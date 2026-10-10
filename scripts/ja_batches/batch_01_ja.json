@@ -57,7 +57,7 @@
   },
   {
     "name": "external_invocation_hint",
-    "ja": "xgesture:// リンクまたは Intent アクションで他アプリから XGesture の機能を開けます。検索パネル、ストッシュ、クリップボードにはサイドバーとアクセシビリティサービスが必要です。"
+    "ja": "xgesture:// リンクまたは Intent アクションで他アプリから XGesture の機能を開けます。検索パネル、ひらめき、クリップボードにはサイドバーとアクセシビリティサービスが必要です。"
   },
   {
     "name": "external_invocation_query_hint",

@@ -15,7 +15,7 @@
   {"name": "shell_panel_history_entry_desc_count", "ja": "直近 %d 件の実行履歴を表示"},
   {"name": "clipboard_history_count", "ja": "%d 件の履歴"},
   {"name": "stash_entry_count", "ja": "%d 件のコンテンツ"},
-  {"name": "stash_clipboard_entry_summary_stash", "ja": "ストッシュ %d 件"},
+  {"name": "stash_clipboard_entry_summary_stash", "ja": "ひらめき %d 件"},
   {"name": "image_search_engine_aggregated_section", "ja": "集約検索エンジン（%d 件表示）"},
   {"name": "missing_permissions_entry_desc_count", "ja": "%1$d 個の機能に Android 権限が不足しています"},
   {"name": "search_panel_settings_index_count", "ja": "現在 %d 件を読み込み済み"},

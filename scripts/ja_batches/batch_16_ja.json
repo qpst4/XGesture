@@ -533,7 +533,7 @@
   },
   {
     "name": "stash_clear_all_confirm_message",
-    "ja": "すべてのストッシュ項目（画像を含む）が削除されます。元に戻せません。"
+    "ja": "すべてのひらめき（画像を含む）が削除されます。元に戻せません。"
   },
   {
     "name": "message_style_float_position",

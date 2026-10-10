@@ -577,7 +577,7 @@
   },
   {
     "name": "stash_clipboard_settings_desc",
-    "ja": "クリップボード履歴とストッシュ管理"
+    "ja": "クリップボード履歴とひらめきの管理"
   },
   {
     "name": "stash_clipboard_section_history",
@@ -613,7 +613,7 @@
   },
   {
     "name": "stash_clipboard_stash_desc",
-    "ja": "サイドバーの「ストッシュを開く」エッジジェスチャーまたはフローティングボールの選択結果からストッシュに保存。"
+    "ja": "サイドバーの「ひらめきを開く」エッジジェスチャーまたはフローティングボールの選択結果からひらめきに保存。"
   },
   {
     "name": "stash_panel_section_appearance",
