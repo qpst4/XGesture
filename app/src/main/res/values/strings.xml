@@ -29,11 +29,11 @@
     <string name="external_invocation_entry_toggle_gesture">Toggle gestures</string>
     <string name="external_invocation_entry_shell_panel">Shell command panel</string>
     <string name="external_invocation_entry_notification_history_desc">Open notification hub</string>
-    <string name="external_invocation_entry_stash_desc">Open Ideas panel</string>
+    <string name="external_invocation_entry_stash_desc">Open side panel</string>
     <string name="external_invocation_entry_clipboard_desc">Open clipboard panel</string>
     <string name="external_invocation_entry_search_panel_desc">Open search panel</string>
     <string name="external_invocation_action_notification_history_desc">Open notification hub (prefer deeplink for search prefill)</string>
-    <string name="external_invocation_action_stash_desc">Open Ideas panel</string>
+    <string name="external_invocation_action_stash_desc">Open side panel</string>
     <string name="external_invocation_action_clipboard_desc">Open clipboard panel</string>
     <string name="external_invocation_action_search_panel_desc">Open search panel</string>
     <string name="external_invocation_action_toggle_gesture_desc">Toggle edge gesture master switch</string>
