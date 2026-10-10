@@ -61,6 +61,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -92,6 +93,9 @@ import com.slideindex.app.clipboard.ClipboardEntry
 import com.slideindex.app.clipboard.ClipboardImageStore
 import com.slideindex.app.clipboard.resolvedContentBlocks
 import com.slideindex.app.di.OverlayDependencyAccess
+import com.slideindex.app.overlay.history.HistoryCardSnapshot
+import com.slideindex.app.overlay.history.recordHistoryCardSnapshot
+import com.slideindex.app.overlay.history.rememberHistoryCardSnapshot
 import com.slideindex.app.stash.PinNotificationSnapshot
 import com.slideindex.app.stash.StashAccess
 import com.slideindex.app.stash.StashCoordinator
@@ -101,6 +105,7 @@ import com.slideindex.app.stash.resolvedContentBlocks
 import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
 import java.util.UUID
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlin.math.abs
 import kotlin.math.max
@@ -642,12 +647,17 @@ object ScreenPinManager {
     private fun bindPinContent(instance: PinInstance) {
         instance.composeView.setContent {
             OverlayAwareModuleTheme {
+                // 长按拖拽：把**钉图本身**当拖影（见 HistoryCardSnapshot）。抓图是 suspend 的，先起协程。
+                val dragSnapshot = rememberHistoryCardSnapshot()
+                val dragScope = rememberCoroutineScope()
                 ScreenPinContent(
                     instance = instance,
                     onTap = { onPinTap(instance.id) },
                     onDoubleTap = { togglePinDoubleTapZoom(instance.id) },
                     onZoom = { zoomFactor -> zoomPin(instance.id, zoomFactor) },
-                    onLongPressDrag = { startPinDrag(instance) },
+                    onLongPressDrag = {
+                        dragScope.launch { startPinDrag(instance, dragSnapshot.capture()) }
+                    },
                     onDragStart = {
                         if (instance.uiState.isEdgeDocked.value) {
                             undockForDrag(instance)
@@ -665,7 +675,8 @@ object ScreenPinManager {
                         hideDropOverlay()
                     },
                     onClose = { removePin(instance.id) },
-                    onAlphaChange = { instance.uiState.contentAlpha.floatValue = it }
+                    onAlphaChange = { instance.uiState.contentAlpha.floatValue = it },
+                    snapshot = dragSnapshot,
                 )
             }
         }
@@ -761,7 +772,7 @@ object ScreenPinManager {
      * 与「滑动拖动 = 挪窗口」和「拖动时的投放层 = 暂存/通知/删除」区分开：
      * 这里只负责把钉图内容交给系统拖拽框架，拖到别的应用松手放下。
      */
-    private fun startPinDrag(instance: PinInstance) {
+    private fun startPinDrag(instance: PinInstance, snapshot: Bitmap? = null) {
         val context = appContext ?: return
         if (instance.uiState.isEdgeDocked.value) return
         // 先给触感反馈，再做内容落盘，避免长按判定被编码耗时拖后。
@@ -772,7 +783,8 @@ object ScreenPinManager {
         PinDragHelper.startDrag(
             view = instance.composeView,
             clipData = clip,
-            preview = PinDragHelper.previewOf(instance.content),
+            // [snapshot] = 长按那一刻抓的"钉图本身"，拖影就是这张钉图的真实样子（圆角/投影由拖影侧画）。
+            preview = PinDragHelper.previewOf(instance.content).copy(snapshot = snapshot),
         )
     }
 
@@ -1323,7 +1335,9 @@ private fun ScreenPinContent(
     onDrag: (dx: Float, dy: Float, localX: Float, localY: Float) -> Unit,
     onDragEnd: (localX: Float, localY: Float) -> Unit,
     onClose: () -> Unit,
-    onAlphaChange: (Float) -> Unit
+    onAlphaChange: (Float) -> Unit,
+    /** 长按拖拽用的"钉图本身"快照入口；null = 拖影退回旧画法（手绘文字/缩略图）。 */
+    snapshot: HistoryCardSnapshot? = null
 ) {
     val showControls by instance.uiState.showControls
     val alpha by instance.uiState.contentAlpha
@@ -1399,6 +1413,8 @@ private fun ScreenPinContent(
                         .alpha(alpha)
                         .shadow(6.dp, RoundedCornerShape(10.dp))
                         .clip(RoundedCornerShape(10.dp))
+                        // 整块内容录一份：长按拖拽时钉图原样跟着手指（见 HistoryCardSnapshot）。
+                        .then(if (snapshot != null) Modifier.recordHistoryCardSnapshot(snapshot) else Modifier)
                         .background(MaterialTheme.colorScheme.surface)
                         .padding(12.dp)
                 ) {
@@ -1415,25 +1431,32 @@ private fun ScreenPinContent(
             is PinContent.Image -> {
                 val contentW = with(density) { displayW.toDp().coerceAtLeast(1.dp) }
                 val contentH = with(density) { displayH.toDp().coerceAtLeast(1.dp) }
-                Image(
-                    bitmap = content.bitmap.asImageBitmap(),
-                    contentDescription = null,
+                // ⚠️ 这里多包一层 Box 只为一件事：让"录一份"的那层**包住图片本身** ——
+                // 直接把修饰符挂在 `Image` 上不一定录得到（图片是 Image 内部画的）。
+                Box(
                     modifier = Modifier
                         .size(contentW, contentH)
-                        .alpha(alpha),
-                    contentScale = if (content.screenRect != null) {
-                        val bmpAspect =
-                            content.bitmap.width.toFloat() / content.bitmap.height.coerceAtLeast(1)
-                        val boxAspect = displayW.toFloat() / displayH.coerceAtLeast(1)
-                        if (kotlin.math.abs(bmpAspect - boxAspect) <= 0.02f) {
-                            ContentScale.FillBounds
+                        .alpha(alpha)
+                        .then(if (snapshot != null) Modifier.recordHistoryCardSnapshot(snapshot) else Modifier)
+                ) {
+                    Image(
+                        bitmap = content.bitmap.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = if (content.screenRect != null) {
+                            val bmpAspect =
+                                content.bitmap.width.toFloat() / content.bitmap.height.coerceAtLeast(1)
+                            val boxAspect = displayW.toFloat() / displayH.coerceAtLeast(1)
+                            if (kotlin.math.abs(bmpAspect - boxAspect) <= 0.02f) {
+                                ContentScale.FillBounds
+                            } else {
+                                ContentScale.Fit
+                            }
                         } else {
                             ContentScale.Fit
                         }
-                    } else {
-                        ContentScale.Fit
-                    }
-                )
+                    )
+                }
             }
             is PinContent.Rich -> {
                 val contentW = with(density) { displayW.toDp().coerceAtLeast(1.dp) }
@@ -1444,6 +1467,8 @@ private fun ScreenPinContent(
                         .alpha(alpha)
                         .shadow(6.dp, RoundedCornerShape(10.dp))
                         .clip(RoundedCornerShape(10.dp))
+                        // 整块内容录一份：长按拖拽时钉图原样跟着手指（见 HistoryCardSnapshot）。
+                        .then(if (snapshot != null) Modifier.recordHistoryCardSnapshot(snapshot) else Modifier)
                         .background(MaterialTheme.colorScheme.surface)
                         .padding(12.dp)
                 ) {

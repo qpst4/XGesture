@@ -264,7 +264,17 @@ private class EntryDragShadowBuilder(
         cardPaint.clearShadowLayer()
 
         snapshotPaint.alpha = CARD_ALPHA
+        // 快照本身也裁成同样的圆角：钉图的图片类内容没有圆角，不裁就会从圆角底板上"露方角"。
+        val clip = android.graphics.Path().apply {
+            addRoundRect(
+                left, top, right, bottom,
+                cardCornerPx, cardCornerPx, android.graphics.Path.Direction.CW,
+            )
+        }
+        canvas.save()
+        canvas.clipPath(clip)
         canvas.drawBitmap(snapshot, left, top, snapshotPaint)
+        canvas.restore()
     }
 
     private companion object {
