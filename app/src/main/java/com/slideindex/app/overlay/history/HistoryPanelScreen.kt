@@ -611,6 +611,10 @@ internal fun HistoryPanelScreen(
      * （两种情况都还没纳入本次分层，真机如撞上再单独处理）。
      */
     DisposableEffect(
+        // ⚠️ 面板内容现在**常驻组合**（见 `OverlaySidePanelHost.attachPanelWindow`），这个 effect
+        // 不再随"面板关掉"而 dispose —— 面板不可见时必须**显式摘掉**返回拦截器，
+        // 语义才和原来"内容随可见性挂载/摘除"时一致（不留"收起后还挂着拦截器"这个隐患）。
+        panelTargetVisible,
         activeSearchQuery,
         selectedTab,
         composerOpen,
@@ -620,6 +624,10 @@ internal fun HistoryPanelScreen(
         // 第 5 档的判据也要当 key：否则闭包里捕获的是旧集合，卡片展开了按返回却收不回来。
         expandedEntryIds,
     ) {
+        if (!panelTargetVisible) {
+            onRegisterBackInterceptor(null)
+            return@DisposableEffect onDispose { onRegisterBackInterceptor(null) }
+        }
         onRegisterBackInterceptor {
             // 与上面注册表一一对应（层 → 动作）。
             //
@@ -1200,6 +1208,16 @@ internal fun HistoryPanelScreen(
             animationSpec = tween(HistoryDurations.d2),
             label = "panelScrim",
         )
+        // 面板本体的透明度：宿主不再包 `AnimatedVisibility`（那棵树收起态会被整个摘掉 →
+        // 每次拉出现组 240~420ms，见 `OverlaySidePanelHost.attachPanelWindow`），
+        // 原来的 `fadeIn/fadeOut(250)` 由这里按同一个进度补回来。
+        // ⚠️ 拖动发起的那次会话（`dragSession`）**全程不淡**：透明度跟着手指变会让"跟手"看起来发虚；
+        // `dragSession` 是弹簧收尾之后才被驱动器清掉的，所以归位/弹出的尾巴也是实心的。
+        val panelAlpha by animateFloatAsState(
+            targetValue = if (HistoryPanelReveal.dragSession) 1f else revealProgress,
+            animationSpec = tween(HistoryDurations.d2),
+            label = "panelAlpha",
+        )
         Box(
             modifier = Modifier
                 .matchParentSize()
@@ -1233,18 +1251,19 @@ internal fun HistoryPanelScreen(
             modifier = Modifier
                 .fillMaxHeight()
                 .width(panelWidth)
-                // ⚠️ 位移必须放在 background/border **之前**：`graphicsLayer` 只包住它之后的绘制，
+                // ⚠️ 位移/透明度必须放在 background/border **之前**：`graphicsLayer` 只包住它之后的绘制，
                 // 放在后面面板底色会留在最终位置不动，只有内容跟着手指跑（踩过）。
+                // 进度（`revealProgress`）是**唯一**驱动源：拖动时贴手指、松手/点击时走弹簧。
+                // 原来"点击打开"那条路靠宿主的 `AnimatedVisibility` 滑入 —— 那棵树在收起态会被摘掉，
+                // 于是每次拉出都要现组一棵 `HistoryPanelScreen`（真机实测 240~420ms），
+                // 死区就是这么来的；现在两条路共用同一个进度值。
                 .graphicsLayer {
-                    translationX = if (HistoryPanelReveal.dragSession) {
-                        HistoryPanelReveal.offsetPx(
-                            progress = revealProgress,
-                            spanPx = panelWidthPx,
-                            gravityEnd = gravityEnd,
-                        )
-                    } else {
-                        0f
-                    }
+                    translationX = HistoryPanelReveal.offsetPx(
+                        progress = revealProgress,
+                        spanPx = panelWidthPx,
+                        gravityEnd = gravityEnd,
+                    )
+                    alpha = panelAlpha
                 }
                 // 设计稿 `.g`：玻璃底 + 白描边 + 上下内高光 + 两层投影。
                 .shadow(

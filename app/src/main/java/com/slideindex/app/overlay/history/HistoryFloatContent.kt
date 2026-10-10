@@ -217,6 +217,10 @@ private fun HistoryFloatHandle(
         modifier = Modifier
             .size(HANDLE_HIT_DP.dp)
             .pointerInput(Unit) {
+                // Compose 的 touch slop（一般 8dp）。下面"跟手进度"要把它补回来，理由见拖动回调里的注释。
+                // 它是 [PointerInputScope] 自带的属性，不用（也不该）在组合期读 `LocalViewConfiguration` ——
+                // 这段 lambda 被 `pointerInput(Unit)` 只抓一次，读组合局部量反而更容易踩到陈旧值。
+                val dragSlopPx = viewConfiguration.touchSlop
                 var totalX = 0f
                 var totalY = 0f
                 // 前 8dp 锁定主方向（设计稿注释：横向=拉出面板，纵向=挪位置）。
@@ -277,8 +281,16 @@ private fun HistoryFloatHandle(
                             }
                             if (revealing) {
                                 val distance = revealDistanceState.value
+                                // ⚠️ 位移基准是**手指按下点**，不是"滑出 slop 的那一点"：
+                                // `detectDragGestures` 在 slop 内一个回调都不给，而首次回调只带出"超出 slop"
+                                // 的那几 px（`overSlop`），slop 本身（≈8dp）没有任何回调带上它 —— 不补的话，
+                                // 面板前缘从第一帧起就少走 8dp 的手指位移（面板行程 = 手指 × 130dp→面板宽度
+                                // ≈ 2.5×，所以是少走约 20dp），表现就是"开头一小段完全不动，之后才跟手"。
+                                // 这里把 slop 补回来（`totalX` 往左拖是负数，越拖越小）。
+                                // ⚠️ 补偿只加在**进度换算**里，绝不动 `totalX`：它还兼着"松手兜底要不要开面板"
+                                // （`totalX <= OPEN_DRAG_THRESHOLD_X`）与轴锁定，改了它会让竖直挪把手也误开面板。
                                 HistoryPanelReveal.dragProgress =
-                                    (-totalX / distance).coerceIn(0f, 1f)
+                                    ((-totalX + dragSlopPx) / distance).coerceIn(0f, 1f)
                                 // 过半轻震（与跟手阈值同一个手感点）。
                                 val half = HistoryPanelReveal.dragProgress >= REVEAL_COMMIT_FRACTION
                                 if (half != crossedHalf) {
