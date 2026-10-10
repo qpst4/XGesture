@@ -265,8 +265,12 @@
         <item quantity="other">تم نسخ %d عناصر</item>
     </plurals>
     <plurals name="freezer_restore_intents_done_count">
-        <item quantity="one">تمت إعادة %d تطبيقًا إلى حالته المسجّلة</item>
-        <item quantity="other">تمت إعادة %d تطبيقًا إلى حالته المسجّلة</item>
+        <item quantity="zero">تمت إعادة %d تطبيقات إلى حالتها المسجّلة</item>
+        <item quantity="one">تمت إعادة %d تطبيق إلى حالته المسجّلة</item>
+        <item quantity="two">تمت إعادة %d تطبيقين إلى حالتهما المسجّلة</item>
+        <item quantity="few">تمت إعادة %d تطبيقات إلى حالتها المسجّلة</item>
+        <item quantity="many">تمت إعادة %d تطبيقًا إلى حالته المسجّلة</item>
+        <item quantity="other">تمت إعادة %d تطبيق إلى حالته المسجّلة</item>
     </plurals>
     <plurals name="freezer_refreeze_done">
         <item quantity="zero">تم تجميد %d تطبيقات</item>
