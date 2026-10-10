@@ -1,10 +1,12 @@
 package com.slideindex.app.overlay.pickresult
 
 import android.graphics.Bitmap
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,6 +55,7 @@ internal fun PickResultImageSection(
     onPinToScreen: () -> Unit,
     onStash: () -> Unit,
     onImageClick: () -> Unit,
+    onCopyImage: (() -> Unit)? = null,
     onImageIndexChange: (Int) -> Unit,
     sectionExpanded: Boolean,
     onSectionExpandedChange: (Boolean) -> Unit
@@ -76,6 +79,7 @@ internal fun PickResultImageSection(
                 onPinToScreen = onPinToScreen,
                 onStash = onStash,
                 onImageClick = onImageClick,
+                onCopyImage = onCopyImage,
                 onImageIndexChange = onImageIndexChange,
                 sectionExpanded = sectionExpanded,
                 onSectionExpandedChange = onSectionExpandedChange
@@ -84,6 +88,7 @@ internal fun PickResultImageSection(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun PickResultImageSectionGallery(
     images: List<Bitmap>,
@@ -100,6 +105,7 @@ internal fun PickResultImageSectionGallery(
     onPinToScreen: () -> Unit,
     onStash: () -> Unit,
     onImageClick: () -> Unit,
+    onCopyImage: (() -> Unit)? = null,
     onImageIndexChange: (Int) -> Unit,
     sectionExpanded: Boolean,
     onSectionExpandedChange: (Boolean) -> Unit,
@@ -153,7 +159,10 @@ internal fun PickResultImageSectionGallery(
                             .width(imageDisplaySize.width)
                             .height(imageDisplaySize.height)
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable(onClick = onImageClick),
+                            .combinedClickable(
+                                onClick = onImageClick,
+                                onLongClick = onCopyImage,
+                            ),
                         contentScale = ContentScale.Fit
                     )
                 } else {
@@ -174,7 +183,10 @@ internal fun PickResultImageSectionGallery(
                                     .width(imageDisplaySize.width)
                                     .height(imageDisplaySize.height)
                                     .clip(RoundedCornerShape(8.dp))
-                                    .clickable(onClick = onImageClick),
+                                    .combinedClickable(
+                                        onClick = onImageClick,
+                                        onLongClick = onCopyImage,
+                                    ),
                                 contentScale = ContentScale.Fit
                             )
                         }

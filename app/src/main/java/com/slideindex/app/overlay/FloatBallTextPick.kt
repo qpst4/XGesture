@@ -1,6 +1,7 @@
 package com.slideindex.app.overlay
 
 import android.content.ClipData
+import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
@@ -81,6 +82,57 @@ object FloatBallTextPick {
         clipboard.setPrimaryClip(ClipData.newUri(context.contentResolver, "image", uri))
         Toast.makeText(context, R.string.float_ball_image_copied, Toast.LENGTH_SHORT).show()
     }
+
+    /**
+     * 异步复制图片到剪贴板，[onDone] 回主线程，true 表示已写入剪贴板。
+     *
+     * 取词面板长按图片走这条路径：[bitmap] 是面板持有的位图，面板 dismiss 后会被
+     * `recycleOwnedPanelImages` 回收，所以先在调用线程（主线程）拷一份快照再交给后台 ——
+     * PNG 无损压缩在一张 1440p 截图上要几百毫秒，留在主线程会卡住与无障碍同进程的 `:overlay`。
+     */
+    fun copyImageAsync(context: Context, bitmap: Bitmap, onDone: (Boolean) -> Unit) {
+        val appContext = context.applicationContext
+        val snapshot = if (bitmap.isRecycled) {
+            null
+        } else {
+            runCatching { bitmap.copy(Bitmap.Config.ARGB_8888, false) }.getOrNull()
+        }
+        if (snapshot == null) {
+            mainHandler.post { onDone(false) }
+            return
+        }
+        Thread({
+            // 浮层与无障碍同进程：后台线程漏出的异常会连无障碍一起带走，这里全部兜住。
+            val uri = try {
+                createShareImageUri(appContext, snapshot)
+            } catch (_: Throwable) {
+                null
+            } finally {
+                snapshot.recycle()
+            }
+            mainHandler.post {
+                val clipboard = appContext.getSystemService(ClipboardManager::class.java)
+                if (uri == null || clipboard == null) {
+                    onDone(false)
+                } else {
+                    val written = runCatching { clipboard.setPrimaryClip(imageUriClip(uri)) }.isSuccess
+                    onDone(written)
+                }
+            }
+        }, "pick-copy-image").start()
+    }
+
+    /**
+     * 显式声明 mime 的图片剪贴项。
+     *
+     * `ClipData.newUri` 的第二参只是 label，mime 靠 resolver 反查：取词面板交出去的是
+     * FileProvider 的 cache URI，一旦反查不到就退化成 `text/plain`，接收方会把图片当纯文本。
+     * 与 `ClipboardWriter.uriClip` 同一处理。
+     */
+    private fun imageUriClip(uri: Uri): ClipData = ClipData(
+        ClipDescription("image", arrayOf("image/*")),
+        ClipData.Item(uri),
+    )
 
     fun readClipboardText(context: Context): String? = ClipboardReader.read(context)?.text
 

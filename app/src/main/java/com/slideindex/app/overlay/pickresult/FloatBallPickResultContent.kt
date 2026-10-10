@@ -108,6 +108,7 @@ internal fun FloatBallPickResultContent(
     onPinImageToScreen: () -> Unit,
     onStashImage: () -> Unit,
     onImageClick: () -> Unit,
+    onCopyImage: (() -> Unit)? = null,
     onImageIndexChange: (Int) -> Unit,
     screenRect: Rect?,
     layoutMeta: ScreenshotLayoutMeta?
@@ -523,6 +524,7 @@ internal fun FloatBallPickResultContent(
                 onPinImageToScreen = onPinImageToScreen,
                 onStashImage = onStashImage,
                 onImageClick = onImageClick,
+                onCopyImage = onCopyImage,
                 onImageIndexChange = onImageIndexChange,
                 onImageSectionExpandedChange = { expanded ->
                     isImageVisible.value = expanded

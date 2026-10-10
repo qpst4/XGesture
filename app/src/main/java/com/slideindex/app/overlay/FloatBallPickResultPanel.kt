@@ -1260,6 +1260,33 @@ object FloatBallPickResultPanel {
                         val bitmap = screenshotHolder.value ?: return@FloatBallPickResultContent
                         FloatBallImageSearchPanel.show(context, bitmap)
                     },
+                    onCopyImage = {
+                        // 长按图片 = 复制当前页（翻页时 screenshotHolder 已同步成当前这张）。
+                        val bitmap = screenshotHolder.value
+                        if (bitmap == null || bitmap.isRecycled) {
+                            showInPanelMessage(overlayContext.getString(R.string.float_ball_action_failed))
+                        } else {
+                            // 与面板内其它动作一致：受「取词面板触觉反馈」开关控制，长按受理时震一次。
+                            if (settingsHolder.value.floatBallPickHapticEnabled) {
+                                composeView?.performHapticFeedback(
+                                    android.view.HapticFeedbackConstants.CONTEXT_CLICK,
+                                    android.view.HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING,
+                                )
+                            }
+                            // 不关面板：长按是顺手动作，dismiss 还会回收面板持有的位图，与后台压缩抢时序。
+                            FloatBallTextPick.copyImageAsync(overlayContext, bitmap) { copied ->
+                                showInPanelMessage(
+                                    overlayContext.getString(
+                                        if (copied) {
+                                            R.string.float_ball_image_copied
+                                        } else {
+                                            R.string.float_ball_action_failed
+                                        }
+                                    )
+                                )
+                            }
+                        }
+                    },
                     onSearchEngineClick = { engine, longPressTriggered ->
                         val query = activeTextHolder.value
                         val launched = when (engine.engineType) {
