@@ -21,7 +21,22 @@ object ClipboardFloatWindowFlags {
      *
      * @param expanded 大窗（Expanded）模式需要 [LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH] 才能收到窗外点击；
      *   chip 模式不监听窗外点击。
-     * @param keyboardFocus true 时窗口可取焦，让输入法挂到浮窗上（搜索态）；否则窗口不可取焦、不挡住输入法。
+     * @param keyboardFocus true 时窗口可取焦，让输入法挂到浮窗上（搜索态）；否则窗口不可取焦。
+     *
+     * ### 为什么不可取焦时**只**加 [LayoutParams.FLAG_NOT_FOCUSABLE]，不再加 `FLAG_ALT_FOCUSABLE_IM`
+     *
+     * 平台文档（`WindowManager.LayoutParams#FLAG_ALT_FOCUSABLE_IM`）写得很明确：在已设
+     * `FLAG_NOT_FOCUSABLE` 的前提下再加这个 flag，等于"**请求成为输入法目标**"，
+     * 于是输入法会被排到本窗之上 —— `dumpsys window` 里的 `imeLayeringTarget` 会变成这扇浮窗。
+     *
+     * 2026-10-10 真机 A/B（魅族 21 / Android 16）证实这会把键盘搞掉：通知栏内联回复里胶囊一出现，
+     * `imeLayeringTarget` 就从 `NotificationShade` 变成我们的胶囊窗，系统随后不再绘制键盘
+     * （`dumpsys input_method` 仍报 `mInputShown=true`）；收掉胶囊键盘立刻回来。普通应用里键盘不受影响
+     * （同一份 A/B 截图：胶囊在、键盘照常工作），但凡是**自己用 insets / WindowInsetsController
+     * 管理输入法**的宿主（SystemUI 内联回复、AI 悬浮窗）都会中招。
+     *
+     * 去掉它之后：本窗依旧不可取焦（不会抢走输入框焦点），但不再"请求成为输入法目标"，
+     * 输入法的分层/控制权留在原宿主手里，键盘不再被顶掉。
      */
     fun forMode(expanded: Boolean, keyboardFocus: Boolean): Int {
         var flags = BASE
@@ -29,7 +44,7 @@ object ClipboardFloatWindowFlags {
             flags = flags or LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
         }
         if (!keyboardFocus) {
-            flags = flags or LayoutParams.FLAG_NOT_FOCUSABLE or LayoutParams.FLAG_ALT_FOCUSABLE_IM
+            flags = flags or LayoutParams.FLAG_NOT_FOCUSABLE
         }
         return flags
     }

@@ -41,6 +41,15 @@ android {
         versionCode = 71
         versionName = "1.36.0"
 
+        // 输入法诊断日志（ImeDiagnostics）。默认关：正式包零开销。
+        // 出诊断包：`./gradlew :app:assembleFullRelease -PimeDiag=true`（release 构建可用同签名，
+        // 用户不必卸载重装）。日志只在"内容变化或满 1s"时输出，避免日志 IO 改变时序与复现率。
+        buildConfigField(
+            "boolean",
+            "IME_DIAG",
+            ((findProperty("imeDiag") as String?)?.toBoolean() ?: false).toString(),
+        )
+
         ndk {
             abiFilters += "arm64-v8a"
         }
