@@ -264,11 +264,11 @@ class ActionExecutor(
                 overlayPanels.showStandaloneOverlay(anchorRawY) { y ->
                     WidgetPopupOverlayWindow.show(context, settings, resolvedSide, y)
                 }
-            GestureAction.StashPanel -> FloatBallStashPanel.show(
+            GestureAction.StashPanel -> FloatBallStashPanel.toggle(
                 context = context,
                 panelSide = resolvedSide
             )
-            GestureAction.ClipboardPanel -> FloatBallStashPanel.show(
+            GestureAction.ClipboardPanel -> FloatBallStashPanel.toggle(
                 context = context,
                 initialTab = StashPanelInitialTab.Clipboard,
                 panelSide = resolvedSide
@@ -446,8 +446,13 @@ class ActionExecutor(
                 true
             }
             GestureAction.FreezerPanel -> {
-                FreezerLaunchState.setPendingInitialTab(FreezerTab.FROZEN)
-                FreezerOverlayWindow.show(context)
+                // 与暂存面板同规则：开着再触发就收起，否则打开了却关不掉（动作只调 show）。
+                if (FreezerOverlayWindow.isShowing) {
+                    FreezerOverlayWindow.dismiss()
+                } else {
+                    FreezerLaunchState.setPendingInitialTab(FreezerTab.FROZEN)
+                    FreezerOverlayWindow.show(context)
+                }
                 true
             }
             GestureAction.Refreeze -> {

@@ -97,7 +97,7 @@
   },
   {
     "name": "external_invocation_entry_stash",
-    "ja": "ストッシュ"
+    "ja": "ひらめき"
   },
   {
     "name": "external_invocation_entry_clipboard",
@@ -121,7 +121,7 @@
   },
   {
     "name": "external_invocation_entry_stash_desc",
-    "ja": "ストッシュパネルを開く"
+    "ja": "ひらめきパネルを開く"
   },
   {
     "name": "external_invocation_entry_clipboard_desc",
@@ -137,7 +137,7 @@
   },
   {
     "name": "external_invocation_action_stash_desc",
-    "ja": "ストッシュパネルを開く"
+    "ja": "ひらめきパネルを開く"
   },
   {
     "name": "external_invocation_action_clipboard_desc",

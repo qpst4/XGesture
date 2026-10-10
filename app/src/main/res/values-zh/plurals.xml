@@ -102,6 +102,10 @@
     <plurals name="universal_copy_copied">
         <item quantity="other">已复制 %d 项</item>
     </plurals>
+    <plurals name="freezer_restore_intents_done_count">
+        <item quantity="one">已按档位收回 %d 个应用</item>
+        <item quantity="other">已按档位收回 %d 个应用</item>
+    </plurals>
     <plurals name="freezer_refreeze_done">
         <item quantity="other">已冻结 %d 个应用</item>
     </plurals>

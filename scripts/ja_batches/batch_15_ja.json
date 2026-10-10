@@ -529,11 +529,11 @@
   },
   {
     "name": "floating_panel_title",
-    "ja": "コレクションパネル"
+    "ja": "ひらめきパネル"
   },
   {
     "name": "stash_panel_tab",
-    "ja": "ストッシュ"
+    "ja": "ひらめき"
   },
   {
     "name": "clipboard_panel_tab",
@@ -553,15 +553,15 @@
   },
   {
     "name": "stash_search_hint",
-    "ja": "ストッシュを検索…"
+    "ja": "ひらめきを検索…"
   },
   {
     "name": "stash_search_empty",
-    "ja": "一致するストッシュ項目がありません"
+    "ja": "一致するひらめきがありません"
   },
   {
     "name": "stash_clipboard_entry_title",
-    "ja": "ストッシュとクリップボード"
+    "ja": "ひらめきとクリップボード"
   },
   {
     "name": "stash_clipboard_entry_summary",
@@ -573,7 +573,7 @@
   },
   {
     "name": "stash_clipboard_settings_title",
-    "ja": "ストッシュとクリップボード"
+    "ja": "ひらめきとクリップボード"
   },
   {
     "name": "stash_clipboard_settings_desc",
@@ -585,11 +585,11 @@
   },
   {
     "name": "stash_clipboard_section_stash",
-    "ja": "ストッシュ"
+    "ja": "ひらめき"
   },
   {
     "name": "stash_clipboard_index_nav_section",
-    "ja": "クリップボードとコレクションパネル"
+    "ja": "クリップボードとひらめき"
   },
   {
     "name": "stash_clipboard_index_stash_panel_desc",
@@ -617,7 +617,7 @@
   },
   {
     "name": "stash_panel_section_appearance",
-    "ja": "コレクションパネル"
+    "ja": "ひらめきパネル"
   },
   {
     "name": "stash_panel_background_blur",

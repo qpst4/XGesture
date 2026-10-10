@@ -160,6 +160,8 @@ fun FreezerPanelContent(
     }
 
     val batchRestore: suspend () -> Int = {
+        // 提示由 FreezerOperations 走 OverlayToastWindow 弹：那是独立覆盖层窗口，
+        // 能叠在这个全屏浮窗之上，不像系统 Toast 会被面板自己盖住。
         FreezerOperations.restoreIntents(
             context = context,
             packages = settings.freezerAppPackages,
@@ -220,165 +222,162 @@ fun FreezerPanelContent(
         )
     )
 
-    SettingsLazyScreenScaffold(
-        modifier = modifier,
-        title = screenTitle,
-        pageHint = stringResource(R.string.extension_freezer_subtitle),
-        onBack = onBack?.let { handleBack },
-        userScrollEnabled = false,
-        actions = {
-            MiuixExpandableSearchIconAction(
-                expanded = searchExpanded,
-                query = searchQuery,
-                onExpandedChange = { searchExpanded = it },
-                onQueryChange = { searchQuery = it }
-            )
-            if (onManageApps != null) {
-                IconButton(onClick = onManageApps) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = stringResource(R.string.freezer_manage_apps),
-                        tint = MiuixTheme.colorScheme.onBackground
-                    )
+    Box(modifier = modifier.fillMaxSize()) {
+        SettingsLazyScreenScaffold(
+            modifier = Modifier.fillMaxSize(),
+            title = screenTitle,
+            pageHint = stringResource(R.string.extension_freezer_subtitle),
+            onBack = onBack?.let { handleBack },
+            userScrollEnabled = false,
+            actions = {
+                MiuixExpandableSearchIconAction(
+                    expanded = searchExpanded,
+                    query = searchQuery,
+                    onExpandedChange = { searchExpanded = it },
+                    onQueryChange = { searchQuery = it }
+                )
+                if (onManageApps != null) {
+                    IconButton(onClick = onManageApps) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = stringResource(R.string.freezer_manage_apps),
+                            tint = MiuixTheme.colorScheme.onBackground
+                        )
+                    }
                 }
-            }
-            if (overlayMode) {
-                Box {
-                    IconButton(onClick = { overflowMenuExpanded = true }) {
+                if (overlayMode) {
+                    Box {
+                        IconButton(onClick = { overflowMenuExpanded = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = stringResource(R.string.freezer_batch_menu),
+                                tint = MiuixTheme.colorScheme.onBackground,
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = overflowMenuExpanded,
+                            onDismissRequest = { overflowMenuExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(importFrozenLabel) },
+                                onClick = {
+                                    overflowMenuExpanded = false
+                                    importFrozenApps()
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(switchWorkModeLabel) },
+                                onClick = {
+                                    overflowMenuExpanded = false
+                                    switchWorkMode()
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(restoreIntentsLabel) },
+                                onClick = {
+                                    overflowMenuExpanded = false
+                                    scope.launch {
+                                        if (batchRestore() > 0) {
+                                            freezeStateRevision++
+                                        }
+                                    }
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(pauseAllLabel) },
+                                onClick = {
+                                    overflowMenuExpanded = false
+                                    scope.launch {
+                                        if (FreezerOperations.pauseAll(context, settings.freezerAppPackages) > 0) {
+                                            freezeStateRevision++
+                                        }
+                                    }
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(unpauseAllLabel) },
+                                onClick = {
+                                    overflowMenuExpanded = false
+                                    scope.launch {
+                                        if (FreezerOperations.unpauseAll(context, settings.freezerAppPackages) > 0) {
+                                            freezeStateRevision++
+                                        }
+                                    }
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(unfreezeAllLabel) },
+                                onClick = {
+                                    overflowMenuExpanded = false
+                                    scope.launch {
+                                        if (FreezerOperations.unfreezeAll(context, settings.freezerAppPackages) > 0) {
+                                            freezeStateRevision++
+                                        }
+                                    }
+                                },
+                            )
+                        }
+                    }
+                } else {
+                    OverlayIconDropdownMenu(entry = overflowMenuEntry) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = stringResource(R.string.freezer_batch_menu),
                             tint = MiuixTheme.colorScheme.onBackground,
                         )
                     }
-                    DropdownMenu(
-                        expanded = overflowMenuExpanded,
-                        onDismissRequest = { overflowMenuExpanded = false },
+                }
+            },
+            bottomContent = {
+                MiuixExpandableSearchBottomContent(
+                    searchExpanded = searchExpanded,
+                    searchQuery = searchQuery,
+                    onSearchQueryChange = { searchQuery = it },
+                    focusRequester = searchFocusRequester,
+                    hintResId = R.string.freezer_grid_search_hint
+                )
+            },
+            floatingActionButton = {
+                MiuixSettingsFab(
+                    onClick = {
+                        scope.launch {
+                            // 与「重冻应用」手势同一套语义：按每个成员记录的档位收回，
+                            // 没记录的才落到工作模式。否则面板按钮会把用户设成暂停的成员一起冻成图标消失。
+                            if (batchRestore() > 0) {
+                                freezeStateRevision++
+                            }
+                        }
+                    },
+                    icon = Icons.Default.AcUnit,
+                    contentDescription = stringResource(R.string.freezer_restore_intents)
+                )
+            }
+        ) {
+            if (isLoading) {
+                item(key = "freezer-loading") {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = androidx.compose.ui.Alignment.Center
                     ) {
-                        DropdownMenuItem(
-                            text = { Text(importFrozenLabel) },
-                            onClick = {
-                                overflowMenuExpanded = false
-                                importFrozenApps()
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(switchWorkModeLabel) },
-                            onClick = {
-                                overflowMenuExpanded = false
-                                switchWorkMode()
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(restoreIntentsLabel) },
-                            onClick = {
-                                overflowMenuExpanded = false
-                                scope.launch {
-                                    if (batchRestore() > 0) {
-                                        freezeStateRevision++
-                                    }
-                                }
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(pauseAllLabel) },
-                            onClick = {
-                                overflowMenuExpanded = false
-                                scope.launch {
-                                    if (FreezerOperations.pauseAll(context, settings.freezerAppPackages) > 0) {
-                                        freezeStateRevision++
-                                    }
-                                }
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(unpauseAllLabel) },
-                            onClick = {
-                                overflowMenuExpanded = false
-                                scope.launch {
-                                    if (FreezerOperations.unpauseAll(context, settings.freezerAppPackages) > 0) {
-                                        freezeStateRevision++
-                                    }
-                                }
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(unfreezeAllLabel) },
-                            onClick = {
-                                overflowMenuExpanded = false
-                                scope.launch {
-                                    if (FreezerOperations.unfreezeAll(context, settings.freezerAppPackages) > 0) {
-                                        freezeStateRevision++
-                                    }
-                                }
-                            },
-                        )
+                        top.yukonga.miuix.kmp.basic.CircularProgressIndicator()
                     }
                 }
             } else {
-                OverlayIconDropdownMenu(entry = overflowMenuEntry) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = stringResource(R.string.freezer_batch_menu),
-                        tint = MiuixTheme.colorScheme.onBackground,
+                LazySettingsItem(key = "freezer-grid", fillParentMaxSize = true) {
+                    FreezerGridUi(
+                        settings = settings,
+                        memberApps = memberApps,
+                        appRepository = appRepository,
+                        settingsRepository = settingsRepository,
+                        searchQuery = searchQuery,
+                        freezeStateRevision = freezeStateRevision,
+                        onFreezeStateRevisionBump = { freezeStateRevision++ },
+                        modifier = Modifier.fillMaxSize(),
+                        onAppLaunched = onAppLaunched,
+                        onManageApps = onManageApps,
+                        overlayMode = overlayMode,
                     )
                 }
-            }
-        },
-        bottomContent = {
-            MiuixExpandableSearchBottomContent(
-                searchExpanded = searchExpanded,
-                searchQuery = searchQuery,
-                onSearchQueryChange = { searchQuery = it },
-                focusRequester = searchFocusRequester,
-                hintResId = R.string.freezer_grid_search_hint
-            )
-        },
-        floatingActionButton = {
-            MiuixSettingsFab(
-                onClick = {
-                    scope.launch {
-                        // 与「重冻应用」手势同一套语义：按每个成员记录的档位收回，
-                        // 没记录的才落到工作模式。否则面板按钮会把用户设成暂停的成员一起冻成图标消失。
-                        val changed = FreezerOperations.restoreIntents(
-                            context = context,
-                            packages = settings.freezerAppPackages,
-                            fallbackPause = settings.freezerWorkMode.isPause,
-                        )
-                        if (changed > 0) {
-                            freezeStateRevision++
-                        }
-                    }
-                },
-                icon = Icons.Default.AcUnit,
-                contentDescription = stringResource(R.string.freezer_restore_intents)
-            )
-        }
-    ) {
-        if (isLoading) {
-            item(key = "freezer-loading") {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = androidx.compose.ui.Alignment.Center
-                ) {
-                    top.yukonga.miuix.kmp.basic.CircularProgressIndicator()
-                }
-            }
-        } else {
-            LazySettingsItem(key = "freezer-grid", fillParentMaxSize = true) {
-                FreezerGridUi(
-                    settings = settings,
-                    memberApps = memberApps,
-                    appRepository = appRepository,
-                    settingsRepository = settingsRepository,
-                    searchQuery = searchQuery,
-                    freezeStateRevision = freezeStateRevision,
-                    onFreezeStateRevisionBump = { freezeStateRevision++ },
-                    modifier = Modifier.fillMaxSize(),
-                    onAppLaunched = onAppLaunched,
-                    onManageApps = onManageApps,
-                    overlayMode = overlayMode,
-                )
             }
         }
     }

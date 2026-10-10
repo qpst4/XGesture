@@ -421,7 +421,7 @@
   },
   {
     "name": "clipboard_float_open_stash_panel",
-    "ja": "ストッシュパネルを開く"
+    "ja": "ひらめきパネルを開く"
   },
   {
     "name": "clipboard_float_collapse",
@@ -525,11 +525,11 @@
   },
   {
     "name": "stash_clear_all",
-    "ja": "ストッシュを消去"
+    "ja": "ひらめきを消去"
   },
   {
     "name": "stash_clear_all_confirm_title",
-    "ja": "ストッシュを消去しますか？"
+    "ja": "ひらめきを消去しますか？"
   },
   {
     "name": "stash_clear_all_confirm_message",

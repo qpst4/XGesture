@@ -681,7 +681,7 @@
   },
   {
     "name": "gesture_action_refreeze_desc",
-    "text": "Disable all apps in freezer list that are currently enabled",
+    "text": "Put each app in the freezer list back the way you left it: paused apps stay paused, frozen apps get frozen, and anything without a recorded state follows the freezer work mode",
     "source": "en"
   },
   {

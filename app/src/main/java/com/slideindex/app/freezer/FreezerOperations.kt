@@ -9,11 +9,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.util.Log
-import android.widget.Toast
 import com.slideindex.app.R
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.di.AppGraphEntryPoint
+import com.slideindex.app.overlay.OverlayToastWindow
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.FreezerAppIntent
 import com.slideindex.app.settings.SettingsRepository
@@ -24,6 +24,24 @@ import kotlinx.coroutines.withContext
 
 object FreezerOperations {
     fun hasShellAccess(): Boolean = TaskManagerUtil.hasPrivilegedAccess()
+
+    /**
+     * 冰箱提示统一出口：**优先用覆盖层窗口显示**，拿不到悬浮窗权限时由它自己回退系统 Toast。
+     *
+     * 为什么不用系统 Toast：冰箱面板是全屏浮窗（`TYPE_APPLICATION_OVERLAY` + `MATCH_PARENT`），
+     * 面板打开时弹出的 Toast 会被面板自己盖在底下（用户反馈「提示看不见」）。覆盖层窗口是同类
+     * 窗口、后 `addView`，稳定叠在面板之上。
+     */
+    private suspend fun showFreezerMessage(context: Context, message: String) {
+        Log.i(TAG, "message: $message")
+        withContext(Dispatchers.Main) {
+            OverlayToastWindow.show(context, message)
+        }
+    }
+
+    private suspend fun showFreezerMessage(context: Context, messageRes: Int) {
+        showFreezerMessage(context, context.getString(messageRes))
+    }
 
     /**
      * 记下「用户要这个成员处于哪种状态」。
@@ -71,15 +89,11 @@ object FreezerOperations {
     suspend fun setFrozen(context: Context, packageName: String, frozen: Boolean): Boolean =
         withContext(Dispatchers.IO) {
             if (!TaskManagerUtil.hasPrivilegedAccess()) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, R.string.freezer_permission_required, Toast.LENGTH_SHORT).show()
-                }
+                showFreezerMessage(context, R.string.freezer_permission_required)
                 return@withContext false
             }
             if (frozen && FreezerPrivilegedOps.isProtectedPackage(context, packageName)) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, R.string.freezer_protected_package, Toast.LENGTH_SHORT).show()
-                }
+                showFreezerMessage(context, R.string.freezer_protected_package)
                 return@withContext false
             }
             if (frozen && isPaused(context, packageName)) {
@@ -94,23 +108,21 @@ object FreezerOperations {
                 return@withContext true
             }
             Log.w(TAG, "setFrozen($packageName, $frozen) -> failed: ${detail.take(160)}")
-            withContext(Dispatchers.Main) {
-                val message = when (detail) {
-                    FreezerPrivilegedOps.NEED_ROOT_FOR_SYSTEM_DISABLE ->
-                        context.getString(R.string.freezer_unfreeze_need_root)
-                    else -> {
-                        val messageRes = if (frozen) {
-                            R.string.freezer_freeze_failed
-                        } else {
-                            R.string.freezer_unfreeze_failed
-                        }
-                        detail.take(160).ifBlank { null }?.let {
-                            context.getString(messageRes, it)
-                        } ?: context.getString(R.string.freezer_permission_required)
+            val message = when (detail) {
+                FreezerPrivilegedOps.NEED_ROOT_FOR_SYSTEM_DISABLE ->
+                    context.getString(R.string.freezer_unfreeze_need_root)
+                else -> {
+                    val messageRes = if (frozen) {
+                        R.string.freezer_freeze_failed
+                    } else {
+                        R.string.freezer_unfreeze_failed
                     }
+                    detail.take(160).ifBlank { null }?.let {
+                        context.getString(messageRes, it)
+                    } ?: context.getString(R.string.freezer_permission_required)
                 }
-                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             }
+            showFreezerMessage(context, message)
             false
         }
 
@@ -121,16 +133,12 @@ object FreezerOperations {
     suspend fun setPaused(context: Context, packageName: String, paused: Boolean): Boolean =
         withContext(Dispatchers.IO) {
             if (!TaskManagerUtil.hasPrivilegedAccess()) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, R.string.freezer_permission_required, Toast.LENGTH_SHORT).show()
-                }
+                showFreezerMessage(context, R.string.freezer_permission_required)
                 return@withContext false
             }
             if (paused) {
                 if (FreezerPrivilegedOps.isProtectedPackage(context, packageName)) {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(context, R.string.freezer_protected_package, Toast.LENGTH_SHORT).show()
-                    }
+                    showFreezerMessage(context, R.string.freezer_protected_package)
                     return@withContext false
                 }
                 if (isFrozen(context, packageName)) {
@@ -155,17 +163,15 @@ object FreezerOperations {
                 return@withContext true
             }
             Log.w(TAG, "setPaused($packageName, $paused) -> failed: ${detail.take(160)}")
-            withContext(Dispatchers.Main) {
-                val messageRes = if (paused) {
-                    R.string.freezer_pause_failed
-                } else {
-                    R.string.freezer_unpause_failed
-                }
-                val message = detail.take(160).ifBlank { null }?.let {
-                    context.getString(messageRes, it)
-                } ?: context.getString(R.string.freezer_permission_required)
-                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            val messageRes = if (paused) {
+                R.string.freezer_pause_failed
+            } else {
+                R.string.freezer_unpause_failed
             }
+            val message = detail.take(160).ifBlank { null }?.let {
+                context.getString(messageRes, it)
+            } ?: context.getString(R.string.freezer_permission_required)
+            showFreezerMessage(context, message)
             false
         }
 
@@ -251,13 +257,12 @@ object FreezerOperations {
     suspend fun restoreIntents(
         context: Context,
         packages: Set<String>,
-        fallbackPause: Boolean
+        fallbackPause: Boolean,
+        report: Boolean = true
     ): Int = withContext(Dispatchers.IO) {
         if (!hasShellAccess()) {
             Log.w(TAG, "restoreIntents: no privileged access, members=${packages.size}")
-            withContext(Dispatchers.Main) {
-                Toast.makeText(context, R.string.freezer_permission_required, Toast.LENGTH_SHORT).show()
-            }
+            if (report) showFreezerMessage(context, R.string.freezer_permission_required)
             return@withContext 0
         }
         val intents = freezerSettingsRepository(context)?.readSnapshot()?.freezerAppIntents.orEmpty()
@@ -283,30 +288,43 @@ object FreezerOperations {
         }
         val count = frozen + paused
         Log.i(TAG, "restoreIntents done: members=${packages.size} changed=$count frozen=$frozen paused=$paused")
-        withContext(Dispatchers.Main) {
-            if (count > 0) {
-                val summary = when {
-                    paused == 0 -> context.resources.getQuantityString(
-                        R.plurals.freezer_refreeze_done, frozen, frozen
-                    )
-                    frozen == 0 -> context.resources.getQuantityString(
-                        R.plurals.freezer_pause_all_done, paused, paused
-                    )
-                    else -> context.getString(R.string.freezer_restore_intents_done, frozen, paused)
-                }
-                Toast.makeText(context, summary, Toast.LENGTH_SHORT).show()
-            } else if (packages.isNotEmpty()) {
+        if (report) {
+            when {
+                count > 0 -> showFreezerMessage(
+                    context,
+                    restoreSummary(context, frozen = frozen, paused = paused),
+                )
                 // 全都在目标态：给一句反馈，否则用户会以为手势没生效（曾经真的被这么报过）。
-                Toast.makeText(context, R.string.freezer_restore_intents_noop, Toast.LENGTH_SHORT).show()
+                packages.isNotEmpty() -> showFreezerMessage(context, R.string.freezer_restore_intents_noop)
             }
         }
         count
     }
 
-    suspend fun pauseAll(context: Context, packages: Set<String>): Int = withContext(Dispatchers.IO) {
+    /**
+     * 「按档位收回」的结果文案。
+     *
+     * 面板内用它渲染提示条（`report = false` 时不弹提示）——面板是全屏浮窗，系统 Toast 会被
+     * 它自己盖住，所以在面板里必须由面板自己显示。
+     */
+    fun restoreSummary(context: Context, frozen: Int, paused: Int): String = when {
+        paused == 0 -> context.resources.getQuantityString(
+            R.plurals.freezer_refreeze_done, frozen, frozen
+        )
+        frozen == 0 -> context.resources.getQuantityString(
+            R.plurals.freezer_pause_all_done, paused, paused
+        )
+        else -> context.getString(R.string.freezer_restore_intents_done, frozen, paused)
+    }
+
+    suspend fun pauseAll(
+        context: Context,
+        packages: Set<String>,
+        report: Boolean = true
+    ): Int = withContext(Dispatchers.IO) {
         if (!hasShellAccess()) {
-            withContext(Dispatchers.Main) {
-                Toast.makeText(context, R.string.freezer_permission_required, Toast.LENGTH_SHORT).show()
+            if (report) {
+                showFreezerMessage(context, R.string.freezer_permission_required)
             }
             return@withContext 0
         }
@@ -314,20 +332,23 @@ object FreezerOperations {
         for (pkg in packages) {
             if (stateOf(context, pkg).isActive && setPaused(context, pkg, paused = true)) count++
         }
-        withContext(Dispatchers.Main) {
-            Toast.makeText(
+        if (report) {
+            showFreezerMessage(
                 context,
                 context.resources.getQuantityString(R.plurals.freezer_pause_all_done, count, count),
-                Toast.LENGTH_SHORT,
-            ).show()
+            )
         }
         count
     }
 
-    suspend fun unpauseAll(context: Context, packages: Set<String>): Int = withContext(Dispatchers.IO) {
+    suspend fun unpauseAll(
+        context: Context,
+        packages: Set<String>,
+        report: Boolean = true
+    ): Int = withContext(Dispatchers.IO) {
         if (!hasShellAccess()) {
-            withContext(Dispatchers.Main) {
-                Toast.makeText(context, R.string.freezer_permission_required, Toast.LENGTH_SHORT).show()
+            if (report) {
+                showFreezerMessage(context, R.string.freezer_permission_required)
             }
             return@withContext 0
         }
@@ -338,20 +359,23 @@ object FreezerOperations {
             // （工作模式为冻结时就是图标消失），那正是用户报过的「说好暂停的又被冻结了」。
             if (stateOf(context, pkg).isPaused && setPaused(context, pkg, paused = false)) count++
         }
-        withContext(Dispatchers.Main) {
-            Toast.makeText(
+        if (report) {
+            showFreezerMessage(
                 context,
                 context.resources.getQuantityString(R.plurals.freezer_unpause_all_done, count, count),
-                Toast.LENGTH_SHORT,
-            ).show()
+            )
         }
         count
     }
 
-    suspend fun unfreezeAll(context: Context, packages: Set<String>): Int = withContext(Dispatchers.IO) {
+    suspend fun unfreezeAll(
+        context: Context,
+        packages: Set<String>,
+        report: Boolean = true
+    ): Int = withContext(Dispatchers.IO) {
         if (!hasShellAccess()) {
-            withContext(Dispatchers.Main) {
-                Toast.makeText(context, R.string.freezer_permission_required, Toast.LENGTH_SHORT).show()
+            if (report) {
+                showFreezerMessage(context, R.string.freezer_permission_required)
             }
             return@withContext 0
         }
@@ -359,12 +383,11 @@ object FreezerOperations {
         for (pkg in packages) {
             if (stateOf(context, pkg).isFrozen && setFrozen(context, pkg, frozen = false)) count++
         }
-        withContext(Dispatchers.Main) {
-            Toast.makeText(
+        if (report) {
+            showFreezerMessage(
                 context,
                 context.resources.getQuantityString(R.plurals.freezer_unfreeze_all_done, count, count),
-                Toast.LENGTH_SHORT,
-            ).show()
+            )
         }
         count
     }

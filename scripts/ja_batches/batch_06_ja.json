@@ -45,19 +45,19 @@
   },
   {
     "name": "float_ball_action_stash",
-    "ja": "ストッシュに保存"
+    "ja": "ひらめきに保存"
   },
   {
     "name": "stash_empty",
-    "ja": "ストッシュに項目はまだありません"
+    "ja": "ひらめきはまだありません"
   },
   {
     "name": "stash_saved",
-    "ja": "ストッシュに保存しました"
+    "ja": "ひらめきに保存しました"
   },
   {
     "name": "stash_save_failed",
-    "ja": "ストッシュへの保存に失敗しました"
+    "ja": "ひらめきへの保存に失敗しました"
   },
   {
     "name": "stash_toggle_side",
@@ -89,7 +89,7 @@
   },
   {
     "name": "stash_drop_target_stash",
-    "ja": "ストッシュ"
+    "ja": "ひらめき"
   },
   {
     "name": "stash_drop_target_delete",

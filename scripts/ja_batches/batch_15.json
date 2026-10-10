@@ -661,12 +661,12 @@
   },
   {
     "name": "floating_panel_title",
-    "text": "Collection panel",
+    "text": "Ideas panel",
     "source": "en"
   },
   {
     "name": "stash_panel_tab",
-    "text": "Stash",
+    "text": "Ideas",
     "source": "en"
   },
   {
@@ -691,17 +691,17 @@
   },
   {
     "name": "stash_search_hint",
-    "text": "Search stash…",
+    "text": "Search Ideas…",
     "source": "en"
   },
   {
     "name": "stash_search_empty",
-    "text": "No matching stash items",
+    "text": "No matching ideas",
     "source": "en"
   },
   {
     "name": "stash_clipboard_entry_title",
-    "text": "Stash & clipboard",
+    "text": "Ideas & clipboard",
     "source": "en"
   },
   {
@@ -716,12 +716,12 @@
   },
   {
     "name": "stash_clipboard_settings_title",
-    "text": "Stash & clipboard",
+    "text": "Ideas & clipboard",
     "source": "en"
   },
   {
     "name": "stash_clipboard_settings_desc",
-    "text": "Clipboard history and stash management",
+    "text": "Clipboard history and Ideas",
     "source": "en"
   },
   {
@@ -731,12 +731,12 @@
   },
   {
     "name": "stash_clipboard_section_stash",
-    "text": "Stash",
+    "text": "Ideas",
     "source": "en"
   },
   {
     "name": "stash_clipboard_index_nav_section",
-    "text": "Clipboard & collection panel",
+    "text": "Clipboard & Ideas",
     "source": "en"
   },
   {
@@ -756,7 +756,7 @@
   },
   {
     "name": "stash_panel_settings_desc",
-    "text": "Collection panel appearance and edge history float settings",
+    "text": "Ideas panel appearance and edge history float settings",
     "source": "en"
   },
   {
@@ -766,12 +766,12 @@
   },
   {
     "name": "stash_clipboard_stash_desc",
-    "text": "Save to stash from the sidebar gesture \\\"Open stash\\\" or float-ball pick results.",
+    "text": "Save to Ideas from the sidebar gesture \\\"Open Ideas\\\" or float-ball pick results.",
     "source": "en"
   },
   {
     "name": "stash_panel_section_appearance",
-    "text": "Collection panel",
+    "text": "Ideas panel",
     "source": "en"
   },
   {

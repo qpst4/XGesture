@@ -534,6 +534,11 @@ internal fun HistoryPanelScreen(
 
     LaunchedEffect(pagerState.currentPage) {
         viewModel.setSelectedTab(HistoryPanelTab.entries[pagerState.currentPage])
+        // 顺手回写「当前页」：外部用来判断「再触发一次该收起还是切页」（FloatBallStashPanel.toggle）。
+        // 不回写的话手势滑动切页后，外部仍以为停在旧页，会继续切页而不是收起。
+        requestedTabOrdinal.intValue = pagerState.currentPage
+        // 「记住上次页签」那一档读的就是它（进程级，见 StashPanelTabMemory）。
+        StashPanelTabMemory.remember(HistoryPanelTab.entries[pagerState.currentPage])
     }
     LaunchedEffect(requestedTabOrdinal.intValue) {
         val target = requestedTabOrdinal.intValue

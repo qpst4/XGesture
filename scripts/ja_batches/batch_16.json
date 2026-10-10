@@ -526,7 +526,7 @@
   },
   {
     "name": "clipboard_float_open_stash_panel",
-    "text": "Open stash panel",
+    "text": "Open Ideas panel",
     "source": "en"
   },
   {
@@ -656,17 +656,17 @@
   },
   {
     "name": "stash_clear_all",
-    "text": "Clear stash",
+    "text": "Clear Ideas",
     "source": "en"
   },
   {
     "name": "stash_clear_all_confirm_title",
-    "text": "Clear stash?",
+    "text": "Clear Ideas?",
     "source": "en"
   },
   {
     "name": "stash_clear_all_confirm_message",
-    "text": "All stash items (including images) will be deleted. This cannot be undone.",
+    "text": "All ideas (including images) will be deleted. This cannot be undone.",
     "source": "en"
   },
   {

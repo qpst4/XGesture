@@ -132,6 +132,10 @@
         <item quantity="one">Copied %d item</item>
         <item quantity="other">Copied %d items</item>
     </plurals>
+    <plurals name="freezer_restore_intents_done_count">
+        <item quantity="one">Done — %d app updated</item>
+        <item quantity="other">Done — %d apps updated</item>
+    </plurals>
     <plurals name="freezer_refreeze_done">
         <item quantity="one">Froze %d app</item>
         <item quantity="other">Froze %d apps</item>

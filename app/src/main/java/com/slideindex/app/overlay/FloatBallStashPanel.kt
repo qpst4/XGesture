@@ -97,7 +97,10 @@ object FloatBallStashPanel {
      * **先把共享状态置上再 show** —— 面板要从屏幕外开始跟手，不能先自己滑进来。
      * 拖动期间面板窗切到"看得见但不吃触摸"，否则它（MATCH_PARENT）会把后续 MOVE 从把手手里抢走。
      */
-    fun beginDragReveal(context: android.content.Context): Boolean {
+    fun beginDragReveal(
+        context: android.content.Context,
+        initialTab: StashPanelInitialTab = StashPanelInitialTab.Stash,
+    ): Boolean {
         if (sideHost.isShowing) return false
         HistoryPanelReveal.dragSession = true
         HistoryPanelReveal.dragging = true
@@ -107,6 +110,10 @@ object FloatBallStashPanel {
         HistoryPanelReveal.windowProgress = 0f
         HistoryPanelReveal.retractPending = false
         HistoryPanelReveal.open = true
+        // 「拉出来先落在哪一页」与「点击指示条」共用同一份解析（见 `HistoryFloatService`）：
+        // 不写的话拉出会沿用上一次的 ordinal，"设置里选闪念、拖出来却是剪贴板"。
+        pendingInitialTab = initialTab.toHistoryFloatingTab()
+        requestedTabOrdinal.intValue = pendingInitialTab.ordinal
         val shown = sideHost.show(
             context = context,
             initialGravityEnd = true,
@@ -147,6 +154,28 @@ object FloatBallStashPanel {
     /** 面板收回动画播完（面板侧回调）：这时才真正关窗。 */
     fun dismissAfterRetract() {
         sideHost.dismiss()
+    }
+
+    /**
+     * 动作再触发一次时的「开关」语义：同一个 Tab 再触发就收起，换了 Tab 就切页。
+     *
+     * 用户反馈过「触发了动作却收不起来」——原来的实现只调 [show]，面板已显示时等于什么都不做。
+     * 这里刻意**不**用 [requestBackIfShowing]：那会走完整返回层级，面板里弹着键盘或展开着卡片时
+     * 只吃掉一层，用户的「关掉它」意图没达成。
+     *
+     * @return true = 本次触发生效（收起或打开）。
+     */
+    fun toggle(
+        context: android.content.Context,
+        initialTab: StashPanelInitialTab = StashPanelInitialTab.Stash,
+        panelSide: PanelSide? = null,
+    ): Boolean {
+        val launching = initialTab == StashPanelInitialTab.Stash
+        if (isShowing && requestedTabOrdinal.intValue == initialTab.toHistoryFloatingTab().ordinal) {
+            dismiss()
+            return true
+        }
+        return show(context, initialTab = initialTab, panelSide = panelSide)
     }
 
     /**
