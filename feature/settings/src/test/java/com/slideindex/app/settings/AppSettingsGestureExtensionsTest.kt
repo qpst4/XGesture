@@ -1,6 +1,8 @@
 package com.slideindex.app.settings
 
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.gesture.GestureActionType
+import com.slideindex.app.gesture.GestureRule
 import com.slideindex.app.gesture.GestureTriggerType
 import com.slideindex.app.gesture.TriggerHandle
 import com.slideindex.app.overlay.PanelSide
@@ -197,5 +199,95 @@ class AppSettingsGestureExtensionsTest {
             GestureAction.Back,
             restored.slotAction(PanelSide.LEFT, GestureTriggerType.SHORT_SWIPE_IN, TriggerHandle.DEFAULT_ID),
         )
+    }
+
+    private fun landscapeSettings(
+        left: List<TriggerHandle> = listOf(TriggerHandle.default()),
+        rules: List<GestureRule> = emptyList(),
+    ): AppSettings = AppSettings().copy(
+        edgeTrigger = EdgeTriggerSettings(
+            leftTriggerHandles = listOf(TriggerHandle.default(topFraction = 0.10f, heightFraction = 0.20f)),
+            leftTriggerHandlesLandscape = left,
+            landscapeTriggersInitialized = true,
+            gestureRulesLandscape = rules,
+        ),
+    )
+
+    @Test
+    fun withPortraitCopiedToLandscape_sameHandleCount_syncsActions() {
+        val portrait = AppSettings()
+            .withSlotAction(
+                side = PanelSide.LEFT,
+                trigger = GestureTriggerType.SHORT_SWIPE_IN,
+                action = GestureAction.Screenshot,
+            )
+
+        val merged = portrait.withPortraitCopiedToLandscape(landscapeSettings())
+
+        assertEquals(
+            GestureAction.Screenshot,
+            merged.rules.first {
+                it.side == PanelSide.LEFT &&
+                    it.trigger == GestureTriggerType.SHORT_SWIPE_IN &&
+                    it.handleId == TriggerHandle.DEFAULT_ID
+            }.action,
+        )
+    }
+    @Test
+    fun withPortraitCopiedToLandscape_portraitHasMoreHandles_appendsThem() {
+        val portrait = AppSettings()
+            .withAddedBottomTriggerHandle()
+            .withAddedBottomTriggerHandle()
+        val extraId = portrait.bottomTriggerHandles.last().id
+        val handleCount = portrait.bottomTriggerHandles.size
+
+        val merged = portrait.withPortraitCopiedToLandscape(landscapeSettings())
+
+        assertEquals(handleCount, merged.handles.getValue(PanelSide.BOTTOM).size)
+        assertTrue(merged.handles.getValue(PanelSide.BOTTOM).any { it.id == extraId })
+        // 新补的触钮也要带上竖屏的动作，而不是空的。
+        assertTrue(
+            merged.rules.any {
+                it.side == PanelSide.BOTTOM &&
+                    it.handleId == extraId &&
+                    it.action.type != GestureActionType.NONE
+            },
+        )
+    }
+
+    @Test
+    fun withPortraitCopiedToLandscape_landscapeOnlyHandle_isKept() {
+        val landscapeOnly = TriggerHandle.default().copy(id = "landscape-only")
+        val landscape = landscapeSettings(
+            left = listOf(TriggerHandle.default(), landscapeOnly),
+            rules = listOf(
+                GestureRule(
+                    id = GestureRule.slotId(PanelSide.LEFT, GestureTriggerType.SHORT_SWIPE_IN, landscapeOnly.id),
+                    side = PanelSide.LEFT,
+                    trigger = GestureTriggerType.SHORT_SWIPE_IN,
+                    action = GestureAction.Home,
+                    handleId = landscapeOnly.id,
+                ),
+            ),
+        )
+
+        val merged = AppSettings().withPortraitCopiedToLandscape(landscape)
+
+        // 横屏独有的触钮没有被删掉，它自己的动作也保留。
+        assertEquals(2, landscape.leftTriggerHandlesLandscape.size)
+        assertEquals(
+            GestureAction.Home,
+            merged.rules.first {
+                it.handleId == landscapeOnly.id && it.trigger == GestureTriggerType.SHORT_SWIPE_IN
+            }.action,
+        )
+    }
+
+    @Test
+    fun withPortraitCopiedToLandscape_notInitialized_changesNothing() {
+        val merged = AppSettings().withPortraitCopiedToLandscape(AppSettings())
+
+        assertTrue(merged.handles.isEmpty())
+        assertTrue(merged.rules.isEmpty())
     }
 }

@@ -77,6 +77,17 @@ class HomeDetailSettingsViewModel @Inject constructor(
         }
     }
 
+    /** 「复制竖屏设置」：把竖屏当前的触钮与手势动作合并进横屏；失败会弹 snackbar。 */
+    fun copyPortraitToLandscape() {
+        viewModelScope.launch {
+            landscapeInitMutex.withLock {
+                settingsRepository.copyPortraitToLandscape().onFailure {
+                    userMessageBus.showError(appContext.getString(R.string.settings_save_failed))
+                }
+            }
+        }
+    }
+
     fun setKeyboardTriggerBehavior(behavior: KeyboardTriggerBehavior, landscape: Boolean) = launchSettingsWrite {
         if (landscape) {
             settingsRepository.setKeyboardTriggerBehaviorLandscape(behavior)

@@ -1216,6 +1216,10 @@
     <string name="trigger_collection_landscape_title">横屏触钮</string>
     <string name="trigger_collection_landscape_desc">独立配置横屏下的触钮位置与外观</string>
     <string name="trigger_collection_open_landscape">横屏设置</string>
+    <string name="trigger_copy_portrait">复制竖屏设置</string>
+    <string name="trigger_copy_portrait_open">复制竖屏设置</string>
+    <string name="trigger_copy_portrait_confirm_title">用竖屏设置覆盖横屏？</string>
+    <string name="trigger_copy_portrait_confirm_message">竖屏的触钮手势与触发方式会复制到横屏。横屏独有的触钮会保留。触钮位置会按横屏屏幕重新排布，不会与竖屏完全一致。此操作不可撤销。</string>
     <string name="trigger_collection_back_portrait">竖屏</string>
     <string name="hide_trigger_landscape">横屏模式</string>
     <string name="hide_trigger_lock_screen">锁屏界面</string>

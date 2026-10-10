@@ -181,6 +181,7 @@ class SettingsRepository @Inject constructor(
     suspend fun removeTriggerHandle(side: PanelSide, handleId: String, landscape: Boolean = false) =
         edge.removeTriggerHandle(side, handleId, landscape)
     suspend fun ensureLandscapeTriggerHandlesInitialized() = edge.ensureLandscapeTriggerHandlesInitialized()
+    suspend fun copyPortraitToLandscape() = edge.copyPortraitToLandscape()
     suspend fun setTriggerAlignOppositeSide(
         handleId: String,
         sourceSide: PanelSide,

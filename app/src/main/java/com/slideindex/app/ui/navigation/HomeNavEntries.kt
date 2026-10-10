@@ -1449,6 +1449,7 @@ private fun HomeTriggerCollectionRoute(
         serviceEnabled = true,
         initialManualLandscapeOverride = initialManualLandscapeOverride,
         onEnsureLandscapeInitialized = viewModel::ensureLandscapeTriggerHandlesInitialized,
+        onCopyPortraitToLandscape = viewModel::copyPortraitToLandscape,
         onBack = {
             TriggerSettingsLandscapeSession.releaseForExit(ctx.activity)
             ctx.navigateBackTo(AppNavKey.HomeMain)

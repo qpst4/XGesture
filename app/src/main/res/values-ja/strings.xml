@@ -1203,6 +1203,10 @@
     <string name="trigger_collection_landscape_title">横向きハンドル</string>
     <string name="trigger_collection_landscape_desc">横向き用にハンドルレイアウトを個別に設定</string>
     <string name="trigger_collection_open_landscape">横向き</string>
+    <string name="trigger_copy_portrait">縦向き設定をコピー</string>
+    <string name="trigger_copy_portrait_open">縦向き設定をコピー</string>
+    <string name="trigger_copy_portrait_confirm_title">縦向き設定を横向きにコピーしますか？</string>
+    <string name="trigger_copy_portrait_confirm_message">縦向きのハンドルのジェスチャーとトリガーを横向きにコピーします。横向き専用のハンドルは残ります。ハンドルの位置は横向き画面用に再配置されるため、縦向きと完全には一致しません。この操作は元に戻せません。</string>
     <string name="trigger_collection_back_portrait">縦向き</string>
     <string name="hide_trigger_landscape">横向き</string>
     <string name="hide_trigger_lock_screen">ロック画面</string>

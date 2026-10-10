@@ -2328,6 +2328,10 @@
     <string name="trigger_collection_landscape_title">Landscape handles</string>
     <string name="trigger_collection_landscape_desc">Configure handle layout separately for landscape</string>
     <string name="trigger_collection_open_landscape">Landscape</string>
+    <string name="trigger_copy_portrait">Copy portrait settings</string>
+    <string name="trigger_copy_portrait_open">Copy portrait settings</string>
+    <string name="trigger_copy_portrait_confirm_title">Copy portrait settings to landscape?</string>
+    <string name="trigger_copy_portrait_confirm_message">The portrait handle gestures and triggers will be copied to landscape. Landscape-only handles are kept. Handle positions are re-laid out for the landscape screen and will not match portrait exactly. This cannot be undone.</string>
     <string name="trigger_collection_back_portrait">Portrait</string>
     <string name="hide_trigger_landscape">Landscape</string>
     <string name="hide_trigger_lock_screen">Lock screen</string>

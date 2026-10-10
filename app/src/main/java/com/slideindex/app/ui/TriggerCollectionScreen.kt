@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.activity.compose.LocalActivity
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import androidx.compose.material.icons.filled.ScreenRotation
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.IconButton
 import com.slideindex.app.settings.forLandscapeEditing
 import com.slideindex.app.ui.trigger.TriggerSettingsLandscapeSession
@@ -80,6 +81,7 @@ fun TriggerCollectionScreen(
     serviceEnabled: Boolean,
     initialManualLandscapeOverride: Boolean? = null,
     onEnsureLandscapeInitialized: () -> Unit = {},
+    onCopyPortraitToLandscape: () -> Unit = {},
     onBack: () -> Unit,
     onOpenLeftTrigger: (handleId: String) -> Unit,
     onOpenRightTrigger: (handleId: String) -> Unit,
@@ -138,6 +140,7 @@ fun TriggerCollectionScreen(
     val displaySettings = if (landscapeMode) settings.forLandscapeEditing() else settings
     var sideExpanded by rememberSaveable { mutableStateOf(true) }
     var pendingRemove by remember { mutableStateOf<PendingSideRemove?>(null) }
+    var showCopyPortraitConfirm by remember { mutableStateOf(false) }
     val entries = displaySettings.triggerCollectionEntries()
     val bottomHandles = displaySettings.allTriggerHandles(PanelSide.BOTTOM)
     val topHandles = displaySettings.allTriggerHandles(PanelSide.TOP)
@@ -161,6 +164,14 @@ fun TriggerCollectionScreen(
         pageHint = pageHint,
         onBack = onBack,
         actions = {
+            if (landscapeMode) {
+                IconButton(onClick = { showCopyPortraitConfirm = true }) {
+                    Icon(
+                        Icons.Default.ContentCopy,
+                        contentDescription = stringResource(R.string.trigger_copy_portrait),
+                    )
+                }
+            }
             IconButton(
                 onClick = {
                     val nextLandscape = !(manualLandscapeDisplay ?: systemLandscape)
@@ -321,6 +332,17 @@ fun TriggerCollectionScreen(
                 onRemoveTriggerHandle(pending.side, pending.handleId)
                 pendingRemove = null
             }
+        },
+    )
+
+    MiuixConfirmDialog(
+        show = showCopyPortraitConfirm,
+        onDismissRequest = { showCopyPortraitConfirm = false },
+        title = stringResource(R.string.trigger_copy_portrait_confirm_title),
+        message = stringResource(R.string.trigger_copy_portrait_confirm_message),
+        onConfirm = {
+            onCopyPortraitToLandscape()
+            showCopyPortraitConfirm = false
         },
     )
 }

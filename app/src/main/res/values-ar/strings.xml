@@ -1190,6 +1190,10 @@
     <string name="trigger_collection_landscape_title">مقابض اللمس في الوضع الأفقي</string>
     <string name="trigger_collection_landscape_desc">تهيئة مستقلة لموضع وشكل مقابض اللمس في الوضع الأفقي</string>
     <string name="trigger_collection_open_landscape">إعدادات الوضع الأفقي</string>
+    <string name="trigger_copy_portrait">نسخ إعدادات الوضع العمودي</string>
+    <string name="trigger_copy_portrait_open">نسخ إعدادات الوضع العمودي</string>
+    <string name="trigger_copy_portrait_confirm_title">نسخ إعدادات الوضع العمودي إلى الوضع الأفقي؟</string>
+    <string name="trigger_copy_portrait_confirm_message">سيتم نسخ إيماءات المقابض ومشغلاتها من الوضع العمودي إلى الوضع الأفقي. وستبقى المقابض الخاصة بالوضع الأفقي. وسيُعاد ترتيب مواضع المقابض لتناسب شاشة الوضع الأفقي، لذا لن تطابق الوضع العمودي تمامًا. لا يمكن التراجع عن هذا الإجراء.</string>
     <string name="trigger_collection_back_portrait">الوضع العمودي</string>
     <string name="hide_trigger_landscape">الوضع الأفقي</string>
     <string name="hide_trigger_lock_screen">واجهة قفل الشاشة</string>

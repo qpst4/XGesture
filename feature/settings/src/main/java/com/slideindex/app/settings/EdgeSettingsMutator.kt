@@ -10,6 +10,7 @@ import com.slideindex.app.gesture.GestureRuleCodec
 import com.slideindex.app.gesture.GestureTriggerMode
 import com.slideindex.app.gesture.GestureTriggerType
 import com.slideindex.app.gesture.TriggerHandle
+import com.slideindex.app.gesture.TriggerHandleCodec
 import com.slideindex.app.gesture.TriggerHandleDesign
 import com.slideindex.app.gesture.TriggerRectanglePresetLogic
 import com.slideindex.app.gesture.TriggerDesignPreset
@@ -188,6 +189,30 @@ class EdgeSettingsMutator @Inject constructor(
         if (updated != current) {
             SettingsTriggerStore.writeLandscapeSettings(prefs, updated)
         }
+    }
+
+    /**
+     * 「复制竖屏设置」：把竖屏当前的触钮与手势动作合并进横屏。
+     *
+     * 横屏没初始化过时先做一次初始化（否则横屏运行态仍会回退竖屏，复制看起来不生效）；
+     * 已配过槽位的触钮按「同侧 + 同序号」同步，横屏独有的触钮与其规则保留不动。
+     */
+    suspend fun copyPortraitToLandscape(): Result<Unit> = editor.edit { prefs ->
+        val snapshot = SettingsTriggerStore.readTriggerSettings(prefs)
+        val current = if (snapshot.landscapeTriggersInitialized) snapshot else snapshot.withLandscapeCopiedFromPortrait()
+        val merged = current.withPortraitCopiedToLandscape(current)
+        merged.handles.forEach { (side, handles) ->
+            prefs[landscapeHandlesKey(side)] = TriggerHandleCodec.encodeAll(handles)
+        }
+        prefs[SettingsPreferenceKeys.GESTURE_RULES_LANDSCAPE] = GestureRuleCodec.encodeAll(merged.rules)
+        prefs[SettingsPreferenceKeys.LANDSCAPE_TRIGGERS_INITIALIZED] = true
+    }
+
+    private fun landscapeHandlesKey(side: PanelSide) = when (side) {
+        PanelSide.LEFT -> SettingsPreferenceKeys.LEFT_TRIGGER_HANDLES_LANDSCAPE
+        PanelSide.RIGHT -> SettingsPreferenceKeys.RIGHT_TRIGGER_HANDLES_LANDSCAPE
+        PanelSide.BOTTOM -> SettingsPreferenceKeys.BOTTOM_TRIGGER_HANDLES_LANDSCAPE
+        PanelSide.TOP -> SettingsPreferenceKeys.TOP_TRIGGER_HANDLES_LANDSCAPE
     }
 
     suspend fun setTriggerAlignOppositeSide(
