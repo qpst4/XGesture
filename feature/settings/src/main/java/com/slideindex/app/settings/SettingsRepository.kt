@@ -814,6 +814,9 @@ class SettingsRepository @Inject constructor(
     suspend fun setStashPanelBackgroundBlurRadiusDp(value: Int) =
         overlay.setStashPanelBackgroundBlurRadiusDp(value)
 
+    suspend fun setStashPanelHandleOpenTab(tab: StashPanelHandleOpenTab) =
+        overlay.setStashPanelHandleOpenTab(tab)
+
     suspend fun setOverlayBlurEnabled(enabled: Boolean) =
         overlay.setOverlayBlurEnabled(enabled)
 

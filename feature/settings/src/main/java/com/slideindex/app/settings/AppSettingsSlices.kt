@@ -407,6 +407,11 @@ data class ClipboardSettings(
     /** Cross-window blur behind stash/history side panel (API 31+). */
     val stashPanelBackgroundBlurEnabled: Boolean = false,
     val stashPanelBackgroundBlurRadiusDp: Int = AppSettings.STASH_PANEL_BLUR_RADIUS_DEFAULT_DP,
+    /**
+     * 从贴边指示条打开收纳面板时先显示哪个页签。
+     * 默认 [StashPanelHandleOpenTab.CLIPBOARD] = 加这条设置之前的历史行为（点指示条一直开剪贴板）。
+     */
+    val stashPanelHandleOpenTab: StashPanelHandleOpenTab = StashPanelHandleOpenTab.CLIPBOARD,
 )
 
 /** 搜索面板与搜索引擎。 */

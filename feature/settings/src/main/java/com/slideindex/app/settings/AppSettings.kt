@@ -369,6 +369,7 @@ data class AppSettings(
     val clipboardFloatAutoCloseSeconds get() = clipboard.clipboardFloatAutoCloseSeconds
     val stashPanelBackgroundBlurEnabled get() = clipboard.stashPanelBackgroundBlurEnabled
     val stashPanelBackgroundBlurRadiusDp get() = clipboard.stashPanelBackgroundBlurRadiusDp
+    val stashPanelHandleOpenTab get() = clipboard.stashPanelHandleOpenTab
 
     val searchEngines get() = searchPanel.searchEngines
     val searchEngineGridColumns get() = searchPanel.searchEngineGridColumns

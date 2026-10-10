@@ -277,11 +277,13 @@ object StashCoordinator {
     /**
      * 跟手拉出：把手横向拖过阈值时调用，返回"是否真的开始跟手"。
      *
+     * [initialTab] = 拉出来先显示哪一页（与"点击指示条"共用一份解析，见 `HistoryFloatService`）。
+     *
      * false 的情况：面板本来就开着、或侧栏窗没挂上（无障碍服务没开）——
      * 此时把手的手势要退回原来的"拖过阈值就打开"逻辑。
      */
-    fun beginHandleReveal(context: Context): Boolean =
-        FloatBallStashPanel.beginDragReveal(context)
+    fun beginHandleReveal(context: Context, initialTab: StashPanelInitialTab): Boolean =
+        FloatBallStashPanel.beginDragReveal(context, initialTab)
 
     /** 跟手拉出：松手（[commit] = 过半就归位，否则弹回）。 */
     fun endHandleReveal(commit: Boolean) {

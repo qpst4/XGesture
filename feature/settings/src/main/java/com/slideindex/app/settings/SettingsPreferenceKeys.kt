@@ -663,6 +663,9 @@ internal object SettingsPreferenceKeys {
     val CLIPBOARD_FLOAT_AUTO_CLOSE_SECONDS = intPreferencesKey("clipboard_float_auto_close_seconds")
     val STASH_PANEL_BACKGROUND_BLUR_ENABLED = booleanPreferencesKey("stash_panel_background_blur_enabled")
     val STASH_PANEL_BACKGROUND_BLUR_RADIUS_DP = intPreferencesKey("stash_panel_background_blur_radius_dp")
+
+    /** 从贴边指示条打开收纳面板时先显示哪个页签（[StashPanelHandleOpenTab] 的 name）。 */
+    val STASH_PANEL_HANDLE_OPEN_TAB = stringPreferencesKey("stash_panel_handle_open_tab")
     val OVERLAY_BLUR_ENABLED = booleanPreferencesKey("overlay_blur_enabled")
     val DEFAULT_IMAGE_VIEWER_PACKAGE = stringPreferencesKey("default_image_viewer_package")
     val IMAGE_EDITOR_DELAY_DELETE_ENABLED = booleanPreferencesKey("image_editor_delay_delete_enabled")

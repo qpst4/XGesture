@@ -369,12 +369,15 @@ internal fun HistoryEntryCardShell(
     // 设计稿 `.box { border-radius: var(--r-lg) }` = 18dp。
     val cardShape = RoundedCornerShape(HistoryRadii.lg)
     // ⚠️ **不再按时间分档**（用户明确："第一点我是不想要有区分"）。
-    // 所有条目同一套外观：半透明白渐变底 + 一条 hairline 描边；**不给每张都加投影**
+    // 所有条目同一套外观：半透明渐变底 + 一条 hairline 描边；**不给每张都加投影**
     // （整屏几十张卡都投影会脏）。demo 那套"今天玻璃/昨天半透/更早透明"的三档全部作废。
     // 唯一还变的是**状态**：星标（accent 底 + 描边）、完成（整卡淡 + 划掉）。
+    //
+    // ⚠️ 底色用 [HistoryTheme.cardFill]（**卡片专用**：比面板底 [HistoryTheme.glassFill] 实一档），
+    // 不要换回 `theme.glassFill` —— 面板底就是那一组，卡片叠上去等于"白压白"，观感发灰。
     val background: Brush = when {
         starred -> SolidColor(theme.accent.copy(alpha = 0.09f))
-        else -> theme.glassFill
+        else -> theme.cardFill
     }
     val borderColor = when {
         starred -> theme.accent.copy(alpha = 0.45f)

@@ -662,6 +662,9 @@ internal object SettingsSnapshotReader {
                 AppSettings.STASH_PANEL_BLUR_RADIUS_MIN_DP,
                 AppSettings.STASH_PANEL_BLUR_RADIUS_MAX_DP,
             ),
+            stashPanelHandleOpenTab = prefs[SettingsPreferenceKeys.STASH_PANEL_HANDLE_OPEN_TAB]
+                ?.let { name -> runCatching { StashPanelHandleOpenTab.valueOf(name) }.getOrNull() }
+                ?: StashPanelHandleOpenTab.CLIPBOARD,
             ),
             overlayBlur = OverlayBlurSettings(
                 overlayBlurEnabled = prefs[SettingsPreferenceKeys.OVERLAY_BLUR_ENABLED] ?: true,

@@ -1396,6 +1396,11 @@ class OverlaySettingsMutator @Inject constructor(
         )
     }
 
+    /** 从贴边指示条打开收纳面板时先显示哪个页签，见 [StashPanelHandleOpenTab]。 */
+    suspend fun setStashPanelHandleOpenTab(tab: StashPanelHandleOpenTab) = editor.edit {
+        it[SettingsPreferenceKeys.STASH_PANEL_HANDLE_OPEN_TAB] = tab.name
+    }
+
     suspend fun setDefaultImageViewerPackage(packageName: String?) = editor.edit {
         if (packageName == null) {
             it.remove(SettingsPreferenceKeys.DEFAULT_IMAGE_VIEWER_PACKAGE)

@@ -31,14 +31,18 @@ import com.slideindex.app.overlay.HistoryFloatHandleGestureExclusion
 import com.slideindex.app.overlay.OverlayCompose
 import com.slideindex.app.overlay.OverlayComposeOwner
 import com.slideindex.app.overlay.OverlayWindowTypes
+import com.slideindex.app.overlay.StashPanelInitialTab
 import com.slideindex.app.overlay.history.HistoryFloatContent
 import com.slideindex.app.overlay.history.HistoryHandleCaptureVisibility
 import com.slideindex.app.overlay.history.HistoryNoteSlotWindow
+import com.slideindex.app.overlay.history.HistoryPanelTab
 import com.slideindex.app.overlay.history.HistorySavePeekWindow
 import com.slideindex.app.overlay.history.HistorySaveSignal
+import com.slideindex.app.overlay.history.StashPanelTabMemory
 import com.slideindex.app.overlay.history.StashReminderPendingState
 import com.slideindex.app.settings.HistoryFloatHandlePosition
 import com.slideindex.app.settings.HistoryFloatHandleWidth
+import com.slideindex.app.settings.StashPanelHandleOpenTab
 import com.slideindex.app.stash.StashAccess
 import com.slideindex.app.stash.StashCoordinator
 import dagger.hilt.android.AndroidEntryPoint
@@ -140,11 +144,13 @@ class HistoryFloatService : Service() {
                 HistoryFloatContent(
                     handleVisible = handleVisible,
                     handleAlert = handleAlert,
-                    onOpenPanel = { openClipboardPanel() },
+                    onOpenPanel = { openPanelFromHandle() },
                     onMoveHandle = { moveHandle(it) },
                     onMoveHandleEnd = { persistHandlePosition() },
                     // 跟手拉出：横向拖过阈值 → 面板窗从屏幕外开始跟着手指走（见 HistoryPanelReveal）。
-                    onRevealStart = { StashCoordinator.beginHandleReveal(this@HistoryFloatService) },
+                    onRevealStart = {
+                        StashCoordinator.beginHandleReveal(this@HistoryFloatService, resolveHandleOpenTab())
+                    },
                     onRevealEnd = { commit -> StashCoordinator.endHandleReveal(commit) },
                     // 长按 = 就地记一条（设计稿 `.slot`），不再只是"打开面板"。
                     onQuickNote = { showNoteSlot() },
@@ -309,8 +315,28 @@ class HistoryFloatService : Service() {
         }
     }
 
-    private fun openClipboardPanel() {
-        StashCoordinator.openClipboardPanel(applicationContext)
+    /**
+     * 「从指示条打开面板先显示哪一页」—— 点击（含双击）与横向拉出**共用这一份判定**。
+     *
+     * 设置见 `StashPanelHandleOpenTab`：默认 CLIPBOARD = 加这条设置之前的历史行为（点一下开剪贴板）；
+     * "记住上次页签"读进程级的 [StashPanelTabMemory]（面板每次换页都会写它）。
+     */
+    private fun resolveHandleOpenTab(): StashPanelInitialTab =
+        when (deps.settingsRepository.readSnapshot().stashPanelHandleOpenTab) {
+            StashPanelHandleOpenTab.STASH -> StashPanelInitialTab.Stash
+            StashPanelHandleOpenTab.CLIPBOARD -> StashPanelInitialTab.Clipboard
+            StashPanelHandleOpenTab.REMEMBER_LAST -> when (StashPanelTabMemory.tab) {
+                HistoryPanelTab.Stash -> StashPanelInitialTab.Stash
+                HistoryPanelTab.Clipboard -> StashPanelInitialTab.Clipboard
+            }
+        }
+
+    private fun openPanelFromHandle() {
+        val context = applicationContext
+        when (resolveHandleOpenTab()) {
+            StashPanelInitialTab.Stash -> StashCoordinator.openStashPanel(context)
+            StashPanelInitialTab.Clipboard -> StashCoordinator.openClipboardPanel(context)
+        }
     }
 
     /** 把手纵向中心（px）：peek 与输入槽都贴着它对齐。 */

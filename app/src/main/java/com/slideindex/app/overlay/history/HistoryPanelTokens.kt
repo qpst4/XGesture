@@ -48,6 +48,16 @@ internal data class HistoryTheme(
      */
     val glassSolidTop: Color,
     val glassSolidBottom: Color,
+    /**
+     * **卡片底色**（`.item .box`）。
+     *
+     * 刻意**不复用** [glassFillTop]/[glassFillBottom]（面板底也是那一组）：卡片叠在同样白的
+     * 面板上等于"白压白"，底色分不出层级、观感发灰（用户反馈"卡片淡、发灰"）。
+     * 现在卡片比面板实一档 —— 浅色 92%→80% 白（面板 78%→58%）、深色 66%→60%（面板 58%→52%），
+     * 仍是玻璃半透明（**没有**改成不透明，别拿 [glassSolidTop] 那组替）。
+     */
+    val cardFillTop: Color,
+    val cardFillBottom: Color,
     /* ------------------------------------------------------------------
      * 以下不是 demo 的值，是**主动加强对比度**的结果（用户反馈：搜索框/页签行/标签
      * "浅灰基本看不见，费眼睛"）。demo 那几处是"白底白描边 + 4% 灰"，在真实浅色
@@ -71,6 +81,9 @@ internal data class HistoryTheme(
 
     /** 不透明版本（玻璃关闭时的面板底）。 */
     val glassSolid: Brush get() = Brush.verticalGradient(listOf(glassSolidTop, glassSolidBottom))
+
+    /** 卡片底：与 [glassFill] 同形（竖向渐变），但比面板底更实一档，见 [cardFillTop]。 */
+    val cardFill: Brush get() = Brush.verticalGradient(listOf(cardFillTop, cardFillBottom))
 }
 
 private val LightHistoryTheme = HistoryTheme(
@@ -103,6 +116,8 @@ private val LightHistoryTheme = HistoryTheme(
     isDark = false,
     glassSolidTop = Color(0xFFFFFFFF),
     glassSolidBottom = Color(0xFFF4F6FB),
+    cardFillTop = Color(0xEBFFFFFF),
+    cardFillBottom = Color(0xCCFFFFFF),
 )
 
 private val DarkHistoryTheme = HistoryTheme(
@@ -135,6 +150,8 @@ private val DarkHistoryTheme = HistoryTheme(
     isDark = true,
     glassSolidTop = Color(0xFF1D2029),
     glassSolidBottom = Color(0xFF171A21),
+    cardFillTop = Color(0xA834394A),
+    cardFillBottom = Color(0x991C202C),
 )
 
 @Composable
