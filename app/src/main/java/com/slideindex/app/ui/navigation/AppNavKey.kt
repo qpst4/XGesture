@@ -303,6 +303,11 @@ sealed interface AppNavKey : NavKey {
         val initialIsLongPress: Boolean = false,
     ) : AppNavKey
     @Serializable data object ExtensionBackup : AppNavKey
+    @Serializable data object ExtensionCloudBackup : AppNavKey
+    @Serializable data object ExtensionCloudStorageSettings : AppNavKey
+
+    /** [configId] 为空串表示新建配置。 */
+    @Serializable data class ExtensionCloudStorageEditor(val configId: String) : AppNavKey
     @Serializable data object ExtensionMissingPermissions : AppNavKey
     @Serializable data object ExtensionPrivacy : AppNavKey
     @Serializable data object ExtensionThirdPartyNotices : AppNavKey

@@ -14,6 +14,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
 import com.slideindex.app.gesture.GestureActionPermissionAuditor
+import com.slideindex.app.ui.CloudBackupScreen
+import com.slideindex.app.ui.CloudStorageConfigEditorScreen
+import com.slideindex.app.ui.CloudStorageSettingsScreen
 import com.slideindex.app.ui.DiagnosticLogDetailScreen
 import com.slideindex.app.ui.DiagnosticLogListScreen
 import com.slideindex.app.ui.ExtensionAboutScreen
@@ -27,6 +30,8 @@ import com.slideindex.app.ui.MissingGesturePermissionsScreen
 import com.slideindex.app.ui.PrivacyPolicyScreen
 import com.slideindex.app.ui.SettingsBackupScreen
 import com.slideindex.app.ui.ThirdPartyNoticesScreen
+import com.slideindex.app.ui.viewmodel.CloudBackupViewModel
+import com.slideindex.app.ui.viewmodel.CloudStorageSettingsViewModel
 import com.slideindex.app.ui.viewmodel.DiagnosticLogViewModel
 import com.slideindex.app.ui.viewmodel.ExtensionHubViewModel
 import com.slideindex.app.ui.viewmodel.ExtensionSettingsViewModel
@@ -190,6 +195,84 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             onConfirmImport = viewModel::confirmImport,
             missingPermissionCount = missingCount,
             onOpenMissingPermissions = { ctx.navigate(AppNavKey.ExtensionMissingPermissions) },
+            onOpenCloudBackup = { ctx.navigate(AppNavKey.ExtensionCloudBackup) },
+        )
+    }
+
+    hiltEntry<AppNavKey.ExtensionCloudBackup> {
+        val viewModel: CloudBackupViewModel = hiltViewModel()
+        val cloudSettings by viewModel.cloudSettings.collectAsStateWithLifecycle()
+        val backups by viewModel.backups.collectAsStateWithLifecycle()
+        val loadingBackups by viewModel.loadingBackups.collectAsStateWithLifecycle()
+        val busy by viewModel.busy.collectAsStateWithLifecycle()
+        val progress by viewModel.progress.collectAsStateWithLifecycle()
+        val includeSensitiveData by viewModel.includeSensitiveData.collectAsStateWithLifecycle()
+        val restorePreview by viewModel.restorePreview.collectAsStateWithLifecycle()
+        val pendingDelete by viewModel.pendingDelete.collectAsStateWithLifecycle()
+
+        // 进页面就拉一次远端列表，避免用户看到空列表以为备份丢了
+        LaunchedEffect(Unit) { viewModel.refresh() }
+
+        CloudBackupScreen(
+            settings = cloudSettings,
+            backups = backups,
+            loadingBackups = loadingBackups,
+            busy = busy,
+            progress = progress,
+            includeSensitiveData = includeSensitiveData,
+            restorePreview = restorePreview,
+            pendingDelete = pendingDelete,
+            onRefresh = viewModel::refresh,
+            onBackupNow = viewModel::backupNow,
+            onSetIncludeSensitive = viewModel::setIncludeSensitiveData,
+            onRestore = viewModel::startRestore,
+            onConfirmRestore = viewModel::confirmRestore,
+            onDismissRestore = viewModel::dismissRestorePreview,
+            onRequestDelete = viewModel::requestDelete,
+            onConfirmDelete = viewModel::confirmDelete,
+            onPruneNow = viewModel::pruneNow,
+            onCancel = viewModel::cancelRunning,
+            onOpenStorageSettings = { ctx.navigate(AppNavKey.ExtensionCloudStorageSettings) },
+            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionBackup) },
+        )
+    }
+
+    hiltEntry<AppNavKey.ExtensionCloudStorageSettings> {
+        val viewModel: CloudStorageSettingsViewModel = hiltViewModel()
+        val cloudSettings by viewModel.cloudSettings.collectAsStateWithLifecycle()
+
+        CloudStorageSettingsScreen(
+            settings = cloudSettings,
+            onOpenEditor = { configId -> ctx.navigate(AppNavKey.ExtensionCloudStorageEditor(configId)) },
+            onSetRetention = viewModel::setRetentionCount,
+            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionCloudBackup) },
+        )
+    }
+
+    hiltEntry<AppNavKey.ExtensionCloudStorageEditor> { key ->
+        val viewModel: CloudStorageSettingsViewModel = hiltViewModel()
+        val cloudSettings by viewModel.cloudSettings.collectAsStateWithLifecycle()
+        val connectionTest by viewModel.connectionTest.collectAsStateWithLifecycle()
+        // 配置从 DataStore 流出，首帧可能还没有：编辑已有配置时必须等它到位，
+        // 否则会先渲染一份空表单（编辑器以 id 为种子 key，配置到达后会自行重填）。
+        val initial = cloudSettings.configs.firstOrNull { it.id == key.configId }
+
+        CloudStorageConfigEditorScreen(
+            initial = initial,
+            isActiveTarget = cloudSettings.activeConfigId == key.configId,
+            connectionTest = connectionTest,
+            onTestConnection = viewModel::testConnection,
+            onDismissConnectionTest = viewModel::dismissConnectionTest,
+            onSave = { config, makeActive ->
+                viewModel.upsertConfig(config)
+                if (makeActive) viewModel.setActiveConfig(config.id)
+                ctx.navigateBackTo(AppNavKey.ExtensionCloudStorageSettings)
+            },
+            onRemove = { configId ->
+                viewModel.removeConfig(configId)
+                ctx.navigateBackTo(AppNavKey.ExtensionCloudStorageSettings)
+            },
+            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionCloudStorageSettings) },
         )
     }
 

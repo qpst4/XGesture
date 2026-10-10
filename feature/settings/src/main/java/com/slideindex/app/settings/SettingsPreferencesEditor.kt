@@ -125,6 +125,16 @@ class SettingsPreferencesEditor @Inject constructor(
         .map { prefs -> SettingsSnapshotReader.read(prefs, context).messageReminderSettings }
         .distinctUntilChanged()
 
+    /**
+     * 云存储配置的原始 JSON。
+     *
+     * 走 DataStore 的原始键而不是塞进 [AppSettings] 快照：它只在云备份设置页用到，
+     * 没必要让每次设置快照构造都解析一遍。放在 DataStore 里则能随备份包自动往返。
+     */
+    val cloudStorageSettingsJson: Flow<String?> = context.dataStore.data
+        .map { prefs -> prefs[SettingsPreferenceKeys.CLOUD_STORAGE_SETTINGS_JSON] }
+        .distinctUntilChanged()
+
 
 
     suspend fun edit(block: (MutablePreferences) -> Unit): Result<Unit> = runCatching {

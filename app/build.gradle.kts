@@ -432,6 +432,7 @@ dependencies {
     implementation(project(":core:ocr"))
     implementation(project(":core:translate"))
     implementation(project(":core:native-engine"))
+    implementation(project(":core:cloud-storage"))
 
     nativeEnginePackArtifacts(libs.onnxruntime.android)
     nativeEnginePackArtifacts(libs.opencv.android)

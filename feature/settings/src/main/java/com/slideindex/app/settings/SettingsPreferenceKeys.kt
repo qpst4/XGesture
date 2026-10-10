@@ -743,4 +743,12 @@ internal object SettingsPreferenceKeys {
     val CORNER_GESTURE_UNIFIED_SLOTS = booleanPreferencesKey("corner_gesture_unified_slots")
     val CORNER_GESTURE_INNER_ZONE_ACTION_ID = intPreferencesKey("corner_gesture_inner_zone_action_id")
     val CORNER_GESTURE_INNER_ZONE_ACTION_PAYLOAD = stringPreferencesKey("corner_gesture_inner_zone_action_payload")
+
+    /**
+     * 云端备份（WebDAV / S3 兼容对象存储）的全部配置：后端列表、当前选中项、远端保留份数。
+     *
+     * 刻意存成一个 JSON 字符串偏好项而不是独立存储：这样它会自动进 `settings.json`
+     * 随本地备份一起导出，也能被恢复回来（换机后不必重新填网盘口令）。
+     */
+    val CLOUD_STORAGE_SETTINGS_JSON = stringPreferencesKey("cloud_storage_settings_json")
 }

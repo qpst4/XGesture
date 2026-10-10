@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
@@ -33,6 +34,7 @@ import com.slideindex.app.R
 import com.slideindex.app.ui.miuix.MiuixScrollableConfirmDialog
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.LazySettingsItem
+import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
@@ -55,6 +57,7 @@ fun SettingsBackupScreen(
     onConfirmImport: (android.net.Uri) -> Unit,
     missingPermissionCount: Int,
     onOpenMissingPermissions: () -> Unit,
+    onOpenCloudBackup: () -> Unit,
 ) {
     val resources = LocalResources.current
     var includeSensitiveData by remember { mutableStateOf(false) }
@@ -74,6 +77,7 @@ fun SettingsBackupScreen(
 
     val actionsSectionTitle = stringResource(R.string.settings_backup_section_actions)
     val permissionsSectionTitle = stringResource(R.string.settings_backup_section_permissions)
+    val cloudSectionTitle = stringResource(R.string.settings_backup_cloud_entry_title)
 
     SettingsScreenScaffold(
         title = stringResource(R.string.settings_backup_title),
@@ -151,8 +155,31 @@ fun SettingsBackupScreen(
             }
         }
 
-        if (missingPermissionCount > 0) {
-            settingsLazySmallTitle(
+        // 云端备份（WebDAV / S3 兼容对象存储）：独立的页面，保留策略与远端列表都在那边
+        settingsLazySmallTitle(key = "backup_cloud_section", title = cloudSectionTitle)
+        groupedCardItems(
+            keyPrefix = "backup_cloud",
+            items = buildList {
+                add(
+                    settingsCardScopeItem("cloud-backup") {
+                        SettingNavigationRow(
+                            icon = { label ->
+                                Icon(
+                                    MiuixIcons.UploadCloud,
+                                    contentDescription = label,
+                                    modifier = Modifier.size(24.dp),
+                                )
+                            },
+                            title = stringResource(R.string.settings_backup_cloud_entry_title),
+                            subtitle = stringResource(R.string.settings_backup_cloud_entry_desc),
+                            onClick = onOpenCloudBackup,
+                        )
+                    },
+                )
+            },
+        )
+
+        if (missingPermissionCount > 0) {            settingsLazySmallTitle(
                 key = "backup_permissions_section",
                 title = permissionsSectionTitle,
             )
