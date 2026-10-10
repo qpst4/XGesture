@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,6 +55,7 @@ import com.slideindex.app.stash.combinedText
 import com.slideindex.app.stash.exportText
 import com.slideindex.app.stash.resolvedContentBlocks
 import com.slideindex.app.stash.shouldOfferExpand
+import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Text
@@ -78,6 +80,9 @@ internal fun HistoryClipboardEntryCard(
 ) {
     val context = LocalContext.current
     val view = LocalView.current
+    // 长按拖拽：把**整张卡**当拖影（见 [HistoryCardSnapshot]）。抓图是 suspend 的，所以要起协程。
+    val dragSnapshot = rememberHistoryCardSnapshot()
+    val dragScope = rememberCoroutineScope()
     val hasImageContent = entry.hasImageContent()
     val contentBlocks = remember(entry.id, entry.contentBlocks, entry.text, entry.htmlText, entry.imageFileNames) {
         entry.resolvedContentBlocks()
@@ -124,23 +129,27 @@ internal fun HistoryClipboardEntryCard(
         if (clipData == null) {
             onShowMessage(R.string.history_drag_unsupported)
         } else {
-            val started = HistoryEntryDragHelper.startDrag(
-                view = view,
-                clipData = clipData,
-                preview = HistoryEntryDragHelper.previewForClipboardEntry(entry, thumbnails),
-                onDragStart = { FloatBallStashPanel.setDragHidden(true) },
-                onDragEnd = { FloatBallStashPanel.setDragHidden(false) },
-                onDropRejected = {
-                    if (ClipboardDragShareFallback.hasShareableContent(clipData) &&
-                        !ClipboardDragShareFallback.shareToForegroundHost(context, clipData)
-                    ) {
+            // ⚠️ 必须先起协程：抓"整张卡"的快照是 suspend 的（得先让这一帧画进 GraphicsLayer）。
+            dragScope.launch {
+                val started = HistoryEntryDragHelper.startDrag(
+                    view = view,
+                    clipData = clipData,
+                    preview = HistoryEntryDragHelper.previewForClipboardEntry(entry, thumbnails)
+                        .copy(snapshot = dragSnapshot.capture()),
+                    onDragStart = { FloatBallStashPanel.setDragHidden(true) },
+                    onDragEnd = { FloatBallStashPanel.setDragHidden(false) },
+                    onDropRejected = {
+                        if (ClipboardDragShareFallback.hasShareableContent(clipData) &&
+                            !ClipboardDragShareFallback.shareToForegroundHost(context, clipData)
+                        ) {
+                            onShowMessage(R.string.history_drag_unsupported)
+                        }
+                    },
+                )
+                if (!started) {
+                    if (!ClipboardDragShareFallback.shareToForegroundHost(context, clipData)) {
                         onShowMessage(R.string.history_drag_unsupported)
                     }
-                },
-            )
-            if (!started) {
-                if (!ClipboardDragShareFallback.shareToForegroundHost(context, clipData)) {
-                    onShowMessage(R.string.history_drag_unsupported)
                 }
             }
         }
@@ -151,6 +160,7 @@ internal fun HistoryClipboardEntryCard(
         createdAtEpochMs = entry.createdAtEpochMs,
         starred = false,
         dayGroup = dayGroup,
+        snapshot = dragSnapshot,
         headerTrailing = {
             IconButton(
                 onClick = {
@@ -325,6 +335,9 @@ internal fun HistoryStashEntryCard(
 ) {
     val context = LocalContext.current
     val view = LocalView.current
+    // 长按拖拽：把**整张卡**当拖影（见 [HistoryCardSnapshot]）。抓图是 suspend 的，所以要起协程。
+    val dragSnapshot = rememberHistoryCardSnapshot()
+    val dragScope = rememberCoroutineScope()
     val repo = StashAccess.repository
     val previewWidthPx = historyPreviewWidthPx()
     val previewHeightPx = historyStashPreviewHeightPx()
@@ -437,23 +450,27 @@ internal fun HistoryStashEntryCard(
         if (clipData == null) {
             onShowMessage(R.string.history_drag_unsupported)
         } else {
-            val started = HistoryEntryDragHelper.startDrag(
-                view = view,
-                clipData = clipData,
-                preview = HistoryEntryDragHelper.previewForStashEntry(entry, singleThumb, richThumbnails),
-                onDragStart = { FloatBallStashPanel.setDragHidden(true) },
-                onDragEnd = { FloatBallStashPanel.setDragHidden(false) },
-                onDropRejected = {
-                    if (ClipboardDragShareFallback.hasShareableContent(clipData) &&
-                        !ClipboardDragShareFallback.shareToForegroundHost(context, clipData)
-                    ) {
+            // ⚠️ 必须先起协程：抓"整张卡"的快照是 suspend 的（得先让这一帧画进 GraphicsLayer）。
+            dragScope.launch {
+                val started = HistoryEntryDragHelper.startDrag(
+                    view = view,
+                    clipData = clipData,
+                    preview = HistoryEntryDragHelper.previewForStashEntry(entry, singleThumb, richThumbnails)
+                        .copy(snapshot = dragSnapshot.capture()),
+                    onDragStart = { FloatBallStashPanel.setDragHidden(true) },
+                    onDragEnd = { FloatBallStashPanel.setDragHidden(false) },
+                    onDropRejected = {
+                        if (ClipboardDragShareFallback.hasShareableContent(clipData) &&
+                            !ClipboardDragShareFallback.shareToForegroundHost(context, clipData)
+                        ) {
+                            onShowMessage(R.string.history_drag_unsupported)
+                        }
+                    },
+                )
+                if (!started) {
+                    if (!ClipboardDragShareFallback.shareToForegroundHost(context, clipData)) {
                         onShowMessage(R.string.history_drag_unsupported)
                     }
-                },
-            )
-            if (!started) {
-                if (!ClipboardDragShareFallback.shareToForegroundHost(context, clipData)) {
-                    onShowMessage(R.string.history_drag_unsupported)
                 }
             }
         }
@@ -470,6 +487,7 @@ internal fun HistoryStashEntryCard(
         // 取词进 ⋮ 菜单 —— 于是头部整行不再存在（设计稿正是如此）。
         flash = flash,
         dayGroup = dayGroup,
+        snapshot = dragSnapshot,
         content = {
             when (entry.type) {
                 StashEntryType.TEXT -> {

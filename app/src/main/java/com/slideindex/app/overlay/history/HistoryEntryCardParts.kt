@@ -365,6 +365,12 @@ internal fun HistoryEntryCardShell(
      * 传 null（例如剪贴板页签）就退回"实心卡片"。
      */
     dayGroup: HistoryDayGroup? = null,
+    /**
+     * 长按拖拽用的"**整张卡**快照"入口（见 [HistoryCardSnapshot]）。
+     *
+     * 传 null = 这张卡不参与"整卡拖影"，拖影会退回旧画法（几行文字 / 一张缩略图）。
+     */
+    snapshot: HistoryCardSnapshot? = null,
     content: @Composable () -> Unit,
     actions: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit,
 ) {
@@ -412,6 +418,9 @@ internal fun HistoryEntryCardShell(
                 },
             )
             .clip(cardShape)
+            // 顺手把整张卡录一份进 [snapshot]：长按拖拽时 `capture()` 出来的就是"整张卡"。
+            // 位置必须在 `clip` 之后（角才是圆的）、`background` 之前（要录到底色与描边）。
+            .then(if (snapshot != null) Modifier.recordHistoryCardSnapshot(snapshot) else Modifier)
             .background(brush = background, shape = cardShape)
             // 描边与顶边高光都**在这里自绘**（不再用 `Modifier.border`），两段原因都是真机截图
             // 逐像素量出来的：

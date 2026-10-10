@@ -28,6 +28,14 @@ import com.slideindex.app.stash.resolvedContentBlocks
 internal data class HistoryDragPreview(
     val text: String = "",
     val bitmap: Bitmap? = null,
+    /**
+     * "**整张卡**"的快照（[HistoryCardSnapshot.capture] 出来的那一张）。
+     *
+     * 有它 = 拖影就是这张卡本身（圆角 + 约 92% 不透明 + 轻投影），跟 iOS 的 drag preview /
+     * Android 自家 Launcher 的观感一致；没有（老调用点、或抓图失败）= 退回 [text]/[bitmap]
+     * 那套旧画法（几行文字 / 一张缩略图）。
+     */
+    val snapshot: Bitmap? = null,
 )
 
 internal object HistoryEntryDragHelper {
@@ -174,14 +182,22 @@ private class EntryDragShadowBuilder(
 ) : DragShadowBuilder(view) {
     private val density = view.resources.displayMetrics.density
     private val hasBitmap = preview.bitmap != null
-    private val width = (density * if (hasBitmap) 160 else 180).toInt()
-    private val height = (density * if (hasBitmap) 108 else 72).toInt()
+    /** 有快照时，四周留一圈给投影（否则阴影会被拖影位图裁掉）。 */
+    private val shadowPad = (density * 14).toInt()
+    private val width = preview.snapshot?.let { it.width + shadowPad * 2 }
+        ?: (density * if (hasBitmap) 160 else 180).toInt()
+    private val height = preview.snapshot?.let { it.height + shadowPad * 2 }
+        ?: (density * if (hasBitmap) 108 else 72).toInt()
 
     private val contentPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
         color = android.graphics.Color.rgb(17, 24, 39)
         textSize = density * view.resources.configuration.fontScale * 14
     }
     private val imagePaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+    /** 卡片轮廓：圆角 + 柔和投影（把整张卡"拿起来"的那层影子）。 */
+    private val cardPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val snapshotPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+    private val cardCornerPx = density * 18f
 
     override fun onProvideShadowMetrics(outShadowSize: Point, outShadowTouchPoint: Point) {
         outShadowSize.set(width, height)
@@ -189,6 +205,12 @@ private class EntryDragShadowBuilder(
     }
 
     override fun onDrawShadow(canvas: Canvas) {
+        val snapshot = preview.snapshot
+        if (snapshot != null) {
+            drawCardSnapshot(canvas, snapshot)
+            return
+        }
+
         val bitmap = preview.bitmap
         if (bitmap != null) {
             val srcRatio = bitmap.width.toFloat() / bitmap.height.toFloat()
@@ -218,5 +240,38 @@ private class EntryDragShadowBuilder(
         if (thirdLine.isNotBlank()) {
             canvas.drawText(thirdLine, 0f, baseY + (contentPaint.textSize + 8) * 2, contentPaint)
         }
+    }
+
+    /**
+     * 整张卡的拖影：**圆角 + 约 92% 不透明 + 一层轻投影**。
+     *
+     * 圆角矩形先铺一层"卡片底色"，再盖快照。底色取**快照正中心那一个像素**——卡片底色现在
+     * 是单色（见 `HistoryTheme.cardColor`），中心像素就等于整张卡的底色；这样快照四个透明角
+     * 不会露出脏边，深色模式也不用另配颜色。
+     */
+    private fun drawCardSnapshot(canvas: Canvas, snapshot: Bitmap) {
+        val left = shadowPad.toFloat()
+        val top = shadowPad.toFloat()
+        val right = left + snapshot.width
+        val bottom = top + snapshot.height
+        val fill = runCatching {
+            snapshot.getPixel(snapshot.width / 2, snapshot.height / 2)
+        }.getOrDefault(android.graphics.Color.WHITE)
+
+        cardPaint.color = fill
+        cardPaint.setShadowLayer(density * 10f, 0f, density * 5f, SHADOW_COLOR)
+        canvas.drawRoundRect(left, top, right, bottom, cardCornerPx, cardCornerPx, cardPaint)
+        cardPaint.clearShadowLayer()
+
+        snapshotPaint.alpha = CARD_ALPHA
+        canvas.drawBitmap(snapshot, left, top, snapshotPaint)
+    }
+
+    private companion object {
+        /** ≈92%：系统拖影就是"半透明地跟着手指"，不是实心图。 */
+        const val CARD_ALPHA = 235
+
+        /** 30% 黑：够看出"浮起来"，又不至于在浅色面板上发脏。 */
+        const val SHADOW_COLOR = 0x4D000000.toInt()
     }
 }

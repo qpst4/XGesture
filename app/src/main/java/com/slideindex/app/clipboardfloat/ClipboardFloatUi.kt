@@ -73,6 +73,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -114,10 +115,13 @@ import com.slideindex.app.clipboard.displayTypeLabelKey
 import com.slideindex.app.clipboard.hasImageContent
 import com.slideindex.app.overlay.history.HistoryEntryDragHelper
 import com.slideindex.app.overlay.history.HistoryPanelColors
+import com.slideindex.app.overlay.history.recordHistoryCardSnapshot
+import com.slideindex.app.overlay.history.rememberHistoryCardSnapshot
 import com.slideindex.app.settings.ClipboardFloatWindowMetrics
 import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -641,6 +645,9 @@ private fun ClipboardFloatSingleLineRow(
 
     val density = LocalDensity.current
     val thumbHeightPx = with(density) { 60.dp.roundToPx() }
+    // 长按拖拽：把**整张卡**当拖影。抓图是 suspend 的，所以要起协程。
+    val dragSnapshot = rememberHistoryCardSnapshot()
+    val dragScope = rememberCoroutineScope()
     val thumbnail = rememberClipboardFloatThumbnail(
         entry = entry,
         enabled = hasImage && expanded,
@@ -651,20 +658,26 @@ private fun ClipboardFloatSingleLineRow(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
+            // 整张卡录一份：长按拖拽时"把整张卡拿起来"（见 HistoryCardSnapshot）。
+            .recordHistoryCardSnapshot(dragSnapshot)
             .clip(RoundedCornerShape(8.dp))
             .clipboardFloatEntryGestures(
                 entryLongPressAction = entryLongPressAction,
                 onClick = onClick,
                 onWordTapLongClick = onWordTapLongClick,
                 onDragLongClick = {
-                    startClipboardFloatEntryDrag(
-                        view = view,
-                        context = context,
-                        entry = entry,
-                        thumbnail = thumbnail,
-                        onDragStart = onEntryDragStart,
-                        onDragEnd = onEntryDragEnd,
-                    )
+                    // ⚠️ 先起协程：快照是 suspend 抓的（得先让这一帧画进 GraphicsLayer）。
+                    dragScope.launch {
+                        startClipboardFloatEntryDrag(
+                            view = view,
+                            context = context,
+                            entry = entry,
+                            thumbnail = thumbnail,
+                            onDragStart = onEntryDragStart,
+                            onDragEnd = onEntryDragEnd,
+                            snapshot = dragSnapshot.capture(),
+                        )
+                    }
                 }
             ),
         shape = RoundedCornerShape(8.dp),
@@ -805,6 +818,9 @@ private fun ClipboardFloatEntryCard(
         contentWidthDp.dp.roundToPx().coerceAtLeast(1)
     }
     val thumbHeightPx = with(density) { 64.dp.roundToPx() }
+    // 长按拖拽：把**整张卡**当拖影。抓图是 suspend 的，所以要起协程。
+    val dragSnapshot = rememberHistoryCardSnapshot()
+    val dragScope = rememberCoroutineScope()
     val thumbnail = rememberClipboardFloatThumbnail(
         entry = entry,
         enabled = hasImage,
@@ -815,19 +831,25 @@ private fun ClipboardFloatEntryCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
+            // 整张卡录一份：长按拖拽时"把整张卡拿起来"（见 HistoryCardSnapshot）。
+            .recordHistoryCardSnapshot(dragSnapshot)
             .clipboardFloatEntryGestures(
                 entryLongPressAction = entryLongPressAction,
                 onClick = onClick,
                 onWordTapLongClick = onWordTapLongClick,
                 onDragLongClick = {
-                    startClipboardFloatEntryDrag(
-                        view = view,
-                        context = context,
-                        entry = entry,
-                        thumbnail = thumbnail,
-                        onDragStart = onEntryDragStart,
-                        onDragEnd = onEntryDragEnd,
-                    )
+                    // ⚠️ 先起协程：快照是 suspend 抓的（得先让这一帧画进 GraphicsLayer）。
+                    dragScope.launch {
+                        startClipboardFloatEntryDrag(
+                            view = view,
+                            context = context,
+                            entry = entry,
+                            thumbnail = thumbnail,
+                            onDragStart = onEntryDragStart,
+                            onDragEnd = onEntryDragEnd,
+                            snapshot = dragSnapshot.capture(),
+                        )
+                    }
                 }
             ),
         shape = RoundedCornerShape(12.dp),
@@ -968,6 +990,8 @@ private fun startClipboardFloatEntryDrag(
     thumbnail: Bitmap?,
     onDragStart: () -> Unit,
     onDragEnd: () -> Unit,
+    /** "整张卡"的快照（[rememberHistoryCardSnapshot] + [recordHistoryCardSnapshot]）；null = 退回旧画法。 */
+    snapshot: Bitmap? = null,
 ) {
     val clipData = ClipboardWriter.buildClipForEntry(context, entry) ?: run {
         Toast.makeText(context, R.string.history_drag_unsupported, Toast.LENGTH_SHORT).show()
@@ -979,7 +1003,7 @@ private fun startClipboardFloatEntryDrag(
         preview = HistoryEntryDragHelper.previewForClipboardEntry(
             entry = entry,
             thumbnails = listOfNotNull(thumbnail)
-        ),
+        ).copy(snapshot = snapshot),
         onDragStart = onDragStart,
         onDragEnd = onDragEnd,
         onDropRejected = {
