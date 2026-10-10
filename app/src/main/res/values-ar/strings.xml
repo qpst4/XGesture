@@ -1014,7 +1014,10 @@
     <string name="gesture_action_freezer_panel">المُجمّد</string>
     <string name="gesture_action_freezer_panel_desc">فتح النافذة العائمة للمُجمّد</string>
     <string name="gesture_action_refreeze">إعادة تجميد التطبيق</string>
-    <string name="gesture_action_refreeze_desc">تجميد التطبيقات المفعلة في قائمة المُجمّد</string>
+    <string name="gesture_action_refreeze_desc">إعادة كل تطبيق في قائمة المُجمّد إلى حالته السابقة: ما كان موقوفاً مؤقتاً يبقى كذلك، وما كان مجمّداً يُجمَّد، وما لا سجل له يتبع وضع عمل المُجمّد</string>
+    <string name="freezer_restore_intents_done">تم تجميد %1$d وإيقاف %2$d مؤقتاً</string>
+    <string name="freezer_restore_intents">إعادة كل تطبيق إلى حالته المسجّلة</string>
+    <string name="freezer_restore_intents_noop">جميع التطبيقات في حالتها المسجّلة بالفعل</string>
     <string name="extension_freezer_title">المُجمّد</string>
     <string name="extension_freezer_subtitle">إدارة قائمة المُجمّد، تجميد/إلغاء تجميد دفعة واحدة، يتطلب Shizuku أو Root</string>
     <string name="extension_back_tap_title">النقر المزدوج على الظهر (تجريبي، قد لا يكون حساساً)</string>
@@ -1046,7 +1049,7 @@
     <string name="freezer_pause_dialog_message">تم إيقاف هذا التطبيق مؤقتاً بواسطة %1$s. اضغط «إلغاء الإيقاف المؤقت» للمتابعة.</string>
     <string name="freezer_protected_package">لا يمكن إيقاف هذا التطبيق مؤقتاً أو تجميده</string>
     <string name="freezer_work_mode_title_format">وضع العمل: %1$s</string>
-    <string name="freezer_work_mode_pause_desc">عند التفعيل ينفّذ الزر السفلي «إيقاف الكل مؤقتاً»، وإلا ينفّذ «تجميد الكل»</string>
+    <string name="freezer_work_mode_pause_desc">الوضع الافتراضي للتطبيقات بلا سجل: عند التفعيل تُوقَف مؤقتاً، وإلا تُجمَّد. الزر السفلي والإيماءة يعيدان كل تطبيق إلى حالته المسجّلة أولاً</string>
     <string name="freezer_work_mode_switch_to_pause">التبديل إلى وضع الإيقاف المؤقت</string>
     <string name="freezer_work_mode_switch_to_freeze">التبديل إلى وضع التجميد</string>
     <string name="freezer_remove_from_list">إزالة من القائمة</string>

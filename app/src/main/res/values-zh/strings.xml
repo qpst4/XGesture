@@ -1040,7 +1040,10 @@
     <string name="gesture_action_freezer_panel">冰箱</string>
     <string name="gesture_action_freezer_panel_desc">打开冰箱悬浮窗</string>
     <string name="gesture_action_refreeze">重冻应用</string>
-    <string name="gesture_action_refreeze_desc">冻结冰箱列表中已启用的应用</string>
+    <string name="gesture_action_refreeze_desc">按每个成员上次的档位收回：暂停过的仍暂停、冻结过的仍冻结，没有记录的按冰箱工作模式执行</string>
+    <string name="freezer_restore_intents_done">已冻结 %1$d 个、暂停 %2$d 个</string>
+    <string name="freezer_restore_intents">按档位收回全部</string>
+    <string name="freezer_restore_intents_noop">应用都已在记录的档位上，无需处理</string>
     <string name="extension_freezer_title">冰箱</string>
     <string name="extension_freezer_subtitle">管理冰箱列表，批量冻结/解冻，需 Shizuku 或 Root</string>
     <string name="extension_back_tap_title">背部双击（实验性可能不灵敏）</string>
@@ -1072,7 +1075,7 @@
     <string name="freezer_pause_dialog_message">已被 %1$s 暂停。点「取消暂停」即可继续使用。</string>
     <string name="freezer_protected_package">该应用不支持暂停或冻结</string>
     <string name="freezer_work_mode_title_format">工作模式：%1$s</string>
-    <string name="freezer_work_mode_pause_desc">开启后底部按钮执行「全部暂停」，关闭则执行「全部冻结」</string>
+    <string name="freezer_work_mode_pause_desc">作为「没有记录的成员」的兜底：开启时它们被暂停，关闭时被冻结。底部按钮与手势都会先把每个成员按各自记录的档位收回</string>
     <string name="freezer_work_mode_switch_to_pause">切换到暂停模式</string>
     <string name="freezer_work_mode_switch_to_freeze">切换到冻结模式</string>
     <string name="freezer_remove_from_list">从列表移除</string>

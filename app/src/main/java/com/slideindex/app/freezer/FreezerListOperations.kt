@@ -62,7 +62,13 @@ object FreezerListOperations {
         if (scanned.isEmpty()) return 0
         val current = settingsRepository.readFreshSnapshot().freezerAppPackages
         val toAdd = scanned - current
-        toAdd.forEach { settingsRepository.addFreezerApp(it) }
+        toAdd.forEach { packageName ->
+            settingsRepository.addFreezerApp(packageName)
+            // 导入的包本来就带着冻结 / 暂停状态：补一条意图，否则手势会按全局模式猜一个档位。
+            val intent = FreezerBootstrap.intentForState(FreezerOperations.stateOf(context, packageName))
+                ?: return@forEach
+            settingsRepository.setFreezerAppIntent(packageName, intent)
+        }
         return toAdd.size
     }
 }

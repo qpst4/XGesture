@@ -452,7 +452,12 @@ class ActionExecutor(
             }
             GestureAction.Refreeze -> {
                 CoroutineScope(Dispatchers.IO).launch {
-                    FreezerOperations.refreezeAll(context, settings.freezerAppPackages)
+                    // 按每个成员自己的意图还原（上次暂停的还它暂停），没有意图的按冰箱工作模式兜底。
+                    FreezerOperations.restoreIntents(
+                        context = context,
+                        packages = settings.freezerAppPackages,
+                        fallbackPause = settings.freezerWorkMode.isPause,
+                    )
                 }
                 true
             }

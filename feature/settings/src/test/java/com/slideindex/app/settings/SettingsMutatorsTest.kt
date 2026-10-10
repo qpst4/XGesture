@@ -301,6 +301,32 @@ class SettingsMutatorsTest {
         val frozen = awaitSettings { !it.freezerWorkMode.isPause }
         assertEquals(FreezerWorkMode.FREEZE, frozen.freezerWorkMode)
     }
+
+    @Test
+    fun setFreezerAppIntent_persistsAndClearsPerPackage() = runBlocking {
+        repository.addFreezerApp("com.example.app")
+        repository.setFreezerAppIntent("com.example.app", FreezerAppIntent.PAUSE)
+        repository.setFreezerAppIntent("com.example.other", FreezerAppIntent.FROZEN)
+
+        val recorded = awaitSettings { it.freezerAppIntents.size == 2 }
+        assertEquals(FreezerAppIntent.PAUSE, recorded.freezerAppIntents["com.example.app"])
+        assertEquals(FreezerAppIntent.FROZEN, recorded.freezerAppIntents["com.example.other"])
+
+        repository.clearFreezerAppIntents(setOf("com.example.app"))
+        val cleared = awaitSettings { it.freezerAppIntents.size == 1 }
+        assertEquals(null, cleared.freezerAppIntents["com.example.app"])
+    }
+
+    @Test
+    fun removeFreezerApp_dropsItsIntent() = runBlocking {
+        repository.addFreezerApp("com.example.app")
+        repository.setFreezerAppIntent("com.example.app", FreezerAppIntent.PAUSE)
+        awaitSettings { it.freezerAppIntents.containsKey("com.example.app") }
+
+        repository.removeFreezerApp("com.example.app")
+        val afterRemove = awaitSettings { !it.freezerAppIntents.containsKey("com.example.app") }
+        assertFalse(afterRemove.freezerAppIntents.containsKey("com.example.app"))
+    }
 }
 
 private val testSettingsLock = Any()

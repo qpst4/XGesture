@@ -193,6 +193,7 @@ data class AppSettings(
     val freezerShowInLauncher get() = launcher.freezerShowInLauncher
     val freezerWorkModeId get() = launcher.freezerWorkModeId
     val freezerWorkMode: FreezerWorkMode get() = FreezerWorkMode.fromId(launcher.freezerWorkModeId)
+    val freezerAppIntents get() = launcher.freezerAppIntents
     val expandPanelSlotActions get() = launcher.expandPanelSlotActions
     val previousAppExcludedPackages get() = launcher.previousAppExcludedPackages
     val excludedAppScopes get() = launcher.excludedAppScopes

@@ -8,17 +8,51 @@ package com.slideindex.app.freezer
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.util.Log
 import android.widget.Toast
 import com.slideindex.app.R
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.data.AppRepository
+import com.slideindex.app.di.AppGraphEntryPoint
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.settings.FreezerAppIntent
+import com.slideindex.app.settings.SettingsRepository
 import com.slideindex.app.util.TaskManagerUtil
+import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 object FreezerOperations {
     fun hasShellAccess(): Boolean = TaskManagerUtil.hasPrivilegedAccess()
+
+    /**
+     * 记下「用户要这个成员处于哪种状态」。
+     *
+     * 系统只有 enabled / suspended 两个当前状态，没有「上次用的是冻结还是暂停」；
+     * 而我们又必须知道它，才能在用户点开应用（`launchAndRestore` 会把状态清成启用）之后
+     * 还能把它按原样收回去。列表外的包不记录，避免留下永远不会被用到的档位。
+     */
+    private suspend fun setFreezerIntent(context: Context, packageName: String, intent: FreezerAppIntent) {
+        val repository = freezerSettingsRepository(context)
+        if (repository == null) {
+            Log.w(TAG, "intent not recorded (no settings repository): $packageName -> ${intent.storageValue}")
+            return
+        }
+        if (packageName !in repository.readSnapshot().freezerAppPackages) {
+            Log.i(TAG, "intent not recorded (not a freezer member): $packageName")
+            return
+        }
+        Log.i(TAG, "intent recorded: $packageName -> ${intent.storageValue}")
+        runCatching { repository.setFreezerAppIntent(packageName, intent) }
+            .onFailure { Log.w(TAG, "intent write failed: $packageName", it) }
+    }
+
+    private fun freezerSettingsRepository(context: Context): SettingsRepository? = runCatching {
+        EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            AppGraphEntryPoint::class.java
+        ).dependencies().settingsRepository
+    }.getOrNull()
 
     /** 一次查询出三态；Compose 组合期逐项调用，不要拆成多次包管理查询。 */
     fun stateOf(context: Context, packageName: String): FreezerAppState =
@@ -54,7 +88,12 @@ object FreezerOperations {
                 FreezerPrivilegedOps.setAppSuspended(context, packageName, suspended = false, dialogMessage = null)
             }
             val (success, detail) = FreezerPrivilegedOps.setAppDisabled(context, packageName, frozen)
-            if (success) return@withContext true
+            if (success) {
+                Log.i(TAG, "setFrozen($packageName, $frozen) -> ok")
+                if (frozen) setFreezerIntent(context, packageName, FreezerAppIntent.FROZEN)
+                return@withContext true
+            }
+            Log.w(TAG, "setFrozen($packageName, $frozen) -> failed: ${detail.take(160)}")
             withContext(Dispatchers.Main) {
                 val message = when (detail) {
                     FreezerPrivilegedOps.NEED_ROOT_FOR_SYSTEM_DISABLE ->
@@ -109,7 +148,13 @@ object FreezerOperations {
             }
             val (success, detail) =
                 FreezerPrivilegedOps.setAppSuspended(context, packageName, paused, dialogMessage)
-            if (success) return@withContext true
+            if (success) {
+                Log.i(TAG, "setPaused($packageName, $paused) -> ok")
+                // 取消暂停不改意图：用户要的还是「暂停」，只是这次为了使用而临时放出来。
+                if (paused) setFreezerIntent(context, packageName, FreezerAppIntent.PAUSE)
+                return@withContext true
+            }
+            Log.w(TAG, "setPaused($packageName, $paused) -> failed: ${detail.take(160)}")
             withContext(Dispatchers.Main) {
                 val messageRes = if (paused) {
                     R.string.freezer_pause_failed
@@ -124,7 +169,12 @@ object FreezerOperations {
             false
         }
 
-    /** 点击冰箱里的应用：按当前状态恢复（解冻 / 取消暂停）后再启动。 */
+    /**
+     * 点击冰箱里的应用：按当前状态恢复（解冻 / 取消暂停）后再启动。
+     *
+     * 恢复前先把「它原本是冻结还是暂停」补进意图表：状态一被清成启用，系统那边就再也看不出
+     * 它原来是哪一种了。这样用户点开应用、用完再用「重冻应用」手势收回时，它会回到原来的档位。
+     */
     suspend fun launchAndRestore(
         context: Context,
         appRepository: AppRepository,
@@ -132,14 +182,23 @@ object FreezerOperations {
         app: AppInfo,
         fullscreen: Boolean = true
     ): Boolean = withContext(Dispatchers.IO) {
-        when (stateOf(context, app.packageName)) {
-            FreezerAppState.FROZEN -> if (!setFrozen(context, app.packageName, frozen = false)) {
-                return@withContext false
+        when (val state = stateOf(context, app.packageName)) {
+            FreezerAppState.FROZEN -> {
+                setFreezerIntent(context, app.packageName, FreezerAppIntent.FROZEN)
+                if (!setFrozen(context, app.packageName, frozen = false)) {
+                    return@withContext false
+                }
             }
-            FreezerAppState.PAUSED -> if (!setPaused(context, app.packageName, paused = false)) {
-                return@withContext false
+            FreezerAppState.PAUSED -> {
+                setFreezerIntent(context, app.packageName, FreezerAppIntent.PAUSE)
+                if (!setPaused(context, app.packageName, paused = false)) {
+                    return@withContext false
+                }
             }
-            FreezerAppState.ACTIVE -> Unit
+            FreezerAppState.ACTIVE ->
+                // 已经是启用的：没有原状态可记（首次加入列表的成员就落在这里，由批量动作
+                // 按全局工作模式兜底），也不需要在启动前做任何恢复。
+                Unit
         }
         withContext(Dispatchers.Main) {
             launchApp(context, app, settings, appRepository, fullscreen)
@@ -179,27 +238,67 @@ object FreezerOperations {
         }.getOrDefault(false)
     }
 
-    /** 重新冻结：只处理「使用中」的成员，已暂停的保持暂停（不把它变成图标消失的冻结）。 */
-    suspend fun refreezeAll(context: Context, packages: Set<String>): Int =
-        freezeAll(context, packages)
-
-    suspend fun freezeAll(context: Context, packages: Set<String>): Int = withContext(Dispatchers.IO) {
+    /**
+     * 批量动作的统一入口：**按每个成员自己记录的档位收回**。冰箱面板底部按钮、「重冻应用」
+     * 手势与后续的自动触发都走这里。
+     *
+     * 有记录的按记录来（上次是暂停的就还它暂停，不会变成冻结）；没有记录的（刚加入列表、
+     * 或从别的工具导入的）按 [fallbackPause] 兜底 —— 取全局工作模式。
+     *
+     * 之所以不是「一律冻结」：用户点开一个应用时状态会被清成启用，只有记录还记得它原来
+     * 该是冻结还是暂停。一律冻结会把用户手动设成暂停的成员一起变成图标消失。
+     */
+    suspend fun restoreIntents(
+        context: Context,
+        packages: Set<String>,
+        fallbackPause: Boolean
+    ): Int = withContext(Dispatchers.IO) {
         if (!hasShellAccess()) {
+            Log.w(TAG, "restoreIntents: no privileged access, members=${packages.size}")
             withContext(Dispatchers.Main) {
                 Toast.makeText(context, R.string.freezer_permission_required, Toast.LENGTH_SHORT).show()
             }
             return@withContext 0
         }
-        var count = 0
+        val intents = freezerSettingsRepository(context)?.readSnapshot()?.freezerAppIntents.orEmpty()
+        var frozen = 0
+        var paused = 0
         for (pkg in packages) {
-            if (stateOf(context, pkg).isActive && setFrozen(context, pkg, frozen = true)) count++
+            val state = stateOf(context, pkg)
+            val decision = FreezerIntentResolution.decide(
+                state = state,
+                intent = intents[pkg],
+                fallbackPause = fallbackPause,
+            )
+            Log.d(
+                TAG,
+                "restoreIntents: $pkg state=$state intent=${intents[pkg]?.storageValue ?: "none"} " +
+                    "fallbackPause=$fallbackPause -> $decision"
+            )
+            when (decision) {
+                FreezerIntentResolution.Decision.Skip -> Unit
+                FreezerIntentResolution.Decision.Freeze -> if (setFrozen(context, pkg, frozen = true)) frozen++
+                FreezerIntentResolution.Decision.Pause -> if (setPaused(context, pkg, paused = true)) paused++
+            }
         }
+        val count = frozen + paused
+        Log.i(TAG, "restoreIntents done: members=${packages.size} changed=$count frozen=$frozen paused=$paused")
         withContext(Dispatchers.Main) {
-            Toast.makeText(
-                context,
-                context.resources.getQuantityString(R.plurals.freezer_refreeze_done, count, count),
-                Toast.LENGTH_SHORT,
-            ).show()
+            if (count > 0) {
+                val summary = when {
+                    paused == 0 -> context.resources.getQuantityString(
+                        R.plurals.freezer_refreeze_done, frozen, frozen
+                    )
+                    frozen == 0 -> context.resources.getQuantityString(
+                        R.plurals.freezer_pause_all_done, paused, paused
+                    )
+                    else -> context.getString(R.string.freezer_restore_intents_done, frozen, paused)
+                }
+                Toast.makeText(context, summary, Toast.LENGTH_SHORT).show()
+            } else if (packages.isNotEmpty()) {
+                // 全都在目标态：给一句反馈，否则用户会以为手势没生效（曾经真的被这么报过）。
+                Toast.makeText(context, R.string.freezer_restore_intents_noop, Toast.LENGTH_SHORT).show()
+            }
         }
         count
     }
@@ -234,6 +333,9 @@ object FreezerOperations {
         }
         var count = 0
         for (pkg in packages) {
+            // 只取消挂起，**不动意图表**：「取消暂停」是让它们现在能跑，用户给它们记的档位
+            // 仍然是「暂停」，下次按档位收回时还要把暂停还回去。删记录会让它们退回兜底档位
+            // （工作模式为冻结时就是图标消失），那正是用户报过的「说好暂停的又被冻结了」。
             if (stateOf(context, pkg).isPaused && setPaused(context, pkg, paused = false)) count++
         }
         withContext(Dispatchers.Main) {
@@ -266,4 +368,6 @@ object FreezerOperations {
         }
         count
     }
+
+    private const val TAG = "FreezerOperations"
 }

@@ -35,4 +35,17 @@ class FreezerBootstrapTest {
     fun `active apps are not importable`() {
         assertFalse(FreezerBootstrap.isImportableState(enabled = true, suspended = false))
     }
+
+    @Test
+    fun `imported state is recorded as intent`() {
+        assertEquals(
+            com.slideindex.app.settings.FreezerAppIntent.FROZEN,
+            FreezerBootstrap.intentForState(FreezerAppState.FROZEN),
+        )
+        assertEquals(
+            com.slideindex.app.settings.FreezerAppIntent.PAUSE,
+            FreezerBootstrap.intentForState(FreezerAppState.PAUSED),
+        )
+        assertEquals(null, FreezerBootstrap.intentForState(FreezerAppState.ACTIVE))
+    }
 }

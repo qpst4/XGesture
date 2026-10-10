@@ -424,6 +424,9 @@ internal object SettingsPreferenceKeys {
     val FREEZER_BOOTSTRAP_EXCLUDED_PACKAGES = stringSetPreferencesKey("freezer_bootstrap_excluded_packages")
     val FREEZER_SHOW_IN_LAUNCHER = booleanPreferencesKey("freezer_show_in_launcher")
     val FREEZER_WORK_MODE = intPreferencesKey("freezer_work_mode")
+
+    /** 每个冰箱成员「上次被设成哪种目标态」，见 [FreezerAppIntent] / [FreezerAppIntentCodec]。 */
+    val FREEZER_APP_INTENTS = stringPreferencesKey("freezer_app_intents")
     val EXPAND_PANEL_SHORTCUTS = stringPreferencesKey("expand_panel_shortcuts")
     val BACK_TAP_ENABLED = booleanPreferencesKey("back_tap_enabled")
     val BACK_TAP_SENSITIVITY = intPreferencesKey("back_tap_sensitivity")

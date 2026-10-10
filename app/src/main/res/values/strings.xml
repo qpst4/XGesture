@@ -1753,7 +1753,10 @@
     <string name="gesture_action_freezer_panel">App freezer</string>
     <string name="gesture_action_freezer_panel_desc">Open freezer overlay</string>
     <string name="gesture_action_refreeze">Re-freeze apps</string>
-    <string name="gesture_action_refreeze_desc">Disable all apps in freezer list that are currently enabled</string>
+    <string name="gesture_action_refreeze_desc">Put each app in the freezer list back the way you left it: paused apps stay paused, frozen apps get frozen, and anything without a recorded state follows the freezer work mode</string>
+    <string name="freezer_restore_intents_done">Froze %1$d, paused %2$d</string>
+    <string name="freezer_restore_intents">Restore each app to its recorded state</string>
+    <string name="freezer_restore_intents_noop">All apps are already in their recorded state</string>
     <string name="gesture_action_remind">Alarm reminder in N min</string>
     <string name="gesture_action_remind_desc">Pick a duration after trigger; rings when time is up</string>
     <string name="gesture_remind_picker_title">Set alarm</string>
@@ -1809,7 +1812,7 @@
     <string name="freezer_pause_dialog_message">%1$s paused this app. Tap Resume to use it again.</string>
     <string name="freezer_protected_package">This app cannot be paused or frozen</string>
     <string name="freezer_work_mode_title_format">Work mode: %1$s</string>
-    <string name="freezer_work_mode_pause_desc">When on, the button at the bottom pauses all apps; when off it freezes them.</string>
+    <string name="freezer_work_mode_pause_desc">Fallback for apps with no recorded state: when on they get paused, when off they get frozen. The bottom button and the gesture restore every app to its own recorded state first.</string>
     <string name="freezer_work_mode_switch_to_pause">Switch to pause mode</string>
     <string name="freezer_work_mode_switch_to_freeze">Switch to freeze mode</string>
     <string name="freezer_remove_from_list">Remove from list</string>

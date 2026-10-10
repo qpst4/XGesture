@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import com.slideindex.app.settings.FreezerAppIntent
 
 object FreezerBootstrap {
     /**
@@ -32,6 +33,16 @@ object FreezerBootstrap {
 
     /** 已停用（冻结）或已挂起（暂停）都值得导入；正常使用的应用不需要。 */
     fun isImportableState(enabled: Boolean, suspended: Boolean): Boolean = !enabled || suspended
+
+    /**
+     * 导入时的意图补记：导入的包本身就带着状态，直接当成它的意图，避免手势按全局模式猜档位。
+     * 活跃状态没有原状态可记，返回 null 表示不写意图（由批量动作兜底）。
+     */
+    fun intentForState(state: FreezerAppState): FreezerAppIntent? = when (state) {
+        FreezerAppState.FROZEN -> FreezerAppIntent.FROZEN
+        FreezerAppState.PAUSED -> FreezerAppIntent.PAUSE
+        FreezerAppState.ACTIVE -> null
+    }
 
     fun importablePackages(scanned: Set<String>, excluded: Set<String>): Set<String> =
         scanned - excluded

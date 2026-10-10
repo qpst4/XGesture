@@ -81,6 +81,7 @@ fun FreezerPanelContent(
     val scope = rememberCoroutineScope()
     val screenTitle = title ?: stringResource(R.string.extension_freezer_title)
     val unfreezeAllLabel = stringResource(R.string.freezer_batch_unfreeze_all)
+    val restoreIntentsLabel = stringResource(R.string.freezer_restore_intents)
     val pauseAllLabel = stringResource(R.string.freezer_pause_all)
     val unpauseAllLabel = stringResource(R.string.freezer_unpause_all)
     val importFrozenLabel = stringResource(R.string.freezer_import_frozen_apps)
@@ -158,6 +159,14 @@ fun FreezerPanelContent(
         }
     }
 
+    val batchRestore: suspend () -> Int = {
+        FreezerOperations.restoreIntents(
+            context = context,
+            packages = settings.freezerAppPackages,
+            fallbackPause = settings.freezerWorkMode.isPause,
+        )
+    }
+
     val overflowMenuEntry = DropdownEntry(
         items = listOf(
             DropdownItem(
@@ -167,6 +176,16 @@ fun FreezerPanelContent(
             DropdownItem(
                 text = switchWorkModeLabel,
                 onClick = { switchWorkMode() }
+            ),
+            DropdownItem(
+                text = restoreIntentsLabel,
+                onClick = {
+                    scope.launch {
+                        if (batchRestore() > 0) {
+                            freezeStateRevision++
+                        }
+                    }
+                }
             ),
             DropdownItem(
                 text = pauseAllLabel,
@@ -251,6 +270,17 @@ fun FreezerPanelContent(
                             },
                         )
                         DropdownMenuItem(
+                            text = { Text(restoreIntentsLabel) },
+                            onClick = {
+                                overflowMenuExpanded = false
+                                scope.launch {
+                                    if (batchRestore() > 0) {
+                                        freezeStateRevision++
+                                    }
+                                }
+                            },
+                        )
+                        DropdownMenuItem(
                             text = { Text(pauseAllLabel) },
                             onClick = {
                                 overflowMenuExpanded = false
@@ -305,24 +335,23 @@ fun FreezerPanelContent(
             )
         },
         floatingActionButton = {
-            val pauseMode = settings.freezerWorkMode.isPause
             MiuixSettingsFab(
                 onClick = {
                     scope.launch {
-                        val changed = if (pauseMode) {
-                            FreezerOperations.pauseAll(context, settings.freezerAppPackages)
-                        } else {
-                            FreezerOperations.freezeAll(context, settings.freezerAppPackages)
-                        }
+                        // 与「重冻应用」手势同一套语义：按每个成员记录的档位收回，
+                        // 没记录的才落到工作模式。否则面板按钮会把用户设成暂停的成员一起冻成图标消失。
+                        val changed = FreezerOperations.restoreIntents(
+                            context = context,
+                            packages = settings.freezerAppPackages,
+                            fallbackPause = settings.freezerWorkMode.isPause,
+                        )
                         if (changed > 0) {
                             freezeStateRevision++
                         }
                     }
                 },
-                icon = if (pauseMode) Icons.Default.Pause else Icons.Default.AcUnit,
-                contentDescription = stringResource(
-                    if (pauseMode) R.string.freezer_action_pause else R.string.freezer_action_freeze
-                )
+                icon = Icons.Default.AcUnit,
+                contentDescription = stringResource(R.string.freezer_restore_intents)
             )
         }
     ) {

@@ -527,6 +527,40 @@ class EdgeSettingsMutator @Inject constructor(
             ?: mutableSetOf()
         excluded.add(packageName)
         it[SettingsPreferenceKeys.FREEZER_BOOTSTRAP_EXCLUDED_PACKAGES] = excluded
+        // 不在列表里就不该留意图，否则重新加入时会带着上一次的旧档位。
+        writeFreezerAppIntents(it, readFreezerAppIntents(it) - packageName)
+    }
+
+    /** 记下某个成员这次被设成冻结还是暂停；[intent] 为 null 表示清掉它的意图。 */
+    suspend fun setFreezerAppIntent(packageName: String, intent: FreezerAppIntent?) = editor.edit {
+        val current = readFreezerAppIntents(it).toMutableMap()
+        if (intent == null) {
+            current.remove(packageName)
+        } else {
+            current[packageName] = intent
+        }
+        writeFreezerAppIntents(it, current)
+    }
+
+    suspend fun clearFreezerAppIntents(packageNames: Set<String>) = editor.edit {
+        if (packageNames.isEmpty()) return@edit
+        writeFreezerAppIntents(it, readFreezerAppIntents(it) - packageNames)
+    }
+
+    private fun readFreezerAppIntents(
+        prefs: androidx.datastore.preferences.core.MutablePreferences,
+    ): Map<String, FreezerAppIntent> =
+        FreezerAppIntentCodec.decode(prefs[SettingsPreferenceKeys.FREEZER_APP_INTENTS])
+
+    private fun writeFreezerAppIntents(
+        prefs: androidx.datastore.preferences.core.MutablePreferences,
+        intents: Map<String, FreezerAppIntent>,
+    ) {
+        if (intents.isEmpty()) {
+            prefs.remove(SettingsPreferenceKeys.FREEZER_APP_INTENTS)
+        } else {
+            prefs[SettingsPreferenceKeys.FREEZER_APP_INTENTS] = FreezerAppIntentCodec.encode(intents)
+        }
     }
 
     suspend fun setFreezerShowInLauncher(enabled: Boolean) = editor.edit {
