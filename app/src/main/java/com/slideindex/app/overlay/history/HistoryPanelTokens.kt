@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,15 +50,19 @@ internal data class HistoryTheme(
     val glassSolidTop: Color,
     val glassSolidBottom: Color,
     /**
-     * **卡片底色**（`.item .box`）。
+     * **卡片底色**（`.item .box`）—— **单色**，刻意不用竖向渐变。
      *
      * 刻意**不复用** [glassFillTop]/[glassFillBottom]（面板底也是那一组）：卡片叠在同样白的
      * 面板上等于"白压白"，底色分不出层级、观感发灰（用户反馈"卡片淡、发灰"）。
-     * 现在卡片比面板实一档 —— 浅色 92%→80% 白（面板 78%→58%）、深色 66%→60%（面板 58%→52%），
+     * 现在卡片比面板实一档 —— 浅色 90% 白（面板 78%→58%）、深色 65%（面板 58%→52%），
      * 仍是玻璃半透明（**没有**改成不透明，别拿 [glassSolidTop] 那组替）。
+     *
+     * ⚠️ **为什么必须是单色**（真机截图逐像素量出来的）：描边是"8% 黑"，压在什么底色上就出什么
+     * 颜色。渐变卡的顶是纯白、底偏灰蓝，于是**同一张卡的上下两条边天然不同色** —— 实测上边
+     * rgb(235,237,238)（亮度 236）、下边 rgb(226,229,234)（亮度 228），差 8 级，肉眼就是
+     * "顶边淡、底边深"。改成单色后四条边落在同一个底色上，配色完全一致。
      */
-    val cardFillTop: Color,
-    val cardFillBottom: Color,
+    val cardColor: Color,
     /* ------------------------------------------------------------------
      * 以下不是 demo 的值，是**主动加强对比度**的结果（用户反馈：搜索框/页签行/标签
      * "浅灰基本看不见，费眼睛"）。demo 那几处是"白底白描边 + 4% 灰"，在真实浅色
@@ -82,8 +87,8 @@ internal data class HistoryTheme(
     /** 不透明版本（玻璃关闭时的面板底）。 */
     val glassSolid: Brush get() = Brush.verticalGradient(listOf(glassSolidTop, glassSolidBottom))
 
-    /** 卡片底：与 [glassFill] 同形（竖向渐变），但比面板底更实一档，见 [cardFillTop]。 */
-    val cardFill: Brush get() = Brush.verticalGradient(listOf(cardFillTop, cardFillBottom))
+    /** 卡片底：**单色**（见 [cardColor]；刻意不用渐变 —— 渐变会让上下两条边不同色）。 */
+    val cardFill: Brush get() = SolidColor(cardColor)
 }
 
 private val LightHistoryTheme = HistoryTheme(
@@ -116,8 +121,7 @@ private val LightHistoryTheme = HistoryTheme(
     isDark = false,
     glassSolidTop = Color(0xFFFFFFFF),
     glassSolidBottom = Color(0xFFF4F6FB),
-    cardFillTop = Color(0xEBFFFFFF),
-    cardFillBottom = Color(0xCCFFFFFF),
+    cardColor = Color(0xE6FFFFFF),
 )
 
 private val DarkHistoryTheme = HistoryTheme(
@@ -150,8 +154,7 @@ private val DarkHistoryTheme = HistoryTheme(
     isDark = true,
     glassSolidTop = Color(0xFF1D2029),
     glassSolidBottom = Color(0xFF171A21),
-    cardFillTop = Color(0xA834394A),
-    cardFillBottom = Color(0x991C202C),
+    cardColor = Color(0xA634394A),
 )
 
 @Composable

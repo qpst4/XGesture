@@ -55,9 +55,12 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -369,7 +372,7 @@ internal fun HistoryEntryCardShell(
     // 设计稿 `.box { border-radius: var(--r-lg) }` = 18dp。
     val cardShape = RoundedCornerShape(HistoryRadii.lg)
     // ⚠️ **不再按时间分档**（用户明确："第一点我是不想要有区分"）。
-    // 所有条目同一套外观：半透明渐变底 + 一条 hairline 描边；**不给每张都加投影**
+    // 所有条目同一套外观：半透明**单色**底 + 一条 1dp **内描边**；**不给每张都加投影**
     // （整屏几十张卡都投影会脏）。demo 那套"今天玻璃/昨天半透/更早透明"的三档全部作废。
     // 唯一还变的是**状态**：星标（accent 底 + 描边）、完成（整卡淡 + 划掉）。
     //
@@ -410,20 +413,37 @@ internal fun HistoryEntryCardShell(
             )
             .clip(cardShape)
             .background(brush = background, shape = cardShape)
-            // `inset 0 1px 0 var(--g-rim)`：卡片内顶一条 1px 高光（玻璃感的来源之一）。
+            // 描边与顶边高光都**在这里自绘**（不再用 `Modifier.border`），两段原因都是真机截图
+            // 逐像素量出来的：
+            //
+            // ⚠️ 为什么不用 `Modifier.border`：它是**骑在卡片边界上**画的（一半在卡内、一半在卡外），
+            // 而卡外那半被上面的 `clip` 切掉 —— 每张卡实际只剩约半个像素的线，且落点差一点点就
+            // 变成"只剩一半深度"。实测同一根线，有的卡亮度 236（实）、有的 243（虚）——这就是
+            // "各卡片顶边线颜色不一致 / 有些淡"的来源。改成**内描边 + 宽度取整像素**后，
+            // 每张卡的墨量完全相同，线也不用再被切掉一半。
+            //
+            // ⚠️ 顶边那条白线（demo 的 `inset 0 1px 0 var(--g-rim)`）**只在深色模式画**：浅色下
+            // 卡片本身接近纯白，白线画在白卡上完全看不见（实测顶边那 236 全部来自描边，白线零贡献）。
             .drawWithContent {
                 drawContent()
-                // 顶部那条极细高光只画在**未星标**的卡上：星标卡底色被 accent 覆盖，
-                // 再叠白线会显脏（用户实测过那根"莫名其妙的横白条"）。
-                if (starred) return@drawWithContent
+                val borderPx = 1.dp.roundToPx().toFloat()
+                val cornerPx = HistoryRadii.lg.toPx() - borderPx / 2f
+                drawRoundRect(
+                    color = borderColor,
+                    topLeft = Offset(borderPx / 2f, borderPx / 2f),
+                    size = Size(size.width - borderPx, size.height - borderPx),
+                    cornerRadius = CornerRadius(cornerPx, cornerPx),
+                    style = Stroke(width = borderPx),
+                )
+                // 星标卡不画顶边高光：底色被 accent 盖住，再叠白线会显脏（用户实测过那根"莫名其妙的横白条"）。
+                if (starred || !theme.isDark) return@drawWithContent
                 drawLine(
                     color = theme.glassRim,
-                    start = Offset(0f, 0.5f),
-                    end = Offset(size.width, 0.5f),
+                    start = Offset(borderPx, borderPx + 0.5f),
+                    end = Offset(size.width - borderPx, borderPx + 0.5f),
                     strokeWidth = 1.dp.toPx(),
                 )
             }
-            .border(width = 1.dp, color = borderColor, shape = cardShape)
             // 设计稿 `.item.flash .box { animation: flashin 1.4s }`：
             // `0 0 0 2px accent` + `0 0 0 8px accent-soft` → 全程淡到无。
             .then(
