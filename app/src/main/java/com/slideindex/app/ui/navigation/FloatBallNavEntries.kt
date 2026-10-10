@@ -35,6 +35,7 @@ import com.slideindex.app.ui.GestureSimulateKeyEventScreen
 import com.slideindex.app.ui.ImageSearchEngineDetailScreen
 import com.slideindex.app.ui.ImageSearchEngineSettingsScreen
 import com.slideindex.app.ui.OcrModelSettingsScreen
+import com.slideindex.app.ui.QuickLauncherPanelPickScreen
 import com.slideindex.app.ui.SearchEngineEditorCategory
 import com.slideindex.app.ui.SearchEngineEditorScreen
 import com.slideindex.app.ui.SearchEnginePreviewSortScreen
@@ -372,6 +373,9 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
             onOpenShellCommand = { type, command ->
                 ctx.navigate(AppNavKey.FloatBallGestureShellCommand(type.id, command))
             },
+            onOpenQuickLauncherPanel = { type, panelId ->
+                ctx.navigate(AppNavKey.FloatBallGestureQuickLauncherPanel(type.id, panelId))
+            },
             onDownSwipeShortPercentChange = viewModel::setFloatBallDownSwipeShortPercent,
             onSideSwipeShortPercentChange = viewModel::setFloatBallSideSwipeShortPercent,
             onUpSwipeShortPercentChange = viewModel::setFloatBallUpSwipeShortPercent,
@@ -488,6 +492,30 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
                 viewModel.setFloatBallGestureAction(
                     gestureType,
                     GestureAction.ExecuteShellCommand(command),
+                )
+                ctx.navigateBackTo(returnKey)
+            },
+        )
+    }
+
+    /**
+     * 悬浮球手势绑的是「快速启动器」时，选要打开哪一个面板（页面）。
+     * 与侧滑触钮那条 `AppNavKey.HomeSideGestureSlotQuickLauncherPanel` 同构，用同一个选择页。
+     */
+    hiltEntry<AppNavKey.FloatBallGestureQuickLauncherPanel> { key ->
+        val viewModel: ExtensionSettingsViewModel = hiltViewModel()
+        val overlaySettings by viewModel.overlaySettings.collectAsStateWithLifecycle()
+        val settings = overlaySettings.toMinimalAppSettings()
+        val gestureType = FloatBallGestureType.fromId(key.gestureTypeId) ?: FloatBallGestureType.SINGLE_TAP
+        val returnKey = AppNavKey.FloatBallGesture
+        QuickLauncherPanelPickScreen(
+            settings = settings,
+            currentPanelId = key.panelId,
+            onBack = { ctx.backStack.removeLastOrNull() },
+            onSelect = { panel ->
+                viewModel.setFloatBallGestureAction(
+                    gestureType,
+                    GestureAction.QuickLauncher(panel.id),
                 )
                 ctx.navigateBackTo(returnKey)
             },

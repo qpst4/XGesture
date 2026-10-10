@@ -435,6 +435,16 @@ sealed interface AppNavKey : NavKey {
         val initialKeyName: String = "",
         val initialIsLongPress: Boolean = false,
     ) : AppNavKey
+    /**
+     * 悬浮球手势绑的是「快速启动器」时，选它打开**哪一个**面板。
+     *
+     * 快速启动器可以有多个面板（页面）；以前悬浮球只能打开默认面板，而侧滑触钮早就能指定
+     * （见 `HomeSideGestureSlotQuickLauncherPanel`），这个键就是把这个能力补齐给悬浮球。
+     */
+    @Serializable data class FloatBallGestureQuickLauncherPanel(
+        val gestureTypeId: Int,
+        val panelId: String = "",
+    ) : AppNavKey
     @Serializable data object FloatBallPick : AppNavKey
     /** 「取词 → 拾取与手感」：拾取十字与指针手感参数（原「取词拾取配置」页）。 */
     @Serializable data object FloatBallPickHandfeel : AppNavKey

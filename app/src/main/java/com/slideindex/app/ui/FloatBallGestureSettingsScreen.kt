@@ -58,6 +58,12 @@ fun FloatBallGestureSettingsScreen(
 
     onOpenShellCommand: (FloatBallGestureType, String) -> Unit,
 
+    /**
+     * 该手势绑了「快速启动器」时，点右侧齿轮去选要打开的面板（页面）。
+     * 与侧滑触钮的同名入口一致：快速启动器可以有多页，不指定就只能打开默认页。
+     */
+    onOpenQuickLauncherPanel: (FloatBallGestureType, String) -> Unit,
+
     onDownSwipeShortPercentChange: (Float) -> Unit,
 
     onSideSwipeShortPercentChange: (Float) -> Unit,
@@ -222,12 +228,17 @@ fun FloatBallGestureSettingsScreen(
                                     showSettings = action is GestureAction.LaunchApp ||
                                         action is GestureAction.LaunchShortcut ||
                                         action is GestureAction.SimulatePointerSwipe ||
+                                        action is GestureAction.QuickLauncher ||
                                         action is GestureAction.ExecuteShellCommand,
                                     onClick = { onOpenActionPick(type) },
-                                    onSettingsClick = if (action is GestureAction.ExecuteShellCommand) {
-                                        { onOpenShellCommand(type, action.command) }
-                                    } else {
-                                        null
+                                    onSettingsClick = when (action) {
+                                        is GestureAction.ExecuteShellCommand -> {
+                                            { onOpenShellCommand(type, action.command) }
+                                        }
+                                        is GestureAction.QuickLauncher -> {
+                                            { onOpenQuickLauncherPanel(type, action.panelId) }
+                                        }
+                                        else -> null
                                     }
                                 )
                             }
