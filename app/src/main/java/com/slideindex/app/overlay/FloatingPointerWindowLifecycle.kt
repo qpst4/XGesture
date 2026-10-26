@@ -186,8 +186,6 @@ internal class FloatingPointerWindowLifecycle(
             buildCollapsedTouchParams(hostContext, pointerSession, settings)
         }
 
-        FloatBallPickResultPanel.warmUp(hostContext)
-        com.slideindex.app.overlay.searchpanel.SearchPanelOverlayWindow.warmUp(hostContext)
         val displayAdded = runCatching { wm.addView(displayCompose, displayParams) }
             .onFailure { Log.e(TAG, "display addView failed", it) }
             .isSuccess

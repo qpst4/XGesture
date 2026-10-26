@@ -266,7 +266,7 @@ class OverlayFullScreenPanelHost(
             }
             currentOwner.lifecycleScope.launch(Dispatchers.Main) {
                 delay(hideDelayMs)
-                view.visibility = View.GONE
+                destroy()
                 onHidden()
             }
         }

@@ -93,17 +93,8 @@ object SearchPanelOverlayWindow {
     }
 
     fun warmUp(context: Context) {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { warmUp(context) }
-            return
-        }
-        // 预热必须等无障碍宿主就绪：早于它建窗会拿到无效 token（BadTokenException），
-        // 之后 show() 的 updateViewLayout 全部失败，面板就变成"窗口在但永远不可见"。
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: return
-        ensureWindow(hostContext)
-        if (!isShowing) {
-            applyPanelShellPassive()
-        }
+        // 绝不提前将 View.GONE 窗口挂载到 WindowManager：
+        // 挂在无障碍 Token 下的无 Surface 窗口会导致深色/浅色模式切换时 BLASTSyncEngine 超时 2 秒。
     }
 
     fun show(context: Context): Boolean {
@@ -176,8 +167,8 @@ object SearchPanelOverlayWindow {
         mainHandler.postDelayed({
             if (token != dismissToken) return@postDelayed
             if (panelVisibilityState?.targetState == true) return@postDelayed
-            applyPanelShellPassive()
             OverlaySceneController.onContentPanelHidden()
+            destroyWindow()
         }, SEARCH_PANEL_ANIM_MS.toLong())
     }
 
@@ -196,7 +187,7 @@ object SearchPanelOverlayWindow {
             mainHandler.post { hide() }
             return
         }
-        applyPanelShellPassive()
+        destroyWindow()
     }
 
     /** 应用内语言切换后销毁预热窗口，下次展示时用新 Configuration 重建。 */

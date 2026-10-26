@@ -511,7 +511,7 @@ class OverlaySidePanelHost(
             owner.lifecycleScope.launch(Dispatchers.Main) {
                 delay(300)
                 if (visibleState.targetState) return@launch
-                view.visibility = View.GONE
+                destroy()
             }
         }
     }

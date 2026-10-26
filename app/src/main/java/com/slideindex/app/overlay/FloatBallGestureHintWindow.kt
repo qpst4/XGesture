@@ -56,6 +56,7 @@ internal class FloatBallGestureHintWindow {
         }
     }
 
+    private var hostContext: Context? = null
     private var windowManager: WindowManager? = null
     private var hintView: ComposeView? = null
     private var hintParams: WindowManager.LayoutParams? = null
@@ -70,14 +71,22 @@ internal class FloatBallGestureHintWindow {
     private var lastAppliedSizePx: Int? = null
 
     fun attach(context: Context, wm: WindowManager) {
-        if (hintView != null) return
+        hostContext = context
+        windowManager = wm
+    }
+
+    private fun ensureHintWindow(context: Context, wm: WindowManager): Pair<ComposeView, WindowManager.LayoutParams>? {
+        val existingView = hintView
+        val existingParams = hintParams
+        if (existingView != null && existingParams != null) {
+            return existingView to existingParams
+        }
         val overlayContext = OverlayCompose.themedContext(context)
         val dialogOwner = OverlayComposeOwner()
         val composeView = OverlayCompose.createComposeView(overlayContext, dialogOwner).apply {
             isClickable = false
             isFocusable = false
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-            visibility = View.GONE
             setContent {
                 OverlayAwareModuleTheme {
                     FloatBallGestureHintContent(
@@ -103,11 +112,15 @@ internal class FloatBallGestureHintWindow {
             layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
-        wm.addView(composeView, params)
-        windowManager = wm
+        val added = runCatching { wm.addView(composeView, params) }.isSuccess
+        if (!added) {
+            OverlayCompose.teardownOverlayCompose(composeView, dialogOwner)
+            return null
+        }
         hintView = composeView
         hintParams = params
         owner = dialogOwner
+        return composeView to params
     }
 
     fun update(
@@ -119,9 +132,9 @@ internal class FloatBallGestureHintWindow {
         dockSide: FloatBallSide,
         density: Float
     ) {
-        val view = hintView ?: return
-        val params = hintParams ?: return
+        val context = hostContext ?: return
         val wm = windowManager ?: return
+        val (view, params) = ensureHintWindow(context, wm) ?: return
         val hintSizePx = (HINT_SIZE_DP * density).roundToInt()
         val gapPx = (HINT_OFFSET_DP * density).roundToInt()
         val (x, y) = hintTopLeftForFingerPx(
@@ -174,7 +187,7 @@ internal class FloatBallGestureHintWindow {
     }
 
     fun hide() {
-        if (!visibleState.value && hintView?.visibility == View.GONE) {
+        if (!visibleState.value && hintView == null) {
             return
         }
         visibleState.value = false
@@ -184,7 +197,18 @@ internal class FloatBallGestureHintWindow {
         lastAppliedX = null
         lastAppliedY = null
         lastAppliedSizePx = null
-        hintView?.visibility = View.GONE
+        val view = hintView
+        val dialogOwner = owner
+        val wm = windowManager
+        if (view != null) {
+            if (wm != null && view.isAttachedToWindow) {
+                runCatching { wm.removeView(view) }
+            }
+            OverlayCompose.teardownOverlayCompose(view, dialogOwner)
+        }
+        hintView = null
+        hintParams = null
+        owner = null
     }
 
     fun bringToFront() {
@@ -200,14 +224,8 @@ internal class FloatBallGestureHintWindow {
 
     fun detach() {
         hide()
-        val wm = windowManager
-        hintView?.let { view -> wm?.let { runCatching { it.removeView(view) } } }
-        val dialogOwner = owner
-        OverlayCompose.teardownOverlayCompose(hintView, dialogOwner)
         windowManager = null
-        hintView = null
-        hintParams = null
-        owner = null
+        hostContext = null
     }
 }
 

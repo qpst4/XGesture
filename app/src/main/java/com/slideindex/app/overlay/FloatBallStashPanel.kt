@@ -40,16 +40,8 @@ object FloatBallStashPanel {
      * Attaches the panel window below float-ball chrome so opening it later avoids z-order bumps.
      */
     fun warmUpBelowChrome(context: android.content.Context) {
-        if (sideHost.isAttached) return
-        val attached = sideHost.attachHidden(
-            context = context,
-            initialGravityEnd = true,
-            content = ::PanelContent,
-            dragReveal = { HistoryPanelReveal.dragSession },
-            // 窗口跟手：进度给宿主，由它换算成窗口左边缘坐标（窗口只有 78% 宽，见 §0.16.3）。
-            revealProgress = { HistoryPanelReveal.windowProgress }
-        )
-        if (attached) registerExternalUiHooks()
+        // 绝不提前将 View.GONE 窗口挂载到 WindowManager：
+        // 挂在无障碍 Token 下的无 Surface 窗口会导致深色/浅色模式切换时 BLASTSyncEngine 超时 2 秒。
     }
 
     fun show(

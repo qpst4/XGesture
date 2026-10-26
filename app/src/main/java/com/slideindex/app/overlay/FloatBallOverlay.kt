@@ -464,7 +464,7 @@ object FloatBallOverlay {
                 }
                 val lineTouch = lineTouchHost
                 val lineTouchLp = lineTouchLayoutParams
-                if (lineTouch != null && lineTouchLp != null && lineTouch.isVisible) {
+                if (lineTouch != null && lineTouchLp != null && lineTouch.isAttachedToWindow && lineTouch.isVisible) {
                     bringOverlayToFront(lineTouch, lineTouchLp, forceReAdd = forceReAdd)
                 }
                 val touch = touchHost
@@ -925,7 +925,15 @@ object FloatBallOverlay {
         val wm = windowManager
         displayView?.let { view -> wm?.let { runCatching { it.removeView(view) } } }
         touchHost?.let { view -> wm?.let { runCatching { it.removeView(view) } } }
-        lineTouchHost?.let { view -> wm?.let { runCatching { it.removeView(view) } } }
+        lineTouchHost?.let { view ->
+            wm?.let {
+                runCatching {
+                    if (view.isAttachedToWindow) {
+                        it.removeView(view)
+                    }
+                }
+            }
+        }
         destroySplitIdleChrome()
         gestureHintWindow.detach()
         displayView?.dispose()
@@ -1199,9 +1207,9 @@ object FloatBallOverlay {
     }
 
     private fun ensureWindows(hostContext: Context, settings: AppSettings) {
-        FloatBallStashPanel.warmUpBelowChrome(hostContext)
-        FloatBallPickResultPanel.warmUp(hostContext)
-        com.slideindex.app.overlay.searchpanel.SearchPanelOverlayWindow.warmUp(hostContext)
+        // ⚠️ 不要提前 warmUp 挂载处于 View.GONE 的面板窗口到 WindowManager：
+        // 挂在无障碍 WindowToken 上的 View.GONE 窗口没有 Surface，在深色/浅色模式切换时 ViewRootImpl 跳过绘制且不汇报
+        // reportDrawFinished，导致系统的 BLASTSyncEngine 阻塞整机转场整整 2 秒。面板在用户首次呼出时按需挂载即可。
         val wm = hostContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager ?: return
         val overlayContext = OverlayCompose.themedContext(hostContext)
         val state = FloatBallSceneState(settings)
@@ -1477,15 +1485,10 @@ object FloatBallOverlay {
             return
         }
 
-        val lineTouchAdded = runCatching { wm.addView(lineTouchLayout, lineTouchLp) }
-            .onFailure { Log.e(TAG, "failed to add line touch overlay", it) }
-            .isSuccess
-        if (!lineTouchAdded) {
-            runCatching { wm.removeView(touchLayout) }
-            runCatching { wm.removeView(displayHost) }
-            displayDialogOwner.destroy()
-            return
-        }
+        // ⚠️ 不要无条件将 lineTouchLayout addView 到 WindowManager：
+        // 若当前未启用边缘线条，挂一个 View.GONE 且无 Surface 的无障碍窗口会导致系统深色模式/浅色模式
+        // 切换时 BLASTSyncEngine 无法收到 draw 完成信号，阻塞整机转场整整 2 秒。
+        // 线条触摸窗仅在 setLineTouchHostEnabled(true) 时按需挂载。
 
         windowManager = wm
         displayView = displayHost
@@ -1652,14 +1655,18 @@ object FloatBallOverlay {
             params.width = 1
             params.height = 1
         }
-        view.visibility = if (enabled) View.VISIBLE else View.GONE
         if (enabled) {
+            view.visibility = View.VISIBLE
             params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+            if (!view.isAttachedToWindow) {
+                runCatching { wm.addView(view, params) }
+            } else {
+                runCatching { wm.updateViewLayout(view, params) }
+            }
         } else {
-            params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-        }
-        if (view.isAttachedToWindow) {
-            runCatching { wm.updateViewLayout(view, params) }
+            if (view.isAttachedToWindow) {
+                runCatching { wm.removeView(view) }
+            }
         }
     }
 
@@ -2068,7 +2075,7 @@ object FloatBallOverlay {
         touchHost?.forceEndGestureCapture()
         lineTouchHost?.cancelGesture()
         touchHost?.visibility = View.GONE
-        lineTouchHost?.visibility = View.GONE
+        setLineTouchHostEnabled(false)
         setBallTouchHostPassthrough(true)
         setLineTouchHostPassthrough(true)
         applyTouchHostOverlayPassthroughFlags()
@@ -2344,8 +2351,8 @@ object FloatBallOverlay {
         val visibility = if (visible) View.VISIBLE else View.GONE
         displayView?.visibility = visibility
         touchHost?.visibility = visibility
-        lineTouchHost?.visibility = visibility
         if (!visible) {
+            setLineTouchHostEnabled(false)
             gestureHintWindow.hide()
         }
     }
@@ -2476,8 +2483,10 @@ object FloatBallOverlay {
         val display = displayView ?: return false
         val touch = touchHost ?: return false
         if (!display.isAttachedToWindow || !touch.isAttachedToWindow) return false
-        val line = lineTouchHost
-        return line == null || line.isAttachedToWindow
+        val line = lineTouchHost ?: return true
+        val settings = settingsState?.value
+        val lineNeeded = settings != null && FloatBallLayout.shouldShowLine(settings) && sceneState?.lineVisible?.value == true
+        return !lineNeeded || line.isAttachedToWindow
     }
 
     private fun bringOverlayToFront(
@@ -3556,8 +3565,6 @@ object FloatBallOverlay {
     private fun maybeStartPickPrefetch() {
         if (cursorPausedState?.value != true) return
         val bounds = selectionPreviewBoundsState?.value ?: return
-        val host = appContext ?: return
-        FloatBallPickResultPanel.warmUp(host)
         val service = SlideIndexAccessibilityService.accessibilityInstance() ?: return
         PickPrefetchCache.startPreviewA11yPrefetch(
             service = service,

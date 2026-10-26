@@ -185,10 +185,8 @@ object FloatBallPickResultPanel {
             return
         }
         val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context.applicationContext
-        ensureWindow(hostContext)
-        if (!pickPanelVisible) {
-            applyPanelShellPassive()
-        }
+        // 绝不提前将 View.GONE 窗口挂载到 WindowManager：
+        // 挂在无障碍 Token 下的无 Surface 窗口会导致深色/浅色模式切换时 BLASTSyncEngine 超时 2 秒。
         preparePanelReveal(hostContext) { }
     }
 
@@ -199,7 +197,7 @@ object FloatBallPickResultPanel {
             return
         }
         if (pickPanelVisible || panelDismissing) return
-        applyPanelShellPassive()
+        destroy()
     }
 
     /** 应用内语言切换后销毁预热壳，下次取词时用新 Locale 重建（与 [SearchPanelOverlayWindow.releaseWarmUp] 对齐）。 */
@@ -814,15 +812,14 @@ object FloatBallPickResultPanel {
                 historyOcrRequestId++
                 ocrTextsByImageIndexState?.value = emptyMap()
                 contentOriginState?.value = PickResultContentOrigin.SCREEN_PICK
-                view.visibility = View.GONE
                 if (FloatBallImageSearchPanel.isShowing) {
                     FloatBallImageSearchPanel.dismiss()
                 }
                 clearTranslateState()
-                applyPanelShellPassive()
                 panelDismissing = false
                 com.slideindex.app.service.SlideIndexAccessibilityService.recoverTriggerInteraction(forceReAddChrome = true)
                 com.slideindex.app.service.SlideIndexAccessibilityService.refreshOverlaySuppression()
+                destroy()
             }
         } else {
             panelDismissing = false
