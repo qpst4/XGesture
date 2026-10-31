@@ -267,6 +267,12 @@ internal fun FileBrowserPanel(
     var showMenu by remember { mutableStateOf(false) }
     var searchExpanded by remember { mutableStateOf(false) }
     var imagePreview by remember { mutableStateOf<FileBrowserEntry?>(null) }
+    var swipeAnchorPath by remember(state.activeTabId, state.path) {
+        mutableStateOf<String?>(null)
+    }
+    LaunchedEffect(state.selectionMode) {
+        if (!state.selectionMode) swipeAnchorPath = null
+    }
     var selectionBarHeightPx by remember { mutableStateOf(0) }
     val selectionInset = if (state.selectionMode) {
         with(density) { selectionBarHeightPx.toDp() }
@@ -531,6 +537,22 @@ internal fun FileBrowserPanel(
                                     onEntryLongClick = { entry ->
                                         focusManager.clearFocus()
                                         controller.enterSelection(entry)
+                                        swipeAnchorPath = entry.path
+                                    },
+                                    onSwipeSelect = { entry ->
+                                        focusManager.clearFocus()
+                                        val ordered = filtered.map { it.path }
+                                        val range = FileBrowserSelection.rangeBetween(
+                                            orderedPaths = ordered,
+                                            anchorPath = swipeAnchorPath,
+                                            targetPath = entry.path,
+                                        )
+                                        if (range != null) {
+                                            controller.selectRange(range)
+                                        } else {
+                                            controller.selectRange(listOf(entry.path))
+                                            swipeAnchorPath = entry.path
+                                        }
                                     },
                                     selectionMode = state.selectionMode,
                                     selectedPaths = state.selectedPaths,

@@ -54,6 +54,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,6 +76,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -90,6 +92,7 @@ import com.slideindex.app.overlay.dragdrop.DragFlowSource
 import com.slideindex.app.overlay.history.HistoryDragPreview
 import com.slideindex.app.overlay.history.HistoryEntryDragHelper
 import java.io.File
+import kotlin.math.abs
 import kotlinx.coroutines.withTimeoutOrNull
 
 @Composable
@@ -100,6 +103,7 @@ internal fun FileBrowserListContent(
     listState: LazyListState,
     onEntryClick: (FileBrowserEntry) -> Unit,
     onEntryLongClick: (FileBrowserEntry) -> Unit,
+    onSwipeSelect: (FileBrowserEntry) -> Unit = {},
     selectionMode: Boolean = false,
     selectedPaths: Set<String> = emptySet(),
     access: FileBrowserAccessInfo? = null,
@@ -125,32 +129,115 @@ internal fun FileBrowserListContent(
             searching = state.query.isNotBlank() || state.entries.isNotEmpty(),
         )
 
-        else -> LazyColumn(
-            state = listState,
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 8.dp + bottomInset),
-        ) {
-            itemsIndexed(
-                items = filtered,
-                key = { _, entry -> entry.path },
-            ) { index, entry ->
-                FileBrowserEntryRow(
-                    entry = entry,
-                    showDivider = index < filtered.lastIndex,
-                    selected = entry.path in selectedPaths,
-                    selectionMode = selectionMode,
-                    access = access,
-                    onClick = { onEntryClick(entry) },
-                    onLongClick = { onEntryLongClick(entry) },
-                    dragPaths = if (selectionMode && entry.path in selectedPaths) {
-                        selectedPaths.toList()
-                    } else {
-                        listOf(entry.path)
-                    },
-                )
+        else -> {
+            val haptic = LocalHapticFeedback.current
+            val latestFiltered = rememberUpdatedState(filtered)
+            val latestOnSwipeSelect = rememberUpdatedState(onSwipeSelect)
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .swipeSelect(
+                        listState = listState,
+                        entries = latestFiltered,
+                        onSelect = latestOnSwipeSelect,
+                        haptic = haptic,
+                    ),
+                contentPadding = PaddingValues(bottom = 8.dp + bottomInset),
+            ) {
+                itemsIndexed(
+                    items = filtered,
+                    key = { _, entry -> entry.path },
+                ) { index, entry ->
+                    FileBrowserEntryRow(
+                        entry = entry,
+                        showDivider = index < filtered.lastIndex,
+                        selected = entry.path in selectedPaths,
+                        selectionMode = selectionMode,
+                        access = access,
+                        onClick = { onEntryClick(entry) },
+                        onLongClick = { onEntryLongClick(entry) },
+                        dragPaths = if (selectionMode && entry.path in selectedPaths) {
+                            selectedPaths.toList()
+                        } else {
+                            listOf(entry.path)
+                        },
+                    )
+                }
             }
         }
     }
+}
+
+/**
+ * MT 式「滑动勾选」：在行上左/右滑即勾选当前行，继续滑到别的行则把两行之间（含两端）
+ * 全部并入选择。只做并集，取消勾选仍靠点击。
+ *
+ * 手指按下后即使滑出本行，pointerInput 仍会收到事件；这里用 [LazyListState] 的可见项偏移
+ * 把手指 Y 映射回行下标。纵向滚动 / 长按拖拽先认领手势时（change.isConsumed）直接放弃，
+ * 避免抢走滚动。
+ */
+private fun Modifier.swipeSelect(
+    listState: LazyListState,
+    entries: State<List<FileBrowserEntry>>,
+    onSelect: State<(FileBrowserEntry) -> Unit>,
+    haptic: HapticFeedback,
+): Modifier = pointerInput(listState) {
+    val touchSlop = viewConfiguration.touchSlop
+    val longPressTimeout = viewConfiguration.longPressTimeoutMillis
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false)
+        var active = false
+        var lastIndex = -1
+        while (true) {
+            val event = awaitPointerEvent(PointerEventPass.Main)
+            val change = event.changes.firstOrNull { it.id == down.id }
+                ?: return@awaitEachGesture
+            if (!change.pressed) return@awaitEachGesture
+            if (!active) {
+                // 滚动或长按已经消费了这次手势：不抢。
+                if (change.isConsumed) return@awaitEachGesture
+                // 长按时间窗之后才动的手，属于长按拖拽（把文件拖出去），不是滑选。
+                if (change.uptimeMillis - down.uptimeMillis > longPressTimeout) {
+                    return@awaitEachGesture
+                }
+                val dx = abs(change.position.x - down.position.x)
+                val dy = abs(change.position.y - down.position.y)
+                if (dy > touchSlop && dy >= dx) return@awaitEachGesture
+                if (dx <= touchSlop) continue
+                active = true
+                lastIndex = listState.indexAtPosition(change.position.y)
+                    ?: return@awaitEachGesture
+                entries.value.getOrNull(lastIndex)?.let {
+                    onSelect.value(it)
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                }
+            }
+            change.consume()
+            val index = listState.indexAtPosition(change.position.y) ?: continue
+            if (index != lastIndex) {
+                lastIndex = index
+                entries.value.getOrNull(index)?.let {
+                    onSelect.value(it)
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 手指 Y（列表容器坐标）→ 可见行下标。
+ *
+ * `LazyListItemInfo.offset` 不含 contentPadding（Compose 到 place 阶段才加 visualOffset），
+ * 所以先加 `viewportStartOffset` 换到同一套坐标里；本列表只有底部 padding，通常等价于 y。
+ */
+private fun LazyListState.indexAtPosition(y: Float): Int? {
+    val info = layoutInfo
+    val adjusted = y + info.viewportStartOffset
+    return info.visibleItemsInfo
+        .firstOrNull { adjusted >= it.offset && adjusted < it.offset + it.size }
+        ?.index
 }
 
 @OptIn(ExperimentalFoundationApi::class)

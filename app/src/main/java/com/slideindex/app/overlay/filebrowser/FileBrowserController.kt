@@ -571,6 +571,19 @@ internal class FileBrowserController(
         )
     }
 
+    /**
+     * 滑动勾选：把 [paths] 并入当前选择（只增不减，取消仍靠点击）。
+     * 与 [toggleSelection] 相反，这里不会因为“路径本来就在选择里”而把勾去掉。
+     */
+    fun selectRange(paths: Collection<String>) {
+        if (paths.isEmpty()) return
+        state = state.copy(
+            selectionMode = true,
+            selectedPaths = state.selectedPaths + paths,
+            details = null,
+        )
+    }
+
     fun exitSelection() {
         state = state.copy(selectionMode = false, selectedPaths = emptySet())
     }

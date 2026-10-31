@@ -201,6 +201,11 @@ internal object FileBrowserOverlayWindow {
             current.controller.hideDetails()
             return
         }
+        // 勾选态是「临时模式」：返回先退出多选，而不是直接回上级目录（否则选中项会被导航清空）。
+        if (state.selectionMode || state.selectedPaths.isNotEmpty()) {
+            current.controller.exitSelection()
+            return
+        }
         if (state.query.isNotEmpty()) {
             current.controller.setQuery("")
             return
