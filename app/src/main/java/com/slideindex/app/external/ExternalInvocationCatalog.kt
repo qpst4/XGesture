@@ -134,6 +134,17 @@ object ExternalInvocationCatalog {
         return builder.toString()
     }
 
+    /**
+     * 拼 `am -n <包>/<类>` 里的类名。
+     *
+     * 这里必须是**带点的相对名**（`.service.XxxActivity`）或全限定名。只去掉包名前缀、
+     * 留下 `service.XxxActivity` 会被 `ComponentName` 当成全限定类名去解析，直接报
+     * `Activity class ... does not exist`（外部调用页复制的命令曾因此跑不通）。
+     */
     private fun componentRelativeName(componentClass: String): String =
-        componentClass.removePrefix("$PACKAGE_NAME.")
+        if (componentClass.startsWith("$PACKAGE_NAME.")) {
+            "." + componentClass.removePrefix("$PACKAGE_NAME.")
+        } else {
+            componentClass
+        }
 }
