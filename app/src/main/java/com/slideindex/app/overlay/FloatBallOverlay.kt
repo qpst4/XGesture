@@ -2962,8 +2962,11 @@ object FloatBallOverlay {
             line.visibility = if (visible) View.VISIBLE else View.GONE
         }
         // 单线模式：线由条带窗画；线窗只在双线模式下画"球所在那一侧"。
-        val showLeft = visible && bothLines && activeSide == FloatBallSide.RIGHT
-        val showRight = visible && bothLines && activeSide == FloatBallSide.LEFT
+        // 双线模式：左窗画左边那条、右窗画右边那条；球所在侧那条由"球侧窗"负责。
+        // ⚠ 之前两个条件写反了：球在右侧时反而让左窗再画一次左边，
+        //    结果球侧（右）那条永远不画 —— 表现就是"一侧有线、对侧没有线但能触发"。
+        val showLeft = visible && bothLines && activeSide == FloatBallSide.LEFT
+        val showRight = visible && bothLines && activeSide == FloatBallSide.RIGHT
         val leftStrip = FloatBallLayout.lineStripBounds(
             settings, metrics, FloatBallSide.LEFT, screenW, screenH,
         )
@@ -3025,7 +3028,10 @@ object FloatBallOverlay {
             }
             return
         }
-        state.ballVisible.value = true
+        // 「两侧都是线」空闲时只画线、不画球（球在开始拖动时才浮现）。
+        // 以前这条规则由空闲层里的 FloatBallIdleBallChrome 提前 return 保证；
+        // 现在球由独立小窗常显，必须在这里把球隐掉，否则会变成"一边球一边线"。
+        state.ballVisible.value = !FloatBallLayout.isBothLines(settings)
         state.lineVisible.value = FloatBallLayout.shouldShowLine(settings)
         touchHost?.ballStripTouchable = true
         lineTouchHost?.stripTouchable = true
