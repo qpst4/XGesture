@@ -1536,17 +1536,12 @@ object FloatBallOverlay {
         val displayHost = FloatBallDisplayHost(
             context = overlayContext,
             lineChromeOwner = displayDialogOwner,
+            ballIconView = ballIcon,
             cursorPreviewView = cursorPreview
         ).apply {
             isClickable = false
             isFocusable = false
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-            lineChromeComposeView.setContent {
-                FloatBallLineChrome(
-                    sceneState = state,
-                    dragActiveSideOverrideState = dragActiveSideOverrideState!!
-                )
-            }
         }
 
         val touchLayout = FloatBallTouchHostLayout(
@@ -1718,12 +1713,8 @@ object FloatBallOverlay {
         // 线条改成两条独立窄窗（纯 View 绘制），运行时不再走全屏 Compose 线层。
         lineWindowLeft = FloatBallLineWindow(hostContext, alignRight = false).also { it.attach() }
         lineWindowRight = FloatBallLineWindow(hostContext, alignRight = true).also { it.attach() }
-        // 关掉 display 层里的 Compose 线条，避免画两份。
-        displayHost.lineChromeComposeView.visibility = View.GONE
 
         // 【单窗】球图标直接挂进触摸窗：窗口既画球又是命中区，不再有第二个"球窗"要同步位置。
-        ballIcon.layoutParams = android.widget.FrameLayout.LayoutParams(1, 1)
-        touchLayout.addView(ballIcon)
 
         val touchAdded = runCatching { wm.addView(touchLayout, touchLp) }
             .onFailure { Log.e(TAG, "failed to add ball touch overlay", it) }
@@ -2905,11 +2896,10 @@ object FloatBallOverlay {
         )
         val (left, top) = state.ballWindowTopLeft(settings, metrics, activeSide, center, screenHeightPx)
         val ballSize = FloatBallLayout.ballSize(settings, metrics.density)
-        moveBallTouchWindow(left, top, ballSize.widthPx, ballSize.heightPx)
-        // 「圆环接管手势」期间球一律不显示：窗口此时是全屏的，球图标在窗内 (0,0)，
-        // 一显示就会闪到屏幕左上角。写进每帧布局里判断，就不用依赖"藏一次"的时序。
+        host.layoutBall(left, top, ballSize.widthPx, ballSize.heightPx)
+        // 「圆环接管手势」期间球一律不显示：display 层此时可能被扩成全屏，球不参与接管。
         val showBall = state.ballVisible.value && !isLauncherCaptureActive()
-        ballIconView?.visibility = if (showBall) View.VISIBLE else View.GONE
+        host.setBallVisible(showBall)
         if (!layoutOnly) {
             ballIconView?.bind(
                 settings = settings,
@@ -3436,6 +3426,13 @@ object FloatBallOverlay {
             screenWidthPx = screenWidthPx,
             screenHeightPx = screenHeightPx
         )
+        // 按下点不在球身上（从线条/边缘拖出来）时，球应当**出现在手指处**，而不是带着
+        // 「球心 − 按下点」的摇杆偏移（按线条时那个偏移能有 200px，球就会一直在手指上方）。
+        val pressOnBall =
+            kotlin.math.abs(touchDownX - ballCenterX) <= ballSize.widthPx / 2f &&
+                kotlin.math.abs(touchDownY - ballCenterY) <= ballSize.heightPx / 2f
+        val effectiveCenterX = if (pressOnBall) ballCenterX else touchDownX
+        val effectiveCenterY = if (pressOnBall) ballCenterY else touchDownY
         val pickDockSide = when {
             fromEdgeGesture -> if (fingerX < screenWidth / 2f) FloatBallSide.LEFT else FloatBallSide.RIGHT
             else -> effectiveActiveSide(settings)
@@ -3446,8 +3443,8 @@ object FloatBallOverlay {
             touchDownY = touchDownY,
             fingerX = fingerX,
             fingerY = fingerY,
-            ballCenterX = ballCenterX,
-            ballCenterY = ballCenterY,
+            ballCenterX = effectiveCenterX,
+            ballCenterY = effectiveCenterY,
             ballSize = ballSize,
             screenWidth = screenWidth,
             screenHeight = screenHeight,
@@ -4181,28 +4178,6 @@ object FloatBallOverlay {
         scheduleCursorCommitOnNextFrame()
     }
 
-    /** 单窗模式：球窗 = 触摸窗，移动球就是移动这个窗口（窗口坐标即命中区）。 */
-    private fun moveBallTouchWindow(left: Int, top: Int, widthPx: Int, heightPx: Int) {
-        val view = touchHost ?: return
-        val wm = windowManager ?: return
-        val params = touchLayoutParams ?: return
-        val w = widthPx.coerceAtLeast(1)
-        val h = heightPx.coerceAtLeast(1)
-        if (params.x == left && params.y == top && params.width == w && params.height == h) return
-        params.x = left
-        params.y = top
-        params.width = w
-        params.height = h
-        // 球图标保持"球大小"：启动器接管时窗口会扩成全屏，MATCH_PARENT 会让球铺满屏幕。
-        val iconLp = ballIconView?.layoutParams
-        if (iconLp != null && (iconLp.width != w || iconLp.height != h)) {
-            iconLp.width = w
-            iconLp.height = h
-            ballIconView?.layoutParams = iconLp
-        }
-        runCatching { wm.updateViewLayout(view, params) }
-    }
-
     private fun applyDragBallLayout(settings: AppSettings) {
         val view = displayView ?: return
         val metrics = view.resources.displayMetrics
@@ -4216,10 +4191,6 @@ object FloatBallOverlay {
             screenWidth = screenBounds.width.roundToInt(),
             screenHeight = screenBounds.height.roundToInt()
         )
-        if (dragCenterLogCount < 10) {
-            val raw = dragSession.ballCenter()
-            dragCenterLogCount++
-        }
         syncDisplayBallLayout(settings, layoutOnly = true, overrideCenter = center)
     }
 
