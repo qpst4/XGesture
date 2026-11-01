@@ -219,6 +219,19 @@ internal class BrowserTab(
             callbacks.onPageStarted(url.orEmpty())
         }
 
+        override fun onReceivedSslError(
+            view: WebView,
+            handler: android.webkit.SslErrorHandler,
+            error: android.net.http.SslError,
+        ) {
+            BrowserDialogs.confirm(
+                context,
+                "此网站证书有问题（code=${error.primaryError}），继续访问可能有风险。是否继续？",
+                onOk = { runCatching { handler.proceed() } },
+                onCancel = { runCatching { handler.cancel() } },
+            )
+        }
+
         override fun onRenderProcessGone(
             view: WebView,
             detail: android.webkit.RenderProcessGoneDetail,

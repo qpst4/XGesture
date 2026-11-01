@@ -168,6 +168,8 @@ object FloatingBrowserPanel {
     private var downloadsVisible by mutableStateOf(false)
     private var historyVisible by mutableStateOf(false)
     private var bookmarksVisible by mutableStateOf(false)
+    private var incognito by mutableStateOf(false)
+    private var memoryCallbacks: android.content.ComponentCallbacks2? = null
     private var contextMenuTarget by mutableStateOf<ContextMenuTarget?>(null)
 
     sealed interface ContextMenuTarget {
@@ -318,6 +320,22 @@ object FloatingBrowserPanel {
             openUrl(initialUrl)
         }
 
+        val appContext = context.applicationContext
+        val callbacks = object : android.content.ComponentCallbacks2 {
+            override fun onTrimMemory(level: Int) {
+                if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+                    trimTabsForMemory()
+                }
+            }
+            override fun onLowMemory() {
+                trimTabsForMemory()
+            }
+
+            override fun onConfigurationChanged(newConfig: android.content.res.Configuration) = Unit
+        }
+        appContext.registerComponentCallbacks(callbacks)
+        memoryCallbacks = callbacks
+
         // 键盘弹出时把卡片上移，避免网页底部输入框被遮挡
         root.setOnApplyWindowInsetsListener { _, insets ->
             val imeBottom = insets.getInsets(android.view.WindowInsets.Type.ime()).bottom
@@ -382,6 +400,16 @@ object FloatingBrowserPanel {
     }
 
     fun dismiss() {
+        memoryCallbacks?.let { cb ->
+            runCatching { rootView?.context?.applicationContext?.unregisterComponentCallbacks(cb) }
+        }
+        memoryCallbacks = null
+        if (incognito) {
+            runCatching {
+                android.webkit.CookieManager.getInstance().removeAllCookies(null)
+                android.webkit.WebStorage.getInstance().deleteAllData()
+            }
+        }
         persistHandler.removeCallbacks(persistRunnable)
         persistWindow()
         persistSession()
@@ -553,6 +581,7 @@ object FloatingBrowserPanel {
         }
 
         override fun onHistoryRecord(url: String, title: String) {
+            if (incognito) return
             val ctx = webHost?.context ?: return
             BrowserStore.record(ctx, url, title)
         }
@@ -664,6 +693,15 @@ object FloatingBrowserPanel {
         urls.forEachIndexed { index, url -> newTab(url, lazy = index != activeIndex) }
         tabs.getOrNull(activeIndex)?.let { activateTab(it.id) }
         return tabs.isNotEmpty()
+    }
+
+    /** 内存吃紧：关掉最久未用的后台标签（至少保留 2 个）。 */
+    private fun trimTabsForMemory() {
+        if (tabs.size <= 2) return
+        val candidates = tabs.filter { it.id != activeTabId }
+            .sortedBy { tabLastUsedAt[it.id] ?: 0L }
+        candidates.firstOrNull()?.let { closeTab(it.id) }
+        refreshUi()
     }
 
     /** 超出上限时回收最久未用的非激活标签。 */
@@ -1428,20 +1466,30 @@ object FloatingBrowserPanel {
         }
     }
 
-    /** 系统下载列表（读 DownloadManager，展示进度）。 */
+    private data class DlEntry(
+        val id: Long,
+        val title: String,
+        val percent: Int,
+        val state: String,
+    )
+
+    /** 系统下载列表（读 DownloadManager，展示进度，可打开）。 */
     @Composable
     private fun DownloadsList() {
         val context = rootView?.context
-        var entries by remember { mutableStateOf(listOf<Triple<String, Int, String>>()) }
+        var entries by remember { mutableStateOf(listOf<DlEntry>()) }
         androidx.compose.runtime.LaunchedEffect(downloadsVisible) {
             if (context == null) return@LaunchedEffect
             val ctx = context
             while (downloadsVisible) {
                 entries = runCatching {
-                    val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
+                    val dm = ctx.getSystemService(Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
                     val cursor = dm.query(android.app.DownloadManager.Query())
-                    val out = mutableListOf<Triple<String, Int, String>>()
+                    val out = mutableListOf<DlEntry>()
                     while (cursor.moveToNext()) {
+                        val id = cursor.getLong(
+                            cursor.getColumnIndexOrThrow(android.app.DownloadManager.COLUMN_ID),
+                        )
                         val title = cursor.getString(
                             cursor.getColumnIndexOrThrow(android.app.DownloadManager.COLUMN_TITLE),
                         ).orEmpty()
@@ -1461,7 +1509,7 @@ object FloatingBrowserPanel {
                             android.app.DownloadManager.STATUS_PAUSED -> ctx.getString(R.string.browser_download_paused)
                             else -> percent.toString() + "%"
                         }
-                        out.add(Triple(title, percent, state))
+                        out.add(DlEntry(id, title, percent, state))
                     }
                     cursor.close()
                     out.takeLast(10).reversed()
@@ -1469,23 +1517,41 @@ object FloatingBrowserPanel {
                 kotlinx.coroutines.delay(1000)
             }
         }
-        Column(modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(160.dp)) {
             if (entries.isEmpty()) {
                 Text(stringResource(R.string.browser_no_downloads), color = ComposeColor(0xFF9AA0A6), fontSize = 12.sp)
             } else {
-                entries.forEach { entry ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            entry.first,
-                            color = ComposeColor(0xFF202124),
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Text(entry.third, color = ComposeColor(0xFF5F6368), fontSize = 11.sp)
+                androidx.compose.foundation.lazy.LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    items(entries) { entry ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 3.dp)
+                                .clickable {
+                                    runCatching {
+                                        val dm = context!!.getSystemService(Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
+                                        val uri = dm.getUriForDownloadedFile(entry.id) ?: return@clickable
+                                        context.startActivity(
+                                            android.content.Intent(android.content.Intent.ACTION_VIEW)
+                                                .setDataAndType(uri, "application/octet-stream")
+                                                .addFlags(
+                                                    android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                                        android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                                                ),
+                                        )
+                                    }
+                                },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                entry.title,
+                                color = ComposeColor(0xFF202124),
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Text(entry.state, color = ComposeColor(0xFF5F6368), fontSize = 11.sp)
+                        }
                     }
                 }
             }
@@ -1647,6 +1713,21 @@ object FloatingBrowserPanel {
                 }
                 if (bookmarksVisible) EntryList(showBookmarks = true)
                 if (historyVisible) EntryList(showBookmarks = false)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        stringResource(R.string.browser_incognito),
+                        color = ComposeColor(0xFF5F6368),
+                        fontSize = 13.sp,
+                        modifier = Modifier.weight(1f),
+                    )
+                    androidx.compose.material3.Switch(
+                        checked = incognito,
+                        onCheckedChange = { incognito = it },
+                    )
+                }
                 androidx.compose.material3.TextButton(
                     onClick = { downloadsVisible = !downloadsVisible },
                     modifier = Modifier.fillMaxWidth(),
