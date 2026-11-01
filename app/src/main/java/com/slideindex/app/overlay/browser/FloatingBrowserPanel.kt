@@ -118,6 +118,12 @@ object FloatingBrowserPanel {
 
     private const val PREFS = "xg_browser"
 
+    /** 同时存活的标签上限（超出按 LRU 回收最久未用的非激活标签）。 */
+    private const val MAX_LIVE_TABS = 8
+
+    /** 冷启动恢复时最多恢复几个标签。 */
+    private const val MAX_RESTORE_TABS = MAX_LIVE_TABS
+
     private var windowManager: WindowManager? = null
     private var rootView: FrameLayout? = null
     private var composeView: ComposeView? = null
@@ -131,6 +137,10 @@ object FloatingBrowserPanel {
     private val activeTab: BrowserTab?
         get() = tabs.firstOrNull { it.id == activeTabId }
     private var nextTabId = 1L
+    private val tabLastUsedAt = mutableMapOf<Long, Long>()
+    private val persistHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val persistRunnable = Runnable { persistSession() }
+    private var imeShiftPx = 0
     private var cardWidthPx = 0
     private var cardHeightPx = 0
 
@@ -150,6 +160,9 @@ object FloatingBrowserPanel {
     private var selectedText by mutableStateOf("")
     private val selectionRects = mutableStateListOf<FloatArray>()
     private var selectionScale = 1f
+    private var themeColor by mutableIntStateOf(0)
+    private var desktopMode by mutableStateOf(false)
+    private var downloadsVisible by mutableStateOf(false)
     private var contextMenuTarget by mutableStateOf<ContextMenuTarget?>(null)
 
     sealed interface ContextMenuTarget {
@@ -290,7 +303,22 @@ object FloatingBrowserPanel {
             return
         }
 
-        if (tabs.isEmpty()) newTab(initialUrl ?: "https://www.bing.com") else initialUrl?.let { openUrl(it) }
+        desktopMode = prefs.getBoolean("desktop_ua", false)
+
+        if (tabs.isEmpty()) {
+            val restored = restoreSession()
+            if (restored && !initialUrl.isNullOrBlank()) openUrl(initialUrl)
+            if (tabs.isEmpty()) newTab(initialUrl ?: "https://www.bing.com")
+        } else if (!initialUrl.isNullOrBlank()) {
+            openUrl(initialUrl)
+        }
+
+        // 键盘弹出时把卡片上移，避免网页底部输入框被遮挡
+        root.setOnApplyWindowInsetsListener { _, insets ->
+            val imeBottom = insets.getInsets(android.view.WindowInsets.Type.ime()).bottom
+            applyImeAvoidance(imeBottom)
+            insets
+        }
         refreshUi()
     }
 
@@ -349,7 +377,9 @@ object FloatingBrowserPanel {
     }
 
     fun dismiss() {
+        persistHandler.removeCallbacks(persistRunnable)
         persistWindow()
+        persistSession()
         tabs.forEach { it.destroy() }
         tabs.clear()
         tabLabels.clear()
@@ -517,6 +547,20 @@ object FloatingBrowserPanel {
             fullscreenView = null
         }
 
+        override fun onThemeColorChanged(color: Int) {
+            themeColor = color
+            refreshUi()
+        }
+
+        override fun onRenderProcessGone() {
+            val host = webHost ?: return
+            android.widget.Toast.makeText(host.context, "网页进程崩溃，已重新打开", android.widget.Toast.LENGTH_SHORT).show()
+            val current = tabs.firstOrNull { it.id == activeTabId }
+            val targetUrl = current?.url.orEmpty()
+            if (current != null) closeTab(current.id)
+            if (tabs.isEmpty()) newTab(targetUrl.ifBlank { "https://www.bing.com" })
+        }
+
         override fun onPageScrolled(scrollY: Int) {
             val delta = scrollY - lastScrollY
             lastScrollY = scrollY
@@ -573,7 +617,81 @@ object FloatingBrowserPanel {
         }
     }
 
-    private fun newTab(url: String? = null, parentTabId: Long? = null): BrowserTab? {
+    private fun schedulePersistSession() {
+        persistHandler.removeCallbacks(persistRunnable)
+        persistHandler.postDelayed(persistRunnable, 400L)
+    }
+
+    private fun persistSession() {
+        val context = rootView?.context ?: return
+        val urls = tabs.mapNotNull { it.url.takeIf { u -> u.isNotBlank() } }
+        if (urls.isEmpty()) return
+        val activeIndex = tabs.indexOfFirst { it.id == activeTabId }.coerceAtLeast(0)
+        runCatching {
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                .putString("session_urls", urls.joinToString("\n"))
+                .putInt("session_active", activeIndex)
+                .apply()
+        }
+    }
+
+    /** 冷启动恢复标签；返回是否恢复出了标签。 */
+    private fun restoreSession(): Boolean {
+        val context = rootView?.context ?: return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val urls = prefs.getString("session_urls", null)
+            ?.split("\n")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.take(MAX_RESTORE_TABS)
+            ?: return false
+        if (urls.isEmpty()) return false
+        val activeIndex = prefs.getInt("session_active", 0).coerceIn(0, urls.size - 1)
+        urls.forEachIndexed { index, url -> newTab(url, lazy = index != activeIndex) }
+        tabs.getOrNull(activeIndex)?.let { activateTab(it.id) }
+        return tabs.isNotEmpty()
+    }
+
+    /** 超出上限时回收最久未用的非激活标签。 */
+    private fun trimTabsIfNeeded() {
+        if (tabs.size <= MAX_LIVE_TABS) return
+        val candidates = tabs.filter { it.id != activeTabId }
+            .sortedBy { tabLastUsedAt[it.id] ?: 0L }
+        val excess = tabs.size - MAX_LIVE_TABS
+        candidates.take(excess).forEach { tab ->
+            closeTab(tab.id)
+        }
+    }
+
+    private fun applyImeAvoidance(imeBottomPx: Int) {
+        val wm = windowManager ?: return
+        val root = rootView ?: return
+        val params = windowParams ?: return
+        if (maximized) return
+        if (imeBottomPx <= 0) {
+            if (imeShiftPx != 0) {
+                params.y += imeShiftPx
+                imeShiftPx = 0
+                runCatching { wm.updateViewLayout(root, params) }
+            }
+            return
+        }
+        val metrics = root.resources.displayMetrics
+        val cardBottom = metrics.heightPixels / 2 + params.y + params.height / 2
+        val keyboardTop = metrics.heightPixels - imeBottomPx
+        val overlap = cardBottom - keyboardTop
+        if (overlap > 0) {
+            params.y -= overlap
+            imeShiftPx += overlap
+            runCatching { wm.updateViewLayout(root, params) }
+        }
+    }
+
+    private fun newTab(
+        url: String? = null,
+        parentTabId: Long? = null,
+        lazy: Boolean = false,
+    ): BrowserTab? {
         val host = webHost ?: return null
         val tabId = nextTabId++
         val tab = BrowserTab(
@@ -586,8 +704,10 @@ object FloatingBrowserPanel {
         tabLabels.add("新标签")
         activateTab(tab.id)
         if (!url.isNullOrBlank()) {
-            tab.load(url)
+            if (lazy) tab.setLazy(url) else tab.load(url)
         }
+        trimTabsIfNeeded()
+        schedulePersistSession()
         return tab
     }
 
@@ -604,6 +724,8 @@ object FloatingBrowserPanel {
         tabLabels.add("新标签")
         tab.pause()
         tab.load(url)
+        trimTabsIfNeeded()
+        schedulePersistSession()
         refreshUi()
         android.widget.Toast.makeText(host.context, "已在后台打开新标签页", android.widget.Toast.LENGTH_SHORT).show()
     }
@@ -662,6 +784,9 @@ object FloatingBrowserPanel {
             }
         }
         activeTabId = id
+        tabLastUsedAt[id] = android.os.SystemClock.uptimeMillis()
+        tabs.firstOrNull { it.id == id }?.loadIfLazy()
+        schedulePersistSession()
         val active = tabs.firstOrNull { it.id == id }
         currentUrl = active?.url.orEmpty()
         addressText = currentUrl
@@ -677,6 +802,7 @@ object FloatingBrowserPanel {
         if (index in tabLabels.indices) tabLabels.removeAt(index)
         webHost?.let { tab.detachFrom(it) }
         tab.destroy()
+        schedulePersistSession()
         if (tabs.isEmpty()) {
             dismiss()
             return
@@ -735,7 +861,15 @@ object FloatingBrowserPanel {
                         .fillMaxWidth()
                         .height(46.dp)
                         .background(
-                            ComposeColor(0xF5F6F8FA),
+                            if (themeColor != 0) {
+                                androidx.compose.ui.graphics.lerp(
+                                    ComposeColor.White,
+                                    ComposeColor(themeColor),
+                                    0.12f,
+                                )
+                            } else {
+                                ComposeColor(0xF5F6F8FA)
+                            },
                             if (maximized) {
                                 RoundedCornerShape(0.dp)
                             } else {
@@ -1146,6 +1280,69 @@ object FloatingBrowserPanel {
         }
     }
 
+    /** 系统下载列表（读 DownloadManager，展示进度）。 */
+    @Composable
+    private fun DownloadsList() {
+        val context = rootView?.context
+        var entries by remember { mutableStateOf(listOf<Triple<String, Int, String>>()) }
+        androidx.compose.runtime.LaunchedEffect(downloadsVisible) {
+            if (context == null) return@LaunchedEffect
+            while (downloadsVisible) {
+                entries = runCatching {
+                    val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
+                    val cursor = dm.query(android.app.DownloadManager.Query())
+                    val out = mutableListOf<Triple<String, Int, String>>()
+                    while (cursor.moveToNext()) {
+                        val title = cursor.getString(
+                            cursor.getColumnIndexOrThrow(android.app.DownloadManager.COLUMN_TITLE),
+                        ).orEmpty()
+                        val total = cursor.getLong(
+                            cursor.getColumnIndexOrThrow(android.app.DownloadManager.COLUMN_TOTAL_SIZE_BYTES),
+                        )
+                        val done = cursor.getLong(
+                            cursor.getColumnIndexOrThrow(android.app.DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR),
+                        )
+                        val status = cursor.getInt(
+                            cursor.getColumnIndexOrThrow(android.app.DownloadManager.COLUMN_STATUS),
+                        )
+                        val percent = if (total > 0) ((done * 100) / total).toInt() else 0
+                        val state = when (status) {
+                            android.app.DownloadManager.STATUS_SUCCESSFUL -> "已完成"
+                            android.app.DownloadManager.STATUS_FAILED -> "失败"
+                            android.app.DownloadManager.STATUS_PAUSED -> "暂停"
+                            else -> percent.toString() + "%"
+                        }
+                        out.add(Triple(title, percent, state))
+                    }
+                    cursor.close()
+                    out.takeLast(10).reversed()
+                }.getOrDefault(emptyList())
+                kotlinx.coroutines.delay(1000)
+            }
+        }
+        Column(modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) {
+            if (entries.isEmpty()) {
+                Text("暂无下载", color = ComposeColor(0xFF9AA0A6), fontSize = 12.sp)
+            } else {
+                entries.forEach { entry ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            entry.first,
+                            color = ComposeColor(0xFF202124),
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(entry.third, color = ComposeColor(0xFF5F6368), fontSize = 11.sp)
+                    }
+                }
+            }
+        }
+    }
+
     @Composable
     private fun AddressSheet() {
         Box(
@@ -1248,6 +1445,41 @@ object FloatingBrowserPanel {
                 }
 
                 Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "桌面版网站",
+                        color = ComposeColor(0xFF5F6368),
+                        fontSize = 13.sp,
+                        modifier = Modifier.weight(1f),
+                    )
+                    androidx.compose.material3.Switch(
+                        checked = desktopMode,
+                        onCheckedChange = { checked ->
+                            desktopMode = checked
+                            tabs.forEach { it.setDesktopMode(checked) }
+                            rootView?.context
+                                ?.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                                ?.edit()
+                                ?.putBoolean("desktop_ua", checked)
+                                ?.apply()
+                            refreshUi()
+                        },
+                    )
+                }
+                androidx.compose.material3.TextButton(
+                    onClick = { downloadsVisible = !downloadsVisible },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(if (downloadsVisible) "收起下载" else "查看下载", fontSize = 13.sp)
+                }
+                if (downloadsVisible) {
+                    DownloadsList()
+                }
+
                 Row(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically,

@@ -53,6 +53,12 @@ internal class BrowserTab(
         /** 页面滚动位置变化（用于自动隐藏底部工具条）。 */
         fun onPageScrolled(scrollY: Int)
 
+        /** 网页声明的 theme-color（用于顶栏取色）。 */
+        fun onThemeColorChanged(color: Int)
+
+        /** WebView 渲染进程崩溃，需要重建标签。 */
+        fun onRenderProcessGone()
+
         /** 选词监听（P0）。 */
         fun onTextSelected(text: String)
 
@@ -68,6 +74,13 @@ internal class BrowserTab(
         /** 长按图片菜单（P1）。 */
         fun onImageContextMenu(imageUrl: String)
     }
+
+    /** 懒加载：冷启动恢复时先只记住 URL，等用户切到该标签才真正 load。 */
+    private var pendingLazyUrl: String? = null
+    val isLazyPending: Boolean get() = pendingLazyUrl != null
+
+    var desktopMode: Boolean = false
+        private set
 
     var url: String = ""
         private set
@@ -162,6 +175,7 @@ internal class BrowserTab(
             settings.userAgentString = settings.userAgentString
                 .replace("; wv", "")
                 .replace(" Version/4.0", "")
+            rememberDefaultUa(settings.userAgentString)
             val cookieManager = CookieManager.getInstance()
             cookieManager.setAcceptCookie(true)
             cookieManager.setAcceptThirdPartyCookies(this, true)
@@ -198,6 +212,14 @@ internal class BrowserTab(
             callbacks.onPageStarted(url.orEmpty())
         }
 
+        override fun onRenderProcessGone(
+            view: WebView,
+            detail: android.webkit.RenderProcessGoneDetail,
+        ): Boolean {
+            callbacks.onRenderProcessGone()
+            return true
+        }
+
         override fun onPageFinished(view: WebView, url: String?) {
             super.onPageFinished(view, url)
             this@BrowserTab.url = url.orEmpty()
@@ -205,6 +227,13 @@ internal class BrowserTab(
             callbacks.onPageFinished(url.orEmpty())
             callbacks.onUrlChanged(url.orEmpty(), title)
             injectFormTakeover(view)
+            view.evaluateJavascript(
+                "(function(){try{var m=document.querySelector('meta[name=theme-color]');" +
+                    "return m&&m.content?m.content:'';}catch(e){return '';}})()",
+            ) { color ->
+                val parsed = parseThemeColor(color)
+                if (parsed != 0) callbacks.onThemeColorChanged(parsed)
+            }
         }
 
         override fun shouldInterceptRequest(
@@ -630,9 +659,42 @@ internal class BrowserTab(
         }
     }
 
+    /** 懒加载：只记住 URL，不真正加载。 */
+    fun setLazy(target: String) {
+        pendingLazyUrl = target
+        url = target
+    }
+
+    /** 切换到该标签时调用：如果是懒加载状态就真正加载。 */
+    fun loadIfLazy() {
+        val pending = pendingLazyUrl ?: return
+        pendingLazyUrl = null
+        load(pending)
+    }
+
     fun load(target: String) {
+        if (target == "xg://imetest") {
+            pendingLazyUrl = null
+            url = target
+            webView.loadDataWithBaseURL(
+                "https://example.com",
+                IME_TEST_HTML,
+                "text/html",
+                "utf-8",
+                null,
+            )
+            return
+        }
         val normalized = normalizeUrl(target)
         webView.loadUrl(normalized)
+    }
+
+    /** 桌面 / 移动 UA 切换（wp 生效于后续请求）。 */
+    fun setDesktopMode(desktop: Boolean) {
+        desktopMode = desktop
+        val settings = webView.settings
+        settings.userAgentString = if (desktop) DESKTOP_UA else DEFAULT_UA
+        runCatching { webView.reload() }
     }
 
     fun evaluate(js: String) {
@@ -700,6 +762,36 @@ internal class BrowserTab(
         }
     }
 
+    /** 解析 #RGB / #RRGGBB / rgb() 形式的 theme-color，失败返回 0。 */
+    private fun parseThemeColor(raw: String?): Int {
+        val value = raw?.removeSurrounding("\"")?.trim().orEmpty()
+        if (value.isEmpty()) return 0
+        return runCatching {
+            when {
+                value.startsWith("#") -> {
+                    val hex = value.removePrefix("#")
+                    when (hex.length) {
+                        6 -> android.graphics.Color.parseColor("#" + hex)
+                        3 -> android.graphics.Color.parseColor(
+                            "#" + hex.map { ch -> "" + ch + ch }.joinToString(""),
+                        )
+                        else -> 0
+                    }
+                }
+                value.startsWith("rgb") -> {
+                    val nums = value.substringAfter('(').substringBefore(')')
+                        .split(',').mapNotNull { it.trim().toIntOrNull() }
+                    if (nums.size >= 3) {
+                        android.graphics.Color.rgb(nums[0], nums[1], nums[2])
+                    } else {
+                        0
+                    }
+                }
+                else -> 0
+            }
+        }.getOrDefault(0)
+    }
+
     private fun cleanJsResult(raw: String?): String {
         if (raw == null || raw == "null" || raw == "\"\"") return ""
         return runCatching {
@@ -736,6 +828,65 @@ internal class BrowserTab(
             "hm.baidu.com",
             "pos.baidu.com",
             "tongji.baidu.com",
+            "cnzz.com",
+            "51.la",
+            "growingio.com",
+            "hotjar.com",
+            "mixpanel.com",
+            "segment.io",
+            "sentry.io",
+            "bugly.qq.com",
+            "pingjs.qq.com",
+            "umengcloud.com",
+            "alog.umeng.com",
+            "ad.google.com",
+            "ads.youtube.com",
+            "googletagmanager.com",
+            "googletagservices.com",
+            "2mdn.net",
+            "serving-sys.com",
+            "adsafeprotected.com",
+            "rubiconproject.com",
+            "pubmatic.com",
+            "openx.net",
+            "casalemedia.com",
+            "smartadserver.com",
+            "yieldmo.com",
+            "sharethrough.com",
+            "triplelift.com",
+            "indexww.com",
+            "33across.com",
+            "adform.net",
+            "1rx.io",
+            "bidswitch.net",
+            "travelaudience.com",
+            "adroll.com",
+            "mathtag.com",
+            "turn.com",
+            "tapad.com",
+            "demdex.net",
+            "omtrdc.net",
+            "everesttech.net",
+            "mc.yandex.ru",
+            "an.yandex.ru",
+            "adfox.ru",
+            "criteo.net",
+            "gumgum.com",
+            "lijit.com",
+            "sovrn.com",
+            "media.net",
+            "contextweb.com",
+            "zedo.com",
+            "adcolony.com",
+            "vungle.com",
+            "chartboost.com",
+            "unityads.unity3d.com",
+            "ironsrc.com",
+            "supertonic.com",
+            "applovin.com",
+            "fyber.com",
+            "inmobi.com",
+            "mopub.com",
         )
 
         fun isBlocked(host: String): Boolean {
@@ -745,6 +896,29 @@ internal class BrowserTab(
     }
 
     companion object {
+        private const val DESKTOP_UA =
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+                "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+
+        private var DEFAULT_UA: String = ""
+
+        internal fun rememberDefaultUa(ua: String) {
+            if (DEFAULT_UA.isBlank()) DEFAULT_UA = ua
+        }
+
+        private val IME_TEST_HTML = """
+            <html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+            <body style="font:16px sans-serif;padding:16px">
+              <h3>输入法避让测试页</h3>
+              <p>下面塞一大段占位文字，把输入框推到页面下方。</p>
+              <p>${"占位文字。".repeat(120)}</p>
+              <p>单行输入：<input style="width:100%;font-size:16px;padding:8px" placeholder="点这里"></p>
+              <p>多行输入：</p>
+              <textarea style="width:100%;height:80px;font-size:16px;padding:8px"></textarea>
+              <p style="height:120px"></p>
+            </body></html>
+        """.trimIndent()
+
         fun normalizeUrl(input: String): String {
             val trimmed = input.trim()
             if (trimmed.isEmpty()) return "about:blank"
