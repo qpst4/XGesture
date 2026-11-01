@@ -1811,9 +1811,8 @@ object FloatBallOverlay {
     }
 
     private fun shouldUseSplitIdleChrome(settings: AppSettings): Boolean {
-        // 【第三步：单层常显】球和线始终由 display 层绘制，空闲态不再另起一套 Compose 层。
-        // 之前空闲时把 display 层设成 GONE、改用触摸窗里的 Compose 层画；拖动开始时再切回来，
-        // 那次 GONE→VISIBLE 要 1~2 帧，就是"手指动了、球还停在原地"的停滞感来源。
+        // 空闲层已停用：线条由原生窄窗绘制、球由 display 层绘制，不再需要
+        // 「display 层 GONE 时用触摸窗里的 Compose 顶替」这一套，避免每次空闲创建 Compose 组合。
         return false
     }
 
