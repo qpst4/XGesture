@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Переводы строк OCR/VLM модуля core:ocr -->
+<resources>
+<string name="ocr_error_api_key_not_configured">API-ключ не настроен, задайте его в «Управлении моделями OCR → Облачная конфигурация»</string>
+<string name="ocr_error_model_not_installed">Модель OCR не установлена</string>
+<string name="ocr_error_native_engine_not_ready">Движок OCR не готов</string>
+<string name="ocr_error_no_text_recognized">Текст не распознан</string>
+<string name="ocr_error_paddle_not_initialized">Движок PaddleOCR не инициализирован</string>
+<string name="ocr_error_unknown_model">Неизвестная модель OCR: %1$s</string>
+<string name="ocr_error_unsupported_engine">Неподдерживаемый движок OCR</string>
+<string name="vlm_provider_openai_name">OpenAI</string>
+<string name="vlm_provider_openai_desc">Серия GPT · Универсальны для зрения и перевода, самая зрелая экосистема</string>
+<string name="vlm_provider_openai_hint">Получите API-ключ на платформе OpenAI (начинается с sk-)</string>
+<string name="vlm_provider_anthropic_name">Claude</string>
+<string name="vlm_provider_anthropic_desc">Anthropic Claude · Лучшее качество распознавания длинных документов и сложных формул</string>
+<string name="vlm_provider_anthropic_hint">Получите API-ключ в консоли Anthropic (начинается с sk-ant-)</string>
+<string name="vlm_provider_gemini_name">Gemini</string>
+<string name="vlm_provider_gemini_desc">Google Gemini · Сильное распознавание изображений, есть бесплатный лимит, через официальный совместимый с OpenAI слой</string>
+<string name="vlm_provider_gemini_hint">Получите API-ключ в Google AI Studio</string>
+<string name="vlm_provider_deepseek_name">DeepSeek</string>
+<string name="vlm_provider_deepseek_desc">DeepSeek · Прямое подключение, низкая цена; deepseek-flash поддерживает распознавание скриншотов</string>
+<string name="vlm_provider_deepseek_hint">Получите API-ключ на открытой платформе DeepSeek</string>
+<string name="vlm_provider_groq_name">Groq</string>
+<string name="vlm_provider_groq_desc">Groq · Очень быстрые вычисления, qwen3.8-27b поддерживает OCR и распознавание изображений (не путать с Grok от xAI)</string>
+<string name="vlm_provider_groq_hint">Получите API-ключ в консоли GroqCloud (начинается с gsk_)</string>
+<string name="vlm_provider_xai_name">Grok (xAI)</string>
+<string name="vlm_provider_xai_desc">xAI Grok · Понимает изображения, хорош в рассуждениях (другая компания, не Groq)</string>
+<string name="vlm_provider_xai_hint">Получите API-ключ в консоли xAI</string>
+<string name="vlm_provider_dashscope_name">Alibaba Cloud Bailian</string>
+<string name="vlm_provider_dashscope_desc">Tongyi Qianwen · Высокая скорость, лучшее соотношение цены и качества для формул и графиков</string>
+<string name="vlm_provider_dashscope_hint">Получите API-ключ в консоли Alibaba Cloud Bailian (начинается с sk-)</string>
+<string name="vlm_provider_zhipu_name">Zhipu AI (ChatGLM)</string>
+<string name="vlm_provider_zhipu_desc">GLM-4V · Глубокое понимание китайского языка, подходит для длинных документов и сложных формул</string>
+<string name="vlm_provider_zhipu_hint">Получите API-ключ на открытой платформе Zhipu AI</string>
+<string name="vlm_provider_siliconflow_name">SiliconFlow</string>
+<string name="vlm_provider_siliconflow_desc">SiliconFlow · Ускоренная ретрансляция открытых моделей зрения при высокой нагрузке</string>
+<string name="vlm_provider_siliconflow_hint">Получите API-ключ на платформе SiliconFlow</string>
+<string name="vlm_provider_custom_name">Своя точка доступа</string>
+<string name="vlm_provider_custom_desc">Поддержка собственных OneAPI, обратных прокси и совместимых с OpenAI точек доступа</string>
+<string name="vlm_provider_custom_hint">Поддерживает любую стандартную точку доступа, совместимую с OpenAI /chat/completions</string>
+<string name="vlm_test_success">Подключение успешно! Аутентификация интерфейса в порядке</string>
+<string name="vlm_test_failed">Ошибка подключения (HTTP %1$d): %2$s</string>
+<string name="vlm_test_network_error">Ошибка сети или адреса: %1$s</string>
+<string name="vlm_error_api_key_empty">API-ключ не может быть пустым</string>
+<string name="vlm_error_cloud_empty">Облачный сервис вернул ошибку: результат распознавания отсутствует</string>
+<string name="vlm_error_cloud_http">Облачное распознавание не удалось (HTTP %1$d): %2$s</string>
+<string name="vlm_error_network">Ошибка сети или интерфейса: %1$s</string>
+<string name="vlm_error_no_details">Нет подробностей</string>
+<string name="vlm_error_unknown">Неизвестная ошибка</string>
+<string name="vlm_user_recognition_prompt">Распознайте текст и формулы на этом изображении строго по правилам форматирования, заданным системой:</string>
+<string name="vlm_default_system_prompt">Вы — профессиональный универсальный помощник по распознаванию текста и формул OCR. Извлекайте текстовое содержимое строго в соответствии с оригиналом изображения, следуя этим правилам форматирования:\n\n1. Обычный текст и абзацы:\n - Весь китайский, обычные английские слова, знаки препинания, повседневные цифры (номера, даты, время, суммы, коды и т. д.) должны выводиться как простой текст; строго запрещено оборачивать их в символы $.\n - Строго запрещено оборачивать в $ отдельные английские буквы, номера вариантов (например, A, B, C или (1), (2)) и чистые цифры.\n\n2. Математические и научные формулы:\n - Используйте синтаксис LaTeX только при встрече настоящих математических выражений (с арифметическими операциями, дробями, корнями, суммами, исчислением, греческими буквами или явными верхними/нижними индексами).\n - Строковые формулы оборачивайте в одиночные $ (например, $E = mc^2$).\n - Отдельные блоки формул оборачивайте в $$ (например, $$frac{a}{b}$$).\n - Если внутри структуры формулы есть китайский текст (индексы, примечания и т. д.), оборачивайте его в LaTeX в формате \\text{текст}.\n\n3. Требования к выводу:\n - Сохраняйте исходные переносы абзацев и порядок чтения.\n - Выводите результат извлечения напрямую; строго запрещено выводить вступления, пояснения или внешние метки блоков кода markdown.</string>
+</resources>

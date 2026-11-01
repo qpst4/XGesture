@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 扩展 Hub 入口 -->
+    <string name="macro_entry_title">Макросы жестов</string>
+    <string name="macro_entry_desc">Запишите последовательность нажатий и свайпов в другом приложении, а затем воспроизведите её одним жестом.</string>
+
+    <!-- 列表页 -->
+    <string name="macro_list_title">Макросы жестов</string>
+    <string name="macro_list_hint">Макрос — это сценарий из нажатий, свайпов и ожиданий, который выполняется в целевом приложении. Нажмите на строку, чтобы изменить, удерживайте — чтобы удалить.</string>
+    <string name="macro_search_hint">Поиск макросов…</string>
+    <string name="macro_list_empty">Макросов пока нет</string>
+    <string name="macro_list_no_match">Нет макросов по этому запросу</string>
+    <string name="macro_create">Новый макрос</string>
+    <string name="macro_row_summary">%1$s — действий: %2$d</string>
+
+    <!-- 删除确认 -->
+    <string name="macro_delete_title">Удалить макрос</string>
+    <string name="macro_delete_message">Удалить «%1$s»? Это действие нельзя отменить.</string>
+    <string name="macro_delete_confirm">Удалить</string>
+
+    <!-- 新建 / 编辑页 -->
+    <string name="macro_editor_title">Изменение макроса</string>
+    <string name="macro_section_basic">Основные настройки</string>
+    <string name="macro_section_record">Запись</string>
+    <string name="macro_name_label">Имя макроса</string>
+    <string name="macro_target_label">Целевое приложение</string>
+    <string name="macro_target_none">Не выбрано</string>
+    <string name="macro_target_value">%1$s · %2$s</string>
+    <string name="macro_start_recording">Начать запись</string>
+    <string name="macro_recording">Запись</string>
+    <string name="macro_start_recording_desc">Открывает целевое приложение и записывает ваши действия в нём.</string>
+    <string name="macro_save">Сохранить</string>
+    <string name="macro_help_idle">При начале записи откроется целевое приложение. Пользуйтесь им как обычно; когда закончите, нажмите «Сохранить» на плавающей панели.</string>
+    <string name="macro_help_recording">Идёт запись: пользуйтесь целевым приложением, затем нажмите «Сохранить» на плавающей панели, чтобы вернуться сюда.</string>
+    <string name="macro_error_name_required">Введите имя макроса</string>
+
+    <!-- 目标 App 选择页 -->
+    <string name="macro_target_pick_title">Целевое приложение</string>
+    <string name="macro_target_pick_subtitle">Показаны только приложения, которые можно запустить с главного экрана.</string>
+    <string name="macro_target_empty">Не найдено приложений для запуска</string>
+    <string name="macro_target_selected">Выбрано · %1$s</string>
+
+    <!-- 录制器接线状态 -->
+    <string name="macro_recording_unavailable">Запись пока недоступна в этой сборке</string>
+    <string name="macro_recording_start_failed">Не удалось начать запись</string>
+    <string name="macro_recording_saved">Запись сохранена: шагов: %1$d</string>
+    <string name="macro_recording_empty">Не записано ни одного шага</string>
+</resources>

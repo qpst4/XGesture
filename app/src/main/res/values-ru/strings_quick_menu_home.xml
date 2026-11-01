@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 快捷菜单首页模块（独立资源文件，避免改动现有 strings.xml）。 -->
+<resources>
+    <string name="quick_menu_home_tools">Инструменты</string>
+    <string name="quick_menu_home_recents_empty">Недавних инструментов пока нет.</string>
+    <string name="quick_menu_title">Быстрое меню</string>
+    <string name="quick_menu_home_search_results">Результаты поиска</string>
+</resources>

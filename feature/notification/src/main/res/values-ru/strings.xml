@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Переводы строк перехвата уведомлений -->
+<resources>
+<string name="notification_replay_link_recycled">Ссылка была освобождена системой</string>
+<string name="notification_replay_no_jump_info">Информация о переходе не захвачена</string>
+</resources>

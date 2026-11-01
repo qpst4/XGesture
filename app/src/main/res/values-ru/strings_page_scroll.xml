@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 页面滚动（独立资源文件，避免改动现有 strings.xml）。 -->
+<resources>
+    <string name="page_scroll_action_name">Прокрутка страницы</string>
+    <string name="page_scroll_action_description">Открывает плавающую панель, которая плавно прокручивает страницу, пока вы не приостановите или не закроете её.</string>
+
+    <string name="page_scroll_reverse_direction">Обратное направление прокрутки</string>
+    <string name="page_scroll_slower">Медленнее</string>
+    <string name="page_scroll_faster">Быстрее</string>
+    <string name="page_scroll_pause">Приостановить прокрутку</string>
+    <string name="page_scroll_resume">Возобновить прокрутку</string>
+    <string name="page_scroll_close">Закрыть панель прокрутки</string>
+
+    <string name="page_scroll_unavailable">На этом экране нет прокручиваемого содержимого.</string>
+    <string name="page_scroll_service_unavailable">Служба специальных возможностей не запущена.</string>
+    <string name="page_scroll_requires_android_n">Плавная прокрутка требует Android 7.0 или новее.</string>
+
+    <string name="page_scroll_prefs_title">Прокрутка страницы</string>
+    <string name="page_scroll_prefs_behavior">Поведение</string>
+    <string name="page_scroll_prefs_appearance">Внешний вид</string>
+    <string name="page_scroll_mode_title">Режим прокрутки</string>
+    <string name="page_scroll_mode_auto">Плавная прокрутка</string>
+    <string name="page_scroll_mode_auto_description">Продолжает прокрутку после отпускания. Используйте плавающую панель, чтобы сменить направление, изменить скорость, сделать паузу или закрыть.</string>
+    <string name="page_scroll_mode_hold_drag">Удержание и перетаскивание</string>
+    <string name="page_scroll_mode_hold_drag_description">Удерживайте край экрана и перемещайте вверх или вниз для постраничной прокрутки.</string>
+    <string name="page_scroll_speed_title">Скорость прокрутки по умолчанию</string>
+    <string name="page_scroll_speed_value">Скорость %1$d из %2$d</string>
+    <string name="page_scroll_bar_color_title">Цвет панели</string>
+    <string name="page_scroll_bar_color_dark">Тёмно-серый</string>
+    <string name="page_scroll_bar_color_black">Чёрный</string>
+    <string name="page_scroll_bar_color_white">Белый</string>
+    <string name="page_scroll_bar_use_accent_title">Использовать акцентный цвет</string>
+    <string name="page_scroll_bar_use_accent_subtitle">Кнопки панели подстраиваются под акцентный цвет текущего приложения.</string>
+</resources>

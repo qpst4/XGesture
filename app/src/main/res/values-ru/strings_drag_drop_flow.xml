@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 全局拖拽流转（独立资源文件，避免改动现有 strings.xml）。 -->
+<resources>
+    <string name="drag_drop_flow_title">Глобальное перетаскивание с передачей</string>
+
+    <!-- 设置页 -->
+    <string name="drag_drop_flow_section_basic">Основные настройки</string>
+    <string name="drag_drop_flow_enable_title">Включить глобальное перетаскивание с передачей</string>
+    <string name="drag_drop_flow_enable_summary">Нажмите и удерживайте изображение или текст в любом приложении и начните перетаскивать: панель передачи выедет из края экрана.</string>
+    <string name="drag_drop_flow_section_layout">Внешний вид и положение</string>
+    <string name="drag_drop_flow_position_title">Положение панели передачи</string>
+    <string name="drag_drop_flow_position_summary">У какого края экрана закреплена панель. Выберите «Кольцевой компас», чтобы превратить её в диск в центре экрана с целями вокруг него.</string>
+    <string name="drag_drop_flow_position_bottom">Нижний край (по умолчанию)</string>
+    <string name="drag_drop_flow_position_left">Левый край, вертикально</string>
+    <string name="drag_drop_flow_position_right">Правый край, вертикально</string>
+    <string name="drag_drop_flow_position_ring">Кольцевой компас (в центре)</string>
+    <string name="drag_drop_flow_haptic_title">Виброотклик</string>
+    <string name="drag_drop_flow_haptic_summary">Лёгкая вибрация при наведении на цель, «Отмена» или «Восстановить».</string>
+    <string name="drag_drop_flow_section_targets">Цели передачи</string>
+    <string name="drag_drop_flow_text_engines_title">Поисковые системы для текста</string>
+    <string name="drag_drop_flow_text_engines_summary">Поиск, перевод и быстрые действия, предлагаемые при перетаскивании текста.</string>
+    <string name="drag_drop_flow_image_engines_title">Поисковые системы для изображений</string>
+    <string name="drag_drop_flow_image_engines_summary">Поиск по изображению, покупки и соцсети, предлагаемые при перетаскивании изображения.</string>
+    <string name="drag_drop_flow_file_engines_title">Приложения для отправки файлов</string>
+    <string name="drag_drop_flow_file_engines_summary">Настройте, какие приложения получают перетаскиваемые аудио и файлы и в каком порядке.</string>
+    <string name="drag_drop_flow_guide">• Запуск: в WeChat, Галерее, браузере или любом приложении с поддержкой системного перетаскивания нажмите и удерживайте текст или изображение и перетащите — появится панель передачи.\n• Прокрутка у края: если на панели много целей, перетащите к её краю — она плавно прокрутится сама.\n• Отмена и восстановление: отпустите над «Отмена», чтобы прервать передачу, не мешая исходному приложению; отпустите над «Восстановить», чтобы вернуть всё как было.</string>
+
+    <!-- 扩展中心入口状态副标题 -->
+    <string name="drag_drop_flow_hub_status_bottom">Вкл · Нижний край</string>
+    <string name="drag_drop_flow_hub_status_left">Вкл · Левый край</string>
+    <string name="drag_drop_flow_hub_status_right">Вкл · Правый край</string>
+    <string name="drag_drop_flow_hub_status_ring">Вкл · Кольцевой компас</string>
+    <string name="drag_drop_flow_hub_status_off">Выкл · Удерживайте и перетаскивайте для быстрой передачи и поиска по изображению</string>
+
+    <!-- 流转栏 -->
+    <string name="drag_drop_flow_restore">Восстановить</string>
+    <string name="drag_drop_flow_cancel">Отмена</string>
+    <string name="drag_drop_flow_release_to_send">Отпустите, чтобы отправить</string>
+
+    <!-- 操作枢纽 -->
+    <string name="drag_drop_flow_hub">Действия</string>
+    <string name="drag_drop_flow_action_segment">Разделить слова</string>
+    <string name="drag_drop_flow_action_search">Поиск</string>
+    <string name="drag_drop_flow_action_pin">Закрепить на экране</string>
+
+    <!-- 流转目标 -->
+    <string name="drag_drop_flow_target_image_search">Поиск по изображению</string>
+    <string name="drag_drop_flow_target_copy_image">Копировать изображение</string>
+    <string name="drag_drop_flow_target_share_image">Поделиться изображением</string>
+    <string name="drag_drop_flow_target_share_file">Поделиться файлом</string>
+    <string name="drag_drop_flow_target_translate">Перевести</string>
+    <string name="drag_drop_flow_target_copy_text">Копировать текст</string>
+    <string name="drag_drop_flow_target_share_text">Поделиться текстом</string>
+
+    <!-- 操作结果提示 -->
+    <string name="drag_drop_flow_toast_cancelled">Перетаскивание отменено</string>
+    <string name="drag_drop_flow_toast_restored">Восстановлено</string>
+    <string name="drag_drop_flow_toast_image_unreadable">Не удаётся прочитать перетаскиваемое изображение</string>
+
+    <string name="drag_drop_flow_toast_file_unreadable">Не удаётся прочитать перетаскиваемый файл</string>
+    <string name="drag_drop_flow_toast_launch_failed">Не удаётся открыть целевое приложение</string>
+    <string name="drag_drop_flow_toast_target_missing">Эта цель больше не на панели передачи</string>
+    <string name="drag_drop_flow_toast_text_copied">Текст скопирован в буфер обмена</string>
+    <string name="drag_drop_flow_toast_share_failed">Не удалось поделиться</string>
+    <string name="drag_drop_flow_toast_pinned">Закреплено на экране</string>
+    <string name="drag_drop_flow_toast_no_text">На изображении не распознан текст</string>
+    <string name="drag_drop_flow_toast_ocr_unavailable">Нет доступных движков OCR</string>
+</resources>
