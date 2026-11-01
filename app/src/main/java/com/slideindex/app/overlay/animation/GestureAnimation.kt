@@ -446,28 +446,42 @@ private fun WaveGestureAnimation(
         ) {
             return@Canvas
         }
+        // 沿边（平行于所贴那条边）的位移：左右取 Y 差、上下取 X 差。
+        // originX/YAnimVal 与 fingerX/YAnimVal 都是绝对屏幕坐标，可以直接相减。
+        val alongEdgeOffset = when (button.position) {
+            GestureAnimationPosition.Left, GestureAnimationPosition.Right -> fingerYAnimVal - originYAnimVal
+            GestureAnimationPosition.Bottom, GestureAnimationPosition.Top -> fingerXAnimVal - originXAnimVal
+        }
+        // 向内（垂直于边）的位移：上游 SideGestureState 里 fingerXAnimVal / fingerYAnimVal
+        // 是「相对按下点的位移」（onDragStart 里 snapTo(0f)/snapTo(sticky) 之后累加每帧 delta），
+        // 和左右方向一直当作深度用的 fingerXAnimVal 同义。所以上下方向的深度直接取它，
+        // 不能再减 originY：顶部会被削掉「按下点到顶边」的那一截，底部直接变成大负值整块不可见。
+        val inwardOffset = when (button.position) {
+            GestureAnimationPosition.Left -> fingerXAnimVal
+            GestureAnimationPosition.Right -> -fingerXAnimVal
+            GestureAnimationPosition.Top -> fingerYAnimVal
+            GestureAnimationPosition.Bottom -> -fingerYAnimVal
+        }
         when (button.position) {
             GestureAnimationPosition.Left -> if (fingerXAnimVal < 0f) return@Canvas
             GestureAnimationPosition.Right -> if (fingerXAnimVal > 0f) return@Canvas
-            GestureAnimationPosition.Bottom -> {
-                val inward = originYAnimVal - fingerYAnimVal
-                val along = abs(fingerXAnimVal - originXAnimVal)
-                if (inward <= 1f && along <= 1f) return@Canvas
-            }
-            GestureAnimationPosition.Top -> {
-                val inward = fingerYAnimVal - originYAnimVal
-                val along = abs(fingerXAnimVal - originXAnimVal)
-                if (inward <= 1f && along <= 1f) return@Canvas
-            }
+            GestureAnimationPosition.Top, GestureAnimationPosition.Bottom ->
+                if (inwardOffset <= 1f && abs(alongEdgeOffset) <= 1f) return@Canvas
         }
 
-        val yShift = animationState.displayYOffset(button.position)
+        // 相对手指的视觉偏移只对左右方向成立：上下方向必须贴屏幕上下边，
+        // 一旦叠加这个偏移（顶部实测 198px），整条波浪就离开边缘浮在屏幕里。
+        val yShift = when (button.position) {
+            GestureAnimationPosition.Left, GestureAnimationPosition.Right ->
+                animationState.displayYOffset(button.position)
+            GestureAnimationPosition.Bottom, GestureAnimationPosition.Top -> 0f
+        }
         val originYDisplay = originYAnimVal + yShift
-        val fingerYDisplay = fingerYAnimVal + yShift
 
+        // 沿边形变偏移：沿用上游的符号约定（左右 originY - fingerY，上下 originX - fingerX）。
         val transformOffset = when (button.position) {
             GestureAnimationPosition.Left, GestureAnimationPosition.Right -> originYAnimVal - fingerYAnimVal
-            GestureAnimationPosition.Bottom, GestureAnimationPosition.Top -> fingerXAnimVal - originXAnimVal
+            GestureAnimationPosition.Bottom, GestureAnimationPosition.Top -> originXAnimVal - fingerXAnimVal
         }.safeCoerceIn(-bezierTransformOffsetCoerce, bezierTransformOffsetCoerce)
 
         val safeOrigin = when (button.position) {
@@ -501,8 +515,8 @@ private fun WaveGestureAnimation(
             }
             val moveToY = when (button.position) {
                 GestureAnimationPosition.Left, GestureAnimationPosition.Right -> safeOrigin - bezierLengthHalf
-                GestureAnimationPosition.Bottom -> size.height + yShift
-                GestureAnimationPosition.Top -> yShift
+                GestureAnimationPosition.Bottom -> size.height
+                GestureAnimationPosition.Top -> 0f
             }
             path.moveTo(moveToX, moveToY)
 
@@ -541,46 +555,31 @@ private fun WaveGestureAnimation(
                         y3 = safeOrigin + bezierLengthHalf,
                     )
                 }
-                GestureAnimationPosition.Bottom -> {
-                    var safeFingerX = safeOrigin - bezierLengthHalf / 2.5f + transformOffset
-                    val safeFingerY = (size.height + fingerYDisplay).coerceAtLeast(size.height - bezierMaxWidth)
+                GestureAnimationPosition.Top, GestureAnimationPosition.Bottom -> {
+                    // 与上游一致：顶部从 y=0、底部从 y=size.height 贴边起笔，凸起朝屏幕内。
+                    val isTop = button.position == GestureAnimationPosition.Top
+                    // 深度 = 贴边方向上的相对位移，夹到 maxWidth。
+                    val depth = inwardOffset.coerceIn(0f, bezierMaxWidth)
+                    val edgeY = if (isTop) 0f else size.height
+                    val outerY = if (isTop) -factor else size.height + factor
+                    val bulgeY = if (isTop) depth else size.height - depth
+                    val firstControlX = safeOrigin - bezierLengthHalf / 2.5f - transformOffset
+                    val secondControlX = safeOrigin + bezierLengthHalf / 2.5f - transformOffset
                     path.cubicTo(
-                        x1 = safeFingerX,
-                        y1 = size.height + factor + yShift,
-                        x2 = safeFingerX,
-                        y2 = safeFingerY,
-                        x3 = safeOrigin + transformOffset,
-                        y3 = safeFingerY,
+                        x1 = firstControlX,
+                        y1 = outerY,
+                        x2 = firstControlX,
+                        y2 = bulgeY,
+                        x3 = safeOrigin - transformOffset,
+                        y3 = bulgeY,
                     )
-                    safeFingerX = safeOrigin + bezierLengthHalf / 2.5f + transformOffset
                     path.cubicTo(
-                        x1 = safeFingerX,
-                        y1 = safeFingerY,
-                        x2 = safeFingerX,
-                        y2 = size.height + yShift,
+                        x1 = secondControlX,
+                        y1 = bulgeY,
+                        x2 = secondControlX,
+                        y2 = edgeY,
                         x3 = safeOrigin + bezierLengthHalf,
-                        y3 = size.height + factor + yShift,
-                    )
-                }
-                GestureAnimationPosition.Top -> {
-                    var safeFingerX = safeOrigin - bezierLengthHalf / 2.5f + transformOffset
-                    val safeFingerY = fingerYDisplay.coerceAtMost(bezierMaxWidth)
-                    path.cubicTo(
-                        x1 = safeFingerX,
-                        y1 = -factor + yShift,
-                        x2 = safeFingerX,
-                        y2 = safeFingerY,
-                        x3 = safeOrigin + transformOffset,
-                        y3 = safeFingerY,
-                    )
-                    safeFingerX = safeOrigin + bezierLengthHalf / 2.5f + transformOffset
-                    path.cubicTo(
-                        x1 = safeFingerX,
-                        y1 = safeFingerY,
-                        x2 = safeFingerX,
-                        y2 = yShift,
-                        x3 = safeOrigin + bezierLengthHalf,
-                        y3 = -factor + yShift,
+                        y3 = outerY,
                     )
                 }
             }
@@ -609,7 +608,7 @@ private fun WaveGestureAnimation(
             GestureAnimationPosition.Left, GestureAnimationPosition.Right ->
                 bezierPath.getBounds().translate(Offset(0f, -transformOffset))
             GestureAnimationPosition.Bottom, GestureAnimationPosition.Top ->
-                bezierPath.getBounds().translate(Offset(transformOffset, 0f))
+                bezierPath.getBounds().translate(Offset(-transformOffset, 0f))
         }
         val side = button.position.toPanelSide()
         val trigger = animationState.currentTrigger
@@ -638,24 +637,12 @@ private fun WaveGestureAnimation(
                 GestureAnimationPosition.Bottom, GestureAnimationPosition.Top ->
                     bezierBounds.height * animationStyle.iconScale
             }
-            val paddingHori = (bezierBounds.width - radius) / 2f
-            val paddingVert = (bezierBounds.height - radius) / 2f
-            val left = when (button.position) {
-                GestureAnimationPosition.Left -> paddingHori - animationStyle.strokeWidth
-                GestureAnimationPosition.Right ->
-                    size.width - bezierBounds.width + paddingHori + animationStyle.strokeWidth
-                GestureAnimationPosition.Bottom, GestureAnimationPosition.Top ->
-                    bezierBounds.left + bezierBounds.width / 2f - radius / 2f
-            }
-            val top = when (button.position) {
-                GestureAnimationPosition.Left, GestureAnimationPosition.Right ->
-                    bezierBounds.top + bezierBounds.height / 2f - radius / 2f
-                GestureAnimationPosition.Bottom ->
-                    size.height - bezierBounds.height + paddingVert + animationStyle.strokeWidth
-                GestureAnimationPosition.Top ->
-                    -paddingVert - animationStyle.strokeWidth
-            }
-            translate(left = left, top = top) {
+            // 图标画在形状自身包围盒的中心（四个方向共用一套算法）。
+            // 原来 Top 用的是 -paddingVert，直接把图标画到屏幕上边以外去了。
+            translate(
+                left = bezierBounds.left + (bezierBounds.width - radius) / 2f,
+                top = bezierBounds.top + (bezierBounds.height - radius) / 2f,
+            ) {
                 activeIcon.run {
                     draw(
                         size = Size(radius, radius),
