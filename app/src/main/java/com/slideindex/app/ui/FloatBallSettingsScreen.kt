@@ -28,6 +28,7 @@ fun FloatBallSettingsScreen(
     accessibilityGranted: Boolean,
     onBack: () -> Unit,
     onEnabledChange: (Boolean) -> Unit,
+    onDragPickEnabledChange: (Boolean) -> Unit,
     onDragPasteEnabledChange: (Boolean) -> Unit,
     onOpenAppearanceSettings: () -> Unit,
     onOpenGestureSettings: () -> Unit,
@@ -104,12 +105,29 @@ fun FloatBallSettingsScreen(
             keyPrefix = "float-ball-pick",
             items = buildList {
                 add(
+                    settingsCardScopeItem("drag-pick") {
+                        SettingSwitchRow(
+                            title = stringResource(R.string.float_ball_drag_pick_enabled),
+                            subtitle = stringResource(R.string.float_ball_drag_pick_enabled_desc),
+                            checked = settings.floatBallDragPickEnabled,
+                            enabled = accessibilityGranted,
+                            onCheckedChange = onDragPickEnabledChange,
+                        )
+                    }
+                )
+                add(
                     settingsCardScopeItem("drag-paste") {
+                        // 拖动粘贴挂在取词拖拽链路上：关掉拖动取词它就无从触发，这里跟着置灰。
+                        val pickEnabled = settings.floatBallDragPickEnabled
                         SettingSwitchRow(
                             title = stringResource(R.string.float_ball_drag_paste_enabled),
-                            subtitle = stringResource(R.string.float_ball_drag_paste_enabled_desc),
+                            subtitle = if (pickEnabled) {
+                                stringResource(R.string.float_ball_drag_paste_enabled_desc)
+                            } else {
+                                stringResource(R.string.float_ball_drag_paste_requires_pick)
+                            },
                             checked = settings.floatBallDragPasteEnabled,
-                            enabled = accessibilityGranted,
+                            enabled = accessibilityGranted && pickEnabled,
                             onCheckedChange = onDragPasteEnabledChange,
                         )
                     }

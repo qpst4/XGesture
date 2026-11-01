@@ -529,6 +529,8 @@ internal object SettingsSnapshotReader {
                 ),
             floatBallPickHapticEnabled =
                 prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_HAPTIC_ENABLED] ?: true,
+            floatBallDragPickEnabled =
+                prefs[SettingsPreferenceKeys.FLOAT_BALL_DRAG_PICK_ENABLED] ?: true,
             floatBallDragPasteEnabled =
                 prefs[SettingsPreferenceKeys.FLOAT_BALL_DRAG_PASTE_ENABLED] ?: true,
             floatBallPickPanelEnterAnimationMs =

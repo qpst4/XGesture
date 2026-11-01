@@ -336,6 +336,13 @@ data class FloatBallSettings(
     val floatBallPickImageToolbarPosition: PickResultImageToolbarPosition = PickResultImageToolbarPosition.LEFT,
     /** Pick panel: enable subtle haptic feedback for copy and word tap drag selection. */
     val floatBallPickHapticEnabled: Boolean = true,
+    /**
+     * 拖动悬浮球时是否进入取词（红十字光标 + 悬停预览 + 松手弹取词面板）。
+     *
+     * 关闭后这条拖动只剩"球跟手"，不显示光标/选区、不弹面板；滑动手势与线条换边照旧，
+     * 挪球仍走圆环工具栏「移动」。默认开 = 保持历史行为。
+     */
+    val floatBallDragPickEnabled: Boolean = true,
     /** FV enable_main_icon_paste: drag float ball over an input field and release to paste latest history. */
     val floatBallDragPasteEnabled: Boolean = true,
     /** Bottom pick panel slide-in duration in ms (0 = no animation). */

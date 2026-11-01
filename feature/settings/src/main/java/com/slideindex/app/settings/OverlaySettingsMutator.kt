@@ -1074,6 +1074,10 @@ class OverlaySettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.FLOAT_BALL_PICK_HAPTIC_ENABLED] = enabled
     }
 
+    suspend fun setFloatBallDragPickEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.FLOAT_BALL_DRAG_PICK_ENABLED] = enabled
+    }
+
     suspend fun setFloatBallDragPasteEnabled(enabled: Boolean) = editor.edit {
         it[SettingsPreferenceKeys.FLOAT_BALL_DRAG_PASTE_ENABLED] = enabled
     }

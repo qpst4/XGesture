@@ -141,6 +141,8 @@ data class OverlaySettings(
     val floatBallPickCopyButtonPosition: PickResultCopyButtonPosition = PickResultCopyButtonPosition.LEFT,
     val floatBallPickImageToolbarPosition: PickResultImageToolbarPosition = PickResultImageToolbarPosition.LEFT,
     val floatBallPickHapticEnabled: Boolean = true,
+    /** 拖动悬浮球是否取词（关 = 拖动只跟手，不显示取词光标/选区）。 */
+    val floatBallDragPickEnabled: Boolean = true,
     val floatBallDragPasteEnabled: Boolean = true,
     val floatBallPickPanelEnterAnimationMs: Int = 64,
     val floatBallPickPanelExitAnimationMs: Int = 64,
@@ -383,6 +385,7 @@ data class OverlaySettings(
             floatBallPickCopyButtonPosition = settings.floatBallPickCopyButtonPosition,
             floatBallPickImageToolbarPosition = settings.floatBallPickImageToolbarPosition,
             floatBallPickHapticEnabled = settings.floatBallPickHapticEnabled,
+            floatBallDragPickEnabled = settings.floatBallDragPickEnabled,
             floatBallDragPasteEnabled = settings.floatBallDragPasteEnabled,
             floatBallPickPanelEnterAnimationMs = settings.floatBallPickPanelEnterAnimationMs,
             floatBallPickPanelExitAnimationMs = settings.floatBallPickPanelExitAnimationMs,

@@ -626,6 +626,8 @@ internal object SettingsPreferenceKeys {
     val FLOAT_BALL_PICK_COPY_BUTTON_POSITION = stringPreferencesKey("float_ball_pick_copy_button_position")
     val FLOAT_BALL_PICK_IMAGE_TOOLBAR_POSITION = stringPreferencesKey("float_ball_pick_image_toolbar_position")
     val FLOAT_BALL_PICK_HAPTIC_ENABLED = booleanPreferencesKey("float_ball_pick_haptic_enabled")
+    /** 拖动悬浮球是否取词（关 = 拖动只跟手，不弹取词光标/选区）。 */
+    val FLOAT_BALL_DRAG_PICK_ENABLED = booleanPreferencesKey("float_ball_drag_pick_enabled")
     val FLOAT_BALL_DRAG_PASTE_ENABLED = booleanPreferencesKey("float_ball_drag_paste_enabled")
     val FLOAT_BALL_PICK_PANEL_ENTER_ANIMATION_MS =
         intPreferencesKey("float_ball_pick_panel_enter_animation_ms")

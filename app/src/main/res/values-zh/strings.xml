@@ -1972,6 +1972,9 @@
     <string name="float_ball_pick_image_toolbar_position_right">右侧</string>
     <string name="float_ball_pick_haptic_enabled">取词面板触感反馈</string>
     <string name="float_ball_pick_haptic_enabled_desc">复制选中成功或在分词模式中连续划选字砖时提供清脆微瞬震动</string>
+    <string name="float_ball_drag_pick_enabled">拖动悬浮球取词</string>
+    <string name="float_ball_drag_pick_enabled_desc">关闭后拖动悬浮球不再显示取词十字、也不选取文字。要挪动球，请长按球，用圆环工具栏的「移动」</string>
+    <string name="float_ball_drag_paste_requires_pick">需先开启上方的「拖动悬浮球取词」</string>
     <string name="float_ball_drag_paste_enabled">拖动悬浮球粘贴</string>
     <string name="float_ball_drag_paste_enabled_desc">悬停在输入框上松手，将剪贴板历史最新一条粘贴到该输入框（不打开取词面板）</string>
     <string name="clipboard_paste_behavior_section">粘贴到输入框</string>

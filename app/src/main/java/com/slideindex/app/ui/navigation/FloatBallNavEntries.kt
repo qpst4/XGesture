@@ -77,6 +77,7 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
             accessibilityGranted = permissions.accessibilityGranted,
             onBack = { ctx.navigateBackTo(AppNavKey.HomeMain) },
             onEnabledChange = viewModel::setFloatBallEnabled,
+            onDragPickEnabledChange = viewModel::setFloatBallDragPickEnabled,
             onDragPasteEnabledChange = viewModel::setFloatBallDragPasteEnabled,
             onOpenAppearanceSettings = { ctx.navigate(AppNavKey.FloatBallAppearance) },
             onOpenGestureSettings = { ctx.navigate(AppNavKey.FloatBallGesture) },

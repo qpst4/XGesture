@@ -1066,6 +1066,9 @@
     <string name="float_ball_pick_image_toolbar_position">Положение панели инструментов изображения</string>
     <string name="float_ball_pick_image_toolbar_position_left">Слева</string>
     <string name="float_ball_pick_image_toolbar_position_right">Справа</string>
+    <string name="float_ball_drag_pick_enabled">Извлечение текста при перетаскивании шарика</string>
+    <string name="float_ball_drag_pick_enabled_desc">Если выключено, при перетаскивании шарика не показывается прицел извлечения и текст не выделяется. Чтобы переместить шарик, удерживайте его и выберите «Переместить» на панели кольца</string>
+    <string name="float_ball_drag_paste_requires_pick">Требуется включить «Извлечение текста при перетаскивании шарика» выше</string>
     <string name="float_ball_drag_paste_enabled">Перетаскивание шарика для вставки</string>
     <string name="float_ball_drag_paste_enabled_desc">Задержитесь над полем ввода и отпустите, чтобы вставить последнюю запись из истории буфера обмена (без панели выделения)</string>
     <string name="clipboard_paste_behavior_section">Вставка в поля</string>

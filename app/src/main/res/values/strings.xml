@@ -1066,6 +1066,9 @@
     <string name="float_ball_pick_image_toolbar_position">Image toolbar position</string>
     <string name="float_ball_pick_image_toolbar_position_left">Left</string>
     <string name="float_ball_pick_image_toolbar_position_right">Right</string>
+    <string name="float_ball_drag_pick_enabled">Pick text when dragging the ball</string>
+    <string name="float_ball_drag_pick_enabled_desc">Off: dragging the ball no longer shows the pick crosshair or selects text. To reposition the ball, long-press it and use Move in the ring toolbar</string>
+    <string name="float_ball_drag_paste_requires_pick">Needs “Pick text when dragging the ball” above</string>
     <string name="float_ball_drag_paste_enabled">Drag float ball to paste</string>
     <string name="float_ball_drag_paste_enabled_desc">Pause over an input field and release to paste the latest clipboard history entry (no pick panel)</string>
     <string name="clipboard_paste_behavior_section">Paste into fields</string>

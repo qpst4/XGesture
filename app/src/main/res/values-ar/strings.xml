@@ -1848,6 +1848,9 @@
     <string name="float_ball_pick_copy_dismiss_panel_desc">عند التفعيل، سيؤدي النقر على «نسخ المحدد» إلى إغلاق لوحة التقاط النص تلقائياً؛ الضغط المطول للنسخ يحتفظ باللوحة</string>
     <string name="float_ball_pick_haptic_enabled">اهتزاز اللوحة</string>
     <string name="float_ball_pick_haptic_enabled_desc">اهتزاز خفيف عند النسخ الناجح وعند تحديد الكلمات في وضع النقر على الكلمات</string>
+    <string name="float_ball_drag_pick_enabled">التقاط النص عند سحب الكرة</string>
+    <string name="float_ball_drag_pick_enabled_desc">عند الإيقاف، لن يظهر مؤشر الالتقاط أو تحديد النص أثناء سحب الكرة. لنقل الكرة، اضغط عليها مطولًا واستخدم «نقل» في شريط الحلقة</string>
+    <string name="float_ball_drag_paste_requires_pick">يتطلب تفعيل «التقاط النص عند سحب الكرة» أعلاه</string>
     <string name="float_ball_drag_paste_enabled">سحب الكرة العائمة للصق</string>
     <string name="float_ball_drag_paste_enabled_desc">عند التمرير فوق مربع الإدخال والإفلات، سيتم لصق أحدث عنصر في سجل الحافظة في مربع الإدخال (بدون فتح لوحة التقاط النص)</string>
     <string name="clipboard_paste_behavior_section">اللصق في حقول الإدخال</string>

@@ -3615,6 +3615,29 @@ object FloatBallOverlay {
             flushDragChromeLayout()
             return
         }
+        // 关闭「拖动悬浮球取词」：这条拖动不进取词链路 —— 不显示十字/预览/选区，松手也不弹面板。
+        // 与移动模式的区别：球照旧跟手，滑动手势与线条换边照旧，只是不取词。
+        if (!settings.floatBallDragPickEnabled) {
+            cancelDragChromeLayoutFrame()
+            cancelCursorCommitFrame()
+            pendingPickAnchor = null
+            selectionStartState?.value = null
+            selectionPreviewBoundsState?.value = null
+            cursorVisibleState?.value = false
+            cursorPausedState?.value = false
+            dragScreenBounds = FloatBallScreenMetrics.bounds(view.context, windowManager)
+            setCursorLayersVisible(false)
+            flushDragChromeLayout()
+            if (!promotingFromSlop) {
+                applyImmediateDragStartVisual(
+                    deferBallWindowMutation || fromEdgeGesture,
+                    showCursorLayers = false,
+                )
+            } else {
+                settingsState?.value?.let { updateChromeVisibility(it) }
+            }
+            return
+        }
         cancelDragChromeLayoutFrame()
         cancelCursorCommitFrame()
         pendingPickAnchor = null
@@ -3727,6 +3750,8 @@ object FloatBallOverlay {
     private fun onDragMoved() {
         // 移动模式：只挪球，不调度取词那一套（暂停计时、预览缓存）。
         if (moveModeActive) return
+        // 关掉「拖动悬浮球取词」后同理：拖动期间不排悬停计时、不刷预览缓存。
+        if (settingsState?.value?.floatBallDragPickEnabled == false) return
         val start = selectionStartState?.value
         if (start != null) {
             val anchor = currentPickAnchor()
