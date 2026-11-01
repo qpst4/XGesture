@@ -322,7 +322,13 @@ class SwipePathRecognizer(
         return if (direction == SwipeDirection.UP || direction == SwipeDirection.DOWN) {
             alongProgressPx(rawX, rawY, direction) <= cancelPx
         } else {
-            inwardDelta(rawX - startRawX, rawY - startRawY) <= startInwardPx() + cancelPx
+            // ⚠️ 这里只能比**相对位移**。[inwardDelta] 吃的是 (raw - startRaw)，
+            // 再加 [startInwardPx]（起手点距屏幕边缘的绝对深度）会把撤销区从 12dp 撑开到
+            // 「起手深度 + 12dp」：顶部触钮的触摸窗口贴边但有厚度（实测 181px，按下点距顶边
+            // 就有 ~150px），于是整段前 183px 的内滑都被反复判成撤销、每帧清零本段状态，
+            // 上层震动器随之每帧重播一次「越过短滑阈值」的震动（真机表现：滑动时一直震）。
+            // 起手点本来就在屏幕边缘时 [startInwardPx] 恒为 0，去掉它不改变左右方向的行为。
+            inwardDelta(rawX - startRawX, rawY - startRawY) <= cancelPx
         }
     }
 

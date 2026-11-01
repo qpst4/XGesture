@@ -128,6 +128,38 @@ class GestureSessionThresholdTrackerTest {
     }
 
     @Test
+    fun trackDistanceHaptics_topStripSwipeFromInsideStrip_firesStartOnlyOnce() {
+        // 顶部触钮的触摸窗口高约 181px，手指按下点距屏幕顶边就有 ~150px。
+        // 「退回起手位置」必须按相对位移判断；一旦混入起手点的绝对深度，
+        // 整段前 (起手深度 + 12dp) 的滑动都会被当成撤销、反复清零，
+        // 于是每帧重新越过短滑阈值 → 每帧补一声 GESTURE_START（真机表现出来就是"一直震"）。
+        val topStrip = RectF(0f, 0f, 1080f, 181f)
+        val topRecognizer = SwipePathRecognizer(PanelSide.TOP, density = 2.75f).apply {
+            applyDistances(shortDp = 60f, longDp = 120f)
+            applyAngles(GestureAngles())
+            onTouchDown(800f, 150f, topStrip)
+            applyCompoundGestureGate(SwipePathRecognizer.ClassifyOptions.DEFAULT)
+        }
+        val topTracker = GestureSessionThresholdTracker(
+            pathRecognizer = topRecognizer,
+            callbacks = callbacks,
+            cancelLongPressCheck = { },
+            isTriggerConfigured = { false },
+        )
+
+        // 从 y=150 平滑下滑到 430（向内 280px < 长滑 120dp×2.75=330px）。
+        var y = 150f
+        while (y <= 430f) {
+            topRecognizer.onTouchMove(800f, y)
+            topTracker.trackDistanceHaptics(800f, y)
+            y += 4f
+        }
+
+        assertEquals(1, gestureStartCount)
+        assertEquals(0, longThresholdCount)
+    }
+
+    @Test
     fun maybeHapticLongPress_firesOnceWhenLongPressArmed() {
         pathRecognizer.onTouchDown(0f, 0f, leftStrip)
         ShadowSystemClock.advanceBy(SwipePathRecognizer.LONG_PRESS_MS + 50L, TimeUnit.MILLISECONDS)
