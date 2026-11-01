@@ -94,6 +94,8 @@ internal class BrowserTab(
     private var lastSelectionScale = 1f
     private var lastNonEmptySelectionAt = 0L
     private var blockedRequestCount = 0
+    var thumbnail: android.graphics.Bitmap? = null
+        private set
 
     val webView: WebView = createWebView()
 
@@ -725,6 +727,21 @@ internal class BrowserTab(
     fun pause() { runCatching { webView.onPause() } }
 
     fun resume() { runCatching { webView.onResume() } }
+
+    /** 离开该标签前抓一张缩略图（此时 WebView 还挂在窗口里，能正常绘制）。 */
+    fun captureThumbnail() {
+        runCatching {
+            val w = webView.width
+            val h = webView.height
+            if (w <= 0 || h <= 0) return
+            val targetW = 240
+            val targetH = (h.toFloat() / w * targetW).toInt().coerceAtLeast(1)
+            val full = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+            webView.draw(android.graphics.Canvas(full))
+            thumbnail = android.graphics.Bitmap.createScaledBitmap(full, targetW, targetH, true)
+                .also { if (it !== full) full.recycle() }
+        }
+    }
 
     fun attachTo(parent: ViewGroup) {
         if (webView.parent === parent) return

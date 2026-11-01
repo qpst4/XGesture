@@ -84,6 +84,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -292,8 +293,8 @@ object FloatingBrowserPanel {
         }
         root.addView(
             dragBar,
-            FrameLayout.LayoutParams(-1, (46 * density).toInt()).apply {
-                rightMargin = (84 * density).toInt()
+            FrameLayout.LayoutParams((140 * density).toInt(), (46 * density).toInt()).apply {
+                gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
             },
         )
 
@@ -796,6 +797,8 @@ object FloatingBrowserPanel {
 
     private fun activateTab(id: Long) {
         val host = webHost ?: return
+        // 切走前给当前激活标签抓缩略图
+        tabs.firstOrNull { it.id == activeTabId && it.id != id }?.captureThumbnail()
         tabs.forEach { tab ->
             if (tab.id == id) {
                 tab.attachTo(host)
@@ -814,6 +817,16 @@ object FloatingBrowserPanel {
         addressText = currentUrl
         lastScrollY = 0
         scrollAccum = 0
+        refreshUi()
+    }
+
+    /** 左右滑动切换标签：offset = -1 上一个 / +1 下一个。 */
+    private fun switchTabBy(offset: Int) {
+        if (tabs.size <= 1) return
+        val index = tabs.indexOfFirst { it.id == activeTabId }
+        if (index < 0) return
+        val next = (index + offset).mod(tabs.size)
+        activateTab(tabs[next].id)
         refreshUi()
     }
 
@@ -913,6 +926,21 @@ object FloatingBrowserPanel {
                     Row(
                         modifier = Modifier
                             .fillMaxSize()
+                            .pointerInput(Unit) {
+                                var totalDx = 0f
+                                detectDragGestures(
+                                    onDragStart = { totalDx = 0f },
+                                    onDragEnd = {
+                                        if (kotlin.math.abs(totalDx) > 60f) {
+                                            switchTabBy(if (totalDx < 0) 1 else -1)
+                                        }
+                                        totalDx = 0f
+                                    },
+                                ) { change, drag ->
+                                    change.consume()
+                                    totalDx += drag.x
+                                }
+                            }
                             .padding(start = 14.dp, end = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -999,6 +1027,21 @@ object FloatingBrowserPanel {
                         .shadow(10.dp, RoundedCornerShape(26.dp), ambientColor = ComposeColor(0x14000000), spotColor = ComposeColor(0x28000000))
                         .background(ComposeColor(0xF6FFFFFF), RoundedCornerShape(26.dp))
                         .border(0.8.dp, ComposeColor(0x24000000), RoundedCornerShape(26.dp))
+                        .pointerInput(Unit) {
+                            var totalDx = 0f
+                            detectDragGestures(
+                                onDragStart = { totalDx = 0f },
+                                onDragEnd = {
+                                    if (kotlin.math.abs(totalDx) > 70f) {
+                                        switchTabBy(if (totalDx < 0) 1 else -1)
+                                    }
+                                    totalDx = 0f
+                                },
+                            ) { change, drag ->
+                                change.consume()
+                                totalDx += drag.x
+                            }
+                        }
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically,
@@ -1248,6 +1291,7 @@ object FloatingBrowserPanel {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp)
+
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(if (isActive) ComposeColor(0x121A73E8) else ComposeColor(0x08000000))
                                 .border(
@@ -1262,6 +1306,17 @@ object FloatingBrowserPanel {
                                 .padding(horizontal = 12.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            tab.thumbnail?.let { bmp ->
+                                androidx.compose.foundation.Image(
+                                    bitmap = bmp.asImageBitmap(),
+                                    contentDescription = null,
+                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(width = 56.dp, height = 40.dp)
+                                        .clip(RoundedCornerShape(6.dp)),
+                                )
+                                Spacer(Modifier.width(10.dp))
+                            }
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = tab.title.ifBlank { tab.url },
