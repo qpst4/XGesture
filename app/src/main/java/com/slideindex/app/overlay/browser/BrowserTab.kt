@@ -53,6 +53,9 @@ internal class BrowserTab(
         /** 页面滚动位置变化（用于自动隐藏底部工具条）。 */
         fun onPageScrolled(scrollY: Int)
 
+        /** 页面加载完成：记录历史。 */
+        fun onHistoryRecord(url: String, title: String)
+
         /** 网页声明的 theme-color（用于顶栏取色）。 */
         fun onThemeColorChanged(color: Int)
 
@@ -226,6 +229,7 @@ internal class BrowserTab(
 
         override fun onPageFinished(view: WebView, url: String?) {
             super.onPageFinished(view, url)
+            if (!url.isNullOrBlank()) callbacks.onHistoryRecord(url, view.title.orEmpty())
             this@BrowserTab.url = url.orEmpty()
             title = view.title.orEmpty()
             callbacks.onPageFinished(url.orEmpty())

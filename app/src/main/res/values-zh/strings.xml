@@ -4875,4 +4875,13 @@ adb 模式应返回 uid=2000。
     <string name="browser_save_image">保存图片</string>
     <string name="browser_share_image">分享图片</string>
     <string name="browser_search_image">以图搜图</string>
+    <string name="browser_bookmarks">书签</string>
+    <string name="browser_history">历史</string>
+    <string name="browser_bookmark_toggle">收藏</string>
+    <string name="browser_bookmark_added">已收藏</string>
+    <string name="browser_bookmark_removed">已取消收藏</string>
+    <string name="browser_no_bookmarks">暂无书签</string>
+    <string name="browser_no_history">暂无历史</string>
+    <string name="browser_clear_history">清空历史</string>
+    <string name="browser_delete">删除</string>
 </resources>

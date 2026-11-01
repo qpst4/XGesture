@@ -4880,4 +4880,13 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="browser_save_image">Save image</string>
     <string name="browser_share_image">Share image</string>
     <string name="browser_search_image">Search by image</string>
+    <string name="browser_bookmarks">Bookmarks</string>
+    <string name="browser_history">History</string>
+    <string name="browser_bookmark_toggle">Bookmark</string>
+    <string name="browser_bookmark_added">Bookmarked</string>
+    <string name="browser_bookmark_removed">Bookmark removed</string>
+    <string name="browser_no_bookmarks">No bookmarks</string>
+    <string name="browser_no_history">No history</string>
+    <string name="browser_clear_history">Clear history</string>
+    <string name="browser_delete">Delete</string>
 </resources>

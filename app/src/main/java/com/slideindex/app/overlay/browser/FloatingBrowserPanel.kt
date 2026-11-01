@@ -166,6 +166,8 @@ object FloatingBrowserPanel {
     private var themeColor by mutableIntStateOf(0)
     private var desktopMode by mutableStateOf(false)
     private var downloadsVisible by mutableStateOf(false)
+    private var historyVisible by mutableStateOf(false)
+    private var bookmarksVisible by mutableStateOf(false)
     private var contextMenuTarget by mutableStateOf<ContextMenuTarget?>(null)
 
     sealed interface ContextMenuTarget {
@@ -548,6 +550,11 @@ object FloatingBrowserPanel {
             val root = rootView ?: return
             fullscreenView?.let { runCatching { root.removeView(it) } }
             fullscreenView = null
+        }
+
+        override fun onHistoryRecord(url: String, title: String) {
+            val ctx = webHost?.context ?: return
+            BrowserStore.record(ctx, url, title)
         }
 
         override fun onThemeColorChanged(color: Int) {
@@ -1357,6 +1364,70 @@ object FloatingBrowserPanel {
         }
     }
 
+    /** 历史 / 书签列表。 */
+    @Composable
+    private fun EntryList(showBookmarks: Boolean) {
+        val ctx = rootView?.context ?: return
+        val items = if (showBookmarks) BrowserStore.bookmarks(ctx) else BrowserStore.history(ctx)
+        Column(modifier = Modifier.fillMaxWidth().height(180.dp)) {
+            if (items.isEmpty()) {
+                Text(
+                    stringResource(
+                        if (showBookmarks) R.string.browser_no_bookmarks else R.string.browser_no_history,
+                    ),
+                    color = ComposeColor(0xFF9AA0A6),
+                    fontSize = 12.sp,
+                )
+            } else {
+                androidx.compose.foundation.lazy.LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    items(items) { entry ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    addressEditing = false
+                                    bookmarksVisible = false
+                                    historyVisible = false
+                                    openUrl(entry.url)
+                                }
+                                .padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    entry.title.ifBlank { entry.url },
+                                    color = ComposeColor(0xFF202124),
+                                    fontSize = 13.sp,
+                                    maxLines = 1,
+                                )
+                                Text(
+                                    entry.url,
+                                    color = ComposeColor(0xFF9AA0A6),
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                )
+                            }
+                            if (showBookmarks) {
+                                androidx.compose.material3.TextButton(onClick = {
+                                    BrowserStore.removeBookmark(ctx, entry.url)
+                                    refreshUi()
+                                }) { Text(stringResource(R.string.browser_delete), fontSize = 11.sp) }
+                            }
+                        }
+                    }
+                }
+            }
+            androidx.compose.material3.TextButton(onClick = {
+                if (!showBookmarks) {
+                    BrowserStore.clearHistory(ctx)
+                    refreshUi()
+                }
+            }) {
+                if (!showBookmarks) Text(stringResource(R.string.browser_clear_history), fontSize = 12.sp)
+            }
+        }
+    }
+
     /** 系统下载列表（读 DownloadManager，展示进度）。 */
     @Composable
     private fun DownloadsList() {
@@ -1548,6 +1619,34 @@ object FloatingBrowserPanel {
                         },
                     )
                 }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                ) {
+                    androidx.compose.material3.TextButton(onClick = {
+                        bookmarksVisible = !bookmarksVisible
+                        if (bookmarksVisible) historyVisible = false
+                    }) { Text(stringResource(R.string.browser_bookmarks), fontSize = 13.sp) }
+                    androidx.compose.material3.TextButton(onClick = {
+                        historyVisible = !historyVisible
+                        if (historyVisible) bookmarksVisible = false
+                    }) { Text(stringResource(R.string.browser_history), fontSize = 13.sp) }
+                    androidx.compose.material3.TextButton(onClick = {
+                        val tab = tabs.firstOrNull { it.id == activeTabId } ?: return@TextButton
+                        val ctx = webHost?.context ?: return@TextButton
+                        val added = BrowserStore.toggleBookmark(ctx, tab.url, tab.title)
+                        android.widget.Toast.makeText(
+                            ctx,
+                            ctx.getString(
+                                if (added) R.string.browser_bookmark_added else R.string.browser_bookmark_removed,
+                            ),
+                            android.widget.Toast.LENGTH_SHORT,
+                        ).show()
+                        refreshUi()
+                    }) { Text(stringResource(R.string.browser_bookmark_toggle), fontSize = 13.sp) }
+                }
+                if (bookmarksVisible) EntryList(showBookmarks = true)
+                if (historyVisible) EntryList(showBookmarks = false)
                 androidx.compose.material3.TextButton(
                     onClick = { downloadsVisible = !downloadsVisible },
                     modifier = Modifier.fillMaxWidth(),
