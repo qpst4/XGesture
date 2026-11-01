@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 宏：执行期提示 -->
+    <string name="macro_run_requires_android_n">Для макросов требуется Android 7.0 или новее.</string>
+    <string name="macro_run_already_running">Макрос уже выполняется.</string>
+    <string name="macro_run_service_unavailable">Служба специальных возможностей не подключена.</string>
+    <string name="macro_run_target_not_found">Не удаётся открыть целевое приложение.</string>
+    <string name="macro_run_app_timeout">Целевое приложение не вышло на передний план вовремя.</string>
+    <string name="macro_run_foreground_changed">Макрос остановлен: сменилось приложение на переднем плане.</string>
+    <string name="macro_run_step_failed">Шаг макроса не выполнен: %1$s</string>
+    <string name="macro_run_completed">Макрос завершён: %1$s</string>
+    <string name="macro_record_touch_unavailable">Запись остановлена: повтор касаний недоступен на этом устройстве.</string>
+    <string name="macro_record_stopped_screen_off">Запись остановлена, так как экран выключился.</string>
+    <string name="macro_record_stopped_timeout">Запись остановлена автоматически (она шла слишком долго).</string>
+
+    <!-- 宏：步骤名（失败提示里用） -->
+    <string name="macro_step_wait">ожидание</string>
+    <string name="macro_step_tap">нажатие</string>
+    <string name="macro_step_swipe">свайп</string>
+
+    <!-- 宏：动作条目 -->
+    <string name="macro_action_run_macro">Макрос жеста</string>
+    <string name="macro_action_run_macro_named">Макрос жеста: %1$s</string>
+    <string name="macro_action_run_macro_missing">Макрос жеста (удалён)</string>
+    <string name="macro_pick_empty">Макросов жестов пока нет. Сначала создайте его в разделе «Расширения → Макросы жестов».</string>
+    <string name="macro_test_run">Тестовый запуск</string>
+    <string name="macro_test_run_desc">Запускает этот макрос прямо сейчас один раз, без привязки к жесту.</string>
+</resources>

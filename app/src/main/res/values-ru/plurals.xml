@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="search_engine_grid_columns_value">
+        <item quantity="one">%d столбец</item>
+        <item quantity="few">%d столбца</item>
+        <item quantity="many">%d столбцов</item>
+        <item quantity="other">%d столбца</item>
+    </plurals>
+    <plurals name="search_engine_grid_rows_value">
+        <item quantity="one">%d строка</item>
+        <item quantity="few">%d строки</item>
+        <item quantity="many">%d строк</item>
+        <item quantity="other">%d строки</item>
+    </plurals>
+    <plurals name="search_engine_settings_summary">
+        <item quantity="one">%d движок</item>
+        <item quantity="few">%d движка</item>
+        <item quantity="many">%d движков</item>
+        <item quantity="other">%d движка</item>
+    </plurals>
+    <plurals name="image_search_engine_settings_summary">
+        <item quantity="one">%1$d цель · %2$d агрегированный движок</item>
+        <item quantity="few">%1$d цели · %2$d агрегированных движка</item>
+        <item quantity="many">%1$d целей · %2$d агрегированных движков</item>
+        <item quantity="other">%1$d цели · %2$d агрегированных движка</item>
+    </plurals>
+    <plurals name="search_engine_import_preview_count">
+        <item quantity="one">новых: %1$d, пропущено дубликатов: %2$d</item>
+        <item quantity="few">новых: %1$d, пропущено дубликатов: %2$d</item>
+        <item quantity="many">новых: %1$d, пропущено дубликатов: %2$d</item>
+        <item quantity="other">новых: %1$d, пропущено дубликатов: %2$d</item>
+    </plurals>
+    <plurals name="search_engine_import_success">
+        <item quantity="one">Импортирован %1$d движок (%2$s)</item>
+        <item quantity="few">Импортировано %1$d движка (%2$s)</item>
+        <item quantity="many">Импортировано %1$d движков (%2$s)</item>
+        <item quantity="other">Импортировано %1$d движка (%2$s)</item>
+    </plurals>
+    <plurals name="share_target_batch_added">
+        <item quantity="one">Добавлена %d цель</item>
+        <item quantity="few">Добавлено %d цели</item>
+        <item quantity="many">Добавлено %d целей</item>
+        <item quantity="other">Добавлено %d цели</item>
+    </plurals>
+    <plurals name="float_ball_style_slideshow_hint">
+        <item quantity="one">Выбрано %d изображение, смена каждые 3 секунды</item>
+        <item quantity="few">Выбрано %d изображения, смена каждые 3 секунды</item>
+        <item quantity="many">Выбрано %d изображений, смена каждые 3 секунды</item>
+        <item quantity="other">Выбрано %d изображения, смена каждые 3 секунды</item>
+    </plurals>
+    <plurals name="share_image_ocr_history_entry_desc_count">
+        <item quantity="one">%d запись — нажмите, чтобы открыть</item>
+        <item quantity="few">%d записи — нажмите, чтобы открыть</item>
+        <item quantity="many">%d записей — нажмите, чтобы открыть</item>
+        <item quantity="other">%d записи — нажмите, чтобы открыть</item>
+    </plurals>
+    <plurals name="floating_pointer_edge_side_summary">
+        <item quantity="one">%1$d зона · %2$s</item>
+        <item quantity="few">%1$d зоны · %2$s</item>
+        <item quantity="many">%1$d зон · %2$s</item>
+        <item quantity="other">%1$d зоны · %2$s</item>
+    </plurals>
+    <plurals name="apps_per_row_value_label">
+        <item quantity="one">%d столбец</item>
+        <item quantity="few">%d столбца</item>
+        <item quantity="many">%d столбцов</item>
+        <item quantity="other">%d столбца</item>
+    </plurals>
+    <plurals name="settings_backup_import_success">
+        <item quantity="one">Импортирована %d настройка</item>
+        <item quantity="few">Импортировано %d настройки</item>
+        <item quantity="many">Импортировано %d настроек</item>
+        <item quantity="other">Импортировано %d настройки</item>
+    </plurals>
+    <plurals name="settings_backup_preview_count">
+        <item quantity="one">Будет перезаписана %d настройка.</item>
+        <item quantity="few">Будет перезаписано %d настройки.</item>
+        <item quantity="many">Будет перезаписано %d настроек.</item>
+        <item quantity="other">Будет перезаписано %d настройки.</item>
+    </plurals>
+    <plurals name="otp_autofill_stats_summary">
+        <item quantity="one">%1$d попытка, успешных %2$d%%</item>
+        <item quantity="few">%1$d попытки, успешных %2$d%%</item>
+        <item quantity="many">%1$d попыток, успешных %2$d%%</item>
+        <item quantity="other">%1$d попытки, успешных %2$d%%</item>
+    </plurals>
+    <plurals name="shell_panel_history_entry_desc_count">
+        <item quantity="one">Просмотреть %d недавний запуск</item>
+        <item quantity="few">Просмотреть %d недавних запуска</item>
+        <item quantity="many">Просмотреть %d недавних запусков</item>
+        <item quantity="other">Просмотреть %d недавних запуска</item>
+    </plurals>
+    <plurals name="clipboard_history_count">
+        <item quantity="one">%d запись</item>
+        <item quantity="few">%d записи</item>
+        <item quantity="many">%d записей</item>
+        <item quantity="other">%d записи</item>
+    </plurals>
+    <plurals name="stash_entry_count">
+        <item quantity="one">%d элемент</item>
+        <item quantity="few">%d элемента</item>
+        <item quantity="many">%d элементов</item>
+        <item quantity="other">%d элемента</item>
+    </plurals>
+    <plurals name="stash_clipboard_entry_summary_stash">
+        <item quantity="one">%d элемент идей</item>
+        <item quantity="few">%d элемента идей</item>
+        <item quantity="many">%d элементов идей</item>
+        <item quantity="other">%d элемента идей</item>
+    </plurals>
+    <plurals name="image_search_engine_aggregated_section">
+        <item quantity="one">Агрегированные поисковые системы (видимых: %d)</item>
+        <item quantity="few">Агрегированные поисковые системы (видимых: %d)</item>
+        <item quantity="many">Агрегированные поисковые системы (видимых: %d)</item>
+        <item quantity="other">Агрегированные поисковые системы (видимых: %d)</item>
+    </plurals>
+    <plurals name="missing_permissions_entry_desc_count">
+        <item quantity="one">У %1$d функции нет разрешений Android</item>
+        <item quantity="few">У %1$d функций нет разрешений Android</item>
+        <item quantity="many">У %1$d функций нет разрешений Android</item>
+        <item quantity="other">У %1$d функций нет разрешений Android</item>
+    </plurals>
+    <plurals name="search_panel_settings_index_count">
+        <item quantity="one">Загружен %d элемент</item>
+        <item quantity="few">Загружено %d элемента</item>
+        <item quantity="many">Загружено %d элементов</item>
+        <item quantity="other">Загружено %d элемента</item>
+    </plurals>
+    <plurals name="honeycomb_launcher_entry_summary">
+        <item quantity="one">Настроено: %d</item>
+        <item quantity="few">Настроено: %d</item>
+        <item quantity="many">Настроено: %d</item>
+        <item quantity="other">Настроено: %d</item>
+    </plurals>
+    <plurals name="fv_ring_launcher_entry_summary">
+        <item quantity="one">Настроен %d элемент</item>
+        <item quantity="few">Настроено %d элемента</item>
+        <item quantity="many">Настроено %d элементов</item>
+        <item quantity="other">Настроено %d элемента</item>
+    </plurals>
+    <plurals name="quick_launcher_entry_summary_panels">
+        <item quantity="one">%d панель лаунчера</item>
+        <item quantity="few">%d панели лаунчера</item>
+        <item quantity="many">%d панелей лаунчера</item>
+        <item quantity="other">%d панели лаунчера</item>
+    </plurals>
+    <plurals name="quick_launcher_panel_pick_summary">
+        <item quantity="one">%1$d × %2$d · %3$d элемент</item>
+        <item quantity="few">%1$d × %2$d · %3$d элемента</item>
+        <item quantity="many">%1$d × %2$d · %3$d элементов</item>
+        <item quantity="other">%1$d × %2$d · %3$d элемента</item>
+    </plurals>
+    <plurals name="search_panel_file_folder_count">
+        <item quantity="one">Добавлено: %d</item>
+        <item quantity="few">Добавлено: %d</item>
+        <item quantity="many">Добавлено: %d</item>
+        <item quantity="other">Добавлено: %d</item>
+    </plurals>
+    <plurals name="clipboard_history_float_record_count">
+        <item quantity="one">%d запись</item>
+        <item quantity="few">%d записи</item>
+        <item quantity="many">%d записей</item>
+        <item quantity="other">%d записи</item>
+    </plurals>
+    <plurals name="clipboard_float_meta_chars">
+        <item quantity="one">%d символ</item>
+        <item quantity="few">%d символа</item>
+        <item quantity="many">%d символов</item>
+        <item quantity="other">%d символа</item>
+    </plurals>
+    <plurals name="clipboard_float_meta_lines">
+        <item quantity="one">%d строка</item>
+        <item quantity="few">%d строки</item>
+        <item quantity="many">%d строк</item>
+        <item quantity="other">%d строки</item>
+    </plurals>
+    <plurals name="clipboard_float_app_blacklist_desc">
+        <item quantity="one">Заблокировано приложений: %1$d · успешных вставок: %2$d · ошибок: %3$d</item>
+        <item quantity="few">Заблокировано приложений: %1$d · успешных вставок: %2$d · ошибок: %3$d</item>
+        <item quantity="many">Заблокировано приложений: %1$d · успешных вставок: %2$d · ошибок: %3$d</item>
+        <item quantity="other">Заблокировано приложений: %1$d · успешных вставок: %2$d · ошибок: %3$d</item>
+    </plurals>
+    <plurals name="notification_history_group_summary">
+        <item quantity="one">%d уведомление</item>
+        <item quantity="few">%d уведомления</item>
+        <item quantity="many">%d уведомлений</item>
+        <item quantity="other">%d уведомления</item>
+    </plurals>
+    <plurals name="fingertip_ring_slot_count_value">
+        <item quantity="one">%d слот</item>
+        <item quantity="few">%d слота</item>
+        <item quantity="many">%d слотов</item>
+        <item quantity="other">%d слота</item>
+    </plurals>
+    <plurals name="universal_copy_selected">
+        <item quantity="one">Выбрано: %d</item>
+        <item quantity="few">Выбрано: %d</item>
+        <item quantity="many">Выбрано: %d</item>
+        <item quantity="other">Выбрано: %d</item>
+    </plurals>
+    <plurals name="universal_copy_copied">
+        <item quantity="one">Скопирован %d элемент</item>
+        <item quantity="few">Скопировано %d элемента</item>
+        <item quantity="many">Скопировано %d элементов</item>
+        <item quantity="other">Скопировано %d элемента</item>
+    </plurals>
+    <plurals name="freezer_restore_intents_done_count">
+        <item quantity="one">Готово — обновлено %d приложение</item>
+        <item quantity="few">Готово — обновлено %d приложения</item>
+        <item quantity="many">Готово — обновлено %d приложений</item>
+        <item quantity="other">Готово — обновлено %d приложения</item>
+    </plurals>
+    <plurals name="freezer_refreeze_done">
+        <item quantity="one">Заморожено %d приложение</item>
+        <item quantity="few">Заморожено %d приложения</item>
+        <item quantity="many">Заморожено %d приложений</item>
+        <item quantity="other">Заморожено %d приложения</item>
+    </plurals>
+    <plurals name="freezer_unfreeze_all_done">
+        <item quantity="one">Разморожено %d приложение</item>
+        <item quantity="few">Разморожено %d приложения</item>
+        <item quantity="many">Разморожено %d приложений</item>
+        <item quantity="other">Разморожено %d приложения</item>
+    </plurals>
+    <plurals name="freezer_pause_all_done">
+        <item quantity="one">Приостановлено %d приложение</item>
+        <item quantity="few">Приостановлено %d приложения</item>
+        <item quantity="many">Приостановлено %d приложений</item>
+        <item quantity="other">Приостановлено %d приложения</item>
+    </plurals>
+    <plurals name="freezer_unpause_all_done">
+        <item quantity="one">Возобновлено %d приложение</item>
+        <item quantity="few">Возобновлено %d приложения</item>
+        <item quantity="many">Возобновлено %d приложений</item>
+        <item quantity="other">Возобновлено %d приложения</item>
+    </plurals>
+    <plurals name="freezer_import_frozen_done">
+        <item quantity="one">Импортировано %d приложение</item>
+        <item quantity="few">Импортировано %d приложения</item>
+        <item quantity="many">Импортировано %d приложений</item>
+        <item quantity="other">Импортировано %d приложения</item>
+    </plurals>
+    <plurals name="freezer_batch_remove_done">
+        <item quantity="one">Удалено из списка %d приложение</item>
+        <item quantity="few">Удалено из списка %d приложения</item>
+        <item quantity="many">Удалено из списка %d приложений</item>
+        <item quantity="other">Удалено из списка %d приложения</item>
+    </plurals>
+    <plurals name="holographic_launcher_entry_summary_hidden">
+        <item quantity="one">Скрыто %d приложение</item>
+        <item quantity="few">Скрыто %d приложения</item>
+        <item quantity="many">Скрыто %d приложений</item>
+        <item quantity="other">Скрыто %d приложения</item>
+    </plurals>
+    <plurals name="holographic_apps_entry_count">
+        <item quantity="one">Добавлено %d приложение</item>
+        <item quantity="few">Добавлено %d приложения</item>
+        <item quantity="many">Добавлено %d приложений</item>
+        <item quantity="other">Добавлено %d приложения</item>
+    </plurals>
+    <plurals name="holographic_apps_section_added">
+        <item quantity="one">Добавлено (%d приложение)</item>
+        <item quantity="few">Добавлено (%d приложения)</item>
+        <item quantity="many">Добавлено (%d приложений)</item>
+        <item quantity="other">Добавлено (%d приложения)</item>
+    </plurals>
+    <plurals name="quick_launcher_folder_items_count">
+        <item quantity="one">%d элемент</item>
+        <item quantity="few">%d элемента</item>
+        <item quantity="many">%d элементов</item>
+        <item quantity="other">%d элемента</item>
+    </plurals>
+    <plurals name="shortcut_custom_count_summary">
+        <item quantity="one">%d пользовательский ярлык</item>
+        <item quantity="few">%d пользовательских ярлыка</item>
+        <item quantity="many">%d пользовательских ярлыков</item>
+        <item quantity="other">%d пользовательских ярлыка</item>
+    </plurals>
+    <plurals name="shortcut_item_count">
+        <item quantity="one">%d элемент</item>
+        <item quantity="few">%d элемента</item>
+        <item quantity="many">%d элементов</item>
+        <item quantity="other">%d элемента</item>
+    </plurals>
+    <plurals name="widget_group_count">
+        <item quantity="one">%d виджет</item>
+        <item quantity="few">%d виджета</item>
+        <item quantity="many">%d виджетов</item>
+        <item quantity="other">%d виджета</item>
+    </plurals>
+    <plurals name="clipboard_lsposed_whitelist_desc">
+        <item quantity="one">Добавлено %1$d приложение</item>
+        <item quantity="few">Добавлено %1$d приложения</item>
+        <item quantity="many">Добавлено %1$d приложений</item>
+        <item quantity="other">Добавлено %1$d приложения</item>
+    </plurals>
+    <plurals name="search_panel_shortcut_index_count">
+        <item quantity="one">Проиндексирован %d ярлык</item>
+        <item quantity="few">Проиндексировано %d ярлыка</item>
+        <item quantity="many">Проиндексировано %d ярлыков</item>
+        <item quantity="other">Проиндексировано %d ярлыка</item>
+    </plurals>
+    <plurals name="search_panel_clipboard_index_count">
+        <item quantity="one">%d запись буфера обмена</item>
+        <item quantity="few">%d записи буфера обмена</item>
+        <item quantity="many">%d записей буфера обмена</item>
+        <item quantity="other">%d записи буфера обмена</item>
+    </plurals>
+</resources>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 文件浏览器（独立资源文件，避免改动现有 strings.xml）。 -->
+<resources>
+    <string name="file_browser_title">Файловый менеджер</string>
+    <string name="file_browser_entry_desc">Просмотр корня системы, внутренней памяти и Android/data.</string>
+
+    <string name="file_browser_search_hint">Поиск в этой папке</string>
+    <string name="file_browser_crumb_root">Корень</string>
+    <string name="file_browser_crumb_internal">Внутренняя память</string>
+
+    <string name="file_browser_quick_root">Корень системы</string>
+    <string name="file_browser_quick_internal">Внутренняя память</string>
+    <string name="file_browser_quick_android_data">Android/data</string>
+    <string name="file_browser_quick_download">Загрузки</string>
+    <string name="file_browser_quick_app_data">Данные приложений</string>
+
+    <string name="file_browser_access_detecting">Проверка…</string>
+    <string name="file_browser_access_root">Root</string>
+    <string name="file_browser_access_shizuku">Shizuku</string>
+    <string name="file_browser_access_all_files">Все файлы</string>
+    <string name="file_browser_access_limited">Ограниченный</string>
+
+    <string name="file_browser_refresh">Обновить</string>
+    <string name="file_browser_menu">Дополнительные параметры</string>
+    <string name="file_browser_close">Закрыть</string>
+
+    <string name="file_browser_sort_name">Имя</string>
+    <string name="file_browser_sort_time">Время изменения</string>
+    <string name="file_browser_sort_size">Размер</string>
+    <string name="file_browser_sort_asc">По возрастанию</string>
+    <string name="file_browser_sort_desc">По убыванию</string>
+    <string name="file_browser_show_hidden">Показывать скрытые файлы</string>
+    <string name="file_browser_copy_current_path">Копировать текущий путь</string>
+
+    <string name="file_browser_empty_dir">Эта папка пуста.</string>
+    <string name="file_browser_empty_search">Нет подходящих файлов.</string>
+    <string name="file_browser_loading">Чтение…</string>
+    <string name="file_browser_truncated">Показаны только первые %1$d элементов.</string>
+    <string name="file_browser_item_count">Элементов: %1$d</string>
+
+    <string name="file_browser_banner_limited">Ограниченный доступ: показаны только файлы, доступные этому приложению.</string>
+    <string name="file_browser_grant_all_files">Предоставить доступ ко всем файлам</string>
+    <string name="file_browser_grant_shizuku">Предоставить Shizuku</string>
+    <string name="file_browser_retry">Повторить</string>
+
+    <string name="file_browser_error_permission">Нет доступа к этой папке</string>
+    <string name="file_browser_error_permission_hint">Папка существует, но у приложения нет разрешения на чтение.</string>
+    <string name="file_browser_error_needs_root">Требуется Root</string>
+    <string name="file_browser_error_needs_root_hint">Shizuku работает от имени shell и не может читать /data. Переключитесь в режим Root и повторите.</string>
+    <string name="file_browser_error_privilege">Требуется привилегированный доступ</string>
+    <string name="file_browser_error_privilege_shizuku_hint">Запустите Shizuku и предоставьте разрешение, затем повторите.</string>
+    <string name="file_browser_error_privilege_root_hint">Root не предоставлен. Авторизуйте Root в настройках приложения и повторите.</string>
+    <string name="file_browser_error_not_found">Папка не найдена</string>
+    <string name="file_browser_error_not_dir">Это не папка</string>
+    <string name="file_browser_error_timeout">Время чтения истекло</string>
+    <string name="file_browser_error_unknown">Не удалось прочитать эту папку</string>
+
+    <string name="file_browser_kind_folder">Папка</string>
+    <string name="file_browser_kind_link">Ссылка</string>
+    <string name="file_browser_kind_file">Файл</string>
+
+    <string name="file_browser_details_title">Сведения</string>
+    <string name="file_browser_detail_name">Имя</string>
+    <string name="file_browser_detail_path">Путь</string>
+    <string name="file_browser_detail_size">Размер</string>
+    <string name="file_browser_detail_modified">Изменён</string>
+    <string name="file_browser_detail_permissions">Разрешения</string>
+    <string name="file_browser_detail_type">Тип</string>
+    <string name="file_browser_copy_path">Копировать путь</string>
+    <string name="file_browser_copied">Скопировано</string>
+
+    <string name="file_browser_card_title">Файлы</string>
+    <string name="file_browser_card_available">Свободно %1$s</string>
+    <string name="file_browser_card_size_loading">Чтение памяти…</string>
+    <string name="file_browser_card_used_of_total">Занято %1$s / всего %2$s</string>
+    <string name="file_browser_pin_current">Закрепить в быстром меню</string>
+    <string name="file_browser_unpin_current">Открепить от быстрого меню</string>
+    <string name="file_browser_footer_count_size">Элементов: %1$d · %2$s на этом уровне</string>
+    <string name="file_browser_footer_count_directory">Элементов: %1$d · всего %2$s</string>
+    <string name="file_browser_size_calculating">Вычисление…</string>
+    <string name="file_browser_size_unavailable">недоступно</string>
+    <string name="file_browser_compute_size">Размер</string>
+    <string name="file_browser_category_pictures">Изображения</string>
+    <string name="file_browser_category_music">Музыка</string>
+    <string name="file_browser_category_videos">Видео</string>
+    <string name="file_browser_category_documents">Документы</string>
+    <string name="file_browser_jump_path">Перейти по пути</string>
+    <string name="file_browser_jump_hint">Абсолютный путь, например /data/data</string>
+    <string name="file_browser_go">Перейти</string>
+    <string name="file_browser_cancel">Отмена</string>
+    <string name="file_browser_open_with">Открыть с помощью…</string>
+    <string name="file_browser_export_open">Экспортировать и открыть</string>
+    <string name="file_browser_exporting">Экспорт…</string>
+    <string name="file_browser_export_failed">Экспорт не удался</string>
+    <string name="file_browser_new_folder">Новая папка</string>
+    <string name="file_browser_rename">Переименовать</string>
+    <string name="file_browser_delete">Удалить</string>
+    <string name="file_browser_delete_message">Удалить «%1$s» и его содержимое? Это действие нельзя отменить.</string>
+    <string name="file_browser_name_hint">Имя</string>
+    <string name="file_browser_create">Создать</string>
+    <string name="file_browser_operation_failed">Операция не удалась</string>
+    <string name="file_browser_recursive_search">Рекурсивный поиск</string>
+    <string name="file_browser_search_results">Результаты поиска</string>
+    <string name="file_browser_search_empty">Совпадений нет</string>
+    <string name="file_browser_search_hint_recursive">Имя содержит…</string>
+    <string name="file_browser_quick_obb">Android/obb</string>
+    <string name="file_browser_selected_count">Выбрано: %1$d</string>
+    <string name="file_browser_copy">Копировать</string>
+    <string name="file_browser_move">Переместить</string>
+    <string name="file_browser_paste_here">Вставить сюда</string>
+    <string name="file_browser_clipboard_copy">Скопировано элементов: %1$d</string>
+    <string name="file_browser_clipboard_move">Вырезано элементов: %1$d</string>
+    <string name="file_browser_selection_details">Сведения</string>
+    <string name="file_browser_delete_selected_message">Удалить выбранные элементы (%1$d)? Это действие нельзя отменить.</string>
+    <string name="file_browser_conflict_title">Конфликт имён</string>
+    <string name="file_browser_conflict_message">В этой папке уже есть элементов: %1$d.</string>
+    <string name="file_browser_conflict_rename">Оставить оба</string>
+    <string name="file_browser_conflict_overwrite">Заменить</string>
+    <string name="file_browser_conflict_skip">Пропустить</string>
+    <string name="file_browser_trash_count">Перемещено в корзину: %1$d</string>
+    <string name="file_browser_undo">Отменить</string>
+    <string name="file_browser_favorites">Избранное</string>
+    <string name="file_browser_favorite_add">Добавить папку в избранное</string>
+    <string name="file_browser_favorite_remove">Удалить из избранного</string>
+    <string name="file_browser_favorites_empty">Избранного пока нет</string>
+    <string name="file_browser_restore_shortcuts">Восстановить встроенные ярлыки</string>
+    <string name="file_browser_image_open">Открыть</string>
+    <string name="file_browser_share">Поделиться</string>
+    <string name="file_browser_add_to_home">Добавить на главный экран</string>
+    <string name="file_browser_add_to_home_failed">Не удалось добавить ярлык</string>
+
+    <!-- 操作反馈 / 图片查看器 / 分享：代码里由 UI 层取资源，不再硬编码 -->
+    <string name="file_browser_failed_count">Не удалось: %1$d</string>
+    <string name="file_browser_skipped_count">Пропущено: %1$d</string>
+    <string name="file_browser_cancelled">Отменено</string>
+    <string name="file_browser_delete_failed">Не удалось удалить</string>
+    <string name="file_browser_restore_failed">Не удалось восстановить: %1$d</string>
+    <string name="file_browser_edit">Изменить</string>
+    <string name="file_browser_sharing">Отправка…</string>
+    <string name="file_browser_share_image">Поделиться изображением</string>
+    <string name="file_browser_share_failed">Не удалось поделиться: %1$s</string>
+    <string name="file_browser_share_files">Поделиться файлами</string>
+</resources>

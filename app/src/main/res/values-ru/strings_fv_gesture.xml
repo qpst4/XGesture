@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FooView（FV 悬浮球）「自定义手势」移植版用到的文案。
+     单独成文件是为了不把这几条塞进已经 4500 条的 strings.xml（仓库里 macro / page_scroll 也是这样分文件的）。 -->
+<resources>
+    <string name="fv_custom_gesture_title">Пользовательские жесты</string>
+    <string name="fv_custom_gesture_summary">Проведите линию по плавающему шарику, чтобы выполнить действие</string>
+    <string name="fv_custom_gesture_section">Пользовательские жесты</string>
+    <string name="fv_custom_gesture_add">Добавить жест</string>
+    <string name="fv_custom_gesture_empty">Пользовательских жестов пока нет — нажмите «+», чтобы нарисовать.</string>
+    <string name="fv_custom_gesture_edit">Изменить</string>
+    <string name="fv_custom_gesture_delete">Удалить</string>
+    <string name="fv_custom_gesture_delete_title">Удалить жест?</string>
+    <string name="fv_custom_gesture_delete_message">Жест и его зеркальный аналог будут удалены.</string>
+    <string name="fv_custom_gesture_mirror_badge">Зеркальный жест</string>
+    <string name="fv_custom_gesture_dialog_title">Жест</string>
+    <string name="fv_custom_gesture_action_row">Действие</string>
+    <string name="fv_custom_gesture_action_none">Нет</string>
+    <string name="fv_custom_gesture_mirror_row">Также добавить зеркальный жест</string>
+    <string name="fv_custom_gesture_conflict_message">Этот жест уже назначен: \"%1$s\". Нарисуйте другую фигуру или сначала измените этот жест.</string>
+    <string name="fv_custom_gesture_failed_title">Ошибка</string>
+    <string name="fv_custom_gesture_straight_line">Прямая линия конфликтует со встроенными жестами свайпа. Нарисуйте угол или изгиб.</string>
+    <string name="fv_custom_gesture_need_gesture">Сначала нарисуйте жест.</string>
+    <string name="fv_custom_gesture_need_action">Сначала выберите действие.</string>
+    <string name="fv_custom_gesture_save_failed">Не удалось сохранить жест.</string>
+    <string name="fv_hint_suffix_free_window">- Свободное окно</string>
+    <string name="fv_hint_suffix_fullscreen">- Полный экран</string>
+</resources>

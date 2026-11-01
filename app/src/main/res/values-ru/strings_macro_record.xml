@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 宏：录制浮动条 -->
+    <string name="macro_record_badge">Макрос</string>
+    <string name="macro_record_running">Запись</string>
+    <string name="macro_record_drag_handle">Перетащить</string>
+    <string name="macro_record_counts">Действий: %1$d</string>
+    <string name="macro_record_counts_with_waits">Действий: %1$d · Ожиданий: %2$d</string>
+
+    <!-- 宏：录制浮动条按钮 -->
+    <string name="macro_record_pause">Пауза</string>
+    <string name="macro_record_resume">Продолжить</string>
+    <string name="macro_record_stop">Стоп</string>
+    <string name="macro_record_save">Сохранить</string>
+    <string name="macro_record_confirm_discard">Отменить эту запись?</string>
+    <string name="macro_record_discard">Не сохранять</string>
+    <string name="macro_record_keep">Оставить</string>
+
+    <!-- 宏：录制结果提示 -->
+    <string name="macro_record_nothing">Шаги пока не записаны.</string>
+    <string name="macro_record_saved">Макрос сохранён: %1$s</string>
+</resources>

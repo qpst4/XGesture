@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Переводы общих строк модуля core:common -->
+<resources>
+<string name="activity_shortcut_coupons">Купоны</string>
+<string name="activity_shortcut_favorites">Избранное</string>
+<string name="activity_shortcut_scan">Сканер</string>
+<string name="activity_shortcut_search">Поиск</string>
+</resources>
