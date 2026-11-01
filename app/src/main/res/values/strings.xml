@@ -4475,6 +4475,7 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="settings_app_language_label_en">English</string>
     <string name="settings_app_language_label_ja">日本語</string>
     <string name="settings_app_language_label_ar">العربية</string>
+    <string name="settings_app_language_label_ru">Русский</string>
     <string name="gesture_action_open_link">Open link</string>
     <string name="gesture_action_open_link_desc">Open a saved external link, deeplink, or intent URI</string>
     <string name="gesture_open_link_url_field">Link</string>

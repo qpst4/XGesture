@@ -4308,7 +4308,7 @@
     <string name="vlm_ocr_custom_prompt_title">Пользовательский выделенный промпт</string>
     <string name="vlm_ocr_custom_prompt_enabled">Выделенное переопределение включено; пользовательское содержимое ниже имеет приоритет</string>
     <string name="vlm_ocr_custom_prompt_disabled">Выделенное переопределение приостановлено; черновик сохранён локально</string>
-    <string name="vlm_ocr_custom_prompt_label">Выделенный System Prompt</string>
+    <string name="vlm_ocr_custom_prompt_label">Выделенный системный промпт</string>
     <string name="vlm_ocr_load_generic_template">Загрузить общий шаблон</string>
     <string name="vlm_ocr_custom_prompt_hint">Выключите, чтобы приостановить выделенное переопределение; включите для тонкой настройки под %1$s. Общее содержимое записывается только при нажатии «Загрузить общий шаблон».</string>
     <string name="ocr_error_no_model_selected">Модель OCR не выбрана</string>
@@ -4324,10 +4324,10 @@
     <string name="ocr_common_config_title">Общие настройки</string>
     <string name="ocr_common_prompt_customized">Глобальный промпт настроен</string>
     <string name="ocr_common_prompt_default">Используется заводской по умолчанию</string>
-    <string name="ocr_global_system_prompt">Глобальный System Prompt</string>
+    <string name="ocr_global_system_prompt">Глобальный системный промпт</string>
     <string name="ocr_edit">Изменить</string>
     <string name="ocr_restore_default">Восстановить по умолчанию</string>
-    <string name="ocr_global_system_prompt_field">Глобальный System Prompt</string>
+    <string name="ocr_global_system_prompt_field">Глобальный системный промпт</string>
     <string name="ocr_model_status_active">Активна</string>
     <string name="ocr_model_status_not_configured">Не настроена</string>
     <string name="ocr_model_summary_custom_prompt">Текущая модель: %1$s · выделенный промпт</string>
@@ -4425,7 +4425,7 @@
     <string name="gesture_search_fingertip_3">Радиальное</string>
     <string name="gesture_search_screen_off_1">Фейковое выключение экрана</string>
     <string name="gesture_search_screen_off_2">Keep-alive с выключенным экраном</string>
-    <string name="gesture_search_screen_off_3">Keep awake</string>
+    <string name="gesture_search_screen_off_3">Не выключать экран</string>
     <string name="gesture_search_screen_off_4">Защита от выгорания</string>
     <string name="gesture_search_screen_off_5">Keep-alive с чёрным экраном</string>
     <string name="gesture_search_pin_1">Закрепить на экране</string>
@@ -4477,6 +4477,7 @@
     <string name="settings_app_language_label_en">English</string>
     <string name="settings_app_language_label_ja">日本語</string>
     <string name="settings_app_language_label_ar">العربية</string>
+    <string name="settings_app_language_label_ru">Русский</string>
     <string name="gesture_action_open_link">Открыть ссылку</string>
     <string name="gesture_action_open_link_desc">Открыть сохранённую внешнюю ссылку, deeplink или intent URI</string>
     <string name="gesture_open_link_url_field">Ссылка</string>

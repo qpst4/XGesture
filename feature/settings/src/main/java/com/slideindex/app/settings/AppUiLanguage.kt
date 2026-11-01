@@ -7,6 +7,7 @@ enum class AppUiLanguage {
     EN,
     JA,
     AR,
+    RU,
     ;
 
     fun toStorageTag(): String = when (this) {
@@ -15,6 +16,7 @@ enum class AppUiLanguage {
         EN -> "en"
         JA -> "ja"
         AR -> "ar"
+        RU -> "ru"
     }
 
     fun toLanguageTags(): String? = when (this) {
@@ -23,6 +25,7 @@ enum class AppUiLanguage {
         EN -> "en"
         JA -> "ja"
         AR -> "ar"
+        RU -> "ru"
     }
 
     companion object {
@@ -32,6 +35,7 @@ enum class AppUiLanguage {
             "en" -> EN
             "ja" -> JA
             "ar" -> AR
+            "ru" -> RU
             else -> SYSTEM
         }
     }

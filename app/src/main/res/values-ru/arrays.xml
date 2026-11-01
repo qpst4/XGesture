@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="screenshot_monitor_keywords">
+        <item>скриншот</item>
+        <item>снимок экрана</item>
+        <item>захват экрана</item>
+    </string-array>
+</resources>
