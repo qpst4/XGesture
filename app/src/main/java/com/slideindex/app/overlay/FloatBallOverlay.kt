@@ -811,6 +811,10 @@ object FloatBallOverlay {
 
     /** 触摸按下、命中球区：立即显形并取消待隐身。 */
     private fun onFloatBallPressed() {
+        // 新一轮按下（按在球上）：清掉上一轮可能残留的侧向覆盖。
+        // 残留会让下一次拖动把红十字的起点算到对面去（"像从另一侧拖过来"）。
+        dragActiveSideOverride = null
+        activeSideAtDragStart = null
         ballPressed = true
         cancelBallIdleHide()
         if (ballRevealed) return
@@ -3434,7 +3438,10 @@ object FloatBallOverlay {
         val effectiveCenterY = if (pressOnBall) ballCenterY else touchDownY
         val pickDockSide = when {
             fromEdgeGesture -> if (fingerX < screenWidth / 2f) FloatBallSide.LEFT else FloatBallSide.RIGHT
-            else -> effectiveActiveSide(settings)
+            // 按在球上：用球停靠的那一侧；按在线上/其它地方：用按下点所在侧的边，
+            // 保证「球从哪算、红十字就从哪算」，不会一边手指、一边对侧。
+            pressOnBall -> effectiveActiveSide(settings)
+            else -> if (touchDownX < screenWidth / 2f) FloatBallSide.LEFT else FloatBallSide.RIGHT
         }
         dragSession.armAtTouch(
             settings = settings,
