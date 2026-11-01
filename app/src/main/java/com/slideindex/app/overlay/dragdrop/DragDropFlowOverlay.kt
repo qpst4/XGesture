@@ -41,6 +41,7 @@ import com.slideindex.app.overlay.FloatBallImageSearchPanel
 import com.slideindex.app.overlay.FloatBallPickResult
 import com.slideindex.app.overlay.FloatBallPickResultPanel
 import com.slideindex.app.overlay.FloatBallTextPick
+import com.slideindex.app.overlay.FloatBallTranslateCoordinator
 import com.slideindex.app.overlay.OverlayCompose
 import com.slideindex.app.overlay.OverlayComposeOwner
 import com.slideindex.app.overlay.OverlayWindowTypes
@@ -771,7 +772,14 @@ class DragDropFlowController(
                         }
                     }
                     targetId == "translate_text" && !text.isNullOrBlank() -> {
-                        FloatBallTextPick.translateText(context, text, "zh-CN")
+                        // 与取词面板 / 剪贴板智能翻译同一条链路：引擎与「即时翻译」开关都生效；
+                        // 选「本地 App」或关掉即时翻译时不会打开取词面板。
+                        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context
+                        FloatBallTranslateCoordinator.translateFromExternalEntry(
+                            context = hostContext,
+                            text = text,
+                            openTextPanel = { openTextPickPanel(hostContext, it) },
+                        )
                     }
                     targetId == "system_share_text" && !text.isNullOrBlank() -> {
                         ShareSheetLauncher.share(
@@ -791,6 +799,16 @@ class DragDropFlowController(
      */
     private fun openWordSegmentation(text: String) {
         val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context
+        openTextPickPanel(hostContext, text)
+    }
+
+    /**
+     * 把一段文字显示进取词结果面板：分词与翻译共用。
+     *
+     * 翻译会在面板显示后再调 `FloatBallTranslateCoordinator` 往面板里灌译文
+     * （`showTranslateLoading` 要求面板已 show），所以这里只负责「先把原文放上面板」。
+     */
+    private fun openTextPickPanel(hostContext: Context, text: String) {
         FloatBallPickResultPanel.showResult(
             context = hostContext,
             result = FloatBallPickResult(

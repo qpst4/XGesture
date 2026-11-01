@@ -50,7 +50,7 @@ import com.slideindex.app.ocr.OcrDependencyAccess
 import com.slideindex.app.ocr.OcrEngines
 import com.slideindex.app.overlay.FloatBallPickResult
 import com.slideindex.app.overlay.FloatBallPickResultPanel
-import com.slideindex.app.overlay.FloatBallTextPick
+import com.slideindex.app.overlay.FloatBallTranslateCoordinator
 import com.slideindex.app.overlay.OverlayWindowTypes
 import com.slideindex.app.overlay.PickResultContentOrigin
 import com.slideindex.app.overlay.PickResultTextSource
@@ -62,7 +62,6 @@ import com.slideindex.app.overlay.searchpanel.SearchPanelQueryBridge
 import com.slideindex.app.overlay.setupBackgroundBlur
 import com.slideindex.app.service.RegionalScreenshotOcr
 import com.slideindex.app.service.SlideIndexAccessibilityService
-import com.slideindex.app.translate.TranslateTargetResolver
 import java.lang.ref.WeakReference
 import kotlin.math.abs
 import kotlinx.coroutines.CancellationException
@@ -774,18 +773,13 @@ object UniversalCopyOverlay {
     }
 
     private fun performTranslate(context: Context, text: String) {
-        val settings = OverlayDependencyAccess.overlayDependencies(context)
-            ?.settingsRepository
-            ?.readSnapshot()
-        val targetLang = if (settings != null) {
-            TranslateTargetResolver.resolve(
-                settings.floatBallTranslateTargetLang,
-                settings.appUiLanguageTag,
-            )
-        } else {
-            "zh-CN"
-        }
-        FloatBallTextPick.translateText(context, text, targetLang)
+        // 引擎 / 目标语言 / 「即时翻译」全部交给统一翻译链路：与取词面板、剪贴板智能翻译完全一致。
+        // 选「本地 App」或关掉即时翻译时不会打开面板（否则会留下一个只显示原文的空面板）。
+        FloatBallTranslateCoordinator.translateFromExternalEntry(
+            context = context,
+            text = text,
+            openTextPanel = { openPickPanel(context, it) },
+        )
     }
 
     private fun resolvePpOcrModelId(context: Context): String? {
