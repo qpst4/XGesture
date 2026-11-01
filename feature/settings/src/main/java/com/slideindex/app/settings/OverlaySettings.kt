@@ -146,7 +146,7 @@ data class OverlaySettings(
     val floatBallDragPasteEnabled: Boolean = true,
     val floatBallPickPanelEnterAnimationMs: Int = 64,
     val floatBallPickPanelExitAnimationMs: Int = 64,
-    val floatBallPointerSlopDp: Float = 3f,
+    val floatBallPointerSlopDp: Float = 12f,
     val floatBallHoverPauseDelayMs: Int = 400,
     val floatBallLongPressMs: Int = 500,
     val floatBallRegionalCancelSlopDp: Float = 16f,

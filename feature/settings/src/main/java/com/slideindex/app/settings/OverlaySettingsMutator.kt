@@ -1093,7 +1093,7 @@ class OverlaySettingsMutator @Inject constructor(
     }
 
     suspend fun setFloatBallPointerSlopDp(value: Float) = editor.edit {
-        it[SettingsPreferenceKeys.FLOAT_BALL_POINTER_SLOP_DP] = value.coerceIn(4f, 32f)
+        it[SettingsPreferenceKeys.FLOAT_BALL_POINTER_SLOP_DP] = value.coerceIn(0f, 32f)
     }
 
     suspend fun setFloatBallHoverPauseDelayMs(value: Int) = editor.edit {

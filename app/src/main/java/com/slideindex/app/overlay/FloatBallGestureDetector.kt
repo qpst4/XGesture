@@ -56,6 +56,9 @@ internal class FloatBallGestureDetector(
          * 抬手时当前正向位移低于峰值的比例则视为取消；高于则仍触发（容忍末尾微回弹）。
          */
         const val GESTURE_CANCEL_RETAIN_FRACTION = 0.55f
+
+        /** 长按允许的手指抖动：12dp ≈ 2mm。超过它才取消长按（转成取词）。 */
+        const val LONG_PRESS_TOLERANCE_DP = 12f
     }
 
     private var density = 1f
@@ -67,6 +70,9 @@ internal class FloatBallGestureDetector(
      * 它**不参与**拖动起点判定 —— 对齐 FV：手指一动球就跟、取词立即开始，没有死区。
      */
     private var tapSlopPx = 8f
+
+    /** 取词启动阈值（px）：来自设置「拖动死区」，0 = 手指一动就开始取词。 */
+    private var pickStartPx = 0f
     private var longPressMs = LONG_PRESS_MS
     private var configuredActions: Map<FloatBallGestureType, GestureAction> = emptyMap()
 
@@ -159,11 +165,20 @@ internal class FloatBallGestureDetector(
     }
 
     private val longPressRunnable = Runnable {
-        if (pickDragStarted || isPickCommitLocked() || longPressFired) return@Runnable
+        if (pickDragStarted || longPressFired) return@Runnable
         val dist = hypot(lastX - downX, lastY - downY)
-        if (dist <= tapSlopPx * 2f) {
+        if (dist <= maxOf(tapSlopPx * 2f, pickStartPx)) {
             longPressFired = true
             pendingSingleTap = false
+            // 长按抢在取词前面：先把已经开始的取词/预览收掉，再执行长按动作。
+            if (pickDragStarted) {
+                pickDragStarted = false
+                pickActive = false
+                onPickCancel?.invoke()
+            } else if (pickActive) {
+                pickActive = false
+                onPickPreviewCancel?.invoke()
+            }
             onGesture?.invoke(FloatBallGestureType.LONG_PRESS, lastX, lastY, downX, downY)
         }
     }
@@ -210,6 +225,7 @@ internal class FloatBallGestureDetector(
         sideSwipeShortPx = swipeThresholdPx(settings.floatBallSideSwipeShortPercent, density)
         upSwipeShortPx = swipeThresholdPx(settings.floatBallUpSwipeShortPercent, density)
         tapSlopPx = systemTouchSlopPx
+        pickStartPx = settings.floatBallPointerSlopDp.coerceIn(0f, 32f) * density
         longPressMs = settings.floatBallLongPressMs.coerceIn(200, 2000).toLong()
         configuredActions = settings.floatBallGestureActions
         this.onPickStart = onPickStart
@@ -288,8 +304,10 @@ internal class FloatBallGestureDetector(
                     }
                 }
                 var justStartedPickDrag = false
-                // 对齐 FV：没有拖动死区 —— 手指一离开按下点就跟手/开始取词。
-                if (distFromStart > 0f) {
+                // 取词：手指一离开按下点就开始（对齐 FV，没有死区）。
+                // 长按定时器**不因移动取消**（FV 的 MOVE 分支里也不 remove）：
+                // 到点时再看位移是否超过抖动容差，超过才算这次是取词。
+                if (distFromStart > pickStartPx) {
                     movedBeyondSlop = true
                     handler.removeCallbacks(longPressRunnable)
                     pendingSingleTap = false

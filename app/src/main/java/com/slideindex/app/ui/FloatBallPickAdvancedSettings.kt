@@ -85,6 +85,18 @@ fun floatBallPickAdvancedCardItems(
             onValueChange = onPickBottomTransitionChange,
         )
     },
+    settingsCardScopeItem("pointer-slop") {
+        SettingsSliderRow(
+            title = stringResource(R.string.float_ball_pointer_slop),
+            value = settings.floatBallPointerSlopDp,
+            // 0 = 手指一动就开始取词；调大 = 需要走够这段距离才启动取词（长按也在这段内不会被打断）。
+            valueRange = 0f..32f,
+            steps = 31,
+            enabled = true,
+            label = stringResource(R.string.float_ball_size_value, settings.floatBallPointerSlopDp),
+            onValueChange = onPointerSlopChange,
+        )
+    },
     settingsCardScopeItem("hover-pause-delay") {
         SettingsSliderRow(
             title = stringResource(R.string.float_ball_hover_pause_delay),

@@ -350,7 +350,7 @@ data class FloatBallSettings(
     /** Bottom pick panel slide-out duration in ms (0 = no animation). */
     val floatBallPickPanelExitAnimationMs: Int = 64,
     /** Finger travel before full-screen pointer mode activates. */
-    val floatBallPointerSlopDp: Float = 3f,
+    val floatBallPointerSlopDp: Float = 12f,
     /** Hover dwell time before cursor locks start position for text pick or screenshot (ms). */
     val floatBallHoverPauseDelayMs: Int = 400,
     /** 悬浮球/侧边条长按手势的触发时长（ms）。 */
