@@ -34,6 +34,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import com.slideindex.app.R
 import androidx.compose.ui.unit.IntOffset
 import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.padding
@@ -554,7 +556,11 @@ object FloatingBrowserPanel {
 
         override fun onRenderProcessGone() {
             val host = webHost ?: return
-            android.widget.Toast.makeText(host.context, "网页进程崩溃，已重新打开", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(
+                host.context,
+                host.context.getString(R.string.browser_render_gone),
+                android.widget.Toast.LENGTH_SHORT,
+            ).show()
             val current = tabs.firstOrNull { it.id == activeTabId }
             val targetUrl = current?.url.orEmpty()
             if (current != null) closeTab(current.id)
@@ -701,7 +707,7 @@ object FloatingBrowserPanel {
             callbacks = createTabCallbacks(tabId),
         )
         tabs.add(tab)
-        tabLabels.add("新标签")
+        tabLabels.add(rootView?.context?.getString(R.string.browser_new_tab) ?: "New tab")
         activateTab(tab.id)
         if (!url.isNullOrBlank()) {
             if (lazy) tab.setLazy(url) else tab.load(url)
@@ -721,20 +727,28 @@ object FloatingBrowserPanel {
             callbacks = createTabCallbacks(tabId),
         )
         tabs.add(tab)
-        tabLabels.add("新标签")
+        tabLabels.add(rootView?.context?.getString(R.string.browser_new_tab) ?: "New tab")
         tab.pause()
         tab.load(url)
         trimTabsIfNeeded()
         schedulePersistSession()
         refreshUi()
-        android.widget.Toast.makeText(host.context, "已在后台打开新标签页", android.widget.Toast.LENGTH_SHORT).show()
+        android.widget.Toast.makeText(
+            host.context,
+            host.context.getString(R.string.browser_background_tab_opened),
+            android.widget.Toast.LENGTH_SHORT,
+        ).show()
     }
 
-    private fun copyToClipboard(text: String, toastMsg: String = "已复制") {
+    private fun copyToClipboard(text: String, toastMsg: String? = null) {
         val host = webHost ?: return
         val cm = host.context.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager ?: return
         cm.setPrimaryClip(android.content.ClipData.newPlainText("xg_browser", text))
-        android.widget.Toast.makeText(host.context, toastMsg, android.widget.Toast.LENGTH_SHORT).show()
+        android.widget.Toast.makeText(
+            host.context,
+            toastMsg ?: host.context.getString(R.string.browser_copied),
+            android.widget.Toast.LENGTH_SHORT,
+        ).show()
     }
 
     private fun openExternal(url: String) {
@@ -744,7 +758,11 @@ object FloatingBrowserPanel {
                 .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             host.context.startActivity(intent)
         }.onFailure {
-            android.widget.Toast.makeText(host.context, "无法唤起外部应用", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(
+                host.context,
+                host.context.getString(R.string.browser_cannot_open_external),
+                android.widget.Toast.LENGTH_SHORT,
+            ).show()
         }
     }
 
@@ -760,7 +778,11 @@ object FloatingBrowserPanel {
             }
             val dm = host.context.getSystemService(Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
             dm.enqueue(request)
-            android.widget.Toast.makeText(host.context, "开始下载图片...", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(
+                host.context,
+                host.context.getString(R.string.browser_downloading_image),
+                android.widget.Toast.LENGTH_SHORT,
+            ).show()
         }.onFailure {
             android.widget.Toast.makeText(host.context, "下载失败: ${it.message}", android.widget.Toast.LENGTH_SHORT).show()
         }
@@ -910,7 +932,7 @@ object FloatingBrowserPanel {
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                text = displayHost().ifBlank { "新建标签页" },
+                                text = displayHost().ifBlank { stringResource(R.string.browser_new_tab_page) },
                                 color = ComposeColor(0xFF202124),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
@@ -1187,7 +1209,7 @@ object FloatingBrowserPanel {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "标签页 (${tabs.size})",
+                        text = stringResource(R.string.browser_tabs_title, tabs.size),
                         color = ComposeColor(0xFF202124),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -1211,7 +1233,7 @@ object FloatingBrowserPanel {
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            text = "新建",
+                            text = stringResource(R.string.browser_new),
                             color = ComposeColor(0xFF1A73E8),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
@@ -1287,6 +1309,7 @@ object FloatingBrowserPanel {
         var entries by remember { mutableStateOf(listOf<Triple<String, Int, String>>()) }
         androidx.compose.runtime.LaunchedEffect(downloadsVisible) {
             if (context == null) return@LaunchedEffect
+            val ctx = context
             while (downloadsVisible) {
                 entries = runCatching {
                     val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
@@ -1307,9 +1330,9 @@ object FloatingBrowserPanel {
                         )
                         val percent = if (total > 0) ((done * 100) / total).toInt() else 0
                         val state = when (status) {
-                            android.app.DownloadManager.STATUS_SUCCESSFUL -> "已完成"
-                            android.app.DownloadManager.STATUS_FAILED -> "失败"
-                            android.app.DownloadManager.STATUS_PAUSED -> "暂停"
+                            android.app.DownloadManager.STATUS_SUCCESSFUL -> ctx.getString(R.string.browser_download_done)
+                            android.app.DownloadManager.STATUS_FAILED -> ctx.getString(R.string.browser_download_failed_state)
+                            android.app.DownloadManager.STATUS_PAUSED -> ctx.getString(R.string.browser_download_paused)
                             else -> percent.toString() + "%"
                         }
                         out.add(Triple(title, percent, state))
@@ -1322,7 +1345,7 @@ object FloatingBrowserPanel {
         }
         Column(modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) {
             if (entries.isEmpty()) {
-                Text("暂无下载", color = ComposeColor(0xFF9AA0A6), fontSize = 12.sp)
+                Text(stringResource(R.string.browser_no_downloads), color = ComposeColor(0xFF9AA0A6), fontSize = 12.sp)
             } else {
                 entries.forEach { entry ->
                     Row(
@@ -1367,7 +1390,7 @@ object FloatingBrowserPanel {
                     ) {},
             ) {
                 Text(
-                    text = "网址或搜索",
+                    text = stringResource(R.string.browser_address_hint),
                     color = ComposeColor(0xFF5F6368),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
@@ -1421,14 +1444,14 @@ object FloatingBrowserPanel {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    SearchEngineChip(label = "必应") {
+                    SearchEngineChip(label = stringResource(R.string.browser_engine_bing)) {
                         val query = addressText.trim()
                         if (query.isNotEmpty()) {
                             addressEditing = false
                             openUrl("https://www.bing.com/search?q=" + Uri.encode(query))
                         }
                     }
-                    SearchEngineChip(label = "百度") {
+                    SearchEngineChip(label = stringResource(R.string.browser_engine_baidu)) {
                         val query = addressText.trim()
                         if (query.isNotEmpty()) {
                             addressEditing = false
@@ -1451,7 +1474,7 @@ object FloatingBrowserPanel {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        "桌面版网站",
+                        stringResource(R.string.browser_desktop_mode),
                         color = ComposeColor(0xFF5F6368),
                         fontSize = 13.sp,
                         modifier = Modifier.weight(1f),
@@ -1474,7 +1497,12 @@ object FloatingBrowserPanel {
                     onClick = { downloadsVisible = !downloadsVisible },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(if (downloadsVisible) "收起下载" else "查看下载", fontSize = 13.sp)
+                    Text(
+                        stringResource(
+                            if (downloadsVisible) R.string.browser_downloads_hide else R.string.browser_downloads_show,
+                        ),
+                        fontSize = 13.sp,
+                    )
                 }
                 if (downloadsVisible) {
                     DownloadsList()
@@ -1486,7 +1514,7 @@ object FloatingBrowserPanel {
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        text = "取消",
+                        text = stringResource(R.string.browser_cancel),
                         color = ComposeColor(0xFF5F6368),
                         fontSize = 14.sp,
                         modifier = Modifier
@@ -1508,7 +1536,7 @@ object FloatingBrowserPanel {
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = "前往",
+                            text = stringResource(R.string.browser_go),
                             color = ComposeColor.White,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
@@ -1609,10 +1637,10 @@ object FloatingBrowserPanel {
                 .padding(horizontal = 6.dp, vertical = 3.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            SelectionActionPillItem(icon = Icons.Rounded.Search, label = "搜索") { onSearch(text) }
-            SelectionActionPillItem(icon = Icons.Outlined.Translate, label = "翻译") { onTranslate(text) }
-            SelectionActionPillItem(icon = Icons.Outlined.ContentCopy, label = "复制") { onCopy(text) }
-            SelectionActionPillItem(icon = Icons.Outlined.PushPin, label = "钉屏") { onPin(text) }
+            SelectionActionPillItem(icon = Icons.Rounded.Search, label = stringResource(R.string.browser_search)) { onSearch(text) }
+            SelectionActionPillItem(icon = Icons.Outlined.Translate, label = stringResource(R.string.browser_translate)) { onTranslate(text) }
+            SelectionActionPillItem(icon = Icons.Outlined.ContentCopy, label = stringResource(R.string.browser_copy)) { onCopy(text) }
+            SelectionActionPillItem(icon = Icons.Outlined.PushPin, label = stringResource(R.string.browser_pin)) { onPin(text) }
         }
     }
 
@@ -1680,7 +1708,7 @@ object FloatingBrowserPanel {
                 when (target) {
                     is ContextMenuTarget.Link -> {
                         Text(
-                            text = "链接操作",
+                            text = stringResource(R.string.browser_link_actions),
                             color = ComposeColor(0xFF202124),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -1765,7 +1793,7 @@ object FloatingBrowserPanel {
                     horizontalArrangement = Arrangement.End,
                 ) {
                     Text(
-                        text = "取消",
+                        text = stringResource(R.string.browser_cancel),
                         color = ComposeColor(0xFF5F6368),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,

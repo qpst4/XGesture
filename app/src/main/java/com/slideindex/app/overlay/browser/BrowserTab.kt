@@ -93,6 +93,7 @@ internal class BrowserTab(
     private var lastTouchY = 0f
     private var lastSelectionScale = 1f
     private var lastNonEmptySelectionAt = 0L
+    private var blockedRequestCount = 0
 
     val webView: WebView = createWebView()
 
@@ -207,6 +208,7 @@ internal class BrowserTab(
     /** 拖动选区手柄：参数是**窗口坐标**，这里换算成网页 CSS 坐标。 */
     private fun createClient(): WebViewClient = object : WebViewClient() {
         override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
+            blockedRequestCount = 0
             super.onPageStarted(view, url, favicon)
             this@BrowserTab.url = url.orEmpty()
             callbacks.onPageStarted(url.orEmpty())
@@ -242,6 +244,7 @@ internal class BrowserTab(
         ): android.webkit.WebResourceResponse? {
             val host = request.url?.host?.lowercase().orEmpty()
             if (host.isNotEmpty() && AdBlockHosts.isBlocked(host)) {
+                blockedRequestCount++
                 return android.webkit.WebResourceResponse(
                     "text/plain",
                     "utf-8",
