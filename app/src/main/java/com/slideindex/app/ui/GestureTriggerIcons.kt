@@ -130,8 +130,11 @@ fun gestureTriggerIconRotationZ(side: PanelSide, trigger: GestureTriggerType): F
         PanelSide.TOP -> when (trigger.directionKind()) {
             TriggerDirectionKind.In -> 90f
             TriggerDirectionKind.InReturn -> 90f
-            TriggerDirectionKind.UpRight -> -135f
-            TriggerDirectionKind.DownRight -> -45f
+            // 斜向必须与 BOTTOM 互为镜像：底边向内是"上"（↖/↗），顶边向内是"下"（↙/↘）。
+            // 这两个值原先照抄了 BOTTOM 的 -135/-45，于是顶边向下斜滑时箭头被画成向上斜指
+            //（右下滑 → ↗、左下滑 → ↖），与手指方向垂向相反。
+            TriggerDirectionKind.UpRight -> 135f
+            TriggerDirectionKind.DownRight -> 45f
             TriggerDirectionKind.Up -> 180f
             TriggerDirectionKind.Down -> 0f
             TriggerDirectionKind.InUp -> 90f
