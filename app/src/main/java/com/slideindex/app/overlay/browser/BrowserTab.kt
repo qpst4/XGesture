@@ -100,7 +100,6 @@ internal class BrowserTab(
             ): android.view.ActionMode? {
                 // 浮层窗口没有 Activity 令牌，系统浮动工具栏弹不出来且会清掉选区；
                 // 文字选区交给我们自绘（手柄 + 工具条）。
-                android.util.Log.i("XGBrowser", "startActionMode type=" + type)
                 if (type == android.view.ActionMode.TYPE_FLOATING) {
                     // 占位 ActionMode：让 Chromium 保留选区，UI 由我们自绘
                     return DummyActionMode(context)
@@ -121,7 +120,6 @@ internal class BrowserTab(
             setBackgroundColor(Color.WHITE)
             setOnLongClickListener { v ->
                 val hit = (v as? WebView)?.hitTestResult
-                android.util.Log.i("XGBrowser", "onLongClick: hitType=${hit?.type}, extra=${hit?.extra}")
                 if (hit != null) {
                     when (hit.type) {
                         WebView.HitTestResult.SRC_ANCHOR_TYPE,
@@ -186,63 +184,13 @@ internal class BrowserTab(
                     val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
                     dm.enqueue(request)
                 }.onFailure {
-                    android.util.Log.w("XGBrowser", "download failed: $it")
                 }
             }
             addJavascriptInterface(JsBridge(this), "xgBrowser")
         }
     }
 
-    /** 用 JS 选中触点在网页里的词，交给自绘工具条。 */
-    private fun selectWordAt(viewX: Float, viewY: Float) {
-        // viewX/viewY 是 WebView 内的 view 坐标；先转成窗口坐标再按缩放换算
-        val loc = IntArray(2)
-        webView.getLocationOnScreen(loc)
-        val originLoc = IntArray(2)
-        webView.getLocationInWindow(originLoc)
-        val scale = lastSelectionScale.coerceAtLeast(0.1f)
-        val cssX = (viewX / scale).toInt()
-        val cssY = (viewY / scale).toInt()
-        webView.evaluateJavascript(
-            "window.xgSelectWordAt ? window.xgSelectWordAt($cssX,$cssY) : ''",
-        ) { result ->
-            val text = result
-                ?.removeSurrounding("\"")
-                ?.replace("\\n", " ")
-                ?.trim()
-                .orEmpty()
-            android.util.Log.i("XGBrowser", "selectWordAt css=($cssX,$cssY) text=$text")
-            if (text.isNotEmpty()) callbacks.onTextSelected(text)
-        }
-    }
-
     /** 拖动选区手柄：参数是**窗口坐标**，这里换算成网页 CSS 坐标。 */
-    private var pendingExtend: Pair<IntArray, Boolean>? = null
-    private var extendPosted = false
-
-    fun extendSelectionTo(windowX: Float, windowY: Float, fromStart: Boolean = false) {
-        val loc = IntArray(2)
-        webView.getLocationInWindow(loc)
-        val scale = lastSelectionScale.coerceAtLeast(0.1f)
-        val cssX = ((windowX - loc[0]) / scale).toInt()
-        val cssY = ((windowY - loc[1]) / scale).toInt()
-        // 节流：拖动时每 ~50ms 才真正更新一次网页选区，避免每帧 evaluateJavascript 造成卡顿
-        pendingExtend = intArrayOf(cssX, cssY) to fromStart
-        if (extendPosted) return
-        extendPosted = true
-        webView.postDelayed({
-            extendPosted = false
-            val pending = pendingExtend ?: return@postDelayed
-            pendingExtend = null
-            val xy = pending.first
-            val fromStartFlag = pending.second
-            webView.evaluateJavascript(
-                "window.xgExtendSelection && window.xgExtendSelection(" + xy[0] + "," + xy[1] + "," + fromStartFlag + ")",
-                null,
-            )
-        }, 50)
-    }
-
     private fun createClient(): WebViewClient = object : WebViewClient() {
         override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
             super.onPageStarted(view, url, favicon)
@@ -290,7 +238,6 @@ internal class BrowserTab(
 
     private fun createChromeClient(): WebChromeClient = object : WebChromeClient() {
         override fun onConsoleMessage(msg: android.webkit.ConsoleMessage?): Boolean {
-            android.util.Log.i("XGBrowser", "console: " + msg?.message())
             return true
         }
 
@@ -368,7 +315,6 @@ internal class BrowserTab(
         override fun onPermissionRequest(request: android.webkit.PermissionRequest?) {
             val req = request ?: return
             val resources = req.resources ?: emptyArray()
-            android.util.Log.i("XGBrowser", "onPermissionRequest: " + resources.joinToString())
             val granted = mutableListOf<String>()
             var needCamera = false
             var needMic = false
@@ -440,7 +386,6 @@ internal class BrowserTab(
                 resultMsg.sendToTarget()
                 true
             }.getOrElse { e ->
-                android.util.Log.e("XGBrowser", "onCreateWindow error", e)
                 false
             }
         }
@@ -625,7 +570,6 @@ internal class BrowserTab(
                     )
                 }
             }.getOrDefault(emptyList())
-            android.util.Log.i("XGBrowser", "selRects n=" + rects.size + " text=" + text.take(20) + " scale=" + lastSelectionScale)
             val now = android.os.SystemClock.uptimeMillis()
             if (rects.isEmpty()) {
                 // 系统销毁 ActionMode 时会清一次选区，忽略这种“刚选中就变空”的抖动
@@ -643,7 +587,6 @@ internal class BrowserTab(
 
         @JavascriptInterface
         fun onTextSelected(text: String) {
-            android.util.Log.i("XGBrowser", "JsBridge.onTextSelected: '$text'")
             if (text.isNotBlank()) {
                 host.post { callbacks.onTextSelected(text) }
             }
@@ -749,7 +692,6 @@ internal class BrowserTab(
     private fun querySelectionText(retryIfBlank: Boolean = true) {
         webView.evaluateJavascript("(function(){ try { return window.getSelection ? window.getSelection().toString() : ''; } catch(e){ return ''; } })()") { result ->
             val text = cleanJsResult(result)
-            android.util.Log.i("XGBrowser", "querySelectionText: '$text' (retry=$retryIfBlank)")
             if (text.isNotBlank()) {
                 webView.post { callbacks.onTextSelected(text) }
             } else if (retryIfBlank) {

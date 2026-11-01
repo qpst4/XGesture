@@ -101,6 +101,24 @@ adb shell run-as com.slideindex.app rm -f shared_prefs/xg_browser.xml
 
 ---
 
+## 3.5 文本选区（重要，容易走弯路）
+
+结论：**不要自己画手柄**。正确做法是给 WebView 一个"占位 ActionMode"：
+
+`kotlin
+override fun startActionMode(callback: android.view.ActionMode.Callback?, type: Int): ActionMode? {
+    if (type == android.view.ActionMode.TYPE_FLOATING) return DummyActionMode(context)
+    return super.startActionMode(callback, type)
+}
+`
+
+- 返回 **null** → Chromium 认为宿主不支持选择，**会把选区清掉**（表现为长按后一闪就没）；
+- 返回一个**空实现**的 ActionMode → 选区与**系统原生手柄**都会保留；
+- 那个真正弹不出来的只是**系统浮动工具栏**（PopupWindow 需要 Activity 令牌），所以工具条仍需自绘；
+- 选区矩形通过 JS getClientRects() 上报，Android 侧换算：比例 = WebView 物理宽度 / visualViewport.width
+  （不要用 devicePixelRatio，无 viewport meta 的页面会算错）；
+- 页面滚动要重新上报（scroll 监听 + 80ms 节流），否则工具条不跟随。
+
 ## 4. 剩余工作（按建议优先级）
 
 ### P0 高

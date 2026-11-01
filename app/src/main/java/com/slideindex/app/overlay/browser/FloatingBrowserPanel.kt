@@ -541,7 +541,6 @@ object FloatingBrowserPanel {
         }
 
         override fun onSelectionRectsChanged(rects: List<FloatArray>, text: String, scale: Float) {
-            android.util.Log.i("XGBrowser", "panel.onSelectionRectsChanged n=" + rects.size + " text=" + text.take(20))
             selectionScale = scale
             selectionRects.clear()
             selectionRects.addAll(rects)
@@ -550,7 +549,6 @@ object FloatingBrowserPanel {
         }
 
         override fun onTextSelected(text: String) {
-            android.util.Log.i("XGBrowser", "onTextSelected -> text: '$text'")
             if (text.isNotBlank()) {
                 selectedText = text.trim()
                 refreshUi()
@@ -647,7 +645,6 @@ object FloatingBrowserPanel {
     }
 
     private fun clearSelection() {
-        android.util.Log.i("XGBrowser", "panel.clearSelection from " + android.util.Log.getStackTraceString(Throwable()).lines().getOrNull(1))
         selectedText = ""
         tabs.firstOrNull { it.id == activeTabId }?.clearSelection()
         refreshUi()
