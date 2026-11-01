@@ -69,6 +69,8 @@ internal object SlideIndexAccessibilityGestureInjector {
                 // 那等于把层级再抄一份，抄漏了就会出现"面板里弹着键盘/卡片展开着，返回却把整个面板关了"
                 // （§0.16.22 的真机回归）。
                 when {
+                    com.slideindex.app.overlay.browser.FloatingBrowserPanel.isShowing ->
+                        com.slideindex.app.overlay.browser.FloatingBrowserPanel.requestBackIfShowing()
                     // §0.16.25：小组件面板浮窗 + 「添加小组件」浮窗页面也走手势返回链路。
                     // 它们过去不在这里，靠"系统注入 KEYCODE_BACK"来关；而那个注入在预测性返回开着的机器上
                     // 会被 SelfInjectedBackGuard 当回声消费掉（见该类 KDoc），于是"手势返回没反应"。

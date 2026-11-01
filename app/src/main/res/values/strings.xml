@@ -4833,4 +4833,6 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="share_sheet_toggle_title">Built-in share panel</string>
     <string name="share_sheet_toggle_desc">Replace the system share sheet with our grid: pin favorite targets and skip the system UI</string>
     <string name="share_sheet_settings_pin_tip">Tip: pinned targets are kept locally; long-press one again to unpin it.</string>
+    <string name="gesture_action_floating_browser">Floating browser</string>
+    <string name="gesture_action_floating_browser_desc">Open mini floating browser window with multi-tabs</string>
 </resources>

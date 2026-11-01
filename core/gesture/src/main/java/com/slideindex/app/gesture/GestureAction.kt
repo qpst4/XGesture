@@ -198,6 +198,9 @@ enum class GestureActionType(val id: Int) {
      * 与「临时暂停悬浮层」（内存态 5 秒）不是一回事。
      */
     TOGGLE_FLOAT_BALL(108),
+
+    /** 「悬浮浏览器」：独立网页小浮窗，多标签/历史/以图搜图。 */
+    FLOATING_BROWSER(109),
     ;
 
     companion object {
@@ -556,6 +559,12 @@ sealed class GestureAction {
     /** Opens the standalone file browser overlay. */
     data object FileBrowser : GestureAction() {
         override val type = GestureActionType.FILE_BROWSER
+        override val payload = ""
+    }
+
+    /** Opens the standalone floating browser overlay. */
+    data object FloatingBrowser : GestureAction() {
+        override val type = GestureActionType.FLOATING_BROWSER
         override val payload = ""
     }
 
@@ -1192,6 +1201,7 @@ sealed class GestureAction {
                 GestureActionType.REGIONAL_SCREENSHOT_PICK -> RegionalScreenshotPick
                 GestureActionType.SEARCH_PANEL -> SearchPanel
                 GestureActionType.FILE_BROWSER -> FileBrowser
+                GestureActionType.FLOATING_BROWSER -> FloatingBrowser
                 GestureActionType.POWER_MENU -> PowerMenu
                 GestureActionType.KEEP_SCREEN_ON -> KeepScreenOn
                 GestureActionType.SCROLL_TO_TOP -> ScrollToTop

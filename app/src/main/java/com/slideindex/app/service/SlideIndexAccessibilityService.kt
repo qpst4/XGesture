@@ -84,6 +84,32 @@ class SlideIndexAccessibilityService : AccessibilityService() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var edgeOverlayHost: EdgeOverlayHost? = null
 
+    // 【调试入口】浮层浏览器：adb shell am broadcast -a com.slideindex.app.BROWSER --es url https://example.com
+    private var browserReceiver: android.content.BroadcastReceiver? = null
+
+    private fun registerBrowserReceiver() {
+        if (browserReceiver != null) return
+        val receiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(context: android.content.Context, intent: android.content.Intent) {
+                val url = intent.getStringExtra("url") ?: "https://www.bing.com"
+                com.slideindex.app.overlay.browser.FloatingBrowserPanel.show(
+                    this@SlideIndexAccessibilityService,
+                    url,
+                )
+            }
+        }
+        browserReceiver = receiver
+        val filter = android.content.IntentFilter("com.slideindex.app.BROWSER")
+        runCatching {
+            if (android.os.Build.VERSION.SDK_INT >= 33) {
+                registerReceiver(receiver, filter, android.content.Context.RECEIVER_EXPORTED)
+            } else {
+                @Suppress("UnspecifiedRegisterReceiverFlag")
+                registerReceiver(receiver, filter)
+            }
+        }
+    }
+
     /**
      * 浮层租约心跳：服务活着就每 2s 续租一次。
      *
@@ -989,6 +1015,7 @@ class SlideIndexAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
+        registerBrowserReceiver()
         instanceGeneration++
         startOverlayHostLease()
         com.slideindex.app.overlay.OverlayStatePort.publish(this, "onServiceConnected")
@@ -1114,6 +1141,8 @@ class SlideIndexAccessibilityService : AccessibilityService() {
     }
 
     override fun onDestroy() {
+        runCatching { browserReceiver?.let { unregisterReceiver(it) } }
+        browserReceiver = null
         mainHandler.removeCallbacks(coalescedImeWindowsChangedWork)
         mainHandler.removeCallbacks(configChangeSuppressionRunnable)
         mainHandler.removeCallbacks(configChangeFinalSettleRunnable)

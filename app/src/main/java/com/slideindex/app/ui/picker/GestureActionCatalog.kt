@@ -182,6 +182,7 @@ object GestureActionCatalog {
         GestureActionType.QUICK_TOOLS_OVERLAY,
         GestureActionType.QUICK_MENU,
         GestureActionType.FILE_BROWSER,
+        GestureActionType.FLOATING_BROWSER,
         GestureActionType.WECHAT_SCAN,
         GestureActionType.WECHAT_PAY_CODE,
         GestureActionType.ALIPAY_PAY_CODE,

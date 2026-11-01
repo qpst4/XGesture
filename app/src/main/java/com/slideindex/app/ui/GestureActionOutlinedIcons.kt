@@ -79,6 +79,7 @@ internal fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector
     GestureActionType.REGIONAL_SCREENSHOT_PICK -> ThinActionIcons.ScreenshotRegion
     GestureActionType.SEARCH_PANEL -> ThinActionIcons.Search
     GestureActionType.FILE_BROWSER -> MaterialSymbolThinIcons.Folder
+    GestureActionType.FLOATING_BROWSER -> ThinActionIcons.Globe
     GestureActionType.VOLUME_PANEL -> ThinActionIcons.VolumeUp
     GestureActionType.SCREEN_TRANSLATE -> ThinActionIcons.TextFields
     GestureActionType.SCREEN_SEARCH -> ThinActionIcons.Search
@@ -187,6 +188,7 @@ internal fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = w
     GestureActionType.REGIONAL_SCREENSHOT_PICK -> ThinActionIcons.ScreenshotRegion
     GestureActionType.SEARCH_PANEL -> ThinActionIcons.Search
     GestureActionType.FILE_BROWSER -> MaterialSymbolThinIcons.Folder
+    GestureActionType.FLOATING_BROWSER -> ThinActionIcons.Globe
     GestureActionType.VOLUME_PANEL -> ThinActionIcons.VolumeUp
     GestureActionType.SCREEN_TRANSLATE -> ThinActionIcons.TextFields
     GestureActionType.SCREEN_SEARCH -> ThinActionIcons.Search

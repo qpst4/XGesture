@@ -4828,4 +4828,6 @@ adb 模式应返回 uid=2000。
     <string name="share_sheet_toggle_title">内置分享面板</string>
     <string name="share_sheet_toggle_desc">用网格面板代替系统分享面板：可钉住常用目标、跳过系统界面</string>
     <string name="share_sheet_settings_pin_tip">提示：钉住的目标保存在本地，再长按一次即可取消。</string>
+    <string name="gesture_action_floating_browser">悬浮浏览器</string>
+    <string name="gesture_action_floating_browser_desc">打开独立网页小浮窗，支持多标签与历史记录</string>
 </resources>
