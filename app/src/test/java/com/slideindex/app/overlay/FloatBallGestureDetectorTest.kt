@@ -496,13 +496,13 @@ class FloatBallGestureDetectorTest {
     @Test
     fun `single tap does not start pick drag`() {
         var pickStarted = false
-        var pickEnded = false
         var pickCancelled = false
+        var pickEnded = false
         val detector = newDetector(
             onGesture = { _, _, _, _, _ -> },
             onPickStart = { _, _, _, _ -> pickStarted = true },
-            onPickEnd = { pickEnded = true },
             onPickCancel = { pickCancelled = true },
+            onPickEnd = { pickEnded = true },
         )
         val down = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 100f, 200f, 0)
         val up = MotionEvent.obtain(0, 50, MotionEvent.ACTION_UP, 100f, 200f, 0)
@@ -637,30 +637,68 @@ class FloatBallGestureDetectorTest {
     }
 
     @Test
-    @org.junit.Ignore("预览回调语义已调整（预览在首次移动后启动、取消只在 CANCEL 触发），测试待按新契约重写")
-    fun `pick preview callbacks fire before drag starts and cancel on tap`() {
+    fun `down starts preview immediately and a move starts the pick drag`() {
         var previewStarted = false
-        var previewCancelled = false
-        var previewProgress = -1f
+        var previewMoves = 0
         var pickStarted = false
+        var pickEnded = false
+        var previewCancelled = false
         val detector = newDetector(
             onPickStart = { _, _, _, _ -> pickStarted = true },
+            onPickEnd = { pickEnded = true },
             onPickPreviewStart = { _, _ -> previewStarted = true },
-            onPickPreviewProgress = { progress -> previewProgress = progress },
+            onPickPreviewMove = { _, _, _, _ -> previewMoves++ },
             onPickPreviewCancel = { previewCancelled = true },
         )
         val down = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 100f, 200f, 0)
         val move = MotionEvent.obtain(0, 50, MotionEvent.ACTION_MOVE, 100f, 210f, 0)
         val up = MotionEvent.obtain(0, 100, MotionEvent.ACTION_UP, 100f, 210f, 0)
+
         detector.onTouchEvent(down)
-        // 现状：预览在首次越过触摸阈值的移动后才启动（不再在 DOWN 时立即触发）
-        assertFalse(pickStarted)
-        detector.onTouchEvent(move)
+        // 按下即进入预览：开始 + 首帧位置
         assertTrue(previewStarted)
-        assertTrue(previewProgress in 0f..1f)
-        detector.onTouchEvent(up)
-        assertTrue(previewCancelled)
+        assertTrue(previewMoves >= 1)
         assertFalse(pickStarted)
+        assertFalse(previewCancelled)
+
+        // 现状：没有拖动死区，手指一离开按下点就开始取词拖动
+        detector.onTouchEvent(move)
+        assertTrue(pickStarted)
+        assertTrue(previewMoves >= 2)
+
+        detector.onTouchEvent(up)
+        // 拖动阶段抬手：不应落回“预览取消”
+        assertFalse(previewCancelled)
+
+        down.recycle()
+        move.recycle()
+        up.recycle()
+    }
+
+    @Test
+    fun `slop phase move reports preview move before the pick commits`() {
+        var previewMoveCount = 0
+        var pickStarted = false
+        val detector = newDetector(
+            onPickStart = { _, _, _, _ -> pickStarted = true },
+            onPickPreviewMove = { _, _, _, _ -> previewMoveCount++ },
+        )
+        val down = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 100f, 200f, 0)
+        val move = MotionEvent.obtain(0, 50, MotionEvent.ACTION_MOVE, 100f, 205f, 0)
+        val up = MotionEvent.obtain(0, 100, MotionEvent.ACTION_UP, 100f, 205f, 0)
+
+        detector.onTouchEvent(down)
+        // 首帧预览移动在 DOWN 时就已上报
+        assertEquals(1, previewMoveCount)
+        assertFalse(pickStarted)
+
+        detector.onTouchEvent(move)
+        assertTrue(previewMoveCount >= 2)
+        // 现状：任何位移都立即提交拖动
+        assertTrue(pickStarted)
+
+        detector.onTouchEvent(up)
+
         down.recycle()
         move.recycle()
         up.recycle()

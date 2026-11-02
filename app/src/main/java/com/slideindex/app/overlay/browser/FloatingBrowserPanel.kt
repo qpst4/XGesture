@@ -174,6 +174,8 @@ object FloatingBrowserPanel {
     private var videosVisible by mutableStateOf(false)
     private var darkMode by mutableStateOf(false)
     private var downloadBusy by mutableStateOf(false)
+    private var castTarget by mutableStateOf<Pair<String, String>?>(null)
+    private var castBusy by mutableStateOf(false)
     private val scope = kotlinx.coroutines.CoroutineScope(
         kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main.immediate,
     )
@@ -1877,23 +1879,65 @@ object FloatingBrowserPanel {
                                         )
                                         Spacer(Modifier.width(8.dp))
                                         Text(
+                                            "画中画",
+                                            color = ComposeColor(0xFF1A73E8),
+                                            fontSize = 11.sp,
+                                            modifier = Modifier.clickable {
+                                                val ctx = webHost?.context ?: return@clickable
+                                                VideoPipActivity.start(ctx, item.first)
+                                            },
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
                                             "投屏",
                                             color = ComposeColor(0xFF1A73E8),
                                             fontSize = 11.sp,
                                             modifier = Modifier.clickable {
                                                 val ctx = webHost?.context ?: return@clickable
-                                                runCatching {
-                                                    ctx.startActivity(
-                                                        android.content.Intent(
-                                                            android.content.Intent.ACTION_SEND,
-                                                        ).setType("text/plain")
-                                                            .putExtra(android.content.Intent.EXTRA_TEXT, item.first)
-                                                            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                                            .let { intent ->
-                                                                android.content.Intent.createChooser(intent, "投屏 / 发送到设备")
-                                                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                                            },
-                                                    )
+                                                if (castBusy) return@clickable
+                                                castBusy = true
+                                                android.widget.Toast.makeText(
+                                                    ctx,
+                                                    "正在搜索局域网投屏设备…",
+                                                    android.widget.Toast.LENGTH_SHORT,
+                                                ).show()
+                                                scope.launch {
+                                                    val devices = runCatching { DlnaCast.discover() }
+                                                        .getOrDefault(emptyList())
+                                                    castBusy = false
+                                                    if (devices.isEmpty()) {
+                                                        android.widget.Toast.makeText(
+                                                            ctx,
+                                                            "没找到可投屏设备（需电视与手机同一 Wi-Fi）",
+                                                            android.widget.Toast.LENGTH_LONG,
+                                                        ).show()
+                                                    } else {
+                                                        val names = devices.map { it.name }
+                                                        val index = android.app.AlertDialog.Builder(ctx)
+                                                            .setTitle("选择投屏设备")
+                                                            .setItems(names.toTypedArray()) { _, which ->
+                                                                val device = devices[which]
+                                                                scope.launch {
+                                                                    val result = DlnaCast.play(device, item.first)
+                                                                    android.widget.Toast.makeText(
+                                                                        ctx,
+                                                                        result.fold(
+                                                                            onSuccess = { "已投屏到 " + device.name },
+                                                                            onFailure = { "投屏失败：" + (it.message ?: "") },
+                                                                        ),
+                                                                        android.widget.Toast.LENGTH_LONG,
+                                                                    ).show()
+                                                                }
+                                                            }
+                                                            .setNegativeButton(android.R.string.cancel, null)
+                                                            .create()
+                                                        index.window?.let { win ->
+                                                            win.setType(
+                                                                OverlayWindowTypes.contentPanelWindowType(ctx),
+                                                            )
+                                                        }
+                                                        index.show()
+                                                    }
                                                 }
                                             },
                                         )
