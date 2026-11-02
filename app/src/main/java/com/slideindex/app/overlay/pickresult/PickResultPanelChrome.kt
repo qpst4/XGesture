@@ -32,6 +32,7 @@ import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.QrCode
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.outlined.Image
@@ -652,6 +653,8 @@ internal fun PickResultTextActionBar(
     onTranslate: () -> Unit,
     onPinToScreen: (() -> Unit)? = null,
     onStash: (() -> Unit)? = null,
+    /** 生成二维码；null 时菜单里不显示这一项。 */
+    onGenerateQr: (() -> Unit)? = null,
     /** 用其他应用处理（二级页列出 PROCESS_TEXT 入口）；null 时菜单里不显示这一项。 */
     onProcessText: ((PickResultProcessTextTarget) -> Unit)? = null,
     onTrimSpaces: (() -> Unit)? = null,
@@ -974,6 +977,16 @@ internal fun PickResultTextActionBar(
                                     onClick = {
                                         moreMenuExpanded = false
                                         stashAction()
+                                    },
+                                )
+                            }
+                            onGenerateQr?.let { generateQr ->
+                                PickResultActionMenuItem(
+                                    label = stringResource(R.string.pick_result_qr),
+                                    icon = Icons.Outlined.QrCode,
+                                    onClick = {
+                                        moreMenuExpanded = false
+                                        generateQr()
                                     },
                                 )
                             }

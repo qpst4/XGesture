@@ -4374,6 +4374,9 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="pick_result_process_text">Process with another app</string>
     <string name="pick_result_process_text_empty">No app can process text</string>
     <string name="pick_result_process_text_failed">Couldn\'t open that app — text copied</string>
+    <string name="pick_result_qr">Generate QR code</string>
+    <string name="pick_result_qr_too_long">Text is too long — select a shorter part</string>
+    <string name="pick_result_qr_drag_hint">Long-press the QR code to drag</string>
     <string name="image_viewer_default_title">Default image viewer</string>
     <string name="image_viewer_ask_every_time">Ask every time</string>
     <string name="image_viewer_builtin_editor">Use built-in image editor</string>

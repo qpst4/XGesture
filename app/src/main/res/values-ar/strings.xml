@@ -4187,6 +4187,9 @@
     <string name="pick_result_process_text">معالجة في تطبيق آخر</string>
     <string name="pick_result_process_text_empty">لا يوجد تطبيق لمعالجة النص</string>
     <string name="pick_result_process_text_failed">تعذّر فتح التطبيق — تم نسخ النص</string>
+    <string name="pick_result_qr">إنشاء رمز QR</string>
+    <string name="pick_result_qr_too_long">النص طويل جدًا — حدّد جزءًا أقصر</string>
+    <string name="pick_result_qr_drag_hint">اضغط مطوّلاً على رمز QR لسحبه</string>
     <string name="image_viewer_default_title">عارض الصور الافتراضي</string>
     <string name="image_viewer_ask_every_time">السؤال في كل مرة</string>
     <string name="image_viewer_builtin_editor">استخدام محرر الصور المدمج</string>

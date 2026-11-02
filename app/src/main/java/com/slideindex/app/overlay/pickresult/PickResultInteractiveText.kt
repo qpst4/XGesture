@@ -146,6 +146,8 @@ internal fun PickResultInteractiveTextSection(
     onSearchDragEnd: () -> Unit = onDragEnd,
     onPinToScreen: (() -> Unit)? = null,
     onStash: (() -> Unit)? = null,
+    /** 生成二维码；null 或没有文字时不显示这一项。 */
+    onGenerateQr: ((String) -> Unit)? = null,
     actionBarBottomPadding: Dp = PickResultTextActionBarBottomPaddingWhenAlone,
     actionBarDragActive: Boolean = false,
     autoSelectAll: Boolean? = null,
@@ -452,6 +454,11 @@ internal fun PickResultInteractiveTextSection(
                     onTranslate = { runOnActiveText(onTranslate) },
                     onPinToScreen = onPinToScreen,
                     onStash = onStash,
+                    onGenerateQr = if (text.isNotBlank()) {
+                        onGenerateQr?.let { action -> { runOnActiveText(action) } }
+                    } else {
+                        null
+                    },
                     onTrimSpaces = { onRemoveSpaces(text, false) },
                     hasImageContent = hasImageContent,
                     onImageSearch = onImageSearch,

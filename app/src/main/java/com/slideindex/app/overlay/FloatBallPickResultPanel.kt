@@ -35,6 +35,7 @@ import com.slideindex.app.overlay.compositor.OverlaySceneController
 import com.slideindex.app.imageeditor.ImageEditorPickReturnContext
 import com.slideindex.app.imageeditor.ImageEditorSavedImageDeleteScheduler
 import com.slideindex.app.overlay.pickresult.FloatBallPickResultContent
+import com.slideindex.app.overlay.pickresult.PickResultQrOverlayWindow
 import com.slideindex.app.overlay.pickresult.PickResultTextMode
 import com.slideindex.app.overlay.pickresult.PickResultTextModeStore
 import com.slideindex.app.overlay.pickresult.preloadPickResultSearchEngineIcons
@@ -1383,6 +1384,13 @@ object FloatBallPickResultPanel {
                                 )
                             )
                         }
+                    },
+                    onGenerateQr = { value ->
+                        PickResultQrOverlayWindow.show(
+                            context = overlayContext,
+                            settings = settingsHolder.value,
+                            text = value,
+                        )
                     },
                     onPinImageToScreen = {
                         val bitmap = screenshotHolder.value ?: return@FloatBallPickResultContent

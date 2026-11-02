@@ -4201,6 +4201,9 @@
     <string name="pick_result_process_text">他のアプリで処理</string>
     <string name="pick_result_process_text_empty">テキストを処理できるアプリがありません</string>
     <string name="pick_result_process_text_failed">アプリを開けませんでした。テキストをコピーしました</string>
+    <string name="pick_result_qr">QRコードを生成</string>
+    <string name="pick_result_qr_too_long">テキストが長すぎます。短い範囲を選択してください</string>
+    <string name="pick_result_qr_drag_hint">QRコードを長押ししてドラッグ</string>
     <string name="image_viewer_default_title">デフォルトの画像ビューア</string>
     <string name="image_viewer_ask_every_time">毎回確認</string>
     <string name="image_viewer_builtin_editor">内蔵画像エディタを使用</string>
