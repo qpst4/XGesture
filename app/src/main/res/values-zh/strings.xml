@@ -4885,7 +4885,7 @@ adb 模式应返回 uid=2000。
     <string name="browser_clear_history">清空历史</string>
     <string name="browser_delete">删除</string>
     <string name="browser_incognito">无痕模式</string>
-    <string name="browser_videos_found">本页视频 (%1\)</string>
+    <string name="browser_videos_found">本页视频 (%1$d)</string>
     <string name="browser_dark_mode">暗色模式</string>
     <string name="browser_mini_window">小窗模式</string>
 </resources>
