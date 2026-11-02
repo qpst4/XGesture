@@ -32,6 +32,16 @@ class BackPanelController(
 
     private val layoutParams = FrameLayout.LayoutParams(0, 0)
     private val displaySize = Point()
+
+    /**
+     * 顶/底边复用同一份「水平箭头」：把整块 view 旋转 90°（顶边 +90、底边 -90）。
+     *
+     * 0° 时保持原来左右边的行为。旋转后条带的厚度变成 [EdgePanelParams.panelWidth]，
+     * 需要在 [applyLayout] 里补一个纵向平移贴住所在边（见 [edgeBandCenterY]）。
+     */
+    private var edgeRotationDegrees = 0f
+    private var edgeScreenHeightPx = 0
+
     var extraFingerOffsetPx: Float = 0f
     var onSettled: (() -> Unit)? = null
     private var suppressSettled = false
@@ -145,6 +155,7 @@ class BackPanelController(
         updateArrowDirection()
         updateArrowState(GestureState.GONE, force = true)
         updateRestingArrowDimens()
+        applyEdgeRotation()
     }
 
     fun detach() {
@@ -167,6 +178,40 @@ class BackPanelController(
     fun setDisplaySize(width: Int, height: Int) {
         displaySize.set(width, height)
         fullyStretchedThreshold = min(width.toFloat(), params.swipeProgressThreshold)
+    }
+
+    /**
+     * 上/下边把系统箭头旋转 90° 复用（0° = 左右边，保持原行为）。
+     *
+     * 旋转后 view 的局部 X（原来"向内长"的方向）指向屏幕的 Y，局部 Y（原来"沿边跟随手指"）
+     * 指向屏幕的 X；[applyLayout] 会再补一个纵向平移，让旋转后的条带贴住所在一侧。
+     *
+     * @param degrees 顶边 +90（局部 +X → 屏幕向下）、底边 -90（局部 +X → 屏幕向上）
+     * @param screenHeightPx 屏幕高度，用来把条带贴到屏幕底边
+     */
+    fun setEdgeRotation(degrees: Float, screenHeightPx: Int) {
+        if (screenHeightPx > 0) edgeScreenHeightPx = screenHeightPx
+        if (edgeRotationDegrees == degrees && panel.rotation == degrees) {
+            applyLayout()
+            return
+        }
+        edgeRotationDegrees = degrees
+        applyEdgeRotation()
+    }
+
+    private fun applyEdgeRotation() {
+        panel.rotation = edgeRotationDegrees
+        applyLayout()
+    }
+
+    /**
+     * 旋转后条带（厚度 = panelWidth）贴住所在一侧所需的视觉中心 Y；null = 不旋转。
+     */
+    private fun edgeBandCenterY(): Float? = when {
+        edgeRotationDegrees == 0f -> null
+        edgeRotationDegrees > 0f -> params.panelWidth / 2f
+        edgeScreenHeightPx <= 0 -> null
+        else -> edgeScreenHeightPx - params.panelWidth / 2f
     }
 
     /** Bind ENTRY→ACTIVE to XGesture's short-swipe distance instead of AOSP's 16dp. */
@@ -569,6 +614,14 @@ class BackPanelController(
     private fun applyLayout() {
         if (panel.parent != null) {
             panel.layoutParams = layoutParams
+            // 顶/底边：旋转后条带沿屏幕 Y 的落点由 rotation 中心决定，这里用 translationY 把它贴边；
+            // 局部 Y（topMargin，跟着手指沿边走）不参与修正。
+            val bandCenterY = edgeBandCenterY()
+            panel.translationY = if (bandCenterY == null) {
+                0f
+            } else {
+                bandCenterY - (layoutParams.topMargin + layoutParams.height / 2f)
+            }
         }
     }
 

@@ -41,8 +41,7 @@ class BackPanelOverlayController(
 
     fun applySettings(settings: AppSettings, handleId: String? = null) {
         enabled = settings.gestureHintEnabled &&
-            settings.gestureHintStyle() == GestureHintStyle.ANDROID &&
-            side.isHorizontalEdge
+            settings.gestureHintStyle() == GestureHintStyle.ANDROID
         val density = appContext?.resources?.displayMetrics?.density ?: 3f
         val handle = if (handleId != null) {
             settings.triggerHandle(side, handleId) ?: settings.primaryTriggerHandle(side)
@@ -60,6 +59,37 @@ class BackPanelOverlayController(
         }
     }
 
+    /** 顶/底边：整块面板旋转 90°，触摸坐标按轴转置后复用左右边那套逻辑。 */
+    private val isRotatedEdge: Boolean
+        get() = side == PanelSide.TOP || side == PanelSide.BOTTOM
+
+    /** 屏幕高度缓存（底边的内滑坐标要换算成「距底边多远」）。 */
+    private var displayHeightPx = 0
+
+    private fun rotationDegrees(): Float = when (side) {
+        PanelSide.TOP -> 90f
+        PanelSide.BOTTOM -> -90f
+        else -> 0f
+    }
+
+    /**
+     * 内滑轴坐标：**向内单调递增**，0 = 贴屏边。
+     *
+     * 和左右边一样要单调增：面板内部用速度符号判断 fling，底边若直接用 -rawY，
+     * 向内滑动会得到负速度、永远判不成 flung。
+     */
+    private fun inwardCoordinate(rawX: Float, rawY: Float): Float = when (side) {
+        PanelSide.TOP -> rawY
+        PanelSide.BOTTOM -> displayHeightPx - rawY
+        else -> rawX
+    }
+
+    /** 沿边轴：左右边是 Y；顶/底边是 X。 */
+    private fun alongCoordinate(rawX: Float, rawY: Float): Float = when (side) {
+        PanelSide.TOP, PanelSide.BOTTOM -> rawX
+        else -> rawY
+    }
+
     fun onDown(
         rawX: Float,
         rawY: Float,
@@ -70,15 +100,25 @@ class BackPanelOverlayController(
         val ctrl = controller ?: return
         val ctx = appContext ?: return
         val metrics = OverlayScreenMetrics.snapshot(ctx)
+        displayHeightPx = metrics.heightPx
         ctrl.setDisplaySize(metrics.widthPx, metrics.heightPx)
-        ctrl.setIsLeftPanel(side == PanelSide.LEFT)
+        ctrl.setIsLeftPanel(if (isRotatedEdge) true else side == PanelSide.LEFT)
+        ctrl.setEdgeRotation(rotationDegrees(), metrics.heightPx)
         activationThresholdPx?.let { ctrl.setActivationThresholdPx(it) }
-        ctrl.onDown(rawX, rawY, translationOriginX)
+        ctrl.onDown(
+            x = inwardCoordinate(rawX, rawY),
+            y = alongCoordinate(rawX, rawY),
+            // 旋转后的内滑坐标 0 就是屏幕边，与左右边传 stripOriginX 等价。
+            translationOriginX = if (isRotatedEdge) 0f else translationOriginX,
+        )
     }
 
     fun onMove(rawX: Float, rawY: Float) {
         if (!enabled) return
-        controller?.onMove(rawX, rawY)
+        controller?.onMove(
+            x = inwardCoordinate(rawX, rawY),
+            y = alongCoordinate(rawX, rawY),
+        )
     }
 
     fun onUp(rawX: Float, rawY: Float) {
@@ -86,7 +126,10 @@ class BackPanelOverlayController(
             hide()
             return
         }
-        controller?.onUp(rawX, rawY)
+        controller?.onUp(
+            x = inwardCoordinate(rawX, rawY),
+            y = alongCoordinate(rawX, rawY),
+        )
     }
 
     fun onCancel() {

@@ -323,9 +323,9 @@ class GestureAnimationCoordinator(
 
     private fun useAndroidBackPanel(): Boolean {
         val settings = settingsProvider()
+        // 顶/底边也走系统箭头（BackPanel 旋转 90° 复用），四个方向观感统一。
         return settings.gestureHintEnabled &&
-            settings.gestureHintStyle() == GestureHintStyle.ANDROID &&
-            side.isHorizontalEdge
+            settings.gestureHintStyle() == GestureHintStyle.ANDROID
     }
 }
 
