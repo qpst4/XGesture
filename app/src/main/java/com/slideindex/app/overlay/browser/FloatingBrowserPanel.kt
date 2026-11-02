@@ -108,6 +108,7 @@ import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.slideindex.app.overlay.OverlayWindowTypes
 import com.slideindex.app.service.WebViewFileChooserBridge
+import kotlinx.coroutines.launch
 
 /**
  * 浮层浏览器：单窗口 + 多标签 + 自绘 chrome。
@@ -171,6 +172,11 @@ object FloatingBrowserPanel {
     private var incognito by mutableStateOf(false)
     private var foundVideos by mutableStateOf(listOf<Pair<String, String>>())
     private var videosVisible by mutableStateOf(false)
+    private var darkMode by mutableStateOf(false)
+    private var downloadBusy by mutableStateOf(false)
+    private val scope = kotlinx.coroutines.CoroutineScope(
+        kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main.immediate,
+    )
     private var memoryCallbacks: android.content.ComponentCallbacks2? = null
     private var contextMenuTarget by mutableStateOf<ContextMenuTarget?>(null)
 
@@ -313,6 +319,7 @@ object FloatingBrowserPanel {
         }
 
         desktopMode = prefs.getBoolean("desktop_ua", false)
+        darkMode = prefs.getBoolean("dark_mode", false)
 
         if (tabs.isEmpty()) {
             val restored = restoreSession()
@@ -337,6 +344,8 @@ object FloatingBrowserPanel {
         }
         appContext.registerComponentCallbacks(callbacks)
         memoryCallbacks = callbacks
+
+        if (darkMode) tabs.forEach { it.setDarkMode(true) }
 
         // 键盘弹出时把卡片上移，避免网页底部输入框被遮挡
         root.setOnApplyWindowInsetsListener { _, insets ->
@@ -399,6 +408,32 @@ object FloatingBrowserPanel {
         // 8. 唯一标签页且网页到顶：关闭整个浮窗
         dismiss()
         return true
+    }
+
+    /** 小窗模式：缩成一个小面板（视频仍在播放），再点一次恢复。 */
+    fun toggleMiniWindow() {
+        val wm = windowManager ?: return
+        val root = rootView ?: return
+        val params = windowParams ?: return
+        val metrics = root.resources.displayMetrics
+        val miniW = (metrics.widthPixels * 0.42f).toInt()
+        val miniH = (metrics.heightPixels * 0.28f).toInt()
+        val alreadyMini = !maximized &&
+            params.width <= miniW + 24 &&
+            params.height <= miniH + 24
+        if (alreadyMini) {
+            params.width = cardWidthPx
+            params.height = cardHeightPx
+            params.y = 0
+        } else {
+            maximized = false
+            params.width = miniW
+            params.height = miniH
+            params.y = (metrics.heightPixels * 0.10f).toInt()
+        }
+        params.x = 0
+        runCatching { wm.updateViewLayout(root, params) }
+        refreshUi()
     }
 
     fun dismiss() {
@@ -1420,8 +1455,28 @@ object FloatingBrowserPanel {
     @Composable
     private fun EntryList(showBookmarks: Boolean) {
         val ctx = rootView?.context ?: return
-        val items = if (showBookmarks) BrowserStore.bookmarks(ctx) else BrowserStore.history(ctx)
+        var query by remember { mutableStateOf("") }
+        val all = if (showBookmarks) BrowserStore.bookmarks(ctx) else BrowserStore.history(ctx)
+        val items = if (query.isBlank()) {
+            all
+        } else {
+            all.filter { it.title.contains(query, true) || it.url.contains(query, true) }
+        }
         Column(modifier = Modifier.fillMaxWidth().height(180.dp)) {
+            androidx.compose.foundation.text.BasicTextField(
+                value = query,
+                onValueChange = { query = it },
+                singleLine = true,
+                textStyle = androidx.compose.ui.text.TextStyle(
+                    color = ComposeColor(0xFF202124),
+                    fontSize = 13.sp,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .background(ComposeColor(0x0A000000), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+            )
             if (items.isEmpty()) {
                 Text(
                     stringResource(
@@ -1565,6 +1620,15 @@ object FloatingBrowserPanel {
                                 modifier = Modifier.weight(1f),
                             )
                             Text(entry.state, color = ComposeColor(0xFF5F6368), fontSize = 11.sp)
+                            androidx.compose.material3.TextButton(
+                                onClick = {
+                                    runCatching {
+                                        val dm = context!!.getSystemService(Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
+                                        dm.remove(entry.id)
+                                    }
+                                    entries = entries.filterNot { it.id == entry.id }
+                                },
+                            ) { Text("取消", fontSize = 11.sp) }
                         }
                     }
                 }
@@ -1762,11 +1826,26 @@ object FloatingBrowserPanel {
                                             .clickable {
                                                 val ctx = webHost?.context ?: return@clickable
                                                 if (item.second == "hls") {
+                                                    if (downloadBusy) return@clickable
+                                                    downloadBusy = true
                                                     android.widget.Toast.makeText(
                                                         ctx,
-                                                        "HLS 流暂不支持直接下载",
+                                                        "开始合并下载 HLS…",
                                                         android.widget.Toast.LENGTH_SHORT,
                                                     ).show()
+                                                    scope.launch {
+                                                        val name = "hls_" + System.currentTimeMillis() + ".ts"
+                                                        val result = HlsDownloader.download(ctx, item.first, name) { _, _ -> }
+                                                        downloadBusy = false
+                                                        android.widget.Toast.makeText(
+                                                            ctx,
+                                                            result.fold(
+                                                                onSuccess = { "HLS 已下载到 Downloads" },
+                                                                onFailure = { "HLS 下载失败：" + (it.message ?: "") },
+                                                            ),
+                                                            android.widget.Toast.LENGTH_LONG,
+                                                        ).show()
+                                                    }
                                                 } else {
                                                     runCatching {
                                                         val request = android.app.DownloadManager.Request(
@@ -1796,12 +1875,64 @@ object FloatingBrowserPanel {
                                             color = ComposeColor(0xFF1A73E8),
                                             fontSize = 11.sp,
                                         )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            "投屏",
+                                            color = ComposeColor(0xFF1A73E8),
+                                            fontSize = 11.sp,
+                                            modifier = Modifier.clickable {
+                                                val ctx = webHost?.context ?: return@clickable
+                                                runCatching {
+                                                    ctx.startActivity(
+                                                        android.content.Intent(
+                                                            android.content.Intent.ACTION_SEND,
+                                                        ).setType("text/plain")
+                                                            .putExtra(android.content.Intent.EXTRA_TEXT, item.first)
+                                                            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                            .let { intent ->
+                                                                android.content.Intent.createChooser(intent, "投屏 / 发送到设备")
+                                                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                            },
+                                                    )
+                                                }
+                                            },
+                                        )
                                     }
                                 }
                             }
                         }
                     }
                 }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        stringResource(R.string.browser_dark_mode),
+                        color = ComposeColor(0xFF5F6368),
+                        fontSize = 13.sp,
+                        modifier = Modifier.weight(1f),
+                    )
+                    androidx.compose.material3.Switch(
+                        checked = darkMode,
+                        onCheckedChange = { checked ->
+                            darkMode = checked
+                            tabs.forEach { it.setDarkMode(checked) }
+                            rootView?.context
+                                ?.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                                ?.edit()
+                                ?.putBoolean("dark_mode", checked)
+                                ?.apply()
+                        },
+                    )
+                }
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        addressEditing = false
+                        toggleMiniWindow()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.browser_mini_window), fontSize = 13.sp) }
                 androidx.compose.material3.TextButton(
                     onClick = { downloadsVisible = !downloadsVisible },
                     modifier = Modifier.fillMaxWidth(),

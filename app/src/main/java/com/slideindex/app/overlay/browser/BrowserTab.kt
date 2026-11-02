@@ -269,6 +269,7 @@ internal class BrowserTab(
             request: WebResourceRequest,
         ): android.webkit.WebResourceResponse? {
             val host = request.url?.host?.lowercase().orEmpty()
+            detectMediaRequest(request.url?.toString().orEmpty())
             if (host.isNotEmpty() && AdBlockHosts.isBlocked(host)) {
                 blockedRequestCount++
                 return android.webkit.WebResourceResponse(
@@ -626,6 +627,39 @@ internal class BrowserTab(
                 } catch (e) {}
               };
               try { window.xgReportVideos(); } catch (e) {}
+              // 手势：双击缩放 / 顶部下拉刷新 / 左边缘右滑后退
+              (function(){
+                var lastTap = 0, zoomed = false;
+                document.addEventListener('touchend', function(e){
+                  var now = Date.now();
+                  if (now - lastTap < 300) {
+                    try {
+                      zoomed = !zoomed;
+                      document.documentElement.style.zoom = zoomed ? '1.6' : '';
+                    } catch (err) {}
+                  }
+                  lastTap = now;
+                }, true);
+                var startX = 0, startY = 0, tracking = false;
+                document.addEventListener('touchstart', function(e){
+                  if (!e.touches || !e.touches.length) return;
+                  startX = e.touches[0].clientX;
+                  startY = e.touches[0].clientY;
+                  tracking = true;
+                }, {passive: true, capture: true});
+                document.addEventListener('touchend', function(e){
+                  if (!tracking) return;
+                  tracking = false;
+                  if (!e.changedTouches || !e.changedTouches.length) return;
+                  var dx = e.changedTouches[0].clientX - startX;
+                  var dy = e.changedTouches[0].clientY - startY;
+                  if (dy > 120 && Math.abs(dx) < 60 && (window.scrollY || 0) <= 2) {
+                    try { window.xgBrowser.onPullRefresh(); } catch (err) {}
+                  } else if (dx > 90 && Math.abs(dy) < 60 && startX < 30) {
+                    try { window.xgBrowser.onEdgeBack(); } catch (err) {}
+                  }
+                }, {passive: true, capture: true});
+              })();
               document.addEventListener('play', function(){ try { window.xgReportVideos(); } catch (e) {} }, true);
             })();
             """.trimIndent(),
@@ -654,6 +688,16 @@ internal class BrowserTab(
     }
 
     private inner class JsBridge(private val host: WebView) {
+        @android.webkit.JavascriptInterface
+        fun onPullRefresh() {
+            webView.post { runCatching { webView.reload() } }
+        }
+
+        @android.webkit.JavascriptInterface
+        fun onEdgeBack() {
+            webView.post { runCatching { if (webView.canGoBack()) webView.goBack() } }
+        }
+
         @android.webkit.JavascriptInterface
         fun onVideoFound(url: String, kind: String) {
             callbacks.onVideoFound(url, kind)
@@ -769,6 +813,38 @@ internal class BrowserTab(
         webView.loadUrl(normalized)
     }
 
+    /** 暗色模式：优先用 WebView 的算法暗化，失败则注入 CSS 滤镜。 */
+    fun setDarkMode(enabled: Boolean) {
+        val applied = runCatching {
+            if (android.os.Build.VERSION.SDK_INT >= 33) {
+                webView.settings.isAlgorithmicDarkeningAllowed = enabled
+                true
+            } else if (android.os.Build.VERSION.SDK_INT >= 29) {
+                @Suppress("DEPRECATION")
+                webView.settings.forceDark = if (enabled) {
+                    android.webkit.WebSettings.FORCE_DARK_ON
+                } else {
+                    android.webkit.WebSettings.FORCE_DARK_OFF
+                }
+                true
+            } else {
+                false
+            }
+        }.getOrDefault(false)
+        if (!applied) {
+            evaluate(
+                if (enabled) {
+                    "(function(){document.documentElement.style.filter='invert(1) hue-rotate(180deg)';" +
+                        "document.documentElement.style.background='#111';})()"
+                } else {
+                    "(function(){document.documentElement.style.filter='';" +
+                        "document.documentElement.style.background='';})()"
+                },
+            )
+        }
+        runCatching { webView.reload() }
+    }
+
     /** 桌面 / 移动 UA 切换（wp 生效于后续请求）。 */
     fun setDesktopMode(desktop: Boolean) {
         desktopMode = desktop
@@ -802,6 +878,24 @@ internal class BrowserTab(
     fun pause() { runCatching { webView.onPause() } }
 
     fun resume() { runCatching { webView.onResume() } }
+
+    private var lastMediaUrl: String? = null
+
+    /** 从网络请求里嗅探视频：直链与 HLS 都算（blob/MSE 无法从这里拿到）。 */
+    private fun detectMediaRequest(url: String) {
+        if (url.isBlank()) return
+        val lower = url.lowercase()
+        val path = lower.substringBefore('?')
+        val kind = when {
+            path.endsWith(".m3u8") -> "hls"
+            path.endsWith(".mp4") || path.endsWith(".webm") || path.endsWith(".m4v") ||
+                path.endsWith(".mov") -> "file"
+            else -> return
+        }
+        if (url == lastMediaUrl) return
+        lastMediaUrl = url
+        callbacks.onVideoFound(url, kind)
+    }
 
     /** 离开该标签前抓一张缩略图（此时 WebView 还挂在窗口里，能正常绘制）。 */
     fun captureThumbnail() {

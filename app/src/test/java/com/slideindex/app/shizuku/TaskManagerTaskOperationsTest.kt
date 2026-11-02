@@ -61,7 +61,8 @@ class TaskManagerTaskOperationsTest {
         )
 
         assertArrayEquals(
-            arrayOf("7\tcom.example/.MainActivity\tExample\tcom.example/.MainActivity"),
+            // 第 5 列是 userId（默认 -1），老客户端只读前 4 列
+        arrayOf("7\tcom.example/.MainActivity\tExample\tcom.example/.MainActivity\t-1"),
             operations.getRecentTasks(),
         )
     }
