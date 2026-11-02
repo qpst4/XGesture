@@ -5,6 +5,8 @@ package com.slideindex.app.overlay.animation
  * Licensed under Apache-2.0. Modified for com.slideindex.app.
  */
 
+import android.os.Handler
+import android.os.Looper
 import android.view.Choreographer
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
@@ -79,6 +81,9 @@ class GestureAnimationState(
     private val animationSpec = spring<Float>(stiffness = 3000f)
     private var animJob: Job? = null
 
+    /** 兜底关 ticker 用：协程可能在任意线程完成，而 Choreographer 只接受主线程操作。 */
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     /**
      * 帧驱动的重绘泵。
      *
@@ -120,10 +125,23 @@ class GestureAnimationState(
 
     private var animTickerRunning = false
 
+    /**
+     * 收束动画已跑的帧数，用来给 ticker 兜底。
+     *
+     * 正常情况下 `animateTo` 200ms 内就结束；一旦它不收敛（例如起点是 NaN，弹簧永远不会
+     * 满足收敛条件），ticker 会每帧 `redrawTick++` → 全屏 Canvas 重组，把主线程钉死，
+     * 且永远等不到 `finally` 里的 [stopAnimTicker]。到上限就强制停。
+     */
+    private var animTickerFrames = 0
+
     private val animTickCallback = object : Choreographer.FrameCallback {
         override fun doFrame(frameTimeNanos: Long) {
             if (!animTickerRunning) return
             redrawTick++
+            if (++animTickerFrames >= MAX_ANIM_TICKER_FRAMES) {
+                stopAnimTicker()
+                return
+            }
             if (::choreographer.isInitialized) {
                 choreographer.postFrameCallback(this)
             }
@@ -136,6 +154,7 @@ class GestureAnimationState(
             choreographer = Choreographer.getInstance()
         }
         animTickerRunning = true
+        animTickerFrames = 0
         choreographer.postFrameCallback(animTickCallback)
     }
 
@@ -275,9 +294,14 @@ class GestureAnimationState(
             clearAnimValues()
             return
         }
+        // 起点是 NaN 时弹簧永远不收敛，会把 ticker 拖到上限；这种状态本来也没有可收束的画面。
+        if (fingerXAnimVal.isNaN() || fingerYAnimVal.isNaN()) {
+            clearAnimValues()
+            return
+        }
         animJob?.cancel()
         startAnimTicker()
-        animJob = scope.launch {
+        val job = scope.launch {
             try {
                 when (position) {
                     GestureAnimationPosition.Left, GestureAnimationPosition.Right -> {
@@ -298,6 +322,14 @@ class GestureAnimationState(
             currentTrigger = null
             currentDistancePx = 0f
             clearAnimValues()
+        }
+        animJob = job
+        // 协程体可能压根没执行（scope 已取消），那样 finally 不会跑、ticker 就没人关。
+        // 这里按「任务结束」兜底，并且只在它仍是当前任务时才关，避免误杀下一次收束的 ticker。
+        job.invokeOnCompletion {
+            mainHandler.post {
+                if (animJob === job) stopAnimTicker()
+            }
         }
     }
 
@@ -464,3 +496,10 @@ class GestureAnimationState(
         }
     }
 }
+
+/**
+ * 收束动画 ticker 的硬上限：120Hz 下约 3 秒、60Hz 下约 6 秒。
+ *
+ * 正常收束（spring stiffness 3000）200ms 内就结束，跑满上限只可能是 `animateTo` 没收敛。
+ */
+private const val MAX_ANIM_TICKER_FRAMES = 360
