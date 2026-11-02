@@ -456,6 +456,7 @@ class OtpRecordsViewModelTest : ViewModelCoroutineTest() {
                 ThrowingPackageManagerContext(context),
                 NoOpAppLaunchPort,
                 AppLaunchIconCache(context),
+                testAppIconOverride(),
                 testApplicationScope,
             ),
         )
@@ -617,8 +618,23 @@ private fun notificationHistoryViewModel(context: Context, bus: UserMessageBus):
 /** 与生产 `AppModule.provideApplicationScope()` 等价，测试中不启动后台工作线程。 */
 private val testApplicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
 
+private fun testAppIconOverride(): com.slideindex.app.data.AppIconOverrideProvider =
+    object : com.slideindex.app.data.AppIconOverrideProvider {
+        override fun bitmap(context: Context, packageName: String, sizePx: Int) = null
+        override fun peekBitmap(context: Context, packageName: String, sizePx: Int) = null
+        override fun drawable(context: Context, packageName: String, sizePx: Int) = null
+        override fun peekDrawable(context: Context, packageName: String, sizePx: Int) = null
+        override fun preload(context: Context, packageNames: Collection<String>, sizePx: Int) = Unit
+    }
+
 private fun testAppRepository(context: Context): AppRepository =
-    AppRepository(context, NoOpAppLaunchPort, AppLaunchIconCache(context), testApplicationScope)
+    AppRepository(
+        context,
+        NoOpAppLaunchPort,
+        AppLaunchIconCache(context),
+        testAppIconOverride(),
+        testApplicationScope,
+    )
 
 private fun notificationHistoryRepository(context: Context): NotificationHistoryRepository =
     NotificationHistoryRepository(

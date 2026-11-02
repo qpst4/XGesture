@@ -419,6 +419,7 @@ class FloatBallGestureDetectorTest {
             it.bind(
                 settings = AppSettings(freeWindow = FreeWindowSettings(freeWindowModeId = FreeWindowMode.STANDARD.id)),
                 density = 3f,
+                systemTouchSlopPx = 8f,
                 onPickStart = { _, _, _, _ -> },
                 onPickDrag = { _, _ -> },
                 onPickEnd = {},
@@ -698,6 +699,7 @@ class FloatBallGestureDetectorTest {
         detector.bind(
             settings = AppSettings(freeWindow = FreeWindowSettings(freeWindowModeId = FreeWindowMode.STANDARD.id)),
             density = 3f,
+                systemTouchSlopPx = 8f,
             onPickStart = { _, _, fingerX, fingerY ->
                 startFingerX = fingerX
                 startFingerY = fingerY
@@ -904,6 +906,7 @@ class FloatBallGestureDetectorTest {
         detector.bind(
             settings = settings,
             density = 3f,
+                systemTouchSlopPx = 8f,
             onPickStart = onPickStart,
             onPickDrag = { _, _ -> },
             onPickEnd = onPickEnd,
