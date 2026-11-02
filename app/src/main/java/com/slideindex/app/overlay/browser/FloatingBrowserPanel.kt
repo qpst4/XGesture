@@ -169,6 +169,8 @@ object FloatingBrowserPanel {
     private var historyVisible by mutableStateOf(false)
     private var bookmarksVisible by mutableStateOf(false)
     private var incognito by mutableStateOf(false)
+    private var foundVideos by mutableStateOf(listOf<Pair<String, String>>())
+    private var videosVisible by mutableStateOf(false)
     private var memoryCallbacks: android.content.ComponentCallbacks2? = null
     private var contextMenuTarget by mutableStateOf<ContextMenuTarget?>(null)
 
@@ -580,10 +582,22 @@ object FloatingBrowserPanel {
             fullscreenView = null
         }
 
+        override fun onVideoFound(url: String, kind: String) {
+            if (foundVideos.none { it.first == url }) {
+                foundVideos = foundVideos + (url to kind)
+                refreshUi()
+            }
+        }
+
         override fun onHistoryRecord(url: String, title: String) {
             if (incognito) return
             val ctx = webHost?.context ?: return
             BrowserStore.record(ctx, url, title)
+        }
+
+        override fun onPageStartedReset() {
+            foundVideos = emptyList()
+            videosVisible = false
         }
 
         override fun onThemeColorChanged(color: Int) {
@@ -1727,6 +1741,66 @@ object FloatingBrowserPanel {
                         checked = incognito,
                         onCheckedChange = { incognito = it },
                     )
+                }
+                if (foundVideos.isNotEmpty()) {
+                    androidx.compose.material3.TextButton(
+                        onClick = { videosVisible = !videosVisible },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            stringResource(R.string.browser_videos_found, foundVideos.size),
+                            fontSize = 13.sp,
+                        )
+                    }
+                    if (videosVisible) {
+                        Column(modifier = Modifier.fillMaxWidth().height(120.dp)) {
+                            androidx.compose.foundation.lazy.LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                                items(foundVideos) { item ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                val ctx = webHost?.context ?: return@clickable
+                                                if (item.second == "hls") {
+                                                    android.widget.Toast.makeText(
+                                                        ctx,
+                                                        "HLS 流暂不支持直接下载",
+                                                        android.widget.Toast.LENGTH_SHORT,
+                                                    ).show()
+                                                } else {
+                                                    runCatching {
+                                                        val request = android.app.DownloadManager.Request(
+                                                            android.net.Uri.parse(item.first),
+                                                        ).setNotificationVisibility(
+                                                            android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED,
+                                                        ).setDestinationInExternalPublicDir(
+                                                            android.os.Environment.DIRECTORY_DOWNLOADS,
+                                                            item.first.substringAfterLast('/').take(64).ifBlank { "video.mp4" },
+                                                        )
+                                                        val dm = ctx.getSystemService(Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
+                                                        dm.enqueue(request)
+                                                    }
+                                                }
+                                            }
+                                            .padding(vertical = 6.dp),
+                                    ) {
+                                        Text(
+                                            item.first.substringAfterLast('/').take(48).ifBlank { item.first },
+                                            color = ComposeColor(0xFF202124),
+                                            fontSize = 12.sp,
+                                            maxLines = 1,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                        Text(
+                                            if (item.second == "hls") "HLS" else "下载",
+                                            color = ComposeColor(0xFF1A73E8),
+                                            fontSize = 11.sp,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 androidx.compose.material3.TextButton(
                     onClick = { downloadsVisible = !downloadsVisible },

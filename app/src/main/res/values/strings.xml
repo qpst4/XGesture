@@ -4890,4 +4890,5 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="browser_clear_history">Clear history</string>
     <string name="browser_delete">Delete</string>
     <string name="browser_incognito">Incognito</string>
+    <string name="browser_videos_found">Videos (%1\)</string>
 </resources>

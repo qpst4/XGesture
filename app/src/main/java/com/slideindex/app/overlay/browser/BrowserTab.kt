@@ -53,6 +53,12 @@ internal class BrowserTab(
         /** 页面滚动位置变化（用于自动隐藏底部工具条）。 */
         fun onPageScrolled(scrollY: Int)
 
+        /** 新页面开始加载：清空页面级状态。 */
+        fun onPageStartedReset()
+
+        /** 页面上探测到可直接下载的视频地址。 */
+        fun onVideoFound(url: String, kind: String)
+
         /** 页面加载完成：记录历史。 */
         fun onHistoryRecord(url: String, title: String)
 
@@ -214,6 +220,7 @@ internal class BrowserTab(
     private fun createClient(): WebViewClient = object : WebViewClient() {
         override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
             blockedRequestCount = 0
+            callbacks.onPageStartedReset()
             super.onPageStarted(view, url, favicon)
             this@BrowserTab.url = url.orEmpty()
             callbacks.onPageStarted(url.orEmpty())
@@ -599,6 +606,27 @@ internal class BrowserTab(
               }, true);
               window.xgHookAll = function(){ hookSelects(); hookDates(); };
               window.xgHookAll();
+              // 视频嗅探：上报 <video>/<source> 的 http(s) 地址（blob/HLS 交给页面自身）
+              window.xgReportVideos = function(){
+                try {
+                  var seen = {};
+                  var list = document.querySelectorAll('video');
+                  for (var i = 0; i < list.length; i++) {
+                    var v = list[i];
+                    var urls = [v.currentSrc, v.src];
+                    var sources = v.querySelectorAll('source');
+                    for (var j = 0; j < sources.length; j++) urls.push(sources[j].src);
+                    for (var k = 0; k < urls.length; k++) {
+                      var u = urls[k];
+                      if (!u || seen[u] || u.indexOf('http') !== 0) continue;
+                      seen[u] = 1;
+                      window.xgBrowser.onVideoFound(u, u.indexOf('.m3u8') >= 0 ? 'hls' : 'file');
+                    }
+                  }
+                } catch (e) {}
+              };
+              try { window.xgReportVideos(); } catch (e) {}
+              document.addEventListener('play', function(){ try { window.xgReportVideos(); } catch (e) {} }, true);
             })();
             """.trimIndent(),
         ) { }
@@ -627,6 +655,10 @@ internal class BrowserTab(
 
     private inner class JsBridge(private val host: WebView) {
         @android.webkit.JavascriptInterface
+        fun onVideoFound(url: String, kind: String) {
+            callbacks.onVideoFound(url, kind)
+        }
+
         fun onSelectionRects(rectsJson: String, text: String, viewportCssWidth: Float) {
             // 真实比例 = WebView 物理宽度 / 视觉视口 CSS 宽度（对无 viewport meta 的页面也成立）
             val viewWidth = webView.width.coerceAtLeast(1)
