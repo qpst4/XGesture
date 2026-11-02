@@ -365,53 +365,79 @@ internal class BrowserTab(
 
         override fun onPermissionRequest(request: android.webkit.PermissionRequest?) {
             val req = request ?: return
+            val host = req.origin?.host.orEmpty()
             val resources = req.resources ?: emptyArray()
             val granted = mutableListOf<String>()
-            var needCamera = false
-            var needMic = false
+            var askCamera = false
+            var askMic = false
+
             resources.forEach { resource ->
                 when (resource) {
-                    android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE ->
-                        if (com.slideindex.app.util.PermissionHelper.hasCameraPermission(context)) {
-                            granted += resource
-                        } else {
-                            needCamera = true
+                    android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE -> {
+                        val remembered = BrowserPermissionMemory.get(context, host, "camera")
+                        val hasSystem =
+                            com.slideindex.app.util.PermissionHelper.hasCameraPermission(context)
+                        when {
+                            remembered == false -> Unit // 用户之前拒绝过该站点，静默拒绝
+                            remembered == true && hasSystem -> granted += resource
+                            hasSystem -> askCamera = true
+                            else -> askCamera = true
                         }
+                    }
 
-                    android.webkit.PermissionRequest.RESOURCE_AUDIO_CAPTURE ->
-                        if (com.slideindex.app.voice.StashVoiceController.hasRecordAudioPermission(context)) {
-                            granted += resource
-                        } else {
-                            needMic = true
+                    android.webkit.PermissionRequest.RESOURCE_AUDIO_CAPTURE -> {
+                        val remembered = BrowserPermissionMemory.get(context, host, "mic")
+                        val hasSystem =
+                            com.slideindex.app.voice.StashVoiceController.hasRecordAudioPermission(context)
+                        when {
+                            remembered == false -> Unit
+                            remembered == true && hasSystem -> granted += resource
+                            hasSystem -> askMic = true
+                            else -> askMic = true
                         }
+                    }
 
                     else -> granted += resource
                 }
             }
+
             if (granted.isNotEmpty()) runCatching { req.grant(granted.toTypedArray()) }
-            if (needCamera || needMic) {
+            if (!askCamera && !askMic) {
                 runCatching { req.deny() }
-                // 浮层里不能直接申请权限：弹自绘提示，引导到 trampoline Activity
-                val what = buildString {
-                    if (needCamera) append("相机")
-                    if (needCamera && needMic) append("和")
-                    if (needMic) append("麦克风")
-                }
-                BrowserDialogs.confirm(
-                    context,
-                    "网页请求使用$what，需要先在系统里授权。现在去授权？",
-                    onOk = {
-                        if (needCamera) {
-                            com.slideindex.app.overlay.searchpanel.CameraPermissionTrampolineActivity
-                                .ensureGranted(context)
-                        }
-                        if (needMic) {
-                            com.slideindex.app.voice.StashVoicePermissionActivity.ensureGranted(context)
-                        }
-                    },
-                    onCancel = {},
-                )
+                return
             }
+
+            runCatching { req.deny() }
+            val what = buildString {
+                if (askCamera) append(context.getString(com.slideindex.app.R.string.browser_camera))
+                if (askCamera && askMic) append(context.getString(com.slideindex.app.R.string.browser_and))
+                if (askMic) append(context.getString(com.slideindex.app.R.string.browser_mic))
+            }
+            BrowserDialogs.confirm(
+                context,
+                context.getString(com.slideindex.app.R.string.browser_permission_request, what),
+                onOk = {
+                    // 记住该站点的允许
+                    if (askCamera) BrowserPermissionMemory.set(context, host, "camera", true)
+                    if (askMic) BrowserPermissionMemory.set(context, host, "mic", true)
+                    if (askCamera &&
+                        !com.slideindex.app.util.PermissionHelper.hasCameraPermission(context)
+                    ) {
+                        com.slideindex.app.overlay.searchpanel.CameraPermissionTrampolineActivity
+                            .ensureGranted(context)
+                    }
+                    if (askMic &&
+                        !com.slideindex.app.voice.StashVoiceController
+                            .hasRecordAudioPermission(context)
+                    ) {
+                        com.slideindex.app.voice.StashVoicePermissionActivity.ensureGranted(context)
+                    }
+                },
+                onCancel = {
+                    if (askCamera) BrowserPermissionMemory.set(context, host, "camera", false)
+                    if (askMic) BrowserPermissionMemory.set(context, host, "mic", false)
+                },
+            )
         }
 
         override fun onShowCustomView(view: android.view.View?, callback: CustomViewCallback?) {

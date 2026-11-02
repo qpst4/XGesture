@@ -130,6 +130,13 @@ override fun startActionMode(callback: android.view.ActionMode.Callback?, type: 
 - 其它：下载（系统 DownloadManager + 面板进度）、广告域名拦截（63 条）、渲染进程崩溃兜底、
   调试测试页 xg://imetest
 
+## 3.7 已知问题（2026-11-02）
+
+- **单元测试暂时跑不起来**：仓库里 FloatBallGestureDetectorTest、ViewModelsTest 因其它重构
+  缺少构造参数而编译失败（与浏览器无关）。修好它们之后才能加/跑浏览器相关单测。
+- 广告过滤只是域名表（63 条），没有元素隐藏与订阅规则。
+- 视频下载/投屏未实现（需要 JS 嗅探 <video> 源）。
+
 ## 4. 剩余工作（按建议优先级）
 
 ### P0 高
