@@ -38,8 +38,8 @@ android {
         applicationId = "com.slideindex.app"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = 37
-        versionCode = 82
-        versionName = "1.55.0"
+        versionCode = 83
+        versionName = "1.55.5"
 
         // 输入法诊断日志（ImeDiagnostics）。默认关：正式包零开销。
         // 出诊断包：`./gradlew :app:assembleFullRelease -PimeDiag=true`（release 构建可用同签名，

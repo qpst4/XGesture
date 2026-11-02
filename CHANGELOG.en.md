@@ -8,6 +8,35 @@ identical to the Chinese file so that the release pipeline can line up both lang
 
 Where the two files differ, `CHANGELOG.md` is authoritative.
 
+## [1.55.5] - 2026-11-02
+
+### Added
+- Text-pick panel overflow menu gains "handle with another app"
+- Text-pick panel overflow menu can generate a QR-code overlay
+- New "drag the float ball to pick text" switch
+- Global copy and drag translation now goes through the configured translation engine instead of always opening Google
+- Russian locale entry added
+
+### Changed
+- Top and bottom trigger-button wave animation now uses the upstream formula: hugging the edge, bulging inward, depth following the finger, icon returning inside the shape
+- Float ball is drawn on the display layer again, fixing the double-line hit area and the position when dragging out from a line
+- Idle Compose layer disabled: the ball and lines are fully native now, so no ComposeView is created while idle
+
+### Fixed
+- Fixed a ticker leak in the retract animation that caused endless main-thread recomposition
+- Fixed missing grow animation of the capsule and bubble under the top and bottom trigger buttons
+- Fixed the reversed hint arrow when swiping down-left on the top trigger button, and completed the system arrow hints for top and bottom buttons
+- Fixed repeated vibration while sliding the top and bottom trigger buttons
+- Fixed a missing line when both sides are lines, and an extra ball appearing while idle
+- Fixed the text-pick crosshair anchor not sharing the ball baseline and a leftover sideways override
+- Restored the float ball drag dead zone so a long press is not interrupted by tiny movements
+- Text-pick share search now uses the in-house PROCESS_TEXT list, avoiding the ROM picker
+- Share-based text-pick search now writes into the search panel input and search history
+- Fixed the missing leading dot in the component name of the copied am command for external invocation
+- File browser back now exits multi-select first, with swipe-to-select and range selection
+- Added the missing Russian language entry strings for zh / ja / ar, fixing Translation Check
+
+
 Release pages are published with the English notes first, then the Chinese ones. In-app update
 notes follow the system language: `notesEn` is shown to non-Chinese locales and `notes` to
 Chinese ones, each falling back to the other when a version is missing.
