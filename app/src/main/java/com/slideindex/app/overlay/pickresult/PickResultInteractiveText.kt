@@ -135,7 +135,7 @@ internal fun PickResultInteractiveTextSection(
     onSearch: (String) -> Unit = {},
     onShare: (String) -> Unit,
     /** 用其他应用处理；null 时动作条不显示这一项（翻译浮窗等不需要的宿主）。 */
-    onProcessText: ((String) -> Unit)? = null,
+    onProcessText: ((String, PickResultProcessTextTarget) -> Unit)? = null,
     onCopy: (String, keepPanelOpen: Boolean) -> Unit,
     onTranslate: (String) -> Unit,
     onRemoveSpaces: (String, removeAll: Boolean) -> Unit,
@@ -442,7 +442,9 @@ internal fun PickResultInteractiveTextSection(
                     },
                     onDismissOpenLinkChooser = { openLinkChooserExpanded = false },
                     onShare = { runOnActiveText(onShare) },
-                    onProcessText = onProcessText?.let { action -> { runOnActiveText(action) } },
+                    onProcessText = onProcessText?.let { action ->
+                        { target -> runOnActiveText { text -> action(text, target) } }
+                    },
                     copyDismissEnabled = appSettings.floatBallPickCopyDismissPanel,
                     copyButtonPosition = appSettings.floatBallPickCopyButtonPosition,
                     onCopy = { runOnActiveText { onCopy(it, false) } },

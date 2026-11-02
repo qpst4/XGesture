@@ -4373,6 +4373,7 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="pick_result_open_link">Open link</string>
     <string name="pick_result_process_text">Process with another app</string>
     <string name="pick_result_process_text_empty">No app can process text</string>
+    <string name="pick_result_process_text_failed">Couldn\'t open that app — text copied</string>
     <string name="image_viewer_default_title">Default image viewer</string>
     <string name="image_viewer_ask_every_time">Ask every time</string>
     <string name="image_viewer_builtin_editor">Use built-in image editor</string>

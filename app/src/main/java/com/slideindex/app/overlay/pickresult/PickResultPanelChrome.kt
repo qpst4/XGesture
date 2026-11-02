@@ -2,6 +2,7 @@ package com.slideindex.app.overlay.pickresult
 import com.slideindex.app.ui.theme.LocalAppDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Search
@@ -53,9 +55,12 @@ import android.os.SystemClock
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -79,6 +84,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -91,6 +97,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -645,8 +652,8 @@ internal fun PickResultTextActionBar(
     onTranslate: () -> Unit,
     onPinToScreen: (() -> Unit)? = null,
     onStash: (() -> Unit)? = null,
-    /** 用其他应用处理（系统 `PROCESS_TEXT` 选择器）；null 时菜单里不显示这一项。 */
-    onProcessText: (() -> Unit)? = null,
+    /** 用其他应用处理（二级页列出 PROCESS_TEXT 入口）；null 时菜单里不显示这一项。 */
+    onProcessText: ((PickResultProcessTextTarget) -> Unit)? = null,
     onTrimSpaces: (() -> Unit)? = null,
     hasImageContent: Boolean = false,
     onImageSearch: (() -> Unit)? = null,
@@ -660,6 +667,19 @@ internal fun PickResultTextActionBar(
 ) {
     var justCopied by remember { mutableStateOf(false) }
     var moreMenuExpanded by remember { mutableStateOf(false) }
+    // 「用其他应用处理」的二级页：点进去才查一次 PROCESS_TEXT 列表（图标解码放在 IO）。
+    var processTextMenuExpanded by remember { mutableStateOf(false) }
+    var processTextTargets by remember { mutableStateOf<List<PickResultProcessTextTarget>?>(null) }
+    val processTextContext = LocalContext.current
+    LaunchedEffect(processTextMenuExpanded) {
+        if (processTextMenuExpanded && processTextTargets == null) {
+            processTextTargets = withContext(Dispatchers.IO) {
+                runCatching {
+                    PickResultProcessText.listTargets(processTextContext.applicationContext)
+                }.getOrDefault(emptyList())
+            }
+        }
+    }
 
     LaunchedEffect(justCopied) {
         if (justCopied) {
@@ -920,37 +940,50 @@ internal fun PickResultTextActionBar(
 
                     PickResultDropdownMenuInLtr(
                         expanded = moreMenuExpanded,
-                        onDismissRequest = { moreMenuExpanded = false }
+                        onDismissRequest = {
+                            moreMenuExpanded = false
+                            processTextMenuExpanded = false
+                        }
                     ) {
-                        onPinToScreen?.let { pinAction ->
-                            PickResultActionMenuItem(
-                                label = stringResource(R.string.pick_result_pin),
-                                icon = Icons.Outlined.PushPin,
-                                onClick = {
+                        if (processTextMenuExpanded) {
+                            PickResultProcessTextTargetList(
+                                targets = processTextTargets.orEmpty(),
+                                loading = processTextTargets == null,
+                                onBack = { processTextMenuExpanded = false },
+                                onSelect = { target ->
                                     moreMenuExpanded = false
-                                    pinAction()
+                                    processTextMenuExpanded = false
+                                    onProcessText?.invoke(target)
                                 },
                             )
-                        }
-                        onStash?.let { stashAction ->
-                            PickResultActionMenuItem(
-                                label = stringResource(R.string.pick_result_stash),
-                                icon = Icons.Outlined.Archive,
-                                onClick = {
-                                    moreMenuExpanded = false
-                                    stashAction()
-                                },
-                            )
-                        }
-                        onProcessText?.let { processTextAction ->
-                            PickResultActionMenuItem(
-                                label = stringResource(R.string.pick_result_process_text),
-                                icon = Icons.Outlined.Apps,
-                                onClick = {
-                                    moreMenuExpanded = false
-                                    processTextAction()
-                                },
-                            )
+                        } else {
+                            onPinToScreen?.let { pinAction ->
+                                PickResultActionMenuItem(
+                                    label = stringResource(R.string.pick_result_pin),
+                                    icon = Icons.Outlined.PushPin,
+                                    onClick = {
+                                        moreMenuExpanded = false
+                                        pinAction()
+                                    },
+                                )
+                            }
+                            onStash?.let { stashAction ->
+                                PickResultActionMenuItem(
+                                    label = stringResource(R.string.pick_result_stash),
+                                    icon = Icons.Outlined.Archive,
+                                    onClick = {
+                                        moreMenuExpanded = false
+                                        stashAction()
+                                    },
+                                )
+                            }
+                            onProcessText?.let {
+                                PickResultActionMenuItem(
+                                    label = stringResource(R.string.pick_result_process_text),
+                                    icon = Icons.Outlined.Apps,
+                                    onClick = { processTextMenuExpanded = true },
+                                )
+                            }
                         }
                     }
                 }
@@ -1326,6 +1359,107 @@ internal fun PickResultActionMenuItem(
                 modifier = Modifier.size(20.dp).then(iconModifier),
                 tint = iconTint,
             )
+        },
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+        onClick = onClick,
+    )
+}
+
+/** 二级页：系统文本菜单里那些第三方 App 入口（`ACTION_PROCESS_TEXT`）。 */
+@Composable
+private fun PickResultProcessTextTargetList(
+    targets: List<PickResultProcessTextTarget>,
+    loading: Boolean,
+    onBack: () -> Unit,
+    onSelect: (PickResultProcessTextTarget) -> Unit,
+) {
+    val isDark = LocalAppDarkTheme.current
+    val textColor = if (isDark) Color(0xFFECECED) else Color(0xFF1F1F1F)
+    val iconTint = if (isDark) Color(0xFFE0E0E6) else Color(0xFF333333)
+    DropdownMenuItem(
+        text = {
+            Text(
+                text = stringResource(R.string.pick_result_process_text),
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, color = textColor),
+            )
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = iconTint,
+            )
+        },
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+        onClick = onBack,
+    )
+    Box(
+        modifier = Modifier
+            .padding(horizontal = 12.dp)
+            .fillMaxWidth()
+            .height(0.5.dp)
+            .background(pickResultDropdownMenuDividerColor(isDark)),
+    )
+    when {
+        loading -> Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 18.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp)
+        }
+
+        targets.isEmpty() -> Text(
+            text = stringResource(R.string.pick_result_process_text_empty),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 14.dp),
+        )
+
+        else -> targets.forEach { target ->
+            PickResultProcessTextMenuItem(target = target, onClick = { onSelect(target) })
+        }
+    }
+}
+
+@Composable
+private fun PickResultProcessTextMenuItem(
+    target: PickResultProcessTextTarget,
+    onClick: () -> Unit,
+) {
+    val isDark = LocalAppDarkTheme.current
+    val textColor = if (isDark) Color(0xFFECECED) else Color(0xFF1F1F1F)
+    val iconTint = if (isDark) Color(0xFFE0E0E6) else Color(0xFF333333)
+    val iconBitmap = target.icon
+    DropdownMenuItem(
+        text = {
+            Text(
+                text = target.label,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, color = textColor),
+            )
+        },
+        leadingIcon = {
+            if (iconBitmap != null) {
+                Image(
+                    bitmap = iconBitmap,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(RoundedCornerShape(5.dp)),
+                    contentScale = ContentScale.Fit,
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.Apps,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = iconTint,
+                )
+            }
         },
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
         onClick = onClick,

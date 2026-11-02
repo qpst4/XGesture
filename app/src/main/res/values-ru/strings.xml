@@ -4375,6 +4375,7 @@
     <string name="pick_result_open_link">Открыть ссылку</string>
     <string name="pick_result_process_text">Обработать в другом приложении</string>
     <string name="pick_result_process_text_empty">Нет приложения для обработки текста</string>
+    <string name="pick_result_process_text_failed">Не удалось открыть приложение — текст скопирован</string>
     <string name="image_viewer_default_title">Просмотрщик изображений по умолчанию</string>
     <string name="image_viewer_ask_every_time">Спрашивать каждый раз</string>
     <string name="image_viewer_builtin_editor">Использовать встроенный редактор изображений</string>

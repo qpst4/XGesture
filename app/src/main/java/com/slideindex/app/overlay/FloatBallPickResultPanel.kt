@@ -1206,9 +1206,14 @@ object FloatBallPickResultPanel {
                         // 分享面板点中目标前会调这个 lambda 收起本面板，避免目标 App 被它盖住。
                         FloatBallTextPick.shareText(context, it) { dismiss() }
                     },
-                    onProcessText = {
-                        // 同分享：切出去之前先收面板，系统选择器和目标 App 才不会被浮窗盖住。
-                        FloatBallTextPick.processText(context, it) { dismiss() }
+                    onProcessText = { value, target ->
+                        // 同分享：切出去之前先收面板，目标 App 才不会被浮窗盖住。
+                        FloatBallTextPick.processText(
+                            context = context,
+                            text = value,
+                            targetPackage = target.packageName,
+                            targetActivity = target.activityName,
+                        ) { dismiss() }
                     },
                     onTranslate = { FloatBallTranslateCoordinator.translate(context, it) },
                     onRemoveSpaces = { value, removeAll ->

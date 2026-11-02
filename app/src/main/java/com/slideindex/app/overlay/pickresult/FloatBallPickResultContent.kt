@@ -94,7 +94,7 @@ internal fun FloatBallPickResultContent(
     onTextChange: (String) -> Unit,
     onCopy: (String, keepPanelOpen: Boolean) -> Unit,
     onShareText: (String) -> Unit,
-    onProcessText: (String) -> Unit,
+    onProcessText: (String, PickResultProcessTextTarget) -> Unit,
     onTranslate: (String) -> Unit,
     onRemoveSpaces: (String, removeAll: Boolean) -> Unit,
     onSaveScreenshot: () -> Unit,
