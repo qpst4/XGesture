@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Search
@@ -644,6 +645,8 @@ internal fun PickResultTextActionBar(
     onTranslate: () -> Unit,
     onPinToScreen: (() -> Unit)? = null,
     onStash: (() -> Unit)? = null,
+    /** 用其他应用处理（系统 `PROCESS_TEXT` 选择器）；null 时菜单里不显示这一项。 */
+    onProcessText: (() -> Unit)? = null,
     onTrimSpaces: (() -> Unit)? = null,
     hasImageContent: Boolean = false,
     onImageSearch: (() -> Unit)? = null,
@@ -936,6 +939,16 @@ internal fun PickResultTextActionBar(
                                 onClick = {
                                     moreMenuExpanded = false
                                     stashAction()
+                                },
+                            )
+                        }
+                        onProcessText?.let { processTextAction ->
+                            PickResultActionMenuItem(
+                                label = stringResource(R.string.pick_result_process_text),
+                                icon = Icons.Outlined.Apps,
+                                onClick = {
+                                    moreMenuExpanded = false
+                                    processTextAction()
                                 },
                             )
                         }

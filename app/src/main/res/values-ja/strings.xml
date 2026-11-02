@@ -4198,6 +4198,8 @@
     <string name="pick_result_pin">画面に固定</string>
     <string name="pick_result_stash">一時保存</string>
     <string name="pick_result_open_link">リンクを開く</string>
+    <string name="pick_result_process_text">他のアプリで処理</string>
+    <string name="pick_result_process_text_empty">テキストを処理できるアプリがありません</string>
     <string name="image_viewer_default_title">デフォルトの画像ビューア</string>
     <string name="image_viewer_ask_every_time">毎回確認</string>
     <string name="image_viewer_builtin_editor">内蔵画像エディタを使用</string>

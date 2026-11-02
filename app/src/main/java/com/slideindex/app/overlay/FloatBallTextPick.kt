@@ -6,6 +6,7 @@ import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.graphics.Bitmap
 import android.graphics.Rect
@@ -29,6 +30,7 @@ import com.slideindex.app.translate.TranslateAppCapability
 import com.slideindex.app.translate.TranslateLanguageCatalog
 import com.slideindex.app.translate.TranslateLaunchChannel
 import com.slideindex.app.translate.TranslateLaunchPlanner
+import com.slideindex.app.util.queryIntentActivitiesCompat
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -182,6 +184,50 @@ object FloatBallTextPick {
 
         copyText(context, text)
         Toast.makeText(context, R.string.float_ball_translate_app_not_found_copied, Toast.LENGTH_SHORT).show()
+    }
+
+    /**
+     * 取词面板「用其他应用处理」：把文字交给系统的 `PROCESS_TEXT` 选择器。
+     *
+     * 面板正文不是系统 TextView，长按弹不出系统文本菜单；这里用同一个 Intent 让系统
+     * 自己去列「谁能处理这段文字」（DeepSeek / 欧路 / Edge 那些入口都是这么注册的），
+     * 我们不维护 App 列表。
+     *
+     * 浮窗必须先把面板收起：取词面板是 `TYPE_APPLICATION_OVERLAY`，不收起来会压在
+     * 目标 App 上面（和分享面板的 `dismissSource` 同一个道理）。
+     */
+    fun processText(context: Context, text: String, dismissSource: (() -> Unit)? = null): Boolean {
+        val trimmed = text.trim()
+        if (trimmed.isEmpty()) return false
+
+        val target = Intent(Intent.ACTION_PROCESS_TEXT).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_PROCESS_TEXT, trimmed)
+            // 取词面板不是可编辑的文本框：按只读语义交出去，目标 App 不会以为要回填。
+            putExtra(Intent.EXTRA_PROCESS_TEXT_READONLY, true)
+        }
+        // 一个能收文字的程序都没有时不弹空选择器，也别白关面板。
+        val hasTarget = runCatching {
+            context.packageManager.queryIntentActivitiesCompat(
+                target,
+                PackageManager.MATCH_DEFAULT_ONLY,
+            ).isNotEmpty()
+        }.getOrDefault(false)
+        if (!hasTarget) {
+            Toast.makeText(context, R.string.pick_result_process_text_empty, Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        runCatching { dismissSource?.invoke() }
+        val chooser = Intent.createChooser(target, context.getString(R.string.pick_result_process_text))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return runCatching {
+            context.startActivity(chooser)
+            true
+        }.getOrElse {
+            Toast.makeText(context, R.string.float_ball_action_failed, Toast.LENGTH_SHORT).show()
+            false
+        }
     }
 
     /** 按 [TranslateLaunchPlanner] 给出的顺序尝试把文本交给 [targetPackage]；全都失败返回 false。 */
