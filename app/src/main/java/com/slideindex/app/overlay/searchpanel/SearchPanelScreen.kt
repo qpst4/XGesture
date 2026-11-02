@@ -843,10 +843,10 @@ fun SearchPanelScreen(
                 selection = TextRange(query.length),
             )
             SearchPanelSessionState.lastTextQuery = query
+            SearchHistoryRecorder.record(context, query)
             if (engine.engineType == SearchEngineType.SHARE_TO_APP) {
                 SearchEngineLauncher.launchTextShare(context, engine, query)
             } else {
-                SearchHistoryRecorder.record(context, query)
                 showSearchHistory = false
                 SearchEngineLauncher.launch(context, engine, query, settings, longPressTriggered)
             }

@@ -1331,9 +1331,7 @@ object FloatBallPickResultPanel {
                             )
                         }
                         if (launched) {
-                            if (engine.engineType != SearchEngineType.SHARE_TO_APP) {
-                                SearchPanelQueryBridge.rememberQuery(context, query)
-                            }
+                            SearchPanelQueryBridge.rememberQuery(context, query)
                             dismiss()
                         }
                     },
@@ -1356,9 +1354,7 @@ object FloatBallPickResultPanel {
                                 )
                             }
                             if (launched) {
-                                if (engine.engineType != SearchEngineType.SHARE_TO_APP) {
-                                    SearchPanelQueryBridge.rememberQuery(context, query)
-                                }
+                                SearchPanelQueryBridge.rememberQuery(context, query)
                                 dismiss()
                             }
                         }
