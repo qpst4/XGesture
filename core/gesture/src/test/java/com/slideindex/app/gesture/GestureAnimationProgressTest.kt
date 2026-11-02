@@ -30,17 +30,66 @@ class GestureAnimationProgressTest {
         )
     }
 
+    /**
+     * 底边：内滑进度只看相对位移（手指向上滑时 fingerY 为负），
+     * 与「按下点离屏幕底边多远」（originY 绝对坐标）无关。
+     *
+     * 回归点：早前算成 `originY - fingerY`，底部恒等于「屏幕高度 + 拖动距离」，
+     * 第一帧就 ≥ maxLength —— 胶囊/圆泡直接满尺寸出现，完全没有生长动画。
+     */
     @Test
-    fun bottomEdge_inwardSwipe_usesOriginMinusFingerY() {
-        val progress = GestureAnimationProgress.progress(
+    fun bottomEdge_inwardSwipe_progressUsesRelativeFingerYOnly() {
+        val pressedNearEdge = GestureAnimationProgress.progress(
             position = GestureAnimationPosition.Bottom,
             originX = 540f,
-            originY = 2200f,
+            originY = 2320f,
             fingerX = 540f,
-            fingerY = 0f,
+            fingerY = -80f,
             swipeDirection = null,
         )
-        assertTrue(progress > 1f)
+        val pressedFarFromEdge = GestureAnimationProgress.progress(
+            position = GestureAnimationPosition.Bottom,
+            originX = 540f,
+            originY = 200f,
+            fingerX = 540f,
+            fingerY = -80f,
+            swipeDirection = null,
+        )
+        assertEquals(80f, pressedNearEdge, 0.01f)
+        assertEquals(pressedNearEdge, pressedFarFromEdge, 0.01f)
+    }
+
+    /**
+     * 顶边：同样只看相对位移。回归点：早前算成 `fingerY - originY`，
+     * 手指没滑过「按下点到顶边的距离」之前进度一直是负数（被上层夹成常量），
+     * 表现就是提示图形卡住不动。
+     */
+    @Test
+    fun topEdge_inwardSwipe_progressUsesRelativeFingerYOnly() {
+        assertEquals(0f, GestureAnimationProgress.progress(
+            position = GestureAnimationPosition.Top,
+            originX = 300f,
+            originY = 75f,
+            fingerX = 300f,
+            fingerY = 0f,
+            swipeDirection = null,
+        ), 0.01f)
+        assertEquals(40f, GestureAnimationProgress.progress(
+            position = GestureAnimationPosition.Top,
+            originX = 300f,
+            originY = 75f,
+            fingerX = 300f,
+            fingerY = 40f,
+            swipeDirection = SwipeDirection.IN,
+        ), 0.01f)
+        assertEquals(40f, GestureAnimationProgress.progress(
+            position = GestureAnimationPosition.Top,
+            originX = 300f,
+            originY = 1500f,
+            fingerX = 300f,
+            fingerY = 40f,
+            swipeDirection = SwipeDirection.IN,
+        ), 0.01f)
     }
 
     @Test
@@ -61,18 +110,18 @@ class GestureAnimationProgressTest {
     }
 
     @Test
-    fun topEdge_inwardSwipe_usesFingerMinusOriginY() {
+    fun bottomEdge_horizontalAlongEdge_usesAlongAxis() {
         val progress = GestureAnimationProgress.progress(
-            position = GestureAnimationPosition.Top,
-            originX = 300f,
-            originY = 12f,
-            fingerX = 300f,
-            fingerY = 80f,
-            swipeDirection = SwipeDirection.IN,
+            position = GestureAnimationPosition.Bottom,
+            originX = 900f,
+            originY = 2320f,
+            fingerX = 820f,
+            fingerY = 0f,
+            swipeDirection = SwipeDirection.UP,
         )
-        assertEquals(68f, progress, 0.01f)
+        assertEquals(80f, progress, 0.01f)
         assertFalse(GestureAnimationProgress.isHorizontalAlongEdge(
-            GestureAnimationPosition.Top,
+            GestureAnimationPosition.Bottom,
             SwipeDirection.IN,
         ))
     }

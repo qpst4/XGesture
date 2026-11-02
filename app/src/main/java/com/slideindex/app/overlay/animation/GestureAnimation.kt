@@ -151,9 +151,11 @@ private fun CapsuleGestureAnimation(
         val topLeft: Offset
         val rectSize: Size
         if (horizontalAlongEdge) {
+            // 沿边滑动时胶囊横躺、贴着所在一侧：底边贴 size.height、顶边贴 0。
+            // （原来两边的值写反了：底边画到屏幕顶端、顶边画到屏幕底端。）
             val centerY = when (button.position) {
-                GestureAnimationPosition.Bottom -> yShift
-                GestureAnimationPosition.Top -> size.height + yShift
+                GestureAnimationPosition.Bottom -> size.height + yShift
+                GestureAnimationPosition.Top -> yShift
                 else -> 0f
             }
             val slideRight = animationState.swipeDirection == SwipeDirection.DOWN ||
@@ -342,13 +344,14 @@ private fun BubbleGestureAnimation(
                     .safeCoerceIn(radius, size.height - radius)
             GestureAnimationPosition.Bottom ->
                 if (horizontalAlongEdge) {
-                    size.height + radius + yShift
+                    // 沿边滑动：圆泡半埋在底边上，跟着手指横向走（原来 +radius 把它整个推到屏幕外，根本看不见）。
+                    size.height + yShift
                 } else {
                     size.height + radius - offset + yShift
                 }
             GestureAnimationPosition.Top ->
                 if (horizontalAlongEdge) {
-                    -radius + yShift
+                    yShift
                 } else {
                     -radius + offset + yShift
                 }
