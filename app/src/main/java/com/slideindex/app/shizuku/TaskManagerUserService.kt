@@ -1,6 +1,7 @@
 package com.slideindex.app.shizuku
 
 import android.content.Context
+import android.util.Log
 import androidx.annotation.Keep
 import androidx.annotation.StringRes
 import com.slideindex.app.multitouch.EvdevTouchObserver
@@ -36,6 +37,10 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
         val observer = EvdevTouchObserver(
             onGesture = { gestures, eventTimeMs ->
                 runCatching {
+                    Log.i(
+                        "MultiTouchBridge",
+                        "batch: " + gestures.joinToString { "${it.gesture}x${it.fingerCount}" },
+                    )
                     callback.onGestureBatch(
                         gestures.map { it.gesture.ordinal }.toIntArray(),
                         gestures.map { it.fingerCount }.toIntArray(),

@@ -39,7 +39,9 @@ class MultiPointerGestureRecognizerTest {
         for (frame in frames) {
             val recognized = recognizer.onFrame(frame, time)
             if (result == null) {
-                result = recognized.firstOrNull()
+                result = recognized.firstOrNull {
+                    it.gesture != MultiPointerGesture.TOUCH
+                }
             }
             time += stepMs
         }
@@ -275,10 +277,12 @@ class MultiPointerGestureRecognizerTest {
     @Test
     fun `two finger tap is recognized`() {
         val down = ring(2, 0.5f, 0.5f, 0.2f)
-        assertTrue(recognizer.onFrame(down, 1_000L).isEmpty())
+        val downFrame = recognizer.onFrame(down, 1_000L)
+        assertEquals(MultiPointerGesture.TOUCH, downFrame.firstOrNull()?.gesture)
+        assertEquals(2, downFrame.firstOrNull()?.fingerCount)
 
         val liftFrame = recognizer.onFrame(emptyList(), 1_100L)
-        assertEquals(MultiPointerGesture.TOUCH, liftFrame.firstOrNull()?.gesture)
+        assertTrue(liftFrame.isEmpty())
 
         val tap = recognizer.onTick(1_400L)
         assertEquals(MultiPointerGesture.TAP, tap?.gesture)

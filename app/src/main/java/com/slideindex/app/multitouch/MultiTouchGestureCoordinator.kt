@@ -259,7 +259,10 @@ class MultiTouchGestureCoordinator @Inject constructor(
         val entry = settingsStore.state.value.entries.firstOrNull {
             it.kind == kind && it.fingerCount == fingerCount &&
                 it.action != GestureAction.None
-        } ?: return false
+        } ?: run {
+            Log.i(TAG, "no entry for ${kind.name} x$fingerCount")
+            return false
+        }
         Log.i(TAG, "gesture ${kind.name} x$fingerCount -> ${entry.action}")
         mainHandler.post { performAction(entry.action, kind, fingerCount) }
         return true

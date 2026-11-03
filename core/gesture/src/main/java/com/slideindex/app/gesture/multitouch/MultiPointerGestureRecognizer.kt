@@ -92,15 +92,7 @@ class MultiPointerGestureRecognizer(
     @Synchronized
     fun onFrame(pointers: List<TouchPointer>, timeMs: Long): List<RecognizedMultiPointerGesture> {
         if (pointers.isEmpty()) {
-            val results = ArrayList<RecognizedMultiPointerGesture>(2)
-            // 触摸（GMD 的 SWIPE_TAP）：点击序列第一次抬起时立即作为候选。
-            if (!moved &&
-                triggered.isEmpty() &&
-                tapCount == 0 &&
-                maxFingers in minFingerCount..maxFingerCount
-            ) {
-                results += RecognizedMultiPointerGesture(MultiPointerGesture.TOUCH, maxFingers)
-            }
+            val results = ArrayList<RecognizedMultiPointerGesture>(1)
             resolveTapOnLift(timeMs)?.let { results += it }
             resetTouch()
             return results
@@ -134,7 +126,16 @@ class MultiPointerGestureRecognizer(
                 timeMs = timeMs,
             )
             updateLastPositions(pointers)
-            return emptyList()
+            // 触摸（GMD 的 SWIPE_TAP）：按下即触发，且只支持双指及以上。
+            // 注意：不写入 triggered——触摸只在这一帧输出一次，不能阻止后续点击判定。
+            val results = ArrayList<RecognizedMultiPointerGesture>(1)
+            if (ordered.size >= 2) {
+                results += RecognizedMultiPointerGesture(
+                    MultiPointerGesture.TOUCH,
+                    ordered.size,
+                )
+            }
+            return results
         }
 
         maxFingers = max(maxFingers, ordered.size)
@@ -176,9 +177,9 @@ class MultiPointerGestureRecognizer(
             return results
         }
 
-        // 滑动：质心位移 + 各指方向一致性 + 连续 3 帧方向一致。
-        if (distance >= swipeThreshold && isSwipeConsistent(ordered, dx, dy)) {
-            val direction = swipeDirection(dx, dy)
+        // 滑动：按 GMD 的做法，逐指判定方向，要求至少 2/3 手指同向。
+        if (distance >= swipeThreshold) {
+            val direction = consensusSwipeDirection(ordered)
             if (direction != null && direction !in triggered) {
                 if (swipeHistory.lastOrNull() != direction) {
                     swipeHistory.clear()
@@ -297,6 +298,21 @@ class MultiPointerGestureRecognizer(
         for (pointer in pointers) {
             lastPositions[pointer.id] = pointer
         }
+    }
+
+    /** 各指方向分类的众数；至少 2/3 手指同向才算数。 */
+    private fun consensusSwipeDirection(pointers: List<TouchPointer>): MultiPointerGesture? {
+        val counts = HashMap<MultiPointerGesture, Int>()
+        var counted = 0
+        for (pointer in pointers) {
+            val last = lastPositions[pointer.id] ?: continue
+            counted++
+            val direction = swipeDirection(pointer.x - last.x, pointer.y - last.y) ?: continue
+            counts[direction] = (counts[direction] ?: 0) + 1
+        }
+        if (counted < 2) return null
+        val best = counts.maxByOrNull { it.value } ?: return null
+        return if (best.value * 3 >= counted * 2) best.key else null
     }
 
     /** 各指位移方向与质心位移方向一致的比例 >= 60% 才算滑动。 */
