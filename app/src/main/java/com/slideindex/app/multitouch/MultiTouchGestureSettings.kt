@@ -69,6 +69,7 @@ val multiTouchPresetKinds: List<MultiPointerGesture> = listOf(
     MultiPointerGesture.DOUBLE_TAP,
     MultiPointerGesture.TRIPLE_TAP,
     MultiPointerGesture.LONG_PRESS,
+    MultiPointerGesture.TOUCH,
 )
 
 @Singleton
@@ -165,7 +166,8 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         MultiPointerGesture.DOUBLE_TAP -> 13
         MultiPointerGesture.TRIPLE_TAP -> 14
         MultiPointerGesture.LONG_PRESS -> 15
-        MultiPointerGesture.PATH -> 16
+        MultiPointerGesture.TOUCH -> 16
+        MultiPointerGesture.PATH -> 17
     }
 
     private fun persist(entries: List<MultiTouchGestureEntry>) {

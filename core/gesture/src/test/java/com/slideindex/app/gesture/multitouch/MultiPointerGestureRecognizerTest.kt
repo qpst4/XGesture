@@ -2,6 +2,7 @@ package com.slideindex.app.gesture.multitouch
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.PI
 import kotlin.math.cos
@@ -269,5 +270,18 @@ class MultiPointerGestureRecognizerTest {
         // 第四根手指加入：应重建基准，不触发。
         frames += ring(4, 0.5f, 0.5f, 0.18f)
         assertNull(feed(frames))
+    }
+
+    @Test
+    fun `two finger tap is recognized`() {
+        val down = ring(2, 0.5f, 0.5f, 0.2f)
+        assertTrue(recognizer.onFrame(down, 1_000L).isEmpty())
+
+        val liftFrame = recognizer.onFrame(emptyList(), 1_100L)
+        assertEquals(MultiPointerGesture.TOUCH, liftFrame.firstOrNull()?.gesture)
+
+        val tap = recognizer.onTick(1_400L)
+        assertEquals(MultiPointerGesture.TAP, tap?.gesture)
+        assertEquals(2, tap?.fingerCount)
     }
 }

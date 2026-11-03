@@ -86,10 +86,21 @@ class MultiPointerGestureRecognizer(
     private var tapCount = 0
     private var lastTapAtMs = 0L
 
+    /** 滑动方向历史：连续多帧方向一致才触发，避免起步抖动误判。 */
+    private val swipeHistory = ArrayDeque<MultiPointerGesture>()
+
     @Synchronized
     fun onFrame(pointers: List<TouchPointer>, timeMs: Long): List<RecognizedMultiPointerGesture> {
         if (pointers.isEmpty()) {
-            val results = ArrayList<RecognizedMultiPointerGesture>(1)
+            val results = ArrayList<RecognizedMultiPointerGesture>(2)
+            // 触摸（GMD 的 SWIPE_TAP）：点击序列第一次抬起时立即作为候选。
+            if (!moved &&
+                triggered.isEmpty() &&
+                tapCount == 0 &&
+                maxFingers in minFingerCount..maxFingerCount
+            ) {
+                results += RecognizedMultiPointerGesture(MultiPointerGesture.TOUCH, maxFingers)
+            }
             resolveTapOnLift(timeMs)?.let { results += it }
             resetTouch()
             return results
@@ -165,12 +176,23 @@ class MultiPointerGestureRecognizer(
             return results
         }
 
-        // 滑动：质心位移 + 各指方向一致性（捏合时各指方向相反，不满足）。
+        // 滑动：质心位移 + 各指方向一致性 + 连续 3 帧方向一致。
         if (distance >= swipeThreshold && isSwipeConsistent(ordered, dx, dy)) {
             val direction = swipeDirection(dx, dy)
             if (direction != null && direction !in triggered) {
-                triggered += direction
-                results += RecognizedMultiPointerGesture(direction, maxFingers)
+                if (swipeHistory.lastOrNull() != direction) {
+                    swipeHistory.clear()
+                }
+                swipeHistory.addLast(direction)
+                if (swipeHistory.size > SWIPE_STABLE_FRAMES) {
+                    swipeHistory.removeFirst()
+                }
+                if (swipeHistory.size == SWIPE_STABLE_FRAMES &&
+                    swipeHistory.all { it == direction }
+                ) {
+                    triggered += direction
+                    results += RecognizedMultiPointerGesture(direction, maxFingers)
+                }
             }
         }
 
@@ -303,6 +325,7 @@ class MultiPointerGestureRecognizer(
         maxFingers = 0
         moved = false
         triggered.clear()
+        swipeHistory.clear()
         lastPositions.clear()
     }
 
@@ -364,5 +387,8 @@ class MultiPointerGestureRecognizer(
 
         /** tan(67.5°)：主方向超过这个比例算水平/垂直，否则斜向。 */
         const val DIAGONAL_RATIO = 2.414f
+
+        /** 滑动方向连续一致的帧数。 */
+        const val SWIPE_STABLE_FRAMES = 3
     }
 }

@@ -32,6 +32,8 @@ enum class MultiPointerGesture {
     DOUBLE_TAP,
     TRIPLE_TAP,
     LONG_PRESS,
+    /** 触摸（GMD 的 `SWIPE_TAP`，与「轻点」不同；触发时机待确认）。 */
+    TOUCH,
     PATH,
     ;
 
@@ -74,5 +76,6 @@ fun MultiPointerGesture.displayName(): String = when (this) {
     MultiPointerGesture.DOUBLE_TAP -> "双击"
     MultiPointerGesture.TRIPLE_TAP -> "三击"
     MultiPointerGesture.LONG_PRESS -> "长按"
+    MultiPointerGesture.TOUCH -> "触摸"
     MultiPointerGesture.PATH -> "记录手势"
 }

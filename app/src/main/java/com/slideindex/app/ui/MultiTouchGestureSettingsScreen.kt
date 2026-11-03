@@ -373,6 +373,7 @@ private fun gestureSymbol(kind: MultiPointerGesture): String = when (kind) {
     MultiPointerGesture.DOUBLE_TAP -> "👆²"
     MultiPointerGesture.TRIPLE_TAP -> "👆³"
     MultiPointerGesture.LONG_PRESS -> "✊"
+    MultiPointerGesture.TOUCH -> "☝"
     MultiPointerGesture.PATH -> "✏️"
 }
 
