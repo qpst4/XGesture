@@ -51,8 +51,8 @@ class MultiPointerGestureRecognizer(
     private val settleMs: Long = 60L,
     private val longPressMs: Long = 550L,
     private val doubleTapMs: Long = 260L,
-    private val rotateScoreThreshold: Float = 0.08f,
-    private val fourFingerRotateScoreThreshold: Float = 0.066f,
+    private val rotateScoreThreshold: Float = 0.05f,
+    private val fourFingerRotateScoreThreshold: Float = 0.04f,
     private val rotateMaxRadiusDrift: Float = 0.32f,
     private val fourFingerRotateMaxRadiusDrift: Float = 0.40f,
     private val radiusChangeFraction: Float = 0.18f,
@@ -71,7 +71,6 @@ class MultiPointerGestureRecognizer(
         val cross: Float,
         /** 半径平方和 Σ(dx² + dy²)。 */
         val radiusSquared: Float,
-        val radiusDelta: Float,
     )
 
     private var baseline: Baseline? = null
@@ -150,14 +149,11 @@ class MultiPointerGestureRecognizer(
             val four = ordered.size >= 4
             val rotation = rotationScore(ordered, centerX, centerY, current)
             if (rotation != null) {
-                // 与 GMD 同口径：|cross| / (2 * Σr²)，尺度无关。
+                // 角度近似：|cross| / (2 * Σr²) ≈ sinθ / 2，尺度无关。
                 val score = abs(rotation.cross) / (2f * rotation.radiusSquared)
                 val threshold = if (four) fourFingerRotateScoreThreshold else rotateScoreThreshold
                 val maxDrift = if (four) fourFingerRotateMaxRadiusDrift else rotateMaxRadiusDrift
-                if (score >= threshold &&
-                    abs(radiusRatio - 1f) <= maxDrift &&
-                    score > abs(rotation.radiusDelta) / (2f * rotation.radiusSquared)
-                ) {
+                if (score >= threshold && abs(radiusRatio - 1f) <= maxDrift) {
                     val gesture = if (rotation.cross > 0f) {
                         MultiPointerGesture.ROTATE_CLOCKWISE
                     } else {
@@ -258,7 +254,6 @@ class MultiPointerGestureRecognizer(
     ): RotationScore? {
         var cross = 0f
         var radiusSquared = 0f
-        var radiusDelta = 0f
         for (pointer in pointers) {
             val start = baseline.startPoints[pointer.id] ?: continue
             val startX = start.x - baseline.centerX
@@ -267,11 +262,9 @@ class MultiPointerGestureRecognizer(
             val currentY = pointer.y - centerY
             cross += startX * currentY - startY * currentX
             radiusSquared += currentX * currentX + currentY * currentY
-            radiusDelta += currentX * currentX + currentY * currentY -
-                (startX * startX + startY * startY)
         }
         if (radiusSquared <= MIN_RADIUS) return null
-        return RotationScore(cross, radiusSquared, radiusDelta)
+        return RotationScore(cross, radiusSquared)
     }
 
     private fun averageRadius(pointers: List<TouchPointer>, cx: Float, cy: Float): Float {
