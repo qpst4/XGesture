@@ -558,26 +558,40 @@ internal class SideOverlayWindowManager(
         )
     }
 
+    private var lastPresentationTouchMode: String? = null
+
     private fun applyPresentationTouchFlags(
         view: EdgeGestureOverlayView,
         params: WindowManager.LayoutParams
     ) {
+        val mode = resolvePresentationTouchMode(view)
+        // 只在**状态变化**时打日志：这函数每次布局都会被调，逐次打会刷屏。
+        if (mode != lastPresentationTouchMode) {
+            lastPresentationTouchMode = mode
+            EdgeDiag.log(
+                "window",
+                "presentation 触摸模式 → $mode " +
+                    "(panelMode=${view.panelMode()} " +
+                    "adjust=${view.hasAdjustPanel()} directTouch=${view.needsPresentationDirectTouch()} " +
+                    "passthrough=${view.presentationShouldPassthroughTouches()} pinned=${view.pinnedQuickLauncherWindowRect() != null})"
+            )
+        }
+        when (mode) {
+            "interactive" -> applyPresentationInteractiveFlags(params)
+            else -> applyPresentationPassthroughFlags(params)
+        }
+    }
+
+    private fun resolvePresentationTouchMode(view: EdgeGestureOverlayView): String {
         // 钉住态：绘制窗口一律放行触摸（面板外直接落到下面的应用），
         // 面板内的触摸由 [syncPinnedTouchWindow] 那层小窗口接住并转发。
-        if (view.pinnedQuickLauncherWindowRect() != null) {
-            applyPresentationPassthroughFlags(params)
-            return
+        if (view.pinnedQuickLauncherWindowRect() != null) return "passthrough(pinned)"
+        if (!view.needsPresentationDirectTouch()) return "passthrough(idle)"
+        val panelOpen = view.panelMode() != OverlayPanelMode.NONE
+        if (!panelOpen && view.presentationShouldPassthroughTouches()) {
+            return "passthrough(dialog)"
         }
-        if (view.needsPresentationDirectTouch()) {
-            val panelOpen = view.panelMode() != OverlayPanelMode.NONE
-            if (!panelOpen && view.presentationShouldPassthroughTouches()) {
-                applyPresentationPassthroughFlags(params)
-            } else {
-                applyPresentationInteractiveFlags(params)
-            }
-        } else {
-            applyPresentationPassthroughFlags(params)
-        }
+        return "interactive"
     }
 
     /**
@@ -794,12 +808,17 @@ internal class SideOverlayWindowManager(
         val effectiveForceReAdd = forceReAdd && !OverlayDisplayRotationGate.suppressCaptureWindowReAdd
         if (effectiveForceReAdd) {
             // updateViewLayout 不会改变 z-order；与悬浮球一致，remove+add 才能压到取词/搜图面板之上。
+            val startedAt = android.os.SystemClock.elapsedRealtime()
             runCatching {
                 windowManager.removeView(view)
                 windowManager.addView(view, params)
                 view.requestLayout()
                 view.invalidate()
             }.onFailure { Log.e(TAG, "Failed to forceReAdd edge window", it) }
+            EdgeDiag.log(
+                "zorder",
+                "触钮窗口 remove+add: ${params.title} cost=${android.os.SystemClock.elapsedRealtime() - startedAt}ms"
+            )
             return
         }
         runCatching {

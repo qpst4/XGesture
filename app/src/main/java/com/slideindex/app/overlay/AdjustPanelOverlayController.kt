@@ -16,6 +16,7 @@ import android.os.SystemClock
 import android.provider.Settings
 import android.view.MotionEvent
 import android.view.animation.AccelerateInterpolator
+import com.slideindex.app.diagnostic.EdgeDiag
 import com.slideindex.app.gesture.ActionExecutor
 import com.slideindex.app.gesture.GestureSession
 import com.slideindex.app.settings.AppSettings
@@ -224,6 +225,15 @@ internal class AdjustPanelOverlayController(
             return
         }
         adjustPanelDismissing = true
+        // 退场动画期间 presentation 必须立刻让出触摸：
+        // 旧实现要等 160ms 动画跑完才清 adjustPanelState，这期间全屏窗仍被判定为"需要直触"，
+        // 落在条消失那一刻的点击全部被这扇窗吃掉（用户感受就是"点哪都没反应"）。
+        EdgeDiag.log(
+            "adjustPanel",
+            "dismiss 开始：立即撤销 presentation 直触 animated=$animated " +
+                "progress=${"%.2f".format(adjustIndicatorProgress)}"
+        )
+        host.notifyPresentationTouchRequirementChanged()
         renderer.animateAdjustIndicatorTo(
             target = 0f,
             durationMs = AdjustPanelRenderer.ADJUST_INDICATOR_EXIT_MS,
@@ -268,6 +278,7 @@ internal class AdjustPanelOverlayController(
 
     private fun finishDismissAdjustPanel() {
         cancelAutoDismiss()
+        EdgeDiag.log("adjustPanel", "dismiss 完成：清状态并交回触摸")
         adjustPanelDismissing = false
         adjustPanelState = null
         adjustPanelExpandedForGesture = false

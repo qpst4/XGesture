@@ -2,6 +2,7 @@ package com.slideindex.app.overlay
 
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import android.view.Choreographer
 import com.slideindex.app.util.InputTapUtil
@@ -66,7 +67,21 @@ object OverlayPassthrough {
                 // 安全恢复已经收尾（主线程卡顿超过 2s）：不再补一次没人守着的注入。
                 if (restored.get()) return@runAfterNextFrames
                 try {
+                    // 先盖章再注入：模块桥看到「注入窗口」应放行，注入事件才到得了目标应用；
+                    // 万一还是被转发回来，[ModuleForwardedTouchGate.isInjectedEcho] 会在 app 侧丢掉它。
+                    ModuleForwardedTouchGate.markInjected(rawX, rawY)
+                    val injectStartMs = SystemClock.elapsedRealtime()
+                    com.slideindex.app.diagnostic.EdgeDiag.log(
+                        "passthrough",
+                        "注入点击 at=($rawX,$rawY) frames=$framesBeforeInject " +
+                            "restoreDelay=$restoreDelayMs armedAfter=$injectStartMs"
+                    )
                     InputTapUtil.dispatchTapAsync(rawX, rawY, onFinished = { ok ->
+                        com.slideindex.app.diagnostic.EdgeDiag.log(
+                            "passthrough",
+                            "注入回调 ok=$ok at=($rawX,$rawY) " +
+                                "cost=${SystemClock.elapsedRealtime() - injectStartMs}ms"
+                        )
                         if (!ok) {
                             Log.w(TAG, "dispatchTapAsync failed at ($rawX, $rawY)")
                         }

@@ -34,7 +34,9 @@ import android.widget.Toast
 import com.slideindex.app.R
 import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.overlay.compositor.OverlayCompositor
+import com.slideindex.app.overlay.compositor.OverlayScene
 import com.slideindex.app.overlay.compositor.OverlaySceneController
+import com.slideindex.app.diagnostic.EdgeDiag
 import com.slideindex.app.perf.PickPerf
 import com.slideindex.app.inspire.PickPrefetchCache
 import com.slideindex.app.service.AccessibilityTextExtractor
@@ -512,7 +514,17 @@ object FloatBallOverlay {
             }
             return
         }
-        val forceReAdd = forceExplicitReAdd || !chromeZOrderFront
+        // 只有「面板真的还压在 chrome 上面」时，remove+add 抬 z 序才是必须的。
+        // 面板已经收掉之后再做这一遍，收益为零、代价是每个窗口 3~14ms 不在窗口树里：
+        // 日志实测一次收尾会有 6 个窗口被逐个拆装（88ms 真空），用户正好在那段时间点屏幕就会丢触摸。
+        val panelAboveNow = OverlaySceneController.scene is OverlayScene.ContentPanelVisible ||
+            SlideIndexAccessibilityService.edgePresentationNeedsChromeRaise()
+        val forceReAdd = forceExplicitReAdd || (!chromeZOrderFront && panelAboveNow)
+        EdgeDiag.log(
+            "zorder",
+            "bringChromeAbovePanelsNow explicit=$forceExplicitReAdd " +
+                "chromeFront=$chromeZOrderFront panelAbove=$panelAboveNow → forceReAdd=$forceReAdd"
+        )
         val edgeSides = edgeChromeRaiseSides
         edgeChromeRaiseSides = null
         settingsState?.value?.let { settings ->
@@ -2603,8 +2615,12 @@ object FloatBallOverlay {
         if (action is GestureAction.None) return
         if (action is GestureAction.ClickPassthrough) {
             if (passthroughRestorePending) return
-            // 输入层接管期间禁止注入放行：注入事件会再次进入模块的过滤器，形成回环。
-            if (ModuleForwardedTouchGate.isRecent()) return
+            // 只拦"我们自己注入的回声"，不拦用户的新点击（旧实现是 1500ms 全拦，接管区里必失效）。
+            EdgeDiag.log(
+                "passthrough",
+                "悬浮球放行 at=($rawX,$rawY) pending=${ModuleForwardedTouchGate.isInjectionPending()} " +
+                    "echo=${ModuleForwardedTouchGate.isInjectedEcho(rawX, rawY)}"
+            )
             OverlayPassthrough.run(
                 hideTriggers = ::hideFloatBallOverlaysForPassthrough,
                 showTriggers = ::restoreFloatBallOverlaysAfterPassthrough,
@@ -2847,12 +2863,18 @@ object FloatBallOverlay {
             return
         }
         if (forceReAdd) {
+            val startedAt = android.os.SystemClock.elapsedRealtime()
             runCatching {
                 wm.removeView(view)
+                EdgeDiag.log("zorder", "窗口 remove+add: ${params.title} 开始")
                 wm.addView(view, params)
                 view.requestLayout()
                 view.invalidate()
             }.onFailure { Log.w(TAG, "bringOverlayToFront forceReAdd failed", it) }
+            EdgeDiag.log(
+                "zorder",
+                "窗口 remove+add: ${params.title} 完成 cost=${android.os.SystemClock.elapsedRealtime() - startedAt}ms"
+            )
             com.slideindex.app.perf.OverlayDrawProbe.attach(view, "ball-front")
             return
         }

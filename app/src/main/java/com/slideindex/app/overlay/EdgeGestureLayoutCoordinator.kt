@@ -97,7 +97,11 @@ internal class EdgeGestureLayoutCoordinator(
 
     fun needsPresentationDirectTouch(): Boolean {
         if (gestureSession.panelMode() != OverlayPanelMode.NONE) return true
-        if (adjustPanelController.hasAdjustPanel()) return true
+        // 退场动画期间不再需要直触：那 160ms 里任何落在屏上的触摸都会被这扇全屏窗吃掉，
+        // 用户感受就是"条快消失时点哪都没反应"。
+        if (adjustPanelController.hasAdjustPanel() && !adjustPanelController.isDismissing()) {
+            return true
+        }
         if (previewModeProvider()) return false
         if (OverlayTrampolineGuard.blocksOverlayPresentationTouch()) return false
         if (quickLauncherController.isComposeOverlayDialogShowing() ||

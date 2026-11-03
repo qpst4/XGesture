@@ -14,7 +14,18 @@ internal class AdjustPanelTouchHandler(
     private val host get() = ctrl.host
 
     fun handleTouch(event: MotionEvent, localX: Float, localY: Float): Boolean {
-        if (ctrl.adjustPanelDismissing) return false
+        if (ctrl.adjustPanelDismissing) {
+            // 退场动画期间窗口还没让出触摸：这一拍必须记下来，否则用户只会说"点哪都没反应"。
+            val action = event.actionMasked
+            if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_UP) {
+                com.slideindex.app.diagnostic.EdgeDiag.log(
+                    "touchDrop",
+                    "adjustPanelDismissing action=${MotionEvent.actionToString(action)} " +
+                        "raw=(${event.rawX},${event.rawY}) → 吞掉（窗口尚未让出触摸）"
+                )
+            }
+            return false
+        }
         val state = ctrl.adjustPanelState ?: return false
         val density = host.density()
         when (event.actionMasked) {

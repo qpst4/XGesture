@@ -29,7 +29,7 @@ import java.time.format.DateTimeFormatter
  */
 object EdgeDiag {
 
-    private const val MAX_LINES = 1500
+    private const val MAX_LINES = 4000
     private const val LOG_TAG = "EdgeDiag"
     private const val STACK_FRAMES = 6
 

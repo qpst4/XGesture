@@ -455,9 +455,31 @@ class EdgeGestureOverlayView(
 
     @SuppressLint("ClickableViewAccessibility") // Overlay gesture surface; not a clickable control
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (layoutCoordinator.composeOverlayDialogShowing()) return false
-        if (!needsPresentationDirectTouch()) return false
+        if (layoutCoordinator.composeOverlayDialogShowing()) {
+            logDroppedTouch(event, "composeDialogShowing")
+            return false
+        }
+        if (!needsPresentationDirectTouch()) {
+            logDroppedTouch(event, "notDirectTouch")
+            return false
+        }
         return handleOverlayTouch(event)
+    }
+
+    /**
+     * 全屏窗收到了触摸却没人处理 —— 这一拍就是用户眼里的「点哪都没反应」。
+     *
+     * 只在 DOWN / UP 打，避免 MOVE 刷屏；坐标、当前状态一起打出来，能直接对上"哪一扇窗吃掉了它"。
+     */
+    private fun logDroppedTouch(event: MotionEvent, reason: String) {
+        val action = event.actionMasked
+        if (action != MotionEvent.ACTION_DOWN && action != MotionEvent.ACTION_UP) return
+        EdgeDiag.log(
+            "touchDrop",
+            "$reason action=${MotionEvent.actionToString(action)} raw=(${event.rawX},${event.rawY}) " +
+                "panelMode=${gestureSession.panelMode()} adjust=${hasAdjustPanel()} " +
+                "dismissing=${adjustPanelController.isDismissing()} session=${gestureSession.isActive()}"
+        )
     }
 
     fun applyGestureTrackingLayout(bounds: CollapsedWindowBounds) =

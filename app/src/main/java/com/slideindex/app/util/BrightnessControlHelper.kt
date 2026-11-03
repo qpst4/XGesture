@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.provider.Settings
 import android.util.Log
+import com.slideindex.app.privilege.PrivilegeGateway
 import kotlin.math.roundToInt
 
 
@@ -172,8 +173,16 @@ object BrightnessControlHelper {
     }
 
     /**
-     * @param duringGesture 滑动过程中为 true：仅快速写 screen_brightness，不走 shell / adj。
-     * @param commitAutoAdj 手势结束时为 true：在后台尽力同步 adj，不阻塞、不切换亮度模式。
+     * 写入亮度。
+     *
+     * **通道优先级由 ROM 行为决定，不是由权限决定**：
+     * ColorOS 16 上「应用身份」写 `screen_brightness` / `screen_auto_brightness_adj` 会被静默忽略
+     * （Settings.putInt 返回 true，但屏幕不动）；真正生效的是 `settings put`（shell 身份）写
+     * `screen_auto_brightness_adj`。旧版本正是在提交时走 shell 写 adj 才"松手能看到变化"。
+     *
+     * @param duringGesture 滑动过程中为 true：自动亮度下**只写 adj**（screen_brightness 在自动
+     *   亮度下由系统自己输出，写了也没用），减少每次 shell 的负载。
+     * @param commitAutoAdj 手势结束时为 true：亮度值 + 曲线偏移一起提交，保证能持久。
      */
     fun writeBrightnessFraction(
         context: Context,
@@ -184,16 +193,17 @@ object BrightnessControlHelper {
         if (!hasAccess(context)) return false
         val appContext = context.applicationContext
         val clamped = fraction.coerceIn(0f, 1f)
-        val synced = writeManualBrightnessFraction(
+        val autoMode = readAutoBrightnessEnabled(appContext)
+        val adj = if (autoMode) fractionToAdj(clamped) else null
+        // 自动亮度下、且还在地势中：只写 adj（亮度值由系统输出，写它只会白花一次 shell）
+        val includeBrightness = commitAutoAdj || !autoMode
+        return writeManualBrightnessFraction(
             context = appContext,
             clamped = clamped,
+            adj = adj,
+            includeBrightness = includeBrightness,
             logSuccess = !duringGesture,
-            allowShell = !duringGesture,
         )
-        if (commitAutoAdj && readAutoBrightnessEnabled(appContext)) {
-            scheduleAutoBrightnessAdjCommit(appContext, clamped)
-        }
-        return synced
     }
 
     fun applyBrightnessFraction(context: Context, fraction: Float): Boolean =
@@ -202,8 +212,9 @@ object BrightnessControlHelper {
     private fun writeManualBrightnessFraction(
         context: Context,
         clamped: Float,
+        adj: Float? = null,
+        includeBrightness: Boolean = true,
         logSuccess: Boolean = true,
-        allowShell: Boolean = true,
     ): Boolean {
         val appContext = context.applicationContext
         val max = brightnessMax(appContext)
@@ -213,80 +224,103 @@ object BrightnessControlHelper {
         } else {
             (min + (max - min) * clamped).roundToInt().coerceIn(min, max)
         }
+        val targetAdj = adj?.coerceIn(-1f, 1f)
 
         var synced = false
+        var path = "none"
         val canWriteSettings = PermissionHelper.canWriteSettings(appContext) ||
             SecureSettingsHelper.hasWriteSecureSettings(appContext)
 
-        // 只写 int 这一个通道。
+        // ① **shell 优先**。
         //
-        // 曾经同时写 screen_brightness_float：Android 12+ 的 BrightnessSynchronizer 会把两个
-        // setting 互相换算、互相回写，谁后写谁生效，两个通道的量纲一旦不一致就成了自己覆盖自己。
-        // 业界第三方（如 SideGesture）也只写 int，float 只读不写。
-        if (canWriteSettings) {
-            synced = runCatching {
-                Settings.System.putInt(
-                    appContext.contentResolver,
-                    Settings.System.SCREEN_BRIGHTNESS,
-                    targetIntLevel,
-                )
-            }.getOrDefault(false)
+        // 真机实测（ColorOS 16 / OnePlus PJZ110）：应用身份 Settings.putInt(screen_brightness)
+        // 与 putFloat(screen_auto_brightness_adj) 都返回 true，但屏幕纹丝不动 —— ROM 只认
+        // shell/system 身份的写。旧版本在提交时用 shell 写 adj，所以"松手能看到一次变化"；
+        // 如果把通道换成 Settings，表现就是"任何调节都不生效"。
+        if (TaskManagerUtil.hasPermission()) {
+            val command = buildString {
+                if (includeBrightness) {
+                    append("settings put system screen_brightness ").append(targetIntLevel)
+                }
+                if (targetAdj != null) {
+                    if (isNotEmpty()) append(" && ")
+                    append("settings put system ")
+                    append(SCREEN_AUTO_BRIGHTNESS_ADJ).append(' ').append(targetAdj)
+                }
+            }
+            if (command.isNotEmpty()) {
+                synced = TaskManagerUtil.runShellCommandLine(
+                    command = command,
+                    useRoot = PrivilegeGateway.isRootMode(),
+                ).success
+                if (synced) {
+                    path = when {
+                        includeBrightness && targetAdj != null -> "shell(brightness+adj)"
+                        includeBrightness -> "shell(brightness)"
+                        else -> "shell(adj)"
+                    }
+                }
+            }
         }
-        if (!synced && allowShell && TaskManagerUtil.hasPermission()) {
-            synced = TaskManagerUtil.runShellCommand(
-                "settings",
-                "put",
-                "system",
-                "screen_brightness",
-                targetIntLevel.toString(),
-            )
+
+        // ② 没有 shell、或 shell 失败时，才退回 Settings（在部分 ROM 上这条通道会被忽略）。
+        //
+        // 只写 int 这一个通道：Android 12+ 的 BrightnessSynchronizer 会把
+        // screen_brightness / screen_brightness_float 互相换算、互相回写，
+        // 两个通道量纲不一致就成了自己覆盖自己。float 只读不写。
+        if (!synced && canWriteSettings) {
+            if (includeBrightness) {
+                synced = runCatching {
+                    Settings.System.putInt(
+                        appContext.contentResolver,
+                        Settings.System.SCREEN_BRIGHTNESS,
+                        targetIntLevel,
+                    )
+                }.getOrDefault(false)
+                if (synced) path = "settings"
+            }
+            if (targetAdj != null) {
+                runCatching {
+                    Settings.System.putFloat(
+                        appContext.contentResolver,
+                        SCREEN_AUTO_BRIGHTNESS_ADJ,
+                        targetAdj,
+                    )
+                }
+            }
+            if (!includeBrightness && targetAdj != null) {
+                synced = true
+                path = "settings(adj)"
+            }
         }
+        lastWritePath = path
         if (synced && logSuccess) {
-            Log.d(TAG, "manual brightness set to $targetIntLevel (fraction=$clamped, max=$max)")
+            Log.d(
+                TAG,
+                "manual brightness set to $targetIntLevel (fraction=$clamped, max=$max, " +
+                    "adj=$targetAdj, includeBrightness=$includeBrightness, path=$path)",
+            )
         }
         return synced
     }
 
-    private fun scheduleAutoBrightnessAdjCommit(context: Context, fraction: Float) {
+    /** 诊断用：最近一次实际走通的通道。 */
+    @Volatile
+    var lastWritePath: String = "-"
+        private set
+
+    /** 诊断用：量程 / 当前值 / 亮度模式 / 写权限，一次说清"这条机器上能怎么写"。 */
+    fun describeScale(context: Context): String {
         val appContext = context.applicationContext
-        val adj = fractionToAdj(fraction)
-        brightnessAdjExecutor.execute {
-            writeAutoBrightnessAdjBestEffort(appContext, adj)
-        }
+        val max = brightnessMax(appContext)
+        val min = writableMin(appContext, max)
+        val level = runCatching {
+            Settings.System.getInt(appContext.contentResolver, Settings.System.SCREEN_BRIGHTNESS, -1)
+        }.getOrDefault(-1)
+        return "range=$min..$max level=$level auto=${readAutoBrightnessEnabled(appContext)} " +
+            "canWriteSettings=${PermissionHelper.canWriteSettings(appContext)} " +
+            "shizuku=${TaskManagerUtil.hasPermission()}"
     }
-
-    private fun writeAutoBrightnessAdjBestEffort(context: Context, adj: Float) {
-        val clamped = adj.coerceIn(-1f, 1f)
-        if (TaskManagerUtil.hasPermission() && writeAdjViaShell(clamped)) {
-            Log.d(TAG, "auto brightness adj committed via shell: $clamped")
-            return
-        }
-        val canWriteSettings = PermissionHelper.canWriteSettings(context) ||
-            SecureSettingsHelper.hasWriteSecureSettings(context)
-        if (canWriteSettings) {
-            runCatching {
-                if (Settings.System.putFloat(
-                        context.contentResolver,
-                        SCREEN_AUTO_BRIGHTNESS_ADJ,
-                        clamped,
-                    )
-                ) {
-                    Log.d(TAG, "auto brightness adj committed via Settings: $clamped")
-                }
-            }.onFailure { error ->
-                Log.w(TAG, "auto brightness adj commit failed", error)
-            }
-        }
-    }
-
-    private fun writeAdjViaShell(adj: Float): Boolean =
-        TaskManagerUtil.runShellCommand(
-            "settings",
-            "put",
-            "system",
-            SCREEN_AUTO_BRIGHTNESS_ADJ,
-            adj.toString(),
-        )
 
 
 
@@ -487,8 +521,6 @@ object BrightnessControlHelper {
     /** 运行期观察到的最大亮度读数：只用来抬高上限，不压低。 */
     @Volatile
     private var observedMaxLevel = 0
-
-    private val brightnessAdjExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
 
 }
 

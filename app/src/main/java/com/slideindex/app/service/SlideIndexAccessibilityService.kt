@@ -207,6 +207,9 @@ class SlideIndexAccessibilityService : AccessibilityService() {
          * 只读 OverlayManager 维护的可能力掩码（volatile），可在 binder 线程安全调用。
          */
         fun canHandleForwardedSide(sideId: Int): Boolean {
+            // 注入窗口内一律"不接"：让模块放行我们注入的那一击，直达目标应用。
+            // （模块对该查询有 1s 缓存，这只是尽力而为；真正的兜底是 handleModuleGestureTouch 里的回声丢弃。）
+            if (com.slideindex.app.overlay.ModuleForwardedTouchGate.isInjectionPending()) return false
             val host = instance?.edgeOverlayHost ?: return false
             val side = sideId.toPanelSideOrNull() ?: return false
             return host.isForwardingCapable(side)
@@ -220,6 +223,7 @@ class SlideIndexAccessibilityService : AccessibilityService() {
          */
         fun canHandleForwardedTargetAt(target: Int, x: Float, y: Float): Boolean {
             instance ?: return false
+            if (com.slideindex.app.overlay.ModuleForwardedTouchGate.isInjectionPending()) return false
             return when (target) {
                 ModuleHookBridgeContract.TARGET_FLOAT_BALL,
                 ModuleHookBridgeContract.TARGET_FLOAT_LINE,
@@ -257,7 +261,17 @@ class SlideIndexAccessibilityService : AccessibilityService() {
             } else if (cornerHost == null && !floatBallTarget) {
                 return false
             }
-            com.slideindex.app.overlay.ModuleForwardedTouchGate.markForwarded()
+            // 注入回声：我们自己刚注入的那一击被模块又转发回来。丢掉，不能进第二次手势解析，
+            // 否则会再触发同一个动作（老实现用"最近 1500ms 有转发就禁止放行"来防这个，
+            // 代价是接管区里所有单击都穿透不了）。
+            if (com.slideindex.app.overlay.ModuleForwardedTouchGate.isInjectedEcho(x, y)) {
+                EdgeDiag.log(
+                    "module",
+                    "丢弃注入回声 sessionId=$sessionId target=$sideId " +
+                        "action=${android.view.MotionEvent.actionToString(action)} at=($x,$y)"
+                )
+                return true
+            }
             if (action == android.view.MotionEvent.ACTION_DOWN) {
                 service.activeForwardedTarget = sideId
             }
@@ -285,7 +299,6 @@ class SlideIndexAccessibilityService : AccessibilityService() {
 
         fun handleModuleGestureSessionEnd(sessionId: Long, reason: Int) {
             val service = instance ?: return
-            com.slideindex.app.overlay.ModuleForwardedTouchGate.markForwarded()
             val target = service.activeForwardedTarget
             service.activeForwardedTarget = NO_FORWARDED_TARGET
             // 「正常终止」与「流被打断」必须分开处理：
@@ -1012,8 +1025,55 @@ class SlideIndexAccessibilityService : AccessibilityService() {
         // 预热分享面板的目标列表（文本分享最常见）：延迟几秒，避开服务连接高峰期；命中缓存时是空操作。
         com.slideindex.app.overlay.share.ShareSheetTargetCache.warmUpAsync(this)
         notifyModuleHostState(ready = true)
+        logDiagnosticEnvironment()
         Log.i(TAG, "onServiceConnected: edge overlays attached")
     }
+
+    /**
+     * 诊断包的环境头：把「这条机器上到底能不能按预期写/接管」一次性写进埋点。
+     *
+     * 排查时最费时间的三件事——音量能不能绝对设置、亮度能不能在滑动中实时写、模块有没有真的接管——
+     * 全都在这里给出当场值，不用再靠猜。
+     */
+    private fun logDiagnosticEnvironment() {
+        runCatching {
+            val settings = deps.settingsRepository.readSnapshot()
+            val volumeScale = runCatching {
+                val manager = getSystemService(android.media.AudioManager::class.java)
+                if (manager == null) "audio=null"
+                else com.slideindex.app.util.VolumeControlHelper.describeScale(
+                    manager,
+                    android.media.AudioManager.STREAM_MUSIC,
+                )
+            }.getOrElse { "audio=err:${it.javaClass.simpleName}" }
+            EdgeDiag.marker("环境快照")
+            EdgeDiag.log("env", "音量量程/步长: $volumeScale")
+            EdgeDiag.log("env", "亮度: ${com.slideindex.app.util.BrightnessControlHelper.describeScale(this)}")
+            EdgeDiag.log(
+                "env",
+                "权限: 通知策略=${diagYesNo(com.slideindex.app.util.PermissionHelper.hasNotificationPolicyAccess(this))} " +
+                    "悬浮窗=${diagYesNo(com.slideindex.app.util.PermissionHelper.canDrawOverlays(this))} " +
+                    "写系统设置=${diagYesNo(com.slideindex.app.util.PermissionHelper.canWriteSettings(this))} " +
+                    "Shizuku=${diagYesNo(com.slideindex.app.util.TaskManagerUtil.hasPermission())}",
+            )
+            EdgeDiag.log(
+                "env",
+                "接管设置: 侧边=${diagYesNo(settings.systemGestureTakeoverSides)} " +
+                    "顶部=${diagYesNo(settings.systemGestureTakeoverTop)} " +
+                    "底部=${diagYesNo(settings.systemGestureTakeoverBottom)} " +
+                    "拦截系统返回=${diagYesNo(settings.interceptSystemBackGesture)}",
+            )
+            val bridge = com.slideindex.app.xposed.bridge.ModuleBridgeStatusStore.read(this)
+            EdgeDiag.log(
+                "env",
+                "模块回执: active=${bridge.active} state=${bridge.state} detail=${bridge.detail}",
+            )
+        }.onFailure {
+            EdgeDiag.log("env", "环境快照失败 ${it.javaClass.simpleName}: ${it.message}")
+        }
+    }
+
+    private fun diagYesNo(value: Boolean): String = if (value) "是" else "否"
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)

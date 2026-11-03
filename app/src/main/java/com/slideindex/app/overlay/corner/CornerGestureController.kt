@@ -658,8 +658,12 @@ internal class CornerGestureController(
     }
 
     private fun performTapPassthrough(rawX: Float, rawY: Float) {
-        // 输入层接管期间禁止注入放行：注入事件会再次进入模块的过滤器，形成回环。
-        if (ModuleForwardedTouchGate.isRecent()) return
+        // 只拦注入回声，不拦用户新点击（旧实现 1500ms 全拦 → 接管区里单击必失效）。
+        com.slideindex.app.diagnostic.EdgeDiag.log(
+            "passthrough",
+            "角轮盘放行 at=($rawX,$rawY) pending=${ModuleForwardedTouchGate.isInjectionPending()} " +
+                "echo=${ModuleForwardedTouchGate.isInjectedEcho(rawX, rawY)}"
+        )
         OverlayPassthrough.run(
             hideTriggers = {
                 restoreCaptureSize()

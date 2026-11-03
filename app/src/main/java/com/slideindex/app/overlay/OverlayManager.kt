@@ -699,11 +699,14 @@ class OverlayManager(
     }
 
     private fun performClickPassthrough(rawX: Float, rawY: Float, onComplete: () -> Unit) {
-        // 输入层接管期间禁止注入放行：注入事件会再次进入模块的过滤器，形成回环。
-        if (ModuleForwardedTouchGate.isRecent()) {
-            onComplete()
-            return
-        }
+        // 旧实现在这里用「最近 1500ms 有过模块转发」整段跳过注入——接管区里的单击必然由模块转发，
+        // 于是每次单击都被跳过（只有振动、点击不生效）。现在只拦**我们自己注入的回声**
+        // （见 ModuleForwardedTouchGate），用户的新点击一律放行。
+        EdgeDiag.log(
+            "passthrough",
+            "放行请求 at=($rawX,$rawY) injectionPending=${ModuleForwardedTouchGate.isInjectionPending()} " +
+                "echo=${ModuleForwardedTouchGate.isInjectedEcho(rawX, rawY)}"
+        )
         OverlayPassthrough.run(
             hideTriggers = ::suspendEdgeCapturesForPassthrough,
             showTriggers = ::resumeEdgeCapturesAfterPassthrough,
