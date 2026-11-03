@@ -4475,6 +4475,7 @@ adb 模式应返回 uid=2000。
     <string name="app_carousel_close_all">全部关闭</string>
     <string name="app_carousel_close_all_hint">松手关闭所有应用</string>
     <string name="app_carousel_cancel_down_hint">下滑关闭面板</string>
+    <string name="app_carousel_cancel_overshoot_hint">松手取消</string>
     <string name="app_carousel_settings_title">卡片应用切换器</string>
     <string name="app_carousel_settings_desc">从屏幕中心向上或向下滑动超过设定距离后松手，可取消切换</string>
     <string name="app_carousel_cancel_distance">取消距离</string>

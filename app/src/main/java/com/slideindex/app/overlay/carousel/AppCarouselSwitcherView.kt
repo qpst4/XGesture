@@ -53,7 +53,7 @@ enum class CarouselVerticalAction {
  * 2. 卡片行固定显示在屏幕纵向正中央；
  * 3. 手指在全屏任意位置左右滑动即可控制轮播，无需点在卡片上；
  * 4. 手指向上滑动依次激活：分屏（Split screen）、小窗（Floating）、关闭（Close app）；
- * 5. 手指向下滑动超过设定阈值直接关闭面板（Dismiss）；
+ * 5. 向上越过关闭项或向下滑动均进入取消状态，松手关闭面板；
  * 6. 自适应 Palette 主色调 Squircle 卡片大图标 + 触感震动反馈。
  */
 @SuppressLint("ViewConstructor")
@@ -79,7 +79,9 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
     private var initialTouchY = 0f
     private var currentTouchX = 0f
     private var currentTouchY = 0f
+    private var isCancelled = false
     private var isDownCancelled = false
+    private var isUpOvershootCancelled = false
     private var selectedVerticalAction = CarouselVerticalAction.NONE
     private var scrollOffset = 0f
     private var targetScrollOffset = 0f
@@ -143,7 +145,9 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
         this.initialTouchY = anchorY
         this.currentTouchX = anchorX
         this.currentTouchY = anchorY
+        this.isCancelled = false
         this.isDownCancelled = false
+        this.isUpOvershootCancelled = false
         this.selectedVerticalAction = CarouselVerticalAction.NONE
         val screenW = resources.displayMetrics.widthPixels.toFloat()
         this.isRightTrigger = anchorX > screenW / 2f
@@ -274,38 +278,67 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
         currentTouchX = rawX
         currentTouchY = rawY
 
-        val centerY = if (height > 0) height / 2f else resources.displayMetrics.heightPixels / 2f
-        val offsetY = rawY - centerY
-        val downThreshold = carouselSettings.cancelDistanceDownPx(density)
+        // 以手指落点 initialTouchY 为相对基准，向上为正，向下为正
+        val upDist = initialTouchY - rawY
+        val downDist = rawY - initialTouchY
+
+        val downThreshold = (carouselSettings.cancelDistanceDownPx(density) * 0.75f)
+            .coerceIn(60f * density, 110f * density)
 
         // 1. 向下滑动取消判定
-        val shouldDownCancel = offsetY > downThreshold
-        if (shouldDownCancel != isDownCancelled) {
-            isDownCancelled = shouldDownCancel
-            animate().alpha(if (isDownCancelled) 0.35f else 1.0f).setDuration(120L).start()
-        }
+        val shouldDownCancel = downDist > downThreshold
 
-        // 2. 向上滑动动作档位判定（仅在非取消且选中非关闭所有卡片时有效）
+        // 2. 向上各档位区间与超出取消判定（界限放宽）
         val selectedItem = items.getOrNull(selectedIndex)
-        val newVerticalAction = if (!isDownCancelled && selectedItem != null && !selectedItem.isCloseAll && offsetY < 0) {
-            val upDist = -offsetY
-            when {
-                upDist >= 140f * density -> CarouselVerticalAction.CLOSE_APP
-                upDist >= 85f * density -> CarouselVerticalAction.FLOATING
-                upDist >= 35f * density -> CarouselVerticalAction.SPLIT_SCREEN
-                else -> CarouselVerticalAction.NONE
+        val d1 = 20f * density   // Split screen 起点
+        val d2 = 65f * density   // Floating 起点
+        val d3 = 110f * density  // Close 起点
+        val dCancel = 165f * density // 超出 Close 后的取消起点
+
+        val (newAction, shouldUpCancel) = if (!shouldDownCancel && selectedItem != null) {
+            if (!selectedItem.isCloseAll) {
+                when {
+                    upDist >= dCancel -> CarouselVerticalAction.NONE to true
+                    upDist >= d3 -> CarouselVerticalAction.CLOSE_APP to false
+                    upDist >= d2 -> CarouselVerticalAction.FLOATING to false
+                    upDist >= d1 -> CarouselVerticalAction.SPLIT_SCREEN to false
+                    else -> CarouselVerticalAction.NONE to false
+                }
+            } else {
+                // 针对 Close All 项，超出一定高度也允许向上甩出取消
+                if (upDist >= 110f * density) {
+                    CarouselVerticalAction.NONE to true
+                } else {
+                    CarouselVerticalAction.NONE to false
+                }
             }
         } else {
-            CarouselVerticalAction.NONE
+            CarouselVerticalAction.NONE to false
         }
 
-        if (newVerticalAction != selectedVerticalAction) {
-            selectedVerticalAction = newVerticalAction
+        val shouldCancel = shouldDownCancel || shouldUpCancel
+        if (shouldCancel != isCancelled) {
+            isCancelled = shouldCancel
+            isDownCancelled = shouldDownCancel
+            isUpOvershootCancelled = shouldUpCancel
+            animate().alpha(if (isCancelled) 0.35f else 1.0f).setDuration(120L).start()
+            if (isCancelled) {
+                appSettings?.let { HapticHelper.appTick(this, it) }
+            }
+        } else {
+            isDownCancelled = shouldDownCancel
+            isUpOvershootCancelled = shouldUpCancel
+        }
+
+        if (newAction != selectedVerticalAction) {
+            selectedVerticalAction = newAction
             appSettings?.let { HapticHelper.appTick(this, it) }
         }
 
-        // 3. 水平滑动切换应用（当处于普通中心区域时允许水平滑动选择应用）
-        if (!isDownCancelled && items.isNotEmpty() && selectedVerticalAction == CarouselVerticalAction.NONE) {
+        // 3. 水平滑动切换应用（方向锁定）：
+        // 当向上抬升达到 15dp 或者已经处于取消状态时，锁定横向滚动，避免斜向上滑时误切应用
+        val isVerticalGestureActive = upDist >= 15f * density || isCancelled
+        if (!isVerticalGestureActive && items.isNotEmpty()) {
             val deltaX = rawX - initialTouchX
             val baseIndex = if (items.size > 2) 1 else 0
             val screenW = resources.displayMetrics.widthPixels.toFloat()
@@ -363,7 +396,7 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
     }
 
     fun onExternalUp(rawX: Float, rawY: Float, cancelled: Boolean) {
-        if (cancelled || isDownCancelled) {
+        if (cancelled || isCancelled) {
             onDismissRequest()
             return
         }
@@ -500,7 +533,7 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
             }
             if (itemCenterX < -cardBaseWidth || itemCenterX > width + cardBaseWidth) continue
 
-            val isSelected = i == selectedIndex && !isDownCancelled
+            val isSelected = i == selectedIndex && !isCancelled
             val scale = if (isSelected) 1.22f else 1.0f
             val cardW = cardBaseWidth * scale
             val cardH = cardBaseHeight * scale
@@ -573,6 +606,7 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
                     label = context.getString(R.string.app_carousel_action_split_screen),
                     action = CarouselVerticalAction.SPLIT_SCREEN,
                     isSelected = selectedVerticalAction == CarouselVerticalAction.SPLIT_SCREEN,
+                    isDimmed = isUpOvershootCancelled,
                 )
 
                 // 中间：Floating
@@ -585,6 +619,7 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
                     label = context.getString(R.string.app_carousel_action_floating),
                     action = CarouselVerticalAction.FLOATING,
                     isSelected = selectedVerticalAction == CarouselVerticalAction.FLOATING,
+                    isDimmed = isUpOvershootCancelled,
                 )
 
                 // 最上：Close
@@ -597,11 +632,23 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
                     label = context.getString(R.string.app_carousel_action_close),
                     action = CarouselVerticalAction.CLOSE_APP,
                     isSelected = selectedVerticalAction == CarouselVerticalAction.CLOSE_APP,
+                    isDimmed = isUpOvershootCancelled,
                 )
+
+                // 如果向上滑出超过 Close 项进入取消：在最上方显示“松手取消”
+                if (isUpOvershootCancelled) {
+                    val cancelY = bottom3 - pillHNormal - 16f * density
+                    canvas.drawText(context.getString(R.string.app_carousel_cancel_overshoot_hint), width / 2f, cancelY, hintPaint)
+                }
             } else {
                 // 选中 Close All 时的上方提示
                 val hintY = selectedTopY - 24f * density
-                canvas.drawText(context.getString(R.string.app_carousel_close_all_hint), width / 2f, hintY, hintPaint)
+                val hintText = if (isUpOvershootCancelled) {
+                    context.getString(R.string.app_carousel_cancel_overshoot_hint)
+                } else {
+                    context.getString(R.string.app_carousel_close_all_hint)
+                }
+                canvas.drawText(hintText, width / 2f, hintY, hintPaint)
             }
         }
 
@@ -619,6 +666,7 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
         label: String,
         action: CarouselVerticalAction,
         isSelected: Boolean,
+        isDimmed: Boolean = false,
     ) {
         val pillW = (if (isSelected) 140f else 130f) * density
         val pillH = (if (isSelected) 36f else 32f) * density
@@ -632,7 +680,9 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
         optionRect.set(left, top, right, bottom)
 
         // 背景
-        optionPlatePaint.color = if (isSelected) {
+        optionPlatePaint.color = if (isDimmed) {
+            0x44212121.toInt()
+        } else if (isSelected) {
             when (action) {
                 CarouselVerticalAction.SPLIT_SCREEN -> 0xEE00897B.toInt()
                 CarouselVerticalAction.FLOATING -> 0xEE3949AB.toInt()
@@ -645,7 +695,10 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
         canvas.drawRoundRect(optionRect, pillCorner, pillCorner, optionPlatePaint)
 
         // 描边
-        if (isSelected) {
+        if (isDimmed) {
+            optionStrokePaint.color = 0x18FFFFFF.toInt()
+            optionStrokePaint.strokeWidth = 1f * density
+        } else if (isSelected) {
             optionStrokePaint.color = Color.WHITE
             optionStrokePaint.strokeWidth = 2f * density
         } else {
@@ -662,7 +715,11 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
         val iconBottom = iconCenterY + iconSize / 2f
         val iconRight = iconLeft + iconSize
 
-        optionIconPaint.color = if (isSelected) Color.WHITE else 0xCCFFFFFF.toInt()
+        optionIconPaint.color = when {
+            isDimmed -> 0x55FFFFFF.toInt()
+            isSelected -> Color.WHITE
+            else -> 0xCCFFFFFF.toInt()
+        }
         when (action) {
             CarouselVerticalAction.SPLIT_SCREEN -> {
                 val gap = 2f * density
@@ -685,8 +742,12 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
         }
 
         // 文字
-        optionTextPaint.color = if (isSelected) Color.WHITE else 0xCCFFFFFF.toInt()
-        optionTextPaint.isFakeBoldText = isSelected
+        optionTextPaint.color = when {
+            isDimmed -> 0x55FFFFFF.toInt()
+            isSelected -> Color.WHITE
+            else -> 0xCCFFFFFF.toInt()
+        }
+        optionTextPaint.isFakeBoldText = isSelected && !isDimmed
         val textX = iconRight + 10f * density
         val textY = iconCenterY - (optionTextPaint.descent() + optionTextPaint.ascent()) / 2f
         canvas.drawText(label, textX, textY, optionTextPaint)
