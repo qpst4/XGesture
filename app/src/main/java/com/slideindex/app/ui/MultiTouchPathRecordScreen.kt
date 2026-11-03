@@ -1,8 +1,5 @@
 package com.slideindex.app.ui
 
-import android.app.Activity
-import android.graphics.Rect
-import android.os.Build
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -36,7 +32,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.gesture.multitouch.PathPoint
 import com.slideindex.app.gesture.multitouch.PathStroke
@@ -67,21 +62,6 @@ fun MultiTouchPathRecordScreen(
     DisposableEffect(Unit) {
         onRecordingStateChange(true)
         onDispose { onRecordingStateChange(false) }
-    }
-
-    val view = LocalView.current
-    DisposableEffect(Unit) {
-        val decor = (view.context as? Activity)?.window?.decorView
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && decor != null) {
-            decor.post {
-                decor.systemGestureExclusionRects = listOf(Rect(0, 0, decor.width, decor.height))
-            }
-        }
-        onDispose {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && decor != null) {
-                decor.systemGestureExclusionRects = emptyList()
-            }
-        }
     }
 
     val editing = initialStrokes.isNotEmpty()
@@ -128,7 +108,6 @@ fun MultiTouchPathRecordScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .systemGestureExclusion()
                     .clip(RoundedCornerShape(20.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .pointerInput(Unit) {
