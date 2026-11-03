@@ -133,15 +133,32 @@ class MultiTouchGestureSettingsStore @Inject constructor(
     private fun read(): MultiTouchGestureSettings {
         val all = prefs.all
         val raw = all[KEY_ENTRIES] as? String
-        val entries = if (!raw.isNullOrBlank()) {
-            parse(raw)
+        val entries = if (!raw.isNullOrBlank()) parse(raw) else migrateLegacy(all)
+        // 首次从旧版本升级时补一次默认条目（补过就标记，用户删除后不会复活）。
+        val defaultsMerged = all[KEY_DEFAULTS_MERGED] == true
+        val merged = if (defaultsMerged) {
+            entries
         } else {
-            migrateLegacy(all)
+            mergeDefaults(entries).also { value ->
+                if (raw.isNullOrBlank()) persist(value)
+                prefs.edit().putBoolean(KEY_DEFAULTS_MERGED, true).apply()
+            }
         }
         return MultiTouchGestureSettings(
             enabled = prefs.getBoolean(KEY_ENABLED, false),
-            entries = entries.ifEmpty { MultiTouchGestureSettings.defaultEntries() },
+            entries = merged.ifEmpty { MultiTouchGestureSettings.defaultEntries() },
         )
+    }
+
+    /** 迁移后把缺失的默认条目补回来（旧版本默认就是这些绑定）。 */
+    private fun mergeDefaults(
+        entries: List<MultiTouchGestureEntry>,
+    ): List<MultiTouchGestureEntry> {
+        if (entries.isEmpty()) return MultiTouchGestureSettings.defaultEntries()
+        val existing = entries.map { it.kind to it.fingerCount }.toSet()
+        val defaults = MultiTouchGestureSettings.defaultEntries()
+            .filter { (it.kind to it.fingerCount) !in existing }
+        return entries + defaults
     }
 
     /** 旧版本存的是固定绑定表 + 路径列表；这里一次性转成条目。 */
@@ -256,6 +273,7 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         const val PREFS_NAME = "multitouch_gesture_settings"
         const val KEY_ENABLED = "enabled"
         const val KEY_ENTRIES = "gesture_entries"
+        const val KEY_DEFAULTS_MERGED = "defaults_merged"
     }
 }
 

@@ -56,7 +56,7 @@ object MultiTouchGestureFeedback {
                     PixelFormat.TRANSLUCENT,
                 ).apply {
                     gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-                    y = (128 * density).toInt()
+                    y = (64 * density).toInt()
                 }
                 wm.addView(label, params)
                 view = label

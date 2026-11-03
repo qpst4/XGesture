@@ -1,20 +1,23 @@
 package com.slideindex.app.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,10 +28,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import com.slideindex.app.gesture.GestureAction
+import androidx.compose.ui.unit.sp
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
 import com.slideindex.app.gesture.multitouch.MultiTouchGestureEntry
 import com.slideindex.app.gesture.multitouch.displayName
@@ -36,6 +41,7 @@ import com.slideindex.app.multitouch.MultiTouchGestureSettings
 import com.slideindex.app.multitouch.MultiTouchStatus
 import com.slideindex.app.multitouch.encodePathStrokes
 import com.slideindex.app.multitouch.multiTouchPresetKinds
+import com.slideindex.app.ui.miuix.MiuixArrowRow
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.MiuixNavigationRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
@@ -44,11 +50,21 @@ import com.slideindex.app.ui.settings.components.StatusRow
 import com.slideindex.app.ui.settings.components.StatusTone
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
+import top.yukonga.miuix.kmp.window.WindowDialog
+
+private val PreviewColors = listOf(
+    Color(0xFF1E88E5),
+    Color(0xFF43A047),
+    Color(0xFFE53935),
+    Color(0xFFFB8C00),
+    Color(0xFF8E24AA),
+)
 
 /**
  * 多指手势设置页（Shizuku 观察模式）。
  *
  * 手势条目 = 类型 + 接触点数 + 动作；“记录手势”只是其中一种类型。
+ * 列表项显示手势预览；点条目打开编辑弹窗（预览 + 动作 + 删除）。
  */
 @Composable
 fun MultiTouchGestureSettingsScreen(
@@ -63,7 +79,7 @@ fun MultiTouchGestureSettingsScreen(
 ) {
     var showKindPicker by remember { mutableStateOf(false) }
     var pendingKind by remember { mutableStateOf<MultiPointerGesture?>(null) }
-    var entryMenu by remember { mutableStateOf<MultiTouchGestureEntry?>(null) }
+    var editingEntry by remember { mutableStateOf<MultiTouchGestureEntry?>(null) }
 
     SettingsScreenScaffold(title = "多指手势", onBack = onBack) {
         groupedCardItems(
@@ -118,11 +134,10 @@ fun MultiTouchGestureSettingsScreen(
                 settings.entries.forEach { entry ->
                     add(
                         settingsCardScopeItem("multitouch-entry-${entry.id}") {
-                            MiuixNavigationRow(
-                                title = "${entry.fingerCount} 指 · ${entry.kind.displayName()}",
-                                summary = gestureActionLabel(entry.action),
+                            EntryRow(
+                                entry = entry,
                                 enabled = settings.enabled,
-                                onClick = { entryMenu = entry },
+                                onClick = { editingEntry = entry },
                             )
                         }
                     )
@@ -137,109 +152,207 @@ fun MultiTouchGestureSettingsScreen(
     }
 
     if (showKindPicker) {
-        GestureKindPickerDialog(
-            onDismiss = { showKindPicker = false },
-            onPick = { kind ->
-                showKindPicker = false
-                if (kind == MultiPointerGesture.PATH) {
-                    onOpenRecorder()
-                } else {
-                    pendingKind = kind
-                }
-            },
-        )
-    }
-
-    val kind = pendingKind
-    if (kind != null) {
-        FingerCountPickerDialog(
-            kind = kind,
-            onDismiss = { pendingKind = null },
-            onPick = { fingers ->
-                pendingKind = null
-                onOpenActionPick(kind, fingers, "")
-            },
-        )
-    }
-
-    val menuEntry = entryMenu
-    if (menuEntry != null) {
-        AlertDialog(
-            onDismissRequest = { entryMenu = null },
-            title = { Text("${menuEntry.fingerCount} 指 · ${menuEntry.kind.displayName()}") },
-            text = { Text(gestureActionLabel(menuEntry.action)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        entryMenu = null
-                        onOpenActionPick(
-                            menuEntry.kind,
-                            menuEntry.fingerCount,
-                            encodePathStrokes(menuEntry.pathStrokes),
-                        )
-                    },
-                ) { Text("修改动作") }
-            },
-            dismissButton = {
-                Row {
-                    TextButton(
-                        onClick = {
-                            entryMenu = null
-                            onRemoveEntry(menuEntry.id)
-                        },
-                    ) { Text("删除") }
-                    TextButton(onClick = { entryMenu = null }) { Text("取消") }
-                }
-            },
-        )
-    }
-}
-
-/** 选择手势：记录手势 + 预设类型（对齐常见多指手势工具的列表）。 */
-@Composable
-private fun GestureKindPickerDialog(
-    onDismiss: () -> Unit,
-    onPick: (MultiPointerGesture) -> Unit,
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            tonalElevation = 6.dp,
-            modifier = Modifier.fillMaxWidth(),
+        WindowDialog(
+            show = true,
+            title = "选择手势",
+            onDismissRequest = { showKindPicker = false },
         ) {
-            Column(modifier = Modifier.padding(vertical = 12.dp)) {
-                Text(
-                    "选择手势",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 460.dp)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                PickerRow(
+                    label = "✏️ 记录手势",
+                    onClick = {
+                        showKindPicker = false
+                        onOpenRecorder()
+                    },
                 )
-                Column(
+                Spacer(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(460.dp)
-                        .verticalScroll(rememberScrollState()),
-                ) {
+                        .padding(vertical = 6.dp)
+                        .height(1.dp)
+                        .background(MaterialTheme.colorScheme.outlineVariant),
+                )
+                multiTouchPresetKinds.forEach { kind ->
                     PickerRow(
-                        label = "✏️ 记录手势",
-                        onClick = { onPick(MultiPointerGesture.PATH) },
+                        label = kind.displayName(),
+                        onClick = {
+                            showKindPicker = false
+                            pendingKind = kind
+                        },
                     )
-                    Spacer(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp)
-                            .height(1.dp)
-                            .background(MaterialTheme.colorScheme.outlineVariant),
-                    )
-                    multiTouchPresetKinds.forEach { kind ->
-                        PickerRow(
-                            label = kind.displayName(),
-                            onClick = { onPick(kind) },
-                        )
-                    }
                 }
             }
         }
     }
+
+    val kind = pendingKind
+    if (kind != null) {
+        WindowDialog(
+            show = true,
+            title = "接触点",
+            summary = "${kind.displayName()}：选择手势触摸点的数量",
+            onDismissRequest = { pendingKind = null },
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    for (fingers in 1..5) {
+                        FingerCell(
+                            fingers = fingers,
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                pendingKind = null
+                                onOpenActionPick(kind, fingers, "")
+                            },
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                TextButton(
+                    onClick = { pendingKind = null },
+                    modifier = Modifier.align(Alignment.End),
+                ) { Text("取消") }
+            }
+        }
+    }
+
+    val editing = editingEntry
+    if (editing != null) {
+        WindowDialog(
+            show = true,
+            title = "编辑手势",
+            onDismissRequest = { editingEntry = null },
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                GesturePreview(
+                    entry = editing,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(140.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                MiuixArrowRow(
+                    title = "${editing.fingerCount} 指 · ${editing.kind.displayName()}",
+                    summary = gestureActionLabel(editing.action),
+                    onClick = {
+                        editingEntry = null
+                        onOpenActionPick(
+                            editing.kind,
+                            editing.fingerCount,
+                            encodePathStrokes(editing.pathStrokes),
+                        )
+                    },
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    TextButton(
+                        onClick = {
+                            editingEntry = null
+                            onRemoveEntry(editing.id)
+                        },
+                        modifier = Modifier.weight(1f),
+                    ) { Text("删除") }
+                    TextButton(
+                        onClick = { editingEntry = null },
+                        modifier = Modifier.weight(1f),
+                    ) { Text("完成") }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EntryRow(
+    entry: MultiTouchGestureEntry,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        GesturePreview(entry = entry, modifier = Modifier.size(44.dp))
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "${entry.fingerCount} 指 · ${entry.kind.displayName()}",
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Text(
+                text = gestureActionLabel(entry.action),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/** 手势预览：记录手势画轨迹，预设类型画方向符号。 */
+@Composable
+private fun GesturePreview(entry: MultiTouchGestureEntry, modifier: Modifier) {
+    if (entry.pathStrokes.isNotEmpty()) {
+        Canvas(modifier = modifier) {
+            val height = size.height
+            entry.pathStrokes.forEachIndexed { index, stroke ->
+                if (stroke.points.size < 2) return@forEachIndexed
+                val path = Path()
+                stroke.points.forEachIndexed { pointIndex, point ->
+                    val x = point.x * height
+                    val y = point.y * height
+                    if (pointIndex == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                }
+                drawPath(
+                    path = path,
+                    color = PreviewColors[index % PreviewColors.size],
+                    style = Stroke(width = 3.dp.toPx()),
+                )
+            }
+        }
+    } else {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text(
+                text = gestureSymbol(entry.kind),
+                fontSize = 20.sp,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+    }
+}
+
+private fun gestureSymbol(kind: MultiPointerGesture): String = when (kind) {
+    MultiPointerGesture.SWIPE_LEFT -> "←"
+    MultiPointerGesture.SWIPE_RIGHT -> "→"
+    MultiPointerGesture.SWIPE_UP -> "↑"
+    MultiPointerGesture.SWIPE_DOWN -> "↓"
+    MultiPointerGesture.SWIPE_UP_LEFT -> "↖"
+    MultiPointerGesture.SWIPE_UP_RIGHT -> "↗"
+    MultiPointerGesture.SWIPE_DOWN_LEFT -> "↙"
+    MultiPointerGesture.SWIPE_DOWN_RIGHT -> "↘"
+    MultiPointerGesture.PINCH -> "⇤"
+    MultiPointerGesture.SPREAD -> "⇥"
+    MultiPointerGesture.ROTATE_CLOCKWISE -> "↻"
+    MultiPointerGesture.ROTATE_COUNTER_CLOCKWISE -> "↺"
+    MultiPointerGesture.TAP -> "👆"
+    MultiPointerGesture.DOUBLE_TAP -> "👆²"
+    MultiPointerGesture.TRIPLE_TAP -> "👆³"
+    MultiPointerGesture.LONG_PRESS -> "✊"
+    MultiPointerGesture.PATH -> "✏️"
 }
 
 @Composable
@@ -250,70 +363,24 @@ private fun PickerRow(label: String, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 14.dp),
+            .padding(horizontal = 24.dp, vertical = 12.dp),
     )
-}
-
-/** 接触点：1–5。 */
-@Composable
-private fun FingerCountPickerDialog(
-    kind: MultiPointerGesture,
-    onDismiss: () -> Unit,
-    onPick: (Int) -> Unit,
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            tonalElevation = 6.dp,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text("接触点", style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    "${kind.displayName()}：选择手势触摸点的数量",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    for (fingers in 1..5) {
-                        FingerCell(
-                            fingers = fingers,
-                            modifier = Modifier.weight(1f),
-                            onClick = { onPick(fingers) },
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.align(Alignment.End),
-                ) { Text("取消") }
-            }
-        }
-    }
 }
 
 @Composable
 private fun FingerCell(fingers: Int, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+    Box(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick),
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = fingers.toString(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp),
         )
     }
 }
