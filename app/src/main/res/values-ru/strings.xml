@@ -3538,6 +3538,8 @@
     <string name="shell_panel_history_empty">Истории выполнения пока нет</string>
     <string name="shell_panel_history_exit_code">Код выхода %1$d</string>
     <string name="tile_gesture_switch">XGesture</string>
+    <string name="tile_shake_switch">XShake</string>
+    <string name="tile_shake_unavailable_hint">Сначала включите XGesture и службу специальных возможностей</string>
     <string name="shortcut_toggle_gesture">Переключить жесты</string>
     <string name="shortcut_toggle_float_ball">Переключить плавающий шарик</string>
     <string name="shortcut_notification_hub">Фильтр уведомлений</string>

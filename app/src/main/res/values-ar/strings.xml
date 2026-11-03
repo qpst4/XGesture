@@ -3383,6 +3383,8 @@
     <string name="shell_panel_history_empty">لا توجد سجلات تنفيذ</string>
     <string name="shell_panel_history_exit_code">رمز الخروج %1$d</string>
     <string name="tile_gesture_switch">XGesture</string>
+    <string name="tile_shake_switch">XShake</string>
+    <string name="tile_shake_unavailable_hint">يرجى تشغيل XGesture وخدمة إمكانية الوصول أولاً</string>
     <string name="shortcut_toggle_gesture">تبديل الإيماءة</string>
     <string name="shortcut_toggle_float_ball">تبديل الكرة العائمة</string>
     <string name="shortcut_notification_hub">مرشح الإشعارات</string>

@@ -3568,6 +3568,8 @@
     <string name="shell_panel_history_empty">暂无执行记录</string>
     <string name="shell_panel_history_exit_code">退出码 %1$d</string>
     <string name="tile_gesture_switch">X手势</string>
+    <string name="tile_shake_switch">X晃动</string>
+    <string name="tile_shake_unavailable_hint">请先开启 X手势及其无障碍服务</string>
     <string name="shortcut_toggle_gesture">开关手势</string>
     <string name="shortcut_toggle_float_ball">切换悬浮球</string>
     <string name="shortcut_notification_hub">通知滤盒</string>

@@ -3407,6 +3407,8 @@
     <string name="shell_panel_history_empty">実行履歴はまだありません</string>
     <string name="shell_panel_history_exit_code">終了コード %1$d</string>
     <string name="tile_gesture_switch">XGesture</string>
+    <string name="tile_shake_switch">XShake</string>
+    <string name="tile_shake_unavailable_hint">先にXGestureとアクセシビリティサービスを有効にしてください</string>
     <string name="shortcut_toggle_gesture">ジェスチャーの切り替え</string>
     <string name="shortcut_toggle_float_ball">フローティングボールの切り替え</string>
     <string name="shortcut_notification_hub">通知フィルター</string>

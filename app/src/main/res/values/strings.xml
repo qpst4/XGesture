@@ -3538,6 +3538,8 @@ Questions: open a GitHub Issue on the project repository.</string>
     <string name="shell_panel_history_empty">No execution history yet</string>
     <string name="shell_panel_history_exit_code">Exit code %1$d</string>
     <string name="tile_gesture_switch">XGesture</string>
+    <string name="tile_shake_switch">XShake</string>
+    <string name="tile_shake_unavailable_hint">Turn on XGesture and its accessibility service first</string>
     <string name="shortcut_toggle_gesture">Toggle gestures</string>
     <string name="shortcut_toggle_float_ball">Toggle float ball</string>
     <string name="shortcut_notification_hub">Notification filter</string>

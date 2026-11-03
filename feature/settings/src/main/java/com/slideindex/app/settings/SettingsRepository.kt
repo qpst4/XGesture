@@ -19,6 +19,7 @@ import com.slideindex.app.shake.ShakeWorkMode
 import com.slideindex.app.shell.ShellCommand
 import com.slideindex.app.util.PredictiveBackStartupStore
 import com.slideindex.app.util.ServiceEnabledStore
+import com.slideindex.app.util.ShakeEnabledStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -104,6 +105,13 @@ class SettingsRepository @Inject constructor(
                 .map { it.serviceEnabled }
                 .distinctUntilChanged()
                 .collect { enabled -> ServiceEnabledStore.write(context, enabled) }
+        }
+        // 晃动总开关也落一份同步镜像：XShake 磁贴可能被 SystemUI 冷启动绑起，不能等 DataStore。
+        cacheScope.launch {
+            settings
+                .map { it.shakeGestureSettings.enabled }
+                .distinctUntilChanged()
+                .collect { enabled -> ShakeEnabledStore.write(context, enabled) }
         }
         // §0.16.25：预测性返回开关也落一个同步镜像：它在 Application.attachBaseContext
         // 就要被读到（用来写 ApplicationInfo 的 FLAG_ENABLE_ON_BACK_INVOKED_CALLBACK），
