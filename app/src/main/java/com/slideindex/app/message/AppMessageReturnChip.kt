@@ -69,7 +69,9 @@ import javax.inject.Singleton
  * - 小窗阅读（[MessageAction.ReadInSmallWindow]）成功时来源应用仍可见，此时不显示；
  *   小窗失败退化成全屏时来源不可见，照常显示。
  *
- * 前台一律读实时值（tracker / 无障碍窗口树），缓存只作最后兜底。
+ * 显示后是否收起**不看前台包名**，而看目标 App 的窗口还在不在屏幕上；前台包名只在等待阶段
+ * 和窗口信息不可用时兜底。前台包名由窗口事件拼出来，切换瞬间会闪（从我们自己的边栏跳过去时
+ * 尤其容易闪成自己），拿它判收起会误收。
  */
 @Singleton
 class AppMessageReturnChip @Inject constructor(
@@ -93,6 +95,15 @@ class AppMessageReturnChip @Inject constructor(
     private var targetPackage: String? = null
     private var smallWindowRead = false
 
+    /** 等目标应用期间最后一次打日志的前台状态，只在状态变化时打，避免刷屏。 */
+    private var lastWaitingForeground: ReturnChipForeground? = null
+
+    /** 胶囊显示时刻，用于点击防抖。 */
+    private var shownAtMs = 0L
+
+    /** 连续「目标窗口不在屏幕上」的采样次数。 */
+    private var missCount = 0
+
     override fun arm(
         context: Context,
         sourcePackage: String?,
@@ -104,7 +115,7 @@ class AppMessageReturnChip @Inject constructor(
             mainHandler.post { arm(context, sourcePackage, targetPackage, settings, smallWindowRead) }
             return
         }
-        dismissInternal()
+        dismissInternal(reason = "arm-replace")
         if (!settings.returnChipEnabled) return
         if (!isUsableSource(sourcePackage)) {
             Log.d(TAG, "arm skipped source=$sourcePackage target=$targetPackage")
@@ -115,6 +126,7 @@ class AppMessageReturnChip @Inject constructor(
         this.sourcePackage = sourcePackage
         this.targetPackage = targetPackage
         this.smallWindowRead = smallWindowRead
+        this.lastWaitingForeground = null
         Log.i(TAG, "arm source=$sourcePackage target=$targetPackage smallWindow=$smallWindowRead")
         val startedAt = SystemClock.uptimeMillis()
         mainHandler.postDelayed(
@@ -128,7 +140,7 @@ class AppMessageReturnChip @Inject constructor(
             mainHandler.post { dismiss() }
             return
         }
-        dismissInternal()
+        dismissInternal(reason = "port-dismiss")
     }
 
     /**
@@ -143,6 +155,14 @@ class AppMessageReturnChip @Inject constructor(
         val target = targetPackage ?: return
         val elapsed = SystemClock.uptimeMillis() - startedAt
         val foreground = resolveForeground(target)
+        if (foreground != lastWaitingForeground) {
+            lastWaitingForeground = foreground
+            Log.d(
+                TAG,
+                "wait foreground=$foreground raw=${currentForegroundPackage()} " +
+                    "elapsed=${elapsed}ms target=$target",
+            )
+        }
 
         val canDecide = when (foreground) {
             ReturnChipForeground.TARGET -> true
@@ -171,7 +191,7 @@ class AppMessageReturnChip @Inject constructor(
                 "show skipped source=$source target=$target foreground=$foreground " +
                     "locked=$screenLocked smallWindow=$smallWindowRead sourceVisible=$sourceStillVisible",
             )
-            dismissInternal()
+            dismissInternal(reason = "wait-giveup:$foreground")
             return
         }
         showChip(armToken, autoDismissSeconds)
@@ -188,7 +208,7 @@ class AppMessageReturnChip @Inject constructor(
         )
         if (!ensureWindow()) {
             chipState.value = null
-            dismissInternal()
+            dismissInternal(reason = "add-window-failed")
             return
         }
         scheduleAutoDismiss(armToken, autoDismissSeconds)
@@ -224,7 +244,7 @@ class AppMessageReturnChip @Inject constructor(
         windowManager = wm
         composeView = view
         composeOwner = owner
-        screenOffReceiver = ScreenOffDismissReceiver { dismissInternal() }.also {
+        screenOffReceiver = ScreenOffDismissReceiver { dismissInternal(reason = "screen-off") }.also {
             it.register(host)
         }
         return true
@@ -257,28 +277,54 @@ class AppMessageReturnChip @Inject constructor(
         val delayMs = seconds.coerceIn(0, 60) * 1000L
         if (delayMs <= 0L) return
         val runnable = Runnable {
-            if (armToken == token) dismissInternal()
+            if (armToken == token) dismissInternal(reason = "timeout:${seconds}s")
         }
         autoDismissRunnable = runnable
         mainHandler.postDelayed(runnable, delayMs)
     }
 
+    /**
+     * 显示后的收起判定：**看目标 App 的窗口还在不在屏幕上**，而不是看前台包名。
+     *
+     * 前台包名由无障碍窗口事件拼出来，切换瞬间会闪（从我们自己的边栏跳过去时尤其明显）；
+     * 窗口列表是系统当下真实状态，目标窗口还在就说明用户没离开。
+     * 连续 [MAX_GONE_SAMPLES] 次看不到目标窗口才收起，容忍一次过渡。
+     * 窗口列表拿不到（无障碍断开等）时退回前台包名判断，同样连坐两次才收。
+     */
     private fun startForegroundWatch(armToken: Int) {
         val target = targetPackage ?: return
         val startedAt = SystemClock.uptimeMillis()
+        shownAtMs = startedAt
+        missCount = 0
         val runnable = object : Runnable {
             override fun run() {
                 if (armToken != token) return
                 if (LockScreenState.isActive(appContext)) {
-                    dismissInternal()
+                    dismissInternal(reason = "lock")
                     return
                 }
-                // 打开后的头 1 秒会夹着启动动画/系统窗口，先不做前台判定。
+                // 打开后的头 1 秒会夹着启动动画/系统窗口，先不做判定。
                 if (SystemClock.uptimeMillis() - startedAt >= FOREGROUND_GRACE_MS) {
-                    val foreground = currentForegroundPackage()
-                    if (!foreground.isNullOrBlank() && foreground != target) {
-                        dismissInternal()
-                        return
+                    val targetOnScreen = isTargetStillOnScreen(target)
+                    if (targetOnScreen == null) {
+                        val foreground = currentForegroundPackage()
+                        if (!foreground.isNullOrBlank() && foreground != target) {
+                            missCount++
+                        } else {
+                            missCount = 0
+                        }
+                        if (missCount >= MAX_GONE_SAMPLES) {
+                            dismissInternal(reason = "foreground:$foreground")
+                            return
+                        }
+                    } else if (targetOnScreen) {
+                        missCount = 0
+                    } else {
+                        missCount++
+                        if (missCount >= MAX_GONE_SAMPLES) {
+                            dismissInternal(reason = "target-gone:$missCount")
+                            return
+                        }
                     }
                 }
                 mainHandler.postDelayed(this, FOREGROUND_POLL_MS)
@@ -288,9 +334,36 @@ class AppMessageReturnChip @Inject constructor(
         mainHandler.postDelayed(runnable, FOREGROUND_POLL_MS)
     }
 
+    /**
+     * 目标应用是否还在屏幕上。
+     *
+     * 返回 null 表示窗口信息不可用（无障碍断开 / 读不到任何应用窗口的包名），
+     * 调用方应退回前台包名判断；false 表示列表可读但没有目标窗口。
+     */
+    private fun isTargetStillOnScreen(target: String): Boolean? {
+        val service = SlideIndexAccessibilityService.accessibilityInstance() ?: return null
+        val windows = runCatching { service.windows }.getOrNull() ?: return null
+        var readable = false
+        for (window in windows) {
+            if (window.type != AccessibilityWindowInfo.TYPE_APPLICATION) continue
+            val packageName = runCatching { window.root?.packageName?.toString() }
+                .getOrNull()
+                .orEmpty()
+            if (packageName.isEmpty()) continue
+            readable = true
+            if (packageName == target) return true
+        }
+        return if (readable) false else null
+    }
+
     private fun onChipTapped(state: ReturnChipState) {
+        val sinceShownMs = SystemClock.uptimeMillis() - shownAtMs
+        if (sinceShownMs < TAP_GUARD_MS) {
+            Log.d(TAG, "tap ignored: ${sinceShownMs}ms after show")
+            return
+        }
         val source = state.sourcePackage
-        dismissInternal()
+        dismissInternal(reason = "tap")
         Thread {
             val opened = runCatching {
                 NotificationAppLauncher.open(appContext, source)
@@ -306,7 +379,12 @@ class AppMessageReturnChip @Inject constructor(
         }.start()
     }
 
-    private fun dismissInternal() {
+    private fun dismissInternal(reason: String) {
+        Log.i(
+            TAG,
+            "dismiss reason=$reason showing=${composeView != null} " +
+                "source=$sourcePackage target=$targetPackage smallWindow=$smallWindowRead",
+        )
         token++
         pollRunnable?.let(mainHandler::removeCallbacks)
         pollRunnable = null
@@ -334,6 +412,9 @@ class AppMessageReturnChip @Inject constructor(
         sourcePackage = null
         targetPackage = null
         smallWindowRead = false
+        lastWaitingForeground = null
+        shownAtMs = 0L
+        missCount = 0
     }
 
     private fun resolveForeground(target: String): ReturnChipForeground {
@@ -415,9 +496,15 @@ class AppMessageReturnChip @Inject constructor(
         /** 拿不到前台时的兜底显示时间（无障碍没连等）。 */
         const val UNKNOWN_FALLBACK_MS = 1_000L
 
-        /** 显示后检查「是否已离开目标应用」的间隔与宽限。 */
+        /** 显示后检查「目标窗口还在不在」的间隔与宽限。 */
         const val FOREGROUND_POLL_MS = 500L
         const val FOREGROUND_GRACE_MS = 1_000L
+
+        /** 连续多少次看不到目标窗口才收起（容忍一次过渡）。 */
+        const val MAX_GONE_SAMPLES = 2
+
+        /** 显示后这段时间内的点击忽略，避免收窗瞬间的误触。 */
+        const val TAP_GUARD_MS = 300L
 
         /** 胶囊垂直位置：左边缘、屏幕高度 22% 处（参考悬浮菜单的贴边胶囊）。 */
         const val TOP_Y_FRACTION = 0.22f
