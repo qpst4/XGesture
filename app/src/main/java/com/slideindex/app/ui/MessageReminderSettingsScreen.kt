@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -90,6 +91,10 @@ fun MessageReminderSettingsScreen(
     onOpenNotificationListenerPermission: () -> Unit,
 ) {
     val context = LocalContext.current
+    // 资源必须走 LocalResources：`LocalContext.current.getString()` 不会随 Configuration
+    // （语言 / 深色 / 字体缩放）失效，Compose lint 直接判 ERROR
+    // （LocalContextGetResourceValueCall）。context 仍保留给权限与能力查询。
+    val resources = LocalResources.current
     val overlayPermissionGranted = PermissionHelper.canDrawOverlays(context)
     val overlayReady = MessageOverlayHost.canShow(context)
     val controlsEnabled = settings.enabled
@@ -246,7 +251,7 @@ fun MessageReminderSettingsScreen(
                                 if (seconds <= 0) {
                                     returnChipNeverLabel
                                 } else {
-                                    context.getString(
+                                    resources.getString(
                                         R.string.message_reminder_auto_dismiss_seconds,
                                         seconds,
                                     )
