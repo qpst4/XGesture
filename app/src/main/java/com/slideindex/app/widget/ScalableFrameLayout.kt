@@ -38,6 +38,9 @@ class ScalableFrameLayout @JvmOverloads constructor(
   private var slotHeightPx: Int = 0
   internal var renderWidthPx: Int = 0
   internal var renderHeightPx: Int = 0
+  /** 上报给 provider 的渲染尺寸（dp），= max(桌面同 span 尺寸, 面板实际槽位)。 */
+  private var renderWidthDp: Int = 0
+  private var renderHeightDp: Int = 0
   internal var scaleVal: Float = 1f
 
   private var resizing: Boolean = false
@@ -58,9 +61,16 @@ class ScalableFrameLayout @JvmOverloads constructor(
   private var pendingOptionsPush: Runnable? = null
 
   companion object {
-    // AOSP/通用启动器标准单元格基准 (dp)
-    private const val STANDARD_CELL_WIDTH_DP = 80
-    private const val STANDARD_CELL_HEIGHT_DP = 80
+    /**
+     * 桌面单元格基准（dp）。
+     *
+     * 曾经的 80dp 在 4 列 / 400~420dp 宽的手机上偏小（桌面单格约 95~100dp），
+     * 一个 4×2 的 widget 会少报约 40dp，正好可能把 provider 挤进「紧凑版」布局——
+     * 表现为面板里点日程/便签只打开 app、不进具体页。
+     * 这里取 90dp（贴近主流桌面），并且渲染尺寸不会再小于该 span 的桌面档。
+     */
+    private const val STANDARD_CELL_WIDTH_DP = 90
+    private const val STANDARD_CELL_HEIGHT_DP = 90
     private const val CELL_GAP_DP = 8
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
   }
@@ -185,7 +195,7 @@ class ScalableFrameLayout @JvmOverloads constructor(
   }
 
   /**
-   * 计算该 Span 下对应的标准桌面尺寸（完全解耦物理网格宽度，固定基准尺寸）
+   * 该 span 在桌面上的标准尺寸（dp）。
    */
   private fun spanToStandardSizeDp(spanX: Int, spanY: Int): Pair<Int, Int> {
     val wDp = spanX * STANDARD_CELL_WIDTH_DP + (spanX - 1) * CELL_GAP_DP
@@ -194,20 +204,30 @@ class ScalableFrameLayout @JvmOverloads constructor(
   }
 
   /**
-   * 重新计算虚拟渲染像素与等比缩放因子
+   * 重新计算虚拟渲染像素与等比缩放因子。
+   *
+   * 渲染尺寸 = max(桌面同 span 标准尺寸, 面板实际槽位)：
+   * - 槽位比桌面窄时，仍按桌面档渲染再缩小，避免 provider 因为“尺寸太小”给紧凑版；
+   * - 槽位更宽时按槽位走，别把内容放大到超过可用空间。
    */
   private fun recalculateRenderAndScale(slotW: Int, slotH: Int) {
     if (slotW <= 0 || slotH <= 0) {
       renderWidthPx = 0
       renderHeightPx = 0
+      renderWidthDp = 0
+      renderHeightDp = 0
       scaleVal = 1f
       return
     }
     val density = resources.displayMetrics.density
     val (standardWDp, standardHDp) = spanToStandardSizeDp(spanX, spanY)
+    val slotWDp = (slotW / density).roundToInt()
+    val slotHDp = (slotH / density).roundToInt()
+    renderWidthDp = maxOf(standardWDp, slotWDp)
+    renderHeightDp = maxOf(standardHDp, slotHDp)
 
-    renderWidthPx = (standardWDp * density).roundToInt()
-    renderHeightPx = (standardHDp * density).roundToInt()
+    renderWidthPx = (renderWidthDp * density).roundToInt()
+    renderHeightPx = (renderHeightDp * density).roundToInt()
 
     if (renderWidthPx > 0 && renderHeightPx > 0) {
       val scaleX = slotW.toFloat() / renderWidthPx.toFloat()
@@ -220,6 +240,8 @@ class ScalableFrameLayout @JvmOverloads constructor(
   }
 
   private fun slotSizeDp(): Pair<Int, Int> {
+    // 上报的就是实际渲染尺寸，保证 provider 看到的 layout 尺寸与画面一致。
+    if (renderWidthDp > 0 && renderHeightDp > 0) return renderWidthDp to renderHeightDp
     return spanToStandardSizeDp(spanX, spanY)
   }
 
