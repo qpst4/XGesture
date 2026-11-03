@@ -4368,6 +4368,12 @@ If Shizuku was started as Root, use wireless debugging/adb instead,
 or revoke permanent Root for Shell in APatch.</string>
     <string name="shell_no_response">Shell service not responding. Fully restart Shizuku, then reopen this app.</string>
     <string name="app_carousel_cancel_hint">Move to top or bottom edge and release to cancel</string>
+    <string name="app_carousel_action_split_screen">Split screen</string>
+    <string name="app_carousel_action_floating">Floating</string>
+    <string name="app_carousel_action_close">Close</string>
+    <string name="app_carousel_close_all">Close all</string>
+    <string name="app_carousel_close_all_hint">Release to close all apps</string>
+    <string name="app_carousel_cancel_down_hint">Swipe down to dismiss</string>
     <string name="extension_about_subtitle">Version, updates &amp; privacy</string>
     <string name="external_invocation_keyword_example"> "keyword"</string>
     <string name="search_panel_aggregated_image_search">Aggregated image search</string>
