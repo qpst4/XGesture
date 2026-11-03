@@ -225,6 +225,15 @@ class MessageSettingsMutator @Inject constructor(
                 seconds.coerceIn(0, 60)
         }
 
+    suspend fun setMessageReturnChipEnabled(enabled: Boolean) =
+        editor.edit { it[SettingsPreferenceKeys.MESSAGE_RETURN_CHIP_ENABLED] = enabled }
+
+    suspend fun setMessageReturnChipAutoDismissSeconds(seconds: Int) =
+        editor.edit {
+            it[SettingsPreferenceKeys.MESSAGE_RETURN_CHIP_AUTO_DISMISS_SECONDS] =
+                seconds.coerceIn(0, 60)
+        }
+
     suspend fun setMessageHideInLandscape(enabled: Boolean) =
         editor.edit { it[SettingsPreferenceKeys.MESSAGE_HIDE_IN_LANDSCAPE] = enabled }
 

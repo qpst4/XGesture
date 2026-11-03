@@ -13,7 +13,9 @@ import javax.inject.Singleton
 class MessageActionExecutor @Inject constructor(
     private val listenerPort: NotificationListenerPort,
     private val foregroundPort: MessageForegroundPort,
+    private val environmentPort: MessageEnvironmentPort,
     private val replyPort: MessageReplyPort,
+    private val returnPort: MessageReturnPort,
 ) {
     fun execute(
         context: Context,
@@ -25,11 +27,23 @@ class MessageActionExecutor @Inject constructor(
         onQuickReplyCancelled: (() -> Unit)? = null,
     ) {
         when (action) {
-            MessageAction.Read -> openNotification(context, data, launchPort)
+            MessageAction.Read -> openNotification(
+                context,
+                data,
+                settings,
+                launchPort,
+                smallWindowRead = false,
+            )
             MessageAction.ReadInSmallWindow -> {
                 val foregroundPackage = foregroundPort.foregroundPackage()
                 if (foregroundPackage != null && foregroundPackage == data.packageName) {
-                    openNotification(context, data, launchPort)
+                    openNotification(
+                        context,
+                        data,
+                        settings,
+                        launchPort,
+                        smallWindowRead = false,
+                    )
                 } else {
                     openNotificationInSmallWindow(context, data, settings, launchPort)
                 }
@@ -78,12 +92,18 @@ class MessageActionExecutor @Inject constructor(
     private fun openNotification(
         context: Context,
         data: NotificationData,
+        settings: AppSettings,
         launchPort: NotificationIntentLaunchPort,
+        smallWindowRead: Boolean,
     ) {
+        // 来源应用必须在打开前取：打开后前台已经是目标应用。这里取实时前台，不用缓存。
+        val sourcePackage = foregroundPort.liveForegroundPackage()
         val opened = launchPort.open(context, data)
         if (!opened) {
             Log.w(TAG, "Failed to open notification for ${data.packageName}")
+            return
         }
+        armReturnChip(context, sourcePackage, data, settings, smallWindowRead)
     }
 
     private fun openNotificationInSmallWindow(
@@ -92,10 +112,35 @@ class MessageActionExecutor @Inject constructor(
         settings: AppSettings,
         launchPort: NotificationIntentLaunchPort,
     ) {
+        val sourcePackage = foregroundPort.liveForegroundPackage()
         val opened = launchPort.openInSmallWindow(context, data, settings)
         if (!opened) {
             Log.w(TAG, "Failed to open notification in small window for ${data.packageName}")
+            return
         }
+        // 小窗真开出来时来源应用仍可见，胶囊的显示判定会把它挡掉；
+        // 小窗失败退化成全屏时来源不可见，照常显示。
+        armReturnChip(context, sourcePackage, data, settings, smallWindowRead = true)
+    }
+
+    private fun armReturnChip(
+        context: Context,
+        sourcePackage: String?,
+        data: NotificationData,
+        settings: AppSettings,
+        smallWindowRead: Boolean,
+    ) {
+        val messageSettings = settings.messageReminderSettings
+        if (!messageSettings.returnChipEnabled) return
+        // 锁屏/解锁后打开的路径没有「阅读前应用」，不显示返回胶囊。
+        if (environmentPort.isScreenLocked(context)) return
+        returnPort.arm(
+            context = context,
+            sourcePackage = sourcePackage,
+            targetPackage = data.packageName,
+            settings = messageSettings,
+            smallWindowRead = smallWindowRead,
+        )
     }
 
     companion object {

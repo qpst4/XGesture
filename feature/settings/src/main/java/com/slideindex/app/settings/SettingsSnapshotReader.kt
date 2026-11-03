@@ -1245,6 +1245,12 @@ internal object SettingsSnapshotReader {
                     .coerceIn(0, MessageSettings.MAX_UNLOCK_OPEN_DELAY_MS),
             keepFloatIconAfterUnlock =
                 prefs[SettingsPreferenceKeys.MESSAGE_KEEP_FLOAT_ICON_AFTER_UNLOCK] ?: false,
+            returnChipEnabled =
+                prefs[SettingsPreferenceKeys.MESSAGE_RETURN_CHIP_ENABLED] ?: base.returnChipEnabled,
+            returnChipAutoDismissSeconds =
+                (prefs[SettingsPreferenceKeys.MESSAGE_RETURN_CHIP_AUTO_DISMISS_SECONDS]
+                    ?: base.returnChipAutoDismissSeconds)
+                    .coerceIn(0, 60),
         )
     }
 

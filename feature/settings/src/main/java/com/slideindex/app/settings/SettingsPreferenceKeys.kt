@@ -515,6 +515,9 @@ internal object SettingsPreferenceKeys {
         intPreferencesKey("message_side_bubble_auto_dismiss_seconds")
     val MESSAGE_C_NOTICE_AUTO_DISMISS_SECONDS =
         intPreferencesKey("message_c_notice_auto_dismiss_seconds")
+    val MESSAGE_RETURN_CHIP_ENABLED = booleanPreferencesKey("message_return_chip_enabled")
+    val MESSAGE_RETURN_CHIP_AUTO_DISMISS_SECONDS =
+        intPreferencesKey("message_return_chip_auto_dismiss_seconds")
     val MESSAGE_C_NOTICE_HORIZONTAL_EDGE = stringPreferencesKey("message_c_notice_horizontal_edge")
     val MESSAGE_C_NOTICE_Y_FRACTION = floatPreferencesKey("message_c_notice_y_fraction")
     val MESSAGE_C_NOTICE_EDGE_MARGIN_DP = floatPreferencesKey("message_c_notice_edge_margin_dp")

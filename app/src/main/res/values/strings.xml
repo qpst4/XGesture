@@ -174,6 +174,12 @@
     <string name="message_reminder_auto_dismiss">Auto dismiss</string>
     <string name="message_reminder_auto_dismiss_off">Never</string>
     <string name="message_reminder_auto_dismiss_seconds">%1$d s</string>
+    <string name="message_reminder_return_chip">Show return chip after reading</string>
+    <string name="message_reminder_return_chip_desc">After a message is opened, show an edge chip that jumps back to the app you were using</string>
+    <string name="message_reminder_return_chip_dismiss">Return chip stay time</string>
+    <string name="message_return_chip_label">Back</string>
+    <string name="message_return_chip_content_description">Back to %1$s</string>
+    <string name="message_return_chip_failed">Couldn\'t go back to %1$s</string>
     <string name="message_reminder_hide_in_landscape">Hide card in landscape</string>
     <string name="message_reminder_hide_in_landscape_desc">Hide float icon and side bubble in landscape; configure edge notification list separately</string>
     <string name="message_reminder_portrait_danmaku">Show danmaku in portrait</string>

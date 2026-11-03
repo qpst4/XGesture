@@ -1189,6 +1189,10 @@ class SettingsRepository @Inject constructor(
 
     suspend fun setMessageSideBubbleAutoDismissSeconds(seconds: Int) =
         message.setMessageSideBubbleAutoDismissSeconds(seconds)
+    suspend fun setMessageReturnChipEnabled(enabled: Boolean) =
+        message.setMessageReturnChipEnabled(enabled)
+    suspend fun setMessageReturnChipAutoDismissSeconds(seconds: Int) =
+        message.setMessageReturnChipAutoDismissSeconds(seconds)
     suspend fun setMessageHideInLandscape(enabled: Boolean) = message.setMessageHideInLandscape(enabled)
     suspend fun setMessagePortraitDanmaku(enabled: Boolean) = message.setMessagePortraitDanmaku(enabled)
     suspend fun setMessageLandscapeDanmaku(enabled: Boolean) = message.setMessageLandscapeDanmaku(enabled)

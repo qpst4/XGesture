@@ -143,6 +143,12 @@
     <string name="message_reminder_auto_dismiss">إغلاق تلقائي</string>
     <string name="message_reminder_auto_dismiss_off">عدم الإغلاق التلقائي</string>
     <string name="message_reminder_auto_dismiss_seconds">%1$d ثانية</string>
+    <string name="message_reminder_return_chip">إظهار زر الرجوع بعد القراءة</string>
+    <string name="message_reminder_return_chip_desc">بعد فتح الرسالة تظهر كبسولة رجوع على الحافة اليسرى للعودة إلى التطبيق السابق</string>
+    <string name="message_reminder_return_chip_dismiss">مدة بقاء زر الرجوع</string>
+    <string name="message_return_chip_label">رجوع</string>
+    <string name="message_return_chip_content_description">العودة إلى %1$s</string>
+    <string name="message_return_chip_failed">تعذّر العودة إلى %1$s</string>
     <string name="message_reminder_hide_in_landscape">إخفاء الكرة العائمة والجانب في الوضع الأفقي</string>
     <string name="message_reminder_hide_in_landscape_desc">إخفاء الكرة العائمة وفقاعات الحافة في الوضع الأفقي؛ يرجى تعيين قائمة الإشعارات الملصقة بالحافة بشكل منفصل في النمط المقابل</string>
     <string name="message_reminder_portrait_danmaku">عرض التعليقات المتحركة في الوضع العمودي</string>

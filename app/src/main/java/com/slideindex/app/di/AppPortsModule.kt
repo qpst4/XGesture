@@ -7,8 +7,10 @@ import com.slideindex.app.message.AppMessageEnvironmentPort
 import com.slideindex.app.message.AppMessageForegroundPort
 import com.slideindex.app.message.AppMessageOverlayPort
 import com.slideindex.app.message.AppMessageReplyPort
+import com.slideindex.app.message.AppMessageReturnChip
 import com.slideindex.app.message.AppNotificationShortcutIconPort
 import com.slideindex.app.message.MessageReplyPort
+import com.slideindex.app.message.MessageReturnPort
 import com.slideindex.app.message.NotificationShortcutIconPort
 import com.slideindex.app.message.AppMessageThemePort
 import com.slideindex.app.message.MessageEnvironmentPort
@@ -204,6 +206,10 @@ abstract class AppPortsModule {
     @Binds
     @Singleton
     abstract fun bindMessageOverlayPort(impl: AppMessageOverlayPort): MessageOverlayPort
+
+    @Binds
+    @Singleton
+    abstract fun bindMessageReturnPort(impl: AppMessageReturnChip): MessageReturnPort
 
     @Binds
     @Singleton

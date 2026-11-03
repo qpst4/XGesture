@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.BackHand
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Checklist
@@ -50,6 +51,7 @@ import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POI
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
 import com.slideindex.app.ui.settings.components.SettingsCardScope
+import com.slideindex.app.ui.settings.components.SettingsSliderRow
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
@@ -64,6 +66,8 @@ fun MessageReminderSettingsScreen(
     onInterceptNotificationsChange: (Boolean) -> Unit,
     onOpenLastMessageOnUnlockChange: (Boolean) -> Unit,
     onOpenLastMessageOnUnlockRules: () -> Unit,
+    onReturnChipEnabledChange: (Boolean) -> Unit,
+    onReturnChipAutoDismissSecondsChange: (Int) -> Unit,
     onFloatIconEnabledChange: (Boolean) -> Unit,
     onSideBubbleEnabledChange: (Boolean) -> Unit,
     onDanmakuEnabledChange: (Boolean) -> Unit,
@@ -93,6 +97,7 @@ fun MessageReminderSettingsScreen(
     val listenerPermHint = stringResource(R.string.message_reminder_permission_listener_desc)
     val overlayPermHint = stringResource(R.string.message_reminder_permission_overlay_desc)
     val enableHint = stringResource(R.string.message_reminder_enable_hint)
+    val returnChipNeverLabel = stringResource(R.string.message_reminder_auto_dismiss_off)
     val generalSectionTitle = stringResource(R.string.message_reminder_section_general)
     val styleSectionTitle = stringResource(R.string.message_style_title)
     val filterSectionTitle = stringResource(R.string.message_reminder_section_filter)
@@ -199,6 +204,55 @@ fun MessageReminderSettingsScreen(
                             enabled = controlsEnabled,
                             onCheckedChange = onOpenLastMessageOnUnlockChange,
                             onNavigate = onOpenLastMessageOnUnlockRules,
+                        )
+                    },
+                )
+                add(
+                    settingsCardScopeItem("return-chip") {
+                        SettingSwitchRow(
+                            title = stringResource(R.string.message_reminder_return_chip),
+                            subtitle = stringResource(R.string.message_reminder_return_chip_desc),
+                            icon = { label ->
+                                Icon(
+                                    Icons.AutoMirrored.Outlined.ArrowBack,
+                                    contentDescription = label,
+                                )
+                            },
+                            checked = settings.returnChipEnabled,
+                            enabled = controlsEnabled,
+                            onCheckedChange = onReturnChipEnabledChange,
+                        )
+                    },
+                )
+                add(
+                    settingsCardScopeItem("return-chip-dismiss") {
+                        val returnChipSeconds = settings.returnChipAutoDismissSeconds
+                        SettingsSliderRow(
+                            title = stringResource(R.string.message_reminder_return_chip_dismiss),
+                            value = returnChipSeconds.toFloat(),
+                            valueRange = 0f..30f,
+                            steps = 29,
+                            enabled = controlsEnabled && settings.returnChipEnabled,
+                            label = if (returnChipSeconds <= 0) {
+                                returnChipNeverLabel
+                            } else {
+                                stringResource(
+                                    R.string.message_reminder_auto_dismiss_seconds,
+                                    returnChipSeconds,
+                                )
+                            },
+                            formatLabel = { value ->
+                                val seconds = value.toInt()
+                                if (seconds <= 0) {
+                                    returnChipNeverLabel
+                                } else {
+                                    context.getString(
+                                        R.string.message_reminder_auto_dismiss_seconds,
+                                        seconds,
+                                    )
+                                }
+                            },
+                            onValueChange = { onReturnChipAutoDismissSecondsChange(it.toInt()) },
                         )
                     },
                 )

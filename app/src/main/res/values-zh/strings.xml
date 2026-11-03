@@ -143,6 +143,12 @@
     <string name="message_reminder_auto_dismiss">自动关闭</string>
     <string name="message_reminder_auto_dismiss_off">不自动关闭</string>
     <string name="message_reminder_auto_dismiss_seconds">%1$d 秒</string>
+    <string name="message_reminder_return_chip">阅读后显示返回键</string>
+    <string name="message_reminder_return_chip_desc">打开消息后，在屏幕左边缘浮出返回胶囊，一键回到原来的应用</string>
+    <string name="message_reminder_return_chip_dismiss">返回键停留时间</string>
+    <string name="message_return_chip_label">返回</string>
+    <string name="message_return_chip_content_description">返回到 %1$s</string>
+    <string name="message_return_chip_failed">无法返回到 %1$s</string>
     <string name="message_reminder_hide_in_landscape">横屏隐藏悬浮球与侧边</string>
     <string name="message_reminder_hide_in_landscape_desc">横屏时隐藏悬浮球与侧边气泡；贴边通知列表请在对应样式中单独设置</string>
     <string name="message_reminder_portrait_danmaku">竖屏显示弹幕</string>

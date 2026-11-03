@@ -150,6 +150,8 @@ fun NavEntryBuilder.notificationNavEntries(ctx: MainNavContext) {
             onOpenLastMessageOnUnlockRules = {
                 ctx.navigate(AppNavKey.MessageReminderUnlockRules)
             },
+            onReturnChipEnabledChange = viewModel::setMessageReturnChipEnabled,
+            onReturnChipAutoDismissSecondsChange = viewModel::setMessageReturnChipAutoDismissSeconds,
             onFloatIconEnabledChange = viewModel::setMessageFloatIconEnabled,
             onSideBubbleEnabledChange = viewModel::setMessageSideBubbleEnabled,
             onDanmakuEnabledChange = viewModel::setMessageDanmakuEnabled,

@@ -174,6 +174,12 @@
     <string name="message_reminder_auto_dismiss">Автоскрытие</string>
     <string name="message_reminder_auto_dismiss_off">Никогда</string>
     <string name="message_reminder_auto_dismiss_seconds">%1$d с</string>
+    <string name="message_reminder_return_chip">Показывать кнопку возврата после прочтения</string>
+    <string name="message_reminder_return_chip_desc">После открытия сообщения у левого края показывается кнопка возврата в предыдущее приложение</string>
+    <string name="message_reminder_return_chip_dismiss">Время показа кнопки возврата</string>
+    <string name="message_return_chip_label">Назад</string>
+    <string name="message_return_chip_content_description">Вернуться в %1$s</string>
+    <string name="message_return_chip_failed">Не удалось вернуться в %1$s</string>
     <string name="message_reminder_hide_in_landscape">Скрывать карточку в альбомной ориентации</string>
     <string name="message_reminder_hide_in_landscape_desc">Скрывать плавающий значок и боковой пузырь в альбомной ориентации; список краевых уведомлений настраивается отдельно</string>
     <string name="message_reminder_portrait_danmaku">Показывать бегущую строку в портретной ориентации</string>

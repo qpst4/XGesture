@@ -143,6 +143,12 @@
     <string name="message_reminder_auto_dismiss">自動非表示</string>
     <string name="message_reminder_auto_dismiss_off">しない</string>
     <string name="message_reminder_auto_dismiss_seconds">%1$d 秒</string>
+    <string name="message_reminder_return_chip">既読後に戻るボタンを表示</string>
+    <string name="message_reminder_return_chip_desc">メッセージを開いた後、画面左端に戻るチップを表示し、元のアプリに戻れます</string>
+    <string name="message_reminder_return_chip_dismiss">戻るチップの表示時間</string>
+    <string name="message_return_chip_label">戻る</string>
+    <string name="message_return_chip_content_description">%1$s に戻る</string>
+    <string name="message_return_chip_failed">%1$s に戻れませんでした</string>
     <string name="message_reminder_hide_in_landscape">横向きでカードを非表示</string>
     <string name="message_reminder_hide_in_landscape_desc">横向きでフロートとサイドバブルを非表示。エッジ通知リストは各スタイルで設定</string>
     <string name="message_reminder_portrait_danmaku">縦向きで弾幕を表示</string>

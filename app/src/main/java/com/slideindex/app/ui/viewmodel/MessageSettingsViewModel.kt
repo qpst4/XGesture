@@ -251,6 +251,14 @@ class MessageSettingsViewModel @Inject constructor(
         settingsRepository.setMessageSideBubbleAutoDismissSeconds(seconds)
     }
 
+    fun setMessageReturnChipEnabled(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setMessageReturnChipEnabled(enabled)
+    }
+
+    fun setMessageReturnChipAutoDismissSeconds(seconds: Int) = launchSettingsWrite {
+        settingsRepository.setMessageReturnChipAutoDismissSeconds(seconds)
+    }
+
     fun setMessageFloatIconSizeDp(sizeDp: Float) = launchSettingsWrite {
         settingsRepository.setMessageFloatIconSizeDp(sizeDp)
     }
