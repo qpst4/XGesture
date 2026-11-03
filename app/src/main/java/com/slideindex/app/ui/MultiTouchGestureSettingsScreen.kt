@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +49,8 @@ import com.slideindex.app.ui.settings.components.StatusRow
 import com.slideindex.app.ui.settings.components.StatusTone
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.window.WindowDialog
 
 private val PreviewColors = listOf(
@@ -217,9 +218,10 @@ fun MultiTouchGestureSettingsScreen(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 TextButton(
+                    text = "取消",
                     onClick = { pendingKind = null },
                     modifier = Modifier.align(Alignment.End),
-                ) { Text("取消") }
+                )
             }
         }
     }
@@ -272,16 +274,21 @@ fun MultiTouchGestureSettingsScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     TextButton(
+                        text = "删除",
                         onClick = {
                             editingEntry = null
                             onRemoveEntry(editing.id)
                         },
                         modifier = Modifier.weight(1f),
-                    ) { Text("删除") }
+                        minHeight = 44.dp,
+                    )
                     TextButton(
+                        text = "完成",
                         onClick = { editingEntry = null },
                         modifier = Modifier.weight(1f),
-                    ) { Text("完成") }
+                        minHeight = 44.dp,
+                        colors = ButtonDefaults.textButtonColorsPrimary(),
+                    )
                 }
             }
         }

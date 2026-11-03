@@ -1,5 +1,8 @@
 package com.slideindex.app.ui
 
+import android.app.Activity
+import android.graphics.Rect
+import android.os.Build
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -13,27 +16,32 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.systemGestureExclusion
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.gesture.multitouch.PathPoint
 import com.slideindex.app.gesture.multitouch.PathStroke
-import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
-import com.slideindex.app.ui.settings.components.settingsLazyHint
 import kotlin.math.hypot
+import top.yukonga.miuix.kmp.basic.TextButton
 
 private val RecordStrokeColors = listOf(
     Color(0xFF1E88E5),
@@ -44,10 +52,10 @@ private val RecordStrokeColors = listOf(
 )
 
 /**
- * 路径手势录制页（独立页面，不是弹窗）。
+ * 路径手势录制页（全屏、非滚动）。
  *
- * 一条轨迹 = 一根手指：画完一条松手，可以继续画下一条，最多 5 条；
- * 进入页面时暂停识别，离开时恢复，避免录制动作本身触发已有手势。
+ * 画板占满页面宽度，并同时在窗口层和画板层排除系统边缘手势，
+ * 避免单指从屏幕左右边缘起笔时被系统返回手势抢走。
  */
 @Composable
 fun MultiTouchPathRecordScreen(
@@ -61,6 +69,21 @@ fun MultiTouchPathRecordScreen(
         onDispose { onRecordingStateChange(false) }
     }
 
+    val view = LocalView.current
+    DisposableEffect(Unit) {
+        val decor = (view.context as? Activity)?.window?.decorView
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && decor != null) {
+            decor.post {
+                decor.systemGestureExclusionRects = listOf(Rect(0, 0, decor.width, decor.height))
+            }
+        }
+        onDispose {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && decor != null) {
+                decor.systemGestureExclusionRects = emptyList()
+            }
+        }
+    }
+
     val editing = initialStrokes.isNotEmpty()
     val strokes = remember {
         mutableListOf<MutableList<PathPoint>>().apply {
@@ -70,98 +93,111 @@ fun MultiTouchPathRecordScreen(
     val strokeIndex = remember { mutableMapOf<Int, Int>() }
     var version by remember { mutableIntStateOf(0) }
 
-    SettingsScreenScaffold(title = if (editing) "重录手势" else "录制路径手势", onBack = onBack) {
-        item(key = "multitouch-record-canvas") {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+    Scaffold { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 16.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                }
                 Text(
-                    if (editing) "重录后覆盖原轨迹，动作不变" else "一条轨迹 = 一根手指",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = if (editing) "重录手势" else "录制路径手势",
+                    style = MaterialTheme.typography.titleLarge,
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    "画完一条松手，可继续画下一条（2–5 条），画完点「完成」",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(420.dp)
-                        // 画到屏幕左右边缘时不触发系统返回手势。
-                        .systemGestureExclusion()
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .pointerInput(Unit) {
-                            val boardHeight = size.height.toFloat().coerceAtLeast(1f)
-                            awaitPointerEventScope {
-                                while (true) {
-                                    val event = awaitPointerEvent()
-                                    val active = event.changes.filter { it.pressed }
-                                    if (active.isEmpty()) {
-                                        strokeIndex.clear()
-                                        continue
-                                    }
-                                    for (change in active) {
-                                        val id = change.id.value.toInt()
-                                        var index = strokeIndex[id]
-                                        if (index == null) {
-                                            if (strokes.size >= 5) continue
-                                            strokes.add(mutableListOf())
-                                            index = strokes.lastIndex
-                                            strokeIndex[id] = index
-                                        }
-                                        val x = change.position.x / boardHeight
-                                        val y = change.position.y / boardHeight
-                                        val points = strokes[index]
-                                        val last = points.lastOrNull()
-                                        if (last == null ||
-                                            hypot(x - last.x, y - last.y) >= 0.006f
-                                        ) {
-                                            points += PathPoint(x, y)
-                                        }
-                                    }
-                                    version++
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                if (editing) "重录后覆盖原轨迹，动作不变" else "一条轨迹 = 一根手指",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                "画完一条松手，可继续画下一条（2–5 条），画完点「完成」",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .systemGestureExclusion()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .pointerInput(Unit) {
+                        val boardHeight = size.height.toFloat().coerceAtLeast(1f)
+                        awaitPointerEventScope {
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val active = event.changes.filter { it.pressed }
+                                if (active.isEmpty()) {
+                                    strokeIndex.clear()
+                                    continue
                                 }
+                                for (change in active) {
+                                    val id = change.id.value.toInt()
+                                    var index = strokeIndex[id]
+                                    if (index == null) {
+                                        if (strokes.size >= 5) continue
+                                        strokes.add(mutableListOf())
+                                        index = strokes.lastIndex
+                                        strokeIndex[id] = index
+                                    }
+                                    val x = change.position.x / boardHeight
+                                    val y = change.position.y / boardHeight
+                                    val points = strokes[index]
+                                    val last = points.lastOrNull()
+                                    if (last == null ||
+                                        hypot(x - last.x, y - last.y) >= 0.006f
+                                    ) {
+                                        points += PathPoint(x, y)
+                                    }
+                                }
+                                version++
                             }
                         }
-                ) {
-                    RecordCanvas(strokes = strokes, version = version)
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    "已画 ${strokes.size}/5 条",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    TextButton(
-                        onClick = {
-                            strokes.clear()
-                            strokeIndex.clear()
-                            version++
-                        },
-                    ) { Text("重画") }
-                    TextButton(
-                        onClick = {
-                            onFinish(strokes.map { points -> PathStroke(points.toList()) })
-                        },
-                        enabled = strokes.size >= 2,
-                    ) { Text("完成") }
-                }
+                    },
+            ) {
+                RecordCanvas(strokes = strokes, version = version)
             }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                "已画 ${strokes.size}/5 条",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                TextButton(
+                    text = "重画",
+                    onClick = {
+                        strokes.clear()
+                        strokeIndex.clear()
+                        version++
+                    },
+                    minHeight = 44.dp,
+                )
+                TextButton(
+                    text = "完成",
+                    onClick = {
+                        if (strokes.size >= 2) {
+                            onFinish(strokes.map { points -> PathStroke(points.toList()) })
+                        }
+                    },
+                    minHeight = 44.dp,
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
         }
-        settingsLazyHint(
-            key = "multitouch-record-hint",
-            text = if (editing) {
-                "录制期间多指识别已暂停；完成后直接覆盖这条手势的轨迹。"
-            } else {
-                "录制期间多指识别已暂停；完成后会进入动作选择页，选好动作即可保存。"
-            },
-        )
     }
 }
 

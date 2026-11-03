@@ -1,23 +1,29 @@
 package com.slideindex.app.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
 import com.slideindex.app.multitouch.MultiTouchGestureCoordinator
 import com.slideindex.app.multitouch.MultiTouchGestureSettingsStore
 import com.slideindex.app.multitouch.decodePathStrokes
+import com.slideindex.app.settings.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class MultiTouchGestureViewModel @Inject constructor(
     private val settingsStore: MultiTouchGestureSettingsStore,
     private val coordinator: MultiTouchGestureCoordinator,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
     val settings = settingsStore.state
 
     val status = coordinator.status
+
+    private var floatBallWasEnabled = false
 
     init {
         coordinator.start()
@@ -51,12 +57,26 @@ class MultiTouchGestureViewModel @Inject constructor(
         settingsStore.updatePathStrokes(entryId, decodePathStrokes(pendingStrokes))
     }
 
-    /** 录制路径手势期间暂停/恢复识别。 */
+    /** 录制路径手势期间暂停/恢复识别；同时临时隐藏悬浮球，避免画到边缘被它抢触摸。 */
     fun setRecording(recording: Boolean) {
         if (recording) {
             coordinator.pauseForRecording()
+            viewModelScope.launch {
+                floatBallWasEnabled = runCatching {
+                    settingsRepository.readSnapshot().floatBallEnabled
+                }.getOrDefault(false)
+                if (floatBallWasEnabled) {
+                    runCatching { settingsRepository.setFloatBallEnabled(false) }
+                }
+            }
         } else {
             coordinator.resumeAfterRecording()
+            viewModelScope.launch {
+                if (floatBallWasEnabled) {
+                    runCatching { settingsRepository.setFloatBallEnabled(true) }
+                }
+                floatBallWasEnabled = false
+            }
         }
     }
 
