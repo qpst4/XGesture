@@ -35,7 +35,7 @@ object ShizukuUserServiceHost {
      * 37：`getRecentTasks()` 行格式增加第 5 列 userId（分身识别）。
      * 升号后进程名变成 `task_manager_v39`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
      */
-    const val SERVICE_BUILD = 39
+    const val SERVICE_BUILD = 40
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bindLock = Any()

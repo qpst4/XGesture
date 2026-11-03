@@ -44,6 +44,9 @@ class ContinuousAdjustController(
     private val brightnessWriteRunning = AtomicBoolean(false)
     private var lastBrightnessWriteAtMs = 0L
 
+    /** 上一次走 shell 旁路（兼容通道）的时刻：按 100ms 节奏下发，不给常驻会话塞满。 */
+    private var lastShellPreviewAtMs = 0L
+
     /** 音量写入：单线程 + 最新值优先（这是把主线程从 binder 里救出来的关键）。 */
     private val volumeWriteExecutor = Executors.newSingleThreadExecutor()
     private val pendingVolumeFraction = AtomicReference<Float?>(null)
@@ -279,12 +282,17 @@ class ContinuousAdjustController(
         }
         val startedAt = SystemClock.uptimeMillis()
         val duringGesture = !commitAutoAdj
+        // 双写：Settings 每帧都写；shell 按 100ms 节奏旁路写一次（ColorOS 只认 shell 身份）。
+        val includeShell = commitAutoAdj ||
+            (SystemClock.uptimeMillis() - lastShellPreviewAtMs >= SHELL_PREVIEW_INTERVAL_MS)
         val synced = BrightnessControlHelper.writeBrightnessFraction(
             appContext,
             clamped,
             duringGesture = duringGesture,
             commitAutoAdj = commitAutoAdj,
+            includeShell = includeShell,
         )
+        if (includeShell) lastShellPreviewAtMs = SystemClock.uptimeMillis()
         val cost = SystemClock.uptimeMillis() - startedAt
         if (synced) {
             lastCommittedFraction = clamped
@@ -293,8 +301,8 @@ class ContinuousAdjustController(
         EdgeDiag.log(
             "brightness",
             "write fraction=${"%.3f".format(clamped)} synced=$synced " +
-                "duringGesture=$duringGesture commitAdj=$commitAutoAdj cost=${cost}ms " +
-                "path=${BrightnessControlHelper.lastWritePath}"
+                "duringGesture=$duringGesture commitAdj=$commitAutoAdj shell=$includeShell " +
+                "cost=${cost}ms path=${BrightnessControlHelper.lastWritePath}"
         )
     }
 
@@ -302,6 +310,11 @@ class ContinuousAdjustController(
         private const val DRAG_SPAN_SCREEN_FRACTION = 0.5f
         private const val VOLUME_TRACE_INTERVAL_MS = 500L
         private const val FRACTION_DEDUP_EPSILON = 0.004f
-        private const val PREVIEW_WRITE_MIN_INTERVAL_MS = 60L
+
+        /** 预览写入的最小间隔：Settings 快路 1~3ms，30Hz 足够跟手且不浪费。 */
+        private const val PREVIEW_WRITE_MIN_INTERVAL_MS = 33L
+
+        /** shell 旁路（兼容通道）的下发节奏：5~20ms 一次会话写，10Hz 已够 ColorOS 生效。 */
+        private const val SHELL_PREVIEW_INTERVAL_MS = 100L
     }
 }

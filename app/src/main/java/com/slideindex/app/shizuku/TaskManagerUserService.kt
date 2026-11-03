@@ -55,11 +55,15 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
 
     override fun runShellCommand(cmd: Array<out String>?): Boolean {
         if (cmd.isNullOrEmpty()) return false
+        runViaSession(cmd.joinToString(" ") { shell.shellQuote(it) })?.let { return it.exitCode == 0 }
         return shell.shellCommand(*cmd)
     }
 
     override fun runShellCommandOutput(cmd: Array<out String>?): String {
         if (cmd.isNullOrEmpty()) return shell.formatShellOutput(-1, "Empty command")
+        runViaSession(cmd.joinToString(" ") { shell.shellQuote(it) })?.let {
+            return shell.formatShellOutput(it.exitCode, it.output)
+        }
         val result = shell.shellCommandWithOutput(*cmd)
         return shell.formatShellOutput(result.exitCode, result.output)
     }
@@ -70,9 +74,18 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
         val wantRoot = useRoot && !forceAdb
         val result = when {
             wantRoot -> shell.runAsRootUser(trimmed)
-            else -> shell.runAsShellUser(trimmed, appContext)
+            // shell 身份下走常驻会话：单次从 ~100ms 降到几毫秒（亮度/音量的连续调节靠它）。
+            else -> runViaSession(trimmed) ?: shell.runAsShellUser(trimmed, appContext)
         }
         return shell.formatShellOutput(result.exitCode, result.output)
+    }
+
+    /**
+     * 走常驻 sh 会话；root 身份（或会话不可用）时返回 null，由调用方回退到一次性执行。
+     */
+    private fun runViaSession(line: String): TaskManagerShellExecutor.ShellExecResult? {
+        if (android.os.Process.myUid() == 0) return null
+        return PrivilegedShellSession.run(line, SESSION_TIMEOUT_MS)
     }
 
     override fun probeRootAvailable(): Boolean =
@@ -110,6 +123,9 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
     ): Boolean = freeWindow.moveTaskToFreeWindow(taskIdStr, windowingMode, left, top, right, bottom)
 
     companion object {
+        /** 单条会话命令的超时：远大于正常 `settings put`（几毫秒），只兜底卡死。 */
+        private const val SESSION_TIMEOUT_MS = 30_000L
+
         const val API_VERSION = ShizukuUserServiceHost.SERVICE_BUILD
         @StringRes
         val SHELL_DOWNGRADE_HINT_RES: Int = TaskManagerShellExecutor.SHELL_DOWNGRADE_HINT_RES

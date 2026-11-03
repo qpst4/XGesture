@@ -173,35 +173,36 @@ object BrightnessControlHelper {
     }
 
     /**
-     * 写入亮度。
+     * 写入亮度。**双写**：Settings（快，1~3ms）每次必写；shell（慢，5~20ms）按调用方的节流旁路写。
      *
-     * **通道优先级由 ROM 行为决定，不是由权限决定**：
-     * ColorOS 16 上「应用身份」写 `screen_brightness` / `screen_auto_brightness_adj` 会被静默忽略
-     * （Settings.putInt 返回 true，但屏幕不动）；真正生效的是 `settings put`（shell 身份）写
-     * `screen_auto_brightness_adj`。旧版本正是在提交时走 shell 写 adj 才"松手能看到变化"。
+     * 为什么要双写：哪条通道真的"进屏幕"是 ROM 决定的，而且**没有任何反馈可以判断**——
+     * - Meizu/Flyme：应用身份写 Settings 就生效，快路足够（拖动可以到 30~60Hz）；
+     * - ColorOS 16：应用身份写 Settings 返回成功、值也进库，但屏幕不动，只有 shell 身份写才生效。
+     * 写入永远返回成功，所以"失败再切"在代码里做不到，只能两条都发：谁能进屏幕谁进。
      *
-     * @param duringGesture 滑动过程中为 true：自动亮度下**只写 adj**（screen_brightness 在自动
-     *   亮度下由系统自己输出，写了也没用），减少每次 shell 的负载。
-     * @param commitAutoAdj 手势结束时为 true：亮度值 + 曲线偏移一起提交，保证能持久。
+     * **两个 key 必须一起写**：真机实测（Meizu 21 / Flyme）自动亮度下单独写
+     * `screen_auto_brightness_adj` 屏幕纹丝不动，只有带上 `screen_brightness` 才跟手。
+     *
+     * @param duringGesture 滑动过程中为 true：只降日志噪。
+     * @param commitAutoAdj 手势结束时为 true：用 caller 指定的通道提交，保证持久。
+     * @param includeShell  本次是否**额外**走一次 shell。调用方按 100ms 节奏置 true。
      */
     fun writeBrightnessFraction(
         context: Context,
         fraction: Float,
         duringGesture: Boolean = false,
         commitAutoAdj: Boolean = false,
+        includeShell: Boolean = true,
     ): Boolean {
         if (!hasAccess(context)) return false
         val appContext = context.applicationContext
         val clamped = fraction.coerceIn(0f, 1f)
-        val autoMode = readAutoBrightnessEnabled(appContext)
-        val adj = if (autoMode) fractionToAdj(clamped) else null
-        // 自动亮度下、且还在地势中：只写 adj（亮度值由系统输出，写它只会白花一次 shell）
-        val includeBrightness = commitAutoAdj || !autoMode
+        val adj = if (readAutoBrightnessEnabled(appContext)) fractionToAdj(clamped) else null
         return writeManualBrightnessFraction(
             context = appContext,
             clamped = clamped,
             adj = adj,
-            includeBrightness = includeBrightness,
+            includeShell = includeShell,
             logSuccess = !duringGesture,
         )
     }
@@ -213,7 +214,7 @@ object BrightnessControlHelper {
         context: Context,
         clamped: Float,
         adj: Float? = null,
-        includeBrightness: Boolean = true,
+        includeShell: Boolean = true,
         logSuccess: Boolean = true,
     ): Boolean {
         val appContext = context.applicationContext
@@ -226,59 +227,24 @@ object BrightnessControlHelper {
         }
         val targetAdj = adj?.coerceIn(-1f, 1f)
 
-        var synced = false
-        var path = "none"
+        var settingsOk = false
+        var shellOk = false
         val canWriteSettings = PermissionHelper.canWriteSettings(appContext) ||
             SecureSettingsHelper.hasWriteSecureSettings(appContext)
 
-        // ① **shell 优先**。
-        //
-        // 真机实测（ColorOS 16 / OnePlus PJZ110）：应用身份 Settings.putInt(screen_brightness)
-        // 与 putFloat(screen_auto_brightness_adj) 都返回 true，但屏幕纹丝不动 —— ROM 只认
-        // shell/system 身份的写。旧版本在提交时用 shell 写 adj，所以"松手能看到一次变化"；
-        // 如果把通道换成 Settings，表现就是"任何调节都不生效"。
-        if (TaskManagerUtil.hasPermission()) {
-            val command = buildString {
-                if (includeBrightness) {
-                    append("settings put system screen_brightness ").append(targetIntLevel)
-                }
-                if (targetAdj != null) {
-                    if (isNotEmpty()) append(" && ")
-                    append("settings put system ")
-                    append(SCREEN_AUTO_BRIGHTNESS_ADJ).append(' ').append(targetAdj)
-                }
-            }
-            if (command.isNotEmpty()) {
-                synced = TaskManagerUtil.runShellCommandLine(
-                    command = command,
-                    useRoot = PrivilegeGateway.isRootMode(),
-                ).success
-                if (synced) {
-                    path = when {
-                        includeBrightness && targetAdj != null -> "shell(brightness+adj)"
-                        includeBrightness -> "shell(brightness)"
-                        else -> "shell(adj)"
-                    }
-                }
-            }
-        }
-
-        // ② 没有 shell、或 shell 失败时，才退回 Settings（在部分 ROM 上这条通道会被忽略）。
+        // ① 快路：Settings。每次调用都写（1~3ms），Settings 有效的 ROM 靠它跟手。
         //
         // 只写 int 这一个通道：Android 12+ 的 BrightnessSynchronizer 会把
         // screen_brightness / screen_brightness_float 互相换算、互相回写，
         // 两个通道量纲不一致就成了自己覆盖自己。float 只读不写。
-        if (!synced && canWriteSettings) {
-            if (includeBrightness) {
-                synced = runCatching {
-                    Settings.System.putInt(
-                        appContext.contentResolver,
-                        Settings.System.SCREEN_BRIGHTNESS,
-                        targetIntLevel,
-                    )
-                }.getOrDefault(false)
-                if (synced) path = "settings"
-            }
+        if (canWriteSettings) {
+            settingsOk = runCatching {
+                Settings.System.putInt(
+                    appContext.contentResolver,
+                    Settings.System.SCREEN_BRIGHTNESS,
+                    targetIntLevel,
+                )
+            }.getOrDefault(false)
             if (targetAdj != null) {
                 runCatching {
                     Settings.System.putFloat(
@@ -288,17 +254,38 @@ object BrightnessControlHelper {
                     )
                 }
             }
-            if (!includeBrightness && targetAdj != null) {
-                synced = true
-                path = "settings(adj)"
+        }
+
+        // ② 兼容路：shell（身份不同，ColorOS 只认它）。按调用方节流下发，或用 Settings 写不动时兜底。
+        if (includeShell || !settingsOk) {
+            if (TaskManagerUtil.hasPermission()) {
+                val command = buildString {
+                    append("settings put system screen_brightness ").append(targetIntLevel)
+                    if (targetAdj != null) {
+                        append(" && settings put system ")
+                        append(SCREEN_AUTO_BRIGHTNESS_ADJ).append(' ').append(targetAdj)
+                    }
+                }
+                shellOk = TaskManagerUtil.runShellCommandLine(
+                    command = command,
+                    useRoot = PrivilegeGateway.isRootMode(),
+                ).success
             }
+        }
+
+        val synced = settingsOk || shellOk
+        val path = when {
+            settingsOk && shellOk -> "settings+shell"
+            settingsOk -> "settings"
+            shellOk -> "shell"
+            else -> "none"
         }
         lastWritePath = path
         if (synced && logSuccess) {
             Log.d(
                 TAG,
                 "manual brightness set to $targetIntLevel (fraction=$clamped, max=$max, " +
-                    "adj=$targetAdj, includeBrightness=$includeBrightness, path=$path)",
+                    "adj=$targetAdj, path=$path, includeShell=$includeShell)",
             )
         }
         return synced
