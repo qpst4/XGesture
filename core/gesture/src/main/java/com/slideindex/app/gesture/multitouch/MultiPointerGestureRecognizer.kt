@@ -51,12 +51,14 @@ class MultiPointerGestureRecognizer(
     private val settleMs: Long = 60L,
     private val longPressMs: Long = 550L,
     private val doubleTapMs: Long = 260L,
-    private val rotateScoreThreshold: Float = 0.05f,
-    private val fourFingerRotateScoreThreshold: Float = 0.04f,
+    private val rotateScoreThreshold: Float = 0.10f,
+    private val fourFingerRotateScoreThreshold: Float = 0.08f,
+    /** 手势尺寸（mm）：GMD 的 `gestureSizeMm`，1–10。 */
+    private val gestureSizeMm: Float = 4f,
+    /** 屏幕高度（mm）：把归一化半径差换算成 mm。 */
+    private val screenHeightMm: Float = 150f,
     private val rotateMaxRadiusDrift: Float = 0.32f,
     private val fourFingerRotateMaxRadiusDrift: Float = 0.40f,
-    private val radiusChangeFraction: Float = 0.18f,
-    private val minRadiusChange: Float = 0.012f,
 ) {
     private data class Baseline(
         val ids: List<Int>,
@@ -149,8 +151,8 @@ class MultiPointerGestureRecognizer(
             val four = ordered.size >= 4
             val rotation = rotationScore(ordered, centerX, centerY, current)
             if (rotation != null) {
-                // 角度近似：|cross| / (2 * Σr²) ≈ sinθ / 2，尺度无关。
-                val score = abs(rotation.cross) / (2f * rotation.radiusSquared)
+                // GMD：|cross| / r²，阈值约 1（归一化后按经验校准）。
+                val score = abs(rotation.cross) / rotation.radiusSquared
                 val threshold = if (four) fourFingerRotateScoreThreshold else rotateScoreThreshold
                 val maxDrift = if (four) fourFingerRotateMaxRadiusDrift else rotateMaxRadiusDrift
                 if (score >= threshold && abs(radiusRatio - 1f) <= maxDrift) {
@@ -164,7 +166,8 @@ class MultiPointerGestureRecognizer(
             }
             val startRms = rmsRadius(current.startPoints.values, current.centerX, current.centerY)
             val currentRms = rmsRadius(ordered, centerX, centerY)
-            val changeThreshold = max(minRadiusChange, startRms * radiusChangeFraction)
+            // GMD：|起始半径 - 当前半径| >= max(1, gestureSizeMm/4) mm。
+            val changeThreshold = max(1f, gestureSizeMm / 4f) / screenHeightMm
             if (startRms - currentRms >= changeThreshold) {
                 return latch(MultiPointerGesture.PINCH, timeMs)
             }
