@@ -154,6 +154,19 @@ object EdgeCardOverlayWindow {
 
         val existing = entries.firstOrNull { it.matches(plan.data) && !it.preview }
         if (existing != null) {
+            // 窗口可能在上一次锁屏挂起 / 建窗失败后变成空壳：这里必须重建，否则该会话后续
+            // 每条消息都只更新内容、永远不再建窗（表现为「日志一直打 autoCollapse，但屏幕没卡」）。
+            val rebuilt = if (existing.view == null || existing.params == null) {
+                if (!ensureWindow(existing, hostContext)) {
+                    Log.w(TAG, "rebuild window failed, dropping entry key=${existing.key}")
+                    removeEntry(existing, notifyDismiss = false)
+                    return
+                }
+                relayout()
+                true
+            } else {
+                false
+            }
             val changed = NotificationContentGate.signature(existing.plan.data) != NotificationContentGate.signature(plan.data)
             // 角标按“本会话收到的条数”累计，不再取通知的 number：微信/QQ 把 number 设成
             // 整个 App 的未读总数，混进来会显示成 99+ 并且永远减不下来。
@@ -173,7 +186,7 @@ object EdgeCardOverlayWindow {
             if (changed) moveToTop(existing)
             // 同会话来新消息：窗口直接瞬移到展开位，再播一次“从屏外滑入”的入场动画。
             applyEntry(existing, animated = false)
-            if (changed) {
+            if (changed || rebuilt) {
                 existing.view?.playEntrance(1f)
                 scheduleAutoCollapse(existing)
             }
@@ -191,7 +204,11 @@ object EdgeCardOverlayWindow {
         entry.dismissCallback = onDismiss
         entries.add(0, entry)
         trimToCount(plan.settings)
-        ensureWindow(entry, hostContext)
+        if (!ensureWindow(entry, hostContext)) {
+            Log.w(TAG, "create window failed, dropping entry key=${entry.key}")
+            removeEntry(entry, notifyDismiss = false)
+            return
+        }
         relayout()
         // 先挂计时器再展开：展开会启动滚动，滚动启动时会把计时器取消掉（内容溢出场景）。
         scheduleAutoCollapse(entry)
@@ -251,7 +268,10 @@ object EdgeCardOverlayWindow {
         entry.actionCallback = {}
         entry.dismissCallback = {}
         entries.add(entry)
-        ensureWindow(entry, hostContext)
+        if (!ensureWindow(entry, hostContext)) {
+            entries.remove(entry)
+            return
+        }
         Log.d(
             TAG,
             "installPreview done entries=${entries.size} view=${entry.view != null} " +
@@ -342,8 +362,14 @@ object EdgeCardOverlayWindow {
         trimToCount(entries.first().plan.settings)
         entries.toList().forEach { entry ->
             if (entry.view == null) {
-                ensureWindow(entry, hostContext)
-                applyEntry(entry, animated = false)
+                if (ensureWindow(entry, hostContext)) {
+                    applyEntry(entry, animated = false)
+                } else {
+                    // 重建失败：丢掉空壳，避免留下永远不显示的卡。
+                    cancelAutoCollapse(entry)
+                    entries.remove(entry)
+                    Log.w(TAG, "replay drop entry key=${entry.key}")
+                }
             }
         }
         relayout()
@@ -583,7 +609,8 @@ object EdgeCardOverlayWindow {
         params.gravity = Gravity.TOP or Gravity.START
     }
 
-    private fun ensureWindow(entry: EdgeCardEntry, hostContext: Context) {
+    /** 建窗口。返回 false 表示这次没挂上，调用方必须丢弃该 entry，避免留下永远不显示的僵尸卡。 */
+    private fun ensureWindow(entry: EdgeCardEntry, hostContext: Context): Boolean {
         val settings = entry.plan.settings
         val view = EdgeCardView(hostContext).apply {
             exclusionEdge = settings.edgeCardHorizontalEdge
@@ -664,16 +691,16 @@ object EdgeCardOverlayWindow {
 
         val wm = windowManager
         if (wm == null) {
-            Log.d(TAG, "ensureWindow skipped: windowManager null")
-            return
+            Log.d(TAG, "ensureWindow skipped: windowManager null key=${entry.key}")
+            return false
         }
         val added = runCatching { wm.addView(view, params) }
-            .onFailure { Log.e(TAG, "addView failed", it) }
+            .onFailure { Log.e(TAG, "addView failed key=${entry.key}", it) }
             .isSuccess
         if (!added) {
             entry.view = null
             entry.params = null
-            return
+            return false
         }
         Log.d(
             TAG,
@@ -682,6 +709,7 @@ object EdgeCardOverlayWindow {
                 "screenW=${screenWidth()}",
         )
         view.post { relayout() }
+        return true
     }
 
     private fun computeTops(settings: MessageSettings, count: Int): List<Int> {
