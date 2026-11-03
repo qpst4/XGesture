@@ -34,7 +34,6 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
     ): Boolean {
         stopMultiTouchObservation()
         val observer = EvdevTouchObserver(
-            pathPriority = pathPriority,
             onGesture = { gesture, eventTimeMs ->
                 runCatching {
                     callback.onGesture(gesture.gesture.ordinal, gesture.fingerCount, eventTimeMs)

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -81,6 +82,8 @@ fun MultiTouchPathRecordScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(420.dp)
+                        // 画到屏幕左右边缘时不触发系统返回手势。
+                        .systemGestureExclusion()
                         .clip(RoundedCornerShape(20.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                         .pointerInput(Unit) {

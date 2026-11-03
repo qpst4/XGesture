@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit
  * Linux input 的 ioctl 在纯 Java 里拿不到，直接解析 shell 输出最省事），同时拿到坐标范围。
  */
 class EvdevTouchObserver(
-    private val pathPriority: Boolean = false,
     private val onGesture: (RecognizedMultiPointerGesture, Long) -> Unit,
     private val onPathGesture: (CollectedPath, Long) -> Unit = { _, _ -> },
     private val onInputConflict: (String?) -> Unit = {},
@@ -40,9 +39,6 @@ class EvdevTouchObserver(
 
     private val pathCollector = PathGestureCollector()
 
-    /** 内置手势已经触发：本次触摸不再收集路径，直到手指全部抬起。 */
-    private var suppressPath = false
-
     /** 上一次上报的虚拟设备列表，避免每次枚举都重复回调。 */
     @Volatile
     private var lastReportedConflict: String? = null
@@ -50,6 +46,10 @@ class EvdevTouchObserver(
     /** 独立冲突检测线程：不依赖触摸事件。 */
     @Volatile
     private var conflictWorker: Thread? = null
+
+    /** 点按延迟判定：没有触摸帧时也要驱动识别器。 */
+    @Volatile
+    private var tickWorker: Thread? = null
 
     fun start(): Boolean {
         if (running) return true
@@ -59,6 +59,10 @@ class EvdevTouchObserver(
             start()
         }
         conflictWorker = Thread({ conflictLoop() }, "multi-touch-conflict").apply {
+            isDaemon = true
+            start()
+        }
+        tickWorker = Thread({ tickLoop() }, "multi-touch-tick").apply {
             isDaemon = true
             start()
         }
@@ -73,6 +77,8 @@ class EvdevTouchObserver(
         worker = null
         conflictWorker?.interrupt()
         conflictWorker = null
+        tickWorker?.interrupt()
+        tickWorker = null
     }
 
     fun isRunning(): Boolean = running && worker?.isAlive == true
@@ -145,34 +151,19 @@ class EvdevTouchObserver(
                         SYN_REPORT -> {
                             val now = android.os.SystemClock.elapsedRealtime()
                             val pointers = collectPointers(slots, ranges)
-                            if (pathPriority) {
-                                // 路径优先模式：只收集轨迹，抬手时交给 app 匹配，不跑几何手势。
-                                val path = pathCollector.onFrame(pointers)
-                                if (path != null) {
-                                    log("path x${path.fingerCount} points=${path.strokes.sumOf { it.points.size }}")
-                                    onPathGesture(path, now)
-                                }
-                            } else {
-                                val gesture = recognizer.onFrame(pointers, now)
-                                if (gesture != null) {
-                                    suppressPath = true
-                                    pathCollector.cancel()
-                                    log("recognized ${gesture.gesture} x${gesture.fingerCount}")
-                                    onGesture(gesture, now)
-                                } else if (!suppressPath) {
-                                    val path = pathCollector.onFrame(pointers)
-                                    if (path != null) {
-                                        log(
-                                            "path x${path.fingerCount} " +
-                                                "points=${path.strokes.sumOf { it.points.size }}"
-                                        )
-                                        onPathGesture(path, now)
-                                    }
-                                }
-                                if (pointers.isEmpty()) {
-                                    suppressPath = false
-                                    pathCollector.cancel()
-                                }
+                            val gesture = recognizer.onFrame(pointers, now)
+                            if (gesture != null) {
+                                log("recognized ${gesture.gesture} x${gesture.fingerCount}")
+                                onGesture(gesture, now)
+                            }
+                            // 路径轨迹与几何识别并行采集：最终由 app 侧按条目去重。
+                            val path = pathCollector.onFrame(pointers)
+                            if (path != null) {
+                                log(
+                                    "path x${path.fingerCount} " +
+                                        "points=${path.strokes.sumOf { it.points.size }}"
+                                )
+                                onPathGesture(path, now)
                             }
                         }
 
@@ -227,6 +218,19 @@ class EvdevTouchObserver(
                 Log.w(TAG, "conflict scan failed: ${it.message}")
             }
             sleepQuietly(CONFLICT_CHECK_INTERVAL_MS)
+        }
+    }
+
+    /** 定时驱动识别器：把双击窗口结束后待定的「轻点」发出去。 */
+    private fun tickLoop() {
+        while (running) {
+            val now = android.os.SystemClock.elapsedRealtime()
+            val gesture = runCatching { recognizer.onTick(now) }.getOrNull()
+            if (gesture != null) {
+                log("recognized ${gesture.gesture} x${gesture.fingerCount} (tick)")
+                onGesture(gesture, now)
+            }
+            sleepQuietly(TICK_INTERVAL_MS)
         }
     }
 
@@ -357,6 +361,9 @@ class EvdevTouchObserver(
 
         /** 运行期冲突检测间隔：其它触控工具可能随时创建设备。 */
         const val CONFLICT_CHECK_INTERVAL_MS = 5_000L
+
+        /** 点按延迟判定的定时器间隔。 */
+        const val TICK_INTERVAL_MS = 40L
 
         const val SYN_REPORT = 0
         const val SYN_DROPPED = 3

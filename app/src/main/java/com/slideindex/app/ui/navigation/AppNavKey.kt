@@ -325,32 +325,39 @@ sealed interface AppNavKey : NavKey {
     /**
      * 多指手势的动作选择页。
      *
-     * @param bindingKey `3:PINCH` 这类绑定键；`path` 表示正在录制一条路径手势
-     * @param pendingStrokes 路径草稿（`x,y;x,y|x,y`），仅 `bindingKey=path` 时使用
+     * @param kind `MultiPointerGesture.ordinal`
+     * @param fingerCount 接触点数（1–5）
+     * @param pendingStrokes 路径草稿（`x,y;x,y|x,y`），`kind=PATH` 时使用
      */
     @Serializable data class ExtensionMultiTouchActionPick(
-        val bindingKey: String,
+        val kind: Int,
+        val fingerCount: Int,
         val pendingStrokes: String = "",
     ) : AppNavKey
     @Serializable data class ExtensionMultiTouchActionMyShortcuts(
-        val bindingKey: String,
+        val kind: Int,
+        val fingerCount: Int,
         val pendingStrokes: String = "",
     ) : AppNavKey
     @Serializable data class ExtensionMultiTouchActionPresetShortcuts(
-        val bindingKey: String,
+        val kind: Int,
+        val fingerCount: Int,
         val pendingStrokes: String = "",
     ) : AppNavKey
     @Serializable data class ExtensionMultiTouchActionPickApp(
-        val bindingKey: String,
+        val kind: Int,
+        val fingerCount: Int,
         val pendingStrokes: String = "",
     ) : AppNavKey
     @Serializable data class ExtensionMultiTouchActionPickActivity(
-        val bindingKey: String,
+        val kind: Int,
+        val fingerCount: Int,
         val pendingStrokes: String = "",
         val appPackageName: String = "",
     ) : AppNavKey
     @Serializable data class ExtensionMultiTouchActionShellCommand(
-        val bindingKey: String,
+        val kind: Int,
+        val fingerCount: Int,
         val pendingStrokes: String = "",
         val initialCommand: String = "",
     ) : AppNavKey

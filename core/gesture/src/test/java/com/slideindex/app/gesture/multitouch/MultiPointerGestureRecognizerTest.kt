@@ -172,13 +172,13 @@ class MultiPointerGestureRecognizerTest {
     }
 
     @Test
-    fun `four finger swipe is ignored`() {
-        // 四指只用于旋转/捏合/张开，整体平移不应触发滑动。
+    fun `four finger swipe is recognized`() {
         val frames = mutableListOf(ring(4, 0.65f, 0.5f, 0.16f))
         repeat(8) { step ->
             frames += ring(4, 0.65f - step * 0.02f, 0.5f, 0.16f)
         }
-        assertNull(feed(frames))
+        val result = feed(frames)
+        assertEquals(MultiPointerGesture.SWIPE_LEFT, result?.gesture)
     }
 
     @Test
@@ -225,12 +225,14 @@ class MultiPointerGestureRecognizerTest {
     }
 
     @Test
-    fun `two finger pinch is ignored`() {
+    fun `two finger pinch is recognized`() {
         val frames = mutableListOf(ring(2, 0.5f, 0.5f, 0.30f))
         repeat(8) { step ->
             frames += ring(2, 0.5f, 0.5f, 0.30f - step * 0.02f)
         }
-        assertNull(feed(frames))
+        val result = feed(frames)
+        assertEquals(MultiPointerGesture.PINCH, result?.gesture)
+        assertEquals(2, result?.fingerCount)
     }
 
     @Test

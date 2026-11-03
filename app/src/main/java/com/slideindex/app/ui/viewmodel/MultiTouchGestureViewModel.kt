@@ -2,8 +2,7 @@ package com.slideindex.app.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.slideindex.app.gesture.GestureAction
-import com.slideindex.app.gesture.multitouch.MultiPointerBinding
-import com.slideindex.app.gesture.multitouch.PathGestureTemplate
+import com.slideindex.app.gesture.multitouch.MultiPointerGesture
 import com.slideindex.app.multitouch.MultiTouchGestureCoordinator
 import com.slideindex.app.multitouch.MultiTouchGestureSettingsStore
 import com.slideindex.app.multitouch.decodePathStrokes
@@ -21,7 +20,6 @@ class MultiTouchGestureViewModel @Inject constructor(
     val status = coordinator.status
 
     init {
-        // 进入设置页时确保协调器已启动（正常由 Application 启动，这里兜底）。
         coordinator.start()
     }
 
@@ -29,42 +27,26 @@ class MultiTouchGestureViewModel @Inject constructor(
         settingsStore.setEnabled(enabled)
     }
 
-    fun setBinding(binding: MultiPointerBinding, action: GestureAction) {
-        settingsStore.setBinding(binding, action)
+    /** 动作选择页回写：同「类型 + 接触点数」覆盖，否则新增条目。 */
+    fun applyEntry(
+        kind: MultiPointerGesture,
+        fingerCount: Int,
+        pendingStrokes: String,
+        action: GestureAction,
+    ) {
+        settingsStore.applyEntry(
+            kind = kind,
+            fingerCount = fingerCount,
+            pendingStrokes = decodePathStrokes(pendingStrokes),
+            action = action,
+        )
     }
 
-    fun addPathGesture(template: PathGestureTemplate) {
-        settingsStore.addPathGesture(template)
+    fun removeEntry(id: String) {
+        settingsStore.removeEntry(id)
     }
 
-    fun removePathGesture(id: String) {
-        settingsStore.removePathGesture(id)
-    }
-
-    fun setPathPriority(enabled: Boolean) {
-        settingsStore.setPathPriority(enabled)
-    }
-
-    /** 动作选择页/子流程回写：`bindingKey=path` 时保存为一条新的路径手势。 */
-    fun applyAction(bindingKey: String, pendingStrokes: String, action: GestureAction) {
-        if (bindingKey == PATH_BINDING_KEY) {
-            val strokes = decodePathStrokes(pendingStrokes)
-            if (strokes.size < 2) return
-            settingsStore.addPathGesture(
-                PathGestureTemplate(
-                    id = "path_${System.currentTimeMillis()}",
-                    name = "手势 ${settingsStore.state.value.pathGestures.size + 1}",
-                    strokes = strokes,
-                    action = action,
-                )
-            )
-            return
-        }
-        val binding = MultiPointerBinding.fromStorageKey(bindingKey) ?: return
-        settingsStore.setBinding(binding, action)
-    }
-
-    /** 录制路径手势期间暂停/恢复识别，避免录制动作触发已有手势。 */
+    /** 录制路径手势期间暂停/恢复识别。 */
     fun setRecording(recording: Boolean) {
         if (recording) {
             coordinator.pauseForRecording()
@@ -75,9 +57,5 @@ class MultiTouchGestureViewModel @Inject constructor(
 
     fun retry() {
         coordinator.restart()
-    }
-
-    companion object {
-        const val PATH_BINDING_KEY = "path"
     }
 }
