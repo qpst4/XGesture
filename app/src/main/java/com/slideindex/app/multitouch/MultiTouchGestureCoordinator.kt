@@ -105,7 +105,7 @@ class MultiTouchGestureCoordinator @Inject constructor(
                 strokes += PathStroke(strokePoints)
             }
             val candidates = settingsStore.state.value.entries
-                .filter { it.isPath && it.fingerCount == fingerCount && it.pathStrokes.size >= 2 }
+                .filter { it.isPath && it.fingerCount == fingerCount && it.pathStrokes.isNotEmpty() }
             if (candidates.isEmpty()) return
             val templates = candidates.map { entry ->
                 PathGestureTemplate(
