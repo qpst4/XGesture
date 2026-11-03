@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.viewinterop.AndroidView
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -105,16 +106,23 @@ private fun SolidPanelBackdrop(
 }
 
 /**
- * 面板内 backdrop 这条路上能否真的糊：**用户总开关 × 系统跨窗模糊能力**，走
- * [OverlayBlurGate] 这个唯一决策点。
+ * 面板内 backdrop 这条路上能否真的糊：**用户总开关 × 系统跨窗模糊能力 × 窗口是否硬件加速**，
+ * 走 [OverlayBlurGate] 这个唯一决策点。
  *
  * 只问用户开关是不够的：ROM 关掉跨窗模糊时 [setupBackgroundBlur] 的反射会静默失败
  * （只打一条日志），面板就只剩 tint 甚至什么都没有 —— 与「关闭模糊后塌成浅色底」是同一类
  * 现象。所以系统那半边必须一起问，问不到就按实色降级。
+ *
+ * 还必须是硬件加速窗口：`BackgroundBlurDrawable.draw()` 走 `Canvas.drawRenderNode`，
+ * 软件 Canvas（`ViewRootImpl.drawSoftware`）上会直接抛 `IllegalArgumentException`。
+ * 浮窗完全可能整窗软件渲染（见 `MiuixOverlayComposeLocals` 的同款结论），此时必须降级实色。
  */
 @Composable
 internal fun canBlurInOverlay(): Boolean {
     if (!rememberOverlayBlurEnabled()) return false
+    val view = LocalView.current
+    // 未 attach 时 isHardwareAccelerated 恒为 false，不能据此判定；交给 setupBackgroundBlur 兜底。
+    if (view.isAttachedToWindow && !view.isHardwareAccelerated) return false
     val context = LocalContext.current
     val windowManager = remember(context) {
         context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
@@ -130,6 +138,20 @@ internal fun setupBackgroundBlur(
     /** 拿不到 drawable 时最多补 post 重试几次（见下）。 */
     retriesLeft: Int = 1,
 ) {
+    // 软件渲染的窗口不能挂 BackgroundBlurDrawable：绘制期 Canvas.drawRenderNode 会抛
+    // IllegalArgumentException（崩溃在 View.draw() 里，外层的 runCatching 兜不住）。
+    // 未 attach 时 isHardwareAccelerated 恒为 false，不能据此判定，留给下面的 post 重试。
+    if (view.isAttachedToWindow && !view.isHardwareAccelerated) {
+        Log.w(
+            "LocalFrostedGlass",
+            "setupBackgroundBlur skipped: window is software-rendered (${view.javaClass.simpleName})"
+        )
+        // 已经挂上的 blur 背景必须摘掉：窗口转软件渲染后它仍会走 drawRenderNode 崩掉。
+        if (view.background?.javaClass?.name?.contains("BackgroundBlurDrawable") == true) {
+            view.background = null
+        }
+        return
+    }
     runCatching {
         val blurDrawable = view.background?.takeIf {
             it.javaClass.name.contains("BackgroundBlurDrawable")

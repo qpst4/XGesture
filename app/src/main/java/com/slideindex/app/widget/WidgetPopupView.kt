@@ -236,7 +236,12 @@ class WidgetPopupCardLayout(
     fun applyCardBackground() {
         val page = pages.getOrElse(currentPageIndex) { WidgetPanelPage() }
         // 全局模糊总开关与单项开关取交集：任一关闭都走实色卡片。
-        val blurActive = settings.overlayBlurEnabled && settings.widgetPanelBlurEnabled
+        // 还必须是硬件加速窗口：BackgroundBlurDrawable 在软件 Canvas 上绘制会抛
+        // IllegalArgumentException（见 LocalFrostedGlassBackdrop.setupBackgroundBlur 的同款守护）。
+        // 未 attach 时 isHardwareAccelerated 恒为 false → 先走实色，首帧 preDraw 会重算一次。
+        val blurActive = settings.overlayBlurEnabled &&
+            settings.widgetPanelBlurEnabled &&
+            isHardwareAccelerated
         val surfaceColor = WidgetPanelUi.panelSurfaceColorInt(
             overlayAlpha = page.overlayAlpha,
             editMode = editMode,
@@ -268,6 +273,10 @@ class WidgetPopupCardLayout(
     }
 
     private fun setupBackgroundBlur(cornerRadiusPx: Float, blurRadiusPx: Int, tintColor: Int) {
+        if (!isHardwareAccelerated) {
+            Log.w(TAG, "setupBackgroundBlur skipped: window is software-rendered")
+            return
+        }
         runCatching {
             val getViewRootImplMethod = View::class.java.getDeclaredMethod("getViewRootImpl")
             getViewRootImplMethod.isAccessible = true
