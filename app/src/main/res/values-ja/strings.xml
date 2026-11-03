@@ -1909,7 +1909,6 @@
     <string name="ocr_download_step_model">モデルをダウンロード中（%1$d/%2$d）…</string>
     <string name="translate_download_step_engine">翻訳エンジンをダウンロード中（%1$d/%2$d）…</string>
     <string name="translate_download_step_language">言語パックをダウンロード中（%1$d/%2$d）…</string>
-    <string name="segmentation_engine_preparing">分かち書きエンジンを準備中…</string>
     <string name="native_engine_status_manage">管理</string>
     <string name="about_section_app_info">アプリ情報</string>
     <string name="about_section_open_source">オープンソースとライセンス</string>
@@ -1937,12 +1936,11 @@
     <string name="diagnostic_report_share_subject">XGesture 診断ログ</string>
     <string name="diagnostic_report_truncation_suffix">\n\n…(内容が長いため省略)…</string>
     <string name="native_engine_packs_title">ランタイムエンジン</string>
-    <string name="native_engine_packs_subtitle">OCR、オフライン翻訳、分かち書き用ネイティブライブラリ</string>
+    <string name="native_engine_packs_subtitle">OCR・オフライン翻訳用ネイティブライブラリ</string>
     <string name="native_engine_packs_section">エンジンパック</string>
     <string name="native_engine_packs_hint">ランタイムエンジンは APK に同梱されています。このページはローカルダウンロードキャッシュの消去のみ（同梱ライブラリは削除されません）。</string>
     <string name="native_engine_pack_ocr">OCR エンジン</string>
     <string name="native_engine_pack_translate">オフライン翻訳エンジン</string>
-    <string name="native_engine_pack_segmentation">分かち書きエンジン</string>
     <string name="native_engine_pack_size">約 %1$s</string>
     <string name="native_engine_pack_installed_version">インストール済み · %1$s</string>
     <string name="native_engine_pack_latest_version">最新 · %1$s</string>
@@ -1959,7 +1957,7 @@
     <string name="native_engine_download_failed">ダウンロード失敗</string>
     <string name="native_engine_download_cancelled">キャンセルしました</string>
     <string name="extension_native_engine_packs_entry_title">ランタイムエンジン</string>
-    <string name="extension_native_engine_packs_entry_desc">OCR / オフライン翻訳 / 分かち書きネイティブ</string>
+    <string name="extension_native_engine_packs_entry_desc">OCR / オフライン翻訳ネイティブ</string>
     <string name="ocr_engine_migration_success_title">OCR エンジンを更新しました</string>
     <string name="ocr_engine_migration_success_message">このバージョンに合わせて OCR ランタイムエンジンを %1$s にアップグレードしました。認識に失敗した場合は、ランタイムエンジンから再インストールしてください。</string>
     <string name="ocr_engine_migration_download_title">OCR エンジンの更新が必要です</string>

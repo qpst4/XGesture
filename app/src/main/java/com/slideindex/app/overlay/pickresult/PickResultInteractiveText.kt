@@ -188,7 +188,7 @@ internal fun PickResultInteractiveTextSection(
         wordTokenOverride = null
         if (text.isNotBlank() && pickResultTokenCache.get(text) == null) {
             val newTokens = withContext(Dispatchers.Default) {
-                PickResultWordTokenizer.tokenizeSelectableWords(text, appContext)
+                PickResultWordTokenizer.tokenizeSelectableWords(text)
             }
             pickResultTokenCache.put(text, newTokens)
             wordTokens = newTokens

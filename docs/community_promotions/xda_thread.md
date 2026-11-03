@@ -56,7 +56,7 @@ I wanted to share **XGesture**, a system-level gesture and productivity tool I'v
 
 * **GitHub**: https://github.com/qpst4/XGesture
 * **Releases**: https://github.com/qpst4/XGesture/releases
-  * `xgesture-*-full.apk`: Out-of-the-box experience with bundled offline OCR & segmentation models.
+  * `xgesture-*-full.apk`: Out-of-the-box experience with bundled offline OCR models.
   * `xgesture-*-lite.apk`: Smaller package size; extension engines download on demand.
 
 Pull requests, OEM quirks reports, and feedback are warmly welcomed!

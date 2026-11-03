@@ -19,8 +19,6 @@ import com.slideindex.app.di.ShizukuInitializer
 import com.slideindex.app.nativeengine.NativeEnginePackCoordinator
 import com.slideindex.app.nativeengine.NativeEngineRuntime
 import com.slideindex.app.ocr.OcrDependencyAccess
-import com.slideindex.app.segmentation.JiebaWarmUp
-import com.slideindex.app.segmentation.SegmentationEngineProvisioner
 import com.slideindex.app.service.ClipboardFloatLifecycle
 import com.slideindex.app.service.GestureToggleTileWarmup
 import com.slideindex.app.service.HistoryFloatLifecycle
@@ -81,7 +79,6 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
     @Inject lateinit var ocrInstalledModelStartupVerifier: OcrInstalledModelStartupVerifier
     @Inject lateinit var nativeEnginePackCoordinator: NativeEnginePackCoordinator
     @Inject lateinit var ocrEnginePackMigrationStartup: OcrEnginePackMigrationStartup
-    @Inject lateinit var segmentationEngineProvisioner: SegmentationEngineProvisioner
     @Inject lateinit var updatePreferencesStore: UpdatePreferencesStore
     @Inject lateinit var moduleHookConfigSync: ModuleHookConfigSync
 
@@ -143,7 +140,6 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.util.LocalCrashHandler.install(this)
         HiddenApiBootstrap.install()
         NativeEngineRuntime.coordinator = nativeEnginePackCoordinator
-        NativeEngineRuntime.onRequestSegmentationPack = { segmentationEngineProvisioner.requestIfNeeded() }
         NativeEngineRuntime.onOcrEnginePackInvalidated = {
             OcrDependencyAccess.inferenceService(this)?.invalidateEngineBlocking()
         }
@@ -206,18 +202,14 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         // :overlay 进程不跑这些，否则它自己就成了"启动期卡顿"的下一个受害者。
         if (AppProcess.isMain) {
         com.slideindex.app.ui.icon.AppIconTheme.ensureSelectedThemeEnabled(this)
-        // 首帧后再做 OCR 校验、分词 warm-up、应用列表扫描，减轻装后首开卡顿
-        // 延迟执行启动期重活：开机瞬间主线程若被 OCR 校验 / 分词 warm-up / 应用列表扫描占住，
+        // 首帧后再做 OCR 校验与应用列表扫描，减轻装后首开卡顿
+        // 延迟执行启动期重活：开机瞬间主线程若被 OCR 校验 / 应用列表扫描占住，
         // 剪贴板监听前台服务会来不及在 5 秒内 startForeground（实测过一次
         // ForegroundServiceDidNotStartInTimeException）。
         ClipboardMonitorStartup.runOnMainWhenReady {
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             // 引擎包校验 + OCR 冒烟改到 :engine 进程执行（native 库与解压消耗不再压在本进程）
             com.slideindex.app.service.EngineBootService.start(this@SlideIndexApp)
-            // 分词不再在启动期预热：cppjieba 要把 5 MB 词典建成 native trie，
-            // 实测常驻上百 MB（首次 smaps 归因：主进程 Scudo 堆里最大的一块匿名内存）。
-            // CppJiebaTokenizer 本身是懒加载的（首次 segment() 才 nativeInit），
-            // 只服务"拾取结果的分词 chip"，等真正需要时再建即可。
             if (deps.settingsRepository.readSnapshot().onboardingCompleted) {
                 deps.applicationScope.launch(Dispatchers.IO) {
                     deps.appRepository.loadApps()

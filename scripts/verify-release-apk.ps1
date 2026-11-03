@@ -85,7 +85,7 @@ function Verify-ReleaseApk {
     Write-Host "APK size: $apkBytes bytes"
 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    $requiredPacks = @("ocr-engine", "translate-engine", "segmentation-engine")
+    $requiredPacks = @("ocr-engine", "translate-engine")
     $zip = [System.IO.Compression.ZipFile]::OpenRead($Path)
     try {
         if ($ResolvedVariant -eq "full") {

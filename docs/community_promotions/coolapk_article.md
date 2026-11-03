@@ -34,7 +34,7 @@
 - 边缘向内滑动唤出摇杆指针，大拇指只需在屏幕下半部轻推，光标即可精准点击屏幕顶部的任意按钮，单手轻松掌控 6.7~6.9 英寸大屏。
 
 #### 3. 悬浮球「全离线 OCR 识图与以图搜图」（FooView 体验进化）
-- 拖拽悬浮球直接取词、OCR、分词（内置 CppJieba），无障碍节点与本地 OCR（PaddleOCR ONNX / ML Kit）智能无缝降级。
+- 拖拽悬浮球直接取词、OCR、分词，无障碍节点与本地 OCR（PaddleOCR ONNX / ML Kit）智能无缝降级。
 - 聚合 Google、Yandex、SauceNAO、TinEye 等 10+ 搜图引擎，内置悬浮窗快速预览，完全支持导入 SearchEVO 规则。
 
 #### 4. 深度玩机与系统级整合

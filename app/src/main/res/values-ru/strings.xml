@@ -1124,7 +1124,6 @@
     <string name="ocr_download_step_model">Загрузка модели (%1$d/%2$d)…</string>
     <string name="translate_download_step_engine">Загрузка движка перевода (%1$d/%2$d)…</string>
     <string name="translate_download_step_language">Загрузка языкового пакета (%1$d/%2$d)…</string>
-    <string name="segmentation_engine_preparing">Подготовка движка сегментации…</string>
     <string name="native_engine_status_manage">Управлять</string>
     <string name="about_section_app_info">О приложении</string>
     <string name="about_section_open_source">Открытый исходный код и лицензии</string>
@@ -1152,12 +1151,11 @@
     <string name="diagnostic_report_share_subject">Диагностический журнал XGesture</string>
     <string name="diagnostic_report_truncation_suffix">\n\n…(усечено)…</string>
     <string name="native_engine_packs_title">Движки времени выполнения</string>
-    <string name="native_engine_packs_subtitle">Нативные библиотеки для OCR, офлайн-перевода и сегментации текста</string>
+    <string name="native_engine_packs_subtitle">Нативные библиотеки для OCR и офлайн-перевода</string>
     <string name="native_engine_packs_section">Пакеты движков</string>
     <string name="native_engine_packs_hint">Движки времени выполнения включены в APK. Эта страница только для очистки локальных кэшей загрузки (не удаляет встроенные библиотеки).</string>
     <string name="native_engine_pack_ocr">Движок OCR</string>
     <string name="native_engine_pack_translate">Офлайн-движок перевода</string>
-    <string name="native_engine_pack_segmentation">Движок сегментации</string>
     <string name="native_engine_pack_size">Около %1$s</string>
     <string name="native_engine_pack_installed_version">Установлено · %1$s</string>
     <string name="native_engine_pack_latest_version">Последняя · %1$s</string>
@@ -1174,7 +1172,7 @@
     <string name="native_engine_download_failed">Загрузка не удалась</string>
     <string name="native_engine_download_cancelled">Отменено</string>
     <string name="extension_native_engine_packs_entry_title">Движки времени выполнения</string>
-    <string name="extension_native_engine_packs_entry_desc">Нативные движки OCR / офлайн-перевода / сегментации</string>
+    <string name="extension_native_engine_packs_entry_desc">Нативные движки OCR / офлайн-перевода</string>
     <string name="ocr_engine_migration_success_title">Движок OCR обновлён</string>
     <string name="ocr_engine_migration_success_message">Приложение обновило ваш движок OCR до %1$s в соответствии с этой версией. Если распознавание не работает, переустановите его из «Движков времени выполнения».</string>
     <string name="ocr_engine_migration_download_title">Требуется обновление движка OCR</string>

@@ -1,12 +1,8 @@
 package com.slideindex.app.overlay.pickresult
 
-import android.content.Context
-import com.slideindex.app.nativeengine.NativeEngineRuntime
-import com.slideindex.app.segmentation.CppJiebaTokenizer
-
 /**
  * FV [com.fooview.android.fooview.ocr.ocrresult.WordSelectTextView#K] inspired tokenizer.
- * CJK segments prefer local cppjieba when the native library is available.
+ * CJK segments use the system ICU word-boundary breaker.
  */
 object PickResultWordTokenizer {
     private val DELIMITERS = charArrayOf(
@@ -50,7 +46,7 @@ object PickResultWordTokenizer {
      * Tap-select tokens: CJK uses locale word boundaries; Latin accumulates into words;
      * whitespace is preserved one character per token for blank-chip rendering.
      */
-    fun tokenizeSelectableWords(text: String, context: Context? = null): List<String> {
+    fun tokenizeSelectableWords(text: String): List<String> {
         if (text.isEmpty()) return emptyList()
         val tokens = mutableListOf<String>()
         val latinBuffer = StringBuilder()
@@ -81,7 +77,7 @@ object PickResultWordTokenizer {
                     while (index < text.length && isCjk(text[index])) {
                         index++
                     }
-                    tokens += breakCjkWords(text.substring(start, index), context)
+                    tokens += breakCjkWords(text.substring(start, index))
                 }
                 else -> {
                     latinBuffer.append(char)
@@ -165,20 +161,8 @@ object PickResultWordTokenizer {
         return token.length == 1 && (token[0].isWhitespace() || token[0] == '\u3000')
     }
 
-    internal fun breakCjkWords(text: String, context: Context? = null): List<String> {
+    internal fun breakCjkWords(text: String): List<String> {
         if (text.isEmpty()) return emptyList()
-        if (context != null) {
-            if (!CppJiebaTokenizer.isNativeAvailable()) {
-                NativeEngineRuntime.requestSegmentationPackIfNeeded()
-            } else {
-                val jiebaWords = runCatching { CppJiebaTokenizer.get(context).cutWords(text) }
-                    .getOrNull()
-                    ?.filter { it.isNotBlank() }
-                if (!jiebaWords.isNullOrEmpty()) {
-                    return jiebaWords
-                }
-            }
-        }
         val words = runCatching { breakWordsWithAndroidIcu(text) }
             .getOrNull()
             ?.takeIf { it.isNotEmpty() }

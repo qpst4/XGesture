@@ -29,7 +29,7 @@
 
 **XGesture（X手势）** は、Android 12 以降の全メーカー端末向けに設計された、システムレベルのジェスチャー＆片手生産性強化ツールです。アクセシビリティサービスを基盤に、**Shizuku、Root（KernelSU / Magisk / APatch）**、および任意の **LSPosed** による複数の権限昇格モードを統合し、大型スマートフォンの片手操作の課題を解決します。
 
-画面端の多角度マルチセグメントスワイプ、片手フローティングポインター、多機能フローティングボール、端末のシェイク、伏せ置き、背面タップなどで **50 種以上のシステムアクション** を簡単に起動できます。**100% ローカルオフライン OCR**、分かち書き（CppJieba）、逆画像検索の集約を深く統合し、任意のアプリ上に高効率なオーバーレイランチャー、アプリ凍結室、OTP 認証コード抽出、通知管理、各 OEM のフリーフォーム小窓を提供。クラウドアップロードや広告は一切なく、プライバシー最優先です。
+画面端の多角度マルチセグメントスワイプ、片手フローティングポインター、多機能フローティングボール、端末のシェイク、伏せ置き、背面タップなどで **50 種以上のシステムアクション** を簡単に起動できます。**100% ローカルオフライン OCR**、分かち書き、逆画像検索の集約を深く統合し、任意のアプリ上に高効率なオーバーレイランチャー、アプリ凍結室、OTP 認証コード抽出、通知管理、各 OEM のフリーフォーム小窓を提供。クラウドアップロードや広告は一切なく、プライバシー最優先です。
 
 - **パッケージ名：** `com.slideindex.app`
 - **現在のバージョン：** 1.55.0（versionCode 82）
@@ -49,7 +49,7 @@
 
 | ビルド | 用途 | 説明 |
 | :--- | :--- | :--- |
-| **Full 版** (`xgesture-*-full.apk`) | **新規ユーザー推奨** | オフライン OCR、Jieba 分かち書き、オフライン翻訳 Native エンジンを内蔵し、すぐに使える |
+| **Full 版** (`xgesture-*-full.apk`) | **新規ユーザー推奨** | オフライン OCR、オフライン翻訳 Native エンジンを内蔵し、すぐに使える |
 | **Lite 版** (`xgesture-*-lite.apk`) | 小さいサイズ / オンライン更新 | コアジェスチャーと基本機能のみ。サイズが小さく、拡張エンジンは必要に応じてダウンロード |
 
 > [!TIP]
@@ -86,7 +86,7 @@
 *「フローティングポインター」とは独立して動作。ジョイスティック操作と画面 OCR ポインターを一体化。*
 
 - **アクセシビリティ＆ローカル多エンジン OCR**：まずアクセシビリティノードからテキスト取得、失敗時はローカルオフライン OCR（**ML Kit / Tesseract / PaddleOCR ONNX**）へスムーズにフォールバック。
-- **テキスト選択パネル**：ワンタップ検索、翻訳、点詞分かち書き（CppJieba）、全選択、空白除去、コピー。範囲選択と画像共有 OCR 履歴をサポート。
+- **テキスト選択パネル**：ワンタップ検索、翻訳、点詞分かち書き、全選択、空白除去、コピー。範囲選択と画像共有 OCR 履歴をサポート。
 - **テキスト検索集約**：検索エンジンリストのカスタマイズ、グリッド並べ替え、検索履歴、プレフィックスエイリアス、ディープリンク。GestureEVO / SearchEVO からのインポートも可能。
 - **逆画像検索集約**：範囲スクショ後に多エンジン検索パネルを表示（Google、Yandex、TinEye、SauceNAO、IQDB、3D-IQDB、ASCII2D、trace.moe、AnimeTrace、Copyseeker）。並列検索と内蔵 WebView プレビューをサポート。
 - **ピン留め**：スクショやテキストブロックを画面上部に固定。ピンチズーム、ドラッグ、コントロールバー非表示をサポート。
@@ -264,13 +264,13 @@ Android には革新的なジェスチャー＆生産性ツールが数多く生
 
 | レイヤー | コア技術 / 依存 |
 | :--- | :--- |
-| **言語** | Kotlin 2.4.0 + C++17（NDK / CMake） |
+| **言語** | Kotlin 2.4.0 |
 | **UI** | Miuix UI（KMP 0.9.4 / HyperOS 風）+ Jetpack Compose（BOM 2026.07.01） |
 | **カラー＆視覚** | MaterialKolor 5.0.0 + Haze 1.7.2（ガウスぼかし） |
 | **アーキテクチャ＆ DI** | MVVM + UDF + Dagger Hilt 2.60.1 |
 | **非同期＆状態** | Kotlin Coroutines 1.11.0 + StateFlow / SharedFlow + DataStore Preferences 1.2.1 |
 | **OCR＆ AI** | ML Kit 16.0.1 + Tesseract4Android 4.9.0 + PaddleOCR（ONNX Runtime 1.28.0 + OpenCV 4.12.0） |
-| **NLP** | CppJieba（JNI）+ ML Kit Translate / Language ID |
+| **NLP** | ML Kit Translate / Language ID |
 | **権限昇格** | Shizuku API 13.1.5 + LibSuperuser 1.1.1 + HiddenApiBypass 6.1 + LibXposed API 102.0.0 |
 | **ネットワーク** | OkHttp 5.4.0 + ZXing 3.5.4 + kotlinx.serialization 1.11.0 + Markdown Renderer M3 |
 
@@ -305,7 +305,7 @@ Android には革新的なジェスチャー＆生産性ツールが数多く生
 ```
 
 1. **サービス調整と Overlay 描画**：`SlideIndexAccessibilityService` がグローバルジェスチャーをインターセプト。浮遊層は `OverlayLayout` と各 WindowManager で管理。
-2. **多エンジン動的ロード**：OCR、翻訳、分かち書きは Full / Lite 両モード。Native `.so` とモデルは実行時に展開可能。
+2. **多エンジン動的ロード**：OCR と翻訳は Full / Lite 両モード。Native `.so` とモデルは実行時に展開可能。
 3. **システム権限チャネル**：Shizuku IPC、Root（LibSu）、LSPosed モジュールが協調し、バックグラウンドクリップボード監視とプロセス制御を実現。
 
 ---
@@ -314,9 +314,8 @@ Android には革新的なジェスチャー＆生産性ツールが数多く生
 
 ```
 .
-├── app/                                 # ホストアプリ：DI、JNI、メイン UI
+├── app/                                 # ホストアプリ：DI、メイン UI
 │   └── src/main/
-│       ├── cpp/                         # C++17 JNI（CppJieba ブリッジ）
 │       └── java/com/slideindex/app/
 │           ├── activity/                # トップレベル Activity
 │           ├── backtap/                 # 背面ジェスチャー
@@ -341,7 +340,7 @@ Android には革新的なジェスチャー＆生産性ツールが数多く生
 ### 要件
 - **JDK 25**
 - **Android Studio**（Ladybug 以降推奨）
-- **Android SDK**（API 37）と **NDK 28+**
+- **Android SDK**（API 37）
 
 ### コマンド
 ```bash

@@ -2030,7 +2030,6 @@
     <string name="ocr_download_step_model">正在下载模型（%1$d/%2$d）…</string>
     <string name="translate_download_step_engine">正在下载翻译引擎（%1$d/%2$d）…</string>
     <string name="translate_download_step_language">正在下载语言包（%1$d/%2$d）…</string>
-    <string name="segmentation_engine_preparing">正在准备分词引擎…</string>
     <string name="native_engine_status_manage">管理</string>
     <string name="about_section_app_info">应用信息</string>
     <string name="about_section_open_source">开源与许可</string>
@@ -2058,12 +2057,11 @@
     <string name="diagnostic_report_share_subject">X手势诊断日志</string>
     <string name="diagnostic_report_truncation_suffix">\n\n…(内容过长已截断)…</string>
     <string name="native_engine_packs_title">运行时引擎</string>
-    <string name="native_engine_packs_subtitle">OCR、离线翻译与取词分词的原生库，按需下载</string>
+    <string name="native_engine_packs_subtitle">OCR 与离线翻译的原生库，按需下载</string>
     <string name="native_engine_packs_section">引擎包</string>
     <string name="native_engine_packs_hint">运行时引擎已随安装包内置。此页仅供高级用户清理本地下载缓存（不影响 APK 内置库）。</string>
     <string name="native_engine_pack_ocr">OCR 引擎</string>
     <string name="native_engine_pack_translate">离线翻译引擎</string>
-    <string name="native_engine_pack_segmentation">取词分词引擎</string>
     <string name="native_engine_pack_size">约 %1$s</string>
     <string name="native_engine_pack_installed_version">已安装 · %1$s</string>
     <string name="native_engine_pack_latest_version">最新 · %1$s</string>
@@ -2080,7 +2078,7 @@
     <string name="native_engine_download_failed">下载失败</string>
     <string name="native_engine_download_cancelled">已取消</string>
     <string name="extension_native_engine_packs_entry_title">运行时引擎</string>
-    <string name="extension_native_engine_packs_entry_desc">OCR / 离线翻译 / 取词分词原生库</string>
+    <string name="extension_native_engine_packs_entry_desc">OCR / 离线翻译原生库</string>
     <string name="ocr_engine_migration_success_title">OCR 引擎已更新</string>
     <string name="ocr_engine_migration_success_message">应用已自动将 OCR 运行时引擎升级至 %1$s，与当前版本匹配。若识别异常，可在「运行时引擎」中重新安装。</string>
     <string name="ocr_engine_migration_download_title">需要更新 OCR 引擎</string>

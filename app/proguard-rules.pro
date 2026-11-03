@@ -125,8 +125,6 @@
 -keepclasseswithmembers class * {
     @javax.inject.* <fields>;
 }
-# cppjieba JNI
--keep class com.slideindex.app.segmentation.CppJiebaTokenizer { *; }
 -keep class com.slideindex.app.SlideIndexApp { *; }
 -keep class com.slideindex.app.privilege.root.TaskManagerRootDaemonMain {
     public static void main(java.lang.String[]);

@@ -29,7 +29,7 @@
 
 **XGesture** is a universal system-level gesture and single-handed productivity suite designed for all Android 12+ devices across all OEMs. Built on Accessibility Services with flexible multi-privilege modes (**Shizuku, Root / KernelSU / Magisk**, and optional **LSPosed** integration), it brings desktop-grade control and effortless reachability to modern large-screen phones.
 
-Easily trigger **50+ system actions** via customizable multi-angle screen-edge swipes, reachability floating pointers, multi-functional floating ball, device shaking, desk-flipping, or back-tap gestures. Deeply integrates **100% offline on-device OCR**, word segmentation (CppJieba), and reverse image search aggregation—delivering high-efficiency overlay launchers, app freezing, OTP verification code extraction, notification management, and OEM freeform windows on top of any app, completely free from ads and cloud trackers.
+Easily trigger **50+ system actions** via customizable multi-angle screen-edge swipes, reachability floating pointers, multi-functional floating ball, device shaking, desk-flipping, or back-tap gestures. Deeply integrates **100% offline on-device OCR**, word segmentation, and reverse image search aggregation—delivering high-efficiency overlay launchers, app freezing, OTP verification code extraction, notification management, and OEM freeform windows on top of any app, completely free from ads and cloud trackers.
 
 - **Package Name:** `com.slideindex.app`
 - **Current Version:** 1.55.0 (versionCode 82)
@@ -49,7 +49,7 @@ Easily trigger **50+ system actions** via customizable multi-angle screen-edge s
 
 | Variant | Scenario | Description |
 | :--- | :--- | :--- |
-| **Full Package** (`xgesture-*-full.apk`) | **Recommended for new users** | Out-of-the-box experience with built-in offline OCR, Jieba segmentation, and offline translation native engines |
+| **Full Package** (`xgesture-*-full.apk`) | **Recommended for new users** | Out-of-the-box experience with built-in offline OCR and offline translation native engines |
 | **Lite Package** (`xgesture-*-lite.apk`) | Compact size / on-demand updates | Retains core gestures and fundamental features with smaller package size; download extension engines on demand |
 
 > [!TIP]
@@ -86,7 +86,7 @@ The app features four main navigation tabs: 🏠 **Home** · 📳 **Motion** · 
 *Operates independently from the Floating Pointer, combining joystick navigation with screen OCR pointers.*
 
 - **Accessibility & Offline Multi-Engine OCR**: Extracts text via accessibility nodes first, seamlessly falling back to local offline OCR (**ML Kit / Tesseract / PaddleOCR ONNX**).
-- **Text Selection Panel**: One-click search, translate, segmentation (CppJieba), select all, remove spaces, and copy; supports region clipping and shared image OCR history.
+- **Text Selection Panel**: One-click search, translate, segmentation, select all, remove spaces, and copy; supports region clipping and shared image OCR history.
 - **Search Aggregation**: Customizable search engines, grid sorting, search history, prefix aliases, and deep links; supports importing from GestureEVO / SearchEVO.
 - **Reverse Image Search**: Summon multi-engine reverse search (Google, Yandex, TinEye, SauceNAO, IQDB, 3D-IQDB, ASCII2D, trace.moe, AnimeTrace, Copyseeker) with built-in WebView preview.
 - **Pin to Screen**: Pin screenshots or text cards as top-level floating windows with pinch-to-zoom and drag support.
@@ -264,13 +264,13 @@ While we deeply admire these pioneering tools, modern Android users frequently f
 
 | Layer | Core Technologies / Components |
 | :--- | :--- |
-| **Languages** | Kotlin 2.4.0 + C++17 (NDK / CMake) |
+| **Languages** | Kotlin 2.4.0 |
 | **UI Framework** | Miuix UI (KMP 0.9.4 / HyperOS style) + Jetpack Compose (BOM 2026.07.01) |
 | **Color & Visuals** | MaterialKolor 5.0.0 (Dynamic Wallpaper Colors) + Haze 1.7.2 (Gaussian Blur) |
 | **Architecture & DI** | MVVM + UDF (Unidirectional Data Flow) + Dagger Hilt 2.60.1 |
 | **Async & State** | Kotlin Coroutines 1.11.0 + StateFlow / SharedFlow + DataStore Preferences 1.2.1 |
 | **OCR & AI** | ML Kit Text Recognition 16.0.1 + Tesseract4Android 4.9.0 + PaddleOCR (ONNX Runtime 1.28.0 + OpenCV 4.12.0) |
-| **NLP & Tokenization** | CppJieba (JNI Native Tokenizer) + ML Kit Translate / Language ID |
+| **NLP & Tokenization** | ML Kit Translate / Language ID |
 | **Privileged Access** | Shizuku API 13.1.5 + LibSuperuser 1.1.1 + HiddenApiBypass 6.1 + LibXposed API 102.0.0 |
 | **Network & Parsing** | OkHttp 5.4.0 + ZXing Core 3.5.4 + kotlinx.serialization 1.11.0 + Markdown Renderer M3 |
 
@@ -305,7 +305,7 @@ The app adopts a **Multi-Module layered architecture** following **MVVM + UDF** 
 ```
 
 1. **Service Coordination & Overlay Rendering**: `SlideIndexAccessibilityService` intercepts global gestures and dispatches system events, while overlays are managed by `OverlayLayout` and independent WindowManagers.
-2. **Dynamic Engine Loading**: OCR, translation, and segmentation engines support both Full and Lite packaging modes; native `.so` libraries and models can be extracted at runtime.
+2. **Dynamic Engine Loading**: OCR and translation engines support both Full and Lite packaging modes; native `.so` libraries and models can be extracted at runtime.
 3. **Privileged Pipelines**: Shizuku IPC (rootless privilege), Root fallback executor (LibSu), and LSPosed module collaborate to provide seamless background clipboard monitoring and process lifecycle control.
 
 ---
@@ -314,9 +314,8 @@ The app adopts a **Multi-Module layered architecture** following **MVVM + UDF** 
 
 ```
 .
-├── app/                                 # Host Application: DI assembly, JNI C++ bridge, and main UI
+├── app/                                 # Host Application: DI assembly and main UI
 │   └── src/main/
-│       ├── cpp/                         # C++17 JNI Sources (CppJieba bridge)
 │       └── java/com/slideindex/app/
 │           ├── activity/                # Top-level Activities & transparent interaction layers
 │           ├── backtap/                 # Back-tap gestures
@@ -357,7 +356,7 @@ The app adopts a **Multi-Module layered architecture** following **MVVM + UDF** 
 ### Requirements
 - **JDK 25**
 - **Android Studio** (Ladybug or newer recommended)
-- **Android SDK** (API 37 `compileSdk`) & **NDK 28+**
+- **Android SDK** (API 37 `compileSdk`)
 
 ### Build Commands
 ```bash

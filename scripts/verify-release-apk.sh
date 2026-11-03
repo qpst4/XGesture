@@ -118,7 +118,7 @@ verify_one_apk() {
     exit 1
   fi
 
-  required_packs=(ocr-engine translate-engine segmentation-engine)
+  required_packs=(ocr-engine translate-engine)
   if [[ "$variant" == "full" ]]; then
     for pack in "${required_packs[@]}"; do
       asset_path="assets/bundled-native-engine/${pack}.zip"
