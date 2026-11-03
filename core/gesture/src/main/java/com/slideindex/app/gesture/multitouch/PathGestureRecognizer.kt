@@ -39,7 +39,7 @@ data class CollectedPath(
  * 全部抬起后再统一结算。这样无论是“多指同时画”还是“逐条画”，采集结构一致。
  */
 class PathGestureCollector(
-    private val minStrokes: Int = 2,
+    private val minStrokes: Int = 1,
     private val maxStrokes: Int = 5,
     private val sampleDistance: Float = 0.012f,
     private val minStrokeLength: Float = 0.05f,

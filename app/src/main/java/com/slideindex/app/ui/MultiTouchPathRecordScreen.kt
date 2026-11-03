@@ -99,7 +99,7 @@ fun MultiTouchPathRecordScreen(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                "画完一条松手，可继续画下一条（2–5 条），画完点「完成」",
+                "画完一条松手，可继续画下一条（1–5 条），画完点「完成」",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -168,7 +168,7 @@ fun MultiTouchPathRecordScreen(
                 TextButton(
                     text = "完成",
                     onClick = {
-                        if (strokes.size >= 2) {
+                        if (strokes.size >= 1) {
                             onFinish(strokes.map { points -> PathStroke(points.toList()) })
                         }
                     },

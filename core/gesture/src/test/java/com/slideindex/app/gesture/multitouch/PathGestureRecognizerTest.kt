@@ -46,12 +46,15 @@ class PathGestureRecognizerTest {
     }
 
     @Test
-    fun `single stroke is ignored`() {
+    fun `single stroke is collected`() {
         val collector = PathGestureCollector()
         val frames = (0..20).map { step ->
             listOf(TouchPointer(0, 0.2f + step * 0.03f, 0.5f))
         }
-        assertNull(feed(collector, frames))
+        val result = feed(collector, frames)
+        assertNotNull(result)
+        assertEquals(1, result?.strokes?.size)
+        assertEquals(1, result?.fingerCount)
     }
 
     @Test
