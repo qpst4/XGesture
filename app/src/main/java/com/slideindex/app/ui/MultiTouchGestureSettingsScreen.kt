@@ -75,6 +75,7 @@ fun MultiTouchGestureSettingsScreen(
     onRetry: () -> Unit,
     onOpenActionPick: (MultiPointerGesture, Int, String) -> Unit = { _, _, _ -> },
     onOpenRecorder: () -> Unit = {},
+    onOpenPathEditor: (MultiTouchGestureEntry) -> Unit = {},
     onRemoveEntry: (String) -> Unit = {},
 ) {
     var showKindPicker by remember { mutableStateOf(false) }
@@ -231,14 +232,27 @@ fun MultiTouchGestureSettingsScreen(
             onDismissRequest = { editingEntry = null },
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                GesturePreview(
-                    entry = editing,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(140.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                )
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable(enabled = editing.isPath) {
+                            editingEntry = null
+                            onOpenPathEditor(editing)
+                        },
+                ) {
+                    GesturePreview(entry = editing, modifier = Modifier.fillMaxWidth().height(140.dp))
+                }
+                if (editing.isPath) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "点上方预览可重录手势",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 Spacer(modifier = Modifier.height(12.dp))
                 MiuixArrowRow(
                     title = "${editing.fingerCount} 指 · ${editing.kind.displayName()}",

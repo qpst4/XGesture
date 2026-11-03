@@ -41,6 +41,7 @@ import com.slideindex.app.gesture.multitouch.MultiPointerGesture
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureTriggerType
 import com.slideindex.app.gesture.multitouch.MultiPointerBinding
+import com.slideindex.app.multitouch.decodePathStrokes
 import com.slideindex.app.multitouch.encodePathStrokes
 import com.slideindex.app.ui.PrivacyPolicyScreen
 import com.slideindex.app.ui.SettingsBackupScreen
@@ -108,24 +109,39 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             onOpenActionPick = { kind, fingers, pending ->
                 ctx.navigate(AppNavKey.ExtensionMultiTouchActionPick(kind.ordinal, fingers, pending))
             },
-            onOpenRecorder = { ctx.navigate(AppNavKey.ExtensionMultiTouchPathRecord) },
+            onOpenRecorder = { ctx.navigate(AppNavKey.ExtensionMultiTouchPathRecord()) },
+            onOpenPathEditor = { entry ->
+                ctx.navigate(
+                    AppNavKey.ExtensionMultiTouchPathRecord(
+                        entryId = entry.id,
+                        initialStrokes = encodePathStrokes(entry.pathStrokes),
+                    ),
+                )
+            },
             onRemoveEntry = viewModel::removeEntry,
         )
     }
 
-    hiltEntry<AppNavKey.ExtensionMultiTouchPathRecord> {
+    hiltEntry<AppNavKey.ExtensionMultiTouchPathRecord> { key ->
         val viewModel: MultiTouchGestureViewModel = hiltViewModel()
         MultiTouchPathRecordScreen(
             onBack = { ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture) },
             onRecordingStateChange = viewModel::setRecording,
+            initialStrokes = decodePathStrokes(key.initialStrokes),
             onFinish = { strokes ->
-                ctx.navigate(
-                    AppNavKey.ExtensionMultiTouchActionPick(
-                        kind = MultiPointerGesture.PATH.ordinal,
-                        fingerCount = strokes.size,
-                        pendingStrokes = encodePathStrokes(strokes),
-                    ),
-                )
+                if (key.entryId.isNotBlank()) {
+                    // 重录：只覆盖轨迹，动作保留，直接回列表。
+                    viewModel.updatePathStrokes(key.entryId, encodePathStrokes(strokes))
+                    ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture)
+                } else {
+                    ctx.navigate(
+                        AppNavKey.ExtensionMultiTouchActionPick(
+                            kind = MultiPointerGesture.PATH.ordinal,
+                            fingerCount = strokes.size,
+                            pendingStrokes = encodePathStrokes(strokes),
+                        ),
+                    )
+                }
             },
         )
     }

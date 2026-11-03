@@ -46,6 +46,11 @@ class MultiTouchGestureViewModel @Inject constructor(
         settingsStore.removeEntry(id)
     }
 
+    /** 重录路径手势：覆盖轨迹，动作保留。 */
+    fun updatePathStrokes(entryId: String, pendingStrokes: String) {
+        settingsStore.updatePathStrokes(entryId, decodePathStrokes(pendingStrokes))
+    }
+
     /** 录制路径手势期间暂停/恢复识别。 */
     fun setRecording(recording: Boolean) {
         if (recording) {

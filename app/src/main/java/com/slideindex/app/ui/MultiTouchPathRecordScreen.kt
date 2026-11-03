@@ -53,6 +53,7 @@ private val RecordStrokeColors = listOf(
 fun MultiTouchPathRecordScreen(
     onBack: () -> Unit,
     onRecordingStateChange: (Boolean) -> Unit,
+    initialStrokes: List<PathStroke> = emptyList(),
     onFinish: (List<PathStroke>) -> Unit,
 ) {
     DisposableEffect(Unit) {
@@ -60,15 +61,20 @@ fun MultiTouchPathRecordScreen(
         onDispose { onRecordingStateChange(false) }
     }
 
-    val strokes = remember { mutableListOf<MutableList<PathPoint>>() }
+    val editing = initialStrokes.isNotEmpty()
+    val strokes = remember {
+        mutableListOf<MutableList<PathPoint>>().apply {
+            initialStrokes.forEach { stroke -> add(stroke.points.toMutableList()) }
+        }
+    }
     val strokeIndex = remember { mutableMapOf<Int, Int>() }
     var version by remember { mutableIntStateOf(0) }
 
-    SettingsScreenScaffold(title = "录制路径手势", onBack = onBack) {
+    SettingsScreenScaffold(title = if (editing) "重录手势" else "录制路径手势", onBack = onBack) {
         item(key = "multitouch-record-canvas") {
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                 Text(
-                    "一条轨迹 = 一根手指",
+                    if (editing) "重录后覆盖原轨迹，动作不变" else "一条轨迹 = 一根手指",
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -150,7 +156,11 @@ fun MultiTouchPathRecordScreen(
         }
         settingsLazyHint(
             key = "multitouch-record-hint",
-            text = "录制期间多指识别已暂停；完成后会进入动作选择页，选好动作即可保存。",
+            text = if (editing) {
+                "录制期间多指识别已暂停；完成后直接覆盖这条手势的轨迹。"
+            } else {
+                "录制期间多指识别已暂停；完成后会进入动作选择页，选好动作即可保存。"
+            },
         )
     }
 }

@@ -320,8 +320,11 @@ sealed interface AppNavKey : NavKey {
     @Serializable data object ExtensionHub : AppNavKey
     /** 多指手势设置（Shizuku evdev 观察模式）。 */
     @Serializable data object ExtensionMultiTouchGesture : AppNavKey
-    /** 路径手势录制页。 */
-    @Serializable data object ExtensionMultiTouchPathRecord : AppNavKey
+    /** 路径手势录制页；`entryId` 非空表示重录已有条目（只覆盖轨迹）。 */
+    @Serializable data class ExtensionMultiTouchPathRecord(
+        val entryId: String = "",
+        val initialStrokes: String = "",
+    ) : AppNavKey
     /**
      * 多指手势的动作选择页。
      *

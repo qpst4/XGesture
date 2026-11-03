@@ -114,16 +114,58 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         } else {
             current.entries + entry
         }
-        persist(updated)
-        _state.value = current.copy(entries = updated)
+        val sorted = sortEntries(updated)
+        persist(sorted)
+        _state.value = current.copy(entries = sorted)
+    }
+
+    /** 重录路径手势：只覆盖轨迹，动作保留。 */
+    fun updatePathStrokes(entryId: String, strokes: List<PathStroke>) {
+        val current = _state.value
+        if (current.entries.none { it.id == entryId }) return
+        val updated = current.entries.map { entry ->
+            if (entry.id == entryId) {
+                entry.copy(pathStrokes = strokes, fingerCount = strokes.size)
+            } else {
+                entry
+            }
+        }
+        val sorted = sortEntries(updated)
+        persist(sorted)
+        _state.value = current.copy(entries = sorted)
     }
 
     fun removeEntry(id: String) {
         val current = _state.value
         val updated = current.entries.filterNot { it.id == id }
         if (updated.size == current.entries.size) return
-        persist(updated)
-        _state.value = current.copy(entries = updated)
+        val sorted = sortEntries(updated)
+        persist(sorted)
+        _state.value = current.copy(entries = sorted)
+    }
+
+    /** 按接触点数升序；同数量按类型固定顺序。 */
+    private fun sortEntries(entries: List<MultiTouchGestureEntry>): List<MultiTouchGestureEntry> =
+        entries.sortedWith(compareBy({ it.fingerCount }, { kindOrder(it.kind) }))
+
+    private fun kindOrder(kind: MultiPointerGesture): Int = when (kind) {
+        MultiPointerGesture.PINCH -> 0
+        MultiPointerGesture.SPREAD -> 1
+        MultiPointerGesture.SWIPE_UP -> 2
+        MultiPointerGesture.SWIPE_DOWN -> 3
+        MultiPointerGesture.SWIPE_LEFT -> 4
+        MultiPointerGesture.SWIPE_RIGHT -> 5
+        MultiPointerGesture.SWIPE_UP_LEFT -> 6
+        MultiPointerGesture.SWIPE_UP_RIGHT -> 7
+        MultiPointerGesture.SWIPE_DOWN_LEFT -> 8
+        MultiPointerGesture.SWIPE_DOWN_RIGHT -> 9
+        MultiPointerGesture.ROTATE_CLOCKWISE -> 10
+        MultiPointerGesture.ROTATE_COUNTER_CLOCKWISE -> 11
+        MultiPointerGesture.TAP -> 12
+        MultiPointerGesture.DOUBLE_TAP -> 13
+        MultiPointerGesture.TRIPLE_TAP -> 14
+        MultiPointerGesture.LONG_PRESS -> 15
+        MultiPointerGesture.PATH -> 16
     }
 
     private fun persist(entries: List<MultiTouchGestureEntry>) {
@@ -146,7 +188,7 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         }
         return MultiTouchGestureSettings(
             enabled = prefs.getBoolean(KEY_ENABLED, false),
-            entries = merged.ifEmpty { MultiTouchGestureSettings.defaultEntries() },
+            entries = sortEntries(merged).ifEmpty { MultiTouchGestureSettings.defaultEntries() },
         )
     }
 
