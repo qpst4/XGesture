@@ -600,6 +600,20 @@ object ScreenDrawOverlay {
         toolbarBlurEnabled = enabled
     }
 
+    /**
+     * 「操作屏幕」：把触摸**和焦点**一起还给下面的 App。
+     *
+     * 只加 [WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE] 不够：画布窗默认是可聚焦窗口
+     * （要收返回键、要让文字工具的输入法挂上来，见 `show()` 里的 `requestFocus()`）。
+     * 只关掉触摸时窗口焦点仍在本窗 —— 下面的 App 收得到点击，却不是焦点窗口，
+     * 输入法不会挂到它上面，于是"点得到输入框、弹不出键盘"。
+     *
+     * `minimizeDraw()` 那条路径之所以没这问题，就是因为它同时加了 `FLAG_NOT_FOCUSABLE`；
+     * 这里补齐同一个位，穿透态才真正等同"把屏幕交给下面的 App"。
+     *
+     * 代价（有意为之）：穿透态下画布收不到返回键，返回交给下面的 App —— 「操作屏幕」本来就是这个语义；
+     * 退出绘制仍可用工具栏的 ×。
+     */
     private fun setPassthrough(enabled: Boolean) {
         val view = canvasHost ?: return
         val params = canvasParams ?: return
@@ -607,11 +621,21 @@ object ScreenDrawOverlay {
         passthrough = enabled
         passthroughState.value = enabled
         params.flags = if (enabled) {
-            params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+            params.flags or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
         } else {
-            params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+            params.flags and
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv() and
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
         }
         runCatching { wm.updateViewLayout(view, params) }
+        // 窗口焦点由系统在 flags 变更后重算；视图侧也同步清/要一次，避免残留只对 view 有效的焦点。
+        if (enabled) {
+            canvas?.clearFocus()
+        } else {
+            canvas?.requestFocus()
+        }
     }
 
     private fun minimizeDraw() {
@@ -788,10 +812,12 @@ object ScreenDrawOverlay {
         val wm = windowManager
         if (cView != null && cParams != null && wm != null) {
             cView.visibility = View.VISIBLE
+            // 穿透态恢复时**不要**清 NOT_FOCUSABLE：否则焦点又被画布抢回去，下面 App 的键盘再次弹不出来。
             if (!passthrough) {
-                cParams.flags = cParams.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+                cParams.flags = cParams.flags and
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv() and
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
             }
-            cParams.flags = cParams.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
             runCatching { wm.updateViewLayout(cView, cParams) }
                 .onFailure { Log.e(TAG, "restoreDraw: cView updateViewLayout failed", it) }
         }
