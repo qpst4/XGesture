@@ -6,7 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -78,6 +78,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.input.pointer.positionChanged
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import androidx.compose.ui.draw.clip
@@ -429,55 +430,70 @@ private fun PickResultSearchActionButton(
                 .then(
                     if (quickLaunchEnabled) {
                         Modifier.pointerInput(options, quickLaunch) {
-                            detectDragGesturesAfterLongPress(
-                                onDragStart = { startOffset ->
-                                    val coords = anchorCoordinates
-                                        ?: return@detectDragGesturesAfterLongPress
-                                    if (options.isEmpty()) return@detectDragGesturesAfterLongPress
-                                    val startIndex = pickResultSearchQuickLaunchStartIndex(
-                                        options,
-                                        quickLaunch.initialFullscreen,
-                                    )
-                                    val finger = coords.localToWindow(startOffset)
-                                    dragStartFingerY = finger.y
-                                    anchorRowUnderFinger(finger.x, startIndex)
-                                    hoveredIndex = startIndex
-                                    isSelecting = true
-                                    HapticHelper.appTick(currentView.value, currentAppSettings.value)
-                                },
-                                onDrag = { change, _ ->
-                                    change.consume()
-                                    val coords = anchorCoordinates
-                                        ?: return@detectDragGesturesAfterLongPress
-                                    val finger = coords.localToWindow(change.position)
-                                    if (abs(finger.y - dragStartFingerY) > yCancelThresholdPx) {
-                                        if (hoveredIndex != -1) {
-                                            hoveredIndex = -1
-                                            HapticHelper.appTick(currentView.value, currentAppSettings.value)
+                            val launch = quickLaunch
+                            // 自己接管长按手势：`detectDragGesturesAfterLongPress` 在抬手时要求
+                            // up 未被消费，而同一节点的 clickable 是内层、会先拿走这次 up，
+                            // 于是"长按后原地松手"被它判成 cancel（什么都不做），必须滑动一下才触发。
+                            awaitEachGesture {
+                                val down = awaitFirstDown(requireUnconsumed = false)
+                                if (options.isEmpty()) return@awaitEachGesture
+                                // 长按成立前抬手 / 移动过大 → null，这次仍按普通单击处理
+                                val longPress = awaitLongPressOrCancellation(down.id)
+                                    ?: return@awaitEachGesture
+                                val coords = anchorCoordinates ?: return@awaitEachGesture
+
+                                val startIndex = pickResultSearchQuickLaunchStartIndex(
+                                    options,
+                                    launch.initialFullscreen,
+                                )
+                                val finger = coords.localToWindow(longPress.position)
+                                dragStartFingerY = finger.y
+                                anchorRowUnderFinger(finger.x, startIndex)
+                                hoveredIndex = startIndex
+                                isSelecting = true
+                                // 长按一成立就封住点击：up 由谁先消费不做保证，这里两头都堵住。
+                                suppressClickUntilMs = Long.MAX_VALUE
+                                HapticHelper.appTick(currentView.value, currentAppSettings.value)
+
+                                var confirmedIndex = startIndex
+                                var released = false
+                                try {
+                                    while (true) {
+                                        val event = awaitPointerEvent()
+                                        val change = event.changes.firstOrNull { it.id == longPress.id }
+                                        if (change == null || !change.pressed) {
+                                            // 抬手即确认：这里**不看 isConsumed**（旧实现看的正是它）
+                                            released = event.changes.none { it.pressed }
+                                            if (released) change?.consume()
+                                            break
                                         }
-                                    } else {
-                                        val index = indexAtFingerX(finger.x)
-                                        if (index != hoveredIndex) {
-                                            hoveredIndex = index
-                                            HapticHelper.appTick(currentView.value, currentAppSettings.value)
+                                        if (change.positionChanged()) {
+                                            change.consume()
+                                            val current = coords.localToWindow(change.position)
+                                            if (abs(current.y - dragStartFingerY) > yCancelThresholdPx) {
+                                                if (hoveredIndex != -1) {
+                                                    hoveredIndex = -1
+                                                    HapticHelper.appTick(currentView.value, currentAppSettings.value)
+                                                }
+                                            } else {
+                                                val index = indexAtFingerX(current.x)
+                                                if (index != hoveredIndex) {
+                                                    hoveredIndex = index
+                                                    HapticHelper.appTick(currentView.value, currentAppSettings.value)
+                                                }
+                                            }
+                                            confirmedIndex = hoveredIndex
                                         }
                                     }
-                                },
-                                onDragEnd = {
-                                    val confirmedIndex = hoveredIndex.takeIf { it in options.indices }
+                                } finally {
                                     isSelecting = false
                                     hoveredIndex = -1
                                     suppressClickUntilMs = SystemClock.uptimeMillis() + 250L
-                                    if (confirmedIndex != null) {
-                                        quickLaunch.onConfirm(options[confirmedIndex])
-                                    }
-                                },
-                                onDragCancel = {
-                                    isSelecting = false
-                                    hoveredIndex = -1
-                                    suppressClickUntilMs = SystemClock.uptimeMillis() + 250L
-                                },
-                            )
+                                }
+                                if (released && confirmedIndex in options.indices) {
+                                    launch.onConfirm(options[confirmedIndex])
+                                }
+                            }
                         }
                     } else {
                         Modifier
@@ -500,17 +516,24 @@ private fun PickResultSearchActionButton(
             val coords = anchorCoordinates
             if (coords != null && coords.isAttached) {
                 val anchorTopLeft = coords.boundsInWindow().topLeft
-                Popup(
-                    alignment = Alignment.TopStart,
-                    offset = IntOffset(
-                        (rowAnchorLeftInWindow - anchorTopLeft.x).roundToInt(),
-                        (-popupOffsetAboveButtonPx).roundToInt(),
-                    ),
-                ) {
-                    PickResultSearchQuickLaunchRow(
-                        options = options,
-                        hoveredIndex = hoveredIndex,
-                    )
+                // 滑选条强制 Ltr：底栏「复制按钮在右」是靠 Rtl 反转图标顺序实现的
+                // （见 CompactIconToolbar），而这里的位置与命中都按窗口 x 从左往右算。
+                // Popup 的方向取自调用点，Rtl 下会把 TopStart 锚到按钮右上角并反向扣除
+                // offset.x，内容 Row 也会从右往左摆 —— 表现为「右滑选中态却往左走」。
+                // 与 PickResultDropdownMenuInLtr 同一套处理。
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Popup(
+                        alignment = Alignment.TopStart,
+                        offset = IntOffset(
+                            (rowAnchorLeftInWindow - anchorTopLeft.x).roundToInt(),
+                            (-popupOffsetAboveButtonPx).roundToInt(),
+                        ),
+                    ) {
+                        PickResultSearchQuickLaunchRow(
+                            options = options,
+                            hoveredIndex = hoveredIndex,
+                        )
+                    }
                 }
             }
         }
