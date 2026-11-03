@@ -1189,6 +1189,9 @@ private class EdgeCardView(context: Context) : ViewGroup(context) {
     private val fallbackView = TextView(context)
     private val badgeView = TextView(context)
     private val titleView = TextView(context)
+    private val senderView = TextView(context)
+    /** 标题行：群名（左，可截断）+ 发言人（右，灰色小字）。 */
+    private val headerRow = LinearLayout(context)
     private val contentView = TextView(context)
     /** 38dp 头像容器：图标 30dp 缩进 4dp，角标也挂在这一层，正好压在圆形图标左上角。 */
     private val avatarContainer = FrameLayout(context)
@@ -1224,6 +1227,13 @@ private class EdgeCardView(context: Context) : ViewGroup(context) {
         titleView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
         titleView.setTypeface(titleView.typeface, android.graphics.Typeface.BOLD)
         titleView.includeFontPadding = false
+        // 群聊时在标题右侧显示发言人（来自 MessagingStyle 的 sender，不用标题里的冒号猜）。
+        senderView.maxLines = 1
+        senderView.ellipsize = TextUtils.TruncateAt.END
+        senderView.setTextColor(Color.parseColor("#9AA0A6"))
+        senderView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+        senderView.includeFontPadding = false
+        senderView.visibility = View.GONE
         contentView.maxLines = 1
         contentView.isSingleLine = true
         contentView.ellipsize = TextUtils.TruncateAt.MARQUEE
@@ -1234,7 +1244,17 @@ private class EdgeCardView(context: Context) : ViewGroup(context) {
 
         textLayer.orientation = LinearLayout.VERTICAL
         textLayer.gravity = Gravity.CENTER_VERTICAL
-        textLayer.addView(titleView, LinearLayout.LayoutParams(-1, -2))
+        headerRow.orientation = LinearLayout.HORIZONTAL
+        headerRow.gravity = Gravity.CENTER_VERTICAL
+        headerRow.addView(
+            titleView,
+            LinearLayout.LayoutParams(0, -2, 1f),
+        )
+        headerRow.addView(
+            senderView,
+            LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dp(4) },
+        )
+        textLayer.addView(headerRow, LinearLayout.LayoutParams(-1, -2))
         textLayer.addView(
             contentView,
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) },
@@ -1318,6 +1338,9 @@ private class EdgeCardView(context: Context) : ViewGroup(context) {
             fallbackView.visibility = View.VISIBLE
         }
         titleView.text = title
+        val sender = NotificationData.overlaySenderName(data)
+        senderView.text = sender
+        senderView.visibility = if (sender.isEmpty()) View.GONE else View.VISIBLE
         contentView.text = data.content
         val badge = state.badgeText()
         if (badge != null) {
@@ -1373,8 +1396,15 @@ private class EdgeCardView(context: Context) : ViewGroup(context) {
         // 宽度按内容算：图标区固定，文字区取标题/正文里较宽的那个，限制在 40..120dp。
         val maxText = dp(120)
         val minText = dp(40)
+        // 群聊时把发言人宽度一起算进去，避免标题把发送者挤没。
+        val senderW = if (senderView.visibility == View.VISIBLE) {
+            measureTextWidth(senderView, dp(60))
+        } else {
+            0
+        }
+        val titleAvail = (maxText - senderW - dp(4)).coerceAtLeast(dp(24))
         val textW = maxOf(
-            measureTextWidth(titleView, maxText),
+            measureTextWidth(titleView, titleAvail) + senderW + dp(4),
             measureTextWidth(contentView, maxText),
         ).coerceIn(minText, maxText)
         val totalW = dp(48) + textW + dp(8)
@@ -1401,7 +1431,8 @@ private class EdgeCardView(context: Context) : ViewGroup(context) {
                 contentView.layoutParams = it
             }
         }
-        val textHeight = titleView.measuredHeight + dp(2) + contentHeight
+        val textHeight = maxOf(titleView.measuredHeight, senderView.measuredHeight) +
+            dp(2) + contentHeight
         val cardHeight = maxOf(textHeight + dp(8), dp(42))
         val h = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.AT_MOST) {
             minOf(cardHeight, MeasureSpec.getSize(heightMeasureSpec).takeIf { it > 0 } ?: cardHeight)

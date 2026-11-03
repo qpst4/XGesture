@@ -36,6 +36,8 @@ data class NotificationData(
     val conversationIcon: Bitmap? = null,
     val badgeCount: Int = 0,
     val textLineCount: Int = 0,
+    /** 群聊发言人（来自 MessagingStyle，单聊为空）。 */
+    val senderName: String = "",
 ) {
     /** 弹幕仅展示会话最新一条消息，避免 TG 等多条历史被重复滚动。 */
     fun latestMessageForDanmaku(): NotificationData {
@@ -117,6 +119,8 @@ data class NotificationData(
                 conversationIcon = listIcon,
                 badgeCount = notification.number.coerceAtLeast(0),
                 textLineCount = textLineCount,
+                senderName = NotificationMessagingHistory.extractMessages(appContext, extras)
+                    .lastOrNull()?.sender?.trim().orEmpty(),
             )
         }
 
@@ -137,6 +141,14 @@ data class NotificationData(
             if (fromConversation.isNotBlank()) return fromConversation
             val normalizedTitle = normalizeConversationTitle(data.title)
             return stripGroupSenderSuffix(normalizedTitle).ifBlank { data.packageName }
+        }
+
+        /** 群聊发言人；与标题相同（单聊、或标题已含发送者）时返回空，避免重复显示。 */
+        fun overlaySenderName(data: NotificationData): String {
+            val sender = data.senderName.trim()
+            if (sender.isEmpty()) return ""
+            val header = overlayHeaderTitle(data)
+            return if (sender.equals(header, ignoreCase = true)) "" else sender
         }
 
         private fun stripGroupSenderSuffix(title: String): String {
