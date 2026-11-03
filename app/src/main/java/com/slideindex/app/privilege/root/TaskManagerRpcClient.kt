@@ -2,6 +2,7 @@ package com.slideindex.app.privilege.root
 
 
 
+import com.slideindex.app.shizuku.IOnMultiTouchGesture
 import com.slideindex.app.shizuku.ITaskManagerService
 
 
@@ -183,6 +184,13 @@ internal class TaskManagerRpcClient(
     private fun rpcStringArray(op: Int, args: List<String?>): Array<String> =
 
         (TaskManagerDaemonRpc.execute(port, op, args) as RpcValue.StrArr).value
+
+    // 多指手势观察只由 Shizuku 用户服务实现；root RPC 守护进程没有对应端点。
+    override fun startMultiTouchObservation(callback: IOnMultiTouchGesture): Boolean = false
+
+    override fun stopMultiTouchObservation() = Unit
+
+    override fun isMultiTouchObservationRunning(): Boolean = false
 
 }
 

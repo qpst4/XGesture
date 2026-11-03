@@ -28,14 +28,20 @@ object ShizukuUserServiceHost {
     /**
      * Bump when the remote service code/ABI changes; drives processNameSuffix.
      *
+     * 43：多指识别器改为「相对质心的叉积/半径旋转判定 + RMS 半径捏合判定」，
+     *     四指不再参与滑动；识别逻辑在 core:gesture，升号强制换进程才能加载新实现。
+     * 42：多指识别器改为「逐帧累计旋转 + 四指放宽阈值」，识别逻辑在 core:gesture，
+     *     用户服务进程加载的是安装时的 APK，升号强制换进程才能让新识别器生效。
+     * 41：`ITaskManagerService` 新增多指手势观察（start/stop/isRunning）与回调接口，
+     *     旧进程没有这些方法，必须换进程名才能让新包生效。
      * 39：root 侧改为在 init mount namespace 启动（`nsenter -t 1 -m`）。升号让覆盖安装后
      *     旧的、继承 App namespace 的 root 守护进程/用户服务自动失效重启，不需要用户手动杀进程。
      * 38：最近任务不再过滤本应用包名（任务切换器需要显示自己）。这是运行在用户服务进程里的
      *     `TaskExclusions` / reader 逻辑，必须换进程名才能让已安装的新包生效。
      * 37：`getRecentTasks()` 行格式增加第 5 列 userId（分身识别）。
-     * 升号后进程名变成 `task_manager_v39`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
+     * 升号后进程名变成 `task_manager_v43`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
      */
-    const val SERVICE_BUILD = 40
+    const val SERVICE_BUILD = 43
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bindLock = Any()

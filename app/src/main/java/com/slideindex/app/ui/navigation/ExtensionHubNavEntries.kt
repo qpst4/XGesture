@@ -28,6 +28,7 @@ import com.slideindex.app.ui.FreezerSettingsScreen
 import com.slideindex.app.ui.LicenseTextScreen
 import com.slideindex.app.ui.LauncherShortcutMenuScreen
 import com.slideindex.app.ui.MissingGesturePermissionsScreen
+import com.slideindex.app.ui.MultiTouchGestureSettingsScreen
 import com.slideindex.app.ui.PrivacyPolicyScreen
 import com.slideindex.app.ui.SettingsBackupScreen
 import com.slideindex.app.ui.ThirdPartyNoticesScreen
@@ -36,6 +37,7 @@ import com.slideindex.app.ui.viewmodel.CloudStorageSettingsViewModel
 import com.slideindex.app.ui.viewmodel.DiagnosticLogViewModel
 import com.slideindex.app.ui.viewmodel.ExtensionHubViewModel
 import com.slideindex.app.ui.viewmodel.ExtensionSettingsViewModel
+import com.slideindex.app.ui.viewmodel.MultiTouchGestureViewModel
 import com.slideindex.app.ui.viewmodel.SettingsBackupViewModel
 import com.slideindex.app.settings.SearchEngineType
 import com.slideindex.app.ui.viewmodel.SearchEngineSettingsViewModel
@@ -70,12 +72,27 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             onOpenFreezer = { ctx.navigate(AppNavKey.ExtensionFreezer) },
             onOpenMacro = { ctx.navigate(AppNavKey.MacroList) },
             onOpenPageScroll = { ctx.navigate(AppNavKey.PageScrollSettings) },
+            onOpenMultiTouchGesture = { ctx.navigate(AppNavKey.ExtensionMultiTouchGesture) },
             onOpenSettingsBackup = { ctx.navigate(AppNavKey.ExtensionBackup) },
             onOpenNativeEnginePacks = { ctx.navigate(AppNavKey.NativeEnginePacks) },
             onOpenDiagnosticLogs = { ctx.navigate(AppNavKey.ExtensionDiagnosticLogs) },
             onOpenIconLibrary = { ctx.navigate(AppNavKey.GlobalIconLibrary) },
             onOpenIconTheme = { ctx.navigate(AppNavKey.IconThemeSettings) },
             onOpenAbout = { ctx.navigate(AppNavKey.ExtensionAbout) },
+        )
+    }
+
+    hiltEntry<AppNavKey.ExtensionMultiTouchGesture> {
+        val viewModel: MultiTouchGestureViewModel = hiltViewModel()
+        val settings by viewModel.settings.collectAsStateWithLifecycle()
+        val status by viewModel.status.collectAsStateWithLifecycle()
+        MultiTouchGestureSettingsScreen(
+            settings = settings,
+            status = status,
+            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
+            onEnabledChange = viewModel::setEnabled,
+            onBindingChange = viewModel::setBinding,
+            onRetry = viewModel::retry,
         )
     }
 

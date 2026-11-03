@@ -3,6 +3,7 @@ package com.slideindex.app.shizuku
 import android.content.Context
 import androidx.annotation.Keep
 import androidx.annotation.StringRes
+import com.slideindex.app.multitouch.EvdevTouchObserver
 
 class TaskManagerUserService() : ITaskManagerService.Stub() {
 
@@ -15,14 +16,41 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
     private val freeWindow =
         TaskManagerFreeWindowOperations(verifier = SystemRecentsAccess::freeWindowMoveStatus)
 
+    private var touchObserver: EvdevTouchObserver? = null
+
     @Keep
     constructor(context: Context) : this() {
         appContext = context.applicationContext
     }
 
     override fun destroy() {
+        stopMultiTouchObservation()
         System.exit(0)
     }
+
+    override fun startMultiTouchObservation(callback: IOnMultiTouchGesture): Boolean {
+        stopMultiTouchObservation()
+        val observer = EvdevTouchObserver(
+            onGesture = { gesture, eventTimeMs ->
+                runCatching {
+                    callback.onGesture(gesture.gesture.ordinal, gesture.fingerCount, eventTimeMs)
+                }
+            },
+            onState = { running, detail ->
+                runCatching { callback.onObserverState(running, detail) }
+            },
+        )
+        touchObserver = observer
+        return observer.start()
+    }
+
+    override fun stopMultiTouchObservation() {
+        touchObserver?.stop()
+        touchObserver = null
+    }
+
+    override fun isMultiTouchObservationRunning(): Boolean =
+        touchObserver?.isRunning() == true
 
     override fun removeTaskById(taskIdStr: String?): Boolean =
         tasks.removeTaskById(taskIdStr)

@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.Gesture
 import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.AcUnit
 import androidx.compose.material.icons.outlined.BugReport
@@ -56,6 +57,7 @@ fun ExtensionHubScreen(
     onOpenFreezer: () -> Unit = {},
     onOpenMacro: () -> Unit = {},
     onOpenPageScroll: () -> Unit = {},
+    onOpenMultiTouchGesture: () -> Unit = {},
     onOpenSettingsBackup: () -> Unit,
     onOpenNativeEnginePacks: () -> Unit,
     onOpenDiagnosticLogs: () -> Unit,
@@ -206,6 +208,18 @@ fun ExtensionHubScreen(
                 add(
                     settingsCardScopeItem("page-scroll") {
                         PageScrollEntryCard(onClick = onOpenPageScroll)
+                    }
+                )
+                add(
+                    settingsCardScopeItem("multi-touch") {
+                        SettingNavigationRow(
+                            icon = { label ->
+                                Icon(Icons.Outlined.Gesture, contentDescription = label)
+                            },
+                            title = "多指手势",
+                            subtitle = "三/四指捏合、滑动、旋转（需 Shizuku）",
+                            onClick = onOpenMultiTouchGesture,
+                        )
                     }
                 )
             }
