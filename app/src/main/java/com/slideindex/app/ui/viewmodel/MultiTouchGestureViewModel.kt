@@ -3,6 +3,7 @@ package com.slideindex.app.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.multitouch.MultiPointerBinding
+import com.slideindex.app.gesture.multitouch.PathGestureTemplate
 import com.slideindex.app.multitouch.MultiTouchGestureCoordinator
 import com.slideindex.app.multitouch.MultiTouchGestureSettingsStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,6 +30,14 @@ class MultiTouchGestureViewModel @Inject constructor(
 
     fun setBinding(binding: MultiPointerBinding, action: GestureAction) {
         settingsStore.setBinding(binding, action)
+    }
+
+    fun addPathGesture(template: PathGestureTemplate) {
+        settingsStore.addPathGesture(template)
+    }
+
+    fun removePathGesture(id: String) {
+        settingsStore.removePathGesture(id)
     }
 
     fun retry() {

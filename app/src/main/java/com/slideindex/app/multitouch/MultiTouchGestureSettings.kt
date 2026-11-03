@@ -5,12 +5,16 @@ import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.gesture.multitouch.MultiPointerBinding
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
+import com.slideindex.app.gesture.multitouch.PathGestureTemplate
+import com.slideindex.app.gesture.multitouch.PathPoint
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * 多指手势设置（Shizuku 观察模式）。
@@ -21,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 data class MultiTouchGestureSettings(
     val enabled: Boolean = false,
     val bindings: Map<MultiPointerBinding, GestureAction> = defaultBindings(),
+    val pathGestures: List<PathGestureTemplate> = emptyList(),
 ) {
     companion object {
         fun defaultBindings(): Map<MultiPointerBinding, GestureAction> = linkedMapOf(
@@ -106,6 +111,21 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         _state.value = current.copy(bindings = current.bindings + (binding to action))
     }
 
+    fun addPathGesture(template: PathGestureTemplate) {
+        val current = _state.value
+        val updated = current.pathGestures + template
+        prefs.edit().putString(KEY_PATH_GESTURES, serializePathGestures(updated)).apply()
+        _state.value = current.copy(pathGestures = updated)
+    }
+
+    fun removePathGesture(id: String) {
+        val current = _state.value
+        val updated = current.pathGestures.filterNot { it.id == id }
+        if (updated.size == current.pathGestures.size) return
+        prefs.edit().putString(KEY_PATH_GESTURES, serializePathGestures(updated)).apply()
+        _state.value = current.copy(pathGestures = updated)
+    }
+
     private fun read(): MultiTouchGestureSettings {
         val defaults = MultiTouchGestureSettings.defaultBindings()
         val bindings = MultiTouchGestureSettings.configurableBindings.associateWith { binding ->
@@ -119,7 +139,51 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         return MultiTouchGestureSettings(
             enabled = prefs.getBoolean(KEY_ENABLED, false),
             bindings = bindings,
+            pathGestures = parsePathGestures(prefs.getString(KEY_PATH_GESTURES, null)),
         )
+    }
+
+    private fun serializePathGestures(templates: List<PathGestureTemplate>): String {
+        val array = JSONArray()
+        for (template in templates) {
+            val obj = JSONObject()
+            obj.put("id", template.id)
+            obj.put("name", template.name)
+            obj.put("fingers", template.fingerCount)
+            obj.put("action", template.action.toMultiTouchTypeId())
+            obj.put(
+                "points",
+                template.points.joinToString(";") { point -> "${point.x},${point.y}" },
+            )
+            array.put(obj)
+        }
+        return array.toString()
+    }
+
+    private fun parsePathGestures(raw: String?): List<PathGestureTemplate> {
+        if (raw.isNullOrBlank()) return emptyList()
+        return runCatching {
+            val array = JSONArray(raw)
+            (0 until array.length()).mapNotNull { index ->
+                val obj = array.optJSONObject(index) ?: return@mapNotNull null
+                val id = obj.optString("id").ifBlank { return@mapNotNull null }
+                val name = obj.optString("name").ifBlank { id }
+                val fingers = obj.optInt("fingers", 3).coerceIn(3, 5)
+                val action = gestureActionFromTypeId(obj.optInt("action", 0))
+                val points = obj.optString("points").split(';').mapNotNull { item ->
+                    val separator = item.indexOf(',')
+                    if (separator <= 0) return@mapNotNull null
+                    val x = item.substring(0, separator).toFloatOrNull() ?: return@mapNotNull null
+                    val y = item.substring(separator + 1).toFloatOrNull() ?: return@mapNotNull null
+                    PathPoint(x, y)
+                }
+                if (points.size < 2) {
+                    null
+                } else {
+                    PathGestureTemplate(id, name, fingers, points, action)
+                }
+            }
+        }.getOrDefault(emptyList())
     }
 
     private fun actionKey(binding: MultiPointerBinding): String = "action_${binding.storageKey}"
@@ -127,5 +191,6 @@ class MultiTouchGestureSettingsStore @Inject constructor(
     private companion object {
         const val PREFS_NAME = "multitouch_gesture_settings"
         const val KEY_ENABLED = "enabled"
+        const val KEY_PATH_GESTURES = "path_gestures"
     }
 }

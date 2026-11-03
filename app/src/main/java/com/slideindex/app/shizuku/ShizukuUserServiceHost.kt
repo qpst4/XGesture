@@ -28,6 +28,13 @@ object ShizukuUserServiceHost {
     /**
      * Bump when the remote service code/ABI changes; drives processNameSuffix.
      *
+     * 49：冲突检测补充诊断日志（定位回调链路）。
+     * 48：冲突检测改为独立线程轮询，不再依赖触摸事件触发。
+     * 47：运行期每 5 秒重扫虚拟触摸设备，设备在启动后才出现时也能及时提示冲突。
+     * 46：新增虚拟触摸设备冲突检测（onInputConflict），AIDL 接口变更。
+     * 45：触摸设备枚举排除 relay/virtual 设备，避免选中其它程序创建的虚拟触摸屏。
+     * 44：多指回调新增路径手势（onPathGesture），旧进程的 AIDL 接口没有这个方法，
+     *     必须换进程名才能让新回调生效。
      * 43：多指识别器改为「相对质心的叉积/半径旋转判定 + RMS 半径捏合判定」，
      *     四指不再参与滑动；识别逻辑在 core:gesture，升号强制换进程才能加载新实现。
      * 42：多指识别器改为「逐帧累计旋转 + 四指放宽阈值」，识别逻辑在 core:gesture，
@@ -39,9 +46,9 @@ object ShizukuUserServiceHost {
      * 38：最近任务不再过滤本应用包名（任务切换器需要显示自己）。这是运行在用户服务进程里的
      *     `TaskExclusions` / reader 逻辑，必须换进程名才能让已安装的新包生效。
      * 37：`getRecentTasks()` 行格式增加第 5 列 userId（分身识别）。
-     * 升号后进程名变成 `task_manager_v43`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
+     * 升号后进程名变成 `task_manager_v49`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
      */
-    const val SERVICE_BUILD = 43
+    const val SERVICE_BUILD = 49
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bindLock = Any()

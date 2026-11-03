@@ -15,4 +15,16 @@ oneway interface IOnMultiTouchGesture {
 
     /** 观察器状态变化（启动 / 停止 / 找不到触摸屏 / 读取出错）。 */
     void onObserverState(boolean running, String detail);
+
+    /**
+     * 一次多指路径手势（抬手时回调）。
+     *
+     * @param points 归一化坐标，x/y 交替排列
+     */
+    void onPathGesture(int fingerCount, in float[] points, long eventTimeMs);
+
+    /**
+     * 检测到的虚拟/中继触摸设备（其它触控工具创建的），null 表示没有。
+     */
+    void onInputConflict(String devices);
 }

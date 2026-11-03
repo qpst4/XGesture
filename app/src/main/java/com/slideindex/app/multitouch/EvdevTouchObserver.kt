@@ -1,7 +1,9 @@
 package com.slideindex.app.multitouch
 
 import android.util.Log
+import com.slideindex.app.gesture.multitouch.CollectedPath
 import com.slideindex.app.gesture.multitouch.MultiPointerGestureRecognizer
+import com.slideindex.app.gesture.multitouch.PathGestureCollector
 import com.slideindex.app.gesture.multitouch.RecognizedMultiPointerGesture
 import com.slideindex.app.gesture.multitouch.TouchPointer
 import java.io.FileInputStream
@@ -19,6 +21,8 @@ import java.util.concurrent.TimeUnit
  */
 class EvdevTouchObserver(
     private val onGesture: (RecognizedMultiPointerGesture, Long) -> Unit,
+    private val onPathGesture: (CollectedPath, Long) -> Unit = { _, _ -> },
+    private val onInputConflict: (String?) -> Unit = {},
     private val onState: (Boolean, String) -> Unit = { _, _ -> },
     private val log: (String) -> Unit = { Log.i(TAG, it) },
 ) {
@@ -33,10 +37,27 @@ class EvdevTouchObserver(
 
     private val recognizer = MultiPointerGestureRecognizer()
 
+    private val pathCollector = PathGestureCollector()
+
+    /** 内置手势已经触发：本次触摸不再收集路径，直到手指全部抬起。 */
+    private var suppressPath = false
+
+    /** 上一次上报的虚拟设备列表，避免每次枚举都重复回调。 */
+    @Volatile
+    private var lastReportedConflict: String? = null
+
+    /** 独立冲突检测线程：不依赖触摸事件。 */
+    @Volatile
+    private var conflictWorker: Thread? = null
+
     fun start(): Boolean {
         if (running) return true
         running = true
         worker = Thread({ runLoop() }, "multi-touch-observer").apply {
+            isDaemon = true
+            start()
+        }
+        conflictWorker = Thread({ conflictLoop() }, "multi-touch-conflict").apply {
             isDaemon = true
             start()
         }
@@ -49,6 +70,8 @@ class EvdevTouchObserver(
         openStream = null
         worker?.interrupt()
         worker = null
+        conflictWorker?.interrupt()
+        conflictWorker = null
     }
 
     fun isRunning(): Boolean = running && worker?.isAlive == true
@@ -57,10 +80,12 @@ class EvdevTouchObserver(
         onState(true, "starting")
         while (running) {
             val device = findTouchscreen() ?: run {
+                reportConflict(emptyList())
                 onState(false, "no-touchscreen")
                 sleepQuietly(1_500L)
                 continue
             }
+            reportConflict(device.virtualDevices)
             recognizer.reset()
             onState(true, "watching:${device.eventPath}")
             try {
@@ -119,14 +144,22 @@ class EvdevTouchObserver(
                         SYN_REPORT -> {
                             val now = android.os.SystemClock.elapsedRealtime()
                             val pointers = collectPointers(slots, ranges)
-                            if (pointers.isEmpty() && !touchDown) {
-                                recognizer.onFrame(emptyList(), now)
-                            } else {
-                                val gesture = recognizer.onFrame(pointers, now)
-                                if (gesture != null) {
-                                    log("recognized ${gesture.gesture} x${gesture.fingerCount}")
-                                    onGesture(gesture, now)
+                            val gesture = recognizer.onFrame(pointers, now)
+                            if (gesture != null) {
+                                suppressPath = true
+                                pathCollector.cancel()
+                                log("recognized ${gesture.gesture} x${gesture.fingerCount}")
+                                onGesture(gesture, now)
+                            } else if (!suppressPath) {
+                                val path = pathCollector.onFrame(pointers)
+                                if (path != null) {
+                                    log("path x${path.fingerCount} points=${path.points.size}")
+                                    onPathGesture(path, now)
                                 }
+                            }
+                            if (pointers.isEmpty()) {
+                                suppressPath = false
+                                pathCollector.reset()
                             }
                         }
 
@@ -145,13 +178,10 @@ class EvdevTouchObserver(
     private fun collectPointers(slots: Map<Int, Slot>, ranges: AbsRanges): List<TouchPointer> {
         val result = ArrayList<TouchPointer>(slots.size)
         if (ranges.width <= 0f || ranges.height <= 0f) return result
-        // 触摸屏原始坐标是 10800x23400 这类非等比范围。识别器内部按 0..1 工作，
-        // 若直接 x/width、y/height，横向阈值会比纵向"短"一倍多（96px vs 210px），
-        // 旋转半径也会算成椭圆。这里把 x 拉成和 y 同尺度（都按屏幕高度的比例）。
-        val aspect = ranges.height / ranges.width
+        // 统一按屏幕高度归一化：x、y 同一尺度，旋转/捏合/滑动阈值在横竖方向一致。
         for ((index, slot) in slots) {
             if (slot.trackingId < 0 || slot.x.isNaN() || slot.y.isNaN()) continue
-            val nx = (slot.x / ranges.width) * aspect
+            val nx = slot.x / ranges.height
             val ny = slot.y / ranges.height
             result += TouchPointer(id = index, x = nx, y = ny)
         }
@@ -171,7 +201,29 @@ class EvdevTouchObserver(
         val name: String,
         val width: Float,
         val height: Float,
+        val virtualDevices: List<String> = emptyList(),
     )
+
+    private fun conflictLoop() {
+        while (running) {
+            runCatching {
+                val device = findTouchscreen()
+                Log.i(TAG, "conflict scan: device=${device?.eventPath} virtual=${device?.virtualDevices}")
+                reportConflict(device?.virtualDevices ?: emptyList())
+            }.onFailure {
+                Log.w(TAG, "conflict scan failed: ${it.message}")
+            }
+            sleepQuietly(CONFLICT_CHECK_INTERVAL_MS)
+        }
+    }
+
+    private fun reportConflict(devices: Collection<String>) {
+        val joined = devices.distinct().joinToString(" | ").ifBlank { null }
+        if (joined == lastReportedConflict) return
+        lastReportedConflict = joined
+        Log.i(TAG, "report conflict: $joined")
+        onInputConflict(joined)
+    }
 
     /**
      * 用 `getevent -p` 枚举触摸屏并同时拿到坐标范围。
@@ -202,16 +254,22 @@ class EvdevTouchObserver(
         var maxX = 0
         var maxY = 0
         var found: Touchscreen? = null
+        val virtualDevices = ArrayList<String>()
 
         fun flush() {
-            if (found != null) return
             val path = currentPath ?: return
-            if (currentName.contains("uinput", ignoreCase = true) ||
-                currentName.contains("virtual", ignoreCase = true)
-            ) {
+            val hasTouchRange = maxX > 1 && maxY > 1
+            // 虚拟/中继设备：记录名字用于冲突提示，但绝不选作触摸屏。
+            val isVirtual = currentName.contains("uinput", ignoreCase = true) ||
+                currentName.contains("virtual", ignoreCase = true) ||
+                currentName.contains("relay", ignoreCase = true)
+            if (isVirtual) {
+                if (hasTouchRange && currentName.isNotBlank()) {
+                    virtualDevices += currentName
+                }
                 return
             }
-            if (maxX <= 1 || maxY <= 1) return
+            if (found != null || !hasTouchRange) return
             found = Touchscreen(path, currentName, maxX.toFloat(), maxY.toFloat())
         }
 
@@ -238,7 +296,7 @@ class EvdevTouchObserver(
             }
         }
         flush()
-        return found
+        return found?.copy(virtualDevices = virtualDevices.toList())
     }
 
     private fun readFully(stream: FileInputStream, buffer: ByteArray): Boolean {
@@ -283,6 +341,9 @@ class EvdevTouchObserver(
         const val EV_SYN = 0
         const val EV_KEY = 1
         const val EV_ABS = 3
+
+        /** 运行期冲突检测间隔：其它触控工具可能随时创建设备。 */
+        const val CONFLICT_CHECK_INTERVAL_MS = 5_000L
 
         const val SYN_REPORT = 0
         const val SYN_DROPPED = 3

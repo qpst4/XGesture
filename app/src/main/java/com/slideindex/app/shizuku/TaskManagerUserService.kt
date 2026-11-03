@@ -36,6 +36,20 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
                     callback.onGesture(gesture.gesture.ordinal, gesture.fingerCount, eventTimeMs)
                 }
             },
+            onPathGesture = { path, eventTimeMs ->
+                val floats = FloatArray(path.points.size * 2)
+                path.points.forEachIndexed { index, point ->
+                    floats[index * 2] = point.x
+                    floats[index * 2 + 1] = point.y
+                }
+                runCatching {
+                    callback.onPathGesture(path.fingerCount, floats, eventTimeMs)
+                }
+            },
+            onInputConflict = { devices ->
+                android.util.Log.i("MultiTouchBridge", "notify conflict: $devices")
+                runCatching { callback.onInputConflict(devices) }
+            },
             onState = { running, detail ->
                 runCatching { callback.onObserverState(running, detail) }
             },

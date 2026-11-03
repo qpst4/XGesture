@@ -93,6 +93,8 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             onEnabledChange = viewModel::setEnabled,
             onBindingChange = viewModel::setBinding,
             onRetry = viewModel::retry,
+            onAddPathGesture = viewModel::addPathGesture,
+            onRemovePathGesture = viewModel::removePathGesture,
         )
     }
 

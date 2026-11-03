@@ -10,6 +10,8 @@ import com.slideindex.app.gesture.ActionExecutor
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.multitouch.MultiPointerBinding
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
+import com.slideindex.app.gesture.multitouch.PathGestureMatcher
+import com.slideindex.app.gesture.multitouch.PathPoint
 import com.slideindex.app.service.SlideIndexAccessibilityService
 import com.slideindex.app.settings.SettingsRepository
 import com.slideindex.app.shizuku.IOnMultiTouchGesture
@@ -26,6 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import rikka.shizuku.Shizuku
 
 /** 多指手势运行状态（设置页展示用）。 */
 data class MultiTouchStatus(
@@ -33,6 +36,8 @@ data class MultiTouchStatus(
     val running: Boolean = false,
     val detail: String = "",
     val shizukuAvailable: Boolean = false,
+    /** 其它触控工具创建的虚拟触摸设备名；非空表示存在冲突风险。 */
+    val conflictDevices: String? = null,
 )
 
 /**
@@ -83,6 +88,30 @@ class MultiTouchGestureCoordinator @Inject constructor(
         override fun onObserverState(running: Boolean, detail: String) {
             _status.value = _status.value.copy(running = running, detail = detail)
         }
+
+        override fun onInputConflict(devices: String?) {
+            val value = devices?.takeIf { it.isNotBlank() }
+            Log.i(TAG, "input conflict: $value")
+            _status.value = _status.value.copy(conflictDevices = value)
+        }
+
+        override fun onPathGesture(fingerCount: Int, points: FloatArray?, eventTimeMs: Long) {
+            val coordinates = points ?: return
+            if (coordinates.size < 4 || coordinates.size % 2 != 0) return
+            val path = ArrayList<PathPoint>(coordinates.size / 2)
+            var index = 0
+            while (index + 1 < coordinates.size) {
+                path += PathPoint(coordinates[index], coordinates[index + 1])
+                index += 2
+            }
+            val templates = settingsStore.state.value.pathGestures
+                .filter { it.fingerCount == fingerCount }
+            if (templates.isEmpty()) return
+            val match = PathGestureMatcher.bestMatch(path, templates) ?: return
+            if (match.action == GestureAction.None) return
+            Log.i(TAG, "path gesture -> ${match.name}")
+            mainHandler.post { performAction(match.action) }
+        }
     }
 
     /** 幂等启动；由 Application 与设置页共同调用。 */
@@ -90,9 +119,17 @@ class MultiTouchGestureCoordinator @Inject constructor(
         if (started) return
         started = true
         if (!isMainProcess()) return
+        // Shizuku 可能比本进程晚就绪：binder 到位后补一次同步，避免一直停在“未运行”。
+        runCatching {
+            Shizuku.addBinderReceivedListenerSticky(binderReceivedListener)
+        }
         applicationScope.launch(Dispatchers.IO) {
             settingsStore.state.collect { syncNow() }
         }
+    }
+
+    private val binderReceivedListener = Shizuku.OnBinderReceivedListener {
+        applicationScope.launch(Dispatchers.IO) { syncNow() }
     }
 
     /** 设置页「重试」：丢掉旧进程，按当前设置重新绑定。 */
@@ -122,17 +159,20 @@ class MultiTouchGestureCoordinator @Inject constructor(
             }
             if (!shizukuAvailable) {
                 _status.value = _status.value.copy(running = false, detail = "shizuku-unavailable")
+                Log.i(TAG, "sync: shizuku unavailable")
                 return
             }
 
             val service = runCatching { ShizukuUserServiceHost.ensure(context) }.getOrNull()
             if (service == null) {
                 _status.value = _status.value.copy(running = false, detail = "service-unavailable")
+                Log.i(TAG, "sync: user service unavailable")
                 return
             }
             val startedObservation = runCatching {
                 service.startMultiTouchObservation(callback)
             }.getOrDefault(false)
+            Log.i(TAG, "sync: start observation=$startedObservation")
             if (startedObservation) {
                 observingService = service
                 _status.value = _status.value.copy(running = true, detail = "watching")
