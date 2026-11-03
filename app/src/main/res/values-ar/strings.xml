@@ -2693,6 +2693,11 @@
     <string name="notification_history_max_count_value">%1$d</string>
     <string name="widget_panel_blur">ضبابية الخلفية</string>
     <string name="widget_panel_blur_desc">Android 12+ يعرض تأثير زجاجي مصنف خلف اللوحة</string>
+    <string name="widget_panel_close_on_click">بعد النقر على عنصر واجهة</string>
+    <string name="widget_panel_close_on_click_desc">متى تُغلق هذه اللوحة تلقائيًا بعد النقر على عنصر واجهة</string>
+    <string name="widget_panel_close_on_click_activity">الإغلاق فقط عند فتح تطبيق</string>
+    <string name="widget_panel_close_on_click_always">الإغلاق دائمًا</string>
+    <string name="widget_panel_close_on_click_never">عدم الإغلاق أبدًا</string>
     <string name="widget_panel_grid_section">تخطيط عناصر الواجهة</string>
     <string name="widget_panel_opacity">عتامة اللوحة</string>
     <string name="widget_panel_add_widget">إضافة عنصر واجهة</string>
@@ -4172,6 +4177,13 @@
     <string name="shell_root_uid_warning">لا يزال يتم تنفيذ الأوامر بصلاحيات root (uid=0). في وضع adb، يجب أن يعود uid إلى 2000. إذا تم تشغيل Shizuku بصلاحيات Root، يرجى استخدام طريقة التصحيح اللاسلكي/adb لتشغيل Shizuku، أو إلغاء تفويض Root الدائم لـ Shell في APatch.</string>
     <string name="shell_no_response">خدمة Shell لا تستجيب. يرجى إغلاق Shizuku وإعادة تشغيله بالكامل، ثم إعادة فتح هذا التطبيق</string>
     <string name="app_carousel_cancel_hint">اسحب بعيداً عن منطقة البطاقات وأفلت للإلغاء</string>
+    <string name="app_carousel_action_split_screen">تقسيم الشاشة</string>
+    <string name="app_carousel_action_floating">نافذة حرة</string>
+    <string name="app_carousel_action_close">إغلاق</string>
+    <string name="app_carousel_close_all">إغلاق الكل</string>
+    <string name="app_carousel_close_all_hint">أفلت لإغلاق جميع التطبيقات</string>
+    <string name="app_carousel_cancel_down_hint">اسحب لأسفل للإغلاق</string>
+    <string name="app_carousel_cancel_overshoot_hint">أفلت للإلغاء</string>
     <string name="app_carousel_settings_title">مبدل تطبيقات البطاقات</string>
     <string name="app_carousel_settings_desc">اسحب لأعلى أو لأسفل من مركز الشاشة لمسافة تتجاوز الحد المحدد ثم أفلت لإلغاء التبديل</string>
     <string name="app_carousel_cancel_distance">مسافة الإلغاء</string>

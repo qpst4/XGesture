@@ -3058,6 +3058,11 @@
     <string name="floating_pointer_ripple_duration_value">%1$d мс</string>
     <string name="widget_panel_blur">Размытие фона</string>
     <string name="widget_panel_blur_desc">Матовое стекло за панелью на Android 12+</string>
+    <string name="widget_panel_close_on_click">После нажатия на виджет</string>
+    <string name="widget_panel_close_on_click_desc">Когда эта панель должна закрываться после нажатия на виджет</string>
+    <string name="widget_panel_close_on_click_activity">Закрывать только при открытии приложения</string>
+    <string name="widget_panel_close_on_click_always">Всегда закрывать</string>
+    <string name="widget_panel_close_on_click_never">Никогда не закрывать</string>
     <string name="widget_panel_grid_section">Расположение виджетов</string>
     <string name="widget_panel_opacity">Прозрачность панели</string>
     <string name="widget_panel_add_widget">Добавить виджет</string>
@@ -4368,6 +4373,13 @@
 или отзовите постоянный Root для Shell в APatch.</string>
     <string name="shell_no_response">Служба Shell не отвечает. Полностью перезапустите Shizuku, затем снова откройте это приложение.</string>
     <string name="app_carousel_cancel_hint">Переместите к верхнему или нижнему краю и отпустите для отмены</string>
+    <string name="app_carousel_action_split_screen">Разделить экран</string>
+    <string name="app_carousel_action_floating">Свободное окно</string>
+    <string name="app_carousel_action_close">Закрыть</string>
+    <string name="app_carousel_close_all">Закрыть все</string>
+    <string name="app_carousel_close_all_hint">Отпустите, чтобы закрыть все приложения</string>
+    <string name="app_carousel_cancel_down_hint">Смахните вниз, чтобы закрыть панель</string>
+    <string name="app_carousel_cancel_overshoot_hint">Отпустите для отмены</string>
     <string name="extension_about_subtitle">Версия, обновления и конфиденциальность</string>
     <string name="external_invocation_keyword_example"> «ключевое слово»</string>
     <string name="search_panel_aggregated_image_search">Агрегированный поиск по изображениям</string>
