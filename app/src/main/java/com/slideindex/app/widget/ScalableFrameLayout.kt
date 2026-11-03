@@ -357,7 +357,7 @@ class ScalableFrameLayout @JvmOverloads constructor(
       MotionEvent.ACTION_MOVE -> {
         val dx = ev.x - interceptDownX
         val dy = ev.y - interceptDownY
-        if (!scrollingInsideWidget && (kotlin.math.abs(dx) > touchSlop || kotlin.math.abs(dy) > touchSlop)) {
+        if (!scrollingInsideWidget) {
           val hostRoot = if (isEmpty()) null else getChildAt(0)
           if (hostRoot != null) {
             val leftOffset = (width - renderWidthPx) / 2f
@@ -365,9 +365,18 @@ class ScalableFrameLayout @JvmOverloads constructor(
             val scale = if (scaleVal > 0f) scaleVal else 1f
             val hostLocalX = (interceptDownX - leftOffset) / scale
             val hostLocalY = (interceptDownY - topOffset) / scale
-            val canScrollVertically = WidgetTouchScrollUtils.canScrollAtPoint(hostRoot, hostLocalX, hostLocalY, 0, dy)
-            val canScrollHorizontally = WidgetTouchScrollUtils.canScrollAtPoint(hostRoot, hostLocalX, hostLocalY, 1, dx)
-            if (canScrollVertically || canScrollHorizontally) {
+            // 与一墨 np5 同款：按主轴判定，竖向为主才交给内层竖向滚动，
+            // 横向为主才交给内层横向滚动；斜向不再误判，其余交给面板。
+            val absDx = kotlin.math.abs(dx)
+            val absDy = kotlin.math.abs(dy)
+            val innerClaims = when {
+              absDy > touchSlop && absDy > absDx ->
+                WidgetTouchScrollUtils.canScrollAtPoint(hostRoot, hostLocalX, hostLocalY, 0, dy)
+              absDx > touchSlop && absDx > absDy ->
+                WidgetTouchScrollUtils.canScrollAtPoint(hostRoot, hostLocalX, hostLocalY, 1, dx)
+              else -> false
+            }
+            if (innerClaims) {
               scrollingInsideWidget = true
               WidgetTouchScrollUtils.requestDisallowInterceptAllParents(this, true)
             }

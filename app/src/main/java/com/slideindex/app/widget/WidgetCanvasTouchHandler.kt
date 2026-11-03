@@ -494,7 +494,8 @@ internal class WidgetCanvasTouchHandler(
         val localX = layout.panelScrollDownX - target.left - target.translationX
         val localY = layout.panelScrollDownY - target.top - target.translationY
         if (target.isTouchOnChrome(localX, localY)) return false
-        if (abs(dy) > layout.touchSlop * 2.5f) return false
+        // 只要小组件里这一方向还能滚，就一直让位；不再用「拖过 N 倍 slop 就收回」的
+        // 距离窗口（那会导致滑两下就变成面板滚动）。
         return target.canContentScrollAtPoint(localX, localY, 0, dy)
     }
 }

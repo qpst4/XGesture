@@ -505,7 +505,7 @@ class WidgetPopupCardLayout(
         override fun getItemCount(): Int = pages.size
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WidgetPageViewHolder {
-            val scrollView = NestedScrollView(context).apply {
+            val scrollView = WidgetPanelNestedScrollView(context).apply {
                 layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT,
