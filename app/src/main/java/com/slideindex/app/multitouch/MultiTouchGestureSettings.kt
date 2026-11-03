@@ -7,6 +7,8 @@ import com.slideindex.app.gesture.multitouch.MultiPointerBinding
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
 import com.slideindex.app.gesture.multitouch.PathGestureTemplate
 import com.slideindex.app.gesture.multitouch.PathPoint
+import com.slideindex.app.gesture.multitouch.PathStroke
+import com.slideindex.app.launcher.QuickLauncherItemCodec
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,6 +28,8 @@ data class MultiTouchGestureSettings(
     val enabled: Boolean = false,
     val bindings: Map<MultiPointerBinding, GestureAction> = defaultBindings(),
     val pathGestures: List<PathGestureTemplate> = emptyList(),
+    /** 开启后 ≥2 指的路径手势优先于内置几何手势（不再被旋转/捏合/滑动抢走）。 */
+    val pathPriority: Boolean = false,
 ) {
     companion object {
         fun defaultBindings(): Map<MultiPointerBinding, GestureAction> = linkedMapOf(
@@ -107,8 +111,14 @@ class MultiTouchGestureSettingsStore @Inject constructor(
     fun setBinding(binding: MultiPointerBinding, action: GestureAction) {
         val current = _state.value
         if (current.bindings[binding] == action) return
-        prefs.edit().putInt(actionKey(binding), action.toMultiTouchTypeId()).apply()
+        prefs.edit().putString(actionKey(binding), encodeAction(action)).apply()
         _state.value = current.copy(bindings = current.bindings + (binding to action))
+    }
+
+    fun setPathPriority(enabled: Boolean) {
+        if (_state.value.pathPriority == enabled) return
+        prefs.edit().putBoolean(KEY_PATH_PRIORITY, enabled).apply()
+        _state.value = _state.value.copy(pathPriority = enabled)
     }
 
     fun addPathGesture(template: PathGestureTemplate) {
@@ -128,19 +138,38 @@ class MultiTouchGestureSettingsStore @Inject constructor(
 
     private fun read(): MultiTouchGestureSettings {
         val defaults = MultiTouchGestureSettings.defaultBindings()
+        val all = prefs.all
         val bindings = MultiTouchGestureSettings.configurableBindings.associateWith { binding ->
-            val stored = prefs.getInt(actionKey(binding), Int.MIN_VALUE)
-            if (stored == Int.MIN_VALUE) {
-                defaults[binding] ?: GestureAction.None
-            } else {
-                gestureActionFromTypeId(stored)
+            // 先看实际类型：旧版本存的是 Int，直接 getString 会 ClassCastException。
+            when (val stored = all[actionKey(binding)]) {
+                is String -> decodeAction(stored)
+                is Int -> gestureActionFromTypeId(stored)
+                else -> defaults[binding] ?: GestureAction.None
             }
         }
         return MultiTouchGestureSettings(
             enabled = prefs.getBoolean(KEY_ENABLED, false),
             bindings = bindings,
-            pathGestures = parsePathGestures(prefs.getString(KEY_PATH_GESTURES, null)),
+            pathGestures = parsePathGestures(
+                (all[KEY_PATH_GESTURES] as? String),
+            ),
+            pathPriority = prefs.getBoolean(KEY_PATH_PRIORITY, false),
         )
+    }
+
+    /** 完整动作编码：`类型 id + 动作正文`，正文复用统一的动作编码器。 */
+    private fun encodeAction(action: GestureAction): String =
+        "${action.type.id}\u001F${QuickLauncherItemCodec.encodeActionBody(action)}"
+
+    private fun decodeAction(raw: String?): GestureAction {
+        if (raw.isNullOrBlank()) return GestureAction.None
+        val separator = raw.indexOf('\u001F')
+        if (separator < 0) {
+            return gestureActionFromTypeId(raw.toIntOrNull() ?: 0)
+        }
+        val type = GestureActionType.fromId(raw.substring(0, separator).toIntOrNull() ?: 0)
+        return QuickLauncherItemCodec.decodeActionBody(type, raw.substring(separator + 1))
+            ?: GestureAction.None
     }
 
     private fun serializePathGestures(templates: List<PathGestureTemplate>): String {
@@ -149,11 +178,12 @@ class MultiTouchGestureSettingsStore @Inject constructor(
             val obj = JSONObject()
             obj.put("id", template.id)
             obj.put("name", template.name)
-            obj.put("fingers", template.fingerCount)
-            obj.put("action", template.action.toMultiTouchTypeId())
+            obj.put("action", encodeAction(template.action))
             obj.put(
-                "points",
-                template.points.joinToString(";") { point -> "${point.x},${point.y}" },
+                "strokes",
+                template.strokes.joinToString("|") { stroke ->
+                    stroke.points.joinToString(";") { point -> "${point.x},${point.y}" }
+                },
             )
             array.put(obj)
         }
@@ -168,19 +198,38 @@ class MultiTouchGestureSettingsStore @Inject constructor(
                 val obj = array.optJSONObject(index) ?: return@mapNotNull null
                 val id = obj.optString("id").ifBlank { return@mapNotNull null }
                 val name = obj.optString("name").ifBlank { id }
-                val fingers = obj.optInt("fingers", 3).coerceIn(3, 5)
-                val action = gestureActionFromTypeId(obj.optInt("action", 0))
-                val points = obj.optString("points").split(';').mapNotNull { item ->
-                    val separator = item.indexOf(',')
-                    if (separator <= 0) return@mapNotNull null
-                    val x = item.substring(0, separator).toFloatOrNull() ?: return@mapNotNull null
-                    val y = item.substring(separator + 1).toFloatOrNull() ?: return@mapNotNull null
-                    PathPoint(x, y)
+                val action = decodeAction(obj.optString("action").ifBlank { null })
+                val rawStrokes = obj.optString("strokes")
+                val strokes = if (rawStrokes.isNotBlank()) {
+                    rawStrokes.split('|').mapNotNull { strokeRaw ->
+                        val points = strokeRaw.split(';').mapNotNull { item ->
+                            val separator = item.indexOf(',')
+                            if (separator <= 0) return@mapNotNull null
+                            val x = item.substring(0, separator).toFloatOrNull()
+                                ?: return@mapNotNull null
+                            val y = item.substring(separator + 1).toFloatOrNull()
+                                ?: return@mapNotNull null
+                            PathPoint(x, y)
+                        }
+                        if (points.size < 2) null else PathStroke(points)
+                    }
+                } else {
+                    // 旧格式：单条 points，迁移为一条轨迹（条数不足的手势不会参与匹配）。
+                    val points = obj.optString("points").split(';').mapNotNull { item ->
+                        val separator = item.indexOf(',')
+                        if (separator <= 0) return@mapNotNull null
+                        val x = item.substring(0, separator).toFloatOrNull()
+                            ?: return@mapNotNull null
+                        val y = item.substring(separator + 1).toFloatOrNull()
+                            ?: return@mapNotNull null
+                        PathPoint(x, y)
+                    }
+                    if (points.size < 2) emptyList() else listOf(PathStroke(points))
                 }
-                if (points.size < 2) {
+                if (strokes.size < 2) {
                     null
                 } else {
-                    PathGestureTemplate(id, name, fingers, points, action)
+                    PathGestureTemplate(id, name, strokes, action)
                 }
             }
         }.getOrDefault(emptyList())
@@ -192,5 +241,26 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         const val PREFS_NAME = "multitouch_gesture_settings"
         const val KEY_ENABLED = "enabled"
         const val KEY_PATH_GESTURES = "path_gestures"
+        const val KEY_PATH_PRIORITY = "path_priority"
+    }
+}
+
+/** 路径草稿的导航编码：轨迹之间 `|`，点之间 `;`，坐标 `x,y`。 */
+fun encodePathStrokes(strokes: List<PathStroke>): String =
+    strokes.joinToString("|") { stroke ->
+        stroke.points.joinToString(";") { point -> "${point.x},${point.y}" }
+    }
+
+fun decodePathStrokes(raw: String): List<PathStroke> {
+    if (raw.isBlank()) return emptyList()
+    return raw.split('|').mapNotNull { strokeRaw ->
+        val points = strokeRaw.split(';').mapNotNull { item ->
+            val separator = item.indexOf(',')
+            if (separator <= 0) return@mapNotNull null
+            val x = item.substring(0, separator).toFloatOrNull() ?: return@mapNotNull null
+            val y = item.substring(separator + 1).toFloatOrNull() ?: return@mapNotNull null
+            PathPoint(x, y)
+        }
+        if (points.size < 2) null else PathStroke(points)
     }
 }

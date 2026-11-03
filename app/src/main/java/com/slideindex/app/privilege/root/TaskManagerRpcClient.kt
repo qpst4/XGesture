@@ -186,7 +186,10 @@ internal class TaskManagerRpcClient(
         (TaskManagerDaemonRpc.execute(port, op, args) as RpcValue.StrArr).value
 
     // 多指手势观察只由 Shizuku 用户服务实现；root RPC 守护进程没有对应端点。
-    override fun startMultiTouchObservation(callback: IOnMultiTouchGesture): Boolean = false
+    override fun startMultiTouchObservation(
+        callback: IOnMultiTouchGesture,
+        pathPriority: Boolean,
+    ): Boolean = false
 
     override fun stopMultiTouchObservation() = Unit
 

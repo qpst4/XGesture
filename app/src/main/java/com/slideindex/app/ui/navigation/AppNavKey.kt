@@ -320,6 +320,40 @@ sealed interface AppNavKey : NavKey {
     @Serializable data object ExtensionHub : AppNavKey
     /** 多指手势设置（Shizuku evdev 观察模式）。 */
     @Serializable data object ExtensionMultiTouchGesture : AppNavKey
+    /** 路径手势录制页。 */
+    @Serializable data object ExtensionMultiTouchPathRecord : AppNavKey
+    /**
+     * 多指手势的动作选择页。
+     *
+     * @param bindingKey `3:PINCH` 这类绑定键；`path` 表示正在录制一条路径手势
+     * @param pendingStrokes 路径草稿（`x,y;x,y|x,y`），仅 `bindingKey=path` 时使用
+     */
+    @Serializable data class ExtensionMultiTouchActionPick(
+        val bindingKey: String,
+        val pendingStrokes: String = "",
+    ) : AppNavKey
+    @Serializable data class ExtensionMultiTouchActionMyShortcuts(
+        val bindingKey: String,
+        val pendingStrokes: String = "",
+    ) : AppNavKey
+    @Serializable data class ExtensionMultiTouchActionPresetShortcuts(
+        val bindingKey: String,
+        val pendingStrokes: String = "",
+    ) : AppNavKey
+    @Serializable data class ExtensionMultiTouchActionPickApp(
+        val bindingKey: String,
+        val pendingStrokes: String = "",
+    ) : AppNavKey
+    @Serializable data class ExtensionMultiTouchActionPickActivity(
+        val bindingKey: String,
+        val pendingStrokes: String = "",
+        val appPackageName: String = "",
+    ) : AppNavKey
+    @Serializable data class ExtensionMultiTouchActionShellCommand(
+        val bindingKey: String,
+        val pendingStrokes: String = "",
+        val initialCommand: String = "",
+    ) : AppNavKey
     // 手势宏（宏列表 / 新建-编辑 / 目标 App 选择）
     @Serializable data object MacroList : AppNavKey
     /** 「页面滚动」设置（滚动方式 / 默认速度 / 控制条配色）。 */

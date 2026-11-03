@@ -29,6 +29,18 @@ import com.slideindex.app.ui.LicenseTextScreen
 import com.slideindex.app.ui.LauncherShortcutMenuScreen
 import com.slideindex.app.ui.MissingGesturePermissionsScreen
 import com.slideindex.app.ui.MultiTouchGestureSettingsScreen
+import com.slideindex.app.ui.GestureActionPickerScreen
+import com.slideindex.app.ui.GestureExecuteShellCommandScreen
+import com.slideindex.app.ui.MultiTouchPathRecordScreen
+import com.slideindex.app.ui.picker.ActivityShortcutPickActivityScreen
+import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
+import com.slideindex.app.ui.picker.MyShortcutsFolderScreen
+import com.slideindex.app.ui.picker.PresetShortcutsFolderScreen
+import com.slideindex.app.gesture.ActionPickerCatalogPolicy
+import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.gesture.GestureTriggerType
+import com.slideindex.app.gesture.multitouch.MultiPointerBinding
+import com.slideindex.app.multitouch.encodePathStrokes
 import com.slideindex.app.ui.PrivacyPolicyScreen
 import com.slideindex.app.ui.SettingsBackupScreen
 import com.slideindex.app.ui.ThirdPartyNoticesScreen
@@ -91,10 +103,200 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             status = status,
             onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
             onEnabledChange = viewModel::setEnabled,
-            onBindingChange = viewModel::setBinding,
             onRetry = viewModel::retry,
-            onAddPathGesture = viewModel::addPathGesture,
+            onPathPriorityChange = viewModel::setPathPriority,
+            onOpenActionPick = { binding ->
+                ctx.navigate(AppNavKey.ExtensionMultiTouchActionPick(binding.storageKey))
+            },
+            onOpenRecorder = { ctx.navigate(AppNavKey.ExtensionMultiTouchPathRecord) },
             onRemovePathGesture = viewModel::removePathGesture,
+        )
+    }
+
+    hiltEntry<AppNavKey.ExtensionMultiTouchPathRecord> {
+        val viewModel: MultiTouchGestureViewModel = hiltViewModel()
+        MultiTouchPathRecordScreen(
+            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture) },
+            onRecordingStateChange = viewModel::setRecording,
+            onFinish = { strokes ->
+                ctx.navigate(
+                    AppNavKey.ExtensionMultiTouchActionPick(
+                        bindingKey = MultiTouchGestureViewModel.PATH_BINDING_KEY,
+                        pendingStrokes = encodePathStrokes(strokes),
+                    ),
+                )
+            },
+        )
+    }
+
+    hiltEntry<AppNavKey.ExtensionMultiTouchActionPick> { key ->
+        val viewModel: MultiTouchGestureViewModel = hiltViewModel()
+        val settings by viewModel.settings.collectAsStateWithLifecycle()
+        val current = if (key.bindingKey == MultiTouchGestureViewModel.PATH_BINDING_KEY) {
+            GestureAction.None
+        } else {
+            MultiPointerBinding.fromStorageKey(key.bindingKey)
+                ?.let { binding -> settings.bindings[binding] }
+                ?: GestureAction.None
+        }
+        GestureActionPickerScreen(
+            trigger = GestureTriggerType.SHORT_SINGLE_TAP,
+            current = current,
+            catalogPolicy = ActionPickerCatalogPolicy.EdgeGesture,
+            onDismiss = { ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture) },
+            onSelect = { action ->
+                viewModel.applyAction(key.bindingKey, key.pendingStrokes, action)
+                ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture)
+            },
+            onOpenMyShortcuts = {
+                ctx.navigate(
+                    AppNavKey.ExtensionMultiTouchActionMyShortcuts(
+                        key.bindingKey,
+                        key.pendingStrokes,
+                    ),
+                )
+            },
+            onOpenPresetShortcuts = {
+                ctx.navigate(
+                    AppNavKey.ExtensionMultiTouchActionPresetShortcuts(
+                        key.bindingKey,
+                        key.pendingStrokes,
+                    ),
+                )
+            },
+            onOpenPickApp = {
+                ctx.navigate(
+                    AppNavKey.ExtensionMultiTouchActionPickApp(
+                        key.bindingKey,
+                        key.pendingStrokes,
+                    ),
+                )
+            },
+            onOpenExecuteShellCommand = { command ->
+                ctx.navigate(
+                    AppNavKey.ExtensionMultiTouchActionShellCommand(
+                        key.bindingKey,
+                        key.pendingStrokes,
+                        command,
+                    ),
+                )
+            },
+        )
+    }
+
+    hiltEntry<AppNavKey.ExtensionMultiTouchActionMyShortcuts> { key ->
+        val viewModel: MultiTouchGestureViewModel = hiltViewModel()
+        val extensionViewModel: ExtensionSettingsViewModel = hiltViewModel()
+        val appSettings by extensionViewModel.settings.collectAsStateWithLifecycle()
+        val settings by viewModel.settings.collectAsStateWithLifecycle()
+        val current = if (key.bindingKey == MultiTouchGestureViewModel.PATH_BINDING_KEY) {
+            GestureAction.None
+        } else {
+            MultiPointerBinding.fromStorageKey(key.bindingKey)
+                ?.let { binding -> settings.bindings[binding] }
+                ?: GestureAction.None
+        }
+        MyShortcutsFolderScreen(
+            activityShortcuts = appSettings.activityShortcuts,
+            onBack = {
+                ctx.navigateBackTo(
+                    AppNavKey.ExtensionMultiTouchActionPick(key.bindingKey, key.pendingStrokes),
+                )
+            },
+            onBrowseNewShortcut = {
+                ctx.navigate(
+                    AppNavKey.ExtensionMultiTouchActionPickApp(
+                        key.bindingKey,
+                        key.pendingStrokes,
+                    ),
+                )
+            },
+            currentAction = current,
+            onSelectRadio = { action ->
+                viewModel.applyAction(key.bindingKey, key.pendingStrokes, action)
+                ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture)
+            },
+        )
+    }
+
+    hiltEntry<AppNavKey.ExtensionMultiTouchActionPresetShortcuts> { key ->
+        val viewModel: MultiTouchGestureViewModel = hiltViewModel()
+        val settings by viewModel.settings.collectAsStateWithLifecycle()
+        val current = if (key.bindingKey == MultiTouchGestureViewModel.PATH_BINDING_KEY) {
+            GestureAction.None
+        } else {
+            MultiPointerBinding.fromStorageKey(key.bindingKey)
+                ?.let { binding -> settings.bindings[binding] }
+                ?: GestureAction.None
+        }
+        PresetShortcutsFolderScreen(
+            onBack = {
+                ctx.navigateBackTo(
+                    AppNavKey.ExtensionMultiTouchActionPick(key.bindingKey, key.pendingStrokes),
+                )
+            },
+            currentAction = current,
+            onSelectRadio = { action ->
+                viewModel.applyAction(key.bindingKey, key.pendingStrokes, action)
+                ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture)
+            },
+        )
+    }
+
+    hiltEntry<AppNavKey.ExtensionMultiTouchActionPickApp> { key ->
+        ActivityShortcutPickAppScreen(
+            onBack = {
+                ctx.navigateBackTo(
+                    AppNavKey.ExtensionMultiTouchActionPick(key.bindingKey, key.pendingStrokes),
+                )
+            },
+            onSelectApp = { app ->
+                ctx.navigate(
+                    AppNavKey.ExtensionMultiTouchActionPickActivity(
+                        key.bindingKey,
+                        key.pendingStrokes,
+                        app.packageName,
+                    ),
+                )
+            },
+        )
+    }
+
+    hiltEntry<AppNavKey.ExtensionMultiTouchActionPickActivity> { key ->
+        val viewModel: MultiTouchGestureViewModel = hiltViewModel()
+        ActivityShortcutPickActivityScreen(
+            packageName = key.appPackageName,
+            onBack = { ctx.backStack.removeLastOrNull() },
+            onSelectActivity = { activity ->
+                viewModel.applyAction(
+                    key.bindingKey,
+                    key.pendingStrokes,
+                    GestureAction.LaunchShortcut.component(
+                        "${activity.packageName}/${activity.className}",
+                        activity.label,
+                    ),
+                )
+                ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture)
+            },
+        )
+    }
+
+    hiltEntry<AppNavKey.ExtensionMultiTouchActionShellCommand> { key ->
+        val viewModel: MultiTouchGestureViewModel = hiltViewModel()
+        val extensionViewModel: ExtensionSettingsViewModel = hiltViewModel()
+        val appSettings by extensionViewModel.settings.collectAsStateWithLifecycle()
+        GestureExecuteShellCommandScreen(
+            initialCommand = key.initialCommand,
+            shellCommands = appSettings.shellCommands,
+            onBack = { ctx.backStack.removeLastOrNull() },
+            onConfirm = { command ->
+                viewModel.applyAction(
+                    key.bindingKey,
+                    key.pendingStrokes,
+                    GestureAction.ExecuteShellCommand(command),
+                )
+                ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture)
+            },
         )
     }
 

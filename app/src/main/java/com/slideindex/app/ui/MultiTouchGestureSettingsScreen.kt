@@ -1,21 +1,11 @@
 package com.slideindex.app.ui
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -24,21 +14,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.multitouch.MultiPointerBinding
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
 import com.slideindex.app.gesture.multitouch.PathGestureTemplate
-import com.slideindex.app.gesture.multitouch.PathPoint
 import com.slideindex.app.multitouch.MultiTouchGestureSettings
 import com.slideindex.app.multitouch.MultiTouchStatus
-import com.slideindex.app.multitouch.multiTouchSelectableActions
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.MiuixNavigationRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
@@ -47,13 +29,11 @@ import com.slideindex.app.ui.settings.components.StatusRow
 import com.slideindex.app.ui.settings.components.StatusTone
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
-import kotlin.math.hypot
 
 /**
  * 多指手势设置页（Shizuku 观察模式）。
  *
  * 注意：这是**只读观察**——触发手势时应用仍会收到同一手势（例如三指捏合时页面也会缩放）。
- * 页面底部明确提示这一点，避免被当成系统级拦截。
  */
 @Composable
 fun MultiTouchGestureSettingsScreen(
@@ -61,14 +41,12 @@ fun MultiTouchGestureSettingsScreen(
     status: MultiTouchStatus,
     onBack: () -> Unit,
     onEnabledChange: (Boolean) -> Unit,
-    onBindingChange: (MultiPointerBinding, GestureAction) -> Unit,
     onRetry: () -> Unit,
-    onAddPathGesture: (PathGestureTemplate) -> Unit = {},
+    onPathPriorityChange: (Boolean) -> Unit = {},
+    onOpenActionPick: (MultiPointerBinding) -> Unit = {},
+    onOpenRecorder: () -> Unit = {},
     onRemovePathGesture: (String) -> Unit = {},
 ) {
-    var pickerBinding by remember { mutableStateOf<MultiPointerBinding?>(null) }
-    var showRecorder by remember { mutableStateOf(false) }
-    var pendingPath by remember { mutableStateOf<Pair<List<PathPoint>, Int>?>(null) }
     var deleteTarget by remember { mutableStateOf<PathGestureTemplate?>(null) }
 
     SettingsScreenScaffold(title = "多指手势", onBack = onBack) {
@@ -111,6 +89,17 @@ fun MultiTouchGestureSettingsScreen(
                         )
                     }
                 )
+                add(
+                    settingsCardScopeItem("multitouch-path-priority") {
+                        SettingSwitchRow(
+                            title = "路径手势优先",
+                            subtitle = "开启后 ≥2 指只做路径匹配，不再触发捏合/旋转/滑动",
+                            checked = settings.pathPriority,
+                            enabled = settings.enabled,
+                            onCheckedChange = onPathPriorityChange,
+                        )
+                    }
+                )
                 MultiTouchGestureSettings.configurableBindings.forEach { binding ->
                     add(
                         settingsCardScopeItem("multitouch-${binding.storageKey}") {
@@ -120,7 +109,7 @@ fun MultiTouchGestureSettingsScreen(
                                     settings.bindings[binding] ?: GestureAction.None
                                 ),
                                 enabled = settings.enabled,
-                                onClick = { pickerBinding = binding },
+                                onClick = { onOpenActionPick(binding) },
                             )
                         }
                     )
@@ -129,9 +118,9 @@ fun MultiTouchGestureSettingsScreen(
                     settingsCardScopeItem("multitouch-path-recorder") {
                         MiuixNavigationRow(
                             title = "录制路径手势",
-                            summary = "三指及以上画一笔，松手后选择动作",
+                            summary = "一条轨迹代表一根手指，逐条画 2–5 条",
                             enabled = settings.enabled,
-                            onClick = { showRecorder = true },
+                            onClick = onOpenRecorder,
                         )
                     }
                 )
@@ -157,53 +146,6 @@ fun MultiTouchGestureSettingsScreen(
         )
     }
 
-    val binding = pickerBinding
-    if (binding != null) {
-        AlertDialog(
-            onDismissRequest = { pickerBinding = null },
-            title = { Text("选择动作 · ${multiTouchBindingTitle(binding)}") },
-            text = { ActionChoiceList { action -> onBindingChange(binding, action) } },
-            confirmButton = {
-                TextButton(onClick = { pickerBinding = null }) { Text("取消") }
-            },
-        )
-    }
-
-    if (showRecorder) {
-        PathGestureRecorderDialog(
-            onDismiss = { showRecorder = false },
-            onFinish = { points, fingers ->
-                showRecorder = false
-                pendingPath = points to fingers
-            },
-        )
-    }
-
-    val pending = pendingPath
-    if (pending != null) {
-        AlertDialog(
-            onDismissRequest = { pendingPath = null },
-            title = { Text("选择动作 · ${pending.second} 指路径") },
-            text = {
-                ActionChoiceList { action ->
-                    onAddPathGesture(
-                        PathGestureTemplate(
-                            id = "path_${System.currentTimeMillis()}",
-                            name = "手势 ${settings.pathGestures.size + 1}",
-                            fingerCount = pending.second,
-                            points = pending.first,
-                            action = action,
-                        )
-                    )
-                    pendingPath = null
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { pendingPath = null }) { Text("取消") }
-            },
-        )
-    }
-
     val deleting = deleteTarget
     if (deleting != null) {
         AlertDialog(
@@ -225,136 +167,11 @@ fun MultiTouchGestureSettingsScreen(
     }
 }
 
-@Composable
-private fun ActionChoiceList(onPick: (GestureAction) -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-    ) {
-        multiTouchSelectableActions.forEach { action ->
-            TextButton(
-                onClick = { onPick(action) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 2.dp),
-            ) {
-                Text(gestureActionLabel(action))
-            }
-        }
-    }
-}
-
-/**
- * 路径手势录制对话框：画板内按屏幕高度归一化，与实时识别使用同一坐标系。
- */
-@Composable
-private fun PathGestureRecorderDialog(
-    onDismiss: () -> Unit,
-    onFinish: (List<PathPoint>, Int) -> Unit,
-) {
-    var points by remember { mutableStateOf<List<PathPoint>>(emptyList()) }
-    var fingers by remember { mutableStateOf(3) }
-    var drawing by remember { mutableStateOf(false) }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            tonalElevation = 6.dp,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text("三指及以上画一笔", style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(12.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(240.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .pointerInput(Unit) {
-                            val boardWidth = size.width.toFloat().coerceAtLeast(1f)
-                            val boardHeight = size.height.toFloat().coerceAtLeast(1f)
-                            awaitPointerEventScope {
-                                while (true) {
-                                    val event = awaitPointerEvent()
-                                    val active = event.changes.filter { it.pressed }
-                                    if (active.isNotEmpty()) {
-                                        fingers = active.size
-                                        if (!drawing) {
-                                            drawing = true
-                                            points = emptyList()
-                                        }
-                                        // 统一按画板高度归一化，和实时识别一致。
-                                        val x = active.map { it.position.x }.average().toFloat()
-                                        val y = active.map { it.position.y }.average().toFloat()
-                                        val next = PathPoint(x / boardHeight, y / boardHeight)
-                                        val last = points.lastOrNull()
-                                        if (last == null || hypot(
-                                                next.x - last.x,
-                                                next.y - last.y,
-                                            ) >= 0.006f
-                                        ) {
-                                            if (points.size < 128) points = points + next
-                                        }
-                                    } else if (drawing) {
-                                        drawing = false
-                                        if (points.size >= 2) {
-                                            onFinish(points, fingers)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                ) {
-                    PathCanvas(points = points)
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                androidx.compose.foundation.layout.Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    TextButton(onClick = onDismiss) { Text("取消") }
-                    TextButton(
-                        onClick = {
-                            if (points.size >= 2) onFinish(points, fingers)
-                        },
-                        enabled = points.size >= 2,
-                    ) { Text("完成") }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PathCanvas(points: List<PathPoint>) {
-    val strokeColor = MaterialTheme.colorScheme.primary
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        if (points.size < 2) return@Canvas
-        val path = Path()
-        for ((index, point) in points.withIndex()) {
-            // 画板坐标反算：x/y 都按高度归一化。
-            val x = point.x * size.height
-            val y = point.y * size.height
-            if (index == 0) {
-                path.moveTo(x, y)
-            } else {
-                path.lineTo(x, y)
-            }
-        }
-        drawPath(
-            path = path,
-            color = strokeColor,
-            style = Stroke(width = 6.dp.toPx()),
-        )
-    }
-}
-
 /** 状态行说明：设备 / 模式 / 特权通道 / 冲突，全部收在这一行里。 */
 private fun multiTouchStatusDetail(status: MultiTouchStatus): String {
     val base = when {
         !status.enabled -> "开关未打开"
+        status.detail == "recording" -> "录制中（识别已暂停）"
         !status.shizukuAvailable -> "Shizuku 未运行或未授权，点击重试"
         status.running -> {
             val device = status.detail.removePrefix("watching:").ifBlank { "未知设备" }

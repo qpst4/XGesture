@@ -17,11 +17,12 @@ oneway interface IOnMultiTouchGesture {
     void onObserverState(boolean running, String detail);
 
     /**
-     * 一次多指路径手势（抬手时回调）。
+     * 一次多指路径手势（全部手指抬起时回调）。
      *
      * @param points 归一化坐标，x/y 交替排列
+     * @param strokeLengths 每条轨迹的点数（按顺序切分 [points]）
      */
-    void onPathGesture(int fingerCount, in float[] points, long eventTimeMs);
+    void onPathGesture(int fingerCount, in float[] points, in int[] strokeLengths, long eventTimeMs);
 
     /**
      * 检测到的虚拟/中继触摸设备（其它触控工具创建的），null 表示没有。

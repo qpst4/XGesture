@@ -28,22 +28,35 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
         System.exit(0)
     }
 
-    override fun startMultiTouchObservation(callback: IOnMultiTouchGesture): Boolean {
+    override fun startMultiTouchObservation(
+        callback: IOnMultiTouchGesture,
+        pathPriority: Boolean,
+    ): Boolean {
         stopMultiTouchObservation()
         val observer = EvdevTouchObserver(
+            pathPriority = pathPriority,
             onGesture = { gesture, eventTimeMs ->
                 runCatching {
                     callback.onGesture(gesture.gesture.ordinal, gesture.fingerCount, eventTimeMs)
                 }
             },
             onPathGesture = { path, eventTimeMs ->
-                val floats = FloatArray(path.points.size * 2)
-                path.points.forEachIndexed { index, point ->
-                    floats[index * 2] = point.x
-                    floats[index * 2 + 1] = point.y
+                val coordinates = ArrayList<Float>()
+                val strokeLengths = IntArray(path.strokes.size)
+                path.strokes.forEachIndexed { index, stroke ->
+                    strokeLengths[index] = stroke.points.size
+                    for (point in stroke.points) {
+                        coordinates += point.x
+                        coordinates += point.y
+                    }
                 }
                 runCatching {
-                    callback.onPathGesture(path.fingerCount, floats, eventTimeMs)
+                    callback.onPathGesture(
+                        path.fingerCount,
+                        coordinates.toFloatArray(),
+                        strokeLengths,
+                        eventTimeMs,
+                    )
                 }
             },
             onInputConflict = { devices ->

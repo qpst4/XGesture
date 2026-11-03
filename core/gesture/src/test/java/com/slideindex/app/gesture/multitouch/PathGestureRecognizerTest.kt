@@ -8,74 +8,56 @@ import org.junit.Test
 
 class PathGestureRecognizerTest {
 
-    private fun centroidFrames(
-        fromX: Float,
-        toX: Float,
-        y: Float,
-        steps: Int,
-        fingers: Int = 3,
-    ): List<List<TouchPointer>> {
+    private fun twoFingerFrames(fromX: Float, toX: Float, steps: Int): List<List<TouchPointer>> {
         val frames = ArrayList<List<TouchPointer>>()
         for (step in 0..steps) {
             val x = fromX + (toX - fromX) * step / steps
-            frames += (0 until fingers).map { index ->
-                TouchPointer(
-                    id = index,
-                    x = x + (index - 1) * 0.02f,
-                    y = y + (index - 1) * 0.015f,
-                )
-            }
+            frames += listOf(
+                TouchPointer(0, x, 0.45f),
+                TouchPointer(1, x, 0.55f),
+            )
         }
         return frames
     }
 
-    private fun feedCollector(
+    private fun feed(
         collector: PathGestureCollector,
         frames: List<List<TouchPointer>>,
     ): CollectedPath? {
-        var result: CollectedPath? = null
         for (frame in frames) {
-            result = collector.onFrame(frame) ?: result
+            collector.onFrame(frame)
         }
-        return collector.onFrame(emptyList()) ?: result
+        return collector.onFrame(emptyList())
     }
 
+    private fun line(fromX: Float, toX: Float, y: Float, steps: Int = 20): PathStroke =
+        PathStroke((0..steps).map { step ->
+            PathPoint(fromX + (toX - fromX) * step / steps, y)
+        })
+
     @Test
-    fun `three finger path is collected and returned on lift`() {
+    fun `two finger strokes are collected`() {
         val collector = PathGestureCollector()
-        val result = feedCollector(
-            collector,
-            centroidFrames(0.2f, 0.8f, 0.5f, steps = 30),
-        )
+        val result = feed(collector, twoFingerFrames(0.2f, 0.8f, 20))
         assertNotNull(result)
-        assertEquals(3, result?.fingerCount)
-        assertTrue((result?.points?.size ?: 0) >= 8)
+        assertEquals(2, result?.strokes?.size)
+        assertEquals(2, result?.fingerCount)
+        assertTrue((result?.strokes?.first()?.points?.size ?: 0) >= 2)
     }
 
     @Test
-    fun `short path is discarded`() {
+    fun `single stroke is ignored`() {
         val collector = PathGestureCollector()
-        val result = feedCollector(
-            collector,
-            centroidFrames(0.5f, 0.52f, 0.5f, steps = 3),
-        )
-        assertNull(result)
-    }
-
-    @Test
-    fun `two finger path is ignored`() {
-        val collector = PathGestureCollector(minFingerCount = 3)
-        val result = feedCollector(
-            collector,
-            centroidFrames(0.2f, 0.8f, 0.5f, steps = 30, fingers = 2),
-        )
-        assertNull(result)
+        val frames = (0..20).map { step ->
+            listOf(TouchPointer(0, 0.2f + step * 0.03f, 0.5f))
+        }
+        assertNull(feed(collector, frames))
     }
 
     @Test
     fun `cancelled path is not returned`() {
         val collector = PathGestureCollector()
-        for (frame in centroidFrames(0.2f, 0.8f, 0.5f, steps = 30)) {
+        for (frame in twoFingerFrames(0.2f, 0.8f, 20)) {
             collector.onFrame(frame)
         }
         collector.cancel()
@@ -83,46 +65,44 @@ class PathGestureRecognizerTest {
     }
 
     @Test
-    fun `same path at different position and scale matches`() {
-        val line = PathGestureMatcher.prepare(
-            (0..30).map { step -> PathPoint(0.2f + step * 0.02f, 0.5f) }
+    fun `same two strokes at another position match`() {
+        val template = PathGestureTemplate(
+            id = "t",
+            name = "双横",
+            strokes = listOf(line(0.2f, 0.8f, 0.45f), line(0.2f, 0.8f, 0.55f)),
         )
-        val moved = PathGestureMatcher.prepare(
-            (0..30).map { step -> PathPoint(0.5f + step * 0.03f, 0.8f) }
-        )
-        val distance = PathGestureMatcher.distance(line, moved)
-        assertTrue("distance=$distance", distance < 0.05f)
+        val live = listOf(line(0.1f, 0.9f, 0.4f), line(0.1f, 0.9f, 0.6f))
+        val match = PathGestureMatcher.bestMatch(live, listOf(template))
+        assertEquals("t", match?.id)
     }
 
     @Test
-    fun `opposite path does not match`() {
-        val forward = PathGestureMatcher.prepare(
-            (0..30).map { step -> PathPoint(0.2f + step * 0.02f, 0.5f) }
+    fun `different stroke count does not match`() {
+        val template = PathGestureTemplate(
+            id = "t",
+            name = "双横",
+            strokes = listOf(line(0.2f, 0.8f, 0.45f), line(0.2f, 0.8f, 0.55f)),
         )
-        val backward = PathGestureMatcher.prepare(
-            (0..30).map { step -> PathPoint(0.8f - step * 0.02f, 0.5f) }
-        )
-        assertTrue(PathGestureMatcher.distance(forward, backward) > PathGestureMatcher.MATCH_THRESHOLD)
+        val live = listOf(line(0.2f, 0.8f, 0.5f))
+        assertNull(PathGestureMatcher.bestMatch(live, listOf(template)))
     }
 
     @Test
     fun `best match picks the closest template`() {
-        val line = (0..30).map { step -> PathPoint(0.2f + step * 0.02f, 0.5f) }
-        val circle = (0..30).map { step ->
-            val angle = step * 2.0 * Math.PI / 30.0
-            PathPoint(
-                x = (0.5 + 0.2 * Math.cos(angle)).toFloat(),
-                y = (0.5 + 0.2 * Math.sin(angle)).toFloat(),
-            )
-        }
-        val templates = listOf(
-            PathGestureTemplate("circle", "圆圈", 3, circle),
-            PathGestureTemplate("line", "横线", 3, line),
+        val horizontal = PathGestureTemplate(
+            id = "h",
+            name = "横线",
+            strokes = listOf(line(0.2f, 0.8f, 0.45f), line(0.2f, 0.8f, 0.55f)),
         )
-        val match = PathGestureMatcher.bestMatch(
-            line.map { PathPoint(it.x + 0.05f, it.y - 0.03f) },
-            templates,
+        val vertical = PathGestureTemplate(
+            id = "v",
+            name = "竖线",
+            strokes = listOf(
+                PathStroke((0..20).map { step -> PathPoint(0.45f, 0.2f + step * 0.03f) }),
+                PathStroke((0..20).map { step -> PathPoint(0.55f, 0.2f + step * 0.03f) }),
+            ),
         )
-        assertEquals("line", match?.id)
+        val live = listOf(line(0.15f, 0.85f, 0.42f), line(0.15f, 0.85f, 0.58f))
+        assertEquals("h", PathGestureMatcher.bestMatch(live, listOf(horizontal, vertical))?.id)
     }
 }

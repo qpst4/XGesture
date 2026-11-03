@@ -12,6 +12,7 @@ import com.slideindex.app.gesture.multitouch.MultiPointerBinding
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
 import com.slideindex.app.gesture.multitouch.PathGestureMatcher
 import com.slideindex.app.gesture.multitouch.PathPoint
+import com.slideindex.app.gesture.multitouch.PathStroke
 import com.slideindex.app.service.SlideIndexAccessibilityService
 import com.slideindex.app.settings.SettingsRepository
 import com.slideindex.app.shizuku.IOnMultiTouchGesture
@@ -95,19 +96,30 @@ class MultiTouchGestureCoordinator @Inject constructor(
             _status.value = _status.value.copy(conflictDevices = value)
         }
 
-        override fun onPathGesture(fingerCount: Int, points: FloatArray?, eventTimeMs: Long) {
+        override fun onPathGesture(
+            fingerCount: Int,
+            points: FloatArray?,
+            strokeLengths: IntArray?,
+            eventTimeMs: Long,
+        ) {
             val coordinates = points ?: return
-            if (coordinates.size < 4 || coordinates.size % 2 != 0) return
-            val path = ArrayList<PathPoint>(coordinates.size / 2)
-            var index = 0
-            while (index + 1 < coordinates.size) {
-                path += PathPoint(coordinates[index], coordinates[index + 1])
-                index += 2
+            val lengths = strokeLengths ?: return
+            if (lengths.isEmpty() || lengths.any { it < 2 }) return
+            if (coordinates.size != lengths.sum() * 2) return
+            val strokes = ArrayList<PathStroke>(lengths.size)
+            var offset = 0
+            for (length in lengths) {
+                val strokePoints = ArrayList<PathPoint>(length)
+                repeat(length) {
+                    strokePoints += PathPoint(coordinates[offset], coordinates[offset + 1])
+                    offset += 2
+                }
+                strokes += PathStroke(strokePoints)
             }
             val templates = settingsStore.state.value.pathGestures
                 .filter { it.fingerCount == fingerCount }
             if (templates.isEmpty()) return
-            val match = PathGestureMatcher.bestMatch(path, templates) ?: return
+            val match = PathGestureMatcher.bestMatch(strokes, templates) ?: return
             if (match.action == GestureAction.None) return
             Log.i(TAG, "path gesture -> ${match.name}")
             mainHandler.post { performAction(match.action) }
@@ -140,6 +152,20 @@ class MultiTouchGestureCoordinator @Inject constructor(
         }
     }
 
+    /** 录制路径手势期间暂停识别，避免录制动作本身触发已有手势。 */
+    fun pauseForRecording() {
+        applicationScope.launch(Dispatchers.IO) {
+            syncMutex.withLock {
+                stopObservation()
+                _status.value = _status.value.copy(running = false, detail = "recording")
+            }
+        }
+    }
+
+    fun resumeAfterRecording() {
+        applicationScope.launch(Dispatchers.IO) { syncNow() }
+    }
+
     private suspend fun syncNow() {
         syncMutex.withLock {
             val settings = settingsStore.state.value
@@ -170,7 +196,7 @@ class MultiTouchGestureCoordinator @Inject constructor(
                 return
             }
             val startedObservation = runCatching {
-                service.startMultiTouchObservation(callback)
+                service.startMultiTouchObservation(callback, settings.pathPriority)
             }.getOrDefault(false)
             Log.i(TAG, "sync: start observation=$startedObservation")
             if (startedObservation) {

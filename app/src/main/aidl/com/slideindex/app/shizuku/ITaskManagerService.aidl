@@ -37,7 +37,7 @@ interface ITaskManagerService {
      * 观察线程跑在 shell 用户服务里；识别到一次手势就通过 [IOnMultiTouchGesture] 回传一条。
      * 重复调用会先停掉旧的观察器。返回 false 表示当前服务拿不到触摸设备（权限/设备异常）。
      */
-    boolean startMultiTouchObservation(in IOnMultiTouchGesture callback) = 20;
+    boolean startMultiTouchObservation(in IOnMultiTouchGesture callback, boolean pathPriority) = 20;
 
     void stopMultiTouchObservation() = 21;
 

@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit
  * Linux input 的 ioctl 在纯 Java 里拿不到，直接解析 shell 输出最省事），同时拿到坐标范围。
  */
 class EvdevTouchObserver(
+    private val pathPriority: Boolean = false,
     private val onGesture: (RecognizedMultiPointerGesture, Long) -> Unit,
     private val onPathGesture: (CollectedPath, Long) -> Unit = { _, _ -> },
     private val onInputConflict: (String?) -> Unit = {},
@@ -144,22 +145,34 @@ class EvdevTouchObserver(
                         SYN_REPORT -> {
                             val now = android.os.SystemClock.elapsedRealtime()
                             val pointers = collectPointers(slots, ranges)
-                            val gesture = recognizer.onFrame(pointers, now)
-                            if (gesture != null) {
-                                suppressPath = true
-                                pathCollector.cancel()
-                                log("recognized ${gesture.gesture} x${gesture.fingerCount}")
-                                onGesture(gesture, now)
-                            } else if (!suppressPath) {
+                            if (pathPriority) {
+                                // 路径优先模式：只收集轨迹，抬手时交给 app 匹配，不跑几何手势。
                                 val path = pathCollector.onFrame(pointers)
                                 if (path != null) {
-                                    log("path x${path.fingerCount} points=${path.points.size}")
+                                    log("path x${path.fingerCount} points=${path.strokes.sumOf { it.points.size }}")
                                     onPathGesture(path, now)
                                 }
-                            }
-                            if (pointers.isEmpty()) {
-                                suppressPath = false
-                                pathCollector.reset()
+                            } else {
+                                val gesture = recognizer.onFrame(pointers, now)
+                                if (gesture != null) {
+                                    suppressPath = true
+                                    pathCollector.cancel()
+                                    log("recognized ${gesture.gesture} x${gesture.fingerCount}")
+                                    onGesture(gesture, now)
+                                } else if (!suppressPath) {
+                                    val path = pathCollector.onFrame(pointers)
+                                    if (path != null) {
+                                        log(
+                                            "path x${path.fingerCount} " +
+                                                "points=${path.strokes.sumOf { it.points.size }}"
+                                        )
+                                        onPathGesture(path, now)
+                                    }
+                                }
+                                if (pointers.isEmpty()) {
+                                    suppressPath = false
+                                    pathCollector.cancel()
+                                }
                             }
                         }
 
