@@ -1,3 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">XGesture</string>
+    <string name="main_nav_home">Início</string>
+    <string name="main_nav_shake">Sacudir</string>
+    <string name="main_nav_notification">Mensagens</string>
+    <string name="main_nav_extension">Extensões</string>
+    <string name="extension_section_launch_panel">Inicializadores e painéis</string>
+    <string name="extension_section_shortcuts">Atalhos e ações</string>
+    <string name="extension_section_tools">Ferramentas</string>
+    <string name="extension_section_maintenance">Manutenção</string>
+    <string name="external_invocation_entry_title">Execução externa</string>
+    <string name="external_invocation_entry_desc">Deeplinks e ações de intent para o Tasker e outros apps</string>
+    <string name="external_invocation_title">Execução externa</string>
+    <string name="external_invocation_hint">Abra recursos do XGesture a partir de outros apps via links xgesture:// ou ações de intent. O painel de pesquisa, Ideias e a área de transferência exigem a barra lateral e o serviço de acessibilidade.</string>
+    <string name="external_invocation_query_hint">O parâmetro opcional q preenche previamente uma busca, ex: xgesture://open/search-panel?q=weather.</string>
+    <string name="external_invocation_deeplink_section">Deeplinks (recomendado)</string>
+    <string name="external_invocation_action_section">Ações de intent (avançado)</string>
+    <string name="external_invocation_action_hint">Toque em um item para copiar um comando adb. Algumas ações exigem um componente explícito. O painel shell é apenas de uso interno do app.</string>
+    <string name="external_invocation_copied">Copiado para a área de transferência</string>
+    <string name="external_invocation_query_example">Compatível com %1$s</string>
+    <string name="external_invocation_action_component">Componente: %1$s</string>
+    <string name="external_invocation_action_query_extra">Extra opcional: %1$s</string>
 </resources>
