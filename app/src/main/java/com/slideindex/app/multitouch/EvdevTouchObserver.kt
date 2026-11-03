@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
  * Linux input 的 ioctl 在纯 Java 里拿不到，直接解析 shell 输出最省事），同时拿到坐标范围。
  */
 class EvdevTouchObserver(
-    private val onGesture: (RecognizedMultiPointerGesture, Long) -> Unit,
+    private val onGesture: (List<RecognizedMultiPointerGesture>, Long) -> Unit,
     private val onPathGesture: (CollectedPath, Long) -> Unit = { _, _ -> },
     private val onInputConflict: (String?) -> Unit = {},
     private val onState: (Boolean, String) -> Unit = { _, _ -> },
@@ -151,10 +151,12 @@ class EvdevTouchObserver(
                         SYN_REPORT -> {
                             val now = android.os.SystemClock.elapsedRealtime()
                             val pointers = collectPointers(slots, ranges)
-                            val gesture = recognizer.onFrame(pointers, now)
-                            if (gesture != null) {
-                                log("recognized ${gesture.gesture} x${gesture.fingerCount}")
-                                onGesture(gesture, now)
+                            val gestures = recognizer.onFrame(pointers, now)
+                            if (gestures.isNotEmpty()) {
+                                for (gesture in gestures) {
+                                    log("recognized ${gesture.gesture} x${gesture.fingerCount}")
+                                }
+                                onGesture(gestures, now)
                             }
                             // 路径轨迹与几何识别并行采集：最终由 app 侧按条目去重。
                             val path = pathCollector.onFrame(pointers)
@@ -228,7 +230,7 @@ class EvdevTouchObserver(
             val gesture = runCatching { recognizer.onTick(now) }.getOrNull()
             if (gesture != null) {
                 log("recognized ${gesture.gesture} x${gesture.fingerCount} (tick)")
-                onGesture(gesture, now)
+                onGesture(listOf(gesture), now)
             }
             sleepQuietly(TICK_INTERVAL_MS)
         }

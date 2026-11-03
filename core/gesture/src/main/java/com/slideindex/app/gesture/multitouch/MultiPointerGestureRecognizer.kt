@@ -3,9 +3,8 @@ package com.slideindex.app.gesture.multitouch
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.max
-import kotlin.math.sqrt
 
-/** 一次识别结果。 */
+/** 一次识别结果（候选）。 */
 data class RecognizedMultiPointerGesture(
     val gesture: MultiPointerGesture,
     val fingerCount: Int,
@@ -33,20 +32,19 @@ data class MultiPointerBinding(
 /**
  * 多指手势识别器（纯逻辑，无 Android 依赖）。
  *
- * 支持 1–5 指：
- * - 几何：捏合/张开/旋转/八方向滑动（相对按下时的基线）；
- * - 点按：轻点/双击/三击（抬起时判定，轻点延迟到双击窗口结束）；
- * - 长按：按住不动超过 [longPressMs] 实时触发；
- * - 滑动：按主方向夹角分八向（22.5° 边界）。
+ * 和常见实现不同：**每种手势类型独立判定**，一次触摸可以同时产出多个候选
+ * （例如“捏合”和“上滑”可能同时被判定），由上层按手势条目挑选，避免
+ * “捏合被滑动抢”的单选题。
  *
- * [onTick] 由外部定时器驱动，用于在“没有任何触摸帧”时把待定的轻点发出去。
+ * 类型：
+ * - 几何：捏合/张开（平均半径差，mm 阈值）、顺/逆时针旋转（|cross|/Σr² + 半径惩罚）；
+ * - 滑动：质心位移 + 各指方向一致性，八方向；
+ * - 点按：轻点/双击/三击（抬起判定）、长按（按住不动）。
  */
 class MultiPointerGestureRecognizer(
     private val minFingerCount: Int = 1,
     private val maxFingerCount: Int = 5,
-    /** 质心位移阈值（归一化，约屏幕高度 9%）。 */
     private val swipeThreshold: Float = 0.09f,
-    /** 点按允许的抖动距离。 */
     private val tapSlop: Float = 0.02f,
     private val settleMs: Long = 60L,
     private val longPressMs: Long = 550L,
@@ -65,23 +63,23 @@ class MultiPointerGestureRecognizer(
         val startPoints: Map<Int, TouchPointer>,
         val centerX: Float,
         val centerY: Float,
-        val radius: Float,
+        /** 按下时的平均半径（用于捏合/张开）。 */
+        val startRadius: Float,
         val timeMs: Long,
     )
 
-    private class RotationScore(
-        val cross: Float,
-        /** 半径平方和 Σ(dx² + dy²)。 */
-        val radiusSquared: Float,
-    )
-
     private var baseline: Baseline? = null
-    private var latched = false
     private var downTimeMs = 0L
     private var downCenterX = 0f
     private var downCenterY = 0f
     private var maxFingers = 0
     private var moved = false
+
+    /** 本次触摸已触发过的类型（每种类型只触发一次）。 */
+    private val triggered = HashSet<MultiPointerGesture>()
+
+    /** 上一帧位置：用于“各指方向一致性”判定。 */
+    private val lastPositions = HashMap<Int, TouchPointer>()
 
     private var pendingTapAtMs = 0L
     private var pendingTapFingers = 0
@@ -89,20 +87,23 @@ class MultiPointerGestureRecognizer(
     private var lastTapAtMs = 0L
 
     @Synchronized
-    fun onFrame(pointers: List<TouchPointer>, timeMs: Long): RecognizedMultiPointerGesture? {
+    fun onFrame(pointers: List<TouchPointer>, timeMs: Long): List<RecognizedMultiPointerGesture> {
         if (pointers.isEmpty()) {
-            val result = resolveTapOnLift(timeMs)
+            val results = ArrayList<RecognizedMultiPointerGesture>(1)
+            resolveTapOnLift(timeMs)?.let { results += it }
             resetTouch()
-            return result
+            return results
         }
-        if (pointers.size > maxFingerCount) return null
+        if (pointers.size > maxFingerCount) {
+            updateLastPositions(pointers)
+            return emptyList()
+        }
 
         val ordered = pointers.sortedBy { it.id }
         val centerX = ordered.sumOf { it.x.toDouble() }.toFloat() / ordered.size
         val centerY = ordered.sumOf { it.y.toDouble() }.toFloat() / ordered.size
 
         if (baseline == null) {
-            // 新的一次触摸序列开始：上一串轻点如果超时，先作废。
             if (tapCount > 0 && timeMs - lastTapAtMs > doubleTapMs) {
                 tapCount = 0
                 pendingTapAtMs = 0
@@ -112,9 +113,17 @@ class MultiPointerGestureRecognizer(
             downCenterY = centerY
             maxFingers = ordered.size
             moved = false
-            latched = false
-            baseline = buildBaseline(ordered, timeMs)
-            return null
+            triggered.clear()
+            baseline = Baseline(
+                ids = ordered.map { it.id },
+                startPoints = ordered.associateBy { it.id },
+                centerX = centerX,
+                centerY = centerY,
+                startRadius = averageRadius(ordered, centerX, centerY),
+                timeMs = timeMs,
+            )
+            updateLastPositions(pointers)
+            return emptyList()
         }
 
         maxFingers = max(maxFingers, ordered.size)
@@ -122,60 +131,95 @@ class MultiPointerGestureRecognizer(
         val dy = centerY - downCenterY
         val distance = hypot(dx, dy)
         if (distance > tapSlop) moved = true
-        if (latched) return null
 
-        // 长按：按住且没怎么动。
-        if (!moved && timeMs - downTimeMs >= longPressMs) {
-            latched = true
-            return RecognizedMultiPointerGesture(MultiPointerGesture.LONG_PRESS, maxFingers)
+        val results = ArrayList<RecognizedMultiPointerGesture>(2)
+        val current = baseline ?: return results
+
+        // 长按（本次触摸还没触发过其它手势，且按住不动）。
+        if (!moved &&
+            triggered.isEmpty() &&
+            timeMs - downTimeMs >= longPressMs &&
+            MultiPointerGesture.LONG_PRESS !in triggered
+        ) {
+            triggered += MultiPointerGesture.LONG_PRESS
+            results += RecognizedMultiPointerGesture(
+                MultiPointerGesture.LONG_PRESS,
+                maxFingers,
+            )
         }
 
-        val ids = ordered.map { it.id }
-        val current = baseline ?: return null
-        if (current.ids != ids) {
-            baseline = buildBaseline(ordered, timeMs)
-            return null
+        if (current.ids != ordered.map { it.id }) {
+            baseline = Baseline(
+                ids = ordered.map { it.id },
+                startPoints = ordered.associateBy { it.id },
+                centerX = centerX,
+                centerY = centerY,
+                startRadius = averageRadius(ordered, centerX, centerY),
+                timeMs = timeMs,
+            )
+            updateLastPositions(pointers)
+            return results
         }
-        if (timeMs - current.timeMs < settleMs) return null
+        if (timeMs - current.timeMs < settleMs) {
+            updateLastPositions(pointers)
+            return results
+        }
 
-        // 滑动（任意指数量）。
-        if (distance >= swipeThreshold) {
+        // 滑动：质心位移 + 各指方向一致性（捏合时各指方向相反，不满足）。
+        if (distance >= swipeThreshold && isSwipeConsistent(ordered, dx, dy)) {
             val direction = swipeDirection(dx, dy)
-            if (direction != null) return latch(direction, timeMs)
+            if (direction != null && direction !in triggered) {
+                triggered += direction
+                results += RecognizedMultiPointerGesture(direction, maxFingers)
+            }
         }
 
-        // 几何手势（>=2 指）。
+        // 几何（>=2 指）。
         if (ordered.size >= 2) {
-            val radius = averageRadius(ordered, centerX, centerY)
-            val radiusRatio = if (current.radius > MIN_RADIUS) radius / current.radius else 1f
             val four = ordered.size >= 4
             val rotation = rotationScore(ordered, centerX, centerY, current)
-            if (rotation != null) {
-                // GMD：|cross| / r²，阈值约 1（归一化后按经验校准）。
+            if (rotation != null && MultiPointerGesture.ROTATE_CLOCKWISE !in triggered &&
+                MultiPointerGesture.ROTATE_COUNTER_CLOCKWISE !in triggered
+            ) {
                 val score = abs(rotation.cross) / rotation.radiusSquared
+                val penalty = abs(rotation.radiusDelta) / (2f * rotation.radiusSquared)
                 val threshold = if (four) fourFingerRotateScoreThreshold else rotateScoreThreshold
                 val maxDrift = if (four) fourFingerRotateMaxRadiusDrift else rotateMaxRadiusDrift
-                if (score >= threshold && abs(radiusRatio - 1f) <= maxDrift) {
+                val radius = averageRadius(ordered, centerX, centerY)
+                val radiusRatio = if (current.startRadius > MIN_RADIUS) {
+                    radius / current.startRadius
+                } else {
+                    1f
+                }
+                if (score >= threshold &&
+                    score >= penalty &&
+                    abs(radiusRatio - 1f) <= maxDrift
+                ) {
                     val gesture = if (rotation.cross > 0f) {
                         MultiPointerGesture.ROTATE_CLOCKWISE
                     } else {
                         MultiPointerGesture.ROTATE_COUNTER_CLOCKWISE
                     }
-                    return latch(gesture, timeMs)
+                    triggered += gesture
+                    results += RecognizedMultiPointerGesture(gesture, maxFingers)
                 }
             }
-            val startRms = rmsRadius(current.startPoints.values, current.centerX, current.centerY)
-            val currentRms = rmsRadius(ordered, centerX, centerY)
-            // GMD：|起始半径 - 当前半径| >= max(1, gestureSizeMm/4) mm。
-            val changeThreshold = max(1f, gestureSizeMm / 4f) / screenHeightMm
-            if (startRms - currentRms >= changeThreshold) {
-                return latch(MultiPointerGesture.PINCH, timeMs)
-            }
-            if (currentRms - startRms >= changeThreshold) {
-                return latch(MultiPointerGesture.SPREAD, timeMs)
+            // 捏合/张开：平均半径差 >= max(1, gestureSizeMm/4) mm。
+            val startRadius = current.startRadius
+            val nowRadius = averageRadius(ordered, centerX, centerY)
+            val delta = nowRadius - startRadius
+            val threshold = max(1f, gestureSizeMm / 4f) / screenHeightMm
+            if (delta <= -threshold && MultiPointerGesture.PINCH !in triggered) {
+                triggered += MultiPointerGesture.PINCH
+                results += RecognizedMultiPointerGesture(MultiPointerGesture.PINCH, maxFingers)
+            } else if (delta >= threshold && MultiPointerGesture.SPREAD !in triggered) {
+                triggered += MultiPointerGesture.SPREAD
+                results += RecognizedMultiPointerGesture(MultiPointerGesture.SPREAD, maxFingers)
             }
         }
-        return null
+
+        updateLastPositions(pointers)
+        return results
     }
 
     /** 由外部定时器调用：双击窗口结束仍未等到第二次点击 → 发出「轻点」。 */
@@ -199,7 +243,9 @@ class MultiPointerGestureRecognizer(
     }
 
     private fun resolveTapOnLift(timeMs: Long): RecognizedMultiPointerGesture? {
-        if (latched || moved || maxFingers !in minFingerCount..maxFingerCount) return null
+        if (triggered.isNotEmpty() || moved || maxFingers !in minFingerCount..maxFingerCount) {
+            return null
+        }
         return when {
             tapCount == 1 && timeMs - lastTapAtMs <= doubleTapMs -> {
                 tapCount = 2
@@ -223,30 +269,41 @@ class MultiPointerGestureRecognizer(
         }
     }
 
-    private fun latch(gesture: MultiPointerGesture, timeMs: Long): RecognizedMultiPointerGesture {
-        latched = true
-        return RecognizedMultiPointerGesture(gesture, maxFingers)
+    private fun updateLastPositions(pointers: List<TouchPointer>) {
+        val ids = pointers.map { it.id }.toSet()
+        lastPositions.keys.retainAll(ids)
+        for (pointer in pointers) {
+            lastPositions[pointer.id] = pointer
+        }
+    }
+
+    /** 各指位移方向与质心位移方向一致的比例 >= 60% 才算滑动。 */
+    private fun isSwipeConsistent(
+        pointers: List<TouchPointer>,
+        dx: Float,
+        dy: Float,
+    ): Boolean {
+        if (pointers.size < 2) return true
+        var consistent = 0
+        var counted = 0
+        for (pointer in pointers) {
+            val last = lastPositions[pointer.id] ?: continue
+            counted++
+            val vx = pointer.x - last.x
+            val vy = pointer.y - last.y
+            if (vx * dx + vy * dy > 0f) consistent++
+        }
+        if (counted == 0) return true
+        return consistent.toFloat() / counted >= 0.6f
     }
 
     private fun resetTouch() {
         baseline = null
-        latched = false
         downTimeMs = 0
         maxFingers = 0
         moved = false
-    }
-
-    private fun buildBaseline(ordered: List<TouchPointer>, timeMs: Long): Baseline {
-        val centerX = ordered.sumOf { it.x.toDouble() }.toFloat() / ordered.size
-        val centerY = ordered.sumOf { it.y.toDouble() }.toFloat() / ordered.size
-        return Baseline(
-            ids = ordered.map { it.id },
-            startPoints = ordered.associateBy { it.id },
-            centerX = centerX,
-            centerY = centerY,
-            radius = averageRadius(ordered, centerX, centerY),
-            timeMs = timeMs,
-        )
+        triggered.clear()
+        lastPositions.clear()
     }
 
     private fun rotationScore(
@@ -257,6 +314,7 @@ class MultiPointerGestureRecognizer(
     ): RotationScore? {
         var cross = 0f
         var radiusSquared = 0f
+        var radiusDelta = 0f
         for (pointer in pointers) {
             val start = baseline.startPoints[pointer.id] ?: continue
             val startX = start.x - baseline.centerX
@@ -265,25 +323,22 @@ class MultiPointerGestureRecognizer(
             val currentY = pointer.y - centerY
             cross += startX * currentY - startY * currentX
             radiusSquared += currentX * currentX + currentY * currentY
+            radiusDelta += currentX * currentX + currentY * currentY -
+                (startX * startX + startY * startY)
         }
         if (radiusSquared <= MIN_RADIUS) return null
-        return RotationScore(cross, radiusSquared)
+        return RotationScore(cross, radiusSquared, radiusDelta)
     }
+
+    private class RotationScore(
+        val cross: Float,
+        val radiusSquared: Float,
+        val radiusDelta: Float,
+    )
 
     private fun averageRadius(pointers: List<TouchPointer>, cx: Float, cy: Float): Float {
         if (pointers.isEmpty()) return 0f
         return pointers.sumOf { hypot(it.x - cx, it.y - cy).toDouble() }.toFloat() / pointers.size
-    }
-
-    private fun rmsRadius(pointers: Collection<TouchPointer>, cx: Float, cy: Float): Float {
-        if (pointers.isEmpty()) return 0f
-        var sum = 0.0
-        for (pointer in pointers) {
-            val dx = (pointer.x - cx).toDouble()
-            val dy = (pointer.y - cy).toDouble()
-            sum += dx * dx + dy * dy
-        }
-        return sqrt(sum / pointers.size).toFloat()
     }
 
     private fun swipeDirection(dx: Float, dy: Float): MultiPointerGesture? {

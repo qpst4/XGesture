@@ -13,6 +13,15 @@ oneway interface IOnMultiTouchGesture {
      */
     void onGesture(int gesture, int fingerCount, long eventTimeMs);
 
+    /**
+     * 一次触摸的多个候选（每种类型独立判定，可能同时命中捏合和滑动等）。
+     *
+     * @param kinds [com.slideindex.app.gesture.multitouch.MultiPointerGesture] 的 ordinal
+     * @param fingerCounts 与 [kinds] 一一对应的触点数
+     * @param eventTimeMs 观察进程的单调时钟（elapsedRealtime）
+     */
+    void onGestureBatch(in int[] kinds, in int[] fingerCounts, long eventTimeMs);
+
     /** 观察器状态变化（启动 / 停止 / 找不到触摸屏 / 读取出错）。 */
     void onObserverState(boolean running, String detail);
 

@@ -37,8 +37,8 @@ class MultiPointerGestureRecognizerTest {
         var result: RecognizedMultiPointerGesture? = null
         for (frame in frames) {
             val recognized = recognizer.onFrame(frame, time)
-            if (result == null && recognized != null) {
-                result = recognized
+            if (result == null) {
+                result = recognized.firstOrNull()
             }
             time += stepMs
         }

@@ -75,13 +75,20 @@ class MultiTouchGestureCoordinator @Inject constructor(
 
     private val callback = object : IOnMultiTouchGesture.Stub() {
         override fun onGesture(gesture: Int, fingerCount: Int, eventTimeMs: Long) {
-            val kind = MultiPointerGesture.entries.getOrNull(gesture) ?: return
-            val entry = settingsStore.state.value.entries.firstOrNull {
-                it.kind == kind && it.fingerCount == fingerCount &&
-                    it.action != GestureAction.None
-            } ?: return
-            Log.i(TAG, "gesture ${kind.name} x$fingerCount -> ${entry.action}")
-            mainHandler.post { performAction(entry.action, kind, fingerCount) }
+            dispatchGesture(gesture, fingerCount)
+        }
+
+        override fun onGestureBatch(
+            kinds: IntArray?,
+            fingerCounts: IntArray?,
+            eventTimeMs: Long,
+        ) {
+            val kindArray = kinds ?: return
+            val fingerArray = fingerCounts ?: return
+            if (kindArray.size != fingerArray.size) return
+            for (index in kindArray.indices) {
+                if (dispatchGesture(kindArray[index], fingerArray[index])) return
+            }
         }
 
         override fun onPathGesture(
@@ -245,6 +252,18 @@ class MultiTouchGestureCoordinator @Inject constructor(
 
     private fun isMainProcess(): Boolean =
         runCatching { Application.getProcessName() == context.packageName }.getOrDefault(true)
+
+    /** 候选按顺序匹配条目，命中第一个就执行并返回 true。 */
+    private fun dispatchGesture(gesture: Int, fingerCount: Int): Boolean {
+        val kind = MultiPointerGesture.entries.getOrNull(gesture) ?: return false
+        val entry = settingsStore.state.value.entries.firstOrNull {
+            it.kind == kind && it.fingerCount == fingerCount &&
+                it.action != GestureAction.None
+        } ?: return false
+        Log.i(TAG, "gesture ${kind.name} x$fingerCount -> ${entry.action}")
+        mainHandler.post { performAction(entry.action, kind, fingerCount) }
+        return true
+    }
 
     private companion object {
         const val TAG = "MultiTouchCoordinator"
