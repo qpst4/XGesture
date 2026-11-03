@@ -28,6 +28,7 @@ object ShizukuUserServiceHost {
     /**
      * Bump when the remote service code/ABI changes; drives processNameSuffix.
      *
+     * 53：旋转评分改为 GMD 同口径 `|cross| / (2·Σr²)`，阈值重新校准。
      * 52：多指手势改为「条目 + 1–5 指」识别，枚举扩展（点按/八方向/长按）。
      * 51：`startMultiTouchObservation` 增加路径优先参数，AIDL 签名变更。
      * 50：路径手势改为多轨迹（每指一条，2–5 条），回调协议同步改为 strokeLengths。
@@ -49,9 +50,9 @@ object ShizukuUserServiceHost {
      * 38：最近任务不再过滤本应用包名（任务切换器需要显示自己）。这是运行在用户服务进程里的
      *     `TaskExclusions` / reader 逻辑，必须换进程名才能让已安装的新包生效。
      * 37：`getRecentTasks()` 行格式增加第 5 列 userId（分身识别）。
-     * 升号后进程名变成 `task_manager_v52`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
+     * 升号后进程名变成 `task_manager_v53`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
      */
-    const val SERVICE_BUILD = 52
+    const val SERVICE_BUILD = 53
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bindLock = Any()
