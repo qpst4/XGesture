@@ -43,6 +43,7 @@ import com.slideindex.app.gesture.GestureTriggerType
 import com.slideindex.app.gesture.multitouch.MultiPointerBinding
 import com.slideindex.app.multitouch.decodePathStrokes
 import com.slideindex.app.multitouch.encodePathStrokes
+import top.yukonga.miuix.kmp.nav.transition.NavSwipeDirection
 import com.slideindex.app.ui.PrivacyPolicyScreen
 import com.slideindex.app.ui.SettingsBackupScreen
 import com.slideindex.app.ui.ThirdPartyNoticesScreen
@@ -122,7 +123,10 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
         )
     }
 
-    hiltEntry<AppNavKey.ExtensionMultiTouchPathRecord> { key ->
+    // 录制页禁用页内横移返回：画线时手指横划会带动页面。
+    hiltEntry<AppNavKey.ExtensionMultiTouchPathRecord>(
+        swipeDismiss = NavSwipeDirection.None,
+    ) { key ->
         val viewModel: MultiTouchGestureViewModel = hiltViewModel()
         MultiTouchPathRecordScreen(
             onBack = { ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture) },
