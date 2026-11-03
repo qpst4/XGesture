@@ -27,6 +27,7 @@ import com.slideindex.app.widget.WidgetPanelDefaults
 import com.slideindex.app.widget.WidgetPanelGridLogic
 import com.slideindex.app.widget.WidgetPanelLayoutMetrics
 import com.slideindex.app.widget.WidgetPanelPage
+import com.slideindex.app.widget.WidgetClickClosePolicy
 import com.slideindex.app.widget.WidgetPopupCardLayout
 import com.slideindex.app.widget.WidgetPopupHost
 import com.slideindex.app.widget.WidgetPopupRootLayout
@@ -100,6 +101,13 @@ object WidgetPopupOverlayWindow {
       Log.w(TAG, "show: accessibility service not enabled")
       return false
     }
+
+    // 每次打开面板都重建宿主视图：跨会话复用 AppWidgetHostView 会让集合型
+    // 小组件的行级点击绑定失效（表现为“看得见、点不动 / 只开 app”）。
+    WidgetPopupHost.clearCachedHostViews()
+    WidgetClickClosePolicy.mode = WidgetClickClosePolicy.modeFromSetting(
+      settings.widgetPanelCloseOnClickMode,
+    )
 
     val hostContext = OverlayDependencyAccess.overlayHostContext()
       ?: run {
@@ -481,6 +489,8 @@ object WidgetPopupOverlayWindow {
         WidgetPopupHost.stopListening(ctx)
       }
     }
+    // 会话结束：宿主视图一起丢掉，下次打开面板重建。
+    WidgetPopupHost.clearCachedHostViews()
     screenOffDismissReceiver.unregister()
     rootLayout = null
     cardLayout = null
@@ -506,6 +516,9 @@ object WidgetPopupOverlayWindow {
     settingsCollectJob = overlayScope.launch {
       deps.settingsRepository.settings.collectLatest { latest ->
         currentSettings = latest
+        WidgetClickClosePolicy.mode = WidgetClickClosePolicy.modeFromSetting(
+          latest.widgetPanelCloseOnClickMode,
+        )
         cardLayout?.let { card ->
           val pages = WidgetPanelDefaults.effectivePages(latest.widgetPanelPages)
             .map { WidgetPanelGridLogic.fitPageToGrid(it) }

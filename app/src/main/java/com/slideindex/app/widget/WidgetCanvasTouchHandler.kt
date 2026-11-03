@@ -187,6 +187,11 @@ internal class WidgetCanvasTouchHandler(
 
     private fun scheduleBrowseLongPress(child: WidgetCardContainer, x: Float, y: Float) {
         cancelBrowseLongPress()
+        // 点在小组件自己的可交互内容上时，不抢长按：那会把这次点击取消掉
+        // （真机表现为「按住稍久一点就点了没反应」）。空白/边框仍保留长按进编辑。
+        if (child.shouldReceiveTouchAtPoint(x - child.left - child.translationX, y - child.top - child.translationY)) {
+            return
+        }
         layout.browseTouchChild = child
         layout.browseTouchDownX = x
         layout.browseTouchDownY = y
@@ -195,6 +200,12 @@ internal class WidgetCanvasTouchHandler(
             if (!layout.browseTouchTracking || layout.editMode) return@Runnable
             val target = layout.browseTouchChild ?: return@Runnable
             if (layout.findTouchTarget(layout.browseTouchDownX, layout.browseTouchDownY) !== target) return@Runnable
+            val localX = layout.browseTouchDownX - target.left - target.translationX
+            val localY = layout.browseTouchDownY - target.top - target.translationY
+            if (target.shouldReceiveTouchAtPoint(localX, localY)) {
+                cancelBrowseLongPress()
+                return@Runnable
+            }
             layout.browseLongPressConsumed = true
             layout.browseTouchTracking = false
             val cancel = MotionEvent.obtain(0L, 0L, MotionEvent.ACTION_CANCEL, 0f, 0f, 0)

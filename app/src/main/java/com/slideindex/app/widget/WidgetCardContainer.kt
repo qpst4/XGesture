@@ -347,13 +347,10 @@ class WidgetCardContainer(
   private fun updateHostLongClickHandling(editMode: Boolean) {
     val hostView = if (scalableFrame.isNotEmpty()) scalableFrame.getChildAt(0) else null
     if (hostView == null) return
-    if (editMode) {
-      hostView.isLongClickable = false
-      hostView.setOnLongClickListener(null)
-    } else {
-      hostView.isLongClickable = true
-      hostView.setOnLongClickListener { true }
-    }
+    // 浏览态不抢小组件自己的长按（有的 widget 长按会出菜单/配置），
+    // 编辑态的拖动由画布处理，宿主这里也不再额外吞事件。
+    hostView.isLongClickable = false
+    hostView.setOnLongClickListener(null)
   }
 
   private fun drawEditOutline(canvas: Canvas) {

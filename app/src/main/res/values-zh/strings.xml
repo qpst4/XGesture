@@ -2832,6 +2832,11 @@
     <string name="notification_history_max_count_value">%1$d 条</string>
     <string name="widget_panel_blur">背景模糊</string>
     <string name="widget_panel_blur_desc">Android 12+ 在面板后方显示毛玻璃效果</string>
+    <string name="widget_panel_close_on_click">点击小组件后</string>
+    <string name="widget_panel_close_on_click_desc">点击小组件后，面板是否自动收起</string>
+    <string name="widget_panel_close_on_click_activity">仅打开外部应用时收起</string>
+    <string name="widget_panel_close_on_click_always">总是收起</string>
+    <string name="widget_panel_close_on_click_never">从不收起</string>
     <string name="widget_panel_grid_section">小组件布局</string>
     <string name="widget_panel_opacity">面板不透明度</string>
     <string name="widget_panel_add_widget">添加小组件</string>

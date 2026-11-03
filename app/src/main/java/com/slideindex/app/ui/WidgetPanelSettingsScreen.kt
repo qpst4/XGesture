@@ -54,6 +54,7 @@ import top.yukonga.miuix.kmp.basic.SmallTitle
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.MiuixNavigationRow
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
+import com.slideindex.app.ui.settings.components.SettingDropdownRow
 import com.slideindex.app.ui.settings.components.SettingsCardSegmentContent
 import com.slideindex.app.ui.settings.components.SettingsCardScope
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
@@ -91,6 +92,7 @@ fun WidgetPanelSettingsScreen(
     onSelectPage = viewModel::selectPage,
     onBlurEnabledChange = viewModel::setBlurEnabled,
     onBlurRadiusChange = viewModel::setBlurRadius,
+    onCloseOnClickModeChange = viewModel::setCloseOnClickMode,
     onGridInteractionActiveChange = viewModel::setGridInteractionActive,
     onPreviewWidget = onPreviewWidget,
   )
@@ -108,6 +110,7 @@ fun WidgetPanelSettingsScreen(
   onSavePages: (List<WidgetPanelPage>) -> Unit,
   onBlurEnabledChange: (Boolean) -> Unit,
   onBlurRadiusChange: (Int) -> Unit = {},
+  onCloseOnClickModeChange: (Int) -> Unit = {},
   onWidthFractionChange: (Float) -> Unit,
 ) {
   val pages = WidgetPanelDefaults.effectivePages(settings.widgetPanelPages)
@@ -119,6 +122,7 @@ fun WidgetPanelSettingsScreen(
     selectedPageIndex = safeIndex,
     blurEnabled = settings.widgetPanelBlurEnabled,
     blurRadiusDp = settings.widgetPanelBlurRadiusDp,
+    closeOnClickMode = settings.widgetPanelCloseOnClickMode,
   )
   WidgetPanelSettingsContent(
     uiState = uiState,
@@ -127,6 +131,7 @@ fun WidgetPanelSettingsScreen(
     onSelectPage = { selectedPageIndex = it },
     onBlurEnabledChange = onBlurEnabledChange,
     onBlurRadiusChange = onBlurRadiusChange,
+    onCloseOnClickModeChange = onCloseOnClickModeChange,
     onGridInteractionActiveChange = {},
   )
 }
@@ -145,11 +150,19 @@ fun WidgetPanelSettingsContent(
   onBlurEnabledChange: (Boolean) -> Unit,
   onPreviewWidget: () -> Unit = {},
   onBlurRadiusChange: (Int) -> Unit = {},
+  onCloseOnClickModeChange: (Int) -> Unit = {},
   onGridInteractionActiveChange: (Boolean) -> Unit = {},
 ) {
   val settingsDesc = stringResource(R.string.widget_panel_settings_desc)
   val blurTitle = stringResource(R.string.widget_panel_blur)
   val blurDesc = stringResource(R.string.widget_panel_blur_desc)
+  val closeOnClickTitle = stringResource(R.string.widget_panel_close_on_click)
+  val closeOnClickDesc = stringResource(R.string.widget_panel_close_on_click_desc)
+  val closeOnClickItems = listOf(
+    stringResource(R.string.widget_panel_close_on_click_activity),
+    stringResource(R.string.widget_panel_close_on_click_always),
+    stringResource(R.string.widget_panel_close_on_click_never),
+  )
   val previewTitle = stringResource(R.string.widget_panel_preview_title)
   val previewDesc = stringResource(R.string.widget_panel_preview_desc)
 
@@ -204,6 +217,20 @@ fun WidgetPanelSettingsContent(
               onValueChange = { onBlurRadiusChange(it.roundToInt()) },
             )
           }
+        },
+      ),
+    )
+    groupedCardItems(
+      keyPrefix = "widget-panel-click",
+      items = listOf(
+        settingsCardScopeItem("widget-panel-close-on-click") {
+          SettingDropdownRow(
+            title = closeOnClickTitle,
+            subtitle = closeOnClickDesc,
+            items = closeOnClickItems,
+            selectedIndex = uiState.closeOnClickMode,
+            onSelectedIndexChange = onCloseOnClickModeChange,
+          )
         },
       ),
     )
