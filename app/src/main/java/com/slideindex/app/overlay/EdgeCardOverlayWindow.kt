@@ -783,12 +783,10 @@ object EdgeCardOverlayWindow {
                     scheduleAutoCollapse(entry)
                     applyEntry(entry, animated = true)
                 } else {
-                    val action = settings.singleTapAction
-                    if (action == MessageAction.Ignore) {
-                        openConversation(entry)
-                    } else {
-                        dispatch(entry, action)
-                    }
+                    // 展开态单击严格按「手势动作 → 单击」执行：Ignore 就是忽略（关卡片、不跳转）。
+                    // 以前把 Ignore 当"没配过"的哨兵直接打开会话，而它恰好也是默认值，
+                    // 于是设置页显示"忽略"、实际却跳转 APP。
+                    dispatch(entry, settings.singleTapAction)
                 }
             }
             EdgeCardSwipe.Expand -> {
@@ -842,12 +840,6 @@ object EdgeCardOverlayWindow {
         if (view.isAttachedToWindow) {
             runCatching { windowManager?.updateViewLayout(view, params) }
         }
-    }
-
-    private fun openConversation(entry: EdgeCardEntry) {
-        val action = entry.actionCallback
-        mainHandler.post { removeEntry(entry, notifyDismiss = false) }
-        action?.invoke(MessageAction.Read)
     }
 
     private fun dispatchOrKeep(entry: EdgeCardEntry, action: MessageAction) {
