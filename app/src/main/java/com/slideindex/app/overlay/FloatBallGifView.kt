@@ -206,6 +206,19 @@ internal class FloatBallGifView @JvmOverloads constructor(
 
     fun isFrameInvisible(): Boolean = frameAlpha <= HIDDEN_ALPHA
 
+    /** 诊断用：当前画面上到底有没有内容（日志排查用）。 */
+    fun debugState(): String {
+        val frame = cachedBitmap
+        val frameDesc = when {
+            frame == null -> "null"
+            frame.isRecycled -> "recycled"
+            else -> "${frame.width}x${frame.height}"
+        }
+        return "alpha=${"%.2f".format(java.util.Locale.US, frameAlpha)} " +
+            "anim=${animatedDrawable != null} stream=$streamingMode frame=$frameDesc " +
+            "shown=$isShown winVis=$windowVisibility"
+    }
+
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         animatedDrawable?.setBounds(0, 0, w.coerceAtLeast(1), h.coerceAtLeast(1))

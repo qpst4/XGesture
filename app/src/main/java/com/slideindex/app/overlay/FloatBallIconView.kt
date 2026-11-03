@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Outline
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewOutlineProvider
@@ -194,7 +195,7 @@ internal class FloatBallIconView(context: Context) : FrameLayout(context) {
     fun release() {
         stopSlideshow()
         gifDecodeToken++
-        gifPlayer.release()
+        gifPlayer.detach()
         releaseGifSequence()
         builtinAnimView.releaseAnimation()
         releaseOwnedBitmap()
@@ -260,6 +261,9 @@ internal class FloatBallIconView(context: Context) : FrameLayout(context) {
     }
 
     private fun showGif(settings: AppSettings, opacity: Float, decodePx: Int) {
+        // 防御：gifView 是球自己的常驻子 View，任何时候进 GIF 分支都重新挂一次（幂等）。
+        // 之前只有在构造时 attach 过一次，一旦被 release 置空，切回 GIF 就永远画不出来。
+        gifPlayer.attach(gifView)
         stopSlideshow()
         releaseOwnedBitmap()
         builtinAnimView.releaseAnimation()
@@ -267,6 +271,11 @@ internal class FloatBallIconView(context: Context) : FrameLayout(context) {
         gifView.setFrameAlpha(opacity)
 
         val uri = settings.floatBallGifUri
+        Log.i(
+            TAG,
+            "showGif: decodePx=$decodePx opacity=$opacity gifView=${gifView.visibility} " +
+                "playerView=${gifPlayer.hasView()} uri=${uri.takeLast(40)}"
+        )
         if (uri.isBlank() || !FloatBallStyleAssetStore.canRead(context, uri)) {
             showStaticBitmap(FloatBallDragVisualRenderer.render(context, settings), owns = true)
             return
@@ -278,7 +287,13 @@ internal class FloatBallIconView(context: Context) : FrameLayout(context) {
         Thread {
             // 策略：小 GIF（能全帧缓存）走“预解码帧 + tick”——实测运行成本最低；
             // 大 GIF（只能流式）或解码失败才用 ImageDecoder / AnimatedImageDrawable。
+            val decodeStartedAt = android.os.SystemClock.uptimeMillis()
             val handle = FloatBallGifSequenceCache.acquire(context, uri, decodePx)
+            Log.i(
+                TAG,
+                "gif decode: ${android.os.SystemClock.uptimeMillis() - decodeStartedAt}ms " +
+                    "token=$token seq=${describeSequence(handle?.sequence)}"
+            )
             val cachedSequence = handle?.sequence
             if (cachedSequence !is FloatBallGifFrameDecoder.Sequence.Cached) {
                 val animated = runCatching {
@@ -305,6 +320,7 @@ internal class FloatBallIconView(context: Context) : FrameLayout(context) {
             }
             mainHandler.post {
                 if (token != gifDecodeToken) {
+                    Log.i(TAG, "gif apply dropped: token=$token current=$gifDecodeToken")
                     handle?.close()
                     return@post
                 }
@@ -315,7 +331,13 @@ internal class FloatBallIconView(context: Context) : FrameLayout(context) {
                     // 重新绑定后仍要尊重冻结状态（否则改设置/重建视图会把冻结顶掉）。
                     gifPlayer.setPaused(gifFrozen)
                     gifPlayer.start()
+                    Log.i(
+                        TAG,
+                        "gif applied: token=$token playerView=${gifPlayer.hasView()} " +
+                            "gif=${gifView.debugState()}"
+                    )
                 } else {
+                    Log.w(TAG, "gif apply fallback: decode returned null")
                     showStaticBitmap(FloatBallDragVisualRenderer.render(context, settings), owns = true)
                 }
             }
@@ -429,7 +451,16 @@ internal class FloatBallIconView(context: Context) : FrameLayout(context) {
         }
     }
 
+    /** 诊断用：把解码结果压成一行，便于 logcat 里直接判断走的哪条分支。 */
+    private fun describeSequence(sequence: FloatBallGifFrameDecoder.Sequence?): String = when (sequence) {
+        null -> "null"
+        is FloatBallGifFrameDecoder.Sequence.Cached -> "Cached(frames=${sequence.frameCount})"
+        is FloatBallGifFrameDecoder.Sequence.Streaming ->
+            "Streaming(${sequence.width}x${sequence.height} ${sequence.durationMs}ms)"
+    }
+
     companion object {
+        private const val TAG = "FloatBallIcon"
         private const val SLIDESHOW_INTERVAL_MS = 3_000L
     }
 }
