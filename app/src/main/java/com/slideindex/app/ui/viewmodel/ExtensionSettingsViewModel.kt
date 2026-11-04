@@ -843,4 +843,8 @@ class ExtensionSettingsViewModel @Inject constructor(
     fun setDragDropFlowHapticEnabled(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setDragDropFlowHapticEnabled(enabled)
     }
+
+    fun setDragDropFlowActionsInline(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setDragDropFlowActionsInline(enabled)
+    }
 }

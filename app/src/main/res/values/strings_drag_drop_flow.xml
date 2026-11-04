@@ -16,6 +16,8 @@
     <string name="drag_drop_flow_position_ring">Ring compass (centred)</string>
     <string name="drag_drop_flow_haptic_title">Haptic feedback</string>
     <string name="drag_drop_flow_haptic_summary">A subtle vibration when you hover a target, Cancel or Restore.</string>
+    <string name="drag_drop_flow_inline_actions_title">Show built-in actions inline</string>
+    <string name="drag_drop_flow_inline_actions_summary">Split words, copy, search, translate, share and pin sit directly in the bar instead of inside the Actions button. Applies to text and image drags.</string>
     <string name="drag_drop_flow_section_targets">Flow targets</string>
     <string name="drag_drop_flow_text_engines_title">Text search engines</string>
     <string name="drag_drop_flow_text_engines_summary">The default search, translation and quick actions offered when you drag text.</string>

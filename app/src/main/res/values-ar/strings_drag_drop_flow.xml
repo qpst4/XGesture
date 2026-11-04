@@ -16,6 +16,8 @@
     <string name="drag_drop_flow_position_ring">بوصلة حلقية (في المنتصف)</string>
     <string name="drag_drop_flow_haptic_title">استجابة الاهتزاز</string>
     <string name="drag_drop_flow_haptic_summary">اهتزاز خفيف عند المرور على هدف أو على «استعادة» أو «إلغاء».</string>
+    <string name="drag_drop_flow_inline_actions_title">إظهار الإجراءات المدمجة مباشرة</string>
+    <string name="drag_drop_flow_inline_actions_summary">يظهر تقسيم الكلمات والنسخ والبحث والترجمة والمشاركة والتثبيت على الشريط مباشرة بدل زر «الإجراءات»؛ وعند الإيقاف تعود إلى الفتح بالضغط المطوّل. للنصوص والصور فقط.</string>
     <string name="drag_drop_flow_section_targets">أهداف التدفق</string>
     <string name="drag_drop_flow_text_engines_title">محركات البحث النصي</string>
     <string name="drag_drop_flow_text_engines_summary">البحث الافتراضي والترجمة والإجراءات السريعة التي تُعرض عند سحب نص.</string>

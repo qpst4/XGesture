@@ -732,6 +732,7 @@ internal object SettingsSnapshotReader {
                 dragDropFlowPositionId = prefs[SettingsPreferenceKeys.DRAG_DROP_FLOW_POSITION]
                     ?: DragDropFlowPosition.BOTTOM.id,
                 dragDropFlowHapticEnabled = prefs[SettingsPreferenceKeys.DRAG_DROP_FLOW_HAPTIC] ?: true,
+                dragDropFlowActionsInline = prefs[SettingsPreferenceKeys.DRAG_DROP_FLOW_ACTIONS_INLINE] ?: true,
                 dragFlowTextEngines = SearchEngineStore.decodeOrEmpty(
                     prefs[SettingsPreferenceKeys.DRAG_FLOW_TEXT_ENGINES_JSON],
                 ),

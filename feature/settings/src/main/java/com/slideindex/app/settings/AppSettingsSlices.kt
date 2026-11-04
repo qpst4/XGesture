@@ -660,6 +660,14 @@ data class DragDropFlowSettings(
     /** 拖拽至引擎或取消时是否震动。 */
     val dragDropFlowHapticEnabled: Boolean = true,
     /**
+     * 内置动作（分词 / 复制 / 搜索 / 翻译 / 分享 / 钉住）是否直接平铺在流转栏上。
+     *
+     * 开着时收起态就是「动作 + 用户目标」，没有再收进「操作」枢纽的一层；
+     * 关掉则回到「枢纽 + 用户目标」，动作要压住枢纽 400ms 才展开。
+     * 文件拖拽没有动作菜单，不受这个开关影响。
+     */
+    val dragDropFlowActionsInline: Boolean = true,
+    /**
      * 拖拽流转栏里「文字」这一类目标。
      *
      * 存的是从搜索引擎卡片拖进来的**独立副本**：改原引擎不联动、删原引擎也不影响这里。

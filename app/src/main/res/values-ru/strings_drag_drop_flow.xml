@@ -16,6 +16,8 @@
     <string name="drag_drop_flow_position_ring">Кольцевой компас (в центре)</string>
     <string name="drag_drop_flow_haptic_title">Виброотклик</string>
     <string name="drag_drop_flow_haptic_summary">Лёгкая вибрация при наведении на цель, «Отмена» или «Восстановить».</string>
+    <string name="drag_drop_flow_inline_actions_title">Показывать встроенные действия сразу</string>
+    <string name="drag_drop_flow_inline_actions_summary">Разделение слов, копирование, поиск, перевод, отправка и закрепление размещаются прямо на панели, а не в кнопке «Действия»; при выключении возвращается раскрытие удержанием. Только для текста и изображений.</string>
     <string name="drag_drop_flow_section_targets">Цели передачи</string>
     <string name="drag_drop_flow_text_engines_title">Поисковые системы для текста</string>
     <string name="drag_drop_flow_text_engines_summary">Поиск, перевод и быстрые действия, предлагаемые при перетаскивании текста.</string>

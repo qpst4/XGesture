@@ -16,6 +16,8 @@
     <string name="drag_drop_flow_position_ring">环形罗盘（居中）</string>
     <string name="drag_drop_flow_haptic_title">触觉震动反馈</string>
     <string name="drag_drop_flow_haptic_summary">拖动至应用图标、取消或恢复按钮时提供细腻震动</string>
+    <string name="drag_drop_flow_inline_actions_title">内置操作直接显示</string>
+    <string name="drag_drop_flow_inline_actions_summary">分词、复制、搜索、翻译、分享、钉住直接排在流转栏上，不再收进「操作」按钮；关闭则改回压住「操作」停一下再展开。仅对文字和图片生效。</string>
     <string name="drag_drop_flow_section_targets">流转目标管理</string>
     <string name="drag_drop_flow_text_engines_title">文字搜索引擎</string>
     <string name="drag_drop_flow_text_engines_summary">拖拽文字时呼出的默认搜索、翻译与快捷动作</string>

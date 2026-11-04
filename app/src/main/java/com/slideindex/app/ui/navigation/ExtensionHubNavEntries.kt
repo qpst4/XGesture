@@ -107,6 +107,7 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             onEnabledChange = viewModel::setDragDropFlowEnabled,
             onPositionChange = viewModel::setDragDropFlowPosition,
             onHapticChange = viewModel::setDragDropFlowHapticEnabled,
+            onActionsInlineChange = viewModel::setDragDropFlowActionsInline,
             onOpenTextSearchEngines = { ctx.navigate(AppNavKey.FloatBallSearchEngine) },
             onOpenImageSearchEngines = { ctx.navigate(AppNavKey.FloatBallImageSearchEngine) },
             onOpenFileShareEngines = { ctx.navigate(AppNavKey.FileShareEngineSettings) },

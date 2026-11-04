@@ -1,6 +1,7 @@
 package com.slideindex.app.ui
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.FolderShared
 import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material.icons.outlined.OpenWith
@@ -38,6 +39,7 @@ fun DragDropFlowSettingsScreen(
     onEnabledChange: (Boolean) -> Unit,
     onPositionChange: (DragDropFlowPosition) -> Unit,
     onHapticChange: (Boolean) -> Unit,
+    onActionsInlineChange: (Boolean) -> Unit,
     onOpenTextSearchEngines: (() -> Unit)? = null,
     onOpenImageSearchEngines: (() -> Unit)? = null,
     onOpenFileShareEngines: (() -> Unit)? = null,
@@ -111,6 +113,18 @@ fun DragDropFlowSettingsScreen(
                             checked = settings.dragDropFlowHapticEnabled,
                             enabled = settings.dragDropFlowEnabled,
                             onCheckedChange = onHapticChange,
+                        )
+                    }
+                )
+                add(
+                    settingsCardScopeItem("actions_inline") {
+                        SettingSwitchRow(
+                            title = stringResource(R.string.drag_drop_flow_inline_actions_title),
+                            subtitle = stringResource(R.string.drag_drop_flow_inline_actions_summary),
+                            icon = { label: String -> Icon(Icons.Outlined.Apps, contentDescription = label) },
+                            checked = settings.dragDropFlowActionsInline,
+                            enabled = settings.dragDropFlowEnabled,
+                            onCheckedChange = onActionsInlineChange,
                         )
                     }
                 )

@@ -445,6 +445,7 @@ data class AppSettings(
     val dragDropFlowPositionId get() = dragDropFlow.dragDropFlowPositionId
     val dragDropFlowPosition: DragDropFlowPosition get() = DragDropFlowPosition.fromId(dragDropFlow.dragDropFlowPositionId)
     val dragDropFlowHapticEnabled get() = dragDropFlow.dragDropFlowHapticEnabled
+    val dragDropFlowActionsInline get() = dragDropFlow.dragDropFlowActionsInline
     val dragFlowTextEngines: List<SearchEngineConfig> get() = dragDropFlow.dragFlowTextEngines
 
     // endregion

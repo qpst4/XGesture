@@ -853,4 +853,7 @@ internal object SettingsPreferenceKeys {
     val DRAG_DROP_FLOW_ENABLED = booleanPreferencesKey("drag_drop_flow_enabled")
     val DRAG_DROP_FLOW_POSITION = intPreferencesKey("drag_drop_flow_position")
     val DRAG_DROP_FLOW_HAPTIC = booleanPreferencesKey("drag_drop_flow_haptic")
+
+    /** 内置动作是否直接平铺在流转栏上（关掉则收进「操作」枢纽）。 */
+    val DRAG_DROP_FLOW_ACTIONS_INLINE = booleanPreferencesKey("drag_drop_flow_actions_inline")
 }

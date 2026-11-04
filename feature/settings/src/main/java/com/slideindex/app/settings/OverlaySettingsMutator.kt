@@ -1993,4 +1993,8 @@ class OverlaySettingsMutator @Inject constructor(
     suspend fun setDragDropFlowHapticEnabled(enabled: Boolean) = editor.edit {
         it[SettingsPreferenceKeys.DRAG_DROP_FLOW_HAPTIC] = enabled
     }
+
+    suspend fun setDragDropFlowActionsInline(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.DRAG_DROP_FLOW_ACTIONS_INLINE] = enabled
+    }
 }

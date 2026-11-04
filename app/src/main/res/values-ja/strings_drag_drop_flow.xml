@@ -16,6 +16,8 @@
     <string name="drag_drop_flow_position_ring">リングコンパス（中央）</string>
     <string name="drag_drop_flow_haptic_title">触覚フィードバック</string>
     <string name="drag_drop_flow_haptic_summary">ターゲットや「キャンセル」「復元」に重ねたときに、細かな振動で知らせます。</string>
+    <string name="drag_drop_flow_inline_actions_title">組み込み操作を常時表示</string>
+    <string name="drag_drop_flow_inline_actions_summary">単語分割・コピー・検索・翻訳・共有・画面固定を「操作」ボタンに収めず、バーに直接並べます。オフにすると「操作」を押し続けて展開する従来の動作に戻ります。テキストと画像のドラッグのみ対象です。</string>
     <string name="drag_drop_flow_section_targets">フローのターゲット</string>
     <string name="drag_drop_flow_text_engines_title">テキスト検索エンジン</string>
     <string name="drag_drop_flow_text_engines_summary">テキストをドラッグしたときに表示する既定の検索・翻訳・クイック操作。</string>

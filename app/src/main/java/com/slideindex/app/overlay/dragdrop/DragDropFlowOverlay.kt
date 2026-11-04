@@ -315,13 +315,19 @@ class DragDropFlowController(
                     return false
                 }
 
-                // 准备候选项目列表：收起态 = 操作枢纽 + 用户目标，展开态 = 动作菜单
-                dockItems = buildDockItems(hasImage = hasImage, hasText = hasText, hasFile = hasFile)
+                // 准备候选项目列表：收起态默认是「操作枢纽 + 用户目标」，展开态是动作菜单。
+                // 动作菜单在两处都要用（枢纽展开后 / 开关打开时直接平铺），所以先构建它。
                 actionItems = if (hasImage || hasText) {
                     buildActionItems(hasImage = hasImage)
                 } else {
                     emptyList()
                 }
+                dockItems = buildDockItems(
+                    hasImage = hasImage,
+                    hasText = hasText,
+                    hasFile = hasFile,
+                    actions = actionItems,
+                )
                 cancelDwell()
                 hubExpandedState.value = false
                 itemsState.value = dockItems
@@ -514,11 +520,23 @@ class DragDropFlowController(
         iconTintColor = tint,
     )
 
-    /** 收起态：第一项是「操作」枢纽，后面才是用户配置的流转目标。 */
-    private fun buildDockItems(hasImage: Boolean, hasText: Boolean, hasFile: Boolean): List<DragDropFlowItem> {
+    /**
+     * 收起态列表。
+     *
+     * - 开关关着：`[操作枢纽] + 用户目标`，内置动作留给枢纽的展开态；
+     * - 开关打开：`内置动作 + 用户目标`，动作本身就是一级入口，不再需要枢纽；
+     * - 文件拖拽没有动作菜单（[actions] 为空），两种开关下都只有用户目标。
+     */
+    private fun buildDockItems(
+        hasImage: Boolean,
+        hasText: Boolean,
+        hasFile: Boolean,
+        actions: List<DragDropFlowItem>,
+    ): List<DragDropFlowItem> {
         val targets = buildTargetItems(hasImage = hasImage, hasText = hasText, hasFile = hasFile)
-        // 只有文字/图片有动作菜单；文件没有可拆分的动作，保持原样，避免多一个点了没反应的入口。
-        if (!hasImage && !hasText) return targets
+        if (!DragDropFlowLayoutPolicy.shouldKeepHub(hasImage, hasText, latestSettings.dragDropFlowActionsInline)) {
+            return actions + targets
+        }
         return listOf(
             DragDropFlowItem(
                 id = DRAG_DROP_FLOW_HUB_ID,
@@ -529,7 +547,12 @@ class DragDropFlowController(
         ) + targets
     }
 
-    /** 展开态：整列只剩动作项。顺序与设置里的目标无关，保证两次拖拽之间不会跳位。 */
+    /**
+     * 动作菜单。顺序与设置里的目标无关，保证两次拖拽之间不会跳位。
+     *
+     * 开关打开时整列会直接平铺到流转栏上：底栏一屏大约只放得下 5 格，
+     * 所以把「分词 / 钉住」这两个别处没有入口的动作排在最前，别让它们落进滚动区。
+     */
     private fun buildActionItems(hasImage: Boolean): List<DragDropFlowItem> =
         if (hasImage) {
             listOf(
@@ -542,11 +565,11 @@ class DragDropFlowController(
         } else {
             listOf(
                 actionItem("segment_text", R.string.drag_drop_flow_action_segment, Icons.Outlined.TextFields, Color(0xFF3F51B5)),
-                actionItem("copy_text", R.string.drag_drop_flow_target_copy_text, Icons.Outlined.ContentCopy, Color(0xFF4CAF50)),
+                actionItem("pin_text", R.string.drag_drop_flow_action_pin, Icons.Outlined.PushPin, Color(0xFFE91E63)),
                 actionItem("search_text", R.string.drag_drop_flow_action_search, Icons.Outlined.Search, Color(0xFF2196F3)),
+                actionItem("copy_text", R.string.drag_drop_flow_target_copy_text, Icons.Outlined.ContentCopy, Color(0xFF4CAF50)),
                 actionItem("translate_text", R.string.drag_drop_flow_target_translate, Icons.Outlined.Translate, Color(0xFF9C27B0)),
                 actionItem("system_share_text", R.string.drag_drop_flow_target_share_text, Icons.Outlined.Share, Color(0xFFFF9800)),
-                actionItem("pin_text", R.string.drag_drop_flow_action_pin, Icons.Outlined.PushPin, Color(0xFFE91E63)),
             )
         }
 
@@ -555,7 +578,8 @@ class DragDropFlowController(
         val list = mutableListOf<DragDropFlowItem>()
 
         if (hasImage) {
-            // 图片：只放用户配置的图搜/分享引擎。复制、分享、以图搜图都是内置动作，只在「操作」菜单里出现。
+            // 图片：这里只放用户配置的图搜/分享引擎。复制、分享、以图搜图是内置动作，
+            // 开关关着时收在「操作」菜单里，开着时由 buildDockItems 平铺到前面。
             for (engine in SearchEngineStore.imageFlowEngines(latestSettings.searchEngines)) {
                 val pkg = engine.targetPackage?.takeIf { it.isNotBlank() } ?: continue
                 val icon = (!engine.iconPath.isNullOrBlank()).let { hasPath ->
@@ -603,7 +627,7 @@ class DragDropFlowController(
             )
         } else {
             // 文本：只放用户在「文字搜索引擎」页配置的命令（独立副本，按卡内顺序）。
-            // 复制、翻译、分享、分词都在「操作」菜单里，不再重复铺到栏上。
+            // 复制、翻译、分享、分词同样是内置动作，开关关着时收在「操作」菜单里。
             for (engine in latestSettings.dragFlowTextEngines.sortedBy { it.sortOrder }) {
                 val pkgIcon = engine.targetPackage?.let { pkg ->
                     com.slideindex.app.ui.AppIconOverride.bitmap(context, pkg, 96)
