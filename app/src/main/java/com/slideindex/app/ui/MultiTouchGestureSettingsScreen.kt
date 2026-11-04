@@ -17,6 +17,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Draw
+import androidx.compose.material.icons.outlined.RotateLeft
+import androidx.compose.material.icons.outlined.RotateRight
+import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.outlined.ZoomIn
+import androidx.compose.material.icons.outlined.ZoomOut
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -348,14 +357,40 @@ private fun GesturePreview(entry: MultiTouchGestureEntry, modifier: Modifier) {
             }
         }
     } else {
+        val icon = gestureIcon(entry.kind)
         Box(modifier = modifier, contentAlignment = Alignment.Center) {
-            Text(
-                text = gestureSymbol(entry.kind),
-                fontSize = 20.sp,
-                color = MaterialTheme.colorScheme.primary,
-            )
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp),
+                )
+            } else {
+                Text(
+                    text = gestureSymbol(entry.kind),
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
+}
+
+/** 预设类型用项目图标；方向滑动保留字符箭头（不是 emoji）。 */
+private fun gestureIcon(kind: MultiPointerGesture): ImageVector? = when (kind) {
+    MultiPointerGesture.PINCH -> Icons.Outlined.ZoomOut
+    MultiPointerGesture.SPREAD -> Icons.Outlined.ZoomIn
+    MultiPointerGesture.ROTATE_CLOCKWISE -> Icons.Outlined.RotateRight
+    MultiPointerGesture.ROTATE_COUNTER_CLOCKWISE -> Icons.Outlined.RotateLeft
+    MultiPointerGesture.TAP,
+    MultiPointerGesture.DOUBLE_TAP,
+    MultiPointerGesture.TRIPLE_TAP,
+    MultiPointerGesture.TOUCH,
+    -> ThinActionIcons.TouchApp
+    MultiPointerGesture.LONG_PRESS -> Icons.Outlined.Timer
+    MultiPointerGesture.PATH -> Icons.Outlined.Draw
+    else -> null
 }
 
 private fun gestureSymbol(kind: MultiPointerGesture): String = when (kind) {
@@ -367,16 +402,7 @@ private fun gestureSymbol(kind: MultiPointerGesture): String = when (kind) {
     MultiPointerGesture.SWIPE_UP_RIGHT -> "↗"
     MultiPointerGesture.SWIPE_DOWN_LEFT -> "↙"
     MultiPointerGesture.SWIPE_DOWN_RIGHT -> "↘"
-    MultiPointerGesture.PINCH -> "⇤"
-    MultiPointerGesture.SPREAD -> "⇥"
-    MultiPointerGesture.ROTATE_CLOCKWISE -> "↻"
-    MultiPointerGesture.ROTATE_COUNTER_CLOCKWISE -> "↺"
-    MultiPointerGesture.TAP -> "👆"
-    MultiPointerGesture.DOUBLE_TAP -> "👆²"
-    MultiPointerGesture.TRIPLE_TAP -> "👆³"
-    MultiPointerGesture.LONG_PRESS -> "✊"
-    MultiPointerGesture.TOUCH -> "☝"
-    MultiPointerGesture.PATH -> "✏️"
+    else -> ""
 }
 
 @Composable
