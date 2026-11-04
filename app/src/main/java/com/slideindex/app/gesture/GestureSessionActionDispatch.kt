@@ -1,5 +1,7 @@
 package com.slideindex.app.gesture
 
+import android.os.Handler
+import android.os.Looper
 import com.slideindex.app.diagnostic.EdgeDiag
 import com.slideindex.app.launcher.QuickLauncherPanelDefaults
 import com.slideindex.app.di.OverlayDependencyAccess
@@ -608,8 +610,32 @@ internal fun GestureSession.dispatchQuickLauncherAction(
                 sessionActionExecutor.execute(action, sessionSettings, anchorRawY = rawY)
                 return false
             }
+            // 全局复制同理、且更明显：它把"屏幕上看得见的文字"框出来，面板不收掉就会一起进取词浮层
+            //（钉住态的面板本来就不随动作关闭，于是面板会一直留在浮层里）。所以先收会话再动作；
+            // 但**不能**紧跟着立即采：presentation 窗的 removeView 是异步的，这一帧仍能采到它，
+            // 隔两帧再执行，保证窗口已经摘掉、无障碍快照也已刷成空面板。
+            if (action == GestureAction.UniversalCopy) {
+                endSession()
+                mainHandler.postDelayed(
+                    { sessionActionExecutor.execute(action, sessionSettings, anchorRawY = rawY) },
+                    QUICK_LAUNCHER_DISMISS_SETTLE_MS
+                )
+                return false
+            }
             sessionActionExecutor.execute(action, sessionSettings, anchorRawY = rawY)
             return true
         }
     }
 }
+
+/**
+ * 收面板 → 执行"要拍/要采整屏"的动作之间的静默期。
+ *
+ * `SideOverlayWindowManager.detachPresentationWindow()` 走的是 `WindowManager.removeView`，
+ * `ViewRootImpl.die` 是异步的：同步紧接着去读无障碍窗口树，那一帧还能读到旧面板。
+ * 32ms ≈ 两帧，够窗口摘除 + 无障碍快照刷新。
+ */
+private const val QUICK_LAUNCHER_DISMISS_SETTLE_MS = 32L
+
+/** 主线程 Handler：这条延时不能走 `View.postDelayed`，面板收起后 view 已 detach，runnable 会被挂起。 */
+private val mainHandler = Handler(Looper.getMainLooper())
