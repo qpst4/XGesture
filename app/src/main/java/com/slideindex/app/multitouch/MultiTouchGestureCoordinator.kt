@@ -180,7 +180,11 @@ class MultiTouchGestureCoordinator @Inject constructor(
             Shizuku.addBinderReceivedListenerSticky(binderReceivedListener)
         }
         applicationScope.launch(Dispatchers.IO) {
-            settingsStore.state.collect { syncNow() }
+            // 只有开关变化才需要重启观察器，改手势条目不用重启。
+            settingsStore.state
+                .map { it.enabled }
+                .distinctUntilChanged()
+                .collect { syncNow() }
         }
         // 切换「特权执行方式」（root / Shizuku）后要重新选择通道。
         applicationScope.launch(Dispatchers.IO) {
@@ -338,6 +342,17 @@ class MultiTouchGestureCoordinator @Inject constructor(
             val strokes = decodePathStrokes(parts.getOrNull(2) ?: return)
             if (strokes.isEmpty()) return
             handlePathStrokes(fingers, strokes)
+            return
+        }
+        if (event.startsWith("d:")) {
+            val device = event.removePrefix("d:").takeIf { it.isNotBlank() } ?: return
+            _status.value = _status.value.copy(device = device, channel = "root")
+            return
+        }
+        if (event.startsWith("c:")) {
+            val value = event.removePrefix("c:").takeIf { it.isNotBlank() }
+            Log.i(TAG, "root input conflict: $value")
+            _status.value = _status.value.copy(conflictDevices = value)
         }
     }
 

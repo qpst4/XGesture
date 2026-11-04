@@ -107,8 +107,16 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
             onPathGesture = { path, _ ->
                 pollingEvents += "p:${path.fingerCount}:${encodePathStrokes(path.strokes)}"
             },
-            onState = { _, _ -> },
-            onInputConflict = { },
+            onState = { _, detail ->
+                // 设备路径只取短名（event7），状态行不用完整的 /dev/input/...。
+                if (detail.startsWith("watching:")) {
+                    val device = detail.removePrefix("watching:").substringAfterLast('/')
+                    pollingEvents += "d:$device"
+                }
+            },
+            onInputConflict = { devices ->
+                pollingEvents += "c:${devices?.takeIf { it.isNotBlank() } ?: ""}"
+            },
         )
         val started = observer.start()
         if (!started) return false
