@@ -50,6 +50,7 @@ import com.slideindex.app.ui.settings.components.StatusRow
 import com.slideindex.app.ui.settings.components.StatusTone
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
+import com.slideindex.app.ui.settings.components.settingsLazyTipCard
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.window.WindowDialog
@@ -85,6 +86,12 @@ fun MultiTouchGestureSettingsScreen(
     var editingEntry by remember { mutableStateOf<MultiTouchGestureEntry?>(null) }
 
     SettingsScreenScaffold(title = "全局触控", onBack = onBack) {
+        settingsLazyTipCard(
+            key = "multitouch-tip",
+            text = "从屏幕任意位置用 1–5 指做手势即可触发对应动作。\n" +
+                "观察模式只读取触摸屏、不拦截原触摸：触发动作时应用仍会收到同一手势。\n" +
+                "Shizuku 重启后需要重新授权；同时开启其它触控工具时会出现「有冲突」提示。",
+        )
         groupedCardItems(
             keyPrefix = "multitouch",
             items = buildList {
