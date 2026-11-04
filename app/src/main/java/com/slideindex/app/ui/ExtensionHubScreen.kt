@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.Gesture
 import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.AcUnit
 import androidx.compose.material.icons.outlined.BugReport
@@ -57,7 +56,6 @@ fun ExtensionHubScreen(
     onOpenFreezer: () -> Unit = {},
     onOpenMacro: () -> Unit = {},
     onOpenPageScroll: () -> Unit = {},
-    onOpenMultiTouchGesture: () -> Unit = {},
     onOpenSettingsBackup: () -> Unit,
     onOpenNativeEnginePacks: () -> Unit,
     onOpenDiagnosticLogs: () -> Unit,
@@ -208,18 +206,6 @@ fun ExtensionHubScreen(
                 add(
                     settingsCardScopeItem("page-scroll") {
                         PageScrollEntryCard(onClick = onOpenPageScroll)
-                    }
-                )
-                add(
-                    settingsCardScopeItem("multi-touch") {
-                        SettingNavigationRow(
-                            icon = { label ->
-                                Icon(Icons.Outlined.Gesture, contentDescription = label)
-                            },
-                            title = "全局触控",
-                            subtitle = "屏幕任意位置，单指/多指触控触发操作（需 root 或 Shizuku）",
-                            onClick = onOpenMultiTouchGesture,
-                        )
                     }
                 )
             }

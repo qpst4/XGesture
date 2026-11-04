@@ -188,6 +188,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             onOpenGestureAppProfiles = { ctx.navigate(AppNavKey.HomeGestureAppProfiles) },
             gestureAppProfileCount = appSettings.gestureProfiles.size,
             onOpenCornerWheel = { ctx.navigate(AppNavKey.HomeCornerGesture) },
+            onOpenMultiTouchGesture = { ctx.navigate(AppNavKey.ExtensionMultiTouchGesture) },
             onOpenGestureAngle = { ctx.navigate(AppNavKey.HomeGestureAngle) },
             onOpenSystemBackGestureWidth = { ctx.navigate(AppNavKey.HomeSystemBackGestureWidth) },
             onOpenAnimationStyleSelect = { ctx.navigate(AppNavKey.HomeAnimationStyleSelect) },

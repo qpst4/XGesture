@@ -87,7 +87,6 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             onOpenFreezer = { ctx.navigate(AppNavKey.ExtensionFreezer) },
             onOpenMacro = { ctx.navigate(AppNavKey.MacroList) },
             onOpenPageScroll = { ctx.navigate(AppNavKey.PageScrollSettings) },
-            onOpenMultiTouchGesture = { ctx.navigate(AppNavKey.ExtensionMultiTouchGesture) },
             onOpenSettingsBackup = { ctx.navigate(AppNavKey.ExtensionBackup) },
             onOpenNativeEnginePacks = { ctx.navigate(AppNavKey.NativeEnginePacks) },
             onOpenDiagnosticLogs = { ctx.navigate(AppNavKey.ExtensionDiagnosticLogs) },
