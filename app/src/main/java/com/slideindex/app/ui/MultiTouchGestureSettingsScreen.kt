@@ -227,9 +227,12 @@ fun MultiTouchGestureSettingsScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     for (fingers in 1..5) {
+                        // 捏合/张开/旋转是几何手势：质心与半径在多指下才有意义，单指必然触发不了。
+                        val geometry = kind in GEOMETRY_GESTURES
                         FingerCell(
                             fingers = fingers,
                             modifier = Modifier.weight(1f),
+                            enabled = !geometry || fingers >= 2,
                             onClick = {
                                 pendingKind = null
                                 onOpenActionPick(kind, fingers, "", "")
@@ -436,12 +439,23 @@ private fun gestureSymbol(kind: MultiPointerGesture): String = when (kind) {
 }
 
 @Composable
-private fun FingerCell(fingers: Int, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun FingerCell(
+    fingers: Int,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable(onClick = onClick)
+            .background(
+                if (enabled) {
+                    MaterialTheme.colorScheme.surfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                },
+            )
+            .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -449,9 +463,22 @@ private fun FingerCell(fingers: Int, modifier: Modifier = Modifier, onClick: () 
             text = fingers.toString(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleMedium,
+            color = if (enabled) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+            },
         )
     }
 }
+
+/** 需要多指才有意义的几何手势（单指时质心/半径失效）。 */
+private val GEOMETRY_GESTURES = setOf(
+    MultiPointerGesture.PINCH,
+    MultiPointerGesture.SPREAD,
+    MultiPointerGesture.ROTATE_CLOCKWISE,
+    MultiPointerGesture.ROTATE_COUNTER_CLOCKWISE,
+)
 
 /** 状态行说明：设备 / 模式 / 特权通道 / 冲突，全部收在这一行里。 */
 @Composable
