@@ -2752,11 +2752,12 @@
     <string name="external_invocation_action_toggle_float_ball_desc">フローティングボールを非表示／再表示します（状態は保持）</string>
     <string name="external_invocation_action_shell_panel_desc">Shell パネルを開く（エクスポート不可、アプリ内ショートカットのみ）</string>
     <string name="activity_shortcut_title">アプリ内ショートカット</string>
-    <string name="activity_shortcut_hint">ここのアイテムはジェスチャーやランチャーに割り当てできます。タップで開きます。カタログのショートカットはネイティブ/カスタムアイコンを表示。非 export の Activity には Shizuku が必要です。</string>
+    <string name="activity_shortcut_hint">ここのアイテムはジェスチャーやランチャーに割り当てできます。タップで編集、右下の + で追加。非 export の Activity には Shizuku が必要です。</string>
     <string name="activity_shortcut_presets_title">おすすめ</string>
     <string name="activity_shortcut_presets_desc">追加前にお試しください。追加したアイテムは「マイショートカット」に表示され、ジェスチャーに割り当てできます。</string>
     <string name="activity_shortcut_mine_title">マイショートカット</string>
     <string name="activity_shortcut_empty">ショートカットはまだありません</string>
+    <string name="activity_shortcut_empty_add_hint">右下の + から追加してください</string>
     <string name="activity_shortcut_add_from_presets">おすすめから追加</string>
     <string name="activity_shortcut_add_from_presets_sub">WeChat などの一般的なページ</string>
     <string name="activity_shortcut_browse_custom">Activity を閲覧</string>
@@ -2822,6 +2823,7 @@
     <string name="activity_shortcut_pick_app">アプリを選択</string>
     <string name="activity_shortcut_pick_activity">Activity を選択</string>
     <string name="activity_shortcut_test">テスト</string>
+    <string name="activity_shortcut_open">開く</string>
     <string name="shell_panel_shizuku_label">Shizuku</string>
     <string name="shell_panel_shizuku_active">有効</string>
     <string name="shell_panel_shizuku_inactive">未認可</string>

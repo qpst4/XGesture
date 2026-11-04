@@ -3,6 +3,7 @@ package com.slideindex.app.ui
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.automirrored.filled.Launch
 import androidx.compose.material.icons.automirrored.filled.Shortcut
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +48,7 @@ import com.slideindex.app.ui.miuix.CardItem
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import com.slideindex.app.ui.miuix.MiuixSettingsFab
+import com.slideindex.app.ui.miuix.MiuixSettingsFabInset
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.miuix.MiuixHintText
@@ -60,6 +63,7 @@ import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -164,7 +168,8 @@ fun ActivityShortcutScreen(
                 icon = Icons.Default.Add,
                 contentDescription = stringResource(R.string.activity_shortcut_add)
             )
-        }
+        },
+        fabInset = MiuixSettingsFabInset
     ) {
         settingsLazyTipCard(key = "hint", text = shortcutHint)
 
@@ -195,40 +200,6 @@ fun ActivityShortcutScreen(
                 )
             },
             onDelete = { pendingDelete = it }
-        )
-
-        groupedCardItems(
-            keyPrefix = "activity-shortcut-add",
-            items = listOf(
-                CardItem("presets") {
-                    ArrowPreference(
-                        title = stringResource(R.string.activity_shortcut_add_from_presets),
-                        summary = stringResource(R.string.activity_shortcut_add_from_presets_sub),
-                        onClick = onOpenPresets
-                    )
-                },
-                CardItem("browse") {
-                    ArrowPreference(
-                        title = stringResource(R.string.activity_shortcut_browse_custom),
-                        summary = stringResource(R.string.activity_shortcut_browse_custom_sub),
-                        onClick = onAdd
-                    )
-                },
-                CardItem("shortcuts") {
-                    ArrowPreference(
-                        title = stringResource(R.string.activity_shortcut_add_from_shortcuts),
-                        summary = stringResource(R.string.activity_shortcut_add_from_shortcuts_sub),
-                        onClick = onAddAppShortcut
-                    )
-                },
-                CardItem("shell") {
-                    ArrowPreference(
-                        title = stringResource(R.string.activity_shortcut_add_from_shell),
-                        summary = stringResource(R.string.activity_shortcut_add_from_shell_sub),
-                        onClick = onAddShellCommand
-                    )
-                }
-            )
         )
     }
 }
@@ -321,12 +292,21 @@ private fun LazyListScope.activityShortcutMineListItems(
             keyPrefix = "activity-shortcut-mine-empty",
             items = listOf(
                 CardItem("empty") {
-                    Text(
-                        text = stringResource(R.string.activity_shortcut_empty),
-                        style = top.yukonga.miuix.kmp.theme.MiuixTheme.textStyles.body2,
-                        color = top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme.onSurfaceSecondary,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-                    )
+                    Column(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.activity_shortcut_empty),
+                            style = top.yukonga.miuix.kmp.theme.MiuixTheme.textStyles.body2,
+                            color = top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme.onSurfaceSecondary,
+                        )
+                        Text(
+                            text = stringResource(R.string.activity_shortcut_empty_add_hint),
+                            style = top.yukonga.miuix.kmp.theme.MiuixTheme.textStyles.body2,
+                            color = top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme.onSurfaceSecondary,
+                        )
+                    }
                 }
             )
         )
@@ -422,14 +402,13 @@ private fun ActivityShortcutSavedRowContent(
     onDelete: () -> Unit
 ) {
     val context = LocalContext.current
-    val editText = stringResource(R.string.activity_shortcut_edit)
+    val openText = stringResource(R.string.activity_shortcut_open)
     val changeIconText = stringResource(R.string.activity_shortcut_change_icon)
     val resetIconText = stringResource(R.string.activity_shortcut_reset_icon)
     val deleteText = stringResource(R.string.stash_action_delete)
     val moreMenuDesc = stringResource(R.string.notification_filter_more_menu)
     val menuEntry = DropdownEntry(
         items = buildList {
-            add(DropdownItem(text = editText, onClick = onEdit))
             add(DropdownItem(text = changeIconText, onClick = onChangeIcon))
             if (!shortcut.iconPath.isNullOrBlank()) {
                 add(DropdownItem(text = resetIconText, onClick = onResetIcon))
@@ -457,7 +436,7 @@ private fun ActivityShortcutSavedRowContent(
         modifier = Modifier.fillMaxWidth(),
         title = title,
         summary = subtitle,
-        onClick = onLaunch,
+        onClick = onEdit,
         startAction = {
             if (iconBitmap != null) {
                 Image(
@@ -477,6 +456,13 @@ private fun ActivityShortcutSavedRowContent(
             }
         },
         endActions = {
+            IconButton(onClick = onLaunch) {
+                MiuixIcon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = openText,
+                    tint = MiuixTheme.colorScheme.primary
+                )
+            }
             OverlayIconDropdownMenu(entry = menuEntry) {
                 MiuixIcon(
                     imageVector = Icons.Default.MoreVert,

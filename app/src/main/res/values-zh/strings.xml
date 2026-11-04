@@ -2892,11 +2892,12 @@
     <string name="external_invocation_action_toggle_float_ball_desc">隐藏或重新显示悬浮球（状态保持）</string>
     <string name="external_invocation_action_shell_panel_desc">打开 Shell 命令面板（未对外导出，仅供应用内快捷方式）</string>
     <string name="activity_shortcut_title">应用内直达</string>
-    <string name="activity_shortcut_hint">此处列表可绑到手势与启动器；点击条目打开。加入目录的快捷会显示原生/自定义图标。非 exported 的 Activity 需要 Shizuku。</string>
+    <string name="activity_shortcut_hint">此处列表可绑到手势与启动器；点击条目编辑，右下角 + 添加。非 exported 的 Activity 需要 Shizuku。</string>
     <string name="activity_shortcut_presets_title">推荐直达</string>
     <string name="activity_shortcut_presets_desc">可先试用，加入后出现在「我的直达」并可用于绑手势。</string>
     <string name="activity_shortcut_mine_title">我的直达</string>
     <string name="activity_shortcut_empty">暂无直达项</string>
+    <string name="activity_shortcut_empty_add_hint">点右下角 + 添加一个</string>
     <string name="activity_shortcut_add_from_presets">从推荐添加</string>
     <string name="activity_shortcut_add_from_presets_sub">微信等常用页面</string>
     <string name="activity_shortcut_browse_custom">浏览 Activity</string>
@@ -2967,6 +2968,7 @@
     <string name="activity_shortcut_pick_app">选择应用</string>
     <string name="activity_shortcut_pick_activity">选择 Activity</string>
     <string name="activity_shortcut_test">测试</string>
+    <string name="activity_shortcut_open">打开</string>
     <string name="shell_panel_shizuku_label">Shizuku</string>
     <string name="shell_panel_shizuku_active">已激活</string>
     <string name="shell_panel_shizuku_inactive">未授权</string>

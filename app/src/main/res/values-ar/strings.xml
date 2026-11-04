@@ -2753,11 +2753,12 @@
     <string name="external_invocation_action_toggle_float_ball_desc">إخفاء الكرة العائمة أو إعادة عرضها (تُحفظ الحالة)</string>
     <string name="external_invocation_action_shell_panel_desc">فتح لوحة أوامر Shell (غير مصدرة خارجياً، فقط للاختصارات داخل التطبيق)</string>
     <string name="activity_shortcut_title">الوصول المباشر داخل التطبيق</string>
-    <string name="activity_shortcut_hint">يمكن ربط هذه القائمة بالإيماءات والمشغل؛ انقر على عنصر لفتحه. الاختصارات المضافة ستعرض أيقونات أصلية/مخصصة. الأنشطة غير المصدرة تتطلب Shizuku.</string>
+    <string name="activity_shortcut_hint">يمكن ربط هذه القائمة بالإيماءات والمشغل؛ انقر على عنصر لتحريره، وأضف من + في الأسفل. الأنشطة غير المصدرة تتطلب Shizuku.</string>
     <string name="activity_shortcut_presets_title">الوصول المباشر الموصى به</string>
     <string name="activity_shortcut_presets_desc">يمكنك تجربتها أولاً، بعد الإضافة ستظهر في «وصولي المباشر» ويمكن ربطها بالإيماءات.</string>
     <string name="activity_shortcut_mine_title">وصولي المباشر</string>
     <string name="activity_shortcut_empty">لا توجد عناصر وصول مباشر</string>
+    <string name="activity_shortcut_empty_add_hint">أضف عنصرًا من + في الأسفل</string>
     <string name="activity_shortcut_add_from_presets">إضافة من الموصى بها</string>
     <string name="activity_shortcut_add_from_presets_sub">صفحات شائعة مثل WeChat</string>
     <string name="activity_shortcut_browse_custom">تصفح النشاط</string>
@@ -2828,6 +2829,7 @@
     <string name="activity_shortcut_pick_app">اختيار التطبيق</string>
     <string name="activity_shortcut_pick_activity">اختيار Activity</string>
     <string name="activity_shortcut_test">اختبار</string>
+    <string name="activity_shortcut_open">فتح</string>
     <string name="shell_panel_shizuku_label">Shizuku</string>
     <string name="shell_panel_shizuku_active">مفعل</string>
     <string name="shell_panel_shizuku_inactive">غير مصرح</string>

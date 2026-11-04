@@ -3083,11 +3083,12 @@
     <string name="activity_shortcut_entry_desc">In-app pages and app shortcuts (e.g. WeChat coupons/scanner); custom icons supported</string>
     <string name="activity_shortcut_entry_desc_count">Saved shortcuts: %1$d</string>
     <string name="activity_shortcut_title">In-app shortcuts</string>
-    <string name="activity_shortcut_hint">Items here can be bound to gestures and launchers. Tap to open. Catalogued shortcuts show native/custom icons. Non-exported activities require Shizuku.</string>
+    <string name="activity_shortcut_hint">Items here can be bound to gestures and launchers. Tap an item to edit; use + to add. Non-exported activities require Shizuku.</string>
     <string name="activity_shortcut_presets_title">Recommended</string>
     <string name="activity_shortcut_presets_desc">Try before adding. Added items appear under My shortcuts and can be bound to gestures.</string>
     <string name="activity_shortcut_mine_title">My shortcuts</string>
     <string name="activity_shortcut_empty">No shortcuts yet</string>
+    <string name="activity_shortcut_empty_add_hint">Tap + at the bottom right to add one</string>
     <string name="activity_shortcut_add_from_presets">Add from recommendations</string>
     <string name="activity_shortcut_add_from_presets_sub">WeChat and other common pages</string>
     <string name="activity_shortcut_browse_custom">Browse activities</string>
@@ -3156,6 +3157,7 @@
     <string name="activity_shortcut_pick_app">Choose app</string>
     <string name="activity_shortcut_pick_activity">Choose activity</string>
     <string name="activity_shortcut_test">Test</string>
+    <string name="activity_shortcut_open">Open</string>
     <string name="shell_panel_shizuku_label">Shizuku</string>
     <string name="shell_panel_shizuku_active">Active</string>
     <string name="shell_panel_shizuku_inactive">Not authorized</string>

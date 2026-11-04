@@ -3083,11 +3083,12 @@
     <string name="activity_shortcut_entry_desc">Страницы приложений и ярлыки (например, купоны/сканер WeChat); поддерживаются пользовательские значки</string>
     <string name="activity_shortcut_entry_desc_count">Сохранённых ярлыков: %1$d</string>
     <string name="activity_shortcut_title">Ярлыки в приложениях</string>
-    <string name="activity_shortcut_hint">Элементы здесь можно привязать к жестам и лаунчерам. Нажмите, чтобы открыть. Ярлыки из каталога показывают нативные/пользовательские значки. Неэкспортируемые activity требуют Shizuku.</string>
+    <string name="activity_shortcut_hint">Элементы здесь можно привязать к жестам и лаунчерам. Нажмите на элемент, чтобы изменить; добавьте с помощью + внизу. Неэкспортируемые activity требуют Shizuku.</string>
     <string name="activity_shortcut_presets_title">Рекомендуемые</string>
     <string name="activity_shortcut_presets_desc">Попробуйте перед добавлением. Добавленные элементы появятся в «Моих ярлыках» и могут быть привязаны к жестам.</string>
     <string name="activity_shortcut_mine_title">Мои ярлыки</string>
     <string name="activity_shortcut_empty">Ярлыков пока нет</string>
+    <string name="activity_shortcut_empty_add_hint">Добавьте с помощью + внизу</string>
     <string name="activity_shortcut_add_from_presets">Добавить из рекомендуемых</string>
     <string name="activity_shortcut_add_from_presets_sub">WeChat и другие популярные страницы</string>
     <string name="activity_shortcut_browse_custom">Просмотр activity</string>
@@ -3156,6 +3157,7 @@
     <string name="activity_shortcut_pick_app">Выбрать приложение</string>
     <string name="activity_shortcut_pick_activity">Выбрать Activity</string>
     <string name="activity_shortcut_test">Тест</string>
+    <string name="activity_shortcut_open">Открыть</string>
     <string name="shell_panel_shizuku_label">Shizuku</string>
     <string name="shell_panel_shizuku_active">Активен</string>
     <string name="shell_panel_shizuku_inactive">Не авторизован</string>
