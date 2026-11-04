@@ -28,6 +28,7 @@ object ShizukuUserServiceHost {
     /**
      * Bump when the remote service code/ABI changes; drives processNameSuffix.
      *
+     * 59：点击判定不再被几何候选取消；触摸补「两指先后按下」分支；gestureSizeMm 默认 5。
      * 58：触摸改为「按下即触发、仅 ≥2 指」；滑动方向改为逐指分类众数（至少 2/3 同向）。
      * 57：滑动方向要求连续 3 帧一致；新增「触摸」（TOUCH）类型与两指轻点支持。
      * 56：识别器改为「每种类型独立判定、输出多候选」，AIDL 新增 onGestureBatch。
@@ -55,9 +56,9 @@ object ShizukuUserServiceHost {
      * 38：最近任务不再过滤本应用包名（任务切换器需要显示自己）。这是运行在用户服务进程里的
      *     `TaskExclusions` / reader 逻辑，必须换进程名才能让已安装的新包生效。
      * 37：`getRecentTasks()` 行格式增加第 5 列 userId（分身识别）。
-     * 升号后进程名变成 `task_manager_v58`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
+     * 升号后进程名变成 `task_manager_v59`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
      */
-    const val SERVICE_BUILD = 58
+    const val SERVICE_BUILD = 59
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bindLock = Any()

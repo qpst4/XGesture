@@ -51,8 +51,8 @@ class MultiPointerGestureRecognizer(
     private val doubleTapMs: Long = 260L,
     private val rotateScoreThreshold: Float = 0.10f,
     private val fourFingerRotateScoreThreshold: Float = 0.08f,
-    /** 手势尺寸（mm）：GMD 的 `gestureSizeMm`，1–10。 */
-    private val gestureSizeMm: Float = 4f,
+    /** 手势尺寸（mm）：GMD 的 `gestureSizeMm`，默认 5、范围 5–10。 */
+    private val gestureSizeMm: Float = 5f,
     /** 屏幕高度（mm）：把归一化半径差换算成 mm。 */
     private val screenHeightMm: Float = 150f,
     private val rotateMaxRadiusDrift: Float = 0.32f,
@@ -80,6 +80,9 @@ class MultiPointerGestureRecognizer(
 
     /** 上一帧位置：用于“各指方向一致性”判定。 */
     private val lastPositions = HashMap<Int, TouchPointer>()
+
+    /** 本次触摸是否已经输出过 TOUCH（两指先后按下时补一次）。 */
+    private var touchEmitted = false
 
     private var pendingTapAtMs = 0L
     private var pendingTapFingers = 0
@@ -127,9 +130,10 @@ class MultiPointerGestureRecognizer(
             )
             updateLastPositions(pointers)
             // 触摸（GMD 的 SWIPE_TAP）：按下即触发，且只支持双指及以上。
-            // 注意：不写入 triggered——触摸只在这一帧输出一次，不能阻止后续点击判定。
+            // 不写入 triggered——触摸只输出一次，不能阻止后续点击判定。
             val results = ArrayList<RecognizedMultiPointerGesture>(1)
             if (ordered.size >= 2) {
+                touchEmitted = true
                 results += RecognizedMultiPointerGesture(
                     MultiPointerGesture.TOUCH,
                     ordered.size,
@@ -169,6 +173,14 @@ class MultiPointerGestureRecognizer(
                 startRadius = averageRadius(ordered, centerX, centerY),
                 timeMs = timeMs,
             )
+            // 两指先后按下：第二指加入时补一次触摸（GMD 触摸只看配置，不要求同帧按下）。
+            if (!touchEmitted && ordered.size >= 2) {
+                touchEmitted = true
+                results += RecognizedMultiPointerGesture(
+                    MultiPointerGesture.TOUCH,
+                    ordered.size,
+                )
+            }
             updateLastPositions(pointers)
             return results
         }
@@ -266,7 +278,12 @@ class MultiPointerGestureRecognizer(
     }
 
     private fun resolveTapOnLift(timeMs: Long): RecognizedMultiPointerGesture? {
-        if (triggered.isNotEmpty() || moved || maxFingers !in minFingerCount..maxFingerCount) {
+        // 点击判定只依赖位移/指数量，不受几何候选影响（GMD 的点击是独立路径）。
+        // 长按已经触发时不再判点击。
+        if (moved ||
+            maxFingers !in minFingerCount..maxFingerCount ||
+            MultiPointerGesture.LONG_PRESS in triggered
+        ) {
             return null
         }
         return when {
@@ -343,6 +360,7 @@ class MultiPointerGestureRecognizer(
         triggered.clear()
         swipeHistory.clear()
         lastPositions.clear()
+        touchEmitted = false
     }
 
     private fun rotationScore(
