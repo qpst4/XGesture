@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 全局触控（独立资源文件，避免改动现有 strings.xml）。 -->
+<resources>
+    <string name="multitouch_title">Глобальное касание</string>
+    <string name="multitouch_home_summary">Запускайте действия касаниями одного или нескольких пальцев в любом месте экрана (нужен root или Shizuku)</string>
+
+    <!-- 设置页：说明卡片 -->
+    <string name="multitouch_tip">Делайте жест 1–5 пальцами в любом месте экрана, чтобы запустить соответствующее действие.\nРежим наблюдения только читает сенсорный экран и не перехватывает исходное касание: при срабатывании действия приложение всё равно получит тот же жест.\nПосле перезапуска Shizuku требует повторной авторизации; при одновременном включении другого инструмента касаний появится предупреждение «конфликт».</string>
+
+    <!-- 设置页：开关与状态 -->
+    <string name="multitouch_enable_title">Включить глобальное касание</string>
+    <string name="multitouch_enable_summary">Запускайте свои действия касаниями одним или несколькими пальцами в любом месте экрана (режим наблюдения, исходное касание не перехватывается)</string>
+    <string name="multitouch_status_title">Состояние</string>
+    <string name="multitouch_status_disabled">Не включено</string>
+    <string name="multitouch_status_conflict_pill">Конфликт</string>
+    <string name="multitouch_status_running">Наблюдение</string>
+    <string name="multitouch_status_stopped">Не запущено</string>
+
+    <!-- 设置页：添加/编辑手势 -->
+    <string name="multitouch_add_title">Добавить жест</string>
+    <string name="multitouch_add_summary">Записать жест или выбрать готовый тип</string>
+    <string name="multitouch_pick_kind_title">Выбор жеста</string>
+    <string name="multitouch_draw_summary">Нарисуйте одну линию сами, затем отпустите палец и выберите действие</string>
+    <string name="multitouch_finger_count_title">Точки касания</string>
+    <string name="multitouch_finger_count_summary">%1$s: выберите количество точек касания для жеста</string>
+    <string name="multitouch_edit_title">Изменить жест</string>
+    <string name="multitouch_edit_rerecord_hint">Нажмите на превью выше, чтобы записать жест заново</string>
+    <string name="multitouch_entry_label">Пальцев: %1$d · %2$s</string>
+    <string name="multitouch_delete">Удалить</string>
+    <string name="multitouch_done">Готово</string>
+    <string name="multitouch_hint">Режим наблюдения не перехватывает события: при срабатывании жеста приложение всё равно получит тот же жест.\nПосле перезапуска Shizuku нужна повторная авторизация и запуск; жесты с малым числом пальцев часто конфликтуют с жестами самого приложения.</string>
+
+    <!-- 设置页：状态详情行 -->
+    <string name="multitouch_detail_disabled">Переключатель выключен</string>
+    <string name="multitouch_detail_recording">Запись (распознавание приостановлено)</string>
+    <string name="multitouch_channel_root">канал root</string>
+    <string name="multitouch_channel_shizuku">Shizuku авторизован</string>
+    <string name="multitouch_channel_observer">режим наблюдения</string>
+    <string name="multitouch_device_unknown">Неизвестное устройство</string>
+    <string name="multitouch_detail_running">Устройство %1$s · Режим наблюдения (только чтение, без перехвата) · %2$s</string>
+    <string name="multitouch_detail_root_unavailable">root недоступен, нажмите для повтора</string>
+    <string name="multitouch_detail_root_start_failed">Не удалось запустить наблюдение через root, нажмите для повтора</string>
+    <string name="multitouch_detail_shizuku_unavailable">Shizuku не запущен или не авторизован, нажмите для повтора</string>
+    <string name="multitouch_detail_service_unavailable">Не удалось запустить службу Shizuku, нажмите для повтора</string>
+    <string name="multitouch_detail_device_unavailable">Нет доступного сенсорного устройства, нажмите для повтора</string>
+    <string name="multitouch_detail_not_running">Не запущено (%1$s), нажмите для повтора</string>
+    <string name="multitouch_detail_conflict">\n⚠ Конфликт: %1$s (при одновременном включении сработает дважды; если он монопольно занимает сенсорный экран, эта функция не получает события)</string>
+
+    <!-- 手势类型名（core 层只保留枚举，文案在这里） -->
+    <string name="multitouch_kind_pinch">Щипок</string>
+    <string name="multitouch_kind_spread">Разведение</string>
+    <string name="multitouch_kind_swipe_up">Свайп вверх</string>
+    <string name="multitouch_kind_swipe_down">Свайп вниз</string>
+    <string name="multitouch_kind_swipe_left">Свайп влево</string>
+    <string name="multitouch_kind_swipe_right">Свайп вправо</string>
+    <string name="multitouch_kind_rotate_clockwise">Поворот по часовой стрелке</string>
+    <string name="multitouch_kind_rotate_counter_clockwise">Поворот против часовой стрелки</string>
+    <string name="multitouch_kind_swipe_up_left">Свайп вверх-влево</string>
+    <string name="multitouch_kind_swipe_up_right">Свайп вверх-вправо</string>
+    <string name="multitouch_kind_swipe_down_left">Свайп вниз-влево</string>
+    <string name="multitouch_kind_swipe_down_right">Свайп вниз-вправо</string>
+    <string name="multitouch_kind_tap">Касание</string>
+    <string name="multitouch_kind_double_tap">Двойное касание</string>
+    <string name="multitouch_kind_triple_tap">Тройное касание</string>
+    <string name="multitouch_kind_long_press">Долгое нажатие</string>
+    <string name="multitouch_kind_touch">Прикосновение</string>
+    <string name="multitouch_kind_path">Рисование жеста</string>
+
+    <!-- 路径手势录制页 -->
+    <string name="multitouch_record_title">Запись жеста-линии</string>
+    <string name="multitouch_record_rerecord_title">Записать заново</string>
+    <string name="multitouch_record_hint">Одна линия = один палец</string>
+    <string name="multitouch_record_rerecord_hint">Повторная запись заменит прежние линии, действие останется</string>
+    <string name="multitouch_record_guide">Отпустите палец после одной линии и нарисуйте следующую (всего 1–5); затем нажмите «Готово»</string>
+    <string name="multitouch_record_drawn_count">Нарисовано %1$d/5</string>
+    <string name="multitouch_record_clear">Перерисовать</string>
+    <string name="multitouch_back">Назад</string>
+</resources>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 全局触控（独立资源文件，避免改动现有 strings.xml）。 -->
+<resources>
+    <string name="multitouch_title">Global touch</string>
+    <string name="multitouch_home_summary">Trigger actions with one or more fingers anywhere on screen (needs root or Shizuku)</string>
+
+    <!-- 设置页：说明卡片 -->
+    <string name="multitouch_tip">Make a gesture with 1–5 fingers anywhere on the screen to trigger the matching action.\nObserver mode only reads the touch screen and never intercepts the original touch: the app still receives the same gesture when an action fires.\nShizuku must be authorized again after a restart; turning on another touch tool at the same time shows a “conflict” warning.</string>
+
+    <!-- 设置页：开关与状态 -->
+    <string name="multitouch_enable_title">Enable global touch</string>
+    <string name="multitouch_enable_summary">Trigger custom actions with one-finger or multi-finger gestures anywhere on screen (observer mode, the original touch is not intercepted)</string>
+    <string name="multitouch_status_title">Status</string>
+    <string name="multitouch_status_disabled">Not enabled</string>
+    <string name="multitouch_status_conflict_pill">Conflict</string>
+    <string name="multitouch_status_running">Watching</string>
+    <string name="multitouch_status_stopped">Not running</string>
+
+    <!-- 设置页：添加/编辑手势 -->
+    <string name="multitouch_add_title">Add gesture</string>
+    <string name="multitouch_add_summary">Record a gesture, or pick a preset type</string>
+    <string name="multitouch_pick_kind_title">Choose a gesture</string>
+    <string name="multitouch_draw_summary">Draw one stroke yourself, then pick an action after you lift your finger</string>
+    <string name="multitouch_finger_count_title">Touch points</string>
+    <string name="multitouch_finger_count_summary">%1$s: choose how many touch points the gesture uses</string>
+    <string name="multitouch_edit_title">Edit gesture</string>
+    <string name="multitouch_edit_rerecord_hint">Tap the preview above to record the gesture again</string>
+    <string name="multitouch_entry_label">%1$d fingers · %2$s</string>
+    <string name="multitouch_delete">Delete</string>
+    <string name="multitouch_done">Done</string>
+    <string name="multitouch_hint">Observer mode never intercepts events: the app still receives the same gesture when it fires.\nShizuku must be authorized and started again after a restart; gestures with few fingers easily conflict with the app own gestures.</string>
+
+    <!-- 设置页：状态详情行 -->
+    <string name="multitouch_detail_disabled">Switch is off</string>
+    <string name="multitouch_detail_recording">Recording (recognition paused)</string>
+    <string name="multitouch_channel_root">root channel</string>
+    <string name="multitouch_channel_shizuku">Shizuku authorized</string>
+    <string name="multitouch_channel_observer">Observer mode</string>
+    <string name="multitouch_device_unknown">Unknown device</string>
+    <string name="multitouch_detail_running">Device %1$s · Observer mode (read-only, no interception) · %2$s</string>
+    <string name="multitouch_detail_root_unavailable">root unavailable, tap to retry</string>
+    <string name="multitouch_detail_root_start_failed">root watcher failed to start, tap to retry</string>
+    <string name="multitouch_detail_shizuku_unavailable">Shizuku is not running or not authorized, tap to retry</string>
+    <string name="multitouch_detail_service_unavailable">Shizuku service failed to start, tap to retry</string>
+    <string name="multitouch_detail_device_unavailable">No readable touch device, tap to retry</string>
+    <string name="multitouch_detail_not_running">Not running (%1$s), tap to retry</string>
+    <string name="multitouch_detail_conflict">\n⚠ Conflict: %1$s (turning both on fires twice; if it grabs the touch screen exclusively this feature receives no events)</string>
+
+    <!-- 手势类型名（core 层只保留枚举，文案在这里） -->
+    <string name="multitouch_kind_pinch">Pinch</string>
+    <string name="multitouch_kind_spread">Spread</string>
+    <string name="multitouch_kind_swipe_up">Swipe up</string>
+    <string name="multitouch_kind_swipe_down">Swipe down</string>
+    <string name="multitouch_kind_swipe_left">Swipe left</string>
+    <string name="multitouch_kind_swipe_right">Swipe right</string>
+    <string name="multitouch_kind_rotate_clockwise">Rotate clockwise</string>
+    <string name="multitouch_kind_rotate_counter_clockwise">Rotate counter-clockwise</string>
+    <string name="multitouch_kind_swipe_up_left">Swipe up-left</string>
+    <string name="multitouch_kind_swipe_up_right">Swipe up-right</string>
+    <string name="multitouch_kind_swipe_down_left">Swipe down-left</string>
+    <string name="multitouch_kind_swipe_down_right">Swipe down-right</string>
+    <string name="multitouch_kind_tap">Tap</string>
+    <string name="multitouch_kind_double_tap">Double tap</string>
+    <string name="multitouch_kind_triple_tap">Triple tap</string>
+    <string name="multitouch_kind_long_press">Long press</string>
+    <string name="multitouch_kind_touch">Touch</string>
+    <string name="multitouch_kind_path">Draw gesture</string>
+
+    <!-- 路径手势录制页 -->
+    <string name="multitouch_record_title">Record path gesture</string>
+    <string name="multitouch_record_rerecord_title">Record again</string>
+    <string name="multitouch_record_hint">One stroke = one finger</string>
+    <string name="multitouch_record_rerecord_hint">Recording again overwrites the old strokes, the action stays</string>
+    <string name="multitouch_record_guide">Lift your finger after one stroke, then draw the next one (1–5 in total); tap “Done” when finished</string>
+    <string name="multitouch_record_drawn_count">%1$d/5 strokes drawn</string>
+    <string name="multitouch_record_clear">Redraw</string>
+    <string name="multitouch_back">Back</string>
+</resources>

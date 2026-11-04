@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
+import com.slideindex.app.R
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.gesture.ActionExecutor
 import com.slideindex.app.gesture.GestureAction
@@ -14,7 +15,6 @@ import com.slideindex.app.gesture.multitouch.PathGestureMatcher
 import com.slideindex.app.gesture.multitouch.PathGestureTemplate
 import com.slideindex.app.gesture.multitouch.PathPoint
 import com.slideindex.app.gesture.multitouch.PathStroke
-import com.slideindex.app.gesture.multitouch.displayName
 import com.slideindex.app.service.SlideIndexAccessibilityService
 import com.slideindex.app.settings.PrivilegeMode
 import com.slideindex.app.settings.SettingsRepository
@@ -24,6 +24,7 @@ import com.slideindex.app.shizuku.ITaskManagerService
 import com.slideindex.app.shizuku.ShizukuUserServiceHost
 import com.slideindex.app.privilege.root.RootTaskManagerServiceHost
 import com.slideindex.app.privilege.root.TaskManagerRpcClient
+import com.slideindex.app.ui.gestureKindLabelRes
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -161,7 +162,7 @@ class MultiTouchGestureCoordinator @Inject constructor(
         val templates = candidates.map { entry ->
             PathGestureTemplate(
                 id = entry.id,
-                name = "${entry.fingerCount} 指路径",
+                name = entry.id,
                 strokes = entry.pathStrokes,
                 action = entry.action,
             )
@@ -367,7 +368,11 @@ class MultiTouchGestureCoordinator @Inject constructor(
         runCatching { ShakeVibrationHelper.vibrate(context) }
         MultiTouchGestureFeedback.show(
             context = SlideIndexAccessibilityService.overlayHostContext() ?: context,
-            text = "$fingerCount 指 · ${kind.displayName()}",
+            text = context.getString(
+                R.string.multitouch_entry_label,
+                fingerCount,
+                context.getString(gestureKindLabelRes(kind)),
+            ),
         )
         runCatching {
             val executor = ActionExecutor(

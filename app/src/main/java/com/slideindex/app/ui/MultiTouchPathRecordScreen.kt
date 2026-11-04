@@ -32,7 +32,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.R
 import com.slideindex.app.gesture.multitouch.PathPoint
 import com.slideindex.app.gesture.multitouch.PathStroke
 import kotlin.math.hypot
@@ -85,21 +87,32 @@ fun MultiTouchPathRecordScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.multitouch_back),
+                    )
                 }
                 Text(
-                    text = if (editing) "重录手势" else "录制路径手势",
+                    text = if (editing) {
+                        stringResource(R.string.multitouch_record_rerecord_title)
+                    } else {
+                        stringResource(R.string.multitouch_record_title)
+                    },
                     style = MaterialTheme.typography.titleLarge,
                 )
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                if (editing) "重录后覆盖原轨迹，动作不变" else "一条轨迹 = 一根手指",
+                if (editing) {
+                    stringResource(R.string.multitouch_record_rerecord_hint)
+                } else {
+                    stringResource(R.string.multitouch_record_hint)
+                },
                 style = MaterialTheme.typography.titleMedium,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                "画完一条松手，可继续画下一条（1–5 条），画完点「完成」",
+                stringResource(R.string.multitouch_record_guide),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -148,7 +161,7 @@ fun MultiTouchPathRecordScreen(
             }
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                "已画 ${strokes.size}/5 条",
+                stringResource(R.string.multitouch_record_drawn_count, strokes.size),
                 style = MaterialTheme.typography.bodyMedium,
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -157,7 +170,7 @@ fun MultiTouchPathRecordScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 TextButton(
-                    text = "重画",
+                    text = stringResource(R.string.multitouch_record_clear),
                     onClick = {
                         strokes.clear()
                         strokeIndex.clear()
@@ -166,7 +179,7 @@ fun MultiTouchPathRecordScreen(
                     minHeight = 44.dp,
                 )
                 TextButton(
-                    text = "完成",
+                    text = stringResource(R.string.multitouch_done),
                     onClick = {
                         if (strokes.size >= 1) {
                             onFinish(strokes.map { points -> PathStroke(points.toList()) })

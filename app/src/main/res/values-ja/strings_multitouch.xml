@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 全局触控（独立资源文件，避免改动现有 strings.xml）。 -->
+<resources>
+    <string name="multitouch_title">グローバルタッチ</string>
+    <string name="multitouch_home_summary">画面のどこでも、1 本または複数の指でのタッチで操作を実行（root または Shizuku が必要）</string>
+
+    <!-- 设置页：说明卡片 -->
+    <string name="multitouch_tip">画面のどこからでも 1～5 本の指でジェスチャーすると、対応するアクションが実行されます。\n観察モードはタッチ画面を読み取るだけで、元のタッチを遮断しません。アクションの実行時もアプリは同じジェスチャーを受け取ります。\nShizuku は再起動後に再認証が必要です。他のタッチツールを同時に有効にすると「競合」の警告が表示されます。</string>
+
+    <!-- 设置页：开关与状态 -->
+    <string name="multitouch_enable_title">グローバルタッチを有効にする</string>
+    <string name="multitouch_enable_summary">画面のどこでも、単指／複数指のタッチアクションでカスタム操作を実行（観察モード、元のタッチは遮断しません）</string>
+    <string name="multitouch_status_title">動作状態</string>
+    <string name="multitouch_status_disabled">未有効</string>
+    <string name="multitouch_status_conflict_pill">競合</string>
+    <string name="multitouch_status_running">観察中</string>
+    <string name="multitouch_status_stopped">停止中</string>
+
+    <!-- 设置页：添加/编辑手势 -->
+    <string name="multitouch_add_title">ジェスチャーを追加</string>
+    <string name="multitouch_add_summary">ジェスチャーを記録するか、プリセットの種類を選択</string>
+    <string name="multitouch_pick_kind_title">ジェスチャーを選択</string>
+    <string name="multitouch_draw_summary">自分で 1 本の軌跡を描き、指を離してからアクションを選択</string>
+    <string name="multitouch_finger_count_title">タッチポイント</string>
+    <string name="multitouch_finger_count_summary">%1$s：ジェスチャーのタッチポイント数を選択</string>
+    <string name="multitouch_edit_title">ジェスチャーを編集</string>
+    <string name="multitouch_edit_rerecord_hint">上のプレビューをタップすると録り直せます</string>
+    <string name="multitouch_entry_label">%1$d 本の指 · %2$s</string>
+    <string name="multitouch_delete">削除</string>
+    <string name="multitouch_done">完了</string>
+    <string name="multitouch_hint">観察モードはイベントを遮断しません。ジェスチャーの実行時もアプリは同じジェスチャーを受け取ります。\nShizuku は再起動後に再認証／再起動が必要です。指の数が少ないジェスチャーはアプリ自身のジェスチャーと競合しやすくなります。</string>
+
+    <!-- 设置页：状态详情行 -->
+    <string name="multitouch_detail_disabled">スイッチがオフです</string>
+    <string name="multitouch_detail_recording">録画中（認識は一時停止）</string>
+    <string name="multitouch_channel_root">root チャネル</string>
+    <string name="multitouch_channel_shizuku">Shizuku 認証済み</string>
+    <string name="multitouch_channel_observer">観察モード</string>
+    <string name="multitouch_device_unknown">不明なデバイス</string>
+    <string name="multitouch_detail_running">デバイス %1$s · 観察モード（読み取り専用、遮断なし） · %2$s</string>
+    <string name="multitouch_detail_root_unavailable">root が利用できません。タップして再試行</string>
+    <string name="multitouch_detail_root_start_failed">root の観察を開始できませんでした。タップして再試行</string>
+    <string name="multitouch_detail_shizuku_unavailable">Shizuku が実行されていないか未認証です。タップして再試行</string>
+    <string name="multitouch_detail_service_unavailable">Shizuku サービスの起動に失敗しました。タップして再試行</string>
+    <string name="multitouch_detail_device_unavailable">読み取り可能なタッチデバイスがありません。タップして再試行</string>
+    <string name="multitouch_detail_not_running">停止中（%1$s）。タップして再試行</string>
+    <string name="multitouch_detail_conflict">\n⚠ 競合：%1$s（同時に有効にすると二重に実行されます。相手がタッチ画面を占有している場合、この機能にはイベントが届きません）</string>
+
+    <!-- 手势类型名（core 层只保留枚举，文案在这里） -->
+    <string name="multitouch_kind_pinch">ピンチ</string>
+    <string name="multitouch_kind_spread">スプレッド</string>
+    <string name="multitouch_kind_swipe_up">上スワイプ</string>
+    <string name="multitouch_kind_swipe_down">下スワイプ</string>
+    <string name="multitouch_kind_swipe_left">左スワイプ</string>
+    <string name="multitouch_kind_swipe_right">右スワイプ</string>
+    <string name="multitouch_kind_rotate_clockwise">時計回りに回転</string>
+    <string name="multitouch_kind_rotate_counter_clockwise">反時計回りに回転</string>
+    <string name="multitouch_kind_swipe_up_left">左上スワイプ</string>
+    <string name="multitouch_kind_swipe_up_right">右上スワイプ</string>
+    <string name="multitouch_kind_swipe_down_left">左下スワイプ</string>
+    <string name="multitouch_kind_swipe_down_right">右下スワイプ</string>
+    <string name="multitouch_kind_tap">タップ</string>
+    <string name="multitouch_kind_double_tap">ダブルタップ</string>
+    <string name="multitouch_kind_triple_tap">トリプルタップ</string>
+    <string name="multitouch_kind_long_press">長押し</string>
+    <string name="multitouch_kind_touch">タッチ</string>
+    <string name="multitouch_kind_path">軌跡を描く</string>
+
+    <!-- 路径手势录制页 -->
+    <string name="multitouch_record_title">パスジェスチャーを録画</string>
+    <string name="multitouch_record_rerecord_title">録り直す</string>
+    <string name="multitouch_record_hint">1 本の軌跡 = 1 本の指</string>
+    <string name="multitouch_record_rerecord_hint">録り直すと元の軌跡は上書きされ、アクションは変わりません</string>
+    <string name="multitouch_record_guide">1 本描いたら指を離し、続けて次を描けます（1～5 本）。描き終えたら「完了」をタップ</string>
+    <string name="multitouch_record_drawn_count">%1$d/5 本描画済み</string>
+    <string name="multitouch_record_clear">描き直す</string>
+    <string name="multitouch_back">戻る</string>
+</resources>

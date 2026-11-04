@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 全局触控（独立资源文件，避免改动现有 strings.xml）。 -->
+<resources>
+    <string name="multitouch_title">اللمس العام</string>
+    <string name="multitouch_home_summary">نفّذ إجراءات بلمسات إصبع واحد أو أكثر في أي مكان على الشاشة (يتطلب root أو Shizuku)</string>
+
+    <!-- 设置页：说明卡片 -->
+    <string name="multitouch_tip">ارسم إيماءة بإصبع واحد إلى خمسة أصابع في أي مكان على الشاشة لتنفيذ الإجراء المطابق.\nيقرأ وضع المراقبة شاشة اللمس فقط ولا يعترض اللمس الأصلي: سيظل التطبيق يتلقى الإيماءة نفسها عند تنفيذ الإجراء.\nيلزم إعادة تفويض Shizuku بعد إعادة التشغيل، وعند تفعيل أداة لمس أخرى في الوقت نفسه تظهر رسالة «تعارض».</string>
+
+    <!-- 设置页：开关与状态 -->
+    <string name="multitouch_enable_title">تفعيل اللمس العام</string>
+    <string name="multitouch_enable_summary">نفّذ إجراءات مخصصة بإيماءات إصبع واحد أو عدة أصابع في أي مكان على الشاشة (وضع المراقبة، دون اعتراض اللمس الأصلي)</string>
+    <string name="multitouch_status_title">حالة التشغيل</string>
+    <string name="multitouch_status_disabled">غير مفعّل</string>
+    <string name="multitouch_status_conflict_pill">تعارض</string>
+    <string name="multitouch_status_running">قيد المراقبة</string>
+    <string name="multitouch_status_stopped">غير مشغّل</string>
+
+    <!-- 设置页：添加/编辑手势 -->
+    <string name="multitouch_add_title">إضافة إيماءة</string>
+    <string name="multitouch_add_summary">سجّل إيماءة أو اختر نوعًا جاهزًا</string>
+    <string name="multitouch_pick_kind_title">اختيار الإيماءة</string>
+    <string name="multitouch_draw_summary">ارسم مسارًا واحدًا بنفسك، ثم ارفع إصبعك واختر الإجراء</string>
+    <string name="multitouch_finger_count_title">نقاط اللمس</string>
+    <string name="multitouch_finger_count_summary">%1$s: اختر عدد نقاط اللمس للإيماءة</string>
+    <string name="multitouch_edit_title">تعديل الإيماءة</string>
+    <string name="multitouch_edit_rerecord_hint">اضغط على المعاينة أعلاه لإعادة تسجيل الإيماءة</string>
+    <string name="multitouch_entry_label">%1$d أصابع · %2$s</string>
+    <string name="multitouch_delete">حذف</string>
+    <string name="multitouch_done">تم</string>
+    <string name="multitouch_hint">لا يعترض وضع المراقبة الأحداث: سيظل التطبيق يتلقى الإيماءة نفسها عند تنفيذها.\nيلزم إعادة تفويض Shizuku وتشغيله بعد إعادة التشغيل؛ الإيماءات بعدد أصابع قليل تتعارض عادةً مع إيماءات التطبيق نفسه.</string>
+
+    <!-- 设置页：状态详情行 -->
+    <string name="multitouch_detail_disabled">المفتاح مغلق</string>
+    <string name="multitouch_detail_recording">جارٍ التسجيل (التعرّف متوقف مؤقتًا)</string>
+    <string name="multitouch_channel_root">قناة root</string>
+    <string name="multitouch_channel_shizuku">Shizuku مفوَّض</string>
+    <string name="multitouch_channel_observer">وضع المراقبة</string>
+    <string name="multitouch_device_unknown">جهاز غير معروف</string>
+    <string name="multitouch_detail_running">الجهاز %1$s · وضع المراقبة (قراءة فقط، دون اعتراض) · %2$s</string>
+    <string name="multitouch_detail_root_unavailable">root غير متاح، اضغط لإعادة المحاولة</string>
+    <string name="multitouch_detail_root_start_failed">فشل بدء المراقبة عبر root، اضغط لإعادة المحاولة</string>
+    <string name="multitouch_detail_shizuku_unavailable">Shizuku غير مشغّل أو غير مفوَّض، اضغط لإعادة المحاولة</string>
+    <string name="multitouch_detail_service_unavailable">فشل بدء خدمة Shizuku، اضغط لإعادة المحاولة</string>
+    <string name="multitouch_detail_device_unavailable">لا يوجد جهاز لمس قابل للقراءة، اضغط لإعادة المحاولة</string>
+    <string name="multitouch_detail_not_running">غير مشغّل (%1$s)، اضغط لإعادة المحاولة</string>
+    <string name="multitouch_detail_conflict">\n⚠ تعارض: %1$s (التفعيل معًا يسبب تنفيذًا مزدوجًا؛ وإذا كان يستحوذ على شاشة اللمس فلن تتلقى هذه الميزة أي أحداث)</string>
+
+    <!-- 手势类型名（core 层只保留枚举，文案在这里） -->
+    <string name="multitouch_kind_pinch">قرصة</string>
+    <string name="multitouch_kind_spread">تفريج</string>
+    <string name="multitouch_kind_swipe_up">تمرير لأعلى</string>
+    <string name="multitouch_kind_swipe_down">تمرير لأسفل</string>
+    <string name="multitouch_kind_swipe_left">تمرير لليسار</string>
+    <string name="multitouch_kind_swipe_right">تمرير لليمين</string>
+    <string name="multitouch_kind_rotate_clockwise">تدوير باتجاه عقارب الساعة</string>
+    <string name="multitouch_kind_rotate_counter_clockwise">تدوير عكس عقارب الساعة</string>
+    <string name="multitouch_kind_swipe_up_left">تمرير لأعلى-يسار</string>
+    <string name="multitouch_kind_swipe_up_right">تمرير لأعلى-يمين</string>
+    <string name="multitouch_kind_swipe_down_left">تمرير لأسفل-يسار</string>
+    <string name="multitouch_kind_swipe_down_right">تمرير لأسفل-يمين</string>
+    <string name="multitouch_kind_tap">نقرة</string>
+    <string name="multitouch_kind_double_tap">نقرتان</string>
+    <string name="multitouch_kind_triple_tap">ثلاث نقرات</string>
+    <string name="multitouch_kind_long_press">ضغط مطوّل</string>
+    <string name="multitouch_kind_touch">لمس</string>
+    <string name="multitouch_kind_path">رسم إيماءة</string>
+
+    <!-- 路径手势录制页 -->
+    <string name="multitouch_record_title">تسجيل إيماءة المسار</string>
+    <string name="multitouch_record_rerecord_title">إعادة التسجيل</string>
+    <string name="multitouch_record_hint">مسار واحد = إصبع واحد</string>
+    <string name="multitouch_record_rerecord_hint">إعادة التسجيل تستبدل المسارات السابقة ويبقى الإجراء كما هو</string>
+    <string name="multitouch_record_guide">ارفع إصبعك بعد رسم مسار واحد ثم ارسم التالي (من 1 إلى 5)، وعند الانتهاء اضغط «تم»</string>
+    <string name="multitouch_record_drawn_count">تم رسم %1$d/5</string>
+    <string name="multitouch_record_clear">إعادة الرسم</string>
+    <string name="multitouch_back">رجوع</string>
+</resources>

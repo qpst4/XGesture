@@ -40,13 +40,13 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
 import com.slideindex.app.gesture.multitouch.MultiTouchGestureEntry
-import com.slideindex.app.gesture.multitouch.displayName
 import com.slideindex.app.multitouch.MultiTouchGestureSettings
 import com.slideindex.app.multitouch.MultiTouchStatus
 import com.slideindex.app.multitouch.encodePathStrokes
@@ -96,12 +96,16 @@ fun MultiTouchGestureSettingsScreen(
     var pendingKind by remember { mutableStateOf<MultiPointerGesture?>(null) }
     var editingEntry by remember { mutableStateOf<MultiTouchGestureEntry?>(null) }
 
-    SettingsScreenScaffold(title = "全局触控", onBack = onBack) {
+    // SettingsScreenScaffold 的 content 是 LazyListScope 扩展，不是 @Composable 上下文，
+    // 所以标题/说明/底部提示的文案要先在这里取出来。
+    val screenTitle = stringResource(R.string.multitouch_title)
+    val tipText = stringResource(R.string.multitouch_tip)
+    val bottomHint = stringResource(R.string.multitouch_hint)
+
+    SettingsScreenScaffold(title = screenTitle, onBack = onBack) {
         settingsLazyTipCard(
             key = "multitouch-tip",
-            text = "从屏幕任意位置用 1–5 指做手势即可触发对应动作。\n" +
-                "观察模式只读取触摸屏、不拦截原触摸：触发动作时应用仍会收到同一手势。\n" +
-                "Shizuku 重启后需要重新授权；同时开启其它触控工具时会出现「有冲突」提示。",
+            text = tipText,
         )
         groupedCardItems(
             keyPrefix = "multitouch",
@@ -109,8 +113,8 @@ fun MultiTouchGestureSettingsScreen(
                 add(
                     settingsCardScopeItem("multitouch-enabled") {
                         SettingSwitchRow(
-                            title = "启用全局触控",
-                            subtitle = "屏幕任意位置，单指/多指触控动作触发自定义操作（观察模式，不拦截原触摸）",
+                            title = stringResource(R.string.multitouch_enable_title),
+                            subtitle = stringResource(R.string.multitouch_enable_summary),
                             checked = settings.enabled,
                             enabled = true,
                             onCheckedChange = onEnabledChange,
@@ -127,13 +131,15 @@ fun MultiTouchGestureSettingsScreen(
                             else -> StatusTone.Bad
                         }
                         val pill = when {
-                            !status.enabled -> "未启用"
-                            conflict != null -> "有冲突"
-                            status.running -> "观察中"
-                            else -> "未运行"
+                            !status.enabled -> stringResource(R.string.multitouch_status_disabled)
+                            conflict != null ->
+                                stringResource(R.string.multitouch_status_conflict_pill)
+
+                            status.running -> stringResource(R.string.multitouch_status_running)
+                            else -> stringResource(R.string.multitouch_status_stopped)
                         }
                         StatusRow(
-                            title = "运行状态",
+                            title = stringResource(R.string.multitouch_status_title),
                             pill = pill,
                             tone = tone,
                             detail = multiTouchStatusDetail(status),
@@ -145,8 +151,8 @@ fun MultiTouchGestureSettingsScreen(
                 add(
                     settingsCardScopeItem("multitouch-add") {
                         MiuixNavigationRow(
-                            title = "添加手势",
-                            summary = "记录手势，或选择预设类型",
+                            title = stringResource(R.string.multitouch_add_title),
+                            summary = stringResource(R.string.multitouch_add_summary),
                             enabled = settings.enabled,
                             onClick = { showKindPicker = true },
                         )
@@ -167,15 +173,14 @@ fun MultiTouchGestureSettingsScreen(
         )
         settingsLazyHint(
             key = "multitouch-hint",
-            text = "观察模式不会拦截事件：触发手势时应用仍会收到同一手势。" +
-                "Shizuku 重启后需要重新授权/启动；低指数量手势容易和应用自身手势冲突。",
+            text = bottomHint,
         )
     }
 
     if (showKindPicker) {
         WindowDialog(
             show = true,
-            title = "选择手势",
+            title = stringResource(R.string.multitouch_pick_kind_title),
             onDismissRequest = { showKindPicker = false },
         ) {
             Column(
@@ -185,8 +190,8 @@ fun MultiTouchGestureSettingsScreen(
                     .verticalScroll(rememberScrollState()),
             ) {
                 MiuixArrowRow(
-                    title = "绘制手势",
-                    summary = "自己画一条轨迹，松手后选择动作",
+                    title = stringResource(R.string.multitouch_kind_path),
+                    summary = stringResource(R.string.multitouch_draw_summary),
                     onClick = {
                         showKindPicker = false
                         onOpenRecorder()
@@ -209,8 +214,11 @@ fun MultiTouchGestureSettingsScreen(
     if (kind != null) {
         WindowDialog(
             show = true,
-            title = "接触点",
-            summary = "${kind.displayName()}：选择手势触摸点的数量",
+            title = stringResource(R.string.multitouch_finger_count_title),
+            summary = stringResource(
+                R.string.multitouch_finger_count_summary,
+                kind.displayName(),
+            ),
             onDismissRequest = { pendingKind = null },
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -231,7 +239,7 @@ fun MultiTouchGestureSettingsScreen(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 TextButton(
-                    text = "取消",
+                    text = stringResource(R.string.cancel),
                     onClick = { pendingKind = null },
                     modifier = Modifier.align(Alignment.End),
                 )
@@ -243,7 +251,7 @@ fun MultiTouchGestureSettingsScreen(
     if (editing != null) {
         WindowDialog(
             show = true,
-            title = "编辑手势",
+            title = stringResource(R.string.multitouch_edit_title),
             onDismissRequest = { editingEntry = null },
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -263,14 +271,18 @@ fun MultiTouchGestureSettingsScreen(
                 if (editing.isPath) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "点上方预览可重录手势",
+                        text = stringResource(R.string.multitouch_edit_rerecord_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 MiuixArrowRow(
-                    title = "${editing.fingerCount} 指 · ${editing.kind.displayName()}",
+                    title = stringResource(
+                        R.string.multitouch_entry_label,
+                        editing.fingerCount,
+                        editing.kind.displayName(),
+                    ),
                     summary = gestureActionLabel(editing.action),
                     onClick = {
                         editingEntry = null
@@ -287,7 +299,7 @@ fun MultiTouchGestureSettingsScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     TextButton(
-                        text = "删除",
+                        text = stringResource(R.string.multitouch_delete),
                         onClick = {
                             editingEntry = null
                             onRemoveEntry(editing.id)
@@ -296,7 +308,7 @@ fun MultiTouchGestureSettingsScreen(
                         minHeight = 44.dp,
                     )
                     TextButton(
-                        text = "完成",
+                        text = stringResource(R.string.multitouch_done),
                         onClick = { editingEntry = null },
                         modifier = Modifier.weight(1f),
                         minHeight = 44.dp,
@@ -325,7 +337,11 @@ private fun EntryRow(
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "${entry.fingerCount} 指 · ${entry.kind.displayName()}",
+                text = stringResource(
+                    R.string.multitouch_entry_label,
+                    entry.fingerCount,
+                    entry.kind.displayName(),
+                ),
                 style = MaterialTheme.typography.bodyLarge,
             )
             Text(
@@ -437,27 +453,42 @@ private fun FingerCell(fingers: Int, modifier: Modifier = Modifier, onClick: () 
 }
 
 /** 状态行说明：设备 / 模式 / 特权通道 / 冲突，全部收在这一行里。 */
+@Composable
 private fun multiTouchStatusDetail(status: MultiTouchStatus): String {
     val base = when {
-        !status.enabled -> "开关未打开"
-        status.detail == "recording" -> "录制中（识别已暂停）"
+        !status.enabled -> stringResource(R.string.multitouch_detail_disabled)
+        status.detail == "recording" -> stringResource(R.string.multitouch_detail_recording)
         status.running -> {
             val channel = when (status.channel) {
-                "root" -> "root 通道"
-                "shizuku" -> "Shizuku 已授权"
-                else -> "观察模式"
+                "root" -> stringResource(R.string.multitouch_channel_root)
+                "shizuku" -> stringResource(R.string.multitouch_channel_shizuku)
+                else -> stringResource(R.string.multitouch_channel_observer)
             }
-            val device = status.device.ifBlank { "未知设备" }
-            "设备 $device · 观察模式（只读，不拦截） · $channel"
+            val unknownDevice = stringResource(R.string.multitouch_device_unknown)
+            val device = status.device.ifBlank { unknownDevice }
+            stringResource(R.string.multitouch_detail_running, device, channel)
         }
-        status.detail == "root-unavailable" -> "root 不可用，点击重试"
-        status.detail == "root-start-failed" -> "root 观察启动失败，点击重试"
-        !status.shizukuAvailable -> "Shizuku 未运行或未授权，点击重试"
-        status.detail == "service-unavailable" -> "Shizuku 服务启动失败，点击重试"
-        status.detail == "device-unavailable" -> "没有可读的触摸设备，点击重试"
-        else -> "未运行（${status.detail.ifBlank { "unknown" }}），点击重试"
+        status.detail == "root-unavailable" ->
+            stringResource(R.string.multitouch_detail_root_unavailable)
+
+        status.detail == "root-start-failed" ->
+            stringResource(R.string.multitouch_detail_root_start_failed)
+
+        !status.shizukuAvailable ->
+            stringResource(R.string.multitouch_detail_shizuku_unavailable)
+
+        status.detail == "service-unavailable" ->
+            stringResource(R.string.multitouch_detail_service_unavailable)
+
+        status.detail == "device-unavailable" ->
+            stringResource(R.string.multitouch_detail_device_unavailable)
+
+        else -> stringResource(
+            R.string.multitouch_detail_not_running,
+            status.detail.ifBlank { "unknown" },
+        )
     }
     val conflict = status.conflictDevices ?: return base
     val name = if (conflict.length > 30) conflict.take(30) + "…" else conflict
-    return base + "\n⚠ 冲突：$name（同时开启会双触发；对方独占触摸屏时本功能收不到事件）"
+    return base + stringResource(R.string.multitouch_detail_conflict, name)
 }

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 全局触控（独立资源文件，避免改动现有 strings.xml）。 -->
+<resources>
+    <string name="multitouch_title">全局触控</string>
+    <string name="multitouch_home_summary">屏幕任意位置，单指/多指触控触发操作（需 root 或 Shizuku）</string>
+
+    <!-- 设置页：说明卡片 -->
+    <string name="multitouch_tip">从屏幕任意位置用 1–5 指做手势即可触发对应动作。\n观察模式只读取触摸屏、不拦截原触摸：触发动作时应用仍会收到同一手势。\nShizuku 重启后需要重新授权；同时开启其它触控工具时会出现「有冲突」提示。</string>
+
+    <!-- 设置页：开关与状态 -->
+    <string name="multitouch_enable_title">启用全局触控</string>
+    <string name="multitouch_enable_summary">屏幕任意位置，单指/多指触控动作触发自定义操作（观察模式，不拦截原触摸）</string>
+    <string name="multitouch_status_title">运行状态</string>
+    <string name="multitouch_status_disabled">未启用</string>
+    <string name="multitouch_status_conflict_pill">有冲突</string>
+    <string name="multitouch_status_running">观察中</string>
+    <string name="multitouch_status_stopped">未运行</string>
+
+    <!-- 设置页：添加/编辑手势 -->
+    <string name="multitouch_add_title">添加手势</string>
+    <string name="multitouch_add_summary">记录手势，或选择预设类型</string>
+    <string name="multitouch_pick_kind_title">选择手势</string>
+    <string name="multitouch_draw_summary">自己画一条轨迹，松手后选择动作</string>
+    <string name="multitouch_finger_count_title">接触点</string>
+    <string name="multitouch_finger_count_summary">%1$s：选择手势触摸点的数量</string>
+    <string name="multitouch_edit_title">编辑手势</string>
+    <string name="multitouch_edit_rerecord_hint">点上方预览可重录手势</string>
+    <string name="multitouch_entry_label">%1$d 指 · %2$s</string>
+    <string name="multitouch_delete">删除</string>
+    <string name="multitouch_done">完成</string>
+    <string name="multitouch_hint">观察模式不会拦截事件：触发手势时应用仍会收到同一手势。\nShizuku 重启后需要重新授权/启动；低指数量手势容易和应用自身手势冲突。</string>
+
+    <!-- 设置页：状态详情行 -->
+    <string name="multitouch_detail_disabled">开关未打开</string>
+    <string name="multitouch_detail_recording">录制中（识别已暂停）</string>
+    <string name="multitouch_channel_root">root 通道</string>
+    <string name="multitouch_channel_shizuku">Shizuku 已授权</string>
+    <string name="multitouch_channel_observer">观察模式</string>
+    <string name="multitouch_device_unknown">未知设备</string>
+    <string name="multitouch_detail_running">设备 %1$s · 观察模式（只读，不拦截） · %2$s</string>
+    <string name="multitouch_detail_root_unavailable">root 不可用，点击重试</string>
+    <string name="multitouch_detail_root_start_failed">root 观察启动失败，点击重试</string>
+    <string name="multitouch_detail_shizuku_unavailable">Shizuku 未运行或未授权，点击重试</string>
+    <string name="multitouch_detail_service_unavailable">Shizuku 服务启动失败，点击重试</string>
+    <string name="multitouch_detail_device_unavailable">没有可读的触摸设备，点击重试</string>
+    <string name="multitouch_detail_not_running">未运行（%1$s），点击重试</string>
+    <string name="multitouch_detail_conflict">\n⚠ 冲突：%1$s（同时开启会双触发；对方独占触摸屏时本功能收不到事件）</string>
+
+    <!-- 手势类型名（core 层只保留枚举，文案在这里） -->
+    <string name="multitouch_kind_pinch">捏合</string>
+    <string name="multitouch_kind_spread">张开</string>
+    <string name="multitouch_kind_swipe_up">上滑</string>
+    <string name="multitouch_kind_swipe_down">下滑</string>
+    <string name="multitouch_kind_swipe_left">左滑</string>
+    <string name="multitouch_kind_swipe_right">右滑</string>
+    <string name="multitouch_kind_rotate_clockwise">顺时针旋转</string>
+    <string name="multitouch_kind_rotate_counter_clockwise">逆时针旋转</string>
+    <string name="multitouch_kind_swipe_up_left">左上滑</string>
+    <string name="multitouch_kind_swipe_up_right">右上滑</string>
+    <string name="multitouch_kind_swipe_down_left">左下滑</string>
+    <string name="multitouch_kind_swipe_down_right">右下滑</string>
+    <string name="multitouch_kind_tap">单击</string>
+    <string name="multitouch_kind_double_tap">双击</string>
+    <string name="multitouch_kind_triple_tap">三击</string>
+    <string name="multitouch_kind_long_press">长按</string>
+    <string name="multitouch_kind_touch">触屏</string>
+    <string name="multitouch_kind_path">绘制手势</string>
+
+    <!-- 路径手势录制页 -->
+    <string name="multitouch_record_title">录制路径手势</string>
+    <string name="multitouch_record_rerecord_title">重录手势</string>
+    <string name="multitouch_record_hint">一条轨迹 = 一根手指</string>
+    <string name="multitouch_record_rerecord_hint">重录后覆盖原轨迹，动作不变</string>
+    <string name="multitouch_record_guide">画完一条松手，可继续画下一条（1–5 条），画完点「完成」</string>
+    <string name="multitouch_record_drawn_count">已画 %1$d/5 条</string>
+    <string name="multitouch_record_clear">重画</string>
+    <string name="multitouch_back">返回</string>
+</resources>

@@ -57,25 +57,3 @@ data class MultiTouchGestureEntry(
 ) {
     val isPath: Boolean get() = kind == MultiPointerGesture.PATH
 }
-
-/** 手势类型的中文名（设置页/反馈提示共用）。 */
-fun MultiPointerGesture.displayName(): String = when (this) {
-    MultiPointerGesture.PINCH -> "捏合"
-    MultiPointerGesture.SPREAD -> "张开"
-    MultiPointerGesture.SWIPE_UP -> "上滑"
-    MultiPointerGesture.SWIPE_DOWN -> "下滑"
-    MultiPointerGesture.SWIPE_LEFT -> "左滑"
-    MultiPointerGesture.SWIPE_RIGHT -> "右滑"
-    MultiPointerGesture.ROTATE_CLOCKWISE -> "顺时针旋转"
-    MultiPointerGesture.ROTATE_COUNTER_CLOCKWISE -> "逆时针旋转"
-    MultiPointerGesture.SWIPE_UP_LEFT -> "左上滑"
-    MultiPointerGesture.SWIPE_UP_RIGHT -> "右上滑"
-    MultiPointerGesture.SWIPE_DOWN_LEFT -> "左下滑"
-    MultiPointerGesture.SWIPE_DOWN_RIGHT -> "右下滑"
-    MultiPointerGesture.TAP -> "单击"
-    MultiPointerGesture.DOUBLE_TAP -> "双击"
-    MultiPointerGesture.TRIPLE_TAP -> "三击"
-    MultiPointerGesture.LONG_PRESS -> "长按"
-    MultiPointerGesture.TOUCH -> "触屏"
-    MultiPointerGesture.PATH -> "绘制手势"
-}
