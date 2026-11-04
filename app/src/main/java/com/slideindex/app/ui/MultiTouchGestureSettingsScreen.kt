@@ -41,6 +41,7 @@ import com.slideindex.app.multitouch.MultiTouchStatus
 import com.slideindex.app.multitouch.encodePathStrokes
 import com.slideindex.app.multitouch.multiTouchPresetKinds
 import com.slideindex.app.ui.miuix.MiuixArrowRow
+import com.slideindex.app.ui.miuix.MiuixArrowRow
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.MiuixNavigationRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
@@ -83,15 +84,15 @@ fun MultiTouchGestureSettingsScreen(
     var pendingKind by remember { mutableStateOf<MultiPointerGesture?>(null) }
     var editingEntry by remember { mutableStateOf<MultiTouchGestureEntry?>(null) }
 
-    SettingsScreenScaffold(title = "多指手势", onBack = onBack) {
+    SettingsScreenScaffold(title = "全局触控", onBack = onBack) {
         groupedCardItems(
             keyPrefix = "multitouch",
             items = buildList {
                 add(
                     settingsCardScopeItem("multitouch-enabled") {
                         SettingSwitchRow(
-                            title = "启用多指手势",
-                            subtitle = "通过 Shizuku 读取触摸屏，按手势条目触发动作",
+                            title = "启用全局触控",
+                            subtitle = "屏幕任意位置，单指/多指触控动作触发自定义操作（观察模式，不拦截原触摸）",
                             checked = settings.enabled,
                             enabled = true,
                             onCheckedChange = onEnabledChange,
@@ -165,23 +166,17 @@ fun MultiTouchGestureSettingsScreen(
                     .heightIn(max = 460.dp)
                     .verticalScroll(rememberScrollState()),
             ) {
-                PickerRow(
-                    label = "✏️ 记录手势",
+                MiuixArrowRow(
+                    title = "记录手势",
+                    summary = "画一条自定义轨迹",
                     onClick = {
                         showKindPicker = false
                         onOpenRecorder()
                     },
                 )
-                Spacer(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp)
-                        .height(1.dp)
-                        .background(MaterialTheme.colorScheme.outlineVariant),
-                )
                 multiTouchPresetKinds.forEach { kind ->
-                    PickerRow(
-                        label = kind.displayName(),
+                    MiuixArrowRow(
+                        title = kind.displayName(),
                         onClick = {
                             showKindPicker = false
                             pendingKind = kind
@@ -375,18 +370,6 @@ private fun gestureSymbol(kind: MultiPointerGesture): String = when (kind) {
     MultiPointerGesture.LONG_PRESS -> "✊"
     MultiPointerGesture.TOUCH -> "☝"
     MultiPointerGesture.PATH -> "✏️"
-}
-
-@Composable
-private fun PickerRow(label: String, onClick: () -> Unit) {
-    Text(
-        text = label,
-        style = MaterialTheme.typography.bodyLarge,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 12.dp),
-    )
 }
 
 @Composable

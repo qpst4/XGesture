@@ -216,8 +216,8 @@ fun ExtensionHubScreen(
                             icon = { label ->
                                 Icon(Icons.Outlined.Gesture, contentDescription = label)
                             },
-                            title = "多指手势",
-                            subtitle = "三/四指捏合、滑动、旋转（需 Shizuku）",
+                            title = "全局触控",
+                            subtitle = "屏幕任意位置，单指/多指触控触发操作（需 Shizuku）",
                             onClick = onOpenMultiTouchGesture,
                         )
                     }
