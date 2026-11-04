@@ -70,8 +70,15 @@ fun NavEntryBuilder.multiTouchNavEntries(ctx: MainNavContext, backKey: AppNavKey
             onBack = { ctx.navigateBackTo(backKey) },
             onEnabledChange = viewModel::setEnabled,
             onRetry = viewModel::retry,
-            onOpenActionPick = { kind, fingers, pending ->
-                ctx.navigate(AppNavKey.ExtensionMultiTouchActionPick(kind.ordinal, fingers, pending))
+            onOpenActionPick = { kind, fingers, pending, entryId ->
+                ctx.navigate(
+                    AppNavKey.ExtensionMultiTouchActionPick(
+                        kind.ordinal,
+                        fingers,
+                        pending,
+                        entryId = entryId,
+                    ),
+                )
             },
             onOpenRecorder = { ctx.navigate(AppNavKey.ExtensionMultiTouchPathRecord()) },
             onOpenPathEditor = { entry ->
@@ -118,7 +125,11 @@ fun NavEntryBuilder.multiTouchNavEntries(ctx: MainNavContext, backKey: AppNavKey
         val settings by viewModel.settings.collectAsStateWithLifecycle()
         val kind = MultiPointerGesture.entries.getOrNull(key.kind) ?: MultiPointerGesture.SWIPE_LEFT
         val current = settings.entries.firstOrNull {
-            it.kind == kind && it.fingerCount == key.fingerCount
+            if (key.entryId.isNotBlank()) {
+                it.id == key.entryId
+            } else {
+                it.kind == kind && it.fingerCount == key.fingerCount
+            }
         }?.action ?: GestureAction.None
         GestureActionPickerScreen(
             trigger = GestureTriggerType.SHORT_SINGLE_TAP,
@@ -126,34 +137,40 @@ fun NavEntryBuilder.multiTouchNavEntries(ctx: MainNavContext, backKey: AppNavKey
             catalogPolicy = ActionPickerCatalogPolicy.EdgeGesture,
             onDismiss = { ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture) },
             onSelect = { action ->
-                viewModel.applyEntry(kind, key.fingerCount, key.pendingStrokes, action)
+                viewModel.applyEntry(
+                    kind,
+                    key.fingerCount,
+                    key.pendingStrokes,
+                    action,
+                    entryId = key.entryId,
+                )
                 ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture)
             },
             onOpenMyShortcuts = {
                 ctx.navigate(
                     AppNavKey.ExtensionMultiTouchActionMyShortcuts(
-                        key.kind, key.fingerCount, key.pendingStrokes,
+                        key.kind, key.fingerCount, key.pendingStrokes, key.entryId,
                     ),
                 )
             },
             onOpenPresetShortcuts = {
                 ctx.navigate(
                     AppNavKey.ExtensionMultiTouchActionPresetShortcuts(
-                        key.kind, key.fingerCount, key.pendingStrokes,
+                        key.kind, key.fingerCount, key.pendingStrokes, key.entryId,
                     ),
                 )
             },
             onOpenPickApp = {
                 ctx.navigate(
                     AppNavKey.ExtensionMultiTouchActionPickApp(
-                        key.kind, key.fingerCount, key.pendingStrokes,
+                        key.kind, key.fingerCount, key.pendingStrokes, key.entryId,
                     ),
                 )
             },
             onOpenExecuteShellCommand = { command ->
                 ctx.navigate(
                     AppNavKey.ExtensionMultiTouchActionShellCommand(
-                        key.kind, key.fingerCount, key.pendingStrokes, command,
+                        key.kind, key.fingerCount, key.pendingStrokes, command, key.entryId,
                     ),
                 )
             },
@@ -167,27 +184,37 @@ fun NavEntryBuilder.multiTouchNavEntries(ctx: MainNavContext, backKey: AppNavKey
         val settings by viewModel.settings.collectAsStateWithLifecycle()
         val kind = MultiPointerGesture.entries.getOrNull(key.kind) ?: MultiPointerGesture.SWIPE_LEFT
         val current = settings.entries.firstOrNull {
-            it.kind == kind && it.fingerCount == key.fingerCount
+            if (key.entryId.isNotBlank()) {
+                it.id == key.entryId
+            } else {
+                it.kind == kind && it.fingerCount == key.fingerCount
+            }
         }?.action ?: GestureAction.None
         MyShortcutsFolderScreen(
             activityShortcuts = appSettings.activityShortcuts,
             onBack = {
                 ctx.navigateBackTo(
                     AppNavKey.ExtensionMultiTouchActionPick(
-                        key.kind, key.fingerCount, key.pendingStrokes,
+                        key.kind, key.fingerCount, key.pendingStrokes, key.entryId,
                     ),
                 )
             },
             onBrowseNewShortcut = {
                 ctx.navigate(
                     AppNavKey.ExtensionMultiTouchActionPickApp(
-                        key.kind, key.fingerCount, key.pendingStrokes,
+                        key.kind, key.fingerCount, key.pendingStrokes, key.entryId,
                     ),
                 )
             },
             currentAction = current,
             onSelectRadio = { action ->
-                viewModel.applyEntry(kind, key.fingerCount, key.pendingStrokes, action)
+                viewModel.applyEntry(
+                    kind,
+                    key.fingerCount,
+                    key.pendingStrokes,
+                    action,
+                    entryId = key.entryId,
+                )
                 ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture)
             },
         )
@@ -198,19 +225,29 @@ fun NavEntryBuilder.multiTouchNavEntries(ctx: MainNavContext, backKey: AppNavKey
         val settings by viewModel.settings.collectAsStateWithLifecycle()
         val kind = MultiPointerGesture.entries.getOrNull(key.kind) ?: MultiPointerGesture.SWIPE_LEFT
         val current = settings.entries.firstOrNull {
-            it.kind == kind && it.fingerCount == key.fingerCount
+            if (key.entryId.isNotBlank()) {
+                it.id == key.entryId
+            } else {
+                it.kind == kind && it.fingerCount == key.fingerCount
+            }
         }?.action ?: GestureAction.None
         PresetShortcutsFolderScreen(
             onBack = {
                 ctx.navigateBackTo(
                     AppNavKey.ExtensionMultiTouchActionPick(
-                        key.kind, key.fingerCount, key.pendingStrokes,
+                        key.kind, key.fingerCount, key.pendingStrokes, key.entryId,
                     ),
                 )
             },
             currentAction = current,
             onSelectRadio = { action ->
-                viewModel.applyEntry(kind, key.fingerCount, key.pendingStrokes, action)
+                viewModel.applyEntry(
+                    kind,
+                    key.fingerCount,
+                    key.pendingStrokes,
+                    action,
+                    entryId = key.entryId,
+                )
                 ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture)
             },
         )
@@ -221,14 +258,18 @@ fun NavEntryBuilder.multiTouchNavEntries(ctx: MainNavContext, backKey: AppNavKey
             onBack = {
                 ctx.navigateBackTo(
                     AppNavKey.ExtensionMultiTouchActionPick(
-                        key.kind, key.fingerCount, key.pendingStrokes,
+                        key.kind, key.fingerCount, key.pendingStrokes, key.entryId,
                     ),
                 )
             },
             onSelectApp = { app ->
                 ctx.navigate(
                     AppNavKey.ExtensionMultiTouchActionPickActivity(
-                        key.kind, key.fingerCount, key.pendingStrokes, app.packageName,
+                        key.kind,
+                        key.fingerCount,
+                        key.pendingStrokes,
+                        app.packageName,
+                        key.entryId,
                     ),
                 )
             },
@@ -250,6 +291,7 @@ fun NavEntryBuilder.multiTouchNavEntries(ctx: MainNavContext, backKey: AppNavKey
                         "${activity.packageName}/${activity.className}",
                         activity.label,
                     ),
+                    entryId = key.entryId,
                 )
                 ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture)
             },
@@ -271,6 +313,7 @@ fun NavEntryBuilder.multiTouchNavEntries(ctx: MainNavContext, backKey: AppNavKey
                     key.fingerCount,
                     key.pendingStrokes,
                     GestureAction.ExecuteShellCommand(command),
+                    entryId = key.entryId,
                 )
                 ctx.navigateBackTo(AppNavKey.ExtensionMultiTouchGesture)
             },

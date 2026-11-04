@@ -87,7 +87,7 @@ fun MultiTouchGestureSettingsScreen(
     onBack: () -> Unit,
     onEnabledChange: (Boolean) -> Unit,
     onRetry: () -> Unit,
-    onOpenActionPick: (MultiPointerGesture, Int, String) -> Unit = { _, _, _ -> },
+    onOpenActionPick: (MultiPointerGesture, Int, String, String) -> Unit = { _, _, _, _ -> },
     onOpenRecorder: () -> Unit = {},
     onOpenPathEditor: (MultiTouchGestureEntry) -> Unit = {},
     onRemoveEntry: (String) -> Unit = {},
@@ -232,7 +232,7 @@ fun MultiTouchGestureSettingsScreen(
                             modifier = Modifier.weight(1f),
                             onClick = {
                                 pendingKind = null
-                                onOpenActionPick(kind, fingers, "")
+                                onOpenActionPick(kind, fingers, "", "")
                             },
                         )
                     }
@@ -290,6 +290,7 @@ fun MultiTouchGestureSettingsScreen(
                             editing.kind,
                             editing.fingerCount,
                             encodePathStrokes(editing.pathStrokes),
+                            editing.id,
                         )
                     },
                 )

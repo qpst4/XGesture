@@ -27,18 +27,20 @@ class MultiTouchGestureViewModel @Inject constructor(
         settingsStore.setEnabled(enabled)
     }
 
-    /** 动作选择页回写：同「类型 + 接触点数」覆盖，否则新增条目。 */
+    /** 动作选择页回写：预设类型按「类型 + 接触点数」覆盖；绘制手势总是新增（带 entryId 才编辑）。 */
     fun applyEntry(
         kind: MultiPointerGesture,
         fingerCount: Int,
         pendingStrokes: String,
         action: GestureAction,
+        entryId: String = "",
     ) {
         settingsStore.applyEntry(
             kind = kind,
             fingerCount = fingerCount,
             pendingStrokes = decodePathStrokes(pendingStrokes),
             action = action,
+            entryId = entryId,
         )
     }
 

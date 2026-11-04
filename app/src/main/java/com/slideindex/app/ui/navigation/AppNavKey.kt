@@ -331,38 +331,45 @@ sealed interface AppNavKey : NavKey {
      * @param kind `MultiPointerGesture.ordinal`
      * @param fingerCount 接触点数（1–5）
      * @param pendingStrokes 路径草稿（`x,y;x,y|x,y`），`kind=PATH` 时使用
+     * @param entryId 非空表示编辑已有条目（绘制手势按 id 定位，避免覆盖同触点数的其它条目）
      */
     @Serializable data class ExtensionMultiTouchActionPick(
         val kind: Int,
         val fingerCount: Int,
         val pendingStrokes: String = "",
+        val entryId: String = "",
     ) : AppNavKey
     @Serializable data class ExtensionMultiTouchActionMyShortcuts(
         val kind: Int,
         val fingerCount: Int,
         val pendingStrokes: String = "",
+        val entryId: String = "",
     ) : AppNavKey
     @Serializable data class ExtensionMultiTouchActionPresetShortcuts(
         val kind: Int,
         val fingerCount: Int,
         val pendingStrokes: String = "",
+        val entryId: String = "",
     ) : AppNavKey
     @Serializable data class ExtensionMultiTouchActionPickApp(
         val kind: Int,
         val fingerCount: Int,
         val pendingStrokes: String = "",
+        val entryId: String = "",
     ) : AppNavKey
     @Serializable data class ExtensionMultiTouchActionPickActivity(
         val kind: Int,
         val fingerCount: Int,
         val pendingStrokes: String = "",
         val appPackageName: String = "",
+        val entryId: String = "",
     ) : AppNavKey
     @Serializable data class ExtensionMultiTouchActionShellCommand(
         val kind: Int,
         val fingerCount: Int,
         val pendingStrokes: String = "",
         val initialCommand: String = "",
+        val entryId: String = "",
     ) : AppNavKey
     // 手势宏（宏列表 / 新建-编辑 / 目标 App 选择）
     @Serializable data object MacroList : AppNavKey

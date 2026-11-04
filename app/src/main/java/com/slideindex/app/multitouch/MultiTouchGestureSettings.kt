@@ -87,20 +87,37 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         _state.value = _state.value.copy(enabled = enabled)
     }
 
-    /** 保存/更新一个条目：同「类型 + 接触点数」已存在就覆盖，否则新增。 */
+    /**
+     * 保存/更新一个条目。
+     *
+     * 预设类型按「类型 + 接触点数」唯一（重复没有意义）；绘制手势（PATH）允许同触点数多条，
+     * 只有带 [entryId] 编辑时才按 id 覆盖，否则总是新增。
+     */
     fun applyEntry(
         kind: MultiPointerGesture,
         fingerCount: Int,
         pendingStrokes: List<PathStroke>,
         action: GestureAction,
+        entryId: String = "",
     ) {
         val current = _state.value
         val strokes = if (kind == MultiPointerGesture.PATH) pendingStrokes else emptyList()
-        val existing = current.entries.firstOrNull {
-            it.kind == kind && it.fingerCount == fingerCount
+        val byId = entryId.takeIf { it.isNotBlank() }
+            ?.let { id -> current.entries.firstOrNull { it.id == id } }
+        val existing = byId ?: if (kind == MultiPointerGesture.PATH) {
+            null
+        } else {
+            current.entries.firstOrNull {
+                it.kind == kind && it.fingerCount == fingerCount
+            }
         }
         val entry = if (existing != null) {
-            existing.copy(action = action, pathStrokes = strokes)
+            existing.copy(
+                kind = kind,
+                fingerCount = fingerCount,
+                action = action,
+                pathStrokes = strokes,
+            )
         } else {
             MultiTouchGestureEntry(
                 id = "entry_${System.currentTimeMillis()}",
