@@ -603,6 +603,8 @@ data class WidgetPanelSettings(
     val widgetPanelTopFraction: Float = 0.15f,
     val widgetPanelBlurEnabled: Boolean = true,
     val widgetPanelBlurRadiusDp: Int = AppSettings.WIDGET_PANEL_BLUR_RADIUS_DEFAULT_DP,
+    /** 点击小组件后收起面板的策略：0=仅外部 Activity，1=总是，2=从不。 */
+    val widgetPanelCloseOnClickMode: Int = 0,
 )
 
 /** 验证码提取与自动填充规则。 */

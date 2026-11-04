@@ -1909,7 +1909,6 @@
     <string name="ocr_download_step_model">モデルをダウンロード中（%1$d/%2$d）…</string>
     <string name="translate_download_step_engine">翻訳エンジンをダウンロード中（%1$d/%2$d）…</string>
     <string name="translate_download_step_language">言語パックをダウンロード中（%1$d/%2$d）…</string>
-    <string name="segmentation_engine_preparing">分かち書きエンジンを準備中…</string>
     <string name="native_engine_status_manage">管理</string>
     <string name="about_section_app_info">アプリ情報</string>
     <string name="about_section_open_source">オープンソースとライセンス</string>
@@ -1937,12 +1936,11 @@
     <string name="diagnostic_report_share_subject">XGesture 診断ログ</string>
     <string name="diagnostic_report_truncation_suffix">\n\n…(内容が長いため省略)…</string>
     <string name="native_engine_packs_title">ランタイムエンジン</string>
-    <string name="native_engine_packs_subtitle">OCR、オフライン翻訳、分かち書き用ネイティブライブラリ</string>
+    <string name="native_engine_packs_subtitle">OCR・オフライン翻訳用ネイティブライブラリ</string>
     <string name="native_engine_packs_section">エンジンパック</string>
     <string name="native_engine_packs_hint">ランタイムエンジンは APK に同梱されています。このページはローカルダウンロードキャッシュの消去のみ（同梱ライブラリは削除されません）。</string>
     <string name="native_engine_pack_ocr">OCR エンジン</string>
     <string name="native_engine_pack_translate">オフライン翻訳エンジン</string>
-    <string name="native_engine_pack_segmentation">分かち書きエンジン</string>
     <string name="native_engine_pack_size">約 %1$s</string>
     <string name="native_engine_pack_installed_version">インストール済み · %1$s</string>
     <string name="native_engine_pack_latest_version">最新 · %1$s</string>
@@ -1959,7 +1957,7 @@
     <string name="native_engine_download_failed">ダウンロード失敗</string>
     <string name="native_engine_download_cancelled">キャンセルしました</string>
     <string name="extension_native_engine_packs_entry_title">ランタイムエンジン</string>
-    <string name="extension_native_engine_packs_entry_desc">OCR / オフライン翻訳 / 分かち書きネイティブ</string>
+    <string name="extension_native_engine_packs_entry_desc">OCR / オフライン翻訳ネイティブ</string>
     <string name="ocr_engine_migration_success_title">OCR エンジンを更新しました</string>
     <string name="ocr_engine_migration_success_message">このバージョンに合わせて OCR ランタイムエンジンを %1$s にアップグレードしました。認識に失敗した場合は、ランタイムエンジンから再インストールしてください。</string>
     <string name="ocr_engine_migration_download_title">OCR エンジンの更新が必要です</string>
@@ -2698,6 +2696,11 @@
     <string name="notification_history_max_count_value">件数: %1$d</string>
     <string name="widget_panel_blur">背景ぼかし</string>
     <string name="widget_panel_blur_desc">Android 12 以降でパネル背面にすりガラス効果を適用</string>
+    <string name="widget_panel_close_on_click">ウィジェットをタップしたとき</string>
+    <string name="widget_panel_close_on_click_desc">ウィジェットをタップした後にこのパネルを自動で閉じる条件</string>
+    <string name="widget_panel_close_on_click_activity">アプリを開いたときのみ閉じる</string>
+    <string name="widget_panel_close_on_click_always">常に閉じる</string>
+    <string name="widget_panel_close_on_click_never">閉じない</string>
     <string name="widget_panel_grid_section">ウィジェットレイアウト</string>
     <string name="widget_panel_opacity">パネルの不透明度</string>
     <string name="widget_panel_add_widget">ウィジェットを追加</string>
@@ -4195,6 +4198,13 @@
     <string name="shell_root_uid_warning">コマンドは root 権限 (uid=0) で実行されています。 adb モードでは uid=2000 である必要があります。 Shizuku を Root で起動した場合はワイヤレスデバッグ/adb で起動するか、 APatch で Shell の永久 Root 権限を取り消してください。</string>
     <string name="shell_no_response">Shell サービスが応答しません。Shizuku を完全に再起動し、本アプリを開き直してください。</string>
     <string name="app_carousel_cancel_hint">画面上部または下部へ移動して離すとキャンセル</string>
+    <string name="app_carousel_action_split_screen">画面分割</string>
+    <string name="app_carousel_action_floating">小ウィンドウ</string>
+    <string name="app_carousel_action_close">閉じる</string>
+    <string name="app_carousel_close_all">すべて閉じる</string>
+    <string name="app_carousel_close_all_hint">離すとすべてのアプリを閉じます</string>
+    <string name="app_carousel_cancel_down_hint">下にスワイプして閉じる</string>
+    <string name="app_carousel_cancel_overshoot_hint">離すとキャンセル</string>
     <string name="extension_about_subtitle">バージョン、更新、プライバシーポリシー</string>
     <string name="external_invocation_keyword_example">キーワード</string>
     <string name="search_panel_aggregated_image_search">画像検索を集約</string>

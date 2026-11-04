@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProviderInfo
 import android.content.Context
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 
 /**
  * Shared [AppWidgetHost] for the widget popup overlay and the settings editor.
@@ -56,17 +57,35 @@ object WidgetPopupHost {
     appWidgetHost(context).allocateAppWidgetId()
 
   fun deleteAppWidgetId(context: Context, appWidgetId: Int) {
-    cachedHostViews.remove(appWidgetId)
+    cachedHostViews.remove(appWidgetId)?.let { view ->
+      runCatching { (view.parent as? ViewGroup)?.removeView(view) }
+    }
     runCatching { appWidgetHost(context).deleteAppWidgetId(appWidgetId) }
       .onFailure { Log.w(TAG, "deleteAppWidgetId($appWidgetId) failed", it) }
   }
 
   fun obtainHostView(context: Context, appWidgetId: Int): AppWidgetHostView? {
     cachedHostViews[appWidgetId]?.let { cached ->
-      (cached.parent as? android.view.ViewGroup)?.removeView(cached)
+      (cached.parent as? ViewGroup)?.removeView(cached)
       return cached
     }
     return createView(context, appWidgetId) as? AppWidgetHostView
+  }
+
+  /**
+   * 会话级缓存清理：面板关闭、重新打开前调用。
+   *
+   * 为什么不能跨会话复用：`AppWidgetHostView` 一旦 detach，集合型小组件
+   * （日程/邮件这类 `RemoteViewsAdapter`）的行级点击绑定会失效或停在上一代
+   * RemoteViews 上——表现就是“面板里看得见内容，但点行只开 app / 点了没反应”。
+   * 每次面板会话重建宿主视图，是目前最稳的解法。
+   */
+  fun clearCachedHostViews() {
+    val views = cachedHostViews.values.toList()
+    cachedHostViews.clear()
+    views.forEach { view ->
+      runCatching { (view.parent as? ViewGroup)?.removeView(view) }
+    }
   }
 
   fun providerInfo(context: Context, appWidgetId: Int): AppWidgetProviderInfo? =
@@ -74,7 +93,11 @@ object WidgetPopupHost {
 
   fun createView(context: Context, appWidgetId: Int): View? {
     val manager = appWidgetManager(context)
-    val info = manager.getAppWidgetInfo(appWidgetId) ?: return null
+    val info = manager.getAppWidgetInfo(appWidgetId)
+    if (info == null) {
+      Log.w(TAG, "createView($appWidgetId): getAppWidgetInfo returned null")
+      return null
+    }
     val widgetHost = appWidgetHost(context)
     return runCatching { widgetHost.createView(context, appWidgetId, info) }
       .onFailure { Log.e(TAG, "createView($appWidgetId) failed", it) }

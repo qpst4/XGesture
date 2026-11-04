@@ -319,6 +319,7 @@ internal object SettingsSnapshotReader {
                 widgetPanelBlurEnabled = prefs[SettingsPreferenceKeys.WIDGET_PANEL_BLUR] ?: true,
                 widgetPanelBlurRadiusDp = prefs[SettingsPreferenceKeys.WIDGET_PANEL_BLUR_RADIUS_DP]
                     ?: AppSettings.WIDGET_PANEL_BLUR_RADIUS_DEFAULT_DP,
+                widgetPanelCloseOnClickMode = prefs[SettingsPreferenceKeys.WIDGET_PANEL_CLOSE_ON_CLICK] ?: 0,
             ),
             floatingPointer = FloatingPointerSettings(
             floatingPointerSensitivityFraction = readFloatingPointerSensitivityFraction(prefs),

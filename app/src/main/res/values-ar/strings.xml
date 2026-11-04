@@ -1906,7 +1906,6 @@
     <string name="ocr_download_step_model">جارٍ تنزيل النموذج (%1$d/%2$d)…</string>
     <string name="translate_download_step_engine">جارٍ تنزيل محرك الترجمة (%1$d/%2$d)…</string>
     <string name="translate_download_step_language">جارٍ تنزيل حزمة اللغة (%1$d/%2$d)…</string>
-    <string name="segmentation_engine_preparing">جارٍ إعداد محرك تقطيع الكلمات…</string>
     <string name="native_engine_status_manage">إدارة</string>
     <string name="about_section_app_info">معلومات التطبيق</string>
     <string name="about_section_open_source">مفتوح المصدر والتراخيص</string>
@@ -1934,12 +1933,11 @@
     <string name="diagnostic_report_share_subject">سجل تشخيص XGesture</string>
     <string name="diagnostic_report_truncation_suffix">…(تم اقتطاع المحتوى لطوله)…</string>
     <string name="native_engine_packs_title">محركات وقت التشغيل</string>
-    <string name="native_engine_packs_subtitle">المكتبات الأصلية لـ OCR، الترجمة بدون إنترنت، وتقطيع الكلمات، يتم تنزيلها حسب الطلب</string>
+    <string name="native_engine_packs_subtitle">المكتبات الأصلية لـ OCR والترجمة بدون إنترنت، يتم تنزيلها حسب الطلب</string>
     <string name="native_engine_packs_section">حزم المحركات</string>
     <string name="native_engine_packs_hint">تم تضمين محركات وقت التشغيل مع حزمة التثبيت. هذه الصفحة مخصصة فقط للمستخدمين المتقدمين لتنظيف ذاكرة الومضات للتنزيلات المحلية (لا تؤثر على المكتبات المدمجة في APK).</string>
     <string name="native_engine_pack_ocr">محرك OCR</string>
     <string name="native_engine_pack_translate">محرك الترجمة بدون إنترنت</string>
-    <string name="native_engine_pack_segmentation">محرك تقطيع الكلمات والتقاط النص</string>
     <string name="native_engine_pack_size">حوالي %1$s</string>
     <string name="native_engine_pack_installed_version">مثبت · %1$s</string>
     <string name="native_engine_pack_latest_version">الأحدث · %1$s</string>
@@ -1956,7 +1954,7 @@
     <string name="native_engine_download_failed">فشل التنزيل</string>
     <string name="native_engine_download_cancelled">تم الإلغاء</string>
     <string name="extension_native_engine_packs_entry_title">محركات وقت التشغيل</string>
-    <string name="extension_native_engine_packs_entry_desc">OCR / الترجمة بدون إنترنت / المكتبات الأصلية لتقطيع الكلمات</string>
+    <string name="extension_native_engine_packs_entry_desc">OCR / الترجمة بدون إنترنت / المكتبات الأصلية</string>
     <string name="ocr_engine_migration_success_title">تم تحديث محرك OCR</string>
     <string name="ocr_engine_migration_success_message">تم تحديث محرك OCR تلقائيًا إلى %1$s ليتوافق مع الإصدار الحالي. إذا ظهرت مشاكل في التعرف، يمكنك إعادة التثبيت من «محركات وقت التشغيل».</string>
     <string name="ocr_engine_migration_download_title">يتطلب تحديث محرك OCR</string>
@@ -2695,6 +2693,11 @@
     <string name="notification_history_max_count_value">%1$d</string>
     <string name="widget_panel_blur">ضبابية الخلفية</string>
     <string name="widget_panel_blur_desc">Android 12+ يعرض تأثير زجاجي مصنف خلف اللوحة</string>
+    <string name="widget_panel_close_on_click">بعد النقر على عنصر واجهة</string>
+    <string name="widget_panel_close_on_click_desc">متى تُغلق هذه اللوحة تلقائيًا بعد النقر على عنصر واجهة</string>
+    <string name="widget_panel_close_on_click_activity">الإغلاق فقط عند فتح تطبيق</string>
+    <string name="widget_panel_close_on_click_always">الإغلاق دائمًا</string>
+    <string name="widget_panel_close_on_click_never">عدم الإغلاق أبدًا</string>
     <string name="widget_panel_grid_section">تخطيط عناصر الواجهة</string>
     <string name="widget_panel_opacity">عتامة اللوحة</string>
     <string name="widget_panel_add_widget">إضافة عنصر واجهة</string>
@@ -4174,6 +4177,13 @@
     <string name="shell_root_uid_warning">لا يزال يتم تنفيذ الأوامر بصلاحيات root (uid=0). في وضع adb، يجب أن يعود uid إلى 2000. إذا تم تشغيل Shizuku بصلاحيات Root، يرجى استخدام طريقة التصحيح اللاسلكي/adb لتشغيل Shizuku، أو إلغاء تفويض Root الدائم لـ Shell في APatch.</string>
     <string name="shell_no_response">خدمة Shell لا تستجيب. يرجى إغلاق Shizuku وإعادة تشغيله بالكامل، ثم إعادة فتح هذا التطبيق</string>
     <string name="app_carousel_cancel_hint">اسحب بعيداً عن منطقة البطاقات وأفلت للإلغاء</string>
+    <string name="app_carousel_action_split_screen">تقسيم الشاشة</string>
+    <string name="app_carousel_action_floating">نافذة حرة</string>
+    <string name="app_carousel_action_close">إغلاق</string>
+    <string name="app_carousel_close_all">إغلاق الكل</string>
+    <string name="app_carousel_close_all_hint">أفلت لإغلاق جميع التطبيقات</string>
+    <string name="app_carousel_cancel_down_hint">اسحب لأسفل للإغلاق</string>
+    <string name="app_carousel_cancel_overshoot_hint">أفلت للإلغاء</string>
     <string name="app_carousel_settings_title">مبدل تطبيقات البطاقات</string>
     <string name="app_carousel_settings_desc">اسحب لأعلى أو لأسفل من مركز الشاشة لمسافة تتجاوز الحد المحدد ثم أفلت لإلغاء التبديل</string>
     <string name="app_carousel_cancel_distance">مسافة الإلغاء</string>

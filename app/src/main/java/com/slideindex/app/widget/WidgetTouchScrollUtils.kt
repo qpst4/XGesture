@@ -55,7 +55,9 @@ internal object WidgetTouchScrollUtils {
     val direction = if (delta < 0) 1 else -1
     var current: View? = hit
     while (current != null) {
-      if (isScrollableOrFlipperContainer(current)) {
+      // 只把「翻转类」容器当作无边界滚动（它们没有 canScrollVertically 的边界语义）；
+      // 普通列表/滚动容器必须按边界判断，否则到顶/到底也无法把滚动交还给面板。
+      if (isFlipContainer(current)) {
         return true
       }
       val canScroll = when (axis) {
@@ -67,6 +69,15 @@ internal object WidgetTouchScrollUtils {
       current = current.parent as? View
     }
     return false
+  }
+
+  /** 翻转类容器（StackView / ViewFlipper 等）没有滚动边界，只能靠类名识别。 */
+  private fun isFlipContainer(view: View): Boolean {
+    val className = view.javaClass.name
+    return className.contains("StackView") ||
+      className.contains("AdapterViewFlipper") ||
+      className.contains("ViewFlipper") ||
+      className.contains("AdapterViewAnimator")
   }
 
   fun hasScrollableOrInteractiveContentAtPoint(root: View, localX: Float, localY: Float): Boolean {

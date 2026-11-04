@@ -38,6 +38,9 @@ class ScalableFrameLayout @JvmOverloads constructor(
   private var slotHeightPx: Int = 0
   internal var renderWidthPx: Int = 0
   internal var renderHeightPx: Int = 0
+  /** 上报给 provider 的渲染尺寸（dp），= max(桌面同 span 尺寸, 面板实际槽位)。 */
+  private var renderWidthDp: Int = 0
+  private var renderHeightDp: Int = 0
   internal var scaleVal: Float = 1f
 
   private var resizing: Boolean = false
@@ -50,12 +53,26 @@ class ScalableFrameLayout @JvmOverloads constructor(
 
   private var lastAppliedWidthPx = 0
   private var lastAppliedHeightPx = 0
+  /** 已真正下发给 provider 的尺寸（dp），用于去重；未下发前保持 -1。 */
+  private var lastPushedDpWidth = -1
+  private var lastPushedDpHeight = -1
+  private var lastSlotWidthPx = 0
+  private var lastSlotHeightPx = 0
+  private var pendingOptionsPush: Runnable? = null
 
   companion object {
-    // AOSP/通用启动器标准单元格基准 (dp)
-    private const val STANDARD_CELL_WIDTH_DP = 80
-    private const val STANDARD_CELL_HEIGHT_DP = 80
+    /**
+     * 桌面单元格基准（dp）。
+     *
+     * 曾经的 80dp 在 4 列 / 400~420dp 宽的手机上偏小（桌面单格约 95~100dp），
+     * 一个 4×2 的 widget 会少报约 40dp，正好可能把 provider 挤进「紧凑版」布局——
+     * 表现为面板里点日程/便签只打开 app、不进具体页。
+     * 这里取 90dp（贴近主流桌面），并且渲染尺寸不会再小于该 span 的桌面档。
+     */
+    private const val STANDARD_CELL_WIDTH_DP = 90
+    private const val STANDARD_CELL_HEIGHT_DP = 90
     private const val CELL_GAP_DP = 8
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
   }
 
   init {
@@ -159,12 +176,13 @@ class ScalableFrameLayout @JvmOverloads constructor(
   fun resetHostSizeCache() {
     lastAppliedWidthPx = 0
     lastAppliedHeightPx = 0
+    lastPushedDpWidth = -1
+    lastPushedDpHeight = -1
   }
 
   private fun flushHostSizeToProvider(force: Boolean = false) {
     if (slotWidthPx <= 0 || slotHeightPx <= 0) return
     applyWidgetSizeToHost(force)
-    syncAppWidgetOptions()
   }
 
   private fun syncSlotAndRecalculate(widthPx: Int, heightPx: Int): Boolean {
@@ -177,7 +195,7 @@ class ScalableFrameLayout @JvmOverloads constructor(
   }
 
   /**
-   * 计算该 Span 下对应的标准桌面尺寸（完全解耦物理网格宽度，固定基准尺寸）
+   * 该 span 在桌面上的标准尺寸（dp）。
    */
   private fun spanToStandardSizeDp(spanX: Int, spanY: Int): Pair<Int, Int> {
     val wDp = spanX * STANDARD_CELL_WIDTH_DP + (spanX - 1) * CELL_GAP_DP
@@ -186,20 +204,30 @@ class ScalableFrameLayout @JvmOverloads constructor(
   }
 
   /**
-   * 重新计算虚拟渲染像素与等比缩放因子
+   * 重新计算虚拟渲染像素与等比缩放因子。
+   *
+   * 渲染尺寸 = max(桌面同 span 标准尺寸, 面板实际槽位)：
+   * - 槽位比桌面窄时，仍按桌面档渲染再缩小，避免 provider 因为“尺寸太小”给紧凑版；
+   * - 槽位更宽时按槽位走，别把内容放大到超过可用空间。
    */
   private fun recalculateRenderAndScale(slotW: Int, slotH: Int) {
     if (slotW <= 0 || slotH <= 0) {
       renderWidthPx = 0
       renderHeightPx = 0
+      renderWidthDp = 0
+      renderHeightDp = 0
       scaleVal = 1f
       return
     }
     val density = resources.displayMetrics.density
     val (standardWDp, standardHDp) = spanToStandardSizeDp(spanX, spanY)
+    val slotWDp = (slotW / density).roundToInt()
+    val slotHDp = (slotH / density).roundToInt()
+    renderWidthDp = maxOf(standardWDp, slotWDp)
+    renderHeightDp = maxOf(standardHDp, slotHDp)
 
-    renderWidthPx = (standardWDp * density).roundToInt()
-    renderHeightPx = (standardHDp * density).roundToInt()
+    renderWidthPx = (renderWidthDp * density).roundToInt()
+    renderHeightPx = (renderHeightDp * density).roundToInt()
 
     if (renderWidthPx > 0 && renderHeightPx > 0) {
       val scaleX = slotW.toFloat() / renderWidthPx.toFloat()
@@ -212,39 +240,51 @@ class ScalableFrameLayout @JvmOverloads constructor(
   }
 
   private fun slotSizeDp(): Pair<Int, Int> {
+    // 上报的就是实际渲染尺寸，保证 provider 看到的 layout 尺寸与画面一致。
+    if (renderWidthDp > 0 && renderHeightDp > 0) return renderWidthDp to renderHeightDp
     return spanToStandardSizeDp(spanX, spanY)
   }
 
   private fun applyWidgetSizeToHost(force: Boolean = false) {
     val child = if (isNotEmpty()) getChildAt(0) as? AppWidgetHostView else null
     if (child == null || slotWidthPx <= 0 || slotHeightPx <= 0) return
-    if (!force &&
-      slotWidthPx == lastAppliedWidthPx &&
-      slotHeightPx == lastAppliedHeightPx
-    ) {
-      return
-    }
-    lastAppliedWidthPx = slotWidthPx
-    lastAppliedHeightPx = slotHeightPx
-
-    // 向系统报告标准 dp 尺寸，让第三方小组件按标准桌面模式排版
     val (widthDp, heightDp) = slotSizeDp()
-    val sizeF = SizeF(widthDp.toFloat(), heightDp.toFloat())
-    val options = Bundle().apply {
-      putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, widthDp)
-      putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, heightDp)
-      putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, widthDp)
-      putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, heightDp)
-      putParcelableArrayList(
-        AppWidgetManager.OPTION_APPWIDGET_SIZES,
-        arrayListOf(sizeF),
-      )
-    }
-    child.updateAppWidgetSize(
-      options,
-      listOf(sizeF),
-    )
-    child.requestLayout()
+    if (!force && widthDp == lastAppliedWidthPx && heightDp == lastAppliedHeightPx) return
+    lastAppliedWidthPx = widthDp
+    lastAppliedHeightPx = heightDp
+    // 布局期间只会被安排一次，真正下发在下一帧；避免一次布局里反复
+    // updateAppWidgetOptions（实测 3 秒能给 provider 打出上百条广播）。
+    scheduleOptionsPush(child, widthDp, heightDp)
+  }
+
+  private fun scheduleOptionsPush(child: AppWidgetHostView, widthDp: Int, heightDp: Int) {
+    pendingOptionsPush?.let { handler.removeCallbacks(it) }
+    pendingOptionsPush = Runnable {
+      pendingOptionsPush = null
+      if (child.parent == null) {
+        // 这帧里卡片已经被摘掉：把“已安排”的标记清掉，等重新挂载后再推。
+        lastAppliedWidthPx = 0
+        lastAppliedHeightPx = 0
+        return@Runnable
+      }
+      if (widthDp == lastPushedDpWidth && heightDp == lastPushedDpHeight) return@Runnable
+      lastPushedDpWidth = widthDp
+      lastPushedDpHeight = heightDp
+      val sizeF = SizeF(widthDp.toFloat(), heightDp.toFloat())
+      val options = Bundle().apply {
+        putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, widthDp)
+        putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, heightDp)
+        putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, widthDp)
+        putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, heightDp)
+        putParcelableArrayList(
+          AppWidgetManager.OPTION_APPWIDGET_SIZES,
+          arrayListOf(sizeF),
+        )
+      }
+      // updateAppWidgetSize 内部会调用 updateAppWidgetOptions，只此一次，别再重复推。
+      child.updateAppWidgetSize(options, listOf(sizeF))
+      child.requestLayout()
+    }.also { handler.post(it) }
   }
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -299,8 +339,10 @@ class ScalableFrameLayout @JvmOverloads constructor(
     child.scaleX = scaleVal
     child.scaleY = scaleVal
 
-    if (!resizing && (lastAppliedWidthPx != slotW || lastAppliedHeightPx != slotH)) {
-      flushHostSizeToProvider(force = true)
+    if (!resizing && (lastSlotWidthPx != slotW || lastSlotHeightPx != slotH)) {
+      lastSlotWidthPx = slotW
+      lastSlotHeightPx = slotH
+      flushHostSizeToProvider()
     }
   }
 
@@ -315,7 +357,7 @@ class ScalableFrameLayout @JvmOverloads constructor(
       MotionEvent.ACTION_MOVE -> {
         val dx = ev.x - interceptDownX
         val dy = ev.y - interceptDownY
-        if (!scrollingInsideWidget && (kotlin.math.abs(dx) > touchSlop || kotlin.math.abs(dy) > touchSlop)) {
+        if (!scrollingInsideWidget) {
           val hostRoot = if (isEmpty()) null else getChildAt(0)
           if (hostRoot != null) {
             val leftOffset = (width - renderWidthPx) / 2f
@@ -323,9 +365,18 @@ class ScalableFrameLayout @JvmOverloads constructor(
             val scale = if (scaleVal > 0f) scaleVal else 1f
             val hostLocalX = (interceptDownX - leftOffset) / scale
             val hostLocalY = (interceptDownY - topOffset) / scale
-            val canScrollVertically = WidgetTouchScrollUtils.canScrollAtPoint(hostRoot, hostLocalX, hostLocalY, 0, dy)
-            val canScrollHorizontally = WidgetTouchScrollUtils.canScrollAtPoint(hostRoot, hostLocalX, hostLocalY, 1, dx)
-            if (canScrollVertically || canScrollHorizontally) {
+            // 与一墨 np5 同款：按主轴判定，竖向为主才交给内层竖向滚动，
+            // 横向为主才交给内层横向滚动；斜向不再误判，其余交给面板。
+            val absDx = kotlin.math.abs(dx)
+            val absDy = kotlin.math.abs(dy)
+            val innerClaims = when {
+              absDy > touchSlop && absDy > absDx ->
+                WidgetTouchScrollUtils.canScrollAtPoint(hostRoot, hostLocalX, hostLocalY, 0, dy)
+              absDx > touchSlop && absDx > absDy ->
+                WidgetTouchScrollUtils.canScrollAtPoint(hostRoot, hostLocalX, hostLocalY, 1, dx)
+              else -> false
+            }
+            if (innerClaims) {
               scrollingInsideWidget = true
               WidgetTouchScrollUtils.requestDisallowInterceptAllParents(this, true)
             }
@@ -337,26 +388,5 @@ class ScalableFrameLayout @JvmOverloads constructor(
       }
     }
     return super.onInterceptTouchEvent(ev)
-  }
-
-  private fun syncAppWidgetOptions() {
-    if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) return
-    if (slotWidthPx <= 0 || slotHeightPx <= 0) return
-    val (widthDp, heightDp) = slotSizeDp()
-    val sizeF = SizeF(widthDp.toFloat(), heightDp.toFloat())
-    val options = Bundle().apply {
-      putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, widthDp)
-      putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, heightDp)
-      putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, widthDp)
-      putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, heightDp)
-      putParcelableArrayList(
-        AppWidgetManager.OPTION_APPWIDGET_SIZES,
-        arrayListOf(sizeF),
-      )
-    }
-    runCatching {
-      AppWidgetManager.getInstance(context.applicationContext)
-        .updateAppWidgetOptions(appWidgetId, options)
-    }
   }
 }

@@ -30,22 +30,6 @@
         "liblanguage_id_l2c_jni.so"
       ],
       "assetPaths": []
-    },
-    {
-      "id": "segmentation-engine",
-      "sizeBytes": 4141875,
-      "url": "https://github.com/qpst4/XGesture/releases/download/v1.6.0/segmentation-engine-arm64-v1.zip",
-      "mirrorUrls": [],
-      "sha256": "8d4cf26510ce0899ab2d8933c3c54e639dc805061af75c9a4d4301582c1c2b46",
-      "minAppVersionCode": 6,
-      "libraries": [
-        "libslideindex_jieba.so"
-      ],
-      "assetPaths": [
-        "dict/jieba.dict.utf8",
-        "dict/hmm_model.utf8",
-        "dict/user.dict.utf8"
-      ]
     }
   ]
 }

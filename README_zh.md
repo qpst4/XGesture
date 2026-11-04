@@ -29,7 +29,7 @@
 
 **X手势（XGesture）** 是一款面向全体 Android 12+ 全品牌设备打造的系统级全能手势与单手生产力增强工具。基于无障碍服务，深度整合 **Shizuku、原生 Root（KernelSU / Magisk / APatch）** 及可选 **LSPosed** 多重提权模式，彻底解决现代大屏手机的单手触达与操作痛点。
 
-支持通过屏幕边缘多角度多段滑动、单手悬浮指针、全能悬浮球、机身晃动、扣桌或背部敲击手势，轻松触发 **50+ 种系统动作**；深度整合 **100% 本地离线多引擎 OCR**、分词（CppJieba）与以图搜图聚合，并在任意应用之上提供高效率的悬浮启动面板、应用冻结室、OTP 验证码提取、通知管理与主流 OEM 自由小窗，全程无云端上传与商业广告，纯净隐私优先。
+支持通过屏幕边缘多角度多段滑动、单手悬浮指针、全能悬浮球、机身晃动、扣桌或背部敲击手势，轻松触发 **50+ 种系统动作**；深度整合 **100% 本地离线多引擎 OCR**、分词与以图搜图聚合，并在任意应用之上提供高效率的悬浮启动面板、应用冻结室、OTP 验证码提取、通知管理与主流 OEM 自由小窗，全程无云端上传与商业广告，纯净隐私优先。
 
 - **应用包名：** `com.slideindex.app`
 - **当前版本：** 1.55.0（versionCode 82）
@@ -49,7 +49,7 @@
 
 | 产物版本 | 适用场景 | 说明 |
 | :--- | :--- | :--- |
-| **Full 完整包** (`xgesture-*-full.apk`) | **新用户首选** | 开箱即用，已内置完整离线 OCR、Jieba 分词与离线翻译 Native 引擎 |
+| **Full 完整包** (`xgesture-*-full.apk`) | **新用户首选** | 开箱即用，已内置完整离线 OCR 与离线翻译 Native 引擎 |
 | **Lite 轻量包** (`xgesture-*-lite.apk`) | 追求小体积 / 在线热更新 | 仅保留核心手势与基础功能，体积更小，可按需在线下载扩展引擎 |
 
 > [!TIP]
@@ -86,7 +86,7 @@
 *与「悬浮指针」独立运行，集摇杆操作与屏幕取词指针于一体。*
 
 - **无障碍与本地多引擎 OCR**：优先通过无障碍节点读取文字，失败自动平滑降级至本地离线 OCR 引擎（**ML Kit / Tesseract / PaddleOCR ONNX**）。
-- **取词面板**：一键搜索、翻译、点词分词（CppJieba）、全选、去空格、复制，支持区域划词与图片分享 OCR 历史记录。
+- **取词面板**：一键搜索、翻译、点词分词、全选、去空格、复制，支持区域划词与图片分享 OCR 历史记录。
 - **文字搜索聚合**：支持自定义搜索引擎列表、网格排序、搜索历史、前缀别名与深链跳转；支持从 GestureEVO / SearchEVO 独立导入。
 - **以图搜图聚合**：区域截图后呼出多引擎搜图面板（Google、Yandex、TinEye、SauceNAO、IQDB、3D-IQDB、ASCII2D、trace.moe、AnimeTrace、Copyseeker），支持并行搜索与内置 WebView 预览。
 - **钉图暂存**：将截屏内容或图文块钉在屏幕顶层，支持双指缩放、拖拽与控制条隐藏。
@@ -264,13 +264,13 @@ Android 历史上诞生过许多极具开创性的手势与效率神器：
 
 | 层次 | 核心技术 / 依赖组件 |
 | :--- | :--- |
-| **核心语言** | Kotlin 2.4.0 + C++17（NDK / CMake） |
+| **核心语言** | Kotlin 2.4.0 |
 | **UI 体系与规范** | Miuix UI (KMP 0.9.4 / HyperOS 风格) + Jetpack Compose (BOM 2026.07.01) |
 | **色彩与动效** | MaterialKolor 5.0.0（壁纸动态取色） + Haze 1.7.2（高斯模糊） |
 | **架构与 DI** | MVVM + UDF（单向数据流） + Dagger Hilt 2.60.1 |
 | **异步与状态** | Kotlin Coroutines 1.11.0 + StateFlow / SharedFlow + DataStore Preferences 1.2.1 |
 | **OCR 与 AI** | ML Kit Text Recognition 16.0.1 + Tesseract4Android 4.9.0 + PaddleOCR (ONNX Runtime 1.28.0 + OpenCV 4.12.0) |
-| **NLP 与分词** | CppJieba（JNI Native 分词引擎） + ML Kit Translate / Language ID |
+| **NLP 与分词** | ML Kit Translate / Language ID |
 | **系统特权扩展** | Shizuku API 13.1.5 + LibSuperuser 1.1.1 + HiddenApiBypass 6.1 + LibXposed API 102.0.0 |
 | **网络与解析** | OkHttp 5.4.0 + ZXing Core 3.5.4 + kotlinx.serialization 1.11.0 + Markdown Renderer M3 |
 
@@ -305,7 +305,7 @@ Android 历史上诞生过许多极具开创性的手势与效率神器：
 ```
 
 1. **服务协调与 Overlay 渲染**：`SlideIndexAccessibilityService` 负责拦截全局手势与系统事件派发，悬浮层由 `OverlayLayout` 与各个独立的 WindowManager 统一管理。
-2. **多引擎动态加载机制**：OCR、翻译与分词引擎支持 Full 内置包与 Lite 轻量包模式，Native `.so` 与模型资源支持运行时按需提取解压。
+2. **多引擎动态加载机制**：OCR 与翻译引擎支持 Full 内置包与 Lite 轻量包模式，Native `.so` 与模型资源支持运行时按需提取解压。
 3. **系统级特权通道**：Shizuku IPC（无 Root 提权）、Root 降级执行器（LibSu）与 LSPosed 模块互补协同，实现无缝的后台剪贴板监听与进程级管控。
 
 ---
@@ -314,9 +314,8 @@ Android 历史上诞生过许多极具开创性的手势与效率神器：
 
 ```
 .
-├── app/                                 # 宿主应用：全局 DI 装配、JNI C++ 桥接与主页面
+├── app/                                 # 宿主应用：全局 DI 装配与主页面
 │   └── src/main/
-│       ├── cpp/                         # C++17 JNI 源码（CppJieba 分词桥接）
 │       └── java/com/slideindex/app/
 │           ├── activity/                # 顶层 Activity 与透明交互层
 │           ├── backtap/                 # 背面手势
@@ -357,7 +356,7 @@ Android 历史上诞生过许多极具开创性的手势与效率神器：
 ### 环境要求
 - **JDK 25**
 - **Android Studio**（建议 Ladybug 或更新版本）
-- **Android SDK**（API 37 `compileSdk`）与 **NDK 28+**
+- **Android SDK**（API 37 `compileSdk`）
 
 ### 构建命令
 ```bash

@@ -21,6 +21,7 @@ data class WidgetPanelUiState(
     val selectedPageIndex: Int = 0,
     val blurEnabled: Boolean = false,
     val blurRadiusDp: Int = 16,
+    val closeOnClickMode: Int = 0,
     val isGridInteractionActive: Boolean = false,
     val isLoading: Boolean = false,
 ) {
@@ -51,6 +52,7 @@ class WidgetPanelEditorViewModel @Inject constructor(
             selectedPageIndex = safeIndex,
             blurEnabled = currentSettings.widgetPanelBlurEnabled,
             blurRadiusDp = currentSettings.widgetPanelBlurRadiusDp,
+            closeOnClickMode = currentSettings.widgetPanelCloseOnClickMode,
             isGridInteractionActive = gridActive,
             isLoading = false,
         )
@@ -83,6 +85,12 @@ class WidgetPanelEditorViewModel @Inject constructor(
     fun setBlurRadius(radiusDp: Int) {
         launchSettingsWrite {
             settingsRepository.setWidgetPanelBlurRadiusDp(radiusDp)
+        }
+    }
+
+    fun setCloseOnClickMode(mode: Int) {
+        launchSettingsWrite {
+            settingsRepository.setWidgetPanelCloseOnClickMode(mode)
         }
     }
 }

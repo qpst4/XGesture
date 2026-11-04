@@ -187,6 +187,11 @@ internal class WidgetCanvasTouchHandler(
 
     private fun scheduleBrowseLongPress(child: WidgetCardContainer, x: Float, y: Float) {
         cancelBrowseLongPress()
+        // 点在小组件自己的可交互内容上时，不抢长按：那会把这次点击取消掉
+        // （真机表现为「按住稍久一点就点了没反应」）。空白/边框仍保留长按进编辑。
+        if (child.shouldReceiveTouchAtPoint(x - child.left - child.translationX, y - child.top - child.translationY)) {
+            return
+        }
         layout.browseTouchChild = child
         layout.browseTouchDownX = x
         layout.browseTouchDownY = y
@@ -195,6 +200,12 @@ internal class WidgetCanvasTouchHandler(
             if (!layout.browseTouchTracking || layout.editMode) return@Runnable
             val target = layout.browseTouchChild ?: return@Runnable
             if (layout.findTouchTarget(layout.browseTouchDownX, layout.browseTouchDownY) !== target) return@Runnable
+            val localX = layout.browseTouchDownX - target.left - target.translationX
+            val localY = layout.browseTouchDownY - target.top - target.translationY
+            if (target.shouldReceiveTouchAtPoint(localX, localY)) {
+                cancelBrowseLongPress()
+                return@Runnable
+            }
             layout.browseLongPressConsumed = true
             layout.browseTouchTracking = false
             val cancel = MotionEvent.obtain(0L, 0L, MotionEvent.ACTION_CANCEL, 0f, 0f, 0)
@@ -483,7 +494,8 @@ internal class WidgetCanvasTouchHandler(
         val localX = layout.panelScrollDownX - target.left - target.translationX
         val localY = layout.panelScrollDownY - target.top - target.translationY
         if (target.isTouchOnChrome(localX, localY)) return false
-        if (abs(dy) > layout.touchSlop * 2.5f) return false
+        // 只要小组件里这一方向还能滚，就一直让位；不再用「拖过 N 倍 slop 就收回」的
+        // 距离窗口（那会导致滑两下就变成面板滚动）。
         return target.canContentScrollAtPoint(localX, localY, 0, dy)
     }
 }

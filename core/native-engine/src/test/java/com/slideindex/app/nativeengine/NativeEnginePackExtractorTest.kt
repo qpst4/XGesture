@@ -24,8 +24,8 @@ class NativeEnginePackExtractorTest {
                 zipFile,
                 linkedMapOf(
                     "lib/arm64-v8a/libonnxruntime.so" to "native-bytes",
-                    "arm64-v8a/libslideindex_jieba.so" to "native-bytes-2",
-                    "assets/dict/jieba.dict.utf8" to "dict-bytes",
+                    "arm64-v8a/libsample_jni.so" to "native-bytes-2",
+                    "assets/data/sample.txt" to "data-bytes",
                 ),
             )
 
@@ -37,13 +37,13 @@ class NativeEnginePackExtractorTest {
             assertTrue("解压出的 native 库应存在：${onnx.absolutePath}", onnx.isFile)
             assertFalse("native 库必须只读，否则 Android 17 上 System.load 会被拒绝", onnx.canWrite())
 
-            val jieba = File(libDir, "libslideindex_jieba.so")
-            assertTrue(jieba.isFile)
-            assertFalse(jieba.canWrite())
+            val sampleLib = File(libDir, "libsample_jni.so")
+            assertTrue(sampleLib.isFile)
+            assertFalse(sampleLib.canWrite())
 
-            val dict = File(assetsDir, "dict/jieba.dict.utf8")
-            assertTrue(dict.isFile)
-            assertTrue("字典等数据文件不需要只读", dict.canWrite())
+            val data = File(assetsDir, "data/sample.txt")
+            assertTrue(data.isFile)
+            assertTrue("数据文件不需要只读", data.canWrite())
         } finally {
             root.makeWritableAndDelete()
         }

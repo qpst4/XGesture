@@ -199,7 +199,6 @@ private fun NativeEnginePackDownloadProgressCard(state: NativeEnginePackDownload
 private fun packTitle(packId: String): String = when (packId) {
     NativeEnginePackIds.OCR -> stringResource(R.string.native_engine_pack_ocr)
     NativeEnginePackIds.TRANSLATE -> stringResource(R.string.native_engine_pack_translate)
-    NativeEnginePackIds.SEGMENTATION -> stringResource(R.string.native_engine_pack_segmentation)
     else -> packId
 }
 

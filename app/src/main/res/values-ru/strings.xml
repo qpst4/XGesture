@@ -1124,7 +1124,6 @@
     <string name="ocr_download_step_model">Загрузка модели (%1$d/%2$d)…</string>
     <string name="translate_download_step_engine">Загрузка движка перевода (%1$d/%2$d)…</string>
     <string name="translate_download_step_language">Загрузка языкового пакета (%1$d/%2$d)…</string>
-    <string name="segmentation_engine_preparing">Подготовка движка сегментации…</string>
     <string name="native_engine_status_manage">Управлять</string>
     <string name="about_section_app_info">О приложении</string>
     <string name="about_section_open_source">Открытый исходный код и лицензии</string>
@@ -1152,12 +1151,11 @@
     <string name="diagnostic_report_share_subject">Диагностический журнал XGesture</string>
     <string name="diagnostic_report_truncation_suffix">\n\n…(усечено)…</string>
     <string name="native_engine_packs_title">Движки времени выполнения</string>
-    <string name="native_engine_packs_subtitle">Нативные библиотеки для OCR, офлайн-перевода и сегментации текста</string>
+    <string name="native_engine_packs_subtitle">Нативные библиотеки для OCR и офлайн-перевода</string>
     <string name="native_engine_packs_section">Пакеты движков</string>
     <string name="native_engine_packs_hint">Движки времени выполнения включены в APK. Эта страница только для очистки локальных кэшей загрузки (не удаляет встроенные библиотеки).</string>
     <string name="native_engine_pack_ocr">Движок OCR</string>
     <string name="native_engine_pack_translate">Офлайн-движок перевода</string>
-    <string name="native_engine_pack_segmentation">Движок сегментации</string>
     <string name="native_engine_pack_size">Около %1$s</string>
     <string name="native_engine_pack_installed_version">Установлено · %1$s</string>
     <string name="native_engine_pack_latest_version">Последняя · %1$s</string>
@@ -1174,7 +1172,7 @@
     <string name="native_engine_download_failed">Загрузка не удалась</string>
     <string name="native_engine_download_cancelled">Отменено</string>
     <string name="extension_native_engine_packs_entry_title">Движки времени выполнения</string>
-    <string name="extension_native_engine_packs_entry_desc">Нативные движки OCR / офлайн-перевода / сегментации</string>
+    <string name="extension_native_engine_packs_entry_desc">Нативные движки OCR / офлайн-перевода</string>
     <string name="ocr_engine_migration_success_title">Движок OCR обновлён</string>
     <string name="ocr_engine_migration_success_message">Приложение обновило ваш движок OCR до %1$s в соответствии с этой версией. Если распознавание не работает, переустановите его из «Движков времени выполнения».</string>
     <string name="ocr_engine_migration_download_title">Требуется обновление движка OCR</string>
@@ -3060,6 +3058,11 @@
     <string name="floating_pointer_ripple_duration_value">%1$d мс</string>
     <string name="widget_panel_blur">Размытие фона</string>
     <string name="widget_panel_blur_desc">Матовое стекло за панелью на Android 12+</string>
+    <string name="widget_panel_close_on_click">После нажатия на виджет</string>
+    <string name="widget_panel_close_on_click_desc">Когда эта панель должна закрываться после нажатия на виджет</string>
+    <string name="widget_panel_close_on_click_activity">Закрывать только при открытии приложения</string>
+    <string name="widget_panel_close_on_click_always">Всегда закрывать</string>
+    <string name="widget_panel_close_on_click_never">Никогда не закрывать</string>
     <string name="widget_panel_grid_section">Расположение виджетов</string>
     <string name="widget_panel_opacity">Прозрачность панели</string>
     <string name="widget_panel_add_widget">Добавить виджет</string>
@@ -4370,6 +4373,13 @@
 или отзовите постоянный Root для Shell в APatch.</string>
     <string name="shell_no_response">Служба Shell не отвечает. Полностью перезапустите Shizuku, затем снова откройте это приложение.</string>
     <string name="app_carousel_cancel_hint">Переместите к верхнему или нижнему краю и отпустите для отмены</string>
+    <string name="app_carousel_action_split_screen">Разделить экран</string>
+    <string name="app_carousel_action_floating">Свободное окно</string>
+    <string name="app_carousel_action_close">Закрыть</string>
+    <string name="app_carousel_close_all">Закрыть все</string>
+    <string name="app_carousel_close_all_hint">Отпустите, чтобы закрыть все приложения</string>
+    <string name="app_carousel_cancel_down_hint">Смахните вниз, чтобы закрыть панель</string>
+    <string name="app_carousel_cancel_overshoot_hint">Отпустите для отмены</string>
     <string name="extension_about_subtitle">Версия, обновления и конфиденциальность</string>
     <string name="external_invocation_keyword_example"> «ключевое слово»</string>
     <string name="search_panel_aggregated_image_search">Агрегированный поиск по изображениям</string>

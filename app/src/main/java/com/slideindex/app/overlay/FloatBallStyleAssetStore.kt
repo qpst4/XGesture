@@ -12,18 +12,33 @@ import java.io.File
  */
 internal object FloatBallStyleAssetStore {
     private const val ASSET_DIR = "float_ball_assets"
-    private const val GIF_FILE = "float_ball.gif"
-    private const val CUSTOM_IMAGE_FILE = "float_ball_custom"
+
+    // 文件名必须每次导入都唯一：换图后 URI 变了，bind key / GIF 帧缓存 / 预览 remember
+    // 才会跟着失效（FV 也是用时间戳命名，见 settings/c.java 的 float_icon_gif 导入）。
+    private const val GIF_PREFIX = "float_ball_gif_"
+    private const val CUSTOM_IMAGE_PREFIX = "float_ball_custom_"
     private const val SLIDE_PREFIX = "float_ball_slide_"
 
-    fun importGif(context: Context, sourceUri: Uri): String? =
-        importReplacing(context, sourceUri, GIF_FILE)
+    /** 旧版本固定文件名，导入时顺手清掉。 */
+    private const val LEGACY_GIF_FILE = "float_ball.gif"
+    private const val LEGACY_CUSTOM_IMAGE_PREFIX = "float_ball_custom."
 
-    fun importCustomImage(context: Context, sourceUri: Uri): String? =
-        importReplacing(
+    fun importGif(context: Context, sourceUri: Uri): String? =
+        importUnique(
             context = context,
             sourceUri = sourceUri,
-            destName = CUSTOM_IMAGE_FILE + extensionFor(context, sourceUri)
+            prefix = GIF_PREFIX,
+            suffix = ".gif",
+            legacyPrefix = LEGACY_GIF_FILE,
+        )
+
+    fun importCustomImage(context: Context, sourceUri: Uri): String? =
+        importUnique(
+            context = context,
+            sourceUri = sourceUri,
+            prefix = CUSTOM_IMAGE_PREFIX,
+            suffix = extensionFor(context, sourceUri),
+            legacyPrefix = LEGACY_CUSTOM_IMAGE_PREFIX,
         )
 
     fun importSlideshow(context: Context, sourceUris: List<Uri>): List<String> {
@@ -32,11 +47,12 @@ internal object FloatBallStyleAssetStore {
         dir.listFiles()
             ?.filter { it.name.startsWith(SLIDE_PREFIX) }
             ?.forEach { it.delete() }
+        val stamp = System.currentTimeMillis()
         return sourceUris.mapIndexedNotNull { index, uri ->
             importReplacing(
                 context = context,
                 sourceUri = uri,
-                destName = "$SLIDE_PREFIX$index${extensionFor(context, uri)}",
+                destName = "$SLIDE_PREFIX${stamp}_$index${extensionFor(context, uri)}",
                 reuseDir = dir
             )
         }
@@ -102,6 +118,37 @@ internal object FloatBallStyleAssetStore {
                 else -> context.contentResolver.openInputStream(uri)?.use { } != null
             }
         }.getOrDefault(false)
+
+    /**
+     * 导入到**唯一文件名**（前缀 + 时间戳），写完清掉同前缀 / 旧固定名的旧文件。
+     *
+     * 为什么必须唯一：`floatBallGifUri` 变了，`FloatBallIconView.buildBindKey()`、
+     * `FloatBallGifSequenceCache.Key(uri, targetPx)`、设置页预览的 `remember(uri)`
+     * 才会一起失效；否则换图后路径没变，球和预览都会继续用上一张图。
+     */
+    private fun importUnique(
+        context: Context,
+        sourceUri: Uri,
+        prefix: String,
+        suffix: String,
+        legacyPrefix: String? = null,
+    ): String? = runCatching {
+        val dir = assetDir(context)
+        dir.mkdirs()
+        val dest = File(dir, "$prefix${System.currentTimeMillis()}$suffix")
+        context.contentResolver.openInputStream(sourceUri)?.use { input ->
+            dest.outputStream().use { output -> input.copyTo(output) }
+        } ?: return@runCatching null
+        check(dest.exists() && dest.length() > 0L)
+        dir.listFiles()
+            ?.filter { file ->
+                file.name != dest.name &&
+                    (file.name.startsWith(prefix) ||
+                        (legacyPrefix != null && file.name.startsWith(legacyPrefix)))
+            }
+            ?.forEach { it.delete() }
+        dest.toUri().toString()
+    }.getOrNull()
 
     private fun importReplacing(
         context: Context,

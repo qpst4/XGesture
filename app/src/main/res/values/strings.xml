@@ -1124,7 +1124,6 @@
     <string name="ocr_download_step_model">Downloading model (%1$d/%2$d)…</string>
     <string name="translate_download_step_engine">Downloading translate engine (%1$d/%2$d)…</string>
     <string name="translate_download_step_language">Downloading language pack (%1$d/%2$d)…</string>
-    <string name="segmentation_engine_preparing">Preparing segmentation engine…</string>
     <string name="native_engine_status_manage">Manage</string>
     <string name="about_section_app_info">App info</string>
     <string name="about_section_open_source">Open source &amp; licenses</string>
@@ -1152,12 +1151,11 @@
     <string name="diagnostic_report_share_subject">XGesture diagnostic log</string>
     <string name="diagnostic_report_truncation_suffix">\n\n…(truncated)…</string>
     <string name="native_engine_packs_title">Runtime engines</string>
-    <string name="native_engine_packs_subtitle">Native libraries for OCR, offline translate, and word segmentation</string>
+    <string name="native_engine_packs_subtitle">Native libraries for OCR and offline translate</string>
     <string name="native_engine_packs_section">Engine packs</string>
     <string name="native_engine_packs_hint">Runtime engines are bundled in the APK. This page is for clearing local download caches only (does not remove bundled libraries).</string>
     <string name="native_engine_pack_ocr">OCR engine</string>
     <string name="native_engine_pack_translate">Offline translate engine</string>
-    <string name="native_engine_pack_segmentation">Segmentation engine</string>
     <string name="native_engine_pack_size">About %1$s</string>
     <string name="native_engine_pack_installed_version">Installed · %1$s</string>
     <string name="native_engine_pack_latest_version">Latest · %1$s</string>
@@ -1174,7 +1172,7 @@
     <string name="native_engine_download_failed">Download failed</string>
     <string name="native_engine_download_cancelled">Cancelled</string>
     <string name="extension_native_engine_packs_entry_title">Runtime engines</string>
-    <string name="extension_native_engine_packs_entry_desc">OCR / offline translate / segmentation natives</string>
+    <string name="extension_native_engine_packs_entry_desc">OCR / offline translate natives</string>
     <string name="ocr_engine_migration_success_title">OCR engine updated</string>
     <string name="ocr_engine_migration_success_message">The app upgraded your OCR runtime engine to %1$s to match this version. If recognition fails, reinstall it from Runtime engines.</string>
     <string name="ocr_engine_migration_download_title">OCR engine update required</string>
@@ -3060,6 +3058,11 @@
     <string name="floating_pointer_ripple_duration_value">%1$d ms</string>
     <string name="widget_panel_blur">Background blur</string>
     <string name="widget_panel_blur_desc">Frosted glass behind the panel on Android 12+</string>
+    <string name="widget_panel_close_on_click">After tapping a widget</string>
+    <string name="widget_panel_close_on_click_desc">When this widget panel should close itself after a widget tap</string>
+    <string name="widget_panel_close_on_click_activity">Close only when an app opens</string>
+    <string name="widget_panel_close_on_click_always">Always close</string>
+    <string name="widget_panel_close_on_click_never">Never close</string>
     <string name="widget_panel_grid_section">Widget layout</string>
     <string name="widget_panel_opacity">Panel opacity</string>
     <string name="widget_panel_add_widget">Add widget</string>

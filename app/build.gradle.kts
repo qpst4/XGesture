@@ -53,12 +53,6 @@ android {
         ndk {
             abiFilters += "arm64-v8a"
         }
-
-        externalNativeBuild {
-            cmake {
-                cppFlags += "-std=c++17"
-            }
-        }
     }
 
     flavorDimensions += "bundle"
@@ -69,28 +63,6 @@ android {
         create("lite") {
             dimension = "bundle"
         }
-    }
-
-    externalNativeBuild {
-        cmake {
-            path = file("src/main/cpp/CMakeLists.txt")
-        }
-    }
-
-    val defaultNdkVersion = "29.0.13599879"
-    val localPropFile = rootProject.file("local.properties")
-    val localSdkDir = if (localPropFile.exists()) {
-        val props = Properties()
-        localPropFile.inputStream().use { props.load(it) }
-        props.getProperty("sdk.dir")
-    } else {
-        System.getenv("ANDROID_SDK_ROOT") ?: System.getenv("ANDROID_HOME")
-    }
-    val localNdks = localSdkDir?.let { file(it).resolve("ndk") }?.listFiles()?.filter { it.isDirectory }?.map { it.name }
-    ndkVersion = if (localNdks != null && !localNdks.contains(defaultNdkVersion) && localNdks.isNotEmpty()) {
-        localNdks.maxOrNull() ?: defaultNdkVersion
-    } else {
-        defaultNdkVersion
     }
 
     signingConfigs {
@@ -142,10 +114,6 @@ android {
         viewBinding = true
     }
 
-    androidResources {
-        ignoreAssetsPattern += "dict:.*"
-    }
-
     bundle {
         language {
             enableSplit = false
@@ -171,7 +139,6 @@ android {
                 "**/libleptonica.so",
                 "**/libtranslate_jni.so",
                 "**/liblanguage_id_l2c_jni.so",
-                "**/libslideindex_jieba.so",
             )
         }
     }
@@ -203,7 +170,6 @@ private data class NativeEnginePackSpec(
     val taskName: String,
     val zipName: String,
     val libraries: List<String>,
-    val assetPaths: List<String> = emptyList(),
 )
 
 private val nativeEnginePackSpecs = listOf(
@@ -223,16 +189,6 @@ private val nativeEnginePackSpecs = listOf(
         libraries = listOf(
             "libtranslate_jni.so",
             "liblanguage_id_l2c_jni.so",
-        ),
-    ),
-    NativeEnginePackSpec(
-        taskName = "packageSegmentationEnginePack",
-        zipName = "segmentation-engine-arm64-v1.zip",
-        libraries = listOf("libslideindex_jieba.so"),
-        assetPaths = listOf(
-            "dict/jieba.dict.utf8",
-            "dict/hmm_model.utf8",
-            "dict/user.dict.utf8",
         ),
     ),
 )
@@ -274,9 +230,6 @@ abstract class CollectNativeEnginePackLibsTask : DefaultTask() {
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
-    @get:InputDirectory
-    abstract val cxxIntermediatesDir: DirectoryProperty
-
     @get:Input
     abstract val nativeEngineAbi: Property<String>
 
@@ -292,9 +245,6 @@ abstract class CollectNativeEnginePackLibsTask : DefaultTask() {
                 extractArm64LibsFromAar(artifact, abi, destination)
             }
         }
-        val jieba = findLatestJiebaLib(cxxIntermediatesDir.get().asFile, abi)
-            ?: error("libslideindex_jieba.so not found; run CMake release build first")
-        jieba.copyTo(destination.resolve("libslideindex_jieba.so"), overwrite = true)
     }
 
     private fun extractArm64LibsFromAar(aar: File, abi: String, destination: File) {
@@ -310,28 +260,13 @@ abstract class CollectNativeEnginePackLibsTask : DefaultTask() {
                 }
         }
     }
-
-    private fun findLatestJiebaLib(cxxDir: File, abi: String): File? {
-        if (!cxxDir.isDirectory) return null
-        val targetSuffix = "/obj/$abi/libslideindex_jieba.so"
-        return cxxDir.walkTopDown()
-            .filter { file ->
-                if (!file.isFile || file.name != "libslideindex_jieba.so") return@filter false
-                val path = file.path.replace('\\', '/')
-                path.contains("/RelWithDebInfo/") && path.endsWith(targetSuffix)
-            }
-            .maxByOrNull { it.lastModified() }
-    }
 }
 
 tasks.register<CollectNativeEnginePackLibsTask>("collectNativeEnginePackLibs") {
     group = "build"
     description = "Extract arm64 native libraries from dependency AARs for engine packs."
-    dependsOn("buildCMakeRelWithDebInfo[$NATIVE_ENGINE_ABI]")
-    mustRunAfter(tasks.matching { it.name.contains("CMakeDebug") })
     artifactFiles.from(nativeEnginePackArtifactFiles)
     outputDirectory.set(nativeEnginePackLibDir)
-    cxxIntermediatesDir.set(layout.buildDirectory.dir("intermediates/cxx"))
     nativeEngineAbi.set(NATIVE_ENGINE_ABI)
 }
 
@@ -345,13 +280,6 @@ val packTasks = nativeEnginePackSpecs.map { spec ->
         from(nativeEnginePackLibDir) {
             include(spec.libraries)
             into("lib/$NATIVE_ENGINE_ABI")
-        }
-        spec.assetPaths.forEach { assetPath ->
-            val assetFile = file("src/main/assets/$assetPath")
-            from(assetFile.parentFile) {
-                include(assetFile.name)
-                into("assets/${assetFile.parentFile.relativeTo(file("src/main/assets"))}")
-            }
         }
     }
 }
@@ -374,7 +302,7 @@ tasks.register("copyBundledNativeEnginePacks") {
     val outputDirProvider = bundledNativeEngineGeneratedAssets
     outputs.dir(outputDirProvider)
     doLast {
-        val expectedPackIds = listOf("ocr-engine", "translate-engine", "segmentation-engine")
+        val expectedPackIds = listOf("ocr-engine", "translate-engine")
         val zipPattern = Regex("""^(.+)-arm64-v(\d+)\.zip$""")
         val packsDir = packsDirProvider.get().asFile
         val zips = if (!packsDir.isDirectory) {

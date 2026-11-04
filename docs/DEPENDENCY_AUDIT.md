@@ -58,7 +58,6 @@ CI 环境：`java-version: 25`，`python-version: 3.14.7`（release 工作流）
 - catalog version: **3**
 - **ocr-engine** revision=5 url=`https://github.com/qpst4/XGesture/releases/download/v1.9.23/ocr-engine-arm64-v5.zip`
 - **translate-engine** revision=- url=`https://github.com/qpst4/XGesture/releases/download/v1.6.0/translate-engine-arm64-v1.zip`
-- **segmentation-engine** revision=- url=`https://github.com/qpst4/XGesture/releases/download/v1.6.0/segmentation-engine-arm64-v1.zip`
 
 ## 5. Maven 坐标全量（直接 + 传递，按 group:artifact 去重）
 

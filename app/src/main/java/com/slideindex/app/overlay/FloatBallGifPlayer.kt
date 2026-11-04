@@ -4,6 +4,7 @@ import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.util.Log
 
 /**
  * FV-style GIF playback: Handler tick + lightweight View invalidate.
@@ -58,8 +59,13 @@ internal class FloatBallGifPlayer(
     }
 
     fun attach(view: FloatBallGifView) {
+        if (gifView === view) return
         gifView = view
+        Log.i(TAG, "attach: view=${view.javaClass.simpleName}")
     }
+
+    /** 诊断用：播放器手里还有没有可画的 View。release() 之后会变 false。 */
+    fun hasView(): Boolean = gifView != null
 
     /**
      * 用系统动图（ImageDecoder → AnimatedImageDrawable）播放：它自己按帧推进，
@@ -121,12 +127,27 @@ internal class FloatBallGifPlayer(
         gifView?.setAnimating(false)
     }
 
+    /**
+     * 停止播放并清空画面，但**不解绑 View**。
+     *
+     * View 的生命周期由球自己（`FloatBallIconView`）持有，这里只负责停播。
+     * 以前这里会把 [gifView] 置空：切一次样式（showStaticBitmap → release）就永久丢掉
+     * 渲染面，再切回 GIF 时解码成功却一帧都画不出来（球变纯透明）。
+     * 真正要解绑只在销毁时走 [detach]。
+     */
     fun release() {
+        Log.i(TAG, "release: hasView=${gifView != null}")
         stop()
         animatedDrawable = null
         sequence = null
         gifView?.clearFrame()
+    }
+
+    /** 解绑 View（只在 View 即将销毁时调用）。之后 [setSequence] 等全部变成空操作。 */
+    fun detach() {
+        release()
         gifView = null
+        Log.i(TAG, "detach")
     }
 
     private fun showFirstFrame(seq: FloatBallGifFrameDecoder.Sequence) {
@@ -148,6 +169,7 @@ internal class FloatBallGifPlayer(
     }
 
     companion object {
+        private const val TAG = "FloatBallGifPlayer"
         internal const val STREAMING_TICK_MS = 66
 
         /** 球不可见时的探测周期；恢复可见后由下一次探测自动继续播放。 */
