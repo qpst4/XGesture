@@ -39,9 +39,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.slideindex.app.R
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
 import com.slideindex.app.gesture.multitouch.MultiTouchGestureEntry
 import com.slideindex.app.gesture.multitouch.displayName
@@ -357,17 +359,23 @@ private fun GesturePreview(entry: MultiTouchGestureEntry, modifier: Modifier) {
             }
         }
     } else {
+        val iconRes = gestureIconRes(entry.kind)
         val icon = gestureIcon(entry.kind)
         Box(modifier = modifier, contentAlignment = Alignment.Center) {
-            if (icon != null) {
-                Icon(
+            when {
+                iconRes != null -> Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp),
+                )
+                icon != null -> Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(22.dp),
                 )
-            } else {
-                Text(
+                else -> Text(
                     text = gestureSymbol(entry.kind),
                     fontSize = 20.sp,
                     color = MaterialTheme.colorScheme.primary,
@@ -377,17 +385,22 @@ private fun GesturePreview(entry: MultiTouchGestureEntry, modifier: Modifier) {
     }
 }
 
-/** 预设类型用项目图标；方向滑动保留字符箭头（不是 emoji）。 */
+/** 点按/捏合/张开用 Material Symbols 图标（用户提供）。 */
+private fun gestureIconRes(kind: MultiPointerGesture): Int? = when (kind) {
+    MultiPointerGesture.PINCH -> R.drawable.ic_gesture_pinch
+    MultiPointerGesture.SPREAD -> R.drawable.ic_gesture_spread
+    MultiPointerGesture.TAP,
+    MultiPointerGesture.TOUCH,
+    -> R.drawable.ic_gesture_touch
+    MultiPointerGesture.DOUBLE_TAP -> R.drawable.ic_gesture_double_tap
+    MultiPointerGesture.TRIPLE_TAP -> R.drawable.ic_gesture_triple_tap
+    else -> null
+}
+
+/** 其余预设类型用 Compose 图标（旋转/长按/记录手势）。 */
 private fun gestureIcon(kind: MultiPointerGesture): ImageVector? = when (kind) {
-    MultiPointerGesture.PINCH -> Icons.Outlined.ZoomOut
-    MultiPointerGesture.SPREAD -> Icons.Outlined.ZoomIn
     MultiPointerGesture.ROTATE_CLOCKWISE -> Icons.Outlined.RotateRight
     MultiPointerGesture.ROTATE_COUNTER_CLOCKWISE -> Icons.Outlined.RotateLeft
-    MultiPointerGesture.TAP,
-    MultiPointerGesture.DOUBLE_TAP,
-    MultiPointerGesture.TRIPLE_TAP,
-    MultiPointerGesture.TOUCH,
-    -> ThinActionIcons.TouchApp
     MultiPointerGesture.LONG_PRESS -> Icons.Outlined.Timer
     MultiPointerGesture.PATH -> Icons.Outlined.Draw
     else -> null
