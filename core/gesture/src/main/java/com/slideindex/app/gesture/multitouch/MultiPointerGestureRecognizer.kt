@@ -45,7 +45,8 @@ class MultiPointerGestureRecognizer(
     private val minFingerCount: Int = 1,
     private val maxFingerCount: Int = 5,
     private val swipeThreshold: Float = 0.09f,
-    private val tapSlop: Float = 0.02f,
+    /** 点击允许的位移（GMD 的 `ic0.z` 阈值约 5px，归一化后按屏幕高度折算）。 */
+    private val tapSlop: Float = 0.006f,
     private val settleMs: Long = 60L,
     private val longPressMs: Long = 550L,
     private val doubleTapMs: Long = 260L,
@@ -95,8 +96,8 @@ class MultiPointerGestureRecognizer(
     @Synchronized
     fun onFrame(pointers: List<TouchPointer>, timeMs: Long): List<RecognizedMultiPointerGesture> {
         if (pointers.isEmpty()) {
-            val results = ArrayList<RecognizedMultiPointerGesture>(1)
-            resolveTapOnLift(timeMs)?.let { results += it }
+            val results = ArrayList<RecognizedMultiPointerGesture>(2)
+            resolveTapOnLift(results, timeMs)
             resetTouch()
             return results
         }
@@ -173,6 +174,8 @@ class MultiPointerGestureRecognizer(
                 startRadius = averageRadius(ordered, centerX, centerY),
                 timeMs = timeMs,
             )
+            // 手指数量变化 = 新基准：位移重新从零算，否则第二根手指落下时会被误判成“移动过”。
+            moved = false
             // 两指先后按下：第二指加入时补一次触摸（GMD 触摸只看配置，不要求同帧按下）。
             if (!touchEmitted && ordered.size >= 2) {
                 touchEmitted = true
@@ -259,15 +262,7 @@ class MultiPointerGestureRecognizer(
 
     /** 由外部定时器调用：双击窗口结束仍未等到第二次点击 → 发出「轻点」。 */
     @Synchronized
-    fun onTick(timeMs: Long): RecognizedMultiPointerGesture? {
-        if (tapCount == 1 && pendingTapAtMs > 0 && timeMs - pendingTapAtMs >= doubleTapMs) {
-            val fingers = pendingTapFingers
-            tapCount = 0
-            pendingTapAtMs = 0
-            return RecognizedMultiPointerGesture(MultiPointerGesture.TAP, fingers)
-        }
-        return null
-    }
+    fun onTick(timeMs: Long): RecognizedMultiPointerGesture? = null
 
     @Synchronized
     fun reset() {
@@ -277,34 +272,46 @@ class MultiPointerGestureRecognizer(
         lastTapAtMs = 0
     }
 
-    private fun resolveTapOnLift(timeMs: Long): RecognizedMultiPointerGesture? {
-        // 点击判定只依赖位移/指数量，不受几何候选影响（GMD 的点击是独立路径）。
-        // 长按已经触发时不再判点击。
+    /**
+     * 抬手时产生点击候选（GMD 模型：点击是独立事件，立即发出，不等窗口）。
+     *
+     * 第一次点击发 TAP；距上次点击 [doubleTapMs] 内的第二次点击再发 DOUBLE_TAP；
+     * 第三次发 TRIPLE_TAP。协调器按条目类型匹配，不需要识别器“猜”。
+     */
+    private fun resolveTapOnLift(
+        results: MutableList<RecognizedMultiPointerGesture>,
+        timeMs: Long,
+    ) {
         if (moved ||
             maxFingers !in minFingerCount..maxFingerCount ||
             MultiPointerGesture.LONG_PRESS in triggered
         ) {
-            return null
+            return
         }
-        return when {
-            tapCount == 1 && timeMs - lastTapAtMs <= doubleTapMs -> {
-                tapCount = 2
-                pendingTapAtMs = 0
-                lastTapAtMs = timeMs
-                RecognizedMultiPointerGesture(MultiPointerGesture.DOUBLE_TAP, maxFingers)
-            }
-            tapCount == 2 && timeMs - lastTapAtMs <= doubleTapMs -> {
+        val fingers = maxFingers
+        val isSecond = tapCount == 1 && timeMs - lastTapAtMs <= doubleTapMs
+        val isThird = tapCount == 2 && timeMs - lastTapAtMs <= doubleTapMs
+        when {
+            isThird -> {
                 tapCount = 0
-                pendingTapAtMs = 0
                 lastTapAtMs = timeMs
-                RecognizedMultiPointerGesture(MultiPointerGesture.TRIPLE_TAP, maxFingers)
+                results += RecognizedMultiPointerGesture(
+                    MultiPointerGesture.TRIPLE_TAP,
+                    fingers,
+                )
+            }
+            isSecond -> {
+                tapCount = 2
+                lastTapAtMs = timeMs
+                results += RecognizedMultiPointerGesture(
+                    MultiPointerGesture.DOUBLE_TAP,
+                    fingers,
+                )
             }
             else -> {
                 tapCount = 1
-                pendingTapAtMs = timeMs
-                pendingTapFingers = maxFingers
                 lastTapAtMs = timeMs
-                null
+                results += RecognizedMultiPointerGesture(MultiPointerGesture.TAP, fingers)
             }
         }
     }
