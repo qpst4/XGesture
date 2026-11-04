@@ -1,10 +1,13 @@
 package com.slideindex.app.activity
 
+import android.content.Intent
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureShortcutPayload
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.launcher.QuickLauncherItemType
+import com.slideindex.app.overlay.TaskSwitcherMenuItem
+import com.slideindex.app.util.ShortcutKind
 
 fun ActivityShortcut.toLaunchShortcut(): GestureAction.LaunchShortcut = when (kind) {
     ActivityShortcutKind.COMPONENT ->
@@ -47,11 +50,44 @@ fun ActivityShortcut.toQuickLauncherItem(): QuickLauncherItem = when (kind) {
     }
 }
 
-fun ActivityShortcut.subtitleDetail(): String = when (kind) {
-    ActivityShortcutKind.COMPONENT -> activityClassName
-    ActivityShortcutKind.DYNAMIC -> shortcutId
-    ActivityShortcutKind.INTENT -> intentUris.firstOrNull().orEmpty()
+fun ActivityShortcut.subtitleDetail(): String = when {
+    isAppShortcut -> shortcutId
+    kind == ActivityShortcutKind.COMPONENT -> activityClassName
+    kind == ActivityShortcutKind.DYNAMIC -> shortcutId
+    else -> intentUris.firstOrNull().orEmpty()
 }
+
+/**
+ * 把「应用快捷方式」列表里的条目转成目录条目。
+ *
+ * 关键：动态/固定快捷方式要保留 [TaskSwitcherMenuItem.shortcutId]；
+ * 静态（XML）快捷方式的 id 是 `包名/类名(intents)` 拼出来的伪 id，不能当系统 ID 用，只保留 intent。
+ */
+fun TaskSwitcherMenuItem.toActivityShortcut(
+    packageName: String,
+    label: String? = null,
+): ActivityShortcut {
+    val uris = intentUris.orEmpty()
+        .filter { it.isNotBlank() }
+        .map { enrichIntentUriWithPackage(it, packageName) }
+    val keepShortcutId = (kind == ShortcutKind.DYNAMIC || kind == ShortcutKind.PINNED) &&
+        !shortcutId.isNullOrBlank()
+    return ActivityShortcut(
+        label = label?.takeIf { it.isNotBlank() } ?: this.label,
+        packageName = packageName,
+        shortcutId = if (keepShortcutId) shortcutId.orEmpty() else "",
+        intentUris = uris,
+    )
+}
+
+private fun enrichIntentUriWithPackage(intentUri: String, packageName: String): String =
+    runCatching {
+        val intent = Intent.parseUri(intentUri, Intent.URI_INTENT_SCHEME)
+        if (intent.`package`.isNullOrBlank() && intent.component == null) {
+            intent.setPackage(packageName)
+        }
+        intent.toUri(Intent.URI_INTENT_SCHEME)
+    }.getOrDefault(intentUri)
 
 fun List<ActivityShortcut>.findForLaunchShortcut(payloadKey: String): ActivityShortcut? {
     val decoded = GestureShortcutPayload.decode(payloadKey) ?: return null

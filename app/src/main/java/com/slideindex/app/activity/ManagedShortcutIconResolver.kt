@@ -83,6 +83,10 @@ object ManagedShortcutIconResolver {
                 return bitmap.toDrawable(context.resources)
             }
         }
+        // 应用快捷方式优先用系统快捷方式图标；INTENT 类型也可能带 shortcutId（启动兜底）。
+        if (shortcut.isAppShortcut) {
+            dynamicShortcutIcon(context, shortcut.packageName, shortcut.shortcutId)?.let { return it }
+        }
         return when (shortcut.kind) {
             ActivityShortcutKind.COMPONENT -> activityIcon(context, shortcut.packageName, shortcut.activityClassName)
             ActivityShortcutKind.DYNAMIC -> dynamicShortcutIcon(context, shortcut.packageName, shortcut.shortcutId)

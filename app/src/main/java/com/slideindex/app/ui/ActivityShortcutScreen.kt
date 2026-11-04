@@ -45,8 +45,6 @@ import com.slideindex.app.ui.compose.rememberAppRepository
 import com.slideindex.app.ui.miuix.CardItem
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
-import com.slideindex.app.ui.miuix.MiuixFormDialog
-import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixSettingsFab
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import com.slideindex.app.ui.miuix.groupedCardItems
@@ -76,14 +74,14 @@ fun ActivityShortcutScreen(
     onAdd: () -> Unit,
     onAddAppShortcut: () -> Unit,
     onAddShellCommand: () -> Unit,
-    onOpenPresets: () -> Unit
+    onOpenPresets: () -> Unit,
+    onEdit: (ActivityShortcut) -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val appRepository = rememberAppRepository()
     var shortcuts by remember(settings.activityShortcuts) { mutableStateOf(settings.activityShortcuts) }
     var pendingDelete by remember { mutableStateOf<ActivityShortcut?>(null) }
-    var renamingShortcut by remember { mutableStateOf<ActivityShortcut?>(null) }
     var changingIconShortcut by remember { mutableStateOf<ActivityShortcut?>(null) }
     var showAddSheet by remember { mutableStateOf(false) }
 
@@ -130,19 +128,6 @@ fun ActivityShortcutScreen(
             ShortcutIconStorage.deleteIconIfOwned(context, target.iconPath)
             persist(shortcuts.filter { it.id != target.id })
             pendingDelete = null
-        }
-    )
-
-    ActivityShortcutRenameDialog(
-        target = renamingShortcut,
-        onDismiss = { renamingShortcut = null },
-        onConfirm = { target, trimmed ->
-            persist(
-                shortcuts.map { shortcut ->
-                    if (shortcut.id == target.id) shortcut.copy(label = trimmed) else shortcut
-                }
-            )
-            renamingShortcut = null
         }
     )
 
@@ -196,7 +181,7 @@ fun ActivityShortcutScreen(
             context = context,
             shortcuts = shortcuts,
             onLaunch = ::launchShortcut,
-            onRename = { renamingShortcut = it },
+            onEdit = onEdit,
             onChangeIcon = {
                 changingIconShortcut = it
                 pickIconLauncher.launch("image/*")
@@ -326,7 +311,7 @@ private fun LazyListScope.activityShortcutMineListItems(
     context: android.content.Context,
     shortcuts: List<ActivityShortcut>,
     onLaunch: (ActivityShortcut) -> Unit,
-    onRename: (ActivityShortcut) -> Unit,
+    onEdit: (ActivityShortcut) -> Unit,
     onChangeIcon: (ActivityShortcut) -> Unit,
     onResetIcon: (ActivityShortcut) -> Unit,
     onDelete: (ActivityShortcut) -> Unit
@@ -370,7 +355,7 @@ private fun LazyListScope.activityShortcutMineListItems(
                     appLabel = appLabel,
                     exported = exported,
                     onLaunch = { onLaunch(shortcut) },
-                    onRename = { onRename(shortcut) },
+                    onEdit = { onEdit(shortcut) },
                     onChangeIcon = { onChangeIcon(shortcut) },
                     onResetIcon = { onResetIcon(shortcut) },
                     onDelete = { onDelete(shortcut) }
@@ -431,20 +416,20 @@ private fun ActivityShortcutSavedRowContent(
     appLabel: String,
     exported: Boolean,
     onLaunch: () -> Unit,
-    onRename: () -> Unit,
+    onEdit: () -> Unit,
     onChangeIcon: () -> Unit,
     onResetIcon: () -> Unit,
     onDelete: () -> Unit
 ) {
     val context = LocalContext.current
-    val renameText = stringResource(R.string.activity_shortcut_rename)
+    val editText = stringResource(R.string.activity_shortcut_edit)
     val changeIconText = stringResource(R.string.activity_shortcut_change_icon)
     val resetIconText = stringResource(R.string.activity_shortcut_reset_icon)
     val deleteText = stringResource(R.string.stash_action_delete)
     val moreMenuDesc = stringResource(R.string.notification_filter_more_menu)
     val menuEntry = DropdownEntry(
         items = buildList {
-            add(DropdownItem(text = renameText, onClick = onRename))
+            add(DropdownItem(text = editText, onClick = onEdit))
             add(DropdownItem(text = changeIconText, onClick = onChangeIcon))
             if (!shortcut.iconPath.isNullOrBlank()) {
                 add(DropdownItem(text = resetIconText, onClick = onResetIcon))
@@ -560,36 +545,6 @@ private fun ActivityShortcutDeleteDialog(
             target?.let(onConfirm)
         }
     )
-}
-
-@Composable
-private fun ActivityShortcutRenameDialog(
-    target: ActivityShortcut?,
-    onDismiss: () -> Unit,
-    onConfirm: (ActivityShortcut, String) -> Unit
-) {
-    target ?: return
-    var label by remember(target.id) { mutableStateOf(target.label) }
-    MiuixFormDialog(
-        show = true,
-        onDismissRequest = onDismiss,
-        title = stringResource(R.string.activity_shortcut_rename_title),
-        confirmEnabled = label.isNotBlank(),
-        onConfirm = {
-            val trimmed = label.trim()
-            if (trimmed.isNotBlank()) {
-                onConfirm(target, trimmed)
-            } else {
-                onDismiss()
-            }
-        }
-    ) {
-        MiuixLabeledTextField(
-            value = label,
-            onValueChange = { label = it },
-            label = stringResource(R.string.activity_shortcut_name_hint)
-        )
-    }
 }
 
 private fun resolveAppLabel(context: android.content.Context, packageName: String): String =

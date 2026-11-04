@@ -2,8 +2,11 @@ package com.slideindex.app.activity
 
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
 import android.net.Uri
+import com.slideindex.app.ui.AppIconOverride
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.UUID
 
@@ -12,6 +15,20 @@ object ShortcutIconStorage {
 
     fun saveIconFromUri(context: Context, uri: Uri): String? {
         val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: return null
+        return saveIconFromBytes(context, bytes)
+    }
+
+    /** 用应用图标做自定义图标；优先走全局图标覆盖，和列表里的应用图标保持一致。 */
+    fun saveIconFromPackage(context: Context, packageName: String): String? {
+        if (packageName.isBlank()) return null
+        val drawable = AppIconOverride.drawable(context, packageName, 128)
+            ?: runCatching { context.packageManager.getApplicationIcon(packageName) }.getOrNull()
+            ?: return null
+        val bytes = ByteArrayOutputStream().use { stream ->
+            val bitmap = drawable.toBitmap(128, 128)
+            if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)) return null
+            stream.toByteArray()
+        }
         return saveIconFromBytes(context, bytes)
     }
 

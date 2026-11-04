@@ -29,8 +29,19 @@ object ActivityShortcutLauncher {
             settings = settings,
             longPressTriggered = longPressTriggered
         )
-        ActivityShortcutKind.DYNAMIC -> launchDynamic(context, shortcut, settings, longPressTriggered)
-        ActivityShortcutKind.INTENT -> launchIntents(context, shortcut, settings, longPressTriggered)
+        ActivityShortcutKind.DYNAMIC -> launchDynamic(
+            context, shortcut, settings, longPressTriggered, showFailureToast = true,
+        )
+        ActivityShortcutKind.INTENT -> {
+            // 应用快捷方式优先按 ID 解析；失败再退回 intent URI（老数据兜底）。
+            val launchedByShortcutId = shortcut.isAppShortcut &&
+                launchDynamic(context, shortcut, settings, longPressTriggered, showFailureToast = false)
+            if (launchedByShortcutId) {
+                true
+            } else {
+                launchIntents(context, shortcut, settings, longPressTriggered)
+            }
+        }
     }
 
     fun launch(
@@ -55,7 +66,8 @@ object ActivityShortcutLauncher {
         context: Context,
         shortcut: ActivityShortcut,
         settings: AppSettings,
-        longPressTriggered: Boolean
+        longPressTriggered: Boolean,
+        showFailureToast: Boolean,
     ): Boolean {
         val item = QuickLauncherItem.dynamicShortcut(
             packageName = shortcut.packageName,
@@ -69,7 +81,7 @@ object ActivityShortcutLauncher {
             return startActivity(context, intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), settings, longPressTriggered)
         }
         val started = TaskManagerUtil.startPublishedShortcut(shortcut.packageName, shortcut.shortcutId)
-        if (!started) {
+        if (!started && showFailureToast) {
             Toast.makeText(context, R.string.float_ball_action_failed, Toast.LENGTH_SHORT).show()
         }
         return started

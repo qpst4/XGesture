@@ -1,17 +1,22 @@
 package com.slideindex.app.ui.navigation
 
+import android.widget.Toast
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
+import com.slideindex.app.R
 import com.slideindex.app.activity.ActivityShortcut
+import com.slideindex.app.activity.ActivityShortcutLauncher
 import com.slideindex.app.activity.ActivityShortcutShellIconBridge
 import com.slideindex.app.activity.activityShortcutFromQuickLauncherItem
 import com.slideindex.app.activity.findForQuickLauncherItem
 import com.slideindex.app.activity.toQuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.settings.toMinimalAppSettings
+import com.slideindex.app.ui.ActivityShortcutEditScreen
 import com.slideindex.app.ui.ActivityShortcutPresetsScreen
 import com.slideindex.app.ui.ActivityShortcutScreen
 import com.slideindex.app.ui.picker.ActivityShortcutPickActivityScreen
@@ -19,11 +24,13 @@ import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
 import com.slideindex.app.ui.picker.ActivityShortcutPickAppShortcutScreen
 import com.slideindex.app.ui.picker.ActivityShortcutPickShellScreen
 import com.slideindex.app.ui.picker.PresetShortcutsFolderScreen
+import com.slideindex.app.ui.viewmodel.ActivityShortcutPickerViewModel
 import com.slideindex.app.ui.viewmodel.ExtensionSettingsViewModel
 
 fun NavEntryBuilder.activityShortcutNavEntries(ctx: MainNavContext) {
     hiltEntry<AppNavKey.ActivityShortcuts> {
         val viewModel: ExtensionSettingsViewModel = hiltViewModel()
+        val pickerViewModel: ActivityShortcutPickerViewModel = hiltViewModel(ctx.activity)
         val gestureSettings by viewModel.gestureSettings.collectAsStateWithLifecycle()
         val settings = gestureSettings.toMinimalAppSettings()
         ActivityShortcutScreen(
@@ -34,6 +41,103 @@ fun NavEntryBuilder.activityShortcutNavEntries(ctx: MainNavContext) {
             onAddAppShortcut = { ctx.navigate(AppNavKey.ActivityShortcutPickAppShortcut) },
             onAddShellCommand = { ctx.navigate(AppNavKey.ActivityShortcutPickShell) },
             onOpenPresets = { ctx.navigate(AppNavKey.ActivityShortcutPresets) },
+            onEdit = { shortcut ->
+                pickerViewModel.consume()
+                ctx.navigate(AppNavKey.ActivityShortcutEdit(shortcut.id))
+            },
+        )
+    }
+
+    hiltEntry<AppNavKey.ActivityShortcutEdit> { key ->
+        val viewModel: ExtensionSettingsViewModel = hiltViewModel()
+        val pickerViewModel: ActivityShortcutPickerViewModel = hiltViewModel(ctx.activity)
+        val gestureSettings by viewModel.gestureSettings.collectAsStateWithLifecycle()
+        val pickerResult by pickerViewModel.result.collectAsStateWithLifecycle()
+        val settings = gestureSettings.toMinimalAppSettings()
+        val shortcut = settings.activityShortcuts.firstOrNull { it.id == key.shortcutId }
+        if (shortcut == null) {
+            LaunchedEffect(key.shortcutId) {
+                Toast.makeText(
+                    ctx.activity,
+                    R.string.activity_shortcut_entry_missing,
+                    Toast.LENGTH_SHORT,
+                ).show()
+                ctx.navigateBackTo(AppNavKey.ActivityShortcuts)
+            }
+        } else {
+            ActivityShortcutEditScreen(
+                shortcut = shortcut,
+                allShortcuts = settings.activityShortcuts,
+                pickerResult = pickerResult,
+                onPickerResultConsumed = pickerViewModel::consume,
+                onPickApp = {
+                    ctx.navigate(
+                        AppNavKey.ActivityShortcutEditPickApp(shortcutId = shortcut.id),
+                    )
+                },
+                onPickActivity = { packageName ->
+                    ctx.navigate(
+                        AppNavKey.ActivityShortcutEditPickActivity(
+                            shortcutId = shortcut.id,
+                            packageName = packageName,
+                        ),
+                    )
+                },
+                onPickIconApp = {
+                    ctx.navigate(
+                        AppNavKey.ActivityShortcutEditPickIconApp(shortcutId = shortcut.id),
+                    )
+                },
+                onTest = { ActivityShortcutLauncher.launch(ctx.activity, it, settings) },
+                onBack = {
+                    pickerViewModel.consume()
+                    ctx.navigateBackTo(AppNavKey.ActivityShortcuts)
+                },
+                onSave = { updated ->
+                    pickerViewModel.consume()
+                    viewModel.setActivityShortcuts(updated)
+                    ctx.navigateBackTo(AppNavKey.ActivityShortcuts)
+                },
+            )
+        }
+    }
+
+    hiltEntry<AppNavKey.ActivityShortcutEditPickApp> { key ->
+        val pickerViewModel: ActivityShortcutPickerViewModel = hiltViewModel(ctx.activity)
+        ActivityShortcutPickAppScreen(
+            onBack = { ctx.navigateBackTo(AppNavKey.ActivityShortcutEdit(key.shortcutId)) },
+            onSelectApp = { app ->
+                pickerViewModel.pickPackage(app.packageName)
+                ctx.navigate(
+                    AppNavKey.ActivityShortcutEditPickActivity(
+                        shortcutId = key.shortcutId,
+                        packageName = app.packageName,
+                    ),
+                )
+            },
+        )
+    }
+
+    hiltEntry<AppNavKey.ActivityShortcutEditPickActivity> { key ->
+        val pickerViewModel: ActivityShortcutPickerViewModel = hiltViewModel(ctx.activity)
+        ActivityShortcutPickActivityScreen(
+            packageName = key.packageName,
+            onBack = { ctx.navigateBackTo(AppNavKey.ActivityShortcutEdit(key.shortcutId)) },
+            onSelectActivity = { activity ->
+                pickerViewModel.pickActivity(key.packageName, activity.className)
+                ctx.navigateBackTo(AppNavKey.ActivityShortcutEdit(key.shortcutId))
+            },
+        )
+    }
+
+    hiltEntry<AppNavKey.ActivityShortcutEditPickIconApp> { key ->
+        val pickerViewModel: ActivityShortcutPickerViewModel = hiltViewModel(ctx.activity)
+        ActivityShortcutPickAppScreen(
+            onBack = { ctx.navigateBackTo(AppNavKey.ActivityShortcutEdit(key.shortcutId)) },
+            onSelectApp = { app ->
+                pickerViewModel.pickIconPackage(app.packageName)
+                ctx.navigateBackTo(AppNavKey.ActivityShortcutEdit(key.shortcutId))
+            },
         )
     }
 

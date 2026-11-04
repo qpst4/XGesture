@@ -27,6 +27,15 @@ data class ActivityShortcut(
             else -> ActivityShortcutKind.COMPONENT
         }
 
+    /**
+     * 是否为「应用快捷方式」（而不是普通 Intent 或 Shell）。
+     *
+     * 动态/固定快捷方式可能同时带 intent URI（启动兜底），所以不能只看 `kind == DYNAMIC`；
+     * Shell 也带 `shortcutId`，用 `cebianshell:` 前缀排除。
+     */
+    val isAppShortcut: Boolean
+        get() = shortcutId.isNotBlank() && !ActivityShortcutShellSupport.isShellShortcut(this)
+
     fun componentFlat(): String = "$packageName/$activityClassName"
 
     /** 与 QuickLauncher / GestureShortcut 对齐的稳定身份键。 */

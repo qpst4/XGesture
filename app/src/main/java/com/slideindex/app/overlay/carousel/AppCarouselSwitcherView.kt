@@ -191,7 +191,7 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
                 }.getOrNull()
                 if (!stats.isNullOrEmpty()) {
                     stats.asSequence()
-                        .filter { it.lastTimeUsed > 0 && it.packageName != context.packageName }
+                        .filter { it.lastTimeUsed > 0 }
                         .sortedByDescending { it.lastTimeUsed }
                         .map { it.packageName }
                         .distinct()
@@ -207,7 +207,7 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
             val taskRefs = runCatching { TaskManagerUtil.refreshRecentTasks() }.getOrNull().orEmpty()
             for (ref in taskRefs) {
                 val pkg = ref.identifier.substringBefore('/').trim()
-                if (pkg.isNotEmpty() && pkg != context.packageName && pm.getLaunchIntentForPackage(pkg) != null) {
+                if (pkg.isNotEmpty() && pm.getLaunchIntentForPackage(pkg) != null) {
                     recentPackages.add(pkg)
                     if (recentPackages.size >= 8) break
                 }
@@ -222,7 +222,7 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
             val resolveInfos = pm.queryIntentActivities(mainIntent, 0)
             for (info in resolveInfos) {
                 val pkg = info.activityInfo.packageName
-                if (pkg != context.packageName && pm.getLaunchIntentForPackage(pkg) != null) {
+                if (pm.getLaunchIntentForPackage(pkg) != null) {
                     recentPackages.add(pkg)
                     if (recentPackages.size >= 8) break
                 }

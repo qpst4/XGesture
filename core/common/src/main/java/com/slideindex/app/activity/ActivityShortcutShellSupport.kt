@@ -47,5 +47,6 @@ object ActivityShortcutShellSupport {
         return ShellCommandIconType.OTHER
     }
 
-    private fun encodeShellUri(command: String): String = URI_PREFIX + command
+    /** 把命令编码成条目内的 intent URI；编辑页只暴露命令本身，不暴露这个前缀。 */
+    fun encodeShellUri(command: String): String = URI_PREFIX + command
 }
