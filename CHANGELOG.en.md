@@ -8,6 +8,51 @@ identical to the Chinese file so that the release pipeline can line up both lang
 
 Where the two files differ, `CHANGELOG.md` is authoritative.
 
+## [1.60.0] - 2026-11-04
+
+### Added
+- New "global touch": trigger custom actions with one to five fingers anywhere on screen (needs root or Shizuku)
+- Global touch supports swipes, taps, long press, pinch, rotate and drawn gestures, and its observer mode never intercepts the original touch
+- Global touch has a dedicated gesture list and recording page, so gestures can be re-recorded, sorted by finger count and bound to actions one by one
+- Global touch reports whether it runs on root or Shizuku and warns when another touch tool is enabled at the same time
+- In-app shortcuts gain an edit page for package, class, intent link, label and icon
+- New "show back chip after reading": a back chip appears on the left edge after a message is opened, with a configurable dwell time
+- Edge cards show the sender name to the right of the group chat title
+- The carousel app switcher gains split screen, floating window, close app and close all, and sliding past the edge cancels it
+- New "X shake" quick settings tile that toggles shake gestures
+- Widget panel gains an "after tapping a widget" setting with three options: collapse only for external apps / always collapse / never collapse
+
+### Changed
+- Global touch moves to "Featured" on the home screen, and "record gesture" becomes "draw gesture"
+- Tapping a row in in-app shortcuts now opens the editor, and adding moves into the "+" button at the bottom right
+- Text picking now uses the system segmenter; the bundled engine and dictionary are removed, cutting the APK by about 7 MB and removing the first-use preparation step
+- Brightness dragging writes through two channels at once, following the finger better and applying immediately on more devices
+- Gesture preview and macro entry icons now match the action list icons
+
+### Fixed
+- Fixed trigger buttons only vibrating on taps inside the capture area
+- Fixed volume dragging jumping back and forth between adjacent steps and stuttering
+- Fixed auto-brightness dragging only applying after release, and the screen not following on some devices
+- Fixed touches being swallowed by the full-screen window during the trigger button exit animation
+- Fixed the app switcher firing on an upward swipe too easily
+- Fixed the back chip collapsing about one second after jumping from the side bar
+- Fixed edge cards never showing again after their window failed to build
+- Fixed the expanded edge card opening the app when its tap action was set to "ignore"
+- Fixed reversed selection when swiping right on the long-press selection bar, and nothing happening when releasing in place
+- Fixed widget panel taps doing nothing after reopening, and calendar or note widgets only opening the app
+- Fixed the widget panel hit position being off and the next tap doing nothing
+- Fixed the widget panel entering edit mode while scrolling
+- Fixed widget scrolling fighting with panel scrolling
+- Fixed widget size being reported too small and landing on the compact layout
+- Fixed the keyboard not opening in the app underneath after turning on screen draw passthrough
+- Fixed a crash from blur in the widget panel under software rendering, now falling back to a solid color
+- Fixed some systems treating the idle full-screen overlay as a black-screen overlay and killing the service
+- Fixed the float ball turning transparent after switching GIF styles and not refreshing after the image changed
+- Fixed the quick launcher leaving its panel behind, where text picking then framed the panel itself, when global copy fires
+- Fixed a crash when opening global touch from its home entry
+- Added the missing zh / ja / ar / ru strings for global touch, the app switcher and the widget panel
+
+
 ## [1.55.5] - 2026-11-02
 
 ### Added
