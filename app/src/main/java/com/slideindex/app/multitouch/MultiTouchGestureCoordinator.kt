@@ -271,7 +271,10 @@ class MultiTouchGestureCoordinator @Inject constructor(
     private companion object {
         const val TAG = "MultiTouchCoordinator"
 
-        /** 同一手势可能同时命中内置条目与路径条目：这个窗口内只执行一次。 */
-        const val ACTION_COOLDOWN_MS = 1_000L
+        /**
+         * 同一次触摸的多个候选（旋转 + 捏合等）在几帧内产生，这个窗口内只执行一次；
+         * 400ms 足够去重，又不会吃掉连续两次手势（人手间隔通常 > 300ms）。
+         */
+        const val ACTION_COOLDOWN_MS = 400L
     }
 }
