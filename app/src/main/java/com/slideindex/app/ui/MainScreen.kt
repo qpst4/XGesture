@@ -395,7 +395,7 @@ fun MainScreen(
                                     )
                                 },
                                 title = "全局触控",
-                                subtitle = "屏幕任意位置，单指/多指触控触发操作（需 Shizuku）",
+                                subtitle = "屏幕任意位置，单指/多指触控触发操作（需 root 或 Shizuku）",
                                 onClick = onOpenMultiTouchGesture,
                             )
                         }
