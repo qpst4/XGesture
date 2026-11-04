@@ -167,8 +167,8 @@ fun MultiTouchGestureSettingsScreen(
                     .verticalScroll(rememberScrollState()),
             ) {
                 MiuixArrowRow(
-                    title = "记录手势",
-                    summary = "画一条自定义轨迹",
+                    title = "绘制手势",
+                    summary = "自己画一条轨迹，松手后选择动作",
                     onClick = {
                         showKindPicker = false
                         onOpenRecorder()

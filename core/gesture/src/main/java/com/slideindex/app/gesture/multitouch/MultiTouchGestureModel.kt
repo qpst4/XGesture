@@ -77,5 +77,5 @@ fun MultiPointerGesture.displayName(): String = when (this) {
     MultiPointerGesture.TRIPLE_TAP -> "三击"
     MultiPointerGesture.LONG_PRESS -> "长按"
     MultiPointerGesture.TOUCH -> "触屏"
-    MultiPointerGesture.PATH -> "记录手势"
+    MultiPointerGesture.PATH -> "绘制手势"
 }
