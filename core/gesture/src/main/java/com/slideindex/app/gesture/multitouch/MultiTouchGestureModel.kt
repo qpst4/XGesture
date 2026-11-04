@@ -32,7 +32,7 @@ enum class MultiPointerGesture {
     DOUBLE_TAP,
     TRIPLE_TAP,
     LONG_PRESS,
-    /** 触摸（GMD 的 `SWIPE_TAP`，与「轻点」不同；触发时机待确认）。 */
+    /** 触摸类型（与「单击」不同）。 */
     TOUCH,
     PATH,
     ;

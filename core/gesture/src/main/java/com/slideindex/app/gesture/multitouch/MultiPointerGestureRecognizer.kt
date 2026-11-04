@@ -47,14 +47,14 @@ class MultiPointerGestureRecognizer(
     private val minFingerCount: Int = 1,
     private val maxFingerCount: Int = 5,
     private val swipeThreshold: Float = 0.09f,
-    /** 点击允许的位移（GMD 的 `ic0.z` 阈值约 5px，归一化后按屏幕高度折算）。 */
+    /** 点击允许的位移（经验阈值约 5px，归一化后按屏幕高度折算）。 */
     private val tapSlop: Float = 0.006f,
     private val settleMs: Long = 60L,
     private val longPressMs: Long = 550L,
     private val doubleTapMs: Long = 260L,
     private val rotateScoreThreshold: Float = 0.10f,
     private val fourFingerRotateScoreThreshold: Float = 0.08f,
-    /** 手势尺寸（mm）：GMD 的 `gestureSizeMm`，默认 5、范围 5–10。 */
+    /** 手势尺寸（毫米）：默认 5，可调范围 5–10。 */
     private val gestureSizeMm: Float = 5f,
     /** 屏幕高度（mm）：把归一化半径差换算成 mm。 */
     private val screenHeightMm: Float = 150f,
@@ -132,7 +132,7 @@ class MultiPointerGestureRecognizer(
                 timeMs = timeMs,
             )
             updateLastPositions(pointers)
-            // 触摸（GMD 的 SWIPE_TAP）：按下即触发，支持任意触点数（条目匹配兜底）。
+            // 触摸：按下即触发，支持任意触点数（条目匹配兜底）。
             // 不写入 triggered——触摸只输出一次，不能阻止后续点击判定。
             val results = ArrayList<RecognizedMultiPointerGesture>(1)
             if (ordered.size >= 1) {
@@ -180,7 +180,7 @@ class MultiPointerGestureRecognizer(
             )
             // 手指数量变化 = 新基准：位移重新从零算，否则第二根手指落下时会被误判成“移动过”。
             moved = false
-            // 两指先后按下：第二指加入时补一次触摸（GMD 触摸只看配置，不要求同帧按下）。
+            // 两指先后按下：第二指加入时补一次触摸（触摸只按条目配置判定，不要求同帧按下）。
             if (!touchEmitted && ordered.size >= 1) {
                 touchEmitted = true
                 results += RecognizedMultiPointerGesture(
@@ -197,7 +197,7 @@ class MultiPointerGestureRecognizer(
             return results
         }
 
-        // 滑动：按 GMD 的做法，逐指判定方向，要求至少 2/3 手指同向。
+        // 滑动：逐指判定方向，要求至少 2/3 手指同向。
         if (distance >= swipeThreshold) {
             val direction = consensusSwipeDirection(ordered)
             if (direction != null && direction !in triggered) {
@@ -290,7 +290,7 @@ class MultiPointerGestureRecognizer(
     }
 
     /**
-     * 抬手时产生点击候选（GMD 模型：点击是独立事件，立即发出，不等窗口）。
+     * 抬手时产生点击候选（点击是独立事件，立即发出，不等窗口）。
      *
      * 第一次点击发 TAP；距上次点击 [doubleTapMs] 内的第二次点击再发 DOUBLE_TAP；
      * 第三次发 TRIPLE_TAP。协调器按条目类型匹配，不需要识别器“猜”。
