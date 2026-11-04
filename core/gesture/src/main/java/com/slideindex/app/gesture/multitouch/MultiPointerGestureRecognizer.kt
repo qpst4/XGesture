@@ -8,6 +8,8 @@ import kotlin.math.max
 data class RecognizedMultiPointerGesture(
     val gesture: MultiPointerGesture,
     val fingerCount: Int,
+    /** 诊断信息（评分/半径差等），仅用于日志。 */
+    val debug: String = "",
 )
 
 /** 绑定键（旧设置页过渡用；新模型见 [MultiTouchGestureEntry]）。 */
@@ -130,14 +132,15 @@ class MultiPointerGestureRecognizer(
                 timeMs = timeMs,
             )
             updateLastPositions(pointers)
-            // 触摸（GMD 的 SWIPE_TAP）：按下即触发，且只支持双指及以上。
+            // 触摸（GMD 的 SWIPE_TAP）：按下即触发，支持任意触点数（条目匹配兜底）。
             // 不写入 triggered——触摸只输出一次，不能阻止后续点击判定。
             val results = ArrayList<RecognizedMultiPointerGesture>(1)
-            if (ordered.size >= 2) {
+            if (ordered.size >= 1) {
                 touchEmitted = true
                 results += RecognizedMultiPointerGesture(
                     MultiPointerGesture.TOUCH,
                     ordered.size,
+                    "touch",
                 )
             }
             return results
@@ -162,6 +165,7 @@ class MultiPointerGestureRecognizer(
             results += RecognizedMultiPointerGesture(
                 MultiPointerGesture.LONG_PRESS,
                 maxFingers,
+                "long",
             )
         }
 
@@ -177,11 +181,12 @@ class MultiPointerGestureRecognizer(
             // 手指数量变化 = 新基准：位移重新从零算，否则第二根手指落下时会被误判成“移动过”。
             moved = false
             // 两指先后按下：第二指加入时补一次触摸（GMD 触摸只看配置，不要求同帧按下）。
-            if (!touchEmitted && ordered.size >= 2) {
+            if (!touchEmitted && ordered.size >= 1) {
                 touchEmitted = true
                 results += RecognizedMultiPointerGesture(
                     MultiPointerGesture.TOUCH,
                     ordered.size,
+                    "touch",
                 )
             }
             updateLastPositions(pointers)
@@ -207,7 +212,7 @@ class MultiPointerGestureRecognizer(
                     swipeHistory.all { it == direction }
                 ) {
                     triggered += direction
-                    results += RecognizedMultiPointerGesture(direction, maxFingers)
+                    results += RecognizedMultiPointerGesture(direction, maxFingers, "swipe")
                 }
             }
         }
@@ -239,7 +244,11 @@ class MultiPointerGestureRecognizer(
                         MultiPointerGesture.ROTATE_COUNTER_CLOCKWISE
                     }
                     triggered += gesture
-                    results += RecognizedMultiPointerGesture(gesture, maxFingers)
+                    results += RecognizedMultiPointerGesture(
+                        gesture,
+                        maxFingers,
+                        "rot s=%.3f p=%.3f r=%.3f".format(score, penalty, radiusRatio),
+                    )
                 }
             }
             // 捏合/张开：平均半径差 >= max(1, gestureSizeMm/4) mm。
@@ -249,10 +258,18 @@ class MultiPointerGestureRecognizer(
             val threshold = max(1f, gestureSizeMm / 4f) / screenHeightMm
             if (delta <= -threshold && MultiPointerGesture.PINCH !in triggered) {
                 triggered += MultiPointerGesture.PINCH
-                results += RecognizedMultiPointerGesture(MultiPointerGesture.PINCH, maxFingers)
+                results += RecognizedMultiPointerGesture(
+                    MultiPointerGesture.PINCH,
+                    maxFingers,
+                    "pinch d=%.4f t=%.4f".format(delta, threshold),
+                )
             } else if (delta >= threshold && MultiPointerGesture.SPREAD !in triggered) {
                 triggered += MultiPointerGesture.SPREAD
-                results += RecognizedMultiPointerGesture(MultiPointerGesture.SPREAD, maxFingers)
+                results += RecognizedMultiPointerGesture(
+                    MultiPointerGesture.SPREAD,
+                    maxFingers,
+                    "spread d=%.4f t=%.4f".format(delta, threshold),
+                )
             }
         }
 
@@ -298,6 +315,7 @@ class MultiPointerGestureRecognizer(
                 results += RecognizedMultiPointerGesture(
                     MultiPointerGesture.TRIPLE_TAP,
                     fingers,
+                    "triple",
                 )
             }
             isSecond -> {
@@ -306,12 +324,17 @@ class MultiPointerGestureRecognizer(
                 results += RecognizedMultiPointerGesture(
                     MultiPointerGesture.DOUBLE_TAP,
                     fingers,
+                    "double",
                 )
             }
             else -> {
                 tapCount = 1
                 lastTapAtMs = timeMs
-                results += RecognizedMultiPointerGesture(MultiPointerGesture.TAP, fingers)
+                results += RecognizedMultiPointerGesture(
+                    MultiPointerGesture.TAP,
+                    fingers,
+                    "tap",
+                )
             }
         }
     }

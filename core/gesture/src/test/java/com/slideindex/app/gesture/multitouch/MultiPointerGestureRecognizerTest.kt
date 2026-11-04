@@ -289,11 +289,14 @@ class MultiPointerGestureRecognizerTest {
 
     @Test
     fun `two finger tap with staggered press is recognized`() {
-        // 第一根手指先按，第二根手指晚一帧。
-        recognizer.onFrame(ring(1, 0.45f, 0.5f, 0.1f), 1_000L)
+        // 第一根手指先按：单指触摸就已经输出一次 TOUCH。
+        val first = recognizer.onFrame(ring(1, 0.45f, 0.5f, 0.1f), 1_000L)
+        assertEquals(MultiPointerGesture.TOUCH, first.firstOrNull()?.gesture)
+        assertEquals(1, first.firstOrNull()?.fingerCount)
+
+        // 第二根手指加入：本次触摸已经发过 TOUCH，不再重复。
         val second = recognizer.onFrame(ring(2, 0.5f, 0.5f, 0.2f), 1_030L)
-        assertEquals(MultiPointerGesture.TOUCH, second.firstOrNull()?.gesture)
-        assertEquals(2, second.firstOrNull()?.fingerCount)
+        assertTrue(second.isEmpty())
 
         val lift = recognizer.onFrame(emptyList(), 1_100L)
         assertEquals(MultiPointerGesture.TAP, lift.firstOrNull()?.gesture)
