@@ -140,6 +140,15 @@ internal object TaskManagerDaemonRpc {
 
             19 -> RpcValue.Bytes(service.getShortcutIconBytes(args.string(0), args.string(1), args.int(2)))
 
+            100 -> RpcValue.Bool(service.startMultiTouchPolling(args.boolean(0)))
+
+            101 -> {
+                service.stopMultiTouchPolling()
+                RpcValue.Void
+            }
+
+            102 -> RpcValue.StrArr(service.pollMultiTouchEvents())
+
             else -> throw IOException("unknown op=$op")
 
         }

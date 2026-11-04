@@ -2,6 +2,7 @@ package com.slideindex.app.privilege.root
 
 
 
+import com.slideindex.app.shizuku.IOnMultiTouchGesture
 import com.slideindex.app.shizuku.ITaskManagerService
 
 
@@ -183,6 +184,27 @@ internal class TaskManagerRpcClient(
     private fun rpcStringArray(op: Int, args: List<String?>): Array<String> =
 
         (TaskManagerDaemonRpc.execute(port, op, args) as RpcValue.StrArr).value
+
+    // 多指手势观察只由 Shizuku 用户服务实现；root 模式走下面的轮询接口。
+    override fun startMultiTouchObservation(
+        callback: IOnMultiTouchGesture,
+        pathPriority: Boolean,
+    ): Boolean = false
+
+    override fun stopMultiTouchObservation() = Unit
+
+    override fun isMultiTouchObservationRunning(): Boolean = false
+
+    /** root 模式：服务端入队观察事件，app 轮询取走。 */
+    override fun startMultiTouchPolling(pathPriority: Boolean): Boolean =
+        rpcBool(100, listOf(if (pathPriority) "1" else "0"))
+
+    override fun pollMultiTouchEvents(): Array<String> =
+        rpcStringArray(102, emptyList())
+
+    override fun stopMultiTouchPolling() {
+        runCatching { TaskManagerDaemonRpc.execute(port, 101, emptyList()) }
+    }
 
 }
 

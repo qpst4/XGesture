@@ -28,14 +28,42 @@ object ShizukuUserServiceHost {
     /**
      * Bump when the remote service code/ABI changes; drives processNameSuffix.
      *
+     * 64：新增 root 模式轮询接口（startMultiTouchPolling/pollMultiTouchEvents/stopMultiTouchPolling）。
+     * 63：冲突状态首次强制上报（避免其它触控工具停止后 app 仍显示旧冲突）。
+     * 62：触摸解除「仅双指及以上」限制，单指也会产生 TOUCH 候选（由条目匹配兜底）。
+     * 61：候选携带诊断信息（旋转评分/罚项/半径比、捏合差值），日志可直接定位误判。
+     * 60：点击改为「抬手立即产生 TAP/DOUBLE/TRIPLE 候选」，手指变化重置位移基准，tapSlop 收窄到 0.006。
+     * 59：点击判定不再被几何候选取消；触摸补「两指先后按下」分支；手势尺寸默认 5。
+     * 58：触摸改为「按下即触发、仅 ≥2 指」；滑动方向改为逐指分类众数（至少 2/3 同向）。
+     * 57：滑动方向要求连续 3 帧一致；新增「触摸」（TOUCH）类型与两指轻点支持。
+     * 56：识别器改为「每种类型独立判定、输出多候选」，AIDL 新增 onGestureBatch。
+     * 55：旋转评分改为「|cross|/Σr²」，捏合改「半径差 ≥ max(1, 手势尺寸/4) mm」。
+     * 54：旋转去掉半径变化惩罚项、阈值按角度近似下调（0.05 / 四指 0.04）。
+     * 53：旋转评分改为「|cross| / (2·Σr²)」，阈值重新校准。
+     * 52：多指手势改为「条目 + 1–5 指」识别，枚举扩展（点按/八方向/长按）。
+     * 51：`startMultiTouchObservation` 增加路径优先参数，AIDL 签名变更。
+     * 50：路径手势改为多轨迹（每指一条，2–5 条），回调协议同步改为 strokeLengths。
+     * 49：冲突检测补充诊断日志（定位回调链路）。
+     * 48：冲突检测改为独立线程轮询，不再依赖触摸事件触发。
+     * 47：运行期每 5 秒重扫虚拟触摸设备，设备在启动后才出现时也能及时提示冲突。
+     * 46：新增虚拟触摸设备冲突检测（onInputConflict），AIDL 接口变更。
+     * 45：触摸设备枚举排除 relay/virtual 设备，避免选中其它程序创建的虚拟触摸屏。
+     * 44：多指回调新增路径手势（onPathGesture），旧进程的 AIDL 接口没有这个方法，
+     *     必须换进程名才能让新回调生效。
+     * 43：多指识别器改为「相对质心的叉积/半径旋转判定 + RMS 半径捏合判定」，
+     *     四指不再参与滑动；识别逻辑在 core:gesture，升号强制换进程才能加载新实现。
+     * 42：多指识别器改为「逐帧累计旋转 + 四指放宽阈值」，识别逻辑在 core:gesture，
+     *     用户服务进程加载的是安装时的 APK，升号强制换进程才能让新识别器生效。
+     * 41：`ITaskManagerService` 新增多指手势观察（start/stop/isRunning）与回调接口，
+     *     旧进程没有这些方法，必须换进程名才能让新包生效。
      * 39：root 侧改为在 init mount namespace 启动（`nsenter -t 1 -m`）。升号让覆盖安装后
      *     旧的、继承 App namespace 的 root 守护进程/用户服务自动失效重启，不需要用户手动杀进程。
      * 38：最近任务不再过滤本应用包名（任务切换器需要显示自己）。这是运行在用户服务进程里的
      *     `TaskExclusions` / reader 逻辑，必须换进程名才能让已安装的新包生效。
      * 37：`getRecentTasks()` 行格式增加第 5 列 userId（分身识别）。
-     * 升号后进程名变成 `task_manager_v39`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
+     * 升号后进程名变成 `task_manager_v64`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
      */
-    const val SERVICE_BUILD = 40
+    const val SERVICE_BUILD = 64
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bindLock = Any()

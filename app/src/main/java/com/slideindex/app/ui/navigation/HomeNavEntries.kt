@@ -28,6 +28,9 @@ import com.slideindex.app.gesture.directionFamily
 import com.slideindex.app.gesture.TriggerHandleDesign
 import com.slideindex.app.gesture.TriggerRectanglePresetLogic
 import com.slideindex.app.gesture.preferredTriggerMode
+import com.slideindex.app.multitouch.encodePathStrokes
+import com.slideindex.app.ui.MultiTouchGestureSettingsScreen
+import com.slideindex.app.ui.viewmodel.MultiTouchGestureViewModel
 import com.slideindex.app.gesture.supportsAction
 import com.slideindex.app.launcher.QuickLauncherPanelDefaults
 import com.slideindex.app.overlay.LayoutPreviewContent
@@ -188,6 +191,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             onOpenGestureAppProfiles = { ctx.navigate(AppNavKey.HomeGestureAppProfiles) },
             gestureAppProfileCount = appSettings.gestureProfiles.size,
             onOpenCornerWheel = { ctx.navigate(AppNavKey.HomeCornerGesture) },
+            onOpenMultiTouchGesture = { ctx.navigate(AppNavKey.ExtensionMultiTouchGesture) },
             onOpenGestureAngle = { ctx.navigate(AppNavKey.HomeGestureAngle) },
             onOpenSystemBackGestureWidth = { ctx.navigate(AppNavKey.HomeSystemBackGestureWidth) },
             onOpenAnimationStyleSelect = { ctx.navigate(AppNavKey.HomeAnimationStyleSelect) },
@@ -435,6 +439,8 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
     }
 
     gestureAppProfileNavEntries(ctx)
+
+    multiTouchNavEntries(ctx, AppNavKey.HomeMain)
 
     hiltEntry<AppNavKey.HomeCornerGesture> {
         val viewModel: HomeDetailSettingsViewModel = hiltViewModel()

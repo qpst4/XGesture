@@ -12,6 +12,7 @@ import com.slideindex.app.di.OtpRecordLimitsInstaller
 import com.slideindex.app.di.OcrEnginePackMigrationStartup
 import com.slideindex.app.di.OcrInstalledModelStartupVerifier
 import com.slideindex.app.di.ModuleHookConfigSync
+import com.slideindex.app.multitouch.MultiTouchGestureCoordinator
 import com.slideindex.app.di.PrivilegeModeInitializer
 import com.slideindex.app.freezer.FreezerLauncherHelper
 import com.slideindex.app.fvgesture.FvGestureLibrary
@@ -81,6 +82,7 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
     @Inject lateinit var ocrEnginePackMigrationStartup: OcrEnginePackMigrationStartup
     @Inject lateinit var updatePreferencesStore: UpdatePreferencesStore
     @Inject lateinit var moduleHookConfigSync: ModuleHookConfigSync
+    @Inject lateinit var multiTouchGestureCoordinator: MultiTouchGestureCoordinator
 
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(AppLocaleApplier.wrapContextIfNeeded(base))
@@ -201,6 +203,8 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         // —— 仅主进程：启动期重活、调度、拉起常驻服务 ——
         // :overlay 进程不跑这些，否则它自己就成了"启动期卡顿"的下一个受害者。
         if (AppProcess.isMain) {
+        // 多指手势（Shizuku evdev 观察）：只在主进程启动，避免子进程重复观察导致一次手势执行多次。
+        multiTouchGestureCoordinator.start()
         com.slideindex.app.ui.icon.AppIconTheme.ensureSelectedThemeEnabled(this)
         // 首帧后再做 OCR 校验与应用列表扫描，减轻装后首开卡顿
         // 延迟执行启动期重活：开机瞬间主线程若被 OCR 校验 / 应用列表扫描占住，
