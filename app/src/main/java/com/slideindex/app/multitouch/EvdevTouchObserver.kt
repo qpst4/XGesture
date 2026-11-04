@@ -154,7 +154,10 @@ class EvdevTouchObserver(
                             val gestures = recognizer.onFrame(pointers, now)
                             if (gestures.isNotEmpty()) {
                                 for (gesture in gestures) {
-                                    log("recognized ${gesture.gesture} x${gesture.fingerCount}")
+                                    log(
+                                        "recognized ${gesture.gesture} " +
+                                            "x${gesture.fingerCount} ${gesture.debug}"
+                                    )
                                 }
                                 onGesture(gestures, now)
                             }
@@ -229,7 +232,10 @@ class EvdevTouchObserver(
             val now = android.os.SystemClock.elapsedRealtime()
             val gesture = runCatching { recognizer.onTick(now) }.getOrNull()
             if (gesture != null) {
-                log("recognized ${gesture.gesture} x${gesture.fingerCount} (tick)")
+                log(
+                    "recognized ${gesture.gesture} x${gesture.fingerCount} " +
+                        "${gesture.debug} (tick)"
+                )
                 onGesture(listOf(gesture), now)
             }
             sleepQuietly(TICK_INTERVAL_MS)
