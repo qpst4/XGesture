@@ -56,6 +56,7 @@ import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.viewmodel.ActivityShortcutPickerResult
+import com.slideindex.app.util.TaskManagerUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -787,7 +788,13 @@ private fun collectIssues(context: Context, shortcut: ActivityShortcut): List<Sh
                     PackageManager.MATCH_DISABLED_COMPONENTS,
                 )
             }.getOrNull() ?: return listOf(ShortcutIssue.ACTIVITY_MISSING)
-            if (info.exported) emptyList() else listOf(ShortcutIssue.NOT_EXPORTED)
+            // 未导出目标由特权通道（Shizuku / Root）启动，见 ActivityShortcutLauncher.launchNonExported；
+            // 已授权时它并不「不可用」，保存前不该当成问题。
+            if (info.exported || TaskManagerUtil.hasPermission()) {
+                emptyList()
+            } else {
+                listOf(ShortcutIssue.NOT_EXPORTED)
+            }
         }
 
         ActivityShortcutKind.DYNAMIC -> {
