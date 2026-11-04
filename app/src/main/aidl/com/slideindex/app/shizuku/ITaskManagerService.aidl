@@ -42,4 +42,15 @@ interface ITaskManagerService {
     void stopMultiTouchObservation() = 21;
 
     boolean isMultiTouchObservationRunning() = 22;
+
+    /**
+     * root 模式：RPC 无法传 binder callback，改为服务端入队、app 轮询取事件。
+     *
+     * 事件格式：`g:手势 ordinal:触点数` 或 `p:触点数:x,y;x,y|x,y`。
+     */
+    boolean startMultiTouchPolling(boolean pathPriority) = 23;
+
+    String[] pollMultiTouchEvents() = 24;
+
+    void stopMultiTouchPolling() = 25;
 }

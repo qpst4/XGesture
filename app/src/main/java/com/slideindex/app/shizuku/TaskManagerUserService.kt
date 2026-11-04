@@ -5,6 +5,8 @@ import android.util.Log
 import androidx.annotation.Keep
 import androidx.annotation.StringRes
 import com.slideindex.app.multitouch.EvdevTouchObserver
+import com.slideindex.app.multitouch.encodePathStrokes
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class TaskManagerUserService() : ITaskManagerService.Stub() {
 
@@ -86,6 +88,47 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
 
     override fun isMultiTouchObservationRunning(): Boolean =
         touchObserver?.isRunning() == true
+
+    // ---- root 模式轮询（RPC 无法传 binder callback）----
+
+    private val pollingEvents = ConcurrentLinkedQueue<String>()
+
+    private var pollingObserver: EvdevTouchObserver? = null
+
+    /** root 模式：启动观察器，事件进队列，由 app 轮询取走。 */
+    override fun startMultiTouchPolling(pathPriority: Boolean): Boolean {
+        stopMultiTouchPolling()
+        val observer = EvdevTouchObserver(
+            onGesture = { gestures, _ ->
+                for (gesture in gestures) {
+                    pollingEvents += "g:${gesture.gesture.ordinal}:${gesture.fingerCount}"
+                }
+            },
+            onPathGesture = { path, _ ->
+                pollingEvents += "p:${path.fingerCount}:${encodePathStrokes(path.strokes)}"
+            },
+            onState = { _, _ -> },
+            onInputConflict = { },
+        )
+        val started = observer.start()
+        if (!started) return false
+        pollingObserver = observer
+        return true
+    }
+
+    override fun pollMultiTouchEvents(): Array<String> {
+        val events = ArrayList<String>()
+        while (true) {
+            events += pollingEvents.poll() ?: break
+        }
+        return events.toTypedArray()
+    }
+
+    override fun stopMultiTouchPolling() {
+        pollingObserver?.stop()
+        pollingObserver = null
+        pollingEvents.clear()
+    }
 
     override fun removeTaskById(taskIdStr: String?): Boolean =
         tasks.removeTaskById(taskIdStr)

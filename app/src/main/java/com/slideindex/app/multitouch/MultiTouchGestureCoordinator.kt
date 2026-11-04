@@ -16,19 +16,27 @@ import com.slideindex.app.gesture.multitouch.PathPoint
 import com.slideindex.app.gesture.multitouch.PathStroke
 import com.slideindex.app.gesture.multitouch.displayName
 import com.slideindex.app.service.SlideIndexAccessibilityService
+import com.slideindex.app.settings.PrivilegeMode
 import com.slideindex.app.settings.SettingsRepository
 import com.slideindex.app.shake.ShakeVibrationHelper
 import com.slideindex.app.shizuku.IOnMultiTouchGesture
 import com.slideindex.app.shizuku.ITaskManagerService
 import com.slideindex.app.shizuku.ShizukuUserServiceHost
+import com.slideindex.app.privilege.root.RootTaskManagerServiceHost
+import com.slideindex.app.privilege.root.TaskManagerRpcClient
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -71,6 +79,11 @@ class MultiTouchGestureCoordinator @Inject constructor(
     private var observingService: ITaskManagerService? = null
 
     @Volatile
+    private var rootService: TaskManagerRpcClient? = null
+
+    private var rootPollJob: Job? = null
+
+    @Volatile
     private var lastActionAtMs = 0L
 
     private val callback = object : IOnMultiTouchGesture.Stub() {
@@ -111,21 +124,7 @@ class MultiTouchGestureCoordinator @Inject constructor(
                 }
                 strokes += PathStroke(strokePoints)
             }
-            val candidates = settingsStore.state.value.entries
-                .filter { it.isPath && it.fingerCount == fingerCount && it.pathStrokes.isNotEmpty() }
-            if (candidates.isEmpty()) return
-            val templates = candidates.map { entry ->
-                PathGestureTemplate(
-                    id = entry.id,
-                    name = "${entry.fingerCount} 指路径",
-                    strokes = entry.pathStrokes,
-                    action = entry.action,
-                )
-            }
-            val match = PathGestureMatcher.bestMatch(strokes, templates) ?: return
-            if (match.action == GestureAction.None) return
-            Log.i(TAG, "path gesture -> ${match.id}")
-            mainHandler.post { performAction(match.action, MultiPointerGesture.PATH, fingerCount) }
+            handlePathStrokes(fingerCount, strokes)
         }
 
         override fun onObserverState(running: Boolean, detail: String) {
@@ -139,6 +138,26 @@ class MultiTouchGestureCoordinator @Inject constructor(
         }
     }
 
+    /** 路径轨迹与条目匹配（Shizuku 回调和 root 轮询共用）。 */
+    private fun handlePathStrokes(fingerCount: Int, strokes: List<PathStroke>) {
+        if (strokes.isEmpty()) return
+        val candidates = settingsStore.state.value.entries
+            .filter { it.isPath && it.fingerCount == fingerCount && it.pathStrokes.isNotEmpty() }
+        if (candidates.isEmpty()) return
+        val templates = candidates.map { entry ->
+            PathGestureTemplate(
+                id = entry.id,
+                name = "${entry.fingerCount} 指路径",
+                strokes = entry.pathStrokes,
+                action = entry.action,
+            )
+        }
+        val match = PathGestureMatcher.bestMatch(strokes, templates) ?: return
+        if (match.action == GestureAction.None) return
+        Log.i(TAG, "path gesture -> ${match.id}")
+        mainHandler.post { performAction(match.action, MultiPointerGesture.PATH, fingerCount) }
+    }
+
     fun start() {
         if (started) return
         started = true
@@ -148,6 +167,13 @@ class MultiTouchGestureCoordinator @Inject constructor(
         }
         applicationScope.launch(Dispatchers.IO) {
             settingsStore.state.collect { syncNow() }
+        }
+        // 切换「特权执行方式」（root / Shizuku）后要重新选择通道。
+        applicationScope.launch(Dispatchers.IO) {
+            settingsRepository.settings
+                .map { it.privilegeMode }
+                .distinctUntilChanged()
+                .collect { syncNow() }
         }
     }
 
@@ -193,6 +219,15 @@ class MultiTouchGestureCoordinator @Inject constructor(
                 _status.value = _status.value.copy(running = false, detail = "disabled")
                 return
             }
+
+            val privilegeMode = runCatching {
+                settingsRepository.readSnapshot().privilegeMode
+            }.getOrDefault(PrivilegeMode.SHIZUKU)
+            if (privilegeMode == PrivilegeMode.ROOT) {
+                startRootObservation(false)
+                return
+            }
+
             if (!shizukuAvailable) {
                 _status.value = _status.value.copy(running = false, detail = "shizuku-unavailable")
                 Log.i(TAG, "sync: shizuku unavailable")
@@ -223,6 +258,59 @@ class MultiTouchGestureCoordinator @Inject constructor(
         observingService = null
         if (service != null) {
             runCatching { service.stopMultiTouchObservation() }
+        }
+        rootPollJob?.cancel()
+        rootPollJob = null
+        val root = rootService
+        rootService = null
+        if (root != null) {
+            runCatching { root.stopMultiTouchPolling() }
+        }
+    }
+
+    /** root 模式：root 守护进程里的观察器入队事件，这里定时取走并分发。 */
+    private fun startRootObservation(pathPriority: Boolean) {
+        val root = runCatching {
+            RootTaskManagerServiceHost.ensure(context) as? TaskManagerRpcClient
+        }.getOrNull()
+        if (root == null) {
+            _status.value = _status.value.copy(running = false, detail = "root-unavailable")
+            Log.i(TAG, "sync: root daemon unavailable")
+            return
+        }
+        val started = runCatching { root.startMultiTouchPolling(pathPriority) }.getOrDefault(false)
+        Log.i(TAG, "sync: root start polling=$started")
+        if (!started) {
+            _status.value = _status.value.copy(running = false, detail = "root-start-failed")
+            return
+        }
+        rootService = root
+        _status.value = _status.value.copy(running = true, detail = "watching:root")
+        rootPollJob = applicationScope.launch(Dispatchers.IO) {
+            while (isActive) {
+                val events = runCatching { root.pollMultiTouchEvents() }.getOrDefault(emptyArray())
+                for (event in events) {
+                    handleRootEvent(event)
+                }
+                delay(ROOT_POLL_INTERVAL_MS)
+            }
+        }
+    }
+
+    private fun handleRootEvent(event: String) {
+        if (event.startsWith("g:")) {
+            val parts = event.split(':')
+            val kind = parts.getOrNull(1)?.toIntOrNull() ?: return
+            val fingers = parts.getOrNull(2)?.toIntOrNull() ?: return
+            dispatchGesture(kind, fingers)
+            return
+        }
+        if (event.startsWith("p:")) {
+            val parts = event.split(':', limit = 3)
+            val fingers = parts.getOrNull(1)?.toIntOrNull() ?: return
+            val strokes = decodePathStrokes(parts.getOrNull(2) ?: return)
+            if (strokes.isEmpty()) return
+            handlePathStrokes(fingers, strokes)
         }
     }
 
@@ -276,5 +364,8 @@ class MultiTouchGestureCoordinator @Inject constructor(
          * 400ms 足够去重，又不会吃掉连续两次手势（人手间隔通常 > 300ms）。
          */
         const val ACTION_COOLDOWN_MS = 400L
+
+        /** root 模式轮询间隔（本地 socket，开销很小）。 */
+        const val ROOT_POLL_INTERVAL_MS = 100L
     }
 }

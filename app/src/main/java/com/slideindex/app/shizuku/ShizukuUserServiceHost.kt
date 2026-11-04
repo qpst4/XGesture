@@ -28,6 +28,7 @@ object ShizukuUserServiceHost {
     /**
      * Bump when the remote service code/ABI changes; drives processNameSuffix.
      *
+     * 64：新增 root 模式轮询接口（startMultiTouchPolling/pollMultiTouchEvents/stopMultiTouchPolling）。
      * 63：冲突状态首次强制上报（避免其它触控工具停止后 app 仍显示旧冲突）。
      * 62：触摸解除「仅双指及以上」限制，单指也会产生 TOUCH 候选（由条目匹配兜底）。
      * 61：候选携带诊断信息（旋转评分/罚项/半径比、捏合差值），日志可直接定位误判。
@@ -60,9 +61,9 @@ object ShizukuUserServiceHost {
      * 38：最近任务不再过滤本应用包名（任务切换器需要显示自己）。这是运行在用户服务进程里的
      *     `TaskExclusions` / reader 逻辑，必须换进程名才能让已安装的新包生效。
      * 37：`getRecentTasks()` 行格式增加第 5 列 userId（分身识别）。
-     * 升号后进程名变成 `task_manager_v63`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
+     * 升号后进程名变成 `task_manager_v64`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
      */
-    const val SERVICE_BUILD = 63
+    const val SERVICE_BUILD = 64
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bindLock = Any()
