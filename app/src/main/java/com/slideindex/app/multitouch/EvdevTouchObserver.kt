@@ -43,6 +43,10 @@ class EvdevTouchObserver(
     @Volatile
     private var lastReportedConflict: String? = null
 
+    /** 本次启动是否已经上报过（首次强制上报，避免 app 保留旧状态）。 */
+    @Volatile
+    private var conflictReported = false
+
     /** 独立冲突检测线程：不依赖触摸事件。 */
     @Volatile
     private var conflictWorker: Thread? = null
@@ -54,6 +58,7 @@ class EvdevTouchObserver(
     fun start(): Boolean {
         if (running) return true
         running = true
+        conflictReported = false
         worker = Thread({ runLoop() }, "multi-touch-observer").apply {
             isDaemon = true
             start()
@@ -244,7 +249,9 @@ class EvdevTouchObserver(
 
     private fun reportConflict(devices: Collection<String>) {
         val joined = devices.distinct().joinToString(" | ").ifBlank { null }
-        if (joined == lastReportedConflict) return
+        // 首次上报必须发：否则 app 会保留上一次运行时的旧冲突状态。
+        if (conflictReported && joined == lastReportedConflict) return
+        conflictReported = true
         lastReportedConflict = joined
         Log.i(TAG, "report conflict: $joined")
         onInputConflict(joined)
