@@ -154,6 +154,7 @@ class WidgetCanvasLayout(context: Context) : ViewGroup(context) {
   }
 
   fun bind(page: WidgetPanelPage, hostContext: Context) {
+    WidgetPanelProbe.canvasRebind(page.id, page.items.size)
     canvasHostContext = hostContext
     canvasPage = page
     pageColumnCount = page.columnCount
@@ -435,6 +436,12 @@ class WidgetCanvasLayout(context: Context) : ViewGroup(context) {
 
   override fun dispatchTouchEvent(event: MotionEvent): Boolean =
     touchHandler.dispatchTouchEvent(event)
+
+  override fun onDetachedFromWindow() {
+    // 页被重建/摘除时，长按计时器还挂在主线程上：不撤销的话，它会把重建后的新画布直接带进编辑态。
+    touchHandler.cancelPendingTimers()
+    super.onDetachedFromWindow()
+  }
 
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean =
     touchHandler.onInterceptTouchEvent(event)

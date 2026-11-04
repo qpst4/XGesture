@@ -381,8 +381,17 @@ class WidgetCardContainer(
     val leftOffset = (scalableFrame.width - scalableFrame.renderWidthPx) / 2f
     val topOffset = (scalableFrame.height - scalableFrame.renderHeightPx) / 2f
     val scale = if (scalableFrame.scaleVal > 0f) scalableFrame.scaleVal else 1f
-    val hostX = (frameX - leftOffset - hostRoot.translationX) / scale
-    val hostY = (frameY - topOffset - hostRoot.translationY) / scale
+    // 旧算式（按原点缩放）保留一份，仅用于探针对比，确认后随探针一起删除。
+    val oldHostX = (frameX - leftOffset - hostRoot.translationX) / scale
+    val oldHostY = (frameY - topOffset - hostRoot.translationY) / scale
+    // 子视图是「以自身中心为轴心」缩放的（见 ScalableFrameLayout.onLayout 的 pivot = renderWidthPx/2），
+    // 逆变换必须绕中心算，不能按原点缩放再平移，否则 scale < 1 时会整体偏移。
+    // 视觉中心 = leftOffset + renderWidthPx/2 = scalableFrame.width/2。
+    val hostX = scalableFrame.renderWidthPx / 2f +
+      (frameX - scalableFrame.width / 2f - hostRoot.translationX) / scale
+    val hostY = scalableFrame.renderHeightPx / 2f +
+      (frameY - scalableFrame.height / 2f - hostRoot.translationY) / scale
+    WidgetPanelProbe.coordDelta(cardLocalX, cardLocalY, oldHostX, oldHostY, hostX, hostY, scale)
     return hostX to hostY
   }
 

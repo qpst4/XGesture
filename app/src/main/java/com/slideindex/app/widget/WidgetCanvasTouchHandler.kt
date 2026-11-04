@@ -43,7 +43,20 @@ internal class WidgetCanvasTouchHandler(
         if (!layout.editMode) {
             if (handleBrowseModeTouch(event)) return true
         }
-        return layout.superDispatchTouchEvent(event)
+        val handled = layout.superDispatchTouchEvent(event)
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+            WidgetPanelProbe.gestureDown(
+                editMode = layout.editMode,
+                foundCard = layout.findTouchTarget(event.x, event.y) != null,
+                handled = handled,
+            )
+        }
+        if (!handled) {
+            // 画布没接住这次手势 → 它不在触摸目标链里，后续 MOVE/UP/CANCEL 都不会送达，
+            // 长按计时器再没有机会被取消；必须在这里立刻撤销，否则 500ms 后会误进编辑态。
+            cancelBrowseLongPress()
+        }
+        return handled
     }
 
     fun onInterceptTouchEvent(event: MotionEvent): Boolean {
@@ -153,6 +166,16 @@ internal class WidgetCanvasTouchHandler(
         layout.pendingLongPress = null
     }
 
+    /** 撤销尚未触发的全部计时器（页面被摘除、或手势已确认丢失时调用）。 */
+    fun cancelPendingTimers() {
+        cancelPendingLongPress()
+        cancelPendingDrag()
+        cancelBrowseLongPress()
+        layout.panelScrollActive = false
+        layout.blankTouchTracking = false
+        layout.chromeTouchTarget = null
+    }
+
     fun resetTouchInteractionState() {
         cancelPendingLongPress()
         cancelPendingDrag()
@@ -221,6 +244,8 @@ internal class WidgetCanvasTouchHandler(
         if (layout.editMode) return false
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                // 上一次手势若在别的容器里结束，这个标记可能残留；新手势开始先清账。
+                layout.browseLongPressConsumed = false
                 val child = layout.findTouchTarget(event.x, event.y)
                 if (child != null) {
                     scheduleBrowseLongPress(child, event.x, event.y)

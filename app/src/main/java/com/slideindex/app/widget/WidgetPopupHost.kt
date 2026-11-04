@@ -66,10 +66,13 @@ object WidgetPopupHost {
 
   fun obtainHostView(context: Context, appWidgetId: Int): AppWidgetHostView? {
     cachedHostViews[appWidgetId]?.let { cached ->
+      WidgetPanelProbe.hostViewObtained(appWidgetId, fromCache = true)
       (cached.parent as? ViewGroup)?.removeView(cached)
       return cached
     }
-    return createView(context, appWidgetId) as? AppWidgetHostView
+    val created = createView(context, appWidgetId) as? AppWidgetHostView
+    WidgetPanelProbe.hostViewObtained(appWidgetId, fromCache = false)
+    return created
   }
 
   /**

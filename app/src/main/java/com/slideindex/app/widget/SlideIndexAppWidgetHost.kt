@@ -107,6 +107,8 @@ class SlideIndexAppWidgetHost(private val appContext: Context) : AppWidgetHost(a
     pendingIntent: PendingIntent,
     response: Any?,
   ): Boolean {
+    WidgetPanelProbe.clickArrived(view.javaClass.simpleName)
+
     // ① 取 launch options：此时 view 仍在窗口上，sourceBounds / display 才是对的。
     val launchOptions = runCatching { readLaunchOptions(view, response) }
       .onFailure { Log.w(TAG, "getLaunchOptions failed: ${it.message}") }
@@ -114,8 +116,10 @@ class SlideIndexAppWidgetHost(private val appContext: Context) : AppWidgetHost(a
 
     // ② 先发送（框架等价路径），失败再兜底。
     var started = false
+    var via = "reflection-unavailable"
     val method = startPendingIntentMethod
     if (method != null) {
+      via = "startPendingIntent"
       started = runCatching {
         (method.invoke(null, view, pendingIntent, launchOptions) as? Boolean) ?: true
       }.onFailure {
@@ -123,8 +127,11 @@ class SlideIndexAppWidgetHost(private val appContext: Context) : AppWidgetHost(a
       }.getOrDefault(false)
     }
     if (!started) {
+      via = "fallback"
       started = sendFallback(pendingIntent, launchOptions)
     }
+
+    WidgetPanelProbe.clickResult(started, via, pendingIntent.isActivity, pendingIntent.creatorPackage)
 
     if (Log.isLoggable(TAG, Log.DEBUG)) {
       Log.d(TAG, buildClickLog(pendingIntent, launchOptions, started))
