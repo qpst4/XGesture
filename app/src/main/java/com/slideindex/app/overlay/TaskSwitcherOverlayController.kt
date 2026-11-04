@@ -97,8 +97,10 @@ internal class TaskSwitcherOverlayController(
     internal var lastTaskSwitcherTouchY = 0f
     internal var taskSwitcherLoadGeneration = 0
     internal var taskSwitcherAnchorRawY: Float? = null
+    internal var taskSwitcherAnchorRawX: Float? = null
     internal var taskSwitcherExternalAnchor = false
     internal var taskSwitcherFrozenAnchorLocalY: Float? = null
+    internal var taskSwitcherFrozenAnchorLocalX: Float? = null
     internal var taskSwitcherScrollOffset = 0f
     internal var taskSwitcherScrollDragging = false
     internal var taskSwitcherScrollDragStartY = 0f
@@ -164,7 +166,8 @@ internal class TaskSwitcherOverlayController(
             host = host,
             rows = rowEntries,
             scrollOffset = taskSwitcherScrollOffset,
-            anchorLocalY = taskSwitcherAnchorLocalY()
+            anchorLocalY = taskSwitcherAnchorLocalY(),
+            anchorLocalX = taskSwitcherAnchorLocalX(),
         )
         taskSwitcherScrollOffset = offset
         return layout
@@ -223,15 +226,22 @@ internal class TaskSwitcherOverlayController(
     internal fun shouldFreezeTaskSwitcherAnchor(): Boolean =
         host.gestureSession().panelMode() == OverlayPanelMode.TASK_SWITCHER
 
-    fun setExternalAnchor(rawY: Float) {
+    fun setExternalAnchor(rawX: Float, rawY: Float) {
         taskSwitcherExternalAnchor = true
+        taskSwitcherAnchorRawX = rawX
         taskSwitcherAnchorRawY = rawY
     }
 
     fun onSessionStart() {
         taskSwitcherFrozenAnchorLocalY = null
+        taskSwitcherFrozenAnchorLocalX = null
         if (taskSwitcherAnchorRawY == null || taskSwitcherAnchorRawY == 0f) {
             taskSwitcherAnchorRawY = host.pathRecognizer().gestureStartRawY().takeIf { it > 0f }
+        }
+        if (taskSwitcherAnchorRawX == null) {
+            // 横坐标 0 是合法值（屏幕最左），不能照搬 Y 那边的 `> 0` 过滤，
+            // 否则贴着左边缘的底部触钮会丢掉锚点、退回"锁死屏幕中间"。
+            taskSwitcherAnchorRawX = host.pathRecognizer().gestureStartRawX()
         }
         taskSwitcherLayout = null
         loadTaskSwitcherApps(deferInvalidate = false)
@@ -240,6 +250,7 @@ internal class TaskSwitcherOverlayController(
     fun onLayoutReady() {
         taskSwitcherLayout = null
         taskSwitcherFrozenAnchorLocalY = resolveTaskSwitcherAnchorLocalY()
+        taskSwitcherFrozenAnchorLocalX = resolveTaskSwitcherAnchorLocalX()
         if (!host.gestureSession().taskSwitcherContinuousPickActive() &&
             !host.gestureSession().isMoveTimeActionLocked()
         ) {
@@ -262,8 +273,10 @@ internal class TaskSwitcherOverlayController(
         taskSwitcherLayout = null
         touchHandler.clearTaskSwitcherPickHighlights()
         taskSwitcherAnchorRawY = null
+        taskSwitcherAnchorRawX = null
         taskSwitcherExternalAnchor = false
         taskSwitcherFrozenAnchorLocalY = null
+        taskSwitcherFrozenAnchorLocalX = null
         taskSwitcherScrollOffset = 0f
         taskSwitcherScrollDragging = false
         taskSwitcherOverscrollOffset = 0f
@@ -307,6 +320,24 @@ internal class TaskSwitcherOverlayController(
 
     private fun taskSwitcherAnchorLocalY(): Float =
         taskSwitcherFrozenAnchorLocalY ?: resolveTaskSwitcherAnchorLocalY()
+
+    /**
+     * 触发点横坐标（本地）。上下侧触钮用它当面板水平中心，左右侧不读这个值。
+     *
+     * 与 Y 一样在布局就绪时冻结：否则面板打开后手指继续滑动，面板会横向漂移。
+     * 没有手指坐标（理论上 onSessionStart 已补上）时回退屏幕中心。
+     */
+    private fun resolveTaskSwitcherAnchorLocalX(): Float {
+        val loc = host.viewLocationOnScreen()
+        val rawX = taskSwitcherAnchorRawX ?: (loc[0] + host.viewWidth() / 2f)
+        val anchorX = rawX - loc[0]
+        val minX = 0f
+        val maxX = host.viewWidth().toFloat().coerceAtLeast(minX)
+        return anchorX.coerceIn(minX, maxX)
+    }
+
+    private fun taskSwitcherAnchorLocalX(): Float =
+        taskSwitcherFrozenAnchorLocalX ?: resolveTaskSwitcherAnchorLocalX()
 
     private fun clearTaskSwitcherMenuRowHighlight() {
         if (host.gestureSession().taskSwitcherContinuousPickActive()) return

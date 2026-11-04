@@ -346,7 +346,7 @@ class EdgeGestureOverlayView(
             val anchorRawX = loc[0] + localX
             externalPanelAnchorLocalY = localY
             when (action) {
-                is GestureAction.TaskSwitcher -> taskSwitcherController.setExternalAnchor(anchorRawY)
+                is GestureAction.TaskSwitcher -> taskSwitcherController.setExternalAnchor(anchorRawX, anchorRawY)
                 is GestureAction.QuickLauncher -> quickLauncherController.setAnchorRawY(anchorRawY)
                 else -> Unit
             }

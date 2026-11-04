@@ -18,11 +18,28 @@ object TaskSwitcherLayoutEngine {
         rows: List<TaskSwitcherRowEntry>,
         scrollOffset: Float,
         anchorLocalY: Float,
+        /**
+         * 触发点的本地横坐标（手指按下点）。
+         *
+         * 上下侧触钮是横条，没有"内侧边"，面板以一个水平锚点居中展开：
+         * 有手指坐标时就用手指按下的位置，避免面板永远锁死在屏幕正中；
+         * `null`（旧调用 / 没有手指坐标）回退到触钮中心。
+         */
+        anchorLocalX: Float? = null,
     ): Pair<TaskSwitcherPanelLayout, Float> {
         val rowHeight = host.dp(42f)
         val footerHeight = host.dp(36f)
-        val panelWidth = host.dp(226f)
         val verticalMargin = host.dp(32f)
+        val viewWidth = host.viewWidth().toFloat()
+        val horizontalMargin = host.dp(16f)
+        // 面板宽度不得超过「整屏 - 左右边距」：窄屏 / 分屏下宁可变窄，也不能画到屏幕外。
+        val panelWidth = if (viewWidth > 0f) {
+            host.dp(226f).coerceAtMost(
+                (viewWidth - horizontalMargin * 2f).coerceAtLeast(1f)
+            )
+        } else {
+            host.dp(226f)
+        }
         val isEmpty = rows.isEmpty()
         val contentHeight = if (isEmpty) {
             (host.dp(52f) - footerHeight).coerceAtLeast(0f)
@@ -50,9 +67,27 @@ object TaskSwitcherLayoutEngine {
         val trigger = host.activeTriggerZoneRect()
         val anchorY = anchorLocalY.coerceIn(trigger.top, trigger.bottom)
         val gap = host.dp(10f)
-        val left = when (host.side()) {
-            PanelSide.LEFT, PanelSide.BOTTOM, PanelSide.TOP -> trigger.right + gap
+        // 左右侧触钮是竖条：贴着触钮的"内侧边"展开是对的。
+        // 上下侧触钮是横条，`trigger.right` 只是横条右端、不是屏幕边 —— 沿用它向右展开
+        // 必然把面板推出屏幕（底部触钮触发时只剩一条边可见）。横条没有"内侧"，
+        // 改为以触发点（手指按下位置）为水平中心，再夹进左右边距。
+        val preferredLeft = when (host.side()) {
+            PanelSide.LEFT -> trigger.right + gap
             PanelSide.RIGHT -> trigger.left - gap - panelWidth
+            PanelSide.BOTTOM, PanelSide.TOP -> if (viewWidth > 0f) {
+                val centerX = anchorLocalX
+                    ?: if (trigger.width() > 0f) trigger.centerX() else viewWidth / 2f
+                centerX - panelWidth / 2f
+            } else {
+                // 尚未测量出宽度：退回旧公式，等真实尺寸到了下一帧会重新居中。
+                trigger.right + gap
+            }
+        }
+        val maxLeft = (viewWidth - panelWidth - horizontalMargin).coerceAtLeast(horizontalMargin)
+        val left = if (viewWidth > 0f) {
+            preferredLeft.coerceSafe(horizontalMargin, maxLeft)
+        } else {
+            preferredLeft
         }
         val top = if (host.side() == PanelSide.TOP) {
             (trigger.bottom + gap).coerceSafe(host.dp(16f), (host.viewHeight() - panelHeight - host.dp(16f)).coerceAtLeast(host.dp(16f)))
