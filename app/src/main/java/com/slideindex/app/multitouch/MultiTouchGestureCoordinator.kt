@@ -48,6 +48,10 @@ data class MultiTouchStatus(
     val running: Boolean = false,
     val detail: String = "",
     val shizukuAvailable: Boolean = false,
+    /** 当前观察通道："root" / "shizuku"；未运行时为空。 */
+    val channel: String = "",
+    /** 触摸设备路径（如 `/dev/input/event7`）；root 模式可能为空。 */
+    val device: String = "",
     /** 其它触控工具创建的虚拟触摸设备名；非空表示存在冲突风险。 */
     val conflictDevices: String? = null,
 )
@@ -128,7 +132,17 @@ class MultiTouchGestureCoordinator @Inject constructor(
         }
 
         override fun onObserverState(running: Boolean, detail: String) {
-            _status.value = _status.value.copy(running = running, detail = detail)
+            val device = if (detail.startsWith("watching:")) {
+                detail.removePrefix("watching:")
+            } else {
+                _status.value.device
+            }
+            _status.value = _status.value.copy(
+                running = running,
+                detail = detail,
+                channel = if (running) "shizuku" else "",
+                device = device,
+            )
         }
 
         override fun onInputConflict(devices: String?) {
@@ -266,6 +280,7 @@ class MultiTouchGestureCoordinator @Inject constructor(
         if (root != null) {
             runCatching { root.stopMultiTouchPolling() }
         }
+        _status.value = _status.value.copy(channel = "", device = "")
     }
 
     /** root 模式：root 守护进程里的观察器入队事件，这里定时取走并分发。 */
@@ -274,18 +289,30 @@ class MultiTouchGestureCoordinator @Inject constructor(
             RootTaskManagerServiceHost.ensure(context) as? TaskManagerRpcClient
         }.getOrNull()
         if (root == null) {
-            _status.value = _status.value.copy(running = false, detail = "root-unavailable")
+            _status.value = _status.value.copy(
+                running = false,
+                detail = "root-unavailable",
+                channel = "",
+            )
             Log.i(TAG, "sync: root daemon unavailable")
             return
         }
         val started = runCatching { root.startMultiTouchPolling(pathPriority) }.getOrDefault(false)
         Log.i(TAG, "sync: root start polling=$started")
         if (!started) {
-            _status.value = _status.value.copy(running = false, detail = "root-start-failed")
+            _status.value = _status.value.copy(
+                running = false,
+                detail = "root-start-failed",
+                channel = "",
+            )
             return
         }
         rootService = root
-        _status.value = _status.value.copy(running = true, detail = "watching:root")
+        _status.value = _status.value.copy(
+            running = true,
+            detail = "watching:root",
+            channel = "root",
+        )
         rootPollJob = applicationScope.launch(Dispatchers.IO) {
             while (isActive) {
                 val events = runCatching { root.pollMultiTouchEvents() }.getOrDefault(emptyArray())

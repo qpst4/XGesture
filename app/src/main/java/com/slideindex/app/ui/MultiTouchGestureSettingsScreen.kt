@@ -395,11 +395,18 @@ private fun multiTouchStatusDetail(status: MultiTouchStatus): String {
     val base = when {
         !status.enabled -> "开关未打开"
         status.detail == "recording" -> "录制中（识别已暂停）"
-        !status.shizukuAvailable -> "Shizuku 未运行或未授权，点击重试"
         status.running -> {
-            val device = status.detail.removePrefix("watching:").ifBlank { "未知设备" }
-            "设备 $device · 观察模式（只读，不拦截） · Shizuku 已授权"
+            val channel = when (status.channel) {
+                "root" -> "root 通道"
+                "shizuku" -> "Shizuku 已授权"
+                else -> "观察模式"
+            }
+            val device = status.device.ifBlank { "未知设备" }
+            "设备 $device · 观察模式（只读，不拦截） · $channel"
         }
+        status.detail == "root-unavailable" -> "root 不可用，点击重试"
+        status.detail == "root-start-failed" -> "root 观察启动失败，点击重试"
+        !status.shizukuAvailable -> "Shizuku 未运行或未授权，点击重试"
         status.detail == "service-unavailable" -> "Shizuku 服务启动失败，点击重试"
         status.detail == "device-unavailable" -> "没有可读的触摸设备，点击重试"
         else -> "未运行（${status.detail.ifBlank { "unknown" }}），点击重试"
