@@ -15,6 +15,10 @@ import com.slideindex.app.gesture.multitouch.PathGestureMatcher
 import com.slideindex.app.gesture.multitouch.PathGestureTemplate
 import com.slideindex.app.gesture.multitouch.PathPoint
 import com.slideindex.app.gesture.multitouch.PathStroke
+import com.slideindex.app.gesture.multitouch.TouchAnchor
+import com.slideindex.app.gesture.multitouch.mapTouchAnchorToScreen
+import com.slideindex.app.overlay.OverlayScreenMetrics
+import com.slideindex.app.overlay.PanelSide
 import com.slideindex.app.service.SlideIndexAccessibilityService
 import com.slideindex.app.settings.PrivilegeMode
 import com.slideindex.app.settings.SettingsRepository
@@ -93,19 +97,23 @@ class MultiTouchGestureCoordinator @Inject constructor(
 
     private val callback = object : IOnMultiTouchGesture.Stub() {
         override fun onGesture(gesture: Int, fingerCount: Int, eventTimeMs: Long) {
-            dispatchGesture(gesture, fingerCount)
+            // 旧接口（服务端已改用 onGestureBatch，这里保留兼容）：没有锚点，按历史行为落屏幕中心。
+            dispatchGesture(gesture, fingerCount, anchor = null)
         }
 
         override fun onGestureBatch(
             kinds: IntArray?,
             fingerCounts: IntArray?,
             eventTimeMs: Long,
+            anchorU: Float,
+            anchorV: Float,
         ) {
             val kindArray = kinds ?: return
             val fingerArray = fingerCounts ?: return
             if (kindArray.size != fingerArray.size) return
+            val anchor = TouchAnchor(anchorU.coerceIn(0f, 1f), anchorV.coerceIn(0f, 1f))
             for (index in kindArray.indices) {
-                if (dispatchGesture(kindArray[index], fingerArray[index])) return
+                if (dispatchGesture(kindArray[index], fingerArray[index], anchor)) return
             }
         }
 
@@ -114,6 +122,8 @@ class MultiTouchGestureCoordinator @Inject constructor(
             points: FloatArray?,
             strokeLengths: IntArray?,
             eventTimeMs: Long,
+            anchorU: Float,
+            anchorV: Float,
         ) {
             val coordinates = points ?: return
             val lengths = strokeLengths ?: return
@@ -129,7 +139,11 @@ class MultiTouchGestureCoordinator @Inject constructor(
                 }
                 strokes += PathStroke(strokePoints)
             }
-            handlePathStrokes(fingerCount, strokes)
+            handlePathStrokes(
+                fingerCount = fingerCount,
+                strokes = strokes,
+                anchor = TouchAnchor(anchorU.coerceIn(0f, 1f), anchorV.coerceIn(0f, 1f)),
+            )
         }
 
         override fun onObserverState(running: Boolean, detail: String) {
@@ -154,7 +168,11 @@ class MultiTouchGestureCoordinator @Inject constructor(
     }
 
     /** 路径轨迹与条目匹配（Shizuku 回调和 root 轮询共用）。 */
-    private fun handlePathStrokes(fingerCount: Int, strokes: List<PathStroke>) {
+    private fun handlePathStrokes(
+        fingerCount: Int,
+        strokes: List<PathStroke>,
+        anchor: TouchAnchor? = null,
+    ) {
         if (strokes.isEmpty()) return
         val candidates = settingsStore.state.value.entries
             .filter { it.isPath && it.fingerCount == fingerCount && it.pathStrokes.isNotEmpty() }
@@ -170,7 +188,9 @@ class MultiTouchGestureCoordinator @Inject constructor(
         val match = PathGestureMatcher.bestMatch(strokes, templates) ?: return
         if (match.action == GestureAction.None) return
         Log.i(TAG, "path gesture -> ${match.id}")
-        mainHandler.post { performAction(match.action, MultiPointerGesture.PATH, fingerCount) }
+        mainHandler.post {
+            performAction(match.action, MultiPointerGesture.PATH, fingerCount, anchor)
+        }
     }
 
     fun start() {
@@ -290,9 +310,24 @@ class MultiTouchGestureCoordinator @Inject constructor(
 
     /** root 模式：root 守护进程里的观察器入队事件，这里定时取走并分发。 */
     private fun startRootObservation(pathPriority: Boolean) {
+        // ⚠️ 不能用 `ensure(minApi = SERVICE_BUILD)` 强制换新守护进程：ensure 会先 `drop()`
+        // 把旧守护进程 destroy 掉，而它留下的 port 文件还被判为「活着」，maybeSpawnDaemon 于是
+        // 拒绝重启 —— 结果是 root 通道直接不可用（比没有锚点更糟）。
+        // 旧守护进程发的是 `g:kind:fingers`（无锚点），parseAnchor 会退回「无锚点」，面板落屏幕中间；
+        // root 守护进程下次重启（重启特权服务 / 开机）后自动带上锚点。
         val root = runCatching {
             RootTaskManagerServiceHost.ensure(context) as? TaskManagerRpcClient
         }.getOrNull()
+        if (root != null) {
+            val api = runCatching { root.apiVersion }.getOrNull() ?: 0
+            if (api < ShizukuUserServiceHost.SERVICE_BUILD) {
+                Log.i(
+                    TAG,
+                    "root 守护进程 api=$api < ${ShizukuUserServiceHost.SERVICE_BUILD}：" +
+                        "它回传的手势不带锚点（面板落屏幕中间），重启特权服务后生效",
+                )
+            }
+        }
         if (root == null) {
             _status.value = _status.value.copy(
                 running = false,
@@ -331,18 +366,23 @@ class MultiTouchGestureCoordinator @Inject constructor(
 
     private fun handleRootEvent(event: String) {
         if (event.startsWith("g:")) {
-            val parts = event.split(':')
+            // 新：g:<kind>:<fingers>:<u>:<v>；旧：g:<kind>:<fingers>（无锚点）。
+            val parts = event.split(':', limit = 5)
             val kind = parts.getOrNull(1)?.toIntOrNull() ?: return
             val fingers = parts.getOrNull(2)?.toIntOrNull() ?: return
-            dispatchGesture(kind, fingers)
+            dispatchGesture(kind, fingers, parseAnchor(parts.getOrNull(3), parts.getOrNull(4)))
             return
         }
         if (event.startsWith("p:")) {
-            val parts = event.split(':', limit = 3)
+            // 新：p:<fingers>:<u>:<v>:<strokes>；旧：p:<fingers>:<strokes>。
+            val parts = event.split(':', limit = 5)
             val fingers = parts.getOrNull(1)?.toIntOrNull() ?: return
-            val strokes = decodePathStrokes(parts.getOrNull(2) ?: return)
+            val hasAnchor = parts.size >= 5
+            val anchor = if (hasAnchor) parseAnchor(parts.getOrNull(2), parts.getOrNull(3)) else null
+            val rawStrokes = (if (hasAnchor) parts.getOrNull(4) else parts.getOrNull(2)) ?: return
+            val strokes = decodePathStrokes(rawStrokes)
             if (strokes.isEmpty()) return
-            handlePathStrokes(fingers, strokes)
+            handlePathStrokes(fingers, strokes, anchor)
             return
         }
         if (event.startsWith("d:")) {
@@ -357,10 +397,17 @@ class MultiTouchGestureCoordinator @Inject constructor(
         }
     }
 
+    private fun parseAnchor(u: String?, v: String?): TouchAnchor? {
+        val horizontal = u?.toFloatOrNull() ?: return null
+        val vertical = v?.toFloatOrNull() ?: return null
+        return TouchAnchor(horizontal.coerceIn(0f, 1f), vertical.coerceIn(0f, 1f))
+    }
+
     private fun performAction(
         action: GestureAction,
         kind: MultiPointerGesture,
         fingerCount: Int,
+        anchor: TouchAnchor?,
     ) {
         val now = SystemClock.elapsedRealtime()
         if (now - lastActionAtMs < ACTION_COOLDOWN_MS) return
@@ -374,22 +421,57 @@ class MultiTouchGestureCoordinator @Inject constructor(
                 context.getString(gestureKindLabelRes(kind)),
             ),
         )
+        // 手指落点 → 屏幕坐标 + 面板侧：快速启动器这类「只能贴边画」的浮层靠它决定从哪出来；
+        // 没有锚点（旧服务进程）时保持历史行为（屏幕中心 + 谁的画布在用谁）。
+        val trigger = anchor?.let { resolveTriggerAnchor(it) }
         runCatching {
             val executor = ActionExecutor(
                 context = SlideIndexAccessibilityService.overlayHostContext() ?: context,
                 appRepository = appRepository,
             )
-            executor.execute(action, settingsRepository.readSnapshot())
+            executor.execute(
+                action = action,
+                settings = settingsRepository.readSnapshot(),
+                anchorRawX = trigger?.x,
+                anchorRawY = trigger?.y,
+                panelSide = trigger?.side,
+            )
         }.onFailure {
             Log.w(TAG, "perform action failed: ${it.message}")
         }
     }
 
+    /**
+     * 把面板自然坐标换算成当前屏幕坐标，并决定面板从哪一侧出来。
+     *
+     * 侧的选择就是「手指落在屏幕中线哪边」，不做死区：多指手势（张开/旋转）的质心本来就可能
+     * 压在中线上，加死区反而要再引入一个「默认侧」的武断值；落在哪边就选哪边最可解释。
+     */
+    private fun resolveTriggerAnchor(anchor: TouchAnchor): TriggerAnchor {
+        val metrics = OverlayScreenMetrics.snapshot(context)
+        val point = mapTouchAnchorToScreen(
+            anchor = anchor,
+            widthPx = metrics.widthPx,
+            heightPx = metrics.heightPx,
+            rotation = metrics.rotation,
+        )
+        val side = if (point.x < metrics.widthPx / 2f) PanelSide.LEFT else PanelSide.RIGHT
+        Log.i(
+            TAG,
+            "anchor u=${anchor.u} v=${anchor.v} rotation=${metrics.rotation} " +
+                "screen=${metrics.widthPx}x${metrics.heightPx} -> " +
+                "(${point.x},${point.y}) side=$side",
+        )
+        return TriggerAnchor(side = side, x = point.x, y = point.y)
+    }
+
+    private data class TriggerAnchor(val side: PanelSide, val x: Float, val y: Float)
+
     private fun isMainProcess(): Boolean =
         runCatching { Application.getProcessName() == context.packageName }.getOrDefault(true)
 
     /** 候选按顺序匹配条目，命中第一个就执行并返回 true。 */
-    private fun dispatchGesture(gesture: Int, fingerCount: Int): Boolean {
+    private fun dispatchGesture(gesture: Int, fingerCount: Int, anchor: TouchAnchor?): Boolean {
         val kind = MultiPointerGesture.entries.getOrNull(gesture) ?: return false
         val entry = settingsStore.state.value.entries.firstOrNull {
             it.kind == kind && it.fingerCount == fingerCount &&
@@ -399,7 +481,7 @@ class MultiTouchGestureCoordinator @Inject constructor(
             return false
         }
         Log.i(TAG, "gesture ${kind.name} x$fingerCount -> ${entry.action}")
-        mainHandler.post { performAction(entry.action, kind, fingerCount) }
+        mainHandler.post { performAction(entry.action, kind, fingerCount, anchor) }
         return true
     }
 

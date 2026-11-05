@@ -5,7 +5,9 @@ import com.slideindex.app.gesture.multitouch.CollectedPath
 import com.slideindex.app.gesture.multitouch.MultiPointerGestureRecognizer
 import com.slideindex.app.gesture.multitouch.PathGestureCollector
 import com.slideindex.app.gesture.multitouch.RecognizedMultiPointerGesture
+import com.slideindex.app.gesture.multitouch.TouchAnchor
 import com.slideindex.app.gesture.multitouch.TouchPointer
+import com.slideindex.app.gesture.multitouch.touchAnchorOf
 import java.io.FileInputStream
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -20,8 +22,8 @@ import java.util.concurrent.TimeUnit
  * Linux input 的 ioctl 在纯 Java 里拿不到，直接解析 shell 输出最省事），同时拿到坐标范围。
  */
 class EvdevTouchObserver(
-    private val onGesture: (List<RecognizedMultiPointerGesture>, Long) -> Unit,
-    private val onPathGesture: (CollectedPath, Long) -> Unit = { _, _ -> },
+    private val onGesture: (List<RecognizedMultiPointerGesture>, Long, TouchAnchor) -> Unit,
+    private val onPathGesture: (CollectedPath, Long, TouchAnchor) -> Unit = { _, _, _ -> },
     private val onInputConflict: (String?) -> Unit = {},
     private val onState: (Boolean, String) -> Unit = { _, _ -> },
     private val log: (String) -> Unit = { Log.i(TAG, it) },
@@ -164,7 +166,14 @@ class EvdevTouchObserver(
                                             "x${gesture.fingerCount} ${gesture.debug}"
                                     )
                                 }
-                                onGesture(gestures, now)
+                                // 同一次触摸的候选共用基准质心，取第一条即可。
+                                val anchor = touchAnchorOf(
+                                    anchorX = gestures.first().anchorX,
+                                    anchorY = gestures.first().anchorY,
+                                    panelWidth = ranges.width,
+                                    panelHeight = ranges.height,
+                                )
+                                onGesture(gestures, now, anchor)
                             }
                             // 路径轨迹与几何识别并行采集：最终由 app 侧按条目去重。
                             val path = pathCollector.onFrame(pointers)
@@ -173,7 +182,7 @@ class EvdevTouchObserver(
                                     "path x${path.fingerCount} " +
                                         "points=${path.strokes.sumOf { it.points.size }}"
                                 )
-                                onPathGesture(path, now)
+                                onPathGesture(path, now, pathAnchor(path, ranges))
                             }
                         }
 
@@ -200,6 +209,32 @@ class EvdevTouchObserver(
             result += TouchPointer(id = index, x = nx, y = ny)
         }
         return result
+    }
+
+    /**
+     * 路径手势的锚点：所有轨迹点的质心。
+     *
+     * 绘制手势可能横跨半个屏幕，没有「一个落点」可用；质心最能代表用户的手落在哪一区域，
+     * 也和内置手势用质心决定的规则一致。
+     */
+    private fun pathAnchor(path: CollectedPath, ranges: AbsRanges): TouchAnchor {
+        var sumX = 0.0
+        var sumY = 0.0
+        var count = 0
+        for (stroke in path.strokes) {
+            for (point in stroke.points) {
+                sumX += point.x
+                sumY += point.y
+                count++
+            }
+        }
+        if (count == 0) return TouchAnchor.CENTER
+        return touchAnchorOf(
+            anchorX = (sumX / count).toFloat(),
+            anchorY = (sumY / count).toFloat(),
+            panelWidth = ranges.width,
+            panelHeight = ranges.height,
+        )
     }
 
     private data class Slot(
@@ -241,7 +276,9 @@ class EvdevTouchObserver(
                     "recognized ${gesture.gesture} x${gesture.fingerCount} " +
                         "${gesture.debug} (tick)"
                 )
-                onGesture(listOf(gesture), now)
+                // onTick 目前只会产出「抬手后延迟结算」的候选（现在恒为 null）；
+                // 这条路上手指坐标已经收不到，锚点退回屏幕中心，不要拿 gesture 里默认的 0 当左上角。
+                onGesture(listOf(gesture), now, TouchAnchor.CENTER)
             }
             sleepQuietly(TICK_INTERVAL_MS)
         }

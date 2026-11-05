@@ -10,6 +10,17 @@ data class RecognizedMultiPointerGesture(
     val fingerCount: Int,
     /** 诊断信息（评分/半径差等），仅用于日志。 */
     val debug: String = "",
+    /**
+     * 这次触摸的**基准质心**（x、y 与 [TouchPointer] 同一坐标系：都按屏高归一化）。
+     *
+     * 取的是「手指数量最后一次变化那一帧」的质心，之后手怎么动都不变。用它给外部浮层
+     * （快速启动器这类只能贴边画的面板）决定「从哪一侧、哪个高度出来」：
+     * 若用触发帧的质心，滑动/张开过程中质心会漂过半屏，面板跟着翻边。
+     *
+     * 手指是先后落下的（1 指 → 3 指）时，基准会重建，所以拿到的是**多指都摆好**的位置。
+     */
+    val anchorX: Float = 0f,
+    val anchorY: Float = 0f,
 )
 
 /** 绑定键（旧设置页过渡用；新模型见 [MultiTouchGestureEntry]）。 */
@@ -141,6 +152,8 @@ class MultiPointerGestureRecognizer(
                     MultiPointerGesture.TOUCH,
                     ordered.size,
                     "touch",
+                    centerX,
+                    centerY,
                 )
             }
             return results
@@ -154,6 +167,9 @@ class MultiPointerGestureRecognizer(
 
         val results = ArrayList<RecognizedMultiPointerGesture>(2)
         val current = baseline ?: return results
+        // 所有候选共用「这次触摸的基准质心」当锚点（见 RecognizedMultiPointerGesture.anchorX）。
+        val anchorX = current.centerX
+        val anchorY = current.centerY
 
         // 长按（本次触摸还没触发过其它手势，且按住不动）。
         if (!moved &&
@@ -166,6 +182,8 @@ class MultiPointerGestureRecognizer(
                 MultiPointerGesture.LONG_PRESS,
                 maxFingers,
                 "long",
+                anchorX,
+                anchorY,
             )
         }
 
@@ -187,6 +205,8 @@ class MultiPointerGestureRecognizer(
                     MultiPointerGesture.TOUCH,
                     ordered.size,
                     "touch",
+                    centerX,
+                    centerY,
                 )
             }
             updateLastPositions(pointers)
@@ -212,7 +232,13 @@ class MultiPointerGestureRecognizer(
                     swipeHistory.all { it == direction }
                 ) {
                     triggered += direction
-                    results += RecognizedMultiPointerGesture(direction, maxFingers, "swipe")
+                    results += RecognizedMultiPointerGesture(
+                        direction,
+                        maxFingers,
+                        "swipe",
+                        anchorX,
+                        anchorY,
+                    )
                 }
             }
         }
@@ -248,6 +274,8 @@ class MultiPointerGestureRecognizer(
                         gesture,
                         maxFingers,
                         "rot s=%.3f p=%.3f r=%.3f".format(score, penalty, radiusRatio),
+                        anchorX,
+                        anchorY,
                     )
                 }
             }
@@ -262,6 +290,8 @@ class MultiPointerGestureRecognizer(
                     MultiPointerGesture.PINCH,
                     maxFingers,
                     "pinch d=%.4f t=%.4f".format(delta, threshold),
+                    anchorX,
+                    anchorY,
                 )
             } else if (delta >= threshold && MultiPointerGesture.SPREAD !in triggered) {
                 triggered += MultiPointerGesture.SPREAD
@@ -269,6 +299,8 @@ class MultiPointerGestureRecognizer(
                     MultiPointerGesture.SPREAD,
                     maxFingers,
                     "spread d=%.4f t=%.4f".format(delta, threshold),
+                    anchorX,
+                    anchorY,
                 )
             }
         }
@@ -306,6 +338,9 @@ class MultiPointerGestureRecognizer(
             return
         }
         val fingers = maxFingers
+        // 抬手时手指已经没了，用这次触摸最后一次建立基准的质心当锚点（即点击落点）。
+        val anchorX = baseline?.centerX ?: downCenterX
+        val anchorY = baseline?.centerY ?: downCenterY
         val isSecond = tapCount == 1 && timeMs - lastTapAtMs <= doubleTapMs
         val isThird = tapCount == 2 && timeMs - lastTapAtMs <= doubleTapMs
         when {
@@ -316,6 +351,8 @@ class MultiPointerGestureRecognizer(
                     MultiPointerGesture.TRIPLE_TAP,
                     fingers,
                     "triple",
+                    anchorX,
+                    anchorY,
                 )
             }
             isSecond -> {
@@ -325,6 +362,8 @@ class MultiPointerGestureRecognizer(
                     MultiPointerGesture.DOUBLE_TAP,
                     fingers,
                     "double",
+                    anchorX,
+                    anchorY,
                 )
             }
             else -> {
@@ -334,6 +373,8 @@ class MultiPointerGestureRecognizer(
                     MultiPointerGesture.TAP,
                     fingers,
                     "tap",
+                    anchorX,
+                    anchorY,
                 )
             }
         }
