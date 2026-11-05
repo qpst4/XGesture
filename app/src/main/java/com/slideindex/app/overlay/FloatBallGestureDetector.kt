@@ -21,6 +21,7 @@ import kotlin.math.hypot
  * 抬手判定记录锁定轴正向峰值位移；末尾微回弹在 [GESTURE_CANCEL_RETAIN_FRACTION] 容差内仍触发手势。
  * 单击/双击/长按不进入取词；slop 内球体微跟手，拖出 slop 后进入取词，[PICK_GESTURE_LOCK_MS] 从拖出时刻起算。
  * 黄框暂停（[lockPickFromPause]）与超时锁定等价：抬手仅取词，不触发滑动手势。
+ * 黄框/区域选择时第二根手指按下可取消选中并回到红十字：本次拖动保留，但抬手不提交。
  */
 internal class FloatBallGestureDetector(
     private val handler: Handler = Handler(Looper.getMainLooper())
@@ -95,6 +96,17 @@ internal class FloatBallGestureDetector(
     private var pickGestureLocked = false
     /** 黄框暂停后为 true，与 [pickGestureLocked] 一样锁定取词提交。 */
     private var pausePickLocked = false
+    /**
+     * 主手指 pointerId。
+     *
+     * 多指时只认这一根：黄框后第二根手指按下用于“取消选中”，第一根手指若先抬起，
+     * 绝不能把第二根当成主手指继续拖动/提交。
+     */
+    private var activePointerId = MotionEvent.INVALID_POINTER_ID
+    /** 第二根手指取消黄框/区域选择后为 true：回红叉，本次抬手不提交、不触发手势。 */
+    private var selectionCancelActive = false
+    /** 主手指已抬起但仍有其它手指按着：吞掉剩余事件，直到全部抬起。 */
+    private var ignoreMultiTouchTail = false
     /** 首次滑出方向锁定后，仅沿该轴累计位移用于提示/抬手判定。 */
     private var lockedSwipeAxis: LockedSwipeAxis? = null
     /** 锁定轴上的正向符号：上=-1、下=+1、侧=sign(dx)。 */
@@ -128,6 +140,8 @@ internal class FloatBallGestureDetector(
     private var onPickDrag: ((fingerX: Float, fingerY: Float) -> Unit)? = null
     private var onPickEnd: (() -> Unit)? = null
     private var onPickCancel: (() -> Unit)? = null
+    /** 第二根手指取消黄框/区域选择：覆盖层应清选中态、回红十字，但保留本次拖动。 */
+    private var onPickSelectionCancel: (() -> Unit)? = null
     private var onGesture: ((
         FloatBallGestureType,
         rawX: Float,
@@ -208,6 +222,7 @@ internal class FloatBallGestureDetector(
         onPickDrag: (fingerX: Float, fingerY: Float) -> Unit,
         onPickEnd: () -> Unit,
         onPickCancel: () -> Unit,
+        onPickSelectionCancel: () -> Unit = {},
         onGesture: (FloatBallGestureType, rawX: Float, rawY: Float, touchDownX: Float, touchDownY: Float) -> Unit,
         onGestureHint: (FloatBallGestureType?) -> Unit = {},
         onPickPreviewStart: (screenX: Float, screenY: Float) -> Unit = { _, _ -> },
@@ -232,6 +247,7 @@ internal class FloatBallGestureDetector(
         this.onPickDrag = onPickDrag
         this.onPickEnd = onPickEnd
         this.onPickCancel = onPickCancel
+        this.onPickSelectionCancel = onPickSelectionCancel
         this.onGesture = onGesture
         this.onGestureHint = onGestureHint
         this.onPickPreviewStart = onPickPreviewStart
@@ -267,6 +283,7 @@ internal class FloatBallGestureDetector(
             MotionEvent.ACTION_DOWN -> {
                 cancelPendingSingleTap()
                 resetTouchSession()
+                activePointerId = event.getPointerId(0)
                 downX = event.rawX
                 downY = event.rawY
                 lastX = downX
@@ -283,7 +300,7 @@ internal class FloatBallGestureDetector(
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
-                if (!pickActive) return true
+                if (!pickActive || ignoreMultiTouchTail) return true
                 if (launcherCaptureMode) {
                     lastX = event.rawX
                     lastY = event.rawY
@@ -326,7 +343,39 @@ internal class FloatBallGestureDetector(
                 emitGestureHint(totalDx, totalDy)
                 return true
             }
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                if (ignoreMultiTouchTail) return true
+                // 圆环接管/移动模式有自己的 UP 语义，不参与取词的多指取消。
+                if (launcherCaptureMode || moveModeActive) return true
+                // 黄框/区域选择时，第二根手指按下 = 取消当前选中态，回红十字继续取词。
+                // 只认这一下：后续第二根手指的 MOVE/UP 都忽略，主手指仍是第一根。
+                if (pickDragStarted && pausePickLocked && !selectionCancelActive) {
+                    beginSelectionCancel()
+                }
+                return true
+            }
+            MotionEvent.ACTION_POINTER_UP -> {
+                if (ignoreMultiTouchTail) return true
+                if (launcherCaptureMode || moveModeActive) return true
+                // 第一根手指抬起时若还有第二根按着，直接收尾，绝不让第二根接管。
+                if (event.getPointerId(event.actionIndex) == activePointerId) {
+                    finishCancelledPickAndIgnoreTail()
+                }
+                return true
+            }
             MotionEvent.ACTION_UP -> {
+                if (ignoreMultiTouchTail) {
+                    resetTouchSession()
+                    return true
+                }
+                // 第二根手指已经取消选中：本次抬手只收尾，不提交、不识别手势。
+                if (selectionCancelActive) {
+                    onGestureHint?.invoke(null)
+                    cancelDeferredCallbacks()
+                    finishGestureOnly()
+                    resetTouchSession()
+                    return true
+                }
                 onGestureHint?.invoke(null)
                 cancelDeferredCallbacks()
                 gesturePath.add(event.rawX)
@@ -431,10 +480,55 @@ internal class FloatBallGestureDetector(
         resetTouchSession()
     }
 
+    /**
+     * 第二根手指取消当前黄框/区域选择（回红十字、保留本次拖动）。
+     *
+     * @return true 表示确实取消了选中态；false 表示当前不在黄框/区域选择。
+     */
+    fun cancelPickSelectionFromPause(): Boolean {
+        if (!pickActive || !pickDragStarted || !pausePickLocked) return false
+        beginSelectionCancel()
+        return true
+    }
+
+    private fun beginSelectionCancel() {
+        pausePickLocked = false
+        selectionCancelActive = true
+        // 取消后不再累计滑动判定：本次手势要么重新黄框提交，要么抬手直接结束。
+        gestureArmed = false
+        peakForwardProgressPx = 0f
+        reboundStartTime = 0L
+        lockedSwipeAxis = null
+        lockedAxisForwardSign = 0f
+        firstSegmentAnchorX = null
+        firstSegmentAnchorY = null
+        onGestureHint?.invoke(null)
+        onPickSelectionCancel?.invoke()
+    }
+
+    /** 主手指先抬起：收尾并吞掉仍在按着的其它手指，避免第二根手指接管。 */
+    private fun finishCancelledPickAndIgnoreTail() {
+        onGestureHint?.invoke(null)
+        cancelDeferredCallbacks()
+        if (pickActive) {
+            pickActive = false
+            if (pickDragStarted) {
+                onPickCancel?.invoke()
+            } else {
+                onPickPreviewCancel?.invoke()
+            }
+        }
+        resetTouchSession()
+        ignoreMultiTouchTail = true
+    }
+
     /** 黄框暂停：与超时锁定相同，抬手仅提交取词。 */
     fun lockPickFromPause() {
         if (!pickDragStarted) return
         pausePickLocked = true
+        // 重新黄框后恢复“抬手提交”，清除上一次第二指取消留下的抑制。
+        selectionCancelActive = false
+        ignoreMultiTouchTail = false
         gestureArmed = false
         peakForwardProgressPx = 0f
         onGestureHint?.invoke(null)
@@ -519,6 +613,7 @@ internal class FloatBallGestureDetector(
     }
 
     private fun lockSwipeAxisIfNeeded(totalDx: Float, totalDy: Float) {
+        if (selectionCancelActive) return
         if (lockedSwipeAxis != null || isPickCommitLocked() || longPressFired) return
         val axis = resolveSwipeAxis(totalDx, totalDy) ?: return
         lockedSwipeAxis = axis
@@ -540,6 +635,12 @@ internal class FloatBallGestureDetector(
         lockedAxis: LockedSwipeAxis? = lockedSwipeAxis,
         forwardSign: Float = lockedAxisForwardSign
     ) {
+        if (selectionCancelActive) {
+            gestureArmed = false
+            peakForwardProgressPx = 0f
+            reboundStartTime = 0L
+            return
+        }
         val axis = lockedAxis ?: run {
             gestureArmed = false
             peakForwardProgressPx = 0f
@@ -602,6 +703,7 @@ internal class FloatBallGestureDetector(
     }
 
     private fun shouldCommitSwipeGesture(projDx: Float, projDy: Float): Boolean {
+        if (selectionCancelActive) return false
         if (isPickCommitLocked() || longPressFired) return false
         if (!qualifiesAsSwipe(projDx, projDy)) return false
         return retainsGestureCommitment(forwardProgressAlongLockedAxis(projDx, projDy))
@@ -647,6 +749,7 @@ internal class FloatBallGestureDetector(
     }
 
     internal fun predictSwipeGesture(dx: Float, dy: Float): FloatBallGestureType? {
+        if (selectionCancelActive) return null
         if (isPickCommitLocked() || longPressFired) return null
         if (!qualifiesAsSwipe(dx, dy)) return null
         return classifySwipe(dx, dy)
@@ -665,6 +768,7 @@ internal class FloatBallGestureDetector(
     }
 
     internal fun classifyReturnGesture(): FloatBallGestureType? {
+        if (selectionCancelActive) return null
         if (isPickCommitLocked() || longPressFired) return null
         val axis = lockedSwipeAxis ?: return null
         val returnType = returnGestureForAxis(axis)
@@ -697,6 +801,7 @@ internal class FloatBallGestureDetector(
      * 未配置对应动作、首段未达标、或整体已超出取词时间窗时均不触发（回落为普通滑动）。
      */
     internal fun classifyCompoundGesture(): FloatBallGestureType? {
+        if (selectionCancelActive) return null
         if (isPickCommitLocked() || longPressFired) return null
         val axis = lockedSwipeAxis ?: return null
         val anchorX = firstSegmentAnchorX ?: return null
@@ -736,6 +841,11 @@ internal class FloatBallGestureDetector(
     }
 
     private fun emitGestureHint(totalDx: Float, totalDy: Float) {
+        // 取消选中后本次手势不再显示/触发任何滑动手势。
+        if (selectionCancelActive) {
+            onGestureHint?.invoke(null)
+            return
+        }
         // 移动模式：只跟手挪球，不预测/不显示任何手势提示（用户会看到"手势图标"跳出来）。
         if (moveModeActive) {
             onGestureHint?.invoke(null)
@@ -802,6 +912,9 @@ internal class FloatBallGestureDetector(
         pickDragStartTime = 0L
         pickGestureLocked = false
         pausePickLocked = false
+        activePointerId = MotionEvent.INVALID_POINTER_ID
+        selectionCancelActive = false
+        ignoreMultiTouchTail = false
         lockedSwipeAxis = null
         lockedAxisForwardSign = 0f
         gestureArmed = false
