@@ -88,12 +88,30 @@ internal class EdgeGestureLayoutCoordinator(
         return snapshot.widthPx to snapshot.heightPx
     }
 
-    fun activeTriggerZoneRect(): android.graphics.RectF =
-        if (gestureSession.isActive()) {
-            zoneLayout.triggerZoneRect(gestureSession.activeHandleId())
+    /**
+     * 面板落位读的「触发带」。
+     *
+     * ⚠️ 会话激活时不能无条件用 `activeHandleId` 的矩形：`sessionActiveHandleId` 默认恒为
+     * [com.slideindex.app.gesture.TriggerHandle.DEFAULT_ID]（"default"，永不为 null），而
+     * `triggerZoneRect(id)` 内部查的是 `allTriggerHandles`（**包含已关闭的触钮**）。于是
+     * 一个触钮都没开的侧（外部触发 / 全局触控打开的会话）也会拿到一条「幽灵带」，面板锚点被
+     * `coerceIn(trigger.top, trigger.bottom)` 夹进那条带里 —— 真机表现就是「面板最高只到屏幕中间」。
+     *
+     * 修法：只有这个触钮**确实启用**时才用它的矩形；否则退回「启用触钮的并集」。
+     * 并集为空时返回空矩形，上层 [EdgeGestureOverlayView.activeTriggerZoneRect] 会合成一条
+     * 零高带（纵向=本次触发高度），面板就能跟手指到任意高度。
+     */
+    fun activeTriggerZoneRect(): android.graphics.RectF {
+        if (!gestureSession.isActive()) return zoneLayout.triggerZoneUnionRect()
+        val activeId = gestureSession.activeHandleId()
+        // triggerZoneRects() 已经过滤过 enabled：这条判断等价于「该触钮确实是开着的」。
+        val enabled = zoneLayout.triggerZoneRects().any { it.first == activeId }
+        return if (enabled) {
+            zoneLayout.triggerZoneRect(activeId)
         } else {
             zoneLayout.triggerZoneUnionRect()
         }
+    }
 
     fun needsPresentationDirectTouch(): Boolean {
         if (gestureSession.panelMode() != OverlayPanelMode.NONE) return true

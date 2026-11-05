@@ -145,6 +145,45 @@ class SideOverlayController(
         return overlayPresentation != null
     }
 
+    /**
+     * 只刷新缓存的设置，不碰窗口。
+     *
+     * 用于「这一侧当前被隐藏」的场景（没触钮 / 横屏隐藏 / 排除应用）：窗口由 [hideEdge] 收掉，
+     * 但 `settings` 必须跟着刷新。否则旋转或改配置后，controller 会一直拿着**旧方向**的触钮列表
+     * ——外部触发（全局触控 / 角轮盘 / 悬浮球）会误判「这侧有触钮、画布应该自己回来」，
+     * 于是拒绝挂面板专用画布，表现就是「这一侧怎么触发都打不开面板」。
+     *
+     * 真机案例：横屏时 left/right 各 2 个触钮，转回竖屏后这些触钮是关的；隐藏侧没有刷新缓存，
+     * `ensurePanelHostForExternalPanel` 看到 2 个触钮直接 `return isEdgeInitialized()`（false），
+     * 面板永远挂不上，直到应用重启。
+     */
+    fun refreshSettingsCache(newSettings: AppSettings, metrics: ScreenMetricsSnapshot) {
+        settings = effectiveSettings(newSettings, metrics)
+        lastIsLandscape = metrics.isLandscape
+        screenWidthPx = metrics.widthPx
+        screenHeightPx = metrics.heightPx
+    }
+
+    /**
+     * 「面板专用宿主」挂不上时的现场，只给 [OverlayManager] 的诊断日志用。
+     *
+     * 几个量分别对应一种卡死原因：
+     * - `presentation`：画布对象在不在（不在说明视图被收掉了）；
+     * - `detached`：该侧是否被 suspend 过且没恢复（`showEdge` 会在 suspended 时直接返回）；
+     * - `suspended`：上面两项 + trampoline 守卫的合并判断；
+     * - `captures`：残留的捕获窗数量（非空但 presentation=false 时 showEdge 会只走"补挂"分支）；
+     * - `handles`：controller 眼里该侧还有几个触钮（非 0 会让 ensure 直接返回 false）；
+     * - `landscape`：缓存里的设置是按哪个方向算的（和屏幕方向不一致就是缓存过期）。
+     */
+    internal fun panelHostDebugState(): String =
+        "presentation=${overlayPresentation != null} " +
+            "detached=${windowManager.edgeOverlayDetached} " +
+            "suspended=${windowManager.overlayLayoutSuspended()} " +
+            "captures=${windowManager.touchCaptureWindows.size} " +
+            "handles=${settings.triggerHandles(side).size} " +
+            "landscape=${lastIsLandscape} " +
+            "panelOnly=$panelOnlyHostRequested"
+
     fun updateSettings(newSettings: AppSettings, metrics: ScreenMetricsSnapshot? = null) {
         val resolvedMetrics = metrics ?: OverlayScreenMetrics.snapshot(context)
         val effective = effectiveSettings(newSettings, resolvedMetrics)

@@ -115,6 +115,12 @@ class OverlayManager(
         if (!hasHandles) {
             // 没有触钮的侧平时不留画布；只有"面板专用宿主正被面板使用"时才保留
             //（角轮盘 / 悬浮球在这种侧弹出快速启动器、任务切换器就靠它）。
+            //
+            // ⚠️ 隐藏之前必须先把 controller 的 settings 刷新一遍：旋转 / 改配置后这一侧
+            // 会被 hideEdge 反复收掉，而 hideEdge 不碰 settings。缓存停在**旧方向**的触钮列表时，
+            // 外部触发（全局触控 / 角轮盘 / 悬浮球）会误判「这侧有触钮、画布应该自己回来」，
+            // 于是拒绝挂面板专用画布 —— 表现是「这一侧怎么触发都打不开面板，重启应用才好」。
+            controller.refreshSettingsCache(settings, metrics)
             if (controller.holdsPanelHostInUse()) return
             controller.hideEdge()
             return
@@ -627,13 +633,27 @@ class OverlayManager(
             return null
         }
         if (controller.overlayPresentation != null) return controller
-        if (controller.ensurePanelHostForExternalPanel(OverlayScreenMetrics.snapshot(context)) &&
+        // 该侧可能「设置改了 / 旋转后一直被隐藏」：controller 缓存的方向或触钮列表会过期。
+        // 先按当前设置刷一遍缓存，再判断要不要挂宿主，否则会拿着旧方向的触钮列表拒绝挂载。
+        val metrics = OverlayScreenMetrics.snapshot(context)
+        controller.refreshSettingsCache(currentSettings, metrics)
+        // 诊断：把「挂之前 / 挂之后」的窗口状态打出来。这一句是定位「同一侧反复挂不上」的唯一线索
+        // （presentation / detached / suspended / captures / handles 五个量各自对应一种卡死原因）。
+        val stateBefore = controller.panelHostDebugState()
+        if (controller.ensurePanelHostForExternalPanel(metrics) &&
             controller.overlayPresentation != null
         ) {
-            EdgeDiag.log("panel", "外部触发面板：$panelSide 侧没有触钮 → 已按需挂面板专用宿主")
+            EdgeDiag.log(
+                "panel",
+                "外部触发面板：$panelSide 侧没有触钮 → 已按需挂面板专用宿主（before: $stateBefore）",
+            )
             return controller
         }
-        EdgeDiag.log("panel", "外部触发面板失败：$panelSide 侧无触钮且面板专用宿主挂不上")
+        EdgeDiag.log(
+            "panel",
+            "外部触发面板失败：$panelSide 侧无触钮且面板专用宿主挂不上" +
+                "（before: $stateBefore / after: ${controller.panelHostDebugState()}）",
+        )
         return null
     }
 
