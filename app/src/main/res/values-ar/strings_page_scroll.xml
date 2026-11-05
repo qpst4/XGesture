@@ -18,19 +18,9 @@
     <string name="page_scroll_prefs_title">تمرير الصفحة</string>
     <string name="page_scroll_prefs_behavior">السلوك</string>
     <string name="page_scroll_prefs_appearance">المظهر</string>
-    <string name="page_scroll_mode_title">طريقة التمرير</string>
-    <string name="page_scroll_mode_auto">تمرير سلس</string>
-    <string name="page_scroll_mode_auto_description">يواصل التمرير بعد رفع إصبعك. استخدم الشريط العائم لتغيير الاتجاه أو ضبط السرعة أو الإيقاف المؤقت أو الإغلاق.</string>
-    <string name="page_scroll_mode_hold_drag">الضغط والسحب</string>
-    <string name="page_scroll_mode_hold_drag_description">استمر في الضغط على الحافة ثم حرّك لأعلى أو لأسفل للتمرير صفحة بصفحة.</string>
+    <string name="page_scroll_behavior_hint">وضع التشغيل «مستمر»: استمر بالضغط وحرّك إصبعك لأعلى أو لأسفل للتمرير صفحة بصفحة، وعند رفعه يتوقف التمرير دون ظهور شريط.\nأوضاع التشغيل الأخرى: يظهر شريط عائم ويواصل التمرير؛ استخدم أزراره للإيقاف المؤقت أو تغيير السرعة أو الإغلاق.</string>
     <string name="page_scroll_speed_title">سرعة التمرير الافتراضية</string>
     <string name="page_scroll_speed_value">السرعة %1$d من %2$d</string>
-    <string name="page_scroll_bar_color_title">لون الشريط</string>
-    <string name="page_scroll_bar_color_dark">رمادي داكن</string>
-    <string name="page_scroll_bar_color_black">أسود</string>
-    <string name="page_scroll_bar_color_white">أبيض</string>
-    <string name="page_scroll_bar_use_accent_title">استخدام لون التمييز</string>
-    <string name="page_scroll_bar_use_accent_subtitle">مطابقة أزرار الشريط مع لون التمييز في التطبيق الحالي.</string>
     <string name="page_scroll_bar_idle_alpha_title">شفافية وقت الخمول</string>
     <string name="page_scroll_bar_idle_alpha_summary">شفافية الشريط بعد 4 ثوانٍ دون لمس. عند الحد الأدنى يصبح غير مرئي تمامًا، لكن الضغط على الموضع نفسه ما زال يعمل.</string>
 </resources>

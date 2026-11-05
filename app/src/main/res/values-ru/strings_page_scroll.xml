@@ -18,19 +18,9 @@
     <string name="page_scroll_prefs_title">Прокрутка страницы</string>
     <string name="page_scroll_prefs_behavior">Поведение</string>
     <string name="page_scroll_prefs_appearance">Внешний вид</string>
-    <string name="page_scroll_mode_title">Режим прокрутки</string>
-    <string name="page_scroll_mode_auto">Плавная прокрутка</string>
-    <string name="page_scroll_mode_auto_description">Продолжает прокрутку после отпускания. Используйте плавающую панель, чтобы сменить направление, изменить скорость, сделать паузу или закрыть.</string>
-    <string name="page_scroll_mode_hold_drag">Удержание и перетаскивание</string>
-    <string name="page_scroll_mode_hold_drag_description">Удерживайте край экрана и перемещайте вверх или вниз для постраничной прокрутки.</string>
+    <string name="page_scroll_behavior_hint">Режим срабатывания «непрерывный»: удерживайте палец и двигайте вверх-вниз — прокрутка идёт постранично, отпустите — остановится, панель не появляется.\nДругие режимы: появляется плавающая панель и прокрутка продолжается; кнопки панели — пауза, скорость, закрытие.</string>
     <string name="page_scroll_speed_title">Скорость прокрутки по умолчанию</string>
     <string name="page_scroll_speed_value">Скорость %1$d из %2$d</string>
-    <string name="page_scroll_bar_color_title">Цвет панели</string>
-    <string name="page_scroll_bar_color_dark">Тёмно-серый</string>
-    <string name="page_scroll_bar_color_black">Чёрный</string>
-    <string name="page_scroll_bar_color_white">Белый</string>
-    <string name="page_scroll_bar_use_accent_title">Использовать акцентный цвет</string>
-    <string name="page_scroll_bar_use_accent_subtitle">Кнопки панели подстраиваются под акцентный цвет текущего приложения.</string>
     <string name="page_scroll_bar_idle_alpha_title">Прозрачность в простое</string>
     <string name="page_scroll_bar_idle_alpha_summary">Непрозрачность панели после 4 секунд без касаний. На минимуме панель полностью не видна, но касание того же места всё ещё работает.</string>
 </resources>

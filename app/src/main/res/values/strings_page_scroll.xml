@@ -18,19 +18,9 @@
     <string name="page_scroll_prefs_title">Page Scroll</string>
     <string name="page_scroll_prefs_behavior">Behavior</string>
     <string name="page_scroll_prefs_appearance">Appearance</string>
-    <string name="page_scroll_mode_title">Scrolling behavior</string>
-    <string name="page_scroll_mode_auto">Smooth scrolling</string>
-    <string name="page_scroll_mode_auto_description">Keeps scrolling after you release. Use the floating bar to change direction, adjust speed, pause, or close.</string>
-    <string name="page_scroll_mode_hold_drag">Hold and drag</string>
-    <string name="page_scroll_mode_hold_drag_description">Keep holding the edge, then move up or down to scroll page by page.</string>
+    <string name="page_scroll_behavior_hint">“Continuous” trigger mode: hold your finger down and slide up or down to scroll page by page; releasing stops, and no bar appears.\nOther trigger modes: a floating bar appears and keeps scrolling; use its buttons to pause, change speed, or close.</string>
     <string name="page_scroll_speed_title">Default scroll speed</string>
     <string name="page_scroll_speed_value">Speed %1$d of %2$d</string>
-    <string name="page_scroll_bar_color_title">Bar color</string>
-    <string name="page_scroll_bar_color_dark">Dark gray</string>
-    <string name="page_scroll_bar_color_black">Black</string>
-    <string name="page_scroll_bar_color_white">White</string>
-    <string name="page_scroll_bar_use_accent_title">Use accent color</string>
-    <string name="page_scroll_bar_use_accent_subtitle">Match the bar buttons to the current app accent color.</string>
     <string name="page_scroll_bar_idle_alpha_title">Idle opacity</string>
     <string name="page_scroll_bar_idle_alpha_summary">Opacity after 4 seconds without touching the bar. Drag to the minimum to hide it completely; the same spot still responds to taps.</string>
 </resources>

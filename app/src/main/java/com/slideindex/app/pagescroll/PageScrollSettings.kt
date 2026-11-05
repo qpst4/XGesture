@@ -4,37 +4,15 @@ import android.content.Context
 import android.content.SharedPreferences
 
 /**
- * 「页面滚动」的执行方式。
+ * 「页面滚动」的可调项。
  *
- * 这是**同一个动作**的内部选项，不是两个动作：默认用控制条 + 平滑滚动；
- * 也可以改成"按住边缘上下拖动"。
+ * 触发方式没有开关：由该手势槽位解析出来的触发模式决定——「持续」走逐页拖动，
+ * 其它模式弹出控制条持续滚动。这里只留真正影响执行的项。
  */
-enum class PageScrollMode(val storageKey: String) {
-    /** 打开控制条并持续平滑滚动（默认）。 */
-    AUTO("auto"),
-
-    /** 按住边缘上下拖动，每次发一个按页滚动。 */
-    HOLD_AND_DRAG("hold_drag"),
-    ;
-
-    companion object {
-        fun fromStorage(value: String?): PageScrollMode =
-            entries.firstOrNull { it.storageKey == value } ?: AUTO
-    }
-}
-
-/** 「页面滚动」的可调项。 */
 data class PageScrollSettings(
-    val mode: PageScrollMode = PageScrollMode.AUTO,
     val speedLevel: Int = DEFAULT_SPEED_LEVEL,
-    /** 控制条底色。 */
-    val controlBarColorArgb: Int = DEFAULT_BAR_COLOR_ARGB,
-    /** 控制条按钮是否跟随应用强调色。 */
-    val controlBarUseAccentColor: Boolean = true,
     /** 闲置 4 秒后控制条停在不透明度（0 = 完全看不见，1 = 不淡出）。 */
     val controlBarIdleAlpha: Float = DEFAULT_CONTROL_BAR_IDLE_ALPHA,
-    /** 面板/控制条位置是否记忆（同样用于左右侧）。 */
-    val rememberSide: Boolean = true,
     val lastSideName: String = "",
 ) {
     /** 当前档位对应的滚动速度（dp/s）。 */
@@ -50,8 +28,6 @@ data class PageScrollSettings(
         val MIN_SPEED_LEVEL = 1
         val MAX_SPEED_LEVEL get() = SPEED_LEVELS.size
 
-        const val DEFAULT_BAR_COLOR_ARGB = 0xFF1A1B1F.toInt()
-
         /** 闲置淡出的默认值：沿用改之前写死的 55%。 */
         const val DEFAULT_CONTROL_BAR_IDLE_ALPHA = 0.55f
         const val MIN_CONTROL_BAR_IDLE_ALPHA = 0f
@@ -63,10 +39,7 @@ data class PageScrollSettings(
 object PageScrollPrefs {
 
     private const val PREFS_NAME = "page_scroll"
-    private const val KEY_MODE = "mode"
     private const val KEY_SPEED_LEVEL = "speed_level"
-    private const val KEY_BAR_COLOR = "control_bar_color"
-    private const val KEY_BAR_USE_ACCENT = "control_bar_use_accent"
     private const val KEY_BAR_IDLE_ALPHA = "control_bar_idle_alpha"
     private const val KEY_LAST_SIDE = "last_side"
     private const val KEY_BAR_Y_RATIO = "control_bar_y_ratio"
@@ -74,11 +47,8 @@ object PageScrollPrefs {
     fun read(context: Context): PageScrollSettings {
         val prefs = prefs(context)
         return PageScrollSettings(
-            mode = PageScrollMode.fromStorage(prefs.getString(KEY_MODE, null)),
             speedLevel = prefs.getInt(KEY_SPEED_LEVEL, PageScrollSettings.DEFAULT_SPEED_LEVEL)
                 .coerceIn(PageScrollSettings.MIN_SPEED_LEVEL, PageScrollSettings.MAX_SPEED_LEVEL),
-            controlBarColorArgb = prefs.getInt(KEY_BAR_COLOR, PageScrollSettings.DEFAULT_BAR_COLOR_ARGB),
-            controlBarUseAccentColor = prefs.getBoolean(KEY_BAR_USE_ACCENT, true),
             controlBarIdleAlpha = prefs.getFloat(
                 KEY_BAR_IDLE_ALPHA,
                 PageScrollSettings.DEFAULT_CONTROL_BAR_IDLE_ALPHA,
@@ -99,10 +69,6 @@ object PageScrollPrefs {
             .apply()
     }
 
-    fun saveMode(context: Context, mode: PageScrollMode) {
-        prefs(context).edit().putString(KEY_MODE, mode.storageKey).apply()
-    }
-
     fun saveLastSide(context: Context, sideName: String) {
         prefs(context).edit().putString(KEY_LAST_SIDE, sideName).apply()
     }
@@ -113,14 +79,6 @@ object PageScrollPrefs {
     }
 
     fun barYRatio(context: Context): Float = prefs(context).getFloat(KEY_BAR_Y_RATIO, -1f)
-
-    fun saveControlBarColor(context: Context, argb: Int) {
-        prefs(context).edit().putInt(KEY_BAR_COLOR, argb).apply()
-    }
-
-    fun saveControlBarUseAccentColor(context: Context, enabled: Boolean) {
-        prefs(context).edit().putBoolean(KEY_BAR_USE_ACCENT, enabled).apply()
-    }
 
     fun saveControlBarIdleAlpha(context: Context, alpha: Float) {
         prefs(context).edit()

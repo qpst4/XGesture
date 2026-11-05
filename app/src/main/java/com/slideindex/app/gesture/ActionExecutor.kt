@@ -90,8 +90,6 @@ class ActionExecutor(
 
     // ---- 「页面滚动」的按住拖动方式：由手势会话驱动 ----
 
-    fun isPageScrollHoldDragMode(): Boolean = PageScrollActionRunner.isHoldDragMode(context)
-
     fun beginPageScrollHoldDrag(rawY: Float) = PageScrollActionRunner.beginHoldDrag(context, rawY)
 
     fun updatePageScrollHoldDrag(rawY: Float) = PageScrollActionRunner.updateHoldDrag(rawY)

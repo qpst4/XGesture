@@ -51,10 +51,6 @@ object PageScrollActionRunner {
 
     // ---- 按住拖动执行方式：由手势会话在 开始/移动/抬起 三个时机驱动 ----
 
-    /** 设置里选的是"按住拖动"吗？ */
-    fun isHoldDragMode(context: Context): Boolean =
-        PageScrollPrefs.read(context).mode == PageScrollMode.HOLD_AND_DRAG
-
     fun beginHoldDrag(context: Context, rawY: Float) {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             mainHandler.post { beginHoldDrag(context, rawY) }

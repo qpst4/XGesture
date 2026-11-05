@@ -18,19 +18,9 @@
     <string name="page_scroll_prefs_title">ページスクロール</string>
     <string name="page_scroll_prefs_behavior">動作</string>
     <string name="page_scroll_prefs_appearance">外観</string>
-    <string name="page_scroll_mode_title">スクロール方式</string>
-    <string name="page_scroll_mode_auto">なめらかスクロール</string>
-    <string name="page_scroll_mode_auto_description">指を離したあともスクロールを続けます。フローティングバーで方向と速度の変更、一時停止、終了ができます。</string>
-    <string name="page_scroll_mode_hold_drag">長押ししてドラッグ</string>
-    <string name="page_scroll_mode_hold_drag_description">端を押し続けたまま上下に動かすと、1 ページずつスクロールします。</string>
+    <string name="page_scroll_behavior_hint">「継続」トリガーモード：指を押したまま上下に動かすと 1 ページずつスクロールし、離すと停止します（バーは表示されません）。\nその他のトリガーモード：フローティングバーが表示され、ページがスクロールし続けます。バーのボタンで一時停止・速度変更・終了ができます。</string>
     <string name="page_scroll_speed_title">既定のスクロール速度</string>
     <string name="page_scroll_speed_value">速度 %1$d / %2$d</string>
-    <string name="page_scroll_bar_color_title">バーの色</string>
-    <string name="page_scroll_bar_color_dark">ダークグレー</string>
-    <string name="page_scroll_bar_color_black">ブラック</string>
-    <string name="page_scroll_bar_color_white">ホワイト</string>
-    <string name="page_scroll_bar_use_accent_title">アクセントカラーを使う</string>
-    <string name="page_scroll_bar_use_accent_subtitle">バーのボタンを現在のアプリのアクセントカラーに合わせます。</string>
     <string name="page_scroll_bar_idle_alpha_title">アイドル時の不透明度</string>
     <string name="page_scroll_bar_idle_alpha_summary">バーに 4 秒間触れなかったときの不透明度。最小にすると完全に透明になりますが、同じ位置をタップすれば操作できます。</string>
 </resources>

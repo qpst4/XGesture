@@ -18,19 +18,9 @@
     <string name="page_scroll_prefs_title">页面滚动</string>
     <string name="page_scroll_prefs_behavior">行为</string>
     <string name="page_scroll_prefs_appearance">外观</string>
-    <string name="page_scroll_mode_title">滚动方式</string>
-    <string name="page_scroll_mode_auto">平滑滚动</string>
-    <string name="page_scroll_mode_auto_description">松手后继续滚动。用浮动控制条改方向、调速、暂停或关闭。</string>
-    <string name="page_scroll_mode_hold_drag">按住并拖动</string>
-    <string name="page_scroll_mode_hold_drag_description">按住边缘后上下移动，逐页滚动。</string>
+    <string name="page_scroll_behavior_hint">「持续」触发模式：按住不放上下滑，逐页滚动，松手即停，不出现控制条。\n其它触发模式：触发后弹出控制条，页面持续滚动，用条上的按钮暂停、调速或关闭。</string>
     <string name="page_scroll_speed_title">默认滚动速度</string>
     <string name="page_scroll_speed_value">速度 %1$d / %2$d</string>
-    <string name="page_scroll_bar_color_title">控制条颜色</string>
-    <string name="page_scroll_bar_color_dark">深灰</string>
-    <string name="page_scroll_bar_color_black">纯黑</string>
-    <string name="page_scroll_bar_color_white">白色</string>
-    <string name="page_scroll_bar_use_accent_title">使用应用强调色</string>
-    <string name="page_scroll_bar_use_accent_subtitle">让控制条按钮跟随当前应用的强调色。</string>
     <string name="page_scroll_bar_idle_alpha_title">闲置不透明度</string>
     <string name="page_scroll_bar_idle_alpha_summary">4 秒没有触摸控制条后的不透明度。拖到最低即完全看不见，点原位置仍然有效。</string>
 </resources>
