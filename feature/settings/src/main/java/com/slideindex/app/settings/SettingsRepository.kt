@@ -910,6 +910,21 @@ class SettingsRepository @Inject constructor(
     suspend fun setSearchEngines(engines: List<SearchEngineConfig>) =
         overlay.setSearchEngines(engines)
 
+    /**
+     * 引擎列表的原子「读 → 改 → 写」。
+     *
+     * 基线取自 DataStore 事务内部的原始 prefs，而不是 ViewModel 的 `settings.value`：
+     * 后者是 `stateIn(WhileSubscribed)` 的快照，页面没有订阅者时不会更新，拿它拼新列表
+     * 会把别处刚落库的引擎整表覆盖掉（图片分享批量添加曾因此每次只留下最后一条）。
+     */
+    suspend fun updateSearchEngines(
+        transform: (List<SearchEngineConfig>) -> List<SearchEngineConfig>,
+    ): Result<Unit> = editor.edit { prefs ->
+        val updated = transform(SearchEngineStore.readFromPreferences(prefs, context))
+        prefs[SettingsPreferenceKeys.SEARCH_ENGINES_JSON] = SearchEngineStore.encode(updated)
+        prefs[SettingsPreferenceKeys.SEARCH_ENGINES_INITIALIZED] = true
+    }
+
     suspend fun setLauncherShortcutMenuOrder(ids: List<String>) =
         overlay.setLauncherShortcutMenuOrder(ids)
 

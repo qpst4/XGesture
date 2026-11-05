@@ -1,6 +1,7 @@
 package com.slideindex.app.settings
 
 import android.content.Context
+import androidx.datastore.preferences.core.Preferences
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 
@@ -29,6 +30,28 @@ object SearchEngineStore {
     fun decodeOrEmpty(raw: String?): List<SearchEngineConfig> {
         if (raw.isNullOrBlank()) return emptyList()
         return runCatching { json.decodeFromString(listSerializer, raw) }.getOrElse { emptyList() }
+    }
+
+    /**
+     * 从 DataStore 的原始 [Preferences] 读出引擎列表（含「是否已初始化」判定）。
+     *
+     * 给需要在写入事务内部做「读 → 改 → 写」的调用方使用：ViewModel 里的 `settings.value`
+     * 是 `stateIn(WhileSubscribed)` 的快照，页面没有订阅者时不会更新，拿它当基线会丢数据。
+     */
+    fun readFromPreferences(prefs: Preferences, context: Context): List<SearchEngineConfig> {
+        val initialized = prefs[SettingsPreferenceKeys.SEARCH_ENGINES_INITIALIZED] ?: false
+        if (!initialized) return SearchEngineCatalog.defaultEngines(context)
+        return decode(context, prefs[SettingsPreferenceKeys.SEARCH_ENGINES_JSON])
+    }
+
+    /** 在保留 [existing] 的前提下追加 [added]，新项按已有最大 sortOrder 依次往后排。 */
+    fun appendEngines(
+        existing: List<SearchEngineConfig>,
+        added: List<SearchEngineConfig>,
+    ): List<SearchEngineConfig> {
+        if (added.isEmpty()) return existing
+        var nextOrder = (existing.maxOfOrNull { it.sortOrder } ?: -1) + 1
+        return existing + added.map { it.copy(sortOrder = nextOrder++) }
     }
 
     fun textPickPanelEngines(engines: List<SearchEngineConfig>): List<SearchEngineConfig> =

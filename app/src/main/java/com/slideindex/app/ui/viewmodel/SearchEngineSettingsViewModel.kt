@@ -19,6 +19,7 @@ import com.slideindex.app.settings.SearchPanelSectionAliasSettings
 import com.slideindex.app.settings.SearchPanelEnterAction
 import com.slideindex.app.settings.SearchPanelInputBehavior
 import com.slideindex.app.settings.SearchEngineConfig
+import com.slideindex.app.settings.SearchEngineStore
 import com.slideindex.app.settings.SearchEngineType
 import com.slideindex.app.settings.SearchIconType
 import com.slideindex.app.settings.SettingsRepository
@@ -279,15 +280,24 @@ class SearchEngineSettingsViewModel @Inject constructor(
     fun addEngines(newEngines: List<SearchEngineConfig>) {
         if (newEngines.isEmpty()) return
         viewModelScope.launch {
-            val existing = settings.value.searchEngines.toMutableList()
-            var nextOrder = (existing.maxOfOrNull { it.sortOrder } ?: -1) + 1
-            for (engine in newEngines) {
-                existing.add(engine.copy(sortOrder = nextOrder++))
-                invalidateSearchEngineIconCache(engine.id)
+            appendEngines(newEngines).onFailure {
+                userMessageBus.showError(appContext.getString(R.string.settings_save_failed))
             }
-            persistEngines(existing.sortedBy { it.sortOrder })
         }
     }
+
+    /**
+     * 原子追加一批引擎。
+     *
+     * 不能用 `settings.value` 当基线：它是 `stateIn(WhileSubscribed)` 的快照，页面没有
+     * 订阅者（例如批量选择页）时不会更新，拿它拼新列表会把上次新增的引擎整表覆盖掉。
+     */
+    private suspend fun appendEngines(newEngines: List<SearchEngineConfig>): Result<Unit> =
+        settingsRepository.updateSearchEngines { current ->
+            SearchEngineStore.appendEngines(current, newEngines)
+        }.onSuccess {
+            newEngines.forEach { engine -> invalidateSearchEngineIconCache(engine.id) }
+        }
 
     /**
      * 批量添加分享引擎：每个勾选的分享入口生成一条 [engineType] 引擎（图片 / 文件分享共用）。
@@ -298,7 +308,10 @@ class SearchEngineSettingsViewModel @Inject constructor(
     fun addShareEngines(targets: List<ShareImageTarget>, engineType: SearchEngineType) {
         if (targets.isEmpty()) return
         viewModelScope.launch {
-            val existing = settings.value.searchEngines
+            // 判重同样不能用 settings.value（同上：可能是旧快照，会让重复目标漏过判重）。
+            val existing = withContext(Dispatchers.IO) {
+                settingsRepository.readFreshSnapshot().searchEngines
+            }
             val fresh = targets
                 .distinctBy { "${it.packageName}/${it.activityClassName}" }
                 .filterNot { target ->
@@ -328,14 +341,19 @@ class SearchEngineSettingsViewModel @Inject constructor(
                     )
                 }
             }
-            addEngines(newEngines)
-            userMessageBus.showSuccess(
-                appContext.resources.getQuantityString(
-                    R.plurals.share_target_batch_added,
-                    newEngines.size,
-                    newEngines.size,
-                ),
-            )
+            appendEngines(newEngines)
+                .onSuccess {
+                    userMessageBus.showSuccess(
+                        appContext.resources.getQuantityString(
+                            R.plurals.share_target_batch_added,
+                            newEngines.size,
+                            newEngines.size,
+                        ),
+                    )
+                }
+                .onFailure {
+                    userMessageBus.showError(appContext.getString(R.string.settings_save_failed))
+                }
         }
     }
 

@@ -46,4 +46,27 @@ class SearchEngineStoreTest {
 
         assertNull(SearchEngineStore.findTextEngineById(engines, "image"))
     }
+
+    @Test
+    fun `appends new engines after existing ones`() {
+        val existing = listOf(
+            engine("a", sortOrder = 3),
+            engine("b", sortOrder = 7),
+        )
+
+        val merged = SearchEngineStore.appendEngines(
+            existing,
+            listOf(engine("c"), engine("d")),
+        )
+
+        assertEquals(listOf("a", "b", "c", "d"), merged.map { it.id })
+        assertEquals(listOf(3, 7, 8, 9), merged.map { it.sortOrder })
+    }
+
+    @Test
+    fun `appending nothing keeps the list untouched`() {
+        val existing = listOf(engine("a", sortOrder = 3))
+
+        assertEquals(existing, SearchEngineStore.appendEngines(existing, emptyList()))
+    }
 }

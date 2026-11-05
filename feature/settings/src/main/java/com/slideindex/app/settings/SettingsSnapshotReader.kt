@@ -829,11 +829,8 @@ internal object SettingsSnapshotReader {
         )
     }
 
-    private fun readSearchEngines(prefs: Preferences, context: Context): List<SearchEngineConfig> {
-        val initialized = prefs[SettingsPreferenceKeys.SEARCH_ENGINES_INITIALIZED] ?: false
-        if (!initialized) return SearchEngineCatalog.defaultEngines(context)
-        return SearchEngineStore.decode(context, prefs[SettingsPreferenceKeys.SEARCH_ENGINES_JSON])
-    }
+    private fun readSearchEngines(prefs: Preferences, context: Context): List<SearchEngineConfig> =
+        SearchEngineStore.readFromPreferences(prefs, context)
 
     fun readFloatBallGestureActions(prefs: Preferences): Map<FloatBallGestureType, GestureAction> {
         val decoded = FloatBallGestureCodec.decodeAll(
