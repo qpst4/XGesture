@@ -189,6 +189,10 @@ internal fun taskSwitcherItemToLaunchShortcut(
     shortcut: TaskSwitcherMenuItem,
     packageName: String
 ): GestureAction.LaunchShortcut {
+    val serviceId = shortcut.shortcutId?.takeIf { shortcut.isServiceShortcut && it.isNotBlank() }
+    if (serviceId != null) {
+        return GestureAction.LaunchShortcut.dynamic(packageName, serviceId, shortcut.label)
+    }
     val uris = shortcut.intentUris
     if (!uris.isNullOrEmpty()) {
         return if (uris.size == 1) {

@@ -22,6 +22,20 @@ object ShortcutRootBatchReader {
         return decode(output)
     }
 
+    /** Read only one package; used by execution-time refresh. */
+    fun readPackage(rootShell: RootShell, packageName: String): ByteArray? {
+        if (packageName.isBlank() || packageName.contains('/')) return null
+        val command = "base64 ${shellQuote("$PACKAGES_DIR/$packageName.xml")}"
+        val output = rootShell.executeLarge(command, timeoutSec = 30L)
+        if (output.isBlank()) return null
+        val payload = output.filterNot { it.isWhitespace() }
+        if (payload.isEmpty()) return null
+        return runCatching { Base64.decode(payload, Base64.DEFAULT) }.getOrNull()
+    }
+
+    private fun shellQuote(value: String): String =
+        "'" + value.replace("'", "'\\''") + "'"
+
     private fun decode(output: String): Map<String, ByteArray> {
         val marker = Regex("""@@SCFILE:([^@\r\n]+)@@""")
         val matches = marker.findAll(output).toList()

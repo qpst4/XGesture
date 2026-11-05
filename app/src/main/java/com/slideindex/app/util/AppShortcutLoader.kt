@@ -151,6 +151,8 @@ object AppShortcutLoader {
         shortcutId: String,
         label: String,
     ): TaskSwitcherMenuItem {
+        // C dynamic/pinned entries store the real ShortcutService id; refresh it now.
+        ShortcutServiceResolver.resolve(context, packageName, shortcutId)?.let { return it }
         lookupRegisteredShortcut(context, packageName, shortcutId)?.let { return it }
         return TaskSwitcherMenuItem(
             label = label,
@@ -160,6 +162,10 @@ object AppShortcutLoader {
     }
 
     fun TaskSwitcherMenuItem.toQuickLauncherItem(packageName: String): QuickLauncherItem {
+        val serviceId = shortcutId?.takeIf { isServiceShortcut && it.isNotBlank() }
+        if (serviceId != null) {
+            return QuickLauncherItem.dynamicShortcut(packageName, serviceId, label)
+        }
         val uris = intentUris
         if (!uris.isNullOrEmpty()) {
             val enrichedUris = uris.map { enrichIntentUriWithPackage(it, packageName) }
@@ -184,6 +190,7 @@ object AppShortcutLoader {
     }
 
     fun cacheShortcutForLaunch(packageName: String, item: TaskSwitcherMenuItem) {
+        if (item.isServiceShortcut) return
         val shortcutId = item.shortcutId?.takeIf { it.isNotBlank() } ?: return
         resolvedShortcutCache[shortcutCacheKey(packageName, shortcutId)] = item
     }
