@@ -38,6 +38,8 @@ import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
 import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.preference.CheckboxLocation
+import top.yukonga.miuix.kmp.preference.CheckboxPreference
 import top.yukonga.miuix.kmp.preference.RadioButtonLocation
 import top.yukonga.miuix.kmp.preference.RadioButtonPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
@@ -442,6 +444,28 @@ fun SettingsCardScope.SettingRadioRow(
             enabled = enabled,
             onClick = { if (enabled) onClick() },
             radioButtonLocation = RadioButtonLocation.End,
+        )
+    }
+}
+
+@Composable
+fun SettingsCardScope.SettingCheckboxRow(
+    title: String,
+    subtitle: String? = null,
+    checked: Boolean,
+    enabled: Boolean = true,
+    segmentKey: Any = title,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    SettingsCardRow(key = segmentKey) { position ->
+        CheckboxPreference(
+            modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
+            title = title,
+            summary = subtitle,
+            checked = checked,
+            enabled = enabled,
+            onCheckedChange = { if (enabled) onCheckedChange(it) },
+            checkboxLocation = CheckboxLocation.End,
         )
     }
 }

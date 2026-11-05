@@ -1051,7 +1051,7 @@ class SettingsRepository @Inject constructor(
     suspend fun setOtpBlockedPackages(packages: Set<String>) = otp.setOtpBlockedPackages(packages)
 
     suspend fun setShakeGesturesEnabled(enabled: Boolean) = shake.setShakeGesturesEnabled(enabled)
-    suspend fun setShakeWorkMode(mode: ShakeWorkMode) = shake.setShakeWorkMode(mode)
+    suspend fun setShakeWorkModes(modes: Set<ShakeWorkMode>) = shake.setShakeWorkModes(modes)
     suspend fun setShakeGestureAction(type: ShakeGestureType, action: GestureAction) = shake.setShakeGestureAction(type, action)
     suspend fun setLockScreenShakeAction(type: ShakeGestureType, action: GestureAction) = shake.setLockScreenShakeAction(type, action)
     suspend fun setPerAppShakeAction(packageName: String, type: ShakeGestureType, action: GestureAction) =

@@ -127,7 +127,7 @@ class ShakeGestureHost @Inject constructor(
         lastAppliedScreenInteractive = screenOn
 
         val keyguardLocked = runtimePort.isLockScreenActive()
-        val modeAllows = shake.workMode.allows(screenOn, keyguardLocked)
+        val modeAllows = shake.workModes.allows(screenOn, keyguardLocked)
         // 熄屏但又没配置任何锁屏动作时，不必常驻采样，也不用持锁。
         val lockScreenReady = screenOn || shake.hasLockScreenAction()
         val shouldRun = shake.enabled &&
@@ -141,7 +141,8 @@ class ShakeGestureHost @Inject constructor(
                     !shake.enabled -> "shake disabled"
                     !accessibilityEnabled -> "accessibility disabled"
                     !modeAllows ->
-                        "work mode ${shake.workMode.name} excludes screenOn=$screenOn locked=$keyguardLocked"
+                        "work mode ${ShakeWorkModes.describe(shake.workModes)} " +
+                            "excludes screenOn=$screenOn locked=$keyguardLocked"
                     !lockScreenReady -> "no lock screen action"
                     else -> "unknown"
                 }
@@ -183,7 +184,8 @@ class ShakeGestureHost @Inject constructor(
         activeDetector.start()
         Log.d(
             TAG,
-            "detector running mode=${shake.workMode.name} screenOn=$screenOn locked=$keyguardLocked " +
+            "detector running mode=${ShakeWorkModes.describe(shake.workModes)} " +
+                "screenOn=$screenOn locked=$keyguardLocked " +
                 "sensitivity=${shake.globalSensitivity} wakeLock=$wakeLockHeld",
         )
     }
@@ -209,10 +211,10 @@ class ShakeGestureHost @Inject constructor(
 
         val screenOn = powerManager().isInteractive
         val lockScreenActive = runtimePort.isLockScreenActive()
-        if (!shake.workMode.allows(screenOn, lockScreenActive)) {
+        if (!shake.workModes.allows(screenOn, lockScreenActive)) {
             Log.d(
                 TAG,
-                "gesture $type blocked: work mode ${shake.workMode.name} " +
+                "gesture $type blocked: work mode ${ShakeWorkModes.describe(shake.workModes)} " +
                     "screenOn=$screenOn locked=$lockScreenActive",
             )
             return

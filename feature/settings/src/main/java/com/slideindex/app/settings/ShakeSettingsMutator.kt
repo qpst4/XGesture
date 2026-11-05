@@ -9,6 +9,7 @@ import com.slideindex.app.shake.ShakeGestureCodec
 import com.slideindex.app.shake.ShakeGestureType
 import com.slideindex.app.shake.ShakeSensitivityScale
 import com.slideindex.app.shake.ShakeWorkMode
+import com.slideindex.app.shake.ShakeWorkModes
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,8 +19,9 @@ class ShakeSettingsMutator @Inject constructor(
 ) {
     suspend fun setShakeGesturesEnabled(enabled: Boolean) = editor.edit { it[SettingsPreferenceKeys.SHAKE_GESTURES_ENABLED] = enabled }
 
-    suspend fun setShakeWorkMode(mode: ShakeWorkMode) = editor.edit {
-        it[SettingsPreferenceKeys.SHAKE_WORK_MODE] = mode.storageId
+    suspend fun setShakeWorkModes(modes: Set<ShakeWorkMode>) = editor.edit {
+        it[SettingsPreferenceKeys.SHAKE_WORK_MODES] =
+            ShakeWorkModes.encode(modes.ifEmpty { ShakeWorkModes.DEFAULT })
     }
 
     suspend fun setShakeGestureAction(type: ShakeGestureType, action: GestureAction) = editor.edit { prefs ->
@@ -30,8 +32,10 @@ class ShakeSettingsMutator @Inject constructor(
 
     suspend fun setLockScreenShakeAction(type: ShakeGestureType, action: GestureAction) = editor.edit { prefs ->
         // 用户一旦编辑锁屏动作，就切到新模型：未设置的项按“无”处理，不再回退。
-        if (prefs[SettingsPreferenceKeys.SHAKE_WORK_MODE] == null) {
-            prefs[SettingsPreferenceKeys.SHAKE_WORK_MODE] = ShakeWorkMode.UNLOCKED.storageId
+        if (prefs[SettingsPreferenceKeys.SHAKE_WORK_MODES] == null &&
+            prefs[SettingsPreferenceKeys.SHAKE_WORK_MODE] == null
+        ) {
+            prefs[SettingsPreferenceKeys.SHAKE_WORK_MODES] = ShakeWorkModes.encode(ShakeWorkModes.DEFAULT)
         }
         val current = SettingsSnapshotReader.readShakeGestureSettings(prefs)
         val updated = current.lockScreenActions.toMutableMap().apply { put(type, action) }

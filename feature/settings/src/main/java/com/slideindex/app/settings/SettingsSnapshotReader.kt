@@ -40,7 +40,7 @@ import com.slideindex.app.shake.FaceDownGestureSettings
 import com.slideindex.app.shake.ShakeGestureCodec
 import com.slideindex.app.shake.ShakeSensitivityScale
 import com.slideindex.app.shake.ShakeGestureSettings
-import com.slideindex.app.shake.ShakeWorkMode
+import com.slideindex.app.shake.ShakeWorkModes
 import com.slideindex.app.translate.TranslateTargetLanguages
 import com.slideindex.app.backtap.BackTapMode
 import com.slideindex.app.backtap.BackTapSettings
@@ -850,7 +850,10 @@ internal object SettingsSnapshotReader {
         } else {
             emptyMap()
         }
-        val hasWorkModeKey = prefs[SettingsPreferenceKeys.SHAKE_WORK_MODE] != null
+        val storedWorkModes = prefs[SettingsPreferenceKeys.SHAKE_WORK_MODES]
+        val legacyWorkModeId = prefs[SettingsPreferenceKeys.SHAKE_WORK_MODE]
+        // 新键存在即视为新模型；旧键只在升级迁移时使用，写入不再更新它。
+        val hasWorkModeKey = storedWorkModes != null || legacyWorkModeId != null
         // 新模型：锁屏动作表里没写的方向就是“无”，不回退；旧模型按原总开关决定是否生效。
         val lockScreenActions = when {
             hasWorkModeKey -> ShakeGestureCodec.decodeActions(
@@ -864,13 +867,11 @@ internal object SettingsSnapshotReader {
         }
         return ShakeGestureSettings(
             enabled = prefs[SettingsPreferenceKeys.SHAKE_GESTURES_ENABLED] ?: false,
-            workMode = ShakeWorkMode.fromId(
-                intPreference(
-                    prefs,
-                    SettingsPreferenceKeys.SHAKE_WORK_MODE,
-                    ShakeWorkMode.UNLOCKED.storageId,
-                ),
-            ),
+            workModes = when {
+                storedWorkModes != null -> ShakeWorkModes.decode(storedWorkModes)
+                legacyWorkModeId != null -> ShakeWorkModes.fromLegacyId(legacyWorkModeId)
+                else -> ShakeWorkModes.DEFAULT
+            },
             basicActions = ShakeGestureCodec.decodeAllActions(prefs[SettingsPreferenceKeys.SHAKE_GESTURE_ACTIONS] ?: emptySet()),
             lockScreenActions = lockScreenActions,
             independentAppShakeEnabled = prefs[SettingsPreferenceKeys.INDEPENDENT_APP_SHAKE_ENABLED] ?: false,

@@ -19,31 +19,59 @@ enum class ShakeGestureType(val id: Int) {
     }
 }
 
-/** 晃动在哪种锁屏/屏幕状态下生效。 */
-enum class ShakeWorkMode(val storageId: Int) {
-    UNLOCKED(0),
-    SCREEN_OFF(1),
-    ALWAYS(2),
-    LOCKED_SCREEN_ON(3),
-    ;
-
-    fun allows(screenOn: Boolean, keyguardLocked: Boolean): Boolean = when (this) {
-        UNLOCKED -> screenOn && !keyguardLocked
-        LOCKED_SCREEN_ON -> screenOn && keyguardLocked
-        SCREEN_OFF -> !screenOn
-        ALWAYS -> true
-    }
-
-    val includesScreenOff: Boolean get() = this == SCREEN_OFF || this == ALWAYS
-
-    companion object {
-        fun fromId(id: Int): ShakeWorkMode = entries.firstOrNull { it.storageId == id } ?: UNLOCKED
-    }
+/**
+ * 晃动在哪种锁屏/屏幕状态下生效。
+ *
+ * 可多选，见 [ShakeWorkModes]。[legacyId] 是旧版单选模型写入 `shake_work_mode` 的值，
+ * 只用于升级迁移，不要再用它持久化。
+ */
+enum class ShakeWorkMode(val legacyId: Int, internal val bit: Int) {
+    UNLOCKED(0, 1),
+    LOCKED_SCREEN_ON(3, 2),
+    SCREEN_OFF(1, 4),
 }
+
+/** [ShakeWorkMode] 的集合编解码与旧版单选值迁移。 */
+object ShakeWorkModes {
+    val DEFAULT: Set<ShakeWorkMode> = setOf(ShakeWorkMode.UNLOCKED)
+    val ALL: Set<ShakeWorkMode> = ShakeWorkMode.entries.toSet()
+
+    fun encode(modes: Set<ShakeWorkMode>): Int =
+        modes.fold(0) { mask, mode -> mask or mode.bit }
+
+    /** 空值回落到 [DEFAULT]，避免出现“一项都没勾、晃动永远不响应”的死配置。 */
+    fun decode(mask: Int): Set<ShakeWorkMode> {
+        val decoded = ShakeWorkMode.entries.filterTo(mutableSetOf()) { mask and it.bit != 0 }
+        return decoded.ifEmpty { DEFAULT }
+    }
+
+    /** 旧版 `shake_work_mode`：0=仅解锁，1=仅熄屏，2=始终，3=仅锁屏亮屏；未知值按仅解锁。 */
+    fun fromLegacyId(id: Int): Set<ShakeWorkMode> = when (id) {
+        1 -> setOf(ShakeWorkMode.SCREEN_OFF)
+        2 -> ALL
+        3 -> setOf(ShakeWorkMode.LOCKED_SCREEN_ON)
+        else -> DEFAULT
+    }
+
+    /** 日志用：按固定顺序拼出已勾选的状态。 */
+    fun describe(modes: Set<ShakeWorkMode>): String =
+        ShakeWorkMode.entries.filter { it in modes }.joinToString("+") { it.name }
+}
+
+/** 当前屏幕状态是否落在勾选的生效范围内。 */
+fun Set<ShakeWorkMode>.allows(screenOn: Boolean, keyguardLocked: Boolean): Boolean = when {
+    !screenOn -> ShakeWorkMode.SCREEN_OFF in this
+    keyguardLocked -> ShakeWorkMode.LOCKED_SCREEN_ON in this
+    else -> ShakeWorkMode.UNLOCKED in this
+}
+
+val Set<ShakeWorkMode>.includesScreenOff: Boolean
+    get() = ShakeWorkMode.SCREEN_OFF in this
 
 data class ShakeGestureSettings(
     val enabled: Boolean = false,
-    val workMode: ShakeWorkMode = ShakeWorkMode.UNLOCKED,
+    /** 勾选的生效状态，至少一项。 */
+    val workModes: Set<ShakeWorkMode> = ShakeWorkModes.DEFAULT,
     val basicActions: Map<ShakeGestureType, GestureAction> = defaultBasicActions(),
     /** 锁屏或熄屏时生效；未设置的项视为“无”，不回退到基础动作。 */
     val lockScreenActions: Map<ShakeGestureType, GestureAction> = emptyMap(),

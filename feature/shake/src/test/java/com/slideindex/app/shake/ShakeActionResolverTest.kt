@@ -217,20 +217,47 @@ class ShakeActionResolverTest {
 
     @Test
     fun workMode_allowsExpectedStates() {
-        assertTrue(ShakeWorkMode.ALWAYS.allows(screenOn = true, keyguardLocked = false))
-        assertTrue(ShakeWorkMode.ALWAYS.allows(screenOn = true, keyguardLocked = true))
-        assertTrue(ShakeWorkMode.ALWAYS.allows(screenOn = false, keyguardLocked = true))
+        assertTrue(ShakeWorkModes.ALL.allows(screenOn = true, keyguardLocked = false))
+        assertTrue(ShakeWorkModes.ALL.allows(screenOn = true, keyguardLocked = true))
+        assertTrue(ShakeWorkModes.ALL.allows(screenOn = false, keyguardLocked = true))
 
-        assertTrue(ShakeWorkMode.UNLOCKED.allows(screenOn = true, keyguardLocked = false))
-        assertFalse(ShakeWorkMode.UNLOCKED.allows(screenOn = true, keyguardLocked = true))
-        assertFalse(ShakeWorkMode.UNLOCKED.allows(screenOn = false, keyguardLocked = false))
+        assertTrue(ShakeWorkModes.DEFAULT.allows(screenOn = true, keyguardLocked = false))
+        assertFalse(ShakeWorkModes.DEFAULT.allows(screenOn = true, keyguardLocked = true))
+        assertFalse(ShakeWorkModes.DEFAULT.allows(screenOn = false, keyguardLocked = false))
 
-        assertTrue(ShakeWorkMode.LOCKED_SCREEN_ON.allows(screenOn = true, keyguardLocked = true))
-        assertFalse(ShakeWorkMode.LOCKED_SCREEN_ON.allows(screenOn = true, keyguardLocked = false))
-        assertFalse(ShakeWorkMode.LOCKED_SCREEN_ON.allows(screenOn = false, keyguardLocked = true))
+        assertTrue(setOf(ShakeWorkMode.LOCKED_SCREEN_ON).allows(screenOn = true, keyguardLocked = true))
+        assertFalse(setOf(ShakeWorkMode.LOCKED_SCREEN_ON).allows(screenOn = true, keyguardLocked = false))
+        assertFalse(setOf(ShakeWorkMode.LOCKED_SCREEN_ON).allows(screenOn = false, keyguardLocked = true))
 
-        assertTrue(ShakeWorkMode.SCREEN_OFF.allows(screenOn = false, keyguardLocked = true))
-        assertTrue(ShakeWorkMode.SCREEN_OFF.allows(screenOn = false, keyguardLocked = false))
-        assertFalse(ShakeWorkMode.SCREEN_OFF.allows(screenOn = true, keyguardLocked = true))
+        assertTrue(setOf(ShakeWorkMode.SCREEN_OFF).allows(screenOn = false, keyguardLocked = true))
+        assertTrue(setOf(ShakeWorkMode.SCREEN_OFF).allows(screenOn = false, keyguardLocked = false))
+        assertFalse(setOf(ShakeWorkMode.SCREEN_OFF).allows(screenOn = true, keyguardLocked = true))
+
+        // 锁屏亮屏 + 解锁：亮屏即生效，熄屏不生效。
+        val screenOnModes = setOf(ShakeWorkMode.UNLOCKED, ShakeWorkMode.LOCKED_SCREEN_ON)
+        assertTrue(screenOnModes.allows(screenOn = true, keyguardLocked = false))
+        assertTrue(screenOnModes.allows(screenOn = true, keyguardLocked = true))
+        assertFalse(screenOnModes.allows(screenOn = false, keyguardLocked = true))
+        assertFalse(screenOnModes.includesScreenOff)
+        assertTrue(setOf(ShakeWorkMode.SCREEN_OFF).includesScreenOff)
+    }
+
+    @Test
+    fun workModes_encodeDecodeRoundTrip() {
+        assertEquals(ShakeWorkModes.ALL, ShakeWorkModes.decode(ShakeWorkModes.encode(ShakeWorkModes.ALL)))
+        val mixed = setOf(ShakeWorkMode.UNLOCKED, ShakeWorkMode.SCREEN_OFF)
+        assertEquals(mixed, ShakeWorkModes.decode(ShakeWorkModes.encode(mixed)))
+        // 空掩码回落到默认的“解锁”。
+        assertEquals(ShakeWorkModes.DEFAULT, ShakeWorkModes.decode(0))
+    }
+
+    @Test
+    fun workModes_legacySingleSelectionMigrates() {
+        assertEquals(setOf(ShakeWorkMode.UNLOCKED), ShakeWorkModes.fromLegacyId(0))
+        assertEquals(setOf(ShakeWorkMode.SCREEN_OFF), ShakeWorkModes.fromLegacyId(1))
+        assertEquals(ShakeWorkModes.ALL, ShakeWorkModes.fromLegacyId(2))
+        assertEquals(setOf(ShakeWorkMode.LOCKED_SCREEN_ON), ShakeWorkModes.fromLegacyId(3))
+        // 未知 id 按旧版默认值处理。
+        assertEquals(ShakeWorkModes.DEFAULT, ShakeWorkModes.fromLegacyId(99))
     }
 }

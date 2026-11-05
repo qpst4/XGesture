@@ -42,7 +42,7 @@ fun NavEntryBuilder.shakeNavEntries(ctx: MainNavContext) {
             bottomContentPadding = ctx.rootBottomContentPadding,
             bottomNavReselectCount = ctx.bottomNavReselectCount,
             onEnabledChange = { enabled -> viewModel.setEnabled(enabled) },
-            onWorkModeChange = viewModel::setWorkMode,
+            onWorkModesChange = viewModel::setWorkModes,
             onIndependentAppShakeEnabledChange = { enabled ->
                 viewModel.setIndependentAppShakeEnabled(enabled)
             },

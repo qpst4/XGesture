@@ -45,11 +45,13 @@ import com.slideindex.app.shake.ShakeGestureSettings
 import com.slideindex.app.shake.ShakeGestureType
 import com.slideindex.app.shake.ShakeSensitivityScale
 import com.slideindex.app.shake.ShakeWorkMode
+import com.slideindex.app.shake.ShakeWorkModes
+import com.slideindex.app.shake.includesScreenOff
 import com.slideindex.app.ui.animationstyle.AnimationStyleColorPickerDialog
 import com.slideindex.app.ui.animationstyle.AnimationStyleColorRow
 import com.slideindex.app.ui.miuix.MiuixHubScaffold
 import com.slideindex.app.ui.miuix.groupedCardItems
-import com.slideindex.app.ui.settings.components.SettingRadioRow
+import com.slideindex.app.ui.settings.components.SettingCheckboxRow
 import com.slideindex.app.ui.settings.components.SettingsCardScope
 import com.slideindex.app.ui.settings.components.SettingsCardScopeContent
 import com.slideindex.app.ui.settings.components.settingsCardItem
@@ -65,7 +67,7 @@ fun ShakeGesturesScreen(
     bottomContentPadding: Dp = 0.dp,
     bottomNavReselectCount: Int = 0,
     onEnabledChange: (Boolean) -> Unit,
-    onWorkModeChange: (ShakeWorkMode) -> Unit,
+    onWorkModesChange: (Set<ShakeWorkMode>) -> Unit,
     onIndependentAppShakeEnabledChange: (Boolean) -> Unit,
     onGlobalSensitivityChange: (Float) -> Unit,
     onIndependentSensitivityEnabledChange: (Boolean) -> Unit,
@@ -103,6 +105,7 @@ fun ShakeGesturesScreen(
     val serviceSectionTitle = stringResource(R.string.settings_section_general)
     val workModeSectionTitle = stringResource(R.string.shake_work_mode_section)
     val workModeBatteryHint = stringResource(R.string.shake_work_mode_battery_hint)
+    val workModeLockScreenHint = stringResource(R.string.shake_work_mode_lock_screen_actions_hint)
     val actionScopeSectionTitle = stringResource(R.string.shake_gestures_section_action_scope)
     val otherGesturesSectionTitle = stringResource(R.string.shake_gestures_section_other)
     val otherGesturesHint = stringResource(R.string.shake_gestures_other_hint)
@@ -156,57 +159,46 @@ fun ShakeGesturesScreen(
             },
         )
         settingsLazySmallTitle(key = "shake-work-mode", title = workModeSectionTitle)
+        val workModes = settings.workModes
         groupedCardItems(
             keyPrefix = "shake-work-mode",
-            selectableGroup = true,
             items = buildList {
                 add(
                     settingsCardScopeItem("shake-work-mode-always") {
-                        SettingRadioRow(
+                        SettingCheckboxRow(
                             title = stringResource(R.string.shake_work_mode_always),
                             subtitle = stringResource(R.string.shake_work_mode_always_desc),
-                            selected = settings.workMode == ShakeWorkMode.ALWAYS,
+                            checked = workModes.containsAll(ShakeWorkModes.ALL),
                             enabled = settings.enabled,
-                            onClick = { onWorkModeChange(ShakeWorkMode.ALWAYS) },
+                            onCheckedChange = { checked ->
+                                onWorkModesChange(if (checked) ShakeWorkModes.ALL else ShakeWorkModes.DEFAULT)
+                            },
                         )
                     },
                 )
-                add(
-                    settingsCardScopeItem("shake-work-mode-unlocked") {
-                        SettingRadioRow(
-                            title = stringResource(R.string.shake_work_mode_unlocked),
-                            subtitle = stringResource(R.string.shake_work_mode_unlocked_desc),
-                            selected = settings.workMode == ShakeWorkMode.UNLOCKED,
-                            enabled = settings.enabled,
-                            onClick = { onWorkModeChange(ShakeWorkMode.UNLOCKED) },
-                        )
-                    },
-                )
-                add(
-                    settingsCardScopeItem("shake-work-mode-locked-screen-on") {
-                        SettingRadioRow(
-                            title = stringResource(R.string.shake_work_mode_locked_screen_on),
-                            subtitle = stringResource(R.string.shake_work_mode_locked_screen_on_desc),
-                            selected = settings.workMode == ShakeWorkMode.LOCKED_SCREEN_ON,
-                            enabled = settings.enabled,
-                            onClick = { onWorkModeChange(ShakeWorkMode.LOCKED_SCREEN_ON) },
-                        )
-                    },
-                )
-                add(
-                    settingsCardScopeItem("shake-work-mode-screen-off") {
-                        SettingRadioRow(
-                            title = stringResource(R.string.shake_work_mode_screen_off),
-                            subtitle = stringResource(R.string.shake_work_mode_screen_off_desc),
-                            selected = settings.workMode == ShakeWorkMode.SCREEN_OFF,
-                            enabled = settings.enabled,
-                            onClick = { onWorkModeChange(ShakeWorkMode.SCREEN_OFF) },
-                        )
-                    },
-                )
+                ShakeWorkMode.entries.forEach { mode ->
+                    add(
+                        settingsCardScopeItem("shake-work-mode-${workModeItemKey(mode)}") {
+                            SettingCheckboxRow(
+                                title = stringResource(workModeTitleRes(mode)),
+                                subtitle = stringResource(workModeDescRes(mode)),
+                                checked = mode in workModes,
+                                enabled = settings.enabled,
+                                onCheckedChange = { checked ->
+                                    onWorkModesChange(if (checked) workModes + mode else workModes - mode)
+                                },
+                            )
+                        },
+                    )
+                }
             },
         )
-        if (settings.workMode.includesScreenOff) {
+        if (ShakeWorkMode.LOCKED_SCREEN_ON in workModes &&
+            settings.lockScreenActions.values.none { it != GestureAction.None }
+        ) {
+            settingsLazyHint(key = "shake-work-mode-lock-screen-hint", text = workModeLockScreenHint)
+        }
+        if (workModes.includesScreenOff) {
             settingsLazyHint(key = "shake-work-mode-battery-hint", text = workModeBatteryHint)
         }
         settingsLazySmallTitle(key = "shake-action-scope", title = actionScopeSectionTitle)
@@ -474,4 +466,22 @@ private fun ColoredSettingIcon(
             )
         }
     }
+}
+
+private fun workModeItemKey(mode: ShakeWorkMode): String = when (mode) {
+    ShakeWorkMode.UNLOCKED -> "unlocked"
+    ShakeWorkMode.LOCKED_SCREEN_ON -> "locked-screen-on"
+    ShakeWorkMode.SCREEN_OFF -> "screen-off"
+}
+
+private fun workModeTitleRes(mode: ShakeWorkMode): Int = when (mode) {
+    ShakeWorkMode.UNLOCKED -> R.string.shake_work_mode_unlocked
+    ShakeWorkMode.LOCKED_SCREEN_ON -> R.string.shake_work_mode_locked_screen_on
+    ShakeWorkMode.SCREEN_OFF -> R.string.shake_work_mode_screen_off
+}
+
+private fun workModeDescRes(mode: ShakeWorkMode): Int = when (mode) {
+    ShakeWorkMode.UNLOCKED -> R.string.shake_work_mode_unlocked_desc
+    ShakeWorkMode.LOCKED_SCREEN_ON -> R.string.shake_work_mode_locked_screen_on_desc
+    ShakeWorkMode.SCREEN_OFF -> R.string.shake_work_mode_screen_off_desc
 }

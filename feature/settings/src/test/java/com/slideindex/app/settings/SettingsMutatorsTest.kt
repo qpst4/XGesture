@@ -1,6 +1,7 @@
 package com.slideindex.app.settings
 
 import android.content.Context
+import androidx.datastore.preferences.core.mutablePreferencesOf
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureRule
 import com.slideindex.app.gesture.GestureTriggerType
@@ -9,6 +10,8 @@ import com.slideindex.app.message.MessageSettings
 import com.slideindex.app.overlay.PanelSide
 import com.slideindex.app.otp.OtpKeywords
 import com.slideindex.app.shake.ShakeGestureType
+import com.slideindex.app.shake.ShakeWorkMode
+import com.slideindex.app.shake.ShakeWorkModes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -432,6 +435,31 @@ class SettingsMutatorsTest {
         assertEquals(
             MessageSettings.DEFAULT_UNLOCK_OPEN_DELAY_MS,
             awaitSettings().messageReminderSettings.unlockOpenDelayMs,
+        )
+    }
+
+    @Test
+    fun shakeWorkModes_persistsMultiSelection() = runBlocking {
+        val selected = setOf(ShakeWorkMode.UNLOCKED, ShakeWorkMode.SCREEN_OFF)
+        repository.setShakeWorkModes(selected)
+
+        val stored = awaitSettings { it.shakeGestureSettings.workModes == selected }
+        assertEquals(selected, stored.shakeGestureSettings.workModes)
+    }
+
+    @Test
+    fun shakeWorkModes_migratesLegacySingleSelection() {
+        // 旧版“始终”= 2，迁移后应为三项全选。
+        val legacy = mutablePreferencesOf(SettingsPreferenceKeys.SHAKE_WORK_MODE to 2)
+        assertEquals(
+            ShakeWorkModes.ALL,
+            SettingsSnapshotReader.readShakeGestureSettings(legacy).workModes,
+        )
+
+        // 全新安装默认只勾“解锁”。
+        assertEquals(
+            ShakeWorkModes.DEFAULT,
+            SettingsSnapshotReader.readShakeGestureSettings(mutablePreferencesOf()).workModes,
         )
     }
 }

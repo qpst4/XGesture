@@ -425,7 +425,12 @@ internal object SettingsPreferenceKeys {
     val GESTURE_PROFILES = stringSetPreferencesKey("gesture_profiles")
     val INDEPENDENT_APP_GESTURE_ENABLED = booleanPreferencesKey("gesture_independent_app_enabled")
     val SHAKE_GESTURES_ENABLED = booleanPreferencesKey("shake_gestures_enabled")
+
+    /** 旧版单选工作模式（int id），仅用于迁移到 [SHAKE_WORK_MODES]。 */
     val SHAKE_WORK_MODE = intPreferencesKey("shake_work_mode")
+
+    /** 多选工作模式，按 [com.slideindex.app.shake.ShakeWorkMode] 的 bit 位存掩码。 */
+    val SHAKE_WORK_MODES = intPreferencesKey("shake_work_modes")
     val SHAKE_GESTURE_ACTIONS = stringSetPreferencesKey("shake_gesture_actions")
     val SHAKE_MENU_ACTIONS = stringSetPreferencesKey("shake_menu_actions")
     val SHAKE_HOLD_SCREEN_ACTIONS = stringSetPreferencesKey("shake_hold_screen_actions")

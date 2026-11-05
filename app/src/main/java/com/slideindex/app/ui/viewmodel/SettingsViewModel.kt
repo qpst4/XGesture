@@ -159,8 +159,15 @@ class ShakeHubViewModel @Inject constructor(
         settingsRepository.setShakeGesturesEnabled(enabled)
     }
 
-    fun setWorkMode(mode: ShakeWorkMode) = launchSettingsWrite {
-        settingsRepository.setShakeWorkMode(mode)
+    fun setWorkModes(modes: Set<ShakeWorkMode>) {
+        // 全部取消等于把晃动静默关掉，这里保留原配置并提示，避免“开了总开关却不响应”。
+        if (modes.isEmpty()) {
+            userMessageBus.showError(appContext.getString(R.string.shake_work_mode_keep_one))
+            return
+        }
+        launchSettingsWrite {
+            settingsRepository.setShakeWorkModes(modes)
+        }
     }
 
     fun setBasicAction(type: ShakeGestureType, action: GestureAction) = launchSettingsWrite {
