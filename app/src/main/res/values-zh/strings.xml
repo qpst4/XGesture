@@ -2916,7 +2916,7 @@
     <string name="activity_shortcut_reset_icon">恢复默认图标</string>
     <string name="activity_shortcut_icon_from_gallery">相册</string>
     <string name="activity_shortcut_icon_from_app">从应用</string>
-    <string name="activity_shortcut_add">添加快捷方式</string>
+    <string name="activity_shortcut_add">添加直达项</string>
     <string name="activity_shortcut_pick_app_title">选择应用</string>
     <string name="activity_shortcut_preset_add">加入</string>
     <string name="activity_shortcut_preset_added">已加入</string>
