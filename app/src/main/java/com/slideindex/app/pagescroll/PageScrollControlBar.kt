@@ -36,7 +36,7 @@ import kotlin.math.max
  * 统一 1.75dp 线宽的描边图标，暂停键是唯一的大圆钮，速度用**竖向 7 格刻度梯**（下慢上快）。
  *
  * 交互：整条可上下拖（位置记住）；速度梯可点可拖；加速/减速键支持长按连调；
- * 闲置 4 秒淡出；手指落在条上期间回报宿主暂停滚动。
+ * 闲置 4 秒淡到设置里的「闲置不透明度」（默认 55%，0 即完全看不见）；手指落在条上期间回报宿主暂停滚动。
  */
 internal class PageScrollControlBar(
     private val context: Context,
@@ -347,7 +347,11 @@ internal class PageScrollControlBar(
     private fun scheduleDim() {
         dimTask?.let { handler.removeCallbacks(it) }
         val task = Runnable {
-            container?.animate()?.alpha(DIM_ALPHA)?.setDuration(DIM_ANIM_MS)?.start()
+            val alpha = settingsProvider().controlBarIdleAlpha.coerceIn(
+                PageScrollSettings.MIN_CONTROL_BAR_IDLE_ALPHA,
+                PageScrollSettings.MAX_CONTROL_BAR_IDLE_ALPHA,
+            )
+            container?.animate()?.alpha(alpha)?.setDuration(DIM_ANIM_MS)?.start()
         }
         dimTask = task
         handler.postDelayed(task, DIM_DELAY_MS)
@@ -551,7 +555,6 @@ internal class PageScrollControlBar(
         const val TOP_MARGIN_DP = 48
         const val BOTTOM_MARGIN_DP = 48
 
-        const val DIM_ALPHA = 0.55f
         const val DIM_DELAY_MS = 4000L
         const val DIM_ANIM_MS = 220L
         const val DISABLED_ALPHA = 0.35f

@@ -31,4 +31,6 @@
     <string name="page_scroll_bar_color_white">ホワイト</string>
     <string name="page_scroll_bar_use_accent_title">アクセントカラーを使う</string>
     <string name="page_scroll_bar_use_accent_subtitle">バーのボタンを現在のアプリのアクセントカラーに合わせます。</string>
+    <string name="page_scroll_bar_idle_alpha_title">アイドル時の不透明度</string>
+    <string name="page_scroll_bar_idle_alpha_summary">バーに 4 秒間触れなかったときの不透明度。最小にすると完全に透明になりますが、同じ位置をタップすれば操作できます。</string>
 </resources>

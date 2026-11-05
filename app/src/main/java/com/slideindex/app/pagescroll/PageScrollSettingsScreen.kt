@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
 import com.slideindex.app.ui.miuix.groupedCardItems
+import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_01
 import com.slideindex.app.ui.settings.components.SettingRadioRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
@@ -20,7 +21,7 @@ import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import kotlin.math.roundToInt
 
 /**
- * 「页面滚动」设置：滚动方式、默认速度、控制条配色。
+ * 「页面滚动」设置：滚动方式、默认速度、控制条配色与闲置不透明度。
  *
  * 速度在控制条上也能实时改，这里改的是"下次触发时用哪个档"。
  */
@@ -139,10 +140,39 @@ fun PageScrollSettingsScreen(
                         },
                     )
                 }
+                add(
+                    settingsCardScopeItem("bar-idle-alpha") {
+                        SettingsSliderRow(
+                            title = stringResource(R.string.page_scroll_bar_idle_alpha_title),
+                            summary = stringResource(R.string.page_scroll_bar_idle_alpha_summary),
+                            value = settings.controlBarIdleAlpha,
+                            valueRange = PageScrollSettings.MIN_CONTROL_BAR_IDLE_ALPHA..
+                                PageScrollSettings.MAX_CONTROL_BAR_IDLE_ALPHA,
+                            enabled = true,
+                            label = idleAlphaPercentLabel(settings.controlBarIdleAlpha),
+                            formatLabel = ::idleAlphaPercentLabel,
+                            keyPoints = SETTINGS_SLIDER_PERCENT_KEY_POINTS_01,
+                            onValueChange = { value ->
+                                val alpha = value.coerceIn(
+                                    PageScrollSettings.MIN_CONTROL_BAR_IDLE_ALPHA,
+                                    PageScrollSettings.MAX_CONTROL_BAR_IDLE_ALPHA,
+                                )
+                                if (alpha != settings.controlBarIdleAlpha) {
+                                    settings = settings.copy(controlBarIdleAlpha = alpha)
+                                    PageScrollPrefs.saveControlBarIdleAlpha(context, alpha)
+                                }
+                            },
+                        )
+                    },
+                )
             },
         )
     }
 }
+
+/** 闲置不透明度的显示值：0~100%，按整数百分比取整（与滑块吸附粒度一致）。 */
+private fun idleAlphaPercentLabel(alpha: Float): String =
+    "${(alpha.coerceIn(0f, 1f) * 100f).roundToInt()}%"
 
 /** 控制条底色的几个预设（跟随强调色打开时这几项不可选）。 */
 private val BAR_COLOR_PRESETS = listOf(

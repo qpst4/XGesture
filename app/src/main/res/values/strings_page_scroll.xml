@@ -31,4 +31,6 @@
     <string name="page_scroll_bar_color_white">White</string>
     <string name="page_scroll_bar_use_accent_title">Use accent color</string>
     <string name="page_scroll_bar_use_accent_subtitle">Match the bar buttons to the current app accent color.</string>
+    <string name="page_scroll_bar_idle_alpha_title">Idle opacity</string>
+    <string name="page_scroll_bar_idle_alpha_summary">Opacity after 4 seconds without touching the bar. Drag to the minimum to hide it completely; the same spot still responds to taps.</string>
 </resources>

@@ -31,4 +31,6 @@
     <string name="page_scroll_bar_color_white">Белый</string>
     <string name="page_scroll_bar_use_accent_title">Использовать акцентный цвет</string>
     <string name="page_scroll_bar_use_accent_subtitle">Кнопки панели подстраиваются под акцентный цвет текущего приложения.</string>
+    <string name="page_scroll_bar_idle_alpha_title">Прозрачность в простое</string>
+    <string name="page_scroll_bar_idle_alpha_summary">Непрозрачность панели после 4 секунд без касаний. На минимуме панель полностью не видна, но касание того же места всё ещё работает.</string>
 </resources>

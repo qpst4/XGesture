@@ -31,6 +31,8 @@ data class PageScrollSettings(
     val controlBarColorArgb: Int = DEFAULT_BAR_COLOR_ARGB,
     /** 控制条按钮是否跟随应用强调色。 */
     val controlBarUseAccentColor: Boolean = true,
+    /** 闲置 4 秒后控制条停在不透明度（0 = 完全看不见，1 = 不淡出）。 */
+    val controlBarIdleAlpha: Float = DEFAULT_CONTROL_BAR_IDLE_ALPHA,
     /** 面板/控制条位置是否记忆（同样用于左右侧）。 */
     val rememberSide: Boolean = true,
     val lastSideName: String = "",
@@ -49,6 +51,11 @@ data class PageScrollSettings(
         val MAX_SPEED_LEVEL get() = SPEED_LEVELS.size
 
         const val DEFAULT_BAR_COLOR_ARGB = 0xFF1A1B1F.toInt()
+
+        /** 闲置淡出的默认值：沿用改之前写死的 55%。 */
+        const val DEFAULT_CONTROL_BAR_IDLE_ALPHA = 0.55f
+        const val MIN_CONTROL_BAR_IDLE_ALPHA = 0f
+        const val MAX_CONTROL_BAR_IDLE_ALPHA = 1f
     }
 }
 
@@ -60,6 +67,7 @@ object PageScrollPrefs {
     private const val KEY_SPEED_LEVEL = "speed_level"
     private const val KEY_BAR_COLOR = "control_bar_color"
     private const val KEY_BAR_USE_ACCENT = "control_bar_use_accent"
+    private const val KEY_BAR_IDLE_ALPHA = "control_bar_idle_alpha"
     private const val KEY_LAST_SIDE = "last_side"
     private const val KEY_BAR_Y_RATIO = "control_bar_y_ratio"
 
@@ -71,6 +79,13 @@ object PageScrollPrefs {
                 .coerceIn(PageScrollSettings.MIN_SPEED_LEVEL, PageScrollSettings.MAX_SPEED_LEVEL),
             controlBarColorArgb = prefs.getInt(KEY_BAR_COLOR, PageScrollSettings.DEFAULT_BAR_COLOR_ARGB),
             controlBarUseAccentColor = prefs.getBoolean(KEY_BAR_USE_ACCENT, true),
+            controlBarIdleAlpha = prefs.getFloat(
+                KEY_BAR_IDLE_ALPHA,
+                PageScrollSettings.DEFAULT_CONTROL_BAR_IDLE_ALPHA,
+            ).coerceIn(
+                PageScrollSettings.MIN_CONTROL_BAR_IDLE_ALPHA,
+                PageScrollSettings.MAX_CONTROL_BAR_IDLE_ALPHA,
+            ),
             lastSideName = prefs.getString(KEY_LAST_SIDE, "").orEmpty(),
         )
     }
@@ -105,6 +120,18 @@ object PageScrollPrefs {
 
     fun saveControlBarUseAccentColor(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_BAR_USE_ACCENT, enabled).apply()
+    }
+
+    fun saveControlBarIdleAlpha(context: Context, alpha: Float) {
+        prefs(context).edit()
+            .putFloat(
+                KEY_BAR_IDLE_ALPHA,
+                alpha.coerceIn(
+                    PageScrollSettings.MIN_CONTROL_BAR_IDLE_ALPHA,
+                    PageScrollSettings.MAX_CONTROL_BAR_IDLE_ALPHA,
+                ),
+            )
+            .apply()
     }
 
     private fun prefs(context: Context): SharedPreferences =

@@ -31,4 +31,6 @@
     <string name="page_scroll_bar_color_white">أبيض</string>
     <string name="page_scroll_bar_use_accent_title">استخدام لون التمييز</string>
     <string name="page_scroll_bar_use_accent_subtitle">مطابقة أزرار الشريط مع لون التمييز في التطبيق الحالي.</string>
+    <string name="page_scroll_bar_idle_alpha_title">شفافية وقت الخمول</string>
+    <string name="page_scroll_bar_idle_alpha_summary">شفافية الشريط بعد 4 ثوانٍ دون لمس. عند الحد الأدنى يصبح غير مرئي تمامًا، لكن الضغط على الموضع نفسه ما زال يعمل.</string>
 </resources>
