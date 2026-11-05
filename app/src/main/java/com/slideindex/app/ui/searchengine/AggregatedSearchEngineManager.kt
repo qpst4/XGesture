@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -66,12 +65,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import com.slideindex.app.overlay.pickresult.SearchEngineIcon
 import com.slideindex.app.settings.SearchEngineConfig
+import com.slideindex.app.settings.SearchEngineIconShape
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
-import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.SliderPreference
-import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.roundToInt
 
@@ -91,12 +88,10 @@ fun AggregatedSearchEngineManager(
     gridRows: Int,
     showLabels: Boolean,
     onUpdateEngines: (List<SearchEngineConfig>) -> Unit,
-    onGridColumnsChange: (Int) -> Unit,
-    onGridRowsChange: (Int) -> Unit,
-    onShowLabelsChange: (Boolean) -> Unit,
     onAddEngine: () -> Unit,
     onEditEngine: (String) -> Unit,
     onDeleteEngine: (String) -> Unit,
+    iconShape: SearchEngineIconShape = SearchEngineIconShape.DEFAULT,
     modifier: Modifier = Modifier,
     onDraggingStateChange: (Boolean) -> Unit = {},
     /**
@@ -488,6 +483,7 @@ fun AggregatedSearchEngineManager(
                                 columns = columns,
                                 showLabels = showLabels,
                                 iconSize = iconSizeDp,
+                                iconShape = iconShape,
                                 draggedEngineId = draggedEngine?.id,
                                 rootCoordinates = rootCoordinates,
                                 itemSlotBounds = itemSlotBounds,
@@ -551,6 +547,7 @@ fun AggregatedSearchEngineManager(
                             columns = columns,
                             showLabels = showLabels,
                             iconSize = iconSizeDp,
+                            iconShape = iconShape,
                             draggedEngineId = draggedEngine?.id,
                             rootCoordinates = rootCoordinates,
                             itemSlotBounds = itemSlotBounds,
@@ -562,59 +559,6 @@ fun AggregatedSearchEngineManager(
                         )
                     }
                 }
-            }
-
-            // 3. 网格布局设置（松手才提交变化，滑动中绝不卡顿重排）
-            SmallTitle(
-                text = "网格布局",
-                insideMargin = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 0.dp),
-            )
-
-            var draftRows by remember(gridRows) { mutableFloatStateOf(rows.toFloat()) }
-            var draftColumns by remember(gridColumns) { mutableFloatStateOf(columns.toFloat()) }
-
-            MiuixCard(modifier = Modifier.fillMaxWidth()) {
-                SliderPreference(
-                    title = "单页行数",
-                    summary = "独立搜索页垂直分布的引擎行数（1~4 行）",
-                    value = draftRows,
-                    valueRange = 1f..4f,
-                    steps = 2,
-                    valueText = "${draftRows.roundToInt()} 行",
-                    onValueChange = { draftRows = it },
-                    onValueChangeFinished = {
-                        val finalRows = draftRows.roundToInt()
-                        if (finalRows != rows) {
-                            onGridRowsChange(finalRows)
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        }
-                    },
-                )
-                SliderPreference(
-                    title = "单页列数",
-                    summary = "独立搜索页每行展示的引擎列数（3~8 列）",
-                    value = draftColumns,
-                    valueRange = 3f..8f,
-                    steps = 4,
-                    valueText = "${draftColumns.roundToInt()} 列",
-                    onValueChange = { draftColumns = it },
-                    onValueChangeFinished = {
-                        val finalCols = draftColumns.roundToInt()
-                        if (finalCols != columns) {
-                            onGridColumnsChange(finalCols)
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        }
-                    },
-                )
-                SwitchPreference(
-                    title = "显示引擎名称",
-                    summary = "在图标下方展示搜索引擎文本标签",
-                    checked = showLabels,
-                    onCheckedChange = {
-                        onShowLabelsChange(it)
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    },
-                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -639,6 +583,7 @@ fun AggregatedSearchEngineManager(
                 SearchEngineIcon(
                     engine = engine,
                     modifier = Modifier.size(iconSizeDp),
+                    iconShape = iconShape,
                 )
             }
         }
@@ -759,6 +704,7 @@ private fun DesktopReorderableGrid(
     columns: Int,
     showLabels: Boolean,
     iconSize: Dp,
+    iconShape: SearchEngineIconShape,
     draggedEngineId: String?,
     rootCoordinates: LayoutCoordinates?,
     itemSlotBounds: MutableMap<String, Rect>,
@@ -806,6 +752,7 @@ private fun DesktopReorderableGrid(
                     verticalSpacingPx = verticalSpacingPx,
                     showLabel = showLabels,
                     iconSize = iconSize,
+                    iconShape = iconShape,
                     isBeingDragged = isBeingDragged,
                     onClick = { onEngineClick(engine) },
                     onSlotPositioned = { coords ->
@@ -836,6 +783,7 @@ private fun DesktopGridSlotItem(
     verticalSpacingPx: Float,
     showLabel: Boolean,
     iconSize: Dp,
+    iconShape: SearchEngineIconShape,
     isBeingDragged: Boolean,
     onClick: () -> Unit,
     onSlotPositioned: (LayoutCoordinates) -> Unit,
@@ -882,6 +830,7 @@ private fun DesktopGridSlotItem(
             SearchEngineIcon(
                 engine = engine,
                 modifier = Modifier.size(iconSize),
+                iconShape = iconShape,
             )
 
             if (showLabel) {

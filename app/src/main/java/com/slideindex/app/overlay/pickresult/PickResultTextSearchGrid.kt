@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import com.slideindex.app.settings.SearchEngineConfig
+import com.slideindex.app.settings.SearchEngineIconShape
 import com.slideindex.app.settings.SearchEngineStore
 import com.slideindex.app.settings.SearchIconType
 import kotlinx.coroutines.Dispatchers
@@ -109,7 +110,8 @@ internal fun pickResultSearchGridReservedHeight(rows: Int, showLabels: Boolean, 
         PickResultTextSearchGridTopSpacing
 }
 
-private fun searchIconSizeForColumns(columns: Int): Dp = when {
+/** 引擎区图标尺寸：列数越多图标越小；设置页预览与 dock 共用同一口径。 */
+internal fun searchIconSizeForColumns(columns: Int): Dp = when {
     columns >= 7 -> 32.dp
     columns >= 6 -> 36.dp
     else -> SearchIconSizeDefault
@@ -143,6 +145,7 @@ fun PickResultTextSearchGrid(
     showPageIndicator: Boolean = false,
     pageIndicatorTopPadding: Dp = 8.dp,
     pageIndicatorBottomPadding: Dp = 6.dp,
+    iconShape: SearchEngineIconShape = SearchEngineIconShape.DEFAULT,
 ) {
     if (engines.isEmpty()) return
     val isLandscape = overlayIsLandscape()
@@ -206,6 +209,7 @@ fun PickResultTextSearchGrid(
                     iconSize = iconSize,
                     longPressEnabled = longPressEnabled,
                     onEngineClick = onEngineClick,
+                    iconShape = iconShape,
                 )
             }
             if (showPageIndicator && pages.size > 1) {
@@ -270,6 +274,7 @@ private fun PickResultSearchEngineGridPage(
     iconSize: Dp,
     longPressEnabled: Boolean,
     onEngineClick: (SearchEngineConfig, Boolean) -> Unit,
+    iconShape: SearchEngineIconShape,
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -291,6 +296,7 @@ private fun PickResultSearchEngineGridPage(
                             onEngineClick(engine, longPressTriggered)
                         },
                         modifier = Modifier.weight(1f),
+                        iconShape = iconShape,
                     )
                 }
                 repeat(columnCount - rowEngines.size) {
@@ -311,6 +317,7 @@ fun PickResultSearchEngineItem(
     onClick: (longPressTriggered: Boolean) -> Unit,
     modifier: Modifier = Modifier,
     longPressEnabled: Boolean = false,
+    iconShape: SearchEngineIconShape = SearchEngineIconShape.DEFAULT,
 ) {
     val clickModifier = if (longPressEnabled && enabled) {
         Modifier.combinedClickable(
@@ -329,6 +336,7 @@ fun PickResultSearchEngineItem(
             engine = engine,
             modifier = Modifier.size(iconSize),
             alpha = if (enabled) 1f else 0.45f,
+            iconShape = iconShape,
         )
         if (showLabel) {
             Text(
@@ -344,8 +352,6 @@ fun PickResultSearchEngineItem(
     }
 }
 
-private const val SearchEngineIconCornerFraction = 0.24f
-
 @Composable
 fun SearchEngineIcon(
     engine: SearchEngineConfig,
@@ -353,6 +359,7 @@ fun SearchEngineIcon(
     alpha: Float = 1f,
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
     fallbackContentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    iconShape: SearchEngineIconShape = SearchEngineIconShape.DEFAULT,
 ) {
     val context = LocalContext.current
     val cacheKey = searchEngineIconCacheKey(engine)
@@ -369,7 +376,11 @@ fun SearchEngineIcon(
     }
 
     BoxWithConstraints(modifier = modifier) {
-        val shape = RoundedCornerShape(maxWidth * SearchEngineIconCornerFraction)
+        val shape = if (iconShape == SearchEngineIconShape.CIRCLE) {
+            CircleShape
+        } else {
+            RoundedCornerShape(maxWidth * iconShape.cornerFraction)
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()

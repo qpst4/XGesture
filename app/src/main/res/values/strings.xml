@@ -3687,7 +3687,8 @@ Questions: open a GitHub Issue on the project repository.</string>
     <string name="search_panel_settings_title">Search panel</string>
     <string name="search_panel_settings_subtitle">Configure search panel layout, appearance and candidates</string>
     <string name="search_panel_settings_section_layout">Layout &amp; behavior</string>
-    <string name="search_panel_presentation_layout_entry_desc">Bar position, background effects, and launch behavior</string>
+    <string name="search_panel_presentation_layout_entry_desc">Bar position, engine area appearance, background effects, and launch behavior</string>
+    <string name="search_panel_engine_layout_shared_hint">Applies to the engine area in both the search panel and the pick panel</string>
     <string name="search_panel_settings_section_behavior">Panel behavior</string>
     <string name="search_panel_settings_section_appearance">Appearance</string>
     <string name="search_panel_settings_section_candidates">Candidate search</string>

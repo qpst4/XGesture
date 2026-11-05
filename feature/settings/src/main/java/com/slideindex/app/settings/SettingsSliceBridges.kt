@@ -307,6 +307,7 @@ fun OverlaySettings.toMinimalAppSettings(): AppSettings = AppSettings(
         searchEngineGridColumns = searchEngineGridColumns,
         searchEngineGridRows = searchEngineGridRows,
         searchEngineShowLabels = searchEngineShowLabels,
+        searchEngineIconShape = searchEngineIconShape,
         searchPanelDefaultEngineId = searchPanelDefaultEngineId,
         searchPanelInputBehavior = searchPanelInputBehavior,
         searchPanelEnterAction = searchPanelEnterAction,

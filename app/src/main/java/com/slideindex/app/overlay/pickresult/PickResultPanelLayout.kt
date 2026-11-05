@@ -531,7 +531,8 @@ internal fun PickResultAuxiliarySearchBlock(
             rows = searchEngineGridRows,
             showLabels = searchEngineShowLabels,
             longPressEnabled = appSettings.launchPolicyLongPressEligible(),
-            onEngineClick = onSearchEngineClick
+            onEngineClick = onSearchEngineClick,
+            iconShape = appSettings.searchEngineIconShape,
         )
     }
 }

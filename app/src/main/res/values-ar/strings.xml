@@ -3530,7 +3530,8 @@
     <string name="search_panel_settings_title">لوحة البحث</string>
     <string name="search_panel_settings_subtitle">تكوين تخطيط لوحة البحث العالمية، المظهر، ونتائج البحث المقترحة</string>
     <string name="search_panel_settings_section_layout">العرض والتخطيط</string>
-    <string name="search_panel_presentation_layout_entry_desc">موضع الشريط، الخلفية، وسلوك التشغيل</string>
+    <string name="search_panel_presentation_layout_entry_desc">موضع الشريط، مظهر منطقة المحركات، الخلفية، وسلوك التشغيل</string>
+    <string name="search_panel_engine_layout_shared_hint">ينطبق على منطقة المحركات في لوحة البحث ولوحة التقاط النص معاً</string>
     <string name="search_panel_settings_section_behavior">سلوك اللوحة</string>
     <string name="search_panel_settings_section_appearance">المظهر</string>
     <string name="search_panel_settings_section_candidates">البحث المقترح</string>

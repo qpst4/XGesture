@@ -1815,6 +1815,7 @@ fun SearchPanelScreen(
                                         showPageIndicator = true,
                                         pageIndicatorTopPadding = SearchPanelPageIndicatorTopPadding,
                                         pageIndicatorBottomPadding = SearchPanelPageIndicatorBottomPadding,
+                                        iconShape = settings.searchEngineIconShape,
                                         onEngineClick = { engine, longPressTriggered ->
                                             launchSearchEngine(engine, longPressTriggered)
                                         },

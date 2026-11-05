@@ -3554,7 +3554,8 @@
     <string name="search_panel_settings_title">検索パネル</string>
     <string name="search_panel_settings_subtitle">検索パネルのレイアウト、外観、候補を設定</string>
     <string name="search_panel_settings_section_layout">レイアウトと動作</string>
-    <string name="search_panel_presentation_layout_entry_desc">検索バーの位置、背景効果、起動時の動作</string>
+    <string name="search_panel_presentation_layout_entry_desc">検索バーの位置、エンジン領域の外観、背景効果、起動時の動作</string>
+    <string name="search_panel_engine_layout_shared_hint">検索パネルとテキスト取得パネルのエンジン領域に同時に適用されます</string>
     <string name="search_panel_settings_section_behavior">パネルの動作</string>
     <string name="search_panel_settings_section_appearance">外観</string>
     <string name="search_panel_settings_section_candidates">候補検索</string>

@@ -747,6 +747,9 @@ internal object SettingsSnapshotReader {
             searchEngineGridColumns = prefs[SettingsPreferenceKeys.SEARCH_ENGINE_GRID_COLUMNS]?.coerceIn(3, 8) ?: 5,
             searchEngineGridRows = prefs[SettingsPreferenceKeys.SEARCH_ENGINE_GRID_ROWS]?.coerceIn(1, 4) ?: 2,
             searchEngineShowLabels = prefs[SettingsPreferenceKeys.SEARCH_ENGINE_SHOW_LABELS] ?: true,
+            searchEngineIconShape = SearchEngineIconShape.fromId(
+                prefs[SettingsPreferenceKeys.SEARCH_ENGINE_ICON_SHAPE],
+            ),
             searchPanelDefaultEngineId = prefs[SettingsPreferenceKeys.SEARCH_PANEL_DEFAULT_ENGINE_ID],
             searchPanelInputBehavior = prefs[SettingsPreferenceKeys.SEARCH_PANEL_INPUT_BEHAVIOR]
                 ?.let { name -> runCatching { SearchPanelInputBehavior.valueOf(name) }.getOrNull() }

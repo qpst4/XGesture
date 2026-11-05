@@ -776,6 +776,7 @@ internal object SettingsPreferenceKeys {
     val SEARCH_ENGINE_GRID_COLUMNS = intPreferencesKey("search_engine_grid_columns")
     val SEARCH_ENGINE_GRID_ROWS = intPreferencesKey("search_engine_grid_rows")
     val SEARCH_ENGINE_SHOW_LABELS = booleanPreferencesKey("search_engine_show_labels")
+    val SEARCH_ENGINE_ICON_SHAPE = stringPreferencesKey("search_engine_icon_shape")
     val SEARCH_PANEL_DEFAULT_ENGINE_ID = stringPreferencesKey("search_panel_default_engine_id")
     val SEARCH_PANEL_INPUT_BEHAVIOR = stringPreferencesKey("search_panel_input_behavior")
     val SEARCH_PANEL_ENTER_ACTION = stringPreferencesKey("search_panel_enter_action")

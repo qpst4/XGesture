@@ -3686,7 +3686,8 @@
     <string name="search_panel_settings_title">Панель поиска</string>
     <string name="search_panel_settings_subtitle">Настройте расположение, внешний вид и кандидатов панели поиска</string>
     <string name="search_panel_settings_section_layout">Расположение и поведение</string>
-    <string name="search_panel_presentation_layout_entry_desc">Положение панели, эффекты фона и поведение запуска</string>
+    <string name="search_panel_presentation_layout_entry_desc">Положение панели, вид области движков, эффекты фона и поведение запуска</string>
+    <string name="search_panel_engine_layout_shared_hint">Действует для области движков и в панели поиска, и в панели извлечения текста</string>
     <string name="search_panel_settings_section_behavior">Поведение панели</string>
     <string name="search_panel_settings_section_appearance">Внешний вид</string>
     <string name="search_panel_settings_section_candidates">Поиск кандидатов</string>

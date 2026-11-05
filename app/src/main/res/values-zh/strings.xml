@@ -3716,7 +3716,8 @@
     <string name="search_panel_settings_title">搜索面板</string>
     <string name="search_panel_settings_subtitle">配置全局搜索面板的布局、外观与候选结果</string>
     <string name="search_panel_settings_section_layout">布局与行为</string>
-    <string name="search_panel_presentation_layout_entry_desc">搜索栏位置、背景效果与打开行为</string>
+    <string name="search_panel_presentation_layout_entry_desc">搜索栏位置、引擎区外观、背景效果与打开行为</string>
+    <string name="search_panel_engine_layout_shared_hint">同时作用于搜索面板与取词面板的引擎区</string>
     <string name="search_panel_settings_section_behavior">面板行为</string>
     <string name="search_panel_settings_section_appearance">外观</string>
     <string name="search_panel_settings_section_candidates">候选搜索</string>
