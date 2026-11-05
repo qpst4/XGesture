@@ -8,6 +8,7 @@ import com.slideindex.app.settings.FloatBallSettings
 import com.slideindex.app.settings.FreeWindowMode
 import com.slideindex.app.settings.FreeWindowSettings
 import android.os.Looper
+import android.view.InputDevice
 import android.view.MotionEvent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -419,6 +420,7 @@ class FloatBallGestureDetectorTest {
             it.bind(
                 settings = AppSettings(freeWindow = FreeWindowSettings(freeWindowModeId = FreeWindowMode.STANDARD.id)),
                 density = 3f,
+                systemTouchSlopPx = 8f,
                 onPickStart = { _, _, _, _ -> },
                 onPickDrag = { _, _ -> },
                 onPickEnd = {},
@@ -698,6 +700,7 @@ class FloatBallGestureDetectorTest {
         detector.bind(
             settings = AppSettings(freeWindow = FreeWindowSettings(freeWindowModeId = FreeWindowMode.STANDARD.id)),
             density = 3f,
+            systemTouchSlopPx = 8f,
             onPickStart = { _, _, fingerX, fingerY ->
                 startFingerX = fingerX
                 startFingerY = fingerY
@@ -869,6 +872,227 @@ class FloatBallGestureDetectorTest {
         listOf(down, moveDown, moveInward, up).forEach { it.recycle() }
     }
 
+    @Test
+    fun `second finger after pause cancels selection and release does not commit`() {
+        var selectionCancelCount = 0
+        var pickEnded = false
+        var pickCancelled = false
+        var fired: FloatBallGestureType? = null
+        val detector = newDetector(
+            onPickEnd = { pickEnded = true },
+            onPickCancel = { pickCancelled = true },
+            onPickSelectionCancel = { selectionCancelCount++ },
+            onGesture = { type, _, _, _, _ -> fired = type },
+        )
+        val down = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 100f, 200f, 0)
+        val move = MotionEvent.obtain(0, 50, MotionEvent.ACTION_MOVE, 100f, 350f, 0)
+        detector.onTouchEvent(down)
+        detector.onTouchEvent(move)
+        detector.lockPickFromPause()
+
+        val secondDown = multiTouchEvent(
+            0, 100, MotionEvent.ACTION_POINTER_DOWN, 1,
+            listOf(Triple(0, 100f, 350f), Triple(1, 600f, 800f)),
+        )
+        detector.onTouchEvent(secondDown)
+        assertEquals(1, selectionCancelCount)
+        assertFalse(pickEnded)
+        assertFalse(pickCancelled)
+
+        val up = MotionEvent.obtain(0, 200, MotionEvent.ACTION_UP, 100f, 350f, 0)
+        detector.onTouchEvent(up)
+        assertFalse(pickEnded)
+        assertTrue(pickCancelled)
+        assertNull(fired)
+        listOf(down, move, secondDown, up).forEach { it.recycle() }
+    }
+
+    @Test
+    fun `second finger cancel then re-pause commits on release`() {
+        var pickEnded = false
+        var pickCancelled = false
+        val detector = newDetector(
+            onPickEnd = { pickEnded = true },
+            onPickCancel = { pickCancelled = true },
+        )
+        val down = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 100f, 200f, 0)
+        val move = MotionEvent.obtain(0, 50, MotionEvent.ACTION_MOVE, 100f, 350f, 0)
+        detector.onTouchEvent(down)
+        detector.onTouchEvent(move)
+        detector.lockPickFromPause()
+        val secondDown = multiTouchEvent(
+            0, 100, MotionEvent.ACTION_POINTER_DOWN, 1,
+            listOf(Triple(0, 100f, 350f), Triple(1, 600f, 800f)),
+        )
+        detector.onTouchEvent(secondDown)
+        val secondUp = multiTouchEvent(
+            0, 150, MotionEvent.ACTION_POINTER_UP, 1,
+            listOf(Triple(0, 100f, 350f), Triple(1, 600f, 800f)),
+        )
+        detector.onTouchEvent(secondUp)
+        // 重新黄框：恢复“抬手提交”。
+        detector.lockPickFromPause()
+        val up = MotionEvent.obtain(0, 300, MotionEvent.ACTION_UP, 100f, 350f, 0)
+        detector.onTouchEvent(up)
+        assertTrue(pickEnded)
+        assertFalse(pickCancelled)
+        listOf(down, move, secondDown, secondUp, up).forEach { it.recycle() }
+    }
+
+    @Test
+    fun `second finger cancel suppresses swipe gesture on release`() {
+        var selectionCancelCount = 0
+        var pickCancelled = false
+        var fired: FloatBallGestureType? = null
+        val detector = newDetector(
+            onPickCancel = { pickCancelled = true },
+            onPickSelectionCancel = { selectionCancelCount++ },
+            onGesture = { type, _, _, _, _ -> fired = type },
+        )
+        val down = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 100f, 200f, 0)
+        val move = MotionEvent.obtain(0, 50, MotionEvent.ACTION_MOVE, 100f, 500f, 0)
+        detector.onTouchEvent(down)
+        detector.onTouchEvent(move)
+        detector.lockPickFromPause()
+        val secondDown = multiTouchEvent(
+            0, 100, MotionEvent.ACTION_POINTER_DOWN, 1,
+            listOf(Triple(0, 100f, 500f), Triple(1, 600f, 800f)),
+        )
+        detector.onTouchEvent(secondDown)
+        // 取消后继续下滑：不允许再武装滑动手势。
+        val moveAfterCancel = MotionEvent.obtain(0, 150, MotionEvent.ACTION_MOVE, 100f, 700f, 0)
+        detector.onTouchEvent(moveAfterCancel)
+        assertFalse(detector.isGestureArmedForTest())
+        val up = MotionEvent.obtain(0, 250, MotionEvent.ACTION_UP, 100f, 700f, 0)
+        detector.onTouchEvent(up)
+        assertEquals(1, selectionCancelCount)
+        assertTrue(pickCancelled)
+        assertNull(fired)
+        listOf(down, move, secondDown, moveAfterCancel, up).forEach { it.recycle() }
+    }
+
+    @Test
+    fun `second finger before pause does not cancel selection`() {
+        var selectionCancelCount = 0
+        val detector = newDetector(onPickSelectionCancel = { selectionCancelCount++ })
+        val down = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 100f, 200f, 0)
+        val move = MotionEvent.obtain(0, 50, MotionEvent.ACTION_MOVE, 100f, 350f, 0)
+        detector.onTouchEvent(down)
+        detector.onTouchEvent(move)
+        val secondDown = multiTouchEvent(
+            0, 100, MotionEvent.ACTION_POINTER_DOWN, 1,
+            listOf(Triple(0, 100f, 350f), Triple(1, 600f, 800f)),
+        )
+        detector.onTouchEvent(secondDown)
+        assertEquals(0, selectionCancelCount)
+        listOf(down, move, secondDown).forEach { it.recycle() }
+    }
+
+    @Test
+    fun `primary lift after second finger cancel does not hand over to second finger`() {
+        var selectionCancelCount = 0
+        var pickCancelled = false
+        var pickEnded = false
+        val detector = newDetector(
+            onPickEnd = { pickEnded = true },
+            onPickCancel = { pickCancelled = true },
+            onPickSelectionCancel = { selectionCancelCount++ },
+        )
+        val down = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 100f, 200f, 0)
+        val move = MotionEvent.obtain(0, 50, MotionEvent.ACTION_MOVE, 100f, 350f, 0)
+        detector.onTouchEvent(down)
+        detector.onTouchEvent(move)
+        detector.lockPickFromPause()
+        val secondDown = multiTouchEvent(
+            0, 100, MotionEvent.ACTION_POINTER_DOWN, 1,
+            listOf(Triple(0, 100f, 350f), Triple(1, 600f, 800f)),
+        )
+        detector.onTouchEvent(secondDown)
+        // 第一根手指先抬起：应当收尾，第二根不能接管。
+        val primaryUp = multiTouchEvent(
+            0, 150, MotionEvent.ACTION_POINTER_UP, 0,
+            listOf(Triple(0, 100f, 350f), Triple(1, 600f, 800f)),
+        )
+        detector.onTouchEvent(primaryUp)
+        assertTrue(pickCancelled)
+        assertEquals(1, selectionCancelCount)
+        assertFalse(pickEnded)
+
+        val secondMove = multiTouchEvent(
+            0, 200, MotionEvent.ACTION_MOVE, 0,
+            listOf(Triple(1, 700f, 900f)),
+        )
+        detector.onTouchEvent(secondMove)
+        val secondUp = multiTouchEvent(
+            0, 250, MotionEvent.ACTION_UP, 0,
+            listOf(Triple(1, 700f, 900f)),
+        )
+        detector.onTouchEvent(secondUp)
+        assertEquals(1, selectionCancelCount)
+        assertTrue(pickCancelled)
+        assertFalse(pickEnded)
+        listOf(down, move, secondDown, primaryUp, secondMove, secondUp).forEach { it.recycle() }
+    }
+
+    @Test
+    fun `cancelPickSelectionFromPause only fires while pause is locked`() {
+        var selectionCancelCount = 0
+        val detector = newDetector(onPickSelectionCancel = { selectionCancelCount++ })
+        val down = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 100f, 200f, 0)
+        val move = MotionEvent.obtain(0, 50, MotionEvent.ACTION_MOVE, 100f, 350f, 0)
+        detector.onTouchEvent(down)
+        detector.onTouchEvent(move)
+        // 红叉阶段没有可取消的选中态。
+        assertFalse(detector.cancelPickSelectionFromPause())
+        assertEquals(0, selectionCancelCount)
+        detector.lockPickFromPause()
+        assertTrue(detector.cancelPickSelectionFromPause())
+        assertEquals(1, selectionCancelCount)
+        // 同一次黄框已经取消过，不能重复触发。
+        assertFalse(detector.cancelPickSelectionFromPause())
+        assertEquals(1, selectionCancelCount)
+        listOf(down, move).forEach { it.recycle() }
+    }
+
+    private fun multiTouchEvent(
+        downTime: Long,
+        eventTime: Long,
+        action: Int,
+        actionIndex: Int,
+        pointers: List<Triple<Int, Float, Float>>,
+    ): MotionEvent {
+        val properties = Array(pointers.size) { index ->
+            MotionEvent.PointerProperties().apply {
+                id = pointers[index].first
+                toolType = MotionEvent.TOOL_TYPE_FINGER
+            }
+        }
+        val coords = Array(pointers.size) { index ->
+            MotionEvent.PointerCoords().apply {
+                x = pointers[index].second
+                y = pointers[index].third
+                pressure = 1f
+                size = 1f
+            }
+        }
+        return MotionEvent.obtain(
+            downTime,
+            eventTime,
+            action or (actionIndex shl MotionEvent.ACTION_POINTER_INDEX_SHIFT),
+            pointers.size,
+            properties,
+            coords,
+            0,
+            0,
+            1f,
+            1f,
+            0,
+            0,
+            InputDevice.SOURCE_TOUCHSCREEN,
+            0,
+        )
+    }
+
     private fun compoundSettings(
         vararg actions: Pair<FloatBallGestureType, com.slideindex.app.gesture.GestureAction>,
     ): AppSettings = AppSettings(
@@ -893,6 +1117,7 @@ class FloatBallGestureDetectorTest {
         settings: AppSettings = AppSettings(freeWindow = FreeWindowSettings(freeWindowModeId = FreeWindowMode.STANDARD.id)),        onPickStart: (Float, Float, Float, Float) -> Unit = { _, _, _, _ -> },
         onPickEnd: () -> Unit = {},
         onPickCancel: () -> Unit = {},
+        onPickSelectionCancel: () -> Unit = {},
         onPickPreviewStart: (Float, Float) -> Unit = { _, _ -> },
         onPickPreviewProgress: (Float) -> Unit = {},
         onPickPreviewMove: (Float, Float, Float, Float) -> Unit = { _, _, _, _ -> },
@@ -904,10 +1129,12 @@ class FloatBallGestureDetectorTest {
         detector.bind(
             settings = settings,
             density = 3f,
+            systemTouchSlopPx = 8f,
             onPickStart = onPickStart,
             onPickDrag = { _, _ -> },
             onPickEnd = onPickEnd,
             onPickCancel = onPickCancel,
+            onPickSelectionCancel = onPickSelectionCancel,
             onGesture = onGesture,
             onPickPreviewStart = onPickPreviewStart,
             onPickPreviewProgress = onPickPreviewProgress,

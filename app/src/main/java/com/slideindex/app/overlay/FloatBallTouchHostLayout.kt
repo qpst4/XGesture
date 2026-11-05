@@ -60,6 +60,8 @@ internal class FloatBallTouchHostLayout(
     private var onBallPickPreviewMove: ((touchDownX: Float, touchDownY: Float, fingerX: Float, fingerY: Float) -> Unit)? = null
     private var onBallPickPreviewProgress: ((progress: Float) -> Unit)? = null
     private var onBallPickPreviewCancel: (() -> Unit)? = null
+    /** 第二根手指取消黄框/区域选择（回红十字、保留本次拖动）。 */
+    private var onBallPickSelectionCancel: (() -> Unit)? = null
     private var onLauncherCaptureMove: ((rawX: Float, rawY: Float) -> Unit)? = null
     private var onLauncherCaptureUp: ((rawX: Float, rawY: Float) -> Unit)? = null
     private var onLauncherCaptureCancel: (() -> Unit)? = null
@@ -109,6 +111,7 @@ internal class FloatBallTouchHostLayout(
             onDrag = { fingerX, fingerY -> onBallDrag?.invoke(fingerX, fingerY) },
             onDragEnd = { onBallDragEnd?.invoke() },
             onDragCancel = { onBallDragCancel?.invoke() },
+            onPickSelectionCancel = { onBallPickSelectionCancel?.invoke() },
             onGesture = { type, x, y, touchDownX, touchDownY ->
                 onBallGesture?.invoke(type, x, y, touchDownX, touchDownY)
             },
@@ -140,6 +143,7 @@ internal class FloatBallTouchHostLayout(
         onPickPreviewProgress: (progress: Float) -> Unit = {},
         onPickPreviewMove: (touchDownX: Float, touchDownY: Float, fingerX: Float, fingerY: Float) -> Unit = { _, _, _, _ -> },
         onPickPreviewCancel: () -> Unit = {},
+        onPickSelectionCancel: () -> Unit = {},
         onLauncherCaptureMove: (rawX: Float, rawY: Float) -> Unit = { _, _ -> },
         onLauncherCaptureUp: (rawX: Float, rawY: Float) -> Unit = { _, _ -> },
         onLauncherCaptureCancel: () -> Unit = {},
@@ -155,6 +159,7 @@ internal class FloatBallTouchHostLayout(
         onBallPickPreviewProgress = onPickPreviewProgress
         onBallPickPreviewMove = onPickPreviewMove
         onBallPickPreviewCancel = onPickPreviewCancel
+        onBallPickSelectionCancel = onPickSelectionCancel
         this.onLauncherCaptureMove = onLauncherCaptureMove
         this.onLauncherCaptureCancel = onLauncherCaptureCancel
         this.onLauncherCaptureUp = onLauncherCaptureUp
@@ -199,6 +204,7 @@ internal class FloatBallTouchHostLayout(
         onDrag: (Float, Float) -> Unit,
         onDragEnd: () -> Unit,
         onDragCancel: () -> Unit,
+        onPickSelectionCancel: () -> Unit,
         onGesture: (FloatBallGestureType, Float, Float, Float, Float) -> Unit,
         onGestureHint: (FloatBallGestureType?) -> Unit,
         onPickPreviewStart: (Float, Float) -> Unit,
@@ -218,6 +224,7 @@ internal class FloatBallTouchHostLayout(
             onPickDrag = onDrag,
             onPickEnd = onDragEnd,
             onPickCancel = onDragCancel,
+            onPickSelectionCancel = onPickSelectionCancel,
             onGesture = onGesture,
             onGestureHint = onGestureHint,
             onPickPreviewStart = onPickPreviewStart,

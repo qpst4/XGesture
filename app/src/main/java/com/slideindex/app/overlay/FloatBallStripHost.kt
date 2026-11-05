@@ -77,6 +77,8 @@ internal class FloatBallStripHost(
     private var onPickPreviewProgress: ((progress: Float) -> Unit)? = null
     private var onPickPreviewMove: ((touchDownX: Float, touchDownY: Float, fingerX: Float, fingerY: Float) -> Unit)? = null
     private var onPickPreviewCancel: (() -> Unit)? = null
+    /** 第二根手指取消黄框/区域选择（回红十字、保留本次拖动）。 */
+    private var onPickSelectionCancel: (() -> Unit)? = null
     private var onLauncherCaptureMove: ((rawX: Float, rawY: Float) -> Unit)? = null
     private var onLauncherCaptureUp: ((rawX: Float, rawY: Float) -> Unit)? = null
     private var onLauncherCaptureCancel: (() -> Unit)? = null
@@ -95,6 +97,7 @@ internal class FloatBallStripHost(
             onPickDrag = { fingerX, fingerY -> onDrag?.invoke(fingerX, fingerY) },
             onPickEnd = { onDragEnd?.invoke() },
             onPickCancel = { onDragCancel?.invoke() },
+            onPickSelectionCancel = { onPickSelectionCancel?.invoke() },
             onGesture = { type, rawX, rawY, touchDownX, touchDownY ->
                 onGesture?.invoke(type, rawX, rawY, touchDownX, touchDownY)
             },
@@ -131,6 +134,7 @@ internal class FloatBallStripHost(
         onPickPreviewProgress: (progress: Float) -> Unit = {},
         onPickPreviewMove: (touchDownX: Float, touchDownY: Float, fingerX: Float, fingerY: Float) -> Unit = { _, _, _, _ -> },
         onPickPreviewCancel: () -> Unit = {},
+        onPickSelectionCancel: () -> Unit = {},
         onLauncherCaptureMove: (rawX: Float, rawY: Float) -> Unit = { _, _ -> },
         onLauncherCaptureUp: (rawX: Float, rawY: Float) -> Unit = { _, _ -> },
         onLauncherCaptureCancel: () -> Unit = {},
@@ -146,6 +150,7 @@ internal class FloatBallStripHost(
         this.onPickPreviewProgress = onPickPreviewProgress
         this.onPickPreviewMove = onPickPreviewMove
         this.onPickPreviewCancel = onPickPreviewCancel
+        this.onPickSelectionCancel = onPickSelectionCancel
         this.onLauncherCaptureMove = onLauncherCaptureMove
         this.onLauncherCaptureCancel = onLauncherCaptureCancel
         this.onLauncherCaptureUp = onLauncherCaptureUp
@@ -177,6 +182,9 @@ internal class FloatBallStripHost(
     fun lockPickFromPause() {
         gestureDetector.lockPickFromPause()
     }
+
+    /** 模块侧多指中断时：先取消黄框/区域选中，再结束手势，避免 cancel 被当成提交。 */
+    fun cancelPickSelection(): Boolean = gestureDetector.cancelPickSelectionFromPause()
 
     fun unlockPickFromPause() {
         gestureDetector.unlockPickFromPause()

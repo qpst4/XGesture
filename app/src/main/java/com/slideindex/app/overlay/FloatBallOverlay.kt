@@ -1546,6 +1546,23 @@ object FloatBallOverlay {
                 dragActiveSideOverride = null
                 hideCursor()
             }
+
+            /**
+             * 第二根手指取消黄框/区域选择：清选中态、回红十字，但保留本次拖动。
+             *
+             * 这里**不走** onCancel：本次取词只是取消选中，第一根手指还要继续瞄准；
+             * 后续是否提交由检测器在重新黄框后恢复。
+             */
+            fun onSelectionCancel() {
+                restoreActiveDragFromPauseOrigin()
+                // 选中态取消后先不显示旧目标的预览框；下一次移动再按新位置重新命中。
+                selectionPreviewBoundsState?.value = null
+                syncCursorChromeAppearance()
+                // 取消后原地停不稳：必须以当前锚点为基线，移动超过取消容差才重新起暂停计时。
+                val anchor = currentPickAnchor()
+                lastPauseScheduleX = anchor?.x ?: Float.NaN
+                lastPauseScheduleY = anchor?.y ?: Float.NaN
+            }
         }
 
         val displayDialogOwner = OverlayComposeOwner()
@@ -1602,6 +1619,7 @@ object FloatBallOverlay {
                     dragCallbacks.onPreviewMove(touchDownX, touchDownY, fingerX, fingerY, fromLineStrip = false)
                 },
                 onPickPreviewCancel = dragCallbacks::onPreviewCancel,
+                onPickSelectionCancel = dragCallbacks::onSelectionCancel,
                 onLauncherCaptureCancel = {},
             onLauncherCaptureMove = { x, y ->
                     handleFloatBallLauncherCaptureMove(x, y)
@@ -1682,6 +1700,7 @@ object FloatBallOverlay {
                     dragCallbacks.onPreviewMove(touchDownX, touchDownY, fingerX, fingerY, fromLineStrip = true)
                 },
                 onPickPreviewCancel = dragCallbacks::onPreviewCancel,
+                onPickSelectionCancel = dragCallbacks::onSelectionCancel,
                 onLauncherCaptureCancel = {},
             onLauncherCaptureMove = { x, y ->
                     handleFloatBallLauncherCaptureMove(x, y)
@@ -2221,14 +2240,20 @@ object FloatBallOverlay {
         else -> false
     }
 
-    /** 输入层会话结束：结束该目标的手势并收回空闲布局。 */
-    fun cancelForwardedTouch(target: Int) {
+    /**
+     * 输入层会话结束：结束该目标的手势并收回空闲布局。
+     *
+     * [selectionCancel] = 多指/桥断等非正常结束：先清掉黄框/区域选中，再收手势。
+     * 否则线条侧的 cancel 会因“黄框暂停 = 提交”而弹出取词面板。
+     */
+    fun cancelForwardedTouch(target: Int, selectionCancel: Boolean = false) {
         when (target) {
             com.slideindex.app.xposed.bridge.ModuleHookBridgeContract.TARGET_FLOAT_BALL -> {
                 touchHost?.forceEndGestureCapture()
                 collapseBallTouchHostFromFullscreen()
             }
             com.slideindex.app.xposed.bridge.ModuleHookBridgeContract.TARGET_FLOAT_LINE -> {
+                if (selectionCancel) lineTouchHost?.cancelPickSelection()
                 lineTouchHost?.cancelGesture()
                 collapseLineTouchHostFromFullscreen()
             }

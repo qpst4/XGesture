@@ -337,7 +337,11 @@ class SlideIndexAccessibilityService : AccessibilityService() {
                 } else if (cornerAnchor != null) {
                     CornerGestureHost.instanceOrNull()?.cancelForwardedTouch(cornerAnchor)
                 } else if (target.isFloatBallTarget()) {
-                    com.slideindex.app.overlay.FloatBallOverlay.cancelForwardedTouch(target)
+                    // 多指/桥断等非正常结束：先清选中态再收手势，避免线条侧“cancel 变提交”。
+                    com.slideindex.app.overlay.FloatBallOverlay.cancelForwardedTouch(
+                        target,
+                        selectionCancel = !gracefulEnd,
+                    )
                 }
             }
         }
