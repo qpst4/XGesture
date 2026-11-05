@@ -52,6 +52,8 @@ internal fun PickResultImageSection(
     onSave: () -> Unit,
     onSaveLongClick: (() -> Unit)? = null,
     onShare: () -> Unit,
+    /** 长按分享键 = 把当前这张图起成系统拖拽；null 时不挂。 */
+    onStartDrag: (() -> Unit)? = null,
     onImageSearch: () -> Unit,
     onShareEngineClick: (com.slideindex.app.settings.SearchEngineConfig) -> Unit,
     onPinToScreen: () -> Unit,
@@ -76,6 +78,7 @@ internal fun PickResultImageSection(
                 onSave = onSave,
                 onSaveLongClick = onSaveLongClick,
                 onShare = onShare,
+                onStartDrag = onStartDrag,
                 onImageSearch = onImageSearch,
                 onShareEngineClick = onShareEngineClick,
                 onPinToScreen = onPinToScreen,
@@ -102,6 +105,8 @@ internal fun PickResultImageSectionGallery(
     onSave: () -> Unit,
     onSaveLongClick: (() -> Unit)? = null,
     onShare: () -> Unit,
+    /** 长按分享键 = 把当前这张图起成系统拖拽；null 时不挂。 */
+    onStartDrag: (() -> Unit)? = null,
     onImageSearch: () -> Unit,
     onShareEngineClick: (com.slideindex.app.settings.SearchEngineConfig) -> Unit,
     onPinToScreen: () -> Unit,
@@ -263,6 +268,7 @@ internal fun PickResultImageSectionGallery(
                     engines = searchEngines,
                     onShareEngineClick = onShareEngineClick,
                     onShare = onShare,
+                    onStartImageDrag = onStartDrag,
                     onImageSearch = onImageSearch,
                     onSave = onSave,
                     onSaveLongClick = onSaveLongClick,

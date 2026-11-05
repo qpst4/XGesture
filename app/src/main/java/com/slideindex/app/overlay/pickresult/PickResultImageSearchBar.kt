@@ -274,6 +274,8 @@ fun PickResultImageSearchBar(
     onSave: () -> Unit,
     modifier: Modifier = Modifier,
     onSaveLongClick: (() -> Unit)? = null,
+    /** 长按分享键 = 把当前这张图起成系统拖拽；null 时不挂。 */
+    onStartImageDrag: (() -> Unit)? = null,
     onPinToScreen: (() -> Unit)? = null,
     onStash: (() -> Unit)? = null,
     overlayMode: Boolean = false,
@@ -309,6 +311,7 @@ fun PickResultImageSearchBar(
                     onImageSearch = onImageSearch,
                     onSave = onSave,
                     onSaveLongClick = onSaveLongClick,
+                    onStartImageDrag = onStartImageDrag,
                     onPinToScreen = onPinToScreen,
                     onStash = onStash,
                     overlayMode = false,
@@ -389,6 +392,7 @@ fun PickResultImageSearchBar(
                 onImageSearch = onImageSearch,
                 onSave = onSave,
                 onSaveLongClick = onSaveLongClick,
+                onStartImageDrag = onStartImageDrag,
                 onPinToScreen = onPinToScreen,
                 onStash = onStash,
                 overlayMode = overlayMode,
@@ -727,6 +731,7 @@ private fun PickResultImageSearchActions(
     onImageSearch: () -> Unit,
     onSave: () -> Unit,
     onSaveLongClick: (() -> Unit)? = null,
+    onStartImageDrag: (() -> Unit)? = null,
     onPinToScreen: (() -> Unit)? = null,
     onStash: (() -> Unit)? = null,
     overlayMode: Boolean = false,
@@ -760,11 +765,12 @@ private fun PickResultImageSearchActions(
             compact = compact,
         )
 
-        // 3. Direct Action: Share (分享图片，直接外显)
+        // 3. Direct Action: Share (分享图片，直接外显)；长按 = 把这张图拖到别的 App。
         PickResultActionIcon(
             icon = Icons.Outlined.Share,
             enabled = true,
             onClick = onShare,
+            onLongClick = onStartImageDrag,
             contentDescription = stringResource(R.string.pick_result_action_share_image),
             overlayMode = overlayMode,
             compact = compact,

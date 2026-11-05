@@ -134,6 +134,8 @@ internal fun PickResultInteractiveTextSection(
     onActiveTextChange: (String) -> Unit = {},
     onSearch: (String) -> Unit = {},
     onShare: (String) -> Unit,
+    /** 长按分享键起系统拖拽（载荷与 [onShare] 一致）；null 时不挂这个长按。 */
+    onStartDrag: ((String) -> Unit)? = null,
     /** 用其他应用处理；null 时动作条不显示这一项（翻译浮窗等不需要的宿主）。 */
     onProcessText: ((String, PickResultProcessTextTarget) -> Unit)? = null,
     onCopy: (String, keepPanelOpen: Boolean) -> Unit,
@@ -444,6 +446,7 @@ internal fun PickResultInteractiveTextSection(
                     },
                     onDismissOpenLinkChooser = { openLinkChooserExpanded = false },
                     onShare = { runOnActiveText(onShare) },
+                    onStartDrag = onStartDrag?.let { drag -> { runOnActiveText(drag) } },
                     onProcessText = onProcessText?.let { action ->
                         { target -> runOnActiveText { text -> action(text, target) } }
                     },

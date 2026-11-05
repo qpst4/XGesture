@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.Rect
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -35,6 +36,8 @@ import com.slideindex.app.overlay.compositor.OverlaySceneController
 import com.slideindex.app.imageeditor.ImageEditorPickReturnContext
 import com.slideindex.app.imageeditor.ImageEditorSavedImageDeleteScheduler
 import com.slideindex.app.overlay.pickresult.FloatBallPickResultContent
+import com.slideindex.app.overlay.pickresult.PickResultDrag
+import com.slideindex.app.overlay.pickresult.PickResultPanelNotification
 import com.slideindex.app.overlay.pickresult.PickResultQrOverlayWindow
 import com.slideindex.app.overlay.pickresult.PickResultTextMode
 import com.slideindex.app.overlay.pickresult.PickResultTextModeStore
@@ -47,6 +50,7 @@ import com.slideindex.app.search.SearchEngineLauncher
 import com.slideindex.app.service.RegionalScreenshotOcr
 import com.slideindex.app.service.ShareImageOcrCoordinator
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.settings.AppThemeMode
 import com.slideindex.app.settings.PickPanelSlideAnimationDefaults
 import com.slideindex.app.settings.PickResultTextModeDefault
 import com.slideindex.app.settings.SearchEngineStore
@@ -127,6 +131,19 @@ object FloatBallPickResultPanel {
     private var settingsState: MutableState<AppSettings>? = null
     private var panelRevealedState: MutableState<Boolean>? = null
     private var panelRevealGeneration = 0
+
+    /**
+     * 长按分享键起拖期间，面板会藏起来但**不销毁**。
+     * 拖拽结束后由流转栏（恢复 / 取消）或兜底逻辑把它放回来。
+     */
+    private var dragSuspended = false
+
+    /**
+     * 图片拖拽用的 PNG 缓存：同一张位图只压一次，重复长按不再卡主线程；换图后重建。
+     * 面板被关掉时只清引用，文件交给 `PickResultDrag` 的过期清理 / 系统缓存回收。
+     */
+    private var dragImageUri: Uri? = null
+    private var dragImageSource: Bitmap? = null
 
     val isShowing: Boolean get() = pickPanelVisible
 
@@ -328,6 +345,85 @@ object FloatBallPickResultPanel {
         composeView?.requestFocus()
     }
 
+    /**
+     * 长按分享键起拖：把面板藏起来但**不销毁**，文字、图片、滚动位置都留着。
+     *
+     * 用 `INVISIBLE` 而不是 `GONE`：系统拖拽的 `ACTION_DRAG_ENDED` 还要派回这个
+     * 发起拖拽的窗口（与搜索面板 / 收纳面板同一条约束）。`FLAG_NOT_FOCUSABLE`
+     * 顺带收起输入法，否则拖拽期间键盘还会压在落点上。
+     */
+    internal fun suspendForDrag() {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            mainHandler.post { suspendForDrag() }
+            return
+        }
+        if (dragSuspended || !pickPanelVisible || panelDismissing) return
+        val wm = windowManager ?: return
+        val view = composeView ?: return
+        val params = layoutParams ?: return
+        dragSuspended = true
+        params.flags = params.flags or
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+        view.clearFocus()
+        view.visibility = View.INVISIBLE
+        runCatching { wm.updateViewLayout(view, params) }
+    }
+
+    /**
+     * 拖拽落回【恢复】：面板原样回来（焦点 / 输入法交给窗口焦点逻辑）。
+     *
+     * 拖拽期间面板已经被别处关掉（返回键 / 熄屏 / 流转栏「取消」）时不再把它拉起来，
+     * 否则会出现「明明关掉了又被拖拽拉回」。
+     */
+    internal fun resumeFromDrag() {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            mainHandler.post { resumeFromDrag() }
+            return
+        }
+        if (!dragSuspended) return
+        dragSuspended = false
+        val view = composeView ?: return
+        if (!pickPanelVisible || panelDismissing) {
+            applyPanelShellPassive()
+            return
+        }
+        view.visibility = View.VISIBLE
+        updateWindowFocusableForMode(textModeState?.value ?: PickResultTextMode.WORD_TAP)
+        requestPanelFocus()
+    }
+
+    /**
+     * 当前这张图的拖拽 URI。同一张位图复用上一次压好的文件；
+     * PNG 压缩在这条路径上是同步的（系统拖拽只能「手指按着」时起），所以只压一次。
+     */
+    private fun dragImageUriFor(context: Context, bitmap: Bitmap): Uri? {
+        val cached = dragImageUri
+        if (cached != null && dragImageSource === bitmap) return cached
+        val uri = PickResultDrag.writeImageUri(context, bitmap) ?: return null
+        dragImageUri = uri
+        dragImageSource = bitmap
+        return uri
+    }
+
+    private fun clearDragImageCache() {
+        dragImageUri = null
+        dragImageSource = null
+    }
+
+    /**
+     * 当前是否深色：拖影要跟面板正文一套底色（深色面板配深色卡，浅色面板配浅色卡）。
+     * 用设置里的主题模式 + 系统夜间位算，和 `SlideIndexTheme` 同一套规则。
+     */
+    private fun isDarkTheme(): Boolean {
+        val settings = settingsState?.value ?: return false
+        val context = appContext ?: return false
+        val systemDark = (context.resources.configuration.uiMode and
+            android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+            android.content.res.Configuration.UI_MODE_NIGHT_YES
+        return AppThemeMode.fromId(settings.themeModeId).resolveIsDark(systemDark)
+    }
+
     fun showResult(
         context: Context,
         anchorX: Float = 0f,
@@ -350,6 +446,8 @@ object FloatBallPickResultPanel {
         captureSuppressed = false
         captureDetached = false
         panelDismissing = false
+        dragSuspended = false
+        clearDragImageCache()
         pickPanelVisible = true
         composeView?.visibility = View.VISIBLE
         val resolvedImages = result.resolvedImages()
@@ -458,6 +556,7 @@ object FloatBallPickResultPanel {
         panelImagesState?.value = listOf(bitmap)
         currentImageIndexState?.value = 0
         screenshotState?.value = bitmap
+        clearDragImageCache()
         screenRectState?.value = screenRect?.let { Rect(it) }
         layoutMetaState?.value = layoutMeta
         PickPerf.mark("panel_screenshot_updated")
@@ -694,6 +793,7 @@ object FloatBallPickResultPanel {
         }
         currentImageIndexState?.value = safeIndex
         screenshotState?.value = images[safeIndex]
+        clearDragImageCache()
         if (contentOriginState?.value == PickResultContentOrigin.STASH_CLIPBOARD &&
             textSourceState?.value == PickResultTextSource.OCR
         ) {
@@ -792,6 +892,8 @@ object FloatBallPickResultPanel {
         }
         panelDismissing = true
         pickPanelVisible = false
+        dragSuspended = false
+        clearDragImageCache()
         // 「记住上次」：面板隐藏时记录当前模式，下次进入按它还原。
         textModeState?.value?.let { rememberTextModeForNextOpen(it) }
         FloatBallOverlay.cancelPickPanelChromeRaiseDeferred()
@@ -895,6 +997,8 @@ object FloatBallPickResultPanel {
             panelShowTokenState = null
             settingsState = null
             panelRevealedState = null
+            dragSuspended = false
+            clearDragImageCache()
             ocrSwitchOnComplete = false
             screenOffReceiver = null
             appContext = null
@@ -1024,9 +1128,9 @@ object FloatBallPickResultPanel {
                 val localView = LocalView.current
                 val panelShowToken = panelShowTokenHolder.intValue
                 val panelRevealed by panelRevealedHolder
-                val panelNotificationHolder = remember { mutableStateOf<String?>(null) }
-                val showInPanelMessage: (String?) -> Unit = { msg ->
-                    panelNotificationHolder.value = msg
+                val panelNotificationHolder = remember { mutableStateOf<PickResultPanelNotification?>(null) }
+                val showInPanelMessage: (String?, Boolean) -> Unit = { msg, success ->
+                    panelNotificationHolder.value = msg?.let { PickResultPanelNotification(it, success) }
                 }
                 val text by textHolder
                 val screenshot by screenshotHolder
@@ -1063,7 +1167,8 @@ object FloatBallPickResultPanel {
                     panelShowToken = panelShowToken,
                     panelRevealed = panelRevealed,
                     panelNotification = panelNotificationHolder.value,
-                    onShowInPanelMessage = showInPanelMessage,
+                    // 提示条 2 秒后自己清空（Content 侧回调）。写入统一走 showInPanelMessage(msg, success)。
+                    onShowInPanelMessage = { panelNotificationHolder.value = it },
                     text = text,
                     screenshot = screenshot,
                     panelImages = panelImages,
@@ -1206,6 +1311,25 @@ object FloatBallPickResultPanel {
                         // 分享面板点中目标前会调这个 lambda 收起本面板，避免目标 App 被它盖住。
                         FloatBallTextPick.shareText(context, it) { dismiss() }
                     },
+                    onStartTextDrag = { value ->
+                        // 长按分享键：起系统拖拽，面板自己会藏起来（见 suspendForDrag），
+                        // 「恢复 / 取消」交给流转栏，和其它拖拽源一致。
+                        // 只有条码没有正文时分享键仍可点，但没什么可拖的：静默忽略，别弹失败。
+                        val view = composeView
+                        if (value.isNotBlank() && (view == null || !PickResultDrag.text(view, value, isDarkTheme()))) {
+                            showInPanelMessage(overlayContext.getString(R.string.float_ball_action_failed), false)
+                        }
+                    },
+                    onStartImageDrag = {
+                        val view = composeView
+                        val bitmap = screenshotHolder.value
+                        val dragContext = appContext ?: overlayContext.applicationContext
+                        if (view == null || bitmap == null || bitmap.isRecycled ||
+                            !PickResultDrag.image(view, dragContext, bitmap, dragImageUriFor(dragContext, bitmap))
+                        ) {
+                            showInPanelMessage(overlayContext.getString(R.string.float_ball_action_failed), false)
+                        }
+                    },
                     onProcessText = { value, target ->
                         // 同分享：切出去之前先收面板，目标 App 才不会被浮窗盖住。
                         FloatBallTextPick.processText(
@@ -1240,16 +1364,17 @@ object FloatBallPickResultPanel {
                                 )
                                 val msg = overlayContext.getString(R.string.inspire_image_edit_save_auto_delete)
                                 Toast.makeText(overlayContext.applicationContext, msg, Toast.LENGTH_SHORT).show()
-                                showInPanelMessage(msg)
+                                showInPanelMessage(msg, true)
                             } else {
-                                showInPanelMessage(overlayContext.getString(R.string.float_ball_action_failed))
+                                showInPanelMessage(overlayContext.getString(R.string.float_ball_action_failed), false)
                             }
                         } else {
                             val saved = FloatBallTextPick.saveScreenshot(context, bitmap)
                             showInPanelMessage(
                                 context.getString(
                                     if (saved) R.string.float_ball_screenshot_saved else R.string.float_ball_action_failed
-                                )
+                                ),
+                                saved,
                             )
                         }
                     },
@@ -1270,9 +1395,9 @@ object FloatBallPickResultPanel {
                                 )
                                 val msg = overlayContext.getString(R.string.inspire_image_edit_save_auto_delete)
                                 Toast.makeText(overlayContext.applicationContext, msg, Toast.LENGTH_SHORT).show()
-                                showInPanelMessage(msg)
+                                showInPanelMessage(msg, true)
                             } else {
-                                showInPanelMessage(overlayContext.getString(R.string.float_ball_action_failed))
+                                showInPanelMessage(overlayContext.getString(R.string.float_ball_action_failed), false)
                             }
                         } else {
                             val saved = FloatBallTextPick.saveScreenshot(context, bitmap)
@@ -1280,7 +1405,7 @@ object FloatBallPickResultPanel {
                                 if (saved) R.string.float_ball_screenshot_saved else R.string.float_ball_action_failed
                             )
                             Toast.makeText(overlayContext.applicationContext, msg, Toast.LENGTH_SHORT).show()
-                            showInPanelMessage(msg)
+                            showInPanelMessage(msg, saved)
                         }
                     },
                     onShareScreenshot = {
@@ -1303,7 +1428,7 @@ object FloatBallPickResultPanel {
                         // 长按图片 = 复制当前页（翻页时 screenshotHolder 已同步成当前这张）。
                         val bitmap = screenshotHolder.value
                         if (bitmap == null || bitmap.isRecycled) {
-                            showInPanelMessage(overlayContext.getString(R.string.float_ball_action_failed))
+                            showInPanelMessage(overlayContext.getString(R.string.float_ball_action_failed), false)
                         } else {
                             // 与面板内其它动作一致：受「取词面板触觉反馈」开关控制，长按受理时震一次。
                             if (settingsHolder.value.floatBallPickHapticEnabled) {
@@ -1321,7 +1446,8 @@ object FloatBallPickResultPanel {
                                         } else {
                                             R.string.float_ball_action_failed
                                         }
-                                    )
+                                    ),
+                                    copied,
                                 )
                             }
                         }
@@ -1372,7 +1498,8 @@ object FloatBallPickResultPanel {
                             showInPanelMessage(
                                 overlayContext.getString(
                                     if (success) R.string.stash_saved else R.string.stash_save_failed
-                                )
+                                ),
+                                success,
                             )
                         }
                     },
@@ -1421,7 +1548,8 @@ object FloatBallPickResultPanel {
                             showInPanelMessage(
                                 overlayContext.getString(
                                     if (success) R.string.stash_saved else R.string.stash_save_failed
-                                )
+                                ),
+                                success,
                             )
                         }
                     },
