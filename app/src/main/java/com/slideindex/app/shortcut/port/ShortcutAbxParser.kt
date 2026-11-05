@@ -8,14 +8,15 @@ import org.xmlpull.v1.XmlPullParser
 /**
  * Parse raw ShortcutService XML bytes (text or ABX) in-process.
  *
- * Reads shortcut attributes, intent-base and <string> extras. Typed
- * <int>/<long> extras are intentionally not read.
+ * Keeps the original 1:1 fields and additionally builds a full Intent with
+ * scalar typed extras from <int>/<long>/<boolean>/<float>.
  */
 object ShortcutAbxParser {
 
     data class Parsed(
         val item: ShortCutItem,
         val kinds: Set<ShortcutKind>,
+        val intent: Intent,
     )
 
     fun parse(data: ByteArray, fallbackPackage: String): List<Parsed> {
@@ -27,6 +28,8 @@ object ShortcutAbxParser {
         var insideExtras = false
         var stringKey: String? = null
         var stringValue: StringBuilder? = null
+        var pendingScalarTag: String? = null
+        var pendingScalarKey: String? = null
 
         try {
             var event = parser.eventType
@@ -51,6 +54,7 @@ object ShortcutAbxParser {
                             val target = current ?: continue
                             parser.attr("intent-base")?.takeIf { it.isNotBlank() }?.let { base ->
                                 runCatching { Intent.parseUri(base, 0) }.getOrNull()?.let { intent ->
+                                    target.baseIntent = intent
                                     intent.action?.let { target.intent["act"] = it }
                                     intent.component?.let { target.intent["cmp"] = it.flattenToShortString() }
                                     intent.dataString?.let { target.intent["dat"] = it }
@@ -61,7 +65,9 @@ object ShortcutAbxParser {
                             val target = current ?: continue
                             val key = parser.attr("name").orEmpty()
                             if (key.isNotBlank()) {
-                                target.extra[key] = parser.attr("value").orEmpty()
+                                val value = parser.attr("value").orEmpty()
+                                target.extra[key] = value
+                                target.fullIntent.putExtra(key, value)
                             }
                         }
                         "extras" -> {
@@ -73,10 +79,33 @@ object ShortcutAbxParser {
                                 stringValue = StringBuilder()
                             }
                         }
+                        "int", "long", "float", "boolean", "double" -> {
+                            val target = current
+                            if (insideExtras && target != null) {
+                                val key = parser.attr("name")
+                                if (!key.isNullOrBlank()) {
+                                    pendingScalarTag = parser.name
+                                    pendingScalarKey = key
+                                    val value = parser.attr("value").orEmpty()
+                                    target.extra[key] = value
+                                    applyScalar(target.fullIntent, parser.name, key, value)
+                                }
+                            }
+                        }
                     }
                     XmlPullParser.TEXT -> {
                         if (insideExtras && stringKey != null) {
                             stringValue?.append(parser.text.orEmpty())
+                        } else if (insideExtras && pendingScalarTag != null && pendingScalarKey != null) {
+                            // Some XML variants put scalar values in the text node.
+                            val target = current
+                            val key = pendingScalarKey
+                            val tag = pendingScalarTag
+                            val text = parser.text.orEmpty()
+                            if (target != null && key != null && tag != null && text.isNotBlank()) {
+                                target.extra[key] = text
+                                applyScalar(target.fullIntent, tag, key, text)
+                            }
                         }
                     }
                     XmlPullParser.END_TAG -> when (parser.name) {
@@ -84,10 +113,16 @@ object ShortcutAbxParser {
                             val key = stringKey
                             val shortcut = current
                             if (insideExtras && shortcut != null && !key.isNullOrBlank()) {
-                                shortcut.extra[key] = stringValue?.toString().orEmpty()
+                                val value = stringValue?.toString().orEmpty()
+                                shortcut.extra[key] = value
+                                shortcut.fullIntent.putExtra(key, value)
                             }
                             stringKey = null
                             stringValue = null
+                        }
+                        "int", "long", "float", "boolean", "double" -> {
+                            pendingScalarTag = null
+                            pendingScalarKey = null
                         }
                         "extras" -> insideExtras = false
                         "shortcut" -> {
@@ -96,6 +131,8 @@ object ShortcutAbxParser {
                             insideExtras = false
                             stringKey = null
                             stringValue = null
+                            pendingScalarTag = null
+                            pendingScalarKey = null
                         }
                     }
                 }
@@ -117,20 +154,42 @@ object ShortcutAbxParser {
     ) {
         val intent = HashMap<String, String>()
         val extra = HashMap<String, String>()
+        var baseIntent: Intent? = null
+        val fullIntent: Intent = Intent()
 
-        fun build(): Parsed = Parsed(
-            item = ShortCutItem(
-                pkg = packageName,
-                name = name,
-                shortcut = id,
-                activity = activity,
-                title = "",
-                text = text,
-                intent = intent,
-                extra = extra,
-            ),
-            kinds = kindsFromFlags(flags),
-        )
+        fun build(): Parsed {
+            val full = baseIntent?.let { Intent(it) } ?: Intent()
+            full.putExtras(fullIntent)
+            return Parsed(
+                item = ShortCutItem(
+                    pkg = packageName,
+                    name = name,
+                    shortcut = id,
+                    activity = activity,
+                    title = "",
+                    text = text,
+                    intent = intent,
+                    extra = extra,
+                ),
+                kinds = kindsFromFlags(flags),
+                intent = full,
+            )
+        }
+    }
+
+    private fun applyScalar(intent: Intent, tag: String, key: String, raw: String) {
+        val value = raw.trim()
+        when (tag) {
+            "int" -> value.toIntOrNull()?.let { intent.putExtra(key, it) }
+            "long" -> value.toLongOrNull()?.let { intent.putExtra(key, it) }
+            "float" -> value.toFloatOrNull()?.let { intent.putExtra(key, it) }
+            "boolean" -> when (value.lowercase()) {
+                "true", "1" -> intent.putExtra(key, true)
+                "false", "0" -> intent.putExtra(key, false)
+            }
+            "double" -> value.toDoubleOrNull()?.let { intent.putExtra(key, it) }
+            else -> intent.putExtra(key, raw)
+        }
     }
 
     private fun XmlPullParser.attr(name: String): String? =

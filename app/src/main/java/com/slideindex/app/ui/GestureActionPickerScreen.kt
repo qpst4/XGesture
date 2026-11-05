@@ -153,7 +153,10 @@ fun GestureActionPickerScreen(
         catalogPolicy = catalogPolicy,
     )
     val filteredApps = rememberActionPickerFilteredApps(allApps, searchQuery)
-    val loadedCatalog = rememberLoadedShortcutCatalog(allApps)
+    val loadedCatalog = rememberLoadedShortcutCatalog(
+        apps = allApps,
+        enabled = selectedTab == ActionPickerTab.SHORTCUTS.ordinal,
+    )
     val filteredShortcuts = remember(loadedCatalog.catalog, searchQuery) {
         filterShortcutCatalog(loadedCatalog.catalog, searchQuery)
     }

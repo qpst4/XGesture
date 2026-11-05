@@ -4,7 +4,9 @@ import android.content.Context
 import android.util.Log
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.overlay.TaskSwitcherMenuItemType
-import com.slideindex.app.util.AppShortcutLoader
+import com.slideindex.app.privilege.PrivilegeGateway
+import com.slideindex.app.ui.picker.ActionPickerShortcutMode
+import com.slideindex.app.ui.picker.loadActionPickerShortcutService
 import com.slideindex.app.util.ShortcutDisplayRules
 import com.slideindex.app.util.ShortcutKind
 import kotlinx.coroutines.Dispatchers
@@ -15,12 +17,8 @@ import kotlinx.coroutines.withContext
 /**
  * 搜索面板「应用快捷方式」索引。
  *
- * 数据源与 App 内的快捷方式选择器（任务切换菜单 / 快捷启动器）完全一致：[AppShortcutLoader]
- * 解析各 App 清单中的 `android.app.shortcuts`（静态快捷方式），免权限、带 5 分钟缓存。
- *
- * 动态 / 固定快捷方式（微信会话、浏览器标签等）只有 Shizuku / Root 才能枚举
- * （见 [com.slideindex.app.util.TaskManagerUtil.loadCategorizedSystemShortcutMap]，走整机 dumpsys），
- * 代价不适合在搜索面板呼出时同步执行，故本索引不包含。
+ * 与选择器共用 [loadActionPickerShortcutService]：Root/Shizuku 时包含
+ * dynamic/pinned/static，无权限时回退 manifest 静态目录。
  */
 object ShortcutSearchIndex {
     private const val TAG = "ShortcutSearchIndex"
@@ -63,9 +61,14 @@ object ShortcutSearchIndex {
 
     private fun appsKey(apps: List<AppInfo>): Int = apps.map { it.packageName }.sorted().hashCode()
 
-    private fun load(context: Context, apps: List<AppInfo>): List<ShortcutSearchEntry> {
+    private suspend fun load(context: Context, apps: List<AppInfo>): List<ShortcutSearchEntry> {
+        val mode = if (PrivilegeGateway.isRootMode()) {
+            ActionPickerShortcutMode.ROOT
+        } else {
+            ActionPickerShortcutMode.SHIZUKU
+        }
         val catalog = runCatching {
-            AppShortcutLoader.loadShortcutCatalog(context, apps)
+            loadActionPickerShortcutService(context, apps, mode).catalog
         }.onFailure { error ->
             Log.w(TAG, "loadShortcutCatalog failed: ${error.message}")
         }.getOrNull() ?: return emptyList()

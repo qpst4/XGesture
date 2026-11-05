@@ -3,6 +3,7 @@ package com.slideindex.app.ui.gesturepicker
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.Shortcut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -26,9 +27,12 @@ import com.slideindex.app.ui.Md3PickerIconLeading
 import com.slideindex.app.ui.Md3PickerListRow
 import com.slideindex.app.ui.PickerTrailingMode
 import com.slideindex.app.ui.gestureActionIcon
+import com.slideindex.app.ui.shortcutKindChip
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.pickerSegmentCount
 import com.slideindex.app.ui.pickerSegmentIndex
+import com.slideindex.app.util.ShortcutKind
+import androidx.compose.material3.MaterialTheme
 
 internal enum class ActionPickerTab {
     ACTIONS,
@@ -240,11 +244,14 @@ internal fun ActionPickerShortcutRow(
 ) {
     val action = shortcutToLaunchShortcut(shortcut, packageName)
     val selected = current is GestureAction.LaunchShortcut && current.payloadKey == action.payloadKey
+    val kindChip = shortcutKindChip(shortcut.kind)
+    val subtitle = shortcut.targetComponent?.takeIf { it.isNotBlank() }
+        ?: shortcut.shortcutId?.takeIf { it.isNotBlank() && !it.contains('/') && !it.contains('(') }
     Md3PickerListRow(
         segmentIndex = segmentIndex,
         segmentCount = segmentCount,
         title = shortcut.label,
-        subtitle = shortcut.targetComponent?.takeIf { it.isNotBlank() },
+        subtitle = subtitle,
         selected = selected,
         highlightPulse = if (selected) highlightPulse else 0f,
         onClick = { onSelect(action) },
@@ -255,7 +262,11 @@ internal fun ActionPickerShortcutRow(
                 contentDescription = shortcut.label,
             )
         },
-        trailingMode = PickerTrailingMode.Radio,
+        trailingMode = PickerTrailingMode.Icon,
+        trailingIcon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+        trailingIconDescription = shortcut.label,
+        trailingIconAlignedToChoice = true,
+        trailingChip = kindChip,
     )
 }
 
@@ -263,6 +274,10 @@ internal fun shortcutToLaunchShortcut(
     shortcut: TaskSwitcherMenuItem,
     packageName: String,
 ): GestureAction.LaunchShortcut {
+    val serviceId = shortcut.shortcutId?.takeIf { shortcut.isServiceShortcut && it.isNotBlank() }
+    if (serviceId != null) {
+        return GestureAction.LaunchShortcut.dynamic(packageName, serviceId, shortcut.label)
+    }
     val uris = shortcut.intentUris
     if (!uris.isNullOrEmpty()) {
         return if (uris.size == 1) {

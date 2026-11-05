@@ -6,13 +6,11 @@ import android.content.Intent
 import android.widget.Toast
 import com.slideindex.app.R
 import com.slideindex.app.launcher.QuickLauncherItem
-import com.slideindex.app.privilege.PrivilegeUiStrings
-import com.slideindex.app.search.NonExportedActivityLauncher
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.shouldLaunchFullscreen
 import com.slideindex.app.util.AppShortcutLoader
 import com.slideindex.app.util.FreeWindowLauncher
-import com.slideindex.app.util.PackageActivityResolver
+import com.slideindex.app.util.ShortcutLaunchDispatcher
 import com.slideindex.app.util.TaskManagerUtil
 
 object ActivityShortcutLauncher {
@@ -52,14 +50,20 @@ object ActivityShortcutLauncher {
         longPressTriggered: Boolean = false
     ): Boolean {
         if (packageName.isBlank() || activityClassName.isBlank()) return false
-        return if (PackageActivityResolver.isActivityExported(context, packageName, activityClassName)) {
-            val intent = Intent()
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .setComponent(ComponentName(packageName, activityClassName))
-            startActivity(context, intent, settings, longPressTriggered)
-        } else {
-            launchNonExported(context, packageName, activityClassName)
-        }
+        val intent = Intent()
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            .setComponent(ComponentName(packageName, activityClassName))
+        return ShortcutLaunchDispatcher.launch(
+            context = context,
+            packageName = packageName,
+            intent = intent,
+            exportedLaunch = { target ->
+                startActivity(context, target, settings, longPressTriggered)
+            },
+            onFailure = { failure ->
+                ShortcutLaunchDispatcher.showFailure(context, failure)
+            },
+        )
     }
 
     private fun launchDynamic(
@@ -69,16 +73,27 @@ object ActivityShortcutLauncher {
         longPressTriggered: Boolean,
         showFailureToast: Boolean,
     ): Boolean {
-        val item = QuickLauncherItem.dynamicShortcut(
+        val resolved = AppShortcutLoader.resolveShortcutForLaunch(
+            context = context,
             packageName = shortcut.packageName,
             shortcutId = shortcut.shortcutId,
-            label = shortcut.label
+            label = shortcut.label,
         )
-        AppShortcutLoader.warmQuickLauncherShortcuts(context, listOf(item))
-        val resolved = AppShortcutLoader.peekResolvedShortcut(shortcut.packageName, shortcut.shortcutId)
-        val intent = resolved?.shortcutIntent
+        val intent = resolved.shortcutIntent
         if (intent != null) {
-            return startActivity(context, intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), settings, longPressTriggered)
+            return ShortcutLaunchDispatcher.launch(
+                context = context,
+                packageName = shortcut.packageName,
+                intent = intent,
+                exportedLaunch = { target ->
+                    startActivity(context, target, settings, longPressTriggered)
+                },
+                onFailure = { failure ->
+                    if (showFailureToast) {
+                        ShortcutLaunchDispatcher.showFailure(context, failure)
+                    }
+                },
+            )
         }
         val started = TaskManagerUtil.startPublishedShortcut(shortcut.packageName, shortcut.shortcutId)
         if (!started && showFailureToast) {
@@ -112,27 +127,18 @@ object ActivityShortcutLauncher {
                 Intent.parseUri(uri, Intent.URI_INTENT_SCHEME)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }.getOrNull() ?: continue
-            if (startActivity(context, intent, settings, longPressTriggered)) return true
+            val launched = ShortcutLaunchDispatcher.launch(
+                context = context,
+                packageName = shortcut.packageName,
+                intent = intent,
+                exportedLaunch = { target ->
+                    startActivity(context, target, settings, longPressTriggered)
+                },
+            )
+            if (launched) return true
         }
         Toast.makeText(context, R.string.float_ball_action_failed, Toast.LENGTH_SHORT).show()
         return false
-    }
-
-    private fun launchNonExported(context: Context, packageName: String, activityClassName: String): Boolean {
-        if (!TaskManagerUtil.hasPermission()) {
-            Toast.makeText(context, PrivilegeUiStrings.privilegedAccessRequiredRes(), Toast.LENGTH_LONG).show()
-            return false
-        }
-        NonExportedActivityLauncher.launch(
-            context = context,
-            packageName = packageName,
-            activityName = activityClassName
-        ) { success ->
-            if (!success) {
-                Toast.makeText(context, R.string.float_ball_action_failed, Toast.LENGTH_SHORT).show()
-            }
-        }
-        return true
     }
 
     private fun startActivity(
@@ -145,9 +151,6 @@ object ActivityShortcutLauncher {
             val fullscreen = settings.shouldLaunchFullscreen(longPressTriggered)
             FreeWindowLauncher.launch(context, intent, settings, fullscreen)
             true
-        }.getOrElse {
-            Toast.makeText(context, R.string.float_ball_action_failed, Toast.LENGTH_SHORT).show()
-            false
-        }
+        }.getOrDefault(false)
     }
 }

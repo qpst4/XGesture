@@ -350,6 +350,7 @@ internal class ActionExecutorLaunch(
                 }
             }
             val cached = AppShortcutLoader.peekResolvedShortcut(packageName, shortcutId)
+                ?.takeUnless { it.isServiceShortcut }
             if (cached != null) {
                 launchResolved(cached)
                 return false

@@ -240,6 +240,7 @@ fun LazyListScope.quickLauncherAddPickerShortcutItems(
         appsByPackage = appsByPackage,
         loading = loading,
         scanProgress = scanProgress,
+        searchQuery = searchQuery,
         onCreateHostClick = onCreateHostClick,
         shortcutRowContent = { group, shortcut, segmentIndex, segmentCount ->
             val item = shortcut.toQuickLauncherItem(group.app.packageName)

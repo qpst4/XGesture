@@ -52,6 +52,7 @@ import com.slideindex.app.ui.Md3PickerAppLeading
 import com.slideindex.app.ui.Md3PickerIconLeading
 import com.slideindex.app.ui.Md3PickerListRow
 import com.slideindex.app.ui.Md3PickerSectionHeader
+import com.slideindex.app.ui.shortcutKindChip
 import com.slideindex.app.ui.PickerListGroupSpacing
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.ui.PickerListOverlayHorizontalPadding
@@ -715,6 +716,7 @@ private fun QuickLauncherAddShortcutsTab(
             appsByPackage = appsByPackage,
             loading = loadedCatalog.loading,
             scanProgress = loadedCatalog.scanProgress,
+            searchQuery = searchQuery,
             loadingItemKey = "shortcut-loading",
             emptyItemKey = "shortcut-empty",
             onCreateHostClick = { host ->
@@ -766,6 +768,7 @@ private fun QuickLauncherShortcutToggleRow(
         leadingContent = { Md3PickerAppLeading(app) },
         trailingMode = if (singleSelect) PickerTrailingMode.None else PickerTrailingMode.Toggle,
         onTrailingClick = if (singleSelect) null else onToggle,
+        trailingChip = shortcutKindChip(shortcut.kind),
     )
 }
 

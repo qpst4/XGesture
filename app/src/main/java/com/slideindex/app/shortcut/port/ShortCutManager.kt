@@ -1,7 +1,9 @@
 package com.slideindex.app.shortcut.port
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import com.slideindex.app.util.ShortcutKind
 import org.w3c.dom.Document
@@ -19,10 +21,13 @@ class ShortCutManager(private val context: Context) {
 
     private val rawData = ArrayList<ShortCutItem>()
     private val kindsByItem = IdentityHashMap<ShortCutItem, Set<ShortcutKind>>()
+    private val intentByItem = IdentityHashMap<ShortCutItem, Intent>()
 
     fun fullData(): List<ShortCutItem> = rawData
 
     fun kindsOf(item: ShortCutItem): Set<ShortcutKind> = kindsByItem[item].orEmpty()
+
+    fun intentOf(item: ShortCutItem): Intent? = intentByItem[item]?.let { Intent(it) }
 
     fun fromShellData(shellResult: String, callback: (String) -> Unit) {
         if (rawData.isEmpty()) {
@@ -65,6 +70,7 @@ class ShortCutManager(private val context: Context) {
                 }
                 rawData.add(entry.item)
                 kindsByItem[entry.item] = entry.kinds
+                intentByItem[entry.item] = entry.intent
             }
         }
         callback("Done parsing ${rawData.size} shortcuts.")
@@ -128,6 +134,7 @@ class ShortCutManager(private val context: Context) {
                     )
                     rawData.add(item)
                     kindsByItem[item] = kindsFromFlags(parseFlags(shortcut.getAttribute("flags")))
+                    intentByItem[item] = buildIntent(intentMap, extraMap)
                 }
             }
         } catch (error: Throwable) {
@@ -216,11 +223,26 @@ class ShortCutManager(private val context: Context) {
                     ?.groupValues
                     ?.getOrNull(1)
                 kindsByItem[item] = kindsFromFlags(parseFlags(flags.orEmpty()))
+                intentByItem[item] = buildIntent(intentMap, extraMap)
             } catch (error: Throwable) {
                 Log.e("analyzeShortCutData", "parse error at item $index: ${error.message}")
             }
         }
         callback("Done processing $total shortcuts.")
+    }
+
+    private fun buildIntent(
+        intentMap: Map<String, String>,
+        extraMap: Map<String, String>,
+    ): Intent {
+        val intent = Intent()
+        intent.action = intentMap["act"]
+        intent.component = intentMap["cmp"]?.let { ComponentName.unflattenFromString(it) }
+        intent.data = intentMap["dat"]?.let { Uri.parse(it) }
+        for ((key, value) in extraMap) {
+            intent.putExtra(key, value)
+        }
+        return intent
     }
 
     private fun parseFlags(raw: String): Int {

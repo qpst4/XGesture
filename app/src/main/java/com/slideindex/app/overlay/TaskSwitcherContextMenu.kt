@@ -21,7 +21,9 @@ data class TaskSwitcherMenuItem(
     val intentUris: List<String>? = null,
     val useShellLaunch: Boolean = false,
     val kind: ShortcutKind? = null,
-    val targetComponent: String? = null
+    val targetComponent: String? = null,
+    /** True when this entry came from ShortcutService and must refresh by package+id. */
+    val isServiceShortcut: Boolean = false,
 )
 
 data class TaskSwitcherContextMenuLayout(

@@ -8,6 +8,7 @@ import com.slideindex.app.overlay.TaskSwitcherMenuItem
 import com.slideindex.app.ui.Md3PickerIconLeading
 import com.slideindex.app.ui.Md3PickerListRow
 import com.slideindex.app.ui.PickerTrailingMode
+import com.slideindex.app.ui.shortcutKindChip
 
 internal enum class QuickLauncherEditorAddTab { ACTIONS, APPS, SHORTCUTS }
 
@@ -34,5 +35,6 @@ internal fun ShortcutCatalogRow(
         },
         trailingMode = PickerTrailingMode.Toggle,
         onTrailingClick = onToggle,
+        trailingChip = shortcutKindChip(shortcut.kind),
     )
 }
