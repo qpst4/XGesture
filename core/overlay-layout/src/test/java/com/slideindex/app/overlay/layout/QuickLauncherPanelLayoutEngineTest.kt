@@ -138,6 +138,38 @@ class QuickLauncherPanelLayoutEngineTest {
         assertEquals(600f - 150f, right.top, 0.01f)
     }
 
+    /**
+     * 外部触发（全局触控 / 角轮盘 / 悬浮球）不把面板拉回触钮条的纵向范围：
+     * 同一个锚点，`clampAnchorToTrigger=false` 时面板跟着触发高度走。
+     */
+    @Test
+    fun anchoredPanelRect_withoutClamp_followsAnchorOutsideTriggerBand() {
+        val host = fakeHost(
+            side = RIGHT,
+            viewWidth = 1080,
+            viewHeight = 1920,
+            trigger = RectF(1056f, 1380f, 1080f, 1920f),
+        )
+        val clamped = QuickLauncherPanelLayoutEngine.anchoredPanelRect(
+            host = host,
+            panelWidth = 300f,
+            contentHeight = 400f,
+            anchorLocalY = 300f,
+        )
+        assertEquals(1380f - 200f, clamped.top, 0.01f)
+
+        val free = QuickLauncherPanelLayoutEngine.anchoredPanelRect(
+            host = host,
+            panelWidth = 300f,
+            contentHeight = 400f,
+            anchorLocalY = 300f,
+            clampAnchorToTrigger = false,
+        )
+        assertEquals(300f - 200f, free.top, 0.01f)
+        // 横向仍贴触发侧，不受影响。
+        assertEquals(1056f - host.dp(8f) - 300f, free.left, 0.01f)
+    }
+
     private fun fakeHost(
         side: PanelSide,
         viewWidth: Int = 1080,

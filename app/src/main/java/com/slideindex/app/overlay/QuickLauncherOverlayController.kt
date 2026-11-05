@@ -1208,6 +1208,9 @@ internal class QuickLauncherOverlayController(
             anchorLocalY = anchorLocalY,
             toolbarReserveWidth = quickLauncherPanelController.contentReserveWidth(host.settings()),
             triggerRectOverride = snapshot?.trigger,
+            // 外部触发（全局触控 / 角轮盘 / 悬浮球）：不把面板拉回触钮条的纵向范围，
+            // 手指在哪个高度呼出就出现在哪个高度；触钮自己触发的路径保持贴条行为。
+            clampAnchorToTrigger = !quickLauncherExternalAnchor,
         )
         // 真机排查「面板自己挪位置」：面板矩形一变就记一笔，附上触发带与状态。
         if (rect != lastLoggedPanelRect) {
@@ -1239,14 +1242,13 @@ internal class QuickLauncherOverlayController(
         val rawY = quickLauncherAnchorRawY ?: host.pathRecognizer().gestureStartRawY()
         val loc = host.viewLocationOnScreen()
         val anchorY = rawY - loc[1]
-        // 开启「启动器对齐手指按下位置」后，外部触发的锚点不再夹进触钮区间：
-        // 悬浮球能停在触钮范围之外，夹进去会让面板离开手指按下的位置。
+        // 外部触发（全局触控 / 角轮盘 / 悬浮球）的锚点不再夹进触钮区间：
+        // 手指可能停在触钮范围之外，夹进去会让面板离开触发位置（表现为"最高只到屏幕中间"）。
+        // 触钮自己触发的路径（quickLauncherExternalAnchor=false）保持贴条行为。
         val trigger = host.activeTriggerZoneRect()
-        val anchorsAtTouchDown =
-            quickLauncherExternalAnchor && host.settings().floatBallOverlayAnchorAtTouchDown
         return anchorY.coerceIn(
             FloatBallOverlayAnchorPolicy.anchorRange(
-                anchorsAtTouchDown = anchorsAtTouchDown,
+                anchorsAtTouchDown = quickLauncherExternalAnchor,
                 viewHeightPx = host.viewHeight().toFloat(),
                 marginPx = host.dp(16f),
                 triggerTopPx = trigger.top,
@@ -1280,7 +1282,8 @@ internal class QuickLauncherOverlayController(
             host = host,
             panelWidth = panelWidth,
             contentHeight = quickLauncherPanelContentHeight(rows),
-            anchorLocalY = quickLauncherAnchorLocalY()
+            anchorLocalY = quickLauncherAnchorLocalY(),
+            clampAnchorToTrigger = !quickLauncherExternalAnchor,
         )
 
     private fun offsetQuickLauncherPanelForToolbar(panelRect: RectF): RectF =

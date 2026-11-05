@@ -26,6 +26,13 @@ object TaskSwitcherLayoutEngine {
          * `null`（旧调用 / 没有手指坐标）回退到触钮中心。
          */
         anchorLocalX: Float? = null,
+        /**
+         * 是否把纵向锚点夹进触发带。
+         *
+         * 默认 `true`（贴着触钮条出现）；**外部触发**（全局触控 / 角轮盘 / 悬浮球）传 `false`，
+         * 让面板出现在手指高度，而不是被拉回触钮条的纵向范围。
+         */
+        clampAnchorToTrigger: Boolean = true,
     ): Pair<TaskSwitcherPanelLayout, Float> {
         val rowHeight = host.dp(42f)
         val footerHeight = host.dp(36f)
@@ -65,7 +72,11 @@ object TaskSwitcherLayoutEngine {
         val coercedOffset = scrollOffset.coerceIn(0f, maxScrollOffset)
         val panelHeight = visibleListHeight + footerHeight
         val trigger = host.activeTriggerZoneRect()
-        val anchorY = anchorLocalY.coerceIn(trigger.top, trigger.bottom)
+        val anchorY = if (clampAnchorToTrigger) {
+            anchorLocalY.coerceIn(trigger.top, trigger.bottom)
+        } else {
+            anchorLocalY
+        }
         val gap = host.dp(10f)
         // 左右侧触钮是竖条：贴着触钮的"内侧边"展开是对的。
         // 上下侧触钮是横条，`trigger.right` 只是横条右端、不是屏幕边 —— 沿用它向右展开

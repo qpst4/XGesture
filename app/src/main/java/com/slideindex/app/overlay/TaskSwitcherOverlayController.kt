@@ -168,6 +168,8 @@ internal class TaskSwitcherOverlayController(
             scrollOffset = taskSwitcherScrollOffset,
             anchorLocalY = taskSwitcherAnchorLocalY(),
             anchorLocalX = taskSwitcherAnchorLocalX(),
+            // 外部触发（全局触控 / 角轮盘 / 悬浮球）：面板跟触发高度走，不拉回触钮条。
+            clampAnchorToTrigger = !taskSwitcherExternalAnchor,
         )
         taskSwitcherScrollOffset = offset
         return layout

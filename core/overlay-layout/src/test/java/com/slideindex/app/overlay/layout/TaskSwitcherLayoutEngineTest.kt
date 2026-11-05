@@ -305,6 +305,40 @@ class TaskSwitcherLayoutEngineTest {
         assertEquals(host.dp(16f), layout.panelRect.top, 0.01f)
     }
 
+    /**
+     * 外部触发（全局触控 / 角轮盘 / 悬浮球）不把面板拉回触钮条的纵向范围。
+     */
+    @Test
+    fun compute_withoutClamp_followsAnchorOutsideTriggerBand() {
+        val host = fakeHost(
+            side = RIGHT,
+            viewWidth = 1080,
+            viewHeight = 1920,
+            trigger = RectF(1056f, 1380f, 1080f, 1920f),
+        )
+        val rows = listOf(TaskSwitcherRowEntry("com.example.a"))
+        val rowHeight = host.dp(42f)
+
+        val (clamped, _) = TaskSwitcherLayoutEngine.compute(
+            host = host,
+            rows = rows,
+            scrollOffset = 0f,
+            anchorLocalY = 300f,
+        )
+        assertEquals(1380f - rowHeight / 2f, clamped.panelRect.top, 0.01f)
+
+        val (free, _) = TaskSwitcherLayoutEngine.compute(
+            host = host,
+            rows = rows,
+            scrollOffset = 0f,
+            anchorLocalY = 300f,
+            clampAnchorToTrigger = false,
+        )
+        assertEquals(300f - rowHeight / 2f, free.panelRect.top, 0.01f)
+        // 横向仍贴触发侧，不受影响。
+        assertEquals(1056f - host.dp(10f) - free.panelRect.width(), free.panelRect.left, 0.01f)
+    }
+
     private fun fakeHost(
         side: PanelSide,
         viewWidth: Int = 1080,

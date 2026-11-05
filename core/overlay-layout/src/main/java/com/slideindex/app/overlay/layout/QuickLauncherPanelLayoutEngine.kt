@@ -56,9 +56,22 @@ object QuickLauncherPanelLayoutEngine {
          * `null` = 不用覆盖（保持历史行为）。
          */
         triggerRectOverride: RectF? = null,
+        /**
+         * 是否把纵向锚点夹进触发带。
+         *
+         * - `true`（默认）：面板始终贴着触钮条出现，这是触钮自己触发的历史行为；
+         * - `false`：只保留屏幕边距，锚点就是本次触发点。用于**外部触发**
+         *   （全局触控 / 角轮盘 / 悬浮球）：手指在屏幕任意高度呼出，面板就出现在那个高度，
+         *   而不是被拉回触钮条的纵向范围（真机表现是"最高只到屏幕中间"）。
+         */
+        clampAnchorToTrigger: Boolean = true,
     ): RectF {
         val trigger = triggerRectOverride ?: host.activeTriggerZoneRect()
-        val anchorY = anchorLocalY.coerceIn(trigger.top, trigger.bottom)
+        val anchorY = if (clampAnchorToTrigger) {
+            anchorLocalY.coerceIn(trigger.top, trigger.bottom)
+        } else {
+            anchorLocalY
+        }
         val gap = host.dp(8f)
         val left = when (host.side()) {
             PanelSide.LEFT, PanelSide.BOTTOM, PanelSide.TOP -> trigger.right + gap
@@ -127,6 +140,8 @@ object QuickLauncherPanelLayoutEngine {
         toolbarReserveWidth: Float,
         /** 触发带覆盖；见 [anchoredPanelRect]。`null` = 用宿主当前的实时触发带。 */
         triggerRectOverride: RectF? = null,
+        /** 是否把锚点夹进触发带；见 [anchoredPanelRect]。外部触发传 `false`。 */
+        clampAnchorToTrigger: Boolean = true,
     ): RectF {
         val layout = gridLayoutInfo(columnsPerPage, rowsPerPage, cellWidth, gridPadding)
         val height = contentHeight(layout.rows, cellHeight, gridPadding, headerHeight)
@@ -136,6 +151,7 @@ object QuickLauncherPanelLayoutEngine {
             contentHeight = height,
             anchorLocalY = anchorLocalY,
             triggerRectOverride = triggerRectOverride,
+            clampAnchorToTrigger = clampAnchorToTrigger,
         )
         return offsetForToolbar(host, base, toolbarReserveWidth)
     }
