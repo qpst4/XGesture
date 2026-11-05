@@ -172,7 +172,7 @@ object QuickLauncherIconResolver {
                     ManagedShortcutIconResolver.drawableForQuickItem(ctx, item, activityShortcuts)
                         ?.let { return it }
                 }
-                shortcutDrawable(item.payload, appsByPackage, context)
+                shortcutDrawable(item.payload, context)
             }
             QuickLauncherItemType.ACTION -> {
                 val action = QuickLauncherItemCodec.parseActionPayload(item.payload) ?: return null
@@ -186,7 +186,7 @@ object QuickLauncherIconResolver {
                                 activityShortcuts,
                             )?.let { return it }
                         }
-                        gestureShortcutDrawable(action.payloadKey, appsByPackage, context)
+                        gestureShortcutDrawable(action.payloadKey, context)
                     }
                     is GestureAction.ExecuteShellCommand -> {
                         val matched = ShellCommandIconResolver.findForCommandLine(action.command, shellCommands)
@@ -212,6 +212,19 @@ object QuickLauncherIconResolver {
     private fun getIconSafe(appInfo: AppInfo?, context: Context?): Drawable? {
         if (appInfo == null || context == null) return null
         return runCatching { context.packageManager.getApplicationIcon(appInfo.packageName) }.getOrNull()
+    }
+
+    /**
+     * 宿主应用图标：**先查全局图标覆盖**（扩展 → 图标库 → 应用图标），再退回系统图标。
+     *
+     * 快捷方式自己的专属图标由 [ManagedShortcutIconResolver] 负责；这里只处理「只能按包名
+     * 取图」的兜底路径。它必须和 APP 条目一样跟随图标库，否则快捷方式图标永远停在原图。
+     */
+    private fun hostAppDrawable(packageName: String, context: Context?): Drawable? {
+        if (packageName.isBlank()) return null
+        val ctx = context ?: return null
+        com.slideindex.app.ui.AppIconOverride.drawable(ctx, packageName, 128)?.let { return it }
+        return runCatching { ctx.packageManager.getApplicationIcon(packageName) }.getOrNull()
     }
 
     fun shouldUseGestureVectorIcon(
@@ -242,21 +255,20 @@ object QuickLauncherIconResolver {
 
     private fun shortcutDrawable(
         payload: String,
-        appsByPackage: Map<String, AppInfo>,
         context: Context?,
     ): Drawable? {
         QuickLauncherItemCodec.resolveHostPackageName(payload) { uri ->
             KnownAppShortcuts.packageForIntentUri(uri)
         }?.let { packageName ->
-            getIconSafe(appsByPackage[packageName], context)?.let { return it }
+            hostAppDrawable(packageName, context)?.let { return it }
         }
         if (payload.startsWith("c:")) {
             val componentFlat = payload.removePrefix("c:").substringBefore('\u001D')
-            packageFromComponentFlat(componentFlat)?.let { getIconSafe(appsByPackage[it], context) }?.let { return it }
+            packageFromComponentFlat(componentFlat)?.let { hostAppDrawable(it, context) }?.let { return it }
         }
         context?.let { ctx ->
             resolvePackageFromIntentPayload(ctx, payload)?.let { packageName ->
-                getIconSafe(appsByPackage[packageName], context)?.let { return it }
+                hostAppDrawable(packageName, context)?.let { return it }
             }
         }
         return null
@@ -264,32 +276,30 @@ object QuickLauncherIconResolver {
 
     private fun gestureShortcutDrawable(
         payloadKey: String,
-        appsByPackage: Map<String, AppInfo>,
         context: Context?,
     ): Drawable? = when (val decoded = GestureShortcutPayload.decode(payloadKey)) {
         is GestureShortcutPayload.Decoded.Dynamic ->
-            getIconSafe(appsByPackage[decoded.packageName], context)
+            hostAppDrawable(decoded.packageName, context)
         is GestureShortcutPayload.Decoded.Component ->
-            packageFromComponentFlat(decoded.componentFlat)?.let { getIconSafe(appsByPackage[it], context) }
+            packageFromComponentFlat(decoded.componentFlat)?.let { hostAppDrawable(it, context) }
         is GestureShortcutPayload.Decoded.IntentShortcut ->
-            resolveIntentShortcutDrawable(decoded.intentUri, appsByPackage, context)
+            resolveIntentShortcutDrawable(decoded.intentUri, context)
         is GestureShortcutPayload.Decoded.IntentsShortcut ->
             decoded.intentUris.firstNotNullOfOrNull { uri ->
-                resolveIntentShortcutDrawable(uri, appsByPackage, context)
+                resolveIntentShortcutDrawable(uri, context)
             }
         null -> null
     }
 
     private fun resolveIntentShortcutDrawable(
         intentUri: String,
-        appsByPackage: Map<String, AppInfo>,
         context: Context?,
     ): Drawable? {
         QuickLauncherItemCodec.resolveHostPackageName(
             "${QuickLauncherItemCodec.INTENT_PAYLOAD_PREFIX}$intentUri",
-        ) { uri -> KnownAppShortcuts.packageForIntentUri(uri) }?.let { getIconSafe(appsByPackage[it], context) }?.let { return it }
+        ) { uri -> KnownAppShortcuts.packageForIntentUri(uri) }?.let { hostAppDrawable(it, context) }?.let { return it }
         context?.let { ctx ->
-            packageFromIntentUri(ctx, intentUri)?.let { getIconSafe(appsByPackage[it], context) }?.let { return it }
+            packageFromIntentUri(ctx, intentUri)?.let { hostAppDrawable(it, context) }?.let { return it }
         }
         return null
     }

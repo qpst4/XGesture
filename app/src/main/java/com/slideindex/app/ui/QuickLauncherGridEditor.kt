@@ -184,7 +184,15 @@ fun QuickLauncherGridEditor(
     }
 
     var iconBitmapCache by remember { mutableStateOf<Map<Int, android.graphics.Bitmap?>>(emptyMap()) }
-    LaunchedEffect(levelItems, appsByPackage, actionIconTintArgb, settings.activityShortcuts, settings.shellCommands) {
+    LaunchedEffect(
+        levelItems,
+        appsByPackage,
+        actionIconTintArgb,
+        settings.activityShortcuts,
+        settings.shellCommands,
+        // 图标库里改完应用图标要重新取图，否则编辑页一直显示改动前的缓存
+        com.slideindex.app.ui.GlobalIconStore.revision,
+    ) {
         iconBitmapCache = withContext(Dispatchers.IO) {
             // 受限并发：串行解析在 OEM 主题图标设备上要等一分钟，全并发又会把 CPU 打满。
             val permits = Semaphore(ICON_LOAD_CONCURRENCY)

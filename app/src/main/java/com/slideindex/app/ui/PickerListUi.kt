@@ -397,7 +397,13 @@ fun Md3PickerManagedShortcutLeading(
         ActivityShortcutKind.COMPONENT -> Icons.AutoMirrored.Filled.Launch
         else -> Icons.AutoMirrored.Filled.Shortcut
     }
-    val iconBitmap = remember(shortcut.id, shortcut.iconPath, shortcut.identityKey()) {
+    val iconBitmap = remember(
+        shortcut.id,
+        shortcut.iconPath,
+        shortcut.identityKey(),
+        // 宿主应用的全局图标覆盖变了，快捷方式回退到应用图标时要跟着换
+        com.slideindex.app.ui.GlobalIconStore.revision,
+    ) {
         ManagedShortcutIconResolver.drawableForManaged(context, shortcut)
             ?.toBitmap(96, 96)
     }
@@ -548,7 +554,7 @@ fun Md3PickerAppLeading(app: AppInfo, sizeDp: Int = 40) {
     // 必须在这里统一画出来，否则同一个应用在不同列表里的样子会不一致。
     Box(modifier = Modifier.size(sizeDp.dp)) {
         // 全局图标覆盖优先（扩展 → 图标库 → 应用图标）
-        val iconOverride = remember(app.packageName) {
+        val iconOverride = remember(app.packageName, com.slideindex.app.ui.GlobalIconStore.revision) {
             GlobalIconStore.appIcon(context, app.packageName)
         }
         if (iconOverride != null) {

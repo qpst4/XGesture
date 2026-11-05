@@ -229,5 +229,21 @@ class TaskManagerTaskOperationsTest {
             shortcutId: String?,
             userId: Int,
         ): ByteArray? = null
+
+        // 多触点观测 / root 轮询：这个测试只覆盖任务操作，桩里一律当"未运行"处理。
+        override fun startMultiTouchObservation(
+            callback: IOnMultiTouchGesture,
+            pathPriority: Boolean,
+        ): Boolean = false
+
+        override fun stopMultiTouchObservation() = Unit
+
+        override fun isMultiTouchObservationRunning(): Boolean = false
+
+        override fun startMultiTouchPolling(pathPriority: Boolean): Boolean = false
+
+        override fun pollMultiTouchEvents(): Array<String> = emptyArray()
+
+        override fun stopMultiTouchPolling() = Unit
     }
 }

@@ -20,6 +20,8 @@ import com.slideindex.app.notification.NotificationShadeActions
 import com.slideindex.app.otp.OtpOfficialRulesLoader
 import com.slideindex.app.otp.OtpRecordsRepository
 import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import com.slideindex.app.data.AppIconOverrideProvider
 import com.slideindex.app.message.MessageAction
 import com.slideindex.app.message.MessageDisplayPlan
 import com.slideindex.app.message.MessageOverlayPort
@@ -456,6 +458,7 @@ class OtpRecordsViewModelTest : ViewModelCoroutineTest() {
                 ThrowingPackageManagerContext(context),
                 NoOpAppLaunchPort,
                 AppLaunchIconCache(context),
+                NoOpAppIconOverrideProvider,
                 testApplicationScope,
             ),
         )
@@ -618,7 +621,13 @@ private fun notificationHistoryViewModel(context: Context, bus: UserMessageBus):
 private val testApplicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
 
 private fun testAppRepository(context: Context): AppRepository =
-    AppRepository(context, NoOpAppLaunchPort, AppLaunchIconCache(context), testApplicationScope)
+    AppRepository(
+        context,
+        NoOpAppLaunchPort,
+        AppLaunchIconCache(context),
+        NoOpAppIconOverrideProvider,
+        testApplicationScope,
+    )
 
 private fun notificationHistoryRepository(context: Context): NotificationHistoryRepository =
     NotificationHistoryRepository(
@@ -635,6 +644,18 @@ private fun notificationFilterRepository(context: Context): NotificationFilterRe
         listenerPort = NoOpNotificationListenerPort,
         shadeActions = NoOpNotificationShadeActions,
     )
+
+private object NoOpAppIconOverrideProvider : AppIconOverrideProvider {
+    override fun bitmap(context: Context, packageName: String, sizePx: Int): Bitmap? = null
+
+    override fun peekBitmap(context: Context, packageName: String, sizePx: Int): Bitmap? = null
+
+    override fun drawable(context: Context, packageName: String, sizePx: Int): Drawable? = null
+
+    override fun peekDrawable(context: Context, packageName: String, sizePx: Int): Drawable? = null
+
+    override fun preload(context: Context, packageNames: Collection<String>, sizePx: Int) = Unit
+}
 
 private object NoOpAppLaunchPort : AppLaunchPort {
     override fun launch(intent: Intent, settings: AppSettings, fullscreen: Boolean) = Unit

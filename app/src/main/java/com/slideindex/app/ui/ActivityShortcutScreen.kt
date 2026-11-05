@@ -428,7 +428,13 @@ private fun ActivityShortcutSavedRowContent(
             append(stringResource(R.string.activity_shortcut_not_exported))
         }
     }
-    val iconBitmap = remember(shortcut.id, shortcut.iconPath, shortcut.identityKey()) {
+    val iconBitmap = remember(
+        shortcut.id,
+        shortcut.iconPath,
+        shortcut.identityKey(),
+        // 宿主应用的全局图标覆盖变了，快捷方式回退到应用图标时要跟着换
+        com.slideindex.app.ui.GlobalIconStore.revision,
+    ) {
         ManagedShortcutIconResolver.drawableForManaged(context, shortcut)
             ?.toBitmap(96, 96)
     }

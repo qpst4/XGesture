@@ -184,7 +184,9 @@ object QuickWheelIconResolver {
     ): ImageBitmap? {
         val catalog = activityShortcuts(context)
         val fingerprint = catalog.map { it.identityKey() to it.iconPath }.hashCode()
-        val key = "shortcut:${action.payloadKey}:$targetSizePx:$fingerprint"
+        // revision 进 key：图标库里改完宿主应用图标后，快捷方式图标要跟着换
+        val key = "shortcut:${action.payloadKey}:$targetSizePx:$fingerprint:" +
+            com.slideindex.app.ui.GlobalIconStore.revision
         if (bitmapCache.containsKey(key)) return bitmapCache[key]
         val target = targetSizePx.coerceIn(MIN_APP_ICON_PX, MAX_APP_ICON_PX)
         val bitmap = runCatching {

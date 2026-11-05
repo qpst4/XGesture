@@ -83,6 +83,12 @@ object ManagedShortcutIconResolver {
                 return bitmap.toDrawable(context.resources)
             }
         }
+        // 全局图标覆盖优先（扩展 → 图标库 → 应用图标）：
+        // 快捷方式自己配过图标（上面两步）就不动；否则宿主应用换成自定义图标后，
+        // 它的快捷方式也要跟着换，不能停在 activity / 系统快捷方式继承来的原始图标上。
+        shortcut.packageName.takeIf { it.isNotBlank() }?.let { packageName ->
+            com.slideindex.app.ui.AppIconOverride.drawable(context, packageName, 128)?.let { return it }
+        }
         // 应用快捷方式优先用系统快捷方式图标；INTENT 类型也可能带 shortcutId（启动兜底）。
         if (shortcut.isAppShortcut) {
             dynamicShortcutIcon(context, shortcut.packageName, shortcut.shortcutId)?.let { return it }
