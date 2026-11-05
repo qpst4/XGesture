@@ -26,7 +26,9 @@ fun AppPickerTabRow(
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
     listState: LazyListState? = null,
-    contentHorizontalPadding: Dp = 12.dp,
+    // 宿主容器（顶栏搜索区 / 悬浮面板 / 展开面板）已经提供 12dp 水平留白，
+    // 这里默认 0，避免再叠一层把 tab 槽缩进 24dp。
+    contentHorizontalPadding: Dp = 0.dp,
     verticalPadding: Dp = 4.dp,
     contourHost: MiuixTabRowContourHost = MiuixTabRowContourHost.AppScaffold,
     colors: TabRowColors = miuixTabRowContourColors(contourHost),
