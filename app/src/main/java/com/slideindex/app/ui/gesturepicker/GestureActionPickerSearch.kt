@@ -15,6 +15,7 @@ import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.ui.quickLauncherPanelLabel
 import com.slideindex.app.ui.compose.rememberAppRepository
 import com.slideindex.app.privilege.PrivilegeUiStrings
+import com.slideindex.app.util.MediaSessionHelper
 import com.slideindex.app.util.PermissionHelper
 import com.slideindex.app.util.PinyinHelper
 import com.slideindex.app.util.TaskManagerUtil
@@ -373,6 +374,10 @@ fun gestureActionLabelText(context: Context, action: GestureAction): String = wh
         GestureActionType.MEDIA_NEXT -> context.getString(R.string.gesture_action_media_next)
         GestureActionType.PREVIOUS_APP -> context.getString(R.string.gesture_action_previous_app)
         GestureActionType.OPEN_NOTIFICATIONS -> context.getString(R.string.gesture_action_open_notifications)
+        GestureActionType.READ_LATEST_MESSAGE -> context.getString(R.string.gesture_action_read_message)
+        GestureActionType.READ_LATEST_MESSAGE_SMALL_WINDOW ->
+            context.getString(R.string.gesture_action_read_message_small_window)
+        GestureActionType.CLEAR_NOTIFICATIONS -> context.getString(R.string.gesture_action_clear_notifications)
         GestureActionType.OPEN_QUICK_SETTINGS -> context.getString(R.string.gesture_action_open_quick_settings)
         GestureActionType.LOCK_SCREEN -> context.getString(R.string.gesture_action_lock_screen)
         GestureActionType.LOCK_SCREEN_AND_SILENCE_RING -> context.getString(R.string.gesture_action_lock_screen_and_silence_ring)
@@ -538,6 +543,10 @@ fun gestureActionLabel(action: GestureAction, settings: AppSettings? = null): St
         GestureActionType.MEDIA_NEXT -> stringResource(R.string.gesture_action_media_next)
         GestureActionType.PREVIOUS_APP -> stringResource(R.string.gesture_action_previous_app)
         GestureActionType.OPEN_NOTIFICATIONS -> stringResource(R.string.gesture_action_open_notifications)
+        GestureActionType.READ_LATEST_MESSAGE -> stringResource(R.string.gesture_action_read_message)
+        GestureActionType.READ_LATEST_MESSAGE_SMALL_WINDOW ->
+            stringResource(R.string.gesture_action_read_message_small_window)
+        GestureActionType.CLEAR_NOTIFICATIONS -> stringResource(R.string.gesture_action_clear_notifications)
         GestureActionType.OPEN_QUICK_SETTINGS -> stringResource(R.string.gesture_action_open_quick_settings)
         GestureActionType.LOCK_SCREEN -> stringResource(R.string.gesture_action_lock_screen)
         GestureActionType.LOCK_SCREEN_AND_SILENCE_RING -> stringResource(R.string.gesture_action_lock_screen_and_silence_ring)
@@ -700,6 +709,10 @@ fun gestureActionDescription(action: GestureAction): String? = when (action.type
     GestureActionType.CORNER_INNER_PIN_WHEEL -> stringResource(R.string.gesture_action_corner_inner_pin_wheel_desc)
     GestureActionType.SNOOZE_OVERLAYS -> stringResource(R.string.gesture_action_snooze_overlays_desc)
     GestureActionType.TIMED_DND -> stringResource(R.string.gesture_action_timed_dnd_desc)
+    GestureActionType.READ_LATEST_MESSAGE -> stringResource(R.string.gesture_action_read_message_desc)
+    GestureActionType.READ_LATEST_MESSAGE_SMALL_WINDOW ->
+        stringResource(R.string.gesture_action_read_message_small_window_desc)
+    GestureActionType.CLEAR_NOTIFICATIONS -> stringResource(R.string.gesture_action_clear_notifications_desc)
     else -> null
 }
 
@@ -866,6 +879,14 @@ fun gestureActionPermissionHintText(context: Context, action: GestureAction): St
             if (PermissionHelper.isAccessibilityServiceEnabledForOverlays(context)) return null
             context.getString(R.string.gesture_action_screen_draw_permission)
         }
+        // 通知三件套都依赖「通知使用权」：没开时列表里直接说明，点提示可跳到授权页。
+        GestureActionType.READ_LATEST_MESSAGE,
+        GestureActionType.READ_LATEST_MESSAGE_SMALL_WINDOW,
+        GestureActionType.CLEAR_NOTIFICATIONS,
+        -> {
+            if (PermissionHelper.hasNotificationAccess(context)) return null
+            context.getString(R.string.gesture_action_notification_access_permission)
+        }
         else -> null
     }
 
@@ -999,6 +1020,14 @@ fun requestPermissionForAdjustAction(context: Context, action: GestureAction) {
                     context.startActivity(PermissionHelper.overlaySettingsIntent(context))
                 !PermissionHelper.hasNotificationPolicyAccess(context) ->
                     PermissionHelper.requestNotificationPolicyAccess(context)
+            }
+        }
+        GestureAction.ReadLatestMessage,
+        GestureAction.ReadLatestMessageInSmallWindow,
+        GestureAction.ClearNotifications,
+        -> {
+            if (!PermissionHelper.hasNotificationAccess(context)) {
+                MediaSessionHelper.openNotificationListenerSettings(context)
             }
         }
         else -> Unit

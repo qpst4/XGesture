@@ -2437,6 +2437,14 @@
     <string name="gesture_action_media_next">Следующий трек</string>
     <string name="gesture_action_previous_app">Предыдущее приложение</string>
     <string name="gesture_action_open_notifications">Открыть шторку уведомлений</string>
+    <string name="gesture_action_read_message">Прочитать сообщение</string>
+    <string name="gesture_action_read_message_desc">Открыть последнее уведомление</string>
+    <string name="gesture_action_read_message_small_window">Прочитать в маленьком окне</string>
+    <string name="gesture_action_read_message_small_window_desc">Открыть последнее уведомление в маленьком окне</string>
+    <string name="gesture_action_clear_notifications">Очистить уведомления</string>
+    <string name="gesture_action_clear_notifications_desc">Скрыть все уведомления и удалить их из шторки</string>
+    <string name="gesture_action_notification_access_permission">Требуется доступ к уведомлениям</string>
+    <string name="gesture_action_read_message_empty">Нет уведомлений для чтения</string>
     <string name="gesture_action_open_quick_settings">Открыть быстрые настройки</string>
     <string name="gesture_action_lock_screen">Заблокировать экран</string>
     <string name="gesture_action_lock_screen_and_silence_ring">Заблокировать экран и отключить звонки</string>

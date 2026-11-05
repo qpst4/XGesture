@@ -2438,6 +2438,14 @@
     <string name="gesture_action_media_next">Next track</string>
     <string name="gesture_action_previous_app">Previous app</string>
     <string name="gesture_action_open_notifications">Open notification shade</string>
+    <string name="gesture_action_read_message">Read message</string>
+    <string name="gesture_action_read_message_desc">Open the latest notification</string>
+    <string name="gesture_action_read_message_small_window">Read in small window</string>
+    <string name="gesture_action_read_message_small_window_desc">Open the latest notification in a small window</string>
+    <string name="gesture_action_clear_notifications">Clear notifications</string>
+    <string name="gesture_action_clear_notifications_desc">Dismiss all notifications and remove them from the shade</string>
+    <string name="gesture_action_notification_access_permission">Notification access is required</string>
+    <string name="gesture_action_read_message_empty">No notification to read</string>
     <string name="gesture_action_open_quick_settings">Open quick settings</string>
     <string name="gesture_action_lock_screen">Lock screen</string>
     <string name="gesture_action_lock_screen_and_silence_ring">Lock screen and silence ringer</string>

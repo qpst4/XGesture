@@ -996,6 +996,14 @@
     <string name="gesture_action_media_next">下一首</string>
     <string name="gesture_action_previous_app">上一个应用程序</string>
     <string name="gesture_action_open_notifications">打开通知面板</string>
+    <string name="gesture_action_read_message">阅读消息</string>
+    <string name="gesture_action_read_message_desc">阅读最新一条通知消息</string>
+    <string name="gesture_action_read_message_small_window">小窗阅读消息</string>
+    <string name="gesture_action_read_message_small_window_desc">通过小窗阅读最新一条通知消息</string>
+    <string name="gesture_action_clear_notifications">清空通知</string>
+    <string name="gesture_action_clear_notifications_desc">忽略并移除所有通知</string>
+    <string name="gesture_action_notification_access_permission">需要开启「通知使用权」</string>
+    <string name="gesture_action_read_message_empty">没有可阅读的通知</string>
     <string name="gesture_action_open_quick_settings">打开控制中心</string>
     <string name="gesture_action_lock_screen">锁屏</string>
     <string name="gesture_action_lock_screen_and_silence_ring">锁屏并静音响铃</string>

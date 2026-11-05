@@ -39,6 +39,13 @@ object NotificationSbnCache {
         }
     }
 
+    /** 活动缓存里 postTime 最新的一条；缓存为空时返回 null。 */
+    fun latestActive(): StatusBarNotification? {
+        synchronized(lock) {
+            return activeCache.values.maxByOrNull { it.postTime }
+        }
+    }
+
     fun onRemoved(sbn: StatusBarNotification, reason: Int) {
         synchronized(lock) {
             if (reason != NotificationListenerService.REASON_SNOOZED) {

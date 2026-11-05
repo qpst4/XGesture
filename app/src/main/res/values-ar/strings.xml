@@ -970,6 +970,14 @@
     <string name="gesture_action_media_next">التالي</string>
     <string name="gesture_action_previous_app">التطبيق السابق</string>
     <string name="gesture_action_open_notifications">فتح لوحة الإشعارات</string>
+    <string name="gesture_action_read_message">قراءة الرسالة</string>
+    <string name="gesture_action_read_message_desc">فتح أحدث إشعار</string>
+    <string name="gesture_action_read_message_small_window">قراءة في نافذة صغيرة</string>
+    <string name="gesture_action_read_message_small_window_desc">فتح أحدث إشعار في نافذة صغيرة</string>
+    <string name="gesture_action_clear_notifications">مسح الإشعارات</string>
+    <string name="gesture_action_clear_notifications_desc">تجاهل جميع الإشعارات وإزالتها من شريط الإشعارات</string>
+    <string name="gesture_action_notification_access_permission">يلزم منح الوصول إلى الإشعارات</string>
+    <string name="gesture_action_read_message_empty">لا توجد إشعارات للقراءة</string>
     <string name="gesture_action_open_quick_settings">فتح مركز التحكم</string>
     <string name="gesture_action_lock_screen">قفل الشاشة</string>
     <string name="gesture_action_lock_screen_and_silence_ring">قفل الشاشة وكتم صوت الرنين</string>

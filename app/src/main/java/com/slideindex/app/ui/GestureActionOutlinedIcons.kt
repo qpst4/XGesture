@@ -70,6 +70,9 @@ internal fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector
     GestureActionType.MEDIA_NEXT -> ThinActionIcons.SkipNext
     GestureActionType.PREVIOUS_APP -> ThinActionIcons.Restore
     GestureActionType.OPEN_NOTIFICATIONS -> ThinActionIcons.Notifications
+    GestureActionType.READ_LATEST_MESSAGE -> ThinActionIcons.ChatBubble
+    GestureActionType.READ_LATEST_MESSAGE_SMALL_WINDOW -> ThinActionIcons.FreeWindow
+    GestureActionType.CLEAR_NOTIFICATIONS -> ThinActionIcons.ClearNotifications
     GestureActionType.OPEN_QUICK_SETTINGS -> ThinActionIcons.QuickSettings
     GestureActionType.LOCK_SCREEN -> ThinActionIcons.Lock
     GestureActionType.LOCK_SCREEN_AND_SILENCE_RING -> ThinActionIcons.LockSilenceRing
@@ -178,6 +181,9 @@ internal fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = w
     GestureActionType.MEDIA_NEXT -> ThinActionIcons.SkipNext
     GestureActionType.PREVIOUS_APP -> ThinActionIcons.Restore
     GestureActionType.OPEN_NOTIFICATIONS -> ThinActionIcons.Notifications
+    GestureActionType.READ_LATEST_MESSAGE -> ThinActionIcons.ChatBubble
+    GestureActionType.READ_LATEST_MESSAGE_SMALL_WINDOW -> ThinActionIcons.FreeWindow
+    GestureActionType.CLEAR_NOTIFICATIONS -> ThinActionIcons.ClearNotifications
     GestureActionType.OPEN_QUICK_SETTINGS -> ThinActionIcons.QuickSettings
     GestureActionType.LOCK_SCREEN -> ThinActionIcons.Lock
     GestureActionType.LOCK_SCREEN_AND_SILENCE_RING -> ThinActionIcons.LockSilenceRing
