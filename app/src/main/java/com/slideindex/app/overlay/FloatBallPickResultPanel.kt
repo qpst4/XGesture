@@ -50,7 +50,6 @@ import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.PickPanelSlideAnimationDefaults
 import com.slideindex.app.settings.PickResultTextModeDefault
 import com.slideindex.app.settings.SearchEngineStore
-import com.slideindex.app.settings.SearchEngineType
 import com.slideindex.app.stash.StashCoordinator
 import com.slideindex.app.stash.StashMetaRepository
 import com.slideindex.app.util.HapticHelper
@@ -1329,17 +1328,13 @@ object FloatBallPickResultPanel {
                     },
                     onSearchEngineClick = { engine, longPressTriggered ->
                         val query = activeTextHolder.value
-                        val launched = when (engine.engineType) {
-                            SearchEngineType.SHARE_TO_APP ->
-                                SearchEngineLauncher.launchTextShare(context, engine, query)
-                            else -> SearchEngineLauncher.launch(
-                                context,
-                                engine,
-                                query,
-                                settings,
-                                longPressTriggered
-                            )
-                        }
+                        val launched = SearchEngineLauncher.launchText(
+                            context,
+                            engine,
+                            query,
+                            settings,
+                            longPressTriggered
+                        )
                         if (launched) {
                             SearchPanelQueryBridge.rememberQuery(context, query)
                             dismiss()
@@ -1352,17 +1347,13 @@ object FloatBallPickResultPanel {
                         )
                         if (engine != null) {
                             val query = activeTextHolder.value
-                            val launched = when (engine.engineType) {
-                                SearchEngineType.SHARE_TO_APP ->
-                                    SearchEngineLauncher.launchTextShare(context, engine, query)
-                                else -> SearchEngineLauncher.launchWithWindowMode(
-                                    context,
-                                    engine,
-                                    query,
-                                    settings,
-                                    fullscreen
-                                )
-                            }
+                            val launched = SearchEngineLauncher.launchTextWithWindowMode(
+                                context,
+                                engine,
+                                query,
+                                settings,
+                                fullscreen
+                            )
                             if (launched) {
                                 SearchPanelQueryBridge.rememberQuery(context, query)
                                 dismiss()

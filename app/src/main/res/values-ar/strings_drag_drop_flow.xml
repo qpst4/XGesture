@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 全局拖拽流转（独立资源文件，避免改动现有 strings.xml）。 -->
 <resources>
-    <string name="drag_drop_flow_title">التدفق العام للسحب والإفلات</string>
+    <string name="drag_drop_flow_title">شريط التدفق العام للسحب والإفلات</string>
 
     <!-- 设置页 -->
     <string name="drag_drop_flow_section_basic">الأساسيات</string>
-    <string name="drag_drop_flow_enable_title">تفعيل التدفق العام للسحب والإفلات</string>
+    <string name="drag_drop_flow_enable_title">تفعيل شريط التدفق العام للسحب والإفلات</string>
     <string name="drag_drop_flow_enable_summary">عند الضغط مطوّلًا على صورة أو نص في أي تطبيق وبدء السحب، يظهر شريط التدفق تلقائيًا من حافة الشاشة.</string>
     <string name="drag_drop_flow_section_layout">المظهر والموضع</string>
     <string name="drag_drop_flow_position_title">موضع شريط التدفق</string>
@@ -25,14 +25,21 @@
     <string name="drag_drop_flow_image_engines_summary">أهداف البحث العكسي بالصور والتسوق والمشاركة الاجتماعية التي تُعرض عند سحب صورة.</string>
     <string name="drag_drop_flow_file_engines_title">محركات مشاركة الملفات</string>
     <string name="drag_drop_flow_file_engines_summary">إدارة التطبيقات التي تستقبل الصوت أو الملفات المسحوبة وترتيبها.</string>
-    <string name="drag_drop_flow_guide">• طريقة التشغيل: اضغط مطوّلًا على نص أو صورة واسحب في WeChat أو المعرض أو المتصفح أو أي تطبيق يدعم السحب النظامي، ليظهر شريط التدفق.\n• التمرير عند الحافة: عندما تكون الأهداف كثيرة على الشريط، اسحب إلى أحد طرفيه ليتمرر بسلاسة تلقائيًا.\n• التخلي والإلغاء: أفلت فوق «إلغاء» للتخلي عن هذا التدفق دون إزعاج التطبيق الأصلي، أو فوق «استعادة» للإبقاء على الحالة الأصلية.</string>
+    <string name="drag_drop_flow_guide">• طريقة التشغيل: اضغط مطوّلًا على نص أو صورة واسحب في تطبيق يدعم السحب النظامي، ليظهر شريط التدفق من حافة الشاشة. ليست كل التطبيقات تدعم ذلك؛ إذا ظهرت قائمة عند الضغط المطوّل فلن يبدأ السحب.\n• التمرير عند الحافة: عندما تكون الأهداف كثيرة على الشريط، اسحب إلى أحد طرفيه ليتمرر بسلاسة تلقائيًا.\n• التخلي والإلغاء: أفلت فوق «إلغاء» للتخلي عن هذا التدفق دون إزعاج التطبيق الأصلي، أو فوق «استعادة» للإبقاء على الحالة الأصلية.</string>
 
     <!-- 扩展中心入口状态副标题 -->
-    <string name="drag_drop_flow_hub_status_bottom">مفعّل · الحافة السفلية</string>
-    <string name="drag_drop_flow_hub_status_left">مفعّل · الحافة اليسرى</string>
-    <string name="drag_drop_flow_hub_status_right">مفعّل · الحافة اليمنى</string>
-    <string name="drag_drop_flow_hub_status_ring">مفعّل · بوصلة حلقية</string>
-    <string name="drag_drop_flow_hub_status_off">متوقف · اضغط مطوّلًا واسحب للتدفق السريع والبحث بالصور</string>
+    <string name="drag_drop_flow_hub_status_bottom">مفعّل · اضغط مطوّلًا واسحب للاستدعاء · شريط سفلي</string>
+    <string name="drag_drop_flow_hub_status_left">مفعّل · اضغط مطوّلًا واسحب للاستدعاء · شريط يسار</string>
+    <string name="drag_drop_flow_hub_status_right">مفعّل · اضغط مطوّلًا واسحب للاستدعاء · شريط يمين</string>
+    <string name="drag_drop_flow_hub_status_ring">مفعّل · اضغط مطوّلًا واسحب للاستدعاء · بوصلة حلقية</string>
+    <string name="drag_drop_flow_hub_status_off">متوقف · اضغط مطوّلًا على نص أو صورة واسحب لاستدعاء شريط التدفق</string>
+
+    <!-- 触发引导与自检 -->
+    <string name="drag_drop_flow_trigger_hint">طريقة الاستدعاء: اضغط مطوّلًا على نص أو صورة في تطبيق يدعم السحب النظامي ثم اسحب. لا تدعم كل التطبيقات ذلك؛ إذا ظهرت قائمة عند الضغط المطوّل فلن يبدأ السحب.</string>
+    <string name="drag_drop_flow_enabled_toast">مفعّل: اضغط مطوّلًا على نص أو صورة واسحب في تطبيق يدعم السحب</string>
+    <string name="drag_drop_flow_demo_title">جرّب</string>
+    <string name="drag_drop_flow_demo_body">اضغط مطوّلًا على النص أدناه واسحبه — سيظهر شريط التدفق من حافة الشاشة. أفلت فوق هدف للإرسال.</string>
+    <string name="drag_drop_flow_demo_sample">اضغط مطوّلًا واسحب إلى شريط التدفق</string>
 
     <!-- 流转栏 -->
     <string name="drag_drop_flow_restore">استعادة</string>
@@ -62,6 +69,7 @@
     <string name="drag_drop_flow_toast_launch_failed">تعذّر فتح التطبيق الهدف</string>
     <string name="drag_drop_flow_toast_target_missing">هذا الهدف لم يعد موجودًا في شريط التدفق</string>
     <string name="drag_drop_flow_toast_text_copied">تم نسخ النص إلى الحافظة</string>
+    <string name="drag_drop_flow_toast_text_unreadable">تعذّرت قراءة النص المسحوب</string>
     <string name="drag_drop_flow_toast_share_failed">فشلت المشاركة</string>
     <string name="drag_drop_flow_toast_pinned">تم التثبيت على الشاشة</string>
     <string name="drag_drop_flow_toast_no_text">لم يتم التعرف على نص في الصورة</string>

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 全局拖拽流转（独立资源文件，避免改动现有 strings.xml）。 -->
 <resources>
-    <string name="drag_drop_flow_title">全局拖拽流转</string>
+    <string name="drag_drop_flow_title">全局拖拽流转栏</string>
 
     <!-- 设置页 -->
     <string name="drag_drop_flow_section_basic">基础功能</string>
-    <string name="drag_drop_flow_enable_title">启用全局拖拽流转</string>
+    <string name="drag_drop_flow_enable_title">启用全局拖拽流转栏</string>
     <string name="drag_drop_flow_enable_summary">在任意应用长按图片或文字开始拖拽时，屏幕边缘自动滑出流转搜索栏</string>
     <string name="drag_drop_flow_section_layout">外观与位置</string>
     <string name="drag_drop_flow_position_title">流转栏显示位置</string>
@@ -25,14 +25,21 @@
     <string name="drag_drop_flow_image_engines_summary">拖拽图片时呼出的以图搜图及购物、社交分享目标</string>
     <string name="drag_drop_flow_file_engines_title">文件分享引擎</string>
     <string name="drag_drop_flow_file_engines_summary">管理拖拽音频或文件时的流转分享应用与排序</string>
-    <string name="drag_drop_flow_guide">• 触发方式：在微信、相册、浏览器或任意支持系统拖拽的应用中，长按文字或图片拖动即可激活流转栏。\n• 边缘滚动：当引擎项目较多时，拖拽至流转栏两侧边缘即可自动平滑滚动。\n• 放弃与取消：拖动到「取消」按钮松手，可直接取消本次流转且不打扰原应用；拖至「恢复」可保持原状态。</string>
+    <string name="drag_drop_flow_guide">• 触发方式：在支持系统拖拽的应用里长按文字或图片拖起，屏幕边缘会滑出流转栏；不是所有 App 都支持——长按只弹菜单就说明拖不起来。\n• 边缘滚动：当引擎项目较多时，拖拽至流转栏两侧边缘即可自动平滑滚动。\n• 放弃与取消：拖动到「取消」按钮松手，可直接取消本次流转且不打扰原应用；拖至「恢复」可保持原状态。</string>
 
     <!-- 扩展中心入口状态副标题 -->
-    <string name="drag_drop_flow_hub_status_bottom">已开启 · 底边横向</string>
-    <string name="drag_drop_flow_hub_status_left">已开启 · 左侧纵向</string>
-    <string name="drag_drop_flow_hub_status_right">已开启 · 右侧纵向</string>
-    <string name="drag_drop_flow_hub_status_ring">已开启 · 环形罗盘</string>
-    <string name="drag_drop_flow_hub_status_off">未启用 · 长按拖拽快速流转与图搜</string>
+    <string name="drag_drop_flow_hub_status_bottom">已开启 · 长按拖起唤出（底边横向）</string>
+    <string name="drag_drop_flow_hub_status_left">已开启 · 长按拖起唤出（左侧纵向）</string>
+    <string name="drag_drop_flow_hub_status_right">已开启 · 长按拖起唤出（右侧纵向）</string>
+    <string name="drag_drop_flow_hub_status_ring">已开启 · 长按拖起唤出（环形罗盘）</string>
+    <string name="drag_drop_flow_hub_status_off">未启用 · 长按文字或图片拖起即可唤出流转栏</string>
+
+    <!-- 触发引导与自检 -->
+    <string name="drag_drop_flow_trigger_hint">触发方式：在支持系统拖拽的应用里长按文字或图片拖起即可唤出；不是所有应用都支持——长按只弹菜单就是拖不起来。</string>
+    <string name="drag_drop_flow_enabled_toast">已开启：在支持拖拽的应用里长按文字或图片拖起即可</string>
+    <string name="drag_drop_flow_demo_title">试一试</string>
+    <string name="drag_drop_flow_demo_body">长按下面这段文字并拖起，流转栏应该从屏幕边缘出现；拖到某个目标上松手即可投递。</string>
+    <string name="drag_drop_flow_demo_sample">长按我，拖到流转栏上试试</string>
 
     <!-- 流转栏 -->
     <string name="drag_drop_flow_restore">恢复</string>
@@ -62,6 +69,7 @@
     <string name="drag_drop_flow_toast_launch_failed">无法唤起目标应用</string>
     <string name="drag_drop_flow_toast_target_missing">这个目标已不在流转栏里</string>
     <string name="drag_drop_flow_toast_text_copied">已复制文字到剪贴板</string>
+    <string name="drag_drop_flow_toast_text_unreadable">无法读取拖放的文字</string>
     <string name="drag_drop_flow_toast_share_failed">分享失败</string>
     <string name="drag_drop_flow_toast_pinned">已钉到屏幕上</string>
     <string name="drag_drop_flow_toast_no_text">图片里没有识别到文字</string>

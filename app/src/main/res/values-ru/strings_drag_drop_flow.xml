@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 全局拖拽流转（独立资源文件，避免改动现有 strings.xml）。 -->
 <resources>
-    <string name="drag_drop_flow_title">Глобальное перетаскивание с передачей</string>
+    <string name="drag_drop_flow_title">Глобальная панель перетаскивания с передачей</string>
 
     <!-- 设置页 -->
     <string name="drag_drop_flow_section_basic">Основные настройки</string>
-    <string name="drag_drop_flow_enable_title">Включить глобальное перетаскивание с передачей</string>
+    <string name="drag_drop_flow_enable_title">Включить глобальную панель перетаскивания с передачей</string>
     <string name="drag_drop_flow_enable_summary">Нажмите и удерживайте изображение или текст в любом приложении и начните перетаскивать: панель передачи выедет из края экрана.</string>
     <string name="drag_drop_flow_section_layout">Внешний вид и положение</string>
     <string name="drag_drop_flow_position_title">Положение панели передачи</string>
@@ -25,14 +25,21 @@
     <string name="drag_drop_flow_image_engines_summary">Поиск по изображению, покупки и соцсети, предлагаемые при перетаскивании изображения.</string>
     <string name="drag_drop_flow_file_engines_title">Приложения для отправки файлов</string>
     <string name="drag_drop_flow_file_engines_summary">Настройте, какие приложения получают перетаскиваемые аудио и файлы и в каком порядке.</string>
-    <string name="drag_drop_flow_guide">• Запуск: в WeChat, Галерее, браузере или любом приложении с поддержкой системного перетаскивания нажмите и удерживайте текст или изображение и перетащите — появится панель передачи.\n• Прокрутка у края: если на панели много целей, перетащите к её краю — она плавно прокрутится сама.\n• Отмена и восстановление: отпустите над «Отмена», чтобы прервать передачу, не мешая исходному приложению; отпустите над «Восстановить», чтобы вернуть всё как было.</string>
+    <string name="drag_drop_flow_guide">• Запуск: нажмите и удерживайте текст или изображение в приложении с поддержкой системного перетаскивания и потяните — панель передачи выедет из края экрана. Поддерживаются не все приложения: если долгое нажатие открывает только меню, перетаскивание не начнётся.\n• Прокрутка у края: если на панели много целей, перетащите к её краю — она плавно прокрутится сама.\n• Отмена и восстановление: отпустите над «Отмена», чтобы прервать передачу, не мешая исходному приложению; отпустите над «Восстановить», чтобы вернуть всё как было.</string>
 
     <!-- 扩展中心入口状态副标题 -->
-    <string name="drag_drop_flow_hub_status_bottom">Вкл · Нижний край</string>
-    <string name="drag_drop_flow_hub_status_left">Вкл · Левый край</string>
-    <string name="drag_drop_flow_hub_status_right">Вкл · Правый край</string>
-    <string name="drag_drop_flow_hub_status_ring">Вкл · Кольцевой компас</string>
-    <string name="drag_drop_flow_hub_status_off">Выкл · Удерживайте и перетаскивайте для быстрой передачи и поиска по изображению</string>
+    <string name="drag_drop_flow_hub_status_bottom">Вкл · Удерживайте и перетащите · Нижняя панель</string>
+    <string name="drag_drop_flow_hub_status_left">Вкл · Удерживайте и перетащите · Левая панель</string>
+    <string name="drag_drop_flow_hub_status_right">Вкл · Удерживайте и перетащите · Правая панель</string>
+    <string name="drag_drop_flow_hub_status_ring">Вкл · Удерживайте и перетащите · Кольцевой компас</string>
+    <string name="drag_drop_flow_hub_status_off">Выкл · Удерживайте и перетаскивайте текст или изображение, чтобы вызвать панель</string>
+
+    <!-- 触发引导与自检 -->
+    <string name="drag_drop_flow_trigger_hint">Как вызвать: нажмите и удерживайте текст или изображение в приложении с поддержкой системного перетаскивания и потяните. Поддерживаются не все приложения: если долгое нажатие открывает только меню, перетаскивание не начнётся.</string>
+    <string name="drag_drop_flow_enabled_toast">Включено: удерживайте и перетащите текст или изображение в поддерживающем приложении</string>
+    <string name="drag_drop_flow_demo_title">Попробовать</string>
+    <string name="drag_drop_flow_demo_body">Нажмите и удерживайте текст ниже и потяните — панель передачи выедет из края экрана. Отпустите над целью, чтобы отправить.</string>
+    <string name="drag_drop_flow_demo_sample">Удерживайте и перетащите на панель</string>
 
     <!-- 流转栏 -->
     <string name="drag_drop_flow_restore">Восстановить</string>
@@ -63,6 +70,7 @@
     <string name="drag_drop_flow_toast_launch_failed">Не удаётся открыть целевое приложение</string>
     <string name="drag_drop_flow_toast_target_missing">Эта цель больше не на панели передачи</string>
     <string name="drag_drop_flow_toast_text_copied">Текст скопирован в буфер обмена</string>
+    <string name="drag_drop_flow_toast_text_unreadable">Не удаётся прочитать перетаскиваемый текст</string>
     <string name="drag_drop_flow_toast_share_failed">Не удалось поделиться</string>
     <string name="drag_drop_flow_toast_pinned">Закреплено на экране</string>
     <string name="drag_drop_flow_toast_no_text">На изображении не распознан текст</string>

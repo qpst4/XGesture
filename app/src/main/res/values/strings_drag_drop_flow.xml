@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 全局拖拽流转（独立资源文件，避免改动现有 strings.xml）。 -->
 <resources>
-    <string name="drag_drop_flow_title">Global drag &amp; drop flow</string>
+    <string name="drag_drop_flow_title">Global drag &amp; drop flow bar</string>
 
     <!-- 设置页 -->
     <string name="drag_drop_flow_section_basic">Basics</string>
-    <string name="drag_drop_flow_enable_title">Enable global drag &amp; drop flow</string>
+    <string name="drag_drop_flow_enable_title">Enable the global drag &amp; drop flow bar</string>
     <string name="drag_drop_flow_enable_summary">Long-press an image or text in any app and start dragging: the flow bar slides in from the screen edge.</string>
     <string name="drag_drop_flow_section_layout">Appearance and position</string>
     <string name="drag_drop_flow_position_title">Flow bar position</string>
@@ -25,14 +25,21 @@
     <string name="drag_drop_flow_image_engines_summary">Reverse image search, shopping and social sharing targets offered when you drag an image.</string>
     <string name="drag_drop_flow_file_engines_title">File share engines</string>
     <string name="drag_drop_flow_file_engines_summary">Manage which apps receive dragged audio or files, and in what order.</string>
-    <string name="drag_drop_flow_guide">• Trigger: in WeChat, Gallery, a browser or any app that supports system drag, long-press text or an image and drag to bring up the flow bar.\n• Edge scrolling: with many targets on the bar, drag to either of its edges and it scrolls smoothly by itself.\n• Discard and cancel: release over “Cancel” to drop this flow without disturbing the source app; release over “Restore” to keep everything as it was.</string>
+    <string name="drag_drop_flow_guide">• Trigger: long-press and drag text or an image in an app that supports system drag, and the flow bar slides in from the screen edge. Not every app supports it — if a long-press only opens a menu, drag won\'t start.\n• Edge scrolling: with many targets on the bar, drag to either of its edges and it scrolls smoothly by itself.\n• Discard and cancel: release over “Cancel” to drop this flow without disturbing the source app; release over “Restore” to keep everything as it was.</string>
 
     <!-- 扩展中心入口状态副标题 -->
-    <string name="drag_drop_flow_hub_status_bottom">On · Bottom edge</string>
-    <string name="drag_drop_flow_hub_status_left">On · Left edge</string>
-    <string name="drag_drop_flow_hub_status_right">On · Right edge</string>
-    <string name="drag_drop_flow_hub_status_ring">On · Ring compass</string>
-    <string name="drag_drop_flow_hub_status_off">Off · Long-press and drag for quick flow and image search</string>
+    <string name="drag_drop_flow_hub_status_bottom">On · Long-press and drag to summon · Bottom bar</string>
+    <string name="drag_drop_flow_hub_status_left">On · Long-press and drag to summon · Left bar</string>
+    <string name="drag_drop_flow_hub_status_right">On · Long-press and drag to summon · Right bar</string>
+    <string name="drag_drop_flow_hub_status_ring">On · Long-press and drag to summon · Ring compass</string>
+    <string name="drag_drop_flow_hub_status_off">Off · Long-press and drag text or images to summon the flow bar</string>
+
+    <!-- 触发引导与自检 -->
+    <string name="drag_drop_flow_trigger_hint">How to trigger: long-press and drag text or an image in an app that supports system drag. Not every app does — if a long-press only opens a menu, drag won\'t start.</string>
+    <string name="drag_drop_flow_enabled_toast">On: long-press and drag text or an image in a supported app to summon the bar</string>
+    <string name="drag_drop_flow_demo_title">Try it</string>
+    <string name="drag_drop_flow_demo_body">Press and hold the text below and drag it: the flow bar should slide in from the screen edge. Release over a target to send.</string>
+    <string name="drag_drop_flow_demo_sample">Press and hold me, then drag onto the flow bar</string>
 
     <!-- 流转栏 -->
     <string name="drag_drop_flow_restore">Restore</string>
@@ -62,6 +69,7 @@
     <string name="drag_drop_flow_toast_launch_failed">Can\'t open the target app</string>
     <string name="drag_drop_flow_toast_target_missing">That target is no longer in the flow bar</string>
     <string name="drag_drop_flow_toast_text_copied">Text copied to clipboard</string>
+    <string name="drag_drop_flow_toast_text_unreadable">Can\'t read the dragged text</string>
     <string name="drag_drop_flow_toast_share_failed">Sharing failed</string>
     <string name="drag_drop_flow_toast_pinned">Pinned to the screen</string>
     <string name="drag_drop_flow_toast_no_text">No text recognised in the image</string>

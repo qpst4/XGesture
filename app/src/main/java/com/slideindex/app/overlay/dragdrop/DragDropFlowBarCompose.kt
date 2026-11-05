@@ -133,6 +133,8 @@ fun DragDropFlowBarLayout(
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
     val itemBounds = remember { mutableStateMapOf<String, Rect>() }
+    /** 震动区：只绑 48dp 图标。命中区可以放宽到整格（图标 + 标签），震动不必跟着放宽。 */
+    val iconBounds = remember { mutableStateMapOf<String, Rect>() }
     var cancelBounds by remember { mutableStateOf<Rect?>(null) }
     var restoreBounds by remember { mutableStateOf<Rect?>(null) }
     var barBounds by remember { mutableStateOf<Rect?>(null) }
@@ -147,6 +149,7 @@ fun DragDropFlowBarLayout(
     LaunchedEffect(visible, items) {
         if (!visible) {
             itemBounds.clear()
+            iconBounds.clear()
             cancelBounds = null
             restoreBounds = null
             barBounds = null
@@ -158,6 +161,7 @@ fun DragDropFlowBarLayout(
         } else {
             val validIds = items.map { it.id }.toSet()
             itemBounds.keys.retainAll(validIds)
+            iconBounds.keys.retainAll(validIds)
         }
     }
 
@@ -216,7 +220,11 @@ fun DragDropFlowBarLayout(
         if (targetId != hoveredId) {
             hoveredId = targetId
             onHoverChanged(targetId)
-            if (targetId != null && targetId != lastVibratedTarget && hapticEnabled) {
+            // 条状栏的震动收窄到图标：命中区已经扩到整格，不这样手指扫过标签就会连抖。
+            // 圆盘按角度命中，本来就没有图标矩形，保持原样。
+            val overIcon = position == DragDropFlowPosition.RING ||
+                (targetId != null && iconBounds[targetId]?.contains(pos) == true)
+            if (targetId != null && targetId != lastVibratedTarget && hapticEnabled && overIcon) {
                 lastVibratedTarget = targetId
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             }
@@ -278,6 +286,7 @@ fun DragDropFlowBarLayout(
                         hoveredId = hoveredId,
                         dragPosition = dragPosition,
                         itemBounds = itemBounds,
+                        iconBounds = iconBounds,
                         barBounds = barBounds,
                         onBarPositioned = { barBounds = it },
                         onCancelPositioned = { cancelBounds = it },
@@ -292,6 +301,7 @@ fun DragDropFlowBarLayout(
                         hoveredId = hoveredId,
                         dragPosition = dragPosition,
                         itemBounds = itemBounds,
+                        iconBounds = iconBounds,
                         barBounds = barBounds,
                         onBarPositioned = { barBounds = it },
                         onCancelPositioned = { cancelBounds = it },
@@ -306,6 +316,7 @@ fun DragDropFlowBarLayout(
                         hoveredId = hoveredId,
                         dragPosition = dragPosition,
                         itemBounds = itemBounds,
+                        iconBounds = iconBounds,
                         barBounds = barBounds,
                         onBarPositioned = { barBounds = it },
                         onCancelPositioned = { cancelBounds = it },
@@ -318,6 +329,7 @@ fun DragDropFlowBarLayout(
                         canRestore = canRestore,
                         hoveredId = hoveredId,
                         itemBounds = itemBounds,
+                        iconBounds = iconBounds,
                         onGeometryChanged = { ringGeometry = it },
                         onCancelPositioned = { cancelBounds = it },
                         onRestorePositioned = { restoreBounds = it },
@@ -338,6 +350,7 @@ private fun BottomFlowContent(
     hoveredId: String?,
     dragPosition: Offset?,
     itemBounds: MutableMap<String, Rect>,
+    iconBounds: MutableMap<String, Rect>,
     barBounds: Rect?,
     onBarPositioned: (Rect) -> Unit,
     onCancelPositioned: (Rect) -> Unit,
@@ -463,7 +476,11 @@ private fun BottomFlowContent(
                                 isHovered = hoveredId == item.id,
                                 isVertical = false,
                                 onPositioned = { rect -> itemBounds[item.id] = rect },
-                                onDisposed = { itemBounds.remove(item.id) },
+                                onIconPositioned = { rect -> iconBounds[item.id] = rect },
+                                onDisposed = {
+                                    itemBounds.remove(item.id)
+                                    iconBounds.remove(item.id)
+                                },
                             )
                         }
                     }
@@ -484,6 +501,7 @@ private fun SideFlowContent(
     hoveredId: String?,
     dragPosition: Offset?,
     itemBounds: MutableMap<String, Rect>,
+    iconBounds: MutableMap<String, Rect>,
     barBounds: Rect?,
     onBarPositioned: (Rect) -> Unit,
     onCancelPositioned: (Rect) -> Unit,
@@ -591,7 +609,11 @@ private fun SideFlowContent(
                                     isHovered = hoveredId == item.id,
                                     isVertical = true,
                                     onPositioned = { rect -> itemBounds[item.id] = rect },
-                                    onDisposed = { itemBounds.remove(item.id) },
+                                    onIconPositioned = { rect -> iconBounds[item.id] = rect },
+                                    onDisposed = {
+                                        itemBounds.remove(item.id)
+                                        iconBounds.remove(item.id)
+                                    },
                                 )
                             }
                         }
@@ -646,6 +668,7 @@ private fun RingFlowContent(
     canRestore: Boolean,
     hoveredId: String?,
     itemBounds: MutableMap<String, Rect>,
+    iconBounds: MutableMap<String, Rect>,
     onGeometryChanged: (RingGeometry) -> Unit,
     onCancelPositioned: (Rect) -> Unit,
     onRestorePositioned: (Rect) -> Unit,
@@ -730,7 +753,11 @@ private fun RingFlowContent(
                     isHovered = hoveredId == item.id,
                     isVertical = false,
                     onPositioned = { rect -> itemBounds[item.id] = rect },
-                    onDisposed = { itemBounds.remove(item.id) },
+                    onIconPositioned = { rect -> iconBounds[item.id] = rect },
+                    onDisposed = {
+                        itemBounds.remove(item.id)
+                        iconBounds.remove(item.id)
+                    },
                 )
             }
         }
@@ -843,7 +870,10 @@ private fun PillActionCapsule(
 }
 
 /**
- * 单个搜索引擎/动作卡片项（精准 44dp 热区绑定 + 桌面原生圆角自适应）
+ * 单个搜索引擎/动作卡片项。
+ *
+ * 命中区 = 整格（图标 + 标签）：松手落在名字上也该算选中，以前只算图标，
+ * 用户对着名字松手就会"看起来没反应"。震动另用 [onIconPositioned] 收窄到图标。
  */
 @Composable
 private fun FlowItemCard(
@@ -851,6 +881,7 @@ private fun FlowItemCard(
     isHovered: Boolean,
     isVertical: Boolean,
     onPositioned: (Rect) -> Unit,
+    onIconPositioned: (Rect) -> Unit,
     onDisposed: () -> Unit,
 ) {
     DisposableEffect(item.id) {
@@ -870,15 +901,16 @@ private fun FlowItemCard(
         modifier = Modifier
             .scale(scale)
             .width(56.dp)
+            .onGloballyPositioned { onPositioned(it.boundsInWindow()) }
             .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        // 图标圆角容器：精确热区只绑定在此 48dp 区域，杜绝边缘虚假震动
+        // 图标圆角容器：震动热区只绑定在此 48dp 区域，杜绝边缘虚假震动
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .onGloballyPositioned { onPositioned(it.boundsInWindow()) }
+                .onGloballyPositioned { onIconPositioned(it.boundsInWindow()) }
                 .background(
                     if (isHovered) {
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)

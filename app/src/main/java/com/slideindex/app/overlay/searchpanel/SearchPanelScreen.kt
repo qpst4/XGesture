@@ -844,12 +844,9 @@ fun SearchPanelScreen(
             )
             SearchPanelSessionState.lastTextQuery = query
             SearchHistoryRecorder.record(context, query)
-            if (engine.engineType == SearchEngineType.SHARE_TO_APP) {
-                SearchEngineLauncher.launchTextShare(context, engine, query)
-            } else {
-                showSearchHistory = false
-                SearchEngineLauncher.launch(context, engine, query, settings, longPressTriggered)
-            }
+            showSearchHistory = false
+            // 统一入口：分享到 App 的引擎由 launchText 转去系统分享，别在这里再判断一次类型。
+            SearchEngineLauncher.launchText(context, engine, query, settings, longPressTriggered)
             dismissPanel()
         } else if (mode == SearchMode.IMAGE && imageBitmap != null) {
             if (engine.id == "slideindex_aggregate_image_search") {

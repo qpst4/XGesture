@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 全局拖拽流转（独立资源文件，避免改动现有 strings.xml）。 -->
 <resources>
-    <string name="drag_drop_flow_title">グローバルドラッグ＆ドロップフロー</string>
+    <string name="drag_drop_flow_title">グローバルドラッグ＆ドロップフローバー</string>
 
     <!-- 设置页 -->
     <string name="drag_drop_flow_section_basic">基本機能</string>
-    <string name="drag_drop_flow_enable_title">グローバルドラッグ＆ドロップフローを有効にする</string>
+    <string name="drag_drop_flow_enable_title">グローバルドラッグ＆ドロップフローバーを有効にする</string>
     <string name="drag_drop_flow_enable_summary">任意のアプリで画像やテキストを長押ししてドラッグを始めると、画面の端からフローバーが自動で現れます。</string>
     <string name="drag_drop_flow_section_layout">外観と位置</string>
     <string name="drag_drop_flow_position_title">フローバーの表示位置</string>
@@ -25,14 +25,21 @@
     <string name="drag_drop_flow_image_engines_summary">画像をドラッグしたときに表示する逆画像検索・ショッピング・SNS 共有のターゲット。</string>
     <string name="drag_drop_flow_file_engines_title">ファイル共有エンジン</string>
     <string name="drag_drop_flow_file_engines_summary">音声やファイルをドラッグしたときの共有先アプリと並び順を管理します。</string>
-    <string name="drag_drop_flow_guide">• 起動方法：WeChat、ギャラリー、ブラウザなどシステムのドラッグに対応したアプリで、テキストや画像を長押ししてドラッグするとフローバーが現れます。\n• 端でのスクロール：ターゲットが多いときは、バーの両端までドラッグすると自動でスムーズにスクロールします。\n• 破棄とキャンセル：「キャンセル」の上で離すと元のアプリに影響を与えずにこのフローを破棄できます。「復元」の上で離すと元の状態を保ちます。</string>
+    <string name="drag_drop_flow_guide">• 起動方法：システムのドラッグに対応したアプリで、テキストや画像を長押ししてドラッグすると、画面の端からフローバーが現れます。すべてのアプリが対応しているわけではなく、長押しでメニューが出るだけならドラッグは始まりません。\n• 端でのスクロール：ターゲットが多いときは、バーの両端までドラッグすると自動でスムーズにスクロールします。\n• 破棄とキャンセル：「キャンセル」の上で離すと元のアプリに影響を与えずにこのフローを破棄できます。「復元」の上で離すと元の状態を保ちます。</string>
 
     <!-- 扩展中心入口状态副标题 -->
-    <string name="drag_drop_flow_hub_status_bottom">オン · 下端</string>
-    <string name="drag_drop_flow_hub_status_left">オン · 左端</string>
-    <string name="drag_drop_flow_hub_status_right">オン · 右端</string>
-    <string name="drag_drop_flow_hub_status_ring">オン · リングコンパス</string>
-    <string name="drag_drop_flow_hub_status_off">オフ · 長押しドラッグでクイックフローと画像検索</string>
+    <string name="drag_drop_flow_hub_status_bottom">オン · 長押しドラッグで呼び出し · 下端バー</string>
+    <string name="drag_drop_flow_hub_status_left">オン · 長押しドラッグで呼び出し · 左端バー</string>
+    <string name="drag_drop_flow_hub_status_right">オン · 長押しドラッグで呼び出し · 右端バー</string>
+    <string name="drag_drop_flow_hub_status_ring">オン · 長押しドラッグで呼び出し · リングコンパス</string>
+    <string name="drag_drop_flow_hub_status_off">オフ · テキストや画像を長押ししてドラッグするとフローバーを呼び出せます</string>
+
+    <!-- 触发引导与自检 -->
+    <string name="drag_drop_flow_trigger_hint">呼び出し方：システムのドラッグに対応したアプリで、テキストや画像を長押ししてドラッグします。対応していないアプリでは長押しメニューが出るだけで、ドラッグは始まりません。</string>
+    <string name="drag_drop_flow_enabled_toast">オン：対応アプリでテキストや画像を長押ししてドラッグすると呼び出せます</string>
+    <string name="drag_drop_flow_demo_title">試してみる</string>
+    <string name="drag_drop_flow_demo_body">下のテキストを長押ししてドラッグすると、画面の端からフローバーが現れます。ターゲットの上で離すと送信できます。</string>
+    <string name="drag_drop_flow_demo_sample">長押ししてフローバーまでドラッグ</string>
 
     <!-- 流转栏 -->
     <string name="drag_drop_flow_restore">復元</string>
@@ -62,6 +69,7 @@
     <string name="drag_drop_flow_toast_launch_failed">対象のアプリを起動できません</string>
     <string name="drag_drop_flow_toast_target_missing">このターゲットはフローバーにありません</string>
     <string name="drag_drop_flow_toast_text_copied">テキストをクリップボードにコピーしました</string>
+    <string name="drag_drop_flow_toast_text_unreadable">ドラッグしたテキストを読み取れません</string>
     <string name="drag_drop_flow_toast_share_failed">共有に失敗しました</string>
     <string name="drag_drop_flow_toast_pinned">画面に固定しました</string>
     <string name="drag_drop_flow_toast_no_text">画像からテキストを認識できませんでした</string>

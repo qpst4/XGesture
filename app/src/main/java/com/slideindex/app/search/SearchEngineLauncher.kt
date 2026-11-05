@@ -43,8 +43,10 @@ object SearchEngineLauncher {
 
     fun launchTextShare(context: Context, engine: SearchEngineConfig, text: String): Boolean {
         if (engine.engineType != SearchEngineType.SHARE_TO_APP) return false
-        val pkg = engine.targetPackage?.takeIf { it.isNotBlank() } ?: return false
-        val activity = engine.targetActivity?.takeIf { it.isNotBlank() } ?: return false
+        // 没有可用的分享入口时不能静默返回 false：调用方（尤其是流转栏）拿到的 false
+        // 无法区分"没配置"和"用户取消"，不提示就又是一次"松手没反应"。
+        val pkg = engine.targetPackage?.takeIf { it.isNotBlank() } ?: return launchFailed(context)
+        val activity = engine.targetActivity?.takeIf { it.isNotBlank() } ?: return launchFailed(context)
         return FloatBallTextPick.shareTextTo(
             context,
             text,
@@ -52,7 +54,10 @@ object SearchEngineLauncher {
         )
     }
 
-    fun launch(
+    /**
+     * 跳转类引擎的实际启动。分享类不会走到这里——统一由 [dispatchTextEngine] 分派。
+     */
+    private fun launch(
         context: Context,
         engine: SearchEngineConfig,
         query: String,
@@ -71,20 +76,95 @@ object SearchEngineLauncher {
                 launchExternJump(context, engine, text, settings, longPressTriggered, null)
             SearchEngineType.JUMP_TO_ACTIVITY ->
                 launchJumpActivity(context, engine, text, settings, longPressTriggered, null)
+            // 只由 dispatchTextEngine 的 OPEN 分支调用，分享类到不了这里；
+            // 需要 bitmap / 文件的目标走 launchImageShare / 文件分享链路。
             SearchEngineType.SHARE_TO_APP,
             SearchEngineType.SHARE_IMAGE_TO_APP,
             SearchEngineType.SHARE_FILE_TO_APP,
-            -> false // use launchTextShare / launchImageShare instead
+            -> false
+        }
+    }
+
+    /**
+     * 文字类引擎的统一入口。
+     *
+     * 「分享到 App」的引擎不能走跳转链路：那个函数只处理跳转类，遇到分享类型会直接
+     * 返回 false（它没有 bitmap / 文件可给）。以前每个入口各抄一份 when 就漏了流转栏，
+     * 表现是把文字拖到「分享到 QQ」上松手完全没反应。
+     *
+     * 所有"已经拿到文字、要交给引擎"的入口都应该调这里，不要再自己判断 engineType。
+     */
+    fun launchText(
+        context: Context,
+        engine: SearchEngineConfig,
+        text: String,
+        settings: AppSettings,
+        longPressTriggered: Boolean = false,
+    ): Boolean = dispatchTextEngine(
+        context = context,
+        engine = engine,
+        text = text,
+        settings = settings,
+        longPressTriggered = longPressTriggered,
+        fullscreenOverride = null,
+    )
+
+    /**
+     * 同 [launchText]，但由调用方指定窗口形态（取词面板长按直搜用）。
+     * 窗口形态只对跳转类有意义，分享类会忽略它。
+     */
+    fun launchTextWithWindowMode(
+        context: Context,
+        engine: SearchEngineConfig,
+        text: String,
+        settings: AppSettings,
+        fullscreen: Boolean,
+    ): Boolean = dispatchTextEngine(
+        context = context,
+        engine = engine,
+        text = text,
+        settings = settings,
+        longPressTriggered = false,
+        fullscreenOverride = fullscreen,
+    )
+
+    /**
+     * 文字引擎唯一的执行入口：类型 → 执行方式只在这里判定。
+     *
+     * 调用方（流转栏 / 搜索面板 / 取词面板）不再各自写 when；新增入口只要调
+     * [launchText] 或 [launchTextWithWindowMode]，不会漏掉分享类。
+     */
+    private fun dispatchTextEngine(
+        context: Context,
+        engine: SearchEngineConfig,
+        text: String,
+        settings: AppSettings,
+        longPressTriggered: Boolean,
+        fullscreenOverride: Boolean?,
+    ): Boolean {
+        val value = text.trim()
+        if (value.isBlank()) {
+            Toast.makeText(context, R.string.search_engine_query_empty, Toast.LENGTH_SHORT).show()
+            return false
+        }
+        return when (textLaunchKind(engine.engineType)) {
+            TextLaunchKind.SHARE_TEXT -> launchTextShare(context, engine, value)
+            TextLaunchKind.OPEN -> if (fullscreenOverride == null) {
+                launch(context, engine, value, settings, longPressTriggered)
+            } else {
+                launchOpenWithWindowMode(context, engine, value, settings, fullscreenOverride)
+            }
+            TextLaunchKind.UNSUPPORTED -> launchFailed(context)
         }
     }
 
     /**
      * 以显式窗口形态启动文本搜索：`fullscreen = true` 全屏，`false` 小窗（小窗未开启时仍按全屏）。
      *
-     * 用于取词面板搜索按钮的长按直搜——此时窗口形态由手势当场指定，不再走启动策略的
-     * 「长按切换」判定。
+     * 只供 [dispatchTextEngine] 在"调用方指定了窗口形态"时使用；对外请走
+     * [launchTextWithWindowMode]，别直接调这里（否则又会绕过类型分派）。
      */
-    fun launchWithWindowMode(
+    private fun launchOpenWithWindowMode(
         context: Context,
         engine: SearchEngineConfig,
         query: String,
@@ -473,4 +553,23 @@ object SearchEngineLauncher {
             false
         }
     }
+}
+
+/**
+ * 文字引擎的执行方式：所有"拿文字去执行引擎"的入口都必须按这里分派。
+ *
+ * 单独抽成纯函数是为了能直接单测——漏掉一个分支的表现就是"点了/拖了没反应"，
+ * 而这种错误编译器不会报（[SearchEngineLauncher.launch] 返回 Boolean，漏了也是合法返回）。
+ */
+internal enum class TextLaunchKind { OPEN, SHARE_TEXT, UNSUPPORTED }
+
+internal fun textLaunchKind(type: SearchEngineType): TextLaunchKind = when (type) {
+    SearchEngineType.SHARE_TO_APP -> TextLaunchKind.SHARE_TEXT
+    SearchEngineType.SHARE_IMAGE_TO_APP,
+    SearchEngineType.SHARE_FILE_TO_APP,
+    -> TextLaunchKind.UNSUPPORTED
+    SearchEngineType.DIRECT_LINK,
+    SearchEngineType.EXTERN_JUMP_LINK,
+    SearchEngineType.JUMP_TO_ACTIVITY,
+    -> TextLaunchKind.OPEN
 }

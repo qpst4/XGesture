@@ -35,6 +35,7 @@ import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toBitmap
 import com.slideindex.app.R
 import com.slideindex.app.di.OverlayDependencyAccess
+import com.slideindex.app.diagnostic.EdgeDiag
 import com.slideindex.app.ocr.OcrDependencyAccess
 import com.slideindex.app.ocr.OcrRecognizeResult
 import com.slideindex.app.overlay.FloatBallImageSearchPanel
@@ -87,6 +88,9 @@ class DragDropFlowController(
 ) {
     companion object {
         private const val TAG = "DragDropFlow"
+
+        /** 诊断埋点 tag：随「分享诊断报告」一起导出，release 正式包默认不记录。 */
+        private const val DIAG_TAG = "DragFlow"
 
         /** 转发缓存目录：拖进来的外部文件先落一份在这里，再经 FileProvider 转交给目标应用。 */
         private const val FORWARD_CACHE_DIR = "drag_forward"
@@ -214,7 +218,10 @@ class DragDropFlowController(
         }
 
         val added = runCatching { windowManager.addView(view, anchor) }
-            .onFailure { Log.e(TAG, "addView failed", it) }
+            .onFailure {
+                Log.e(TAG, "addView failed", it)
+                EdgeDiag.log(DIAG_TAG, "anchor addView failed: ${it.message}")
+            }
             .isSuccess
 
         if (!added) {
@@ -229,6 +236,7 @@ class DragDropFlowController(
         this.isExpanded = false
 
         Log.d(TAG, "DragDropFlow anchor window attached (1px idle)")
+        EdgeDiag.log(DIAG_TAG, "anchor attached")
         return true
     }
 
@@ -302,6 +310,9 @@ class DragDropFlowController(
         when (event.action) {
             DragEvent.ACTION_DRAG_STARTED -> {
                 val desc = event.clipDescription ?: return false
+                val mimes = (0 until desc.mimeTypeCount).mapNotNull { index ->
+                    runCatching { desc.getMimeType(index) }.getOrNull()
+                }
                 val hasImage = desc.hasMimeType("image/*")
                 val hasAudio = desc.hasMimeType("audio/*") ||
                     desc.hasMimeType("audio/mp4")
@@ -312,6 +323,7 @@ class DragDropFlowController(
                     desc.hasMimeType(ClipDescription.MIMETYPE_TEXT_HTML)
 
                 if (!hasImage && !hasText && !hasFile) {
+                    EdgeDiag.log(DIAG_TAG, "ignored mimes=$mimes")
                     return false
                 }
 
@@ -333,6 +345,10 @@ class DragDropFlowController(
                 itemsState.value = dockItems
                 currentHoveredId = null
                 isHandlingDrop = false
+                EdgeDiag.log(
+                    DIAG_TAG,
+                    "started mimes=$mimes items=${dockItems.joinToString(",") { it.id }}",
+                )
 
                 // 本应用注册过拖拽源就认领这次拖拽：之后源只负责藏好自己，
                 // "结束后恢复还是关掉"由下面 DROP / DRAG_ENDED 统一决定。
@@ -366,6 +382,14 @@ class DragDropFlowController(
             DragEvent.ACTION_DROP -> {
                 val targetId = currentHoveredId
                 val clipData = event.clipData
+                val droppedTextLength = runCatching {
+                    clipData?.getItemAt(0)?.text?.length ?: -1
+                }.getOrDefault(-1)
+                EdgeDiag.log(
+                    DIAG_TAG,
+                    "drop hovered=$targetId clipItems=${clipData?.itemCount ?: -1} " +
+                        "textLen=$droppedTextLength",
+                )
 
                 // 只松在「操作」枢纽上（还没展开到动作项）不算选中任何目标：
                 // 不消费这次 drop，也别把「已处理」的标记打上。
@@ -415,6 +439,10 @@ class DragDropFlowController(
                 val droppedTarget = currentHoveredId
                 currentHoveredId = null
                 visibleState.value = false
+                EdgeDiag.log(
+                    DIAG_TAG,
+                    "ended result=${event.result} handled=$isHandlingDrop target=$droppedTarget",
+                )
 
                 // 没落在本栏的项上（或落在空白处）时才由这里定案：
                 // result=true = 内容已被某个目标接收（在其它应用里松的手），关掉源；
@@ -652,7 +680,10 @@ class DragDropFlowController(
         scope.launch(Dispatchers.IO) {
             val item = clipData.getItemAt(0) ?: return@launch
             val uri = item.uri
-            val text = item.text?.toString()
+            // 纯文本优先，其次 HTML（网页 / 部分编辑器只给 htmlText）。两者都没有时 text 为 null，
+            // 下面引擎分支会明确提示，而不是静默什么都不做。
+            val text = item.text?.toString()?.takeIf { it.isNotBlank() }
+                ?: item.htmlText?.takeIf { it.isNotBlank() }
 
             withContext(Dispatchers.Main) {
                 when {
@@ -740,10 +771,23 @@ class DragDropFlowController(
                         val engineId = targetId.removePrefix("engine_")
                         val engine = latestSettings.dragFlowTextEngines.find { it.id == engineId }
                         if (engine != null) {
-                            SearchEngineLauncher.launch(context, engine, text, latestSettings)
+                            // 统一走 launchText：「分享到 App」的引擎由它转去 launchTextShare。
+                            // 这里再自己判断 engineType 就会再次漏掉分享类（历史 bug：拖到 QQ 松手没反应）。
+                            val launched = SearchEngineLauncher.launchText(context, engine, text, latestSettings)
+                            EdgeDiag.log(
+                                DIAG_TAG,
+                                "engine id=${engine.id} type=${engine.engineType} " +
+                                    "pkg=${engine.targetPackage} launched=$launched",
+                            )
                         } else {
+                            EdgeDiag.log(DIAG_TAG, "engine missing id=$engineId")
                             Toast.makeText(context, context.getString(R.string.drag_drop_flow_toast_target_missing), Toast.LENGTH_SHORT).show()
                         }
+                    }
+                    targetId.startsWith("engine_") -> {
+                        // 拖过来的只有 URI 或纯 HTML，没有可交给引擎的文字：明确提示，别静默。
+                        EdgeDiag.log(DIAG_TAG, "engine dropped without text id=$targetId")
+                        Toast.makeText(context, context.getString(R.string.drag_drop_flow_toast_text_unreadable), Toast.LENGTH_SHORT).show()
                     }
                     targetId == "copy_text" && !text.isNullOrBlank() -> {
                         FloatBallTextPick.copyText(context, text)
