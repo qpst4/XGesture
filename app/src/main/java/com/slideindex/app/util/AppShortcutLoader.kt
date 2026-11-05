@@ -8,6 +8,8 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.widget.Toast
+import com.slideindex.app.R
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemCodec
@@ -368,6 +370,12 @@ object AppShortcutLoader {
             }
             return
         }
+        if (item.isServiceShortcut) {
+            item.shortcutIntent?.let { intent ->
+                launchServiceShortcut(context, packageName, intent)
+                return
+            }
+        }
         val intentUris = item.intentUris
         if (!intentUris.isNullOrEmpty()) {
             launchShortcutIntents(context, intentUris)
@@ -382,9 +390,33 @@ object AppShortcutLoader {
                     context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 }.onFailure { fallbackError ->
                     Log.e(TAG, "launchShortcut($packageName) direct failed", fallbackError)
+                    Toast.makeText(context, R.string.float_ball_action_failed, Toast.LENGTH_SHORT).show()
                 }
             }
         }
+    }
+
+    /**
+     * 服务快捷方式优先保留完整 Intent；未导出组件必须走统一启动出口，
+     * 不能再交给普通 startActivity / am start。
+     */
+    private fun launchServiceShortcut(
+        context: Context,
+        packageName: String,
+        intent: Intent,
+    ) {
+        ShortcutLaunchDispatcher.launch(
+            context = context,
+            packageName = packageName,
+            intent = intent,
+            exportedLaunch = { target ->
+                context.startActivity(LaunchTrampolineActivity.createIntent(context, target))
+                true
+            },
+            onFailure = { failure ->
+                ShortcutLaunchDispatcher.showFailure(context, failure)
+            },
+        )
     }
 
     fun CreatedShortcut.toQuickLauncherItem(): QuickLauncherItem {

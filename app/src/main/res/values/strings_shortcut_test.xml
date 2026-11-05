@@ -29,7 +29,7 @@
     <string name="shortcut_test_rescan">Rescan</string>
     <string name="shortcut_test_source_root">Root</string>
     <string name="shortcut_test_source_shizuku">Shizuku</string>
-    <string name="shortcut_port_tip">Scan the system shortcut service, then execute the generated am start command as Root or Shizuku.</string>
+    <string name="shortcut_port_tip">Scan the system shortcut service, then launch through the unified shortcut launcher as Root or Shizuku.</string>
     <string name="shortcut_port_loading">Loading shortcuts…</string>
     <string name="shortcut_port_ready">%1$d shortcuts</string>
     <string name="shortcut_port_exec_success">Command succeeded: %1$s</string>

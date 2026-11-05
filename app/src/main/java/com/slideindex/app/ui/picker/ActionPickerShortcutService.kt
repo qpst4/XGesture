@@ -122,6 +122,7 @@ suspend fun loadActionPickerShortcutService(
                 label = item.name.ifBlank { item.title.ifBlank { item.pkg } },
                 type = TaskSwitcherMenuItemType.SHORTCUT,
                 shortcutId = item.shortcut,
+                shortcutIntent = manager.intentOf(item),
                 intentUris = listOfNotNull(item.toIntentUri()),
                 kind = kind,
                 isServiceShortcut = true,

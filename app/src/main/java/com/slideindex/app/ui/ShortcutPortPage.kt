@@ -59,7 +59,10 @@ import com.slideindex.app.shortcut.port.ShortCutItem
 import com.slideindex.app.shortcut.port.ShortCutManager
 import com.slideindex.app.shortcut.port.ShortcutPortEntry
 import com.slideindex.app.shortcut.port.ShortcutRootBatchReader
+import com.slideindex.app.shortcut.port.toCurrentIntent
+import com.slideindex.app.service.LaunchTrampolineActivity
 import com.slideindex.app.util.ShortcutKind
+import com.slideindex.app.util.ShortcutLaunchDispatcher
 import com.slideindex.app.ui.miuix.MiuixProgressCard
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffoldWithExpandableSearch
@@ -167,7 +170,11 @@ fun ShortcutPortPage(onBack: () -> Unit) {
                     }
                 }
                 entries = manager.fullData().map {
-                    ShortcutPortEntry(item = it, kinds = manager.kindsOf(it))
+                    ShortcutPortEntry(
+                        item = it,
+                        kinds = manager.kindsOf(it),
+                        intent = manager.intentOf(it) ?: it.toCurrentIntent(),
+                    )
                 }
             }
             scanDurationMs = SystemClock.elapsedRealtime() - startedAt
@@ -211,50 +218,30 @@ fun ShortcutPortPage(onBack: () -> Unit) {
         }
     }
 
-    fun executeItem(item: ShortCutItem) {
-        scope.launch {
-            var error: Throwable? = null
-            val mode = activeMode
-            val result = try {
-                withContext(Dispatchers.IO) {
-                    when (mode) {
-                        PrivilegeMode.ROOT -> {
-                            if (!rootPermission(rootShell)) {
-                                throw IllegalStateException("Root 不可用")
-                            }
-                            rootExec(rootShell, item.toIntent())
-                        }
-                        PrivilegeMode.SHIZUKU -> {
-                            if (!shizukuPermission(shizukuShell)) {
-                                throw IllegalStateException("Shizuku 权限不可用")
-                            }
-                            shizukuExec(shizukuShell, item.toIntent())
-                        }
-                    }
-                }
-            } catch (throwable: Throwable) {
-                error = throwable
-                ""
-            }
-            Log.d("ShortcutPort", "execute output: $result")
-            val requiresRoot = mode == PrivilegeMode.SHIZUKU && looksLikeRootRequired(result)
-            val failure = when {
-                error != null -> error.message.orEmpty()
-                requiresRoot -> context.getString(R.string.shortcut_port_requires_root)
-                result.isBlank() -> context.getString(R.string.shortcut_port_exec_no_output)
-                looksLikeAmFailure(result) -> result.trim()
-                else -> null
-            }
-            Toast.makeText(
-                context,
-                if (failure != null) {
-                    context.getString(R.string.shortcut_port_exec_failed, failure.take(600))
-                } else {
-                    context.getString(R.string.shortcut_port_exec_success, result.trim().take(300))
-                },
-                Toast.LENGTH_LONG,
-            ).show()
-        }
+    fun executeItem(entry: ShortcutPortEntry) {
+        ShortcutLaunchDispatcher.launch(
+            context = context,
+            packageName = entry.item.pkg,
+            intent = entry.intent,
+            exportedLaunch = { intent ->
+                context.startActivity(LaunchTrampolineActivity.createIntent(context, intent))
+                true
+            },
+            onResult = { success ->
+                Toast.makeText(
+                    context,
+                    if (success) {
+                        context.getString(R.string.shortcut_port_exec_success, "OK")
+                    } else {
+                        context.getString(R.string.shortcut_port_exec_failed, "launch failed")
+                    },
+                    Toast.LENGTH_LONG,
+                ).show()
+            },
+            onFailure = { failure ->
+                ShortcutLaunchDispatcher.showFailure(context, failure)
+            },
+        )
     }
 
     SettingsLazyScreenScaffoldWithExpandableSearch(
@@ -328,7 +315,7 @@ fun ShortcutPortPage(onBack: () -> Unit) {
                             ShortcutPortRow(
                                 entry = entry,
                                 onCopy = { copyItem(entry.item) },
-                                onExecute = { executeItem(entry.item) },
+                                onExecute = { executeItem(entry) },
                             )
                         }
                     },
