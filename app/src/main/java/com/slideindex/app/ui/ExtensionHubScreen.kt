@@ -5,6 +5,7 @@ package com.slideindex.app.ui
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Shortcut
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Gavel
@@ -59,6 +60,7 @@ fun ExtensionHubScreen(
     onOpenSettingsBackup: () -> Unit,
     onOpenNativeEnginePacks: () -> Unit,
     onOpenDiagnosticLogs: () -> Unit,
+    onOpenShortcutTest: () -> Unit = {},
     onOpenAbout: () -> Unit,
 ) {
     val listState = rememberLazyListState()
@@ -241,6 +243,21 @@ fun ExtensionHubScreen(
                             title = stringResource(R.string.share_sheet_settings_title),
                             subtitle = stringResource(R.string.share_sheet_hub_subtitle),
                             onClick = onOpenShareSheet,
+                        )
+                    }
+                )
+                add(
+                    settingsCardScopeItem("shortcut-test") {
+                        SettingNavigationRow(
+                            icon = { label ->
+                                Icon(
+                                    Icons.AutoMirrored.Filled.Shortcut,
+                                    contentDescription = label,
+                                )
+                            },
+                            title = stringResource(R.string.extension_shortcut_test_title),
+                            subtitle = stringResource(R.string.extension_shortcut_test_subtitle),
+                            onClick = onOpenShortcutTest,
                         )
                     }
                 )

@@ -1,10 +1,14 @@
 package com.slideindex.app.util
 
 object ShortcutShellParser {
-    private const val FLAG_DISABLED = 1 shl 0
+    // Keep in sync with android.content.pm.ShortcutInfo:
+    // FLAG_DYNAMIC=1<<0, FLAG_PINNED=1<<1, FLAG_MANIFEST=1<<2, FLAG_CACHED=1<<3.
+    // The dump prints raw ShortcutInfo flags; mapping manifest/cached as 4/8
+    // (the previous values) mislabels every shortcut kind.
+    private const val FLAG_DYNAMIC = 1 shl 0
     private const val FLAG_PINNED = 1 shl 1
-    private const val FLAG_DYNAMIC = 1 shl 2
-    private const val FLAG_MANIFEST = 1 shl 3
+    private const val FLAG_MANIFEST = 1 shl 2
+    private const val FLAG_CACHED = 1 shl 3
 
     private val idPattern = Regex("""(?mi)\bid=([^,\s}]+)""")
     private val packagePattern = Regex("""(?mi)\bpackageName=([^,\s}]+)""")

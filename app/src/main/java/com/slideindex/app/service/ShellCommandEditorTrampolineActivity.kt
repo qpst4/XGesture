@@ -89,17 +89,13 @@ class ShellCommandEditorTrampolineActivity : ComponentActivity() {
                     } else {
                         null
                     },
-                    onTest = if (shizukuGranted) {
-                        { command, callback ->
-                            scope.launch {
-                                val outcome = withContext(Dispatchers.IO) {
-                                    ShellCommandRunner.execute(this@ShellCommandEditorTrampolineActivity, command)
-                                }
-                                callback(outcome.exitCode, outcome.output)
+                    onTest = { command, callback ->
+                        scope.launch {
+                            val outcome = withContext(Dispatchers.IO) {
+                                ShellCommandRunner.execute(this@ShellCommandEditorTrampolineActivity, command)
                             }
+                            callback(outcome.exitCode, outcome.output)
                         }
-                    } else {
-                        null
                     },
                     registerBackHandler = { dismissRequest = it }
                 )

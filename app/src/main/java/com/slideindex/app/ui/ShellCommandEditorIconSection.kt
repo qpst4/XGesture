@@ -5,6 +5,8 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,19 +16,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Apps
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Title
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -50,6 +48,19 @@ import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import top.yukonga.miuix.kmp.basic.Button as MiuixButton
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator as MiuixCircularProgressIndicator
+import top.yukonga.miuix.kmp.basic.DropdownDefaults
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Edit
+import top.yukonga.miuix.kmp.icon.extended.GridView
+import top.yukonga.miuix.kmp.icon.extended.Image
+import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 internal data class ShellCommandIconDraft(
     val iconType: ShellCommandIconType = ShellCommandIconType.OTHER,
@@ -173,6 +184,7 @@ internal fun ShellCommandAppIconPickerScreen(
 @Composable
 internal fun ShellCommandEditorIconSection(
     label: String,
+    onLabelChange: (String) -> Unit,
     initial: ShellCommand?,
     iconDraft: ShellCommandIconDraft,
     onIconDraftChange: (ShellCommandIconDraft) -> Unit,
@@ -219,83 +231,97 @@ internal fun ShellCommandEditorIconSection(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(modifier = Modifier.size(56.dp)) {
-                val pendingBitmap = pendingPreviewBitmap
-                if (pendingBitmap != null) {
-                    Image(
-                        bitmap = pendingBitmap.asImageBitmap(),
-                        contentDescription = label,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(13.dp)),
-                        contentScale = ContentScale.Crop,
-                    )
-                } else {
-                    ShellCommandIcon(
-                        command = preview,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
-            }
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    ShellIconSourceButton(
+            val pickImageText = stringResource(R.string.search_engine_pick_icon)
+            val pickAppText = stringResource(R.string.search_engine_pick_app_icon)
+            val textIconText = stringResource(R.string.search_engine_text_icon)
+            val resetIconText = stringResource(R.string.shell_panel_reset_icon)
+            val menuItems = buildList {
+                add(
+                    DropdownItem(
+                        text = pickImageText,
                         onClick = { iconPicker.launch("image/*") },
-                        enabled = true,
-                        isLoading = false,
-                        icon = Icons.Default.Image,
-                        label = stringResource(R.string.search_engine_pick_icon),
-                        modifier = Modifier.weight(1f),
-                    )
-                    ShellIconSourceButton(
-                        onClick = onPickAppIcon,
-                        enabled = !isSavingAppIcon,
-                        isLoading = isSavingAppIcon,
-                        icon = Icons.Default.Apps,
-                        label = stringResource(
-                            if (isSavingAppIcon) {
-                                R.string.search_engine_pick_app_icon_loading
-                            } else {
-                                R.string.search_engine_pick_app_icon
-                            },
-                        ),
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    ShellIconSourceButton(
+                    ),
+                )
+                add(
+                    DropdownItem(
+                        text = pickAppText,
+                        onClick = { onPickAppIcon() },
+                    ),
+                )
+                add(
+                    DropdownItem(
+                        text = textIconText,
                         onClick = { showTextIconDialog = true },
-                        enabled = true,
-                        isLoading = false,
-                        icon = Icons.Default.Title,
-                        label = stringResource(R.string.search_engine_text_icon),
-                        modifier = Modifier.weight(1f),
-                    )
-                    if (iconDraft.hasSelection(initial)) {
-                        TextButton(
+                    ),
+                )
+                if (iconDraft.hasSelection(initial)) {
+                    add(
+                        DropdownItem(
+                            text = resetIconText,
                             onClick = {
                                 discardShellPendingIconPath(context, iconDraft.iconPath, initial?.iconPath)
                                 onIconDraftChange(ShellCommandIconDraft())
                             },
-                            modifier = Modifier.weight(1f),
+                        ),
+                    )
+                }
+            }
+
+            OverlayIconDropdownMenu(
+                entry = DropdownEntry(items = menuItems),
+                modifier = Modifier.size(56.dp),
+                minWidth = 56.dp,
+                minHeight = 56.dp,
+                cornerRadius = 16.dp,
+                backgroundColor = MiuixTheme.colorScheme.surfaceContainerHigh,
+                maxHeight = 320.dp,
+                dropdownColors = DropdownDefaults.dropdownColors(),
+                renderInRootScaffold = true,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(16.dp)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    val pendingBitmap = pendingPreviewBitmap
+                    if (pendingBitmap != null) {
+                        Image(
+                            bitmap = pendingBitmap.asImageBitmap(),
+                            contentDescription = label,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(16.dp)),
+                            contentScale = ContentScale.Crop,
+                        )
+                    } else {
+                        ShellCommandIcon(
+                            command = preview,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                    if (isSavingAppIcon) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MiuixTheme.colorScheme.surface.copy(alpha = 0.55f)),
+                            contentAlignment = Alignment.Center,
                         ) {
-                            Text(
-                                text = stringResource(R.string.shell_panel_reset_icon),
-                                style = MaterialTheme.typography.labelSmall,
-                                maxLines = 1,
-                            )
+                            MiuixCircularProgressIndicator(modifier = Modifier.size(20.dp))
                         }
                     }
                 }
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                MiuixLabeledTextField(
+                    value = label,
+                    onValueChange = onLabelChange,
+                    label = stringResource(R.string.shell_panel_label_field),
+                    useLabelAsPlaceholder = false,
+                )
             }
         }
     }
@@ -335,21 +361,20 @@ private fun ShellIconSourceButton(
     label: String,
     modifier: Modifier = Modifier,
 ) {
-    OutlinedButton(
+    MiuixButton(
         onClick = onClick,
         enabled = enabled && !isLoading,
         modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
     ) {
         if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.size(18.dp))
+            MiuixCircularProgressIndicator(modifier = Modifier.size(18.dp))
         } else {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+            MiuixIcon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
         }
-        Text(
+        MiuixText(
             text = label,
             modifier = Modifier.padding(start = 4.dp),
-            style = MaterialTheme.typography.labelSmall,
+            style = MiuixTheme.textStyles.footnote1,
             maxLines = 1,
         )
     }

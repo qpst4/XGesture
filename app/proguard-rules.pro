@@ -148,3 +148,11 @@
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
+
+# ---------------------------------------------------------------------------
+# ShortCuts port: Shizuku loads UserService by class name
+# ---------------------------------------------------------------------------
+-keep class com.slideindex.app.shortcut.port.UserService { *; }
+-keep interface com.slideindex.app.shortcut.port.IUserService { *; }
+-keep class com.slideindex.app.shortcut.port.IUserService$Stub { *; }
+-keep class com.slideindex.app.shortcut.port.IUserService$Stub$Proxy { *; }

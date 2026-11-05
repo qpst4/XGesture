@@ -20,6 +20,7 @@ import com.slideindex.app.privilege.PrivilegeGateway
 import com.slideindex.app.privilege.RootPrivilegedOperations
 import com.slideindex.app.privilege.root.RootTaskManagerServiceHost
 import com.slideindex.app.settings.PrivilegeMode
+import com.slideindex.app.shell.ShellExecutionMode
 import com.slideindex.app.shizuku.ITaskManagerService
 import com.slideindex.app.shizuku.ShizukuUserServiceHost
 import rikka.shizuku.Shizuku
@@ -757,6 +758,27 @@ object TaskManagerUtil {
             useRoot = useRoot,
             timeoutMs = timeoutMs,
         )
+    }
+
+    /**
+     * Explicit per-command routing. Never falls back to the other privilege mode.
+     */
+    fun runShellCommandLineExplicit(
+        command: String,
+        mode: ShellExecutionMode,
+        timeoutMs: Long = 35_000L,
+    ): ShellCommandResult = when (mode) {
+        ShellExecutionMode.ROOT ->
+            RootPrivilegedOperations.runShellCommandLine(command, timeoutMs)
+        ShellExecutionMode.SHIZUKU ->
+            TaskManagerUtilShell.runShellCommandLine(
+                hasPermission = hasShizukuPermission(),
+                bindFreshService = ::bindFreshService,
+                readServiceApi = ::readServiceApi,
+                command = command,
+                useRoot = false,
+                timeoutMs = timeoutMs,
+            )
     }
 
     internal inline fun <reified T> runOnTaskWorker(noinline block: () -> T): T {

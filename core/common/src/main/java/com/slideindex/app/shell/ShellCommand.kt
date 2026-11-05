@@ -10,6 +10,9 @@ data class ShellCommand(
     /** Relative path under app files dir, e.g. shell_icons/custom-xxx.png */
     val iconPath: String? = null,
     val textIcon: String? = null,
+    /** null only for legacy commands saved before per-command modes existed. */
+    val executionMode: ShellExecutionMode? = ShellExecutionMode.SHIZUKU,
+    val resultDisplay: ShellResultDisplay = ShellResultDisplay.DIALOG,
 ) {
     fun hasCustomIcon(): Boolean = when (iconType) {
         ShellCommandIconType.URI -> !iconPath.isNullOrBlank()
@@ -32,6 +35,8 @@ object ShellCommandCodec {
             item.iconType.name,
             item.iconPath.orEmpty(),
             item.textIcon.orEmpty(),
+            item.executionMode?.storageValue.orEmpty(),
+            item.resultDisplay.storageValue,
         ).joinToString(SEP)
 
     fun decode(raw: String): ShellCommand? {
@@ -48,6 +53,8 @@ object ShellCommandCodec {
         }
         val iconPath = parts.getOrNull(4)?.takeIf { it.isNotBlank() }
         val textIcon = parts.getOrNull(5)?.takeIf { it.isNotBlank() }
+        val executionMode = ShellExecutionMode.fromStorage(parts.getOrNull(6))
+        val resultDisplay = ShellResultDisplay.fromStorage(parts.getOrNull(7))
         return ShellCommand(
             id = id,
             label = label,
@@ -55,6 +62,8 @@ object ShellCommandCodec {
             iconType = iconType,
             iconPath = iconPath,
             textIcon = textIcon,
+            executionMode = executionMode,
+            resultDisplay = resultDisplay,
         )
     }
 

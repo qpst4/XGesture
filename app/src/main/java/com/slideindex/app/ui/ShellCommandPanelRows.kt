@@ -22,6 +22,10 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +37,8 @@ import com.slideindex.app.privilege.PrivilegeGateway
 import com.slideindex.app.privilege.PrivilegeUiStrings
 import androidx.compose.foundation.layout.width
 import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.shell.ShellExecutionMode
+import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.settings.components.SettingLinkRow
 import com.slideindex.app.ui.settings.components.SettingsCardRow
 import com.slideindex.app.ui.settings.components.SettingsCardScope
@@ -40,8 +46,67 @@ import com.slideindex.app.ui.settings.components.SettingsCardSegmentContent
 import com.slideindex.app.ui.settings.components.settingsCardItems
 import com.slideindex.app.ui.settings.components.settingsGroupedRowBackground
 import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.icon.extended.Refresh
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+internal fun ShellRootStatusCard(
+    rootAvailable: Boolean?,
+    checking: Boolean,
+    onCheck: () -> Unit,
+    embeddedInOverlay: Boolean = false,
+) {
+    val card = settingsCardItems(rootAvailable, checking) {
+        SettingsCardRow(key = "shell_root_status") { position ->
+            BasicComponent(
+                modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
+                title = stringResource(R.string.shell_panel_root_status_title),
+                summary = when {
+                    checking -> stringResource(R.string.shell_panel_root_unknown)
+                    rootAvailable == true -> stringResource(R.string.shell_panel_root_ready)
+                    rootAvailable == false -> stringResource(R.string.shell_panel_root_unavailable)
+                    else -> stringResource(R.string.shell_panel_root_unknown)
+                },
+                startAction = {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(
+                                when {
+                                    checking -> MaterialTheme.colorScheme.outline
+                                    rootAvailable == true -> MaterialTheme.colorScheme.primary
+                                    rootAvailable == false -> MaterialTheme.colorScheme.error
+                                    else -> MaterialTheme.colorScheme.outline
+                                },
+                            ),
+                    )
+                },
+                endActions = {
+                    if (checking) {
+                        LoadingIndicator(modifier = Modifier.size(20.dp))
+                    } else {
+                        IconButton(onClick = onCheck) {
+                            Icon(
+                                MiuixIcons.Medium.Refresh,
+                                contentDescription = stringResource(R.string.shell_panel_root_check),
+                            )
+                        }
+                    }
+                },
+            )
+        }
+    }
+    if (embeddedInOverlay) {
+        SettingsCardSegmentContent { card.RenderRows() }
+    } else {
+        card.RenderRows()
+    }
+}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -109,6 +174,109 @@ internal fun ShellShizukuStatusCard(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
+internal fun ShellExecutionEnvironmentCard(
+    rootAvailable: Boolean?,
+    checkingRoot: Boolean,
+    onCheckRoot: () -> Unit,
+    shizukuGranted: Boolean,
+    restartingService: Boolean,
+    onRequestShizuku: () -> Unit,
+    onRestartService: () -> Unit,
+) {
+    val rootText = when {
+        checkingRoot -> stringResource(R.string.shell_panel_root_unknown)
+        rootAvailable == true -> stringResource(R.string.shell_panel_root_ready)
+        rootAvailable == false -> stringResource(R.string.shell_panel_root_unavailable)
+        else -> stringResource(R.string.shell_panel_root_unknown)
+    }
+    val shizukuText = if (shizukuGranted) {
+        stringResource(R.string.shell_panel_shizuku_ready)
+    } else {
+        stringResource(R.string.shell_panel_shizuku_unavailable)
+    }
+    val shizukuNeedsGrant = !shizukuGranted && PrivilegeGateway.isShizukuMode()
+    var showDetails by remember { mutableStateOf(false) }
+    val statusColor = when {
+        checkingRoot || restartingService -> MaterialTheme.colorScheme.outline
+        rootAvailable == false || shizukuNeedsGrant -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.primary
+    }
+
+    val card = settingsCardItems(rootAvailable, checkingRoot, shizukuGranted, restartingService) {
+        SettingsCardRow(key = "shell_environment") { position ->
+            BasicComponent(
+                modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
+                title = stringResource(R.string.shell_panel_environment_title),
+                summary = "Root $rootText · Shizuku $shizukuText",
+                onClick = { showDetails = true },
+                startAction = {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(statusColor),
+                    )
+                },
+                endActions = {
+                    when {
+                        checkingRoot || restartingService -> {
+                            LoadingIndicator(modifier = Modifier.size(20.dp))
+                        }
+                        shizukuNeedsGrant -> {
+                            MiuixTextButton(
+                                text = stringResource(PrivilegeUiStrings.shellPanelGrantTitleRes()),
+                                onClick = onRequestShizuku,
+                            )
+                        }
+                        else -> {
+                            IconButton(onClick = onCheckRoot) {
+                                Icon(
+                                    MiuixIcons.Medium.Refresh,
+                                    contentDescription = stringResource(R.string.shell_panel_root_check),
+                                )
+                            }
+                        }
+                    }
+                },
+            )
+        }
+    }
+    card.RenderRows()
+
+    if (showDetails) {
+        MiuixFormDialog(
+            show = true,
+            onDismissRequest = { showDetails = false },
+            title = stringResource(R.string.shell_panel_environment_title),
+            confirmText = stringResource(R.string.confirm),
+            onConfirm = { showDetails = false },
+            dismissText = null,
+        ) {
+            Column {
+                Text("Root：$rootText")
+                Spacer(Modifier.height(4.dp))
+                Text("Shizuku：$shizukuText")
+                Spacer(Modifier.height(16.dp))
+                MiuixTextButton(
+                    text = stringResource(R.string.shell_panel_root_check),
+                    onClick = onCheckRoot,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (shizukuGranted && PrivilegeGateway.isShizukuMode()) {
+                    Spacer(Modifier.height(8.dp))
+                    MiuixTextButton(
+                        text = stringResource(R.string.shell_panel_restart_shizuku),
+                        onClick = onRestartService,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
 internal fun ShellCommandCard(
     item: ShellCommand,
     running: Boolean,
@@ -134,14 +302,15 @@ internal fun ShellCommandCard(
                     command = item,
                     modifier = Modifier
                         .padding(top = 2.dp, end = 8.dp)
-                        .size(32.dp),
+                        .size(32.dp)
+                        .clickable(onClick = onEdit),
                 )
             }
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .padding(end = 4.dp)
-                    .clickable(enabled = enabled || running, onClick = onEdit),
+                    .clickable(onClick = onEdit),
             ) {
                 Text(
                     text = item.label,
@@ -149,6 +318,17 @@ internal fun ShellCommandCard(
                     color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = stringResource(
+                        when (item.executionMode) {
+                            ShellExecutionMode.ROOT -> R.string.shell_panel_mode_root
+                            ShellExecutionMode.SHIZUKU -> R.string.shell_panel_mode_shizuku
+                            null -> R.string.shell_panel_mode_unset
+                        },
+                    ),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(

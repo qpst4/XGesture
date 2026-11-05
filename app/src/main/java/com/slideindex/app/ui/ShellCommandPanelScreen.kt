@@ -18,9 +18,12 @@ import androidx.compose.foundation.layout.Column
 
 import androidx.compose.foundation.layout.PaddingValues
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 
 import androidx.compose.foundation.layout.padding
@@ -55,6 +58,8 @@ import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
 
+import androidx.compose.runtime.LaunchedEffect
+
 import androidx.compose.runtime.getValue
 
 import androidx.compose.runtime.mutableStateOf
@@ -87,6 +92,7 @@ import com.slideindex.app.settings.AppSettings
 
 import com.slideindex.app.service.ShellCommandResultTrampoline
 import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.shell.ShellResultDisplay
 
 import com.slideindex.app.shell.ShellTemplateContextFactory
 
@@ -102,6 +108,7 @@ import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.viewmodel.ShellCommandResultState
 import com.slideindex.app.ui.viewmodel.ShellCommandViewModel
 
+import com.slideindex.app.util.ShellResultFormatter
 import com.slideindex.app.util.TaskManagerUtil
 
 import kotlinx.coroutines.Dispatchers
@@ -153,13 +160,62 @@ fun ShellCommandPanelScreen(
 
     var runningCommandId by remember { mutableStateOf<String?>(null) }
 
-    val historyEntries by shellViewModel.historyRepository.entries.collectAsStateWithLifecycle()
+    var rootAvailable by remember { mutableStateOf<Boolean?>(null) }
+
+    var checkingRoot by remember { mutableStateOf(false) }
+
+    fun deliverResult(
+        item: ShellCommand,
+        expandedCommand: String,
+        exitCode: Int,
+        output: String,
+    ) {
+        when (item.resultDisplay) {
+            ShellResultDisplay.DIALOG -> {
+                shellViewModel.setPendingResult(
+                    ShellCommandResultState(
+                        label = item.label,
+                        command = expandedCommand,
+                        exitCode = exitCode,
+                        output = output,
+                    ),
+                )
+                ShellCommandResultTrampoline.launch(
+                    context = context,
+                    result = ShellCommandResultTrampoline.Payload(
+                        label = item.label,
+                        command = expandedCommand,
+                        exitCode = exitCode,
+                        output = output,
+                    ),
+                    onPrepare = {},
+                    onDismiss = { shellViewModel.clearPendingResult() },
+                )
+            }
+            ShellResultDisplay.TOAST -> {
+                android.widget.Toast.makeText(
+                    context,
+                    ShellResultFormatter.toast(context, exitCode, output),
+                    android.widget.Toast.LENGTH_LONG,
+                ).show()
+            }
+            ShellResultDisplay.NONE -> {
+                if (exitCode != 0) {
+                    android.widget.Toast.makeText(
+                        context,
+                        ShellResultFormatter.toast(context, exitCode, output),
+                        android.widget.Toast.LENGTH_LONG,
+                    ).show()
+                }
+            }
+        }
+    }
 
     fun runCommand(item: ShellCommand) {
 
-        if (!shizukuGranted) {
+        if (item.executionMode == null) {
 
-            onRequestShizuku()
+            onOpenEditor(item.id)
 
             return
 
@@ -177,45 +233,20 @@ fun ShellCommandPanelScreen(
 
                 }
 
-                shellViewModel.setPendingResult(
-                    ShellCommandResultState(
-                        label = item.label,
-                        command = result.expandedCommand,
-                        exitCode = result.exitCode,
-                        output = result.output,
-                    ),
-                )
-                ShellCommandResultTrampoline.launch(
-                    context = context,
-                    result = ShellCommandResultTrampoline.Payload(
-                        label = item.label,
-                        command = result.expandedCommand,
-                        exitCode = result.exitCode,
-                        output = result.output,
-                    ),
-                    onPrepare = {},
-                    onDismiss = { shellViewModel.clearPendingResult() },
+                deliverResult(
+                    item = item,
+                    expandedCommand = result.expandedCommand,
+                    exitCode = result.exitCode,
+                    output = result.output,
                 )
 
             } catch (_: Exception) {
 
-                val failed = ShellCommandResultState(
-                    label = item.label,
-                    command = item.command,
+                deliverResult(
+                    item = item,
+                    expandedCommand = item.command,
                     exitCode = -1,
                     output = shellTimeoutMessage,
-                )
-                shellViewModel.setPendingResult(failed)
-                ShellCommandResultTrampoline.launch(
-                    context = context,
-                    result = ShellCommandResultTrampoline.Payload(
-                        label = failed.label,
-                        command = failed.command,
-                        exitCode = failed.exitCode,
-                        output = failed.output,
-                    ),
-                    onPrepare = {},
-                    onDismiss = { shellViewModel.clearPendingResult() },
                 )
 
             } finally {
@@ -232,11 +263,6 @@ fun ShellCommandPanelScreen(
 
     SettingsScreenScaffold(
         title = stringResource(R.string.shell_panel_title),
-        pageHint = buildString {
-            append(stringResource(R.string.shell_panel_entry_desc))
-            append('\n')
-            append(stringResource(R.string.shell_panel_template_hint))
-        },
         onBack = onBack,
         actions = {
             IconButton(onClick = onOpenHistory) {
@@ -253,196 +279,136 @@ fun ShellCommandPanelScreen(
                 contentDescription = stringResource(R.string.shell_panel_add),
             )
         },
-        // 内容区底部要让开悬浮按钮的高度（见 [MiuixSettingsFabInset]）。
-        // ⚠️ 只能加在**网格自己的 contentPadding** 上：网格是 `weight(1f)` 的滚动子项，
-        // 给外层 Column 加 padding 等于把滚动区硬压矮一截，会把最后一行**裁断**、露出底下一层
-        // （用户截图报的那个 bug）。加在网格的内边距上，滚到底时最后一行才会正好落在按钮之上。
         fabInset = MiuixSettingsFabInset,
     ) {
-        LazySettingsItem(key = "shell-panel-body", fillParentMaxSize = true) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+        item(key = "shell-environment") {
+            var restartingService by remember { mutableStateOf(false) }
 
-                var restartingService by remember { mutableStateOf(false) }
-
-                ShellShizukuStatusCard(
-
-                    shizukuGranted = shizukuGranted,
-
-                    restartingService = restartingService,
-
-                    onRequestShizuku = onRequestShizuku,
-
-                    onRestartService = {
-
-                        if (!restartingService) {
-
-                            restartingService = true
-
-                            scope.launch {
-
-                                val api = withContext(Dispatchers.IO) {
-
-                                    runCatching { TaskManagerUtil.restartShellService() }.getOrDefault(-1)
-
-                                }
-
-                                restartingService = false
-
-                                val message = when {
-
-                                    api >= ShizukuUserServiceHost.SERVICE_BUILD -> {
-
-                                        resources.getString(R.string.shell_panel_restart_success, api)
-
-                                    }
-
-                                    api > 0 -> {
-
-                                        resources.getString(R.string.shell_panel_restart_outdated, api)
-
-                                    }
-
-                                    else -> {
-
-                                        restartFailedMessage
-
-                                    }
-
-                                }
-
-                                android.widget.Toast.makeText(
-
-                                    context,
-
-                                    message,
-
-                                    android.widget.Toast.LENGTH_SHORT,
-
-                                ).show()
-
-                            }
-
-                        }
-
-                    },
-
-                )
-
-
-
-                PermissionGatedFeature(
-                    modifier = Modifier.fillMaxWidth(),
-
-                    granted = shizukuGranted,
-
-                    permissionTitle = stringResource(R.string.permission_shizuku_title),
-
-                    permissionDescription = stringResource(R.string.permission_shizuku_desc),
-
-                    onGrant = onRequestShizuku,
-
-                    grantLabel = stringResource(R.string.permission_shizuku_grant),
-
-                ) {
-
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                    ) {
-
-                        SmallTitle(
-                            text = if (commands.isEmpty()) {
-                                stringResource(R.string.shell_panel_commands_section)
-                            } else {
-                                stringResource(R.string.shell_panel_commands_section_count, commands.size)
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp, bottom = 12.dp),
-                        )
-
-                        if (commands.isEmpty()) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 28.dp, vertical = 24.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Code,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Text(
-                                    text = stringResource(R.string.shell_panel_empty_hint),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                )
-                            }
-                        } else {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(2),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f, fill = true),
-
-                            contentPadding = PaddingValues(
-                                start = 12.dp,
-                                end = 12.dp,
-                                bottom = 16.dp + MiuixSettingsFabInset,
-                            ),
-
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-
-                            verticalArrangement = Arrangement.spacedBy(10.dp),
-
-                        ) {
-
-                            items(commands, key = { it.id }) { item ->
-
-                                ShellCommandCard(
-
-                                    item = item,
-
-                                    running = runningCommandId == item.id,
-
-                                    enabled = shizukuGranted && runningCommandId == null,
-
-                                    onEdit = { onOpenEditor(item.id) },
-
-                                    onRun = { runCommand(item) },
-
-                                )
-
-                            }
-
-                        }
-
+            LaunchedEffect(Unit) {
+                if (rootAvailable == null && !checkingRoot) {
+                    checkingRoot = true
+                    rootAvailable = withContext(Dispatchers.IO) {
+                        runCatching {
+                            com.slideindex.app.privilege.PrivilegeGateway.probeDirectRootAvailable()
+                        }.getOrDefault(false)
                     }
-
-                    }
-
+                    checkingRoot = false
                 }
-
-
-
-                if (historyEntries.isNotEmpty()) {
-                    MiuixHintText(
-                        pluralStringResource(
-                            R.plurals.shell_panel_history_entry_desc_count,
-                            historyEntries.size,
-                            historyEntries.size,
-                        ),
-                    )
-                }
-
             }
 
+            ShellExecutionEnvironmentCard(
+                rootAvailable = rootAvailable,
+                checkingRoot = checkingRoot,
+                onCheckRoot = {
+                    if (!checkingRoot) {
+                        checkingRoot = true
+                        scope.launch {
+                            rootAvailable = withContext(Dispatchers.IO) {
+                                runCatching {
+                                    com.slideindex.app.privilege.PrivilegeGateway.probeDirectRootAvailable()
+                                }.getOrDefault(false)
+                            }
+                            checkingRoot = false
+                        }
+                    }
+                },
+                shizukuGranted = shizukuGranted,
+                restartingService = restartingService,
+                onRequestShizuku = onRequestShizuku,
+                onRestartService = {
+                    if (!restartingService) {
+                        restartingService = true
+                        scope.launch {
+                            val api = withContext(Dispatchers.IO) {
+                                runCatching { TaskManagerUtil.restartShellService() }.getOrDefault(-1)
+                            }
+                            restartingService = false
+                            val message = when {
+                                api >= ShizukuUserServiceHost.SERVICE_BUILD -> {
+                                    resources.getString(R.string.shell_panel_restart_success, api)
+                                }
+                                api > 0 -> {
+                                    resources.getString(R.string.shell_panel_restart_outdated, api)
+                                }
+                                else -> restartFailedMessage
+                            }
+                            android.widget.Toast.makeText(
+                                context,
+                                message,
+                                android.widget.Toast.LENGTH_SHORT,
+                            ).show()
+                        }
+                    }
+                },
+            )
+        }
+
+        item(key = "shell-commands-header") {
+            SmallTitle(
+                text = if (commands.isEmpty()) {
+                    stringResource(R.string.shell_panel_commands_section)
+                } else {
+                    stringResource(R.string.shell_panel_commands_section_count, commands.size)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 12.dp),
+            )
+        }
+
+        if (commands.isEmpty()) {
+            item(key = "shell-commands-empty") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 28.dp, vertical = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Code,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = stringResource(R.string.shell_panel_empty_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                }
+            }
+        } else {
+            commands.chunked(2).forEachIndexed { index, rowItems ->
+                item(key = "shell-command-row-$index") {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 5.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        rowItems.forEach { item ->
+                            Box(modifier = Modifier.weight(1f)) {
+                                ShellCommandCard(
+                                    item = item,
+                                    running = runningCommandId == item.id,
+                                    enabled = runningCommandId == null,
+                                    onEdit = { onOpenEditor(item.id) },
+                                    onRun = { runCommand(item) },
+                                )
+                            }
+                        }
+                        if (rowItems.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+        }
+
+        item(key = "shell-panel-bottom") {
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

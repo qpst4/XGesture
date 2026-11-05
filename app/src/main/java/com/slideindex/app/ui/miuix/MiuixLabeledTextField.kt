@@ -27,6 +27,7 @@ fun MiuixLabeledTextField(
     singleLine: Boolean = true,
     minLines: Int = 1,
     maxLines: Int = if (singleLine) 1 else 6,
+    useLabelAsPlaceholder: Boolean = true,
 ) {
     val state = rememberTextFieldState(initialText = value)
     // 组合期的 value / onValueChange 不能直接被下面的长驻协程捕获：LaunchedEffect(state)
@@ -69,7 +70,7 @@ fun MiuixLabeledTextField(
         state = state,
         modifier = modifier.fillMaxWidth(),
         label = label,
-        useLabelAsPlaceholder = true,
+        useLabelAsPlaceholder = useLabelAsPlaceholder,
         lineLimits = lineLimits,
         insideMargin = insideMargin,
     )

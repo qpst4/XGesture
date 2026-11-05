@@ -15,10 +15,12 @@ import java.io.StringReader
 object ShortcutSystemXmlParser {
     private const val TAG = "ShortcutSystemXmlParser"
 
-    private const val FLAG_DISABLED = 1 shl 0
+    // Keep in sync with android.content.pm.ShortcutInfo. The persisted flags
+    // are the same bit layout as dumpsys: dynamic=1, pinned=2, manifest=4, cached=8.
+    private const val FLAG_DYNAMIC = 1 shl 0
     private const val FLAG_PINNED = 1 shl 1
-    private const val FLAG_DYNAMIC = 1 shl 2
-    private const val FLAG_MANIFEST = 1 shl 3
+    private const val FLAG_MANIFEST = 1 shl 2
+    private const val FLAG_CACHED = 1 shl 3
 
     const val SHORTCUT_PACKAGES_DIR = "/data/system_ce/0/shortcut_service/packages"
 
@@ -150,7 +152,7 @@ object ShortcutSystemXmlParser {
     private fun parseShortcut(parser: XmlPullParser, packageName: String): SystemShortcutEntry? {
         val id = parser.getAttributeValue(null, "id")?.trim()?.takeIf { it.isNotBlank() } ?: return null
         val flags = parser.getAttributeValue(null, "flags")?.toIntOrNull() ?: 0
-        if (isShortcutDisabled(parser, flags)) return null
+        if (isShortcutDisabled(parser)) return null
 
         val kinds = resolveKinds(flags)
         val title = parser.getAttributeValue(null, "title")?.trim().orEmpty()
@@ -170,10 +172,12 @@ object ShortcutSystemXmlParser {
         )
     }
 
-    private fun isShortcutDisabled(parser: XmlPullParser, flags: Int): Boolean {
+    private fun isShortcutDisabled(parser: XmlPullParser): Boolean {
         val disabledReason = parser.getAttributeValue(null, "disabled-reason")?.toIntOrNull()
         if (disabledReason != null) return disabledReason != 0
-        return flags and FLAG_DISABLED != 0
+        // Do not use bit 0 here: that is FLAG_DYNAMIC, not a disabled bit.
+        return parser.getAttributeValue(null, "enabled")
+            ?.equals("false", ignoreCase = true) == true
     }
 
     private fun resolveKinds(flags: Int): Set<ShortcutKind> {

@@ -4903,4 +4903,26 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="share_sheet_toggle_title">Built-in share panel</string>
     <string name="share_sheet_toggle_desc">Replace the system share sheet with our grid: pin favorite targets and skip the system UI</string>
     <string name="share_sheet_settings_pin_tip">Tip: pinned targets are kept locally; long-press one again to unpin it.</string>
+    <string name="shell_panel_execution_mode">Execution mode</string>
+    <string name="shell_panel_mode_root">Root</string>
+    <string name="shell_panel_mode_shizuku">Shizuku</string>
+    <string name="shell_panel_mode_unset">Not set</string>
+    <string name="shell_panel_root_status_title">Root</string>
+    <string name="shell_panel_root_ready">Ready</string>
+    <string name="shell_panel_root_unavailable">Unavailable</string>
+    <string name="shell_panel_root_unknown">Not checked</string>
+    <string name="shell_panel_root_check">Check</string>
+    <string name="shortcut_port_requires_root">This shortcut needs Root. Switch to Root mode to launch it.</string>
+    <string name="shell_panel_result_display">Show execution result</string>
+    <string name="shell_panel_result_none">Do not show</string>
+    <string name="shell_panel_result_toast">Toast</string>
+    <string name="shell_panel_result_dialog">Dialog</string>
+    <string name="shell_panel_icon_and_name">Icon and name</string>
+    <string name="shell_panel_environment_title">Execution environment</string>
+    <string name="shell_panel_shizuku_ready">Authorized</string>
+    <string name="shell_panel_shizuku_unavailable">Not authorized</string>
+    <string name="shell_panel_mode_unavailable">The selected execution mode is unavailable.</string>
+    <string name="shell_panel_result_exit_ok">exit 0 (no output)</string>
+    <string name="shell_panel_result_exit_only">exit %1$d (no output)</string>
+    <string name="shell_panel_test_result">Test result</string>
 </resources>

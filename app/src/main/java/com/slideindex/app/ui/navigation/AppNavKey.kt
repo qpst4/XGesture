@@ -396,6 +396,7 @@ sealed interface AppNavKey : NavKey {
 @Serializable data object GlobalIconLibrary : AppNavKey
 @Serializable data object IconThemeSettings : AppNavKey
     @Serializable data object ExtensionDiagnosticLogs : AppNavKey
+    @Serializable data object ExtensionShortcutTest : AppNavKey
     @Serializable data class ExtensionDiagnosticLogDetail(val fileName: String) : AppNavKey
     @Serializable data object ExtensionFreezer : AppNavKey
     @Serializable data object ExtensionFreezerApps : AppNavKey

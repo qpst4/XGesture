@@ -46,6 +46,7 @@ import com.slideindex.app.multitouch.encodePathStrokes
 import top.yukonga.miuix.kmp.nav.transition.NavSwipeDirection
 import com.slideindex.app.ui.PrivacyPolicyScreen
 import com.slideindex.app.ui.SettingsBackupScreen
+import com.slideindex.app.ui.ShortcutTestScreen
 import com.slideindex.app.ui.ThirdPartyNoticesScreen
 import com.slideindex.app.ui.viewmodel.CloudBackupViewModel
 import com.slideindex.app.ui.viewmodel.CloudStorageSettingsViewModel
@@ -90,6 +91,7 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             onOpenSettingsBackup = { ctx.navigate(AppNavKey.ExtensionBackup) },
             onOpenNativeEnginePacks = { ctx.navigate(AppNavKey.NativeEnginePacks) },
             onOpenDiagnosticLogs = { ctx.navigate(AppNavKey.ExtensionDiagnosticLogs) },
+            onOpenShortcutTest = { ctx.navigate(AppNavKey.ExtensionShortcutTest) },
             onOpenIconLibrary = { ctx.navigate(AppNavKey.GlobalIconLibrary) },
             onOpenIconTheme = { ctx.navigate(AppNavKey.IconThemeSettings) },
             onOpenAbout = { ctx.navigate(AppNavKey.ExtensionAbout) },
@@ -155,6 +157,12 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
 
     hiltEntry<AppNavKey.IconThemeSettings> {
         com.slideindex.app.ui.IconThemeSettingsScreen(
+            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
+        )
+    }
+
+    hiltEntry<AppNavKey.ExtensionShortcutTest> {
+        ShortcutTestScreen(
             onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
         )
     }

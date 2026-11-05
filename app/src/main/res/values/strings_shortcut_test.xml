@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="extension_shortcut_test_title">Test shortcuts</string>
+    <string name="extension_shortcut_test_subtitle">Scan published dynamic/pinned shortcuts (requires Root or Shizuku)</string>
+
+    <string name="shortcut_test_title">Shortcut test</string>
+    <string name="shortcut_test_tip">Read-only scan of the system shortcut service via dumpsys shortcut. Root or Shizuku is required. Tapping a shortcut only launches it through the system API.</string>
+    <string name="shortcut_test_search_hint">Search app, package, or shortcut</string>
+    <string name="shortcut_test_status_loading">Scanning…</string>
+    <string name="shortcut_test_status_ready">Scan complete</string>
+    <string name="shortcut_test_status_failed">Scan failed</string>
+    <string name="shortcut_test_status_detail">%1$d apps · pinned %2$d / dynamic %3$d / static %4$d</string>
+    <string name="shortcut_test_status_meta">%1$d ms · raw %2$d KB</string>
+    <string name="shortcut_test_results">Results (%1$d)</string>
+    <string name="shortcut_test_empty">No shortcuts found</string>
+    <string name="shortcut_test_search_empty">No matching shortcuts</string>
+    <string name="shortcut_test_no_privilege">Root or Shizuku access is required. Enable it in Settings first.</string>
+    <string name="shortcut_test_command_failed">dumpsys shortcut failed: %1$s</string>
+    <string name="shortcut_test_empty_output">dumpsys shortcut returned no output</string>
+    <string name="shortcut_test_parse_empty">No ShortcutInfo blocks could be parsed (%1$s)</string>
+    <string name="shortcut_test_kind_pinned">Pinned</string>
+    <string name="shortcut_test_kind_dynamic">Dynamic</string>
+    <string name="shortcut_test_kind_static">Static</string>
+    <string name="shortcut_test_copy">Copy intent command</string>
+    <string name="shortcut_test_copied">Intent command copied</string>
+    <string name="shortcut_test_copy_failed">Could not copy shortcut info</string>
+    <string name="shortcut_test_launch">Execute command</string>
+    <string name="shortcut_test_launch_failed">Command failed</string>
+    <string name="shortcut_test_rescan">Rescan</string>
+    <string name="shortcut_test_source_root">Root</string>
+    <string name="shortcut_test_source_shizuku">Shizuku</string>
+    <string name="shortcut_port_tip">Scan the system shortcut service, then execute the generated am start command as Root or Shizuku.</string>
+    <string name="shortcut_port_loading">Loading shortcuts…</string>
+    <string name="shortcut_port_ready">%1$d shortcuts</string>
+    <string name="shortcut_port_exec_success">Command succeeded: %1$s</string>
+    <string name="shortcut_port_exec_failed">Command failed: %1$s</string>
+    <string name="shortcut_port_mode">%1$s mode</string>
+    <string name="shortcut_port_root">Root</string>
+    <string name="shortcut_port_shizuku">Shizuku</string>
+    <string name="shortcut_port_unknown">—</string>
+    <string name="shortcut_port_rescan">Rescan</string>
+    <string name="shortcut_port_apps">%1$d apps</string>
+    <string name="shortcut_port_kinds">Pinned %1$d / Dynamic %2$d / Static %3$d</string>
+    <string name="shortcut_port_duration">%1$d ms</string>
+    <string name="shortcut_port_exec_no_output">No output from am</string>
+</resources>
