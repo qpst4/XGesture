@@ -164,6 +164,7 @@ fun CornerSlotSubMenuShortcutPickScreen(
             appsByPackage = appsByPackage,
             loading = loadedCatalog.loading,
             scanProgress = loadedCatalog.scanProgress,
+            searchQuery = searchQuery,
             onCreateHostClick = { host ->
                 pendingCreateHost = host
                 runCatching { createLauncher.launch(host.createIntent()) }
@@ -214,6 +215,7 @@ private fun CornerSlotSubMenuShortcutRow(
             )
         },
         trailingMode = PickerTrailingMode.Toggle,
-        onTrailingClick = onClick
+        onTrailingClick = onClick,
+        trailingChip = shortcutKindChip(shortcut.kind)
     )
 }

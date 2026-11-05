@@ -341,6 +341,7 @@ fun LazyListScope.actionPickerShortcutItems(
         appsByPackage = appsByPackage,
         loading = loading,
         scanProgress = scanProgress,
+        searchQuery = searchQuery,
         onCreateHostClick = onCreateHostClick,
         shortcutRowContent = shortcutRowContent,
     )
@@ -410,7 +411,7 @@ internal fun actionPickerShortcutIndexOfCurrent(
         index += activityShortcuts.size + 2
     }
     if (filtered.createHosts.isNotEmpty()) {
-        index += 1 + filtered.createHosts.size + 1
+        index += 1 // 可折叠的「创建快捷方式」段
     }
     if (filtered.groups.isEmpty()) return null
     index += 1 // 「启动快捷方式」标题

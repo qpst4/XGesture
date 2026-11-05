@@ -48,6 +48,7 @@ import com.slideindex.app.ui.GestureQuickLauncherActionScreen
 import com.slideindex.app.ui.GestureQuickWheelActionScreen
 import com.slideindex.app.ui.Md3PickerAppShortcutLeading
 import com.slideindex.app.ui.Md3PickerListRow
+import com.slideindex.app.ui.shortcutKindChip
 import com.slideindex.app.ui.Md3PickerManagedShortcutLeading
 import com.slideindex.app.ui.Md3PickerSectionHeader
 import com.slideindex.app.ui.PickerTrailingMode
@@ -427,6 +428,7 @@ fun ExpandPanelSlotPicker(
                                             )
                                         },
                                         trailingMode = PickerTrailingMode.Radio,
+                                        trailingChip = shortcutKindChip(row.shortcut.kind),
                                     )
                                 }
                             }
@@ -479,6 +481,7 @@ fun ExpandPanelSlotPicker(
                                                 )
                                             },
                                             trailingMode = PickerTrailingMode.Radio,
+                                            trailingChip = shortcutKindChip(row.shortcut.kind),
                                         )
                                     }
                                 }

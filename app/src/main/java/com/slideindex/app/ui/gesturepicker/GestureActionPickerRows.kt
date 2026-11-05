@@ -25,9 +25,9 @@ import com.slideindex.app.ui.Md3PickerAppLeading
 import com.slideindex.app.ui.Md3PickerAppShortcutLeading
 import com.slideindex.app.ui.Md3PickerIconLeading
 import com.slideindex.app.ui.Md3PickerListRow
-import com.slideindex.app.ui.PickerChipSpec
 import com.slideindex.app.ui.PickerTrailingMode
 import com.slideindex.app.ui.gestureActionIcon
+import com.slideindex.app.ui.shortcutKindChip
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.pickerSegmentCount
 import com.slideindex.app.ui.pickerSegmentIndex
@@ -244,17 +244,7 @@ internal fun ActionPickerShortcutRow(
 ) {
     val action = shortcutToLaunchShortcut(shortcut, packageName)
     val selected = current is GestureAction.LaunchShortcut && current.payloadKey == action.payloadKey
-    val kindChip = shortcut.kind?.let { kind ->
-        val labelRes = when (kind) {
-            ShortcutKind.PINNED -> R.string.shortcut_test_kind_pinned
-            ShortcutKind.DYNAMIC -> R.string.shortcut_test_kind_dynamic
-            ShortcutKind.STATIC -> R.string.shortcut_test_kind_static
-        }
-        PickerChipSpec(
-            text = stringResource(labelRes),
-            color = MaterialTheme.colorScheme.secondaryContainer,
-        )
-    }
+    val kindChip = shortcutKindChip(shortcut.kind)
     val subtitle = shortcut.targetComponent?.takeIf { it.isNotBlank() }
         ?: shortcut.shortcutId?.takeIf { it.isNotBlank() && !it.contains('/') && !it.contains('(') }
     Md3PickerListRow(

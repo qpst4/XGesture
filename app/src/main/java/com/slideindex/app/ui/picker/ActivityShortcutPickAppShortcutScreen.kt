@@ -23,6 +23,7 @@ import com.slideindex.app.overlay.TaskSwitcherMenuItem
 import com.slideindex.app.ui.Md3PickerIconLeading
 import com.slideindex.app.ui.Md3PickerListRow
 import com.slideindex.app.ui.PickerTrailingMode
+import com.slideindex.app.ui.shortcutKindChip
 import com.slideindex.app.ui.compose.rememberAppRepository
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffoldWithExpandableSearch
 import com.slideindex.app.util.AppShortcutLoader
@@ -80,6 +81,7 @@ fun ActivityShortcutPickAppShortcutScreen(
                     appsByPackage = appsByPackage,
                     loading = true,
                     scanProgress = loadedCatalog.scanProgress,
+                    searchQuery = query,
                     loadingItemKey = "loading",
                     onCreateHostClick = {},
                     shortcutRowContent = { _, _, _, _ -> },
@@ -101,6 +103,7 @@ fun ActivityShortcutPickAppShortcutScreen(
                     appsByPackage = appsByPackage,
                     loading = false,
                     scanProgress = null,
+                    searchQuery = query,
                     onCreateHostClick = {},
                     shortcutRowContent = { group, shortcut, segmentIndex, segmentCount ->
                         ActivityShortcutPickAppShortcutRow(
@@ -150,5 +153,6 @@ private fun ActivityShortcutPickAppShortcutRow(
             )
         },
         trailingMode = PickerTrailingMode.Toggle,
+        trailingChip = shortcutKindChip(shortcut.kind),
     )
 }

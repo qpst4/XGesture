@@ -68,6 +68,7 @@ import com.slideindex.app.overlay.ShellCommandBadgeOverlay
 import com.slideindex.app.overlay.ShortcutBadgeOverlay
 import com.slideindex.app.ui.miuix.miuixGroupedCardItem
 import com.slideindex.app.util.PickerAppIconBitmap
+import com.slideindex.app.util.ShortcutKind
 import com.slideindex.app.util.toSafeImageBitmap
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
@@ -184,6 +185,26 @@ fun PickerStatusChip(
 
 /** 行尾状态胶囊的内容与配色。 */
 data class PickerChipSpec(val text: String, val color: Color)
+
+/** 快捷方式类型徽章：所有选择器共用，避免各页面各写一套颜色。 */
+@Composable
+fun shortcutKindChip(kind: ShortcutKind?): PickerChipSpec? {
+    if (kind == null) return null
+    val labelRes = when (kind) {
+        ShortcutKind.PINNED -> R.string.shortcut_test_kind_pinned
+        ShortcutKind.DYNAMIC -> R.string.shortcut_test_kind_dynamic
+        ShortcutKind.STATIC -> R.string.shortcut_test_kind_static
+    }
+    val contentColor = when (kind) {
+        ShortcutKind.PINNED -> MaterialTheme.colorScheme.primary
+        ShortcutKind.DYNAMIC -> MaterialTheme.colorScheme.tertiary
+        ShortcutKind.STATIC -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    return PickerChipSpec(
+        text = stringResource(labelRes),
+        color = contentColor,
+    )
+}
 
 /** 行尾槽位：`endActions` 是必填闭包，没有胶囊时这里什么都不画，别让调用点各写一份空判断。 */
 @Composable

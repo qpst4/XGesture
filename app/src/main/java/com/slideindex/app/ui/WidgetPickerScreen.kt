@@ -544,6 +544,7 @@ fun WidgetPickerScreen(
           appsByPackage = appsByPackage,
           loading = loadedCatalog.loading,
           scanProgress = loadedCatalog.scanProgress,
+          searchQuery = searchQuery,
           loadingItemKey = "widget-shortcut-loading",
           emptyItemKey = "widget-shortcut-empty",
           onCreateHostClick = { host ->
@@ -614,6 +615,7 @@ fun WidgetPickerScreen(
                 }
               },
               leadingContent = { Md3PickerAppLeading(group.app) },
+              trailingChip = shortcutKindChip(shortcut.kind),
             )
           },
         )
