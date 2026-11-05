@@ -147,6 +147,7 @@ fun rememberActionPickerFilteredActions(
     includeCornerInnerZoneActions: Boolean,
     pinNoneAtTop: Boolean,
     catalogPolicy: ActionPickerCatalogPolicy,
+    excludeActionTypes: Set<GestureActionType> = emptySet(),
 ): List<GestureAction> {
     val context = LocalContext.current
     val actionOptions = remember(
@@ -154,6 +155,7 @@ fun rememberActionPickerFilteredActions(
         includePointerGestureActions,
         includeCornerInnerZoneActions,
         catalogPolicy,
+        excludeActionTypes,
     ) {
         GestureActionCatalog.build(
             scope = GestureActionCatalogScope.GesturePicker,
@@ -161,7 +163,7 @@ fun rememberActionPickerFilteredActions(
             includePointerGestureActions = includePointerGestureActions,
             includeCornerInnerZoneActions = includeCornerInnerZoneActions,
             catalogPolicy = catalogPolicy,
-        )
+        ).filterNot { it.type in excludeActionTypes }
     }
     return remember(
         actionOptions,

@@ -37,6 +37,7 @@ internal fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector
     GestureActionType.RUN_MACRO -> ThinActionIcons.PlayCircle
     GestureActionType.QUICK_TOOLS_OVERLAY -> MaterialSymbolThinIcons.Handyman
     GestureActionType.QUICK_MENU -> ThinActionIcons.QuickMenu
+    GestureActionType.SHAKE_MENU -> ThinActionIcons.MenuOpen
     GestureActionType.WIDGET_POPUP_OVERLAY -> ThinActionIcons.Widgets
     GestureActionType.OPEN_STASH_PANEL -> ThinActionIcons.Inventory
     GestureActionType.OPEN_CLIPBOARD_PANEL -> ThinActionIcons.ContentPaste
@@ -145,6 +146,7 @@ internal fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = w
     GestureActionType.RUN_MACRO -> ThinActionIcons.PlayCircle
     GestureActionType.QUICK_TOOLS_OVERLAY -> MaterialSymbolThinIcons.Handyman
     GestureActionType.QUICK_MENU -> ThinActionIcons.QuickMenu
+    GestureActionType.SHAKE_MENU -> ThinActionIcons.MenuOpen
     GestureActionType.WIDGET_POPUP_OVERLAY -> ThinActionIcons.Widgets
     GestureActionType.OPEN_STASH_PANEL -> ThinActionIcons.Inventory
     GestureActionType.OPEN_CLIPBOARD_PANEL -> ThinActionIcons.ContentPaste

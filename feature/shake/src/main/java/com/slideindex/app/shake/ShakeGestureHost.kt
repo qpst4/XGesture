@@ -7,6 +7,7 @@ import android.content.IntentFilter
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.os.SystemClock
 import android.util.Log
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.settings.AppSettings
@@ -45,6 +46,19 @@ class ShakeGestureHost @Inject constructor(
     private var wakeLock: PowerManager.WakeLock? = null
     private var wakeLockHeld = false
 
+    /**
+     * 当前激活的「晃动菜单」会话；非 `null` 时所有方向晃动都路由到菜单表，
+     * 不再走基础动作 / 独立应用 / 锁屏那套映射。
+     */
+    private var menuSession: ShakeMenuSession? = null
+
+    /** 菜单会话超时：到点自动关浮层并恢复普通冷却。 */
+    private val menuDismissRunnable = Runnable {
+        if (menuSession == null) return@Runnable
+        Log.d(TAG, "shake menu session timed out")
+        dismissMenuOverlay()
+    }
+
     private val wakeLockRenewRunnable = Runnable {
         if (!wakeLockHeld) return@Runnable
         if (screenInteractive) {
@@ -65,6 +79,7 @@ class ShakeGestureHost @Inject constructor(
                 }
                 Intent.ACTION_SCREEN_OFF -> {
                     screenInteractive = false
+                    dismissMenuOverlay()
                     latestSettings?.let(::applyRuntime)
                 }
                 Intent.ACTION_USER_PRESENT -> {
@@ -93,6 +108,7 @@ class ShakeGestureHost @Inject constructor(
         settingsJob = null
         hostScope = null
         unregisterScreenReceiver()
+        dismissMenuOverlay()
         detector?.stop()
         detector = null
         lastAppliedScreenInteractive = null
@@ -177,6 +193,10 @@ class ShakeGestureHost @Inject constructor(
             independentEnabled = shake.independentSensitivityEnabled,
             perDirection = shake.perDirectionSensitivity,
         )
+        // 菜单状态下用更短的入场冷却，保证「打开菜单 → 再晃方向」不会卡在 500ms 上。
+        activeDetector.setCooldownMs(
+            if (menuSession != null) shake.menuGuardMs else NORMAL_COOLDOWN_MS,
+        )
         // 部分机型息屏后会挂起非唤醒传感器，切屏幕状态时重新注册一次恢复采样。
         if (activeDetector.isRunning && screenChanged) {
             activeDetector.restartSensor()
@@ -239,6 +259,13 @@ class ShakeGestureHost @Inject constructor(
             return
         }
 
+        // 菜单状态优先：会话有效时，方向事件只看菜单表，不再走全局映射。
+        val activeMenuSession = menuSession
+        if (activeMenuSession != null) {
+            handleMenuGesture(activeMenuSession, shake, type, settings, screenOn)
+            return
+        }
+
         val action = resolveShakeAction(
             shake = shake,
             type = type,
@@ -251,7 +278,90 @@ class ShakeGestureHost @Inject constructor(
             return
         }
 
+        // 基础方向绑的是「晃动菜单」：进入菜单状态，等第二次带方向的晃动。
+        if (action is GestureAction.OpenShakeMenu) {
+            openShakeMenu(action, shake, type, screenOn)
+            return
+        }
+
         dispatchAction(action, settings, shake, type, screenOn)
+    }
+
+    /** 菜单状态下的一次晃动：命中菜单动作就执行并退出，未配置该方向则保持菜单打开。 */
+    private fun handleMenuGesture(
+        session: ShakeMenuSession,
+        shake: ShakeGestureSettings,
+        type: ShakeGestureType,
+        settings: AppSettings,
+        screenOn: Boolean,
+    ) {
+        val outcome = ShakeMenuRuntime.decide(
+            session = session,
+            menus = shake.menus,
+            type = type,
+            nowElapsedMs = SystemClock.elapsedRealtime(),
+            guardMs = shake.menuGuardMs,
+        )
+        menuSession = outcome.session
+        when (val decision = outcome.decision) {
+            is ShakeMenuDecision.Execute -> {
+                Log.i(TAG, "menu ${decision.menu.id} direction $type -> ${decision.action}")
+                dismissMenuOverlay()
+                if (decision.action != GestureAction.None) {
+                    dispatchAction(decision.action, settings, shake, type, screenOn)
+                }
+            }
+            is ShakeMenuDecision.Ignored -> {
+                Log.d(TAG, "menu ${decision.menu.id} direction $type ignored")
+            }
+            is ShakeMenuDecision.Expired -> {
+                Log.d(TAG, "menu ${decision.menuId} expired")
+                dismissMenuOverlay()
+            }
+            ShakeMenuDecision.NotInMenu -> Unit
+        }
+    }
+
+    /** 打开「晃动菜单」：建立会话、切换冷却、按设置弹出浮层。 */
+    private fun openShakeMenu(
+        action: GestureAction.OpenShakeMenu,
+        shake: ShakeGestureSettings,
+        type: ShakeGestureType,
+        screenOn: Boolean,
+    ) {
+        val menu = ShakeMenuRuntime.resolveMenu(shake.menus, action.menuId)
+        if (menu == null) {
+            Log.d(TAG, "shake menu open skipped: no menu configured")
+            return
+        }
+        menuSession = ShakeMenuRuntime.open(menu.id, SystemClock.elapsedRealtime())
+        detector?.setCooldownMs(shake.menuGuardMs)
+        mainHandler.removeCallbacks(menuDismissRunnable)
+        mainHandler.postDelayed(menuDismissRunnable, ShakeMenuRuntime.DEFAULT_SESSION_TIMEOUT_MS)
+        Log.i(
+            TAG,
+            "shake menu opened id=${menu.id} name=${menu.name} " +
+                "directions=${menu.configuredDirections} guard=${shake.menuGuardMs}ms",
+        )
+        deliverFeedback(shake, type, action, screenOn)
+
+        if (!shake.showMenuOverlay || !screenOn) return
+        val show = { feedbackPort.showMenuOverlay(appContext, menu) }
+        val delayMs = shake.menuDisplayDelayMs
+        if (delayMs > 0L) {
+            // 延迟显示期间用户可能已经完成操作（或会话已被替换），只给仍然有效的会话弹层。
+            mainHandler.postDelayed({ if (menuSession?.menuId == menu.id) show() }, delayMs)
+        } else {
+            show()
+        }
+    }
+
+    /** 关掉菜单浮层并恢复普通冷却；会话本身由调用方清空。 */
+    private fun dismissMenuOverlay() {
+        menuSession = null
+        mainHandler.removeCallbacks(menuDismissRunnable)
+        detector?.setCooldownMs(NORMAL_COOLDOWN_MS)
+        feedbackPort.detachMenuOverlay()
     }
 
     private fun dispatchAction(
@@ -387,5 +497,8 @@ class ShakeGestureHost @Inject constructor(
         private const val TAG = "ShakeGestureHost"
         private const val WAKE_LOCK_TIMEOUT_MS = 10 * 60 * 1000L
         private const val WAKE_LOCK_RENEW_MS = WAKE_LOCK_TIMEOUT_MS - 60_000L
+
+        /** 普通模式的手势间隔，与 [ShakeGestureDetector] 的默认值保持一致。 */
+        private const val NORMAL_COOLDOWN_MS = 500L
     }
 }

@@ -241,42 +241,55 @@ sealed interface AppNavKey : NavKey {
     @Serializable data object ShakeIndependentAppSettings : AppNavKey
     @Serializable data object ShakeIndependentAppPick : AppNavKey
     @Serializable data class ShakePerAppActions(val packageName: String) : AppNavKey
+
+    /** 「晃动菜单」管理页：菜单列表 + 菜单级参数（生效时间 / 延迟显示 / 显示菜单状态）。 */
+    @Serializable data object ShakeMenuSettings : AppNavKey
+
+    /** 单个菜单的编辑页：名称 + 6 个方向的第二套动作。 */
+    @Serializable data class ShakeMenuEdit(val menuId: String) : AppNavKey
     @Serializable data class ShakeGestureActionPick(
         val target: ShakeActionPickTarget,
         val gestureTypeId: Int,
         val packageName: String = "",
+        val menuId: String = "",
     ) : AppNavKey
     @Serializable data class ShakeGestureActionMyShortcuts(
         val target: ShakeActionPickTarget,
         val gestureTypeId: Int,
         val packageName: String = "",
+        val menuId: String = "",
     ) : AppNavKey
     @Serializable data class ShakeGestureActionPresetShortcuts(
         val target: ShakeActionPickTarget,
         val gestureTypeId: Int,
         val packageName: String = "",
+        val menuId: String = "",
     ) : AppNavKey
     @Serializable data class ShakeGestureActionPickApp(
         val target: ShakeActionPickTarget,
         val gestureTypeId: Int,
         val packageName: String = "",
+        val menuId: String = "",
     ) : AppNavKey
     @Serializable data class ShakeGestureActionPickActivity(
         val target: ShakeActionPickTarget,
         val gestureTypeId: Int,
         val packageName: String = "",
+        val menuId: String = "",
         val appPackageName: String,
     ) : AppNavKey
     @Serializable data class ShakeGestureActionShellCommand(
         val target: ShakeActionPickTarget,
         val gestureTypeId: Int,
         val packageName: String = "",
+        val menuId: String = "",
         val initialCommand: String = "",
     ) : AppNavKey
     @Serializable data class ShakeGestureActionSimulateKeyEvent(
         val target: ShakeActionPickTarget,
         val gestureTypeId: Int,
         val packageName: String = "",
+        val menuId: String = "",
         val initialKeyCode: Int = 82,
         val initialKeyName: String = "",
         val initialIsLongPress: Boolean = false,

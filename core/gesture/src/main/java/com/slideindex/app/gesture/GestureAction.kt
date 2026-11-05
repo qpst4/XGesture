@@ -198,6 +198,14 @@ enum class GestureActionType(val id: Int) {
      * 与「临时暂停悬浮层」（内存态 5 秒）不是一回事。
      */
     TOGGLE_FLOAT_BALL(108),
+
+    /**
+     * 「晃动菜单」：晃动后进入菜单状态（浮层按方向列出可用功能），再次按方向晃动执行该菜单里绑定的动作。
+     *
+     * payload 是菜单 id；菜单本体见 [com.slideindex.app.shake.ShakeMenu]。
+     * 一个基础晃动方向绑定本动作后，这个方向就变成「打开某个菜单」而不是直接执行动作。
+     */
+    SHAKE_MENU(109),
     ;
 
     companion object {
@@ -649,6 +657,19 @@ sealed class GestureAction {
     data object QuickMenu : GestureAction() {
         override val type = GestureActionType.QUICK_MENU
         override val payload = ""
+    }
+
+    /**
+     * 「晃动菜单」：打开一张预置的方向动作表，并进入菜单状态。
+     *
+     * payload 是菜单 id（见 `ShakeMenu`）。选中后由晃动浮层列出该菜单的各方向功能，
+     * 用户再按方向晃动一次才执行具体动作；菜单里没配置的方向什么都不做。
+     */
+    data class OpenShakeMenu(
+        val menuId: String = "",
+    ) : GestureAction() {
+        override val type = GestureActionType.SHAKE_MENU
+        override val payload = menuId
     }
 
     /**
@@ -1203,6 +1224,7 @@ sealed class GestureAction {
                 GestureActionType.OPEN_LINK -> OpenLink.fromPayload(payload)
                 GestureActionType.QUICK_TOOLS_OVERLAY -> QuickToolsOverlay
                 GestureActionType.QUICK_MENU -> QuickMenu
+                GestureActionType.SHAKE_MENU -> OpenShakeMenu(payload)
                 GestureActionType.WIDGET_POPUP_OVERLAY -> WidgetPopupOverlay
                 GestureActionType.OPEN_STASH_PANEL -> StashPanel
                 GestureActionType.OPEN_CLIPBOARD_PANEL -> ClipboardPanel

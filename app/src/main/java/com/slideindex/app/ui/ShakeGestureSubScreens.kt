@@ -117,7 +117,7 @@ fun ShakeIndependentSensitivityScreen(
 }
 
 @Composable
-private fun SettingsCardScope.ShakeGestureActionRow(
+internal fun SettingsCardScope.ShakeGestureActionRow(
     type: ShakeGestureType,
     action: GestureAction,
     enabled: Boolean = true,

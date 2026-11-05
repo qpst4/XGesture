@@ -22,4 +22,10 @@ interface ShakeFeedbackPort {
         colorArgb: Int,
     )
     fun detachFeedbackOverlay()
+
+    /** 显示「晃动菜单」浮层：按方向列出该菜单里绑定的动作，未配置的方向显示为「无」。 */
+    fun showMenuOverlay(context: Context, menu: ShakeMenu)
+
+    /** 关掉菜单浮层；执行动作、会话超时或服务停止时调用。 */
+    fun detachMenuOverlay()
 }

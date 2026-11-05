@@ -432,12 +432,22 @@ internal object SettingsPreferenceKeys {
     /** 多选工作模式，按 [com.slideindex.app.shake.ShakeWorkMode] 的 bit 位存掩码。 */
     val SHAKE_WORK_MODES = intPreferencesKey("shake_work_modes")
     val SHAKE_GESTURE_ACTIONS = stringSetPreferencesKey("shake_gesture_actions")
-    val SHAKE_MENU_ACTIONS = stringSetPreferencesKey("shake_menu_actions")
+
+    /** 用户自建的「晃动菜单」列表，JSON 数组字符串（见 `ShakeMenuCodec`）。 */
+    val SHAKE_MENUS = stringPreferencesKey("shake_menus_json")
+
+    /** 菜单激活后的入场冷却（毫秒）；0/缺失按默认 300ms。 */
+    val SHAKE_MENU_GUARD_MS = longPreferencesKey("shake_menu_guard_ms")
+
+    /** 菜单浮层延迟显示（毫秒）；缺失按 0（立即）。 */
+    val SHAKE_MENU_DISPLAY_DELAY_MS = longPreferencesKey("shake_menu_display_delay_ms")
     val SHAKE_HOLD_SCREEN_ACTIONS = stringSetPreferencesKey("shake_hold_screen_actions")
     val SHAKE_HOLD_GESTURE_BAR_ACTIONS = stringSetPreferencesKey("shake_hold_gesture_bar_actions")
     val SHAKE_LOCK_SCREEN_ACTIONS = stringSetPreferencesKey("shake_lock_screen_actions")
     val SHAKE_PER_APP_ACTIONS = stringSetPreferencesKey("shake_per_app_actions")
     val SHAKE_PER_DIRECTION_SENSITIVITY = stringSetPreferencesKey("shake_per_direction_sensitivity")
+
+    /** 「显示菜单状态」：是否绘制晃动菜单浮层；关闭后菜单仍然生效（盲操作）。 */
     val SHAKE_MENU_ENABLED = booleanPreferencesKey("shake_menu_enabled")
     val HOLD_SHAKE_ENABLED = booleanPreferencesKey("hold_shake_enabled")
 

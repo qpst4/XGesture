@@ -185,6 +185,9 @@ class ActionExecutor(
             // 「运行宏」：宏的执行是"拉目标 App → 逐步骤注入手势"，整条流程在宏自己的工作线程上跑，
             // 这里只负责受理（返回 true 表示已接手，避免上层再走别的兜底分支）。
             is GestureAction.RunMacro -> MacroActionRunner.run(context, action)
+            // 「晃动菜单」只由晃动 Host 处理（它要建立会话、等第二次带方向的晃动）；
+            // 被别的槽位误绑时不能在这里真的弹菜单，直接返回 false。
+            is GestureAction.OpenShakeMenu -> false
             // 「页面滚动」：打开/关闭竖排控制条，并让引擎持续续接划动手势。
             GestureAction.PageScroll -> PageScrollActionRunner.toggle(
                 context = context,

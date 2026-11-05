@@ -19,6 +19,7 @@ import com.slideindex.app.settings.ShakeUiSettings
 import com.slideindex.app.settings.ThemeSettings
 import com.slideindex.app.message.MessageSettings
 import com.slideindex.app.shake.ShakeGestureType
+import com.slideindex.app.shake.ShakeMenu
 import com.slideindex.app.shake.ShakeWorkMode
 import com.slideindex.app.ui.feedback.UserMessageBus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -230,6 +231,37 @@ class ShakeHubViewModel @Inject constructor(
         launchSettingsWrite {
             settingsRepository.setPerAppShakeAction(packageName, type, action)
         }
+
+    // ---- 晃动菜单 ----
+
+    fun addShakeMenu(menu: ShakeMenu) = launchSettingsWrite {
+        settingsRepository.addShakeMenu(menu)
+    }
+
+    fun updateShakeMenu(menu: ShakeMenu) = launchSettingsWrite {
+        settingsRepository.updateShakeMenu(menu)
+    }
+
+    fun setShakeMenuAction(menuId: String, type: ShakeGestureType, action: GestureAction) =
+        launchSettingsWrite {
+            settingsRepository.setShakeMenuAction(menuId, type, action)
+        }
+
+    fun removeShakeMenu(menuId: String) = launchSettingsWrite {
+        settingsRepository.removeShakeMenu(menuId)
+    }
+
+    fun setShakeMenuGuardMs(valueMs: Long) = launchSettingsWrite {
+        settingsRepository.setShakeMenuGuardMs(valueMs)
+    }
+
+    fun setShakeMenuDisplayDelayMs(valueMs: Long) = launchSettingsWrite {
+        settingsRepository.setShakeMenuDisplayDelayMs(valueMs)
+    }
+
+    fun setShowShakeMenuOverlay(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setShowShakeMenuOverlay(enabled)
+    }
 
     fun setFaceDownEnabled(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setFaceDownGestureEnabled(enabled)

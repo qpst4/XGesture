@@ -85,9 +85,20 @@ data class ShakeGestureSettings(
     val animationColorArgb: Int = 0xFF424242.toInt(),
     val disableInLandscape: Boolean = false,
     val blacklistedPackages: Set<String> = emptySet(),
+    /** 用户自建的「晃动菜单」；[GestureAction.OpenShakeMenu] 通过 id 引用，空 id 取第一个。 */
+    val menus: List<ShakeMenu> = emptyList(),
+    /** 菜单激活后的入场冷却（毫秒）：这段时间内的方向晃动一律忽略，防止打开菜单的那一下被当成执行。 */
+    val menuGuardMs: Long = ShakeMenuRuntime.DEFAULT_GUARD_MS,
+    /** 菜单浮层的延迟显示（毫秒）；0 = 立即显示。 */
+    val menuDisplayDelayMs: Long = ShakeMenuRuntime.DEFAULT_DISPLAY_DELAY_MS,
+    /** 是否显示菜单浮层；关闭后菜单仍然生效，只是不给视觉提示（盲操作）。 */
+    val showMenuOverlay: Boolean = true,
 ) {
     fun actionFor(type: ShakeGestureType): GestureAction =
         basicActions[type] ?: GestureAction.None
+
+    /** 按 id 找菜单；没有菜单时返回 `null`。 */
+    fun menuFor(id: String): ShakeMenu? = ShakeMenuRuntime.resolveMenu(menus, id)
 
     fun sensitivityFor(type: ShakeGestureType): Float =
         if (independentSensitivityEnabled) {
@@ -130,7 +141,7 @@ object ShakeGestureCodec {
         actions.map { (type, action) -> encodeAction(type, sanitizeAction(action)) }.toSet()
 
     private fun sanitizeAction(action: GestureAction): GestureAction =
-        action.sanitizeForSlotPicker(SlotPickerKind.OverlayTap)
+        action.sanitizeForSlotPicker(SlotPickerKind.ShakeGesture)
 
     /** 严格解析：不在 [raw] 里的方向保持缺失（视为“无”），不补基础动作。 */
     fun decodeActions(raw: Set<String>): Map<ShakeGestureType, GestureAction> =

@@ -1073,6 +1073,17 @@ class SettingsRepository @Inject constructor(
     suspend fun setShakeGesturesEnabled(enabled: Boolean) = shake.setShakeGesturesEnabled(enabled)
     suspend fun setShakeWorkModes(modes: Set<ShakeWorkMode>) = shake.setShakeWorkModes(modes)
     suspend fun setShakeGestureAction(type: ShakeGestureType, action: GestureAction) = shake.setShakeGestureAction(type, action)
+    suspend fun addShakeMenu(menu: com.slideindex.app.shake.ShakeMenu) = shake.addShakeMenu(menu)
+    suspend fun updateShakeMenu(menu: com.slideindex.app.shake.ShakeMenu) = shake.updateShakeMenu(menu)
+    suspend fun setShakeMenuAction(
+        menuId: String,
+        type: ShakeGestureType,
+        action: GestureAction,
+    ) = shake.setShakeMenuAction(menuId, type, action)
+    suspend fun removeShakeMenu(menuId: String) = shake.removeShakeMenu(menuId)
+    suspend fun setShakeMenuGuardMs(valueMs: Long) = shake.setShakeMenuGuardMs(valueMs)
+    suspend fun setShakeMenuDisplayDelayMs(valueMs: Long) = shake.setShakeMenuDisplayDelayMs(valueMs)
+    suspend fun setShowShakeMenuOverlay(enabled: Boolean) = shake.setShowShakeMenuOverlay(enabled)
     suspend fun setLockScreenShakeAction(type: ShakeGestureType, action: GestureAction) = shake.setLockScreenShakeAction(type, action)
     suspend fun setPerAppShakeAction(packageName: String, type: ShakeGestureType, action: GestureAction) =
         shake.setPerAppShakeAction(packageName, type, action)

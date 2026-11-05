@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.RotateRight
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.SwipeLeft
@@ -79,6 +80,7 @@ fun ShakeGesturesScreen(
     onOpenLockScreenShakeSettings: () -> Unit = {},
     onOpenIndependentAppShakeSettings: () -> Unit = {},
     onOpenAppBlacklist: () -> Unit = {},
+    onOpenShakeMenuSettings: () -> Unit = {},
     onOpenBasicActionPick: (ShakeGestureType) -> Unit = {},
     onOpenFaceDownSettings: () -> Unit = {},
     onOpenBackTapSettings: () -> Unit = {},
@@ -327,6 +329,43 @@ fun ShakeGesturesScreen(
         groupedCardItems(
             keyPrefix = "shake-advanced-features",
             items = buildList {
+                add(
+                    settingsCardScopeItem("shake-menu-settings") {
+                        SettingNavigationRow(
+                            icon = { label ->
+                                ColoredSettingIcon(
+                                    icon = Icons.Default.Menu,
+                                    background = Color(0xFF43A047),
+                                    contentDescription = label,
+                                )
+                            },
+                            title = stringResource(R.string.shake_menu_title),
+                            subtitle = stringResource(R.string.shake_menu_desc),
+                            enabled = settings.enabled,
+                            onClick = onOpenShakeMenuSettings,
+                            trailingContent = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                ) {
+                                    if (settings.menus.isNotEmpty()) {
+                                        Text(
+                                            text = settings.menus.size.toString(),
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                        contentDescription = stringResource(R.string.cd_navigate_forward),
+                                        modifier = Modifier.size(20.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            },
+                        )
+                    },
+                )
                 add(
                     settingsCardScopeItem("shake-disable-landscape") {
                         SettingSwitchRow(

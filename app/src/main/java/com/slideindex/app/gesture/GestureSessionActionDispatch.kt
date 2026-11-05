@@ -247,6 +247,9 @@ internal fun GestureSession.handleClassifiedGesture(
     when (action) {
         is GestureAction.OpenIndex -> enterIndexMode(localX, localY)
 
+        // 「晃动菜单」只在晃动方向上有意义，边缘手势分发到这里直接忽略。
+        is GestureAction.OpenShakeMenu -> Unit
+
         GestureAction.AdjustVolume, GestureAction.AdjustBrightness -> {
             val adjustControllerMode = when (action) {
                 GestureAction.AdjustVolume -> ContinuousAdjustController.Mode.VOLUME

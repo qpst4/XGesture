@@ -76,6 +76,13 @@ fun gestureActionSearchAliases(context: Context, action: GestureAction): List<St
         "password",
         "stopwatch",
     )
+    GestureActionType.SHAKE_MENU -> listOf(
+        context.getString(R.string.shake_menu_title),
+        context.getString(R.string.shake_menu_action_subtitle),
+        "shake menu",
+        "menu",
+        "layer",
+    )
     GestureActionType.APP_CAROUSEL_SWITCHER -> listOf(
         context.getString(R.string.gesture_search_carousel_1),
         "app switcher",
@@ -447,6 +454,7 @@ fun gestureActionLabelText(context: Context, action: GestureAction): String = wh
         GestureActionType.LAUNCH_APP -> context.getString(R.string.gesture_action_launch_app)
         GestureActionType.LAUNCH_SHORTCUT -> context.getString(R.string.gesture_action_launch_shortcut)
         GestureActionType.QUICK_WHEEL -> context.getString(R.string.gesture_action_quick_wheel)
+        GestureActionType.SHAKE_MENU -> context.getString(R.string.shake_menu_title)
     }
 }
 
@@ -612,6 +620,7 @@ fun gestureActionLabel(action: GestureAction, settings: AppSettings? = null): St
         GestureActionType.LAUNCH_APP -> stringResource(R.string.gesture_action_launch_app)
         GestureActionType.LAUNCH_SHORTCUT -> stringResource(R.string.gesture_action_launch_shortcut)
         GestureActionType.QUICK_WHEEL -> stringResource(R.string.gesture_action_quick_wheel)
+        GestureActionType.SHAKE_MENU -> stringResource(R.string.shake_menu_title)
     }
     }
 }

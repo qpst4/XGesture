@@ -26,6 +26,14 @@ class ShakeGestureDetector(
     private var perDirectionSensitivity: Map<ShakeGestureType, Float> = emptyMap()
     private var listenerRegistered = false
 
+    /**
+     * 两次手势之间的最短间隔。
+     *
+     * 普通模式固定 500ms；「晃动菜单」激活后由 Host 调到更短的入场冷却（默认 300ms），
+     * 否则用户打开菜单后要干等 500ms 才能晃第二个方向，手感发涩。
+     */
+    private var cooldownMs = NORMAL_COOLDOWN_MS
+
     private var lastTriggerTime = 0L
     private var lastDirection: ShakeGestureType? = null
     private var lastAccel = floatArrayOf(0f, 0f, 0f)
@@ -40,6 +48,12 @@ class ShakeGestureDetector(
         globalSensitivity = ShakeGestureClassifier.clampSensitivity(global)
         this.independentEnabled = independentEnabled
         perDirectionSensitivity = perDirection
+    }
+
+    /** 调整手势间隔；限制在 [MIN_COOLDOWN_MS, NORMAL_COOLDOWN_MS]，不允许关掉去噪。 */
+    @Synchronized
+    fun setCooldownMs(valueMs: Long) {
+        cooldownMs = valueMs.coerceIn(MIN_COOLDOWN_MS, NORMAL_COOLDOWN_MS)
     }
 
     @Synchronized
@@ -134,7 +148,7 @@ class ShakeGestureDetector(
 
     private fun emitGesture(direction: ShakeGestureType) {
         val now = System.currentTimeMillis()
-        if (now - lastTriggerTime < NORMAL_COOLDOWN_MS) return
+        if (now - lastTriggerTime < cooldownMs) return
 
         if (lastDirection != null && isReverseDirection(direction, lastDirection!!)) {
             if (now - lastTriggerTime < REVERSE_IGNORE_MS) return
@@ -184,6 +198,7 @@ class ShakeGestureDetector(
     companion object {
         private const val TAG = "ShakeGestureDetector"
         private const val NORMAL_COOLDOWN_MS = 500L
+        private const val MIN_COOLDOWN_MS = 100L
         private const val REVERSE_IGNORE_MS = 800L
         /** 把界面上的 1～10 档阈值折算成加速度计差分阈值（沿用原陀螺仪阈值的换算系数）。 */
         private const val ACCEL_DELTA_SCALE = 0.35f

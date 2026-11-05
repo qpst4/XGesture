@@ -30,6 +30,7 @@ import com.slideindex.app.R
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.freezer.FreezerOperations
+import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.gesture.ActionPickerCatalogPolicy
 import com.slideindex.app.gesture.GestureTriggerType
 import com.slideindex.app.gesture.LaunchWindowMode
@@ -47,6 +48,7 @@ import com.slideindex.app.ui.gesturepicker.ActionPickerShortcutRow
 import com.slideindex.app.ui.gesturepicker.actionPickerShortcutItems
 import com.slideindex.app.ui.gesturepicker.GestureLaunchWindowModeDialog
 import com.slideindex.app.ui.gesturepicker.MacroPickDialog
+import com.slideindex.app.ui.gesturepicker.ShakeMenuPickDialog
 import com.slideindex.app.ui.gesturepicker.rememberActionPickerFilteredActions
 import com.slideindex.app.ui.gesturepicker.rememberActionPickerFilteredApps
 import com.slideindex.app.ui.picker.AppPickerTabRow
@@ -83,6 +85,8 @@ fun GestureActionPickerScreen(
     includeCornerInnerZoneActions: Boolean = false,
     pinNoneAtTop: Boolean = true,
     catalogPolicy: ActionPickerCatalogPolicy,
+    /** 不进候选列表的动作类型；「晃动菜单」编辑页用它挡掉再套一层菜单造成的递归。 */
+    excludeActionTypes: Set<GestureActionType> = emptySet(),
 ) {
     // 打开时先落在「当前已绑定动作」所属的那一页，而不是永远从第 0 页开始。
     var selectedTab by remember { mutableIntStateOf(current.pickerTab().ordinal) }
@@ -151,6 +155,7 @@ fun GestureActionPickerScreen(
         includeCornerInnerZoneActions = includeCornerInnerZoneActions,
         pinNoneAtTop = pinNoneAtTop,
         catalogPolicy = catalogPolicy,
+        excludeActionTypes = excludeActionTypes,
     )
     val filteredApps = rememberActionPickerFilteredApps(allApps, searchQuery)
     val loadedCatalog = rememberLoadedShortcutCatalog(
@@ -245,9 +250,13 @@ fun GestureActionPickerScreen(
     var hasSelected by remember { mutableStateOf(false) }
     // 「运行宏」要先挑一条宏：这里只为它开一个二级选择弹窗，选中后再真正回调出去。
     var macroPickVisible by remember { mutableStateOf(false) }
+    // 「晃动菜单」同理：先选一个已建好的菜单，再回填成带 menuId 的动作。
+    var shakeMenuPickVisible by remember { mutableStateOf(false) }
     val safeSelect: (GestureAction) -> Unit = { action ->
         if (action is GestureAction.RunMacro && action.macroId.isBlank()) {
             macroPickVisible = true
+        } else if (action is GestureAction.OpenShakeMenu) {
+            shakeMenuPickVisible = true
         } else if (!hasSelected) {
             hasSelected = true
             onSelect(action)
@@ -454,6 +463,18 @@ fun GestureActionPickerScreen(
                 },
                 // 已经绑着某条宏时，把它标出来（换宏时不用自己在列表里找）。
                 selectedMacroId = (current as? GestureAction.RunMacro)?.macroId,
+            )
+        }
+
+        if (shakeMenuPickVisible) {
+            ShakeMenuPickDialog(
+                menus = appSettings.shakeGestureSettings.menus,
+                selectedMenuId = (current as? GestureAction.OpenShakeMenu)?.menuId,
+                onDismissRequest = { shakeMenuPickVisible = false },
+                onPick = { menu ->
+                    shakeMenuPickVisible = false
+                    safeSelect(GestureAction.OpenShakeMenu(menu.id))
+                },
             )
         }
     }
