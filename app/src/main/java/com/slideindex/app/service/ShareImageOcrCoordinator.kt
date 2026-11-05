@@ -50,13 +50,42 @@ object ShareImageOcrCoordinator {
     val canMoveToBackground: Boolean
         get() = activeSession != null && FloatBallPickResultPanel.isShowing
 
+    /**
+     * 这条 Intent 是不是「把一张图交给 XGesture」。
+     *
+     * 分享面板走 SEND / SEND_MULTIPLE，系统「打开方式」走 VIEW（部分相册/文件管理器的
+     * 「编辑」入口走 EDIT）。两个入口共用同一套 trampoline，所以这里只按 action 放行，
+     * 真正的图片 URI 由 [resolveImageUri] 取。
+     */
+    fun isImageIntent(intent: Intent?): Boolean {
+        return when (intent?.action) {
+            Intent.ACTION_SEND,
+            Intent.ACTION_SEND_MULTIPLE,
+            Intent.ACTION_VIEW,
+            Intent.ACTION_EDIT -> true
+            else -> false
+        }
+    }
+
+    /**
+     * 从分享 / 打开方式 Intent 里取出图片 URI。
+     *
+     * - 分享：图在 `EXTRA_STREAM`（或 clipData）。
+     * - 打开方式：图在 `data`；个别 ROM 会把它塞进 clipData，所以都兜一下。
+     */
     fun resolveImageUri(intent: Intent): Uri? {
         return when (intent.action) {
             Intent.ACTION_SEND -> readSendUri(intent)
             Intent.ACTION_SEND_MULTIPLE -> readSendMultipleUri(intent)
+            Intent.ACTION_VIEW, Intent.ACTION_EDIT -> readViewUri(intent)
             else -> null
         }
     }
+
+    private fun readViewUri(intent: Intent): Uri? =
+        intent.data
+            ?: intent.clipData?.getItemAt(0)?.uri
+            ?: readSendUri(intent)
 
     fun moveToBackground(context: Context) {
         val session = activeSession ?: return
@@ -479,21 +508,26 @@ object ShareImageOcrCoordinator {
 
     private suspend fun cacheSharedImageToAppStorage(context: Context, uri: Uri): Uri? =
         withContext(Dispatchers.IO) {
-            val dir = File(context.applicationContext.cacheDir, CACHE_DIR_NAME).apply { mkdirs() }
-            dir.listFiles()?.forEach { file ->
-                runCatching { file.delete() }
-            }
-            val outFile = File(dir, "current_share.img")
-            val copied = context.contentResolver.openInputStream(uri)?.use { input ->
-                outFile.outputStream().use { output -> input.copyTo(output) }
-                true
-            } ?: false
-            if (!copied || outFile.length() <= 0L) {
-                outFile.delete()
-                null
-            } else {
-                Uri.fromFile(outFile)
-            }
+            // 「打开方式」传进来的 URI 不一定带读授权（不是所有相册/文件管理器都会加
+            // FLAG_GRANT_READ_URI_PERMISSION）。这里必须吞掉 SecurityException，
+            // 交给调用方走「图片加载失败」提示，不能让异常带走整个进程。
+            runCatching {
+                val dir = File(context.applicationContext.cacheDir, CACHE_DIR_NAME).apply { mkdirs() }
+                dir.listFiles()?.forEach { file ->
+                    runCatching { file.delete() }
+                }
+                val outFile = File(dir, "current_share.img")
+                val copied = context.contentResolver.openInputStream(uri)?.use { input ->
+                    outFile.outputStream().use { output -> input.copyTo(output) }
+                    true
+                } ?: false
+                if (!copied || outFile.length() <= 0L) {
+                    outFile.delete()
+                    null
+                } else {
+                    Uri.fromFile(outFile)
+                }
+            }.getOrNull()
         }
 
     private fun cleanupCachedUri(uri: Uri) {

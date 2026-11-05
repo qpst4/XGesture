@@ -613,6 +613,7 @@
             </intent-filter>
         </activity>
 
+        <!-- 分享 / 打开方式：外部交来的图片 → 取词面板（需无障碍 + OCR 模型 + 悬浮窗） -->
         <activity
             android:name=".service.ShareImageOcrTrampolineActivity"
             android:excludeFromRecents="true"
@@ -629,6 +630,12 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+            <!-- 系统「打开方式」：相册/文件管理器里选 XGesture 取词。 -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="image/*" />
             </intent-filter>
@@ -656,7 +663,7 @@
             </intent-filter>
         </activity>
 
-        <!-- 分享图片到内置图片编辑器 -->
+        <!-- 分享 / 打开方式：外部交来的图片 → 内置图片编辑器 -->
         <activity
             android:name=".service.ShareImageEditTrampolineActivity"
             android:excludeFromRecents="true"
@@ -673,6 +680,12 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+            <!-- 系统「打开方式」：相册/文件管理器里选 XGesture 图片编辑。 -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="image/*" />
             </intent-filter>
