@@ -941,6 +941,7 @@ private fun ShellCommandEditorOverlayBody(
             onIconDraftChange = onIconDraftChange,
             onPickAppIcon = onPickAppIcon,
             isSavingAppIcon = isSavingAppIcon,
+            useWindowMenu = true,
         )
         ShellCommandEditorFields(
             command = command,

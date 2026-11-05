@@ -10,6 +10,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +21,7 @@ import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.shell.ShellCommand
 import com.slideindex.app.shell.ShellCommandCodec
 import com.slideindex.app.ui.ShellCommandEditorOverlaySheet
+import com.slideindex.app.ui.compose.LocalAppDependencies
 import com.slideindex.app.ui.miuix.theme.ModuleTheme
 import com.slideindex.app.util.ShellCommandRunner
 import kotlinx.coroutines.Dispatchers
@@ -72,33 +74,35 @@ class ShellCommandEditorTrampolineActivity : ComponentActivity() {
             }
 
             ModuleTheme(settings = appSettings) {
-                ShellCommandEditorOverlaySheet(
-                    onDismissComplete = { finishPicker() },
-                    onWindowReady = { ShellCommandEditorTrampoline.runPrepareIfNeeded() },
-                    initial = existing,
-                    shizukuGranted = shizukuGranted,
-                    onSave = { saved ->
-                        ShellCommandEditorTrampoline.onItemSave(saved)
-                        finishPicker()
-                    },
-                    onDelete = if (canDelete) {
-                        {
-                            ShellCommandEditorTrampoline.onItemDelete()
+                CompositionLocalProvider(LocalAppDependencies provides deps) {
+                    ShellCommandEditorOverlaySheet(
+                        onDismissComplete = { finishPicker() },
+                        onWindowReady = { ShellCommandEditorTrampoline.runPrepareIfNeeded() },
+                        initial = existing,
+                        shizukuGranted = shizukuGranted,
+                        onSave = { saved ->
+                            ShellCommandEditorTrampoline.onItemSave(saved)
                             finishPicker()
-                        }
-                    } else {
-                        null
-                    },
-                    onTest = { command, callback ->
-                        scope.launch {
-                            val outcome = withContext(Dispatchers.IO) {
-                                ShellCommandRunner.execute(this@ShellCommandEditorTrampolineActivity, command)
+                        },
+                        onDelete = if (canDelete) {
+                            {
+                                ShellCommandEditorTrampoline.onItemDelete()
+                                finishPicker()
                             }
-                            callback(outcome.exitCode, outcome.output)
-                        }
-                    },
-                    registerBackHandler = { dismissRequest = it }
-                )
+                        } else {
+                            null
+                        },
+                        onTest = { command, callback ->
+                            scope.launch {
+                                val outcome = withContext(Dispatchers.IO) {
+                                    ShellCommandRunner.execute(this@ShellCommandEditorTrampolineActivity, command)
+                                }
+                                callback(outcome.exitCode, outcome.output)
+                            }
+                        },
+                        registerBackHandler = { dismissRequest = it }
+                    )
+                }
             }
         }
     }

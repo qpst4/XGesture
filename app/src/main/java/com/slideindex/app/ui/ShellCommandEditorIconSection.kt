@@ -60,6 +60,7 @@ import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.icon.extended.GridView
 import top.yukonga.miuix.kmp.icon.extended.Image
 import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
+import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 internal data class ShellCommandIconDraft(
@@ -191,6 +192,7 @@ internal fun ShellCommandEditorIconSection(
     onPickAppIcon: () -> Unit,
     modifier: Modifier = Modifier,
     isSavingAppIcon: Boolean = false,
+    useWindowMenu: Boolean = false,
 ) {
     val context = LocalContext.current
     var showTextIconDialog by remember { mutableStateOf(false) }
@@ -267,17 +269,7 @@ internal fun ShellCommandEditorIconSection(
                 }
             }
 
-            OverlayIconDropdownMenu(
-                entry = DropdownEntry(items = menuItems),
-                modifier = Modifier.size(56.dp),
-                minWidth = 56.dp,
-                minHeight = 56.dp,
-                cornerRadius = 16.dp,
-                backgroundColor = MiuixTheme.colorScheme.surfaceContainerHigh,
-                maxHeight = 320.dp,
-                dropdownColors = DropdownDefaults.dropdownColors(),
-                renderInRootScaffold = true,
-            ) {
+            val iconButtonContent: @Composable () -> Unit = {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -310,6 +302,35 @@ internal fun ShellCommandEditorIconSection(
                             MiuixCircularProgressIndicator(modifier = Modifier.size(20.dp))
                         }
                     }
+                }
+            }
+
+            if (useWindowMenu) {
+                WindowIconDropdownMenu(
+                    entry = DropdownEntry(items = menuItems),
+                    modifier = Modifier.size(56.dp),
+                    minWidth = 56.dp,
+                    minHeight = 56.dp,
+                    cornerRadius = 16.dp,
+                    backgroundColor = MiuixTheme.colorScheme.surfaceContainerHigh,
+                    maxHeight = 320.dp,
+                    dropdownColors = DropdownDefaults.dropdownColors(),
+                ) {
+                    iconButtonContent()
+                }
+            } else {
+                OverlayIconDropdownMenu(
+                    entry = DropdownEntry(items = menuItems),
+                    modifier = Modifier.size(56.dp),
+                    minWidth = 56.dp,
+                    minHeight = 56.dp,
+                    cornerRadius = 16.dp,
+                    backgroundColor = MiuixTheme.colorScheme.surfaceContainerHigh,
+                    maxHeight = 320.dp,
+                    dropdownColors = DropdownDefaults.dropdownColors(),
+                    renderInRootScaffold = true,
+                ) {
+                    iconButtonContent()
                 }
             }
             Column(

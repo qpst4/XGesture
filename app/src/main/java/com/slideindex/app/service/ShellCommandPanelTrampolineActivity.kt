@@ -14,6 +14,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +25,7 @@ import com.slideindex.app.R
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.shell.ShellCommand
 import com.slideindex.app.ui.ShellCommandPanelOverlaySheet
+import com.slideindex.app.ui.compose.LocalAppDependencies
 import com.slideindex.app.ui.miuix.theme.ModuleTheme
 import com.slideindex.app.util.TaskManagerUtil
 import kotlinx.coroutines.flow.first
@@ -79,25 +81,27 @@ class ShellCommandPanelTrampolineActivity : ComponentActivity() {
             }
 
             ModuleTheme(settings = appSettings) {
-                ShellCommandPanelOverlaySheet(
-                    initialCommands = commands,
-                    shizukuGranted = shizukuGranted,
-                    onRequestShizuku = { TaskManagerUtil.requestPermission(this@ShellCommandPanelTrampolineActivity) },
-                    onDismissComplete = { finishPicker() },
-                    onPersistCommands = { updated ->
-                        commands = updated
-                        ShellCommandPanelTrampoline.onCommandsPersist(updated)
-                        lifecycleScope.launch {
-                            deps.settingsRepository.setShellCommands(updated)
-                        }
-                    },
-                    onWindowReady = { ShellCommandPanelTrampoline.runPrepareIfNeeded() },
-                    registerBackHandler = { dismissRequest = it },
-                    registerContinuousDismissHandler = { handler ->
-                        ShellCommandPanelTrampoline.registerContinuousDismissRequest(handler)
-                    },
-                    onCopyOutput = { output -> copyOutput(output) }
-                )
+                CompositionLocalProvider(LocalAppDependencies provides deps) {
+                    ShellCommandPanelOverlaySheet(
+                        initialCommands = commands,
+                        shizukuGranted = shizukuGranted,
+                        onRequestShizuku = { TaskManagerUtil.requestPermission(this@ShellCommandPanelTrampolineActivity) },
+                        onDismissComplete = { finishPicker() },
+                        onPersistCommands = { updated ->
+                            commands = updated
+                            ShellCommandPanelTrampoline.onCommandsPersist(updated)
+                            lifecycleScope.launch {
+                                deps.settingsRepository.setShellCommands(updated)
+                            }
+                        },
+                        onWindowReady = { ShellCommandPanelTrampoline.runPrepareIfNeeded() },
+                        registerBackHandler = { dismissRequest = it },
+                        registerContinuousDismissHandler = { handler ->
+                            ShellCommandPanelTrampoline.registerContinuousDismissRequest(handler)
+                        },
+                        onCopyOutput = { output -> copyOutput(output) }
+                    )
+                }
             }
         }
     }

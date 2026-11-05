@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,6 +42,7 @@ import com.slideindex.app.R
 import com.slideindex.app.privilege.PrivilegeGateway
 import com.slideindex.app.shell.ShellCommand
 import com.slideindex.app.shell.ShellExecutionMode
+import com.slideindex.app.ui.miuix.MiuixSettingsFab
 import com.slideindex.app.util.ShellCommandRunner
 import com.slideindex.app.util.ShellResultFormatter
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +51,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Add
 import top.yukonga.miuix.kmp.icon.extended.Refresh
 private const val SHELL_PANEL_OVERLAY_TIMEOUT_MS = 40_000L
 
@@ -186,9 +187,10 @@ fun ShellCommandPanelOverlaySheet(
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
             tonalElevation = 6.dp,
         ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                ) {
                 ShellOverlayEnvironmentRow(
                     rootAvailable = rootAvailable,
                     checkingRoot = checkingRoot,
@@ -208,13 +210,13 @@ fun ShellCommandPanelOverlaySheet(
                     shizukuGranted = shizukuGranted,
                     onRequestShizuku = onRequestShizuku,
                 )
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 if (commands.isEmpty()) {
                     Text(
                         text = stringResource(R.string.shell_panel_overlay_empty),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 12.dp),
+                        modifier = Modifier.padding(horizontal = 4.dp).padding(top = 12.dp, bottom = 64.dp),
                     )
                 } else {
                     LazyVerticalGrid(
@@ -222,7 +224,7 @@ fun ShellCommandPanelOverlaySheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(max = 360.dp),
-                        contentPadding = PaddingValues(bottom = 4.dp),
+                        contentPadding = PaddingValues(bottom = 72.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
@@ -275,17 +277,18 @@ fun ShellCommandPanelOverlaySheet(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
+                }
+                MiuixSettingsFab(
                     onClick = {
                         editorTarget = null
                         showEditor = true
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.large,
-                ) {
-                    Text(stringResource(R.string.shell_panel_add))
-                }
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 12.dp, bottom = 8.dp),
+                    icon = MiuixIcons.Add,
+                    contentDescription = stringResource(R.string.shell_panel_add),
+                )
             }
         }
     }
@@ -318,7 +321,9 @@ private fun ShellOverlayEnvironmentRow(
     }
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 42.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -328,7 +333,10 @@ private fun ShellOverlayEnvironmentRow(
                 .background(statusColor),
         )
         Spacer(modifier = Modifier.width(10.dp))
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center,
+        ) {
             Text(
                 text = stringResource(R.string.shell_panel_environment_title),
                 style = MaterialTheme.typography.titleSmallEmphasized,
@@ -348,7 +356,10 @@ private fun ShellOverlayEnvironmentRow(
         if (checkingRoot) {
             LoadingIndicator(modifier = Modifier.size(20.dp))
         } else {
-            IconButton(onClick = onCheckRoot) {
+            IconButton(
+                onClick = onCheckRoot,
+                modifier = Modifier.size(36.dp),
+            ) {
                 Icon(
                     imageVector = MiuixIcons.Medium.Refresh,
                     contentDescription = stringResource(R.string.shell_panel_root_check),
