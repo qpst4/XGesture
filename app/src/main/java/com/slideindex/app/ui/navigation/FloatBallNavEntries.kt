@@ -3,8 +3,6 @@ package com.slideindex.app.ui.navigation
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -15,7 +13,6 @@ import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.ActionPickerCatalogPolicy
 import com.slideindex.app.gesture.GestureTriggerType
 import com.slideindex.app.gesture.SlotPickerKind
-import com.slideindex.app.search.SearchEngineIconStorage
 import com.slideindex.app.settings.SearchEngineType
 import com.slideindex.app.settings.toMinimalAppSettings
 import com.slideindex.app.ui.FloatBallAppearanceSettingsScreen
@@ -61,9 +58,7 @@ import com.slideindex.app.ui.viewmodel.OcrModelSettingsViewModel
 import com.slideindex.app.ui.viewmodel.SearchEngineSettingsViewModel
 import com.slideindex.app.ui.viewmodel.ShareImageOcrHistoryViewModel
 import com.slideindex.app.ui.viewmodel.TranslateSettingsViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
     nativeEnginePackNavEntry(ctx)
@@ -181,9 +176,6 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
 
     hiltEntry<AppNavKey.SearchEnginePickApp> { key ->
         val viewModel: SearchEngineSettingsViewModel = hiltViewModel(ctx.activity)
-        val context = LocalContext.current
-        val scope = rememberCoroutineScope()
-        val pickAppIconFailedMessage = stringResource(R.string.search_engine_pick_app_icon_failed)
         val editorDraft by viewModel.editorDraft.collectAsStateWithLifecycle()
         val returnKey = if (key.isImageSearch) {
             AppNavKey.FloatBallImageSearchEngineEditor(editorDraft?.engineId.orEmpty())
@@ -211,27 +203,16 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
                         ctx.navigateBackTo(returnKey)
                     }
                     "APP_ICON" -> {
-                        scope.launch {
-                            val iconPath = withContext(Dispatchers.IO) {
-                                SearchEngineIconStorage.saveIconFromPackage(context, app.packageName)
-                            }
-                            if (iconPath != null) {
-                                viewModel.updateDraft {
-                                    it.copy(
-                                        pendingIconPath = iconPath,
-                                        pendingIconUri = null,
-                                        pendingTextIcon = null,
-                                    )
-                                }
-                                ctx.navigateBackTo(returnKey)
-                            } else {
-                                android.widget.Toast.makeText(
-                                    context,
-                                    pickAppIconFailedMessage,
-                                    android.widget.Toast.LENGTH_SHORT,
-                                ).show()
-                            }
+                        // 不落快照：记录「跟随这个应用」，之后图标库改图会自动跟着变。
+                        viewModel.updateDraft {
+                            it.copy(
+                                pendingIconSourcePackage = app.packageName,
+                                pendingIconPath = null,
+                                pendingIconUri = null,
+                                pendingTextIcon = null,
+                            )
                         }
+                        ctx.navigateBackTo(returnKey)
                     }
                 }
             },
@@ -259,8 +240,6 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
 
     hiltEntry<AppNavKey.SearchEnginePickShareTarget> { key ->
         val viewModel: SearchEngineSettingsViewModel = hiltViewModel(ctx.activity)
-        val context = LocalContext.current
-        val scope = rememberCoroutineScope()
         val editorDraft by viewModel.editorDraft.collectAsStateWithLifecycle()
         if (key.batchMode) {
             // 「批量添加图片分享引擎」：勾选多个接口后一次性建引擎，不经过编辑器。
@@ -289,23 +268,14 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
                             targetPackage = target.packageName,
                             targetActivity = target.activityClassName,
                             name = nextName,
+                            // 分享目标的图标走「跟随」：不落快照，运行期实时取该应用的当前图标。
+                            pendingIconSourcePackage = target.packageName,
+                            pendingIconPath = null,
+                            pendingIconUri = null,
+                            pendingTextIcon = null,
                         )
                     }
-                    scope.launch {
-                        val iconPath = withContext(Dispatchers.IO) {
-                            SearchEngineIconStorage.saveIconFromPackage(context, target.packageName)
-                        }
-                        if (iconPath != null) {
-                            viewModel.updateDraft {
-                                it.copy(
-                                    pendingIconPath = iconPath,
-                                    pendingIconUri = null,
-                                    pendingTextIcon = null,
-                                )
-                            }
-                        }
-                        ctx.navigateBackTo(returnKey)
-                    }
+                    ctx.navigateBackTo(returnKey)
                 },
             )
         }

@@ -90,30 +90,30 @@ class SettingsModuleRegistryTest {
             .toSet()
 
     private companion object {
-        const val EXPECTED_TOTAL_KEYS = 645
+        const val EXPECTED_TOTAL_KEYS = 665
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
             SettingsModule.EDGE_GESTURE to 84,
             SettingsModule.CORNER_WHEEL to 34,
             SettingsModule.QUICK_WHEEL to 2,
-            SettingsModule.FLOAT_BALL to 61,
+            SettingsModule.FLOAT_BALL to 70,
             SettingsModule.FLOATING_POINTER to 52,
             SettingsModule.FINGERTIP_RING to 13,
             SettingsModule.QUICK_LAUNCHER to 91,
-            SettingsModule.WIDGET_PANEL to 6,
-            SettingsModule.MESSAGE to 68,
+            SettingsModule.WIDGET_PANEL to 7,
+            SettingsModule.MESSAGE to 73,
             SettingsModule.OTP to 24,
-            SettingsModule.SHAKE to 40,
+            SettingsModule.SHAKE to 42,
             SettingsModule.CLIPBOARD to 59,
-            SettingsModule.DRAG_DROP to 4,
+            SettingsModule.DRAG_DROP to 5,
             SettingsModule.STASH to 5,
-            SettingsModule.SEARCH to 38,
+            SettingsModule.SEARCH to 39,
             SettingsModule.FREE_WINDOW to 13,
             SettingsModule.FREEZER to 6,
             SettingsModule.SHELL to 1,
             SettingsModule.ACTIVITY_SHORTCUTS to 3,
             SettingsModule.THEME_UI to 19,
-            SettingsModule.GENERAL to 22,
+            SettingsModule.GENERAL to 23,
         )
     }
 }

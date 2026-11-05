@@ -23,9 +23,10 @@ object SearchEngineIconStorage {
 
     fun saveIconFromPackage(context: Context, packageName: String): String? {
         if (packageName.isBlank()) return null
-        val drawable = runCatching {
-            context.packageManager.getApplicationIcon(packageName)
-        }.getOrNull() ?: return null
+        // 全局图标覆盖优先（扩展 → 图标库）：落快照时用的应该是用户当前看到的那张图
+        val drawable = com.slideindex.app.ui.AppIconOverride.drawable(context, packageName, 128)
+            ?: runCatching { context.packageManager.getApplicationIcon(packageName) }.getOrNull()
+            ?: return null
         val bytes = ByteArrayOutputStream().use { stream ->
             val bitmap = drawable.toBitmap(128, 128)
             if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)) return null

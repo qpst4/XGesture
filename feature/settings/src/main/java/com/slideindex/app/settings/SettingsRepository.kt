@@ -81,6 +81,7 @@ class SettingsRepository @Inject constructor(
                 overlay.migrateFvRingLauncherPreferenceKeysOnce()
                 overlay.migrateFloatBallInstantTranslateDefaultOnOnce()
                 edge.persistOppositeGestureSlotRepairIfNeeded()
+                migrateSearchEngineIconSourcesOnce().getOrThrow()
             }.onFailure {
                 android.util.Log.w(
                     "SettingsRepository",
@@ -923,6 +924,25 @@ class SettingsRepository @Inject constructor(
         val updated = transform(SearchEngineStore.readFromPreferences(prefs, context))
         prefs[SettingsPreferenceKeys.SEARCH_ENGINES_JSON] = SearchEngineStore.encode(updated)
         prefs[SettingsPreferenceKeys.SEARCH_ENGINES_INITIALIZED] = true
+    }
+
+    /**
+     * 一次性迁移：旧版本把分享 / 外部跳转引擎的图标落成了快照，这里补上「跟随的应用包名」。
+     *
+     * 只在首次执行（标记见 [SettingsPreferenceKeys.SEARCH_ENGINE_ICON_SOURCE_MIGRATED]）：
+     * 备份导入的旧数据不会被反复改写，用户手动切回固定图标的结果也不会被覆盖。
+     */
+    private suspend fun migrateSearchEngineIconSourcesOnce() = editor.edit { prefs ->
+        if (prefs[SettingsPreferenceKeys.SEARCH_ENGINE_ICON_SOURCE_MIGRATED] == true) return@edit
+        prefs[SettingsPreferenceKeys.SEARCH_ENGINE_ICON_SOURCE_MIGRATED] = true
+        if (prefs[SettingsPreferenceKeys.SEARCH_ENGINES_INITIALIZED] != true) return@edit
+        val raw = prefs[SettingsPreferenceKeys.SEARCH_ENGINES_JSON] ?: return@edit
+        val engines = SearchEngineStore.decodeOrEmpty(raw)
+        if (engines.isEmpty()) return@edit
+        val migrated = SearchEngineIconSourceMigration.migrate(engines)
+        if (migrated != engines) {
+            prefs[SettingsPreferenceKeys.SEARCH_ENGINES_JSON] = SearchEngineStore.encode(migrated)
+        }
     }
 
     suspend fun setLauncherShortcutMenuOrder(ids: List<String>) =

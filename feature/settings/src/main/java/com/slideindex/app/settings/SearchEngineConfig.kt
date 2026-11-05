@@ -28,6 +28,13 @@ data class SearchEngineConfig(
     val iconType: SearchIconType = SearchIconType.OTHER,
     /** Relative path under app files dir, e.g. search_icons/saveIcon-xxx */
     val iconPath: String? = null,
+    /**
+     * 「用应用图标」时跟随的应用包名。
+     *
+     * 非空时优先实时取该应用的当前图标（会走图标库的全局覆盖），不再依赖 [iconPath] 的快照；
+     * 只有在取不到（应用被卸载、换设备没装）时才回退到 [iconPath]。
+     */
+    val iconSourcePackage: String? = null,
     val textIcon: String? = null,
     /** Prefix shortcut for search panel, e.g. "g" → Google; triggers after a trailing space. */
     val aliasCode: String? = null,

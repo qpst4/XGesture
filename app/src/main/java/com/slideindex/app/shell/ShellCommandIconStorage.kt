@@ -18,9 +18,10 @@ object ShellCommandIconStorage {
 
     fun saveIconFromPackage(context: Context, packageName: String): String? {
         if (packageName.isBlank()) return null
-        val drawable = runCatching {
-            context.packageManager.getApplicationIcon(packageName)
-        }.getOrNull() ?: return null
+        // 全局图标覆盖优先（扩展 → 图标库）：与快捷方式 / 圆环槽位的快照保持一致
+        val drawable = com.slideindex.app.ui.AppIconOverride.drawable(context, packageName, 128)
+            ?: runCatching { context.packageManager.getApplicationIcon(packageName) }.getOrNull()
+            ?: return null
         val bytes = ByteArrayOutputStream().use { stream ->
             val bitmap = drawable.toBitmap(128, 128)
             if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)) return null

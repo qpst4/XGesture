@@ -120,6 +120,7 @@ fun SearchEngineEditorScreen(
     val pendingIconUri = draft.pendingIconUri
     val pendingIconPath = draft.pendingIconPath
     val pendingTextIcon = draft.pendingTextIcon
+    val pendingIconSourcePackage = draft.pendingIconSourcePackage
 
     var showTextIconDialog by remember(initialEngine?.id) { mutableStateOf(false) }
     var showIdentityDialog by remember(initialEngine?.id) { mutableStateOf(false) }
@@ -142,6 +143,7 @@ fun SearchEngineEditorScreen(
         pendingIconUri,
         pendingIconPath,
         pendingTextIcon,
+        pendingIconSourcePackage,
     ) {
         buildPreviewEngine(
             initialEngine = initialEngine,
@@ -150,6 +152,7 @@ fun SearchEngineEditorScreen(
             hasPendingIconUri = pendingIconUri != null,
             pendingIconPath = pendingIconPath,
             pendingTextIcon = pendingTextIcon,
+            iconSourcePackage = pendingIconSourcePackage,
         )
     }
 
@@ -162,6 +165,7 @@ fun SearchEngineEditorScreen(
                 pendingIconPath = null,
                 pendingTextIcon = null,
                 pendingIconUri = uri,
+                pendingIconSourcePackage = null,
             )
         }
     }
@@ -192,6 +196,7 @@ fun SearchEngineEditorScreen(
                 hasPendingIcon = pendingIconUri != null || pendingIconPath != null,
                 pendingIconPath = pendingIconPath,
                 pendingTextIcon = pendingTextIcon,
+                iconSourcePackage = pendingIconSourcePackage,
             )
             val normalizedAlias = SearchPanelAliasResolver.normalizeAliasCode(engine.aliasCode.orEmpty())
             when {
@@ -341,6 +346,16 @@ fun SearchEngineEditorScreen(
 
                     if (!isShareImageType) {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // 「用应用图标」时说明图标是跟随某个应用的，图标库改图会自动跟着变。
+                            pendingIconSourcePackage?.let { sourcePackage ->
+                                MiuixHintText(
+                                    text = stringResource(
+                                        R.string.search_engine_icon_following_app,
+                                        sourcePackage,
+                                    ),
+                                    horizontalPadding = 0.dp,
+                                )
+                            }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -393,6 +408,7 @@ fun SearchEngineEditorScreen(
                                                         pendingIconUri = null,
                                                         pendingTextIcon = null,
                                                         pendingIconPath = iconPath,
+                                                        pendingIconSourcePackage = null,
                                                     )
                                                 }
                                             } else {
@@ -519,6 +535,7 @@ fun SearchEngineEditorScreen(
                         pendingIconUri = null,
                         pendingIconPath = null,
                         pendingTextIcon = text,
+                        pendingIconSourcePackage = null,
                     )
                 }
                 showTextIconDialog = false
@@ -757,8 +774,10 @@ private fun buildPreviewEngine(
     hasPendingIconUri: Boolean,
     pendingIconPath: String?,
     pendingTextIcon: String?,
+    iconSourcePackage: String?,
 ): SearchEngineConfig {
     val iconType = when {
+        iconSourcePackage != null -> SearchIconType.OTHER
         hasPendingIconUri || pendingIconPath != null -> SearchIconType.URI
         !pendingTextIcon.isNullOrBlank() -> SearchIconType.TEXT
         else -> initialEngine?.iconType ?: SearchIconType.OTHER
@@ -777,6 +796,7 @@ private fun buildPreviewEngine(
         } else {
             null
         },
+        iconSourcePackage = iconSourcePackage,
     )
 }
 
@@ -794,9 +814,11 @@ private fun buildEngine(
     hasPendingIcon: Boolean,
     pendingIconPath: String?,
     pendingTextIcon: String?,
+    iconSourcePackage: String?,
 ): SearchEngineConfig {
     val id = initialEngine?.id ?: "engine_${System.currentTimeMillis()}"
     val iconType = when {
+        iconSourcePackage != null -> SearchIconType.OTHER
         hasPendingIcon -> SearchIconType.URI
         !pendingTextIcon.isNullOrBlank() -> SearchIconType.TEXT
         else -> initialEngine?.iconType ?: SearchIconType.OTHER
@@ -826,6 +848,7 @@ private fun buildEngine(
         },
         autoInputEnter = autoInputEnter,
         iconType = iconType,
+        iconSourcePackage = iconSourcePackage,
         iconPath = if (iconType == SearchIconType.URI) {
             pendingIconPath ?: initialEngine?.iconPath?.takeIf { initialEngine.iconType == SearchIconType.URI }
         } else {

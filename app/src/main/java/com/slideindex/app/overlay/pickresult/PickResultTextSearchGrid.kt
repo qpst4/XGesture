@@ -61,7 +61,8 @@ import android.content.Context
 private val searchEngineBitmapCache = LruCache<String, android.graphics.Bitmap>(48)
 
 internal fun searchEngineIconCacheKey(engine: SearchEngineConfig): String =
-    "${engine.id}|${engine.iconType}|${engine.iconPath.orEmpty()}|${engine.textIcon.orEmpty()}"
+    "${engine.id}|${engine.iconType}|${engine.iconPath.orEmpty()}|${engine.textIcon.orEmpty()}|" +
+        "${engine.iconSourcePackage.orEmpty()}|${com.slideindex.app.ui.GlobalIconStore.revision}"
 
 internal fun invalidateSearchEngineIconCache(engineId: String) {
     val prefix = "$engineId|"
@@ -74,12 +75,10 @@ internal fun preloadPickResultSearchEngineIcons(
     context: Context,
     engines: List<SearchEngineConfig>,
 ) {
-    val filesDir = context.filesDir
-    val packageManager = context.packageManager
     engines.forEach { engine ->
         val cacheKey = searchEngineIconCacheKey(engine)
         if (searchEngineBitmapCache.get(cacheKey) != null) return@forEach
-        resolveSearchEngineBitmap(filesDir, engine, packageManager)?.let { bitmap ->
+        resolveSearchEngineBitmap(context, engine)?.let { bitmap ->
             searchEngineBitmapCache.put(cacheKey, bitmap)
         }
     }
@@ -363,7 +362,7 @@ fun SearchEngineIcon(
 
     LaunchedEffect(cacheKey) {
         bitmap = withContext(Dispatchers.IO) {
-            resolveSearchEngineBitmap(context.filesDir, engine, context.packageManager)
+            resolveSearchEngineBitmap(context, engine)
         }?.also { loaded ->
             searchEngineBitmapCache.put(cacheKey, loaded)
         }
@@ -414,21 +413,25 @@ internal fun loadPickResultSearchEngineBitmap(
 ): android.graphics.Bitmap? {
     val cacheKey = searchEngineIconCacheKey(engine)
     cachedSearchEngineBitmap(cacheKey)?.let { return it }
-    return resolveSearchEngineBitmap(context.filesDir, engine, context.packageManager)?.also { bitmap ->
+    return resolveSearchEngineBitmap(context, engine)?.also { bitmap ->
         searchEngineBitmapCache.put(cacheKey, bitmap)
     }
 }
 
-private fun resolveSearchEngineBitmap(
-    filesDir: File,
+internal fun resolveSearchEngineBitmap(
+    context: Context,
     engine: SearchEngineConfig,
-    packageManager: android.content.pm.PackageManager,
 ): android.graphics.Bitmap? {
     if (engine.iconType == SearchIconType.TEXT) return null
+    // 「用应用图标」：实时取该应用的当前图标，图标库改了要跟着变；
+    // 取不到（应用被卸载 / 换设备没装）再回退到下面 iconPath 的快照。
+    engine.iconSourcePackage?.takeIf { it.isNotBlank() }?.let { sourcePackage ->
+        appIconBitmap(context, sourcePackage)?.let { return it }
+    }
     if (engine.iconType == SearchIconType.URI) {
         val iconPath = engine.iconPath?.takeIf { it.isNotBlank() }
         if (iconPath != null) {
-            val file = File(filesDir, iconPath)
+            val file = File(context.filesDir, iconPath)
             if (file.isFile) {
                 runCatching { BitmapFactory.decodeFile(file.absolutePath) }.getOrNull()?.let { return it }
             }
@@ -437,9 +440,15 @@ private fun resolveSearchEngineBitmap(
     val pkg = engine.targetPackage?.takeIf { it.isNotBlank() }
         ?: engine.externJumpPackage?.takeIf { it.isNotBlank() }
     if (pkg != null) {
-        return runCatching {
-            packageManager.getApplicationIcon(pkg).toBitmap(128, 128)
-        }.getOrNull()
+        return appIconBitmap(context, pkg)
     }
     return null
+}
+
+/** 应用图标：先查全局图标覆盖（扩展 → 图标库），再退回系统图标。 */
+private fun appIconBitmap(context: Context, packageName: String): android.graphics.Bitmap? {
+    com.slideindex.app.ui.AppIconOverride.bitmap(context, packageName, 128)?.let { return it }
+    return runCatching {
+        context.packageManager.getApplicationIcon(packageName).toBitmap(128, 128)
+    }.getOrNull()
 }

@@ -2455,6 +2455,7 @@
     <string name="search_engine_pick_app_icon_title">选择应用图标</string>
     <string name="search_engine_pick_app_icon_loading">正在保存应用图标…</string>
     <string name="search_engine_pick_app_icon_failed">获取应用图标失败</string>
+    <string name="search_engine_icon_following_app">图标跟随：%1$s</string>
     <string name="search_engine_pick_app">选择应用</string>
     <string name="search_engine_pick_app_title">选择应用</string>
     <string name="search_engine_pick_activity">选择 Activity</string>

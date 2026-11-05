@@ -875,6 +875,7 @@
     <string name="search_engine_pick_app_icon_title">Choose app icon</string>
     <string name="search_engine_pick_app_icon_loading">Saving app icon…</string>
     <string name="search_engine_pick_app_icon_failed">Failed to load app icon</string>
+    <string name="search_engine_icon_following_app">Icon follows %1$s</string>
     <string name="search_engine_pick_app">Choose app</string>
     <string name="search_engine_pick_app_title">Choose app</string>
     <string name="search_engine_pick_activity">Choose activity</string>

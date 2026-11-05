@@ -54,6 +54,8 @@ data class SearchEngineDraft(
     val pendingIconUri: Uri? = null,
     val pendingIconPath: String? = null,
     val pendingTextIcon: String? = null,
+    /** 「用应用图标」时跟随的包名；非空表示图标实时跟随该应用（含图标库覆盖）。 */
+    val pendingIconSourcePackage: String? = null,
 )
 
 data class SearchEngineImportPreviewState(
@@ -119,6 +121,7 @@ class SearchEngineSettingsViewModel @Inject constructor(
             autoInputEnter = initialEngine?.autoInputEnter ?: true,
             pendingIconPath = initialEngine?.iconPath?.takeIf { initialEngine.iconType == SearchIconType.URI },
             pendingTextIcon = initialEngine?.textIcon?.takeIf { initialEngine.iconType == SearchIconType.TEXT },
+            pendingIconSourcePackage = initialEngine?.iconSourcePackage,
         )
         draftCategory = category
     }
@@ -251,6 +254,15 @@ class SearchEngineSettingsViewModel @Inject constructor(
                         textIcon = null,
                     )
                 }
+                result.engine.iconSourcePackage != null -> {
+                    // 「用应用图标」：不落盘，清掉旧快照，渲染时实时取该应用的当前图标。
+                    previous?.iconPath?.let { SearchEngineIconStorage.deleteIconIfOwned(appContext, it) }
+                    engine = engine.copy(
+                        iconType = SearchIconType.OTHER,
+                        iconPath = null,
+                        textIcon = null,
+                    )
+                }
                 result.engine.iconType == SearchIconType.TEXT -> {
                     previous?.iconPath?.let { oldPath ->
                         SearchEngineIconStorage.deleteIconIfOwned(appContext, oldPath)
@@ -327,19 +339,17 @@ class SearchEngineSettingsViewModel @Inject constructor(
                 )
                 return@launch
             }
-            val newEngines = withContext(Dispatchers.IO) {
-                fresh.mapIndexed { index, target ->
-                    val iconPath = SearchEngineIconStorage.saveIconFromPackage(appContext, target.packageName)
-                    SearchEngineConfig(
-                        id = "engine_${System.currentTimeMillis()}_$index",
-                        name = ShareImageTargetResolver.displayGroupTitle(target),
-                        engineType = engineType,
-                        iconType = if (iconPath != null) SearchIconType.URI else SearchIconType.OTHER,
-                        iconPath = iconPath,
-                        targetPackage = target.packageName,
-                        targetActivity = target.activityClassName,
-                    )
-                }
+            // 不再落盘快照：记录图标来源包名，运行期实时取该应用的当前图标（含图标库覆盖）。
+            val newEngines = fresh.mapIndexed { index, target ->
+                SearchEngineConfig(
+                    id = "engine_${System.currentTimeMillis()}_$index",
+                    name = ShareImageTargetResolver.displayGroupTitle(target),
+                    engineType = engineType,
+                    iconType = SearchIconType.OTHER,
+                    iconSourcePackage = target.packageName,
+                    targetPackage = target.packageName,
+                    targetActivity = target.activityClassName,
+                )
             }
             appendEngines(newEngines)
                 .onSuccess {

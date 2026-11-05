@@ -769,6 +769,10 @@ internal object SettingsPreferenceKeys {
     val SEARCH_ENGINES_JSON = stringPreferencesKey("search_engines_json")
     val DRAG_FLOW_TEXT_ENGINES_JSON = stringPreferencesKey("drag_flow_text_engines_json")
     val SEARCH_ENGINES_INITIALIZED = booleanPreferencesKey("search_engines_initialized")
+
+    /** 一次性迁移标记：给旧引擎补「图标跟随的应用包名」，见 [SearchEngineIconSourceMigration]。 */
+    val SEARCH_ENGINE_ICON_SOURCE_MIGRATED =
+        booleanPreferencesKey("search_engine_icon_source_migrated")
     val SEARCH_ENGINE_GRID_COLUMNS = intPreferencesKey("search_engine_grid_columns")
     val SEARCH_ENGINE_GRID_ROWS = intPreferencesKey("search_engine_grid_rows")
     val SEARCH_ENGINE_SHOW_LABELS = booleanPreferencesKey("search_engine_show_labels")
