@@ -155,6 +155,12 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.OverlayHostRuntime.isAccessibilityServiceEnabled = { ctx ->
             com.slideindex.app.util.PermissionHelper.isAccessibilityServiceEnabled(ctx)
         }
+        // 浮层 Compose 的透明主题与应用内语言：资源 id 与 locale 包装器都在 :app，注入给模块。
+        com.slideindex.app.overlay.OverlayHostRuntime.overlayThemeResId =
+            com.slideindex.app.R.style.Theme_SlideIndex_Transparent
+        com.slideindex.app.overlay.OverlayHostRuntime.wrapOverlayLocale = { ctx ->
+            com.slideindex.app.util.AppLocaleApplier.wrapOverlayContext(ctx)
+        }
         com.slideindex.app.overlay.OverlayHostRuntime.accessibilityHostContext = {
             com.slideindex.app.service.SlideIndexAccessibilityService.overlayHostContext()
         }
@@ -170,6 +176,12 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         }
         com.slideindex.app.overlay.OverlayZOrderHooks.edgePresentationNeedsChromeRaise = {
             com.slideindex.app.service.SlideIndexAccessibilityService.edgePresentationNeedsChromeRaise()
+        }
+        com.slideindex.app.overlay.OverlayZOrderHooks.isFloatBallShowing = {
+            com.slideindex.app.overlay.FloatBallOverlay.isShowing
+        }
+        com.slideindex.app.overlay.OverlayZOrderHooks.notifyPanelAttachedAboveChrome = {
+            com.slideindex.app.overlay.FloatBallOverlay.notifyPanelAttachedAboveChrome()
         }
         if (AppProcess.isEngine) return
 

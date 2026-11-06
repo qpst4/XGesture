@@ -26,11 +26,11 @@
 | :--- | :--- | :--- |
 | `screenshot` | `FloatBallPickResult` / `FloatBallPickResultPanel` / `FloatBallTextPick` / `OverlayComposeDialogHost` / `ScreenPinManager` | 单例 |
 | `backpanel` | `OverlayScreenMetrics`（✅ 已下移）+ `AndroidBackPanelColors → ui.miuix.theme`（✅ 已解除）+ **`R.dimen.navigation_edge_*` 30+ 个尺寸资源** | 资源 |
-| `quickwheel` | `OverlayBlurGate` / `OverlayComposeOwner` / `ShellCommandBadgeOverlay` / `ShortcutBadgeOverlay` | 主题 + 宿主 + 单例 |
-| `animation` | `OverlayComposeOwner` | 宿主 |
-| `volumepanel` | `FloatBallOverlay` / `LocalFrostedGlassBackdrop` / `OverlayComposeOwner` / `OverlayViewBackHandler` | 宿主 + 单例 |
+| `quickwheel` | `OverlayBlurGate`（✅ 已下移）/ `OverlayComposeOwner`（✅ 已下移）/ `ShellCommandBadgeOverlay` / `ShortcutBadgeOverlay` | 单例 |
+| `animation` | `OverlayComposeOwner`（✅ 已下移） | ✅ 可搬 |
+| `volumepanel` | `FloatBallOverlay` / `LocalFrostedGlassBackdrop` / `OverlayViewBackHandler`（`OverlayComposeOwner` ✅ 已下移） | 单例 |
 | `fingertip` | `ShellCommandBadgeRenderer` | 单例 |
-| `share` | `OverlayComposeOwner` / `OverlayToastWindow` / `OverlayViewBackHandler` | 宿主 + 单例 |
+| `share` | `OverlayToastWindow` / `OverlayViewBackHandler`（`OverlayComposeOwner` ✅ 已下移） | 单例 |
 | `compositor` | 已用 `OverlayZOrderHooks` 反转 | ✅ 已完成 |
 
 ## 2. 阶段 A：先拆底座（4–6 天）
@@ -47,14 +47,17 @@
 
 **验收**：`:core:design` 独立编译通过；`unitTests` 全绿（323 类 / 2,421 用例）；`:app` 编译通过。
 
-### A2. 宿主层（`:core:overlay-host`，1–2 天）——🟡 部分完成（2026-11-06）
+### A2. 宿主层（`:core:overlay-host`，1–2 天）——✅ 已完成（2026-11-06）
 
-- ✅ `OverlayScreenMetrics` 已挪进 `:core:overlay-host`（`object` 改 public；顺带把 `isDisplayLandscapeRotation` 一起下移，`:app` 不再持有）。
-- ⬜ `OverlayComposeOwner` 的 `R` 依赖：把 `R.style.Theme_SlideIndex_Transparent` 换成 `OverlayHostRuntime.overlayThemeResId`。
-- ⬜ `AppLocaleApplier` 依赖：改成 `OverlayHostRuntime.wrapOverlayLocale` 回调（模式已有先例）。
-- ⬜ `OverlayScreenMetrics` 之后，`backpanel` 又撞到新的一层：`EdgePanelParams.kt` 用了 **30+ 个 `R.dimen.navigation_edge_*`**，这些尺寸资源还在 `:app/src/main/res/values`。搬 `backpanel` 之前要先把这批 dimen 挪进面板模块（并确认没有别处引用）。
+- ✅ `OverlayScreenMetrics` 下移（`object` 改 public；`isDisplayLandscapeRotation` 一并下移）。
+- ✅ `OverlayComposeOwner` 的 `R` 依赖：换成 `OverlayHostRuntime.overlayThemeResId`（由 `SlideIndexApp` 注入 `R.style.Theme_SlideIndex_Transparent`，为 0 时退回系统透明主题）。
+- ✅ `AppLocaleApplier` 依赖：换成 `OverlayHostRuntime.wrapOverlayLocale` 回调。
+- ✅ `OverlayComposeOwner` + `OverlayCompose` 迁入模块（模块新增 Compose / lifecycle / savedstate 依赖）。
+- ✅ `OverlayFullScreenPanelHost` 迁入模块：浮球两处调用（`isShowing` / `notifyPanelAttachedAboveChrome`）用 `OverlayZOrderHooks` 反转。
+- ✅ `OverlayBlurGate` 的纯决策部分迁入模块；读设置的那层（`rememberOverlayBlurEnabled`）留在 `:app` 的 `OverlayBlurGateCompose.kt`。
+- ⬜ `backpanel` 还有一个独立阻塞：`EdgePanelParams.kt` 用了 **30+ 个 `R.dimen.navigation_edge_*`**，这批尺寸资源要挪进面板模块（并确认没有别处引用）。
 
-**验收**：`OverlayFullScreenPanelHost` 可以搬进模块（`ScreenOffDismissReceiver` 已在模块里）。
+**验收**：`:core:overlay-host` 19 文件 / 1,644 行；`:app` 的 `overlay/` 217 个文件。
 
 ### A3. 单例接口化（1–2 天）
 
@@ -96,6 +99,7 @@
 | 批 2a | `compositor` → `:core:overlay-host` | 5 文件 / 296 行，4 个外部调用用 `OverlayZOrderHooks` 反转 |
 | **A1** | 设计层种子 → `:core:design` | `AppThemeSpec` + `MiuixSeedResolver` + `AppMaterialColorScheme` 迁入；主题枚举下沉 `:core:common`；`:app` 留适配层 |
 | **A2a** | `OverlayScreenMetrics` → `:core:overlay-host` | 60 行；`isDisplayLandscapeRotation` 一并下移，`:app` 只剩调用 |
+| **A2b** | 宿主层 → `:core:overlay-host` | `OverlayComposeOwner` / `OverlayCompose` / `OverlayFullScreenPanelHost` / `OverlayBlurGate`（纯决策部分）迁入；R 与语言依赖用 `OverlayHostRuntime` 反转，浮球用 `OverlayZOrderHooks` 反转。模块 19 文件 / 1,644 行 |
 
 `:core:overlay-host` 现有 15 个文件 / 1,020 行。
 

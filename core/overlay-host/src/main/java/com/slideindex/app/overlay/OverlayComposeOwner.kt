@@ -23,8 +23,6 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
-import com.slideindex.app.R
-import com.slideindex.app.util.AppLocaleApplier
 import java.util.concurrent.ConcurrentHashMap
 
 class OverlayComposeOwner : LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
@@ -62,8 +60,11 @@ object OverlayCompose {
      */
     fun themedContext(context: Context): Context {
         val uiContext = resolveUiContext(unwrapThemeContext(context))
-        val localizedContext = AppLocaleApplier.wrapOverlayContext(uiContext)
-        return ContextThemeWrapper(localizedContext, R.style.Theme_SlideIndex_Transparent)
+        val localizedContext = OverlayHostRuntime.wrapOverlayLocale?.invoke(uiContext) ?: uiContext
+        val themeRes = OverlayHostRuntime.overlayThemeResId
+            .takeIf { it != 0 }
+            ?: android.R.style.Theme_Translucent_NoTitleBar
+        return ContextThemeWrapper(localizedContext, themeRes)
     }
 
     private fun unwrapThemeContext(context: Context): Context {

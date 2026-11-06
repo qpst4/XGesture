@@ -24,4 +24,12 @@ object OverlayZOrderHooks {
     /** 无障碍呈现层是否仍然需要把 chrome 抬起（未接入时按 false）。 */
     @Volatile
     var edgePresentationNeedsChromeRaise: (() -> Boolean)? = null
+
+    /** 悬浮球当前是否可见（全屏面板创建时要决定是否把 chrome 抬上去）。 */
+    @Volatile
+    var isFloatBallShowing: (() -> Boolean)? = null
+
+    /** 面板挂到 chrome 之上时通知悬浮球（它会重排自己的 z 序）。 */
+    @Volatile
+    var notifyPanelAttachedAboveChrome: (() -> Unit)? = null
 }

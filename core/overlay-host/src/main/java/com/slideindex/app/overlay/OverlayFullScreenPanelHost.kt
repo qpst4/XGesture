@@ -90,8 +90,8 @@ class OverlayFullScreenPanelHost(
             dialogOwner.destroy()
             return null
         }
-        if (FloatBallOverlay.isShowing) {
-            FloatBallOverlay.notifyPanelAttachedAboveChrome()
+        if (OverlayZOrderHooks.isFloatBallShowing?.invoke() == true) {
+            OverlayZOrderHooks.notifyPanelAttachedAboveChrome?.invoke()
         }
         OverlayPanelSystemGestureExclusion.attach(compose, excludeLeftBackEdge = excludeLeftBackEdge)
 
