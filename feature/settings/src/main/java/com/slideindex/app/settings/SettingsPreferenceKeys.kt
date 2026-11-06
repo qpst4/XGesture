@@ -164,6 +164,8 @@ internal object SettingsPreferenceKeys {
     val APP_CAROUSEL_CANCEL_DISTANCE_UP_DP = intPreferencesKey("app_carousel_cancel_distance_up_dp")
     val APP_CAROUSEL_CANCEL_DISTANCE_DOWN_DP = intPreferencesKey("app_carousel_cancel_distance_down_dp")
     val APP_CAROUSEL_CANCEL_BOTH_DIRECTIONS = booleanPreferencesKey("app_carousel_cancel_both_directions")
+    val APP_CAROUSEL_SLIDE_REVERSED = booleanPreferencesKey("app_carousel_slide_reversed")
+    val APP_CAROUSEL_SLIDE_SENSITIVITY = intPreferencesKey("app_carousel_slide_sensitivity")
     val FV_RING_LAUNCHER_CIRCLE_COUNT = intPreferencesKey("fv_ring_launcher_circle_count")
     val FV_RING_LAUNCHER_ICON_SIZE_DP = floatPreferencesKey("fv_ring_launcher_icon_size_dp")
     val FV_RING_LAUNCHER_ICON_SHAPE = stringPreferencesKey("fv_ring_launcher_icon_shape")

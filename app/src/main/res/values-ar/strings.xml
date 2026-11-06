@@ -4244,6 +4244,9 @@
     <string name="app_carousel_separate_cancel_distances">تعيين مسافات الإلغاء لأعلى وأسفل بشكل منفصل</string>
     <string name="app_carousel_cancel_distance_up">مسافة الإلغاء للأعلى</string>
     <string name="app_carousel_cancel_distance_down">مسافة الإلغاء للأسفل</string>
+    <string name="app_carousel_slide_reversed">عكس اتجاه السحب</string>
+    <string name="app_carousel_slide_reversed_desc">اعكس اتجاه السحب لتصفح التطبيقات الأخيرة</string>
+    <string name="app_carousel_slide_sensitivity">حساسية السحب</string>
     <string name="app_carousel_cancel_both_directions">إلغاء بالاتجاهين أعلى وأسفل</string>
     <string name="extension_about_subtitle">الإصدار، التحديثات، وسياسة الخصوصية</string>
     <string name="external_invocation_keyword_example">كلمة مفتاحية</string>
