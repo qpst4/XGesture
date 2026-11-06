@@ -34,6 +34,15 @@ class ShakeGestureDetector(
      */
     private var cooldownMs = NORMAL_COOLDOWN_MS
 
+    /**
+     * 反向手势的额外忽略窗口。
+     *
+     * 普通模式 800ms：一次物理晃动会带回摆，防止「左翻」被立刻跟一个「右翻」。
+     * 菜单模式下必须收窄到与入场冷却同一量级——「左翻打开菜单、右翻执行」是正常操作，
+     * 留着 800ms 会让用户觉得晃了没反应。
+     */
+    private var reverseIgnoreMs = REVERSE_IGNORE_MS
+
     private var lastTriggerTime = 0L
     private var lastDirection: ShakeGestureType? = null
     private var lastAccel = floatArrayOf(0f, 0f, 0f)
@@ -54,6 +63,12 @@ class ShakeGestureDetector(
     @Synchronized
     fun setCooldownMs(valueMs: Long) {
         cooldownMs = valueMs.coerceIn(MIN_COOLDOWN_MS, NORMAL_COOLDOWN_MS)
+    }
+
+    /** 调整反向忽略窗口；菜单模式传入场冷却即可，`0` 表示不额外忽略。 */
+    @Synchronized
+    fun setReverseIgnoreMs(valueMs: Long) {
+        reverseIgnoreMs = valueMs.coerceIn(0L, REVERSE_IGNORE_MS)
     }
 
     @Synchronized
@@ -151,7 +166,7 @@ class ShakeGestureDetector(
         if (now - lastTriggerTime < cooldownMs) return
 
         if (lastDirection != null && isReverseDirection(direction, lastDirection!!)) {
-            if (now - lastTriggerTime < REVERSE_IGNORE_MS) return
+            if (now - lastTriggerTime < reverseIgnoreMs) return
         }
 
         lastTriggerTime = now

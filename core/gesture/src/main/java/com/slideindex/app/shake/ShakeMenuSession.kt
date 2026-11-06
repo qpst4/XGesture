@@ -22,12 +22,18 @@ sealed interface ShakeMenuDecision {
     data class Execute(val menu: ShakeMenu, val action: GestureAction) : ShakeMenuDecision
 
     /**
-     * 菜单内没有可执行的动作：忽略这次晃动，**保持菜单打开**。
-     *
-     * 包括两种情形：入场冷却内（[ShakeMenuSession] 刚建立，用户手还没停）和该方向没配置动作。
-     * 保持打开是为了让用户晃错方向后还能接着晃对的方向，不必重新进入菜单。
+     * 入场冷却内：这次晃动大概率还是「打开菜单」那一下的余波，吞掉但**保持菜单打开**，
+     * 否则浮层会刚出现就被同一串抖动关掉。
      */
-    data class Ignored(val menu: ShakeMenu) : ShakeMenuDecision
+    data class CoolingDown(val menu: ShakeMenu) : ShakeMenuDecision
+
+    /**
+     * 晃到了菜单里没有配置动作的方向：这次选择作废，**退出菜单状态**。
+     *
+     * 与 [CoolingDown] 的区别是「用户确实做完了一次方向选择」——按约定，晃动菜单是用完即走，
+     * 不管这一下有没有命中动作，浮层都该收起。
+     */
+    data class Unbound(val menu: ShakeMenu) : ShakeMenuDecision
 
     /** 会话已失效（超时或菜单被删）：退出菜单状态，这次晃动作废。 */
     data class Expired(val menuId: String) : ShakeMenuDecision
@@ -108,12 +114,13 @@ object ShakeMenuRuntime {
             ?: return ShakeMenuOutcome(session = null, decision = ShakeMenuDecision.Expired(session.menuId))
 
         if (ageMs < guardMs) {
-            return ShakeMenuOutcome(session = session, decision = ShakeMenuDecision.Ignored(menu))
+            return ShakeMenuOutcome(session = session, decision = ShakeMenuDecision.CoolingDown(menu))
         }
 
         val action = menu.actionFor(type)
         if (action == GestureAction.None) {
-            return ShakeMenuOutcome(session = session, decision = ShakeMenuDecision.Ignored(menu))
+            // 用户完成了一次方向选择，只是这个方向没配动作：同样收起菜单。
+            return ShakeMenuOutcome(session = null, decision = ShakeMenuDecision.Unbound(menu))
         }
         return ShakeMenuOutcome(session = null, decision = ShakeMenuDecision.Execute(menu, action))
     }

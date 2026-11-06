@@ -255,7 +255,9 @@ fun GestureActionPickerScreen(
     val safeSelect: (GestureAction) -> Unit = { action ->
         if (action is GestureAction.RunMacro && action.macroId.isBlank()) {
             macroPickVisible = true
-        } else if (action is GestureAction.OpenShakeMenu) {
+        } else if (action is GestureAction.OpenShakeMenu && action.menuId.isBlank()) {
+            // 只在「还没选菜单」时开弹窗；选完回填的这份 action 必须落到下面的 onSelect，
+            // 否则会弹窗重开、永远绑不上。
             shakeMenuPickVisible = true
         } else if (!hasSelected) {
             hasSelected = true

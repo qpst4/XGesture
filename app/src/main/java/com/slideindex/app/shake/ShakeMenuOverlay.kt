@@ -22,6 +22,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,16 +34,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
+import com.slideindex.app.di.AppGraphEntryPoint
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.overlay.OverlayCompose
 import com.slideindex.app.overlay.OverlayComposeOwner
 import com.slideindex.app.overlay.OverlayWindowTypes
 import com.slideindex.app.service.SlideIndexAccessibilityService
+import com.slideindex.app.ui.compose.LocalAppDependencies
 import com.slideindex.app.ui.gestureActionIcon
 import com.slideindex.app.ui.gestureActionSettingSubtitle
 import com.slideindex.app.ui.shakeGestureIcon
 import com.slideindex.app.ui.shakeGestureLabel
 import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
+import dagger.hilt.android.EntryPointAccessors
 
 /**
  * 「晃动菜单」浮层。
@@ -62,9 +67,24 @@ object ShakeMenuOverlay {
     fun show(context: Context, menu: ShakeMenu) {
         mainHandler.post {
             if (!ensureAttached(context)) return@post
+            Log.i(
+                TAG,
+                "show menu=${menu.id} name=${menu.name} directions=${menu.configuredDirections}",
+            )
             composeView?.setContent {
-                OverlayAwareModuleTheme {
-                    ShakeMenuPanel(menu)
+                // OverlayAwareModuleTheme 会读 LocalAppDependencies（主题色等），悬浮窗的
+                // Compose 环境里没有 MainActivity 那层 Provider，必须自己补上，
+                // 否则组合期直接抛 "AppDependencies not provided"。
+                val appDeps = remember {
+                    EntryPointAccessors.fromApplication(
+                        context.applicationContext,
+                        AppGraphEntryPoint::class.java,
+                    ).dependencies()
+                }
+                CompositionLocalProvider(LocalAppDependencies provides appDeps) {
+                    OverlayAwareModuleTheme {
+                        ShakeMenuPanel(menu)
+                    }
                 }
             }
             bringToFront()
@@ -76,6 +96,7 @@ object ShakeMenuOverlay {
             val wm = windowManager
             val view = composeView
             if (wm != null && view != null) {
+                Log.d(TAG, "detach")
                 runCatching { wm.removeView(view) }
             }
             OverlayCompose.teardownOverlayCompose(view, composeOwner)

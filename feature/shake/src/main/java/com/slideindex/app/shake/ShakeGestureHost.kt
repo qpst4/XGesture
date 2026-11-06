@@ -197,6 +197,10 @@ class ShakeGestureHost @Inject constructor(
         activeDetector.setCooldownMs(
             if (menuSession != null) shake.menuGuardMs else NORMAL_COOLDOWN_MS,
         )
+        // 反向忽略同理：菜单内的反方向是正常操作，不能按普通模式的 800ms 拦。
+        activeDetector.setReverseIgnoreMs(
+            if (menuSession != null) shake.menuGuardMs else NORMAL_REVERSE_IGNORE_MS,
+        )
         // 部分机型息屏后会挂起非唤醒传感器，切屏幕状态时重新注册一次恢复采样。
         if (activeDetector.isRunning && screenChanged) {
             activeDetector.restartSensor()
@@ -287,7 +291,7 @@ class ShakeGestureHost @Inject constructor(
         dispatchAction(action, settings, shake, type, screenOn)
     }
 
-    /** 菜单状态下的一次晃动：命中菜单动作就执行并退出，未配置该方向则保持菜单打开。 */
+    /** 菜单状态下的一次晃动：命中动作就执行，没配动作也收起菜单；冷却内则只吞掉这次事件。 */
     private fun handleMenuGesture(
         session: ShakeMenuSession,
         shake: ShakeGestureSettings,
@@ -311,8 +315,13 @@ class ShakeGestureHost @Inject constructor(
                     dispatchAction(decision.action, settings, shake, type, screenOn)
                 }
             }
-            is ShakeMenuDecision.Ignored -> {
-                Log.d(TAG, "menu ${decision.menu.id} direction $type ignored")
+            is ShakeMenuDecision.Unbound -> {
+                // 用户确实做完了一次方向选择，只是这个方向没配动作：收菜单，不做别的。
+                Log.d(TAG, "menu ${decision.menu.id} direction $type unbound, closing")
+                dismissMenuOverlay()
+            }
+            is ShakeMenuDecision.CoolingDown -> {
+                Log.d(TAG, "menu ${decision.menu.id} direction $type ignored (cooldown)")
             }
             is ShakeMenuDecision.Expired -> {
                 Log.d(TAG, "menu ${decision.menuId} expired")
@@ -336,6 +345,8 @@ class ShakeGestureHost @Inject constructor(
         }
         menuSession = ShakeMenuRuntime.open(menu.id, SystemClock.elapsedRealtime())
         detector?.setCooldownMs(shake.menuGuardMs)
+        // 「左翻打开、右翻执行」在菜单里是正常操作，反向忽略也必须缩到同一量级。
+        detector?.setReverseIgnoreMs(shake.menuGuardMs)
         mainHandler.removeCallbacks(menuDismissRunnable)
         mainHandler.postDelayed(menuDismissRunnable, ShakeMenuRuntime.DEFAULT_SESSION_TIMEOUT_MS)
         Log.i(
@@ -345,7 +356,13 @@ class ShakeGestureHost @Inject constructor(
         )
         deliverFeedback(shake, type, action, screenOn)
 
-        if (!shake.showMenuOverlay || !screenOn) return
+        if (!shake.showMenuOverlay) {
+            // 关掉「显示菜单状态」时菜单仍然生效，只是盲操作——这条日志用来区分
+            // 「浮层没画出来」和「设置里根本没让它画」。
+            Log.d(TAG, "shake menu overlay suppressed: showMenuOverlay=false")
+            return
+        }
+        if (!screenOn) return
         val show = { feedbackPort.showMenuOverlay(appContext, menu) }
         val delayMs = shake.menuDisplayDelayMs
         if (delayMs > 0L) {
@@ -356,11 +373,12 @@ class ShakeGestureHost @Inject constructor(
         }
     }
 
-    /** 关掉菜单浮层并恢复普通冷却；会话本身由调用方清空。 */
+    /** 关掉菜单浮层并恢复普通冷却/反向忽略；会话本身由调用方清空。 */
     private fun dismissMenuOverlay() {
         menuSession = null
         mainHandler.removeCallbacks(menuDismissRunnable)
         detector?.setCooldownMs(NORMAL_COOLDOWN_MS)
+        detector?.setReverseIgnoreMs(NORMAL_REVERSE_IGNORE_MS)
         feedbackPort.detachMenuOverlay()
     }
 
@@ -500,5 +518,8 @@ class ShakeGestureHost @Inject constructor(
 
         /** 普通模式的手势间隔，与 [ShakeGestureDetector] 的默认值保持一致。 */
         private const val NORMAL_COOLDOWN_MS = 500L
+
+        /** 普通模式的反向忽略窗口，与 [ShakeGestureDetector] 的默认值保持一致。 */
+        private const val NORMAL_REVERSE_IGNORE_MS = 800L
     }
 }

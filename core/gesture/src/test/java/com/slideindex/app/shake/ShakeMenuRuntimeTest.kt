@@ -32,7 +32,7 @@ class ShakeMenuRuntimeTest {
     }
 
     @Test
-    fun decide_insideGuard_ignoresAndKeepsSession() {
+    fun decide_insideGuard_coolsDownAndKeepsSession() {
         val session = ShakeMenuRuntime.open(leftFlipMenu.id, nowElapsedMs = 1_000L)
         val outcome = ShakeMenuRuntime.decide(
             session = session,
@@ -42,7 +42,7 @@ class ShakeMenuRuntimeTest {
             guardMs = 300L,
         )
         assertEquals(session, outcome.session)
-        assertEquals(ShakeMenuDecision.Ignored(leftFlipMenu), outcome.decision)
+        assertEquals(ShakeMenuDecision.CoolingDown(leftFlipMenu), outcome.decision)
     }
 
     @Test
@@ -63,7 +63,7 @@ class ShakeMenuRuntimeTest {
     }
 
     @Test
-    fun decide_unboundDirection_ignoresAndKeepsSession() {
+    fun decide_unboundDirection_closesSession() {
         val session = ShakeMenuRuntime.open(leftFlipMenu.id, nowElapsedMs = 1_000L)
         val outcome = ShakeMenuRuntime.decide(
             session = session,
@@ -72,12 +72,12 @@ class ShakeMenuRuntimeTest {
             nowElapsedMs = 2_000L,
             guardMs = 300L,
         )
-        assertEquals(session, outcome.session)
-        assertEquals(ShakeMenuDecision.Ignored(leftFlipMenu), outcome.decision)
+        assertNull(outcome.session)
+        assertEquals(ShakeMenuDecision.Unbound(leftFlipMenu), outcome.decision)
     }
 
     @Test
-    fun decide_noneActionIsTreatedAsUnbound() {
+    fun decide_noneAction_closesSession() {
         val menu = leftFlipMenu.copy(
             actions = mapOf(ShakeGestureType.LEFT_FLIP to GestureAction.None),
         )
@@ -88,8 +88,8 @@ class ShakeMenuRuntimeTest {
             type = ShakeGestureType.LEFT_FLIP,
             nowElapsedMs = 1_000L,
         )
-        assertEquals(ShakeMenuDecision.Ignored(menu), outcome.decision)
-        assertEquals(session, outcome.session)
+        assertEquals(ShakeMenuDecision.Unbound(menu), outcome.decision)
+        assertNull(outcome.session)
     }
 
     @Test
