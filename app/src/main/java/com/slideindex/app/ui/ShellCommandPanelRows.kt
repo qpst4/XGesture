@@ -207,7 +207,11 @@ internal fun ShellExecutionEnvironmentCard(
             BasicComponent(
                 modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
                 title = stringResource(R.string.shell_panel_environment_title),
-                summary = "Root $rootText · Shizuku $shizukuText",
+                summary = stringResource(
+                    R.string.shell_panel_environment_summary,
+                    shizukuText,
+                    rootText,
+                ),
                 onClick = { showDetails = true },
                 startAction = {
                     Box(
@@ -253,9 +257,19 @@ internal fun ShellExecutionEnvironmentCard(
             dismissText = null,
         ) {
             Column {
-                Text("Root：$rootText")
+                Text(
+                    stringResource(
+                        R.string.shell_panel_environment_detail_shizuku,
+                        shizukuText,
+                    ),
+                )
                 Spacer(Modifier.height(4.dp))
-                Text("Shizuku：$shizukuText")
+                Text(
+                    stringResource(
+                        R.string.shell_panel_environment_detail_root,
+                        rootText,
+                    ),
+                )
                 Spacer(Modifier.height(16.dp))
                 MiuixTextButton(
                     text = stringResource(R.string.shell_panel_root_check),

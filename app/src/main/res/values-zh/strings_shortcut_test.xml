@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="extension_shortcut_test_title">测试快捷方式</string>
-    <string name="extension_shortcut_test_subtitle">扫描系统动态/固定快捷方式（需要 Root 或 Shizuku）</string>
+    <string name="extension_shortcut_test_subtitle">扫描系统动态/固定快捷方式（需要 Shizuku 或 Root）</string>
 
     <string name="shortcut_test_title">快捷方式测试</string>
-    <string name="shortcut_test_tip">本页只读扫描系统快捷方式服务（dumpsys shortcut），需要 Root 或 Shizuku。点击条目只会通过系统 API 启动该快捷方式。</string>
+    <string name="shortcut_test_tip">本页只读扫描系统快捷方式服务（dumpsys shortcut），需要 Shizuku 或 Root。点击条目只会通过系统 API 启动该快捷方式。</string>
     <string name="shortcut_test_search_hint">搜索应用、包名或快捷方式</string>
     <string name="shortcut_test_status_loading">正在扫描…</string>
     <string name="shortcut_test_status_ready">扫描完成</string>
@@ -14,7 +14,7 @@
     <string name="shortcut_test_results">结果（%1$d）</string>
     <string name="shortcut_test_empty">没有扫描到快捷方式</string>
     <string name="shortcut_test_search_empty">没有匹配的快捷方式</string>
-    <string name="shortcut_test_no_privilege">需要 Root 或 Shizuku 权限，请先在设置中启用。</string>
+    <string name="shortcut_test_no_privilege">需要 Shizuku 或 Root 权限，请先在设置中启用。</string>
     <string name="shortcut_test_command_failed">dumpsys shortcut 执行失败：%1$s</string>
     <string name="shortcut_test_empty_output">dumpsys shortcut 没有输出</string>
     <string name="shortcut_test_parse_empty">没有解析到 ShortcutInfo（%1$s）</string>
@@ -29,7 +29,7 @@
     <string name="shortcut_test_rescan">重新扫描</string>
     <string name="shortcut_test_source_root">Root</string>
     <string name="shortcut_test_source_shizuku">Shizuku</string>
-    <string name="shortcut_port_tip">扫描系统快捷方式服务，再通过统一启动器以 Root 或 Shizuku 身份打开。</string>
+    <string name="shortcut_port_tip">扫描系统快捷方式服务，再通过统一启动器以 Shizuku 或 Root 身份打开。</string>
     <string name="shortcut_port_loading">正在加载快捷方式…</string>
     <string name="shortcut_port_ready">%1$d 条快捷方式</string>
     <string name="shortcut_port_exec_success">命令执行成功：%1$s</string>

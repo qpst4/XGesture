@@ -13,7 +13,7 @@ object ShellCommandExecutor {
         val mode = command.executionMode
             ?: return TaskManagerUtil.ShellCommandResult(
                 exitCode = -1,
-                output = "未设置执行方式（Root / Shizuku）",
+                output = "未设置执行方式（Shizuku / Root）",
             )
         val expanded = templateContext?.let {
             ShellCommandTemplate.expand(command.command, it)

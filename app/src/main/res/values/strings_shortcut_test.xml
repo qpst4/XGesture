@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="extension_shortcut_test_title">Test shortcuts</string>
-    <string name="extension_shortcut_test_subtitle">Scan published dynamic/pinned shortcuts (requires Root or Shizuku)</string>
+    <string name="extension_shortcut_test_subtitle">Scan published dynamic/pinned shortcuts (requires Shizuku or Root)</string>
 
     <string name="shortcut_test_title">Shortcut test</string>
-    <string name="shortcut_test_tip">Read-only scan of the system shortcut service via dumpsys shortcut. Root or Shizuku is required. Tapping a shortcut only launches it through the system API.</string>
+    <string name="shortcut_test_tip">Read-only scan of the system shortcut service via dumpsys shortcut. Shizuku or Root is required. Tapping a shortcut only launches it through the system API.</string>
     <string name="shortcut_test_search_hint">Search app, package, or shortcut</string>
     <string name="shortcut_test_status_loading">Scanning…</string>
     <string name="shortcut_test_status_ready">Scan complete</string>
@@ -14,7 +14,7 @@
     <string name="shortcut_test_results">Results (%1$d)</string>
     <string name="shortcut_test_empty">No shortcuts found</string>
     <string name="shortcut_test_search_empty">No matching shortcuts</string>
-    <string name="shortcut_test_no_privilege">Root or Shizuku access is required. Enable it in Settings first.</string>
+    <string name="shortcut_test_no_privilege">Shizuku or Root access is required. Enable it in Settings first.</string>
     <string name="shortcut_test_command_failed">dumpsys shortcut failed: %1$s</string>
     <string name="shortcut_test_empty_output">dumpsys shortcut returned no output</string>
     <string name="shortcut_test_parse_empty">No ShortcutInfo blocks could be parsed (%1$s)</string>
@@ -29,7 +29,7 @@
     <string name="shortcut_test_rescan">Rescan</string>
     <string name="shortcut_test_source_root">Root</string>
     <string name="shortcut_test_source_shizuku">Shizuku</string>
-    <string name="shortcut_port_tip">Scan the system shortcut service, then launch through the unified shortcut launcher as Root or Shizuku.</string>
+    <string name="shortcut_port_tip">Scan the system shortcut service, then launch through the unified shortcut launcher as Shizuku or Root.</string>
     <string name="shortcut_port_loading">Loading shortcuts…</string>
     <string name="shortcut_port_ready">%1$d shortcuts</string>
     <string name="shortcut_port_exec_success">Command succeeded: %1$s</string>

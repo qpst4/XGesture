@@ -342,7 +342,11 @@ private fun ShellOverlayEnvironmentRow(
                 style = MaterialTheme.typography.titleSmallEmphasized,
             )
             Text(
-                text = "Root $rootText · Shizuku $shizukuText",
+                text = stringResource(
+                    R.string.shell_panel_environment_summary,
+                    shizukuText,
+                    rootText,
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

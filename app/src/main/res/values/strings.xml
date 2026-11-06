@@ -418,7 +418,7 @@
     <string name="app_keep_alive_desc">Background keep-alive and permissions</string>
     <string name="privilege_mode_title">Privileged execution</string>
     <string name="privilege_mode_desc">Shell, freezer, task manager, and other extensions require this</string>
-    <string name="privilege_mode_shizuku">Shizuku (recommended)</string>
+    <string name="privilege_mode_shizuku">Shizuku</string>
     <string name="privilege_mode_shizuku_desc">Works without root via wireless debugging; runs silently after grant</string>
     <string name="privilege_mode_root">Root</string>
     <string name="privilege_mode_root_desc">No Shizuku needed; grant su access to this app in Magisk, etc.</string>
@@ -4961,6 +4961,9 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="shell_panel_result_dialog">Dialog</string>
     <string name="shell_panel_icon_and_name">Icon and name</string>
     <string name="shell_panel_environment_title">Execution environment</string>
+    <string name="shell_panel_environment_summary">Shizuku %1$s · Root %2$s</string>
+    <string name="shell_panel_environment_detail_shizuku">Shizuku: %1$s</string>
+    <string name="shell_panel_environment_detail_root">Root: %1$s</string>
     <string name="shell_panel_shizuku_ready">Authorized</string>
     <string name="shell_panel_shizuku_unavailable">Not authorized</string>
     <string name="shell_panel_mode_unavailable">The selected execution mode is unavailable.</string>

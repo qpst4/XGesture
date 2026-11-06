@@ -364,7 +364,7 @@
     <string name="app_keep_alive_desc">الإبقاء على التطبيق في الخلفية والأذونات ذات الصلة</string>
     <string name="privilege_mode_title">طريقة التنفيذ ذات الامتيازات</string>
     <string name="privilege_mode_desc">تعتمد وظائف مثل Shell، والتجميد، وإدارة المهام على هذا التفويض</string>
-    <string name="privilege_mode_shizuku">Shizuku (موصى به)</string>
+    <string name="privilege_mode_shizuku">Shizuku</string>
     <string name="privilege_mode_shizuku_desc">يمكن استخدامه بدون Root عبر التصحيح اللاسلكي؛ بعد التفويض، يتم التنفيذ الصامت في الخلفية</string>
     <string name="privilege_mode_root">Root</string>
     <string name="privilege_mode_root_desc">لا يتطلب تثبيت Shizuku؛ يجب منح التطبيق صلاحية su في Magisk أو ما شابه</string>
