@@ -19,6 +19,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.baselineprofile)
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -94,12 +95,17 @@ android {
                 "proguard-rules.pro",
             )
         }
+        // benchmark / nonMinifiedRelease 两个变体由 androidx.baselineprofile 插件自动创建
+        // （initWith release、不可调试、带 profileable），这里不要再手工 create 一遍。
     }
 
     lint {
         lintConfig = file("lint.xml")
         abortOnError = true
         checkReleaseBuilds = true
+        // 文案完整性由 scripts/check-translations.py 判断（它还检查 values 结构），
+        // lint 的这两条只会报"数量对不上"，关掉交给 CI 的 translation 任务。
+        disable += setOf("MissingTranslation", "ExtraTranslation")
     }
 
     compileOptions {
@@ -145,12 +151,6 @@ android {
 
     testOptions {
         unitTests.isIncludeAndroidResources = true
-    }
-
-    lint {
-        abortOnError = true
-        checkReleaseBuilds = false
-        disable += setOf("MissingTranslation", "ExtraTranslation")
     }
 }
 
@@ -341,8 +341,12 @@ tasks.register("copyBundledNativeEnginePacks") {
 }
 
 afterEvaluate {
-    tasks.matching {
-        it.name == "mergeFullReleaseAssets" || it.name == "mergeFullDebugAssets"
+    // 所有 full 变体都带内置引擎 assets（zip 在 generated/release-assets），
+    // 少了依赖的话 benchmark / nonMinifiedRelease 变体汇编时那个 assets 目录是空的。
+    tasks.matching { task ->
+        task.name.matches(
+            Regex("mergeFull(Release|Debug|BenchmarkRelease|NonMinifiedRelease)Assets"),
+        )
     }.configureEach {
         dependsOn("copyBundledNativeEnginePacks")
     }
@@ -351,6 +355,22 @@ afterEvaluate {
     }.configureEach {
         dependsOn("copyBundledNativeEnginePacks")
     }
+}
+
+/**
+ * 把 full 采出来的基线配置同步一份给 lite。
+ *
+ * profile 只跟"代码路径"有关，与 flavor 无关（两者差的是内置引擎 assets），所以一次真机采集
+ * 两个 release 变体都能用。插件只按 fullRelease 回写（我们是在 full 的 benchmark 流程里采的），
+ * lite 这一份靠这个任务复制过去；`liteRelease` 是变体专属源集，debug 不会被带上。
+ *
+ * 重采 profile 之后执行：`gradlew :app:syncLiteBaselineProfile`
+ */
+tasks.register<Copy>("syncLiteBaselineProfile") {
+    group = "build"
+    description = "Copies the generated baseline profile from fullRelease into liteRelease."
+    from(layout.projectDirectory.dir("src/fullRelease/generated/baselineProfiles"))
+    into(layout.projectDirectory.dir("src/liteRelease/generated/baselineProfiles"))
 }
 
 dependencies {
@@ -446,4 +466,8 @@ dependencies {
 
     compileOnly(libs.libxposed.api)
     implementation(libs.libxposed.service)
+
+    // 基线配置生成器（`:baselineprofile`）。只在 generate*BaselineProfile 时用到，
+    // 不进 APK；产物是 app/src/main/baseline-prof.txt。
+    baselineProfile(project(":baselineprofile"))
 }

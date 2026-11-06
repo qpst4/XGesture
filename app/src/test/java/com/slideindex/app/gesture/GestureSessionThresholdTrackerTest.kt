@@ -130,9 +130,10 @@ class GestureSessionThresholdTrackerTest {
     @Test
     fun trackDistanceHaptics_topStripSwipeFromInsideStrip_firesStartOnlyOnce() {
         // 顶部触钮的触摸窗口高约 181px，手指按下点距屏幕顶边就有 ~150px。
-        // 「退回起手位置」必须按相对位移判断；一旦混入起手点的绝对深度，
-        // 整段前 (起手深度 + 12dp) 的滑动都会被当成撤销、反复清零，
-        // 于是每帧重新越过短滑阈值 → 每帧补一声 GESTURE_START（真机表现出来就是"一直震"）。
+        // 「退回起手位置」按相对位移判断（≤ 12dp），而短滑阈值按绝对内滑距离判断
+        // （60dp×2.75 = 165px，见 measureTriggerDistance）——两者原点不同。
+        // 起手深度 150px + 12dp 撤销区会和 165px 阈值重叠：同一帧既清零本段、又判定越过阈值，
+        // 于是每帧补一声 GESTURE_START（真机表现：滑动时一直震）。这里锁住"只响一次"。
         val topStrip = RectF(0f, 0f, 1080f, 181f)
         val topRecognizer = SwipePathRecognizer(PanelSide.TOP, density = 2.75f).apply {
             applyDistances(shortDp = 60f, longDp = 120f)
@@ -147,9 +148,10 @@ class GestureSessionThresholdTrackerTest {
             isTriggerConfigured = { false },
         )
 
-        // 从 y=150 平滑下滑到 430（向内 280px < 长滑 120dp×2.75=330px）。
+        // 从 y=150 平滑下滑到 300：绝对内滑距离 300px < 长滑 120dp×2.75 = 330px，
+        // 短滑阈值 165px 在 y≈166 越过一次。
         var y = 150f
-        while (y <= 430f) {
+        while (y <= 300f) {
             topRecognizer.onTouchMove(800f, y)
             topTracker.trackDistanceHaptics(800f, y)
             y += 4f

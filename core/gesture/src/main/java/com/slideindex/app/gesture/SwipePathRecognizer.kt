@@ -328,7 +328,14 @@ class SwipePathRecognizer(
             // 就有 ~150px），于是整段前 183px 的内滑都被反复判成撤销、每帧清零本段状态，
             // 上层震动器随之每帧重播一次「越过短滑阈值」的震动（真机表现：滑动时一直震）。
             // 起手点本来就在屏幕边缘时 [startInwardPx] 恒为 0，去掉它不改变左右方向的行为。
-            inwardDelta(rawX - startRawX, rawY - startRawY) <= cancelPx
+            if (inwardDelta(rawX - startRawX, rawY - startRawY) > cancelPx) return false
+            // 撤销区（相对起手点）和短滑阈值（相对屏幕边缘，见 measureTriggerDistance）用的是
+            // 两套原点。起手点本身已经在阈值之外时（厚触钮里按在 y≈150，离顶边就已经 150px），
+            // 这两段区间会重叠：同一帧既判定"撤销、清零本段"、又判定"越过短滑阈值"，上层
+            // [GestureSessionThresholdTracker] 每清零一次就重播一次 GESTURE_START —— 真机表现
+            // 就是顶部/底部触钮滑动时一直震。真正的撤销必然先退回阈值以内，所以"仍在阈值之外"
+            // 时不算撤销。（左右触钮起手点贴边，距离 ≤ 12dp < 阈值，行为不变。）
+            measureDistanceForDirection(rawX, rawY, SwipeDirection.IN) < shortThresholdPx()
         }
     }
 

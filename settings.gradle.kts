@@ -22,6 +22,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "XGesture"
 include(":app")
+include(":baselineprofile")
 include(":core:common")
 include(":core:autofill")
 include(":core:gesture")

@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -16,9 +15,12 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * 悬浮球「闲置隐身」：开关默认关、闲置不透明度默认 0、闲置判定默认 3 秒。
+ * 悬浮球「闲置隐身」默认值：开关默认开、闲置不透明度 0.38、闲置判定 3 秒。
  *
- * 存量用户升级后行为必须完全不变（球始终按「不透明度」显示），所以默认值不能是开。
+ * 默认值在 2fbbc4322（2026-10-31「闲置隐身与闲置停动图默认开启」）被显式改成"开"，
+ * 本测试随之对齐。该提交只改了 `?: default`，没有补一次性键迁移，所以**从未写过该键的
+ * 存量设备升级后也会变成"闲置 3 秒淡到 38%"**——2026-11-06 维护者确认接受这个行为变化，
+ * 不再补迁移（原先"存量用户行为必须完全不变"的约束作废）。
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [31])
@@ -34,11 +36,11 @@ class FloatBallIdleHiddenTest {
     }
 
     @Test
-    fun freshInstall_idleHideDisabledByDefault() {
+    fun freshInstall_idleHideEnabledByDefault() {
         val settings = SettingsSnapshotReader.read(emptyPreferences(), context)
 
-        assertFalse(settings.floatBallHideWhenIdle)
-        assertEquals(0f, settings.floatBallIdleOpacity, 0.0001f)
+        assertTrue(settings.floatBallHideWhenIdle)
+        assertEquals(0.38f, settings.floatBallIdleOpacity, 0.0001f)
         assertEquals(3000, settings.floatBallIdleDelayMs)
     }
 

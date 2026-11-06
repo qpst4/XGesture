@@ -95,6 +95,23 @@ python scripts/extract-changelog-section.py -v {版本号} \
 
 ---
 
+### 2.6 基线配置（改了启动路径才需要）
+
+`app/src/fullRelease/generated/baselineProfiles/` 里是真机采出来的 ART profile，随 fullRelease 一起打包。只有当这一版改动了冷启动路径（`Application` / `MainActivity` / 首页组合）时才需要重采：
+
+```bash
+# 需要一台已授权 USB 调试的 arm64 真机；--no-configuration-cache 不能省
+gradlew :app:generateFullReleaseBaselineProfile --no-configuration-cache
+```
+
+- 产物由插件自动写回 `app/src/fullRelease/generated/baselineProfiles/{baseline,startup}-prof.txt`，**提交这两个文件**。
+- 再执行 `gradlew :app:syncLiteBaselineProfile` 复制一份到 `app/src/liteRelease/generated/baselineProfiles/`（lite 包同样吃这份加速；profile 只跟代码路径有关，与 flavor 无关）。**两个目录都要提交。**
+- debug / benchmark / nonMinifiedRelease 变体不带 App 级 profile：debug 会拖慢安装与 dexopt、也不反映真实 JIT 行为，所以只给 release 变体；它们合并到的只有第三方库自带的 profile。
+- 基准测试工具在 Windows 上写出的是 CRLF，提交前跑 `python scripts/normalize-eol.py --write <文件>` 规范成 LF。
+- 只想量启动耗时：`gradlew :baselineprofile:connectedFullBenchmarkReleaseAndroidTest --no-configuration-cache`。
+
+---
+
 ### 3. 提交并推送 Tag
 
 ```bash

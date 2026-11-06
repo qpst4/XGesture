@@ -31,12 +31,14 @@ class TranslateTargetResolverTest {
 
     @Test
     fun followApp_withSystemUiTag_unsupportedLocale_fallsBackToEnglish() {
+        // 别再用 pt-BR 当"不支持"的样本：巴葡在 323b4519（2026-10-11）已进目录，
+        // 这里换一个确实不在 TranslateLanguageCatalog 里的语言标签。
         assertEquals(
             "en",
             TranslateTargetResolver.resolve(
                 storedCode = TranslateTargetLanguages.FOLLOW_APP,
                 appUiLanguageTag = "",
-                locale = Locale.forLanguageTag("pt-BR"),
+                locale = Locale.forLanguageTag("xx-YY"),
             ),
         )
     }

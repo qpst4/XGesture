@@ -56,12 +56,23 @@ class TaskManagerTaskOperationsTest {
                         component = "com.example/.MainActivity",
                         title = "Example",
                     ),
+                    SystemRecentsAccess.Task(
+                        taskId = 8,
+                        packageName = "com.example",
+                        component = "com.example/.MainActivity",
+                        title = "Example (clone)",
+                        userId = 999,
+                    ),
                 ),
             ),
         )
 
+        // 第 5 列 = userId（多开/分身）：默认 -1 表示平台没暴露；老客户端只读前 4 列。
         assertArrayEquals(
-            arrayOf("7\tcom.example/.MainActivity\tExample\tcom.example/.MainActivity"),
+            arrayOf(
+                "7\tcom.example/.MainActivity\tExample\tcom.example/.MainActivity\t-1",
+                "8\tcom.example/.MainActivity\tExample (clone)\tcom.example/.MainActivity\t999",
+            ),
             operations.getRecentTasks(),
         )
     }

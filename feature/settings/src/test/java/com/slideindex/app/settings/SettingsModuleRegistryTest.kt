@@ -90,7 +90,10 @@ class SettingsModuleRegistryTest {
             .toSet()
 
     private companion object {
-        const val EXPECTED_TOTAL_KEYS = 666
+        // 670 = 666 + app_carousel_slide_{reversed,sensitivity}（QUICK_LAUNCHER）
+        //       + shake_menus_json / shake_menu_guard_ms / shake_menu_display_delay_ms（SHAKE）
+        //       - shake_menu_actions（bad9b0b0 起被上面三个键取代）。
+        const val EXPECTED_TOTAL_KEYS = 670
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
             SettingsModule.EDGE_GESTURE to 84,
@@ -99,11 +102,11 @@ class SettingsModuleRegistryTest {
             SettingsModule.FLOAT_BALL to 70,
             SettingsModule.FLOATING_POINTER to 52,
             SettingsModule.FINGERTIP_RING to 13,
-            SettingsModule.QUICK_LAUNCHER to 91,
+            SettingsModule.QUICK_LAUNCHER to 93,
             SettingsModule.WIDGET_PANEL to 7,
             SettingsModule.MESSAGE to 73,
             SettingsModule.OTP to 24,
-            SettingsModule.SHAKE to 42,
+            SettingsModule.SHAKE to 44,
             SettingsModule.CLIPBOARD to 59,
             SettingsModule.DRAG_DROP to 5,
             SettingsModule.STASH to 5,
