@@ -97,9 +97,6 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
             onDeleteEngine = viewModel::deleteEngine,
             onMoveEngine = viewModel::moveEngine,
             onUpdateEngines = viewModel::updateTextEngines,
-            onGridColumnsChange = viewModel::setGridColumns,
-            onGridRowsChange = viewModel::setGridRows,
-            onShowLabelsChange = viewModel::setShowLabels,
             onOpenPreviewSort = { ctx.navigate(AppNavKey.FloatBallSearchEnginePreviewSort) },
             onOpenEditor = { engineId ->
                 ctx.navigate(AppNavKey.FloatBallSearchEngineEditor(engineId.orEmpty()))

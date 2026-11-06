@@ -40,6 +40,7 @@ import com.slideindex.app.overlay.PanelSide
 import com.slideindex.app.overlay.WidgetPopupOverlayWindow
 import com.slideindex.app.service.ClipboardFloatLifecycle
 import com.slideindex.app.copy.UniversalCopyOverlay
+import com.slideindex.app.di.MessageGestureActionsAccess
 import com.slideindex.app.freezer.FreezerLaunchState
 import com.slideindex.app.freezer.FreezerOperations
 import com.slideindex.app.freezer.FreezerOverlayWindow
@@ -504,6 +505,16 @@ class ActionExecutor(
                 true
             }
             is GestureAction.SimulateKeyEvent -> SystemGestureActions.simulateKeyEvent(context, action.keyCode, action.isLongPress)
+            // 通知三件套：阅读最新一条 / 小窗阅读 / 清空通知栏。
+            // 目标通知与权限判断都在 MessageGestureActions 里，这里只做转交。
+            GestureAction.ReadLatestMessage ->
+                MessageGestureActionsAccess.get(context)?.readLatest(context, settings, smallWindow = false)
+                    ?: false
+            GestureAction.ReadLatestMessageInSmallWindow ->
+                MessageGestureActionsAccess.get(context)?.readLatest(context, settings, smallWindow = true)
+                    ?: false
+            GestureAction.ClearNotifications ->
+                MessageGestureActionsAccess.get(context)?.clearNotifications(context) ?: false
             GestureAction.PreviousApp,
             GestureAction.OpenNotifications,
             GestureAction.OpenQuickSettings,

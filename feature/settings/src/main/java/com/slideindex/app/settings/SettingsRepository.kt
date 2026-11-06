@@ -960,6 +960,9 @@ class SettingsRepository @Inject constructor(
     suspend fun setSearchEngineShowLabels(enabled: Boolean) =
         overlay.setSearchEngineShowLabels(enabled)
 
+    suspend fun setSearchEngineIconShape(shape: SearchEngineIconShape) =
+        overlay.setSearchEngineIconShape(shape)
+
     suspend fun setSearchPanelDefaultEngineId(id: String?) =
         overlay.setSearchPanelDefaultEngineId(id)
 

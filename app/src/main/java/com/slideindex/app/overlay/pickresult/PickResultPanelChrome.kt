@@ -670,6 +670,8 @@ internal fun PickResultTextActionBar(
     onOpenLinkChoice: (String) -> Unit = {},
     onDismissOpenLinkChooser: () -> Unit = {},
     onShare: () -> Unit,
+    /** 长按分享键 = 把当前这段文字起成系统拖拽；null 时保持普通分享键。 */
+    onStartDrag: (() -> Unit)? = null,
     copyDismissEnabled: Boolean = false,
     onCopy: () -> Unit,
     onCopyKeepOpen: () -> Unit = onCopy,
@@ -931,18 +933,30 @@ internal fun PickResultTextActionBar(
                     )
                 }
 
-                // 2.3 分享（直接外显，正对图片底栏的分享）
-                IconButton(
-                    onClick = onShare,
-                    enabled = enabled,
+                // 2.3 分享（直接外显，正对图片底栏的分享）。长按 = 拖拽出口：
+                // 面板里内容的长按已经被「分词 / 复制图片」占住，拖拽只能借工具键起手。
+                // 用 `combinedClickable` 而不是 IconButton：IconButton 只有 click，
+                // 长按会被它内部的 clickable 吃掉，起不了拖。
+                val shareTint = if (isDark) {
+                    androidx.compose.ui.graphics.Color(0xFFE0E0E6)
+                } else {
+                    androidx.compose.ui.graphics.Color(0xFF333333)
+                }
+                Box(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(RoundedCornerShape(21.dp))
+                        .combinedClickable(
+                            enabled = enabled,
+                            onClick = onShare,
+                            onLongClick = onStartDrag,
+                        ),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Share,
                         contentDescription = stringResource(R.string.pick_result_share),
-                        tint = if (enabled) (if (isDark) androidx.compose.ui.graphics.Color(0xFFE0E0E6) else androidx.compose.ui.graphics.Color(0xFF333333)) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                        tint = if (enabled) shareTint else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
                         modifier = Modifier.size(22.dp)
                     )
                 }

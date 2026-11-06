@@ -22,6 +22,11 @@
     <cache-path
         name="float_ball_share"
         path="float_ball_share/" />
+    <!-- 取词面板「拖出去」的临时 PNG：系统拖拽只能给 content://，
+         没白名单时 getUriForFile 会抛 IllegalArgumentException（图片拖拽直接起不来）。 -->
+    <cache-path
+        name="pick_drag"
+        path="pick_drag/" />
     <cache-path
         name="drag_forward"
         path="drag_forward/" />

@@ -360,6 +360,8 @@ internal fun PickResultAuxiliaryImageBlock(
     onSaveScreenshot: () -> Unit,
     onSaveScreenshotLongClick: (() -> Unit)? = null,
     onShareScreenshot: () -> Unit,
+    /** 长按图片底栏的分享键 = 起系统拖拽；null 时不挂。 */
+    onStartImageDrag: (() -> Unit)? = null,
     onImageSearch: () -> Unit,
     onImageShareEngineClick: (com.slideindex.app.settings.SearchEngineConfig) -> Unit,
     onPinImageToScreen: () -> Unit,
@@ -409,6 +411,7 @@ internal fun PickResultAuxiliaryImageBlock(
         onSave = onSaveScreenshot,
         onSaveLongClick = onSaveScreenshotLongClick,
         onShare = onShareScreenshot,
+        onStartDrag = onStartImageDrag,
         onImageSearch = onImageSearch,
         onShareEngineClick = onImageShareEngineClick,
         onPinToScreen = onPinImageToScreen,
@@ -528,7 +531,8 @@ internal fun PickResultAuxiliarySearchBlock(
             rows = searchEngineGridRows,
             showLabels = searchEngineShowLabels,
             longPressEnabled = appSettings.launchPolicyLongPressEligible(),
-            onEngineClick = onSearchEngineClick
+            onEngineClick = onSearchEngineClick,
+            iconShape = appSettings.searchEngineIconShape,
         )
     }
 }
@@ -557,6 +561,8 @@ internal fun PickResultPanelTextSlot(
     onTextSourceChange: (PickResultTextSource) -> Unit,
     onActiveTextChange: (String) -> Unit,
     onShareText: (String) -> Unit,
+    /** 长按文字底栏的分享键 = 起系统拖拽；null 时不挂。 */
+    onStartTextDrag: ((String) -> Unit)? = null,
     onProcessText: (String, PickResultProcessTextTarget) -> Unit,
     onCopy: (String, keepPanelOpen: Boolean) -> Unit,
     onTranslate: (String) -> Unit,
@@ -643,6 +649,7 @@ internal fun PickResultPanelTextSlot(
                 onSearch = { onToggleSearchGrid() },
                 onActiveTextChange = onActiveTextChange,
                 onShare = onShareText,
+                onStartDrag = onStartTextDrag,
                 onProcessText = onProcessText,
                 onCopy = onCopy,
                 onTranslate = onTranslate,
@@ -768,6 +775,8 @@ internal fun PickResultCollapsePanelColumn(
     onSaveScreenshot: () -> Unit,
     onSaveScreenshotLongClick: (() -> Unit)? = null,
     onShareScreenshot: () -> Unit,
+    /** 长按图片底栏的分享键 = 起系统拖拽；null 时不挂。 */
+    onStartImageDrag: (() -> Unit)? = null,
     onImageSearch: () -> Unit,
     onImageShareEngineClick: (com.slideindex.app.settings.SearchEngineConfig) -> Unit,
     onPinImageToScreen: () -> Unit,
@@ -805,6 +814,8 @@ internal fun PickResultCollapsePanelColumn(
     onTextModeChange: (PickResultTextMode) -> Unit,
     onTextChange: (String) -> Unit,
     onShareText: (String) -> Unit,
+    /** 长按文字底栏的分享键 = 起系统拖拽；null 时不挂。 */
+    onStartTextDrag: ((String) -> Unit)? = null,
     onProcessText: (String, PickResultProcessTextTarget) -> Unit,
     onCopy: (String, keepPanelOpen: Boolean) -> Unit,
     onTranslate: (String) -> Unit,
@@ -1193,6 +1204,7 @@ internal fun PickResultCollapsePanelColumn(
             onTextSourceChange = onTextSourceChange,
             onActiveTextChange = onActiveTextChange,
             onShareText = onShareText,
+            onStartTextDrag = onStartTextDrag,
             onProcessText = onProcessText,
             onCopy = onCopy,
             onTranslate = onTranslate,
@@ -1238,6 +1250,7 @@ internal fun PickResultCollapsePanelColumn(
             onSaveScreenshot = onSaveScreenshot,
             onSaveScreenshotLongClick = onSaveScreenshotLongClick,
             onShareScreenshot = onShareScreenshot,
+            onStartImageDrag = onStartImageDrag,
             onImageSearch = onImageSearch,
             onImageShareEngineClick = onImageShareEngineClick,
             onPinImageToScreen = onPinImageToScreen,

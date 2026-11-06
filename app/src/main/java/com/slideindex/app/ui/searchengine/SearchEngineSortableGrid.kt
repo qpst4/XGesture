@@ -53,6 +53,7 @@ import com.slideindex.app.launcher.QuickLauncherGridLogic
 import com.slideindex.app.launcher.QuickLauncherGridLogic.moveIndex
 import com.slideindex.app.overlay.pickresult.SearchEngineIcon
 import com.slideindex.app.settings.SearchEngineConfig
+import com.slideindex.app.settings.SearchEngineIconShape
 import kotlin.math.roundToInt
 
 private const val PAGE_EDGE_RESISTANCE = 0.35f
@@ -83,6 +84,7 @@ fun SearchEngineSortableGrid(
     showLabels: Boolean,
     onOrderChange: (List<SearchEngineConfig>) -> Unit,
     modifier: Modifier = Modifier,
+    iconShape: SearchEngineIconShape = SearchEngineIconShape.DEFAULT,
 ) {
     if (engines.isEmpty()) return
 
@@ -269,6 +271,7 @@ fun SearchEngineSortableGrid(
                             pageSize = pageSize,
                             showLabels = showLabels,
                             iconSize = iconSize,
+                            iconShape = iconShape,
                             dragFromGlobal = dragFromGlobal,
                             dragSlotGlobal = dragSlotGlobal,
                         )
@@ -395,6 +398,7 @@ fun SearchEngineSortableGrid(
                             engine = draggedEngine,
                             showLabel = showLabels,
                             iconSize = iconSize,
+                            iconShape = iconShape,
                             modifier = Modifier
                                 .zIndex(2f)
                                 .offset {
@@ -427,6 +431,7 @@ private fun SearchEngineSortableGridPage(
     pageSize: Int,
     showLabels: Boolean,
     iconSize: Dp,
+    iconShape: SearchEngineIconShape,
     dragFromGlobal: Int,
     dragSlotGlobal: Int,
 ) {
@@ -461,6 +466,7 @@ private fun SearchEngineSortableGridPage(
                                 engine = engine,
                                 showLabel = showLabels,
                                 iconSize = iconSize,
+                                iconShape = iconShape,
                             )
                         }
                     }
@@ -475,6 +481,7 @@ private fun SearchEngineSortableGridCell(
     engine: SearchEngineConfig,
     showLabel: Boolean,
     iconSize: Dp,
+    iconShape: SearchEngineIconShape = SearchEngineIconShape.DEFAULT,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -485,6 +492,7 @@ private fun SearchEngineSortableGridCell(
         SearchEngineIcon(
             engine = engine,
             modifier = Modifier.size(iconSize),
+            iconShape = iconShape,
         )
         if (showLabel) {
             Text(

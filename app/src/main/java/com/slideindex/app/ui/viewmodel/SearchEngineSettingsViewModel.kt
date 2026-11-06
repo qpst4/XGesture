@@ -455,6 +455,10 @@ class SearchEngineSettingsViewModel @Inject constructor(
         settingsRepository.setSearchEngineShowLabels(enabled)
     }
 
+    fun setIconShape(shape: com.slideindex.app.settings.SearchEngineIconShape) = launchSettingsWrite {
+        settingsRepository.setSearchEngineIconShape(shape)
+    }
+
     fun setDefaultEngineId(id: String?) = launchSettingsWrite {
         settingsRepository.setSearchPanelDefaultEngineId(id)
     }

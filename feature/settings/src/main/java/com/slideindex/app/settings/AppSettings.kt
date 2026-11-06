@@ -411,6 +411,7 @@ data class AppSettings(
     val searchEngineGridColumns get() = searchPanel.searchEngineGridColumns
     val searchEngineGridRows get() = searchPanel.searchEngineGridRows
     val searchEngineShowLabels get() = searchPanel.searchEngineShowLabels
+    val searchEngineIconShape get() = searchPanel.searchEngineIconShape
     val searchPanelDefaultEngineId get() = searchPanel.searchPanelDefaultEngineId
     val searchPanelInputBehavior get() = searchPanel.searchPanelInputBehavior
     val searchPanelEnterAction get() = searchPanel.searchPanelEnterAction

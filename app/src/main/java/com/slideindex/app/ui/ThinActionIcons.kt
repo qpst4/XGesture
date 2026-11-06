@@ -1953,4 +1953,42 @@ internal object ThinActionIcons {
             }
         }
     }
+
+    /** 「阅读消息」：聊天气泡（与「打开通知栏」的铃铛区分开）。 */
+    val ChatBubble: ImageVector by lazy {
+        createThinIcon("ThinChatBubble") {
+            addPath(
+                pathData = PathParser().parsePathString(
+                    "M7 5h10a2.5 2.5 0 0 1 2.5 2.5v7a2.5 2.5 0 0 1 -2.5 2.5" +
+                        "h-5.5l-3.5 3v-3h-1a2.5 2.5 0 0 1 -2.5 -2.5v-7a2.5 2.5 0 0 1 2.5 -2.5z",
+                ).toNodes(),
+                stroke = strokeBrush,
+                strokeLineWidth = STROKE_WIDTH,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            )
+        }
+    }
+
+    /** 「清空通知」：垃圾桶（清空语义，避免和「关闭」的叉号混淆）。 */
+    val ClearNotifications: ImageVector by lazy {
+        createThinIcon("ThinClearNotifications") {
+            val paths = listOf(
+                "M4.5 6.5h15",
+                "M9.5 6.5v-2a1 1 0 0 1 1 -1h3a1 1 0 0 1 1 1v2",
+                "M6.5 6.5l0.8 12.2a1.6 1.6 0 0 0 1.6 1.3h6.2a1.6 1.6 0 0 0 1.6 -1.3l0.8 -12.2",
+                "M10 10.5v6",
+                "M14 10.5v6",
+            )
+            paths.forEach { pathData ->
+                addPath(
+                    pathData = PathParser().parsePathString(pathData).toNodes(),
+                    stroke = strokeBrush,
+                    strokeLineWidth = STROKE_WIDTH,
+                    strokeLineCap = StrokeCap.Round,
+                    strokeLineJoin = StrokeJoin.Round,
+                )
+            }
+        }
+    }
 }

@@ -199,13 +199,22 @@ enum class GestureActionType(val id: Int) {
      */
     TOGGLE_FLOAT_BALL(108),
 
+    /** 「阅读消息」：打开通知栏里最新一条可点开的通知。 */
+    READ_LATEST_MESSAGE(109),
+
+    /** 「小窗阅读消息」：在小窗里打开最新一条通知；小窗不可用时回落全屏。 */
+    READ_LATEST_MESSAGE_SMALL_WINDOW(110),
+
+    /** 「清空通知」：移除通知栏里所有可清除通知，并收起全部消息提醒。 */
+    CLEAR_NOTIFICATIONS(111),
+
     /**
      * 「晃动菜单」：晃动后进入菜单状态（浮层按方向列出可用功能），再次按方向晃动执行该菜单里绑定的动作。
      *
      * payload 是菜单 id；菜单本体见 [com.slideindex.app.shake.ShakeMenu]。
      * 一个基础晃动方向绑定本动作后，这个方向就变成「打开某个菜单」而不是直接执行动作。
      */
-    SHAKE_MENU(109),
+    SHAKE_MENU(112),
     ;
 
     companion object {
@@ -890,6 +899,29 @@ sealed class GestureAction {
         override val payload = ""
     }
 
+    /**
+     * 「阅读消息」：打开通知栏里**最新一条**可点开的通知。
+     *
+     * 目标通知在运行时现找，动作本身不带参数；真正打开走的是消息提醒那套执行器，
+     * 所以「小窗回落全屏」「阅读后返回键」等行为与卡片上的「阅读」完全一致。
+     */
+    data object ReadLatestMessage : GestureAction() {
+        override val type = GestureActionType.READ_LATEST_MESSAGE
+        override val payload = ""
+    }
+
+    /** 「小窗阅读消息」：同 [ReadLatestMessage]，但优先在小窗里打开。 */
+    data object ReadLatestMessageInSmallWindow : GestureAction() {
+        override val type = GestureActionType.READ_LATEST_MESSAGE_SMALL_WINDOW
+        override val payload = ""
+    }
+
+    /** 「清空通知」：清空通知栏（跳过常驻/不可清除的），并收起所有消息提醒浮层。 */
+    data object ClearNotifications : GestureAction() {
+        override val type = GestureActionType.CLEAR_NOTIFICATIONS
+        override val payload = ""
+    }
+
     data object SwitchInputMethod : GestureAction() {
         override val type = GestureActionType.SWITCH_INPUT_METHOD
         override val payload = ""
@@ -1204,6 +1236,9 @@ sealed class GestureAction {
                 GestureActionType.MEDIA_NEXT -> MediaNext
                 GestureActionType.PREVIOUS_APP -> PreviousApp
                 GestureActionType.OPEN_NOTIFICATIONS -> OpenNotifications
+                GestureActionType.READ_LATEST_MESSAGE -> ReadLatestMessage
+                GestureActionType.READ_LATEST_MESSAGE_SMALL_WINDOW -> ReadLatestMessageInSmallWindow
+                GestureActionType.CLEAR_NOTIFICATIONS -> ClearNotifications
                 GestureActionType.OPEN_QUICK_SETTINGS -> OpenQuickSettings
                 GestureActionType.LOCK_SCREEN -> LockScreen
                 GestureActionType.LOCK_SCREEN_AND_SILENCE_RING -> LockScreenAndSilenceRing

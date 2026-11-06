@@ -32,6 +32,8 @@ class ShizukuInitializer @Inject constructor(
     private val binderListener = Shizuku.OnBinderReceivedListener {
         if (TaskManagerUtil.hasShizukuPermission()) {
             TaskManagerUtil.warmUp()
+            // binder 刚到手：顺手把最近任务查询的探测跑掉，别让用户第一次打开切换器时等。
+            TaskManagerUtil.warmRecentTasksAsync()
             scope.launch(Dispatchers.IO) {
                 com.slideindex.app.service.OverlayServiceLifecycle.syncFromSettings(
                     context,
@@ -81,6 +83,7 @@ class ShizukuInitializer @Inject constructor(
             }
             if (TaskManagerUtil.hasShizukuPermission()) {
                 TaskManagerUtil.warmUp()
+                TaskManagerUtil.warmRecentTasksAsync()
             }
         } else {
             if (listenerRegistered) {

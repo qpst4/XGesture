@@ -119,6 +119,9 @@ object GestureActionIconBitmap {
             GestureActionType.LOCK_SCREEN_AND_SILENCE_RING,
             GestureActionType.LOCK_SCREEN_AND_MUTE_ALL,
             GestureActionType.OPEN_NOTIFICATIONS,
+            GestureActionType.READ_LATEST_MESSAGE,
+            GestureActionType.READ_LATEST_MESSAGE_SMALL_WINDOW,
+            GestureActionType.CLEAR_NOTIFICATIONS,
             GestureActionType.OPEN_QUICK_SETTINGS,
             GestureActionType.POWER_MENU,
             GestureActionType.TASK_SWITCHER -> {

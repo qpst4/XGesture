@@ -541,6 +541,8 @@ data class SearchPanelSettings(
     val searchEngineGridColumns: Int = 5,
     val searchEngineGridRows: Int = 2,
     val searchEngineShowLabels: Boolean = true,
+    /** 引擎区图标的裁切形状；[SearchEngineIconShape.DEFAULT] 保持历史观感。 */
+    val searchEngineIconShape: SearchEngineIconShape = SearchEngineIconShape.DEFAULT,
     val searchPanelDefaultEngineId: String? = null,
     val searchPanelInputBehavior: SearchPanelInputBehavior = SearchPanelInputBehavior.KEEP,
     val searchPanelEnterAction: SearchPanelEnterAction = SearchPanelEnterAction.SEARCH_ENGINE,

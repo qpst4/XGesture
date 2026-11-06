@@ -2437,6 +2437,14 @@
     <string name="gesture_action_media_next">Следующий трек</string>
     <string name="gesture_action_previous_app">Предыдущее приложение</string>
     <string name="gesture_action_open_notifications">Открыть шторку уведомлений</string>
+    <string name="gesture_action_read_message">Прочитать сообщение</string>
+    <string name="gesture_action_read_message_desc">Открыть последнее уведомление</string>
+    <string name="gesture_action_read_message_small_window">Прочитать в маленьком окне</string>
+    <string name="gesture_action_read_message_small_window_desc">Открыть последнее уведомление в маленьком окне</string>
+    <string name="gesture_action_clear_notifications">Очистить уведомления</string>
+    <string name="gesture_action_clear_notifications_desc">Скрыть все уведомления и удалить их из шторки</string>
+    <string name="gesture_action_notification_access_permission">Требуется доступ к уведомлениям</string>
+    <string name="gesture_action_read_message_empty">Нет уведомлений для чтения</string>
     <string name="gesture_action_open_quick_settings">Открыть быстрые настройки</string>
     <string name="gesture_action_lock_screen">Заблокировать экран</string>
     <string name="gesture_action_lock_screen_and_silence_ring">Заблокировать экран и отключить звонки</string>
@@ -3678,7 +3686,8 @@
     <string name="search_panel_settings_title">Панель поиска</string>
     <string name="search_panel_settings_subtitle">Настройте расположение, внешний вид и кандидатов панели поиска</string>
     <string name="search_panel_settings_section_layout">Расположение и поведение</string>
-    <string name="search_panel_presentation_layout_entry_desc">Положение панели, эффекты фона и поведение запуска</string>
+    <string name="search_panel_presentation_layout_entry_desc">Положение панели, вид области движков, эффекты фона и поведение запуска</string>
+    <string name="search_panel_engine_layout_shared_hint">Действует для области движков и в панели поиска, и в панели извлечения текста</string>
     <string name="search_panel_settings_section_behavior">Поведение панели</string>
     <string name="search_panel_settings_section_appearance">Внешний вид</string>
     <string name="search_panel_settings_section_candidates">Поиск кандидатов</string>
@@ -4654,6 +4663,9 @@
     <string name="app_carousel_separate_cancel_distances">Задать дистанции вверх и вниз отдельно</string>
     <string name="app_carousel_cancel_distance_up">Дистанция отмены вверх</string>
     <string name="app_carousel_cancel_distance_down">Дистанция отмены вниз</string>
+    <string name="app_carousel_slide_reversed">Обратное направление свайпа</string>
+    <string name="app_carousel_slide_reversed_desc">Инвертировать направление свайпа для просмотра недавних приложений</string>
+    <string name="app_carousel_slide_sensitivity">Чувствительность свайпа</string>
     <string name="app_carousel_cancel_both_directions">Отмена в обоих направлениях</string>
     <string name="inspire_image_edit_add_text">Добавить текст</string>
     <string name="inspire_image_edit_brush_drag_hint">Нажмите или ведите влево/вправо, чтобы изменить размер кисти</string>

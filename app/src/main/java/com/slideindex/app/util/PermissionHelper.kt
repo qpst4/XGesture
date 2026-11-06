@@ -40,6 +40,18 @@ object PermissionHelper {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    /**
+     * 本应用是否持有「通知使用权」（Notification access）。
+     *
+     * 与 [hasNotificationPermission] 是两回事：那个是本应用**发**通知的权限，
+     * 这个是**读/清**系统通知栏的权限，阅读消息、清空通知都依赖它。
+     */
+    fun hasNotificationAccess(context: Context): Boolean = runCatching {
+        androidx.core.app.NotificationManagerCompat
+            .getEnabledListenerPackages(context)
+            .contains(context.packageName)
+    }.getOrDefault(false)
+
     fun isBatteryOptimizationExempt(context: Context): Boolean {
         val pm = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
         return pm.isIgnoringBatteryOptimizations(context.packageName)

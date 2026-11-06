@@ -991,6 +991,14 @@
     <string name="gesture_action_media_next">次の曲</string>
     <string name="gesture_action_previous_app">前のアプリ</string>
     <string name="gesture_action_open_notifications">通知シェードを開く</string>
+    <string name="gesture_action_read_message">メッセージを読む</string>
+    <string name="gesture_action_read_message_desc">最新の通知を開く</string>
+    <string name="gesture_action_read_message_small_window">小ウィンドウで読む</string>
+    <string name="gesture_action_read_message_small_window_desc">小ウィンドウで最新の通知を開く</string>
+    <string name="gesture_action_clear_notifications">通知をクリア</string>
+    <string name="gesture_action_clear_notifications_desc">すべての通知を閉じて通知シェードから削除</string>
+    <string name="gesture_action_notification_access_permission">「通知へのアクセス」が必要です</string>
+    <string name="gesture_action_read_message_empty">読める通知がありません</string>
     <string name="gesture_action_open_quick_settings">クイック設定を開く</string>
     <string name="gesture_action_lock_screen">画面をロック</string>
     <string name="gesture_action_lock_screen_and_silence_ring">画面ロックと着信音サイレント</string>
@@ -3546,7 +3554,8 @@
     <string name="search_panel_settings_title">検索パネル</string>
     <string name="search_panel_settings_subtitle">検索パネルのレイアウト、外観、候補を設定</string>
     <string name="search_panel_settings_section_layout">レイアウトと動作</string>
-    <string name="search_panel_presentation_layout_entry_desc">検索バーの位置、背景効果、起動時の動作</string>
+    <string name="search_panel_presentation_layout_entry_desc">検索バーの位置、エンジン領域の外観、背景効果、起動時の動作</string>
+    <string name="search_panel_engine_layout_shared_hint">検索パネルとテキスト取得パネルのエンジン領域に同時に適用されます</string>
     <string name="search_panel_settings_section_behavior">パネルの動作</string>
     <string name="search_panel_settings_section_appearance">外観</string>
     <string name="search_panel_settings_section_candidates">候補検索</string>
@@ -4414,6 +4423,9 @@
     <string name="app_carousel_separate_cancel_distances">キャンセル距離</string>
     <string name="app_carousel_cancel_distance_up">上のキャンセル距離</string>
     <string name="app_carousel_cancel_distance_down">下のキャンセル距離</string>
+    <string name="app_carousel_slide_reversed">スワイプ方向を反転</string>
+    <string name="app_carousel_slide_reversed_desc">最近アプリをたどるスワイプ方向を反転します</string>
+    <string name="app_carousel_slide_sensitivity">スワイプ感度</string>
     <string name="app_carousel_cancel_both_directions">上下両方でキャンセル</string>
     <string name="inspire_image_edit_add_text">追加文字</string>
     <string name="inspire_image_edit_brush_drag_hint">タップまたは左右にドラッグして、ブラシのサイズを調整できます</string>

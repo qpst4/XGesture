@@ -90,7 +90,7 @@ class SettingsModuleRegistryTest {
             .toSet()
 
     private companion object {
-        const val EXPECTED_TOTAL_KEYS = 665
+        const val EXPECTED_TOTAL_KEYS = 666
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
             SettingsModule.EDGE_GESTURE to 84,
@@ -107,7 +107,7 @@ class SettingsModuleRegistryTest {
             SettingsModule.CLIPBOARD to 59,
             SettingsModule.DRAG_DROP to 5,
             SettingsModule.STASH to 5,
-            SettingsModule.SEARCH to 39,
+            SettingsModule.SEARCH to 40,
             SettingsModule.FREE_WINDOW to 13,
             SettingsModule.FREEZER to 6,
             SettingsModule.SHELL to 1,

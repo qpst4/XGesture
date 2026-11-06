@@ -99,6 +99,9 @@ class EdgeOverlayHost(
         // 覆盖安装后主进程启动慢被判死时，:overlay 会被系统连带杀掉（悬浮球消失）。
         if (TaskManagerUtil.peekPrivilegedAccess()) {
             TaskManagerUtil.warmUpPrivilegedBackend()
+            // 最近任务查询的「探测」只做一次（十几种候选各跑一遍挑出最小集合）。放到启动后
+            // 空闲时做，用户第一次打开任务切换器就走稳定路径；这里只预热查询方案，不缓存任务。
+            TaskManagerUtil.warmRecentTasksAsync()
         }
         floatBallController = FloatBallController(context, scope, deps.settingsRepository)
         cornerGestureHost = CornerGestureHost(context, scope, deps).also { it.start() }

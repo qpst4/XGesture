@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -62,8 +63,8 @@ import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
 internal fun FloatBallPickResultContent(
     panelShowToken: Int,
     panelRevealed: Boolean,
-    panelNotification: String?,
-    onShowInPanelMessage: (String?) -> Unit,
+    panelNotification: PickResultPanelNotification?,
+    onShowInPanelMessage: (PickResultPanelNotification?) -> Unit,
     text: String?,
     screenshot: Bitmap?,
     panelImages: List<Bitmap>,
@@ -94,12 +95,16 @@ internal fun FloatBallPickResultContent(
     onTextChange: (String) -> Unit,
     onCopy: (String, keepPanelOpen: Boolean) -> Unit,
     onShareText: (String) -> Unit,
+    /** 长按文字底栏的分享键 = 把当前这段文字拖出去。 */
+    onStartTextDrag: (String) -> Unit,
     onProcessText: (String, PickResultProcessTextTarget) -> Unit,
     onTranslate: (String) -> Unit,
     onRemoveSpaces: (String, removeAll: Boolean) -> Unit,
     onSaveScreenshot: () -> Unit,
     onSaveScreenshotLongClick: (() -> Unit)? = null,
     onShareScreenshot: () -> Unit,
+    /** 长按图片底栏的分享键 = 把当前这张图拖出去。 */
+    onStartImageDrag: () -> Unit,
     onImageShareEngineClick: (com.slideindex.app.settings.SearchEngineConfig) -> Unit,
     onImageSearch: () -> Unit,
     onSearchEngineClick: (com.slideindex.app.settings.SearchEngineConfig, Boolean) -> Unit,
@@ -540,6 +545,7 @@ internal fun FloatBallPickResultContent(
                 onSaveScreenshot = onSaveScreenshot,
                 onSaveScreenshotLongClick = onSaveScreenshotLongClick,
                 onShareScreenshot = onShareScreenshot,
+                onStartImageDrag = onStartImageDrag,
                 onImageSearch = onImageSearch,
                 onImageShareEngineClick = onImageShareEngineClick,
                 onPinImageToScreen = onPinImageToScreen,
@@ -580,6 +586,7 @@ internal fun FloatBallPickResultContent(
                 onTextModeChange = onTextModeChange,
                 onTextChange = onTextChange,
                 onShareText = onShareText,
+                onStartTextDrag = onStartTextDrag,
                 onProcessText = onProcessText,
                 onCopy = onCopy,
                 onTranslate = onTranslate,
@@ -630,14 +637,20 @@ internal fun FloatBallPickResultContent(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        // 成功画勾、失败画感叹号：提示条以前只有字符串，失败也挂着绿勾。
+                        val success = panelNotification?.success != false
                         androidx.compose.material3.Icon(
-                            Icons.Default.Check,
+                            if (success) Icons.Default.Check else Icons.Outlined.ErrorOutline,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = if (success) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                androidx.compose.ui.graphics.Color(0xFFFFB4AB)
+                            }
                         )
                         Text(
-                            text = panelNotification ?: "",
+                            text = panelNotification?.text ?: "",
                             style = MaterialTheme.typography.labelLarge
                         )
                     }

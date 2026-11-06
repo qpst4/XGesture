@@ -2465,6 +2465,14 @@
     <string name="gesture_action_media_next">Next track</string>
     <string name="gesture_action_previous_app">Previous app</string>
     <string name="gesture_action_open_notifications">Open notification shade</string>
+    <string name="gesture_action_read_message">Read message</string>
+    <string name="gesture_action_read_message_desc">Open the latest notification</string>
+    <string name="gesture_action_read_message_small_window">Read in small window</string>
+    <string name="gesture_action_read_message_small_window_desc">Open the latest notification in a small window</string>
+    <string name="gesture_action_clear_notifications">Clear notifications</string>
+    <string name="gesture_action_clear_notifications_desc">Dismiss all notifications and remove them from the shade</string>
+    <string name="gesture_action_notification_access_permission">Notification access is required</string>
+    <string name="gesture_action_read_message_empty">No notification to read</string>
     <string name="gesture_action_open_quick_settings">Open quick settings</string>
     <string name="gesture_action_lock_screen">Lock screen</string>
     <string name="gesture_action_lock_screen_and_silence_ring">Lock screen and silence ringer</string>
@@ -3706,7 +3714,8 @@ Questions: open a GitHub Issue on the project repository.</string>
     <string name="search_panel_settings_title">Search panel</string>
     <string name="search_panel_settings_subtitle">Configure search panel layout, appearance and candidates</string>
     <string name="search_panel_settings_section_layout">Layout &amp; behavior</string>
-    <string name="search_panel_presentation_layout_entry_desc">Bar position, background effects, and launch behavior</string>
+    <string name="search_panel_presentation_layout_entry_desc">Bar position, engine area appearance, background effects, and launch behavior</string>
+    <string name="search_panel_engine_layout_shared_hint">Applies to the engine area in both the search panel and the pick panel</string>
     <string name="search_panel_settings_section_behavior">Panel behavior</string>
     <string name="search_panel_settings_section_appearance">Appearance</string>
     <string name="search_panel_settings_section_candidates">Candidate search</string>
@@ -4682,6 +4691,9 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="app_carousel_separate_cancel_distances">Set up and down distances separately</string>
     <string name="app_carousel_cancel_distance_up">Upward cancel distance</string>
     <string name="app_carousel_cancel_distance_down">Downward cancel distance</string>
+    <string name="app_carousel_slide_reversed">Reverse swipe direction</string>
+    <string name="app_carousel_slide_reversed_desc">Flip which way you swipe to browse recent apps</string>
+    <string name="app_carousel_slide_sensitivity">Swipe sensitivity</string>
     <string name="app_carousel_cancel_both_directions">Cancel in both directions</string>
     <string name="inspire_image_edit_add_text">Add text</string>
     <string name="inspire_image_edit_brush_drag_hint">Tap or drag left/right to adjust the brush size</string>

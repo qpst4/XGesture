@@ -65,9 +65,11 @@ object ShizukuUserServiceHost {
      * 38：最近任务不再过滤本应用包名（任务切换器需要显示自己）。这是运行在用户服务进程里的
      *     `TaskExclusions` / reader 逻辑，必须换进程名才能让已安装的新包生效。
      * 37：`getRecentTasks()` 行格式增加第 5 列 userId（分身识别）。
-     * 升号后进程名变成 `task_manager_v64`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
+     * 66：最近任务查询改为「首次探测 + 记住最小覆盖集」，只跑 1～2 条查询（原来每次跑满
+     *     16 次候选调用）。查询逻辑在用户服务进程里，必须换进程名才能让新包生效。
+     * 升号后进程名变成 `task_manager_v65`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
      */
-    const val SERVICE_BUILD = 65
+    const val SERVICE_BUILD = 66
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bindLock = Any()

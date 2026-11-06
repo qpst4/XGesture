@@ -346,6 +346,9 @@ fun gestureActionFromTypeId(id: Int): GestureAction = when (GestureActionType.fr
     GestureActionType.SCREENSHOT -> GestureAction.Screenshot
     GestureActionType.LOCK_SCREEN -> GestureAction.LockScreen
     GestureActionType.OPEN_NOTIFICATIONS -> GestureAction.OpenNotifications
+    GestureActionType.READ_LATEST_MESSAGE -> GestureAction.ReadLatestMessage
+    GestureActionType.READ_LATEST_MESSAGE_SMALL_WINDOW -> GestureAction.ReadLatestMessageInSmallWindow
+    GestureActionType.CLEAR_NOTIFICATIONS -> GestureAction.ClearNotifications
     GestureActionType.OPEN_QUICK_SETTINGS -> GestureAction.OpenQuickSettings
     else -> GestureAction.None
 }
