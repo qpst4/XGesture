@@ -4423,6 +4423,9 @@
     <string name="app_carousel_separate_cancel_distances">キャンセル距離</string>
     <string name="app_carousel_cancel_distance_up">上のキャンセル距離</string>
     <string name="app_carousel_cancel_distance_down">下のキャンセル距離</string>
+    <string name="app_carousel_slide_reversed">スワイプ方向を反転</string>
+    <string name="app_carousel_slide_reversed_desc">最近アプリをたどるスワイプ方向を反転します</string>
+    <string name="app_carousel_slide_sensitivity">スワイプ感度</string>
     <string name="app_carousel_cancel_both_directions">上下両方でキャンセル</string>
     <string name="inspire_image_edit_add_text">追加文字</string>
     <string name="inspire_image_edit_brush_drag_hint">タップまたは左右にドラッグして、ブラシのサイズを調整できます</string>

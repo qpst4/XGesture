@@ -4663,6 +4663,9 @@
     <string name="app_carousel_separate_cancel_distances">Задать дистанции вверх и вниз отдельно</string>
     <string name="app_carousel_cancel_distance_up">Дистанция отмены вверх</string>
     <string name="app_carousel_cancel_distance_down">Дистанция отмены вниз</string>
+    <string name="app_carousel_slide_reversed">Обратное направление свайпа</string>
+    <string name="app_carousel_slide_reversed_desc">Инвертировать направление свайпа для просмотра недавних приложений</string>
+    <string name="app_carousel_slide_sensitivity">Чувствительность свайпа</string>
     <string name="app_carousel_cancel_both_directions">Отмена в обоих направлениях</string>
     <string name="inspire_image_edit_add_text">Добавить текст</string>
     <string name="inspire_image_edit_brush_drag_hint">Нажмите или ведите влево/вправо, чтобы изменить размер кисти</string>

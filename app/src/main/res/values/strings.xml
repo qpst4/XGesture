@@ -4664,6 +4664,9 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="app_carousel_separate_cancel_distances">Set up and down distances separately</string>
     <string name="app_carousel_cancel_distance_up">Upward cancel distance</string>
     <string name="app_carousel_cancel_distance_down">Downward cancel distance</string>
+    <string name="app_carousel_slide_reversed">Reverse swipe direction</string>
+    <string name="app_carousel_slide_reversed_desc">Flip which way you swipe to browse recent apps</string>
+    <string name="app_carousel_slide_sensitivity">Swipe sensitivity</string>
     <string name="app_carousel_cancel_both_directions">Cancel in both directions</string>
     <string name="inspire_image_edit_add_text">Add text</string>
     <string name="inspire_image_edit_brush_drag_hint">Tap or drag left/right to adjust the brush size</string>

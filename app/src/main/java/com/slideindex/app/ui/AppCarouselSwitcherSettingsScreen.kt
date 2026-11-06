@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
 import com.slideindex.app.settings.AppCarouselSwitcherSettings
+import com.slideindex.app.ui.SettingSwitchRow
 import com.slideindex.app.ui.miuix.CardItem
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
@@ -79,6 +80,30 @@ fun appCarouselSwitcherSettingsCardItems(
                 onValueChange = {
                     onUpdate(local.copy(cancelDistanceUpDp = it.roundToInt()))
                 },
+            )
+        },
+        settingsCardScopeItem("$keyPrefix-slide-sensitivity") {
+            SettingsSliderRow(
+                title = stringResource(R.string.app_carousel_slide_sensitivity),
+                value = local.slideSensitivity.toFloat(),
+                valueRange = AppCarouselSwitcherSettings.MIN_SLIDE_SENSITIVITY.toFloat()..
+                    AppCarouselSwitcherSettings.MAX_SLIDE_SENSITIVITY.toFloat(),
+                steps = AppCarouselSwitcherSettings.MAX_SLIDE_SENSITIVITY -
+                    AppCarouselSwitcherSettings.MIN_SLIDE_SENSITIVITY - 1,
+                enabled = true,
+                label = local.slideSensitivity.toString(),
+                onValueChange = {
+                    onUpdate(local.copy(slideSensitivity = it.roundToInt()))
+                },
+            )
+        },
+        settingsCardScopeItem("$keyPrefix-slide-reversed") {
+            SettingSwitchRow(
+                title = stringResource(R.string.app_carousel_slide_reversed),
+                subtitle = stringResource(R.string.app_carousel_slide_reversed_desc),
+                checked = local.slideReversed,
+                enabled = true,
+                onCheckedChange = { onUpdate(local.copy(slideReversed = it)) },
             )
         },
         settingsCardScopeItem("$keyPrefix-down") {
