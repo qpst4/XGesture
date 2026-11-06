@@ -31,15 +31,25 @@ class UpdateCheckerTest {
     @Test
     fun formatNotesForDisplay_splitsSemicolonsAndBlankLines() {
         val raw = "第一行；第二行\n\n第三行"
+        // 必须显式传 locale：不传就吃 Locale.getDefault()，CI 的 en-US runner 上会渲染成 "1. "，
+        // 本地 zh-CN 的 Windows 反而一路绿（这就是这条红只在 CI 出现的原因）。
         assertEquals(
             "一、第一行\n二、第二行\n三、第三行",
-            UpdateChecker.formatNotesForDisplay(raw),
+            UpdateChecker.formatNotesForDisplay(raw, Locale.SIMPLIFIED_CHINESE),
+        )
+        // 英文环境走另一支，顺手把序号格式一起锁住。
+        assertEquals(
+            "1. 第一行\n2. 第二行\n3. 第三行",
+            UpdateChecker.formatNotesForDisplay(raw, Locale.US),
         )
     }
 
     @Test
     fun formatNotesForDisplay_preservesExistingNewlines() {
-        assertEquals("一、a\n二、b", UpdateChecker.formatNotesForDisplay("a\nb"))
+        assertEquals(
+            "一、a\n二、b",
+            UpdateChecker.formatNotesForDisplay("a\nb", Locale.SIMPLIFIED_CHINESE),
+        )
     }
 
     @Test
@@ -68,7 +78,10 @@ class UpdateCheckerTest {
     fun formatNotesForDisplay_groupedNotes_restartsNumberingPerGroup() {
         assertEquals(
             "新增\n一、功能A\n二、功能B\n修复\n一、修复C",
-            UpdateChecker.formatNotesForDisplay("## 新增\n- 功能A\n- 功能B\n## 修复\n- 修复C"),
+            UpdateChecker.formatNotesForDisplay(
+                "## 新增\n- 功能A\n- 功能B\n## 修复\n- 修复C",
+                Locale.SIMPLIFIED_CHINESE,
+            ),
         )
     }
 
