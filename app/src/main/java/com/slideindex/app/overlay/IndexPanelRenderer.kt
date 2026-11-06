@@ -219,8 +219,9 @@ internal class IndexPanelRenderer(
         val zoneLayout = host.zoneLayout()
         val settings = host.settings()
         val rail = zoneLayout.indexRailRect()
-        val alphaScale = settings.panelOpacity.coerceIn(0.6f, 1f)
-        railBgPaint.color = Color.argb((200 * alphaScale).toInt(), 38, 38, 42)
+        // 0% = 底板全透明，100% = 实心：与设置页的 0–100% 一一对应。
+        val alphaScale = settings.panelOpacity.coerceIn(0f, 1f)
+        railBgPaint.color = Color.argb((255 * alphaScale).toInt(), 38, 38, 42)
         canvas.drawRoundRect(rail, railCorner, railCorner, railBgPaint)
 
         val railLetters = host.indexSession().currentRailLetters()
@@ -253,7 +254,12 @@ internal class IndexPanelRenderer(
         val letter = host.indexSession().selectedLetter ?: return
         val center = bubbleCenter()
         val settings = host.settings()
-        bubblePaint.color = Color.argb((240 * settings.panelOpacity).toInt().coerceIn(150, 240), 52, 52, 56)
+        bubblePaint.color = Color.argb(
+            (255 * settings.panelOpacity.coerceIn(0f, 1f)).toInt().coerceIn(0, 255),
+            52,
+            52,
+            56,
+        )
         canvas.drawCircle(center.x, center.y, bubbleRadius, bubblePaint)
         bubbleLetterPaint.textSize = host.sp(22f)
         canvas.drawText(
@@ -274,7 +280,12 @@ internal class IndexPanelRenderer(
         val m = layout.appsPerRow
         val grid = gridPopupRect()
         val settings = host.settings()
-        panelBgPaint.color = Color.argb((215 * settings.panelOpacity).toInt().coerceIn(140, 215), 48, 48, 52)
+        panelBgPaint.color = Color.argb(
+            (255 * settings.panelOpacity.coerceIn(0f, 1f)).toInt().coerceIn(0, 255),
+            48,
+            48,
+            52,
+        )
         canvas.drawRoundRect(grid, panelCorner, panelCorner, panelBgPaint)
 
         indexSession.gridCellBounds.forEach { (app, cell) ->

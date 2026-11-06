@@ -26,6 +26,7 @@ import com.slideindex.app.ui.miuix.MiuixListScaffold
 import com.slideindex.app.ui.miuix.MiuixListSettingsCard
 import com.slideindex.app.ui.miuix.MiuixSliderRow
 import com.slideindex.app.ui.miuix.MiuixSwitchRow
+import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_01
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.settingsCardItems
 import com.slideindex.app.ui.settings.components.SettingsCardScope
@@ -141,10 +142,16 @@ fun LayoutSettingsScreen(
                     MiuixSliderRow(
                         title = stringResource(R.string.panel_opacity),
                         value = settings.panelOpacity,
-                        valueRange = 0.75f..1f,
+                        valueRange = 0f..1f,
+                        // 五个提示点：0 / 25 / 50 / 75 / 100%，与「索引栏纵向位置」同一组。
+                        keyPoints = SETTINGS_SLIDER_PERCENT_KEY_POINTS_01,
                         enabled = serviceEnabled,
                         label = "",
                         formatLabel = { "${(it * 100).roundToInt()}%" },
+                        // 拖动期只改本地值、松手才提交一次设置：之前每个 tick 都写一次
+                        // DataStore，落盘队列会在松手后继续回流，把拖动过程"回放"一遍
+                        //（表现为滑块拖不跟手、松手后数值还在慢慢走）。
+                        commitOnFinish = true,
                         onValueChange = onPanelOpacityChange,
                     )
                 },
