@@ -30,6 +30,7 @@ import com.slideindex.app.util.PermissionHelper
 import com.slideindex.app.util.RecentTasksLoader
 import com.slideindex.app.util.TaskManagerUtil
 import com.slideindex.app.util.TaskSwitcherMenuActions
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 data class AppCarouselItem(
@@ -347,48 +348,54 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
             val maxSteps = items.lastIndex - baseIndex
             val deadZone = 0.05f
 
-            val newIndex = if (!isRightTrigger) {
-                // 左侧触发：手指向左滑浏览历史，手指向右滑回退至当前
-                if (deltaX <= 0f) {
-                    if (maxSteps <= 0) baseIndex else {
-                        val availableTravel = (initialTouchX - edgeMargin).coerceIn(60f * density, maxComfortTravel)
-                        val progress = (-deltaX / availableTravel).coerceIn(0f, 1f)
-                        if (progress < deadZone) baseIndex else {
-                            val activeProgress = (progress - deadZone) / (1f - deadZone)
-                            val stepIndex = (activeProgress * maxSteps).roundToInt().coerceIn(0, maxSteps)
-                            (baseIndex + stepIndex).coerceIn(0, items.lastIndex)
-                        }
-                    }
+            // 手指朝"历史应用"方向滑 = forward；反方向滑 = 回退到当前应用
+            val forward = if (!isRightTrigger) deltaX <= 0f else deltaX >= 0f
+            val availableTravel = if (forward) {
+                if (!isRightTrigger) {
+                    initialTouchX - edgeMargin
                 } else {
-                    val availableTravel = (screenW - edgeMargin - initialTouchX).coerceIn(60f * density, maxComfortTravel)
-                    val progress = (deltaX / availableTravel).coerceIn(0f, 1f)
-                    if (progress > 0.08f) 0 else baseIndex
+                    screenW - edgeMargin - initialTouchX
                 }
             } else {
-                // 右侧触发对称：手指向右滑浏览历史，手指向左滑回退至当前
-                if (deltaX >= 0f) {
-                    if (maxSteps <= 0) baseIndex else {
-                        val availableTravel = (screenW - edgeMargin - initialTouchX).coerceIn(60f * density, maxComfortTravel)
-                        val progress = (deltaX / availableTravel).coerceIn(0f, 1f)
-                        if (progress < deadZone) baseIndex else {
-                            val activeProgress = (progress - deadZone) / (1f - deadZone)
-                            val stepIndex = (activeProgress * maxSteps).roundToInt().coerceIn(0, maxSteps)
-                            (baseIndex + stepIndex).coerceIn(0, items.lastIndex)
-                        }
-                    }
+                if (!isRightTrigger) {
+                    screenW - edgeMargin - initialTouchX
                 } else {
-                    val availableTravel = (initialTouchX - edgeMargin).coerceIn(60f * density, maxComfortTravel)
-                    val progress = (-deltaX / availableTravel).coerceIn(0f, 1f)
-                    if (progress > 0.08f) 0 else baseIndex
+                    initialTouchX - edgeMargin
                 }
-            }
+            }.coerceIn(60f * density, maxComfortTravel)
+            val progress = (abs(deltaX) / availableTravel).coerceIn(0f, 1f)
+            val active = ((progress - deadZone) / (1f - deadZone)).coerceIn(0f, 1f)
 
-            if (newIndex != selectedIndex) {
-                selectedIndex = newIndex
-                smoothScrollToIndex(selectedIndex)
-                if (selectedIndex != lastHapticIndex) {
-                    lastHapticIndex = selectedIndex
-                    appSettings?.let { HapticHelper.appTick(this, it) }
+            // 跟手：整排位置按手指进度线性插值，拖动期间不做动画，松手才吸附。
+            scrollAnimator?.cancel()
+            if (forward) {
+                val endIndex = (baseIndex + maxSteps).coerceAtMost(items.lastIndex)
+                val baseOffset = computeScrollOffsetForIndex(baseIndex)
+                val endOffset = computeScrollOffsetForIndex(endIndex)
+                scrollOffset = baseOffset + (endOffset - baseOffset) * active
+                val newIndex = if (maxSteps <= 0) {
+                    baseIndex
+                } else {
+                    (baseIndex + (active * maxSteps).roundToInt()).coerceIn(0, items.lastIndex)
+                }
+                if (newIndex != selectedIndex) {
+                    selectedIndex = newIndex
+                    if (selectedIndex != lastHapticIndex) {
+                        lastHapticIndex = selectedIndex
+                        appSettings?.let { HapticHelper.appTick(this, it) }
+                    }
+                }
+            } else {
+                val baseOffset = computeScrollOffsetForIndex(baseIndex)
+                val firstOffset = computeScrollOffsetForIndex(0)
+                scrollOffset = baseOffset + (firstOffset - baseOffset) * active
+                val newIndex = if (progress > 0.08f) 0 else baseIndex
+                if (newIndex != selectedIndex) {
+                    selectedIndex = newIndex
+                    if (selectedIndex != lastHapticIndex) {
+                        lastHapticIndex = selectedIndex
+                        appSettings?.let { HapticHelper.appTick(this, it) }
+                    }
                 }
             }
         }
@@ -534,7 +541,11 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
             if (itemCenterX < -cardBaseWidth || itemCenterX > width + cardBaseWidth) continue
 
             val isSelected = i == selectedIndex && !isCancelled
-            val scale = if (isSelected) 1.22f else 1.0f
+            // 缩放按“距屏幕中心的距离”连续变化（0.62~1.0），对齐悬浮菜单的滑动切换观感：
+            // 拖动时整排跟着手指走，靠近中心逐渐放大，而不是选中/未选中二值跳变。
+            val distanceRatio = (1f - abs(width / 2f - itemCenterX) / width).coerceIn(0f, 1f)
+            val distanceScale = 0.62f + 0.38f * distanceRatio
+            val scale = if (isSelected) distanceScale * 1.22f else distanceScale
             val cardW = cardBaseWidth * scale
             val cardH = cardBaseHeight * scale
             val left = itemCenterX - cardW / 2f
