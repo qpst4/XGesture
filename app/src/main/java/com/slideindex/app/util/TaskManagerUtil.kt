@@ -89,6 +89,11 @@ object TaskManagerUtil {
 
     private const val PRIVILEGED_OPS_TIMEOUT_MS = 8_000L
 
+    private const val MAIN_THREAD_SKIP_LOG_INTERVAL_MS = 5_000L
+
+    @Volatile
+    private var lastMainThreadSkipLogAtMs = 0L
+
     private val onPrivilegedOpsThread = ThreadLocal.withInitial { false }
 
     @Suppress("UNCHECKED_CAST")
@@ -117,6 +122,17 @@ object TaskManagerUtil {
             return block()
         }
         if (Looper.myLooper() == Looper.getMainLooper()) {
+            // 主线程不可能拿到结果：命令丢给特权线程后这里立刻返回「失败」。调用方若把返回值当成
+            // 真实执行结果，就会误判（写 secure 设置曾因此每拖动一次滑条弹一次 ADB 授权框）。
+            val now = SystemClock.elapsedRealtime()
+            if (now - lastMainThreadSkipLogAtMs >= MAIN_THREAD_SKIP_LOG_INTERVAL_MS) {
+                lastMainThreadSkipLogAtMs = now
+                Log.w(
+                    TAG,
+                    "privileged op called on main thread: dispatched to PrivilegedTaskOps, " +
+                        "returning failure to caller",
+                )
+            }
             privilegedOpsExecutor.execute {
                 onPrivilegedOpsThread.set(true)
                 try {

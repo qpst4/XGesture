@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -38,6 +39,7 @@ import com.slideindex.app.util.SystemBackGestureInsetHelper
 import com.slideindex.app.xposed.bridge.ModuleBridgeStatusProbe
 import com.slideindex.app.xposed.bridge.ModuleStatusFields
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -55,6 +57,7 @@ fun SystemBackGestureWidthSettingsScreen(
     onRefreshPermissions: () -> Unit = {},
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val gestureNavigation = remember(context) { SystemBackGestureConflictHelper.isGestureNavigation(context) }
     var leftScale by remember { mutableFloatStateOf(SystemBackGestureInsetHelper.DEFAULT_SCALE) }
     var rightScale by remember { mutableFloatStateOf(SystemBackGestureInsetHelper.DEFAULT_SCALE) }
@@ -95,26 +98,25 @@ fun SystemBackGestureWidthSettingsScreen(
         rightScale = SystemBackGestureInsetHelper.readRightScale(context)
     }
 
-    fun writeScale(side: BackGestureSide, value: Float): Boolean {
-        val success = when (side) {
-            BackGestureSide.LEFT -> SystemBackGestureInsetHelper.writeLeftScale(context, value)
-            BackGestureSide.RIGHT -> SystemBackGestureInsetHelper.writeRightScale(context, value)
-        }
-        if (success) {
-            refreshScales()
-        }
-        return success
-    }
-
-    fun onScaleChange(side: BackGestureSide, value: Float) {
+    /**
+     * 滑条松手后提交一次。写入必须在后台线程等结果：root 模式下 `runShellCommandLine` 在主线程
+     * 只会立刻返回「主线程跳过特权任务」，等于每次拖动都判失败并弹 ADB 授权框。
+     * 提交后无论成败都以系统里的真实值为准，失败时滑条会退回写入前的位置。
+     */
+    fun commitScale(side: BackGestureSide, value: Float) {
         if (!gestureNavigation || !canWrite) return
         val snapped = (value * 20f).roundToInt() / 20f
         when (side) {
             BackGestureSide.LEFT -> leftScale = snapped
             BackGestureSide.RIGHT -> rightScale = snapped
         }
-        if (!writeScale(side, snapped)) {
-            showAdbDialog = true
+        scope.launch {
+            val success = when (side) {
+                BackGestureSide.LEFT -> SystemBackGestureInsetHelper.writeLeftScale(context, snapped)
+                BackGestureSide.RIGHT -> SystemBackGestureInsetHelper.writeRightScale(context, snapped)
+            }
+            refreshScales()
+            if (!success) showAdbDialog = true
         }
     }
 
@@ -223,7 +225,9 @@ fun SystemBackGestureWidthSettingsScreen(
                             steps = 20,
                             enabled = gestureNavigation && canWrite,
                             formatLabel = { "${(it * 100).roundToInt()}%" },
-                            onValueChange = { onScaleChange(BackGestureSide.LEFT, it) },
+                            // 松手才写一次：拖动中每格都发一条特权命令会把队列堆满。
+                            commitOnFinish = true,
+                            onValueChange = { commitScale(BackGestureSide.LEFT, it) },
                         )
                     },
                 )
@@ -236,7 +240,9 @@ fun SystemBackGestureWidthSettingsScreen(
                             steps = 20,
                             enabled = gestureNavigation && canWrite,
                             formatLabel = { "${(it * 100).roundToInt()}%" },
-                            onValueChange = { onScaleChange(BackGestureSide.RIGHT, it) },
+                            // 松手才写一次：拖动中每格都发一条特权命令会把队列堆满。
+                            commitOnFinish = true,
+                            onValueChange = { commitScale(BackGestureSide.RIGHT, it) },
                         )
                     },
                 )
@@ -249,10 +255,10 @@ fun SystemBackGestureWidthSettingsScreen(
                             onClick = {
                                 if (!gestureNavigation) return@SettingLinkRow
                                 if (!canWrite && !requestWriteAccess()) return@SettingLinkRow
-                                if (SystemBackGestureInsetHelper.resetDefaults(context)) {
+                                scope.launch {
+                                    val success = SystemBackGestureInsetHelper.resetDefaults(context)
                                     refreshScales()
-                                } else {
-                                    showAdbDialog = true
+                                    if (!success) showAdbDialog = true
                                 }
                             },
                         )
