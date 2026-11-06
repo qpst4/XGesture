@@ -489,13 +489,35 @@ fun sameSigner(context: Context, apk: File): Boolean {
 - ~~更新弹窗补"精简版"说明 + 契约单测~~——**取消**（P2-11：引擎在 `filesDir`，Full→Lite 更新不会丢，契约测试守的是"未来有人改坏"，维护者判断不值得）
 
 ### 第 2–3 个月（结构）
-- [ ] 抽 `:feature:overlay-panels`，`:app` 降到 20 万行以内（P1-1 第②步）
-- [ ] `FloatBallOverlay` 拆 4 个类（P1-2）
-- [ ] `OverlayPreviewPort` 接口化，85 个静态入口收敛（P1-3）
-- [ ] trampoline 合并到 5 个以内（§4.3）
-- [x] ~~生成 app 级 Baseline Profile~~（已完成，见 §11.3）；CI 跑 `StartupBenchmark` **不做**（见 §5.2 的修正）
-- [ ] **启动路径有改动后重采 profile**（P1-7 刚改过启动路径，当前 profile 记的是旧路径）
-- [ ] 设置 schema 版本号 + 迁移表（P1-5）
+
+这一时期有**三条互不相干的主线**。别把它们当成一张平铺的待办表：
+
+- **W1 结构**：把 overlay 迁出 `:app`。施工细节**只**在 [overlay-panels-migration-plan.md](overlay-panels-migration-plan.md)（依赖优先版），本报告只记目标和验收。
+- **W2 性能**：profile 重采。和结构重构无关，绑在发版节奏上。
+- **W3 卫生**：trampoline、设置 schema。各自独立，随时能做。
+
+#### W1 结构重构：overlay 迁移（约 1.5–2 周）
+
+> 顺序**按依赖**，不按文件大小：先拆底座，面板组才搬得动。
+
+- 阶段 A 拆底座（主题层 / 宿主 / 根包单例）：4–6 天
+- 阶段 B 搬面板组：5–7 天（`filebrowser` 不依赖底座，可提前单独做）
+- 阶段 C 收根目录 220 个文件：3–5 天
+- 一并完成的三条原条目：
+  - **P1-1 第②步**：`:app` 降到 20 万行以内（W1 做完自然达成）
+  - **P1-2**：`FloatBallOverlay` 拆 4 类（在阶段 A3 做单例接口化时顺手拆）
+  - **P1-3**：85 个静态入口收敛（预览那 21 个已完成，剩余在 A3 / C3）
+
+#### W2 性能：profile（发版前，约 40 分钟）
+
+- [x] ~~生成 app 级 Baseline Profile~~（已完成，见 §11.3）
+- [ ] **启动路径改动后重采**：P1-7 刚改过启动路径，现有 profile 记的是旧路径；发版前重采一次即可
+- CI 跑 `StartupBenchmark` **不做**（理由见 §5.2 的修正）
+
+#### W3 工程卫生（独立，随时可做）
+
+- [ ] trampoline 合并到 5 个以内（1–2 天，见 §4.3）
+- [ ] 设置 schema 版本号 + 迁移表（1 天）
 
 ### 第 2 季度
 - [ ] 抽 `:feature:floatball` / `:feature:launchers` / `:core:design`
@@ -515,7 +537,7 @@ fun sameSigner(context: Context, apk: File): Boolean {
 - 根 `build.gradle.kts` 新增聚合任务 `unitTests`：`:app:testFullDebugUnitTest` + 所有叶子模块的 `testDebugUnitTest`。**不用** `./gradlew test`——AGP 会为 app 的 8 个变体（2 flavor × 4 buildType）各跑一遍同一套用例。
 - 所有 `Test` 任务补 `--add-opens=java.base/jdk.internal.access=ALL-UNNAMED` 与 `java.base/java.io=ALL-UNNAMED`：JDK 25 下 Robolectric 的 FileDescriptor 拦截器要反射访问 `SharedSecrets`，否则走 `ApplicationSharedMemory` 的用例在 `beforeTest` 就抛 `IllegalAccessException`。
 
-### 11.2 修掉的 9 条红
+### 11.2 修掉的 12 条红
 
 | 用例 | 根因 | 处置 |
 | :--- | :--- | :--- |
@@ -525,6 +547,7 @@ fun sameSigner(context: Context, apk: File): Boolean {
 | `TranslateTargetResolverTest.followApp_withSystemUiTag_unsupportedLocale_fallsBackToEnglish` | `323b4519` 把巴葡/葡葡/印尼语加进目标语言目录，`pt-BR` 不再是"不支持"样本 | 换成确实不在目录里的 `xx-YY` |
 | `SettingsModuleRegistryTest.everyDeclaredKeyBelongsToTheExpectedModule` | 新增 5 个键、删 1 个键（总数 666→670），守卫测试按设计报红 | 按前缀规则更新快照：QUICK_LAUNCHER 91→93、SHAKE 42→44 |
 | `FloatBallIdleHiddenTest.freshInstall_…` | `2fbbc4322` 把闲置隐身默认值改成「开 / 0.38」，测试还停在旧默认 | 断言对齐新默认；**并留下警示**：该提交只改 `?: default`、没有补一次性迁移，从未写过该键的存量设备升级后也会跟着变 |
+| `UpdateCheckerTest.formatNotesForDisplay_*` × 3 | 用例没传 locale，吃 `Locale.getDefault()`：本地 zh-CN 走"一、"分支所以绿，CI 的 en-US runner 走"1. "分支就红 | 显式传 `Locale.SIMPLIFIED_CHINESE`，并补一条 `Locale.US` 断言锁住另一支。**这三条只有 CI 能发现**，是新增门禁当天抓到的 |
 
 **结果**：`./gradlew unitTests` 全绿——**323 个测试类 / 2,421 个用例 / 0 失败**。
 
@@ -562,6 +585,8 @@ fun sameSigner(context: Context, apk: File): Boolean {
   - **下一刀（未做，约半天）**：`OverlayFullScreenPanelHost` 看着"零业务依赖"，实际要 `FloatBallOverlay`（通知回调）、`OverlayComposeOwner`（依赖 `R` 与 `AppLocaleApplier`）、`OverlayBlurGate`（依赖 DI 门面）。要先把这三个口子反转掉，再连同 `OverlaySidePanelHost` / `EdgeOverlayHost` 一起搬，别一个个搬。
 
 **验证**：`./gradlew unitTests` 全绿——323 个测试类 / 2,421 个用例 / 0 失败；`:core:overlay-host:testDebugUnitTest` 4/4。
+
+**批 2 的修正**：原计划"`compositor` + `screenshot` + `backpanel` 一起搬"只完成了 `compositor`（+`OverlayZOrderHooks` 四个回调）。另外两组被**主题层与根包单例**挡住——这让整个迁移计划的排序原则从"按组大小"改成"按依赖深度"，重写后的版本见 [overlay-panels-migration-plan.md](overlay-panels-migration-plan.md)：阶段 A 拆底座 → 阶段 B 搬面板 → 阶段 C 收根目录。`:core:overlay-host` 现在 15 个文件 / 1,020 行。
 
 **遗留一件**：P1-7 改的是**启动路径**，而现有基线配置是改之前采的。需要重采一次（`:app:generateFullReleaseBaselineProfile --no-configuration-cache` → `:app:syncLiteBaselineProfile`），否则新加的 `primeFromContext` 这类方法不在加速清单里。
 
