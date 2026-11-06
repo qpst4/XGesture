@@ -6,20 +6,11 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.combinedClickable
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,10 +21,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -55,17 +44,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import kotlin.math.roundToInt
 import com.slideindex.app.R
 import com.slideindex.app.privilege.PrivilegeGateway
 import com.slideindex.app.shell.ShellCommand
@@ -166,97 +149,6 @@ private fun ShellInlineTestResultCard(
     }
 }
 
-@Composable
-internal fun ShellSegmentedControl(
-    labels: List<String>,
-    selectedIndex: Int,
-    onSelect: (Int) -> Unit,
-) {
-    BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(40.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
-            .border(
-                width = 1.dp,
-                color = MiuixTheme.colorScheme.dividerLine,
-                shape = RoundedCornerShape(14.dp),
-            )
-            .padding(3.dp),
-    ) {
-        val density = LocalDensity.current
-        val haptic = LocalHapticFeedback.current
-        val dividerTotal = if (labels.isEmpty()) 0.dp else (labels.size - 1).dp
-        val segmentWidth = if (labels.isEmpty()) 0.dp else (maxWidth - dividerTotal) / labels.size
-        val indicatorOffset = remember { Animatable(0f) }
-        var firstLayout by remember { mutableStateOf(true) }
-
-        LaunchedEffect(selectedIndex, segmentWidth) {
-            val target = with(density) { (segmentWidth + 1.dp).toPx() } * selectedIndex
-            if (firstLayout) {
-                indicatorOffset.snapTo(target)
-                firstLayout = false
-            } else {
-                indicatorOffset.animateTo(
-                    targetValue = target,
-                    animationSpec = tween(200, easing = LinearEasing),
-                )
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .offset { IntOffset(indicatorOffset.value.roundToInt(), 0) }
-                .width(segmentWidth)
-                .fillMaxHeight()
-                .clip(RoundedCornerShape(11.dp))
-                .background(MiuixTheme.colorScheme.surface),
-        )
-
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            labels.forEachIndexed { index, label ->
-                if (index > 0) {
-                    Box(
-                        modifier = Modifier
-                            .width(1.dp)
-                            .height(24.dp)
-                            .background(MiuixTheme.colorScheme.dividerLine),
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() },
-                        ) {
-                            if (index != selectedIndex) {
-                                haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                onSelect(index)
-                            }
-                        },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    MiuixText(
-                        text = label,
-                        style = MiuixTheme.textStyles.body2,
-                        color = if (index == selectedIndex) {
-                            MiuixTheme.colorScheme.primary
-                        } else {
-                            MiuixTheme.colorScheme.onSurfaceVariantSummary
-                        },
-                    )
-                }
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ShellExecutionModeSelector(
@@ -269,17 +161,17 @@ private fun ShellExecutionModeSelector(
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        ShellSegmentedControl(
-            labels = listOf(
-                stringResource(R.string.shell_panel_mode_root),
-                stringResource(R.string.shell_panel_mode_shizuku),
-            ),
-            selectedIndex = if (executionMode == ShellExecutionMode.ROOT) 0 else 1,
-            onSelect = { index ->
-                onExecutionModeChange(
-                    if (index == 0) ShellExecutionMode.ROOT else ShellExecutionMode.SHIZUKU,
-                )
+        // 顺序：Shizuku 在前，与「特权执行方式」设置页保持一致。
+        SegmentedControl(
+            items = listOf(ShellExecutionMode.SHIZUKU, ShellExecutionMode.ROOT),
+            selected = executionMode,
+            labelRes = { mode ->
+                when (mode) {
+                    ShellExecutionMode.SHIZUKU -> R.string.shell_panel_mode_shizuku
+                    ShellExecutionMode.ROOT -> R.string.shell_panel_mode_root
+                }
             },
+            onSelect = onExecutionModeChange,
         )
     }
 }
@@ -370,26 +262,21 @@ private fun ShellCommandEditorFields(
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        ShellSegmentedControl(
-            labels = listOf(
-                stringResource(R.string.shell_panel_result_none),
-                stringResource(R.string.shell_panel_result_toast),
-                stringResource(R.string.shell_panel_result_dialog),
+        SegmentedControl(
+            items = listOf(
+                ShellResultDisplay.NONE,
+                ShellResultDisplay.TOAST,
+                ShellResultDisplay.DIALOG,
             ),
-            selectedIndex = when (resultDisplay) {
-                ShellResultDisplay.NONE -> 0
-                ShellResultDisplay.TOAST -> 1
-                ShellResultDisplay.DIALOG -> 2
+            selected = resultDisplay,
+            labelRes = { display ->
+                when (display) {
+                    ShellResultDisplay.NONE -> R.string.shell_panel_result_none
+                    ShellResultDisplay.TOAST -> R.string.shell_panel_result_toast
+                    ShellResultDisplay.DIALOG -> R.string.shell_panel_result_dialog
+                }
             },
-            onSelect = { index ->
-                onResultDisplayChange(
-                    when (index) {
-                        0 -> ShellResultDisplay.NONE
-                        1 -> ShellResultDisplay.TOAST
-                        else -> ShellResultDisplay.DIALOG
-                    },
-                )
-            },
+            onSelect = onResultDisplayChange,
         )
     }
 }

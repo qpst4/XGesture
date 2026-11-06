@@ -266,12 +266,17 @@ fun ShortcutPortPage(onBack: () -> Unit) {
             Box(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
-                ShellSegmentedControl(
-                    labels = listOf("Root", "Shizuku"),
-                    selectedIndex = if (activeMode == PrivilegeMode.ROOT) 0 else 1,
-                    onSelect = { index ->
-                        switchMode(if (index == 0) PrivilegeMode.ROOT else PrivilegeMode.SHIZUKU)
+                // 顺序：Shizuku 在前，与「特权执行方式」设置页保持一致。
+                SegmentedControl(
+                    items = listOf(PrivilegeMode.SHIZUKU, PrivilegeMode.ROOT),
+                    selected = activeMode,
+                    labelRes = { mode ->
+                        when (mode) {
+                            PrivilegeMode.SHIZUKU -> R.string.shell_panel_mode_shizuku
+                            PrivilegeMode.ROOT -> R.string.shell_panel_mode_root
+                        }
                     },
+                    onSelect = { mode -> switchMode(mode) },
                 )
             }
         }
