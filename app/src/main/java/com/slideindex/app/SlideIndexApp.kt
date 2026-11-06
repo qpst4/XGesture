@@ -158,6 +158,19 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.OverlayHostRuntime.accessibilityHostContext = {
             com.slideindex.app.service.SlideIndexAccessibilityService.overlayHostContext()
         }
+        // compositor 的 z-order 联动：浮球/指针窗口与无障碍呈现层都在 :app，用它四个回调接回去。
+        com.slideindex.app.overlay.OverlayZOrderHooks.scheduleChromeAbovePanels = {
+            com.slideindex.app.overlay.FloatBallOverlay.scheduleChromeAbovePanels()
+        }
+        com.slideindex.app.overlay.OverlayZOrderHooks.restoreChromeZOrderIfIdle = {
+            com.slideindex.app.overlay.FloatBallOverlay.restoreChromeZOrderIfIdle()
+        }
+        com.slideindex.app.overlay.OverlayZOrderHooks.bringFloatingPointerToFront = {
+            com.slideindex.app.overlay.FloatingPointerOverlayWindow.bringToFront(forceReAdd = false)
+        }
+        com.slideindex.app.overlay.OverlayZOrderHooks.edgePresentationNeedsChromeRaise = {
+            com.slideindex.app.service.SlideIndexAccessibilityService.edgePresentationNeedsChromeRaise()
+        }
         if (AppProcess.isEngine) return
 
         // 预测性返回（§0.16.26）：这里**故意不写** `enableOnBackInvokedCallback`。

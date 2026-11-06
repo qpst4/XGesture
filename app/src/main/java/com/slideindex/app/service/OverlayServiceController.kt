@@ -12,6 +12,8 @@ import com.slideindex.app.overlay.LayoutPreviewContent
 import com.slideindex.app.overlay.LayoutPreviewFocus
 import com.slideindex.app.overlay.PanelSide
 import com.slideindex.app.overlay.WidgetPopupOverlayWindow
+import com.slideindex.app.overlay.preview.AccessibilityOverlayPreviewPort
+import com.slideindex.app.overlay.preview.OverlayPreviewPort
 import com.slideindex.app.settings.SettingsRepository
 import com.slideindex.app.ui.navigation.NavPermissionStates
 import com.slideindex.app.util.PermissionHelper
@@ -34,7 +36,12 @@ class OverlayServiceController(
     private val context: Context,
     private val permissionStates: NavPermissionStates,
     private val scope: CoroutineScope,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    /**
+     * 预览能力走接口而不是直接点 [SlideIndexAccessibilityService] 的静态入口：
+     * 这样预览逻辑能在没有 AccessibilityService 实例的单测里用假实现验证。
+     */
+    private val previewPort: OverlayPreviewPort = AccessibilityOverlayPreviewPort,
 ) {
     private var lastPreviewDropNoticeMs = 0L
 
@@ -45,12 +52,12 @@ class OverlayServiceController(
         focus: LayoutPreviewFocus? = null,
     ) {
         if (!permissionStates.accessibilityGranted.value) return
-        SlideIndexAccessibilityService.setPreviewMode(true, content, focus)
+        previewPort.setPreviewMode(true, content, focus)
     }
 
     fun stopLayoutPreview() {
         if (!permissionStates.accessibilityGranted.value) return
-        SlideIndexAccessibilityService.setPreviewMode(false)
+        previewPort.setPreviewMode(false)
     }
 
     /** 触钮外观/位置预览：为 null 的项表示"这一项沿用当前值"。 */
@@ -64,7 +71,7 @@ class OverlayServiceController(
         longSwipeDistanceDp: Float? = null,
         design: TriggerHandleDesign? = null,
     ) = withOverlayPreview("previewTriggerHandle") {
-        SlideIndexAccessibilityService.mergeTriggerHandleLayoutPreview(
+        previewPort.mergeTriggerHandleLayoutPreview(
             side = side,
             handleId = handleId,
             edgeWidthDp = edgeWidthDp,
@@ -78,12 +85,12 @@ class OverlayServiceController(
 
     fun previewIndexHeightFraction(fraction: Float) =
         withOverlayPreview("previewIndexHeightFraction") {
-            SlideIndexAccessibilityService.previewIndexHeightFraction(fraction)
+            previewPort.previewIndexHeightFraction(fraction)
         }
 
     fun clearIndexHeightPreview() =
         withOverlayPreview("clearIndexHeightPreview") {
-            SlideIndexAccessibilityService.clearIndexHeightPreview()
+            previewPort.clearIndexHeightPreview()
         }
 
     /**
@@ -92,34 +99,34 @@ class OverlayServiceController(
      */
     fun commitIndexHeightPreview() =
         withOverlayPreview("commitIndexHeightPreview") {
-            SlideIndexAccessibilityService.commitIndexHeightPreview()
+            previewPort.commitIndexHeightPreview()
         }
 
     fun previewIndexVerticalPositionFraction(fraction: Float) =
         withOverlayPreview("previewIndexVerticalPositionFraction") {
-            SlideIndexAccessibilityService.previewIndexVerticalPositionFraction(fraction)
+            previewPort.previewIndexVerticalPositionFraction(fraction)
         }
 
     fun clearIndexVerticalPositionPreview() =
         withOverlayPreview("clearIndexVerticalPositionPreview") {
-            SlideIndexAccessibilityService.clearIndexVerticalPositionPreview()
+            previewPort.clearIndexVerticalPositionPreview()
         }
 
     /** 松手提交索引位置预览：语义同 [commitIndexHeightPreview]。 */
     fun commitIndexVerticalPositionPreview() =
         withOverlayPreview("commitIndexVerticalPositionPreview") {
-            SlideIndexAccessibilityService.commitIndexVerticalPositionPreview()
+            previewPort.commitIndexVerticalPositionPreview()
         }
 
     /** 索引页滑条松手（长度/位置共用）：只提交最近拖过的那一个。 */
     fun commitIndexSliderPreviews() =
         withOverlayPreview("commitIndexSliderPreviews") {
-            SlideIndexAccessibilityService.commitIndexSliderPreviews()
+            previewPort.commitIndexSliderPreviews()
         }
 
     fun setCornerZonePreviewActive(active: Boolean) =
         withOverlayPreview("setCornerZonePreviewActive") {
-            SlideIndexAccessibilityService.setCornerZonePreviewActive(active)
+            previewPort.setCornerZonePreviewActive(active)
         }
 
     /** 改角区尺寸的调用点都在"预览已激活"期间，所以这里顺带把预览置为激活。 */
@@ -129,8 +136,8 @@ class OverlayServiceController(
         horizontalEdgeWidthDp: Float,
         horizontalEdgeHeightDp: Float,
     ) = withOverlayPreview("applyCornerZonePreviewDimensions") {
-        SlideIndexAccessibilityService.setCornerZonePreviewActive(true)
-        SlideIndexAccessibilityService.applyCornerZonePreviewDimensions(
+        previewPort.setCornerZonePreviewActive(true)
+        previewPort.applyCornerZonePreviewDimensions(
             verticalEdgeWidthDp = verticalEdgeWidthDp,
             verticalEdgeHeightDp = verticalEdgeHeightDp,
             horizontalEdgeWidthDp = horizontalEdgeWidthDp,
@@ -141,29 +148,29 @@ class OverlayServiceController(
     /** 手势角度预览：null 表示清掉预览。 */
     fun setGestureAnglesPreview(angles: GestureAngles?) =
         withOverlayPreview("setGestureAnglesPreview") {
-            SlideIndexAccessibilityService.setGestureAnglesPreview(angles)
+            previewPort.setGestureAnglesPreview(angles)
         }
 
     // —— 悬浮球（触钮条 / 位置 / 外观） ——
 
     fun setFloatBallStripZonePreview(active: Boolean) =
         withOverlayPreview("setFloatBallStripZonePreview") {
-            SlideIndexAccessibilityService.setFloatBallStripZonePreview(active)
+            previewPort.setFloatBallStripZonePreview(active)
         }
 
     fun previewFloatBallPositionYFraction(fraction: Float) =
         withOverlayPreview("previewFloatBallPositionYFraction") {
-            SlideIndexAccessibilityService.previewFloatBallPositionYFraction(fraction)
+            previewPort.previewFloatBallPositionYFraction(fraction)
         }
 
     fun endFloatBallPositionYPreview(restoreIfNeeded: Boolean) =
         withOverlayPreview("endFloatBallPositionYPreview") {
-            SlideIndexAccessibilityService.endFloatBallPositionYPreview(restoreIfNeeded)
+            previewPort.endFloatBallPositionYPreview(restoreIfNeeded)
         }
 
     fun clearFloatBallPositionYPreviewRestore() =
         withOverlayPreview("clearFloatBallPositionYPreviewRestore") {
-            SlideIndexAccessibilityService.clearFloatBallPositionYPreviewRestore()
+            previewPort.clearFloatBallPositionYPreviewRestore()
         }
 
     fun previewFloatBallAppearance(
@@ -174,7 +181,7 @@ class OverlayServiceController(
         lineWidthDp: Float? = null,
         lineOpacity: Float? = null,
     ) = withOverlayPreview("previewFloatBallAppearance") {
-        SlideIndexAccessibilityService.previewFloatBallAppearance(
+        previewPort.previewFloatBallAppearance(
             sizeDp = sizeDp,
             opacity = opacity,
             visibleFraction = visibleFraction,
@@ -186,12 +193,12 @@ class OverlayServiceController(
 
     fun endFloatBallAppearancePreview(restoreIfNeeded: Boolean) =
         withOverlayPreview("endFloatBallAppearancePreview") {
-            SlideIndexAccessibilityService.endFloatBallAppearancePreview(restoreIfNeeded)
+            previewPort.endFloatBallAppearancePreview(restoreIfNeeded)
         }
 
     fun clearFloatBallAppearancePreviewRestore() =
         withOverlayPreview("clearFloatBallAppearancePreviewRestore") {
-            SlideIndexAccessibilityService.clearFloatBallAppearancePreviewRestore()
+            previewPort.clearFloatBallAppearancePreviewRestore()
         }
 
     /**
@@ -223,13 +230,13 @@ class OverlayServiceController(
 
     fun clearOverlayLayoutPreview() =
         withOverlayPreview("clearOverlayLayoutPreview") {
-            SlideIndexAccessibilityService.clearOverlayLayoutPreview()
+            previewPort.clearOverlayLayoutPreview()
         }
 
     /** 松手提交触钮预览：同 [commitIndexHeightPreview]。 */
     fun commitTriggerHandleLayoutPreview() =
         withOverlayPreview("commitTriggerHandleLayoutPreview") {
-            SlideIndexAccessibilityService.commitTriggerHandleLayoutPreview()
+            previewPort.commitTriggerHandleLayoutPreview()
         }
 
     /** 离开设置页：停掉布局预览与行程范围预览。 */

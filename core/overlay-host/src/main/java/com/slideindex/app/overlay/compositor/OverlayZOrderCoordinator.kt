@@ -1,7 +1,6 @@
 package com.slideindex.app.overlay.compositor
 
-import com.slideindex.app.overlay.FloatBallOverlay
-import com.slideindex.app.overlay.FloatingPointerOverlayWindow
+import com.slideindex.app.overlay.OverlayZOrderHooks
 
 /**
  * Applies [OverlayScene] to WM window ordering across compositor, panels, and chrome.
@@ -11,13 +10,13 @@ internal object OverlayZOrderCoordinator {
         when (OverlaySceneController.scene) {
             OverlayScene.EdgeGestureActive -> {
                 OverlayCompositor.bringCompositorToFront()
-                FloatBallOverlay.scheduleChromeAbovePanels()
-                FloatingPointerOverlayWindow.bringToFront(forceReAdd = false)
+                OverlayZOrderHooks.scheduleChromeAbovePanels?.invoke()
+                OverlayZOrderHooks.bringFloatingPointerToFront?.invoke()
             }
             OverlayScene.ContentPanelVisible -> {
                 OverlayCompositor.bringAboveContentPanels()
-                FloatBallOverlay.scheduleChromeAbovePanels()
-                FloatingPointerOverlayWindow.bringToFront(forceReAdd = false)
+                OverlayZOrderHooks.scheduleChromeAbovePanels?.invoke()
+                OverlayZOrderHooks.bringFloatingPointerToFront?.invoke()
             }
             OverlayScene.Idle -> Unit
         }

@@ -2,9 +2,7 @@ package com.slideindex.app.overlay.compositor
 
 import android.os.Handler
 import android.os.Looper
-import com.slideindex.app.overlay.FloatBallOverlay
-import com.slideindex.app.overlay.FloatingPointerOverlayWindow
-import com.slideindex.app.service.SlideIndexAccessibilityService
+import com.slideindex.app.overlay.OverlayZOrderHooks
 
 /**
  * Single source of truth for overlay scene transitions.
@@ -38,12 +36,13 @@ object OverlaySceneController {
                 else -> OverlayScene.Idle
             }
             OverlayCompositor.bringCompositorToFront()
-            if (contentPanelVisible || SlideIndexAccessibilityService.edgePresentationNeedsChromeRaise()) {
-                FloatBallOverlay.scheduleChromeAbovePanels()
+            val needsRaise = OverlayZOrderHooks.edgePresentationNeedsChromeRaise?.invoke() ?: false
+            if (contentPanelVisible || needsRaise) {
+                OverlayZOrderHooks.scheduleChromeAbovePanels?.invoke()
             } else {
-                FloatBallOverlay.restoreChromeZOrderIfIdle()
+                OverlayZOrderHooks.restoreChromeZOrderIfIdle?.invoke()
             }
-            FloatingPointerOverlayWindow.bringToFront(forceReAdd = false)
+            OverlayZOrderHooks.bringFloatingPointerToFront?.invoke()
         }
     }
 
@@ -51,8 +50,8 @@ object OverlaySceneController {
         runOnMain {
             scene = OverlayScene.ContentPanelVisible
             OverlayCompositor.bringAboveContentPanels()
-            FloatBallOverlay.scheduleChromeAbovePanels()
-            FloatingPointerOverlayWindow.bringToFront(forceReAdd = false)
+            OverlayZOrderHooks.scheduleChromeAbovePanels?.invoke()
+            OverlayZOrderHooks.bringFloatingPointerToFront?.invoke()
         }
     }
 
@@ -62,8 +61,8 @@ object OverlaySceneController {
                 scene = OverlayScene.Idle
             }
             OverlayCompositor.bringCompositorToFront()
-            FloatBallOverlay.scheduleChromeAbovePanels()
-            FloatingPointerOverlayWindow.bringToFront(forceReAdd = false)
+            OverlayZOrderHooks.scheduleChromeAbovePanels?.invoke()
+            OverlayZOrderHooks.bringFloatingPointerToFront?.invoke()
         }
     }
 
