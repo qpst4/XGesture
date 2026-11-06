@@ -19,6 +19,18 @@ object AppLocaleApplier {
     fun currentLanguage(): AppUiLanguage = lastApplied
 
     /**
+     * `attachBaseContext` 期间专用：Application 还没 attach 完，`applicationContext` 为 null，
+     * 所以必须用传进来的 base 直接读 SharedPreferences（只读一个键，微秒级）。
+     */
+    fun primeFromContext(context: Context) {
+        val tag = runCatching {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(KEY_STORAGE_TAG, null)
+        }.getOrNull()
+        lastApplied = AppUiLanguage.fromStorageTag(tag)
+    }
+
+    /**
      * 非主进程启动时用：只读一个 SharedPreferences。
      *
      * `:overlay` 进程启动路径上不能同步读 DataStore、也不该再写一次系统 LocaleManager，
@@ -26,12 +38,7 @@ object AppLocaleApplier {
      * ForegroundServiceDidNotStartInTimeException）。主进程在应用语言时会缓存这个 tag。
      */
     fun primeFromStorage(context: Context) {
-        val tag = runCatching {
-            context.applicationContext
-                .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                .getString(KEY_STORAGE_TAG, null)
-        }.getOrNull()
-        lastApplied = AppUiLanguage.fromStorageTag(tag)
+        primeFromContext(context.applicationContext ?: context)
     }
 
     fun apply(context: Context, language: AppUiLanguage, refreshOverlays: Boolean = false) {

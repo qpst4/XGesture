@@ -39,7 +39,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 @HiltAndroidApp
 class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
@@ -85,6 +84,9 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
     @Inject lateinit var multiTouchGestureCoordinator: MultiTouchGestureCoordinator
 
     override fun attachBaseContext(base: Context) {
+        // 先把上次的应用语言从 SharedPreferences 同步镜像读回来（只读一个键，不碰 DataStore），
+        // 再包 Configuration——否则 API<33 上冷启动首帧会先用系统语言渲染一次再被 onCreate 纠正。
+        AppLocaleApplier.primeFromContext(base)
         super.attachBaseContext(AppLocaleApplier.wrapContextIfNeeded(base))
         // §0.16.25：**故意不在这里写"预测性返回"flag**。
         // 试过在这里按"同步镜像"写入，但踩到两个坑：① 这一阶段 `Application` 还没 attach 完，
@@ -145,6 +147,17 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         NativeEngineRuntime.onOcrEnginePackInvalidated = {
             OcrDependencyAccess.inferenceService(this)?.invalidateEngineBlocking()
         }
+        // 浮层宿主的失联诊断：overlay-host 模块不认识 :app 的诊断日志，这里把两者接起来。
+        com.slideindex.app.overlay.OverlayHostLease.onHostLost = { message ->
+            com.slideindex.app.diagnostic.EdgeDiag.logStack("host", message)
+        }
+        // overlay-host 选窗口类型时要知道"无障碍服务是否启用"和它的宿主 context。
+        com.slideindex.app.overlay.OverlayHostRuntime.isAccessibilityServiceEnabled = { ctx ->
+            com.slideindex.app.util.PermissionHelper.isAccessibilityServiceEnabled(ctx)
+        }
+        com.slideindex.app.overlay.OverlayHostRuntime.accessibilityHostContext = {
+            com.slideindex.app.service.SlideIndexAccessibilityService.overlayHostContext()
+        }
         if (AppProcess.isEngine) return
 
         // 预测性返回（§0.16.26）：这里**故意不写** `enableOnBackInvokedCallback`。
@@ -163,17 +176,20 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         // —— 主进程与 :overlay 共有：常驻交互（无障碍/浮层/模块桥/系统监听）需要用到的部分 ——
         deps.launcherAppsCallbackBridge.register()
         if (AppProcess.isMain) {
-            // 主进程读一次最新语言并写入系统 LocaleManager（其它进程从轻量缓存取）
-            runBlocking(Dispatchers.IO) {
-                val language = AppUiLanguage.fromStorageTag(
-                    runCatching {
-                val snapshot = deps.settingsRepository.readFreshSnapshot()
-                com.slideindex.app.ui.IconPlateModeState.init(this@SlideIndexApp)
-                com.slideindex.app.ui.IconPlateModeState.mode =
-                    com.slideindex.app.settings.IconPlateMode.fromId(snapshot.iconPlateModeId)
-                snapshot.appUiLanguageTag
-            }.getOrDefault("")
-                )
+            // 应用语言走同步镜像，不再在主线程 runBlocking 等一次 DataStore 全量读 + 快照解析：
+            // attachBaseContext 里已经 prime 过（只读一个 SharedPreferences 键），首帧语言是对的；
+            // 这里这次异步读只做"对账"（LocaleManager 上一般已生效），读失败也保持已 prime 的语言，
+            // 不会像旧代码那样 getOrDefault("") 把用户设置的语言重置成系统。
+            deps.applicationScope.launch(Dispatchers.IO) {
+                val snapshot = runCatching { deps.settingsRepository.readFreshSnapshot() }.getOrNull()
+                if (snapshot != null) {
+                    com.slideindex.app.ui.IconPlateModeState.init(this@SlideIndexApp)
+                    com.slideindex.app.ui.IconPlateModeState.mode =
+                        com.slideindex.app.settings.IconPlateMode.fromId(snapshot.iconPlateModeId)
+                }
+                val language = snapshot
+                    ?.let { AppUiLanguage.fromStorageTag(it.appUiLanguageTag) }
+                    ?: AppLocaleApplier.currentLanguage()
                 AppLocaleApplier.apply(this@SlideIndexApp, language)
             }
             shizukuInitializer.start()

@@ -26,14 +26,22 @@ import javax.inject.Inject
 
 import javax.inject.Singleton
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 
 
 
 private const val SETTINGS_STORE_NAME = "slide_index_settings"
+
+/** 最后一个订阅者走后，共享快照再保持热的时长；超时后上游停止，下次订阅重新解析一次。 */
+private const val SNAPSHOT_STOP_TIMEOUT_MS = 5_000L
 
 /**
  * 多进程安全的设置存储。
@@ -63,67 +71,84 @@ class SettingsPreferencesEditor @Inject constructor(
 
 ) {
 
-    val settings: Flow<AppSettings> = context.dataStore.data.map { prefs ->
-        SettingsSnapshotReader.read(prefs, context)
+    /**
+     * 共享快照用的作用域。设置对象是进程级单例，`WhileSubscribed` 让它在"有收集者"期间
+     * 保持热、全部取消 5 秒后自动停——测试里反复构造仓库时不会留下一堆永不停歇的协程。
+     */
+    private val snapshotScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /**
+     * 全量设置快照的**唯一**解析入口。
+     *
+     * 以前每个切片各自 `dataStore.data.map { SettingsSnapshotReader.read(...) }`：一次写盘，
+     * 收集它的每个 flow 都会把整份 Preferences 完整解析一遍（530 次键查 + 43 次 codec 解码）。
+     * 设置页 + 浮层宿主同时在线时，改一个开关要重复解析 3–5 遍。现在只解析一次再 shareIn，
+     * 切片全部从这份快照派生。
+     */
+    private val snapshot: Flow<AppSettings> = context.dataStore.data
+        .map { prefs -> SettingsSnapshotReader.read(prefs, context) }
+        .distinctUntilChanged()
+        .shareIn(
+            scope = snapshotScope,
+            started = SharingStarted.WhileSubscribed(SNAPSHOT_STOP_TIMEOUT_MS),
+            replay = 1,
+        )
+
+    /** 把一个切片从共享快照里切出来，变化时才发射。 */
+    private fun <T> slice(selector: (AppSettings) -> T): Flow<T> =
+        snapshot.map(selector).distinctUntilChanged()
+
+    /**
+     * 冷流：每次订阅都从 DataStore 读当前值再解析。
+     *
+     * 必须保留"订阅即最新"的语义——`.settings.first()` 在写完某个键之后立刻读，必须拿到刚写入的
+     * 值；全仓有 30 多个 trampoline / 浮层入口是这么用的。共享快照 [snapshot] 只服务切片与仓库缓存，
+     * 不替换这条路径（否则 `.first()` 会先拿到 replay 的旧快照，出现"写完读不到"的竞态）。
+     */
+    val settings: Flow<AppSettings> = context.dataStore.data
+        .map { prefs -> SettingsSnapshotReader.read(prefs, context) }
+
+    /** 进程内共享的快照（切片与仓库缓存用）：同一份 Preferences 只解析一次。 */
+    internal val snapshotFlow: Flow<AppSettings> = snapshot
+
+    val themeSettings: Flow<ThemeSettings> = slice { settings ->
+        ThemeSettings(
+            themeColorArgb = settings.themeColorArgb,
+            dynamicColorEnabled = settings.dynamicColorEnabled,
+            themePaletteStyleId = settings.themePaletteStyleId,
+        )
     }
 
-    val themeSettings: Flow<ThemeSettings> = context.dataStore.data.map { prefs ->
-        ThemeSettings(
-            themeColorArgb = prefs[SettingsPreferenceKeys.THEME_COLOR] ?: 0xFF6750A4.toInt(),
-            dynamicColorEnabled = prefs[SettingsPreferenceKeys.DYNAMIC_COLOR_ENABLED] ?: false,
-            themePaletteStyleId = prefs[SettingsPreferenceKeys.THEME_PALETTE_STYLE]
-                ?: ThemePaletteStyle.TONAL_SPOT.id,
-        )
-    }.distinctUntilChanged()
-
-    val appRootSettings: Flow<AppRootSettings> = context.dataStore.data.map { prefs ->
+    val appRootSettings: Flow<AppRootSettings> = slice { settings ->
         AppRootSettings(
-            themeColorArgb = prefs[SettingsPreferenceKeys.THEME_COLOR] ?: 0xFF6750A4.toInt(),
-            dynamicColorEnabled = prefs[SettingsPreferenceKeys.DYNAMIC_COLOR_ENABLED] ?: false,
-            themePaletteStyleId = prefs[SettingsPreferenceKeys.THEME_PALETTE_STYLE]
-                ?: ThemePaletteStyle.TONAL_SPOT.id,
-            onboardingCompleted = prefs[SettingsPreferenceKeys.ONBOARDING_COMPLETED] ?: false,
-            hideFromRecents = prefs[SettingsPreferenceKeys.HIDE_FROM_RECENTS] ?: false,
-            predictiveBackEnabled = prefs[SettingsPreferenceKeys.PREDICTIVE_BACK_ENABLED] ?: false,
-            privilegeMode = PrivilegeMode.fromStorage(prefs[SettingsPreferenceKeys.PRIVILEGE_MODE]),
+            themeColorArgb = settings.themeColorArgb,
+            dynamicColorEnabled = settings.dynamicColorEnabled,
+            themePaletteStyleId = settings.themePaletteStyleId,
+            onboardingCompleted = settings.onboardingCompleted,
+            hideFromRecents = settings.hideFromRecents,
+            predictiveBackEnabled = settings.predictiveBackEnabled,
+            privilegeMode = settings.privilegeMode,
         )
-    }.distinctUntilChanged()
+    }
 
-    val gestureSettings: Flow<GestureSettings> = context.dataStore.data
-        .map { prefs -> GestureSettings.from(SettingsSnapshotReader.read(prefs, context)) }
-        .distinctUntilChanged()
+    val gestureSettings: Flow<GestureSettings> = slice(GestureSettings::from)
 
-    val overlaySettings: Flow<OverlaySettings> = context.dataStore.data
-        .map { prefs -> OverlaySettings.from(SettingsSnapshotReader.read(prefs, context)) }
-        .distinctUntilChanged()
+    val overlaySettings: Flow<OverlaySettings> = slice(OverlaySettings::from)
 
-    val homeMainSettings: Flow<HomeMainSettings> = context.dataStore.data
-        .map { prefs -> HomeMainSettings.from(SettingsSnapshotReader.read(prefs, context)) }
-        .distinctUntilChanged()
+    val homeMainSettings: Flow<HomeMainSettings> = slice(HomeMainSettings::from)
 
-    val extensionHubSettings: Flow<ExtensionHubSettings> = context.dataStore.data
-        .map { prefs -> ExtensionHubSettings.from(SettingsSnapshotReader.read(prefs, context)) }
-        .distinctUntilChanged()
+    val extensionHubSettings: Flow<ExtensionHubSettings> = slice(ExtensionHubSettings::from)
 
-    val keepAliveUiSettings: Flow<KeepAliveUiSettings> = context.dataStore.data
-        .map { prefs -> KeepAliveUiSettings.from(SettingsSnapshotReader.read(prefs, context)) }
-        .distinctUntilChanged()
+    val keepAliveUiSettings: Flow<KeepAliveUiSettings> = slice(KeepAliveUiSettings::from)
 
-    val shakeUiSettings: Flow<ShakeUiSettings> = context.dataStore.data
-        .map { prefs -> ShakeUiSettings.from(SettingsSnapshotReader.read(prefs, context)) }
-        .distinctUntilChanged()
+    val shakeUiSettings: Flow<ShakeUiSettings> = slice(ShakeUiSettings::from)
 
-    val freeWindowUiSettings: Flow<FreeWindowUiSettings> = context.dataStore.data
-        .map { prefs -> FreeWindowUiSettings.from(SettingsSnapshotReader.read(prefs, context)) }
-        .distinctUntilChanged()
+    val freeWindowUiSettings: Flow<FreeWindowUiSettings> = slice(FreeWindowUiSettings::from)
 
-    val otpUiSettings: Flow<OtpUiSettings> = context.dataStore.data
-        .map { prefs -> OtpUiSettings.from(SettingsSnapshotReader.read(prefs, context)) }
-        .distinctUntilChanged()
+    val otpUiSettings: Flow<OtpUiSettings> = slice(OtpUiSettings::from)
 
-    val messageReminderSettings: Flow<MessageSettings> = context.dataStore.data
-        .map { prefs -> SettingsSnapshotReader.read(prefs, context).messageReminderSettings }
-        .distinctUntilChanged()
+    val messageReminderSettings: Flow<MessageSettings> =
+        slice { settings -> settings.messageReminderSettings }
 
     /**
      * 云存储配置的原始 JSON。

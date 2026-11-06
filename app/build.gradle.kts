@@ -380,6 +380,7 @@ dependencies {
     implementation(project(":core:notification"))
     implementation(project(":core:monitoring"))
     implementation(project(":core:overlay-layout"))
+    implementation(project(":core:overlay-host"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:otp"))
     implementation(project(":feature:notification"))

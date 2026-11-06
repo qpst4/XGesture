@@ -90,7 +90,9 @@ class SettingsRepository @Inject constructor(
                 )
             }
             runCatching {
-                settings.collect { snapshot ->
+                // 缓存与三个同步镜像都走共享快照：它们常驻不取消，用冷流的话每次写盘
+                // 会各自完整解析一遍（这正是切片化要消掉的重复）。
+                editor.snapshotFlow.collect { snapshot ->
                     cachedSettings = snapshot
                 }
             }.onFailure {
@@ -102,14 +104,14 @@ class SettingsRepository @Inject constructor(
             }
         }
         cacheScope.launch {
-            settings
+            editor.snapshotFlow
                 .map { it.serviceEnabled }
                 .distinctUntilChanged()
                 .collect { enabled -> ServiceEnabledStore.write(context, enabled) }
         }
         // 晃动总开关也落一份同步镜像：XShake 磁贴可能被 SystemUI 冷启动绑起，不能等 DataStore。
         cacheScope.launch {
-            settings
+            editor.snapshotFlow
                 .map { it.shakeGestureSettings.enabled }
                 .distinctUntilChanged()
                 .collect { enabled -> ShakeEnabledStore.write(context, enabled) }
@@ -118,7 +120,7 @@ class SettingsRepository @Inject constructor(
         // 就要被读到（用来写 ApplicationInfo 的 FLAG_ENABLE_ON_BACK_INVOKED_CALLBACK），
         // 而那个时点**不能**同步读 DataStore。详见 PredictiveBackStartupStore 的 KDoc。
         cacheScope.launch {
-            settings
+            editor.snapshotFlow
                 .map { it.predictiveBackEnabled }
                 .distinctUntilChanged()
                 .collect { enabled -> PredictiveBackStartupStore.write(context, enabled) }

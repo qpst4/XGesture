@@ -543,6 +543,17 @@ fun sameSigner(context: Context, apk: File): Boolean {
 - **闲置隐身默认值对存量设备的影响**：**已决**（2026-11-06 维护者确认接受）——存量设备升级后同样改为"闲置 3 秒淡到 38%"，不补一次性迁移；`FloatBallIdleHiddenTest` 的 KDoc 已记录该决定。
 - 16 KB 页大小、`:app` 模块拆分、Roborazzi 截图测试等，仍在 §10 的后续排期里。
 
+### 11.5 第 2–4 周开工（同日晚）
+
+- **P1-5 设置单快照（已做）**：`SettingsPreferencesEditor` 内部只保留一份共享快照（`shareIn(WhileSubscribed(5s), replay = 1)`），10 个切片全部从它派生；`SettingsRepository` 的缓存 + 三个同步镜像改走 `snapshotFlow`，不再各自完整解析一遍。
+  - **关键取舍**：`settings` 保持**冷流**。实测把它也换成热流会有 2 条测试红——`.settings.first()` 在写完某个键之后立刻读，会先拿到 replay 的旧快照（`FloatBallIdleHiddenTest` 读到 3000 而非 2500、`QuickLauncherPanelRemovalRemapTest` 读到 null）。全仓有 30+ 处这种"写后立刻读"（trampoline / 浮层入口），不能改语义。
+- **P1-7 启动去 runBlocking（已做）**：`AppLocaleApplier.primeFromContext()` 在 `attachBaseContext` 只读一个 SharedPreferences 键（顺带修了 API<33 上首帧先用系统语言渲染的旧问题），`onCreate` 改成异步对账。读失败时保留已 prime 的语言，不再像旧代码 `getOrDefault("")` 那样把用户设置的语言重置成系统。
+  - **待真机验证**：切换应用语言 → 冷启动，确认首帧语言正确、无闪回。
+- **P1-1 第一刀（已做）**：新建 `:core:overlay-host`，迁入 `OverlayHostLease` / `OverlayPanelMode` / `PanelRootView` / `OverlayPanelSystemGestureExclusion` 及 `OverlayHostLeaseTest`。包名保持 `com.slideindex.app.overlay`（split package，与 `:core:common` 的 `PanelSide` 同款），调用方一行 import 都不用改。`OverlayHostLease` 与 `:app` 的 `EdgeDiag` 解耦成 `onHostLost` 回调，在 `SlideIndexApp` 里接回。
+  - **下一刀**：`OverlayWindowTypes` / `OverlayPanelLayoutParams` 依赖 `PermissionHelper` 的两个判断（`canDrawOverlays`、无障碍开关探测），要先把它们下移成模块内的窄检查，再把这两个文件搬过去；之后才是 `OverlaySidePanelHost` / `EdgeOverlayHost` 这类带业务的面板宿主。
+
+**验证**：`./gradlew unitTests` 全绿——323 个测试类 / 2,421 个用例 / 0 失败；`:core:overlay-host:testDebugUnitTest` 4/4。
+
 ---
 
 ## 附录 A：可直接抄的补丁

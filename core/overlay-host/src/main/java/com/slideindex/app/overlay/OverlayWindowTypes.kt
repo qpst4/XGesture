@@ -11,7 +11,6 @@ import android.graphics.PixelFormat
 import android.view.ContextThemeWrapper
 import android.view.Gravity
 import android.view.WindowManager
-import com.slideindex.app.util.PermissionHelper
 
 /**
  * WindowManager overlay types and flags aligned with SideGesture (gulugulu):
@@ -26,12 +25,13 @@ object OverlayWindowTypes {
     }
 
     fun overlayWindowType(context: Context): Int {
-        val a11yHost = com.slideindex.app.service.SlideIndexAccessibilityService.overlayHostContext()
+        val a11yHost = OverlayHostRuntime.accessibilityHostContext?.invoke()
         val base = unwrapOverlayHost(context)
         val hostBase = a11yHost?.let { unwrapOverlayHost(it) }
         val isA11yContext = base is android.accessibilityservice.AccessibilityService ||
             (hostBase != null && base == hostBase)
-        return if (isA11yContext && PermissionHelper.isAccessibilityServiceEnabledForOverlays(context)) {
+        val a11yEnabled = OverlayHostRuntime.isAccessibilityServiceEnabled?.invoke(context) ?: false
+        return if (isA11yContext && a11yEnabled) {
             WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY
         } else {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -58,7 +58,7 @@ object OverlayWindowTypes {
      * 优先使用 [TYPE_APPLICATION_OVERLAY]，彻底避免部分 OEM（如 Meizu Flyme）对 [TYPE_ACCESSIBILITY_OVERLAY] 窗口强制叠加 80% alpha（0.7998047）导致面板背景发灰、图标发虚半透明的底层系统限制。
      */
     fun fullscreenLauncherWindowType(context: Context): Int {
-        if (PermissionHelper.canDrawOverlays(context)) {
+        if (android.provider.Settings.canDrawOverlays(context)) {
             return WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         }
         return overlayWindowType(context)

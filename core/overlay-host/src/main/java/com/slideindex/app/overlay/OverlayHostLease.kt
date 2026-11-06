@@ -27,6 +27,15 @@ object OverlayHostLease {
     /** 巡检间隔：单进程下只用来兜底"服务没了但窗口还在"这一种情况。 */
     private const val CHECK_INTERVAL_MS = 2_000L
 
+    /**
+     * 宿主失联时的诊断回调。
+     *
+     * 本模块不认识 `:app` 的诊断日志（EdgeDiag），由 Application 启动时把两者接起来；
+     * 不接的话就只留下面那行 `Log.w`（行为不变，只是少一条可导出的诊断记录）。
+     */
+    @Volatile
+    var onHostLost: ((String) -> Unit)? = null
+
     private val mainHandler = Handler(Looper.getMainLooper())
 
     private class Registration(
@@ -48,9 +57,8 @@ object OverlayHostLease {
         if (!ownerAlive) {
             val pending = registrations.values.map { it.teardown }
             registrations.clear()
-            com.slideindex.app.diagnostic.EdgeDiag.logStack(
-                "host",
-                "OverlayHostLease 判定宿主失联（无障碍实例为 null）→ 强制拆卸 ${pending.size} 个宿主"
+            onHostLost?.invoke(
+                "OverlayHostLease 判定宿主失联（无障碍实例为 null）→ 强制拆卸 ${pending.size} 个宿主",
             )
             Log.w(
                 TAG,
