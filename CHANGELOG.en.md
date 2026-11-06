@@ -8,6 +8,54 @@ identical to the Chinese file so that the release pipeline can line up both lang
 
 Where the two files differ, `CHANGELOG.md` is authoritative.
 
+## [1.62.0] - 2026-11-06
+
+### Added
+- The index panel's opacity now ranges from 0 to 100%, with five marks on the slider
+- New "shake menu": bind a menu to one direction, then shake that direction again to run an action from it
+- Shake work modes are now multi-select, so unlocked, screen-on and screen-off can be combined
+- New actions: read message, read in a floating window and clear notifications
+- Images can join the system "open with" list and reuse the text picking and image editing entries
+- Long-press the share button in the text panel to drag the current text or image into another app
+- Search engine icons can follow a chosen app's icon, including icon-pack overrides
+- New search engine icon shape that switches between rounded rectangle, circle, squircle and slightly rounded square
+- Shortcuts can be scanned and run for testing from the extensions page over root or Shizuku
+- Built-in drag actions can be tiled directly, with a new "show built-in actions directly" switch
+- The idle opacity of the page scroll control bar is adjustable
+- A second finger cancels the current text selection
+- Global touch reports where the hand lands, so panels open from any side without edge triggers and appear at the finger's height
+- The carousel app switcher gains a fading swipe-up menu with adjustable distance, plus direction reversal and sensitivity settings
+
+### Changed
+- Carousel app switching now follows the finger continuously and scales with distance, matching the floating menu
+- The shake sensitivity slider is re-scaled so level 1 matches the old level 5 and low levels are no longer unreachable
+- The search panel's engine layout moves into the "layout and behavior" page, with an in-page preview
+- The shortcut create section can be collapsed, and types share one badge
+- Execution mode options now list Shizuku first
+- All pickers share one shortcut catalog, so text picking, gestures and slots show the same shortcuts
+- The settings page drops the unused scroll mode, background presets and accent switch, explaining them in a card at the top
+- The add entry is titled "add shortcut" everywhere
+- Recent tasks remember the query plan and open in tens of milliseconds
+
+### Fixed
+- The back gesture width slider no longer raises ADB authorization dialogs while dragging
+- Apps tapped in the index panel now launch while "instant trigger" is on
+- Shake menus now bind correctly, flip without a stall and no longer crash the overlay
+- Dragging text to share targets such as QQ now works
+- Adding several image search engines no longer overwrites the previous one
+- Shortcut and search engine icons now follow icon-pack overrides
+- The app picker tab row no longer doubles its horizontal inset
+- Choosing an app icon in the floating editor no longer crashes, and floating commands run in their own execution mode
+- The command panel can be opened again after it went to the background
+- Unexported shortcut targets are no longer flagged when privileged access is available
+- Drawn gestures can keep several entries with the same finger count
+- The contact point dialog for pinch, spread and rotate no longer offers one finger
+- Panels opened from the top or bottom edge trigger are no longer pushed off screen
+- Panels opened from outside triggers can now reach the top of the screen
+- Panels on a side whose trigger is hidden now open again without a restart
+- Missing Arabic, Japanese and Russian strings are filled in
+
+
 ## [1.60.0] - 2026-11-04
 
 ### Added
