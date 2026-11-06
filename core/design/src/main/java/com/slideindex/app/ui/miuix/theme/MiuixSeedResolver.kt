@@ -10,8 +10,8 @@ import androidx.compose.ui.graphics.toArgb
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamicColorScheme
 import com.materialkolor.dynamiccolor.ColorSpec
+import com.slideindex.app.design.AppThemeSpec
 import com.slideindex.app.settings.AppColorSpec
-import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.ThemePaletteStyle
 import top.yukonga.miuix.kmp.theme.ThemeColorSpec
 import top.yukonga.miuix.kmp.theme.ThemePaletteStyle as MiuixPaletteStyle
@@ -23,28 +23,28 @@ object MiuixSeedResolver {
         return scheme.primary.toArgb()
     }
 
-    fun customSeed(context: Context, settings: AppSettings, dark: Boolean): Int =
-        if (settings.dynamicColorEnabled) {
-            wallpaperAccent(context, dark) ?: settings.themeColorArgb
+    fun customSeed(context: Context, spec: AppThemeSpec): Int =
+        if (spec.dynamicColorEnabled) {
+            wallpaperAccent(context, spec.dark) ?: spec.themeColorArgb
         } else {
-            settings.themeColorArgb
+            spec.themeColorArgb
         }
 
-    fun materialScheme(seed: Int, settings: AppSettings, dark: Boolean): ColorScheme =
+    fun materialScheme(seed: Int, spec: AppThemeSpec): ColorScheme =
         dynamicColorScheme(
             seedColor = Color(seed),
-            isDark = dark,
-            style = settings.paletteStyle().toMaterialKolor(),
-            specVersion = settings.effectiveColorSpec().toMaterialKolor(),
+            isDark = spec.dark,
+            style = spec.paletteStyle().toMaterialKolor(),
+            specVersion = spec.effectiveColorSpec().toMaterialKolor(),
         )
 }
 
-private fun AppSettings.paletteStyle(): ThemePaletteStyle =
-    ThemePaletteStyle.fromId(themePaletteStyleId)
+private fun AppThemeSpec.paletteStyle(): ThemePaletteStyle =
+    ThemePaletteStyle.fromId(paletteStyleId)
 
-private fun AppSettings.effectiveColorSpec(): AppColorSpec {
-    val spec = AppColorSpec.fromId(themeColorSpecId)
-    val palette = ThemePaletteStyle.fromId(themePaletteStyleId)
+private fun AppThemeSpec.effectiveColorSpec(): AppColorSpec {
+    val spec = AppColorSpec.fromId(colorSpecId)
+    val palette = ThemePaletteStyle.fromId(paletteStyleId)
     return if (palette.supportsMiuixSpec2025()) spec else AppColorSpec.SPEC_2021
 }
 

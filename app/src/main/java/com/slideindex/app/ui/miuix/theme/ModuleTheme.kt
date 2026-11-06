@@ -52,7 +52,7 @@ fun ModuleTheme(
     } else {
         ThemeController(
             colorSchemeMode = if (darkTheme) ColorSchemeMode.MonetDark else ColorSchemeMode.MonetLight,
-            keyColor = Color(MiuixSeedResolver.customSeed(context, settings, darkTheme)),
+            keyColor = Color(MiuixSeedResolver.customSeed(context, settings.toThemeSpec(darkTheme))),
             colorSpec = colorSpec.toMiuix(),
             paletteStyle = paletteStyle.toMiuix(),
             isDark = darkTheme,

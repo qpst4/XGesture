@@ -37,13 +37,15 @@
 
 > 目标：让"面板组"不再依赖 `:app` 里的任何单例。做完 A，阶段 B 的组之间可以任意排序。
 
-### A1. 设计层种子（`:core:design`，2–3 天）
+### A1. 设计层种子（`:core:design`，2–3 天）——✅ 已完成（2026-11-06）
 
-- 把 `resolveAppMaterialColorScheme(context, settings, dark)` 改成收 **种子色 + 明暗 + 可选覆盖**，不再吃 `ThemeSettings`；
-- 把 MIUIX 相关封装（`MiuixSettingsScreenScaffold` 之外的公共件：卡片、分组、`WideContentBox`）下移；
-- `OverlayBlurGate` 去掉对 `OverlayDependencyAccess` 的依赖，改成注入一个 `Flow<Boolean>`。
+- 新增 `:core:design`（依赖 `:core:common` + Compose + Miuix + MaterialKolor），包名沿用 `com.slideindex.app.ui.miuix.theme`（split package，调用方 import 不变）；
+- 新增 `AppThemeSpec`（纯值对象：种子色 / 明暗 / 调色板 id / 规格 id / 深色背景 id），配色解析不再吃 `AppSettings`；
+- `MiuixSeedResolver`、`AppMaterialColorScheme` 迁入模块并改为 spec 入参；
+- `AppThemeMode` / `DarkBackgroundStyle` / `AppColorSpec` / `ThemePaletteStyle` 下沉到 `:core:common`；
+- `:app` 保留 `AppThemeSpecAdapter`（`AppSettings → AppThemeSpec` + 原函数签名），6 个调用点零改动。
 
-**验收**：`:core:design` 可独立编译；`:app` 与 `feature:settings` 都改为依赖它，行为不变。
+**验收**：`:core:design` 独立编译通过；`unitTests` 全绿（323 类 / 2,421 用例）；`:app` 编译通过。
 
 ### A2. 宿主层（`:core:overlay-host`，1–2 天）
 
@@ -91,6 +93,7 @@
 | :--- | :--- | :--- |
 | 批 1 | `OverlayPreviewPort` + `AccessibilityOverlayPreviewPort` | 设置页 21 个预览静态入口收成接口，`OverlayServiceController` 改注入 |
 | 批 2a | `compositor` → `:core:overlay-host` | 5 文件 / 296 行，4 个外部调用用 `OverlayZOrderHooks` 反转 |
+| **A1** | 设计层种子 → `:core:design` | `AppThemeSpec` + `MiuixSeedResolver` + `AppMaterialColorScheme` 迁入；主题枚举下沉 `:core:common`；`:app` 留适配层 |
 
 `:core:overlay-host` 现有 15 个文件 / 1,020 行。
 
