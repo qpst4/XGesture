@@ -4223,6 +4223,7 @@
     <string name="privileged_task_skipped_main_thread">تم تخطي المهمة ذات الامتيازات في الخيط الرئيسي</string>
     <string name="privileged_no_root">لا توجد صلاحيات Root</string>
     <string name="shell_no_shizuku">لا توجد صلاحيات Shizuku</string>
+    <string name="shell_no_execution_mode">لم يتم تعيين وضع التنفيذ (Shizuku / Root)</string>
     <string name="shell_user_service_failed">فشل الاتصال بـ Shizuku UserService، يرجى إعادة تشغيل Shizuku ثم المحاولة مرة أخرى</string>
     <string name="shell_command_timeout">انتهت مهلة أمر Shell (%1$d ثانية)، يرجى المحاولة مرة أخرى</string>
     <string name="shell_command_empty">الأمر فارغ</string>

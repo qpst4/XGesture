@@ -4244,6 +4244,7 @@
     <string name="privileged_task_skipped_main_thread">メインスレッドで特権タスクをスキップ</string>
     <string name="privileged_no_root">Root 権限がありません</string>
     <string name="shell_no_shizuku">Shizuku 権限がありません</string>
+    <string name="shell_no_execution_mode">実行方式が未設定です（Shizuku / Root）</string>
     <string name="shell_user_service_failed">Shizuku UserService への接続に失敗しました。Shizuku を再起動して再試行してください。</string>
     <string name="shell_command_timeout">Shell コマンドがタイムアウトしました（%1$d 秒）。再試行してください。</string>
     <string name="shell_command_empty">コマンドが空です</string>

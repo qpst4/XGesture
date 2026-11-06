@@ -4542,6 +4542,7 @@
     <string name="privileged_task_skipped_main_thread">主线程跳过特权任务</string>
     <string name="privileged_no_root">无 Root 权限</string>
     <string name="shell_no_shizuku">无 Shizuku 权限</string>
+    <string name="shell_no_execution_mode">未设置执行方式（Shizuku / Root）</string>
     <string name="shell_user_service_failed">Shizuku UserService 连接失败，请重启 Shizuku 后重试</string>
     <string name="shell_command_timeout">Shell 命令超时（%1$d s），请重试</string>
     <string name="shell_command_empty">命令为空</string>

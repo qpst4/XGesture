@@ -4441,6 +4441,7 @@ Start Shizuku via adb/wireless debugging instead.</string>
     <string name="privileged_task_skipped_main_thread">Privileged task skipped on main thread</string>
     <string name="privileged_no_root">No Root permission</string>
     <string name="shell_no_shizuku">No Shizuku permission</string>
+    <string name="shell_no_execution_mode">No execution mode set (Shizuku / Root)</string>
     <string name="shell_user_service_failed">Shizuku UserService connection failed. Restart Shizuku and retry.</string>
     <string name="shell_command_timeout">Shell command timed out (%1$d s). Retry.</string>
     <string name="shell_command_empty">Command is empty</string>

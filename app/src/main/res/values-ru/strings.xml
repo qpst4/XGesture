@@ -4415,6 +4415,7 @@
     <string name="privileged_task_skipped_main_thread">Привилегированная задача пропущена на главном потоке</string>
     <string name="privileged_no_root">Нет разрешения Root</string>
     <string name="shell_no_shizuku">Нет разрешения Shizuku</string>
+    <string name="shell_no_execution_mode">Режим выполнения не задан (Shizuku / Root)</string>
     <string name="shell_user_service_failed">Не удалось подключиться к UserService Shizuku. Перезапустите Shizuku и повторите.</string>
     <string name="shell_command_timeout">Время выполнения shell-команды истекло (%1$d с). Повторите.</string>
     <string name="shell_command_empty">Команда пуста</string>

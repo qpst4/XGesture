@@ -1,5 +1,6 @@
 package com.slideindex.app.util
 
+import com.slideindex.app.R
 import com.slideindex.app.shell.ShellCommand
 import com.slideindex.app.shell.ShellCommandTemplate
 import com.slideindex.app.shell.ShellTemplateContext
@@ -13,7 +14,8 @@ object ShellCommandExecutor {
         val mode = command.executionMode
             ?: return TaskManagerUtil.ShellCommandResult(
                 exitCode = -1,
-                output = "未设置执行方式（Shizuku / Root）",
+                output = TaskManagerUtil.applicationContext()
+                    .getString(R.string.shell_no_execution_mode),
             )
         val expanded = templateContext?.let {
             ShellCommandTemplate.expand(command.command, it)
