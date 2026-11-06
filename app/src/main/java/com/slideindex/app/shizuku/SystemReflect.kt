@@ -2,12 +2,29 @@ package com.slideindex.app.shizuku
 
 import android.content.ComponentName
 import android.content.Intent
+import java.lang.reflect.Field
+import java.lang.reflect.Method
+import java.util.concurrent.ConcurrentHashMap
 
-/** Minimal reflection helpers for system TaskInfo / ActivityManager stubs. */
+/**
+ * Minimal reflection helpers for system TaskInfo / ActivityManager stubs.
+ *
+ * 任务切换器每次打开都会对每条任务做十几次「按名字找方法/字段」的反射；不做缓存时，
+ * 每次 `getMethod` 都要遍历方法表，找不到时还要构造 `NoSuchMethodException`
+ * （调用方用 `runCatching` 吞掉，但异常构造的成本照付）。这里按「类 + 名字 + 参数类型」
+ * 缓存命中和未命中两种结果，把重复的开销压掉。
+ */
 internal object SystemReflect {
 
+    private val NO_METHOD = Any()
+    private val NO_FIELD = Any()
+    private val EMPTY_TYPES = emptyArray<Class<*>>()
+
+    private val methodCache = ConcurrentHashMap<String, Any>()
+    private val fieldCache = ConcurrentHashMap<String, Any>()
+
     fun invoke(target: Any, method: String): Any? =
-        runCatching { target.javaClass.getMethod(method).invoke(target) }.getOrNull()
+        runCatching { findMethod(target.javaClass, method, EMPTY_TYPES)?.invoke(target) }.getOrNull()
 
     fun invoke(target: Any, method: String, vararg args: Any?): Any? =
         runCatching {
@@ -20,18 +37,17 @@ internal object SystemReflect {
                     else -> arg.javaClass
                 }
             }.toTypedArray()
-            target.javaClass.getMethod(method, *types).invoke(target, *args)
+            findMethod(target.javaClass, method, types)?.invoke(target, *args)
         }.getOrNull()
 
     fun readField(target: Any, name: String): Any? {
         var clazz: Class<*>? = target.javaClass
         while (clazz != null) {
-            val value = runCatching {
-                val field = clazz.getDeclaredField(name)
-                field.isAccessible = true
-                field.get(target)
-            }.getOrNull()
-            if (value != null) return value
+            val field = findField(clazz, name)
+            if (field != null) {
+                val value = runCatching { field.get(target) }.getOrNull()
+                if (value != null) return value
+            }
             clazz = clazz.superclass
         }
         return null
@@ -114,6 +130,37 @@ internal object SystemReflect {
             invoke(result, "getList") as? List<*>
         }.getOrNull()?.filterNotNull()
     }
+
+    private fun findMethod(clazz: Class<*>, name: String, types: Array<Class<*>>): Method? {
+        val key = methodKey(clazz, name, types)
+        val cached = methodCache[key]
+        if (cached != null) return if (cached === NO_METHOD) null else cached as Method
+        val found = runCatching { clazz.getMethod(name, *types) }.getOrNull()
+        methodCache[key] = found ?: NO_METHOD
+        return found
+    }
+
+    private fun findField(clazz: Class<*>, name: String): Field? {
+        val key = clazz.name + '#' + name
+        val cached = fieldCache[key]
+        if (cached != null) return if (cached === NO_FIELD) null else cached as Field
+        val found = runCatching {
+            clazz.getDeclaredField(name).also { it.isAccessible = true }
+        }.getOrNull()
+        fieldCache[key] = found ?: NO_FIELD
+        return found
+    }
+
+    private fun methodKey(clazz: Class<*>, name: String, types: Array<Class<*>>): String =
+        buildString(48) {
+            append(clazz.name)
+            append('#')
+            append(name)
+            for (type in types) {
+                append('|')
+                append(type.name)
+            }
+        }
 
     private fun parseComponent(raw: String): ComponentName? {
         val trimmed = raw.trim()

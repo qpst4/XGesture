@@ -231,6 +231,39 @@ class AppRepository @Inject constructor(
         return lookupApp(packageName)
     }
 
+    /** 启动器列表里已知的包（纯内存查询，不碰 PackageManager）。 */
+    fun isKnownPackage(packageName: String): Boolean =
+        packageName.isNotBlank() && appsByPackage.containsKey(packageName)
+
+    /**
+     * 只确认包是否存在：不取应用名、不解码图标。
+     *
+     * 任务切换器把 `包名/Activity` 切成包名后只需要知道「这个包在不在」；
+     * 走 [queryAppInfo] 会顺带 `getApplicationLabel` + `launchIconCache.loadDrawable`，
+     * 图标的解码成本对「只要一个包名」的调用完全是白付的。
+     */
+    fun packageExists(packageName: String): Boolean {
+        if (packageName.isBlank() || !packageName.contains('.')) return false
+        return runCatching {
+            // 与 queryAppInfo 一致：冻结（pm disable）的包也要算“存在”。
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getApplicationInfo(
+                    packageName,
+                    PackageManager.ApplicationInfoFlags.of(
+                        PackageManager.MATCH_DISABLED_COMPONENTS.toLong(),
+                    ),
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getApplicationInfo(
+                    packageName,
+                    PackageManager.MATCH_DISABLED_COMPONENTS,
+                )
+            }
+            true
+        }.getOrDefault(false)
+    }
+
     /** Map a recents dump identifier to an installed package (handles Flyme class-style names). */
     fun resolveInstalledPackage(identifier: String): String? {
         val trimmed = identifier.trim()

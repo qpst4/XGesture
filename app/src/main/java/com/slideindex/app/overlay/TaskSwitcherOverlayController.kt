@@ -6,6 +6,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.RectF
+import android.os.SystemClock
+import android.util.Log
 import android.view.MotionEvent
 import android.view.animation.AccelerateInterpolator
 import com.slideindex.app.R
@@ -111,12 +113,25 @@ internal class TaskSwitcherOverlayController(
     internal var taskSwitcherLoading = false
     internal var taskSwitcherPrivilegedAccess = false
 
+    // 性能打点：打开 → 数据就绪 → 首帧带行。只在 logcat 里看，不参与业务逻辑。
+    private var loadStartedAtMs = 0L
+    private var dataReadyAtMs = 0L
+    private var firstFrameLogged = false
+
     fun handleTouch(event: MotionEvent, localX: Float, localY: Float): Boolean =
         touchHandler.handleTouch(event, localX, localY)
 
     fun draw(canvas: Canvas) {
         val layout = computeTaskSwitcherLayout()
         taskSwitcherLayout = layout
+        if (!firstFrameLogged && dataReadyAtMs > 0L && layout.rows.isNotEmpty()) {
+            firstFrameLogged = true
+            Log.i(
+                PERF_TAG,
+                "panel first frame with rows: ${SystemClock.uptimeMillis() - loadStartedAtMs}ms " +
+                    "after open (data ${dataReadyAtMs - loadStartedAtMs}ms), rows=${layout.rows.size}"
+            )
+        }
         host.panelContentRect().set(layout.panelRect)
         host.drawWithPanelEnterAnimation(canvas, layout.panelRect) {
             renderer.drawPanelContent(canvas, layout, taskSwitcherRenderState())
@@ -124,6 +139,9 @@ internal class TaskSwitcherOverlayController(
     }
 
     internal fun loadTaskSwitcherApps(deferInvalidate: Boolean = false) {
+        loadStartedAtMs = SystemClock.uptimeMillis()
+        dataReadyAtMs = 0L
+        firstFrameLogged = false
         taskSwitcherLayout = null
         touchHandler.clearTaskSwitcherPickHighlights()
 
@@ -145,6 +163,11 @@ internal class TaskSwitcherOverlayController(
         RecentTasksLoader.refreshAsync(host.appRepository()) { fresh ->
             if (generation != taskSwitcherLoadGeneration) return@refreshAsync
             if (host.gestureSession().panelMode() != OverlayPanelMode.TASK_SWITCHER) return@refreshAsync
+            dataReadyAtMs = SystemClock.uptimeMillis()
+            Log.i(
+                PERF_TAG,
+                "data ready: ${dataReadyAtMs - loadStartedAtMs}ms entries=${fresh.size}"
+            )
             if (taskSwitcherContextMenuActive()) {
                 dismissTaskSwitcherContextMenu(immediate = true)
             }
@@ -415,6 +438,7 @@ internal class TaskSwitcherOverlayController(
     }
 
     companion object {
+        private const val PERF_TAG = "TaskSwitcherPerf"
         internal const val TASK_SWITCHER_LONG_PRESS_MS = 650L
         internal const val TASK_SWITCHER_MENU_ENTER_MS = 200L
         internal const val TASK_SWITCHER_MENU_EXIT_MS = 160L
