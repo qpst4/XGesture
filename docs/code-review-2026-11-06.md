@@ -267,7 +267,7 @@ lint {                                  // 第二个：把上一句覆盖成 fal
   立刻从 N 次解析降到 1 次。
 - 引入 `SETTINGS_SCHEMA_VERSION` 整数键 + 一个 `List<Migration>` 按序执行，替代散落的 `*Once`。
 
-#### P1-6 UI 层零测试，129 个屏幕全靠手测
+#### P1-6 UI 层零测试，129 个屏幕全靠手测（已决：推迟）
 
 `app/src/androidTest` 不存在（只有 `vendor/ppocr-sdk` 有）。Compose 界面、浮层布局、面板 chrome 全靠真机看。而 `docs/screenshots/2026-10-07-panel-fullwidth-bug.png` 说明**视觉回归是真实发生过的**。
 
@@ -293,7 +293,7 @@ runBlocking(Dispatchers.IO) {
 
 **讽刺的是项目自己已经有正确解法**：`PredictiveBackStartupStore` 就是为了"启动早期不能同步读 DataStore"而做的同步镜像文件。语言也照抄这个模式即可——写设置时落一份 `language.txt`，`attachBaseContext` 读文件（微秒级），异步再校正。
 
-#### P1-8 更新包不校验签名/摘要
+#### P1-8 更新包不校验签名/摘要（已决：暂缓，不碰发版链路）
 
 `ApkInstaller.download()` 只校验**文件长度**（`expectedSize`），`installApk()` 直接 `ACTION_VIEW` 拉起安装器。没有任何 signer / SHA-256 校验。
 
@@ -330,7 +330,7 @@ fun sameSigner(context: Context, apk: File): Boolean {
 | P2-8 | **无依赖校验 / 无 SBOM** | 缺 `gradle/verification-metadata.xml`；仓库依赖 jitpack（`colorpicker-compose`、`libsuperuser`） | `./gradlew --write-verification-metadata sha256 help`；jitpack 依赖尽量换 mavenCentral |
 | P2-9 | **`@Suppress` 298 处** | 大多数是 `DEPRECATION`（`ActivityOptions`、`BasicTextField`），属合理 | 每季度跑一次 `lint --check Deprecation` 清一批；`BasicTextField` 那几处等 foundation 提供 state 重载再收 |
 | P2-10 | **`!!` 147 处、`runBlocking` 2 处、`Thread.sleep` 23 处** | `Thread.sleep` 大多在 root/Shizuku 轮询线程里（合理），少数在注入/限流路径 | 不必全清；优先检查与无障碍注入、截图限流相关的几处 |
-| P2-11 | **更新链路无变体提示（按设计走 Lite）** | `update.json` 恒指向 `-lite.apk`（`release.yml:131-135`），全链路不认变体。已核实 **Full → Lite 覆盖不会丢引擎**：`provisionFromAssetsIfNeeded()` 无内置 asset 时是纯 no-op（`NativeEngineBundledAssetProvisioner.kt:28`），引擎解包在 `filesDir`，`upgradePackIfOutdated()` 只比 `packRevision` | **不必改链路**。建议只补两件小事：① 更新弹窗/发布页写一句"应用内更新安装精简版，需要内置引擎请到 Release 下载完整版"（Full 用户零感知会被当成回退）；② 在 `NativeEngineBundledAssetProvisioner` 类头用 KDoc 写死"无 asset 必须 no-op、不得清理已解包文件"这条契约，并加 10 行单测锁住（无 asset 调用后 `filesDir` 内容不变） |
+| P2-11（**已取消**） | **更新链路无变体提示（按设计走 Lite）** | `update.json` 恒指向 `-lite.apk`（`release.yml:131-135`），全链路不认变体。已核实 **Full → Lite 覆盖不会丢引擎**：`provisionFromAssetsIfNeeded()` 无内置 asset 时是纯 no-op（`NativeEngineBundledAssetProvisioner.kt:28`），引擎解包在 `filesDir`，`upgradePackIfOutdated()` 只比 `packRevision` | **不必改链路**。建议只补两件小事：① 更新弹窗/发布页写一句"应用内更新安装精简版，需要内置引擎请到 Release 下载完整版"（Full 用户零感知会被当成回退）；② 在 `NativeEngineBundledAssetProvisioner` 类头用 KDoc 写死"无 asset 必须 no-op、不得清理已解包文件"这条契约，并加 10 行单测锁住（无 asset 调用后 `filesDir` 内容不变） |
 
 ---
 
@@ -392,7 +392,11 @@ fun sameSigner(context: Context, apk: File): Boolean {
 3. **没有 app 级 Baseline Profile**（P1-4b）。`profileinstaller` 已经引入、R8 也合并了 `combined_art_profile`，但合并的只是第三方 AAR 的 profile——你的 `MainActivity` 首帧、`EdgeOverlayHost` 创建、`OverlayComposeDialogHost` 首次组合全在 profile 覆盖之外。
 4. **无性能回归门禁**。`core:monitoring` 有 `PerformanceMonitor`、代码里有 `PerfProbe` 注释，但没有任何自动化在跑它。
 
-**建议的最小闭环**：接线 `:baselineprofile` → 生成 `baseline-prof.txt`（首帧 + 打开设置 + 呼出一次面板）→ CI 加一个 API 35 模拟器 job 跑 `StartupBenchmark`（只跑 `coldStartup`，阈值放宽到 ±15% 防抖）。
+**建议的最小闭环（已按 11-06 实测修正）**：接线 `:baselineprofile` → 真机生成 profile（已完成，见 §11.3）→ **发版前手动**在真机上跑一次 `:baselineprofile:connectedFullBenchmarkReleaseAndroidTest` 记数字。
+
+> 初稿写的是"CI 加一个模拟器 job 跑 `StartupBenchmark`"，当天实测后**撤回**：需要 KVM 模拟器、单次 10–20 分钟，而本包 arm64-only（x86_64 模拟器装不上），±10% 抖动还容易误报。对单人维护的项目，"发版前手动跑一次"性价比高得多。
+>
+> 另外注意：profile 记录的是**采集时的代码路径**。P1-7 改了启动路径，所以现有 profile 需要重采一次（见 §10 第 2–3 个月清单）。
 
 ---
 
@@ -468,25 +472,29 @@ fun sameSigner(context: Context, apk: File): Boolean {
 
 ## 10. 建议排期
 
+> **状态（2026-11-06 晚，已按当天实际执行结果更新）**
+> 第 1 周：三项全部完成。第 2–4 周：P1-5 / P1-7 完成，P1-1 完成两刀半；P1-6 推迟、P1-8 暂缓、P2-11 取消。第 2–3 个月：profile 已生成，CI benchmark 改为"不发 CI、手动跑"。详见 §11。
+
 ### 第 1 周（止血）
-- [ ] CI 加 `test` job，修 `GestureSessionThresholdTrackerTest` 那条红（P0-1）
-- [ ] 合并两个 `lint {}` 块，恢复 `checkReleaseBuilds = true`（P1-4a）
-- [ ] `baselineprofile` / `macrobenchmark` 二选一：接线或删除（P1-4b）
+- [x] CI 加 `test` job，修 `GestureSessionThresholdTrackerTest` 那条红（P0-1）——实际修了 12 条，见 §11.2
+- [x] 合并两个 `lint {}` 块，恢复 `checkReleaseBuilds = true`（P1-4a）
+- [x] `baselineprofile` / `macrobenchmark` 二选一：接线或删除（P1-4b）
 
 ### 第 2–4 周（骨架）
-- [ ] 抽 `:core:overlay-host`（P1-1 第①步）+ 接入 dependency-analysis
-- [ ] 设置仓库改成单快照 + 切片派生（P1-5）
-- [ ] 启动期 `runBlocking` 换成同步镜像（P1-7，照抄 `PredictiveBackStartupStore`）
-- [ ] 安装前校验签名 + `update.json` 加 sha256（P1-8）
-- [ ] 引入 Roborazzi，给 5 个高频面板加截图基线（P1-6）
-- [ ] 更新弹窗补"精简版"说明 + 给 asset no-op 契约加单测（P2-11，半小时的事）
+- [x] 抽 `:core:overlay-host`（P1-1 第①步）——两刀半，见 §11.5；dependency-analysis **未接**（先跑基线再决定，别和拆模块同一天做）
+- [x] 设置仓库改成单快照 + 切片派生（P1-5）
+- [x] 启动期 `runBlocking` 换成同步镜像（P1-7）
+- [ ] 安装前校验签名 + `update.json` 加 sha256（P1-8）——**暂缓**：它收益偏防御性，却要动 `release.yml` 与发版脚本；等哪天发版流程有余量再做
+- [ ] 引入 Roborazzi，给 5 个高频面板加截图基线（P1-6）——**推迟**：面板是悬浮窗宿主，要先把内容抽成纯 composable（正好是 `overlay-panels` 那一步），届时优先用官方 Compose Preview Screenshot Testing
+- ~~更新弹窗补"精简版"说明 + 契约单测~~——**取消**（P2-11：引擎在 `filesDir`，Full→Lite 更新不会丢，契约测试守的是"未来有人改坏"，维护者判断不值得）
 
 ### 第 2–3 个月（结构）
 - [ ] 抽 `:feature:overlay-panels`，`:app` 降到 20 万行以内（P1-1 第②步）
 - [ ] `FloatBallOverlay` 拆 4 个类（P1-2）
 - [ ] `OverlayPreviewPort` 接口化，85 个静态入口收敛（P1-3）
 - [ ] trampoline 合并到 5 个以内（§4.3）
-- [ ] 生成 app 级 Baseline Profile + CI 跑 `StartupBenchmark`（§5.2）
+- [x] ~~生成 app 级 Baseline Profile~~（已完成，见 §11.3）；CI 跑 `StartupBenchmark` **不做**（见 §5.2 的修正）
+- [ ] **启动路径有改动后重采 profile**（P1-7 刚改过启动路径，当前 profile 记的是旧路径）
 - [ ] 设置 schema 版本号 + 迁移表（P1-5）
 
 ### 第 2 季度
@@ -549,10 +557,13 @@ fun sameSigner(context: Context, apk: File): Boolean {
   - **关键取舍**：`settings` 保持**冷流**。实测把它也换成热流会有 2 条测试红——`.settings.first()` 在写完某个键之后立刻读，会先拿到 replay 的旧快照（`FloatBallIdleHiddenTest` 读到 3000 而非 2500、`QuickLauncherPanelRemovalRemapTest` 读到 null）。全仓有 30+ 处这种"写后立刻读"（trampoline / 浮层入口），不能改语义。
 - **P1-7 启动去 runBlocking（已做）**：`AppLocaleApplier.primeFromContext()` 在 `attachBaseContext` 只读一个 SharedPreferences 键（顺带修了 API<33 上首帧先用系统语言渲染的旧问题），`onCreate` 改成异步对账。读失败时保留已 prime 的语言，不再像旧代码 `getOrDefault("")` 那样把用户设置的语言重置成系统。
   - **待真机验证**：切换应用语言 → 冷启动，确认首帧语言正确、无闪回。
-- **P1-1 第一刀（已做）**：新建 `:core:overlay-host`，迁入 `OverlayHostLease` / `OverlayPanelMode` / `PanelRootView` / `OverlayPanelSystemGestureExclusion` 及 `OverlayHostLeaseTest`。包名保持 `com.slideindex.app.overlay`（split package，与 `:core:common` 的 `PanelSide` 同款），调用方一行 import 都不用改。`OverlayHostLease` 与 `:app` 的 `EdgeDiag` 解耦成 `onHostLost` 回调，在 `SlideIndexApp` 里接回。
-  - **下一刀**：`OverlayWindowTypes` / `OverlayPanelLayoutParams` 依赖 `PermissionHelper` 的两个判断（`canDrawOverlays`、无障碍开关探测），要先把它们下移成模块内的窄检查，再把这两个文件搬过去；之后才是 `OverlaySidePanelHost` / `EdgeOverlayHost` 这类带业务的面板宿主。
+- **P1-1 已完成两刀半**：新建 `:core:overlay-host`（9 个文件 / 699 行 + 测试），迁入 `OverlayHostLease` / `OverlayPanelMode` / `PanelRootView` / `OverlayPanelSystemGestureExclusion` / `OverlayWindowTypes` / `OverlayPanelLayoutParams` / `ScreenOffDismissReceiver`。包名保持 `com.slideindex.app.overlay`（split package，与 `:core:common` 的 `PanelSide` 同款），调用方一行 import 都不用改。`:app` 的 `overlay/` 包从 232 个文件降到 220 个。
+  - **依赖反转**：新增 `OverlayHostRuntime`（无障碍宿主 context、服务是否启用两个回调），`OverlayHostLease` 的 `EdgeDiag` 解耦成 `onHostLost`；两者都在 `SlideIndexApp.onCreate` 接线，行为不变。
+  - **下一刀（未做，约半天）**：`OverlayFullScreenPanelHost` 看着"零业务依赖"，实际要 `FloatBallOverlay`（通知回调）、`OverlayComposeOwner`（依赖 `R` 与 `AppLocaleApplier`）、`OverlayBlurGate`（依赖 DI 门面）。要先把这三个口子反转掉，再连同 `OverlaySidePanelHost` / `EdgeOverlayHost` 一起搬，别一个个搬。
 
 **验证**：`./gradlew unitTests` 全绿——323 个测试类 / 2,421 个用例 / 0 失败；`:core:overlay-host:testDebugUnitTest` 4/4。
+
+**遗留一件**：P1-7 改的是**启动路径**，而现有基线配置是改之前采的。需要重采一次（`:app:generateFullReleaseBaselineProfile --no-configuration-cache` → `:app:syncLiteBaselineProfile`），否则新加的 `primeFromContext` 这类方法不在加速清单里。
 
 ---
 
