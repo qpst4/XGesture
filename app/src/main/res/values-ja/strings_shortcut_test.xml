@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="extension_shortcut_test_title">ショートカットをテスト</string>
+    <string name="extension_shortcut_test_subtitle">公開された動的/固定ショートカットをスキャン（Shizuku または Root が必要）</string>
+
+    <string name="shortcut_test_title">ショートカットテスト</string>
+    <string name="shortcut_test_tip">dumpsys shortcut 経由でシステムのショートカットサービスを読み取り専用でスキャンします。Shizuku または Root が必要です。項目をタップすると、システム API 経由でそのショートカットを起動するだけです。</string>
+    <string name="shortcut_test_search_hint">アプリ、パッケージ、ショートカットを検索</string>
+    <string name="shortcut_test_status_loading">スキャン中…</string>
+    <string name="shortcut_test_status_ready">スキャン完了</string>
+    <string name="shortcut_test_status_failed">スキャン失敗</string>
+    <string name="shortcut_test_status_detail">%1$d 個のアプリ · 固定 %2$d / 動的 %3$d / 静的 %4$d</string>
+    <string name="shortcut_test_status_meta">%1$d ms · 生データ %2$d KB</string>
+    <string name="shortcut_test_results">結果（%1$d）</string>
+    <string name="shortcut_test_empty">ショートカットが見つかりません</string>
+    <string name="shortcut_test_search_empty">一致するショートカットがありません</string>
+    <string name="shortcut_test_no_privilege">Shizuku または Root 権限が必要です。先に設定で有効にしてください。</string>
+    <string name="shortcut_test_command_failed">dumpsys shortcut の実行に失敗しました: %1$s</string>
+    <string name="shortcut_test_empty_output">dumpsys shortcut が出力を返しませんでした</string>
+    <string name="shortcut_test_parse_empty">ShortcutInfo ブロックを解析できませんでした（%1$s）</string>
+    <string name="shortcut_test_kind_pinned">固定</string>
+    <string name="shortcut_test_kind_dynamic">動的</string>
+    <string name="shortcut_test_kind_static">静的</string>
+    <string name="shortcut_test_copy">intent コマンドをコピー</string>
+    <string name="shortcut_test_copied">intent 起動コマンドをコピーしました</string>
+    <string name="shortcut_test_copy_failed">ショートカット情報をコピーできませんでした</string>
+    <string name="shortcut_test_launch">コマンドを実行</string>
+    <string name="shortcut_test_launch_failed">コマンドの実行に失敗しました</string>
+    <string name="shortcut_test_rescan">再スキャン</string>
+    <string name="shortcut_test_source_root">Root</string>
+    <string name="shortcut_test_source_shizuku">Shizuku</string>
+    <string name="shortcut_port_tip">システムのショートカットサービスをスキャンし、統合ショートカットランチャー経由で Shizuku または Root として起動します。</string>
+    <string name="shortcut_port_loading">ショートカットを読み込み中…</string>
+    <string name="shortcut_port_ready">%1$d 個のショートカット</string>
+    <string name="shortcut_port_exec_success">コマンドが成功しました: %1$s</string>
+    <string name="shortcut_port_exec_failed">コマンドが失敗しました: %1$s</string>
+    <string name="shortcut_port_mode">%1$s モード</string>
+    <string name="shortcut_port_root">Root</string>
+    <string name="shortcut_port_shizuku">Shizuku</string>
+    <string name="shortcut_port_unknown">—</string>
+    <string name="shortcut_port_rescan">再スキャン</string>
+    <string name="shortcut_port_apps">%1$d 個のアプリ</string>
+    <string name="shortcut_port_kinds">固定 %1$d / 動的 %2$d / 静的 %3$d</string>
+    <string name="shortcut_port_duration">%1$d ms</string>
+    <string name="shortcut_port_exec_no_output">am からの出力がありません</string>
+</resources>

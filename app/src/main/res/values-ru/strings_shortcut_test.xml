@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="extension_shortcut_test_title">Тест ярлыков</string>
+    <string name="extension_shortcut_test_subtitle">Сканирование опубликованных динамических и закреплённых ярлыков (требуется Shizuku или Root)</string>
+
+    <string name="shortcut_test_title">Тест ярлыков</string>
+    <string name="shortcut_test_tip">Сканирование системной службы ярлыков только для чтения через dumpsys shortcut. Требуется Shizuku или Root. Нажатие на ярлык лишь запускает его через системный API.</string>
+    <string name="shortcut_test_search_hint">Поиск приложения, пакета или ярлыка</string>
+    <string name="shortcut_test_status_loading">Сканирование…</string>
+    <string name="shortcut_test_status_ready">Сканирование завершено</string>
+    <string name="shortcut_test_status_failed">Ошибка сканирования</string>
+    <string name="shortcut_test_status_detail">%1$d приложений · закреплённых %2$d / динамических %3$d / статических %4$d</string>
+    <string name="shortcut_test_status_meta">%1$d мс · исходно %2$d КБ</string>
+    <string name="shortcut_test_results">Результаты (%1$d)</string>
+    <string name="shortcut_test_empty">Ярлыки не найдены</string>
+    <string name="shortcut_test_search_empty">Нет подходящих ярлыков</string>
+    <string name="shortcut_test_no_privilege">Требуется доступ Shizuku или Root. Сначала включите его в настройках.</string>
+    <string name="shortcut_test_command_failed">Сбой dumpsys shortcut: %1$s</string>
+    <string name="shortcut_test_empty_output">dumpsys shortcut не вернул вывода</string>
+    <string name="shortcut_test_parse_empty">Не удалось разобрать блоки ShortcutInfo (%1$s)</string>
+    <string name="shortcut_test_kind_pinned">Закреплённые</string>
+    <string name="shortcut_test_kind_dynamic">Динамические</string>
+    <string name="shortcut_test_kind_static">Статические</string>
+    <string name="shortcut_test_copy">Копировать команду intent</string>
+    <string name="shortcut_test_copied">Команда intent скопирована</string>
+    <string name="shortcut_test_copy_failed">Не удалось скопировать данные ярлыка</string>
+    <string name="shortcut_test_launch">Выполнить команду</string>
+    <string name="shortcut_test_launch_failed">Ошибка выполнения команды</string>
+    <string name="shortcut_test_rescan">Сканировать снова</string>
+    <string name="shortcut_test_source_root">Root</string>
+    <string name="shortcut_test_source_shizuku">Shizuku</string>
+    <string name="shortcut_port_tip">Сканируйте системную службу ярлыков, затем запускайте их через единый лаунчер ярлыков от имени Shizuku или Root.</string>
+    <string name="shortcut_port_loading">Загрузка ярлыков…</string>
+    <string name="shortcut_port_ready">Ярлыков: %1$d</string>
+    <string name="shortcut_port_exec_success">Команда выполнена успешно: %1$s</string>
+    <string name="shortcut_port_exec_failed">Ошибка выполнения команды: %1$s</string>
+    <string name="shortcut_port_mode">Режим %1$s</string>
+    <string name="shortcut_port_root">Root</string>
+    <string name="shortcut_port_shizuku">Shizuku</string>
+    <string name="shortcut_port_unknown">—</string>
+    <string name="shortcut_port_rescan">Сканировать снова</string>
+    <string name="shortcut_port_apps">Приложений: %1$d</string>
+    <string name="shortcut_port_kinds">Закреплённые %1$d / динамические %2$d / статические %3$d</string>
+    <string name="shortcut_port_duration">%1$d мс</string>
+    <string name="shortcut_port_exec_no_output">am не вернул вывода</string>
+</resources>

@@ -202,6 +202,10 @@ fun ShortcutPortPage(onBack: () -> Unit) {
     }
     val tipText = stringResource(R.string.shortcut_port_tip)
     val countTitle = stringResource(R.string.shortcut_port_ready, filtered.size)
+    // 在 Composable 作用域预取文案，避免在回调里用 LocalContext 的 context.getString
+    // （Compose lint: LocalContextGetResourceValueCall 不配置感知）。
+    val execSuccessText = stringResource(R.string.shortcut_port_exec_success, "OK")
+    val execFailedText = stringResource(R.string.shortcut_port_exec_failed, "launch failed")
 
     fun copyItem(item: ShortCutItem) {
         val clipboard = context.getSystemService(ClipboardManager::class.java)
@@ -230,11 +234,7 @@ fun ShortcutPortPage(onBack: () -> Unit) {
             onResult = { success ->
                 Toast.makeText(
                     context,
-                    if (success) {
-                        context.getString(R.string.shortcut_port_exec_success, "OK")
-                    } else {
-                        context.getString(R.string.shortcut_port_exec_failed, "launch failed")
-                    },
+                    if (success) execSuccessText else execFailedText,
                     Toast.LENGTH_LONG,
                 ).show()
             },

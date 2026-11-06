@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="extension_shortcut_test_title">اختبار الاختصارات</string>
+    <string name="extension_shortcut_test_subtitle">فحص الاختصارات الديناميكية/المثبّتة المنشورة (يتطلب Shizuku أو Root)</string>
+
+    <string name="shortcut_test_title">اختبار الاختصارات</string>
+    <string name="shortcut_test_tip">فحص للقراءة فقط لخدمة الاختصارات في النظام عبر dumpsys shortcut. يتطلب Shizuku أو Root. النقر على أي اختصار يقتصر على تشغيله عبر واجهة برمجة تطبيقات النظام.</string>
+    <string name="shortcut_test_search_hint">البحث عن تطبيق أو حزمة أو اختصار</string>
+    <string name="shortcut_test_status_loading">جارٍ الفحص…</string>
+    <string name="shortcut_test_status_ready">اكتمل الفحص</string>
+    <string name="shortcut_test_status_failed">فشل الفحص</string>
+    <string name="shortcut_test_status_detail">%1$d تطبيق · مثبت %2$d / ديناميكي %3$d / ثابت %4$d</string>
+    <string name="shortcut_test_status_meta">%1$d مللي ثانية · خام %2$d كيلوبايت</string>
+    <string name="shortcut_test_results">النتائج (%1$d)</string>
+    <string name="shortcut_test_empty">لم يتم العثور على اختصارات</string>
+    <string name="shortcut_test_search_empty">لا توجد اختصارات مطابقة</string>
+    <string name="shortcut_test_no_privilege">يتطلب إذن Shizuku أو Root. يرجى تفعيله أولًا في الإعدادات.</string>
+    <string name="shortcut_test_command_failed">فشل تنفيذ dumpsys shortcut: %1$s</string>
+    <string name="shortcut_test_empty_output">لم يُرجع dumpsys shortcut أي مخرجات</string>
+    <string name="shortcut_test_parse_empty">تعذر تحليل أي كتلة ShortcutInfo (%1$s)</string>
+    <string name="shortcut_test_kind_pinned">مثبت</string>
+    <string name="shortcut_test_kind_dynamic">ديناميكي</string>
+    <string name="shortcut_test_kind_static">ثابت</string>
+    <string name="shortcut_test_copy">نسخ أمر intent</string>
+    <string name="shortcut_test_copied">تم نسخ أمر intent</string>
+    <string name="shortcut_test_copy_failed">تعذر نسخ معلومات الاختصار</string>
+    <string name="shortcut_test_launch">تنفيذ الأمر</string>
+    <string name="shortcut_test_launch_failed">فشل تنفيذ الأمر</string>
+    <string name="shortcut_test_rescan">إعادة الفحص</string>
+    <string name="shortcut_test_source_root">Root</string>
+    <string name="shortcut_test_source_shizuku">Shizuku</string>
+    <string name="shortcut_port_tip">افحص خدمة الاختصارات في النظام، ثم شغّلها عبر المشغّل الموحد للاختصارات بصلاحية Shizuku أو Root.</string>
+    <string name="shortcut_port_loading">جارٍ تحميل الاختصارات…</string>
+    <string name="shortcut_port_ready">%1$d اختصار</string>
+    <string name="shortcut_port_exec_success">نجح تنفيذ الأمر: %1$s</string>
+    <string name="shortcut_port_exec_failed">فشل تنفيذ الأمر: %1$s</string>
+    <string name="shortcut_port_mode">وضع %1$s</string>
+    <string name="shortcut_port_root">Root</string>
+    <string name="shortcut_port_shizuku">Shizuku</string>
+    <string name="shortcut_port_unknown">—</string>
+    <string name="shortcut_port_rescan">إعادة الفحص</string>
+    <string name="shortcut_port_apps">%1$d تطبيق</string>
+    <string name="shortcut_port_kinds">مثبت %1$d / ديناميكي %2$d / ثابت %3$d</string>
+    <string name="shortcut_port_duration">%1$d مللي ثانية</string>
+    <string name="shortcut_port_exec_no_output">لا توجد مخرجات من am</string>
+</resources>
