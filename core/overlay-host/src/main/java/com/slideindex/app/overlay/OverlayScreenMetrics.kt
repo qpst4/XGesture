@@ -22,7 +22,7 @@ data class ScreenMetricsSnapshot(
 }
 
 /** 覆盖层布局用真实屏幕尺寸（含导航栏区域），与 SideGesture ScreenUtils 一致。 */
-internal object OverlayScreenMetrics {
+object OverlayScreenMetrics {
     fun snapshot(context: Context): ScreenMetricsSnapshot {
         val (w, h) = sizePx(context)
         return ScreenMetricsSnapshot(w, h, displayRotation(context))
@@ -58,3 +58,8 @@ internal object OverlayScreenMetrics {
         return displayManager?.getDisplay(Display.DEFAULT_DISPLAY)?.rotation ?: Surface.ROTATION_0
     }
 }
+
+/** 横屏判定：仅按旋转角，不看宽高比（模块内与 :app 共用）。 */
+fun isDisplayLandscapeRotation(rotation: Int): Boolean =
+    rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270
+

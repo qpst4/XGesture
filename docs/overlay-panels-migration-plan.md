@@ -25,7 +25,7 @@
 | 组 | 外部根包依赖 | 受影响的总线 |
 | :--- | :--- | :--- |
 | `screenshot` | `FloatBallPickResult` / `FloatBallPickResultPanel` / `FloatBallTextPick` / `OverlayComposeDialogHost` / `ScreenPinManager` | 单例 |
-| `backpanel` | `OverlayScreenMetrics` + `AndroidBackPanelColors → ui.miuix.theme` | 主题 + 单例 |
+| `backpanel` | `OverlayScreenMetrics`（✅ 已下移）+ `AndroidBackPanelColors → ui.miuix.theme`（✅ 已解除）+ **`R.dimen.navigation_edge_*` 30+ 个尺寸资源** | 资源 |
 | `quickwheel` | `OverlayBlurGate` / `OverlayComposeOwner` / `ShellCommandBadgeOverlay` / `ShortcutBadgeOverlay` | 主题 + 宿主 + 单例 |
 | `animation` | `OverlayComposeOwner` | 宿主 |
 | `volumepanel` | `FloatBallOverlay` / `LocalFrostedGlassBackdrop` / `OverlayComposeOwner` / `OverlayViewBackHandler` | 宿主 + 单例 |
@@ -47,13 +47,14 @@
 
 **验收**：`:core:design` 独立编译通过；`unitTests` 全绿（323 类 / 2,421 用例）；`:app` 编译通过。
 
-### A2. 宿主层（`:core:overlay-host`，1–2 天）
+### A2. 宿主层（`:core:overlay-host`，1–2 天）——🟡 部分完成（2026-11-06）
 
-- `OverlayComposeOwner` 的 `R` 依赖：把用到的资源换成"由调用方传入的样式 id / 字符串"，或用 `Context.theme` 解析；
-- `AppLocaleApplier` 依赖：改成 `OverlayHostRuntime` 里的一个回调（模式已有先例）；
-- `OverlayScreenMetrics` 挪进 `:core:overlay-host`（它只依赖 DisplayManager）。
+- ✅ `OverlayScreenMetrics` 已挪进 `:core:overlay-host`（`object` 改 public；顺带把 `isDisplayLandscapeRotation` 一起下移，`:app` 不再持有）。
+- ⬜ `OverlayComposeOwner` 的 `R` 依赖：把 `R.style.Theme_SlideIndex_Transparent` 换成 `OverlayHostRuntime.overlayThemeResId`。
+- ⬜ `AppLocaleApplier` 依赖：改成 `OverlayHostRuntime.wrapOverlayLocale` 回调（模式已有先例）。
+- ⬜ `OverlayScreenMetrics` 之后，`backpanel` 又撞到新的一层：`EdgePanelParams.kt` 用了 **30+ 个 `R.dimen.navigation_edge_*`**，这些尺寸资源还在 `:app/src/main/res/values`。搬 `backpanel` 之前要先把这批 dimen 挪进面板模块（并确认没有别处引用）。
 
-**验收**：`OverlayFullScreenPanelHost` 可以搬进模块（连同 `ScreenOffDismissReceiver` 已在模块里）。
+**验收**：`OverlayFullScreenPanelHost` 可以搬进模块（`ScreenOffDismissReceiver` 已在模块里）。
 
 ### A3. 单例接口化（1–2 天）
 
@@ -94,6 +95,7 @@
 | 批 1 | `OverlayPreviewPort` + `AccessibilityOverlayPreviewPort` | 设置页 21 个预览静态入口收成接口，`OverlayServiceController` 改注入 |
 | 批 2a | `compositor` → `:core:overlay-host` | 5 文件 / 296 行，4 个外部调用用 `OverlayZOrderHooks` 反转 |
 | **A1** | 设计层种子 → `:core:design` | `AppThemeSpec` + `MiuixSeedResolver` + `AppMaterialColorScheme` 迁入；主题枚举下沉 `:core:common`；`:app` 留适配层 |
+| **A2a** | `OverlayScreenMetrics` → `:core:overlay-host` | 60 行；`isDisplayLandscapeRotation` 一并下移，`:app` 只剩调用 |
 
 `:core:overlay-host` 现有 15 个文件 / 1,020 行。
 

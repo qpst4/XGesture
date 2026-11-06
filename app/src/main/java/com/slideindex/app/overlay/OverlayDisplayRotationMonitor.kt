@@ -5,7 +5,6 @@ import android.hardware.display.DisplayManager
 import android.os.Handler
 import android.os.Looper
 import android.view.Display
-import android.view.Surface
 
 /**
  * Listens for default-display rotation changes and debounces overlay relayout.
@@ -77,6 +76,3 @@ internal object OverlayDisplayRotationGate {
 
     private const val SETTLING_WINDOW_MS = 450L
 }
-
-internal fun isDisplayLandscapeRotation(rotation: Int): Boolean =
-    rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270
