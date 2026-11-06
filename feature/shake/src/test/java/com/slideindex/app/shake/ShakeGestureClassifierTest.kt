@@ -15,9 +15,9 @@ class ShakeGestureClassifierTest {
 
     @Test
     fun effectiveThreshold_higherValueMeansLowerThreshold() {
-        assertEquals(20f, ShakeGestureClassifier.effectiveThreshold(1f), 0.001f)
-        assertEquals(7.684f, ShakeGestureClassifier.effectiveThreshold(14f), 0.01f)
-        assertEquals(11.474f, ShakeGestureClassifier.effectiveThreshold(10f), 0.01f)
+        assertEquals(16.2f, ShakeGestureClassifier.effectiveThreshold(1f), 0.001f)
+        assertEquals(6.484f, ShakeGestureClassifier.effectiveThreshold(14f), 0.01f)
+        assertEquals(9.474f, ShakeGestureClassifier.effectiveThreshold(10f), 0.01f)
         assertEquals(2f, ShakeGestureClassifier.effectiveThreshold(20f), 0.001f)
     }
 
@@ -74,12 +74,13 @@ class ShakeGestureClassifierTest {
 
     @Test
     fun detectDirection_independentMode_emptyPerDirection_usesEffectiveThreshold() {
+        // 重标定后默认档阈值约 4.68，用 3 rad/s 才在「低于阈值」这一侧。
         val direction = ShakeGestureClassifier.detectDirection(
             axisX = 0f,
-            axisY = 5f,
+            axisY = 3f,
             axisZ = 0f,
             absX = 0f,
-            absY = 5f,
+            absY = 3f,
             absZ = 0f,
             globalSensitivity = ShakeSensitivityScale.DEFAULT_UI,
             independentEnabled = true,

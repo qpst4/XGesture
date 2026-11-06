@@ -29,7 +29,9 @@ internal object ShakeGestureClassifier {
         }
 
         val sensitivity = effectiveThreshold(globalSensitivity) * axisScale
-        val flipYMargin = 1.5f * axisScale
+        // 翻转原本要多加 1.5 rad/s：在旧阈值区间（2..20）里那几乎可忽略，
+        // 但阈值整体下移后它会占掉很大比例（UI 20 时接近 75%），低档位因此显得"晃不动"。
+        val flipYMargin = 0.5f * axisScale
         val swingMargin = 1.0f * axisScale
         val tiltBackMargin = 0.5f * axisScale
         val swingSideMargin = 0.5f * axisScale

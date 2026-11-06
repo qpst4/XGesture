@@ -7,9 +7,9 @@ class ShakeGestureDetectorTest {
 
     @Test
     fun effectiveThreshold_higherValueMeansLowerThreshold() {
-        assertEquals(20f, ShakeGestureDetector.effectiveThreshold(1f), 0.001f)
-        assertEquals(7.684f, ShakeGestureDetector.effectiveThreshold(14f), 0.01f)
-        assertEquals(11.474f, ShakeGestureDetector.effectiveThreshold(10f), 0.01f)
+        assertEquals(16.2f, ShakeGestureDetector.effectiveThreshold(1f), 0.001f)
+        assertEquals(6.484f, ShakeGestureDetector.effectiveThreshold(14f), 0.01f)
+        assertEquals(9.474f, ShakeGestureDetector.effectiveThreshold(10f), 0.01f)
         assertEquals(2f, ShakeGestureDetector.effectiveThreshold(20f), 0.001f)
     }
 
