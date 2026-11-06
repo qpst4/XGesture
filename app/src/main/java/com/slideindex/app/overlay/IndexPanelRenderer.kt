@@ -164,7 +164,15 @@ internal class IndexPanelRenderer(
                     return true
                 }
                 lastRenderedContentRect = null
-                host.gestureSession().onTouchUp(event.rawX, event.rawY, touchX, localY)
+                val session = host.gestureSession()
+                if (session.isActive()) {
+                    session.onTouchUp(event.rawX, event.rawY, touchX, localY)
+                } else if (event.actionMasked == MotionEvent.ACTION_UP) {
+                    // 即时触发：抬指时 releaseImmediateGestureLock 已结束手指跟踪，面板以
+                    // leave-open 留在屏上；这次点击不是「按住手势」，直接确认高亮项。
+                    // 走 onTouchUp 会被 active 守卫挡掉（表现为只高亮、不启动）。
+                    session.confirmIndexSelection()
+                }
                 return true
             }
         }

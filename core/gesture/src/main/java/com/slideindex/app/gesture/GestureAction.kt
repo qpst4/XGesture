@@ -1379,6 +1379,9 @@ fun GestureAction.isContinuousTrackingKind(): Boolean =
 fun GestureAction.supportsContinuousTracking(trigger: GestureTriggerType): Boolean {
     if (!isContinuousTrackingKind()) return false
     return when (this) {
+        // 索引与面板类动作同语义：长按阈值处先打开，后续滑动继续跟手，松手按落点确认。
+        // 不加这一条时长按槽位只能「松手开面板」或「即时开面板」，选不到持续触发。
+        GestureAction.OpenIndex,
         GestureAction.RingLauncher,
         GestureAction.AppCarouselSwitcher,
         GestureAction.FingertipRing,

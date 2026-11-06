@@ -452,23 +452,7 @@ class GestureSession(
         when (sessionPanelMode) {
             OverlayPanelMode.INDEX -> {
                 if (releaseImmediateGestureLock()) return
-
-                val app = indexSession.highlightedApp
-                val longPressArmed = indexSession.longPressArmed
-                endSession()
-                app?.let {
-                    callbacks.hapticConfirmLaunch()
-                    if (it.isClone) {
-                        // 分身实例：同包名但要在别的 user 下启动。
-                        actionExecutor.launchAppInUser(it.packageName, it.cloneUserId, sessionSettings)
-                    } else {
-                        actionExecutor.execute(
-                            GestureAction.LaunchApp(it.packageName),
-                            sessionSettings,
-                            longPressArmed
-                        )
-                    }
-                }
+                confirmIndexSelection()
             }
 
             OverlayPanelMode.QUICK_LAUNCHER, OverlayPanelMode.TASK_SWITCHER,
@@ -925,6 +909,34 @@ class GestureSession(
         callbacks.onSessionStart(OverlayPanelMode.INDEX)
         indexSession.updateSelection(localX, localY)
         callbacks.onRequestInvalidate()
+    }
+
+    /**
+     * 索引面板的「确认高亮项」：启动当前高亮应用（含分身 / 长按小窗）并收掉面板。
+     *
+     * 索引面板有两种存活形态，必须共用这一份实现：
+     * - 手指仍按住（松手触发刚打开、持续触发拖动中）→ 走 [onTouchUp] 的 INDEX 分支；
+     * - 手指已抬起、面板以 leave-open 形态留在屏上（即时触发）→ 此时 [active] 已被
+     *   [releaseImmediateGestureLock] 清成 false，不能再让 `onTouchUp` 的 active 守卫把它挡掉，
+     *   由 `IndexPanelRenderer` 的抬指路径直接调用本方法。
+     */
+    fun confirmIndexSelection() {
+        val app = indexSession.highlightedApp
+        val longPressArmed = indexSession.longPressArmed
+        endSession()
+        app?.let {
+            callbacks.hapticConfirmLaunch()
+            if (it.isClone) {
+                // 分身实例：同包名但要在别的 user 下启动。
+                actionExecutor.launchAppInUser(it.packageName, it.cloneUserId, sessionSettings)
+            } else {
+                actionExecutor.execute(
+                    GestureAction.LaunchApp(it.packageName),
+                    sessionSettings,
+                    longPressArmed
+                )
+            }
+        }
     }
 
     /** @return true if the overlay session should end after this quick-launcher tap. */
