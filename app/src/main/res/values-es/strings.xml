@@ -1,3 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">XGesture</string>
+    <string name="main_nav_home">Inicio</string>
+    <string name="main_nav_shake">Agitar</string>
+    <string name="main_nav_notification">Mensajes</string>
+    <string name="main_nav_extension">Extensiones</string>
+    <string name="extension_section_launch_panel">Lanzadores y paneles</string>
+    <string name="extension_section_shortcuts">Atajos y acciones</string>
+    <string name="extension_section_tools">Herramientas</string>
+    <string name="extension_section_maintenance">Mantenimiento</string>
+    <string name="external_invocation_entry_title">Invocación externa</string>
+    <string name="external_invocation_entry_desc">Enlaces profundos y acciones de intent para Tasker y otras aplicaciones</string>
+    <string name="external_invocation_title">Invocación externa</string>
+    <string name="external_invocation_hint">Abre las funciones de XGesture desde otras apps mediante enlaces xgesture:// o acciones de intent. El panel de búsqueda, Ideas y el portapapeles requieren la barra lateral y el servicio de accesibilidad.</string>
+    <string name="external_invocation_query_hint">El parámetro opcional q rellena previamente una búsqueda, por ejemplo: xgesture://open/search-panel?q=weather.</string>
 </resources>
