@@ -5,7 +5,7 @@ import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureShortcutPayload
 import com.slideindex.app.util.KnownAppShortcuts
 
-internal fun GestureAction.resolveHostPackageName(): String? = when (this) {
+fun GestureAction.resolveHostPackageName(): String? = when (this) {
     is GestureAction.LaunchApp -> packageName.takeIf { it.isNotBlank() }
     is GestureAction.LaunchShortcut -> resolveLaunchShortcutHostPackage(payloadKey)
     else -> null
