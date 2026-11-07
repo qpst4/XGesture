@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.slideindex.app.clipboard.ClipboardEntry
 import com.slideindex.app.clipboard.ClipboardHistoryFilter
-import com.slideindex.app.clipboard.ClipboardHistoryRepository
+import com.slideindex.app.clipboard.ClipboardHistoryQuery
 import com.slideindex.app.stash.StashEntry
 import com.slideindex.app.stash.StashMetaRepository
 import com.slideindex.app.stash.StashMetaStore
@@ -38,7 +38,7 @@ enum class HistoryPanelTab {
 class HistoryPanelViewModel(
     private val savedStateHandle: SavedStateHandle,
     private val stashRepository: StashRepository?,
-    private val clipboardRepository: ClipboardHistoryRepository?,
+    private val clipboardRepository: ClipboardHistoryQuery?,
     private val metaRepository: StashMetaRepository? = null,
 ) : ViewModel() {
 
@@ -270,7 +270,7 @@ class HistoryPanelViewModel(
                 _clipboardFilterCount.value = 0
                 return@launch
             }
-            _clipboardFilterCount.value = repo.countEntries(filter)
+            _clipboardFilterCount.value = repo.count(filter)
         }
     }
 
@@ -328,7 +328,7 @@ class HistoryPanelViewModel(
         clipboardActivateJob = viewModelScope.launch {
             delay(CLIPBOARD_TAB_ACTIVATE_DELAY_MS)
             // 打开剪贴板面板就是「我要看最新的」：主动补读一次，且不受截图保护 / 自己写剪贴板的 skip 影响。
-            clipboardRepository?.catchUpLatestClipboard(
+            clipboardRepository?.catchUpLatest(
                 triggerContext = context,
                 skipWhenListening = false,
             )
@@ -388,7 +388,7 @@ class HistoryPanelViewModel(
         _clipboardListLoading.value = true
         try {
             _clipboardSearchResults.value = withContext(Dispatchers.IO) {
-                repo.searchHistory(trimmed)
+                repo.search(trimmed)
             }
         } finally {
             _clipboardListLoading.value = false
@@ -399,7 +399,7 @@ class HistoryPanelViewModel(
         val repo = clipboardRepository ?: return
         val current = _clipboardPagedEntries.value
         val freshTop = withContext(Dispatchers.IO) {
-            repo.loadHistoryPage(
+            repo.loadPage(
                 createdBeforeMs = null,
                 limit = HistoryFloatPagination.PAGE_SIZE,
                 filter = clipboardPagesFilter,
@@ -434,7 +434,7 @@ class HistoryPanelViewModel(
         var cursor: Long? = if (more) current.lastOrNull()?.createdAtEpochMs else null
         while (!clipboardReachedEnd) {
             val page = withContext(Dispatchers.IO) {
-                repo.loadHistoryPage(
+                repo.loadPage(
                     createdBeforeMs = cursor,
                     limit = HistoryFloatPagination.PAGE_SIZE,
                     filter = clipboardPagesFilter,

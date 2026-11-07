@@ -7,7 +7,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.slideindex.app.stash.StashAccess
 import com.slideindex.app.stash.StashReminderMirror
-import com.slideindex.app.stash.StashReminderScheduler
 
 /**
  * 「有没有一条**已提醒、但用户还没处理**的闪念」——给指示条（流光）用。
@@ -54,7 +53,7 @@ import com.slideindex.app.stash.StashReminderScheduler
  * ⚠️ [hasPending] 只会在**值真的变了**的时候写：它被 Compose 当 state 观察，每帧都写一次
  * 会让整块面板每帧重组（`refresh` 会被周期性调用，见调用点）。
  */
-internal object StashReminderPendingState {
+object StashReminderPendingState {
 
     private const val TAG = "StashRemindPending"
 
@@ -205,7 +204,7 @@ internal object StashReminderPendingState {
             addAll(notified)
         }
         candidateIds.forEach { entryId ->
-            if (StashReminderScheduler.notifyIdOf(entryId) in activeIds) return true
+            if (com.slideindex.app.stash.notifyIdOf(entryId) in activeIds) return true
         }
 
         val store = repo?.store?.value ?: return false

@@ -16,3 +16,8 @@ object StashReminderScheduling {
     @Volatile
     var cancel: ((Context, String) -> Unit)? = null
 }
+
+private const val NOTIFY_ID_BASE = 24_100
+
+/** 通知 ID（按条目 id 稳定派生）。 */
+fun notifyIdOf(entryId: String): Int = NOTIFY_ID_BASE + entryId.hashCode()

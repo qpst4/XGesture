@@ -31,6 +31,12 @@ interface ClipboardHistoryQuery {
     /** 全文搜索。 */
     suspend fun search(query: String, limit: Int = 50): List<ClipboardEntry>
 
+    /** 追平最新一条（`:app` 侧可能有外部写入需要同步；默认无操作）。 */
+    suspend fun catchUpLatest(
+        triggerContext: android.content.Context? = null,
+        skipWhenListening: Boolean = false,
+    ) = Unit
+
     /** 最近一条（用于面板首屏）。 */
     suspend fun peekLatest(): ClipboardEntry?
 }

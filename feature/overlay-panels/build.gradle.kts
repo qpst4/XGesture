@@ -39,6 +39,8 @@ dependencies {
     implementation(project(":core:gesture"))
     implementation(project(":core:shortcuts"))
     implementation(project(":core:clipboard"))
+    implementation(project(":core:stash"))
+    implementation(libs.lifecycle.viewmodel.savedstate)
     implementation(project(":core:overlay-host"))
     implementation(project(":core:design"))
     implementation(project(":feature:settings"))

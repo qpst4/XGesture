@@ -8,7 +8,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * 收纳面板专用色：Miuix 浅色下 background 与 surfaceContainer 均为白，
  * 须用 surface（灰底）+ surfaceContainer（白卡）才能看出卡片边界。
  */
-internal object HistoryPanelColors {
+object HistoryPanelColors {
     @Composable
     fun panelChrome(blurActive: Boolean = false): Color {
         val scheme = MiuixTheme.colorScheme

@@ -9,7 +9,7 @@ import java.util.TimeZone
  *
  * 这是纯逻辑，不碰 Compose —— 分组边界（尤其夏令时）由 `HistoryTimelineGroupingTest` 覆盖。
  */
-internal enum class HistoryDayGroup {
+enum class HistoryDayGroup {
     Today,
     Yesterday,
     Earlier,
@@ -23,7 +23,7 @@ internal enum class HistoryDayGroup {
  * 一整块不可拆分的项。竖线因此**逐行绘制**（每行画自己那一段），这样懒加载把行
  * 拆到不同时间合成也不会断口（这正是 §6.4 里"竖线在懒加载条目边界能否不断口"的答案）。
  */
-internal sealed interface HistoryTimelineRow {
+sealed interface HistoryTimelineRow {
     val key: String
 
     /**
@@ -54,7 +54,7 @@ internal sealed interface HistoryTimelineRow {
 }
 
 /** 竖线在分组起始处的强度：设计稿 `color-mix(in srgb, var(--text) 14%, transparent)`。 */
-internal const val HistoryTimelineLineAlpha = 0.14f
+const val HistoryTimelineLineAlpha = 0.14f
 
 /**
  * 某条记录属于哪一组。
@@ -62,7 +62,7 @@ internal const val HistoryTimelineLineAlpha = 0.14f
  * 用 [Calendar] 取"当天零点"再比较，而不是减 86400000 —— 夏令时切换那天
  * 「昨天零点」并不等于「今天零点减一天」，直接减会把午夜前后一小时算错组。
  */
-internal fun historyDayGroupOf(
+fun historyDayGroupOf(
     epochMs: Long,
     nowMs: Long,
     zone: TimeZone = TimeZone.getDefault(),
@@ -90,7 +90,7 @@ private fun startOfDayMs(epochMs: Long, zone: TimeZone): Long =
  * 每段都会再出一个表头，[HistoryTimelineRow.GroupHeader.runIndex] 保证 key 不重复 ——
  * 重复 key 会让 `LazyColumn` 直接抛异常。
  */
-internal fun buildHistoryTimelineRows(
+fun buildHistoryTimelineRows(
     entries: List<StashEntry>,
     nowMs: Long = System.currentTimeMillis(),
     zone: TimeZone = TimeZone.getDefault(),

@@ -328,3 +328,25 @@ iteration 3:   0  → 净落地 52 个文件
 | `quickLauncher*` / `managedShortcut*` | 换 `:core:shortcuts` 的 resolver 接口 |
 | `pickerApps` / `ringSlotConfigSheetContent` | P3 完成后删除 |
 | `dispatchTapAsync` / `switchInputMethod` | 换 `:core:overlay-host` 的系统能力接口 |
+
+### 12.5 P1 执行记录（2026-11-08）
+
+| 事项 | 结果 |
+| :--- | :--- |
+| `:core:clipboard` | ✅ 已建：19 个纯数据/解析文件（3,174 行）+ `ClipboardHistoryQuery` 只读接口 + `ClipboardService` 定位点 + `ClipboardForeground`；`:app` 仓储已实现并注册；6 个模块测试 |
+| `:core:stash` | 🟡 部分：仅 `StashEntry` / `StashReminderMirror` 可独立（433 行）；其余 10 个文件是紧耦合集群 |
+| `history` 组 | 🟡 已搬 `HistoryToast`；其余压在 stash / service / ui |
+
+**stash 集群的依赖链**（实测）：
+
+```
+StashRepository ↔ StashMetaRepository → StashReminderScheduler ← StashReminderBootReceiver
+StashReminderReceiver → StashReminderPendingState + StashClipboardTrampolineActivity + 8×R.string
+```
+
+要整组搬，需先补：trampoline Intent 钩子、`StashReminderPendingState` 下沉、8 条提醒文案。
+
+**结论**：剩余组（`history` / `filebrowser` / `pickresult` / `quickmenu` / `searchpanel`，约 5.6 万行）
+的共性卡点是 `service`（16k）与 `ui`（101k）两个巨型包，不是单个数据层能撬动的。
+建议把 `:core:clipboard` / `:core:stash` 作为下一阶段的起点，按 P2（FloatBallPort）→ P3（picker）
+→ P4（tasks）→ `service` 拆分推进。

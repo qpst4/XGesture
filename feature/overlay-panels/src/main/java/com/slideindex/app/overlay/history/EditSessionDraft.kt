@@ -44,7 +44,7 @@ import java.io.File
  * [text] 与 [imagePaths] 由 [updateBlocks] 同步，方便"正文串"式的读点继续工作；
  * 它们是投影，**不要**再直接写。
  */
-internal object EditSessionDraft {
+object EditSessionDraft {
     /**
      * 当前草稿属于哪一条条目；null = 没有草稿。
      *
