@@ -95,6 +95,32 @@ object PanelRuntimeHooks {
     /** 内置分享面板总开关（`:app` 从设置快照读）。 */
     @Volatile
     var isShareSheetEnabled: ((Context) -> Boolean)? = null
+
+    /** 手势动作的显示名（`:app` 的 `gestureActionLabelText`）。 */
+    @Volatile
+    var gestureActionLabel: ((Context, com.slideindex.app.gesture.GestureAction) -> String)? = null
+
+    /** 快捷方式动作的显示名（`:app` 的 `launchShortcutDisplayLabel`）。 */
+    @Volatile
+    var launchShortcutLabel: ((com.slideindex.app.gesture.GestureAction.LaunchShortcut) -> String)? = null
+
+    /** 托管快捷方式图标（Drawable）。 */
+    @Volatile
+    var managedShortcutDrawable:
+        ((
+            Context,
+            com.slideindex.app.gesture.GestureAction.LaunchShortcut,
+            List<com.slideindex.app.activity.ActivityShortcut>,
+        ) -> android.graphics.drawable.Drawable?)? = null
+
+    /** 快捷方式面板项图标（Drawable）。 */
+    @Volatile
+    var managedQuickItemDrawable:
+        ((
+            Context,
+            com.slideindex.app.launcher.QuickLauncherItem,
+            List<com.slideindex.app.activity.ActivityShortcut>,
+        ) -> android.graphics.drawable.Drawable?)? = null
 }
 
 /** 见 [PanelRuntimeHooks.appDependenciesComposition]。 */

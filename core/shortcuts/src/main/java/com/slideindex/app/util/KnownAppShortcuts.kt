@@ -6,7 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.core.net.toUri
-import com.slideindex.app.R
+import com.slideindex.app.shortcuts.R
 import com.slideindex.app.overlay.TaskSwitcherMenuItem
 import com.slideindex.app.overlay.TaskSwitcherMenuItemType
 
@@ -14,7 +14,7 @@ import com.slideindex.app.overlay.TaskSwitcherMenuItemType
  * Hard-coded desktop-equivalent shortcuts for WeChat / QQ / Alipay when ShortcutManager
  * and Shizuku queries return nothing on many ROMs.
  */
-internal object KnownAppShortcuts {
+object KnownAppShortcuts {
     private const val WECHAT = "com.tencent.mm"
     private const val QQ = "com.tencent.mobileqq"
     private const val TIM = "com.tencent.tim"

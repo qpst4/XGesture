@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 已知应用快捷方式名称：随 KnownAppShortcuts 一起下沉。 -->
+<resources>
+    <string name="shortcut_scan">Scan</string>
+    <string name="shortcut_my_qr">My QR code</string>
+    <string name="shortcut_receive_pay">Receive &amp; pay</string>
+    <string name="shortcut_cainiao">Cainiao</string>
+    <string name="shortcut_ant_forest">Ant Forest</string>
+    <string name="shortcut_receive_code">Receive code</string>
+    <string name="shortcut_pay_code">Pay code</string>
+    <string name="shortcut_bus_code">Transit code</string>
+</resources>

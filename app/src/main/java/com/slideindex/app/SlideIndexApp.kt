@@ -216,6 +216,20 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideBitmap = { ctx, pkg, size ->
             com.slideindex.app.ui.AppIconOverride.bitmap(ctx, pkg, size)
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel = { ctx, action ->
+            com.slideindex.app.ui.gesturepicker.gestureActionLabelText(ctx, action)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchShortcutLabel = { action ->
+            com.slideindex.app.ui.gesturepicker.launchShortcutDisplayLabel(action)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutDrawable = { ctx, action, catalog ->
+            com.slideindex.app.activity.ManagedShortcutIconResolver
+                .drawableForLaunchShortcut(ctx, action, catalog)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedQuickItemDrawable = { ctx, item, catalog ->
+            com.slideindex.app.activity.ManagedShortcutIconResolver
+                .drawableForQuickItem(ctx, item, catalog)
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideDrawable = { ctx, pkg, size ->
             com.slideindex.app.ui.AppIconOverride.drawable(ctx, pkg, size)
         }
