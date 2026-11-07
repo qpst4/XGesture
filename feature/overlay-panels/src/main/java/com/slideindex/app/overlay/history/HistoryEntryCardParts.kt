@@ -83,7 +83,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
-internal fun HistoryImagePagerSection(
+fun HistoryImagePagerSection(
     thumbnails: List<Bitmap>,
     selectedIndex: Int,
     onSelectedIndexChange: (Int) -> Unit,
@@ -217,7 +217,7 @@ internal fun HistoryImagePagerSection(
 }
 
 @Composable
-internal fun HistoryExpandableContentSection(
+fun HistoryExpandableContentSection(
     entryId: String,
     canExpand: Boolean,
     expanded: Boolean,
@@ -338,7 +338,7 @@ internal fun HistoryExpandableContentSection(
 }
 
 @Composable
-internal fun HistoryEntryCardShell(
+fun HistoryEntryCardShell(
     entryId: String,
     createdAtEpochMs: Long,
     starred: Boolean = false,
@@ -535,7 +535,7 @@ internal fun HistoryEntryCardShell(
  * [tint] 传 null = 跟随正文色；主状态动作（星标 / 完成）在"已开启"时传主题色。
  */
 @Composable
-internal fun HistoryCardActionIcon(
+fun HistoryCardActionIcon(
     icon: ImageVector,
     contentDescription: String?,
     onClick: () -> Unit,
@@ -574,7 +574,7 @@ internal fun HistoryCardActionIcon(
 }
 
 /** 操作行命中区边长（Android 最小触摸目标）。 */
-internal const val CARD_ACTION_HIT_DP = 48
+const val CARD_ACTION_HIT_DP = 48
 
 /**
  * 操作行命中区**宽度**：比 48 窄。
@@ -582,10 +582,10 @@ internal const val CARD_ACTION_HIT_DP = 48
  * 48dp 方块 + 22dp 字形时，两个相邻按钮的**字形之间**要隔 26dp，真机上看着"散"；
  * 收窄到 40dp 后是 18dp。高度仍是 48dp（纵向不受影响）。
  */
-internal const val CARD_ACTION_HIT_WIDTH_DP = 40
+const val CARD_ACTION_HIT_WIDTH_DP = 40
 
 /** 操作行图标字形边长（设计稿 22dp）。 */
-internal const val CARD_ACTION_GLYPH_DP = 22
+const val CARD_ACTION_GLYPH_DP = 22
 
 /** 设计稿 `.item.flash`：`flashin 1.4s` 的高亮环（2dp 环 + 8dp 柔光）。 */
 private const val HistoryCardFlashDurationMs = 1_400
@@ -615,7 +615,7 @@ private fun rememberHistoryCardFlash(flash: Boolean): Float {
     return progress.value
 }
 
-internal data class HistoryCardMenuAction(
+data class HistoryCardMenuAction(
     val label: String,
     val icon: ImageVector,
     val onClick: () -> Unit,
@@ -625,7 +625,7 @@ internal data class HistoryCardMenuAction(
 )
 
 @Composable
-internal fun HistoryCardOverflowMenu(
+fun HistoryCardOverflowMenu(
     contentDescription: String,
     actions: List<HistoryCardMenuAction>,
 ) {
@@ -680,7 +680,7 @@ internal fun HistoryCardOverflowMenu(
  * `.item.done .box .body { text-decoration: line-through }`。
  */
 @Composable
-internal fun HistoryCollapsedSummaryText(
+fun HistoryCollapsedSummaryText(
     text: String,
     maxLines: Int = 3,
     strikethrough: Boolean = false,
@@ -710,7 +710,7 @@ internal fun HistoryCollapsedSummaryText(
  * 各渲染一块 —— 比"只显示最后一条"信息更全。
  */
 @Composable
-internal fun HistoryCardAppendBlock(text: String) {
+fun HistoryCardAppendBlock(text: String) {
     if (text.isBlank()) return
     val theme = historyTheme()
     // `.append { border-top: 1px dashed var(--line); margin-top:10px; padding-top:9px;
@@ -754,7 +754,7 @@ private fun HistoryCardDashedDivider(color: Color) {
  * 来源 = 这条是从哪儿来的（剪贴板 / 取词 / 图片）；用户自己记的纯闪念没有来源，不显示。
  */
 @Composable
-internal fun HistoryCardFootRow(
+fun HistoryCardFootRow(
     sourceLabel: String?,
     tags: List<Pair<String, Color>>,
 ) {
@@ -813,7 +813,7 @@ private fun HistoryCardMiniChip(
 }
 
 @Composable
-internal fun HistorySingleImageThumb(
+fun HistorySingleImageThumb(
     bitmap: Bitmap?,
     maxHeightDp: androidx.compose.ui.unit.Dp = 150.dp,
 ) {
@@ -831,7 +831,7 @@ internal fun HistorySingleImageThumb(
 }
 
 @Composable
-internal fun rememberLoadedThumbnails(
+fun rememberLoadedThumbnails(
     entryId: String,
     loadKey: Any,
     enabled: Boolean,
@@ -853,7 +853,7 @@ internal fun rememberLoadedThumbnails(
 }
 
 @Composable
-internal fun rememberLoadedSingleThumb(
+fun rememberLoadedSingleThumb(
     entryId: String,
     loadKey: Any,
     enabled: Boolean,

@@ -41,5 +41,8 @@ dependencies {
     implementation(libs.compose.material3.pinned)
     implementation(libs.compose.material.icons)
     implementation(libs.miuix.ui)
+    implementation(libs.miuix.icons)
+    implementation(libs.miuix.blur)
+    implementation(libs.miuix.shader)
     implementation(libs.materialkolor)
 }

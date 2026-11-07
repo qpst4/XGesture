@@ -4,14 +4,10 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.AppThemeMode
 import com.slideindex.app.settings.ThemePaletteStyle
-
-/** App 解析后的深色状态（尊重 [AppThemeMode]，非仅系统）。 */
-val LocalAppDarkTheme = staticCompositionLocalOf { false }
 
 @Composable
 fun SlideIndexTheme(

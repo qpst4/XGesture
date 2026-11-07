@@ -23,7 +23,7 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.icon.extended.Search
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import com.slideindex.app.R
+import com.slideindex.app.design.R
 
 /**
  * Miuix 风格搜索输入框，与外部 [query] 双向同步。
