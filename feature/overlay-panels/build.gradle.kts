@@ -59,5 +59,7 @@ dependencies {
     implementation(libs.androidx.palette)
     implementation(libs.miuix.ui)
     implementation(libs.miuix.icons)
+    implementation(libs.miuix.blur)
+    implementation(libs.miuix.shader)
     implementation(libs.materialkolor)
 }
