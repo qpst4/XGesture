@@ -59,15 +59,23 @@
 
 **验收**：`:core:overlay-host` 19 文件 / 1,644 行；`:app` 的 `overlay/` 217 个文件。
 
-### A3. 单例接口化（1–2 天）
+### A3. 单例接口化（1–2 天）——🟡 进行中
 
 给这批根包单例各开一个窄接口 / 回调，`SlideIndexApp` 里接线（模式同 `OverlayZOrderHooks`）：
 
-- `FloatBallOverlay`：`isShowing`、`notifyPanelAttachedAboveChrome()`、z 序三个钩子（后三个已有）；
-- `OverlayComposeDialogHost` / `ScreenPinManager` / `OverlayToastWindow` / `OverlayViewBackHandler`；
-- `ShellCommandBadgeRenderer` / `ShellCommandBadgeOverlay` / `ShortcutBadgeOverlay`。
+- ✅ `OverlayViewBackHandler` → 直接迁入 `:core:overlay-host`（`internal` 改 public）；它依赖的
+  `PredictiveBackHelper` 一起下沉到 `:core:common`。
+- ✅ `FloatBallOverlay`：`isShowing` / `notifyPanelAttachedAboveChrome` 已有 `OverlayZOrderHooks` 钩子。
+- ⬜ `OverlayComposeDialogHost` / `ScreenPinManager` / `OverlayToastWindow`（`share` / `screenshot` 用）。
+- ⬜ `LocalFrostedGlassBackdrop`（`volumepanel` / `filebrowser` 用）——它读设置，要拆成"纯背板 + 设置门面"两层。
+- ⬜ `ShellCommandBadgeRenderer` / `ShellCommandBadgeOverlay` / `ShortcutBadgeOverlay`（`fingertip` / `quickwheel` 用）。
 
 **验收**：`screenshot` / `backpanel` / `quickwheel` / `animation` / `volumepanel` / `fingertip` / `share` 的外部根包依赖全部归零。
+
+> 2026-11-07 的实测补充：**逐组搬在依赖图上远比预期贵**。`filebrowser` 虽然 A 层文件多，但横向依赖
+> clipboard / ocr / history / searchpanel / share / privilege / R / service 等 13 个包；`animation` 依赖
+> settings / ui / perf。这两组都**不是**"搬走就行"的叶子。真正能整组搬的，是那些只依赖
+> `:core:*` + 少量 settings 枚举的面板；在此之前，A3 的接口化仍是前置。
 
 ## 3. 阶段 B：按组搬面板（5–7 天，顺序自由）
 
@@ -100,6 +108,7 @@
 | **A1** | 设计层种子 → `:core:design` | `AppThemeSpec` + `MiuixSeedResolver` + `AppMaterialColorScheme` 迁入；主题枚举下沉 `:core:common`；`:app` 留适配层 |
 | **A2a** | `OverlayScreenMetrics` → `:core:overlay-host` | 60 行；`isDisplayLandscapeRotation` 一并下移，`:app` 只剩调用 |
 | **A2b** | 宿主层 → `:core:overlay-host` | `OverlayComposeOwner` / `OverlayCompose` / `OverlayFullScreenPanelHost` / `OverlayBlurGate`（纯决策部分）迁入；R 与语言依赖用 `OverlayHostRuntime` 反转，浮球用 `OverlayZOrderHooks` 反转。模块 19 文件 / 1,644 行 |
+| **A3a** | `OverlayViewBackHandler` → `:core:overlay-host` | 328 行，`internal` 改 public；`PredictiveBackHelper`（179 行）一并下沉到 `:core:common` |
 
 `:core:overlay-host` 现有 15 个文件 / 1,020 行。
 

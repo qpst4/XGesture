@@ -37,7 +37,7 @@ import com.slideindex.app.util.PredictiveBackHelper
  * 聚焦的那个浮窗**，输入法没机会先吃，于是"键盘弹着按返回"会直接把弹窗关掉（用户报的就是这个）。
  * 判断与处理都放在 [dispatchBack] 这个唯一漏斗里，所以**所有用它的浮窗一起受益**。
  */
-internal class OverlayViewBackHandler(
+class OverlayViewBackHandler(
     private val view: View,
     private val onBack: () -> Unit,
 ) {
