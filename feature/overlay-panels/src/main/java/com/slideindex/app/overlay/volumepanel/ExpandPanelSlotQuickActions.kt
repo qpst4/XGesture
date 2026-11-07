@@ -46,7 +46,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.util.HapticHelper
 import kotlin.math.abs
@@ -66,7 +66,7 @@ import kotlin.math.roundToInt
  * 非 app 槽位（Shell / 按键 / 链接之外的动作）与空槽位**不弹横条**，长按直接进编辑模式 ——
  * 见 `VolumePanelContent` 里 `opensSomething()` 那一层判断。
  */
-internal enum class ExpandPanelSlotQuickAction {
+enum class ExpandPanelSlotQuickAction {
     OPEN,
     EDIT_MODE,
 }
@@ -104,7 +104,7 @@ private fun actionForSlot(mode: StripMode, slotIndex: Int): ExpandPanelSlotQuick
 }
 
 @Composable
-internal fun ExpandPanelSlotQuickActionTarget(
+fun ExpandPanelSlotQuickActionTarget(
     enabled: Boolean,
     /** 「打开」会以全屏还是小窗打开 —— 按「应用启动方式」策略解析出来的结果，只影响图标与文案。 */
     openFullscreen: Boolean,
