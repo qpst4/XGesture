@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
  * 与 [ThinActionIcons] 的差别：这里是 1024 / 47.789 viewport 的实心图形（与 MyGesture 一致），
  * 不是 24×24 + stroke 1.5 的细线风格；渲染时统一由 `Icon(tint = …)` 上色。
  */
-internal object PayQrActionIcons {
+object PayQrActionIcons {
 
     /** 微信扫一扫（微信双气泡造型） */
     val WechatScan: ImageVector by lazy {

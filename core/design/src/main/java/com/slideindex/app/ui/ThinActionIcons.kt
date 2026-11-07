@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-internal object ThinActionIcons {
+object ThinActionIcons {
     private const val STROKE_WIDTH = 1.5f
     private val strokeBrush = SolidColor(Color.White)
 

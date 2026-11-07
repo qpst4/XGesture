@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
  * ⚠️ 这些是**填充路径**（fill），不是 stroke：想再调粗细，要回字体重新实例化，
  * 改 `strokeLineWidth` 对它们无效。
  */
-internal object MaterialSymbolThinIcons {
+object MaterialSymbolThinIcons {
 
     private fun icon(name: String, pathData: String): ImageVector =
         ImageVector.Builder(

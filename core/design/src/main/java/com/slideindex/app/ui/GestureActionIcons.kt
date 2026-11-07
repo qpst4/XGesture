@@ -41,7 +41,7 @@ fun gestureActionImageVector(action: GestureAction, outlined: Boolean = false): 
             }
     }
 
-internal fun pointerSwipeDirectionThinIcon(
+fun pointerSwipeDirectionThinIcon(
     direction: com.slideindex.app.gesture.PointerSwipeDirection
 ): ImageVector = pointerSwipeDirectionOutlinedIcon(direction)
 

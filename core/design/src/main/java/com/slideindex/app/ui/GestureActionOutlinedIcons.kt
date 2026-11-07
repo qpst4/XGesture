@@ -4,14 +4,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.overlay.PanelSide
 
-internal fun panelSideSwipeOutlinedIcon(side: PanelSide): ImageVector = when (side) {
+fun panelSideSwipeOutlinedIcon(side: PanelSide): ImageVector = when (side) {
     PanelSide.LEFT -> ThinActionIcons.Back
     PanelSide.RIGHT -> ThinActionIcons.ArrowRight
     PanelSide.TOP -> ThinActionIcons.ArrowUp
     PanelSide.BOTTOM -> ThinActionIcons.ArrowDown
 }
 
-internal fun pointerSwipeDirectionOutlinedIcon(
+fun pointerSwipeDirectionOutlinedIcon(
     direction: com.slideindex.app.gesture.PointerSwipeDirection
 ): ImageVector = when (direction) {
     com.slideindex.app.gesture.PointerSwipeDirection.LEFT -> ThinActionIcons.Back
@@ -22,7 +22,7 @@ internal fun pointerSwipeDirectionOutlinedIcon(
 
 /** 动作图标（outlined / 浮窗 raster）统一走自绘 [ThinActionIcons]。 */
 @Suppress("DEPRECATION")
-internal fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (type) {
+fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (type) {
     GestureActionType.NONE -> ThinActionIcons.Block
     GestureActionType.OPEN_INDEX -> ThinActionIcons.SortByAlpha
     GestureActionType.QUICK_LAUNCHER -> ThinActionIcons.Apps
@@ -134,7 +134,7 @@ internal fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector
 }
 
 @Suppress("DEPRECATION")
-internal fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type) {
+fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type) {
     GestureActionType.NONE -> ThinActionIcons.Block
     GestureActionType.OPEN_INDEX -> ThinActionIcons.SortByAlpha
     GestureActionType.QUICK_LAUNCHER -> ThinActionIcons.Apps
