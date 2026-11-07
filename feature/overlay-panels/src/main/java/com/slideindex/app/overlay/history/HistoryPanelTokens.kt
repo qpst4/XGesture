@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.sp
  * 值全部来自 demo，浅色/深色两套都抄。
  */
 @Immutable
-internal data class HistoryTheme(
+data class HistoryTheme(
     val text: Color,
     val sub: Color,
     val hair: Color,
@@ -158,11 +158,11 @@ private val DarkHistoryTheme = HistoryTheme(
 )
 
 @Composable
-internal fun historyTheme(): HistoryTheme =
+fun historyTheme(): HistoryTheme =
     if (isSystemInDarkTheme()) DarkHistoryTheme else LightHistoryTheme
 
 /** demo `:root` 的圆角刻度。 */
-internal object HistoryRadii {
+object HistoryRadii {
     val xs: Dp = 8.dp
     val sm: Dp = 12.dp
     val md: Dp = 14.dp
@@ -173,7 +173,7 @@ internal object HistoryRadii {
 }
 
 /** demo `:root` 的字号刻度（`--f-tiny` … `--f-body`）。 */
-internal object HistoryFontSizes {
+object HistoryFontSizes {
     val tiny = 10.5.sp
     val meta = 11.5.sp
     val sm = 12.5.sp
@@ -183,7 +183,7 @@ internal object HistoryFontSizes {
 }
 
 /** demo `:root` 的间距刻度（`--s1` … `--s7`）。 */
-internal object HistorySpacing {
+object HistorySpacing {
     val s1: Dp = 4.dp
     val s2: Dp = 8.dp
     val s3: Dp = 12.dp
@@ -197,14 +197,14 @@ internal object HistorySpacing {
 }
 
 /** demo 的动画时长刻度（`--d1` … `--d3`，毫秒）。 */
-internal object HistoryDurations {
+object HistoryDurations {
     const val d1 = 140
     const val d2 = 200
     const val d3 = 280
 }
 
 /** demo 的两条缓动曲线：`--e-out: cubic-bezier(.22,1,.36,1)`、`--e-io: cubic-bezier(.4,0,.2,1)`。 */
-internal object HistoryEasing {
+object HistoryEasing {
     val out = androidx.compose.animation.core.CubicBezierEasing(0.22f, 1f, 0.36f, 1f)
     val io = androidx.compose.animation.core.CubicBezierEasing(0.4f, 0f, 0.2f, 1f)
 }
@@ -219,4 +219,4 @@ internal object HistoryEasing {
  * 数值 = (命中区宽 - 字形宽) / 2 = (40 - 22) / 2 = **9dp**（[CARD_ACTION_HIT_WIDTH_DP] 收窄后同步改，
  * 否则字形会比正文多缩进几个 dp）。
  */
-internal val HistoryActsOffsetX: Dp = 9.dp
+val HistoryActsOffsetX: Dp = 9.dp

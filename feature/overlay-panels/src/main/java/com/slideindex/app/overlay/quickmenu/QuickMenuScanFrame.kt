@@ -9,7 +9,7 @@ import kotlin.math.roundToInt
  * 抽成纯函数是为了可单测：这两处都是"错了不会崩、但结果会静默错位/变色"的地方——
  * 标记和图对不上、颜色发绿，靠肉眼很难判断是哪里错的。
  */
-internal object QuickMenuScanFrame {
+object QuickMenuScanFrame {
 
     /**
      * 顺时针旋转 [rotationDegrees] 度后，归一化坐标的映射。

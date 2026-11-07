@@ -1,11 +1,11 @@
 package com.slideindex.app.overlay.pickresult
 
-internal sealed class PickResultOpenLinkAction {
+sealed class PickResultOpenLinkAction {
     data class Open(val url: String) : PickResultOpenLinkAction()
     data class Choose(val urls: List<String>) : PickResultOpenLinkAction()
 }
 
-internal object PickResultUrl {
+object PickResultUrl {
     /**
      * 不允许出现在网址内部的字符。
      *

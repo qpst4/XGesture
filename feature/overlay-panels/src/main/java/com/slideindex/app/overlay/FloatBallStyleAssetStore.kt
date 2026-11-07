@@ -10,7 +10,7 @@ import java.io.File
 /**
  * 将用户从文档选择器获得的 URI 复制到应用私有目录，避免重装/权限失效后悬浮球样式丢失。
  */
-internal object FloatBallStyleAssetStore {
+object FloatBallStyleAssetStore {
     private const val ASSET_DIR = "float_ball_assets"
 
     // 文件名必须每次导入都唯一：换图后 URI 变了，bind key / GIF 帧缓存 / 预览 remember
@@ -187,7 +187,7 @@ internal object FloatBallStyleAssetStore {
  * 180° 只是上下颠倒，宽高不用换（以前写成 `in 90..270`，把 180 也换掉了，是个隐性错误）。
  * 宽或高非法（读文件头失败）时返回 null。
  */
-internal fun aspectFromRawSize(
+fun aspectFromRawSize(
     rawWidthPx: Int,
     rawHeightPx: Int,
     rotationDegrees: Int,

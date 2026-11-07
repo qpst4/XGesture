@@ -20,7 +20,7 @@ import kotlin.math.min
  *
  * 另外提供 [drawPipBadge]：长按到时间且目标是"小窗"时，在图标右下角画一个画中画角标。
  */
-internal object HintRingRenderer {
+object HintRingRenderer {
 
     /** 底环（与 HudRingTrack 一致）。 */
     const val TRACK_COLOR = 0x33FFFFFF

@@ -161,7 +161,7 @@ object PickResultWordTokenizer {
         return token.length == 1 && (token[0].isWhitespace() || token[0] == '\u3000')
     }
 
-    internal fun breakCjkWords(text: String): List<String> {
+    fun breakCjkWords(text: String): List<String> {
         if (text.isEmpty()) return emptyList()
         val words = runCatching { breakWordsWithAndroidIcu(text) }
             .getOrNull()

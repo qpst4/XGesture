@@ -11,7 +11,7 @@ import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.hypot
 
-internal data class FloatingPointerEdgeActionSegment(
+data class FloatingPointerEdgeActionSegment(
     val side: FloatingPointerEdgeSide,
     val action: GestureAction,
     val wedgeRect: Rect,
@@ -23,7 +23,7 @@ internal data class FloatingPointerEdgeActionSegment(
     var proximity: Float = 0f
 )
 
-internal object FloatingPointerEdgeActionsEngine {
+object FloatingPointerEdgeActionsEngine {
     private const val EDGE_INSET_DP = 1f
     private const val WEDGE_CORNER_INSET_DP = 1.35f
 

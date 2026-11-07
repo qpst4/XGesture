@@ -29,7 +29,7 @@ import kotlin.math.roundToInt
  * - [showCachedFrame]：预解码好的 Bitmap（小 GIF 全帧缓存）
  * - [showStreamingFrame]：`Movie` 逐帧（大 GIF 兜底）
  */
-internal class FloatBallGifView @JvmOverloads constructor(
+class FloatBallGifView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : View(context, attrs) {
