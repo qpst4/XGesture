@@ -67,4 +67,61 @@ object PanelStashWriteHooks {
     /** 暂存富内容贴屏。 */
     @Volatile
     var pinStashRich: ((Context, StashEntry) -> Unit)? = null
+    /** 拖动卡片时隐藏/恢复暂存浮窗。 */
+    @Volatile
+    var setStashDragHidden: ((Boolean) -> Unit)? = null
+
+    /** 分享文本。 */
+    @Volatile
+    var shareText: ((Context, String, () -> Unit) -> Unit)? = null
+
+    /** 分享截屏。 */
+    @Volatile
+    var shareScreenshot: ((Context, Bitmap, () -> Unit) -> Unit)? = null
+
+    /** 保存截屏；返回是否成功。 */
+    @Volatile
+    var saveScreenshot: ((Context, Bitmap) -> Boolean)? = null
+
+    /** 从剪贴板条目打开取词面板。 */
+    @Volatile
+    var openPickResultFromClipboard: ((Context, ClipboardEntry, Int) -> Unit)? = null
+
+    /** 从暂存条目打开取词面板。 */
+    @Volatile
+    var openPickResultFromStash: ((Context, StashEntry, Int) -> Unit)? = null
+
+    /** 写入暂存面板宽度档位（0=COMPACT, 1=STANDARD）。 */
+    @Volatile
+    var setStashPanelWidthMode: ((Int) -> Unit)? = null
+
+    /** 写入暂存面板自定义宽度比例。 */
+    @Volatile
+    var setStashPanelCustomWidthFraction: ((Float) -> Unit)? = null
+    /** 取消一条提醒。 */
+    @Volatile
+    var reminderCancel: ReminderCancelHook? = null
+
+    /** 排定一条提醒。 */
+    @Volatile
+    var reminderSchedule: ReminderScheduleHook? = null
+
+    /** 批量重排提醒。 */
+    @Volatile
+    var reminderRescheduleAll: ReminderRescheduleAllHook? = null
+}
+
+/** 取消一条提醒。 */
+fun interface ReminderCancelHook {
+    fun cancel(context: Context, entryId: String)
+}
+
+/** 排定一条提醒。 */
+fun interface ReminderScheduleHook {
+    fun schedule(context: Context, entryId: String, atEpochMs: Long, text: String)
+}
+
+/** 批量重排提醒。 */
+fun interface ReminderRescheduleAllHook {
+    fun rescheduleAll(context: Context, reminders: Map<String, Long>, textOf: (String) -> String)
 }

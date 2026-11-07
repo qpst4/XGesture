@@ -12,6 +12,9 @@ object StashReminderScheduling {
     @Volatile
     var schedule: ((Context, String, Long, String) -> Unit)? = null
 
+    /** 批量重排提醒（`reminders` 为 id → 到点时刻）。 */
+    var rescheduleAll: ((Context, Map<String, Long>, (String) -> String) -> Unit)? = null
+
     /** 取消一条提醒。 */
     @Volatile
     var cancel: ((Context, String) -> Unit)? = null

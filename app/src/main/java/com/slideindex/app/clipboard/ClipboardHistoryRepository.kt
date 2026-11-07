@@ -141,7 +141,7 @@ class ClipboardHistoryRepository @Inject constructor(
         )
     }
 
-    suspend fun delete(id: String) {
+    override suspend fun delete(id: String) {
         writeMutex.withLock {
             val removed = store.queryById(id)
             removed?.let { ClipboardImageStore.deleteEntryImages(context, it) }

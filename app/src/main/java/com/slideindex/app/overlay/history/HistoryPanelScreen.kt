@@ -83,7 +83,7 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.savedstate.compose.LocalSavedStateRegistryOwner
 import com.slideindex.app.R
-import com.slideindex.app.clipboard.ClipboardAccess
+import com.slideindex.app.clipboard.ClipboardService
 import com.slideindex.app.clipboard.ClipboardHistoryFilter
 import com.slideindex.app.clipboard.ClipboardThumbnailCache
 import com.slideindex.app.clipboard.ClipboardWriter
@@ -92,7 +92,6 @@ import com.slideindex.app.overlay.StashPanelExternalUi
 import com.slideindex.app.stash.StashAccess
 import com.slideindex.app.stash.StashCoordinator
 import com.slideindex.app.stash.StashEntryType
-import com.slideindex.app.stash.StashReminderScheduler
 import com.slideindex.app.stash.StashRichPart
 import com.slideindex.app.service.StashComposerImageTrampolineActivity
 import com.slideindex.app.service.decodeStashImageFile
@@ -315,7 +314,7 @@ private fun openImageEditorForBlock(
 }
 
 @Composable
-internal fun HistoryPanelScreen(
+fun HistoryPanelScreen(
     gravityEnd: Boolean,
     panelTargetVisible: Boolean,
     panelBlurActive: Boolean = false,
@@ -337,7 +336,7 @@ internal fun HistoryPanelScreen(
     val appContext = remember(context) { context.applicationContext }
     val scope = rememberCoroutineScope()
     val stashRepo = StashAccess.repository
-    val clipboardRepo = ClipboardAccess.repository
+    val clipboardRepo = ClipboardService.query
 
     val stashEntries by viewModel.stashEntries.collectAsStateWithLifecycle()
     val filteredStashEntries by viewModel.filteredStashEntries.collectAsStateWithLifecycle()
@@ -865,7 +864,7 @@ internal fun HistoryPanelScreen(
         val reminderAt = stashMeta.reminderOf(entry.id)
         haptics.confirm()
         scope.launch {
-            StashReminderScheduler.cancel(appContext, entry.id)
+            com.slideindex.app.overlay.panels.PanelStashWriteHooks.reminderCancel?.cancel(appContext, entry.id)
             stashRepo?.delete(entry.id)
             showUndoMessage(R.string.stash_deleted) {
                 scope.launch {
@@ -874,12 +873,8 @@ internal fun HistoryPanelScreen(
                     if (reminderAt != null) {
                         metaRepo?.setReminder(entry.id, reminderAt)
                         if (reminderAt > System.currentTimeMillis()) {
-                            StashReminderScheduler.schedule(
-                                context = appContext,
-                                entryId = entry.id,
-                                atEpochMs = reminderAt,
-                                text = entry.text.orEmpty(),
-                            )
+                            com.slideindex.app.overlay.panels.PanelStashWriteHooks.reminderSchedule
+                                ?.schedule(appContext, entry.id, reminderAt, entry.text.orEmpty())
                         }
                     }
                 }
@@ -913,9 +908,9 @@ internal fun HistoryPanelScreen(
         scope.launch {
             metaRepo?.setReminder(entryId, at)
             if (at == null) {
-                StashReminderScheduler.cancel(appContext, entryId)
+                com.slideindex.app.overlay.panels.PanelStashWriteHooks.reminderCancel?.cancel(appContext, entryId)
             } else {
-                StashReminderScheduler.schedule(
+                com.slideindex.app.overlay.panels.PanelStashWriteHooks.reminderSchedule?.schedule(
                     context = appContext,
                     entryId = entryId,
                     atEpochMs = at,
@@ -929,14 +924,14 @@ internal fun HistoryPanelScreen(
                 scope.launch {
                     metaRepo?.setReminder(entryId, before)
                     if (before != null && before > System.currentTimeMillis()) {
-                        StashReminderScheduler.schedule(
+                        com.slideindex.app.overlay.panels.PanelStashWriteHooks.reminderSchedule?.schedule(
                             context = appContext,
                             entryId = entryId,
                             atEpochMs = before,
                             text = entry?.text.orEmpty(),
                         )
                     } else {
-                        StashReminderScheduler.cancel(appContext, entryId)
+                        com.slideindex.app.overlay.panels.PanelStashWriteHooks.reminderCancel?.cancel(appContext, entryId)
                     }
                     if (editTarget?.entryId == entryId) {
                         editTarget = editTarget?.copy(reminderAtMs = before)
@@ -951,7 +946,7 @@ internal fun HistoryPanelScreen(
         scope.launch {
             if (done) {
                 // 设计稿：`if (s.done) s.remind = null` —— 完成即取消提醒，否则到点还响。
-                StashReminderScheduler.cancel(appContext, entry.id)
+                com.slideindex.app.overlay.panels.PanelStashWriteHooks.reminderCancel?.cancel(appContext, entry.id)
                 if (reminderAt != null) metaRepo?.setReminder(entry.id, null)
             }
             metaRepo?.setDone(entry.id, done)
@@ -962,7 +957,7 @@ internal fun HistoryPanelScreen(
                     metaRepo?.setDone(entry.id, !done)
                     if (done && reminderAt != null && reminderAt > System.currentTimeMillis()) {
                         metaRepo?.setReminder(entry.id, reminderAt)
-                        StashReminderScheduler.schedule(
+                        com.slideindex.app.overlay.panels.PanelStashWriteHooks.reminderSchedule?.schedule(
                             context = appContext,
                             entryId = entry.id,
                             atEpochMs = reminderAt,
@@ -989,7 +984,7 @@ internal fun HistoryPanelScreen(
         composerReminderAt?.let { at ->
             scope.launch {
                 metaRepo?.setReminder(newEntryId, at)
-                StashReminderScheduler.schedule(
+                com.slideindex.app.overlay.panels.PanelStashWriteHooks.reminderSchedule?.schedule(
                     context = appContext,
                     entryId = newEntryId,
                     atEpochMs = at,
@@ -1137,7 +1132,7 @@ internal fun HistoryPanelScreen(
         val texts = stashEntries.associate { entry ->
             entry.id to (entry.text ?: entry.combinedText())
         }
-        StashReminderScheduler.rescheduleAll(appContext, reminders) { entryId ->
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.reminderRescheduleAll?.rescheduleAll(appContext, reminders) { entryId ->
             texts[entryId].orEmpty()
         }
     }
@@ -2340,7 +2335,7 @@ private fun HistoryClipboardTabBody(
     isActive: Boolean,
     panelBlurActive: Boolean,
     loading: Boolean,
-    clipboardRepo: com.slideindex.app.clipboard.ClipboardHistoryRepository?,
+    clipboardRepo: com.slideindex.app.clipboard.ClipboardHistoryQuery?,
     expandedEntryIds: Set<String>,
     selectedImageIndices: Map<String, Int>,
     onToggleExpanded: (String) -> Unit,

@@ -41,9 +41,6 @@ import com.slideindex.app.clipboard.hasImageContent
 import com.slideindex.app.clipboard.hasRichPinContent
 import com.slideindex.app.clipboard.resolvedContentBlocks
 import com.slideindex.app.clipboard.shouldOfferExpand
-import com.slideindex.app.overlay.FloatBallStashPanel
-import com.slideindex.app.overlay.FloatBallTextPick
-import com.slideindex.app.overlay.PickResultFromHistoryCoordinator
 import com.slideindex.app.overlay.dragdrop.DragFlowSource
 import com.slideindex.app.stash.StashAccess
 import com.slideindex.app.stash.StashCoordinator
@@ -67,12 +64,12 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * 拖拽结束后由流转栏按落点调用（见 [com.slideindex.app.overlay.dragdrop.DragFlowSession]）。
  */
 private fun stashPanelDragFlowSource() = DragFlowSource(
-    onRestore = { FloatBallStashPanel.setDragHidden(false) },
-    onDiscard = { FloatBallStashPanel.dismiss() },
+    onRestore = { com.slideindex.app.overlay.panels.PanelStashWriteHooks.setStashDragHidden?.invoke(false) },
+    onDiscard = { com.slideindex.app.overlay.panels.PanelFloatBallHooks.dismissStashPanel?.invoke() },
 )
 
 @Composable
-internal fun HistoryClipboardEntryCard(
+fun HistoryClipboardEntryCard(
     entry: ClipboardEntry,
     expanded: Boolean,
     onExpandedChange: () -> Unit,
@@ -149,8 +146,8 @@ internal fun HistoryClipboardEntryCard(
                     clipData = clipData,
                     preview = HistoryEntryDragHelper.previewForClipboardEntry(entry, thumbnails)
                         .copy(snapshot = dragSnapshot.capture()),
-                    onDragStart = { FloatBallStashPanel.setDragHidden(true) },
-                    onDragEnd = { FloatBallStashPanel.setDragHidden(false) },
+                    onDragStart = { com.slideindex.app.overlay.panels.PanelStashWriteHooks.setStashDragHidden?.invoke(true) },
+                    onDragEnd = { com.slideindex.app.overlay.panels.PanelStashWriteHooks.setStashDragHidden?.invoke(false) },
                     onDropRejected = {
                         if (ClipboardDragShareFallback.hasShareableContent(clipData) &&
                             !ClipboardDragShareFallback.shareToForegroundHost(context, clipData)
@@ -178,7 +175,7 @@ internal fun HistoryClipboardEntryCard(
         headerTrailing = {
             IconButton(
                 onClick = {
-                    PickResultFromHistoryCoordinator.openFromClipboard(
+                    com.slideindex.app.overlay.panels.PanelStashWriteHooks.openPickResultFromClipboard?.invoke(
                         context,
                         entry,
                         selectedImageIndex,
@@ -282,7 +279,7 @@ internal fun HistoryClipboardEntryCard(
                                 icon = Icons.Outlined.Share,
                                 onClick = {
                                     haptics.tick()
-                                    FloatBallTextPick.shareScreenshot(context, selectedBitmap) { onDismissPanel() }
+                                    com.slideindex.app.overlay.panels.PanelStashWriteHooks.shareScreenshot?.invoke(context, selectedBitmap) { onDismissPanel() }
                                 },
                             ),
                         )
@@ -292,7 +289,7 @@ internal fun HistoryClipboardEntryCard(
                                 icon = Icons.Outlined.Save,
                                 onClick = {
                                     haptics.tick()
-                                    val saved = FloatBallTextPick.saveScreenshot(context, selectedBitmap)
+                                    val saved = com.slideindex.app.overlay.panels.PanelStashWriteHooks.saveScreenshot?.invoke(context, selectedBitmap) == true
                                     onShowMessage(
                                         if (saved) R.string.float_ball_screenshot_saved else R.string.float_ball_action_failed,
                                     )
@@ -306,7 +303,7 @@ internal fun HistoryClipboardEntryCard(
                                 icon = Icons.Outlined.Share,
                                 onClick = {
                                     haptics.tick()
-                                    FloatBallTextPick.shareText(context, bodyText) { onDismissPanel() }
+                                    com.slideindex.app.overlay.panels.PanelStashWriteHooks.shareText?.invoke(context, bodyText) { onDismissPanel() }
                                 },
                             ),
                         )
@@ -327,7 +324,7 @@ internal fun HistoryClipboardEntryCard(
 }
 
 @Composable
-internal fun HistoryStashEntryCard(
+fun HistoryStashEntryCard(
     entry: StashEntry,
     expanded: Boolean,
     onExpandedChange: () -> Unit,
@@ -452,15 +449,15 @@ internal fun HistoryStashEntryCard(
             StashEntryType.RICH -> selectedImageIndex
             else -> 0
         }
-        PickResultFromHistoryCoordinator.openFromStash(context, entry, imageIndex)
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.openPickResultFromStash?.invoke(context, entry, imageIndex)
     }
     val shareEntry: () -> Unit = {
         when {
             entry.type == StashEntryType.RICH && !expanded && richHasImages && richSelectedBitmap != null -> {
-                FloatBallTextPick.shareScreenshot(context, richSelectedBitmap) { onDismissPanel() }
+                com.slideindex.app.overlay.panels.PanelStashWriteHooks.shareScreenshot?.invoke(context, richSelectedBitmap) { onDismissPanel() }
             }
             entry.type == StashEntryType.RICH && !expanded && exportText.isNotBlank() -> {
-                FloatBallTextPick.shareText(context, exportText) { onDismissPanel() }
+                com.slideindex.app.overlay.panels.PanelStashWriteHooks.shareText?.invoke(context, exportText) { onDismissPanel() }
             }
             else -> onShare()
         }
@@ -479,8 +476,8 @@ internal fun HistoryStashEntryCard(
                     clipData = clipData,
                     preview = HistoryEntryDragHelper.previewForStashEntry(entry, singleThumb, richThumbnails)
                         .copy(snapshot = dragSnapshot.capture()),
-                    onDragStart = { FloatBallStashPanel.setDragHidden(true) },
-                    onDragEnd = { FloatBallStashPanel.setDragHidden(false) },
+                    onDragStart = { com.slideindex.app.overlay.panels.PanelStashWriteHooks.setStashDragHidden?.invoke(true) },
+                    onDragEnd = { com.slideindex.app.overlay.panels.PanelStashWriteHooks.setStashDragHidden?.invoke(false) },
                     onDropRejected = {
                         if (ClipboardDragShareFallback.hasShareableContent(clipData) &&
                             !ClipboardDragShareFallback.shareToForegroundHost(context, clipData)
@@ -698,7 +695,7 @@ internal fun HistoryStashEntryCard(
                                 icon = Icons.Outlined.Save,
                                 onClick = {
                                     haptics.tick()
-                                    val saved = FloatBallTextPick.saveScreenshot(context, richSelectedBitmap)
+                                    val saved = com.slideindex.app.overlay.panels.PanelStashWriteHooks.saveScreenshot?.invoke(context, richSelectedBitmap) == true
                                     onShowMessage(
                                         if (saved) R.string.float_ball_screenshot_saved else R.string.float_ball_action_failed,
                                     )

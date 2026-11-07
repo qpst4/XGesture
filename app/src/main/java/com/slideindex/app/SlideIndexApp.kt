@@ -282,6 +282,54 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
             if (repo == null) emptyList() else
                 com.slideindex.app.ui.picker.PickerApps.fromCached(ctx, repo, freezer)
         }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.reminderCancel = com.slideindex.app.overlay.panels.ReminderCancelHook { ctx, id ->
+            com.slideindex.app.stash.StashReminderScheduler.cancel(ctx, id)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.reminderSchedule = com.slideindex.app.overlay.panels.ReminderScheduleHook { ctx, id, at, text ->
+            com.slideindex.app.stash.StashReminderScheduler.schedule(ctx, id, at, text)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.reminderRescheduleAll = com.slideindex.app.overlay.panels.ReminderRescheduleAllHook { ctx, reminders, textOf ->
+            com.slideindex.app.stash.StashReminderScheduler.rescheduleAll(ctx, reminders, textOf)
+        }
+        com.slideindex.app.stash.StashReminderScheduling.rescheduleAll = { ctx, reminders, textOf ->
+            com.slideindex.app.stash.StashReminderScheduler.rescheduleAll(ctx, reminders, textOf)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.setStashDragHidden = { hidden ->
+            com.slideindex.app.overlay.FloatBallStashPanel.setDragHidden(hidden)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.shareText = { ctx, text, onDone ->
+            com.slideindex.app.overlay.FloatBallTextPick.shareText(ctx, text, onDone)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.shareScreenshot = { ctx, bitmap, onDone ->
+            com.slideindex.app.overlay.FloatBallTextPick.shareScreenshot(ctx, bitmap, onDone)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.saveScreenshot = { ctx, bitmap ->
+            com.slideindex.app.overlay.FloatBallTextPick.saveScreenshot(ctx, bitmap)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.openPickResultFromClipboard = { ctx, entry, index ->
+            com.slideindex.app.overlay.PickResultFromHistoryCoordinator.openFromClipboard(ctx, entry, index)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.openPickResultFromStash = { ctx, entry, index ->
+            com.slideindex.app.overlay.PickResultFromHistoryCoordinator.openFromStash(ctx, entry, index)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.setStashPanelWidthMode = { mode ->
+            hookScope.launch {
+                com.slideindex.app.di.OverlayDependencyAccess
+                    .overlayDependencies(this@SlideIndexApp)
+                    ?.settingsRepository
+                    ?.setStashPanelWidthMode(
+                        com.slideindex.app.settings.StashPanelWidthMode.entries[mode],
+                    )
+            }
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.setStashPanelCustomWidthFraction = { f ->
+            hookScope.launch {
+                com.slideindex.app.di.OverlayDependencyAccess
+                    .overlayDependencies(this@SlideIndexApp)
+                    ?.settingsRepository
+                    ?.setStashPanelCustomWidthFraction(f)
+            }
+        }
         com.slideindex.app.stash.StashReminderScheduling.schedule = { ctx, entryId, atEpochMs, text ->
             com.slideindex.app.stash.StashReminderScheduler.schedule(ctx, entryId, atEpochMs, text)
         }

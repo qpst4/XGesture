@@ -37,6 +37,9 @@ interface ClipboardHistoryQuery {
         skipWhenListening: Boolean = false,
     ) = Unit
 
+    /** 删除一条（`:app` 负责真正落库）。 */
+    suspend fun delete(id: String) = Unit
+
     /** 最近一条（用于面板首屏）。 */
     suspend fun peekLatest(): ClipboardEntry?
 }
