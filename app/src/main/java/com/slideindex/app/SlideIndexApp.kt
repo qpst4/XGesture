@@ -235,6 +235,21 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 scope = if (cornerWheel) com.slideindex.app.util.OverlaySuppressionScope.CORNER_WHEEL else com.slideindex.app.util.OverlaySuppressionScope.TRIGGER,
             )
         }
+        com.slideindex.app.overlay.panels.PanelFloatBallHooks.enterFreeMoveMode = {
+            com.slideindex.app.overlay.FloatBallOverlay.enterFreeMoveMode()
+        }
+        com.slideindex.app.overlay.panels.PanelFloatBallHooks.hideChromeForRingLauncher = {
+            com.slideindex.app.overlay.FloatBallOverlay.hideChromeForRingLauncher()
+        }
+        com.slideindex.app.overlay.panels.PanelFloatBallHooks.restoreChromeAfterRingLauncher = {
+            com.slideindex.app.overlay.FloatBallOverlay.restoreChromeAfterRingLauncher()
+        }
+        com.slideindex.app.overlay.panels.PanelFloatBallHooks.suppressTouchHostsForActiveLauncherOverlay = {
+            com.slideindex.app.overlay.FloatBallOverlay.suppressTouchHostsForActiveLauncherOverlay()
+        }
+        com.slideindex.app.overlay.panels.PanelFloatBallHooks.overlayLayoutMetrics = { settings ->
+            com.slideindex.app.overlay.FloatBallOverlay.overlayLayoutMetrics(settings) ?: (1f to 1080f)
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot = { ctx ->
             com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(ctx)
                 ?.settingsRepository

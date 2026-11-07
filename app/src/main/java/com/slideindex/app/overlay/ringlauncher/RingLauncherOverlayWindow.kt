@@ -77,7 +77,7 @@ object RingLauncherOverlayWindow {
         // 圆环让位给外部编辑页（自定义图标等）时，悬浮球要还回来：
         // 球本来只在**圆环展示期间**才需要收起（避免挡住圆环与它的触摸），
         // 编辑页是普通页面，球消失反而是 bug（真机反馈：一进自定义图标页球就没了）。
-        FloatBallOverlay.restoreChromeAfterRingLauncher()
+        com.slideindex.app.overlay.panels.PanelFloatBallHooks.restoreChromeAfterRingLauncher?.invoke()
     }
 
     fun resumeAfterSlotIconEditor() {
@@ -90,9 +90,9 @@ object RingLauncherOverlayWindow {
         // 圆环回到屏幕上了 → 按原设计重新收起悬浮球；若圆环没能恢复（比如已被释放），则把球还回来，
         // 避免出现"圆环没了、球也没了"的悬挂状态。
         if (isShowing) {
-            FloatBallOverlay.hideChromeForRingLauncher()
+            com.slideindex.app.overlay.panels.PanelFloatBallHooks.hideChromeForRingLauncher?.invoke()
         } else {
-            FloatBallOverlay.restoreChromeAfterRingLauncher()
+            com.slideindex.app.overlay.panels.PanelFloatBallHooks.restoreChromeAfterRingLauncher?.invoke()
         }
     }
 
@@ -239,7 +239,9 @@ object RingLauncherOverlayWindow {
         val appsByPackage = apps.associateBy { it.packageName }
 
         val wm = hostContext.getSystemService(android.view.WindowManager::class.java)
-        val (density, screenWidth) = FloatBallOverlay.overlayLayoutMetrics(settings)
+        val (density, screenWidth) = com.slideindex.app.overlay.panels.PanelFloatBallHooks.overlayLayoutMetrics?.invoke(settings)
+            ?: (context.resources.displayMetrics.density to
+                context.resources.displayMetrics.widthPixels.toFloat())
             ?: run {
                 val layoutMetrics = OverlayDisplayMetrics.resolve(hostContext, wm, null)
                 layoutMetrics.density to OverlayDisplayMetrics.screenWidthPx(hostContext, wm, layoutMetrics)
@@ -312,7 +314,7 @@ object RingLauncherOverlayWindow {
             }
         }
 
-        FloatBallOverlay.hideChromeForRingLauncher()
+        com.slideindex.app.overlay.panels.PanelFloatBallHooks.hideChromeForRingLauncher?.invoke()
 
         val shown = overlayController.show(
             settings = settings,
@@ -478,7 +480,7 @@ object RingLauncherOverlayWindow {
         )
         if (!shown) {
             Log.w(TAG, "show: overlayController.show returned false")
-            FloatBallOverlay.restoreChromeAfterRingLauncher()
+            com.slideindex.app.overlay.panels.PanelFloatBallHooks.restoreChromeAfterRingLauncher?.invoke()
             return false
         }
 
@@ -491,7 +493,7 @@ object RingLauncherOverlayWindow {
             overlayController.externalMove(resolvedAutoSelectOriginX, resolvedAutoSelectOriginY)
         } else {
             overlayController.pinForLeaveOpen()
-            FloatBallOverlay.suppressTouchHostsForActiveLauncherOverlay()
+            com.slideindex.app.overlay.panels.PanelFloatBallHooks.suppressTouchHostsForActiveLauncherOverlay?.invoke()
         }
         if (appRepository != null && targets.any { it?.icon == null }) {
             HoneycombIconLoader.loadMissingIconsAsync(
@@ -546,7 +548,7 @@ object RingLauncherOverlayWindow {
             persistAfterPin = true
         }
         if (overlayController?.isVisible() == true) {
-            FloatBallOverlay.suppressTouchHostsForActiveLauncherOverlay()
+            com.slideindex.app.overlay.panels.PanelFloatBallHooks.suppressTouchHostsForActiveLauncherOverlay?.invoke()
         }
     }
 
@@ -748,7 +750,7 @@ object RingLauncherOverlayWindow {
     }
 
     private fun releaseOverlayState() {
-        FloatBallOverlay.restoreChromeAfterRingLauncher()
+        com.slideindex.app.overlay.panels.PanelFloatBallHooks.restoreChromeAfterRingLauncher?.invoke()
         controller = null
         appContext = null
         externalTracking = false

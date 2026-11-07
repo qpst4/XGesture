@@ -489,7 +489,7 @@ internal class RingLauncherOverlayView(
                 dismissPanel()
                 // 「移动」＝把悬浮球切到自由位置模式（保持当前所在位置），之后在屏幕上拖动球即可移动它。
                 // 原先这里只是 dismissPanel()，与「−」完全重复，等于没做功能。
-                FloatBallOverlay.enterFreeMoveMode()
+                com.slideindex.app.overlay.panels.PanelFloatBallHooks.enterFreeMoveMode?.invoke()
                 return true
             }
             toolbarButton == FvToolbarButton.SETTINGS -> {
