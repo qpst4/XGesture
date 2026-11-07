@@ -25,7 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.clipboard.ClipboardBlockKind
 import com.slideindex.app.clipboard.ClipboardContentBlock
 import com.slideindex.app.clipboard.ClipboardThumbnailCache
