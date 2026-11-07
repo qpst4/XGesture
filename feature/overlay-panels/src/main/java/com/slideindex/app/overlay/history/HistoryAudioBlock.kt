@@ -34,7 +34,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.clipboard.formatAudioDuration
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
@@ -55,7 +55,7 @@ import top.yukonga.miuix.kmp.basic.Text
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun HistoryAudioBlockCapsule(
+fun HistoryAudioBlockCapsule(
     /** 已经解析过的**可播放绝对路径**（文件名 → 路径那一步由调用方做）。 */
     path: String,
     durationMs: Long,
@@ -197,7 +197,7 @@ internal fun HistoryAudioBlockCapsule(
  * （`positionInParent` 相对块列表，滚动时不变）。
  */
 @Composable
-internal fun DraftBlockEditorAudio(
+fun DraftBlockEditorAudio(
     path: String,
     durationMs: Long,
     onRemove: () -> Unit,

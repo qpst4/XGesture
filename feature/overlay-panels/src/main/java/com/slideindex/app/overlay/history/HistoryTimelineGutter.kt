@@ -31,7 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.stash.StashEntry
 import kotlinx.coroutines.delay
 import top.yukonga.miuix.kmp.basic.Icon
@@ -51,7 +51,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * ⚠️ 设计稿里节点是 `left:-8.5px`、竖线在 54px（两者中心差 2.25dp，是设计稿自己的
  * 取整）。这里把节点**中心对齐到竖线**，比照抄坐标更整齐。
  */
-internal val HistoryTimelineGutterWidth = 62.dp
+val HistoryTimelineGutterWidth = 62.dp
 
 private val TimelineLineX = 54.dp
 private val TimelineLineWidth = 1.5.dp
@@ -89,7 +89,7 @@ private val TimelineTimeRowItemGap = 7.dp
  * [staggerDelayMs] = 首屏错开淡入的延迟（0 = 不播，见 [rememberTimelineReveal]）。
  */
 @Composable
-internal fun HistoryTimelineGroupHeader(
+fun HistoryTimelineGroupHeader(
     group: HistoryDayGroup,
     lineAlpha: Float,
     staggerDelayMs: Int = 0,
@@ -148,7 +148,7 @@ internal fun HistoryTimelineGroupHeader(
  * 而那其实只说明"它响过了、你还没处理"。默认 false 让既有调用点不用改。
  */
 @Composable
-internal fun HistoryTimelineEntryRow(
+fun HistoryTimelineEntryRow(
     entry: StashEntry,
     group: HistoryDayGroup,
     lineAlpha: Float,
@@ -279,10 +279,10 @@ private fun historyDayGroupLabelRes(group: HistoryDayGroup): Int = when (group) 
 }
 
 /** 首屏错开淡入：一行的步长（列表里第 n 行延迟 n × 这个值）。 */
-internal const val HistoryRowStaggerStepMs = 40
+const val HistoryRowStaggerStepMs = 40
 
 /** 只对首屏这么多行做错开（设计稿列表只 stagger 首屏；再多会和 Lazy 虚拟化打架）。 */
-internal const val HistoryRowStaggerMaxCount = 8
+const val HistoryRowStaggerMaxCount = 8
 
 /** 设计稿 `.item .remind svg { width: 11px }`。 */
 private val TimelineReminderIconSize = 11.dp

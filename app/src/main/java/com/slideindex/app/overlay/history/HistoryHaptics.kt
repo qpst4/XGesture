@@ -23,7 +23,7 @@ import com.slideindex.app.util.HapticHelper
  * settings 用 overlay 里通行的 `OverlayDependencyAccess` 订阅
  * （同 `PickResultInteractiveText` / `PickResultPanelChrome`）。
  */
-internal class HistoryHaptics(
+class HistoryHaptics(
     private val view: View,
     private val settings: AppSettings,
 ) {
@@ -44,7 +44,7 @@ internal class HistoryHaptics(
 }
 
 @Composable
-internal fun rememberHistoryHaptics(): HistoryHaptics {
+fun rememberHistoryHaptics(): HistoryHaptics {
     val view = LocalView.current
     val context = LocalContext.current.applicationContext
     var settings by remember { mutableStateOf(AppSettings()) }

@@ -61,7 +61,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 
 /**
  * 面板头部 —— **逐条对齐设计稿 `.stream .head`**：
@@ -83,7 +83,7 @@ import com.slideindex.app.R
  * 想关面板就只能靠点空白或返回键。
  */
 @Composable
-internal fun HistoryPanelHeader(
+fun HistoryPanelHeader(
     tabLabels: List<String>,
     selectedTabIndex: Int,
     onTabSelected: (Int) -> Unit,
@@ -366,7 +366,7 @@ private fun HistorySearchField(
 
 /** `.stream .x`：40×40 圆、透明底、sub 色。标签管理浮窗的关闭键也复用它（[size] 可按需收小）。 */
 @Composable
-internal fun HistoryHeaderCircleButton(
+fun HistoryHeaderCircleButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     contentDescription: String?,
     onClick: () -> Unit,
@@ -473,7 +473,7 @@ private fun HistoryPanelTabs(
  * [mini] 对应 `.chip.mini`（h22，用在卡片脚注的标签上）。
  */
 @Composable
-internal fun HistoryChip(
+fun HistoryChip(
     label: String,
     dotColor: Color?,
     selected: Boolean,
@@ -547,7 +547,7 @@ internal fun HistoryChip(
 
 /** `.chip.mini.ghost`：脚注里的来源（暂存 / 剪贴板 / 图片 / 取词）。 */
 @Composable
-internal fun HistorySourceChip(label: String, modifier: Modifier = Modifier) {
+fun HistorySourceChip(label: String, modifier: Modifier = Modifier) {
     HistoryChip(
         label = label,
         dotColor = null,
