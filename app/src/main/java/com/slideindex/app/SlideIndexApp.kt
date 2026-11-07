@@ -279,6 +279,48 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
             if (repo == null) emptyList() else
                 com.slideindex.app.ui.picker.PickerApps.fromCached(ctx, repo, freezer)
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.swapRingLauncherSlots = { axis, from, to ->
+            hookScope.launch {
+                com.slideindex.app.di.OverlayDependencyAccess
+                    .overlayDependencies(this@SlideIndexApp)
+                    ?.settingsRepository
+                    ?.swapFvRingLauncherSlots(axis, from, to)
+            }
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.persistRingLauncherCircleCount = { axis, count ->
+            hookScope.launch {
+                com.slideindex.app.di.OverlayDependencyAccess
+                    .overlayDependencies(this@SlideIndexApp)
+                    ?.settingsRepository
+                    ?.setFvRingLauncherCircleCount(axis, count)
+            }
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.persistRingLauncherSettings = { axis, settings ->
+            hookScope.launch {
+                com.slideindex.app.di.OverlayDependencyAccess
+                    .overlayDependencies(this@SlideIndexApp)
+                    ?.settingsRepository
+                    ?.setFvRingLauncherSettings(axis, settings)
+            }
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.persistRingLauncherLinkAppearanceAxes =
+            { enabled, axis, mergeDirection ->
+                hookScope.launch {
+                    com.slideindex.app.di.OverlayDependencyAccess
+                        .overlayDependencies(this@SlideIndexApp)
+                        ?.settingsRepository
+                        ?.setFvRingLauncherLinkAppearanceAxes(enabled, axis, mergeDirection)
+                }
+            }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.persistRingLauncherLinkSlotAxes =
+            { enabled, axis, mergeDirection ->
+                hookScope.launch {
+                    com.slideindex.app.di.OverlayDependencyAccess
+                        .overlayDependencies(this@SlideIndexApp)
+                        ?.settingsRepository
+                        ?.setFvRingLauncherLinkSlotAxes(enabled, axis, mergeDirection)
+                }
+            }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.persistRingLauncherSlot = { axis, slotIndex, item ->
             hookScope.launch {
                 com.slideindex.app.di.OverlayDependencyAccess

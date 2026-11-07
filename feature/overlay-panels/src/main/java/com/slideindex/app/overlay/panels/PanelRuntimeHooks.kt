@@ -131,7 +131,36 @@ object PanelRuntimeHooks {
     var quickLauncherLabel:
         ((Context, com.slideindex.app.launcher.QuickLauncherItem, Map<String, com.slideindex.app.data.AppInfo>) -> String?)? =
         null
-        /** 环状启动器槽位配置面板内容（`:app` 的 RingLauncherSlotConfigSheet）。 */
+        /** 环状启动器：交换两个槽位。 */
+    @Volatile
+    var swapRingLauncherSlots: ((com.slideindex.app.settings.FvRingLauncherAxis, Int, Int) -> Unit)? = null
+    /** 环状启动器：写回圆形数量。 */
+    @Volatile
+    var persistRingLauncherCircleCount: ((com.slideindex.app.settings.FvRingLauncherAxis, Int) -> Unit)? = null
+
+    /** 环状启动器：写回整套设置。 */
+    @Volatile
+    var persistRingLauncherSettings:
+        ((com.slideindex.app.settings.FvRingLauncherAxis, com.slideindex.app.settings.FvRingLauncherSettings) -> Unit)? = null
+
+    /** 环状启动器：写回"外观联动轴"设置。 */
+    @Volatile
+    var persistRingLauncherLinkAppearanceAxes:
+        ((
+            Boolean,
+            com.slideindex.app.settings.FvRingLauncherAxis,
+            com.slideindex.app.settings.FvRingLauncherAxisMergeDirection?,
+        ) -> Unit)? = null
+
+    /** 环状启动器：写回"槽位联动轴"设置。 */
+    @Volatile
+    var persistRingLauncherLinkSlotAxes:
+        ((
+            Boolean,
+            com.slideindex.app.settings.FvRingLauncherAxis,
+            com.slideindex.app.settings.FvRingLauncherAxisMergeDirection?,
+        ) -> Unit)? = null
+    /** 环状启动器槽位配置面板内容（`:app` 的 RingLauncherSlotConfigSheet）。 */
     @Volatile
     var ringSlotConfigSheetContent: RingSlotConfigSheetContent? = null
     /** 环状启动器槽位配置用的应用列表（含分身/冻结状态）。 */
