@@ -122,7 +122,8 @@ private fun SettingsCardScope.ExternalInvocationDeeplinkRow(
         append(uri)
         if (entry.supportsQuery) {
             append('\n')
-            append(stringResource(R.string.external_invocation_query_example, "${QUERY_PARAM}=关键词"))
+            val keywordExample = stringResource(R.string.external_invocation_keyword_example).trim().trim('"', '«', '»')
+            append(stringResource(R.string.external_invocation_query_example, "${QUERY_PARAM}=$keywordExample"))
         }
     }
     ExternalInvocationCopyRow(
