@@ -20,7 +20,8 @@ object FvRingLauncherSlotIconStorage {
         if (packageName.isBlank()) return null
         // 全局图标覆盖优先（扩展 → 图标库 → 应用图标）：
         // 用户「从应用选图标」时，落快照的应该是他当前看到的那张图。
-        val drawable = com.slideindex.app.ui.AppIconOverride.drawable(context, packageName, 128)
+        val drawable = com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideDrawable
+            ?.invoke(context, packageName, 128)
             ?: runCatching { context.packageManager.getApplicationIcon(packageName) }.getOrNull()
             ?: return null
         val bytes = ByteArrayOutputStream().use { stream ->
