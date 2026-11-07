@@ -288,6 +288,56 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.stash.StashReminderScheduling.cancel = { ctx, entryId ->
             com.slideindex.app.stash.StashReminderScheduler.cancel(ctx, entryId)
         }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.writeRichBlocks =
+            { ctx, blocks, html, dataUri, contentUri, dims ->
+                com.slideindex.app.clipboard.ClipboardWriter.writeBlocks(
+                    context = ctx,
+                    blocks = blocks,
+                    htmlText = html,
+                    resolveDataUri = dataUri,
+                    resolveContentUri = { name -> contentUri(name) },
+                    resolveDimensions = dims,
+                )
+            }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.beginHandleReveal = { ctx, tab, side ->
+            com.slideindex.app.overlay.FloatBallStashPanel.beginDragReveal(
+                ctx,
+                com.slideindex.app.overlay.StashPanelInitialTab.entries[tab],
+                side,
+            )
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.endHandleReveal = { commit ->
+            com.slideindex.app.overlay.FloatBallStashPanel.endDragReveal(commit)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.copyText = { ctx, text ->
+            com.slideindex.app.overlay.FloatBallTextPick.copyText(ctx, text)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.copyImage = { ctx, bitmap ->
+            com.slideindex.app.overlay.FloatBallTextPick.copyImage(ctx, bitmap)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.showStashPanel = { ctx, side ->
+            com.slideindex.app.overlay.FloatBallStashPanel.show(ctx, panelSide = side)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.pinText = { ctx, text ->
+            com.slideindex.app.overlay.ScreenPinManager.pinText(ctx, text)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.pinImage = { ctx, bitmap, rect, meta ->
+            com.slideindex.app.overlay.ScreenPinManager.pinImage(
+                ctx,
+                bitmap,
+                rect,
+                meta as? com.slideindex.app.overlay.ScreenshotLayoutMeta,
+            )
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.pinClipboardEntry = { ctx, entry ->
+            com.slideindex.app.overlay.ScreenPinManager.pinClipboardEntry(ctx, entry)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.pinFromStashImage = { ctx, entry, bitmap ->
+            com.slideindex.app.overlay.ScreenPinManager.pinFromStashImage(ctx, bitmap)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.pinStashRich = { ctx, entry ->
+            com.slideindex.app.overlay.ScreenPinManager.pinStashRich(ctx, entry)
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.addStashRich =
             { parts, html, source, onDone, onSaved ->
                 com.slideindex.app.stash.StashCoordinator.addRich(

@@ -6,15 +6,10 @@ import android.graphics.Rect
 import com.slideindex.app.clipboard.ClipboardBlockKind
 import com.slideindex.app.clipboard.ClipboardEntry
 import com.slideindex.app.clipboard.ClipboardImageStore
-import com.slideindex.app.clipboard.ClipboardWriter
 import com.slideindex.app.clipboard.hasImageContent
 import com.slideindex.app.clipboard.resolvedContentBlocks
-import com.slideindex.app.overlay.FloatBallStashPanel
 import com.slideindex.app.overlay.PanelSide
 import com.slideindex.app.overlay.StashPanelInitialTab
-import com.slideindex.app.overlay.FloatBallTextPick
-import com.slideindex.app.overlay.ScreenPinManager
-import com.slideindex.app.overlay.ScreenshotLayoutMeta
 import com.slideindex.app.overlay.history.HistorySaveSignal
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -206,16 +201,15 @@ object StashCoordinator {
     }
 
     fun pinImageFromStash(context: Context, entry: StashEntry, bitmap: Bitmap) {
-        ScreenPinManager.pinFromStashImage(
-            context = context,
-            bitmap = bitmap,
-            displayWidthPx = entry.pinDisplayWidthPx,
-            displayHeightPx = entry.pinDisplayHeightPx
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.pinFromStashImage?.invoke(
+            context,
+            entry,
+            bitmap,
         )
     }
 
     fun pinRichFromStash(context: Context, entry: StashEntry) {
-        ScreenPinManager.pinStashRich(context, entry)
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.pinStashRich?.invoke(context, entry)
     }
 
     fun copyStashEntry(context: Context, entry: StashEntry): Boolean {
@@ -224,56 +218,54 @@ object StashCoordinator {
             StashEntryType.TEXT -> {
                 val text = entry.text.orEmpty()
                 if (text.isBlank()) return false
-                FloatBallTextPick.copyText(context, text)
+                com.slideindex.app.overlay.panels.PanelStashWriteHooks.copyText?.invoke(context, text)
                 true
             }
             StashEntryType.IMAGE -> {
                 val bitmap = repo?.loadImage(entry) ?: return false
-                FloatBallTextPick.copyImage(context, bitmap)
+                com.slideindex.app.overlay.panels.PanelStashWriteHooks.copyImage?.invoke(context, bitmap)
                 true
             }
             StashEntryType.RICH -> {
                 val blocks = entry.resolvedContentBlocks()
                 if (blocks.isEmpty()) return false
-                ClipboardWriter.writeBlocks(
-                    context = context,
-                    blocks = blocks,
-                    htmlText = entry.htmlText,
-                    resolveDataUri = { fileName -> repo?.dataUriForFile(fileName) },
-                    resolveContentUri = { fileName -> repo?.uriForFile(fileName) },
-                    resolveDimensions = { fileName -> repo?.imageDimensions(fileName) }
+                com.slideindex.app.overlay.panels.PanelStashWriteHooks.writeRichBlocks?.invoke(
+                    context,
+                    blocks,
+                    entry.htmlText,
+                    { fileName -> repo?.dataUriForFile(fileName) },
+                    { fileName -> repo?.uriForFile(fileName) },
+                    { fileName -> repo?.imageDimensions(fileName) },
                 )
+                true
             }
         }
     }
 
     fun openStashPanel(context: Context, panelSide: PanelSide? = null) {
-        FloatBallStashPanel.show(context, panelSide = panelSide)
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.showStashPanel?.invoke(context, panelSide)
     }
 
     fun openClipboardPanel(context: Context, panelSide: PanelSide? = null) {
-        FloatBallStashPanel.show(
-            context = context,
-            initialTab = StashPanelInitialTab.Clipboard,
-            panelSide = panelSide,
-        )
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.showClipboardPanel
+            ?.invoke(context, panelSide)
     }
 
     fun pinTextToScreen(context: Context, text: String) {
-        ScreenPinManager.pinText(context, text)
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.pinText?.invoke(context, text)
     }
 
     fun pinImageToScreen(
         context: Context,
         bitmap: Bitmap,
         screenRect: Rect? = null,
-        layoutMeta: ScreenshotLayoutMeta? = null
+        layoutMeta: Any? = null
     ) {
-        ScreenPinManager.pinImage(context, bitmap, screenRect, layoutMeta)
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.pinImage?.invoke(context, bitmap, screenRect, layoutMeta)
     }
 
     fun pinRichFromClipboard(context: Context, entry: ClipboardEntry) {
-        ScreenPinManager.pinClipboardEntry(context, entry)
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.pinClipboardEntry?.invoke(context, entry)
     }
 
     /**
@@ -288,11 +280,12 @@ object StashCoordinator {
         context: Context,
         initialTab: StashPanelInitialTab,
         panelSide: PanelSide? = null,
-    ): Boolean = FloatBallStashPanel.beginDragReveal(context, initialTab, panelSide)
+    ): Boolean = com.slideindex.app.overlay.panels.PanelStashWriteHooks.beginHandleReveal
+        ?.invoke(context, initialTab.ordinal, panelSide) == true
 
     /** 跟手拉出：松手（[commit] = 过半就归位，否则弹回）。 */
     fun endHandleReveal(commit: Boolean) {
-        FloatBallStashPanel.endDragReveal(commit)
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.endHandleReveal?.invoke(commit)
     }
 
     fun addFromClipboard(context: Context, entry: ClipboardEntry, onDone: (Boolean) -> Unit = {}) {

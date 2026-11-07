@@ -18,10 +18,6 @@ import com.slideindex.app.overlay.history.StashPanelLaunchState
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
 
-enum class StashPanelInitialTab {
-    Stash,
-    Clipboard,
-}
 
 /**
  * Stash / clipboard side panel. Window lifecycle is handled by [OverlaySidePanelHost].
