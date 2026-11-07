@@ -384,6 +384,7 @@ dependencies {
     implementation(project(":core:design"))
     implementation(project(":core:shortcuts"))
     implementation(project(":core:clipboard"))
+    implementation(project(":core:stash"))
     implementation(project(":feature:overlay-panels"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:otp"))

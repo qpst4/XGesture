@@ -30,7 +30,7 @@ import android.util.Log
  * 控制字符（含 `\u0000`；用 `"$at\u0000$text"` 这种裸拼就是在这里翻车的）。
  * 一个小 JSON 对象 + 转义最省事，也不需要为一个字段多引一层编解码器。
  */
-internal object StashReminderMirror {
+object StashReminderMirror {
     private const val TAG = "StashReminderMirror"
 
     private const val PREFS_NAME = "stash_remind_mirror"
