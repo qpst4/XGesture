@@ -169,4 +169,6 @@
     <string name="stash_audio_permission_denied">Microphone permission is required for recording</string>
     <string name="clipboard_monitor_notification_channel_name">Clipboard monitor</string>
     <string name="clipboard_monitor_notification_channel_desc">Shows clipboard background listener status</string>
+    <string name="stash_composer_empty">Write something first</string>
+    <string name="stash_deleted">Deleted</string>
 </resources>

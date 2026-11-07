@@ -238,23 +238,3 @@ class StashComposerImageTrampolineActivity : ComponentActivity() {
     }
 }
 
-/**
- * 把 trampoline 落下来的临时图读成 Bitmap（存条目时用）。
- *
- * 与 [StashComposerImageTrampolineActivity] 同一套降采样口径，避免同一张图两条路径解出不同尺寸。
- */
-internal fun decodeStashImageFile(path: String, maxDimension: Int = 2048): Bitmap? = runCatching {
-    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-    BitmapFactory.decodeFile(path, bounds)
-    var sample = 1
-    while (bounds.outWidth / sample > maxDimension || bounds.outHeight / sample > maxDimension) {
-        sample *= 2
-    }
-    BitmapFactory.decodeFile(
-        path,
-        BitmapFactory.Options().apply {
-            inSampleSize = sample
-            inPreferredConfig = Bitmap.Config.ARGB_8888
-        },
-    )
-}.getOrNull()

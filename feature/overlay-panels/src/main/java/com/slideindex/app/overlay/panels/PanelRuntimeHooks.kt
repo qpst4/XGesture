@@ -131,7 +131,20 @@ object PanelRuntimeHooks {
     var quickLauncherLabel:
         ((Context, com.slideindex.app.launcher.QuickLauncherItem, Map<String, com.slideindex.app.data.AppInfo>) -> String?)? =
         null
-        /** 切换输入法（环状启动器快捷动作）。 */
+        /** 保存一条富内容闪念（`:app` 的 StashCoordinator.addRich）。 */
+    var addStashRich:
+        ((
+            List<com.slideindex.app.stash.StashRichPart>,
+            String?,
+            String?,
+            (Boolean) -> Unit,
+            (String) -> Unit,
+        ) -> Unit)? = null
+
+    /** 选图（暂存编辑器"＋图片"）：回调收到的路径已去重。 */
+    var pickStashComposerImages: ((Context, (List<String>) -> Unit) -> Unit)? = null
+
+    /** 切换输入法（环状启动器快捷动作）。 */
     @Volatile
     var switchInputMethod: ((Context) -> Unit)? = null
 

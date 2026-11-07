@@ -288,6 +288,21 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.stash.StashReminderScheduling.cancel = { ctx, entryId ->
             com.slideindex.app.stash.StashReminderScheduler.cancel(ctx, entryId)
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.addStashRich =
+            { parts, html, source, onDone, onSaved ->
+                com.slideindex.app.stash.StashCoordinator.addRich(
+                    parts = parts,
+                    htmlText = html,
+                    source = source,
+                    onDone = onDone,
+                    onSaved = onSaved,
+                )
+            }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickStashComposerImages = { ctx, onPicked ->
+            com.slideindex.app.service.StashComposerImageTrampolineActivity.launch(ctx) { picked ->
+                onPicked(picked)
+            }
+        }
         com.slideindex.app.voice.StashVoiceRecorderAccess.recorder =
             object : com.slideindex.app.voice.StashVoiceRecorder {
                 override fun isRecording(): Boolean =

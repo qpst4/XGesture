@@ -4,7 +4,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
-import com.slideindex.app.service.StashEditImageTrampolineActivity
 
 /**
  * 「拉起外部 UI（相册选择器 / 内置图片编辑器）」期间挂起 / 恢复收纳面板窗的进程级把手（§0.16.14）。
@@ -37,12 +36,12 @@ import com.slideindex.app.service.StashEditImageTrampolineActivity
  * 那两句话里包含了状态、看门狗和日志。面板可能已经被系统摘掉（[clear] 把两个字段置回 null），
  * 这时外部 UI 照常走，只是没什么可挂起的。
  */
-internal object StashPanelExternalUi {
+object StashPanelExternalUi {
     /**
      * 本链路统一日志 tag（字符串与 [StashEditImageTrampolineActivity.LOG_TAG] **同一个值**）：
      * `adb logcat -s StashImageEdit` 能把"点 ✎ → 起中转 → 编辑器 → 结果 → 替换 → 恢复"一次看全。
      */
-    private const val TAG = StashEditImageTrampolineActivity.LOG_TAG
+    private const val TAG = "StashImageEdit"
 
     /** 拉起外部 UI **之前**调用：挂起面板窗（不可见 + 不吃触摸）。由 [FloatBallStashPanel] 注册。 */
     var suspend: (() -> Unit)? = null

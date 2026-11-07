@@ -24,11 +24,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.OverlayComposeDialogHost
 import com.slideindex.app.overlay.StashPanelExternalUi
 import com.slideindex.app.overlay.rememberOverlayImeBottomHeight
-import com.slideindex.app.service.StashComposerImageTrampolineActivity
 import com.slideindex.app.stash.StashAccess
 import com.slideindex.app.stash.StashTag
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
@@ -66,7 +65,7 @@ import java.io.File
  *   面板与本窗**不会同时开着**（本窗收起才回桌面 / 面板），所以共用这一份状态是安全的。
  * - **录音**：走 `StashAudioRecorderController` 的前台服务，窗是谁不影响。
  */
-internal class HistoryComposerWindow(
+class HistoryComposerWindow(
     private val context: Context,
     @Suppress("unused") private val windowManager: WindowManager,
 ) {
@@ -293,7 +292,7 @@ internal class HistoryComposerWindow(
                             StashPanelExternalUi.suspendForExternalUi(
                                 caller = "composer-window-add-image",
                             )
-                            StashComposerImageTrampolineActivity.launch(appContext) { picked ->
+                            com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickStashComposerImages?.invoke(appContext) { picked ->
                                 StashPanelExternalUi.resumeAfterExternalUi(
                                     caller = "选图回调（编辑窗）",
                                 )

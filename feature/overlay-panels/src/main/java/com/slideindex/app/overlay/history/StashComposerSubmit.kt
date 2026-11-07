@@ -4,9 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.slideindex.app.service.decodeStashImageFile
 import com.slideindex.app.stash.StashAccess
-import com.slideindex.app.stash.StashCoordinator
 import com.slideindex.app.stash.StashRichPart
-import com.slideindex.app.stash.StashReminderScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,7 +36,7 @@ import java.io.File
  * 本次不动它，避免为了"纯"而把已验证的行为改出回归。所以本文件里的**具体写法**（解码、
  * 判空、跳过坏图）与面板那份**必须保持一致** —— 改动其中一处时，另一处跟着改。
  */
-internal object StashComposerSubmit {
+object StashComposerSubmit {
 
     private const val TAG = "StashComposerSubmit"
 
@@ -115,15 +113,19 @@ internal object StashComposerSubmit {
                 .map { it.value.trim() }
                 .filter { it.isNotEmpty() }
                 .joinToString("\n")
-            StashCoordinator.addRich(
-                parts = parts,
-                onSaved = { newEntryId ->
+            val runner = com.slideindex.app.overlay.panels.PanelRuntimeHooks.addStashRich
+            if (runner == null) {
+                onFailed()
+            } else runner(
+                parts,
+                null,
+                null,
+                { success -> if (!success) onFailed() },
+                { newEntryId ->
                     onSaved(newEntryId, summary)
                     commitMetadata(appContext, newEntryId, tags, reminderAtMs, summary)
-                    // 图 / 录音已经拷进仓库了，cache 里这几份临时文件没用了。
                     deleteTempFiles(snapshot)
                 },
-                onDone = { success -> if (!success) onFailed() },
             )
         }
     }
@@ -149,12 +151,8 @@ internal object StashComposerSubmit {
         if (reminderAtMs != null) {
             scope.launch {
                 metaRepo?.setReminder(entryId, reminderAtMs)
-                StashReminderScheduler.schedule(
-                    context = context,
-                    entryId = entryId,
-                    atEpochMs = reminderAtMs,
-                    text = summary,
-                )
+                com.slideindex.app.stash.StashReminderScheduling.schedule
+                    ?.invoke(context, entryId, reminderAtMs, summary)
             }
         }
     }
