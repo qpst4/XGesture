@@ -4944,4 +4944,20 @@
     <string name="shell_panel_environment_summary">Shizuku %1$s · Root %2$s</string>
     <string name="shell_panel_environment_detail_shizuku">Shizuku: %1$s</string>
     <string name="shell_panel_environment_detail_root">Root: %1$s</string>
+
+    <!-- Flow Bar Card in Search Engine Settings -->
+    <string name="flow_bar_title">شريط التدفق</string>
+    <string name="flow_bar_drag_targets_title">الأهداف عند سحب النص</string>
+    <string name="flow_bar_drag_empty_hint">لا توجد أهداف بعد. اضغط مع الاستمرار على أي محرك بحث أدناه واسحبه إلى هذه البطاقة للإضافة (تبقى القائمة الأصلية كما هي).</string>
+    <string name="flow_bar_remove_target">إزالة من شريط التدفق</string>
+
+    <!-- Search Engine Manager / Aggregated -->
+    <string name="search_engine_hidden_header">مخفي</string>
+    <string name="search_engine_hidden_hint">اسحب المحركات من الأعلى إلى هنا لإخفائها</string>
+    <string name="search_engine_page_header">الصفحة %1$d</string>
+    <string name="search_engine_move_page_up">تحريك الصفحة لأعلى</string>
+    <string name="search_engine_move_page_down">تحريك الصفحة لأسفل</string>
+    <string name="search_engine_empty_enabled">لا توجد محركات بحث مفعلة. أضف واحداً من المحركات المخفية أدناه أو انقر على + لإنشاء جديد</string>
+    <string name="search_engine_action_hide">نقل إلى المخفي</string>
+    <string name="search_engine_action_restore">استعادة إلى اللوحة</string>
 </resources>

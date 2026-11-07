@@ -4971,4 +4971,20 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="shell_panel_result_exit_ok">exit 0 (no output)</string>
     <string name="shell_panel_result_exit_only">exit %1$d (no output)</string>
     <string name="shell_panel_test_result">Test result</string>
+
+    <!-- Flow Bar Card in Search Engine Settings -->
+    <string name="flow_bar_title">Flow bar</string>
+    <string name="flow_bar_drag_targets_title">Targets when dragging text</string>
+    <string name="flow_bar_drag_empty_hint">No targets yet. Long-press any search engine icon below and drag it onto this card to add a copy (the original list stays unchanged).</string>
+    <string name="flow_bar_remove_target">Remove from flow bar</string>
+
+    <!-- Search Engine Manager / Aggregated -->
+    <string name="search_engine_hidden_header">Hidden</string>
+    <string name="search_engine_hidden_hint">Drag engines from above here to hide them</string>
+    <string name="search_engine_page_header">Page %1$d</string>
+    <string name="search_engine_move_page_up">Move page up</string>
+    <string name="search_engine_move_page_down">Move page down</string>
+    <string name="search_engine_empty_enabled">No search engines enabled. Add one from the hidden pool below or tap + in the bottom right to create one</string>
+    <string name="search_engine_action_hide">Hide to hidden pool</string>
+    <string name="search_engine_action_restore">Restore to panel</string>
 </resources>
