@@ -10,7 +10,7 @@ import android.graphics.drawable.Drawable
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.graphics.withRotation
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import kotlin.math.roundToInt
 
 object BrightnessIconRenderer {

@@ -42,6 +42,12 @@ interface PanelActionHost {
     fun endContinuousAdjust()
 
     fun applyAdjustOnce(mode: PanelAdjustMode, anchorRawY: Float)
+
+    /** 音量刻度的文案（如「媒体 5/15」）；由 `:app` 用 AudioManager 拼。 */
+    fun describeVolumeScale(stream: PanelVolumeStream): String
+
+    /** 亮度刻度的文案；由 `:app` 拼。 */
+    fun describeBrightnessScale(context: android.content.Context): String
 }
 
 /** 音量流（对齐 `:app` 的 `VolumeControlHelper.Stream`）。 */

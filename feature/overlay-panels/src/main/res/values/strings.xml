@@ -19,4 +19,35 @@
     <string name="share_sheet_toast_pinned">Pinned “%1$s”</string>
     <string name="share_sheet_toast_unpinned">Unpinned “%1$s”</string>
     <string name="share_sheet_use_system">System share sheet</string>
+
+    <string name="gesture_action_volume_panel">Expansion panel</string>
+    <string name="volume_panel_brightness">Brightness</string>
+    <string name="volume_panel_alarm">Alarm</string>
+    <string name="volume_panel_notification">Notification</string>
+    <string name="volume_panel_ring">Ring</string>
+    <string name="volume_panel_media">Media</string>
+    <string name="expand_panel_shortcuts_title">Shortcuts</string>
+    <string name="expand_panel_shortcut_add">Add shortcut</string>
+    <string name="expand_panel_shortcut_pick">Pick app</string>
+    <string name="expand_panel_edit_hint">Editing: tap a slot to change, tap − to remove; long-press blank area to exit</string>
+    <string name="expand_panel_clear_slot">Clear this slot</string>
+    <string name="expand_panel_editing_slot">Editing slot %1$d · %2$s</string>
+    <string name="expand_panel_slot_add_label">Add</string>
+    <string name="search_hint">Search apps…</string>
+    <string name="gesture_action_launch_shortcut">Launch shortcut</string>
+    <string name="gesture_action_toggle_dnd_failed">Could not change Do Not Disturb</string>
+    <string name="confirm">OK</string>
+    <string name="launch_shortcut">Existing shortcuts</string>
+    <string name="action_picker_tab_actions">Actions</string>
+    <string name="action_picker_tab_apps">Apps</string>
+    <string name="action_picker_tab_shortcuts">Shortcuts</string>
+    <string name="widget_panel_edit_mode">Edit mode</string>
+    <string name="activity_shortcut_picker_section">My shortcuts</string>
+    <string name="search_no_actions">No actions found</string>
+    <string name="cancel">Cancel</string>
+    <string name="adjust_volume_ring_label">Ring</string>
+    <string name="adjust_volume_notification_label">Notif</string>
+    <string name="gesture_action_open_link">Open link</string>
+    <string name="quick_wheel_launch_fullscreen">Full screen</string>
+    <string name="quick_wheel_launch_free_window">Small window</string>
 </resources>
