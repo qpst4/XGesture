@@ -180,6 +180,12 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     com.slideindex.app.ui.theme.OverlayAwareModuleTheme { content() }
                 }
             }
+        // 主题层已下沉到 :feature:settings，设置流由这里注入。
+        com.slideindex.app.settings.SettingsFlowHolder.provider = { ctx ->
+            com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(ctx)
+                ?.settingsRepository
+                ?.settings
+        }
         com.slideindex.app.overlay.OverlayHostRuntime.accessibilityHostContext = {
             com.slideindex.app.service.SlideIndexAccessibilityService.overlayHostContext()
         }

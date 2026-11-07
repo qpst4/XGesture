@@ -60,7 +60,7 @@ fun ModuleTheme(
         )
     }
 
-    val materialScheme = resolveAppMaterialColorScheme(context, settings, darkTheme)
+    val materialScheme = resolveAppMaterialColorScheme(context, settings.toThemeSpec(darkTheme))
 
     val currentDensity = LocalDensity.current
     val densityScale = UiDensityScaleLimits.normalize(settings.uiDensityScale)
