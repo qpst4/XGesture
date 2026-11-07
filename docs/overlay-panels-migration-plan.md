@@ -370,3 +370,18 @@ TaskManagerUtil(968) ← PrivilegeGateway ← TaskManagerShellExecutor ← RootN
 试搬 16 文件后连锁回退 9 次，最终只剩 7 个「纯反射/纯 Binder」小文件能独立（价值极低）。
 **结论：要动 `privilege`，必须先拆 `TaskManagerUtil`（968 行 hub）**，把"任务查询/结束/小窗"从它里面分出接口，
 再让 `PrivilegeGateway` / 执行器依赖接口。这是独立的一次重构，不要和面板迁移混在一起。
+
+### 12.7 quickwheel 垂直切片的前置清单（2026-11-08）
+
+目标：整组迁出 `overlay/quickwheel`（5 文件 / 2,126 行）。
+
+| 文件 | 卡点 | 处理 |
+| :--- | :--- | :--- |
+| `QuickWheelActionHud` | `ui.gesturepicker` 两个标签函数 | 改用 `PanelRuntimeHooks.gestureActionLabel` / `launchShortcutLabel`（已就位） |
+| `QuickWheelContainer` | `ui.gestureActionIcon`（Canvas 画图标） | 需新增 `gestureActionIconDraw` 钩子 |
+| `QuickWheelIconResolver` | `ManagedShortcutIconResolver` + `di.OverlayDependencyAccess` | 图标走 `managedShortcut*` 钩子（已就位）；DI 走 `PanelRuntimeHooks.appRepository` |
+| `QuickWheelOverlayContent` | `ui.QuickWheelWheelRenderer` | 随 `QuickWheelPreviewCanvas`（524 行）一起迁入模块 |
+| `QuickWheelOverlayWindow` | `ActionExecutor` 参数 + `ui.toWheelShapeOrNull` | 参数改 `GestureActionRunner`；映射函数抽到模块 |
+
+即：**再补 1 个钩子（`gestureActionIconDraw`）+ 2 个小函数下沉**即可整组搬走。
+这是当前依赖图下最短的一条"能真正搬完一组"的路。
