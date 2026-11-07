@@ -169,6 +169,14 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 ?.settings
                 ?.let { flow -> flow.map { it.overlayBlurEnabled } }
         }
+        // 浮层内容主题包装：模块里的 OverlayToastWindow 等用它套 Miuix 主题。
+        com.slideindex.app.overlay.OverlayHostRuntime.themeWrapper =
+            object : com.slideindex.app.overlay.OverlayThemeWrapper {
+                @androidx.compose.runtime.Composable
+                override fun wrap(content: @androidx.compose.runtime.Composable () -> Unit) {
+                    com.slideindex.app.ui.theme.OverlayAwareModuleTheme { content() }
+                }
+            }
         com.slideindex.app.overlay.OverlayHostRuntime.accessibilityHostContext = {
             com.slideindex.app.service.SlideIndexAccessibilityService.overlayHostContext()
         }

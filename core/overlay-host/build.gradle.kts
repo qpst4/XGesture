@@ -44,6 +44,8 @@ dependencies {
     implementation(platform(libs.compose.bom.alpha))
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
+    implementation(libs.compose.material3.pinned)
+    implementation(libs.compose.material.icons)
     implementation(libs.lifecycle.runtime)
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.savedstate)

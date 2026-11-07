@@ -33,6 +33,7 @@ import com.slideindex.app.settings.resolvedLaunchPolicy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import com.slideindex.app.ui.miuix.theme.ModuleTheme
 
 internal class QuickLauncherOverlayController(
     internal val host: Host
@@ -100,7 +101,7 @@ internal class QuickLauncherOverlayController(
 
     internal val quickLauncherOverlayDialogHost = OverlayComposeDialogHost(
         context = host.context,
-        themeSettings = { host.settings() }
+        applyTheme = { content -> ModuleTheme(settings = host.settings()) { content() } }
     )
     internal val quickLauncherPanelController = QuickLauncherPanelController(
         object : QuickLauncherPanelController.Host {

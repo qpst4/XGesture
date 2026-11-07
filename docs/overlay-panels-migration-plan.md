@@ -59,18 +59,21 @@
 
 **验收**：`:core:overlay-host` 19 文件 / 1,644 行；`:app` 的 `overlay/` 217 个文件。
 
-### A3. 单例接口化（1–2 天）——🟡 进行中
+### A3. 单例接口化（1–2 天）——🟢 已完成（`ScreenPinManager` 除外，见末条）
 
 给这批根包单例各开一个窄接口 / 回调，`SlideIndexApp` 里接线（模式同 `OverlayZOrderHooks`）：
 
 - ✅ `OverlayViewBackHandler` → 直接迁入 `:core:overlay-host`（`internal` 改 public）；它依赖的
   `PredictiveBackHelper` 一起下沉到 `:core:common`。
 - ✅ `FloatBallOverlay`：`isShowing` / `notifyPanelAttachedAboveChrome` 已有 `OverlayZOrderHooks` 钩子。
-- ⬜ `OverlayComposeDialogHost` / `ScreenPinManager` / `OverlayToastWindow`（`share` / `screenshot` 用）。
-- ⬜ `LocalFrostedGlassBackdrop`（`volumepanel` / `filebrowser` 用）——它读设置，要拆成"纯背板 + 设置门面"两层。
-- ⬜ `ShellCommandBadgeRenderer` / `ShellCommandBadgeOverlay` / `ShortcutBadgeOverlay`（`fingertip` / `quickwheel` 用）。
+- ✅ `OverlayComposeDialogHost`：`themeSettings: () -> AppSettings` 改成
+  `applyTheme: @Composable (@Composable () -> Unit) -> Unit`（默认走 `OverlayHostRuntime.themeWrapper`），
+  宿主 context 走 `OverlayHostRuntime.accessibilityHostContext`；3 个调用点改为显式传 `ModuleTheme`。
+- ✅ `OverlayToastWindow`：同上（主题包装 + 宿主 context 两个钩子），迁入模块。
+- ✅ `LocalFrostedGlassBackdrop` / `ShellCommandBadgeRenderer` / `ShellCommandBadgeOverlay` / `ShortcutBadgeOverlay`（+ Java 版 `ShortcutBadgeRenderer`）：纯绘制，直接迁入。
+- ❌ `ScreenPinManager`（2,177 行）：依赖 clipboard / ocr / stash / history / ui / R，**不是钩子能解决的**，必须等 `:core:model` 那三层。
 
-**验收**：`screenshot` / `backpanel` / `quickwheel` / `animation` / `volumepanel` / `fingertip` / `share` 的外部根包依赖全部归零。
+**验收**：`screenshot` / `backpanel` / `quickwheel` / `animation` / `volumepanel` / `fingertip` / `share` 的外部根包依赖**只剩业务类型**（settings / ui / di / R），不再有单例。
 
 > 2026-11-07 的实测补充：**逐组搬在依赖图上远比预期贵**。`filebrowser` 虽然 A 层文件多，但横向依赖
 > clipboard / ocr / history / searchpanel / share / privilege / R / service 等 13 个包；`animation` 依赖
@@ -111,7 +114,7 @@
 | **A3a** | `OverlayViewBackHandler` → `:core:overlay-host` | 328 行，`internal` 改 public；`PredictiveBackHelper`（179 行）一并下沉到 `:core:common` |
 | **A3b** | 毛玻璃背板 + 徽标 → `:core:overlay-host` | `LocalFrostedGlassBackdrop` / `ShellCommandBadgeOverlay` / `ShortcutBadgeOverlay` / `ShellCommandBadgeRenderer` / `ShortcutBadgeRenderer` 迁入；模糊开关改由 `OverlayHostRuntime.overlayBlurEnabledFlow` 注入 |
 
-`:core:overlay-host` 现有 15 个文件 / 1,020 行。
+`:core:overlay-host` 现有 27 个文件 / 3,136 行；`:core:design` 3 个文件 / 246 行；`:app` 的 `overlay/` 根目录从 220 个文件降到 209。
 
 ## 6. 每批验收（不变）
 

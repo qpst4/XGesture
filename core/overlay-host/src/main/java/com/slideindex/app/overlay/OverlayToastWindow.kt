@@ -36,8 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.service.SlideIndexAccessibilityService
-import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
 
 /**
  * 覆盖层提示条：用独立悬浮窗显示一句提示。
@@ -46,7 +44,7 @@ import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
  * `TYPE_APPLICATION_OVERLAY`），在面板里调 `Toast` 会被面板自己盖住，用户看不到。
  *
  * 窗口挂点（**踩过两次坑，别改回去**）：必须挂到**无障碍服务那层**
- * （[SlideIndexAccessibilityService.overlayHostContext]，`TYPE_ACCESSIBILITY_OVERLAY`，`mBaseLayer` 311000），
+ * （`OverlayHostRuntime.accessibilityHostContext`，`TYPE_ACCESSIBILITY_OVERLAY`，`mBaseLayer` 311000），
  * 和悬浮球/触钮/侧栏同层。挂在应用层（`TYPE_APPLICATION_OVERLAY`）时，无论 `addView` 顺序如何
  * 都会被面板盖住 —— 真机 `dumpsys window` 已确认两层的层级差。
  *
@@ -109,7 +107,7 @@ object OverlayToastWindow {
         // 项目自己的悬浮球/触钮/侧栏都在那一层。冰箱面板是应用层的 `TYPE_APPLICATION_OVERLAY`
         // （mBaseLayer 明显更低），挂在应用层就会被面板盖住 —— 这正是前两版「提示看不见」的原因。
         // 拿不到无障碍宿主时才退回应用层，那时至少还有系统 Toast 兜底。
-        val a11yHost = SlideIndexAccessibilityService.overlayHostContext()
+        val a11yHost = OverlayHostRuntime.accessibilityHostContext?.invoke()
         val host = a11yHost ?: appContext
         val wm = host.getSystemService(Context.WINDOW_SERVICE) as? WindowManager ?: run {
             Log.w(TAG, "attach: no WindowManager")
@@ -122,9 +120,11 @@ object OverlayToastWindow {
             isFocusable = false
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             setContent {
-                OverlayAwareModuleTheme {
+                val content: @Composable () -> Unit = {
                     OverlayToastContent(visibleState = visibleState, messageState = messageState)
                 }
+                val wrapper = OverlayHostRuntime.themeWrapper
+                if (wrapper != null) wrapper.wrap(content) else content()
             }
         }
         val density = appContext.resources.displayMetrics.density

@@ -82,6 +82,7 @@ import com.slideindex.app.settings.moveFvRingLauncherSlot
 import com.slideindex.app.util.HapticHelper
 import com.slideindex.app.util.InputMethodHelper
 import kotlin.math.roundToInt
+import com.slideindex.app.ui.miuix.theme.ModuleTheme
 
 @SuppressLint("ViewConstructor")
 internal class RingLauncherOverlayView(
@@ -102,7 +103,7 @@ internal class RingLauncherOverlayView(
 
     private val composeDialogHost = OverlayComposeDialogHost(
         context = context,
-        themeSettings = { settings },
+        applyTheme = { content -> ModuleTheme(settings = settings) { content() } },
     )
 
     private var settings = AppSettings()

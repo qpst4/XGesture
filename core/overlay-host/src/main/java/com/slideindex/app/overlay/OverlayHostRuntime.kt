@@ -47,4 +47,19 @@ object OverlayHostRuntime {
      */
     @Volatile
     var overlayBlurEnabledFlow: ((Context) -> kotlinx.coroutines.flow.Flow<Boolean>?)? = null
+
+    /**
+     * 浮层内容的主题包装（`:app` 注入 `OverlayAwareModuleTheme`）。
+     *
+     * 用接口而不是可组合函数类型：`@Composable` 的 SAM 转换在接口上更稳，
+     * 而且实现方可以写成匿名对象。未注入时直接渲染内容（无主题包装）。
+     */
+    @Volatile
+    var themeWrapper: OverlayThemeWrapper? = null
+}
+
+/** 见 [OverlayHostRuntime.themeWrapper]。 */
+fun interface OverlayThemeWrapper {
+    @androidx.compose.runtime.Composable
+    fun wrap(content: @androidx.compose.runtime.Composable () -> Unit)
 }

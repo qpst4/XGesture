@@ -40,6 +40,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import com.slideindex.app.ui.miuix.theme.ModuleTheme
 
 @SuppressLint("StaticFieldLeak")
 object RingLauncherOverlayWindow {
@@ -128,7 +129,7 @@ object RingLauncherOverlayWindow {
             ).dependencies()
         val dialogHost = slotConfigDialogHost ?: OverlayComposeDialogHost(
             context = hostContext,
-            themeSettings = { lastSettings },
+            applyTheme = { content -> ModuleTheme(settings = lastSettings) { content() } },
         ).also { slotConfigDialogHost = it }
 
         // 圆环槽位的应用列表要和动作选择 / 索引一致：带分身条目、带冻结 / 暂停状态。

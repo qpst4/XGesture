@@ -23,11 +23,8 @@ import androidx.compose.runtime.Composable
 
 import androidx.compose.ui.platform.ComposeView
 
-import com.slideindex.app.service.SlideIndexAccessibilityService
 
-import com.slideindex.app.settings.AppSettings
 
-import com.slideindex.app.ui.miuix.theme.ModuleTheme
 
 
 
@@ -35,7 +32,10 @@ class OverlayComposeDialogHost(
 
     context: Context,
 
-    private val themeSettings: () -> AppSettings = { AppSettings() },
+    private val applyTheme: @Composable (@Composable () -> Unit) -> Unit = { content ->
+        val wrapper = OverlayHostRuntime.themeWrapper
+        if (wrapper != null) wrapper.wrap(content) else content()
+    },
 
     private val fullScreen: Boolean = true
 
@@ -126,11 +126,7 @@ class OverlayComposeDialogHost(
 
             setContent {
 
-                ModuleTheme(settings = themeSettings()) {
-
-                    content()
-
-                }
+                applyTheme(content)
 
             }
 
@@ -350,7 +346,7 @@ class OverlayComposeDialogHost(
 
 
 
-    private fun overlayHostContext(): Context? = SlideIndexAccessibilityService.overlayHostContext()
+    private fun overlayHostContext(): Context? = OverlayHostRuntime.accessibilityHostContext?.invoke()
 
 
 
