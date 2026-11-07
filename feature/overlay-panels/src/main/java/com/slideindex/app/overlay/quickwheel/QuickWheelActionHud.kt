@@ -37,13 +37,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.settings.QuickWheelIconSource
 import com.slideindex.app.settings.QuickWheelSlot
-import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
-import com.slideindex.app.ui.gesturepicker.launchShortcutDisplayLabel
 import kotlin.math.roundToInt
 
 /**
@@ -89,7 +87,7 @@ private val HudActionGlyph = Color(0xE6FFFFFF)
 private const val HUD_TEXT_MAX_WIDTH_DP = 200
 
 /** 松手会执行哪一类动作（与 [QuickWheelOverlayContent] 的 `handleRelease` 判定保持一致）。 */
-internal enum class QuickWheelHudMode {
+enum class QuickWheelHudMode {
     /** 松手执行该容器的**单击**动作。 */
     TAP,
 
@@ -105,14 +103,14 @@ internal enum class QuickWheelHudMode {
  * - 已按满（[armed]）→ 长按；
  * - 其余 → 单击。
  */
-internal fun quickWheelHudModeFor(
+fun quickWheelHudModeFor(
     hitIsParentWhileExpanded: Boolean,
     armed: Boolean,
 ): QuickWheelHudMode =
     if (hitIsParentWhileExpanded || armed) QuickWheelHudMode.LONG_PRESS else QuickWheelHudMode.TAP
 
 /** HUD 的纯内容描述（便于单测）。 */
-internal data class QuickWheelHudContent(
+data class QuickWheelHudContent(
     /** 主行是否代表长按动作（是 → 用长按动作图标 + "长按：…"）。 */
     val primaryIsLongPress: Boolean,
     val primaryText: String,
@@ -128,7 +126,7 @@ internal data class QuickWheelHudContent(
  * @param tapLine 已本地化的单击行文案（如 "单击：返回"；没配动作时传"未设置动作"）
  * @param longPressLine 已本地化的长按行文案（如 "长按：主屏幕"）
  */
-internal fun quickWheelHudContent(
+fun quickWheelHudContent(
     slot: QuickWheelSlot,
     mode: QuickWheelHudMode,
     tapLine: String,
@@ -176,11 +174,13 @@ private fun hudActionLabel(context: Context, action: GestureAction): String = wh
     }
 
     is GestureAction.LaunchShortcut ->
-        launchShortcutDisplayLabel(action).ifBlank {
+        (com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchShortcutLabel
+            ?.invoke(action).orEmpty()).ifBlank {
             context.getString(R.string.gesture_action_launch_shortcut)
         }
 
-    else -> gestureActionLabelText(context, action)
+    else -> com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel
+        ?.invoke(context, action).orEmpty()
 }
 
 /**
@@ -209,7 +209,7 @@ private fun rememberActionIconBitmap(
  * @param progressKey 变化即重启长按进度动画（传悬停 token，与长按计时同源）
  */
 @Composable
-internal fun QuickWheelActionHud(
+fun QuickWheelActionHud(
     slot: QuickWheelSlot,
     mode: QuickWheelHudMode,
     longPressMs: Int,
@@ -220,7 +220,7 @@ internal fun QuickWheelActionHud(
     val hasTapAction = slot.tapAction.type != GestureActionType.NONE
     val hasLongPressAction = slot.longPressAction.type != GestureActionType.NONE
     val noAction = stringResource(R.string.quick_wheel_hud_no_action)
-    // ⚠️ 这里**必须**用无依赖注入的 gestureActionLabelText(context, …)：
+    // ⚠️ 这里**必须**用无依赖注入的 com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel?.invoke(context, …)：
     // 可组合版 gestureActionLabel(…) 会读 `LocalAppDependencies`，而浮层合成里**没有**提供它
     // （该 CompositionLocal 的默认实现直接 error(...) 抛异常）→ 手指一碰到容器、
     // HUD 首次合成就会闪退（"一点击容器就闪退"）。

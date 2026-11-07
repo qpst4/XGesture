@@ -9,8 +9,6 @@ import android.os.Looper
 import android.util.Log
 import android.view.WindowManager
 import androidx.compose.ui.platform.ComposeView
-import com.slideindex.app.di.OverlayDependencyAccess
-import com.slideindex.app.gesture.ActionExecutor
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.gesture.QuickWheelAnchorMode
@@ -32,7 +30,6 @@ import com.slideindex.app.settings.opensSomething
 import com.slideindex.app.settings.withQuickWheelLaunchMode
 import com.slideindex.app.settings.withoutLaunchWindowMode
 import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
-import com.slideindex.app.ui.toWheelShapeOrNull
 
 /**
  * 「快捷轮盘」浮层宿主（Compose）。
@@ -48,7 +45,7 @@ object QuickWheelOverlayWindow {
     private var composeView: ComposeView? = null
     private var composeOwner: OverlayComposeOwner? = null
     private var windowManager: WindowManager? = null
-    private var activeExecutor: ActionExecutor? = null
+    private var activeExecutor: com.slideindex.app.overlay.panels.GestureActionRunner? = null
     private var activeSettings: AppSettings = AppSettings()
 
     /** 本应用包名：容器选了"始终小窗"时用于硬排除判定（桌面 / 系统界面 / 自身 → 仍全屏）。 */
@@ -84,7 +81,7 @@ object QuickWheelOverlayWindow {
         wheelId: String,
         anchorRawX: Float,
         anchorRawY: Float,
-        actionExecutor: ActionExecutor,
+        actionExecutor: com.slideindex.app.overlay.panels.GestureActionRunner,
         externalTracking: Boolean = false,
         shape: QuickWheelLaunchShape = QuickWheelLaunchShape.DEFAULT,
         /** 动作绑定处手动固定的**一级圆形**扇区；`null`（默认）= 按触发位置自适应求解。 */
@@ -94,9 +91,8 @@ object QuickWheelOverlayWindow {
     ): Boolean {
         // 始终以「最新设置快照」为准：调用方（手势会话）传入的 settings 可能是旧快照，
         // 会出现"预览已改、调用仍是旧配置"，甚至取不到轮盘而不显示。
-        val latestSettings = OverlayDependencyAccess.overlayDependencies(context)
-            ?.settingsRepository
-            ?.readSnapshot()
+        val latestSettings = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot
+            ?.invoke(context)
         val effective = latestSettings ?: settings
         val resolved = resolveWheel(effective, wheelId) ?: resolveWheel(settings, wheelId) ?: run {
             Log.w(TAG, "show: 没有可用的轮盘配置（wheelId='$wheelId'）")
@@ -159,7 +155,7 @@ object QuickWheelOverlayWindow {
         wheel: QuickWheel,
         anchorRawX: Float,
         anchorRawY: Float,
-        actionExecutor: ActionExecutor,
+        actionExecutor: com.slideindex.app.overlay.panels.GestureActionRunner,
     ): Boolean = showInternal(
         context = context,
         settings = settings,
@@ -180,7 +176,7 @@ object QuickWheelOverlayWindow {
         wheel: QuickWheel,
         anchorRawX: Float,
         anchorRawY: Float,
-        actionExecutor: ActionExecutor,
+        actionExecutor: com.slideindex.app.overlay.panels.GestureActionRunner,
         externalTracking: Boolean,
         showCenter: Boolean,
         adaptivePlacement: Boolean,
@@ -466,14 +462,13 @@ object QuickWheelOverlayWindow {
             )
         }
         runCatching {
-            executor.execute(
-                action = action,
-                settings = effectiveSettings,
-                // 轮盘的点击动作按「非长按」、长按动作按「长按」参与启动策略判定（长按时长仍用轮盘自己的设定，
-                // 与「应用与启动」页的长按时长互不影响）。
-                longPressArmed = longPress,
-                anchorRawX = anchorX,
-                anchorRawY = anchorY,
+            executor.run(
+                action,
+                effectiveSettings,
+                longPress,
+                anchorX,
+                anchorY,
+                null,
             )
         }.onFailure { Log.w(TAG, "executeSlot 失败", it) }
     }

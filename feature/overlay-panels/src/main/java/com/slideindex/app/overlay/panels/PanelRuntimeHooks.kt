@@ -115,6 +115,13 @@ object PanelRuntimeHooks {
     /** 环状启动器：创建快捷方式（host 为 `:app` 的 `AppShortcutLoader.CreateShortcutHost`）。 */
     @Volatile
     var createShortcutLauncher: ((Context, Any, () -> Unit, (Any?) -> Unit) -> Unit)? = null
+    /** 内置动作图标的 Composable（`:app` 的 ActionIconSlot）。 */
+    @Volatile
+    var actionIconSlot: PanelActionIconSlot? = null
+
+    /** 当前设置快照里的应用内快捷方式目录。 */
+    @Volatile
+    var activityShortcutsCatalog: ((Context) -> List<com.slideindex.app.activity.ActivityShortcut>)? = null
     /** 选择器里的应用图标（ImageBitmap）。 */
     @Volatile
     var pickerAppIcon: (suspend (Context, String) -> androidx.compose.ui.graphics.ImageBitmap?)? = null
@@ -310,5 +317,14 @@ fun interface RingSlotConfigSheetContent {
         onSelectItem: (com.slideindex.app.launcher.QuickLauncherItem?) -> Unit,
         onOpenCustomIconEditor: () -> Unit,
         launchCreateShortcut: (Any, (Any?) -> Unit) -> Unit,
+    )
+}
+
+/** 见 [PanelRuntimeHooks.actionIconSlot]。 */
+fun interface PanelActionIconSlot {
+    @androidx.compose.runtime.Composable
+    fun content(
+        action: com.slideindex.app.gesture.GestureAction,
+        sizeDp: Int,
     )
 }

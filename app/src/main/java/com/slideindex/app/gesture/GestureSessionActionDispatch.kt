@@ -1,4 +1,5 @@
 package com.slideindex.app.gesture
+import com.slideindex.app.overlay.asGestureActionRunner
 
 import android.os.Handler
 import android.os.Looper
@@ -143,7 +144,7 @@ internal fun GestureSession.trackContinuousGesture(
                     wheelId = action.wheelId,
                     anchorRawX = rawX,
                     anchorRawY = rawY,
-                    actionExecutor = sessionActionExecutor,
+                    actionExecutor = sessionActionExecutor.asGestureActionRunner(),
                     externalTracking = true,
                     shape = action.shape,
                     manualSectorMask = action.manualSectorMask,

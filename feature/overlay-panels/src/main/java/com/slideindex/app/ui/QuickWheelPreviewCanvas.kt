@@ -29,7 +29,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.layout.QuickWheelLayout
 import com.slideindex.app.overlay.layout.QuickWheelAdaptiveScreen
 import com.slideindex.app.overlay.layout.QuickWheelLayoutEngine
@@ -401,7 +401,7 @@ private fun PlacedAddContainer(
 
 /** 页面顶部提示条（深色胶囊 + 白字），画布编辑页等使用。 */
 @Composable
-internal fun QuickWheelHintPill(
+fun QuickWheelHintPill(
     text: String,
     modifier: Modifier = Modifier,
 ) {

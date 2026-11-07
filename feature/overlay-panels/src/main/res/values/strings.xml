@@ -174,4 +174,14 @@
     <string name="drag_drop_flow_restore">Restore</string>
     <string name="drag_drop_flow_cancel">Cancel</string>
     <string name="drag_drop_flow_release_to_send">Release to send</string>
+    <string name="gesture_action_launch_app">Launch app</string>
+    <string name="quick_wheel_sector_dir_top_right">Upper right sector</string>
+    <string name="quick_wheel_sector_dir_bottom_right">Lower right sector</string>
+    <string name="quick_wheel_sector_dir_bottom_left">Lower left sector</string>
+    <string name="quick_wheel_sector_dir_top_left">Upper left sector</string>
+    <string name="quick_wheel_action_sector_title">Sector (primary circle)</string>
+    <string name="quick_wheel_hud_tap">Tap: %1$s</string>
+    <string name="quick_wheel_hud_long_press">Long press: %1$s</string>
+    <string name="quick_wheel_hud_no_action">No action</string>
+    <string name="quick_wheel_action_sector_auto">Auto (from trigger position)</string>
 </resources>

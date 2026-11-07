@@ -569,7 +569,7 @@ fun QuickWheelOverlayContent(
  * @param appearOriginX 展开起点（px，轮盘锚点）；null = 用容器自己的位置（→ 只做缩放，中心大圆用）。
  */
 @Composable
-internal fun PlacedContainer(
+fun PlacedContainer(
     placed: QuickWheelPlacedSlot?,
     slot: QuickWheelSlot,
     style: QuickWheelStyleSpec,

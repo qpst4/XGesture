@@ -9,8 +9,6 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.slideindex.app.activity.ActivityShortcut
-import com.slideindex.app.activity.ManagedShortcutIconResolver
-import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.settings.QuickWheelIconSource
 import com.slideindex.app.settings.QuickWheelSlot
@@ -115,7 +113,7 @@ object QuickWheelIconResolver {
         if (slot.iconValue.isBlank()) return null
         // revision 进 key：在图标库里改完应用图标，轮盘不会继续用旧图
         val key = "${slot.iconSource.name}:${slot.iconValue}:$targetSizePx:" +
-            com.slideindex.app.ui.GlobalIconStore.revision
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconCacheRevision?.invoke().orEmpty()
         if (bitmapCache.containsKey(key)) return bitmapCache[key]
         val bitmap = when (slot.iconSource) {
             QuickWheelIconSource.APP_ICON -> loadAppIcon(context, slot.iconValue, targetSizePx)
@@ -155,8 +153,8 @@ object QuickWheelIconResolver {
 
             is GestureAction.LaunchShortcut ->
                 shortcutIcon(context, action, targetSizePx)
-                    ?: ManagedShortcutIconResolver
-                        .hostPackageForLaunchShortcut(action.payloadKey)
+                    ?: com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutHostPackage
+                        ?.invoke(action.payloadKey)
                         ?.let { host -> appIcon(context, host, targetSizePx) }
 
             else -> null
@@ -186,16 +184,12 @@ object QuickWheelIconResolver {
         val fingerprint = catalog.map { it.identityKey() to it.iconPath }.hashCode()
         // revision 进 key：图标库里改完宿主应用图标后，快捷方式图标要跟着换
         val key = "shortcut:${action.payloadKey}:$targetSizePx:$fingerprint:" +
-            com.slideindex.app.ui.GlobalIconStore.revision
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconCacheRevision?.invoke().orEmpty()
         if (bitmapCache.containsKey(key)) return bitmapCache[key]
         val target = targetSizePx.coerceIn(MIN_APP_ICON_PX, MAX_APP_ICON_PX)
         val bitmap = runCatching {
-            ManagedShortcutIconResolver.bitmapForLaunchShortcut(
-                context = context,
-                action = action,
-                catalog = catalog,
-                sizePx = target,
-            )?.asImageBitmap()
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutBitmap
+                ?.invoke(context, action, target, catalog)?.asImageBitmap()
         }.getOrNull()
         bitmapCache[key] = bitmap
         return bitmap
@@ -203,21 +197,19 @@ object QuickWheelIconResolver {
 
     /** 应用内直达（快捷方式）目录：图标解析与角标判定（[QuickWheelIconBadge]）共用同一份。 */
     internal fun activityShortcuts(context: Context): List<ActivityShortcut> =
-        OverlayDependencyAccess.overlayDependencies(context)
-            ?.settingsRepository
-            ?.readSnapshot()
-            ?.activityShortcuts
-            .orEmpty()
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.activityShortcutsCatalog
+            ?.invoke(context).orEmpty()
 
     fun clearBitmapCache() = bitmapCache.clear()
 
     private fun loadAppIcon(context: Context, packageName: String, sizePx: Int): ImageBitmap? {
         val target = sizePx.coerceIn(MIN_APP_ICON_PX, MAX_APP_ICON_PX)
         // 全局图标覆盖优先（扩展 → 图标库 → 应用图标）
-        com.slideindex.app.ui.AppIconOverride
-            .bitmap(context, packageName, target)
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideBitmap
+            ?.invoke(context, packageName, target)
             ?.let { return it.asImageBitmap() }
-        val repository = OverlayDependencyAccess.overlayDependencies(context)?.appRepository ?: return null
+        val repository = com.slideindex.app.overlay.panels.PanelRuntimeHooks.appRepository
+            ?.invoke(context) ?: return null
         return runCatching { repository.launchIconBitmap(packageName, target).asImageBitmap() }.getOrNull()
     }
 

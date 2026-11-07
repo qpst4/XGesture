@@ -1,4 +1,5 @@
 package com.slideindex.app.gesture
+import com.slideindex.app.overlay.asGestureActionRunner
 
 import com.slideindex.app.diagnostic.EdgeDiag
 import com.slideindex.app.overlay.OverlayPanelMode
@@ -688,7 +689,7 @@ class GestureSession(
                     wheelId = action.wheelId,
                     anchorRawX = rawX,
                     anchorRawY = rawY,
-                    actionExecutor = actionExecutor,
+                    actionExecutor = actionExecutor.asGestureActionRunner(),
                     externalTracking = false,
                     shape = action.shape,
                     manualSectorMask = action.manualSectorMask,

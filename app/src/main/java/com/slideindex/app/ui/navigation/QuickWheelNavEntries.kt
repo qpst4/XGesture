@@ -11,6 +11,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.gesture.ActionExecutor
+import com.slideindex.app.overlay.asGestureActionRunner
 import com.slideindex.app.overlay.layout.QuickWheelLayoutEngine
 import com.slideindex.app.overlay.quickwheel.QuickWheelOverlayWindow
 import com.slideindex.app.settings.AppSettings
@@ -184,6 +185,6 @@ private fun showQuickWheelPreview(
         wheel = previewWheel,
         anchorRawX = anchorX,
         anchorRawY = anchorY,
-        actionExecutor = executor,
+        actionExecutor = executor.asGestureActionRunner(),
     )
 }

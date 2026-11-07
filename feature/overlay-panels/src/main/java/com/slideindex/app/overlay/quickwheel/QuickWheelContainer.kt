@@ -219,7 +219,7 @@ fun QuickWheelAddContainer(
  * @param badgeAction 角标依据的动作；默认 = 单击动作（图标只跟单击动作走；HUD 在「按满」时传长按动作）
  */
 @Composable
-internal fun QuickWheelSlotIcon(
+fun QuickWheelSlotIcon(
     slot: QuickWheelSlot,
     builtinDp: Dp,
     rasterDp: Dp,
@@ -230,7 +230,7 @@ internal fun QuickWheelSlotIcon(
     val targetPx = with(LocalDensity.current) { rasterDp.toPx() }.toInt()
 
     // 读 revision：图标库里改完应用图标，轮盘里的槽位要立刻换图
-    val iconRevision = com.slideindex.app.ui.GlobalIconStore.revision
+    val iconRevision = com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconCacheRevision?.invoke().orEmpty()
 
     val libraryVector = if (slot.iconSource == QuickWheelIconSource.ICON_LIBRARY) {
         QuickWheelIconResolver.vectorFor(slot.iconValue)
@@ -297,10 +297,9 @@ internal fun QuickWheelSlotIcon(
                 modifier = Modifier.size(rasterDp),
             )
 
-            fallbackAction != null -> com.slideindex.app.ui.ActionIconSlot(
-                action = fallbackAction,
-                sizeDp = builtinDp.value.toInt(),
-            )
+            fallbackAction != null ->
+                com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconSlot
+                    ?.content(fallbackAction, builtinDp.value.toInt())
 
             slot.name.isNotBlank() -> Text(
                 text = slot.name.take(1),
@@ -335,7 +334,7 @@ internal fun QuickWheelSlotIcon(
  * 带圆角裁剪的容器（`QuickWheelContainer`）为此会等比缩小图标，见那边的说明。
  */
 @Composable
-internal fun QuickWheelIconBadge(action: GestureAction, iconSize: Dp) {
+fun QuickWheelIconBadge(action: GestureAction, iconSize: Dp) {
     val shortcut = action as? GestureAction.LaunchShortcut ?: return
     val context = LocalContext.current
     val isShell = remember(shortcut) {

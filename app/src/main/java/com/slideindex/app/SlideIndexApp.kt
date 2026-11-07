@@ -265,6 +265,24 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onResult = { created -> onResult(created) },
             )
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconSlot =
+            object : com.slideindex.app.overlay.panels.PanelActionIconSlot {
+                @androidx.compose.runtime.Composable
+                override fun content(
+                    action: com.slideindex.app.gesture.GestureAction,
+                    sizeDp: Int,
+                ) {
+                    com.slideindex.app.ui.ActionIconSlot(action = action, sizeDp = sizeDp)
+                }
+            }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.activityShortcutsCatalog = { ctx ->
+            com.slideindex.app.di.OverlayDependencyAccess
+                .overlayDependencies(ctx)
+                ?.settingsRepository
+                ?.readSnapshot()
+                ?.activityShortcuts
+                .orEmpty()
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerAppIconPeek = { pkg ->
             com.slideindex.app.util.PickerAppIconBitmap.peek(pkg)
         }

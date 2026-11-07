@@ -1,4 +1,5 @@
 package com.slideindex.app.gesture
+import com.slideindex.app.overlay.asGestureActionRunner
 
 import android.content.Context
 import android.os.Handler
@@ -303,7 +304,7 @@ class ActionExecutor(
                         wheelId = action.wheelId,
                         anchorRawX = x,
                         anchorRawY = y,
-                        actionExecutor = this,
+                        actionExecutor = asGestureActionRunner(),
                         externalTracking = continueTouch,
                         shape = action.shape,
                         manualSectorMask = action.manualSectorMask,

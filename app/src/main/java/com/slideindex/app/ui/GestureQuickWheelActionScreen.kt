@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.slideindex.app.R
+import com.slideindex.app.overlay.quickwheel.toWheelShapeOrNull
 import com.slideindex.app.gesture.QuickWheelAnchorMode
 import com.slideindex.app.gesture.QuickWheelLaunchLevelShape
 import com.slideindex.app.gesture.QuickWheelLaunchShape
@@ -451,14 +452,6 @@ fun quickWheelLaunchShapeLabel(shape: QuickWheelLaunchShape): String = when (sha
 
 /** 二选一弹框正在为哪一级选形态。 */
 private enum class QuickWheelLevelTarget { PRIMARY, SECONDARY }
-
-/** 展平一级 / 二级的形态覆盖；`null` = 跟随轮盘自身配置。 */
-internal fun QuickWheelLaunchLevelShape.toWheelShapeOrNull(): QuickWheelShape? = when (this) {
-    QuickWheelLaunchLevelShape.FOLLOW -> null
-    QuickWheelLaunchLevelShape.CIRCLE -> QuickWheelShape.CIRCLE
-    QuickWheelLaunchLevelShape.RECT -> QuickWheelShape.RECT
-}
-
 /** 一级 + 二级形态 → 呼出形态的四组合值（映射放 app 层：`:core:gesture` 不依赖 `:core:overlay-layout`）。 */
 internal fun quickWheelLaunchShapeOf(
     primary: QuickWheelShape,
