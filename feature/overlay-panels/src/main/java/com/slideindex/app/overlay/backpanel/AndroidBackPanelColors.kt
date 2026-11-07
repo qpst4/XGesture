@@ -9,6 +9,7 @@ import com.slideindex.app.settings.AndroidBackColorSource
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.AppThemeMode
 import com.slideindex.app.settings.androidBackColorSource
+import com.slideindex.app.settings.toThemeSpec
 import com.slideindex.app.ui.miuix.theme.resolveAppMaterialColorScheme
 
 internal object AndroidBackPanelColors {
@@ -22,7 +23,7 @@ internal object AndroidBackPanelColors {
                 if (systemDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
             AndroidBackColorSource.APP_THEME -> {
                 val dark = AppThemeMode.fromId(settings.themeModeId).resolveIsDark(systemDark)
-                resolveAppMaterialColorScheme(context, settings, dark)
+                resolveAppMaterialColorScheme(context, settings.toThemeSpec(dark))
             }
         }
         return Paints(

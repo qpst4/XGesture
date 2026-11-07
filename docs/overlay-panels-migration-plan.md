@@ -86,8 +86,8 @@
 
 | 顺序 | 内容 | 文件 / 行 | 备注 |
 | :-- | :--- | ---: | :--- |
-| B1 | `filebrowser` | 35 / 9,405 | **不依赖底座，可以提前到任何时间做** |
-| B2 | `screenshot` + `backpanel` | 13 / 3,231 | 依赖 A1 + A3 |
+| B1 | `filebrowser` | 35 / 9,405 | 横向依赖 13 个包，需 UI 套件 + DI + R 之后 |
+| B2 | `backpanel` ✅ / `screenshot` ⬜ | 6 / 1,931（已完成）；`screenshot` 仍被 `ScreenPinManager` 挡住 |
 | B3 | `quickmenu` + `quickwheel` | 29 / 10,798 | 依赖 A1 + A2 + A3 |
 | B4 | `pickresult` + `share` | 27 / 10,773 | 依赖 A2 + A3 |
 | B5 | `history` | 42 / 14,807 | 最大，业务耦合最深 |
@@ -113,8 +113,10 @@
 | **A2b** | 宿主层 → `:core:overlay-host` | `OverlayComposeOwner` / `OverlayCompose` / `OverlayFullScreenPanelHost` / `OverlayBlurGate`（纯决策部分）迁入；R 与语言依赖用 `OverlayHostRuntime` 反转，浮球用 `OverlayZOrderHooks` 反转。模块 19 文件 / 1,644 行 |
 | **A3a** | `OverlayViewBackHandler` → `:core:overlay-host` | 328 行，`internal` 改 public；`PredictiveBackHelper`（179 行）一并下沉到 `:core:common` |
 | **A3b** | 毛玻璃背板 + 徽标 → `:core:overlay-host` | `LocalFrostedGlassBackdrop` / `ShellCommandBadgeOverlay` / `ShortcutBadgeOverlay` / `ShellCommandBadgeRenderer` / `ShortcutBadgeRenderer` 迁入；模糊开关改由 `OverlayHostRuntime.overlayBlurEnabledFlow` 注入 |
+| **A3c** | toast + 对话框宿主 → `:core:overlay-host` | `OverlayToastWindow` / `OverlayComposeDialogHost`；主题包装改 `OverlayHostRuntime.themeWrapper`（`OverlayThemeWrapper` 接口），`themeSettings` 换成 `applyTheme` |
+| **B2** | `backpanel` → **新模块 `:feature:overlay-panels`** | 6 文件 / 1,931 行 + 42 个 `navigation_edge_*` dimen 一起迁入；`AppSettings→AppThemeSpec` 映射下沉到 `:feature:settings`，面板直接依赖 `:feature:settings` |
 
-`:core:overlay-host` 现有 27 个文件 / 3,136 行；`:core:design` 3 个文件 / 246 行；`:app` 的 `overlay/` 根目录从 220 个文件降到 209。
+`:core:overlay-host` 现有 27 个文件 / 3,136 行；`:core:design` 3 个文件 / 246 行；`:feature:overlay-panels` 7 个文件 / 1,993 行；`:app` 的 `overlay/` 根目录从 220 个文件降到 209。
 
 ## 6. 每批验收（不变）
 

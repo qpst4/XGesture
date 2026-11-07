@@ -5,7 +5,7 @@ import android.util.TypedValue
 import android.view.animation.Interpolator
 import android.view.animation.PathInterpolator
 import androidx.dynamicanimation.animation.SpringForce
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 
 /** Ported from AOSP SystemUI `EdgePanelParams` (Apache-2.0). */
 data class EdgePanelParams(private var resources: Resources) {

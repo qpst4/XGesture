@@ -22,6 +22,7 @@ android {
 
 dependencies {
     implementation(project(":core:common"))
+    implementation(project(":core:design"))
     implementation(project(":core:cloud-storage"))
     implementation(project(":core:gesture"))
     implementation(project(":core:notification"))

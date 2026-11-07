@@ -8,25 +8,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import com.slideindex.app.design.AppThemeSpec
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.AppThemeMode
+import com.slideindex.app.settings.toThemeSpec
 
 /**
  * `:app` 侧的适配层：把 `AppSettings` 映射成设计层的 [AppThemeSpec]。
  *
  * 保留原来的函数签名（`context, settings, dark`），所以 6 个调用点一行都不用改；
- * 真正的解析逻辑在 `:core:design` 里，面板模块以后直接吃 [AppThemeSpec]。
+ * 真正的解析逻辑在 `:core:design` 里，`settings → spec` 的映射在 `:feature:settings`。
  */
-fun AppSettings.toThemeSpec(systemDark: Boolean): AppThemeSpec = AppThemeSpec(
-    customColorEnabled = customColorEnabled,
-    themeColorArgb = themeColorArgb,
-    dynamicColorEnabled = dynamicColorEnabled,
-    paletteStyleId = themePaletteStyleId,
-    colorSpecId = themeColorSpecId,
-    darkBackgroundStyleId = darkBackgroundStyleId,
-    dark = AppThemeMode.fromId(themeModeId).resolveIsDark(systemDark),
-)
 
 fun resolveAppMaterialColorScheme(
     context: Context,

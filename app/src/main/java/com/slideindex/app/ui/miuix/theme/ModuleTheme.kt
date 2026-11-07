@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import com.slideindex.app.settings.AppColorSpec
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.settings.toThemeSpec
 import com.slideindex.app.settings.AppThemeMode
 import com.slideindex.app.settings.DarkBackgroundStyle
 import com.slideindex.app.settings.OverlaySettings
