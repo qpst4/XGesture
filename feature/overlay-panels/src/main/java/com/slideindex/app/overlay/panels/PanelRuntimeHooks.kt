@@ -115,6 +115,24 @@ object PanelRuntimeHooks {
     /** 环状启动器：创建快捷方式（host 为 `:app` 的 `AppShortcutLoader.CreateShortcutHost`）。 */
     @Volatile
     var createShortcutLauncher: ((Context, Any, () -> Unit, (Any?) -> Unit) -> Unit)? = null
+    /** 选择器里的应用图标（ImageBitmap）。 */
+    @Volatile
+    var pickerAppIcon: (suspend (Context, String) -> androidx.compose.ui.graphics.ImageBitmap?)? = null
+
+    /** 选择器里的应用图标（同步缓存命中）。 */
+    var pickerAppIconPeek: ((String) -> androidx.compose.ui.graphics.ImageBitmap?)? = null
+
+    /** 选择器里的 Activity 图标（同步缓存命中）。 */
+    var pickerActivityIconPeek: ((String, String) -> androidx.compose.ui.graphics.ImageBitmap?)? = null
+
+    /** 选择器里的 Activity 图标（ImageBitmap）。 */
+    @Volatile
+    var pickerActivityIcon: (suspend (Context, String, String) -> androidx.compose.ui.graphics.ImageBitmap?)? = null
+
+    /** 托管快捷方式（App 内快捷方式）的 Drawable 图标。 */
+    @Volatile
+    var managedShortcutManagedDrawable:
+        ((Context, com.slideindex.app.activity.ActivityShortcut) -> android.graphics.drawable.Drawable?)? = null
     /** 快捷启动器项图标（Drawable）。 */
     @Volatile
     var quickLauncherIconDrawable:

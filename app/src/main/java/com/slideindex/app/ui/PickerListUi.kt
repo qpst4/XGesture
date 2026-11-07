@@ -58,7 +58,6 @@ import androidx.core.graphics.drawable.toBitmap
 import com.slideindex.app.R
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.activity.ActivityShortcutKind
-import com.slideindex.app.activity.ManagedShortcutIconResolver
 import com.slideindex.app.activity.findForLaunchShortcut
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.gesture.GestureAction
@@ -67,7 +66,6 @@ import com.slideindex.app.launcher.showsShellActivityShortcutBadge
 import com.slideindex.app.overlay.ShellCommandBadgeOverlay
 import com.slideindex.app.overlay.ShortcutBadgeOverlay
 import com.slideindex.app.ui.miuix.miuixGroupedCardItem
-import com.slideindex.app.util.PickerAppIconBitmap
 import com.slideindex.app.util.ShortcutKind
 import com.slideindex.app.util.toSafeImageBitmap
 import top.yukonga.miuix.kmp.basic.BasicComponent
@@ -81,11 +79,11 @@ import top.yukonga.miuix.kmp.preference.CheckboxPreference
 import top.yukonga.miuix.kmp.preference.RadioButtonLocation
 import top.yukonga.miuix.kmp.preference.RadioButtonPreference
 
-internal val PickerListScaffoldEmbeddedHorizontalPadding = 0.dp
-internal val PickerListOverlayHorizontalPadding = 12.dp
-internal val PickerListHorizontalPadding = PickerListScaffoldEmbeddedHorizontalPadding
-internal val PickerListGroupSpacing = 12.dp
-internal val PickerListContentPadding = PaddingValues(
+val PickerListScaffoldEmbeddedHorizontalPadding = 0.dp
+val PickerListOverlayHorizontalPadding = 12.dp
+val PickerListHorizontalPadding = PickerListScaffoldEmbeddedHorizontalPadding
+val PickerListGroupSpacing = 12.dp
+val PickerListContentPadding = PaddingValues(
     horizontal = PickerListScaffoldEmbeddedHorizontalPadding,
     vertical = 8.dp,
 )
@@ -98,35 +96,35 @@ enum class PickerTrailingMode {
 }
 
 @Composable
-internal fun settingsSegmentedColors() = ListItemDefaults.segmentedColors(
+fun settingsSegmentedColors() = ListItemDefaults.segmentedColors(
     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     selectedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
 )
 
 @Composable
-internal fun pickerSegmentedColors() = ListItemDefaults.segmentedColors(
+fun pickerSegmentedColors() = ListItemDefaults.segmentedColors(
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
 )
 
 @Composable
-internal fun pickerSegmentedShapes(index: Int, count: Int) =
+fun pickerSegmentedShapes(index: Int, count: Int) =
     ListItemDefaults.segmentedShapes(index = index, count = count)
 
 @Composable
-internal fun pickerListSegmentedGap() = ListItemDefaults.SegmentedGap
+fun pickerListSegmentedGap() = ListItemDefaults.SegmentedGap
 
 private const val PickerSegmentGroupMax = 12
 
-internal fun pickerSegmentIndex(index: Int, total: Int): Int =
+fun pickerSegmentIndex(index: Int, total: Int): Int =
     if (total <= PickerSegmentGroupMax) index else 0
 
-internal fun pickerSegmentCount(total: Int): Int =
+fun pickerSegmentCount(total: Int): Int =
     if (total <= PickerSegmentGroupMax) total else 1
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun PickerSearchListHeader(
+fun PickerSearchListHeader(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -404,7 +402,7 @@ fun Md3PickerManagedShortcutLeading(
         // 宿主应用的全局图标覆盖变了，快捷方式回退到应用图标时要跟着换
         com.slideindex.app.ui.GlobalIconStore.revision,
     ) {
-        ManagedShortcutIconResolver.drawableForManaged(context, shortcut)
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutManagedDrawable?.invoke(context, shortcut)
             ?.toBitmap(96, 96)
     }
     if (iconBitmap != null) {
@@ -469,7 +467,7 @@ fun Md3PickerLaunchShortcutLeading(
         if (managed != null) {
             Md3PickerManagedShortcutLeading(shortcut = managed, selected = selected)
         } else {
-            val hostPackage = ManagedShortcutIconResolver.hostPackageForLaunchShortcut(action.payloadKey).orEmpty()
+            val hostPackage = com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutHostPackage?.invoke(action.payloadKey).orEmpty()
             Md3PickerPackageLeading(
                 packageName = hostPackage,
                 contentDescription = action.label,
@@ -501,12 +499,12 @@ fun Md3PickerPackageLeading(
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var bitmap by remember(packageName) {
-        mutableStateOf(if (packageName.isBlank()) null else PickerAppIconBitmap.peek(packageName))
+        mutableStateOf(if (packageName.isBlank()) null else com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerAppIconPeek?.invoke(packageName))
     }
     var failed by remember(packageName) { mutableStateOf(packageName.isBlank()) }
     LaunchedEffect(packageName) {
         if (packageName.isNotBlank() && bitmap == null && !failed) {
-            val loaded = PickerAppIconBitmap.load(context, packageName)
+            val loaded = com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerAppIcon?.invoke(context, packageName)
             if (loaded == null) {
                 failed = true
             } else {
@@ -570,12 +568,12 @@ fun Md3PickerAppLeading(app: AppInfo, sizeDp: Int = 40) {
             )
         } else {
             var bitmap by remember(app.packageName) {
-                mutableStateOf(PickerAppIconBitmap.peek(app.packageName))
+                mutableStateOf(com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerAppIconPeek?.invoke(app.packageName))
             }
             var failed by remember(app.packageName) { mutableStateOf(false) }
             LaunchedEffect(app.packageName) {
                 if (bitmap == null && !failed) {
-                    val loaded = PickerAppIconBitmap.load(context, app.packageName)
+                    val loaded = com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerAppIcon?.invoke(context, app.packageName)
                     if (loaded == null) {
                         failed = true
                     } else {
@@ -633,11 +631,11 @@ fun Md3PickerActivityLeading(
     val cacheKey = "$packageName/$className"
     // 只认 Activity 缓存；不要用 App 图标 peek，否则会短路掉真正的 Activity 图标加载。
     var bitmap by remember(cacheKey) {
-        mutableStateOf(PickerAppIconBitmap.peekActivity(packageName, className))
+        mutableStateOf(com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerActivityIconPeek?.invoke(packageName, className))
     }
     var failed by remember(cacheKey) { mutableStateOf(false) }
     LaunchedEffect(cacheKey) {
-        val loaded = PickerAppIconBitmap.loadActivity(context, packageName, className)
+        val loaded = com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerActivityIcon?.invoke(context, packageName, className)
         if (loaded == null) {
             failed = true
             bitmap = null

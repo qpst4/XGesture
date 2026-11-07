@@ -265,6 +265,21 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onResult = { created -> onResult(created) },
             )
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerAppIconPeek = { pkg ->
+            com.slideindex.app.util.PickerAppIconBitmap.peek(pkg)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerActivityIconPeek = { pkg, cls ->
+            com.slideindex.app.util.PickerAppIconBitmap.peekActivity(pkg, cls)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerAppIcon = { ctx, pkg ->
+            com.slideindex.app.util.PickerAppIconBitmap.load(ctx, pkg)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerActivityIcon = { ctx, pkg, cls ->
+            com.slideindex.app.util.PickerAppIconBitmap.loadActivity(ctx, pkg, cls)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutManagedDrawable = { ctx, shortcut ->
+            com.slideindex.app.activity.ManagedShortcutIconResolver.drawableForManaged(ctx, shortcut)
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.quickLauncherIconDrawable =
             { item, apps, ctx, shortcuts, shells ->
                 com.slideindex.app.util.QuickLauncherIconResolver.iconDrawable(
