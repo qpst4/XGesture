@@ -107,6 +107,14 @@ object PanelRuntimeHooks {
     /** 当前是否应隐藏触发区（锁屏/横屏/桌面/暂停等规则）。 */
     @Volatile
     var suppressTrigger: ((AppSettings, Context, Boolean) -> Boolean)? = null
+    /** 环状启动器：打开槽位图标编辑页的 Intent。 */
+    @Volatile
+    var ringSlotIconEditorIntent:
+        ((Context, com.slideindex.app.settings.FvRingLauncherAxis, Int) -> android.content.Intent?)? = null
+
+    /** 环状启动器：创建快捷方式（host 为 `:app` 的 `AppShortcutLoader.CreateShortcutHost`）。 */
+    @Volatile
+    var createShortcutLauncher: ((Context, Any, () -> Unit, (Any?) -> Unit) -> Unit)? = null
     /** 快捷启动器项图标（Drawable）。 */
     @Volatile
     var quickLauncherIconDrawable:

@@ -250,6 +250,18 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.panels.PanelFloatBallHooks.overlayLayoutMetrics = { settings ->
             com.slideindex.app.overlay.FloatBallOverlay.overlayLayoutMetrics(settings) ?: (1f to 1080f)
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.ringSlotIconEditorIntent = { ctx, axis, slotIndex ->
+            com.slideindex.app.service.RingLauncherSlotIconEditorTrampolineActivity
+                .createIntent(ctx, axis, slotIndex)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.createShortcutLauncher = { ctx, host, onPrepare, onResult ->
+            com.slideindex.app.service.CreateShortcutTrampoline.launch(
+                context = ctx,
+                host = host as com.slideindex.app.util.AppShortcutLoader.CreateShortcutHost,
+                onPrepare = onPrepare,
+                onResult = { created -> onResult(created) },
+            )
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.quickLauncherIconDrawable =
             { item, apps, ctx, shortcuts, shells ->
                 com.slideindex.app.util.QuickLauncherIconResolver.iconDrawable(

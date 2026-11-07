@@ -33,7 +33,6 @@ import com.slideindex.app.settings.FvRingLauncherAxisMergeDirection
 import com.slideindex.app.settings.FvRingLauncherSettings
 import com.slideindex.app.settings.fvRingLauncherFor
 import com.slideindex.app.settings.toAxis
-import com.slideindex.app.service.CreateShortcutTrampoline
 import com.slideindex.app.ui.ringlauncher.RingLauncherSlotConfigSheet
 import com.slideindex.app.util.PermissionHelper
 import com.slideindex.app.util.RecentTasksLoader
@@ -169,17 +168,17 @@ object RingLauncherOverlayWindow {
                             },
                             onOpenCustomIconEditor = {
                                 suspendForSlotIconEditor()
-                                val intent = com.slideindex.app.service.RingLauncherSlotIconEditorTrampolineActivity
-                                    .createIntent(hostContext, axis, slotIndex)
-                                runCatching { hostContext.startActivity(intent) }
+                                val intent = com.slideindex.app.overlay.panels.PanelRuntimeHooks.ringSlotIconEditorIntent
+                                    ?.invoke(hostContext, axis, slotIndex)
+                                if (intent != null) {
+                                    runCatching { hostContext.startActivity(intent) }
+                                }
                             },
                             launchCreateShortcut = { createHost, onResult ->
-                                CreateShortcutTrampoline.launch(
-                                    context = hostContext,
-                                    host = createHost,
-                                    onPrepare = { RingLauncherOverlayWindow.dismiss() },
-                                    onResult = onResult,
-                                )
+                                com.slideindex.app.overlay.panels.PanelRuntimeHooks.createShortcutLauncher
+                                    ?.invoke(hostContext, createHost, { RingLauncherOverlayWindow.dismiss() }) { created ->
+                                        onResult(created as? com.slideindex.app.util.AppShortcutLoader.CreatedShortcut)
+                                    }
                             },
                         )
                     }

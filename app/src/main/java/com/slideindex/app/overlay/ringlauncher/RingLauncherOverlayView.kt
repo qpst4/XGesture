@@ -71,7 +71,6 @@ import com.slideindex.app.overlay.layout.FvCircleLayoutEngine
 import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.overlay.layout.FvPanelLayout
 import com.slideindex.app.overlay.layout.FvToolbarButton
-import com.slideindex.app.service.RingLauncherSlotPickTrampolineActivity
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.FvRingLauncherLinkFlags
 import com.slideindex.app.settings.FvRingLauncherSettings
