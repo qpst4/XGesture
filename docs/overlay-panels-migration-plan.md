@@ -350,3 +350,23 @@ StashReminderReceiver → StashReminderPendingState + StashClipboardTrampolineAc
 的共性卡点是 `service`（16k）与 `ui`（101k）两个巨型包，不是单个数据层能撬动的。
 建议把 `:core:clipboard` / `:core:stash` 作为下一阶段的起点，按 P2（FloatBallPort）→ P3（picker）
 → P4（tasks）→ `service` 拆分推进。
+
+### 12.6 数据层模块进度（续）
+
+| 模块 | 状态 |
+| :--- | :--- |
+| `:core:clipboard` | ✅ 19 文件 / 3.2k 行 + 只读接口 + 6 测试 |
+| `:core:stash` | ✅ 7 文件 / 2.2k 行 + 只读/写入定位点 + 2 测试 |
+| `:core:search` | ✅ 18 文件（图片搜索、文件索引、系统设置索引、计算器） |
+
+**`:core:privilege` 实测不可行（2026-11-08）**：`privilege` / `shizuku` 是一个闭环集群——
+
+```
+TaskManagerUtil(968) ← PrivilegeGateway ← TaskManagerShellExecutor ← RootNamespace
+        ↑                                        ↑
+   FreeWindowLauncher(overlay)            R.string + ITaskManagerService(AIDL)
+```
+
+试搬 16 文件后连锁回退 9 次，最终只剩 7 个「纯反射/纯 Binder」小文件能独立（价值极低）。
+**结论：要动 `privilege`，必须先拆 `TaskManagerUtil`（968 行 hub）**，把"任务查询/结束/小窗"从它里面分出接口，
+再让 `PrivilegeGateway` / 执行器依赖接口。这是独立的一次重构，不要和面板迁移混在一起。
