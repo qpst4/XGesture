@@ -84,4 +84,5 @@
     <string name="fv_ring_launcher_circle_2">2 rings (13)</string>
     <string name="fv_ring_launcher_circle_3">3 rings (24)</string>
     <string name="fv_ring_launcher_circle_4">4 rings (38)</string>
+    <string name="stash_undo">Undo</string>
 </resources>

@@ -37,17 +37,17 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Text
 
 /** 一条提示的内容（设计稿 `.toast` 的单槽 `undoFn`）。 */
-internal data class HistoryToastState(
+data class HistoryToastState(
     val message: String,
     val onUndo: (() -> Unit)?,
 )
 
 /** 设计稿：`.toast { bottom: 104px; max-width: 342px }`。 */
-internal val HistoryToastBottomPadding = 104.dp
+val HistoryToastBottomPadding = 104.dp
 
 /** 有撤销 4200ms、无撤销 2200ms（设计稿 `showToast` 的两个 `setTimeout`）。 */
-internal const val HistoryToastUndoDurationMs = 4_200L
-internal const val HistoryToastPlainDurationMs = 2_200L
+const val HistoryToastUndoDurationMs = 4_200L
+const val HistoryToastPlainDurationMs = 2_200L
 
 /**
  * 提示条 + 「撤销」——照设计稿 `.toast` 自己画，不用 miuix Snackbar：
@@ -63,7 +63,7 @@ internal const val HistoryToastPlainDurationMs = 2_200L
  * 全屏那一层（面板窗是满屏的，`BottomCenter` 即可）。
  */
 @Composable
-internal fun HistoryToast(
+fun HistoryToast(
     state: HistoryToastState?,
     onUndo: () -> Unit,
     /** 左右滑动消除（不执行撤销）。 */
@@ -150,7 +150,7 @@ internal fun HistoryToast(
                     ) {
                         Text(
                             text = androidx.compose.ui.res.stringResource(
-                                com.slideindex.app.R.string.stash_undo,
+                                com.slideindex.app.overlay.panels.R.string.stash_undo,
                             ),
                             style = TextStyle(
                                 fontSize = HistoryFontSizes.meta,
