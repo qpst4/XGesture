@@ -40,7 +40,7 @@ object StashVoiceController {
         if (result.isFailure) {
             // 起不来（后台启动受限等）：也要走一次"会话"，否则输入面认领不到这个失败。
             StashVoiceSession.beginSession()
-            StashVoiceSession.finishWithError(com.slideindex.app.R.string.stash_voice_error_generic)
+            StashVoiceSession.finishWithError(com.slideindex.app.overlay.panels.R.string.stash_voice_error_generic)
         }
     }
 

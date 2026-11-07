@@ -18,7 +18,7 @@ import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.util.ForegroundNotificationChannels
 import java.io.File
 import java.util.Locale

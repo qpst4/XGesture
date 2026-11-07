@@ -235,6 +235,9 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 scope = if (cornerWheel) com.slideindex.app.util.OverlaySuppressionScope.CORNER_WHEEL else com.slideindex.app.util.OverlaySuppressionScope.TRIGGER,
             )
         }
+        com.slideindex.app.overlay.panels.PanelFloatBallHooks.dismissStashPanel = {
+            com.slideindex.app.overlay.FloatBallStashPanel.dismiss()
+        }
         com.slideindex.app.overlay.panels.PanelFloatBallHooks.enterFreeMoveMode = {
             com.slideindex.app.overlay.FloatBallOverlay.enterFreeMoveMode()
         }
@@ -285,6 +288,24 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.stash.StashReminderScheduling.cancel = { ctx, entryId ->
             com.slideindex.app.stash.StashReminderScheduler.cancel(ctx, entryId)
         }
+        com.slideindex.app.voice.StashVoiceRecorderAccess.recorder =
+            object : com.slideindex.app.voice.StashVoiceRecorder {
+                override fun isRecording(): Boolean =
+                    com.slideindex.app.voice.StashAudioRecorderController.isRecording()
+
+                override fun toggle(context: Context) =
+                    com.slideindex.app.voice.StashAudioRecorderController.toggle(context)
+
+                override fun start(context: Context) =
+                    com.slideindex.app.voice.StashAudioRecorderController.start(context)
+
+                override fun stop(context: Context) =
+                    com.slideindex.app.voice.StashAudioRecorderController.stop(context)
+
+                override fun hasRecordAudioPermission(context: Context): Boolean =
+                    com.slideindex.app.voice.StashAudioRecorderController
+                        .hasRecordAudioPermission(context)
+            }
         com.slideindex.app.clipboard.ClipboardForeground.resolvePackage = { ctx ->
             com.slideindex.app.util.AccessibilityForegroundResolver.resolve(ctx)
         }

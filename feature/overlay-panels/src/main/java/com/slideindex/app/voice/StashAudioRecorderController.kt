@@ -10,8 +10,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startForegroundService
-import com.slideindex.app.R
-import com.slideindex.app.overlay.FloatBallStashPanel
+import com.slideindex.app.overlay.panels.R
 
 /**
  * 「录音」的统一入口（§0.16.21）。
@@ -108,7 +107,7 @@ private object StashAudioPermissionNotice {
         runCatching {
             Toast.makeText(appContext, R.string.stash_audio_permission_denied, Toast.LENGTH_LONG).show()
         }
-        runCatching { FloatBallStashPanel.dismiss() }
+        runCatching { com.slideindex.app.overlay.panels.PanelFloatBallHooks.dismissStashPanel?.invoke() }
         runCatching {
             appContext.startActivity(
                 Intent(

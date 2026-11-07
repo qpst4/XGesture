@@ -5,7 +5,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import android.util.Log
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 
 /**
  * 前台服务通知的渠道保障。

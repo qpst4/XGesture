@@ -78,10 +78,9 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.clipboard.formatAudioDuration
 import com.slideindex.app.voice.StashAudioRecordSession
-import com.slideindex.app.voice.StashAudioRecorderController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Icon
@@ -104,7 +103,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * 把整条抬到输入法上方（调用方传 [imeBottom]）。
  */
 @Composable
-internal fun HistoryComposerFabSlot(
+fun HistoryComposerFabSlot(
     visible: Boolean,
     open: Boolean,
     onOpenChange: (Boolean) -> Unit,
@@ -147,7 +146,7 @@ internal fun HistoryComposerFabSlot(
 @Suppress("DEPRECATION")
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-internal fun HistoryComposerModal(
+fun HistoryComposerModal(
     open: Boolean,
     /** 正文的块序列（唯一真相在 [StashComposerDraft.blocks]，这里传进来的是一份快照）。 */
     blocks: List<DraftBlock>,
@@ -319,7 +318,7 @@ internal fun HistoryComposerModal(
  *   用户一保存这张图就**不会**落盘（块还在、打开却没有图）。
  */
 @Composable
-internal fun DraftBlockEditorSurface(
+fun DraftBlockEditorSurface(
     blocks: List<DraftBlock>,
     onBlocksChange: ((List<DraftBlock>) -> List<DraftBlock>) -> Unit,
     onAddImage: ((onPicked: (List<String>) -> Unit) -> Unit)?,
@@ -776,13 +775,13 @@ internal fun DraftBlockEditorSurface(
                         iconSize = 16.dp,
                         onTapRecord = {
                             if (StashAudioRecordSession.state == StashAudioRecordSession.State.Recording) {
-                                StashAudioRecorderController.stop(context)
+                                com.slideindex.app.voice.StashVoiceRecorderAccess.recorder?.stop(context)
                             } else {
                                 // 先认领"这一轮"，再开录：结果回来时才知道该由哪一层插块。
                                 claimedRecordSessionId = StashAudioRecordSession.sessionId
                                 // 互斥的另一半：录音期间不许有播放（播放器是单例，这里直接叫停）。
                                 HistoryAudioPlayback.stop()
-                                StashAudioRecorderController.start(context)
+                                com.slideindex.app.voice.StashVoiceRecorderAccess.recorder?.start(context)
                             }
                         },
                     )
@@ -1360,7 +1359,7 @@ private const val HistoryComposerImageTargetOversample = 2.0f
  * 下次要做"框外小图"（比如多图预览条）可以直接复用，不必再写第三遍。
  */
 @Composable
-internal fun HistoryComposerThumbnail(path: String, onRemove: () -> Unit) {
+fun HistoryComposerThumbnail(path: String, onRemove: () -> Unit) {
     val theme = historyTheme()
     val shape = RoundedCornerShape(HistoryRadii.sm)
     val thumbnail = remember(path) { decodeComposerThumbnail(path) }
@@ -1442,7 +1441,7 @@ private val HistoryComposerFabBottomPadding = 32.dp
 
 /** 设计稿 `.fab`：54dp、圆角 19、主题色底 + 白加号；打开后变玻璃底 + 加号转 45°（成了 ×）。 */
 @Composable
-internal fun HistoryComposerFab(
+fun HistoryComposerFab(
     open: Boolean,
     onClick: () -> Unit,
 ) {

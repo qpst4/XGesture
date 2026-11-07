@@ -28,7 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.voice.StashAudioRecordSession
 import com.slideindex.app.voice.StashVoiceController
 import com.slideindex.app.voice.StashVoiceSession
@@ -51,7 +51,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * - 出错 → 交给调用方提示（面板用 snackbar、输入槽用 toast）。
  */
 @Composable
-internal fun HistoryVoiceMicButton(
+fun HistoryVoiceMicButton(
     onResult: (String) -> Unit,
     onError: (Int) -> Unit,
     modifier: Modifier = Modifier,

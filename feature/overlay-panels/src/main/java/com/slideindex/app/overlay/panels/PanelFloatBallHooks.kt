@@ -26,6 +26,9 @@ object PanelFloatBallHooks {
     @Volatile
     var suppressTouchHostsForActiveLauncherOverlay: (() -> Unit)? = null
 
+    /** 关闭暂存浮窗（语音录制开始/结束时会用到）。 */
+    var dismissStashPanel: (() -> Unit)? = null
+
     /** 浮层布局度量：density 与屏幕宽度。 */
     @Volatile
     var overlayLayoutMetrics: ((AppSettings) -> Pair<Float, Float>)? = null
