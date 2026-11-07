@@ -109,7 +109,7 @@ object WidgetPopupOverlayWindow {
       settings.widgetPanelCloseOnClickMode,
     )
 
-    val hostContext = OverlayDependencyAccess.overlayHostContext()
+    val hostContext = overlayHostContext()
       ?: run {
         Log.w(TAG, "show: accessibility service not connected")
         return false

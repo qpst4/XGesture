@@ -578,7 +578,7 @@ object ScreenPinManager {
         content: PinContent,
         placement: PinInitialPlacement? = null
     ): Boolean {
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context.applicationContext
+        val hostContext = overlayHostContext() ?: context.applicationContext
         ensureScreenOffReceiver(hostContext)
         val wm = windowManager ?: (
             hostContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager

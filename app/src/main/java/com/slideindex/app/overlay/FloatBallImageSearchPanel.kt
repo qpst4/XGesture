@@ -255,7 +255,7 @@ object FloatBallImageSearchPanel {
             cachedHostedUrl = null
         }
 
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context.applicationContext
+        val hostContext = overlayHostContext() ?: context.applicationContext
         ensureWindow(hostContext)
         ownedBitmap?.recycle()
         val copied = bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, false)

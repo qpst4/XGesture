@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.share
 
+import com.slideindex.app.overlay.overlayHostContext
+
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -137,7 +139,7 @@ object ShareSheetOverlayWindow {
             runCatching { latch.await(500, java.util.concurrent.TimeUnit.MILLISECONDS) }
             return result
         }
-        val host = OverlayDependencyAccess.overlayHostContext() ?: run {
+        val host = overlayHostContext() ?: run {
             Log.w(TAG, "show: accessibility service not connected")
             return false
         }

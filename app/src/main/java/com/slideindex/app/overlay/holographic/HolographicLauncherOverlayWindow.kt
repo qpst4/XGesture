@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.holographic
 
+import com.slideindex.app.overlay.overlayHostContext
+
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -52,7 +54,7 @@ object HolographicLauncherOverlayWindow {
             return false
         }
 
-        val hostContext = OverlayDependencyAccess.overlayHostContext()
+        val hostContext = overlayHostContext()
             ?: run {
                 Log.w(TAG, "show: accessibility service not connected")
                 return false

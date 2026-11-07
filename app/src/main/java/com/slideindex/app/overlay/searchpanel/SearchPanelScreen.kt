@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.searchpanel
 
+import com.slideindex.app.overlay.overlayHostContext
+
 import android.accessibilityservice.AccessibilityService
 import android.content.ClipData
 import android.content.Context
@@ -441,7 +443,7 @@ fun SearchPanelScreen(
                     backgroundBitmap = null
                     return@LaunchedEffect
                 }
-                val service = OverlayDependencyAccess.overlayHostContext() as? AccessibilityService
+                val service = overlayHostContext() as? AccessibilityService
                 if (service == null) {
                     backgroundBitmap = null
                     return@LaunchedEffect
@@ -977,7 +979,7 @@ fun SearchPanelScreen(
 
     /** 剪贴板候选：长按 = 复制并粘贴到目标输入框（面板收起后再粘，避免粘回搜索框）。 */
     fun pasteClipboardCandidate(entry: ClipboardEntry) {
-        val service = OverlayDependencyAccess.overlayHostContext() as? AccessibilityService
+        val service = overlayHostContext() as? AccessibilityService
         if (service == null) {
             copyClipboardCandidate(entry)
             return

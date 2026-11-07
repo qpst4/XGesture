@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.volumepanel
 
+import com.slideindex.app.overlay.overlayHostContext
+
 /**
  * Portions derived from EdgeGesture (https://github.com/evilgodxu/EdgeGesture)
  * Licensed under GPL-3.0. Modified for com.slideindex.app.
@@ -119,7 +121,7 @@ fun VolumePanelContent(
     var pickerSlot by remember { mutableIntStateOf(-1) }
     var allApps by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
     val overlayContext = remember(context) {
-        OverlayDependencyAccess.overlayHostContext() ?: context
+        overlayHostContext() ?: context
     }
     val actionExecutor = remember(deps, overlayContext) {
         val repository = deps?.appRepository ?: return@remember null

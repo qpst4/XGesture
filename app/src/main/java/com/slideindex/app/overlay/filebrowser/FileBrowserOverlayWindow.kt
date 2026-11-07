@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.filebrowser
 
+import com.slideindex.app.overlay.overlayHostContext
+
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Environment
@@ -118,7 +120,7 @@ internal object FileBrowserOverlayWindow {
             Log.w(TAG, "show: accessibility service not enabled")
             return false
         }
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: run {
+        val hostContext = overlayHostContext() ?: run {
             Log.w(TAG, "show: accessibility service not connected")
             return false
         }
@@ -269,7 +271,7 @@ internal object FileBrowserOverlayWindow {
         if (!fileDragSuspended && !force) return
         fileDragSuspended = false
         val current = session ?: return
-        val hostContext = OverlayDependencyAccess.overlayHostContext()
+        val hostContext = overlayHostContext()
         if (hostContext == null) {
             Log.w(TAG, "resumeFromFileDrag: accessibility service not connected")
             return
@@ -305,7 +307,7 @@ internal object FileBrowserOverlayWindow {
     private fun resumeFromExternalActivity() {
         runOnMainSync {
             val current = session ?: return@runOnMainSync
-            val hostContext = OverlayDependencyAccess.overlayHostContext()
+            val hostContext = overlayHostContext()
             if (hostContext == null) {
                 Log.w(TAG, "resume: accessibility service not connected")
                 return@runOnMainSync

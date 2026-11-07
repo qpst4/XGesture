@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.pickresult
 
+import com.slideindex.app.overlay.overlayHostContext
+
 import android.content.ClipData
 import android.content.ClipDescription
 import android.content.Context
@@ -124,7 +126,7 @@ internal object PickResultQrOverlayWindow {
             }
             if (isShowing) dismiss()
 
-            val hostContext = OverlayDependencyAccess.overlayHostContext()
+            val hostContext = overlayHostContext()
                 ?: context.applicationContext
             if (!ensureWindow(hostContext, settings)) {
                 OverlayToastWindow.show(context, context.getString(R.string.float_ball_action_failed))

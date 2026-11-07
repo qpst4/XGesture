@@ -76,7 +76,7 @@ object PinToScreenDialog {
             return false
         }
 
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context.applicationContext
+        val hostContext = overlayHostContext() ?: context.applicationContext
         val host = dialogHost ?: OverlayComposeDialogHost(
             context = hostContext,
             fullScreen = false

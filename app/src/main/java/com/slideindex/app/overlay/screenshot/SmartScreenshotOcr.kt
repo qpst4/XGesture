@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.screenshot
 
+import com.slideindex.app.overlay.overlayHostContext
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Rect
@@ -30,7 +32,7 @@ object SmartScreenshotOcr {
         screenRect: Rect? = null,
         layoutMeta: ScreenshotLayoutMeta? = null
     ) {
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context.applicationContext
+        val hostContext = overlayHostContext() ?: context.applicationContext
         val settings = OverlayDependencyAccess.overlayDependencies(hostContext)
             ?.settingsRepository
             ?.readSnapshot()

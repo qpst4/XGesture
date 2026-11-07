@@ -147,7 +147,7 @@ class OverlaySidePanelHost(
         onAccessibilityRequired: () -> Boolean = {
             PermissionHelper.isAccessibilityServiceEnabledForOverlays(context)
         },
-        onHostContext: () -> Context? = { OverlayDependencyAccess.overlayHostContext() },
+        onHostContext: () -> Context? = { overlayHostContext() },
         dragReveal: () -> Boolean = { false },
         revealProgress: () -> Float = { 0f }
     ): Boolean {
@@ -190,7 +190,7 @@ class OverlaySidePanelHost(
         onAccessibilityRequired: () -> Boolean = {
             PermissionHelper.isAccessibilityServiceEnabledForOverlays(context)
         },
-        onHostContext: () -> Context? = { OverlayDependencyAccess.overlayHostContext() },
+        onHostContext: () -> Context? = { overlayHostContext() },
         onShown: () -> Unit = { FloatBallOverlay.scheduleChromeAbovePanels() },
         dragReveal: () -> Boolean = { false },
         revealProgress: () -> Float = { 0f }

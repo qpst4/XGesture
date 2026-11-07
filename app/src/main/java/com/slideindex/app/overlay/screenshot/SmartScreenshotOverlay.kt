@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.screenshot
 
+import com.slideindex.app.overlay.overlayHostContext
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
@@ -35,7 +37,7 @@ object SmartScreenshotOverlay {
             return
         }
 
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context.applicationContext
+        val hostContext = overlayHostContext() ?: context.applicationContext
         val minSelectionPx = (48 * hostContext.resources.displayMetrics.density).toInt()
         state.show(screenshot, minSelectionPx)
 

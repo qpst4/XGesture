@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.searchpanel
 
+import com.slideindex.app.overlay.overlayHostContext
+
 import com.slideindex.app.overlay.ScreenOffDismissReceiver
 import android.content.Context
 import android.graphics.PixelFormat
@@ -115,7 +117,7 @@ object SearchPanelOverlayWindow {
         }
         // 预热必须等无障碍宿主就绪：早于它建窗会拿到无效 token（BadTokenException），
         // 之后 show() 的 updateViewLayout 全部失败，面板就变成"窗口在但永远不可见"。
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: return
+        val hostContext = overlayHostContext() ?: return
         ensureWindow(hostContext)
         if (!isShowing) {
             applyPanelShellPassive()
@@ -158,7 +160,7 @@ object SearchPanelOverlayWindow {
             Log.w(TAG, "show: accessibility service not enabled")
             return false
         }
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: run {
+        val hostContext = overlayHostContext() ?: run {
             Log.w(TAG, "show: accessibility service not connected")
             return false
         }

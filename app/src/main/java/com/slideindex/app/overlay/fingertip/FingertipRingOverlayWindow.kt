@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.fingertip
 
+import com.slideindex.app.overlay.overlayHostContext
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
@@ -78,7 +80,7 @@ object FingertipRingOverlayWindow {
             Log.w(TAG, "show: accessibility not enabled")
             return false
         }
-        val hostContext = OverlayDependencyAccess.overlayHostContext()
+        val hostContext = overlayHostContext()
             ?: run {
                 Log.w(TAG, "show: overlay host unavailable")
                 return false

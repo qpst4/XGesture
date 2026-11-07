@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.dragdrop
 
+import com.slideindex.app.overlay.overlayHostContext
+
 import android.content.ClipData
 import android.content.ClipDescription
 import android.content.Context
@@ -798,7 +800,7 @@ class DragDropFlowController(
                     }
                     targetId == "search_text" && !text.isNullOrBlank() -> {
                         // 进我们自己的搜索面板，不要 ACTION_WEB_SEARCH 弹系统窗口。
-                        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context
+                        val hostContext = overlayHostContext() ?: context
                         SearchPanelQueryBridge.rememberQuery(context, text)
                         if (!SearchPanelOverlayWindow.show(hostContext)) {
                             Toast.makeText(context, context.getString(R.string.shortcut_panel_open_failed), Toast.LENGTH_SHORT).show()
@@ -823,7 +825,7 @@ class DragDropFlowController(
                         if (bitmap == null) {
                             Toast.makeText(context, context.getString(R.string.drag_drop_flow_toast_image_unreadable), Toast.LENGTH_SHORT).show()
                         } else {
-                            val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context
+                            val hostContext = overlayHostContext() ?: context
                             SearchPanelSessionState.pushImage(bitmap)
                             if (!SearchPanelOverlayWindow.show(hostContext)) {
                                 SearchPanelSessionState.pushImage(null)
@@ -842,7 +844,7 @@ class DragDropFlowController(
                     targetId == "translate_text" && !text.isNullOrBlank() -> {
                         // 与取词面板 / 剪贴板智能翻译同一条链路：引擎与「即时翻译」开关都生效；
                         // 选「本地 App」或关掉即时翻译时不会打开取词面板。
-                        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context
+                        val hostContext = overlayHostContext() ?: context
                         FloatBallTranslateCoordinator.translateFromExternalEntry(
                             context = hostContext,
                             text = text,
@@ -866,7 +868,7 @@ class DragDropFlowController(
      * 走的是和全局取词相同的入口，锚点交给面板自己算（没有手指坐标可用）。
      */
     private fun openWordSegmentation(text: String) {
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context
+        val hostContext = overlayHostContext() ?: context
         openTextPickPanel(hostContext, text)
     }
 

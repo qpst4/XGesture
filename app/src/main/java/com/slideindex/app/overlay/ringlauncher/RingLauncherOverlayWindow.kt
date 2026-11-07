@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.ringlauncher
 
+import com.slideindex.app.overlay.overlayHostContext
+
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -116,7 +118,7 @@ object RingLauncherOverlayWindow {
             mainHandler.post { openSlotPicker(slotIndex) }
             return
         }
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: return
+        val hostContext = overlayHostContext() ?: return
         val deps = OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
         val settings = lastSettings
         val axis = currentAxis()
@@ -226,7 +228,7 @@ object RingLauncherOverlayWindow {
             return false
         }
 
-        val hostContext = OverlayDependencyAccess.overlayHostContext()
+        val hostContext = overlayHostContext()
             ?: run {
                 Log.w(TAG, "show: accessibility service not connected")
                 return false
@@ -555,7 +557,7 @@ object RingLauncherOverlayWindow {
         }
         val overlayController = controller ?: return
         if (!overlayController.isVisible()) return
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: return
+        val hostContext = overlayHostContext() ?: return
         val deps = OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
         val appRepository = deps.appRepository
         val apps = appRepository.getCachedApps()
@@ -629,7 +631,7 @@ object RingLauncherOverlayWindow {
         }
         val overlayController = controller ?: return
         if (!overlayController.isVisible()) return
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: return
+        val hostContext = overlayHostContext() ?: return
         val deps = OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
         val appRepository = deps.appRepository
         val appsByPackage = appRepository.getCachedApps().associateBy { it.packageName }

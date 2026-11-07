@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.volumepanel
 
+import com.slideindex.app.overlay.overlayHostContext
+
 /**
  * Portions derived from EdgeGesture (https://github.com/evilgodxu/EdgeGesture)
  * Licensed under GPL-3.0. Modified for com.slideindex.app.
@@ -104,7 +106,7 @@ object VolumePanelOverlayWindow {
             Log.w(TAG, "show: accessibility service not enabled")
             return false
         }
-        val hostContext = OverlayDependencyAccess.overlayHostContext()
+        val hostContext = overlayHostContext()
             ?: run {
                 Log.w(TAG, "show: accessibility service not connected")
                 return false

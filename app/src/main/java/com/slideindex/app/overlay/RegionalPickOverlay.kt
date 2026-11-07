@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay
 
+import com.slideindex.app.overlay.overlayHostContext
+
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -127,7 +129,7 @@ object RegionalPickOverlay {
             EdgeContinuedOverlayLaunchCoordinator.clearAfterHandoffEnd()
             return
         }
-        val hostContext = com.slideindex.app.di.OverlayDependencyAccess.overlayHostContext()
+        val hostContext = overlayHostContext()
             ?: run {
                 Log.w(TAG, "launchFromEdge: host unavailable")
                 continuedGestureActive = false
@@ -166,7 +168,7 @@ object RegionalPickOverlay {
             Log.w(TAG, "show: accessibility not enabled")
             return
         }
-        val hostContext = com.slideindex.app.di.OverlayDependencyAccess.overlayHostContext()
+        val hostContext = overlayHostContext()
             ?: run {
                 Log.w(TAG, "show: host unavailable")
                 return

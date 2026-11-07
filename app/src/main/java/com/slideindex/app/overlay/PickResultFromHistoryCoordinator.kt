@@ -36,7 +36,7 @@ object PickResultFromHistoryCoordinator {
     ) {
         scope.launch {
             val appContext = context.applicationContext
-            val hostContext = OverlayDependencyAccess.overlayHostContext() ?: appContext
+            val hostContext = overlayHostContext() ?: appContext
             val repo = StashAccess.repository
             val text = when (entry.type) {
                 StashEntryType.TEXT -> entry.text?.trim().orEmpty().takeIf { it.isNotEmpty() }
@@ -67,7 +67,7 @@ object PickResultFromHistoryCoordinator {
     ) {
         scope.launch {
             val appContext = context.applicationContext
-            val hostContext = OverlayDependencyAccess.overlayHostContext() ?: appContext
+            val hostContext = overlayHostContext() ?: appContext
             val text = entry.combinedText().takeIf { it.isNotEmpty() }
             val images = withContext(Dispatchers.IO) {
                 loadClipboardImages(appContext, entry)
@@ -90,7 +90,7 @@ object PickResultFromHistoryCoordinator {
     ) {
         scope.launch {
             val appContext = context.applicationContext
-            val hostContext = OverlayDependencyAccess.overlayHostContext() ?: appContext
+            val hostContext = overlayHostContext() ?: appContext
             if (payload == null) {
                 Toast.makeText(context, R.string.pick_from_history_empty, Toast.LENGTH_SHORT).show()
                 return@launch

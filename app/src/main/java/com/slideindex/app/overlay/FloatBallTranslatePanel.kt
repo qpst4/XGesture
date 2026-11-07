@@ -191,7 +191,7 @@ object FloatBallTranslatePanel {
 
         }
 
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context.applicationContext
+        val hostContext = overlayHostContext() ?: context.applicationContext
 
         if (FloatBallImageSearchPanel.isShowing) {
             FloatBallImageSearchPanel.dismiss()
@@ -222,7 +222,7 @@ object FloatBallTranslatePanel {
 
         }
 
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context.applicationContext
+        val hostContext = overlayHostContext() ?: context.applicationContext
 
         ensureWindow(hostContext)
 
@@ -249,7 +249,7 @@ object FloatBallTranslatePanel {
 
         }
 
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context.applicationContext
+        val hostContext = overlayHostContext() ?: context.applicationContext
 
         ensureWindow(hostContext)
 

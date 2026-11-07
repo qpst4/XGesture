@@ -1023,7 +1023,7 @@ object FloatBallOverlay {
             return
         }
         if (!isShowing) return
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: return
+        val hostContext = overlayHostContext() ?: return
         val settings = settingsState?.value ?: return
         val persistPosition = onPositionPersisted ?: return
         val persistSide = onActiveSidePersisted ?: {}
@@ -1049,7 +1049,7 @@ object FloatBallOverlay {
             settingsState?.value = settings
             return
         }
-        val hostContext = OverlayDependencyAccess.overlayHostContext()
+        val hostContext = overlayHostContext()
             ?: run {
                 Log.w(TAG, "accessibility service not connected")
                 return
@@ -2374,7 +2374,7 @@ object FloatBallOverlay {
         fromLineStrip: Boolean,
         settings: AppSettings
     ) {
-        val hostContext = OverlayDependencyAccess.overlayHostContext()
+        val hostContext = overlayHostContext()
             ?: displayView?.context?.applicationContext
         val deps = hostContext?.let { OverlayDependencyAccess.overlayDependencies(it) }
         if (hostContext == null || deps == null) {
@@ -2657,7 +2657,7 @@ object FloatBallOverlay {
             )
             return
         }
-        val hostContext = OverlayDependencyAccess.overlayHostContext()
+        val hostContext = overlayHostContext()
             ?: displayView?.context?.applicationContext
             ?: return
         val deps = OverlayDependencyAccess.overlayDependencies(hostContext) ?: return

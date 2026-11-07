@@ -212,7 +212,7 @@ object FloatBallPickResultPanel {
             mainHandler.post { warmUp(context) }
             return
         }
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context.applicationContext
+        val hostContext = overlayHostContext() ?: context.applicationContext
         ensureWindow(hostContext)
         if (!pickPanelVisible) {
             applyPanelShellPassive()
@@ -441,7 +441,7 @@ object FloatBallPickResultPanel {
         // 外部观察者（新手引导等）靠这里判断"用户自己成功取到词了"。统一在结果面板入口广播一次，
         // 避免在每条取词链路上各改一处；空结果同样经过，订阅方按 result.text 过滤即可。
         FloatBallPickEvents.publish(result)
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context.applicationContext
+        val hostContext = overlayHostContext() ?: context.applicationContext
         ensureWindow(hostContext)
         captureSuppressed = false
         captureDetached = false
@@ -573,7 +573,7 @@ object FloatBallPickResultPanel {
             mainHandler.post { showLoading(context, anchorX, anchorY, loadingSource) }
             return
         }
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context.applicationContext
+        val hostContext = overlayHostContext() ?: context.applicationContext
         ensureWindow(hostContext)
         captureSuppressed = false
         captureDetached = false

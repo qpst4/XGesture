@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.quickwheel
 
+import com.slideindex.app.overlay.overlayHostContext
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Handler
@@ -229,7 +231,7 @@ object QuickWheelOverlayWindow {
             return false
         }
 
-        val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context
+        val hostContext = overlayHostContext() ?: context
         val wm = hostContext.getSystemService(WindowManager::class.java) ?: return false
         val metrics = hostContext.resources.displayMetrics
         val density = if (metrics.density > 0f) metrics.density else 1f

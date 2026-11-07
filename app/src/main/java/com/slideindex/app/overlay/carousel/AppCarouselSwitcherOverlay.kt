@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.carousel
 
+import com.slideindex.app.overlay.overlayHostContext
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PixelFormat
@@ -58,7 +60,7 @@ object AppCarouselSwitcherOverlay {
             return false
         }
 
-        val hostContext = OverlayDependencyAccess.overlayHostContext()
+        val hostContext = overlayHostContext()
             ?: run {
                 Log.w(TAG, "show: accessibility service not connected")
                 return false
