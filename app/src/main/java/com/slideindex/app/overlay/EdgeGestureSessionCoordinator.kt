@@ -314,7 +314,7 @@ internal class EdgeGestureSessionCoordinator(
             executeGesture = if (continuousPick) {
                 null
             } else {
-                com.slideindex.app.overlay.panels.GestureActionRunner { action, s, armed, ax, ay ->
+                com.slideindex.app.overlay.panels.GestureActionRunner { action, s, armed, ax, ay, side ->
                     actionExecutor.execute(
                         action = action,
                         settings = s,
@@ -340,7 +340,7 @@ internal class EdgeGestureSessionCoordinator(
             rawX = rawX,
             rawY = rawY,
             settings = settingsProvider(),
-            executeGesture = com.slideindex.app.overlay.panels.GestureActionRunner { action, s, armed, ax, ay ->
+            executeGesture = com.slideindex.app.overlay.panels.GestureActionRunner { action, s, armed, ax, ay, side ->
                 actionExecutor.execute(
                     action = action,
                     settings = s,

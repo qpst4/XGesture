@@ -101,6 +101,10 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         // 所以即使这次写入被 ROM 拦掉，两边也不会再对不上。
     }
 
+    private val hookScope = kotlinx.coroutines.CoroutineScope(
+        kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO,
+    )
+
     override fun onCreate() {
         super.onCreate()
         // perf 包已下沉到 :core:common，构建标记由这里注入。
@@ -230,6 +234,19 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 foregroundPackage = com.slideindex.app.service.OverlayService.foregroundPackage,
                 scope = com.slideindex.app.util.OverlaySuppressionScope.TRIGGER,
             )
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot = { ctx ->
+            com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(ctx)
+                ?.settingsRepository
+                ?.readSnapshot()
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.persistShellCommands = { commands ->
+            hookScope.launch {
+                com.slideindex.app.di.OverlayDependencyAccess
+                    .overlayDependencies(this@SlideIndexApp)
+                    ?.settingsRepository
+                    ?.setShellCommands(commands)
+            }
         }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel = { ctx, action ->
             com.slideindex.app.ui.gesturepicker.gestureActionLabelText(ctx, action)

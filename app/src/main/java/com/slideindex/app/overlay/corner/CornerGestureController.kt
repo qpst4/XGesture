@@ -31,6 +31,7 @@ internal class CornerGestureController(
     private val appRepository: AppRepository,
     private val scope: CoroutineScope,
     private val onShellCommandsPersist: (List<ShellCommand>) -> Unit,
+    private val gestureRunner: com.slideindex.app.overlay.panels.GestureActionRunner,
 ) {
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val zoneLayout = CornerZoneLayout()
@@ -297,6 +298,7 @@ internal class CornerGestureController(
                 onReleaseCapture = ::restoreCaptureSize,
                 onOpenSlotPicker = ::openSlotPicker,
                 onShellCommandsPersist = onShellCommandsPersist,
+                gestureRunner = gestureRunner,
                 onMenuVisualActiveChange = ::syncOverlayBackgroundBlur,
             )
             overlayRoot = FrameLayout(context).apply {

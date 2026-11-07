@@ -223,7 +223,7 @@ object FingertipRingOverlayWindow {
                 settings.resolveHoneycombLongPressArmed(selectionPressDurationMs.coerceAtLeast(0L))
             else -> false
         }
-        executeGesture.run(action, settings, armed, anchorRawX, anchorRawY)
+        executeGesture.run(action, settings, armed, anchorRawX, anchorRawY, null)
     }
 
     private fun dismissInternal() {

@@ -2,17 +2,18 @@ package com.slideindex.app.overlay.corner
 
 import android.content.Context
 import com.slideindex.app.data.AppRepository
-import com.slideindex.app.di.AppDependencies
+import com.slideindex.app.overlay.panels.PanelRuntimeHooks
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.settings.SettingsFlowHolder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class CornerGestureHost(
     private val context: Context,
     private val scope: CoroutineScope,
-    private val deps: AppDependencies,
+    private val appRepository: AppRepository,
+    private val gestureRunner: com.slideindex.app.overlay.panels.GestureActionRunner,
 ) {
     private var controller: CornerGestureController? = null
 
@@ -34,7 +35,9 @@ class CornerGestureHost(
         fun resumeAfterSlotPicker() {
             val host = active ?: return
             host.controller?.resumeAfterSlotPicker()
-            host.controller?.applySettings(host.deps.settingsRepository.readSnapshot())
+            PanelRuntimeHooks.settingsSnapshot?.invoke(host.context)?.let { settings ->
+                host.controller?.applySettings(settings)
+            }
         }
 
         /** 外部编辑页已离开前台但轮盘仍卡在挂起态时自愈（由 `:overlay` 侧前台变化时调用）。 */
@@ -43,7 +46,9 @@ class CornerGestureHost(
             val controller = host.controller ?: return
             if (!controller.isSuspendedForExternalActivity()) return
             host.controller?.resumeAfterSlotPicker()
-            host.controller?.applySettings(host.deps.settingsRepository.readSnapshot())
+            PanelRuntimeHooks.settingsSnapshot?.invoke(host.context)?.let { settings ->
+                host.controller?.applySettings(settings)
+            }
         }
     }
 
@@ -62,19 +67,16 @@ class CornerGestureHost(
         if (controller != null) return
         controller = CornerGestureController(
             context = context,
-            appRepository = deps.appRepository,
+            appRepository = appRepository,
             scope = scope,
             onShellCommandsPersist = { commands ->
-                scope.launch { deps.settingsRepository.setShellCommands(commands) }
+                PanelRuntimeHooks.persistShellCommands?.invoke(commands)
             },
+            gestureRunner = gestureRunner,
         )
+        val settingsFlow = SettingsFlowHolder.settingsFlow(context) ?: return
         scope.launch {
-            combine(
-                deps.settingsRepository.gestureSettings,
-                deps.settingsRepository.overlaySettings,
-            ) { _, _ ->
-                deps.settingsRepository.readSnapshot()
-            }.collectLatest { settings ->
+            settingsFlow.collectLatest { settings ->
                 controller?.applySettings(settings)
             }
         }

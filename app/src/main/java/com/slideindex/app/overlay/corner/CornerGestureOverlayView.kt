@@ -40,6 +40,7 @@ internal class CornerGestureOverlayView(
     private val onReleaseCapture: () -> Unit = {},
     private val onOpenSlotPicker: (CornerAnchor, Int) -> Unit = { _, _ -> },
     private val onShellCommandsPersist: (List<ShellCommand>) -> Unit,
+    private val gestureRunner: com.slideindex.app.overlay.panels.GestureActionRunner,
     private val onMenuVisualActiveChange: (Boolean) -> Unit = {},
 ) : View(context) {
 
@@ -82,12 +83,6 @@ internal class CornerGestureOverlayView(
     private var subMenuRevealAnimator: ValueAnimator? = null
     private val dimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.BLACK }
     private var menuVisualActive = false
-
-    private val actionExecutor = ActionExecutor(
-        context = context,
-        appRepository = appRepository,
-        onShellCommandsPersist = onShellCommandsPersist,
-    )
 
     init {
         setBackgroundColor(Color.TRANSPARENT)
@@ -688,14 +683,7 @@ internal class CornerGestureOverlayView(
         rawY: Float,
         longPressArmed: Boolean = false,
     ) {
-        actionExecutor.execute(
-            action = action,
-            settings = settings,
-            longPressArmed = longPressArmed,
-            anchorRawX = rawX,
-            anchorRawY = rawY,
-            panelSide = anchor.toPanelSide(),
-        )
+        gestureRunner.run(action, settings, longPressArmed, rawX, rawY, anchor.toPanelSide())
     }
 
     private fun syncSlotPressTracking(slot: Int, eventTime: Long) {

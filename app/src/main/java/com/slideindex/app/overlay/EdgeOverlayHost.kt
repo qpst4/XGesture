@@ -104,7 +104,25 @@ class EdgeOverlayHost(
             TaskManagerUtil.warmRecentTasksAsync()
         }
         floatBallController = FloatBallController(context, scope, deps.settingsRepository)
-        cornerGestureHost = CornerGestureHost(context, scope, deps).also { it.start() }
+        val cornerExecutor = com.slideindex.app.gesture.ActionExecutor(
+            context = context,
+            appRepository = deps.appRepository,
+            onShellCommandsPersist = { commands ->
+                scope.launch { deps.settingsRepository.setShellCommands(commands) }
+            },
+        )
+        val cornerRunner = com.slideindex.app.overlay.panels.GestureActionRunner {
+            action, settings, armed, ax, ay, side ->
+            cornerExecutor.execute(
+                action = action,
+                settings = settings,
+                longPressArmed = armed,
+                anchorRawX = ax,
+                anchorRawY = ay,
+                panelSide = side,
+            )
+        }
+        cornerGestureHost = CornerGestureHost(context, scope, deps.appRepository, cornerRunner).also { it.start() }
         dragDropFlowController = DragDropFlowController(context, scope, deps.settingsRepository).also { it.start() }
         displayRotationMonitor = OverlayDisplayRotationMonitor(context) {
             overlayManager?.relayoutTriggersForDisplayRotation()

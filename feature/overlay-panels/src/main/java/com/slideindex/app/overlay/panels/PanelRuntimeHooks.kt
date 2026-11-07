@@ -103,6 +103,27 @@ object PanelRuntimeHooks {
     /** 当前是否应隐藏触发区（锁屏/横屏/桌面/暂停等规则）。 */
     @Volatile
     var suppressTrigger: ((AppSettings, Context) -> Boolean)? = null
+    /** 当前设置快照（`:app` 的 settingsRepository.readSnapshot()）。 */
+    @Volatile
+    var settingsSnapshot: ((Context) -> AppSettings?)? = null
+
+    /** 持久化 shell 命令列表。 */
+    @Volatile
+    var persistShellCommands: ((List<com.slideindex.app.shell.ShellCommand>) -> Unit)? = null
+
+    /** 托管快捷方式图标位图。 */
+    @Volatile
+    var managedShortcutBitmap:
+        ((
+            Context,
+            com.slideindex.app.gesture.GestureAction.LaunchShortcut,
+            Int,
+            List<com.slideindex.app.activity.ActivityShortcut>,
+        ) -> android.graphics.Bitmap?)? = null
+
+    /** 托管快捷方式归属包名（用于取应用图标）。 */
+    @Volatile
+    var managedShortcutHostPackage: ((String) -> String?)? = null
     /** 内置分享面板总开关（`:app` 从设置快照读）。 */
     @Volatile
     var isShareSheetEnabled: ((Context) -> Boolean)? = null
@@ -157,5 +178,6 @@ fun interface GestureActionRunner {
         longPressArmed: Boolean,
         anchorRawX: Float?,
         anchorRawY: Float?,
+        panelSide: com.slideindex.app.overlay.PanelSide?,
     )
 }
