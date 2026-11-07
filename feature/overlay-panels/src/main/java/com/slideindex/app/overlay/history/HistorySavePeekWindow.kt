@@ -35,7 +35,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.OverlayCompose
 import com.slideindex.app.overlay.OverlayComposeOwner
 import com.slideindex.app.overlay.OverlayWindowTypes
@@ -54,7 +54,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  *
  * 事件源是 [HistorySaveSignal]（由 `HistoryFloatService` 订阅）。
  */
-internal class HistorySavePeekWindow(
+class HistorySavePeekWindow(
     private val context: Context,
     private val windowManager: WindowManager,
 ) {

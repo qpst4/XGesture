@@ -725,7 +725,6 @@ private enum class DragAxis { HORIZONTAL, VERTICAL }
  * （单击仍能命中，因为触摸区一直延伸到条内侧）。把手窗自己申报了手势排除区
  * （`HistoryFloatHandleGestureExclusion`），代价是把手所在的那一小段外缘失去系统返回手势。
  */
-internal const val HANDLE_EDGE_GAP_DP = 3
 
 /**
  * 触摸窗的尺寸（本文件就是这一层）。
@@ -743,21 +742,13 @@ internal const val HANDLE_EDGE_GAP_DP = 3
  * 现在 24dp = 条（最宽 14dp）+ 内侧 10dp：误触面积只有旧实现的一半，同时留出可点的余量。
  * 只朝**屏幕内侧**加宽：外侧那 3dp 之外就是系统侧滑/返回手势区，绝不往外扩。
  */
-internal const val HANDLE_BOX_DP = 48
-internal const val HANDLE_BAR_WIDTH_DP = 9
-internal const val HANDLE_BAR_ACTIVE_WIDTH_DP = 11
-internal const val HANDLE_TOUCH_INNER_BAND_DP = 10
-internal const val HANDLE_TOUCH_WIDTH_DP =
-    HANDLE_EDGE_GAP_DP + HANDLE_BAR_ACTIVE_WIDTH_DP + HANDLE_TOUCH_INNER_BAND_DP
 
 /**
  * 条高（原来直接写死在 `size(width, height = 28.dp)` 里，绘制层要按它算矩形）。
  * 流光窗里条的位置/尺寸也按它算，所以两窗必须共用同一个值。
  */
-internal const val HANDLE_BAR_HEIGHT_DP = 28
 
 /** 条边框宽度（原来 `BorderStroke(1.dp, …)`）。 */
-internal const val HANDLE_BAR_BORDER_DP = 1f
 
 // ── 条本体的"任何底色上都看得见"配色（§对比度修正）────────────────────────
 //
@@ -798,7 +789,6 @@ private const val HANDLE_BAR_ALPHA_ACTIVE = 1.0f
 private const val HANDLE_BAR_FILL_ALPHA = 1.0f
 
 /** 条圆角（与原来 `RoundedCornerShape(5.dp)` 一致；绘制层是按形状手画的，所以要有这个常量）。 */
-internal const val HANDLE_BAR_CORNER_DP = 5
 
 // ── 流光参数（一眼参数表；真机上调观感只改这里）────────────────────────────
 //

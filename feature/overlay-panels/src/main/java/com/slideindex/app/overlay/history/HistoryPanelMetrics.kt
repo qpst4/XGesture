@@ -98,3 +98,16 @@ fun historyExpandedImageMaxSidePx(): Int {
         ).coerceAtMost(2048)
     }
 }
+
+// ---- 浮窗把手常量（原 app 的 HistoryFloatContent；面板与 Handle/SavePeek 窗共用）----
+
+const val HANDLE_EDGE_GAP_DP = 3
+const val HANDLE_BOX_DP = 48
+const val HANDLE_BAR_WIDTH_DP = 9
+const val HANDLE_BAR_ACTIVE_WIDTH_DP = 11
+const val HANDLE_TOUCH_INNER_BAND_DP = 10
+const val HANDLE_TOUCH_WIDTH_DP =
+    HANDLE_EDGE_GAP_DP + HANDLE_BAR_ACTIVE_WIDTH_DP + HANDLE_TOUCH_INNER_BAND_DP
+const val HANDLE_BAR_HEIGHT_DP = 28
+const val HANDLE_BAR_BORDER_DP = 1f
+const val HANDLE_BAR_CORNER_DP = 5

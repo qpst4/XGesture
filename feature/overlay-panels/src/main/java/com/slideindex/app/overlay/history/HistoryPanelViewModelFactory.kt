@@ -4,8 +4,8 @@ import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.savedstate.SavedStateRegistryOwner
-import com.slideindex.app.clipboard.ClipboardAccess
-import com.slideindex.app.clipboard.ClipboardHistoryRepository
+import com.slideindex.app.clipboard.ClipboardService
+import com.slideindex.app.clipboard.ClipboardHistoryQuery
 import com.slideindex.app.stash.StashAccess
 import com.slideindex.app.stash.StashMetaRepository
 import com.slideindex.app.stash.StashRepository
@@ -18,7 +18,7 @@ import com.slideindex.app.stash.StashRepository
 class HistoryPanelViewModelFactory(
     owner: SavedStateRegistryOwner,
     private val stashRepository: StashRepository? = StashAccess.repository,
-    private val clipboardRepository: ClipboardHistoryRepository? = ClipboardAccess.repository,
+    private val clipboardRepository: ClipboardHistoryQuery? = ClipboardService.query,
     private val metaRepository: StashMetaRepository? = StashAccess.metaRepository,
 ) : AbstractSavedStateViewModelFactory(owner, null) {
 

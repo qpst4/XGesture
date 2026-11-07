@@ -139,4 +139,5 @@
     <string name="stash_audio_playback_failed">Cannot play this recording</string>
     <string name="panel_close">Close</string>
     <string name="clipboard_image_unavailable">Image unavailable or expired</string>
+    <string name="stash_peek_saved">Saved</string>
 </resources>

@@ -44,7 +44,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  *    这里被压的只有"光"，条本体在**可触摸**的触摸窗里、不受影响 —— 这也是本方案
  *    优于"整窗都不可触摸"的地方。
  */
-internal class HistoryHandleGlowWindow(
+class HistoryHandleGlowWindow(
     private val context: Context,
     private val windowManager: WindowManager,
 ) {
