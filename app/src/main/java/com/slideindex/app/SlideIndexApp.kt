@@ -250,6 +250,19 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.panels.PanelFloatBallHooks.overlayLayoutMetrics = { settings ->
             com.slideindex.app.overlay.FloatBallOverlay.overlayLayoutMetrics(settings) ?: (1f to 1080f)
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.quickLauncherIconDrawable =
+            { item, apps, ctx, shortcuts, shells ->
+                com.slideindex.app.util.QuickLauncherIconResolver.iconDrawable(
+                    item = item,
+                    appsByPackage = apps,
+                    context = ctx,
+                    activityShortcuts = shortcuts,
+                    shellCommands = shells,
+                )
+            }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.quickLauncherLabel = { ctx, item, apps ->
+            com.slideindex.app.launcher.QuickLauncherLabels.resolveLabel(ctx, item, apps)
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot = { ctx ->
             com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(ctx)
                 ?.settingsRepository

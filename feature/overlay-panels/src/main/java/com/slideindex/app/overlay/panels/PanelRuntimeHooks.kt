@@ -107,6 +107,22 @@ object PanelRuntimeHooks {
     /** 当前是否应隐藏触发区（锁屏/横屏/桌面/暂停等规则）。 */
     @Volatile
     var suppressTrigger: ((AppSettings, Context, Boolean) -> Boolean)? = null
+    /** 快捷启动器项图标（Drawable）。 */
+    @Volatile
+    var quickLauncherIconDrawable:
+        ((
+            com.slideindex.app.launcher.QuickLauncherItem,
+            Map<String, com.slideindex.app.data.AppInfo>,
+            Context?,
+            List<com.slideindex.app.activity.ActivityShortcut>,
+            List<com.slideindex.app.shell.ShellCommand>,
+        ) -> android.graphics.drawable.Drawable?)? = null
+
+    /** 快捷启动器项显示名。 */
+    @Volatile
+    var quickLauncherLabel:
+        ((Context, com.slideindex.app.launcher.QuickLauncherItem, Map<String, com.slideindex.app.data.AppInfo>) -> String?)? =
+        null
     /** 当前设置快照（`:app` 的 settingsRepository.readSnapshot()）。 */
     @Volatile
     var settingsSnapshot: ((Context) -> AppSettings?)? = null

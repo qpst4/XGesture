@@ -10,14 +10,13 @@ import com.slideindex.app.data.AppRepository
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemType
 import com.slideindex.app.shell.ShellCommand
-import com.slideindex.app.util.QuickLauncherIconResolver
 import java.util.concurrent.Executors
 
 /**
  * Loads honeycomb launcher icons off the UI thread so [HoneycombAppPickerOverlayWindow.show]
  * can attach the overlay before PackageManager work finishes.
  */
-internal object HoneycombIconLoader {
+object HoneycombIconLoader {
     private val worker = Executors.newSingleThreadExecutor { runnable ->
         Thread(runnable, "HoneycombIcons").apply { isDaemon = true }
     }
@@ -87,11 +86,11 @@ internal object HoneycombIconLoader {
             QuickLauncherItemType.APP -> {
                 val packageName = item.appTarget?.packageName ?: item.payload
                 // 全局图标覆盖优先（扩展 → 图标库 → 应用图标）
-                com.slideindex.app.ui.AppIconOverride.drawable(context, packageName, 128)
+                com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideDrawable?.invoke(context, packageName, 128)
                     ?: appRepository.launchIconDrawable(packageName)
             }
             QuickLauncherItemType.SHORTCUT, QuickLauncherItemType.ACTION ->
-                QuickLauncherIconResolver.iconDrawable(
+                com.slideindex.app.overlay.panels.PanelRuntimeHooks.quickLauncherIconDrawable?.invoke(
                     item,
                     appsByPackage,
                     context,

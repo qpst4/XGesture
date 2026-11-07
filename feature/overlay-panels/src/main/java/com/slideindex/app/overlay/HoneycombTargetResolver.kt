@@ -11,11 +11,9 @@ import com.slideindex.app.data.AppInfo
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemType
-import com.slideindex.app.launcher.QuickLauncherLabels
 import com.slideindex.app.shell.ShellCommand
-import com.slideindex.app.util.QuickLauncherIconResolver
 
-internal object HoneycombTargetResolver {
+object HoneycombTargetResolver {
     fun resolve(
         context: Context,
         items: List<QuickLauncherItem>,
@@ -31,7 +29,7 @@ internal object HoneycombTargetResolver {
             ) {
                 return@mapNotNull null
             }
-            val label = QuickLauncherLabels.resolveLabel(context, item, appsByPackage)
+            val label = com.slideindex.app.overlay.panels.PanelRuntimeHooks.quickLauncherLabel?.invoke(context, item, appsByPackage) ?: item.payload
             val target = item.appTarget
             val icon = when {
                 appRepository != null && item.type == QuickLauncherItemType.APP -> {
@@ -39,12 +37,12 @@ internal object HoneycombTargetResolver {
                     // 全局图标覆盖优先（扩展 → 图标库 → 应用图标）。
                     // 这里必须查：target.icon 会被渲染方当成 resolvedIcon 直接用，
                     // 预填成系统原图后再也走不到覆盖分支（圆环 / 蜂窝的真机表现）。
-                    com.slideindex.app.ui.AppIconOverride.drawable(context, packageName, 128)
+                    com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideDrawable?.invoke(context, packageName, 128)
                         ?: appRepository.peekLaunchIconDrawable(packageName)
                 }
                 appRepository == null || item.type == QuickLauncherItemType.SHORTCUT ||
                     item.type == QuickLauncherItemType.ACTION ->
-                    QuickLauncherIconResolver.iconDrawable(
+                    com.slideindex.app.overlay.panels.PanelRuntimeHooks.quickLauncherIconDrawable?.invoke(
                         item,
                         appsByPackage,
                         context,
