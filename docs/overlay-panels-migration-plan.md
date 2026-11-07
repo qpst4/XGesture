@@ -228,3 +228,36 @@ iteration 3:   0  → 净落地 52 个文件
 | **B. app-core 大爆炸** | 把 overlay+ui+service+util 整体搬进一个 `:app-core`，`:app` 只留 Application/Manifest | 约 2–3 轮 | **不干净**：只是把上帝模块改名，且错误面数百 |
 
 2026-11-08 维护者选择：**A 路线**（干净彻底，宁可多轮）。
+
+## 11. 剩余组的端口地图（2026-11-08）
+
+已迁出：`backpanel` / `carousel` / `holographic` / `fingertip` / `animation` / `share` /
+`Adjust` / `corner`（8 组）+ `screenshot` 4/7 + 约 110 个散件；`:feature:overlay-panels`
+约 26k 行，`:app` 的 `overlay/` 从 136,402 行降到约 107,700 行。
+
+### 已就位的端口
+
+| 端口 | 覆盖 |
+| :--- | :--- |
+| `PanelActionHost`（22 方法） | 音量/亮度/勿扰/深色/连续调节 + 权限探测 + 刻度文案 |
+| `GestureActionRunner` | 手势动作执行（action / settings / armed / anchor / panelSide） |
+| `PanelFloatBallHooks`（5） | 进入自由移动、藏/恢复 chrome、抑制触摸宿主、布局度量 |
+| `PanelRuntimeHooks`（30+） | 宿主 context、设置快照/流、shell 持久化、标签、各类图标、分享开关、角标 Intent、触发抑制、点击注入、壁纸模糊、任务/小窗、AppRepository、DI Composition、快捷启动器项 |
+| `SettingsFlowHolder` / `OverlayHostRuntime` / `OverlayZOrderHooks` | 设置流、宿主能力、z 序 |
+
+### 各组还差什么
+
+| 组 | 缺口 |
+| :--- | :--- |
+| `ringlauncher` | `CreateShortcutTrampoline.launch`（host 是 app 的 `AppShortcutLoader.CreateShortcutHost`）、`RingLauncherSlotIconEditorTrampolineActivity` / `RingLauncherSlotPickTrampolineActivity` 两个 Intent、`RingLauncherSlotConfigSheet`（495 行 Compose，依赖 `Md3Picker*` / `QuickLauncherPanel*`） |
+| `volumepanel` | `ui.gesturepicker` picker 套件（动作选择页）、`FloatBallOverlay` 少量方法（已有同族钩子可扩） |
+| `quickwheel` | 同上 picker 套件 + `ActionPickerCatalogPolicy` |
+| `dragdrop` / `pickresult` / `quickmenu` | `FloatBall*` 单例族（贴图/取词/翻译入口）+ `SearchPanel*` 跨组调用 |
+| `filebrowser` / `history` / `searchpanel` | `clipboard` / `stash` / `search` 三个子系统（建议先做 `:core:clipboard` 的只读接口） |
+
+### 建议的下一刀（按性价比）
+
+1. `ringlauncher` 三个 trampoline 钩子 + slot config sheet 的 composable 钩子（1 轮）；
+2. `volumepanel` + `quickwheel` 共用的 picker 套件抽到 `:core:design`（2 轮，一次解锁两组）；
+3. `FloatBall*` 单例族端口（2 轮，解锁 `dragdrop` / `pickresult` / `quickmenu` 三组）；
+4. `:core:clipboard` 只读接口（2–3 轮，解锁 `filebrowser` / `history` / `searchpanel`）。
