@@ -12,10 +12,8 @@ import com.slideindex.app.launcher.showsShellActivityShortcutBadge
 import com.slideindex.app.launcher.showsShellCommandBadge
 import com.slideindex.app.overlay.ShellCommandBadgeRenderer
 import com.slideindex.app.overlay.ShortcutBadgeRenderer
-import com.slideindex.app.overlay.corner.CornerSlotIconBitmap
 import com.slideindex.app.settings.FingertipRingCodec
 import com.slideindex.app.shell.ShellCommand
-import com.slideindex.app.util.GestureActionIconBitmap
 import kotlin.math.roundToInt
 
 internal object FingertipRingRenderer {
@@ -80,7 +78,7 @@ internal object FingertipRingRenderer {
                 iconSizeInt = iconSizeInt,
                 activityShortcuts = activityShortcuts,
                 shellCommands = shellCommands,
-            )
+            ) ?: continue
             val left = iconX - drawDiameter / 2f
             val top = iconY - drawDiameter / 2f
             iconClipPath.rewind()
@@ -117,15 +115,15 @@ internal object FingertipRingRenderer {
         is GestureAction.LaunchApp,
         is GestureAction.LaunchShortcut,
         is GestureAction.ExecuteShellCommand,
-        -> CornerSlotIconBitmap.get(
-            context = context,
-            action = action,
-            sizePx = iconSizeInt,
-            tintArgb = ICON_TINT,
-            activityShortcuts = activityShortcuts,
-            shellCommands = shellCommands,
+        -> com.slideindex.app.overlay.panels.PanelRuntimeHooks.cornerSlotIconBitmap?.invoke(
+            context,
+            action,
+            iconSizeInt,
+            ICON_TINT,
+            activityShortcuts,
+            shellCommands,
         )
-        else -> GestureActionIconBitmap.get(action, iconSizeInt, ICON_TINT)
+        else -> com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconBitmap?.invoke(action, iconSizeInt, ICON_TINT)
     }
 
     private fun applyAlpha(argb: Int, scale: Float): Int {

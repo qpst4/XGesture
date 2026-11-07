@@ -48,6 +48,27 @@ object PanelRuntimeHooks {
     @Volatile
     var cloneAppLabel: ((Context, Int, String) -> String)? = null
 
+    /** 手势动作图标（`:app` 的 GestureActionIconBitmap）。 */
+    @Volatile
+    var actionIconBitmap:
+        ((com.slideindex.app.gesture.GestureAction, Int, Int) -> android.graphics.Bitmap?)? = null
+
+    /** 手势动作执行器；面板只表达"选了哪个动作"。 */
+    @Volatile
+    var gestureActionRunner: GestureActionRunner? = null
+
+    /** 槽位图标（`:app` 的 CornerSlotIconBitmap，带应用/快捷方式图标与角标）。 */
+    @Volatile
+    var cornerSlotIconBitmap:
+        ((
+            Context,
+            com.slideindex.app.gesture.GestureAction,
+            Int,
+            Int,
+            List<com.slideindex.app.activity.ActivityShortcut>,
+            List<com.slideindex.app.shell.ShellCommand>,
+        ) -> android.graphics.Bitmap?)? = null
+
     /**
      * 取"模糊后的壁纸"给面板做背景；返回缓存命中时的位图，未命中时异步回调。
      *
@@ -62,4 +83,19 @@ object PanelRuntimeHooks {
 /** 见 [PanelRuntimeHooks.captureBlurredWallpaper]。 */
 fun interface WallpaperBlurCallback {
     fun onReady(bitmap: android.graphics.Bitmap?)
+}
+
+/**
+ * 手势动作执行器（`:app` 的 `ActionExecutor.execute` 的窄接口）。
+ *
+ * 面板只负责"选定了一个动作"，真正执行（启动应用、执行 shell、起小窗…）在 `:app`。
+ */
+fun interface GestureActionRunner {
+    fun run(
+        action: com.slideindex.app.gesture.GestureAction,
+        settings: AppSettings,
+        longPressArmed: Boolean,
+        anchorRawX: Float?,
+        anchorRawY: Float?,
+    )
 }

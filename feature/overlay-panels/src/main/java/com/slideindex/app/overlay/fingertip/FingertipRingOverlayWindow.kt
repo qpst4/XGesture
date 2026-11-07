@@ -13,8 +13,6 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import com.slideindex.app.di.OverlayDependencyAccess
-import com.slideindex.app.gesture.ActionExecutor
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.overlay.OverlayWindowTypes
 import com.slideindex.app.settings.AppSettings
@@ -37,7 +35,7 @@ object FingertipRingOverlayWindow {
     private var windowManager: WindowManager? = null
     private var externalTracking = false
     private var persistAfterSessionEnd = false
-    private var browseActionExecutor: ActionExecutor? = null
+    private var browseActionExecutor: com.slideindex.app.overlay.panels.GestureActionRunner? = null
     private var browseSettings: AppSettings? = null
 
     val isShowing: Boolean get() = overlayView != null
@@ -48,7 +46,7 @@ object FingertipRingOverlayWindow {
         anchorRawX: Float,
         anchorRawY: Float,
         externalTracking: Boolean,
-        actionExecutor: ActionExecutor? = null,
+        executeGesture: com.slideindex.app.overlay.panels.GestureActionRunner? = null,
         highlightedSlot: Int = -1,
     ): Boolean {
         if (Looper.myLooper() != Looper.getMainLooper()) {
@@ -61,7 +59,7 @@ object FingertipRingOverlayWindow {
                     anchorRawX,
                     anchorRawY,
                     externalTracking,
-                    actionExecutor,
+                    executeGesture,
                     highlightedSlot,
                 )
                 latch.countDown()
@@ -119,7 +117,7 @@ object FingertipRingOverlayWindow {
             windowManager = wm
             this.externalTracking = externalTracking
             persistAfterSessionEnd = !externalTracking
-            browseActionExecutor = if (externalTracking) null else actionExecutor
+            browseActionExecutor = if (externalTracking) null else executeGesture
             browseSettings = if (externalTracking) null else settings
             if (externalTracking) {
                 view.updatePointer(anchorRawX, anchorRawY)
@@ -151,10 +149,10 @@ object FingertipRingOverlayWindow {
         rawX: Float,
         rawY: Float,
         settings: AppSettings,
-        actionExecutor: ActionExecutor,
+        executeGesture: com.slideindex.app.overlay.panels.GestureActionRunner,
     ) {
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { confirmSelection(rawX, rawY, settings, actionExecutor) }
+            mainHandler.post { confirmSelection(rawX, rawY, settings, executeGesture) }
             return
         }
         val view = overlayView ?: return
@@ -166,7 +164,7 @@ object FingertipRingOverlayWindow {
         executeSlot(
             slot = slot,
             settings = settings,
-            actionExecutor = actionExecutor,
+            executeGesture = executeGesture,
             selectionPressDurationMs = selectionPressDurationMs,
             longPressArmed = longPressArmed,
             anchorRawX = rawX,
@@ -194,8 +192,8 @@ object FingertipRingOverlayWindow {
 
     private fun confirmBrowseSelection(rawX: Float, rawY: Float) {
         val settings = browseSettings ?: return
-        val actionExecutor = browseActionExecutor ?: return
-        confirmSelection(rawX, rawY, settings, actionExecutor)
+        val runner = browseActionExecutor ?: return
+        confirmSelection(rawX, rawY, settings, runner)
     }
 
     private fun enableDirectTouch(view: View, wm: WindowManager) {
@@ -209,7 +207,7 @@ object FingertipRingOverlayWindow {
     private fun executeSlot(
         slot: Int,
         settings: AppSettings,
-        actionExecutor: ActionExecutor,
+        executeGesture: com.slideindex.app.overlay.panels.GestureActionRunner,
         selectionPressDurationMs: Long,
         longPressArmed: Boolean,
         anchorRawX: Float,
@@ -225,13 +223,7 @@ object FingertipRingOverlayWindow {
                 settings.resolveHoneycombLongPressArmed(selectionPressDurationMs.coerceAtLeast(0L))
             else -> false
         }
-        actionExecutor.execute(
-            action = action,
-            settings = settings,
-            longPressArmed = armed,
-            anchorRawX = anchorRawX,
-            anchorRawY = anchorRawY,
-        )
+        executeGesture.run(action, settings, armed, anchorRawX, anchorRawY)
     }
 
     private fun dismissInternal() {

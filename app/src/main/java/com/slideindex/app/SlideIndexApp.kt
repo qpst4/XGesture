@@ -223,6 +223,20 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.cloneAppLabel = { ctx, userId, base ->
             com.slideindex.app.overlay.CloneAppsIndex.labelForUser(ctx, userId, base)
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconBitmap = { action, sizePx, tint ->
+            com.slideindex.app.util.GestureActionIconBitmap.get(action, sizePx, tint)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.cornerSlotIconBitmap =
+            { ctx, action, sizePx, tint, shortcuts, shellCommands ->
+                com.slideindex.app.overlay.corner.CornerSlotIconBitmap.get(
+                    context = ctx,
+                    action = action,
+                    sizePx = sizePx,
+                    tintArgb = tint,
+                    activityShortcuts = shortcuts,
+                    shellCommands = shellCommands,
+                )
+            }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.captureBlurredWallpaper = { service, appCtx, radius, callback ->
             com.slideindex.app.overlay.BlurredWallpaperCache.captureFromDisplay(
                 service,
