@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 应用轮播（carousel）面板专用字符串：随面板一起迁出 :app；设置页用的仍留在 :app。 -->
+<resources>
+    <string name="app_carousel_action_split_screen">Split screen</string>
+    <string name="app_carousel_action_floating">Floating</string>
+    <string name="app_carousel_action_close">Close</string>
+    <string name="app_carousel_close_all">Close all</string>
+    <string name="app_carousel_close_all_hint">Release to close all apps</string>
+    <string name="app_carousel_cancel_down_hint">Swipe down to dismiss</string>
+    <string name="app_carousel_cancel_overshoot_hint">Release to cancel</string>
+</resources>

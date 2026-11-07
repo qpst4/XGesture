@@ -21,15 +21,11 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toBitmap
-import com.slideindex.app.R
-import com.slideindex.app.service.SlideIndexAccessibilityService
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.settings.AppCarouselSwitcherSettings
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.util.HapticHelper
 import com.slideindex.app.util.PermissionHelper
-import com.slideindex.app.util.RecentTasksLoader
-import com.slideindex.app.util.TaskManagerUtil
-import com.slideindex.app.util.TaskSwitcherMenuActions
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -208,9 +204,9 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
 
         // 2. 尝试从最近任务中补充
         if (recentPackages.size < 8) {
-            val taskRefs = runCatching { TaskManagerUtil.refreshRecentTasks() }.getOrNull().orEmpty()
+            val taskRefs = com.slideindex.app.overlay.panels.PanelRuntimeHooks.recentTaskIdentifiers?.invoke().orEmpty()
             for (ref in taskRefs) {
-                val pkg = ref.identifier.substringBefore('/').trim()
+                val pkg = ref.substringBefore('/').trim()
                 if (pkg.isNotEmpty() && pm.getLaunchIntentForPackage(pkg) != null) {
                     recentPackages.add(pkg)
                     if (recentPackages.size >= 8) break
@@ -243,7 +239,7 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
                 pm.defaultActivityIcon
             }
             val iconSizePx = (48f * density).roundToInt().coerceAtLeast(32)
-            val bitmap = com.slideindex.app.ui.AppIconOverride.bitmap(context, pkg, iconSizePx)
+            val bitmap = com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideBitmap?.invoke(context, pkg, iconSizePx)
                 ?: try {
                     iconDrawable.toBitmap(iconSizePx, iconSizePx, Bitmap.Config.ARGB_8888)
                 } catch (_: Exception) {
@@ -443,34 +439,29 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
     private fun executeCloseAll() {
         val packages = items.filterNot { it.isCloseAll }.map { it.packageName }
         if (packages.isNotEmpty()) {
-            RecentTasksLoader.removePackages(packages)
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.removeRecentPackages?.invoke(packages)
             Thread {
                 for (pkg in packages) {
-                    TaskManagerUtil.forceStopPackage(pkg)
+                    com.slideindex.app.overlay.panels.PanelRuntimeHooks.forceStopPackage?.invoke(pkg)
                 }
             }.start()
         }
     }
 
     private fun executeCloseApp(packageName: String) {
-        RecentTasksLoader.removePackages(listOf(packageName))
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.removeRecentPackages?.invoke(listOf(packageName))
         Thread {
-            TaskManagerUtil.forceStopPackage(packageName)
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.forceStopPackage?.invoke(packageName)
         }.start()
     }
 
     private fun executeFloating(packageName: String) {
         val effective = appSettings ?: AppSettings()
-        TaskSwitcherMenuActions.launchFreeWindow(
-            context = context,
-            packageName = packageName,
-            settings = effective,
-            onSessionEnd = onDismissRequest,
-        )
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchFreeWindow?.invoke(context, packageName, effective, onDismissRequest)
     }
 
     private fun executeSplitScreen(packageName: String) {
-        val service = SlideIndexAccessibilityService.accessibilityInstance()
+        val service = com.slideindex.app.overlay.panels.PanelRuntimeHooks.accessibilityService?.invoke()
         if (service != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             val ok = service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_TOGGLE_SPLIT_SCREEN)
             if (ok) {

@@ -4453,14 +4453,6 @@ adb mode should return uid=2000.
 If Shizuku was started as Root, use wireless debugging/adb instead,
 or revoke permanent Root for Shell in APatch.</string>
     <string name="shell_no_response">Shell service not responding. Fully restart Shizuku, then reopen this app.</string>
-    <string name="app_carousel_cancel_hint">Move to top or bottom edge and release to cancel</string>
-    <string name="app_carousel_action_split_screen">Split screen</string>
-    <string name="app_carousel_action_floating">Floating</string>
-    <string name="app_carousel_action_close">Close</string>
-    <string name="app_carousel_close_all">Close all</string>
-    <string name="app_carousel_close_all_hint">Release to close all apps</string>
-    <string name="app_carousel_cancel_down_hint">Swipe down to dismiss</string>
-    <string name="app_carousel_cancel_overshoot_hint">Release to cancel</string>
     <string name="extension_about_subtitle">Version, updates &amp; privacy</string>
     <string name="external_invocation_keyword_example"> "keyword"</string>
     <string name="search_panel_aggregated_image_search">Aggregated image search</string>
@@ -4686,16 +4678,6 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="clipboard_monitoring_capture_logcat">System log reading</string>
     <string name="clipboard_monitoring_capture_logcat_desc">Reads logcat and filters clipboard changes; better compatibility with older devices</string>
     <string name="clipboard_monitor_notification_lsposed_running">LSPosed allowlist mode</string>
-    <string name="app_carousel_settings_title">Card app switcher</string>
-    <string name="app_carousel_settings_desc">Swipe up or down from the center of the screen past the configured distance and release to cancel the switch</string>
-    <string name="app_carousel_cancel_distance">Cancel distance</string>
-    <string name="app_carousel_separate_cancel_distances">Set up and down distances separately</string>
-    <string name="app_carousel_cancel_distance_up">Upward cancel distance</string>
-    <string name="app_carousel_cancel_distance_down">Downward cancel distance</string>
-    <string name="app_carousel_slide_reversed">Reverse swipe direction</string>
-    <string name="app_carousel_slide_reversed_desc">Flip which way you swipe to browse recent apps</string>
-    <string name="app_carousel_slide_sensitivity">Swipe sensitivity</string>
-    <string name="app_carousel_cancel_both_directions">Cancel in both directions</string>
     <string name="inspire_image_edit_add_text">Add text</string>
     <string name="inspire_image_edit_brush_drag_hint">Tap or drag left/right to adjust the brush size</string>
     <string name="inspire_image_edit_brush_value">%1$d px</string>
@@ -4971,4 +4953,15 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="shell_panel_result_exit_ok">exit 0 (no output)</string>
     <string name="shell_panel_result_exit_only">exit %1$d (no output)</string>
     <string name="shell_panel_test_result">Test result</string>
+<string name="app_carousel_cancel_hint">Move to top or bottom edge and release to cancel</string>
+<string name="app_carousel_settings_title">Card app switcher</string>
+<string name="app_carousel_settings_desc">Swipe up or down from the center of the screen past the configured distance and release to cancel the switch</string>
+<string name="app_carousel_cancel_distance">Cancel distance</string>
+<string name="app_carousel_separate_cancel_distances">Set up and down distances separately</string>
+<string name="app_carousel_cancel_distance_up">Upward cancel distance</string>
+<string name="app_carousel_cancel_distance_down">Downward cancel distance</string>
+<string name="app_carousel_slide_reversed">Reverse swipe direction</string>
+<string name="app_carousel_slide_reversed_desc">Flip which way you swipe to browse recent apps</string>
+<string name="app_carousel_slide_sensitivity">Swipe sensitivity</string>
+<string name="app_carousel_cancel_both_directions">Cancel in both directions</string>
 </resources>

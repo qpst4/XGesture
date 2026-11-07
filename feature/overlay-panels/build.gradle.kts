@@ -41,6 +41,7 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3.pinned)
     implementation(libs.dynamicanimation)
+    implementation(libs.androidx.palette)
     implementation(libs.miuix.ui)
     implementation(libs.materialkolor)
 }

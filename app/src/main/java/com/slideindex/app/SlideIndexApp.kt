@@ -188,6 +188,32 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 ?.settingsRepository
                 ?.settings
         }
+        // 面板模块（:feature:overlay-panels）要的特权/任务/小窗/图标能力，全部回调注入。
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.accessibilityService = {
+            com.slideindex.app.service.SlideIndexAccessibilityService.accessibilityInstance()
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.recentTaskIdentifiers = {
+            runCatching {
+                com.slideindex.app.util.TaskManagerUtil.refreshRecentTasks().map { it.identifier }
+            }.getOrNull()
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.forceStopPackage = { pkg ->
+            com.slideindex.app.util.TaskManagerUtil.forceStopPackage(pkg)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.removeRecentPackages = { packages ->
+            com.slideindex.app.util.RecentTasksLoader.removePackages(packages)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchFreeWindow = { ctx, pkg, settings, onEnd ->
+            com.slideindex.app.util.TaskSwitcherMenuActions.launchFreeWindow(
+                context = ctx,
+                packageName = pkg,
+                settings = settings,
+                onSessionEnd = onEnd,
+            )
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideBitmap = { ctx, pkg, size ->
+            com.slideindex.app.ui.AppIconOverride.bitmap(ctx, pkg, size)
+        }
         com.slideindex.app.overlay.OverlayHostRuntime.accessibilityHostContext = {
             com.slideindex.app.service.SlideIndexAccessibilityService.overlayHostContext()
         }

@@ -10,7 +10,6 @@ import android.os.Looper
 import android.util.Log
 import android.view.Gravity
 import android.view.WindowManager
-import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.overlay.OverlayWindowTypes
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.util.PermissionHelper
