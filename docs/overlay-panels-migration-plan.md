@@ -129,4 +129,32 @@
 | 开发效率收益 | 明显：`:app` 从约 35.4 万行降到约 21.8 万行，冷编译从 4–5 分钟往下走；模块边界真实化 |
 | 成本 | 1.5–2 周，且必须整块时间（碎片做会留半拆状态） |
 | 风险 | overlay 无单测，只能真机手测；每批都可能撞到新的隐式依赖 |
+
+## 8. 2026-11-07 重新评估（重要）
+
+阶段 A1–A3b 已把**基础设施**（约 2.4k 行）搬进 `:core:design` / `:core:overlay-host`。但继续搬**面板组**时发现：A3 的"单例接口化"**不是充分的**——面板组的阻塞项主要是**类型级依赖**，不是几个静态入口。
+
+实测（组 → 除 overlay 自身外的 `com.slideindex.app.*` import）：
+
+| 组 | 依赖 | 结论 |
+| :--- | :--- | :--- |
+| `quickwheel` | `settings`（QuickWheel*、AppSettings）、`gesture`（ActionExecutor/GestureAction）、`activity`、`launcher`、`ui`（图标/标签/渲染器/主题）、`R`、`util` | 搬不动：settings 类型 + UI 套件 |
+| `fingertip` | `settings`（FingertipRing*、AppSettings）、`gesture`、`launcher`、`util`（图标位图/Haptic）、`R` | 同上 |
+| `share` | `di`（AppGraphEntryPoint / OverlayDependencyAccess）、`search`、`ui`、`util`、`R` | 同上 |
+| `filebrowser` | 13 个包（clipboard / ocr / history / searchpanel / share / privilege / R / service …） | 同上 |
+| `animation` | `settings`（样式）、`ui`（图标/主题）、`perf` | 同上 |
+
+也就是说：**要整组搬面板，前置不是 A3，而是三层核心抽取**：
+
+1. **`:core:model`**：`AppSettings` 及其 387 个字段、QuickWheel/FingertipRing/Gesture 等设置类型与扩展函数；
+2. **`:core:design` 扩展**：`ThinActionIcons`、`gestureActionIcon`、`gestureActionLabelText`、`QuickWheelWheelRenderer`、`OverlayAwareModuleTheme` 等 UI 套件（依赖 miuix + 图标资源）；
+3. **`:core:actions`**：`ActionExecutor` / `GestureAction` 的执行接口（面板只需要"执行某个动作"，不需要实现）。
+
+这三层做完，阶段 B 才是"搬文件"；否则每搬一个组都要连带拆它的所有依赖。
+
+**修正后的估计**：三层前置约 2–3 周（且需要真机回归），之后面板组迁移约 1–2 周。原计划"1.5–2 周完成"不成立。
+
+**当前建议**：
+- 如果目标是"减少 `:app` 体量"，**在基础设施搬完处收手是合理的终点**（已降约 2.4k 行，模块边界真实化，风险已释放）；
+- 如果目标仍是"overlay 全部出 `:app`"，先立项做上面三层，别继续零敲碎打搬面板——每次都会撞在同一堵墙上。
 | 建议 | **有连续 3–5 天再做阶段 A**；`filebrowser`（B1）可以单独挑出来先做，半天到一天。没有整块时间就放着——它不会自己变好，但也不会坏。 |
