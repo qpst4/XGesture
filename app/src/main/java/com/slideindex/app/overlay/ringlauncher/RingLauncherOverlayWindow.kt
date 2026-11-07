@@ -118,16 +118,9 @@ object RingLauncherOverlayWindow {
             return
         }
         val hostContext = overlayHostContext() ?: return
-        val deps = OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
         val settings = lastSettings
         val axis = currentAxis()
-        val fvSettings = settings.fvRingLauncherFor(axis)
-        val currentItem = fvSettings.itemAt(slotIndex)
-        val appDeps = deps as? com.slideindex.app.di.AppDependencies
-            ?: dagger.hilt.android.EntryPointAccessors.fromApplication(
-                hostContext.applicationContext,
-                com.slideindex.app.di.AppGraphEntryPoint::class.java,
-            ).dependencies()
+        val currentItem = settings.fvRingLauncherFor(axis).itemAt(slotIndex)
         val dialogHost = slotConfigDialogHost ?: OverlayComposeDialogHost(
             context = hostContext,
             applyTheme = { content -> ModuleTheme(settings = lastSettings) { content() } },
@@ -136,52 +129,54 @@ object RingLauncherOverlayWindow {
         // 圆环槽位的应用列表要和动作选择 / 索引一致：带分身条目、带冻结 / 暂停状态。
         // enrich 会查 LauncherApps / shell，放 IO 线程，算完再回主线程弹窗。
         settingsScope.launch {
-            val apps = com.slideindex.app.ui.picker.PickerApps.fromCached(
-                hostContext,
-                deps.appRepository,
-                settings.freezerAppPackages,
-            )
+            val apps = com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerApps
+                ?.invoke(hostContext, null, settings.freezerAppPackages)
+                .orEmpty()
             mainHandler.post {
+                val sheet = com.slideindex.app.overlay.panels.PanelRuntimeHooks.ringSlotConfigSheetContent
+                if (sheet == null) {
+                    dialogHost.dismiss()
+                    return@post
+                }
                 dialogHost.show(
                     onBackPressed = {
                         dialogHost.dismiss()
                         true
                     },
                 ) {
-                    androidx.compose.runtime.CompositionLocalProvider(
-                        com.slideindex.app.ui.compose.LocalAppDependencies provides appDeps,
-                    ) {
-                        RingLauncherSlotConfigSheet(
-                            slotIndex = slotIndex,
-                            currentItem = currentItem,
-                            apps = apps,
-                            activityShortcuts = settings.activityShortcuts,
-                            shellCommands = settings.shellCommands,
-                            quickLauncherPanels = settings.quickLauncherPanels,
-                            onDismiss = { dialogHost.dismiss() },
-                            onSelectItem = { selectedItem ->
-                                settingsScope.launch {
-                                    val itemToSet = selectedItem ?: QuickLauncherItem(QuickLauncherItemType.APP, "", "")
-                                    deps.settingsRepository.setFvRingLauncherSlot(axis, slotIndex, itemToSet)
-                                    refreshFromSettings()
-                                }
-                            },
-                            onOpenCustomIconEditor = {
-                                suspendForSlotIconEditor()
-                                val intent = com.slideindex.app.overlay.panels.PanelRuntimeHooks.ringSlotIconEditorIntent
+                    sheet.content(
+                        slotIndex = slotIndex,
+                        currentItem = currentItem,
+                        settings = settings,
+                        apps = apps,
+                        onDismiss = { dialogHost.dismiss() },
+                        onSelectItem = { selectedItem ->
+                            val itemToSet = selectedItem
+                                ?: QuickLauncherItem(QuickLauncherItemType.APP, "", "")
+                            com.slideindex.app.overlay.panels.PanelRuntimeHooks.persistRingLauncherSlot
+                                ?.invoke(axis, slotIndex, itemToSet)
+                            settingsScope.launch { refreshFromSettings() }
+                        },
+                        onOpenCustomIconEditor = {
+                            suspendForSlotIconEditor()
+                            val intent =
+                                com.slideindex.app.overlay.panels.PanelRuntimeHooks.ringSlotIconEditorIntent
                                     ?.invoke(hostContext, axis, slotIndex)
-                                if (intent != null) {
-                                    runCatching { hostContext.startActivity(intent) }
+                            if (intent != null) {
+                                runCatching { hostContext.startActivity(intent) }
+                            }
+                        },
+                        launchCreateShortcut = { createHost, onResult ->
+                            com.slideindex.app.overlay.panels.PanelRuntimeHooks.createShortcutLauncher
+                                ?.invoke(
+                                    hostContext,
+                                    createHost,
+                                    { RingLauncherOverlayWindow.dismiss() },
+                                ) { created ->
+                                    onResult(created as? com.slideindex.app.util.AppShortcutLoader.CreatedShortcut)
                                 }
-                            },
-                            launchCreateShortcut = { createHost, onResult ->
-                                com.slideindex.app.overlay.panels.PanelRuntimeHooks.createShortcutLauncher
-                                    ?.invoke(hostContext, createHost, { RingLauncherOverlayWindow.dismiss() }) { created ->
-                                        onResult(created as? com.slideindex.app.util.AppShortcutLoader.CreatedShortcut)
-                                    }
-                            },
-                        )
-                    }
+                        },
+                    )
                 }
             }
         }
@@ -232,8 +227,7 @@ object RingLauncherOverlayWindow {
                 Log.w(TAG, "show: accessibility service not connected")
                 return false
             }
-        val deps = OverlayDependencyAccess.overlayDependencies(hostContext)
-        val appRepository = deps?.appRepository
+        val appRepository = com.slideindex.app.overlay.panels.PanelRuntimeHooks.appRepository?.invoke(hostContext)
         val apps = appRepository?.getCachedApps().orEmpty()
         val appsByPackage = apps.associateBy { it.packageName }
 
@@ -346,7 +340,8 @@ object RingLauncherOverlayWindow {
                 }
 
                 override fun onCircleCountChange(circleCount: Int) {
-                    val repository = deps?.settingsRepository ?: return
+                    val deps = com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
+        val repository = deps.settingsRepository
                     val axis = side.toAxis()
                     settingsScope.launch {
                         repository.setFvRingLauncherCircleCount(axis, circleCount)
@@ -373,7 +368,8 @@ object RingLauncherOverlayWindow {
                 }
 
                 override fun onSettingsChange(settings: FvRingLauncherSettings) {
-                    val repository = deps?.settingsRepository ?: return
+                    val deps = com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
+        val repository = deps.settingsRepository
                     val axis = side.toAxis()
                     settingsScope.launch {
                         repository.setFvRingLauncherSettings(axis, settings)
@@ -403,7 +399,8 @@ object RingLauncherOverlayWindow {
                     enabled: Boolean,
                     mergeDirection: FvRingLauncherAxisMergeDirection?,
                 ) {
-                    val repository = deps?.settingsRepository ?: return
+                    val deps = com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
+        val repository = deps.settingsRepository
                     val axis = side.toAxis()
                     settingsScope.launch {
                         repository.setFvRingLauncherLinkAppearanceAxes(enabled, axis, mergeDirection)
@@ -435,7 +432,8 @@ object RingLauncherOverlayWindow {
                     enabled: Boolean,
                     mergeDirection: FvRingLauncherAxisMergeDirection?,
                 ) {
-                    val repository = deps?.settingsRepository ?: return
+                    val deps = com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
+        val repository = deps.settingsRepository
                     val axis = side.toAxis()
                     settingsScope.launch {
                         repository.setFvRingLauncherLinkSlotAxes(enabled, axis, mergeDirection)
@@ -469,7 +467,8 @@ object RingLauncherOverlayWindow {
                 }
 
                 override fun onSlotsSwapped(fromSlot: Int, toSlot: Int) {
-                    val repository = deps?.settingsRepository ?: return
+                    val deps = com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
+        val repository = deps.settingsRepository
                     val axis = side.toAxis()
                     settingsScope.launch {
                         repository.swapFvRingLauncherSlots(axis, fromSlot, toSlot)
@@ -559,12 +558,12 @@ object RingLauncherOverlayWindow {
         val overlayController = controller ?: return
         if (!overlayController.isVisible()) return
         val hostContext = overlayHostContext() ?: return
-        val deps = OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
-        val appRepository = deps.appRepository
+        val appRepository = com.slideindex.app.overlay.panels.PanelRuntimeHooks.appRepository?.invoke(hostContext) ?: return
         val apps = appRepository.getCachedApps()
         val appsByPackage = apps.associateBy { it.packageName }
         settingsScope.launch {
-            val settings = deps.settingsRepository.settings.first()
+            val settings = com.slideindex.app.settings.SettingsFlowHolder.settingsFlow(hostContext)
+                ?.first() ?: lastSettings
             lastSettings = settings
             val side = activeSide ?: return@launch
             val fvSettings = settings.fvRingLauncherFor(side)
@@ -633,11 +632,11 @@ object RingLauncherOverlayWindow {
         val overlayController = controller ?: return
         if (!overlayController.isVisible()) return
         val hostContext = overlayHostContext() ?: return
-        val deps = OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
-        val appRepository = deps.appRepository
+        val appRepository = com.slideindex.app.overlay.panels.PanelRuntimeHooks.appRepository?.invoke(hostContext) ?: return
         val appsByPackage = appRepository.getCachedApps().associateBy { it.packageName }
         settingsScope.launch {
-            val settings = deps.settingsRepository.settings.first()
+            val settings = com.slideindex.app.settings.SettingsFlowHolder.settingsFlow(hostContext)
+                ?.first() ?: lastSettings
             lastSettings = settings
             val side = activeSide ?: return@launch
             val fvSettings = settings.fvRingLauncherFor(side)
