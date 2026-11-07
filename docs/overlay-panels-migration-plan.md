@@ -166,3 +166,27 @@
 - B 阶段完成 1/16（`backpanel`，3.2k 行）+ 新模块 `:feature:overlay-panels`；
 - 公共层完成 `PermissionHelper`；
 - 下一个可动的组：`carousel`（3 文件 / 1,042 行），仍差 `di` + `R` + 3 个 util。
+
+## 9. A′ 期间已完成的公共层搬迁（2026-11-07 下午）
+
+| 批次 | 内容 | 位置 |
+| :--- | :--- | :--- |
+| A4 | 主题层（`ui/theme` 整包 + `ui/miuix` 4 文件） | `:feature:settings` |
+| A5 | 图标层 6 文件 / 3,006 行 | `:core:design` |
+| A6 | `overlayHostContext()` 去 DI（29 个 `:app` 文件） | `:core:overlay-host` |
+| A7 | `perf` 4 文件 + `barcode` 3 文件 | `:core:common` |
+| A8 | 18 个纯 Android util + `ShellCommandIconResolver` | `:core:common` |
+| A9 | `DrawableExtensions`（需要 Compose） | `:core:design` |
+
+**:app/util 的搬迁规律**（实测）：能搬的是"零 app import 且不引用同包 app 类"的文件；一旦同包引用（Kotlin 不用 import）就会连环失败。
+已回滚过的：`AppLocaleApplier`、`OverlaySuppression`、`TriggerVisibility`、`VoiceActionHelper`、`SystemBackGestureInsetHelper`、`PackageActivityResolver`、`PickerAppIconBitmap`、`BrightnessControlHelper`、`VolumeControlHelper`、`HiddenApiBootstrap`。
+
+### 下一块：`carousel`（3 文件 / 1,042 行）的具体前置
+
+| 依赖 | 处理方式 |
+| :--- | :--- |
+| `SlideIndexAccessibilityService.accessibilityInstance()` → `performGlobalAction` | 新增 `OverlayHostRuntime.accessibilityService: (() -> AccessibilityService?)?`（平台类，模块可用） |
+| `TaskManagerUtil.refreshRecentTasks()` / `forceStopPackage()` | 新增 `RecentTasksPort` 接口（返回类型 `RecentTaskRef` 需先下沉） |
+| `RecentTasksLoader.removePackages()` | 同上接口 |
+| `TaskSwitcherMenuActions.launchFreeWindow()` | 同上接口或独立回调 |
+| `R.string.app_carousel_*`（8 条） | 抽到 `:feature:overlay-panels` 的 `res/values/strings.xml` |
