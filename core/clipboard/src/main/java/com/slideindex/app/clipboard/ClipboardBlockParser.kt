@@ -2,7 +2,7 @@ package com.slideindex.app.clipboard
 
 import java.util.regex.Pattern
 
-internal object ClipboardBlockParser {
+object ClipboardBlockParser {
     private val IMG_TAG_PATTERN = Pattern.compile(
         """<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>""",
         Pattern.CASE_INSENSITIVE

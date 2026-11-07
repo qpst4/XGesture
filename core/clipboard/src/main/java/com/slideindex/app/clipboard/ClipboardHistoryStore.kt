@@ -11,7 +11,7 @@ import kotlinx.serialization.json.Json
 /**
  * SQLite-backed clipboard history: keyset pagination, optional FTS5 search, indexed dedup.
  */
-internal class ClipboardHistoryStore(
+class ClipboardHistoryStore(
     context: Context,
     private val json: Json
 ) {

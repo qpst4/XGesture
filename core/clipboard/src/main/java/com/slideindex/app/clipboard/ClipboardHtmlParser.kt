@@ -5,7 +5,7 @@ import android.util.Base64
 import androidx.core.text.HtmlCompat
 import java.util.regex.Pattern
 
-internal object ClipboardHtmlParser {
+object ClipboardHtmlParser {
     private val IMG_SRC_PATTERN = Pattern.compile(
         """<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["']""",
         Pattern.CASE_INSENSITIVE

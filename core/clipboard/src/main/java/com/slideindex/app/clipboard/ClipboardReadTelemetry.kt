@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicLong
  * 输出到 logcat，漏记排查只能看文件。位置：
  * `files/diagnostic/clipboard_read.log`（超过 [MAX_LOG_BYTES] 时轮转为 `.1`）。
  */
-internal object ClipboardReadTelemetry {
+object ClipboardReadTelemetry {
     private const val TAG = "ClipboardReadTelemetry"
     private const val DIR_NAME = "diagnostic"
     private const val FILE_NAME = "clipboard_read.log"

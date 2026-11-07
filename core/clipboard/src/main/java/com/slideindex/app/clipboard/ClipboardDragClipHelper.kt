@@ -48,7 +48,7 @@ object ClipboardDragClipHelper {
      * 只有 `content://media/...` 这类系统媒体库 URI 宿主本来就能读，可以直接用原件；
      * 应用私有 FileProvider、`file://` 等宿主读不到的 URI 都要先镜像一份系统 URI。
      */
-    internal fun needsSystemMirror(uri: Uri): Boolean =
+    fun needsSystemMirror(uri: Uri): Boolean =
         uri.scheme != "content" || uri.authority != MediaStore.AUTHORITY
 
     private fun remapUrisForHost(

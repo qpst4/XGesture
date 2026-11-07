@@ -38,7 +38,7 @@ object DragFileMirror {
     private const val CACHE_DIR = "SlideIndex/DragCache"
 
     /** [CACHE_DIR] 的小写形式，方便判定 MediaStore 路径是不是拖拽镜像。 */
-    internal val PATH_MARKER: String = CACHE_DIR.lowercase(Locale.ROOT)
+    val PATH_MARKER: String = CACHE_DIR.lowercase(Locale.ROOT)
 
     /** 投放成功后留给宿主读完镜像的时间：宿主松手时已拿到文件，这里只覆盖异步拷贝。 */
     const val DROP_RELEASE_GRACE_MS = 10_000L
@@ -123,13 +123,13 @@ object DragFileMirror {
     }
 
     /** 立即回收镜像：没有任何宿主接收这次投放，没人会去读它。 */
-    internal fun releaseNow(appContext: Context, mirrors: List<Uri>, reason: String) {
+    fun releaseNow(appContext: Context, mirrors: List<Uri>, reason: String) {
         val app = appContext.applicationContext
         deleteMirrors(app, prefsOf(app), mirrors, reason)
     }
 
     /** 延迟回收镜像：投放成功，留一段宿主异步拷贝的时间。 */
-    internal fun releaseAfter(appContext: Context, mirrors: List<Uri>, graceMs: Long, reason: String) {
+    fun releaseAfter(appContext: Context, mirrors: List<Uri>, graceMs: Long, reason: String) {
         if (graceMs <= 0L) {
             releaseNow(appContext, mirrors, reason)
             return

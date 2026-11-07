@@ -4,7 +4,7 @@ package com.slideindex.app.clipboard
  * 纯图片条目里常见的「标签文字」：截图文件名、IMG_xxx、或图片 content URI 本身。
  * 这些不应作为正文写入系统剪贴板。
  */
-internal object ClipboardImageLabel {
+object ClipboardImageLabel {
 
     fun isMetadataText(
         text: String,
