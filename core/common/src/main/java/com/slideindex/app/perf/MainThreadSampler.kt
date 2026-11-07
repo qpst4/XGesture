@@ -8,7 +8,6 @@ import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import androidx.core.content.ContextCompat
-import com.slideindex.app.BuildConfig
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -44,7 +43,7 @@ object MainThreadSampler {
 
     /** 在常驻进程里装一次广播接收器，之后靠 adb 广播按需触发。 */
     fun install(context: Context) {
-        if (!BuildConfig.DEBUG) return
+        if (!PerfBuildFlags.debugBuild) return
         if (!installed.compareAndSet(false, true)) return
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
@@ -64,7 +63,7 @@ object MainThreadSampler {
 
     /** 采一段主线程栈，异步执行；已在采样时直接返回。 */
     fun start(reason: String) {
-        if (!BuildConfig.DEBUG) return
+        if (!PerfBuildFlags.debugBuild) return
         if (!running.compareAndSet(false, true)) return
         Thread({ sample(reason) }, "MainThreadSampler").apply {
             isDaemon = true

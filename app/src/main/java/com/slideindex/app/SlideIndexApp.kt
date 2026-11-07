@@ -103,6 +103,8 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        // perf 包已下沉到 :core:common，构建标记由这里注入。
+        com.slideindex.app.perf.PerfBuildFlags.debugBuild = com.slideindex.app.BuildConfig.DEBUG
         // 渠道必须先于任何 startForeground 存在：AMS 在 ServiceRecord.postNotification() 里
         // 查不到渠道就直接 killMisbehavingService()（Bad notification for startForeground），
         // 而这个判定发生在 AMS 的 handler 线程，服务侧 try/catch 抓不住。

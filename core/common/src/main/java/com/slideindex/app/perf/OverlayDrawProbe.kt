@@ -3,7 +3,6 @@ package com.slideindex.app.perf
 import android.os.SystemClock
 import android.util.Log
 import android.view.View
-import com.slideindex.app.BuildConfig
 import java.util.Collections
 import java.util.WeakHashMap
 import java.util.concurrent.ConcurrentHashMap
@@ -36,7 +35,7 @@ object OverlayDrawProbe {
 
     /** 给一个窗口根 View 打标签；重复调用无副作用。 */
     fun attach(view: View, label: String) {
-        if (!BuildConfig.DEBUG) return
+        if (!PerfBuildFlags.debugBuild) return
         synchronized(attached) {
             if (!attached.add(view)) return
         }
@@ -49,7 +48,7 @@ object OverlayDrawProbe {
 
     /** 每 [INTERVAL_MS] 打一次各窗口出帧数，持续 [durationMs]。 */
     fun startDump(durationMs: Long) {
-        if (!BuildConfig.DEBUG) return
+        if (!PerfBuildFlags.debugBuild) return
         if (!dumping.compareAndSet(false, true)) return
         Thread({
             try {

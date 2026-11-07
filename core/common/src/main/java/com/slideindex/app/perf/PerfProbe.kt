@@ -2,7 +2,6 @@ package com.slideindex.app.perf
 
 import android.os.SystemClock
 import android.util.Log
-import com.slideindex.app.BuildConfig
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
@@ -23,7 +22,7 @@ object PerfProbe {
     private const val TAG = "PerfProbe"
 
     /** debug 构建启用。与 EdgeDiag 同一套思路：正式包不要这个开销。 */
-    val enabled: Boolean = BuildConfig.DEBUG
+    val enabled: Boolean = PerfBuildFlags.debugBuild
 
     /** 单次超过这个阈值就单独打一行，便于对着拖动时间轴看。 */
     private const val SLOW_MS = 8L
