@@ -74,7 +74,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  *   见调用方（`HistoryPanelScreen`）传进来的实现。
  * - **光标处插图 / 退格删图 / 空块**：全部复用弹窗那一套（§0.16.16）。
  */
-internal data class HistoryEditTarget(
+data class HistoryEditTarget(
     val entryId: String,
     val text: String,
     val tagNames: List<String>,
@@ -87,7 +87,7 @@ internal data class HistoryEditTarget(
 @OptIn(ExperimentalLayoutApi::class)
 @Suppress("DEPRECATION") // BasicTextField 的 state 版重载在这个 foundation 版本里不存在，见输入条的同类注释
 @Composable
-internal fun HistoryPanelEditBar(
+fun HistoryPanelEditBar(
     target: HistoryEditTarget,
     availableTags: List<StashTag>,
     imeBottom: Dp,
@@ -481,7 +481,7 @@ private fun HistoryEditAppendRow(
 
 /** 设计稿 `.actbtn`：flex 1、高 38dp、圆角 12dp。 */
 @Composable
-internal fun HistoryEditActionButton(
+fun HistoryEditActionButton(
     label: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit,

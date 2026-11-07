@@ -66,7 +66,7 @@ import top.yukonga.miuix.kmp.basic.Text
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun HistoryReminderPickerModal(
+fun HistoryReminderPickerModal(
     open: Boolean,
     /** 当前已设的提醒（null = 没设）；用来标出选中项并决定要不要显示「清除」。 */
     currentAtMs: Long?,

@@ -54,7 +54,7 @@ import top.yukonga.miuix.kmp.basic.Text
  */
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
-internal fun HistoryTagChips(
+fun HistoryTagChips(
     tags: List<StashTag>,
     selectedTags: Set<String>,
     /** 多标签匹配方式当前值：true = 同时含全部（AND，默认）。 */
@@ -202,7 +202,7 @@ private fun TagMatchOption(
  */
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
-internal fun HistoryClipboardFilterChips(
+fun HistoryClipboardFilterChips(
     selected: ClipboardHistoryFilter,
     onSelected: (ClipboardHistoryFilter) -> Unit,
     modifier: Modifier = Modifier,

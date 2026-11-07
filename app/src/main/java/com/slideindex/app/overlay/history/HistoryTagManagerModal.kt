@@ -71,7 +71,7 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
  * 前 5 个就是 `StashMetaRepository.DEFAULT_TAGS` 的配色 —— 默认标签改色时能"改回原样"，
  * 后 3 个是补的：默认 5 色全是偏暖/偏冷的中饱和色，用户在粉紫之间换色时会觉得没得选。
  */
-internal val HistoryTagPalette: List<Long> = listOf(
+val HistoryTagPalette: List<Long> = listOf(
     0xFF5B8DF6,
     0xFFF0A93B,
     0xFF57B87A,
@@ -129,7 +129,7 @@ private class HistoryTagDragState(initial: List<StashTag>) {
  * 改色与移动照旧可用（颜色与顺序都不参与关键字判定）。
  */
 @Composable
-internal fun HistoryTagManagerModal(
+fun HistoryTagManagerModal(
     open: Boolean,
     tags: List<StashTag>,
     imeBottom: Dp,
