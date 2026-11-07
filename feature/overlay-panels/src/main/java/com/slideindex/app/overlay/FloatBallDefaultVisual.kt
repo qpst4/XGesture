@@ -24,7 +24,7 @@ import kotlin.math.roundToInt
 /**
  * Shared default float-ball: compact glassy orb with theme tint.
  */
-internal object FloatBallDefaultVisual {
+object FloatBallDefaultVisual {
 
     const val BODY_SCALE = 0.72f
 

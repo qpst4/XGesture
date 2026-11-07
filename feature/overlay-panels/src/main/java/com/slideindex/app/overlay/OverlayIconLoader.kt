@@ -23,7 +23,7 @@ import java.util.concurrent.Executors
  * - 未命中时用 [request] 提交后台解析，完成后在主线程回调重绘，期间绘制方自己画占位；
  * - 同一个 key 不会重复提交（in-flight 去重）。
  */
-internal object OverlayIconLoader {
+object OverlayIconLoader {
 
     /** 图标内存上限；单个 128×128 ARGB 图标约 64KB，8MB 约可放 120 个。 */
     private const val MAX_CACHE_KB = 8 * 1024

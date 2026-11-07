@@ -12,7 +12,7 @@ import android.util.Log
  * Quick Cursor [mt0]: one [dispatchGesture] at a time; each segment uses
  * [GestureDescription.StrokeDescription.continueStroke] with 1 ms duration.
  */
-internal class FloatingPointerRealtimeGesture(
+class FloatingPointerRealtimeGesture(
     private val service: AccessibilityService,
     startX: Float,
     startY: Float,

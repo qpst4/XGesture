@@ -7,7 +7,7 @@ import android.graphics.RectF
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 
-internal class OverlayPanelEnterAnimator(
+class OverlayPanelEnterAnimator(
     private val side: PanelSide,
     private val dp: (Float) -> Float,
     private val invalidate: () -> Unit

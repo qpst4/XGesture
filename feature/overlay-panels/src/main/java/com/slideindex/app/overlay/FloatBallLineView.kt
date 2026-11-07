@@ -17,7 +17,7 @@ import kotlin.math.min
  * 设置页的实时预览仍然走 Compose —— 那边不影响运行性能。
  */
 @SuppressLint("ViewConstructor")
-internal class FloatBallLineView(context: Context) : View(context) {
+class FloatBallLineView(context: Context) : View(context) {
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL

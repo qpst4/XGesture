@@ -16,7 +16,7 @@ import com.slideindex.app.settings.FloatBallStyleType
 /**
  * Circular clipped canvas animation surface (~20fps Handler tick, no AVD/Lottie).
  */
-internal class FloatBallBuiltinAnimView @JvmOverloads constructor(
+class FloatBallBuiltinAnimView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : View(context, attrs) {

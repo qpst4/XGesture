@@ -23,7 +23,7 @@ package com.slideindex.app.overlay
  *
  * 纯逻辑、可单测：时间由调用方以 `nowMs`（`SystemClock.uptimeMillis()`）传入，本类不读时钟。
  */
-internal class ImeSignalStabilizer(
+class ImeSignalStabilizer(
     private val confirmMs: Long = DEFAULT_CONFIRM_MS,
     private val quietMs: Long = DEFAULT_QUIET_MS,
 ) {

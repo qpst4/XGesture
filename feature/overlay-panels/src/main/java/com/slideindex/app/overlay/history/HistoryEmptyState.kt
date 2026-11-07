@@ -35,7 +35,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * 位置照设计稿：**顶部对齐**、距列表顶 46dp（不是屏幕垂直居中）。
  */
 @Composable
-internal fun HistoryEmptyState(
+fun HistoryEmptyState(
     title: String,
     modifier: Modifier = Modifier,
     hint: String? = null,

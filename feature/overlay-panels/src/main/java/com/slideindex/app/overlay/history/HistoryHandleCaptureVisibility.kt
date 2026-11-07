@@ -23,7 +23,7 @@ import android.os.SystemClock
  * 线程约定：只隐藏绘制（`view.alpha`），所有动作都落在主线程；截图链路本身就在主线程调用，
  * 所以 [suppress] 返回时把手已经不可见了（这才是"截不到"的前提）。
  */
-internal object HistoryHandleCaptureVisibility {
+object HistoryHandleCaptureVisibility {
 
     /** 租约时长：截图链路正常 200ms 内恢复，超过这个时间一定是恢复丢了。 */
     private const val LEASE_TIMEOUT_MS = 3_000L

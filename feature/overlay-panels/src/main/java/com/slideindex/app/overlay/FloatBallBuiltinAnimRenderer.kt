@@ -15,7 +15,7 @@ import kotlin.math.sin
 /**
  * Lightweight built-in float-ball animations drawn on Canvas (~20fps), no AVD/Lottie.
  */
-internal object FloatBallBuiltinAnimRenderer {
+object FloatBallBuiltinAnimRenderer {
 
     private val planePath = Path().apply {
         moveTo(24f, 8f)

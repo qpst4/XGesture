@@ -25,7 +25,7 @@ private val SideBubbleCompactPlatformStyle = PlatformTextStyle(includeFontPaddin
 private val BracketCountPattern = Regex("""\[\d+条\]""")
 
 @Composable
-internal fun SideBubbleTitleText(
+fun SideBubbleTitleText(
     text: String,
     color: Color,
     fontSize: TextUnit = SideBubbleTitleFontSize,
@@ -46,7 +46,7 @@ internal fun SideBubbleTitleText(
 }
 
 @Composable
-internal fun SideBubbleContentText(
+fun SideBubbleContentText(
     title: String,
     text: String,
     titleColor: Color,
@@ -67,7 +67,7 @@ internal fun SideBubbleContentText(
     )
 }
 
-internal fun resolveSideBubbleContent(title: String, content: String): String {
+fun resolveSideBubbleContent(title: String, content: String): String {
     val colonIndex = content.indexOf(':')
     if (colonIndex <= 0 || colonIndex >= content.lastIndex) {
         return content.replace(BracketCountPattern, "")
@@ -86,7 +86,7 @@ internal fun resolveSideBubbleContent(title: String, content: String): String {
     return content.replace(BracketCountPattern, "")
 }
 
-internal fun buildSideBubbleContentText(
+fun buildSideBubbleContentText(
     text: String,
     titleColor: Color,
     contentColor: Color,

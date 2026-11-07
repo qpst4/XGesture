@@ -13,7 +13,7 @@ import android.view.WindowManager
  * 相比原来把线条画在全屏 Compose 层里，合成面积从整屏降到一条边。
  * 目前尚未接线（[FloatBallOverlay] 还没创建它），接线时按下面的方法调用即可。
  */
-internal class FloatBallLineWindow(
+class FloatBallLineWindow(
     private val context: Context,
     private val alignRight: Boolean,
 ) {

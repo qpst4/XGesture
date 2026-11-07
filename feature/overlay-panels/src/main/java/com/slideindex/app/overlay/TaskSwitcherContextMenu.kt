@@ -15,7 +15,7 @@ data class TaskSwitcherContextMenuLayout(
     val inlineInPanel: Boolean = false
 )
 
-internal object TaskSwitcherContextMenuLayoutFactory {
+object TaskSwitcherContextMenuLayoutFactory {
     fun build(
         side: PanelSide,
         panelRect: RectF,

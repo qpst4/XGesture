@@ -28,7 +28,7 @@ import androidx.core.graphics.get
  * 代价：首次探测约 4 × (1 + [PROBE_STEPS]) 次像素读取；调用方用 `remember` 缓存结果，
  * 图标不变就不会重算。
  */
-internal object HudIconSilhouette {
+object HudIconSilhouette {
 
     /** 归一化圆角半径 ≥ 该值 → 当成椭圆（圆形图标）。 */
     private const val OVAL_RADIUS_RATIO = 0.42f

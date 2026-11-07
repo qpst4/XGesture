@@ -41,7 +41,7 @@ data class QuickMenuHistoryEntry(
  *
  * 抽成纯函数是为了可单测：历史是"看一眼"的东西，损坏或超量都不该让页面打不开。
  */
-internal object QuickMenuHistoryCodec {
+object QuickMenuHistoryCodec {
 
     const val MAX_ENTRIES = 20
 
