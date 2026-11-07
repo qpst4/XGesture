@@ -9,7 +9,7 @@ import kotlin.math.min
 import kotlin.math.pow
 
 
-internal object FloatingPointerBounds {
+object FloatingPointerBounds {
     /** Linear mapping (1.0) keeps pointer speed proportional to finger speed at all positions. */
     const val EDGE_CURVE_POWER_X = 1.0f
     const val EDGE_CURVE_POWER_Y = 1.0f
@@ -257,7 +257,7 @@ internal object FloatingPointerBounds {
         return Offset(x, y)
     }
 
-    internal data class AreaPreviewLayout(
+    data class AreaPreviewLayout(
         val trigger: Offset,
         val joystickCenter: Offset,
         val joystickRadiusPx: Float,
