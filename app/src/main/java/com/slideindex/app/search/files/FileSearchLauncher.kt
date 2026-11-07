@@ -55,7 +55,7 @@ object FileSearchLauncher {
         // 统一走内置分享面板（开关关闭时由 launcher 退回系统 chooser）。
         return ShareSheetLauncher.share(
             context = context,
-            payload = ShareSheetPayload.Files(uris = listOf(entry.uri), mimeType = mime),
+            payload = ShareSheetPayload.Files(uris = listOf(entry.uri), mimeType = mime ?: "*/*"),
             dismissSource = dismissSource,
         )
     }
