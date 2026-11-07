@@ -131,6 +131,19 @@ object PanelRuntimeHooks {
     var quickLauncherLabel:
         ((Context, com.slideindex.app.launcher.QuickLauncherItem, Map<String, com.slideindex.app.data.AppInfo>) -> String?)? =
         null
+        /** 环状启动器槽位配置面板内容（`:app` 的 RingLauncherSlotConfigSheet）。 */
+    @Volatile
+    var ringSlotConfigSheetContent: RingSlotConfigSheetContent? = null
+    /** 环状启动器槽位配置用的应用列表（含分身/冻结状态）。 */
+    @Volatile
+    var pickerApps:
+        (suspend (Context, com.slideindex.app.data.AppRepository?, Set<String>) -> List<com.slideindex.app.data.AppInfo>)? =
+        null
+    /** 持久化环状启动器槽位。 */
+    @Volatile
+    var persistRingLauncherSlot:
+        ((com.slideindex.app.settings.FvRingLauncherAxis, Int, com.slideindex.app.launcher.QuickLauncherItem) -> Unit)? =
+        null
     /** 当前设置快照（`:app` 的 settingsRepository.readSnapshot()）。 */
     @Volatile
     var settingsSnapshot: ((Context) -> AppSettings?)? = null
@@ -207,5 +220,20 @@ fun interface GestureActionRunner {
         anchorRawX: Float?,
         anchorRawY: Float?,
         panelSide: com.slideindex.app.overlay.PanelSide?,
+    )
+}
+
+/** 见 [PanelRuntimeHooks.ringSlotConfigSheetContent]。 */
+fun interface RingSlotConfigSheetContent {
+    @androidx.compose.runtime.Composable
+    fun content(
+        slotIndex: Int,
+        currentItem: com.slideindex.app.launcher.QuickLauncherItem?,
+        settings: AppSettings,
+        apps: List<com.slideindex.app.data.AppInfo>,
+        onDismiss: () -> Unit,
+        onSelectItem: (com.slideindex.app.launcher.QuickLauncherItem?) -> Unit,
+        onOpenCustomIconEditor: () -> Unit,
+        launchCreateShortcut: (Any, (Any?) -> Unit) -> Unit,
     )
 }

@@ -275,6 +275,47 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.quickLauncherLabel = { ctx, item, apps ->
             com.slideindex.app.launcher.QuickLauncherLabels.resolveLabel(ctx, item, apps)
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerApps = { ctx, repo, freezer ->
+            if (repo == null) emptyList() else
+                com.slideindex.app.ui.picker.PickerApps.fromCached(ctx, repo, freezer)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.persistRingLauncherSlot = { axis, slotIndex, item ->
+            hookScope.launch {
+                com.slideindex.app.di.OverlayDependencyAccess
+                    .overlayDependencies(this@SlideIndexApp)
+                    ?.settingsRepository
+                    ?.setFvRingLauncherSlot(axis, slotIndex, item)
+            }
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.ringSlotConfigSheetContent =
+            object : com.slideindex.app.overlay.panels.RingSlotConfigSheetContent {
+                @androidx.compose.runtime.Composable
+                override fun content(
+                    slotIndex: Int,
+                    currentItem: com.slideindex.app.launcher.QuickLauncherItem?,
+                    settings: com.slideindex.app.settings.AppSettings,
+                    apps: List<com.slideindex.app.data.AppInfo>,
+                    onDismiss: () -> Unit,
+                    onSelectItem: (com.slideindex.app.launcher.QuickLauncherItem?) -> Unit,
+                    onOpenCustomIconEditor: () -> Unit,
+                    launchCreateShortcut: (Any, (Any?) -> Unit) -> Unit,
+                ) {
+                    com.slideindex.app.ui.ringlauncher.RingLauncherSlotConfigSheet(
+                        slotIndex = slotIndex,
+                        currentItem = currentItem,
+                        apps = apps,
+                        activityShortcuts = settings.activityShortcuts,
+                        shellCommands = settings.shellCommands,
+                        quickLauncherPanels = settings.quickLauncherPanels,
+                        onDismiss = onDismiss,
+                        onSelectItem = onSelectItem,
+                        onOpenCustomIconEditor = onOpenCustomIconEditor,
+                        launchCreateShortcut = { host, result ->
+                            launchCreateShortcut(host) { created -> result(created as? com.slideindex.app.util.AppShortcutLoader.CreatedShortcut) }
+                        },
+                    )
+                }
+            }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot = { ctx ->
             com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(ctx)
                 ?.settingsRepository
