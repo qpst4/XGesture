@@ -279,6 +279,19 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
             if (repo == null) emptyList() else
                 com.slideindex.app.ui.picker.PickerApps.fromCached(ctx, repo, freezer)
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.switchInputMethod = { ctx ->
+            com.slideindex.app.util.InputMethodHelper.switchInputMethod(ctx)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.addIconChangeListener = { listener ->
+            com.slideindex.app.ui.GlobalIconStore.addIconChangeListener(listener)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.removeIconChangeListener = { listener ->
+            com.slideindex.app.ui.GlobalIconStore.removeIconChangeListener(listener)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconCacheRevision = {
+            "${com.slideindex.app.ui.GlobalIconStore.revision}:${com.slideindex.app.ui.IconPlateModeState.mode}:" +
+                com.slideindex.app.ui.IconPlateModeState.lastResolvedDark
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.swapRingLauncherSlots = { axis, from, to ->
             hookScope.launch {
                 com.slideindex.app.di.OverlayDependencyAccess

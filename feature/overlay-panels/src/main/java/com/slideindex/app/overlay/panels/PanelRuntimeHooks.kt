@@ -131,7 +131,22 @@ object PanelRuntimeHooks {
     var quickLauncherLabel:
         ((Context, com.slideindex.app.launcher.QuickLauncherItem, Map<String, com.slideindex.app.data.AppInfo>) -> String?)? =
         null
-        /** 环状启动器：交换两个槽位。 */
+        /** 切换输入法（环状启动器快捷动作）。 */
+    @Volatile
+    var switchInputMethod: ((Context) -> Unit)? = null
+
+    /** 注册全局图标库变更监听。 */
+    @Volatile
+    var addIconChangeListener: ((() -> Unit) -> Unit)? = null
+
+    /** 注销全局图标库变更监听。 */
+    @Volatile
+    var removeIconChangeListener: ((() -> Unit) -> Unit)? = null
+
+    /** 图标缓存版本键（全局图标库 revision + 图标底板模式）。 */
+    @Volatile
+    var iconCacheRevision: (() -> String)? = null
+    /** 环状启动器：交换两个槽位。 */
     @Volatile
     var swapRingLauncherSlots: ((com.slideindex.app.settings.FvRingLauncherAxis, Int, Int) -> Unit)? = null
     /** 环状启动器：写回圆形数量。 */
