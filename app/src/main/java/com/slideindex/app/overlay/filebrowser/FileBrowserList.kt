@@ -645,10 +645,11 @@ private fun FileBrowserErrorState(
                     textAlign = TextAlign.Center,
                 )
             }
-            if (error is FileBrowserError.Unknown && !error.detail.isNullOrBlank()) {
+            val unknownDetail = (error as? FileBrowserError.Unknown)?.detail
+            if (!unknownDetail.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = error.detail.take(160),
+                    text = unknownDetail.take(160),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center,
