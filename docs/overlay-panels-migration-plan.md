@@ -151,7 +151,7 @@
 
 也就是说：**要整组搬面板，前置不是 A3，而是公共层抽取**。2026-11-07 当天又实测了一轮，把顺序修正为：
 
-1. **`util` 工具**（收益最快，但**是 hub-and-spoke**）：`PermissionHelper` ✅ 已下沉（239 个调用点，服务类用 `OverlayHostRuntime.accessibilityServiceClass` 反转）。同日试搬 `BrightnessControlHelper` / `VolumeControlHelper` 失败并已回滚——它们同包调 `TaskManagerUtil`（968 行，自身依赖 `R` / `OverlayService` / `Settings` / `PrivilegeGateway` / 根权限操作）。**`TaskManagerUtil` 是 util 层的枢纽**，必须先单独拆它，其它 util 才能跟着走；
+1. **`util` 工具**（收益最快，但**是 hub-and-spoke**）：`PermissionHelper` ✅ 已下沉（239 个调用点，服务类用 `OverlayHostRuntime.accessibilityServiceClass` 反转）。同日试搬 `BrightnessControlHelper` / `VolumeControlHelper` 失败并已回滚——它们同包调 `TaskManagerUtil`（968 行，自身依赖 `R` / `OverlayService` / `Settings` / `PrivilegeGateway` / 根权限操作）。**`TaskManagerUtil` 是 util 层的枢纽**，但盘完发现它不是"反几个钩子"能搬的：它依赖 `R`（5 处字符串）/ `OverlayService` / `AppSettings` / `PrivilegeGateway` / `RootPrivilegedOperations` / `RootTaskManagerServiceHost` / `ShizukuUserServiceHost` / `ITaskManagerService` —— 也就是**整个特权 + Shizuku + 任务管理子系统**。这部分是 `:app` 的核心，不应为搬面板而搬走；面板要它，只能走接口（`:core:tasks` 的 `RecentTasksProvider` 之类），那是另一个立项。
 2. **`ui` 套件**（最大的一块）：`ThinActionIcons`、`gestureActionIcon`、`gestureActionLabelText`、`QuickWheelWheelRenderer`、`OverlayAwareModuleTheme` 等，依赖 miuix + 图标资源，要连 `R` 一起沉；
 3. **`di` 反转 + `R` 资源下沉**：`OverlayDependencyAccess` 换成接口注入（`OverlayHostRuntime` 是现成样板），`R.dimen/string/drawable` 按组迁移；
 4. **`:core:actions`**：`ActionExecutor` / `GestureAction` 接口（面板只需"执行"，不需实现）。
