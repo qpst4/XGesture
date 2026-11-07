@@ -2,13 +2,10 @@ package com.slideindex.app.overlay
 
 import android.view.MotionEvent
 import android.widget.Toast
-import com.slideindex.app.R
-import com.slideindex.app.util.BrightnessControlHelper
-import com.slideindex.app.util.ContinuousAdjustController
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.util.PermissionHelper
-import com.slideindex.app.util.VolumeControlHelper
 
-internal class AdjustPanelTouchHandler(
+class AdjustPanelTouchHandler(
     private val ctrl: AdjustPanelOverlayController
 ) {
     private val host get() = ctrl.host
@@ -35,14 +32,14 @@ internal class AdjustPanelTouchHandler(
                     return true
                 }
                 when (state.mode) {
-                    ContinuousAdjustController.Mode.VOLUME -> when (
+                    com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME -> when (
                         AdjustLevelIndicator.hitVolumeTarget(layout, host.side(), localX, localY, density)
                     ) {
                         VolumeHitTarget.DND -> {
-                            if (!VolumeControlHelper.hasAccess(host.context)) {
+                            if (!host.actionHost().hasVolumeAccess(host.context)) {
                                 PermissionHelper.requestNotificationPolicyAccess(host.context)
                             } else {
-                                val executor = host.actionExecutor()
+                                val executor = host.actionHost()
                                 val changed = executor.toggleDnd() != null
                                 state.interruptionFilter = executor.readInterruptionFilter()
                                 if (changed) {
@@ -60,10 +57,10 @@ internal class AdjustPanelTouchHandler(
                             return true
                         }
                         VolumeHitTarget.RINGER -> {
-                            if (!VolumeControlHelper.hasAccess(host.context)) {
+                            if (!host.actionHost().hasVolumeAccess(host.context)) {
                                 PermissionHelper.requestNotificationPolicyAccess(host.context)
                             } else {
-                                host.actionExecutor().cycleRingerMode()?.let { state.ringerMode = it }
+                                host.actionHost().cycleRingerMode()?.let { state.ringerMode = it }
                                 host.hapticConfirmLaunch()
                             }
                             ctrl.scheduleAutoDismiss()
@@ -102,14 +99,14 @@ internal class AdjustPanelTouchHandler(
                             return true
                         }
                     }
-                    ContinuousAdjustController.Mode.BRIGHTNESS -> when (
+                    com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS -> when (
                         AdjustLevelIndicator.hitBrightnessTarget(layout, host.side(), localX, localY, density)
                     ) {
                         BrightnessHitTarget.AUTO_BRIGHTNESS -> {
-                            if (!BrightnessControlHelper.hasAccess(host.context)) {
+                            if (!host.actionHost().hasBrightnessAccess(host.context)) {
                                 PermissionHelper.requestWriteSettingsAccess(host.context)
                             } else {
-                                host.actionExecutor().toggleAutoBrightness()?.let {
+                                host.actionHost().toggleAutoBrightness()?.let {
                                     state.autoBrightnessEnabled = it
                                     ctrl.syncBrightnessFractionAfterAutoToggle()
                                     host.hapticConfirmLaunch()
@@ -120,10 +117,10 @@ internal class AdjustPanelTouchHandler(
                             return true
                         }
                         BrightnessHitTarget.DARK_MODE -> {
-                            if (!BrightnessControlHelper.hasDarkModeAccess(host.context)) {
+                            if (!host.actionHost().hasDarkModeAccess(host.context)) {
                                 PermissionHelper.requestWriteSettingsAccess(host.context)
                             } else {
-                                host.actionExecutor().toggleDarkMode()?.let {
+                                host.actionHost().toggleDarkMode()?.let {
                                     state.darkModeEnabled = it
                                     host.hapticConfirmLaunch()
                                 }
@@ -147,8 +144,8 @@ internal class AdjustPanelTouchHandler(
                 if (state.dragTarget == null) return false
                 when (state.dragTarget) {
                     VolumeDragTarget.MEDIA -> {
-                        host.actionExecutor().updateContinuousAdjust(state.mode, event.rawY)
-                        state.fraction = host.actionExecutor().adjustFraction()
+                        host.actionHost().updateContinuousAdjust(state.mode, event.rawY)
+                        state.fraction = host.actionHost().adjustFraction()
                     }
                     VolumeDragTarget.RING, VolumeDragTarget.NOTIFICATION -> {
                         updateVolumeStreamDrag(state, event.rawY)
@@ -162,17 +159,17 @@ internal class AdjustPanelTouchHandler(
                 if (state.dragTarget == null) return false
                 when (state.dragTarget) {
                     VolumeDragTarget.MEDIA -> {
-                        if (state.mode == ContinuousAdjustController.Mode.BRIGHTNESS) {
+                        if (state.mode == com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS) {
                             ctrl.suppressBrightnessLevelSync()
                         }
-                        val committedFraction = if (state.mode == ContinuousAdjustController.Mode.BRIGHTNESS) {
-                            host.actionExecutor().adjustFraction()
+                        val committedFraction = if (state.mode == com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS) {
+                            host.actionHost().adjustFraction()
                         } else {
                             null
                         }
-                        host.actionExecutor().endContinuousAdjust()
+                        host.actionHost().endContinuousAdjust()
                         state.fraction = committedFraction
-                            ?: host.actionExecutor().readCurrentAdjustFraction(state.mode)
+                            ?: host.actionHost().readCurrentAdjustFraction(state.mode)
                     }
                     VolumeDragTarget.RING, VolumeDragTarget.NOTIFICATION -> Unit
                     null -> Unit
@@ -188,10 +185,10 @@ internal class AdjustPanelTouchHandler(
     }
 
     fun refreshVolumePanelLevels(state: AdjustPanelState) {
-        val executor = host.actionExecutor()
-        state.fraction = executor.readCurrentAdjustFraction(ContinuousAdjustController.Mode.VOLUME)
-        state.ringFraction = executor.readVolumeFraction(VolumeControlHelper.Stream.RING)
-        state.notificationFraction = executor.readVolumeFraction(VolumeControlHelper.Stream.NOTIFICATION)
+        val executor = host.actionHost()
+        state.fraction = executor.readCurrentAdjustFraction(com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME)
+        state.ringFraction = executor.readVolumeFraction(com.slideindex.app.overlay.panels.PanelVolumeStream.RING)
+        state.notificationFraction = executor.readVolumeFraction(com.slideindex.app.overlay.panels.PanelVolumeStream.NOTIFICATION)
         state.ringerMode = executor.readRingerMode()
         state.interruptionFilter = executor.readInterruptionFilter()
     }
@@ -200,8 +197,8 @@ internal class AdjustPanelTouchHandler(
         ctrl.cancelAutoDismiss()
         state.dragTarget = VolumeDragTarget.MEDIA
         state.dragging = true
-        host.actionExecutor().beginContinuousAdjust(state.mode, rawY)
-        host.actionExecutor().updateContinuousAdjust(state.mode, rawY)
+        host.actionHost().beginContinuousAdjust(state.mode, rawY)
+        host.actionHost().updateContinuousAdjust(state.mode, rawY)
         host.invalidate()
     }
 
@@ -223,11 +220,11 @@ internal class AdjustPanelTouchHandler(
         when (state.dragTarget) {
             VolumeDragTarget.RING -> {
                 state.ringFraction = fraction
-                host.actionExecutor().setVolumeFraction(VolumeControlHelper.Stream.RING, fraction)
+                host.actionHost().setVolumeFraction(com.slideindex.app.overlay.panels.PanelVolumeStream.RING, fraction)
             }
             VolumeDragTarget.NOTIFICATION -> {
                 state.notificationFraction = fraction
-                host.actionExecutor().setVolumeFraction(VolumeControlHelper.Stream.NOTIFICATION, fraction)
+                host.actionHost().setVolumeFraction(com.slideindex.app.overlay.panels.PanelVolumeStream.NOTIFICATION, fraction)
             }
             VolumeDragTarget.MEDIA, null -> Unit
         }

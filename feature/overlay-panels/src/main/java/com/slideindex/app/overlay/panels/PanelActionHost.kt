@@ -46,6 +46,21 @@ interface PanelActionHost {
     /** 音量刻度的文案（如「媒体 5/15」）；由 `:app` 用 AudioManager 拼。 */
     fun describeVolumeScale(stream: PanelVolumeStream): String
 
+    /** 是否有通知策略权限（勿扰/响铃模式控制）。 */
+    fun hasVolumeAccess(context: android.content.Context): Boolean
+
+    /** 是否有修改系统设置权限（亮度控制）。 */
+    fun hasBrightnessAccess(context: android.content.Context): Boolean
+
+    /** 是否有深色模式控制权限。 */
+    fun hasDarkModeAccess(context: android.content.Context): Boolean
+
+    /** 当前勿扰模式是否属于"仅闹钟/静音"过滤。 */
+    fun isDndFilter(interruptionFilter: Int): Boolean
+
+    /** 当前亮度（0..1，考虑特权写入路径）。 */
+    fun readBrightnessFraction(context: android.content.Context): Float
+
     /** 亮度刻度的文案；由 `:app` 拼。 */
     fun describeBrightnessScale(context: android.content.Context): String
 }

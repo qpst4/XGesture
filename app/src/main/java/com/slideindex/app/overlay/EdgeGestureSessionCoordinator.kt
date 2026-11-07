@@ -360,7 +360,7 @@ internal class EdgeGestureSessionCoordinator(
         deferWindowLayout: Boolean
     ) {
         onAdjustPanelLayoutCallback(anchorRawY)
-        adjustPanelController.showAdjustPanel(mode, fraction, anchorRawY)
+        adjustPanelController.showAdjustPanel(mode.toPanelMode(), fraction, anchorRawY)
     }
 
     override fun onRequestInvalidate() {

@@ -3,7 +3,6 @@ package com.slideindex.app.overlay
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.RectF
-import com.slideindex.app.util.ContinuousAdjustController
 
 /**
  * Floating vertical level pill shown while adjusting volume or brightness.
@@ -78,7 +77,7 @@ object AdjustLevelIndicator {
     fun draw(
         canvas: Canvas,
         layout: Layout,
-        mode: ContinuousAdjustController.Mode,
+        mode: com.slideindex.app.overlay.panels.PanelAdjustMode,
         fraction: Float,
         enterProgress: Float,
         density: Float,

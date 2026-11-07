@@ -4,6 +4,7 @@ import android.animation.ValueAnimator
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
+import com.slideindex.app.overlay.panels.UI_NIGHT_MODE_KEY
 import android.content.Intent
 import android.content.IntentFilter
 import android.database.ContentObserver
@@ -17,22 +18,21 @@ import android.provider.Settings
 import android.view.MotionEvent
 import android.view.animation.AccelerateInterpolator
 import com.slideindex.app.diagnostic.EdgeDiag
-import com.slideindex.app.gesture.ActionExecutor
-import com.slideindex.app.gesture.GestureSession
 import com.slideindex.app.settings.AppSettings
-import com.slideindex.app.util.BrightnessControlHelper
-import com.slideindex.app.util.ContinuousAdjustController
-import com.slideindex.app.util.VolumeControlHelper
 
-internal class AdjustPanelOverlayController(
-    internal val host: Host
+class AdjustPanelOverlayController(
+    val host: Host
 ) {
     interface Host {
         val context: Context
         fun side(): PanelSide
         fun settings(): AppSettings
-        fun actionExecutor(): ActionExecutor
-        fun gestureSession(): GestureSession
+        fun actionHost(): com.slideindex.app.overlay.panels.PanelActionHost
+        fun isAdjustMode(): Boolean
+    fun currentAdjustMode(): com.slideindex.app.overlay.panels.PanelAdjustMode?
+    fun adjustAnchorRawY(): Float?
+    fun panelMode(): OverlayPanelMode
+    fun endGestureSession()
         fun viewWidth(): Int
         fun viewHeight(): Int
         fun density(): Float
@@ -51,8 +51,8 @@ internal class AdjustPanelOverlayController(
         fun notifyPresentationTouchRequirementChanged()
     }
 
-    internal data class AdjustIndicatorVisual(
-        val mode: ContinuousAdjustController.Mode,
+    data class AdjustIndicatorVisual(
+        val mode: com.slideindex.app.overlay.panels.PanelAdjustMode,
         val fraction: Float,
         val anchorRawY: Float
     )
@@ -148,30 +148,30 @@ internal class AdjustPanelOverlayController(
     fun handleTouch(event: MotionEvent, localX: Float, localY: Float): Boolean =
         touchHandler.handleTouch(event, localX, localY)
 
-    internal fun updateAdjustIndicatorLayout(
+    fun updateAdjustIndicatorLayout(
         anchorRawY: Float,
         forceFullScreenAnchor: Boolean = false,
-        mode: ContinuousAdjustController.Mode? = null
+        mode: com.slideindex.app.overlay.panels.PanelAdjustMode? = null
     ): AdjustLevelIndicator.Layout? =
         renderer.updateAdjustIndicatorLayout(anchorRawY, forceFullScreenAnchor, mode)
 
     fun showAdjustPanel(
-        mode: ContinuousAdjustController.Mode,
+        mode: com.slideindex.app.overlay.panels.PanelAdjustMode,
         fraction: Float,
         anchorRawY: Float
     ) {
-        if (mode == ContinuousAdjustController.Mode.BRIGHTNESS) {
-            host.actionExecutor().clearBrightnessPreview()
+        if (mode == com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS) {
+            host.actionHost().clearBrightnessPreview()
             suppressBrightnessLevelSync(BRIGHTNESS_LEVEL_SYNC_SUPPRESS_MS)
         }
-        val executor = host.actionExecutor()
-        adjustPanelState = if (mode == ContinuousAdjustController.Mode.VOLUME) {
+        val executor = host.actionHost()
+        adjustPanelState = if (mode == com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME) {
             AdjustPanelState(
                 mode = mode,
                 fraction = fraction,
                 anchorRawY = anchorRawY,
-                ringFraction = executor.readVolumeFraction(VolumeControlHelper.Stream.RING),
-                notificationFraction = executor.readVolumeFraction(VolumeControlHelper.Stream.NOTIFICATION),
+                ringFraction = executor.readVolumeFraction(com.slideindex.app.overlay.panels.PanelVolumeStream.RING),
+                notificationFraction = executor.readVolumeFraction(com.slideindex.app.overlay.panels.PanelVolumeStream.NOTIFICATION),
                 ringerMode = executor.readRingerMode(),
                 interruptionFilter = executor.readInterruptionFilter()
             )
@@ -186,7 +186,7 @@ internal class AdjustPanelOverlayController(
         }
         adjustPanelDismissing = false
         adjustIndicatorAnimator?.cancel()
-        val fromContinuousGesture = host.gestureSession().isAdjustMode()
+        val fromContinuousGesture = host.isAdjustMode()
         adjustPanelExpandedForGesture = true
         host.onSessionStart()
         host.notifyPresentationTouchRequirementChanged()
@@ -246,7 +246,7 @@ internal class AdjustPanelOverlayController(
     fun drawVisibleIndicator(canvas: Canvas) = renderer.drawVisibleIndicator(canvas)
 
     fun syncAdjustIndicatorAnimation() {
-        val active = host.gestureSession().isAdjustMode() || adjustPanelState != null
+        val active = host.isAdjustMode() || adjustPanelState != null
         if (active == wasAdjustMode) return
         wasAdjustMode = active
         if (active) {
@@ -290,19 +290,19 @@ internal class AdjustPanelOverlayController(
         adjustIndicatorAnimator?.cancel()
         adjustIndicatorProgress = 0f
         wasAdjustMode = false
-        if (host.gestureSession().panelMode() == OverlayPanelMode.NONE &&
-            !host.gestureSession().isAdjustMode()
+        if (host.panelMode() == OverlayPanelMode.NONE &&
+            !host.isAdjustMode()
         ) {
-            host.gestureSession().endSession()
+            host.endGestureSession()
         }
         host.onAdjustPanelDismiss()
         host.invalidate()
     }
 
-    private fun startAdjustPanelLevelSync(mode: ContinuousAdjustController.Mode) {
+    private fun startAdjustPanelLevelSync(mode: com.slideindex.app.overlay.panels.PanelAdjustMode) {
         when (mode) {
-            ContinuousAdjustController.Mode.VOLUME -> startVolumeLevelSync()
-            ContinuousAdjustController.Mode.BRIGHTNESS -> startBrightnessSettingsSync()
+            com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME -> startVolumeLevelSync()
+            com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS -> startBrightnessSettingsSync()
         }
     }
 
@@ -356,7 +356,7 @@ internal class AdjustPanelOverlayController(
         if (brightnessSettingsObserver != null) return
         val observer = object : ContentObserver(brightnessSettingsHandler) {
             override fun onChange(selfChange: Boolean) {
-                syncAdjustPanelLevelFromSystem(ContinuousAdjustController.Mode.BRIGHTNESS)
+                syncAdjustPanelLevelFromSystem(com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS)
             }
         }
         brightnessSettingsObserver = observer
@@ -386,7 +386,7 @@ internal class AdjustPanelOverlayController(
             )
         }
         resolver.registerContentObserver(
-            Settings.Secure.getUriFor(BrightnessControlHelper.UI_NIGHT_MODE_KEY),
+            Settings.Secure.getUriFor(UI_NIGHT_MODE_KEY),
             false,
             observer
         )
@@ -400,19 +400,19 @@ internal class AdjustPanelOverlayController(
     }
 
     private fun syncAdjustPanelVolumeFromSystem() {
-        syncAdjustPanelLevelFromSystem(ContinuousAdjustController.Mode.VOLUME)
+        syncAdjustPanelLevelFromSystem(com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME)
         if (adjustPanelState?.dragTarget == null) {
             scheduleAutoDismiss()
         }
     }
 
-    internal fun suppressBrightnessLevelSync(durationMs: Long = BRIGHTNESS_LEVEL_SYNC_SUPPRESS_MS) {
+    fun suppressBrightnessLevelSync(durationMs: Long = BRIGHTNESS_LEVEL_SYNC_SUPPRESS_MS) {
         suppressBrightnessLevelSyncUntilMs = SystemClock.uptimeMillis() + durationMs
     }
 
-    internal fun syncBrightnessFractionAfterAutoToggle() {
+    fun syncBrightnessFractionAfterAutoToggle() {
         val state = adjustPanelState ?: return
-        if (state.mode != ContinuousAdjustController.Mode.BRIGHTNESS) return
+        if (state.mode != com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS) return
         suppressBrightnessLevelSync(BRIGHTNESS_AUTO_TOGGLE_SYNC_SUPPRESS_MS)
         scheduleDebouncedBrightnessAccurateRefresh()
     }
@@ -427,11 +427,11 @@ internal class AdjustPanelOverlayController(
 
     private fun runBrightnessAccurateRefresh(expectedGeneration: Long) {
         Thread {
-            val fraction = BrightnessControlHelper.readBrightnessFractionAccurate(host.context)
+            val fraction = host.actionHost().readBrightnessFraction(host.context)
             brightnessSettingsHandler.post {
                 if (brightnessAccurateSyncGeneration != expectedGeneration) return@post
                 val state = adjustPanelState ?: return@post
-                if (state.mode != ContinuousAdjustController.Mode.BRIGHTNESS) return@post
+                if (state.mode != com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS) return@post
                 if (kotlin.math.abs(state.fraction - fraction) < LEVEL_SYNC_EPSILON) return@post
                 state.fraction = fraction
                 host.invalidate()
@@ -439,11 +439,11 @@ internal class AdjustPanelOverlayController(
         }.start()
     }
 
-    private fun syncAdjustPanelLevelFromSystem(mode: ContinuousAdjustController.Mode) {
+    private fun syncAdjustPanelLevelFromSystem(mode: com.slideindex.app.overlay.panels.PanelAdjustMode) {
         val state = adjustPanelState ?: return
         if (state.mode != mode) return
-        val executor = host.actionExecutor()
-        if (mode == ContinuousAdjustController.Mode.VOLUME) {
+        val executor = host.actionHost()
+        if (mode == com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME) {
             if (state.dragTarget != VolumeDragTarget.MEDIA) {
                 val mediaFraction = executor.readCurrentAdjustFraction(mode)
                 if (kotlin.math.abs(state.fraction - mediaFraction) >= LEVEL_SYNC_EPSILON) {
@@ -451,13 +451,13 @@ internal class AdjustPanelOverlayController(
                 }
             }
             if (state.dragTarget != VolumeDragTarget.RING) {
-                val ringFraction = executor.readVolumeFraction(VolumeControlHelper.Stream.RING)
+                val ringFraction = executor.readVolumeFraction(com.slideindex.app.overlay.panels.PanelVolumeStream.RING)
                 if (kotlin.math.abs(state.ringFraction - ringFraction) >= LEVEL_SYNC_EPSILON) {
                     state.ringFraction = ringFraction
                 }
             }
             if (state.dragTarget != VolumeDragTarget.NOTIFICATION) {
-                val notificationFraction = executor.readVolumeFraction(VolumeControlHelper.Stream.NOTIFICATION)
+                val notificationFraction = executor.readVolumeFraction(com.slideindex.app.overlay.panels.PanelVolumeStream.NOTIFICATION)
                 if (kotlin.math.abs(state.notificationFraction - notificationFraction) >= LEVEL_SYNC_EPSILON) {
                     state.notificationFraction = notificationFraction
                 }
@@ -470,8 +470,8 @@ internal class AdjustPanelOverlayController(
             host.invalidate()
             return
         }
-        if (mode == ContinuousAdjustController.Mode.BRIGHTNESS) {
-            if (host.gestureSession().isAdjustMode() && adjustPanelState == null) return
+        if (mode == com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS) {
+            if (host.isAdjustMode() && adjustPanelState == null) return
             if (SystemClock.uptimeMillis() < suppressBrightnessLevelSyncUntilMs) return
         }
         if (state.dragTarget != null) return
@@ -486,7 +486,7 @@ internal class AdjustPanelOverlayController(
     }
 
     private fun syncAdjustPanelBrightnessFlags(state: AdjustPanelState) {
-        val executor = host.actionExecutor()
+        val executor = host.actionHost()
         val autoBrightnessEnabled = executor.readAutoBrightnessEnabled()
         val darkModeEnabled = executor.readDarkModeEnabled()
         var changed = false

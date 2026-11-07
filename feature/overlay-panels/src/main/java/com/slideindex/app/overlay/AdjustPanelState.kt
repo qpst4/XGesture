@@ -1,10 +1,9 @@
 package com.slideindex.app.overlay
 
 import android.media.AudioManager
-import com.slideindex.app.util.ContinuousAdjustController
 
 data class AdjustPanelState(
-    val mode: ContinuousAdjustController.Mode,
+    val mode: com.slideindex.app.overlay.panels.PanelAdjustMode,
     var fraction: Float,
     var anchorRawY: Float,
     var dragging: Boolean = false,

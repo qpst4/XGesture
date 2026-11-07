@@ -73,6 +73,14 @@ internal class EdgeGestureOverlayHosts(
     override fun pathRecognizer(): SwipePathRecognizer = pathRecognizer
 
     override fun actionExecutor(): ActionExecutor = actionExecutor
+    override fun actionHost(): com.slideindex.app.overlay.panels.PanelActionHost =
+        com.slideindex.app.overlay.AdjustActionHostAdapter(actionExecutor)
+    override fun isAdjustMode(): Boolean = gestureSession.isAdjustMode()
+    override fun currentAdjustMode(): com.slideindex.app.overlay.panels.PanelAdjustMode? =
+        gestureSession.adjustModeOrNull()?.toPanelMode()
+    override fun adjustAnchorRawY(): Float? = gestureSession.adjustAnchorRawY()
+    override fun panelMode(): com.slideindex.app.overlay.OverlayPanelMode = gestureSession.panelMode()
+    override fun endGestureSession() = gestureSession.endSession()
 
     override fun panelGridSession(): PanelGridSession = panelGridSession
 

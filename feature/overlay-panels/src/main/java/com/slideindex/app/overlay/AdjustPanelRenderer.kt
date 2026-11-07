@@ -6,10 +6,8 @@ import android.graphics.Canvas
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.Interpolator
-import com.slideindex.app.util.ContinuousAdjustController
-import com.slideindex.app.util.VolumeControlHelper
 
-internal class AdjustPanelRenderer(
+class AdjustPanelRenderer(
     private val ctrl: AdjustPanelOverlayController
 ) {
     private val host get() = ctrl.host
@@ -29,7 +27,7 @@ internal class AdjustPanelRenderer(
     fun updateAdjustIndicatorLayout(
         anchorRawY: Float,
         forceFullScreenAnchor: Boolean = false,
-        mode: ContinuousAdjustController.Mode? = null
+        mode: com.slideindex.app.overlay.panels.PanelAdjustMode? = null
     ): AdjustLevelIndicator.Layout? {
         val density = host.density()
         val screenWidthPx = host.screenWidthPx()
@@ -37,7 +35,7 @@ internal class AdjustPanelRenderer(
         val anchorLocalY = host.anchorLocalY(anchorRawY)
         val adjustMode = mode
             ?: ctrl.adjustPanelState?.mode
-            ?: host.gestureSession().adjustModeOrNull()
+            ?: host.currentAdjustMode()
         ctrl.adjustIndicatorLayout = AdjustLevelIndicator.layout(
             viewWidth = if (forceFullScreenAnchor) screenWidthPx else host.viewWidth().coerceAtLeast(1),
             viewHeight = host.viewHeight().coerceAtLeast(host.screenHeightPx()),
@@ -47,12 +45,12 @@ internal class AdjustPanelRenderer(
             viewScreenX = if (forceFullScreenAnchor) 0 else loc[0],
             screenWidthPx = screenWidthPx,
             chrome = when (adjustMode) {
-                ContinuousAdjustController.Mode.VOLUME -> AdjustPanelChrome.VOLUME
-                ContinuousAdjustController.Mode.BRIGHTNESS -> AdjustPanelChrome.BRIGHTNESS
+                com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME -> AdjustPanelChrome.VOLUME
+                com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS -> AdjustPanelChrome.BRIGHTNESS
                 null -> AdjustPanelChrome.NONE
             },
             volumeExpanded = ctrl.adjustPanelState?.volumeExpanded == true &&
-                adjustMode == ContinuousAdjustController.Mode.VOLUME
+                adjustMode == com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME
         )
         return ctrl.adjustIndicatorLayout
     }
@@ -121,7 +119,7 @@ internal class AdjustPanelRenderer(
         return captureAdjustIndicatorVisual()
     }
 
-    fun freezeAdjustIndicatorLayout(anchorRawY: Float?, mode: ContinuousAdjustController.Mode? = null) {
+    fun freezeAdjustIndicatorLayout(anchorRawY: Float?, mode: com.slideindex.app.overlay.panels.PanelAdjustMode? = null) {
         if (ctrl.adjustIndicatorFrozenLayout != null) return
         anchorRawY?.let { updateAdjustIndicatorLayout(it, mode = mode) }
         ctrl.adjustIndicatorFrozenLayout = ctrl.adjustIndicatorLayout
@@ -146,10 +144,10 @@ internal class AdjustPanelRenderer(
             ctrl.adjustIndicatorReceding = true
             freezeAdjustIndicatorLayout(
                 ctrl.adjustIndicatorHoldVisual?.anchorRawY ?: ctrl.adjustPanelState?.anchorRawY
-                    ?: host.gestureSession().adjustAnchorRawY(),
+                    ?: host.adjustAnchorRawY(),
                 ctrl.adjustIndicatorHoldVisual?.mode
                     ?: ctrl.adjustPanelState?.mode
-                    ?: host.gestureSession().adjustModeOrNull()
+                    ?: host.currentAdjustMode()
             )
         } else if (target >= 1f) {
             ctrl.adjustIndicatorReceding = false
@@ -190,30 +188,30 @@ internal class AdjustPanelRenderer(
     private fun captureAdjustIndicatorVisual(): AdjustPanelOverlayController.AdjustIndicatorVisual? {
         ctrl.adjustPanelState?.let { state ->
             val fraction = when (state.dragTarget) {
-                VolumeDragTarget.MEDIA -> host.actionExecutor().adjustFraction()
+                VolumeDragTarget.MEDIA -> host.actionHost().adjustFraction()
                 else -> state.fraction
             }
             return AdjustPanelOverlayController.AdjustIndicatorVisual(state.mode, fraction, state.anchorRawY)
         }
-        host.gestureSession().adjustModeOrNull()?.let { mode ->
+        host.currentAdjustMode()?.let { mode ->
             return AdjustPanelOverlayController.AdjustIndicatorVisual(
                 mode = mode,
-                fraction = host.actionExecutor().adjustFraction(),
-                anchorRawY = host.gestureSession().adjustAnchorRawY()
+                fraction = host.actionHost().adjustFraction(),
+                anchorRawY = host.adjustAnchorRawY() ?: 0f
             )
         }
         return ctrl.adjustIndicatorHoldVisual
     }
 
     private fun resolveBrightnessPanelVisual(): BrightnessPanelVisual? {
-        ctrl.adjustPanelState?.takeIf { it.mode == ContinuousAdjustController.Mode.BRIGHTNESS }?.let { state ->
+        ctrl.adjustPanelState?.takeIf { it.mode == com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS }?.let { state ->
             return BrightnessPanelVisual(
                 autoBrightnessEnabled = state.autoBrightnessEnabled,
                 darkModeEnabled = state.darkModeEnabled
             )
         }
-        if (host.gestureSession().adjustModeOrNull() != ContinuousAdjustController.Mode.BRIGHTNESS) return null
-        val executor = host.actionExecutor()
+        if (host.currentAdjustMode() != com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS) return null
+        val executor = host.actionHost()
         return BrightnessPanelVisual(
             autoBrightnessEnabled = executor.readAutoBrightnessEnabled(),
             darkModeEnabled = executor.readDarkModeEnabled()
@@ -221,7 +219,7 @@ internal class AdjustPanelRenderer(
     }
 
     private fun resolveVolumePanelVisual(): VolumePanelVisual? {
-        ctrl.adjustPanelState?.takeIf { it.mode == ContinuousAdjustController.Mode.VOLUME }?.let { state ->
+        ctrl.adjustPanelState?.takeIf { it.mode == com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME }?.let { state ->
             return VolumePanelVisual(
                 expanded = state.volumeExpanded,
                 ringFraction = state.ringFraction,
@@ -230,12 +228,12 @@ internal class AdjustPanelRenderer(
                 interruptionFilter = state.interruptionFilter
             )
         }
-        if (host.gestureSession().adjustModeOrNull() != ContinuousAdjustController.Mode.VOLUME) return null
-        val executor = host.actionExecutor()
+        if (host.currentAdjustMode() != com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME) return null
+        val executor = host.actionHost()
         return VolumePanelVisual(
             expanded = false,
-            ringFraction = executor.readVolumeFraction(VolumeControlHelper.Stream.RING),
-            notificationFraction = executor.readVolumeFraction(VolumeControlHelper.Stream.NOTIFICATION),
+            ringFraction = executor.readVolumeFraction(com.slideindex.app.overlay.panels.PanelVolumeStream.RING),
+            notificationFraction = executor.readVolumeFraction(com.slideindex.app.overlay.panels.PanelVolumeStream.NOTIFICATION),
             ringerMode = executor.readRingerMode(),
             interruptionFilter = executor.readInterruptionFilter()
         )
@@ -243,7 +241,7 @@ internal class AdjustPanelRenderer(
 
     private fun drawAdjustIndicator(
         canvas: Canvas,
-        mode: ContinuousAdjustController.Mode,
+        mode: com.slideindex.app.overlay.panels.PanelAdjustMode,
         fraction: Float,
         anchorRawY: Float
     ) {

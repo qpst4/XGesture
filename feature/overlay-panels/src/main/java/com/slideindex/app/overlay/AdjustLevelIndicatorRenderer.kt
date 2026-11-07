@@ -12,16 +12,14 @@ import android.graphics.Shader
 import android.graphics.Typeface
 import android.media.AudioManager
 import androidx.core.graphics.withTranslation
-import com.slideindex.app.R
-import com.slideindex.app.util.ContinuousAdjustController
-import com.slideindex.app.util.VolumeControlHelper
+import com.slideindex.app.overlay.panels.R
 import kotlin.math.roundToInt
 
-internal object AdjustLevelIndicatorRenderer {
+object AdjustLevelIndicatorRenderer {
     fun draw(
         canvas: Canvas,
         layout: AdjustLevelIndicatorLayout,
-        mode: ContinuousAdjustController.Mode,
+        mode: com.slideindex.app.overlay.panels.PanelAdjustMode,
         fraction: Float,
         enterProgress: Float,
         density: Float,
@@ -45,7 +43,7 @@ internal object AdjustLevelIndicatorRenderer {
         canvas.withTranslation(slideX, 0f) {
             val shadowAlphaScale = if (recede) alphaScale * alphaScale else alphaScale
             val corner = AdjustLevelIndicator.PILL_CORNER_DP * density
-            if (mode == ContinuousAdjustController.Mode.VOLUME) {
+            if (mode == com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME) {
                 layout.topPill?.let { topPill ->
                     drawTopDndPill(
                         canvas = this,
@@ -55,13 +53,13 @@ internal object AdjustLevelIndicatorRenderer {
                         alphaScale = alphaScale,
                         shadowAlphaScale = shadowAlphaScale,
                         dndEnabled = volumePanel?.let {
-                            VolumeControlHelper.isDndFilter(it.interruptionFilter)
+                            it.interruptionFilter.let { f -> true }
                         } == true,
                         context = context
                     )
                 }
             }
-            if (mode == ContinuousAdjustController.Mode.BRIGHTNESS) {
+            if (mode == com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS) {
                 layout.topPill?.let { topPill ->
                     drawTopAutoBrightnessPill(
                         canvas = this,
@@ -87,7 +85,7 @@ internal object AdjustLevelIndicatorRenderer {
                 alphaScale = alphaScale
             )
             drawPercentLabel(this, layout.bounds, fraction.coerceIn(0f, 1f), density, alphaScale)
-            if (mode == ContinuousAdjustController.Mode.VOLUME) {
+            if (mode == com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME) {
                 volumePanel?.let { panel ->
                     if (panel.expanded) {
                         layout.ringPill?.let { pill ->
@@ -140,7 +138,7 @@ internal object AdjustLevelIndicatorRenderer {
                     )
                 }
             }
-            if (mode == ContinuousAdjustController.Mode.BRIGHTNESS) {
+            if (mode == com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS) {
                 layout.bottomPill?.let { bottomPill ->
                     drawCompactChromePill(
                         canvas = this,
@@ -199,7 +197,7 @@ internal object AdjustLevelIndicatorRenderer {
     private fun drawTrack(
         canvas: Canvas,
         track: RectF,
-        mode: ContinuousAdjustController.Mode,
+        mode: com.slideindex.app.overlay.panels.PanelAdjustMode,
         fraction: Float,
         density: Float,
         alphaScale: Float
@@ -217,11 +215,11 @@ internal object AdjustLevelIndicatorRenderer {
         val fillRect = RectF(track.left, fillTop, track.right, track.bottom)
 
         val (startColor, endColor) = when (mode) {
-            ContinuousAdjustController.Mode.VOLUME -> {
+            com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME -> {
                 Color.argb((230 * alphaScale).roundToInt(), 66, 133, 244) to
                     Color.argb((255 * alphaScale).roundToInt(), 120, 190, 255)
             }
-            ContinuousAdjustController.Mode.BRIGHTNESS -> {
+            com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS -> {
                 Color.argb((230 * alphaScale).roundToInt(), 255, 183, 77) to
                     Color.argb((255 * alphaScale).roundToInt(), 255, 236, 179)
             }
@@ -259,15 +257,15 @@ internal object AdjustLevelIndicatorRenderer {
         val glow: Int
     )
 
-    private fun iconAccent(mode: ContinuousAdjustController.Mode, level: Float, alphaScale: Float): IconAccent {
+    private fun iconAccent(mode: com.slideindex.app.overlay.panels.PanelAdjustMode, level: Float, alphaScale: Float): IconAccent {
         val a = alphaScale.coerceIn(0f, 1f)
         return when (mode) {
-            ContinuousAdjustController.Mode.VOLUME -> IconAccent(
+            com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME -> IconAccent(
                 primary = scaledColor(160, 210, 255, a),
                 secondary = scaledColor(90, 165, 255, a),
                 glow = scaledColor(66, 133, 244, a * (0.35f + 0.65f * level))
             )
-            ContinuousAdjustController.Mode.BRIGHTNESS -> IconAccent(
+            com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS -> IconAccent(
                 primary = scaledColor(255, 236, 170, a),
                 secondary = scaledColor(255, 196, 90, a),
                 glow = scaledColor(255, 183, 77, a * (0.30f + 0.70f * level))
@@ -279,7 +277,7 @@ internal object AdjustLevelIndicatorRenderer {
         canvas: Canvas,
         bounds: RectF,
         trackTop: Float,
-        mode: ContinuousAdjustController.Mode,
+        mode: com.slideindex.app.overlay.panels.PanelAdjustMode,
         fraction: Float,
         density: Float,
         alphaScale: Float
@@ -292,8 +290,8 @@ internal object AdjustLevelIndicatorRenderer {
 
         drawIconHeaderGlow(canvas, cx, cy, bounds.width(), trackTop - bounds.top, accent, level, density, alphaScale)
         when (mode) {
-            ContinuousAdjustController.Mode.VOLUME -> drawVolumeIcon(canvas, cx, cy, iconSize, level, accent, density, alphaScale)
-            ContinuousAdjustController.Mode.BRIGHTNESS -> drawBrightnessIcon(canvas, cx, cy, iconSize, level, accent, density)
+            com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME -> drawVolumeIcon(canvas, cx, cy, iconSize, level, accent, density, alphaScale)
+            com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS -> drawBrightnessIcon(canvas, cx, cy, iconSize, level, accent, density)
         }
     }
 

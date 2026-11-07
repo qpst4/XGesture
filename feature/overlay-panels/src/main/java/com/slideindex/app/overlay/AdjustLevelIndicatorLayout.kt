@@ -2,7 +2,7 @@ package com.slideindex.app.overlay
 
 import android.graphics.RectF
 
-internal object AdjustLevelIndicatorLayoutEngine {
+object AdjustLevelIndicatorLayoutEngine {
     fun layout(
         viewWidth: Int,
         viewHeight: Int,

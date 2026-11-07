@@ -694,7 +694,7 @@ class EdgeGestureOverlayView(
         @Suppress("UNUSED_PARAMETER") deferWindowLayout: Boolean = false
     ) {
         onAdjustPanelLayoutCallback(anchorRawY)
-        adjustPanelController.showAdjustPanel(mode, fraction, anchorRawY)
+        adjustPanelController.showAdjustPanel(mode.toPanelMode(), fraction, anchorRawY)
     }
 
     override fun onDraw(canvas: Canvas) {
