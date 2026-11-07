@@ -38,6 +38,7 @@ dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:gesture"))
     implementation(project(":core:shortcuts"))
+    implementation(project(":core:clipboard"))
     implementation(project(":core:overlay-host"))
     implementation(project(":core:design"))
     implementation(project(":feature:settings"))

@@ -279,6 +279,9 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
             if (repo == null) emptyList() else
                 com.slideindex.app.ui.picker.PickerApps.fromCached(ctx, repo, freezer)
         }
+        com.slideindex.app.clipboard.ClipboardForeground.resolvePackage = { ctx ->
+            com.slideindex.app.util.AccessibilityForegroundResolver.resolve(ctx)
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.switchInputMethod = { ctx ->
             com.slideindex.app.util.InputMethodHelper.switchInputMethod(ctx)
         }

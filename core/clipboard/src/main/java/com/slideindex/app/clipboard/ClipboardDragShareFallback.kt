@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import com.slideindex.app.util.AccessibilityForegroundResolver
 
 /**
  * 拖拽未被 IM 接受时的文件分享兜底。
@@ -21,7 +20,7 @@ object ClipboardDragShareFallback {
         }
 
     fun shareToForegroundHost(context: Context, clipData: ClipData): Boolean {
-        val hostPackage = AccessibilityForegroundResolver.resolve(context) ?: return false
+        val hostPackage = ClipboardForeground.resolvePackage?.invoke(context) ?: return false
         val uris = (0 until clipData.itemCount).mapNotNull { clipData.getItemAt(it).uri }
         val plainText = clipData.firstPlainText()
         val htmlText = clipData.firstHtmlText()

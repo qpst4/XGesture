@@ -291,11 +291,12 @@ iteration 3:   0  → 净落地 52 个文件
 
 每条都要求：模块自带测试、`:app` 只保留实现与接线、面板通过接口使用。
 
-#### P1 `:core:clipboard`（预计 2–3 轮）
+#### P1 `:core:clipboard`（进行中：模块已建，数据层 19 文件已迁）
 
 - 只读 API：历史列表、条目详情、变更流（`Flow<List<ClipboardEntry>>`）
 - 不含写入 / 特权操作；写入仍留在 `:app`，通过现有钩子
 - 目标：`filebrowser` / `history` / `pickresult` 不再 import `com.slideindex.app.clipboard.*`
+- **进度（2026-11-08）**：模块已建；19 个纯数据/解析文件迁入（3,174 行）；`ClipboardHistoryQuery` 只读接口 + `ClipboardService` 服务定位点已就绪，`:app` 仓储已实现并注册；模块测试 3 例通过
 - 验收：三组整组迁入 panels，且 `:app` 中 `clipboard` 包不再被 `overlay/` 引用
 
 #### P2 `FloatBallPort`（预计 2 轮）

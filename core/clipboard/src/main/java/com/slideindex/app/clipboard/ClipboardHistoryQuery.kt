@@ -45,3 +45,12 @@ object ClipboardService {
     @Volatile
     var query: ClipboardHistoryQuery? = null
 }
+
+/**
+ * 前台包名解析：`:app` 注入（依赖无障碍服务），模块内不直接引用。
+ */
+object ClipboardForeground {
+
+    @Volatile
+    var resolvePackage: ((android.content.Context) -> String?)? = null
+}
