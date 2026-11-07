@@ -279,6 +279,12 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
             if (repo == null) emptyList() else
                 com.slideindex.app.ui.picker.PickerApps.fromCached(ctx, repo, freezer)
         }
+        com.slideindex.app.stash.StashReminderScheduling.schedule = { ctx, entryId, atEpochMs, text ->
+            com.slideindex.app.stash.StashReminderScheduler.schedule(ctx, entryId, atEpochMs, text)
+        }
+        com.slideindex.app.stash.StashReminderScheduling.cancel = { ctx, entryId ->
+            com.slideindex.app.stash.StashReminderScheduler.cancel(ctx, entryId)
+        }
         com.slideindex.app.clipboard.ClipboardForeground.resolvePackage = { ctx ->
             com.slideindex.app.util.AccessibilityForegroundResolver.resolve(ctx)
         }

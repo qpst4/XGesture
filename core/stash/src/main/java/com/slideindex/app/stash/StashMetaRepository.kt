@@ -393,13 +393,13 @@ class StashMetaRepository @Inject constructor(
         // 那条闹钟本来就已经被「稍后」排到 override 时间上了，这里重排是幂等的（而且能修好
         // "用户后来在面板里手动改了时间、但 override 还留着"的残留）。
         expiredRemovals.forEach { entryId ->
-            StashReminderScheduler.cancel(appContext, entryId)
+            StashReminderScheduling.cancel?.invoke(appContext, entryId)
             StashReminderMirror.removeSnoozeOverride(appContext, entryId)
         }
         val overriddenTexts = StashReminderMirror.all(appContext).associate { it.first to it.third }
         overriddenToFuture.forEach { (entryId, atEpochMs) ->
             // 重排时正文取自镜像（meta 不存正文）：镜像里那份就是用户设置时写进去的正文。
-            StashReminderScheduler.schedule(appContext, entryId, atEpochMs, overriddenTexts[entryId].orEmpty())
+            StashReminderScheduling.schedule?.invoke(appContext, entryId, atEpochMs, overriddenTexts[entryId].orEmpty())
             StashReminderMirror.removeSnoozeOverride(appContext, entryId)
         }
         Log.i(
