@@ -190,3 +190,41 @@
 | `RecentTasksLoader.removePackages()` | 同上接口 |
 | `TaskSwitcherMenuActions.launchFreeWindow()` | 同上接口或独立回调 |
 | `R.string.app_carousel_*`（8 条） | 抽到 `:feature:overlay-panels` 的 `res/values/strings.xml` |
+
+## 10. 2026-11-08 状态与结构性结论（大爆炸试验后）
+
+### 实测进度
+
+| 指标 | 数值 |
+| :--- | :--- |
+| `:app` 的 `overlay/` | 441 文件 / 136,402 行 → **271 文件 / ~113,000 行** |
+| `:feature:overlay-panels` | **157 文件 / ~20,500 行** |
+| `:core:overlay-host` | 30 文件 / 3,824 行 |
+| 整组迁出 | 6 组（backpanel / carousel / holographic / fingertip / animation / share）+ screenshot 4/7 |
+| 散件 + 收敛 | 约 110 个文件 |
+
+### 大爆炸试验（已放弃）
+
+尝试把剩余 323 个 overlay 文件一次性搬进 `:feature:overlay-panels`，再用编译回滚收敛：
+
+```
+iteration 0: 237 个文件编译失败
+iteration 1:  32
+iteration 2:   2
+iteration 3:   0  → 净落地 52 个文件
+```
+
+结论：**剩余 overlay 的"可独立闭合子集"已经挖完**。再往下的 271 个文件互相引用，并且都伸进 `:app` 的：
+
+- `util`（140 处引用，剩余 47 文件依赖 service/shizuku/privilege/R）
+- `stash`(70) / `clipboard`(66) / `service`(62) / `message`(61) / `launcher`(51) / `di`(43) / `ui`(22)
+- `R`（96 处）
+
+### 两条后续路线
+
+| 路线 | 做法 | 轮次 | 干净度 |
+| :--- | :--- | :--- | :--- |
+| **A. 端口优先（推荐）** | 先做一批窄接口：`ActionExecutor` 面板面（14 方法）、音量/亮度、picker 图标、label+字符串、`ScreenPinManager`、`FloatBall` 单例族；再整组搬 | 约 4–6 轮 | 干净：每组真实边界 |
+| **B. app-core 大爆炸** | 把 overlay+ui+service+util 整体搬进一个 `:app-core`，`:app` 只留 Application/Manifest | 约 2–3 轮 | **不干净**：只是把上帝模块改名，且错误面数百 |
+
+2026-11-08 维护者选择：**A 路线**（干净彻底，宁可多轮）。
