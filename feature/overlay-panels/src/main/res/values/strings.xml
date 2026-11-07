@@ -171,4 +171,7 @@
     <string name="clipboard_monitor_notification_channel_desc">Shows clipboard background listener status</string>
     <string name="stash_composer_empty">Write something first</string>
     <string name="stash_deleted">Deleted</string>
+    <string name="drag_drop_flow_restore">Restore</string>
+    <string name="drag_drop_flow_cancel">Cancel</string>
+    <string name="drag_drop_flow_release_to_send">Release to send</string>
 </resources>
