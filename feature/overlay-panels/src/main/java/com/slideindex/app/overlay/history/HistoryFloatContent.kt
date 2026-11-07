@@ -405,7 +405,7 @@ private fun HistoryFloatHandleTouch(
  * ⚠️ 为什么不让它们各画各的条：拆窗之后条本体只该画一次。流光窗里那段主带是
  * **clip 在条形状里**的（见下），所以它仍然需要 `barPath`，只是不 `drawPath` 而已。
  */
-internal fun Modifier.historyHandlePaint(
+fun Modifier.historyHandlePaint(
     /**
      * 条本体基色。**现在是恒定偏亮**（[HANDLE_BAR_COLOR]，见 :207 那组"对比度修正"注释），
      * 不再随 alert / 深色模式变化；alpha 在绘制期乘上 [barAlpha] × [barFillAlpha]。
@@ -656,7 +656,7 @@ internal fun Modifier.historyHandlePaint(
  * 所以"没提醒就零动画"这条约束依旧成立。
  */
 @Composable
-internal fun HistoryHandleGlowSweep(): State<Float> {
+fun HistoryHandleGlowSweep(): State<Float> {
     val transition = rememberInfiniteTransition(label = "handleGlow")
     return transition.animateFloat(
         initialValue = 0f,
@@ -685,7 +685,7 @@ internal fun HistoryHandleGlowSweep(): State<Float> {
  * 且仅在"有未处理提醒"时发生 —— 与既有的性能 gate 一致。
  */
 @Composable
-internal fun rememberGlowObservedPhase(source: State<Float>): State<Float> {
+fun rememberGlowObservedPhase(source: State<Float>): State<Float> {
     val mirror = remember { mutableFloatStateOf(source.value) }
     LaunchedEffect(source) {
         while (true) {
