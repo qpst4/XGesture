@@ -92,6 +92,17 @@ object PanelRuntimeHooks {
     @Volatile
     var appDependenciesComposition: AppDependenciesComposition? = null
 
+    /** 注入一次点击（悬浮窗穿透用）。 */
+    @Volatile
+    var dispatchTapAsync: ((Float, Float, (Boolean) -> Unit) -> Unit)? = null
+
+    /** 角标快捷方式槽位的选择 Activity Intent。 */
+    @Volatile
+    var cornerSlotPickIntent: ((Context, String, Int) -> android.content.Intent?)? = null
+
+    /** 当前是否应隐藏触发区（锁屏/横屏/桌面/暂停等规则）。 */
+    @Volatile
+    var suppressTrigger: ((AppSettings, Context) -> Boolean)? = null
     /** 内置分享面板总开关（`:app` 从设置快照读）。 */
     @Volatile
     var isShareSheetEnabled: ((Context) -> Boolean)? = null

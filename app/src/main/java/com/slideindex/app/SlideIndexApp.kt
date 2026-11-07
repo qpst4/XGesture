@@ -216,6 +216,21 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideBitmap = { ctx, pkg, size ->
             com.slideindex.app.ui.AppIconOverride.bitmap(ctx, pkg, size)
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.dispatchTapAsync = { x, y, onFinished ->
+            com.slideindex.app.util.InputTapUtil.dispatchTapAsync(x, y, onFinished = onFinished)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.cornerSlotPickIntent = { ctx, corner, slotIndex ->
+            com.slideindex.app.service.CornerGestureSlotPickTrampolineActivity
+                .createIntent(ctx, corner, slotIndex)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.suppressTrigger = { settings: com.slideindex.app.settings.AppSettings, ctx: Context ->
+            com.slideindex.app.util.OverlaySuppression.shouldSuppress(
+                settings = settings,
+                context = ctx,
+                foregroundPackage = com.slideindex.app.service.OverlayService.foregroundPackage,
+                scope = com.slideindex.app.util.OverlaySuppressionScope.TRIGGER,
+            )
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel = { ctx, action ->
             com.slideindex.app.ui.gesturepicker.gestureActionLabelText(ctx, action)
         }

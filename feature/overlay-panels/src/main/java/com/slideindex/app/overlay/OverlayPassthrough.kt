@@ -5,7 +5,6 @@ import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.view.Choreographer
-import com.slideindex.app.util.InputTapUtil
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -76,7 +75,7 @@ object OverlayPassthrough {
                         "注入点击 at=($rawX,$rawY) frames=$framesBeforeInject " +
                             "restoreDelay=$restoreDelayMs armedAfter=$injectStartMs"
                     )
-                    InputTapUtil.dispatchTapAsync(rawX, rawY, onFinished = { ok ->
+                    com.slideindex.app.overlay.panels.PanelRuntimeHooks.dispatchTapAsync?.invoke(rawX, rawY) { ok ->
                         com.slideindex.app.diagnostic.EdgeDiag.log(
                             "passthrough",
                             "注入回调 ok=$ok at=($rawX,$rawY) " +
@@ -90,7 +89,7 @@ object OverlayPassthrough {
                         } else {
                             mainHandler.postDelayed(safeRestore, restoreDelayMs)
                         }
-                    })
+                    }
                 } catch (e: Throwable) {
                     Log.e(TAG, "InputTapUtil.dispatchTapAsync failed during passthrough", e)
                     safeRestore()
