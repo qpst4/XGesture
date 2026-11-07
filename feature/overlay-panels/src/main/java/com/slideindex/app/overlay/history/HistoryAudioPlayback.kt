@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
  * ⚠️ 所有方法都必须在**主线程**调用（`MediaPlayer` 的既有约束，也是这些调用点的实际情况：
  * 全部来自 Compose 的点击回调）。
  */
-internal object HistoryAudioPlayback {
+object HistoryAudioPlayback {
     private const val TAG = "HistoryAudioPlayback"
 
     /** 进度轮询间隔：200ms 足够让"播放中"看起来是连续走动的，又不至于每帧写状态。 */

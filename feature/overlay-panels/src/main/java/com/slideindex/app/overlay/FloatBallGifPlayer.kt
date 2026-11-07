@@ -9,7 +9,7 @@ import android.util.Log
 /**
  * FV-style GIF playback: Handler tick + lightweight View invalidate.
  */
-internal class FloatBallGifPlayer(
+class FloatBallGifPlayer(
     looper: Looper = Looper.getMainLooper()
 ) {
     private val handler = Handler(looper)

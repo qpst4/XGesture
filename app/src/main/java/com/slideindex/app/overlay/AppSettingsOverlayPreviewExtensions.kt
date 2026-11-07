@@ -19,8 +19,9 @@ fun AppSettings.withOverlayLayoutPreview(): AppSettings {
         val beforePreview = result
         val side = preview.side
         val handleId = preview.handleId
-        if (preview.edgeWidthDp != null) {
-            result = result.withUpdatedTriggerHandleEdgeWidth(side, handleId, preview.edgeWidthDp)
+        val edgeWidthDp = preview.edgeWidthDp
+        if (edgeWidthDp != null) {
+            result = result.withUpdatedTriggerHandleEdgeWidth(side, handleId, edgeWidthDp)
         }
         if (preview.topFraction != null || preview.bottomFraction != null) {
             val handle = result.triggerHandle(side, handleId)
@@ -39,8 +40,9 @@ fun AppSettings.withOverlayLayoutPreview(): AppSettings {
                 longSwipeDistanceDp = preview.longSwipeDistanceDp
             )
         }
-        if (preview.design != null) {
-            result = result.withUpdatedTriggerHandleDesign(side, handleId, preview.design)
+        val design = preview.design
+        if (design != null) {
+            result = result.withUpdatedTriggerHandleDesign(side, handleId, design)
         }
         // 设置已经落盘回流（预览值不再改变任何东西）→ 丢掉"待确认"，恢复正常渲染。
         if (result == beforePreview) {

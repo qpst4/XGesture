@@ -8,7 +8,7 @@ import com.slideindex.app.settings.FloatBallSide
  * Continuous pick-point offset relative to the float-ball center (FV-style).
  * Default above the ball; smoothly transitions below only inside a band at the screen bottom edge.
  */
-internal object FloatBallPickAnchor {
+object FloatBallPickAnchor {
   private const val MIN_SCREEN_MARGIN_DP = 4f
   private const val BOTTOM_EDGE_INSET_DP = 8f
   private const val HORIZONTAL_OFFSET_FRACTION = 0.35f

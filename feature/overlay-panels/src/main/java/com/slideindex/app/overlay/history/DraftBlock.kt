@@ -33,7 +33,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
  * `StashRepository.replaceBlocks`。UI 侧只多一件事：**显示**前要把文件名拼成可读路径
  * （`StashRepository.imageFilePath`）。
  */
-internal sealed interface DraftBlock {
+sealed interface DraftBlock {
     /** 稳定 id：Compose 的 `key`、每块的 `FocusRequester` 表、焦点衔接都要用它。 */
     val id: String
 
@@ -68,14 +68,14 @@ internal sealed interface DraftBlock {
 private var blockIdSeq = 1
 
 /** 取一个新的块 id（`c1` / `c2` …，人肉读日志时比 UUID 好认）。 */
-internal fun newDraftBlockId(): String = "c${blockIdSeq++}"
+fun newDraftBlockId(): String = "c${blockIdSeq++}"
 
 /**
  * 一个新的**空**文字块（还没插进任何草稿）。
  *
  * 光标处切块、删图之后补位都要它；插进去那一步才走草稿自己的 `updateBlocks`。
  */
-internal fun newEmptyDraftTextBlock(): DraftBlock.Text =
+fun newEmptyDraftTextBlock(): DraftBlock.Text =
     DraftBlock.Text(id = newDraftBlockId(), value = "")
 
 /**
@@ -88,7 +88,7 @@ internal fun newEmptyDraftTextBlock(): DraftBlock.Text =
  *
  * @param blocks 收尾之后的块序列（调用方负责写回自己的 `SnapshotStateList`）。
  */
-internal fun syncDraftMirrors(
+fun syncDraftMirrors(
     blocks: List<DraftBlock>,
     textMirror: androidx.compose.runtime.MutableState<String>,
     imagePathsMirror: androidx.compose.runtime.MutableState<List<String>>,
@@ -127,27 +127,27 @@ internal fun syncDraftMirrors(
  * ⚠️ 幂等：末尾已经是文字块时**原样返回同一个 list 实例**，不重新发 id
  * （每次重组都发新 id 会让 Compose 的 `key(block.id)` 把整块重建、输入框丢焦点）。
  */
-internal fun normalizeDraftBlocks(blocks: List<DraftBlock>): List<DraftBlock> {
+fun normalizeDraftBlocks(blocks: List<DraftBlock>): List<DraftBlock> {
     if (blocks.isEmpty()) return listOf(newEmptyDraftTextBlock())
     if (blocks.last() is DraftBlock.Text) return blocks
     return blocks + newEmptyDraftTextBlock()
 }
 
 /** 一份块序列的**只读投影**里"文字"那一半的语义（非空文字块用 `\n` 连接）。 */
-internal fun draftTextOf(blocks: List<DraftBlock>): String =
+fun draftTextOf(blocks: List<DraftBlock>): String =
     blocks.filterIsInstance<DraftBlock.Text>()
         .map { it.value }
         .filter { it.isNotBlank() }
         .joinToString("\n")
 
 /** 供 [SnapshotStateList] 之外的调用方（保存前的快照）一次性拿到两条投影。 */
-internal fun draftImagePathsOf(blocks: List<DraftBlock>): List<String> =
+fun draftImagePathsOf(blocks: List<DraftBlock>): List<String> =
     blocks.filterIsInstance<DraftBlock.Image>().map { it.path }
 
 /** 语音块路径的投影（关窗/换条目时"要删掉哪些 cache 临时音频"用）。 */
-internal fun draftAudioPathsOf(blocks: List<DraftBlock>): List<String> =
+fun draftAudioPathsOf(blocks: List<DraftBlock>): List<String> =
     blocks.filterIsInstance<DraftBlock.Audio>().map { it.path }
 
 /** 空的只读镜像（给"没有草稿"的调用方当默认值用，省得到处 `mutableStateOf(emptyList())`）。 */
-internal fun emptyDraftImagePathsMirror(): androidx.compose.runtime.MutableState<List<String>> =
+fun emptyDraftImagePathsMirror(): androidx.compose.runtime.MutableState<List<String>> =
     mutableStateOf(emptyList())

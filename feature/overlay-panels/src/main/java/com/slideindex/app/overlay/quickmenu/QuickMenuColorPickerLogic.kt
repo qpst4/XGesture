@@ -26,7 +26,7 @@ import kotlin.math.roundToInt
  * 放大镜的绘制仍然走 `DrawScope.drawImage`（和 `QuickMenuToolScreens` 里
  * `ScanImageWithMarkers`「按原亮度重画标记区」同一套手法），这里只负责把矩形算出来。
  */
-internal object QuickMenuColorPickerGeometry {
+object QuickMenuColorPickerGeometry {
 
     /**
      * 容器尺寸（像素）。
@@ -319,7 +319,7 @@ internal object QuickMenuColorPickerGeometry {
  *
  * 和 `QuickMenuHistoryCodec` 同一套思路：存纯数据、读取一律兜底，损坏或超量都不该让页面打不开。
  */
-internal object RecentColorsCodec {
+object RecentColorsCodec {
 
     /** 历史最多留多少条。12 条正好在一行/两行色块里看全，再多就只是"翻记录"了。 */
     const val MAX_ENTRIES = 12
@@ -420,7 +420,7 @@ object QuickMenuColorGainStore {
  * `#RRGGBB` / `#AARRGGBB` / `rgb(...)` / `hsl(...)` 都在 [QuickMenuColorMath] 里（已单测），
  * 这里只补它没有的 HSV，并统一成"格式名 → 值"的列表，让 UI 一行一个、各自一个复制按钮。
  */
-internal object QuickMenuColorFormats {
+object QuickMenuColorFormats {
 
     /** HSV：`hsv(h, s%, v%)`，写法和 [QuickMenuColorMath.toHsl] 的 `hsl(...)` 保持一致。 */
     fun toHsv(argb: Int): String {

@@ -15,7 +15,7 @@ import kotlin.math.roundToInt
 /**
  * FV-style GIF decode: downscale to ball size, pre-cache frames when small enough.
  */
-internal object FloatBallGifFrameDecoder {
+object FloatBallGifFrameDecoder {
     private const val MAX_CACHE_PIXELS = 16_000_000
     private const val MIN_FRAME_DELAY_MS = 33
     private const val MAX_FRAME_DELAY_MS = 1_000

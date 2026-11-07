@@ -16,7 +16,7 @@ import java.util.LinkedHashMap
  * - 消费方拿到 [Handle]，用完 `close()`；
  * - 没人引用且超过 [MAX_ENTRIES] 的旧条目才真正 [FloatBallGifFrameDecoder.Sequence.recycle]。
  */
-internal object FloatBallGifSequenceCache {
+object FloatBallGifSequenceCache {
 
     /** 同时保留几份解码结果：球本身与设置页预览通常共用同一 key，2 份足够。 */
     private const val MAX_ENTRIES = 2

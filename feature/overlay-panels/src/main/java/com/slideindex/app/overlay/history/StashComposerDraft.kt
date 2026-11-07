@@ -58,7 +58,7 @@ import androidx.compose.runtime.toMutableStateList
  * [normalizeComposerBlocks]）—— UI 侧完全不做这个兜底：光标要有个可放的地方、
  * 「＋图片」也得有个块可切，否则"全是图"的草稿上用户会发现自己打不了字。
  */
-internal object StashComposerDraft {
+object StashComposerDraft {
     /**
      * 正文的**唯一真相**：有序块序列（文字 / 图片交错）。
      *
