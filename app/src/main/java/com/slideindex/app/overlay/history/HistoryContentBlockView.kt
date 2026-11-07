@@ -35,7 +35,7 @@ import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-internal enum class HistoryImageSource {
+enum class HistoryImageSource {
     Clipboard,
     Stash,
 }
@@ -60,7 +60,7 @@ internal enum class HistoryImageSource {
 private const val HistoryCardImageOversample = 2.0f
 
 @Composable
-internal fun HistoryContentBlockView(
+fun HistoryContentBlockView(
     block: ClipboardContentBlock,
     imageSource: HistoryImageSource,
     entryId: String,
@@ -228,7 +228,7 @@ internal fun HistoryContentBlockView(
 }
 
 @Composable
-internal fun HistoryExpandedImage(
+fun HistoryExpandedImage(
     imageBitmap: ImageBitmap,
     modifier: Modifier = Modifier,
 ) {
@@ -243,5 +243,5 @@ internal fun HistoryExpandedImage(
 }
 
 @Composable
-internal fun rememberHistoryImageBitmap(bitmap: Bitmap?): ImageBitmap? =
+fun rememberHistoryImageBitmap(bitmap: Bitmap?): ImageBitmap? =
     remember(bitmap) { bitmap?.asImageBitmap() }
