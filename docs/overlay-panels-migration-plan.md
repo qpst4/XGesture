@@ -261,3 +261,69 @@ iteration 3:   0  → 净落地 52 个文件
 2. `volumepanel` + `quickwheel` 共用的 picker 套件抽到 `:core:design`（2 轮，一次解锁两组）；
 3. `FloatBall*` 单例族端口（2 轮，解锁 `dragdrop` / `pickresult` / `quickmenu` 三组）；
 4. `:core:clipboard` 只读接口（2–3 轮，解锁 `filebrowser` / `history` / `searchpanel`）。
+
+---
+
+## 12. 收口结论与下一阶段施工单（2026-11-08）
+
+### 12.1 本阶段（W1-A/B）实际交付
+
+| 项 | 数据 |
+| :--- | :--- |
+| `:feature:overlay-panels` | 0 → 约 26.4k 行（新建模块） |
+| `:app` 的 `overlay/` | 136,402 → 约 107,700 行（-21%） |
+| 整组迁出 | 9 组：`backpanel` / `carousel` / `holographic` / `fingertip` / `animation` / `share` / `Adjust` / `corner`（+ `screenshot` 4/7） |
+| 散件迁出 | 约 110 个文件 |
+| 新增落地模块 | `:core:design`、`:core:overlay-host`、`:core:shortcuts` |
+| 端口 | `PanelActionHost`（22 方法）、`GestureActionRunner`、`PanelFloatBallHooks`（5）、`PanelRuntimeHooks`（40+） |
+| 验证 | `unitTests` 全绿（323 类 / 2,421 用例）、`:app` 真机装机通过 |
+
+### 12.2 为什么在此收口
+
+继续"一组一组搬"的边际收益已经很低：`ringlauncher` 两次迁移实测各剩 30+ 编译错误，
+且缺口集中在 `FloatBallLayout` / `ActionExecutor` / `RecentTasksLoader` /
+`TaskSwitcherRepository` / `AppShortcutLoader` —— 全是 **`:app` 核心子系统的实现细节**。
+
+继续补钩子会把 `PanelRuntimeHooks` 养成第二个 god object，与本次重构目的相反。
+因此收口，转为**先把依赖方向掰正**。
+
+### 12.3 下一阶段施工单（P1–P4）
+
+每条都要求：模块自带测试、`:app` 只保留实现与接线、面板通过接口使用。
+
+#### P1 `:core:clipboard`（预计 2–3 轮）
+
+- 只读 API：历史列表、条目详情、变更流（`Flow<List<ClipboardEntry>>`）
+- 不含写入 / 特权操作；写入仍留在 `:app`，通过现有钩子
+- 目标：`filebrowser` / `history` / `pickresult` 不再 import `com.slideindex.app.clipboard.*`
+- 验收：三组整组迁入 panels，且 `:app` 中 `clipboard` 包不再被 `overlay/` 引用
+
+#### P2 `FloatBallPort`（预计 2 轮）
+
+- 把 `FloatBallOverlay` / `FloatBallLayout` 的静态能力收敛成 `interface FloatBallPort`
+  （chrome 显隐、自由移动、布局度量、贴图/取词入口）
+- `:app` 提供实现并在 `OverlayHostRuntime` 注册；`PanelFloatBallHooks` 逐步废弃
+- 目标：解锁 `dragdrop` / `quickmenu` / `pickresult`
+
+#### P3 picker 下沉 `:core:design`（预计 2 轮）
+
+- `ui.gesturepicker` 的选动作页 + `Md3Picker*` 基础件迁入 `:core:design`
+- 依赖：`AppRepository` 走 `:feature:apps` 接口；图标走 `:core:shortcuts`
+- 目标：解锁 `volumepanel` / `quickwheel`
+
+#### P4 `:core:tasks`（预计 1–2 轮）
+
+- `TaskSwitcherRepository` / `RecentTasksLoader` / 最近任务查询下沉
+- 目标：解锁 `ringlauncher`（最后一块拼图）
+
+### 12.4 钩子退役计划
+
+`PanelRuntimeHooks` 目前 40+ 个槽位，属迁移期脚手架。P1–P4 完成后按组退役：
+
+| 钩子族 | 退役方式 |
+| :--- | :--- |
+| `appRepository` / `settingsSnapshot` / `persist*` | 换 `:feature:apps` + `:feature:settings` 的正式接口 |
+| `addIconChangeListener` / `iconCacheRevision` | 换 `:core:design` 图标库服务 |
+| `quickLauncher*` / `managedShortcut*` | 换 `:core:shortcuts` 的 resolver 接口 |
+| `pickerApps` / `ringSlotConfigSheetContent` | P3 完成后删除 |
+| `dispatchTapAsync` / `switchInputMethod` | 换 `:core:overlay-host` 的系统能力接口 |
