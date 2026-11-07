@@ -50,4 +50,6 @@
     <string name="gesture_action_open_link">Open link</string>
     <string name="quick_wheel_launch_fullscreen">Full screen</string>
     <string name="quick_wheel_launch_free_window">Small window</string>
+    <string name="fv_hint_suffix_free_window">- Free window</string>
+    <string name="fv_hint_suffix_fullscreen">- Fullscreen</string>
 </resources>

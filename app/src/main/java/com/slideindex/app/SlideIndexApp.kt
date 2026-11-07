@@ -227,12 +227,12 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
             com.slideindex.app.service.CornerGestureSlotPickTrampolineActivity
                 .createIntent(ctx, corner, slotIndex)
         }
-        com.slideindex.app.overlay.panels.PanelRuntimeHooks.suppressTrigger = { settings: com.slideindex.app.settings.AppSettings, ctx: Context ->
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.suppressTrigger = { settings: com.slideindex.app.settings.AppSettings, ctx: Context, cornerWheel: Boolean ->
             com.slideindex.app.util.OverlaySuppression.shouldSuppress(
                 settings = settings,
                 context = ctx,
                 foregroundPackage = com.slideindex.app.service.OverlayService.foregroundPackage,
-                scope = com.slideindex.app.util.OverlaySuppressionScope.TRIGGER,
+                scope = if (cornerWheel) com.slideindex.app.util.OverlaySuppressionScope.CORNER_WHEEL else com.slideindex.app.util.OverlaySuppressionScope.TRIGGER,
             )
         }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot = { ctx ->
@@ -254,6 +254,14 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchShortcutLabel = { action ->
             com.slideindex.app.ui.gesturepicker.launchShortcutDisplayLabel(action)
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutBitmap = { ctx, action, size, catalog ->
+            com.slideindex.app.activity.ManagedShortcutIconResolver
+                .bitmapForLaunchShortcut(ctx, action, catalog, size)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutHostPackage = { payloadKey ->
+            com.slideindex.app.activity.ManagedShortcutIconResolver
+                .hostPackageForLaunchShortcut(payloadKey)
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutDrawable = { ctx, action, catalog ->
             com.slideindex.app.activity.ManagedShortcutIconResolver
                 .drawableForLaunchShortcut(ctx, action, catalog)
@@ -271,6 +279,17 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.cloneAppLabel = { ctx, userId, base ->
             com.slideindex.app.overlay.CloneAppsIndex.labelForUser(ctx, userId, base)
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconBitmapFull =
+            { action, sizePx, tint, outlined, withPlate, plateShapeOrdinal ->
+                com.slideindex.app.util.GestureActionIconBitmap.get(
+                    action = action,
+                    sizePx = sizePx,
+                    tintArgb = tint,
+                    outlined = outlined,
+                    withPlate = withPlate,
+                    plateShape = com.slideindex.app.util.GestureActionPlateShape.entries[plateShapeOrdinal],
+                )
+            }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconBitmap = { action, sizePx, tint ->
             com.slideindex.app.util.GestureActionIconBitmap.get(action, sizePx, tint)
         }

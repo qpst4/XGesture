@@ -7,15 +7,12 @@ import android.graphics.drawable.Drawable
 import android.util.LruCache
 import androidx.core.graphics.createBitmap
 import com.slideindex.app.activity.ActivityShortcut
-import com.slideindex.app.activity.ManagedShortcutIconResolver
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.shell.ShellCommand
 import com.slideindex.app.shell.ShellCommandIconResolver
-import com.slideindex.app.util.GestureActionIconBitmap
-import com.slideindex.app.util.GestureActionPlateShape
 
-internal object CornerSlotIconBitmap {
+object CornerSlotIconBitmap {
     private val appIconCache = object : LruCache<String, Bitmap>(64) {}
 
     fun clear() {
@@ -32,13 +29,6 @@ internal object CornerSlotIconBitmap {
         appRepository: AppRepository? = null,
     ): Bitmap {
         // 全局图标覆盖优先（扩展 → 图标库）
-        com.slideindex.app.ui.ActionIconBitmap.load(
-            context = context,
-            action = action,
-            sizePx = sizePx,
-            tintArgb = android.graphics.Color.WHITE,
-            withPlate = true,
-        )?.let { return it }
         if (action is GestureAction.LaunchApp) {
             val cacheKey = "app:${action.packageName}:${action.cloneUserId}:$sizePx"
             appIconCache.get(cacheKey)?.let { return it }
@@ -51,16 +41,16 @@ internal object CornerSlotIconBitmap {
         if (action is GestureAction.LaunchShortcut) {
             val managedKey = "managed:${action.payloadKey}:$sizePx:${activityShortcuts.map { it.identityKey() to it.iconPath }.hashCode()}"
             appIconCache.get(managedKey)?.let { return it }
-            ManagedShortcutIconResolver.bitmapForLaunchShortcut(
-                context = context,
-                action = action,
-                catalog = activityShortcuts,
-                sizePx = sizePx,
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutBitmap?.invoke(
+                context,
+                action,
+                sizePx,
+                activityShortcuts,
             )?.let { bitmap ->
                 appIconCache.put(managedKey, bitmap)
                 return bitmap
             }
-            val hostPackage = ManagedShortcutIconResolver.hostPackageForLaunchShortcut(action.payloadKey)
+            val hostPackage = com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutHostPackage?.invoke(action.payloadKey)
             if (!hostPackage.isNullOrBlank()) {
                 val cacheKey = "host:$hostPackage:$sizePx"
                 appIconCache.get(cacheKey)?.let { return it }
@@ -81,14 +71,14 @@ internal object CornerSlotIconBitmap {
                 }
             }
         }
-        return GestureActionIconBitmap.get(
-            action = action,
-            sizePx = sizePx,
-            tintArgb = android.graphics.Color.WHITE,
-            outlined = true,
-            withPlate = true,
-            plateShape = GestureActionPlateShape.CIRCLE,
-        )
+        return com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconBitmapFull?.invoke(
+            action,
+            sizePx,
+            android.graphics.Color.WHITE,
+            true,
+            true,
+            1, // CIRCLE
+        ) ?: Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
     }
 
     private fun resolveAppIconBitmap(

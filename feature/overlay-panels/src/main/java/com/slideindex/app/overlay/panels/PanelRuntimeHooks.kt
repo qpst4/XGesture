@@ -53,6 +53,10 @@ object PanelRuntimeHooks {
     var actionIconBitmap:
         ((com.slideindex.app.gesture.GestureAction, Int, Int) -> android.graphics.Bitmap?)? = null
 
+    /** 手势动作图标（完整参数：动作/尺寸/着色/描边/底板/形状序号）。 */
+    @Volatile
+    var actionIconBitmapFull:
+        ((com.slideindex.app.gesture.GestureAction, Int, Int, Boolean, Boolean, Int) -> android.graphics.Bitmap?)? = null
     /** 手势动作执行器；面板只表达"选了哪个动作"。 */
     @Volatile
     var gestureActionRunner: GestureActionRunner? = null
@@ -102,7 +106,7 @@ object PanelRuntimeHooks {
 
     /** 当前是否应隐藏触发区（锁屏/横屏/桌面/暂停等规则）。 */
     @Volatile
-    var suppressTrigger: ((AppSettings, Context) -> Boolean)? = null
+    var suppressTrigger: ((AppSettings, Context, Boolean) -> Boolean)? = null
     /** 当前设置快照（`:app` 的 settingsRepository.readSnapshot()）。 */
     @Volatile
     var settingsSnapshot: ((Context) -> AppSettings?)? = null

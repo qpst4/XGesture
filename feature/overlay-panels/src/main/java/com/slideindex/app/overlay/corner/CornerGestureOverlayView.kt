@@ -15,25 +15,22 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import com.slideindex.app.data.AppRepository
-import com.slideindex.app.gesture.ActionExecutor
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.isCornerInnerZoneOnly
 import com.slideindex.app.gesture.isEffective
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.CornerGestureSettings
 import com.slideindex.app.settings.CornerRadialMenuCodec
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.settings.effectiveLongPressDurationMs
 import com.slideindex.app.settings.shouldLaunchFullscreen
 import com.slideindex.app.settings.launchPolicyLongPressEligible
 import com.slideindex.app.shell.ShellCommand
-import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
-import com.slideindex.app.ui.gesturepicker.launchShortcutDisplayLabel
 import com.slideindex.app.util.HapticHelper
 import kotlin.math.hypot
 
 @SuppressLint("ViewConstructor")
-internal class CornerGestureOverlayView(
+class CornerGestureOverlayView(
     context: Context,
     private val appRepository: AppRepository,
     private val onSessionEnd: () -> Unit,
@@ -615,8 +612,8 @@ internal class CornerGestureOverlayView(
         val (anchorX, anchorY) = anchorCenter(anchor)
         val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 13f * density }
         val textWidths = items.map { shortcut ->
-            val label = launchShortcutDisplayLabel(shortcut).ifBlank {
-                gestureActionLabelText(context, shortcut)
+            val label = (com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchShortcutLabel?.invoke(shortcut).orEmpty()).ifBlank {
+                com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel?.invoke(context, shortcut).orEmpty()
             }
             textPaint.measureText(label)
         }

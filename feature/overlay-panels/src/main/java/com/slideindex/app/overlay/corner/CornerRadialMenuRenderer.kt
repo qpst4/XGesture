@@ -22,11 +22,9 @@ import com.slideindex.app.overlay.ShellCommandBadgeRenderer
 import com.slideindex.app.overlay.ShortcutBadgeRenderer
 import com.slideindex.app.settings.CornerGestureSettings
 import com.slideindex.app.shell.ShellCommand
-import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
-import com.slideindex.app.ui.gesturepicker.launchShortcutDisplayLabel
 import kotlin.math.min
 
-internal object CornerRadialMenuRenderer {
+object CornerRadialMenuRenderer {
     private val slotIconClipPath = Path()
     /** 提示卡片里图标外圈的进度用矩形（复用，避免每帧分配）。 */
     private val hintRingRect = RectF()
@@ -339,8 +337,10 @@ internal object CornerRadialMenuRenderer {
                 }
             }
 
-            val label = launchShortcutDisplayLabel(shortcut).ifBlank {
-                gestureActionLabelText(context, shortcut)
+            val label = (com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchShortcutLabel
+                ?.invoke(shortcut).orEmpty()).ifBlank {
+                com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel
+                    ?.invoke(context, shortcut).orEmpty()
             }
             val textStart = drawRect.left + iconContentWidth
             val textMaxWidth = (drawRect.right - paddingRight - textStart).coerceAtLeast(0f)
@@ -372,7 +372,7 @@ internal object CornerRadialMenuRenderer {
         hintPipArmed: Boolean = false,
     ) {
         // 长按到时间 → 名字后面拼上目标形态（-小窗 / -全屏）
-        val label = gestureActionLabelText(context, action) +
+        val label = com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel?.invoke(context, action).orEmpty() +
             if (longPressRingProgress >= 1f) hintLabelSuffix else ""
         if (label.isBlank()) return
 

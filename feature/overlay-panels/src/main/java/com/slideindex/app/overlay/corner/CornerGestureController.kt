@@ -16,17 +16,13 @@ import com.slideindex.app.overlay.OverlayBlurGate
 import com.slideindex.app.overlay.OverlayPassthrough
 import com.slideindex.app.overlay.OverlayScreenMetrics
 import com.slideindex.app.overlay.OverlayWindowTypes
-import com.slideindex.app.service.OverlayService
-import com.slideindex.app.service.CornerGestureSlotPickTrampolineActivity
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.CornerGestureSettings
 import com.slideindex.app.shell.ShellCommand
-import com.slideindex.app.util.OverlaySuppression
-import com.slideindex.app.util.OverlaySuppressionScope
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineScope
 
-internal class CornerGestureController(
+class CornerGestureController(
     private val context: Context,
     private val appRepository: AppRepository,
     private val scope: CoroutineScope,
@@ -155,12 +151,12 @@ internal class CornerGestureController(
         if (!view.isOverlayVisible()) return
         suspendOverlayForExternalActivity()
         val corner = when (anchor) {
-            CornerAnchor.LEFT -> CornerGestureSlotPickTrampolineActivity.CORNER_LEFT
-            CornerAnchor.RIGHT -> CornerGestureSlotPickTrampolineActivity.CORNER_RIGHT
+            CornerAnchor.LEFT -> "left"
+            CornerAnchor.RIGHT -> "right"
         }
-        val intent = CornerGestureSlotPickTrampolineActivity.createIntent(context, corner, slotIndex).apply {
-            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
+        val intent = com.slideindex.app.overlay.panels.PanelRuntimeHooks.cornerSlotPickIntent
+            ?.invoke(context, corner, slotIndex) ?: return
+        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
         runCatching { context.startActivity(intent) }
     }
 
@@ -215,12 +211,8 @@ internal class CornerGestureController(
     }
 
     private fun isCornerWheelSuppressed(settings: AppSettings): Boolean =
-        OverlaySuppression.shouldSuppress(
-            settings = settings,
-            context = context,
-            foregroundPackage = OverlayService.foregroundPackage,
-            scope = OverlaySuppressionScope.CORNER_WHEEL,
-        )
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.suppressTrigger
+            ?.invoke(settings, context, true) == true
 
     fun destroy() {
         detachPreview()
