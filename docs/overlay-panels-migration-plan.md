@@ -149,17 +149,19 @@
 | `filebrowser` | 13 个包（clipboard / ocr / history / searchpanel / share / privilege / R / service …） | 同上 |
 | `animation` | `settings`（样式）、`ui`（图标/主题）、`perf` | 同上 |
 
-也就是说：**要整组搬面板，前置不是 A3，而是三层核心抽取**：
+也就是说：**要整组搬面板，前置不是 A3，而是公共层抽取**。2026-11-07 当天又实测了一轮，把顺序修正为：
 
-1. **`:core:model`**：`AppSettings` 及其 387 个字段、QuickWheel/FingertipRing/Gesture 等设置类型与扩展函数；
-2. **`:core:design` 扩展**：`ThinActionIcons`、`gestureActionIcon`、`gestureActionLabelText`、`QuickWheelWheelRenderer`、`OverlayAwareModuleTheme` 等 UI 套件（依赖 miuix + 图标资源）；
-3. **`:core:actions`**：`ActionExecutor` / `GestureAction` 的执行接口（面板只需要"执行某个动作"，不需要实现）。
+1. **`util` 工具**（收益最快）：`PermissionHelper` ✅ 已下沉（239 个调用点，服务类用 `OverlayHostRuntime.accessibilityServiceClass` 反转）；`HapticHelper` / `VolumeControlHelper` / `BrightnessControlHelper` / `TaskManagerUtil` 逐个按依赖处理；
+2. **`ui` 套件**（最大的一块）：`ThinActionIcons`、`gestureActionIcon`、`gestureActionLabelText`、`QuickWheelWheelRenderer`、`OverlayAwareModuleTheme` 等，依赖 miuix + 图标资源，要连 `R` 一起沉；
+3. **`di` 反转 + `R` 资源下沉**：`OverlayDependencyAccess` 换成接口注入（`OverlayHostRuntime` 是现成样板），`R.dimen/string/drawable` 按组迁移；
+4. **`:core:actions`**：`ActionExecutor` / `GestureAction` 接口（面板只需"执行"，不需实现）。
 
-这三层做完，阶段 B 才是"搬文件"；否则每搬一个组都要连带拆它的所有依赖。
+**修正一**：`:core:model` 不再是前置——面板模块可以直接依赖 `:feature:settings`（`backpanel` 就是这么搬的），设置模型抽离可以后置。
 
-**修正后的估计**：三层前置约 2–3 周（且需要真机回归），之后面板组迁移约 1–2 周。原计划"1.5–2 周完成"不成立。
+**修正二**：**估计 2–3 周**（需真机回归），之后面板组迁移约 1–2 周；原计划"1.5–2 周完成"不成立。
 
-**当前建议**：
-- 如果目标是"减少 `:app` 体量"，**在基础设施搬完处收手是合理的终点**（已降约 2.4k 行，模块边界真实化，风险已释放）；
-- 如果目标仍是"overlay 全部出 `:app`"，先立项做上面三层，别继续零敲碎打搬面板——每次都会撞在同一堵墙上。
-| 建议 | **有连续 3–5 天再做阶段 A**；`filebrowser`（B1）可以单独挑出来先做，半天到一天。没有整块时间就放着——它不会自己变好，但也不会坏。 |
+**当前状态（2026-11-07 收盘）**：
+- A 阶段完成（`ScreenPinManager` 除外）；
+- B 阶段完成 1/16（`backpanel`，3.2k 行）+ 新模块 `:feature:overlay-panels`；
+- 公共层完成 `PermissionHelper`；
+- 下一个可动的组：`carousel`（3 文件 / 1,042 行），仍差 `di` + `R` + 3 个 util。

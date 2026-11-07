@@ -14,7 +14,7 @@ import android.os.Process
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import com.slideindex.app.service.SlideIndexAccessibilityService
+import com.slideindex.app.overlay.OverlayHostRuntime
 
 object PermissionHelper {
     fun canDrawOverlays(context: Context): Boolean = Settings.canDrawOverlays(context)
@@ -124,7 +124,8 @@ object PermissionHelper {
             context.contentResolver,
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
         ) ?: return false
-        val component = ComponentName(context, SlideIndexAccessibilityService::class.java)
+        val serviceClass = OverlayHostRuntime.accessibilityServiceClass ?: return false
+        val component = ComponentName(context, serviceClass)
         return enabled.split(':').any {
             it.equals(component.flattenToString(), ignoreCase = true) ||
                 it.equals(component.flattenToShortString(), ignoreCase = true)

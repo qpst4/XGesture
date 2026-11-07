@@ -24,6 +24,14 @@ object OverlayHostRuntime {
     var isAccessibilityServiceEnabled: ((Context) -> Boolean)? = null
 
     /**
+     * 无障碍服务的 `Class`（`:app` 的 `SlideIndexAccessibilityService::class.java`）。
+     *
+     * 权限工具要用它拼 `ComponentName` 去查已启用服务列表；模块不认识服务类，未接入时按"未启用"处理。
+     */
+    @Volatile
+    var accessibilityServiceClass: Class<*>? = null
+
+    /**
      * 浮层 Compose 用的透明主题（`:app` 的 `R.style.Theme_SlideIndex_Transparent`）。
      *
      * 资源 id 不能跨模块引用，由 Application 启动时注入；为 0 时退回系统透明主题。

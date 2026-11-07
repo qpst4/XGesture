@@ -156,6 +156,9 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.OverlayHostRuntime.isAccessibilityServiceEnabled = { ctx ->
             com.slideindex.app.util.PermissionHelper.isAccessibilityServiceEnabled(ctx)
         }
+        // 权限工具（已下沉到 :core:overlay-host）要用服务类拼 ComponentName。
+        com.slideindex.app.overlay.OverlayHostRuntime.accessibilityServiceClass =
+            com.slideindex.app.service.SlideIndexAccessibilityService::class.java
         // 浮层 Compose 的透明主题与应用内语言：资源 id 与 locale 包装器都在 :app，注入给模块。
         com.slideindex.app.overlay.OverlayHostRuntime.overlayThemeResId =
             com.slideindex.app.R.style.Theme_SlideIndex_Transparent
