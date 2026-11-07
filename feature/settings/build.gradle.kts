@@ -47,6 +47,8 @@ dependencies {
     implementation(libs.miuix.ui)
     implementation(libs.miuix.blur)
     implementation(libs.material)
+    // 与 :app 对齐 appcompat 版本（material 会拉 1.7.0，本地缓存里只有 1.8.0）。
+    implementation(libs.appcompat)
 
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
