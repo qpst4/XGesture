@@ -245,6 +245,31 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 com.slideindex.app.overlay.BlurredWallpaperCache.Callback { bitmap -> callback.onReady(bitmap) },
             )
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.peekActivityIcon = { pkg, cls ->
+            com.slideindex.app.util.PickerAppIconBitmap.peekActivity(pkg, cls)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.loadActivityIcon = { ctx, pkg, cls ->
+            com.slideindex.app.util.PickerAppIconBitmap.loadActivity(ctx, pkg, cls)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.appDependenciesComposition =
+            object : com.slideindex.app.overlay.panels.AppDependenciesComposition {
+                @androidx.compose.runtime.Composable
+                override fun provide(content: @androidx.compose.runtime.Composable () -> Unit) {
+                    val deps = androidx.compose.runtime.remember {
+                        runCatching {
+                            dagger.hilt.android.EntryPointAccessors.fromApplication(
+                                this@SlideIndexApp,
+                                com.slideindex.app.di.AppGraphEntryPoint::class.java,
+                            ).dependencies()
+                        }.getOrNull()
+                    }
+                    androidx.compose.runtime.CompositionLocalProvider(
+                        *(listOfNotNull(deps?.let { com.slideindex.app.ui.compose.LocalAppDependencies provides it }).toTypedArray()),
+                    ) {
+                        content()
+                    }
+                }
+            }
         com.slideindex.app.overlay.OverlayHostRuntime.accessibilityHostContext = {
             com.slideindex.app.service.SlideIndexAccessibilityService.overlayHostContext()
         }

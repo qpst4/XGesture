@@ -68,9 +68,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.slideindex.app.R
-import com.slideindex.app.di.AppGraphEntryPoint
-import com.slideindex.app.di.OverlayDependencyAccess
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.OverlayCompose
 import com.slideindex.app.overlay.OverlayComposeOwner
 import com.slideindex.app.overlay.OverlayToastWindow
@@ -81,11 +79,8 @@ import com.slideindex.app.overlay.compositor.OverlaySceneController
 import com.slideindex.app.overlay.overlayBottomPanelHeightCap
 import com.slideindex.app.overlay.overlayBottomPanelWidth
 import com.slideindex.app.search.ShareImageTarget
-import com.slideindex.app.ui.compose.LocalAppDependencies
 import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
 import com.slideindex.app.util.PermissionHelper
-import com.slideindex.app.util.PickerAppIconBitmap
-import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.launch
 
 private const val TAG = "ShareSheetOverlay"
@@ -192,17 +187,9 @@ object ShareSheetOverlayWindow {
         val overlayContext = OverlayCompose.themedContext(host)
         val composeOwner = OverlayComposeOwner()
         owner = composeOwner
-        val appDeps = runCatching {
-            EntryPointAccessors.fromApplication(
-                host.applicationContext,
-                AppGraphEntryPoint::class.java
-            ).dependencies()
-        }.getOrNull()
         val view = OverlayCompose.createComposeView(overlayContext, composeOwner).apply {
             setContent {
-                androidx.compose.runtime.CompositionLocalProvider(
-                    *(listOfNotNull(appDeps?.let { LocalAppDependencies provides it }).toTypedArray())
-                ) {
+                val content: @Composable () -> Unit = {
                     OverlayAwareModuleTheme {
                         ShareSheetRoot(
                             payload = payload,
@@ -213,6 +200,8 @@ object ShareSheetOverlayWindow {
                         )
                     }
                 }
+                val provider = com.slideindex.app.overlay.panels.PanelRuntimeHooks.appDependenciesComposition
+                if (provider != null) provider.provide(content) else content()
             }
         }
         val params = WindowManager.LayoutParams(
@@ -542,13 +531,13 @@ private fun ShareTargetIcon(target: ShareImageTarget) {
     val cacheKey = target.shareKey
     var bitmap by remember(cacheKey) {
         mutableStateOf(
-            PickerAppIconBitmap.peekActivity(target.packageName, target.activityClassName)
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.peekActivityIcon?.invoke(target.packageName, target.activityClassName)
         )
     }
     LaunchedEffect(cacheKey) {
         if (bitmap == null) {
             bitmap =
-                PickerAppIconBitmap.loadActivity(context, target.packageName, target.activityClassName)
+                com.slideindex.app.overlay.panels.PanelRuntimeHooks.loadActivityIcon?.invoke(context, target.packageName, target.activityClassName)
         }
     }
     val current = bitmap

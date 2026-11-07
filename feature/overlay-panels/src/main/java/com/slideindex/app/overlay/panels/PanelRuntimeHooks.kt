@@ -78,6 +78,29 @@ object PanelRuntimeHooks {
     var captureBlurredWallpaper:
         ((android.accessibilityservice.AccessibilityService, Context, Int, WallpaperBlurCallback) -> android.graphics.Bitmap?)? =
         null
+
+    /** 应用图标（同步，命中缓存）；未命中返回 null。 */
+    @Volatile
+    var peekActivityIcon: ((String, String) -> androidx.compose.ui.graphics.ImageBitmap?)? = null
+
+    /** 应用图标（异步加载，供 LaunchedEffect 用）。 */
+    @Volatile
+    var loadActivityIcon:
+        (suspend (Context, String, String) -> androidx.compose.ui.graphics.ImageBitmap?)? = null
+
+    /** 给 Compose 树提供 app 依赖（`:app` 的 LocalAppDependencies）。 */
+    @Volatile
+    var appDependenciesComposition: AppDependenciesComposition? = null
+
+    /** 内置分享面板总开关（`:app` 从设置快照读）。 */
+    @Volatile
+    var isShareSheetEnabled: ((Context) -> Boolean)? = null
+}
+
+/** 见 [PanelRuntimeHooks.appDependenciesComposition]。 */
+fun interface AppDependenciesComposition {
+    @androidx.compose.runtime.Composable
+    fun provide(content: @androidx.compose.runtime.Composable () -> Unit)
 }
 
 /** 见 [PanelRuntimeHooks.captureBlurredWallpaper]。 */

@@ -3,7 +3,6 @@ package com.slideindex.app.overlay.share
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.slideindex.app.di.OverlayDependencyAccess
 
 /**
  * 浮窗分享的统一入口。
@@ -16,12 +15,8 @@ object ShareSheetLauncher {
 
     private const val TAG = "ShareSheetLauncher"
 
-    fun isEnabled(context: Context): Boolean = runCatching {
-        OverlayDependencyAccess.overlayDependencies(context)
-            ?.settingsRepository
-            ?.readSnapshot()
-            ?.shareSheetEnabled
-    }.getOrNull() ?: false
+    fun isEnabled(context: Context): Boolean =
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.isShareSheetEnabled?.invoke(context) == true
 
     /**
      * 分享 [payload]。

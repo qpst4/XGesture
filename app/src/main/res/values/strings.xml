@@ -1302,7 +1302,6 @@
     <string name="float_ball_pick_source_a11y">A11y</string>
     <string name="float_ball_pick_source_ocr">OCR</string>
     <string name="float_ball_pick_source_barcode">Scan</string>
-    <string name="float_ball_action_edit">Edit</string>
     <string name="float_ball_action_word_select">Word tap</string>
     <string name="float_ball_action_select_all">Select all</string>
     <string name="float_ball_action_deselect_all">Deselect all</string>
@@ -1930,7 +1929,6 @@
     <string name="universal_copy_copy">Copy</string>
     <string name="universal_copy_search">Search</string>
     <string name="universal_copy_translate">Translate</string>
-    <string name="universal_copy_pick">Segment</string>
     <string name="universal_copy_no_text">No copyable text found</string>
     <string name="universal_copy_ocr">OCR</string>
     <string name="universal_copy_ocr_recognizing">Recognizing…</string>
@@ -4911,20 +4909,6 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="quick_wheel_slot_save">Save</string>
     <string name="smart_screenshot_saved">Screenshot saved to gallery</string>
     <string name="smart_screenshot_copied">Screenshot copied to clipboard</string>
-    <string name="share_sheet_title">Share to</string>
-    <string name="share_sheet_hint">Long-press to pin</string>
-    <string name="share_sheet_empty">No share targets found</string>
-    <string name="share_sheet_toast_pinned">Pinned “%1$s”</string>
-    <string name="share_sheet_toast_unpinned">Unpinned “%1$s”</string>
-    <string name="share_sheet_use_system">System share sheet</string>
-    <string name="share_sheet_settings_title">Share panel</string>
-    <string name="share_sheet_settings_subtitle">Built-in share grid instead of the system sheet</string>
-    <string name="share_sheet_hub_subtitle">Grid panel with pinned targets</string>
-    <string name="share_sheet_settings_tip">• Sharing from a floating panel (text picker, file browser, drag &amp; drop) no longer leaves the overlay, so the system sheet can never hide behind our own floating windows.\n• Tap a target to share directly; long-press it to pin it to the front.</string>
-    <string name="share_sheet_settings_section">Behavior</string>
-    <string name="share_sheet_toggle_title">Built-in share panel</string>
-    <string name="share_sheet_toggle_desc">Replace the system share sheet with our grid: pin favorite targets and skip the system UI</string>
-    <string name="share_sheet_settings_pin_tip">Tip: pinned targets are kept locally; long-press one again to unpin it.</string>
     <string name="shell_panel_execution_mode">Execution mode</string>
     <string name="shell_panel_mode_root">Root</string>
     <string name="shell_panel_mode_shizuku">Shizuku</string>
@@ -4961,4 +4945,14 @@ or revoke permanent Root for Shell in APatch.</string>
 <string name="app_carousel_slide_reversed_desc">Flip which way you swipe to browse recent apps</string>
 <string name="app_carousel_slide_sensitivity">Swipe sensitivity</string>
 <string name="app_carousel_cancel_both_directions">Cancel in both directions</string>
+<string name="float_ball_action_edit">Edit</string>
+<string name="universal_copy_pick">Segment</string>
+<string name="share_sheet_settings_title">Share panel</string>
+<string name="share_sheet_settings_subtitle">Built-in share grid instead of the system sheet</string>
+<string name="share_sheet_hub_subtitle">Grid panel with pinned targets</string>
+<string name="share_sheet_settings_tip">• Sharing from a floating panel (text picker, file browser, drag &amp; drop) no longer leaves the overlay, so the system sheet can never hide behind our own floating windows.\n• Tap a target to share directly; long-press it to pin it to the front.</string>
+<string name="share_sheet_settings_section">Behavior</string>
+<string name="share_sheet_toggle_title">Built-in share panel</string>
+<string name="share_sheet_toggle_desc">Replace the system share sheet with our grid: pin favorite targets and skip the system UI</string>
+<string name="share_sheet_settings_pin_tip">Tip: pinned targets are kept locally; long-press one again to unpin it.</string>
 </resources>

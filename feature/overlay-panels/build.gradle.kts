@@ -1,4 +1,5 @@
 plugins {
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
 }
@@ -43,12 +44,16 @@ dependencies {
     implementation(project(":feature:apps"))
 
     implementation(libs.core.ktx)
+    implementation(libs.datastore.preferences)
+    implementation(libs.kotlinx.serialization.json)
     implementation(platform(libs.compose.bom.alpha))
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3.pinned)
+    implementation(libs.compose.material.icons)
     implementation(libs.dynamicanimation)
     implementation(libs.androidx.palette)
     implementation(libs.miuix.ui)
+    implementation(libs.miuix.icons)
     implementation(libs.materialkolor)
 }
