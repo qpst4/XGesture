@@ -34,6 +34,7 @@ dependencies {
     implementation(project(":core:overlay-host"))
     implementation(project(":core:design"))
     implementation(project(":feature:settings"))
+    implementation(project(":feature:apps"))
 
     implementation(libs.core.ktx)
     implementation(platform(libs.compose.bom.alpha))

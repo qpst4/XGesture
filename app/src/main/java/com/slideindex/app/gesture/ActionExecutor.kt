@@ -291,7 +291,7 @@ class ActionExecutor(
                     HolographicLauncherOverlayWindow.show(
                         context = context,
                         settings = settings,
-                        actionExecutor = this
+                        executeGesture = { action, actionSettings -> execute(action, actionSettings) },
                     )
                 }
             is GestureAction.QuickWheel ->

@@ -11,11 +11,9 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.data.AppRepository
-import com.slideindex.app.di.OverlayDependencyAccess
-import com.slideindex.app.gesture.ActionExecutor
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.HolographicAppMode
@@ -36,13 +34,13 @@ object HolographicLauncherOverlayWindow {
     fun show(
         context: Context,
         settings: AppSettings,
-        actionExecutor: ActionExecutor,
+        executeGesture: (GestureAction, AppSettings) -> Unit,
     ): Boolean {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             var result = false
             val latch = java.util.concurrent.CountDownLatch(1)
             mainHandler.post {
-                result = show(context, settings, actionExecutor)
+                result = show(context, settings, executeGesture)
                 latch.countDown()
             }
             runCatching { latch.await(500, java.util.concurrent.TimeUnit.MILLISECONDS) }
@@ -59,8 +57,8 @@ object HolographicLauncherOverlayWindow {
                 Log.w(TAG, "show: accessibility service not connected")
                 return false
             }
-        val deps = OverlayDependencyAccess.overlayDependencies(hostContext)
-        val appRepository = deps?.appRepository
+        val deps = com.slideindex.app.overlay.panels.PanelRuntimeHooks.appRepository?.invoke(hostContext)
+        val appRepository = deps
             ?: run {
                 Log.w(TAG, "show: app repository unavailable")
                 return false
@@ -93,7 +91,7 @@ object HolographicLauncherOverlayWindow {
                     screenOffDismissReceiver.unregister()
                     overlayController.removeNow()
                     releaseOverlayState()
-                    actionExecutor.execute(
+                    executeGesture(
                         GestureAction.LaunchApp(app.packageName, cloneUserId = app.cloneUserId),
                         settings,
                     )
@@ -177,11 +175,11 @@ object HolographicLauncherOverlayWindow {
                     if (!target.isClone) {
                         base
                     } else {
-                        val label = com.slideindex.app.overlay.CloneAppsIndex.labelForUser(
+                        val label = com.slideindex.app.overlay.panels.PanelRuntimeHooks.cloneAppLabel?.invoke(
                             context,
                             target.cloneUserId,
                             base.label,
-                        )
+                        ) ?: base.label
                         base.copy(
                             label = label,
                             cloneUserId = target.cloneUserId,
@@ -208,8 +206,8 @@ object HolographicLauncherOverlayWindow {
                     icon = run {
                         // 全局图标覆盖优先（扩展 → 图标库 → 应用图标）。
                         // 预填成系统原图后渲染方不会再查覆盖（真机实测）。
-                        val base = com.slideindex.app.ui.AppIconOverride
-                            .drawable(context, info.packageName, 128)
+                        val base = com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideDrawable
+                            ?.invoke(context, info.packageName, 128)
                             ?: appRepository.peekLaunchIconDrawable(info.packageName)
                         base?.let {
                             com.slideindex.app.util.CloneBadge.wrap(it, info.cloneUserId > 0)

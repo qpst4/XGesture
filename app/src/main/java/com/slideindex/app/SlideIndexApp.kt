@@ -214,6 +214,23 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideBitmap = { ctx, pkg, size ->
             com.slideindex.app.ui.AppIconOverride.bitmap(ctx, pkg, size)
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideDrawable = { ctx, pkg, size ->
+            com.slideindex.app.ui.AppIconOverride.drawable(ctx, pkg, size)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.appRepository = { ctx ->
+            com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(ctx)?.appRepository
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.cloneAppLabel = { ctx, userId, base ->
+            com.slideindex.app.overlay.CloneAppsIndex.labelForUser(ctx, userId, base)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.captureBlurredWallpaper = { service, appCtx, radius, callback ->
+            com.slideindex.app.overlay.BlurredWallpaperCache.captureFromDisplay(
+                service,
+                appCtx,
+                radius,
+                com.slideindex.app.overlay.BlurredWallpaperCache.Callback { bitmap -> callback.onReady(bitmap) },
+            )
+        }
         com.slideindex.app.overlay.OverlayHostRuntime.accessibilityHostContext = {
             com.slideindex.app.service.SlideIndexAccessibilityService.overlayHostContext()
         }

@@ -8,4 +8,7 @@
     <string name="app_carousel_close_all_hint">Release to close all apps</string>
     <string name="app_carousel_cancel_down_hint">Swipe down to dismiss</string>
     <string name="app_carousel_cancel_overshoot_hint">Release to cancel</string>
+    <string name="holographic_no_selected_apps">The sphere has no apps yet. Pick some in Settings → Holographic launcher → Select apps, or switch the mode to Allow all apps.</string>
+    <string name="holographic_no_apps_loaded">No apps loaded</string>
+    <string name="holographic_check_settings_hint">Check settings or configure on the settings page</string>
 </resources>

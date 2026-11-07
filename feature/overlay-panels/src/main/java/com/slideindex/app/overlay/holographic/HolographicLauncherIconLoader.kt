@@ -34,8 +34,8 @@ internal object HolographicLauncherIconLoader {
             var updated = false
             for (app in missing) {
                 // 全局图标覆盖优先（扩展 → 图标库 → 应用图标）
-                val drawable = com.slideindex.app.ui.AppIconOverride
-                    .drawable(context, app.packageName, 128)
+                val drawable = com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideDrawable
+                    ?.invoke(context, app.packageName, 128)
                     ?: appRepository.launchIconDrawable(app.packageName)
                     ?: continue
                 app.icon = com.slideindex.app.util.CloneBadge.wrap(drawable, app.cloneUserId > 0) ?: drawable

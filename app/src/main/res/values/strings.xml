@@ -2427,7 +2427,6 @@
     <string name="holographic_apps_deselect_all">Deselect all</string>
     <string name="holographic_apps_allow_all_note">Currently "Allow all apps": the sphere shows every installed app and ignores the selections below.</string>
     <string name="holographic_apps_empty">Nothing selected yet. Add apps below and the sphere will show them.</string>
-    <string name="holographic_no_selected_apps">The sphere has no apps yet. Pick some in Settings → Holographic launcher → Select apps, or switch the mode to Allow all apps.</string>
     <string name="gesture_action_task_switcher">Task switcher</string>
     <string name="gesture_action_back">Back</string>
     <string name="gesture_action_home">Home</string>
@@ -4563,8 +4562,6 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="widget_tab_apps">Apps</string>
     <string name="widget_tab_shortcuts">Shortcuts</string>
     <string name="cd_view_all">View all</string>
-    <string name="holographic_no_apps_loaded">No apps loaded</string>
-    <string name="holographic_check_settings_hint">Check settings or configure on the settings page</string>
     <string name="update_version_current">Current %1$s</string>
     <string name="update_version_latest">Latest %1$s</string>
     <string name="task_switcher_app_info">App info</string>

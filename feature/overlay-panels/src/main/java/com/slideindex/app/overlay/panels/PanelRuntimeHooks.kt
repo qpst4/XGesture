@@ -35,4 +35,31 @@ object PanelRuntimeHooks {
     /** 应用图标覆盖（用户自定义图标）；返回 null 时用系统图标。 */
     @Volatile
     var iconOverrideBitmap: ((Context, String, Int) -> android.graphics.Bitmap?)? = null
+
+    /** 同上，但返回 Drawable（全息启动器的球面图标用）。 */
+    @Volatile
+    var iconOverrideDrawable: ((Context, String, Int) -> android.graphics.drawable.Drawable?)? = null
+
+    /** 应用仓库（`:feature:apps`）；面板读应用名/图标用。 */
+    @Volatile
+    var appRepository: ((Context) -> com.slideindex.app.data.AppRepository?)? = null
+
+    /** 分身应用显示名前缀（如「微信 · 分身 2」）。 */
+    @Volatile
+    var cloneAppLabel: ((Context, Int, String) -> String)? = null
+
+    /**
+     * 取"模糊后的壁纸"给面板做背景；返回缓存命中时的位图，未命中时异步回调。
+     *
+     * 参数：无障碍服务、应用 context、模糊半径 dp、回调。
+     */
+    @Volatile
+    var captureBlurredWallpaper:
+        ((android.accessibilityservice.AccessibilityService, Context, Int, WallpaperBlurCallback) -> android.graphics.Bitmap?)? =
+        null
+}
+
+/** 见 [PanelRuntimeHooks.captureBlurredWallpaper]。 */
+fun interface WallpaperBlurCallback {
+    fun onReady(bitmap: android.graphics.Bitmap?)
 }

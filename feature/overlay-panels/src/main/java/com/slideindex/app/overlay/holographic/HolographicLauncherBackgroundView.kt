@@ -9,7 +9,6 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
-import com.slideindex.app.overlay.BlurredWallpaperCache
 import com.slideindex.app.overlay.LocalFrostedGlassDrawable
 import com.slideindex.app.overlay.SystemWallpaperBlurHelper
 import com.slideindex.app.settings.HolographicLauncherSettings
@@ -36,7 +35,7 @@ internal class HolographicLauncherBackgroundView @JvmOverloads constructor(
     private val density: Float
         get() = resources.displayMetrics.density
 
-    private val wallpaperCallback = BlurredWallpaperCache.Callback { bitmap ->
+    private val wallpaperCallback = com.slideindex.app.overlay.panels.WallpaperBlurCallback { bitmap ->
         post {
             if (released || backgroundStyle != HolographicLauncherSettings.BACKGROUND_BLUR) {
                 return@post
@@ -193,7 +192,7 @@ internal class HolographicLauncherBackgroundView @JvmOverloads constructor(
         val hostContext = context
         if (hostContext !is AccessibilityService) return
         val appContext = hostContext.applicationContext ?: hostContext
-        wallpaper = BlurredWallpaperCache.captureFromDisplay(
+        wallpaper = com.slideindex.app.overlay.panels.PanelRuntimeHooks.captureBlurredWallpaper?.invoke(
             hostContext,
             appContext,
             blurDp,

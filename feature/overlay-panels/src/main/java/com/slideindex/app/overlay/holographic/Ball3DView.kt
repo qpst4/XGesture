@@ -16,7 +16,7 @@ import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewParent
 import androidx.core.view.ViewCompat
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.settings.HolographicLauncherSettings
 import kotlin.math.abs
 import kotlin.math.cos
