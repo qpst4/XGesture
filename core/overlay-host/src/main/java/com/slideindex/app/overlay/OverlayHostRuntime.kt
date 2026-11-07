@@ -38,4 +38,13 @@ object OverlayHostRuntime {
      */
     @Volatile
     var wrapOverlayLocale: ((Context) -> Context)? = null
+
+    /**
+     * 全局模糊开关的流（`:app` 从设置仓库取）。
+     *
+     * 模块里的 `rememberOverlayBlurEnabled()` 用它；未接入时按"开启"处理，
+     * 与设置项默认值一致，避免启动瞬间闪一下实色面板。
+     */
+    @Volatile
+    var overlayBlurEnabledFlow: ((Context) -> kotlinx.coroutines.flow.Flow<Boolean>?)? = null
 }

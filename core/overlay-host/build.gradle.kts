@@ -49,6 +49,8 @@ dependencies {
     implementation(libs.savedstate)
     // 与 :app 对齐 navigationevent 版本，避免 compose-ui 拉到模块里没缓存的那条传递依赖。
     implementation(libs.navigationevent.compose)
+    // 毛玻璃背板 / 徽标绘制要用 Miuix 主题色。
+    implementation(libs.miuix.ui)
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

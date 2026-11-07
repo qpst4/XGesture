@@ -118,7 +118,7 @@ private fun SolidPanelBackdrop(
  * 浮窗完全可能整窗软件渲染（见 `MiuixOverlayComposeLocals` 的同款结论），此时必须降级实色。
  */
 @Composable
-internal fun canBlurInOverlay(): Boolean {
+fun canBlurInOverlay(): Boolean {
     if (!rememberOverlayBlurEnabled()) return false
     val view = LocalView.current
     // 未 attach 时 isHardwareAccelerated 恒为 false，不能据此判定；交给 setupBackgroundBlur 兜底。
@@ -130,7 +130,7 @@ internal fun canBlurInOverlay(): Boolean {
     return OverlayBlurGate.isSystemBlurEnabled(windowManager)
 }
 
-internal fun setupBackgroundBlur(
+fun setupBackgroundBlur(
     view: View,
     cornerRadiusPx: Float,
     blurRadiusPx: Int,
@@ -186,7 +186,7 @@ internal fun setupBackgroundBlur(
  * Reusable Canvas-level helper for drawing hardware BackgroundBlurDrawable
  * inside custom View onDraw(canvas) or overlay renderers.
  */
-internal class LocalFrostedGlassDrawable(private val viewProvider: () -> View?) {
+class LocalFrostedGlassDrawable(private val viewProvider: () -> View?) {
     constructor(view: View) : this({ view })
     private var blurDrawable: Drawable? = null
     private var lastViewRootImpl: Any? = null

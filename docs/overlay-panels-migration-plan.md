@@ -26,11 +26,11 @@
 | :--- | :--- | :--- |
 | `screenshot` | `FloatBallPickResult` / `FloatBallPickResultPanel` / `FloatBallTextPick` / `OverlayComposeDialogHost` / `ScreenPinManager` | 单例 |
 | `backpanel` | `OverlayScreenMetrics`（✅ 已下移）+ `AndroidBackPanelColors → ui.miuix.theme`（✅ 已解除）+ **`R.dimen.navigation_edge_*` 30+ 个尺寸资源** | 资源 |
-| `quickwheel` | `OverlayBlurGate`（✅ 已下移）/ `OverlayComposeOwner`（✅ 已下移）/ `ShellCommandBadgeOverlay` / `ShortcutBadgeOverlay` | 单例 |
+| `quickwheel` | `OverlayBlurGate` / `OverlayComposeOwner` / `ShellCommandBadgeOverlay` / `ShortcutBadgeOverlay`（**四项均已下移**） | ✅ 可搬 |
 | `animation` | `OverlayComposeOwner`（✅ 已下移） | ✅ 可搬 |
-| `volumepanel` | `FloatBallOverlay` / `LocalFrostedGlassBackdrop` / `OverlayViewBackHandler`（`OverlayComposeOwner` ✅ 已下移） | 单例 |
-| `fingertip` | `ShellCommandBadgeRenderer` | 单例 |
-| `share` | `OverlayToastWindow` / `OverlayViewBackHandler`（`OverlayComposeOwner` ✅ 已下移） | 单例 |
+| `volumepanel` | `FloatBallOverlay`（`LocalFrostedGlassBackdrop` / `OverlayViewBackHandler` / `OverlayComposeOwner` ✅ 已下移） | 只剩悬浮球 |
+| `fingertip` | `ShellCommandBadgeRenderer`（✅ 已下移） | ✅ 可搬 |
+| `share` | `OverlayToastWindow`（`OverlayViewBackHandler` / `OverlayComposeOwner` ✅ 已下移） | 只剩 toast 窗口 |
 | `compositor` | 已用 `OverlayZOrderHooks` 反转 | ✅ 已完成 |
 
 ## 2. 阶段 A：先拆底座（4–6 天）
@@ -109,6 +109,7 @@
 | **A2a** | `OverlayScreenMetrics` → `:core:overlay-host` | 60 行；`isDisplayLandscapeRotation` 一并下移，`:app` 只剩调用 |
 | **A2b** | 宿主层 → `:core:overlay-host` | `OverlayComposeOwner` / `OverlayCompose` / `OverlayFullScreenPanelHost` / `OverlayBlurGate`（纯决策部分）迁入；R 与语言依赖用 `OverlayHostRuntime` 反转，浮球用 `OverlayZOrderHooks` 反转。模块 19 文件 / 1,644 行 |
 | **A3a** | `OverlayViewBackHandler` → `:core:overlay-host` | 328 行，`internal` 改 public；`PredictiveBackHelper`（179 行）一并下沉到 `:core:common` |
+| **A3b** | 毛玻璃背板 + 徽标 → `:core:overlay-host` | `LocalFrostedGlassBackdrop` / `ShellCommandBadgeOverlay` / `ShortcutBadgeOverlay` / `ShellCommandBadgeRenderer` / `ShortcutBadgeRenderer` 迁入；模糊开关改由 `OverlayHostRuntime.overlayBlurEnabledFlow` 注入 |
 
 `:core:overlay-host` 现有 15 个文件 / 1,020 行。
 

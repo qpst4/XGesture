@@ -39,7 +39,7 @@ fun ShortcutBadgeOverlay(
     }
 }
 
-internal fun DrawScope.drawShortcutBadge(
+fun DrawScope.drawShortcutBadge(
     iconCenterX: Float,
     iconCenterY: Float,
     iconDiameter: Float,

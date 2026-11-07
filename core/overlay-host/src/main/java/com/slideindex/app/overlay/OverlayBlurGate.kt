@@ -1,6 +1,13 @@
 package com.slideindex.app.overlay
 
 import android.view.WindowManager
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 /**
  * 悬浮窗模糊的**唯一决策点**：用户总开关 × 系统跨窗模糊能力。
@@ -35,4 +42,24 @@ object OverlayBlurGate {
      */
     fun effectiveBlurRadiusDp(userEnabled: Boolean, radiusDp: Int): Int =
         if (userEnabled) radiusDp else 0
+}
+
+/**
+ * 读取全局模糊开关（Compose 侧）。
+ *
+ * 设置还没就绪（宿主拿不到依赖、或首帧尚未 collect 到）时按默认「开启」处理，
+ * 与设置项默认值一致，避免启动瞬间闪一下实色面板。
+ *
+ * 数据来自 [OverlayHostRuntime.overlayBlurEnabledFlow]：`:app` 在启动时把设置仓库的流接进来，
+ * 模块自己不依赖 DI / DataStore。
+ */
+@Composable
+fun rememberOverlayBlurEnabled(): Boolean {
+    val context = LocalContext.current
+    val flow: Flow<Boolean>? = remember(context) {
+        OverlayHostRuntime.overlayBlurEnabledFlow?.invoke(context)
+    }
+    if (flow == null) return true
+    val enabled by remember(flow) { flow.distinctUntilChanged() }.collectAsState(initial = true)
+    return enabled
 }

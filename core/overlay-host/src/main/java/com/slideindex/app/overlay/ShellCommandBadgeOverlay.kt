@@ -35,7 +35,7 @@ fun ShellCommandBadgeOverlay(
     }
 }
 
-internal fun DrawScope.drawShellCommandBadge(
+fun DrawScope.drawShellCommandBadge(
     iconCenterX: Float,
     iconCenterY: Float,
     iconDiameter: Float,

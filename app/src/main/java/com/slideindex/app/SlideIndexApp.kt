@@ -38,6 +38,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @HiltAndroidApp
@@ -160,6 +161,13 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
             com.slideindex.app.R.style.Theme_SlideIndex_Transparent
         com.slideindex.app.overlay.OverlayHostRuntime.wrapOverlayLocale = { ctx ->
             com.slideindex.app.util.AppLocaleApplier.wrapOverlayContext(ctx)
+        }
+        // 全局模糊开关：模块里的 rememberOverlayBlurEnabled() 从这里取流。
+        com.slideindex.app.overlay.OverlayHostRuntime.overlayBlurEnabledFlow = { ctx ->
+            com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(ctx)
+                ?.settingsRepository
+                ?.settings
+                ?.let { flow -> flow.map { it.overlayBlurEnabled } }
         }
         com.slideindex.app.overlay.OverlayHostRuntime.accessibilityHostContext = {
             com.slideindex.app.service.SlideIndexAccessibilityService.overlayHostContext()
