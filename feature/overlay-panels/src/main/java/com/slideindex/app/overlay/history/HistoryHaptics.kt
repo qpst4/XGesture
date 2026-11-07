@@ -9,19 +9,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.settings.SettingsFlowHolder
 import com.slideindex.app.util.HapticHelper
 
 /**
- * 闪念的触觉反馈（计划 P4「触觉」：长按 = LONG_PRESS、存下 / 复制 / 删除 / 完成 = CONFIRM）。
+ * 闪念的触觉反馈（长按 = LONG_PRESS、存下 / 复制 / 删除 / 完成 = CONFIRM）。
  *
- * 把手与面板**都要用**，所以放在 history 包里而不是面板里。
+ * 把手与面板**都要用**；`:app` 与 `:feature:overlay-panels` 共用这一份实现。
  *
  * 走既有的 [HapticHelper]：它统一尊重用户的**触觉开关与强度**设置，并自带
- * `performHapticFeedback` 失败时的 `Vibrator` 兜底。它需要 `(View, AppSettings)`，
- * settings 用 overlay 里通行的 `OverlayDependencyAccess` 订阅
- * （同 `PickResultInteractiveText` / `PickResultPanelChrome`）。
+ * `performHapticFeedback` 失败时的 `Vibrator` 兜底。
  */
 class HistoryHaptics(
     private val view: View,
@@ -49,10 +47,7 @@ fun rememberHistoryHaptics(): HistoryHaptics {
     val context = LocalContext.current.applicationContext
     var settings by remember { mutableStateOf(AppSettings()) }
     LaunchedEffect(context) {
-        OverlayDependencyAccess.overlayDependencies(context)
-            ?.settingsRepository
-            ?.settings
-            ?.collect { settings = it }
+        SettingsFlowHolder.settingsFlow(context)?.collect { settings = it }
     }
     return remember(view, settings) { HistoryHaptics(view, settings) }
 }
