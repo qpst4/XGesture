@@ -7,7 +7,7 @@ package com.slideindex.app.overlay
  * `pm list users` / `pm list packages --user N` 的格式一旦被 ROM 改掉，
  * 这里是最先崩的地方，也是最该有测试的地方。
  */
-internal object CloneSpaceParsing {
+object CloneSpaceParsing {
     /** `UserInfo{999:FlymeParallelSpace:1010} running` 里的 user id。 */
     private val USER_INFO = Regex("""UserInfo\{(\d+):""")
 

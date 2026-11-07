@@ -14,7 +14,7 @@ import android.util.Log
  * （见 [SideOverlayWindowManager]）。代价是手势动画首帧要现建 Compose 组合，
  * 比常驻组合慢 20~30ms —— 换「服务不被系统杀掉」，值得。
  */
-internal object EdgeIdlePresentationPolicy {
+object EdgeIdlePresentationPolicy {
 
     /** true = 保持原来的「配了触钮就空闲常驻」；false = 空闲摘窗、按下再挂。 */
     val keepPresentationWhileIdle: Boolean by lazy {

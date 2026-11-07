@@ -15,7 +15,7 @@ import com.slideindex.app.util.toSafeImageBitmap
  * Activity：标签取的是 **Activity 自己的 label**（系统菜单里显示的就是它，如「在 Edge 中搜索」），
  * 不是应用名；同一个应用可以有两个入口（如便签 / 待办）。
  */
-internal data class PickResultProcessTextTarget(
+data class PickResultProcessTextTarget(
     val packageName: String,
     val activityName: String,
     val label: String,
@@ -32,7 +32,7 @@ internal data class PickResultProcessTextTarget(
  * 系统选择器按 AOSP 的「单候选自动启动」逻辑直接把人带进翻译页，列表根本不显示。
  * 所以这里自己查、自己列，点哪项就用 component 明确启动——不再经过系统选择器。
  */
-internal object PickResultProcessText {
+object PickResultProcessText {
 
     fun listTargets(context: Context): List<PickResultProcessTextTarget> {
         val pm = context.packageManager

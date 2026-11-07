@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 
 @Composable
-internal fun WidgetPopupTouchHandler(
+fun WidgetPopupTouchHandler(
     blockingTouches: Boolean,
     visible: Boolean,
     editMode: Boolean,

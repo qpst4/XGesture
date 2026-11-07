@@ -13,7 +13,7 @@ import java.io.File
  *
  * Root/Shizuku 才能读的文件不在这里处理：需要先用特权 cp 导出到 cache，属于后续的 root 导出流程。
  */
-internal object FileBrowserOpen {
+object FileBrowserOpen {
     fun canOpen(path: String): Boolean {
         val file = File(path)
         return file.isFile && file.canRead()

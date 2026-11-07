@@ -105,6 +105,8 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         super.onCreate()
         // perf 包已下沉到 :core:common，构建标记由这里注入。
         com.slideindex.app.perf.PerfBuildFlags.debugBuild = com.slideindex.app.BuildConfig.DEBUG
+        com.slideindex.app.perf.PerfBuildFlags.appVersionName = com.slideindex.app.BuildConfig.VERSION_NAME
+        com.slideindex.app.perf.PerfBuildFlags.appVersionCode = com.slideindex.app.BuildConfig.VERSION_CODE
         // 渠道必须先于任何 startForeground 存在：AMS 在 ServiceRecord.postNotification() 里
         // 查不到渠道就直接 killMisbehavingService()（Bad notification for startForeground），
         // 而这个判定发生在 AMS 的 handler 线程，服务侧 try/catch 抓不住。
@@ -188,7 +190,7 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 ?.settingsRepository
                 ?.settings
         }
-        // 面板模块（:feature:overlay-panels）要的特权/任务/小窗/图标能力，全部回调注入。
+        // 诊断（EdgeDiag 已下沉到 :core:overlay-host）：服务状态与模块回执由这里注入。`n        com.slideindex.app.overlay.OverlayHostRuntime.diagnosticsInfo = {`n            com.slideindex.app.overlay.OverlayHostRuntime.DiagnosticsInfo(`n                serviceConnected = com.slideindex.app.service.SlideIndexAccessibilityService.isConnected(),`n                overlayReady = com.slideindex.app.service.SlideIndexAccessibilityService.isOverlayReady(),`n                foregroundPackage = com.slideindex.app.service.SlideIndexAccessibilityService.currentForegroundPackageName(),`n            )`n        }`n        com.slideindex.app.overlay.OverlayHostRuntime.moduleBridgeText = { ctx ->`n            runCatching {`n                val snapshot = com.slideindex.app.xposed.bridge.ModuleBridgeStatusStore.read(ctx)`n                val ageSeconds = (System.currentTimeMillis() - snapshot.updatedAtMs) / 1000L`n                "active=${snapshot.active} state=${snapshot.state.ifBlank { "-" }} " +`n                    "detail=${snapshot.detail.ifBlank { "-" }} (${ageSeconds}s 前回执)"`n            }.getOrDefault("-")`n        }`n        // 面板模块（:feature:overlay-panels）要的特权/任务/小窗/图标能力，全部回调注入。
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.accessibilityService = {
             com.slideindex.app.service.SlideIndexAccessibilityService.accessibilityInstance()
         }

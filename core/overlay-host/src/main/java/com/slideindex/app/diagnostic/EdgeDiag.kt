@@ -5,8 +5,6 @@ import android.content.Context
 import android.os.Build
 import android.os.Process
 import android.util.Log
-import com.slideindex.app.BuildConfig
-import com.slideindex.app.service.SlideIndexAccessibilityService
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -43,7 +41,7 @@ object EdgeDiag {
     private const val DIAGNOSTIC_BUILD_FORCE_ENABLE = false
 
     /** release 且未开诊断包时恒为 false：所有埋点退化为空操作。 */
-    val enabled: Boolean = DIAGNOSTIC_BUILD_FORCE_ENABLE || BuildConfig.DEBUG
+    val enabled: Boolean = DIAGNOSTIC_BUILD_FORCE_ENABLE || com.slideindex.app.perf.PerfBuildFlags.debugBuild
 
     private val lock = Any()
     private val buffer = ArrayDeque<String>(MAX_LINES)
@@ -124,10 +122,11 @@ object EdgeDiag {
             appendLine("- 埋点构建: ${buildKindText()}")
             appendLine("- 进程: ${processText(context)} (pid ${Process.myPid()})")
             appendLine("- 设备: ${Build.MANUFACTURER} ${Build.MODEL} / Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
-            appendLine("- 无障碍服务: ${yesNo(runCatching { SlideIndexAccessibilityService.isConnected() }.getOrDefault(false))}")
-            appendLine("- 浮层宿主就绪: ${yesNo(runCatching { SlideIndexAccessibilityService.isOverlayReady() }.getOrDefault(false))}")
+            val diag = com.slideindex.app.overlay.OverlayHostRuntime.diagnosticsInfo?.invoke()
+            appendLine("- 无障碍服务: ${yesNo(diag?.serviceConnected == true)}")
+            appendLine("- 浮层宿主就绪: ${yesNo(diag?.overlayReady == true)}")
             appendLine("- LSPosed 接管状态: ${moduleBridgeText(context)}")
-            appendLine("- 前台包名: ${runCatching { SlideIndexAccessibilityService.currentForegroundPackageName() }.getOrNull() ?: "-"}")
+            appendLine("- 前台包名: ${diag?.foregroundPackage ?: "-"}")
             appendLine("- 埋点行数: ${lines.size}")
             appendLine()
             if (lines.isEmpty()) {
@@ -158,12 +157,15 @@ object EdgeDiag {
             }
     }.getOrDefault("-")
 
-    private fun versionText(): String = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+    private fun versionText(): String {
+        val flags = com.slideindex.app.perf.PerfBuildFlags
+        return "${flags.appVersionName} (${flags.appVersionCode})"
+    }
 
     /** 让收到的报告能自证是「诊断包」还是 debug 包，避免和正式包的报告混淆。 */
     private fun buildKindText(): String = when {
         DIAGNOSTIC_BUILD_FORCE_ENABLE -> "诊断包（正式签名，埋点强制开启）"
-        BuildConfig.DEBUG -> "debug 构建"
+        com.slideindex.app.perf.PerfBuildFlags.debugBuild -> "debug 构建"
         else -> "关闭（正式包）"
     }
 
@@ -179,12 +181,8 @@ object EdgeDiag {
      * 模块回执状态：`active/state/detail` 由模块自身写回，
      * 能直接看出「接管是否真的在生效」——这正是①/②类根因的分界线。
      */
-    private fun moduleBridgeText(context: Context): String = runCatching {
-        val snapshot = com.slideindex.app.xposed.bridge.ModuleBridgeStatusStore.read(context)
-        val ageSeconds = (System.currentTimeMillis() - snapshot.updatedAtMs) / 1000L
-        "active=${snapshot.active} state=${snapshot.state.ifBlank { "-" }} " +
-            "detail=${snapshot.detail.ifBlank { "-" }} (${ageSeconds}s 前回执)"
-    }.getOrDefault("-")
+    private fun moduleBridgeText(context: Context): String =
+        com.slideindex.app.overlay.OverlayHostRuntime.moduleBridgeText?.invoke(context) ?: "-"
 
     private fun yesNo(value: Boolean): String = if (value) "是" else "否"
 }

@@ -18,7 +18,7 @@ import androidx.compose.runtime.mutableStateOf
  *
  * ⚠️ 只保存**筛选条件**，不保存任何条目数据 —— 数据永远是 `StashRepository` / `StashMetaStore` 的。
  */
-internal object StashTagFilterState {
+object StashTagFilterState {
 
     /**
      * 选中的标签名（多选）。

@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.Color
 import com.slideindex.app.ui.theme.LocalAppDarkTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-internal data class ExpandPanelFrostedStyle(
+data class ExpandPanelFrostedStyle(
     val tintColor: Int,
     val borderColor: Color,
     val innerScrimAlpha: Float,
@@ -13,7 +13,7 @@ internal data class ExpandPanelFrostedStyle(
 )
 
 @Composable
-internal fun expandPanelFrostedStyle(): ExpandPanelFrostedStyle {
+fun expandPanelFrostedStyle(): ExpandPanelFrostedStyle {
     val isDark = LocalAppDarkTheme.current
     return ExpandPanelFrostedStyle(
         tintColor = if (isDark) 0x88343438.toInt() else 0x78F5F5F7.toInt(),
@@ -30,7 +30,7 @@ internal fun expandPanelFrostedStyle(): ExpandPanelFrostedStyle {
 }
 
 @Composable
-internal fun expandPanelSecondaryTextColor(): Color {
+fun expandPanelSecondaryTextColor(): Color {
     val isDark = LocalAppDarkTheme.current
     return if (isDark) {
         MiuixTheme.colorScheme.onSurface.copy(alpha = 0.90f)
@@ -40,7 +40,7 @@ internal fun expandPanelSecondaryTextColor(): Color {
 }
 
 @Composable
-internal fun expandPanelSliderTrackColor(): Color {
+fun expandPanelSliderTrackColor(): Color {
     val isDark = LocalAppDarkTheme.current
     return MiuixTheme.colorScheme.outline.copy(alpha = if (isDark) 0.48f else 0.34f)
 }

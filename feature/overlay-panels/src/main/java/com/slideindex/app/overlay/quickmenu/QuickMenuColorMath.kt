@@ -11,7 +11,7 @@ import kotlin.math.roundToInt
  * 抽出来的理由和 `QuickMenuScanFrame` 一样：这类换算**错了不会崩、只是静默把颜色显示错**，
  * 而"#RRGGBB 差一位"肉眼很难发现。
  */
-internal object QuickMenuColorMath {
+object QuickMenuColorMath {
 
     /** `#RRGGBB`（不含 alpha；取色的场景里 alpha 恒为不透明）。 */
     fun toHex(argb: Int): String = String.format("#%06X", argb and 0xFFFFFF)

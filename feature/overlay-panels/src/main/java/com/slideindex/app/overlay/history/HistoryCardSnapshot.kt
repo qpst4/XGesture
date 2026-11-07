@@ -27,7 +27,7 @@ import androidx.compose.ui.graphics.rememberGraphicsLayer
  * 3. 长按拖拽时 `snapshot.capture()` 取位图（suspend；失败返回 null，拖影会退回旧画法）。
  */
 @Stable
-internal class HistoryCardSnapshot internal constructor() {
+class HistoryCardSnapshot internal constructor() {
     private var layer: GraphicsLayer? = null
 
     internal val graphicsLayer: GraphicsLayer? get() = layer
@@ -43,7 +43,7 @@ internal class HistoryCardSnapshot internal constructor() {
 }
 
 @Composable
-internal fun rememberHistoryCardSnapshot(): HistoryCardSnapshot {
+fun rememberHistoryCardSnapshot(): HistoryCardSnapshot {
     val layer = rememberGraphicsLayer()
     return remember(layer) { HistoryCardSnapshot().also { it.attach(layer) } }
 }
@@ -55,7 +55,7 @@ internal fun rememberHistoryCardSnapshot(): HistoryCardSnapshot {
  * - 放在 `clip` 之后 → 录进去的内容被圆角裁过，快照自带圆角；
  * - 放在 `background` 之前 → `drawContent()` 会把下游的底色、描边、正文一起画进这一层。
  */
-internal fun Modifier.recordHistoryCardSnapshot(snapshot: HistoryCardSnapshot): Modifier =
+fun Modifier.recordHistoryCardSnapshot(snapshot: HistoryCardSnapshot): Modifier =
     drawWithContent {
         val layer = snapshot.graphicsLayer
         if (layer == null) {

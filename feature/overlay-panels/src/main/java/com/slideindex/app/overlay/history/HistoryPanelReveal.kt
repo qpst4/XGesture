@@ -31,7 +31,7 @@ import androidx.compose.runtime.setValue
  *   `rememberPanelRevealProgress` 清掉，下次"点击打开"就恢复正常滑入。
  * - [retractPending]：取消拖动后"等收回动画播完再让宿主关窗"的标志。
  */
-internal object HistoryPanelReveal {
+object HistoryPanelReveal {
     var open by mutableStateOf(false)
     var dragging by mutableStateOf(false)
     var dragProgress by mutableFloatStateOf(0f)

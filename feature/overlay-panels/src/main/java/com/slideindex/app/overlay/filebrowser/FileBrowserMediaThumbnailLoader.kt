@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** MediaStore 内容的缩略图缓存；图片/视频都走 ContentResolver.loadThumbnail。 */
-internal object FileBrowserMediaThumbnailLoader {
+object FileBrowserMediaThumbnailLoader {
     private const val MAX_EDGE_PX = 256
     private val cache = object : LruCache<String, Bitmap>(
         (Runtime.getRuntime().maxMemory() / 1024L / 10L).toInt().coerceAtLeast(4 * 1024),

@@ -5,7 +5,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 
 /** Persists the last text query across search panel dismiss / recreate cycles. */
-internal object SearchPanelSessionState {
+object SearchPanelSessionState {
     var lastTextQuery: String = ""
 
     /**

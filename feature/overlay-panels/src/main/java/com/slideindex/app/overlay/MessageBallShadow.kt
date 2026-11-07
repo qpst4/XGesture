@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
  * `drawElevationShadow` 同一套做法），配合 [MessageOverlayLayout.FLOAT_ICON_SHADOW_PAD_DP]
  * 预留的窗口空间，形状与柔和度都可控，任何设备一致。
  */
-internal object MessageBallShadow {
+object MessageBallShadow {
 
     /** 阴影模糊半径（dp）。 */
     private const val BLUR_DP = 2.5f

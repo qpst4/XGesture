@@ -14,7 +14,7 @@ import android.view.ViewTreeObserver
  * [com.slideindex.app.util.HiddenApiBootstrap] 豁免了整个 framework 包；
  * 反射失败时保持原行为（整窗可触摸），只多一圈死区，不影响功能。
  */
-internal object OverlayTouchableRegion {
+object OverlayTouchableRegion {
     private const val TAG = "OverlayTouchRegion"
 
     /**

@@ -13,7 +13,7 @@ import com.slideindex.app.settings.QuickLauncherDisplaySettings
  * Builds clip paths for quick-launcher icon shapes.
  * Adaptive uses the system [AdaptiveIconDrawable] mask when available.
  */
-internal object QuickLauncherIconMask {
+object QuickLauncherIconMask {
     private val tmpUnitBounds = RectF(0f, 0f, 1f, 1f)
     private val tmpMatrix = Matrix()
     private var cachedAdaptiveUnitPath: Path? = null

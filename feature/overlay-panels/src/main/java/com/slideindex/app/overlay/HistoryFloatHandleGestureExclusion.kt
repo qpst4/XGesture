@@ -22,7 +22,7 @@ import androidx.core.view.ViewCompat
  * 这是"贴边放常驻物"必然要付的代价；触摸区收窄到"竖条真实宽度"后这块代价也小了一个量级
  * （旧实现是 48dp 见方，现在只有 14×48dp）。
  */
-internal object HistoryFloatHandleGestureExclusion {
+object HistoryFloatHandleGestureExclusion {
 
     private val handleTagKey: Int = "history_float_handle_gesture_exclusion".hashCode()
 

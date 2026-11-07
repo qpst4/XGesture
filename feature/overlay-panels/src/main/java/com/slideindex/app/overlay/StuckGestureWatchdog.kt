@@ -14,7 +14,7 @@ import android.os.Looper
  * 任何输入事件，就回调 [onStall] 强制收尾。手指真的在动时会不断续期，
  * 因此正常长按/连续调节不会被打断。
  */
-internal class StuckGestureWatchdog(
+class StuckGestureWatchdog(
     private val timeoutMs: Long,
     private val isHolding: () -> Boolean,
     private val onStall: () -> Unit,

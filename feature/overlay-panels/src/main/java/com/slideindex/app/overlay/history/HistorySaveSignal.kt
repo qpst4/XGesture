@@ -15,7 +15,7 @@ import androidx.compose.runtime.setValue
  *
  * 读这两个属性即参与 Compose 订阅（它们是 Compose 状态，不是普通字段）。
  */
-internal object HistorySaveSignal {
+object HistorySaveSignal {
     /** 每次成功存进闪念 +1。 */
     var saveCount by mutableIntStateOf(0)
         private set

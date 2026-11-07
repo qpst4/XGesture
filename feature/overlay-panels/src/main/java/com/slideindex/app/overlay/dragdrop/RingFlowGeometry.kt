@@ -19,7 +19,7 @@ import kotlin.math.sin
  * 窗口是个方块、环带是个圆，方块四角会按角度算给“最近的 App”，看着就是
  * “拖到圆外还亮着某个应用”。
  */
-internal object RingFlowGeometry {
+object RingFlowGeometry {
 
     /** 第 [index] 个目标在轮盘上的角度（度）。 */
     fun angleFor(index: Int, count: Int): Float {

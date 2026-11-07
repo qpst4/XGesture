@@ -11,7 +11,7 @@ import kotlin.math.max
  * 悬浮窗布局用真实 dp→px 换算。Accessibility / Application Context 的 [DisplayMetrics.density]
  * 在部分机型上偏低，需结合 WindowMetrics 与屏宽反推。
  */
-internal object OverlayDisplayMetrics {
+object OverlayDisplayMetrics {
     fun resolve(
         context: Context,
         windowManager: WindowManager? = null,

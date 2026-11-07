@@ -3,7 +3,7 @@ package com.slideindex.app.overlay
 import com.slideindex.app.settings.FloatBallTranslateEngine
 
 /** 「点了翻译之后去哪儿」：引擎与「即时翻译」开关两两组合后的唯一判定结果。 */
-internal enum class TranslateLanding {
+enum class TranslateLanding {
     /** 交给用户在设置里指定的本地翻译 App。 */
     EXTERNAL_APP,
 
@@ -22,7 +22,7 @@ internal enum class TranslateLanding {
  * 2. 关闭「即时翻译」= 跳转翻译，引擎（Google/ML Kit/云端）在这一档不参与；
  * 3. 其余才是在取词结果面板里用所选引擎翻译。
  */
-internal fun resolveTranslateLanding(
+fun resolveTranslateLanding(
     engine: FloatBallTranslateEngine,
     instantTranslate: Boolean,
 ): TranslateLanding = when {

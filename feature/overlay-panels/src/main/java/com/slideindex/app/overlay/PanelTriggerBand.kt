@@ -15,7 +15,7 @@ import android.graphics.RectF
  * 这里按**本次触发点**合成一条窄带：贴 [side] 那条边、纵向正好落在触发高度。
  * 横向厚度只决定"面板与屏幕边留出与触钮条相当的空隙"，不参与别的判定。
  */
-internal object PanelTriggerBand {
+object PanelTriggerBand {
     fun synthetic(
         side: PanelSide,
         anchorLocalY: Float,

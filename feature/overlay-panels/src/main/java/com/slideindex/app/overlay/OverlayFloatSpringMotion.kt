@@ -15,7 +15,7 @@ import kotlin.math.abs
  * View-overlay float motion using Compose animation core (SideGesture-style spring).
  * Replaces [android.animation.ValueAnimator] on panel paging / overscroll snap paths.
  */
-internal class OverlayFloatSpringMotion(
+class OverlayFloatSpringMotion(
     private val scope: CoroutineScope,
     private val animationSpec: AnimationSpec<Float> = OverlayPanelSpringMotion.snapSpec
 ) {
@@ -62,7 +62,7 @@ internal class OverlayFloatSpringMotion(
     }
 }
 
-internal object OverlayPanelSpringMotion {
+object OverlayPanelSpringMotion {
     const val SNAP_STIFFNESS = 3000f
 
     val snapSpec = spring<Float>(stiffness = SNAP_STIFFNESS)

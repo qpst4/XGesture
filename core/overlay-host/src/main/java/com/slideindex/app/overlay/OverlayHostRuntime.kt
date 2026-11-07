@@ -64,7 +64,22 @@ object OverlayHostRuntime {
      */
     @Volatile
     var themeWrapper: OverlayThemeWrapper? = null
+
+    /** 诊断快照（无障碍连接 / 浮层就绪 / 前台包名）；未接入时返回 null。 */
+    @Volatile
+    var diagnosticsInfo: (() -> DiagnosticsInfo?)? = null
+
+    /** LSPosed 模块回执状态文本；未接入时返回 null。 */
+    @Volatile
+    var moduleBridgeText: ((Context) -> String)? = null
 }
+
+/** 见 [OverlayHostRuntime.diagnosticsInfo]。 */
+data class DiagnosticsInfo(
+    val serviceConnected: Boolean,
+    val overlayReady: Boolean,
+    val foregroundPackage: String?,
+)
 
 /** 见 [OverlayHostRuntime.themeWrapper]。 */
 fun interface OverlayThemeWrapper {
