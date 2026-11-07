@@ -7,7 +7,7 @@ import java.io.File
 /**
  * Reads ShortcutService persistence files (text XML or ABX) from disk or shell.
  */
-internal object ShortcutSystemFileReader {
+object ShortcutSystemFileReader {
     private const val TAG = "ShortcutSystemFileReader"
     private const val ABX2XML_TMP_PREFIX = "slideindex_sc_"
 
