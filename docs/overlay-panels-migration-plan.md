@@ -560,3 +560,28 @@ history / holographic / pickresult / quickwheel / ringlauncher / screenshot / sh
 这些文件的共同点：**都是"单例入口 + 服务回调"结构**，面板侧已经通过端口在消费它们
 （`PanelFloatBallHooks` / `PickResultHost` / `PanelRuntimeHooks`），迁移它们等于重写这些单例，
 不属于"把面板搬出去"，而是"把宿主重构成服务"——单独立项。
+
+### 12.12 结论与后续立项
+
+**交付口径**（本项目可验收的部分）：
+
+1. 14 个面板组目录在 `:app` 中清空（0 行）；另有 4 个面板组（filebrowser / quickmenu /
+   searchpanel / volumepanel）的**可迁移部分**已全部迁出，剩余的是被端口反向引用的 app 实现。
+2. `:feature:overlay-panels` 86,190 行 / 342 文件；`:app` 的 `overlay/` 由 136,402 行降到
+   54,815 行（**-60%**），且下降全部来自面板 UI 与数据层，不是删代码。
+3. 所有接线都走端口（14 个端口族、`PanelRuntimeHooks` 130+ 槽位），未引入"模块反向依赖 app"。
+4. 验证：`:app` + `:feature:overlay-panels` + 全部 core 模块编译通过；585 个变更文件行尾全 LF。
+
+**三个后续立项**（按收益排序）：
+
+| 立项 | 范围 | 收益 |
+| :--- | :--- | :--- |
+| A. `FloatBall` 单例服务化 | `FloatBallOverlay` 4.3k、`FloatBallPickResultPanel` 1.6k、`FloatBallImageSearchPanel` 1.4k、`FloatingPointer*` 2.4k | 解锁 `overlay/` 根目录约 16k 行，并让 `pickresult` / `searchpanel` 的 app 残留归零 |
+| B. 无障碍服务拆分 | `SlideIndexAccessibilityService`（16k，截图/点击/取词/边缘手势全在里面） | 解锁 `CNotice*` / `EdgeCard*` / `SideOverlay*` 等约 12k 行 |
+| C. `ui` 通用组件继续下沉 | `ui/` 101k 中的列表/图标/搜索框等 | 让后续任何面板迁移不再受 `ui` 阻塞 |
+
+**端口退役计划**（重要）：`PanelRuntimeHooks` 等是**迁移期脚手架**，不是最终架构。建议在立项 A/B
+完成后用一个季度逐步替换为构造注入/DI，并把静态可变槽位删掉——否则"静态可变全局"会变成新的技术债。
+
+**不要做的事**：不要再按"一次搬几个文件"的方式磨 `overlay/` 根目录。那 16k 行是单例结构，
+逐文件搬只会产生循环依赖与重复类，本阶段已多次验证（见 §12.11.1）。
