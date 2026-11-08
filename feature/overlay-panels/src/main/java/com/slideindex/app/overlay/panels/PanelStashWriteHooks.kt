@@ -67,6 +67,10 @@ object PanelStashWriteHooks {
     /** 暂存富内容贴屏。 */
     @Volatile
     var pinStashRich: ((Context, StashEntry) -> Unit)? = null
+    /** 构造一条剪贴板历史对应的 ClipData（`:app` 的 ClipboardWriter.buildClipForEntry）。 */
+    @Volatile
+    var buildClipForEntry: ((Context, ClipboardEntry) -> android.content.ClipData?)? = null
+
     /** 把一条剪贴板历史写回系统剪贴板（`:app` 的 ClipboardWriter.write）。 */
     @Volatile
     var writeClipboardEntry: ((Context, ClipboardEntry) -> Unit)? = null

@@ -587,6 +587,9 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.stashImageEditLogTag =
             com.slideindex.app.service.StashEditImageTrampolineActivity.LOG_TAG
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.buildClipForEntry = { ctx, entry ->
+            com.slideindex.app.clipboard.ClipboardWriter.buildClipForEntry(ctx, entry)
+        }
         com.slideindex.app.overlay.panels.PanelStashWriteHooks.writeClipboardEntry = { ctx, entry ->
             com.slideindex.app.clipboard.ClipboardWriter.write(ctx, entry)
         }

@@ -274,4 +274,19 @@
     <string name="float_ball_pick_source_barcode">Scan</string>
     <string name="float_ball_action_word_select">Word tap</string>
     <string name="float_ball_action_deselect_all">Deselect all</string>
+    <string name="float_ball_action_failed">Action failed</string>
+    <string name="float_ball_screenshot_saved">Screenshot saved to gallery</string>
+    <string name="float_ball_action_stash">Save to Ideas</string>
+    <string name="stash_action_pin">Pin to screen</string>
+    <string name="stash_action_open_pick">Open in pick panel</string>
+    <string name="stash_action_star">Add star</string>
+    <string name="stash_action_unstar">Remove star</string>
+    <string name="notification_filter_more_menu">More</string>
+    <string name="clipboard_entry_type_text">Text</string>
+    <string name="clipboard_entry_type_uri">Link / file</string>
+    <string name="clipboard_entry_type_intent">Intent</string>
+    <string name="clipboard_entry_type_html">Rich text</string>
+    <string name="clipboard_action_save_image">Save image</string>
+    <string name="history_drag_unsupported">This item cannot be dragged</string>
+    <string name="clipboard_history_float_copy">Copy</string>
 </resources>
