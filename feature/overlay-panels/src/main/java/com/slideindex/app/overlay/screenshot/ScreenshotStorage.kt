@@ -10,7 +10,6 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
-import com.slideindex.app.BuildConfig
 import com.slideindex.app.overlay.share.ShareSheetLauncher
 import com.slideindex.app.overlay.share.ShareSheetPayload
 import java.io.File

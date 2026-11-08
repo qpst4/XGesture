@@ -189,4 +189,9 @@
     <string name="shortcut_test_kind_static">Static</string>
     <string name="freezer_status_frozen">Frozen</string>
     <string name="freezer_status_paused">Paused</string>
+    <string name="share_image_ocr_model_required">Download and select an OCR model in Pick settings first</string>
+    <string name="ocr_error_recognition_failed">Recognition error: %1$s</string>
+    <string name="ocr_error_unknown">Unknown error</string>
+    <string name="smart_screenshot_saved">Screenshot saved to gallery</string>
+    <string name="smart_screenshot_copied">Screenshot copied to clipboard</string>
 </resources>

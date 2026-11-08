@@ -6,17 +6,13 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.widget.Toast
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.barcode.ZxingBarcodeScanner
-import com.slideindex.app.di.OverlayDependencyAccess
-import com.slideindex.app.ocr.OcrDependencyAccess
 import com.slideindex.app.overlay.FloatBallPickResult
-import com.slideindex.app.overlay.FloatBallPickResultPanel
 import com.slideindex.app.overlay.PickResultContentOrigin
 import com.slideindex.app.overlay.PickResultTextSource
 import com.slideindex.app.overlay.ScreenshotLayoutMeta
 import com.slideindex.app.overlay.pickresult.PickResultTextMode
-import com.slideindex.app.service.RegionalScreenshotOcr
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -33,12 +29,12 @@ object SmartScreenshotOcr {
         layoutMeta: ScreenshotLayoutMeta? = null
     ) {
         val hostContext = overlayHostContext() ?: context.applicationContext
-        val settings = OverlayDependencyAccess.overlayDependencies(hostContext)
-            ?.settingsRepository
-            ?.readSnapshot()
+        val settings = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot
+            ?.invoke(hostContext)
         val modelId = settings?.floatBallOcrModelId.orEmpty()
         val isModelInstalled = modelId.isNotBlank() &&
-            OcrDependencyAccess.modelRepository(hostContext)?.isInstalled(modelId) == true
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.isOcrModelInstalled
+                ?.invoke(hostContext, modelId) == true
 
         if (!isModelInstalled) {
             Toast.makeText(hostContext, R.string.share_image_ocr_model_required, Toast.LENGTH_LONG).show()
@@ -48,10 +44,10 @@ object SmartScreenshotOcr {
         val panelScreenshot = bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, false) ?: return
         val ocrBitmap = bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, false) ?: return
 
-        FloatBallPickResultPanel.showResult(
-            context = hostContext,
-            anchorX = screenRect?.centerX()?.toFloat() ?: (hostContext.resources.displayMetrics.widthPixels / 2f),
-            anchorY = screenRect?.centerY()?.toFloat() ?: (hostContext.resources.displayMetrics.heightPixels / 2f),
+        com.slideindex.app.overlay.pickresult.PickResultHostAccess.host?.show(
+            hostContext,
+            screenRect?.centerX()?.toFloat() ?: (hostContext.resources.displayMetrics.widthPixels / 2f),
+            screenRect?.centerY()?.toFloat() ?: (hostContext.resources.displayMetrics.heightPixels / 2f),
             result = FloatBallPickResult(
                 a11yText = null,
                 ocrText = null,
@@ -65,13 +61,13 @@ object SmartScreenshotOcr {
                 a11ySourceEnabled = false,
                 contentOrigin = PickResultContentOrigin.SCREEN_PICK
             ),
-            initialTextMode = PickResultTextMode.WORD_TAP
+            PickResultTextMode.WORD_TAP,
         )
 
         scope.launch(Dispatchers.IO) {
             // 令牌在主线程取：showResult 若被非主线程调用会先 post，这里能排到它后面。
             val panelToken = withContext(Dispatchers.Main.immediate) {
-                FloatBallPickResultPanel.showToken
+                com.slideindex.app.overlay.pickresult.PickResultHostAccess.host?.showToken()
             }
             val barcodeResults = runCatching {
                 ZxingBarcodeScanner.scanBitmap(
@@ -79,15 +75,17 @@ object SmartScreenshotOcr {
                     // 与浮球取词同一条取词链路：先扫 2D、命中即停；小图还会补白边/放大。
                     pickFastPath = true,
                     budgetMs = ZxingBarcodeScanner.PANEL_SCAN_BUDGET_MS,
-                    shouldCancel = { !FloatBallPickResultPanel.isStillShowing(panelToken) },
+                    shouldCancel = { !(com.slideindex.app.overlay.pickresult.PickResultHostAccess.host?.isStillShowing(panelToken ?: 0) == true) },
                 )
             }.getOrDefault(emptyList())
             if (barcodeResults.isNotEmpty()) {
-                FloatBallPickResultPanel.updateBarcodeResults(barcodeResults, panelToken)
+                com.slideindex.app.overlay.pickresult.PickResultHostAccess.host
+                    ?.updateBarcodeResults(barcodeResults, panelToken ?: 0)
             }
 
             val ocrResult = runCatching {
-                RegionalScreenshotOcr.recognizeBitmapPublic(hostContext, modelId, ocrBitmap)
+                com.slideindex.app.overlay.panels.PanelRuntimeHooks.recognizeBitmap
+                    ?.invoke(hostContext, modelId, ocrBitmap) ?: com.slideindex.app.ocr.OcrRecognizeResult.Failure("ocr-unavailable")
             }.getOrElse {
                 com.slideindex.app.ocr.OcrRecognizeResult.Failure(
                     hostContext.getString(
@@ -102,15 +100,13 @@ object SmartScreenshotOcr {
                 when (ocrResult) {
                     is com.slideindex.app.ocr.OcrRecognizeResult.Success -> {
                         val text = ocrResult.text.trim()
-                        FloatBallPickResultPanel.updateOcrText(
-                            ocrText = text,
-                            switchToOcr = true,
-                            initialTextMode = PickResultTextMode.WORD_TAP
-                        )
+                        com.slideindex.app.overlay.pickresult.PickResultHostAccess.host
+                            ?.updateOcrText(text, true, PickResultTextMode.WORD_TAP)
                     }
                     is com.slideindex.app.ocr.OcrRecognizeResult.Failure -> {
-                        FloatBallPickResultPanel.finishOcrPending()
-                        FloatBallPickResultPanel.showOcrError(hostContext, ocrResult.reason)
+                        com.slideindex.app.overlay.pickresult.PickResultHostAccess.host?.finishOcrPending()
+                        com.slideindex.app.overlay.pickresult.PickResultHostAccess.host
+                            ?.showOcrError(hostContext, ocrResult.reason)
                     }
                 }
             }

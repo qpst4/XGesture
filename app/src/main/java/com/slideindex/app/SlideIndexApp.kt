@@ -265,6 +265,58 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onResult = { created -> onResult(created) },
             )
         }
+        com.slideindex.app.overlay.pickresult.PickResultHostAccess.host =
+            object : com.slideindex.app.overlay.pickresult.PickResultHost {
+                override fun show(
+                    context: android.content.Context,
+                    anchorX: Float,
+                    anchorY: Float,
+                    result: com.slideindex.app.overlay.FloatBallPickResult,
+                    textMode: com.slideindex.app.overlay.pickresult.PickResultTextMode,
+                ) {
+                    com.slideindex.app.overlay.FloatBallPickResultPanel.showResult(
+                        context = context,
+                        anchorX = anchorX,
+                        anchorY = anchorY,
+                        result = result,
+                        initialTextMode = textMode,
+                    )
+                }
+
+                override fun showToken(): Int =
+                    com.slideindex.app.overlay.FloatBallPickResultPanel.showToken
+
+                override fun isStillShowing(token: Int): Boolean =
+                    com.slideindex.app.overlay.FloatBallPickResultPanel.isStillShowing(token)
+
+                override fun updateBarcodeResults(
+                    results: List<com.slideindex.app.barcode.BarcodeScanResult>,
+                    token: Int,
+                ) {
+                    com.slideindex.app.overlay.FloatBallPickResultPanel
+                        .updateBarcodeResults(results, token)
+                }
+
+                override fun updateOcrText(
+                    text: String,
+                    switchToOcr: Boolean,
+                    textMode: com.slideindex.app.overlay.pickresult.PickResultTextMode,
+                ) {
+                    com.slideindex.app.overlay.FloatBallPickResultPanel.updateOcrText(
+                        ocrText = text,
+                        switchToOcr = switchToOcr,
+                        initialTextMode = textMode,
+                    )
+                }
+
+                override fun finishOcrPending() {
+                    com.slideindex.app.overlay.FloatBallPickResultPanel.finishOcrPending()
+                }
+
+                override fun showOcrError(context: android.content.Context, reason: String) {
+                    com.slideindex.app.overlay.FloatBallPickResultPanel.showOcrError(context, reason)
+                }
+            }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.isOcrModelInstalled = { ctx, modelId ->
             com.slideindex.app.ocr.OcrDependencyAccess.modelRepository(ctx)?.isInstalled(modelId) == true
         }

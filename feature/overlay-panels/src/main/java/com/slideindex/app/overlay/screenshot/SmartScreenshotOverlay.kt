@@ -8,11 +8,8 @@ import android.graphics.Bitmap
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
-import com.slideindex.app.R
-import com.slideindex.app.di.OverlayDependencyAccess
-import com.slideindex.app.overlay.FloatBallTextPick
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.OverlayComposeDialogHost
-import com.slideindex.app.overlay.ScreenPinManager
 import com.slideindex.app.overlay.buildScreenshotLayoutMeta
 import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
 import com.slideindex.app.util.PermissionHelper
@@ -95,7 +92,8 @@ object SmartScreenshotOverlay {
                             screenWidthPx = hostContext.resources.displayMetrics.widthPixels,
                             screenHeightPx = hostContext.resources.displayMetrics.heightPixels
                         )
-                        ScreenPinManager.pinImage(hostContext, cropped, screenRect = rect, layoutMeta = layoutMeta)
+                        com.slideindex.app.overlay.panels.PanelStashWriteHooks.pinImage
+            ?.invoke(hostContext, cropped, rect, layoutMeta)
                         dismiss()
                     },
                     onWordSegmentation = {
@@ -127,17 +125,11 @@ object SmartScreenshotOverlay {
                             screenWidthPx = hostContext.resources.displayMetrics.widthPixels,
                             screenHeightPx = hostContext.resources.displayMetrics.heightPixels
                         )
-                        val settings = OverlayDependencyAccess.overlayDependencies(hostContext)
-                            ?.settingsRepository
-                            ?.readSnapshot()
+                        val settings = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot
+                            ?.invoke(hostContext)
                         val targetPackage = settings?.defaultImageViewerPackage
-                        val opened = FloatBallTextPick.viewScreenshot(
-                            context = hostContext,
-                            bitmap = cropped,
-                            targetPackage = targetPackage,
-                            screenRect = rect,
-                            layoutMeta = layoutMeta,
-                        )
+                        val opened = com.slideindex.app.overlay.panels.PanelRuntimeHooks.viewScreenshot
+                            ?.invoke(hostContext, cropped, targetPackage, rect) ?: false
                         if (opened) {
                             dismiss()
                         }
