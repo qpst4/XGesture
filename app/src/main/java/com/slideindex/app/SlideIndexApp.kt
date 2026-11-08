@@ -404,6 +404,12 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onDone(entries)
             }
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerIconBitmap = { ctx: android.content.Context, pkg: String ->
+            com.slideindex.app.util.PickerAppIconBitmap.load(ctx, pkg)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.peekPickerIconBitmap = { pkg: String ->
+            com.slideindex.app.util.PickerAppIconBitmap.peek(pkg)
+        }
         com.slideindex.app.overlay.searchpanel.SearchPanelHostAccess.host =
             object : com.slideindex.app.overlay.searchpanel.SearchPanelHost {
                 override fun freezerState(

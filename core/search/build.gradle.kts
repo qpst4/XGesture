@@ -28,6 +28,8 @@ dependencies {
     implementation(project(":core:common"))
     implementation(project(":feature:settings"))
     implementation(libs.core.ktx)
+    implementation(platform(libs.compose.bom.alpha))
+    implementation(libs.compose.ui)
     implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.junit)
 }

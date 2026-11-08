@@ -89,13 +89,12 @@ import android.content.ClipData
 import android.icu.text.SimpleDateFormat
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.ui.platform.LocalConfiguration
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
+import com.slideindex.app.freezer.FreezerAppState
 import com.slideindex.app.clipboard.ClipboardEntry
 import com.slideindex.app.clipboard.ClipboardHtmlParser
 import com.slideindex.app.clipboard.hasImageContent
 import com.slideindex.app.data.AppInfo
-import com.slideindex.app.freezer.FreezerAppState
-import com.slideindex.app.freezer.FreezerOperations
 import com.slideindex.app.overlay.pickresult.PickResultUrl
 import com.slideindex.app.search.contacts.ContactSearchEntry
 import com.slideindex.app.search.files.DeviceFileEntry
@@ -106,7 +105,6 @@ import com.slideindex.app.search.shortcuts.ShortcutSearchEntry
 import com.slideindex.app.search.settings.SystemSettingsSearchEntry
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.SearchPanelAppDisplayStyle
-import com.slideindex.app.util.PickerAppIconBitmap
 import java.util.Calendar
 import java.util.Date
 import kotlinx.coroutines.Dispatchers
@@ -401,7 +399,8 @@ private fun SearchPanelAppIconStrip(
         ) {
             apps.forEach { app ->
                 val context = LocalContext.current
-                val appState = FreezerOperations.stateOf(context, app)
+                val appState = com.slideindex.app.overlay.searchpanel.SearchPanelHostAccess.host?.freezerState(context, app)
+        ?: com.slideindex.app.freezer.FreezerAppState.ACTIVE
                 SearchPanelAppQuickActionTarget(
                     packageName = app.packageName,
                     cloneUserId = app.cloneUserId,
@@ -474,7 +473,8 @@ private fun SearchPanelAppListCards(
     ) {
         displayApps.forEachIndexed { index, app ->
             val context = LocalContext.current
-            val appState = FreezerOperations.stateOf(context, app)
+            val appState = com.slideindex.app.overlay.searchpanel.SearchPanelHostAccess.host?.freezerState(context, app)
+        ?: com.slideindex.app.freezer.FreezerAppState.ACTIVE
             SearchPanelResultCard(
                 title = app.label,
                 subtitle = null,
@@ -523,16 +523,19 @@ private fun SearchPanelAppIcon(
     size: Dp,
     corner: RoundedCornerShape,
     dimmed: Boolean = false,
-    state: FreezerAppState = FreezerAppState.ACTIVE,
+    state: com.slideindex.app.freezer.FreezerAppState = com.slideindex.app.freezer.FreezerAppState.ACTIVE,
     isClone: Boolean = false,
 ) {
     val context = LocalContext.current
     var iconBitmap by remember(packageName) {
-        mutableStateOf(PickerAppIconBitmap.peek(packageName))
+        mutableStateOf(
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.peekPickerIconBitmap?.invoke(packageName),
+        )
     }
     LaunchedEffect(packageName) {
         if (iconBitmap == null) {
-            iconBitmap = PickerAppIconBitmap.load(context, packageName)
+            iconBitmap = com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerIconBitmap
+                        ?.invoke(context, packageName)
         }
     }
     val grayscale = if (dimmed) {
@@ -966,7 +969,7 @@ private fun SearchPanelFileLeadingIcon(file: DeviceFileEntry) {
     val showThumbnail = !file.isDirectory &&
         (fileType == FileType.PICTURES || fileType == FileType.VIDEOS)
     val uriString = file.uri.toString()
-    var thumbnailBitmap by remember(uriString) { mutableStateOf(FileThumbnailCache.get(uriString)) }
+    var thumbnailBitmap by remember(uriString) { mutableStateOf(com.slideindex.app.search.files.FileThumbnailCache.get(uriString)) }
 
     if (showThumbnail) {
         LaunchedEffect(uriString) {
@@ -979,7 +982,7 @@ private fun SearchPanelFileLeadingIcon(file: DeviceFileEntry) {
                 }.getOrNull()
             }
             if (imageBitmap != null) {
-                FileThumbnailCache.put(uriString, imageBitmap)
+                com.slideindex.app.search.files.FileThumbnailCache.put(uriString, imageBitmap)
                 thumbnailBitmap = imageBitmap
             }
         }
