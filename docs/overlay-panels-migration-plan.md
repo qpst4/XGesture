@@ -449,3 +449,34 @@ Adjust、corner、quickwheel、screenshot、volumepanel（+ B2 backpanel 更早�
 3. `TaskManagerUtil`（968 行 hub）拆分，才能动 `privilege`
 
 **已落地的可复用资产**：`PanelRuntimeHooks` 的钩子模式在本仓库已被 14 组面板使用，并有明确的退役计划（见 §12.4）——这些槽位是迁移期脚手架，不是最终架构。
+
+### 12.10 第二轮进展（2026-11-08 晚）
+
+新增整组与半组：
+- `dragdrop`（1,094 行，第 15 组）
+- `ringlauncher`（3,416 行，第 16 组）
+- `clipboardfloat`（2,990 行，第 17 组）
+- `pickresult` / `history` 补齐剩余文件
+- `searchpanel` 12/18、`quickmenu` 15/21、`filebrowser` 部分文件
+
+新增端口族：
+- `PickResultHost`、`ClipboardFloatHost` / `ClipboardFloatHistorySource`
+- `PanelRuntimeHooks` 扩到 110+ 槽位（settingsFlow / settingsRepository /
+  overlayHostContext / refreshRecentTasks / quickLauncherIconBitmap /
+  createShareImageUri / showFileBrowser / suppressChromeForCapture / editStashImage …）
+- `PanelFloatBallHooks.isShowing` / 延迟版 scheduleChromeAbovePanels
+
+新增模块：
+- `:core:translate` 承接语言标签 helper（并开启 Compose）
+- `:core:clipboard` 承接 clipboardfloat 的 5 个无耦合件
+- `:core:common` 承接 quickmenu 六个纯逻辑件（953 行）与快捷方式索引件
+
+**当前账目**：`:feature:overlay-panels` ≈ 68.2k 行；`:app` 的 `overlay/` 72.4k 行
+（起点 136.4k，**-47%**）；本地待推提交 128 个。
+
+**剩余阻塞（均需结构性重构，非端口能解）**：
+1. `FloatBall*` 单例簇（Overlay 4.3k / PickResult 1.6k / ImageSearch 1.4k）
+2. `freezer`（3.2k）与 `macro`（MacroActionRunner）
+3. `service`（无障碍服务 16k：截图/点击/文案提取）
+4. `privilege` + `TaskManagerUtil`（968 行 hub）
+5. `filebrowser` 内部闭环（MediaPage/MediaCategory/AccessInfo）
