@@ -11,7 +11,7 @@ package com.slideindex.app.overlay.history
  * 只记**进程内**：App 进程被杀 / 重启后回到「闪念」。要跨重启就得落到 settings
  * （`StashPanelHandleOpenTab` 所在的偏好里加一个 last-tab 键），那是另一件事。
  */
-internal object StashPanelTabMemory {
+object StashPanelTabMemory {
     @Volatile
     var tab: HistoryPanelTab = HistoryPanelTab.Stash
         private set
