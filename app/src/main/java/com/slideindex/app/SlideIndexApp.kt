@@ -370,6 +370,35 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onDone(entries)
             }
         }
+        com.slideindex.app.clipboardfloat.ClipboardFloatHostAccess.host =
+            object : com.slideindex.app.clipboardfloat.ClipboardFloatHost {
+                override fun accessibilityService(): android.accessibilityservice.AccessibilityService? =
+                    com.slideindex.app.service.SlideIndexAccessibilityService.accessibilityInstance()
+
+                override fun showForIme(
+                    context: android.content.Context,
+                    imeTop: Int,
+                    showChip: Boolean,
+                ) {
+                    com.slideindex.app.service.ClipboardFloatLifecycle.showForIme(
+                        context = context,
+                        imeTop = imeTop,
+                        showChip = showChip,
+                    )
+                }
+
+                override fun resolveForegroundPackage(
+                    service: android.accessibilityservice.AccessibilityService,
+                ): String? = com.slideindex.app.util.AccessibilityForegroundResolver.resolve(service)
+
+                override fun hide(context: android.content.Context) {
+                    com.slideindex.app.service.ClipboardFloatLifecycle.hide(context)
+                }
+
+                override fun updateImeTop(context: android.content.Context, top: Int) {
+                    com.slideindex.app.service.ClipboardFloatService.updateImeTop(context, top)
+                }
+            }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.quickLauncherIconBitmap =
             { item, appsByPackage, sizePx, ctx, shortcuts, shells ->
                 com.slideindex.app.util.QuickLauncherIconResolver.iconBitmap(

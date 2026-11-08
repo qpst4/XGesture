@@ -7,9 +7,6 @@ import android.os.SystemClock
 import com.slideindex.app.overlay.ImeBoundsDetector
 import com.slideindex.app.overlay.ImeDiagnostics
 import com.slideindex.app.overlay.ImeSignalStabilizer
-import com.slideindex.app.service.ClipboardFloatLifecycle
-import com.slideindex.app.service.ClipboardFloatService
-import com.slideindex.app.service.SlideIndexAccessibilityService
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.SettingsRepository
 import kotlin.math.abs
@@ -71,8 +68,8 @@ object ClipboardFloatImeCoordinator {
             hideIfShown(serviceContext)
             return
         }
-        val service = SlideIndexAccessibilityService.accessibilityInstance()
-            ?: return
+        val service = com.slideindex.app.clipboardfloat.ClipboardFloatHostAccess.host
+            ?.accessibilityService() ?: return
         if (isForegroundBlocked(service)) {
             cancelTick()
             hideIfShown(serviceContext)
@@ -133,14 +130,11 @@ object ClipboardFloatImeCoordinator {
         if (visible) {
             val top = lastSampledImeTop ?: return
             lastDispatchedImeTop = top
-            ClipboardFloatLifecycle.showForIme(
-                context = serviceContext,
-                imeTop = top,
-                showChip = showChip,
-            )
+            com.slideindex.app.clipboardfloat.ClipboardFloatHostAccess.host
+                ?.showForIme(serviceContext, top, showChip)
         } else {
             lastDispatchedImeTop = null
-            ClipboardFloatLifecycle.hide(serviceContext)
+            com.slideindex.app.clipboardfloat.ClipboardFloatHostAccess.host?.hide(serviceContext)
         }
     }
 
@@ -148,36 +142,38 @@ object ClipboardFloatImeCoordinator {
         val previous = lastDispatchedImeTop
         if (previous != null && abs(top - previous) <= IME_TOP_DEBOUNCE_PX) return
         lastDispatchedImeTop = top
-        ClipboardFloatService.updateImeTop(serviceContext, top)
+        com.slideindex.app.clipboardfloat.ClipboardFloatHostAccess.host?.updateImeTop(serviceContext, top)
     }
 
     private fun hideIfShown(serviceContext: Context) {
         if (!stabilizer.committedVisible) return
         stabilizer.reset(visible = false, nowMs = SystemClock.uptimeMillis())
         lastDispatchedImeTop = null
-        ClipboardFloatLifecycle.hide(serviceContext)
+        com.slideindex.app.clipboardfloat.ClipboardFloatHostAccess.host?.hide(serviceContext)
     }
 
     suspend fun syncFromSettings(context: Context, settingsRepository: SettingsRepository) {
         applySettings(settingsRepository.settings.first())
-        val service = SlideIndexAccessibilityService.accessibilityInstance()
+        val service = com.slideindex.app.clipboardfloat.ClipboardFloatHostAccess.host
+            ?.accessibilityService()
         if (!enabled || (service != null && isForegroundBlocked(service))) {
             cancelTick()
             stabilizer.reset(visible = false, nowMs = SystemClock.uptimeMillis())
             lastDispatchedImeTop = null
-            ClipboardFloatLifecycle.hide(context)
+            com.slideindex.app.clipboardfloat.ClipboardFloatHostAccess.host?.hide(context)
         }
     }
 
-    private fun isForegroundBlocked(service: SlideIndexAccessibilityService): Boolean {
-        val foregroundPackage = ClipboardFloatForegroundResolver.resolveHostPackage(service)
+    private fun isForegroundBlocked(service: android.accessibilityservice.AccessibilityService): Boolean {
+        val foregroundPackage = com.slideindex.app.clipboardfloat.ClipboardFloatHostAccess.host
+            ?.resolveForegroundPackage(service)
             ?: return false
         return foregroundPackage in blockedPackages
     }
 
     /** 诊断行：把"我们的两个读数 + 决定 + 焦点节点"放进同一行，便于和 dumpsys 对齐。 */
     private fun diagLine(
-        service: SlideIndexAccessibilityService,
+        service: android.accessibilityservice.AccessibilityService,
         probe: ImeBoundsDetector.ImeProbe,
         committed: Boolean,
         nowMs: Long,
