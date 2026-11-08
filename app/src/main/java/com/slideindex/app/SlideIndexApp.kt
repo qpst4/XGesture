@@ -265,6 +265,20 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onResult = { created -> onResult(created) },
             )
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.isOcrModelInstalled = { ctx, modelId ->
+            com.slideindex.app.ocr.OcrDependencyAccess.modelRepository(ctx)?.isInstalled(modelId) == true
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.recognizeBitmap = { ctx, modelId, bmp ->
+            com.slideindex.app.service.RegionalScreenshotOcr.recognizeBitmapPublic(ctx, modelId, bmp)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.viewScreenshot = { ctx, bmp, target, rect ->
+            com.slideindex.app.overlay.FloatBallTextPick.viewScreenshot(
+                context = ctx,
+                bitmap = bmp,
+                targetPackage = target,
+                screenRect = rect,
+            )
+        }
         com.slideindex.app.overlay.panels.PanelVolumeHooks.readBrightness = {
             val ctx = com.slideindex.app.overlay.overlayHostContext()
             if (ctx == null) 0f else com.slideindex.app.util.BrightnessControlHelper.readBrightnessFraction(ctx)

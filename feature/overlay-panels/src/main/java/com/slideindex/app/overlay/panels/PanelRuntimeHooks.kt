@@ -128,6 +128,28 @@ object PanelRuntimeHooks {
     @Volatile
     var expandPanelSlotPicker: PanelExpandSlotPicker? = null
 
+    /** 打开取词/取图结果面板（`:app` 的 FloatBallPickResultPanel）。 */
+    @Volatile
+    var showPickResultPanel:
+        ((
+            Context,
+            Float,
+            Float,
+            com.slideindex.app.overlay.FloatBallPickResult,
+            com.slideindex.app.overlay.pickresult.PickResultTextMode,
+        ) -> Unit)? = null
+    /** OCR 模型是否已安装。 */
+    @Volatile
+    var isOcrModelInstalled: ((Context, String) -> Boolean)? = null
+
+    /** 区域截图 OCR：返回识别结果。 */
+    @Volatile
+    var recognizeBitmap:
+        (suspend (Context, String, android.graphics.Bitmap) -> com.slideindex.app.ocr.OcrRecognizeResult?)? = null
+
+    /** 查看截图（在取词面板里打开）。 */
+    @Volatile
+    var viewScreenshot: ((Context, android.graphics.Bitmap, String?, android.graphics.Rect?) -> Boolean)? = null
     /** 默认手势执行器（`:app` 的 ActionExecutor），供自带执行逻辑的面板使用。 */
     @Volatile
     var defaultGestureRunner: GestureActionRunner? = null

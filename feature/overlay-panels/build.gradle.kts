@@ -40,6 +40,7 @@ dependencies {
     implementation(project(":core:shortcuts"))
     implementation(project(":core:clipboard"))
     implementation(project(":core:stash"))
+    implementation(project(":core:ocr"))
     implementation(libs.lifecycle.viewmodel.savedstate)
     implementation(project(":core:overlay-host"))
     implementation(project(":core:overlay-layout"))
