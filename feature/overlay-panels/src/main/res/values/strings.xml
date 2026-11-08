@@ -327,4 +327,14 @@
     <string name="clipboard_float_paste_no_window">Paste failed. No active input window found.</string>
     <string name="clipboard_float_paste_insert_failed">Paste failed. This app does not support automatic insertion.</string>
     <string name="clipboard_paste_pick_content_desc">Tap the input field to paste into</string>
+    <string name="search_clear">Clear search</string>
+    <string name="clipboard_float_style_toggle">Toggle List Style</string>
+    <string name="clipboard_float_title">Clipboard</string>
+    <string name="clipboard_float_open">Open clipboard</string>
+    <string name="clipboard_float_keep_visible">Keep visible when keyboard hides</string>
+    <string name="clipboard_float_open_stash_panel">Open side panel</string>
+    <string name="clipboard_float_collapse">Collapse</string>
+    <string name="clipboard_float_close">Close</string>
+    <string name="clipboard_float_meta_image">Image</string>
+    <string name="clipboard_float_opacity_title">Floating window opacity</string>
 </resources>

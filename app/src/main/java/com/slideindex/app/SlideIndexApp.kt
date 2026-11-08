@@ -362,6 +362,10 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     com.slideindex.app.overlay.FloatBallPickResultPanel.showOcrError(context, reason)
                 }
             }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsFlow = { ctx ->
+            com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(ctx)
+                ?.settingsRepository?.settings
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.overlayHostContext = {
             com.slideindex.app.di.OverlayDependencyAccess.overlayHostContext()
         }
@@ -431,6 +435,10 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 override fun resolveForegroundPackage(
                     service: android.accessibilityservice.AccessibilityService,
                 ): String? = com.slideindex.app.util.AccessibilityForegroundResolver.resolve(service)
+
+                override fun discardAfterDragTransfer() {
+                    com.slideindex.app.service.ClipboardFloatService.discardAfterDragTransfer()
+                }
 
                 override fun hide(context: android.content.Context) {
                     com.slideindex.app.service.ClipboardFloatLifecycle.hide(context)

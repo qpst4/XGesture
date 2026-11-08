@@ -24,6 +24,9 @@ interface ClipboardFloatHost {
     /** 在无障碍服务上同步派发一次点击。 */
     fun dispatchTap(service: AccessibilityService, x: Float, y: Float)
 
+    /** 拖拽转移后丢弃浮窗状态。 */
+    fun discardAfterDragTransfer()
+
     /** 当前前台包名（用于屏蔽名单判断）；取不到时为 null。 */
     fun resolveForegroundPackage(service: AccessibilityService): String?
 

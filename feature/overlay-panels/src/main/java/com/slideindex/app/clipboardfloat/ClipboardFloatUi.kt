@@ -101,16 +101,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.clipboard.ClipboardDragShareFallback
 import com.slideindex.app.clipboard.ClipboardEntry
 import com.slideindex.app.clipboard.ClipboardEntryType
 import com.slideindex.app.clipboard.ClipboardHtmlParser
 import com.slideindex.app.clipboard.ClipboardThumbnailCache
-import com.slideindex.app.clipboard.ClipboardWriter
 import com.slideindex.app.clipboard.displayTypeLabelKey
 import com.slideindex.app.clipboard.hasImageContent
-import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.overlay.LocalFrostedGlassBackdrop
 import com.slideindex.app.overlay.canBlurInOverlay
 import com.slideindex.app.overlay.dragdrop.DragFlowSource
@@ -118,7 +116,6 @@ import com.slideindex.app.overlay.history.HistoryEntryDragHelper
 import com.slideindex.app.overlay.history.HistoryPanelColors
 import com.slideindex.app.overlay.history.recordHistoryCardSnapshot
 import com.slideindex.app.overlay.history.rememberHistoryCardSnapshot
-import com.slideindex.app.service.ClipboardFloatService
 import com.slideindex.app.settings.ClipboardFloatWindowMetrics
 import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
 import kotlinx.coroutines.Dispatchers
@@ -200,7 +197,7 @@ private fun rememberClipboardFloatGlass(
 ): ClipboardFloatGlass {
     val context = LocalContext.current
     val settingsFlow = remember(context) {
-        OverlayDependencyAccess.overlayDependencies(context)?.settingsRepository?.settings
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsFlow?.invoke(context)
     }
     // 初值来自建窗前的快照（服务已经读过），不能从 false 起步：这扇窗是冷启动的，
     // 首帧没有 backdrop 就会先画出 0.42 半透明底，而窗口就位后完全静止、不会再有一帧
@@ -1144,14 +1141,18 @@ private fun startClipboardFloatEntryDrag(
     /** "整张卡"的快照（[rememberHistoryCardSnapshot] + [recordHistoryCardSnapshot]）；null = 退回旧画法。 */
     snapshot: Bitmap? = null,
 ) {
-    val clipData = ClipboardWriter.buildClipForEntry(context, entry) ?: run {
+    val clipData = com.slideindex.app.overlay.panels.PanelStashWriteHooks.buildClipForEntry
+        ?.invoke(context, entry) ?: run {
         Toast.makeText(context, R.string.history_drag_unsupported, Toast.LENGTH_SHORT).show()
         return
     }
     // 恢复 = 把浮窗放回来；关掉 = 恢复可见后按普通条目动作收起。
     val dragFlowSource = DragFlowSource(
         onRestore = onDragEnd,
-        onDiscard = { ClipboardFloatService.discardAfterDragTransfer() },
+        onDiscard = {
+            com.slideindex.app.clipboardfloat.ClipboardFloatHostAccess.host
+                ?.discardAfterDragTransfer()
+        },
     )
     val started = HistoryEntryDragHelper.startDrag(
         view = view,
