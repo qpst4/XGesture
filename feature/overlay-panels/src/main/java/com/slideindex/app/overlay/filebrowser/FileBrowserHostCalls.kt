@@ -33,6 +33,15 @@ object FileBrowserHostCalls {
         FileBrowserHostAccess.host?.pinImageToScreen(context, bitmap)
     }
 
+    fun requestPinShortcut(context: Context): Boolean =
+        FileBrowserHostAccess.host?.requestPinShortcut(context) == true
+
+    fun launchImageEditor(context: Context, bitmap: android.graphics.Bitmap): Boolean =
+        FileBrowserHostAccess.host?.launchImageEditor(context, bitmap) == true
+
+    fun showSearchPanel(context: Context): Boolean =
+        FileBrowserHostAccess.host?.showSearchPanel(context) == true
+
     fun launchTrampoline(context: Context, path: String?) {
         FileBrowserHostAccess.host?.launchTrampoline(context, path)
     }

@@ -28,6 +28,15 @@ interface FileBrowserHost {
     /** 把图片钉到屏幕上（暂存夹能力）。 */
     fun pinImageToScreen(context: Context, bitmap: android.graphics.Bitmap)
 
+    /** 请求把文件浏览器固定到桌面（返回是否发起成功）。 */
+    fun requestPinShortcut(context: Context): Boolean
+
+    /** 用内置图片编辑器打开一张图片（返回是否成功启动）。 */
+    fun launchImageEditor(context: Context, bitmap: android.graphics.Bitmap): Boolean
+
+    /** 打开搜索面板窗口。 */
+    fun showSearchPanel(context: Context): Boolean
+
     /** 启动文件浏览器中转 Activity（用于从外部打开指定路径）。 */
     fun launchTrampoline(context: Context, path: String?)
 }

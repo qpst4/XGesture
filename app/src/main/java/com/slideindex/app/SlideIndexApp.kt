@@ -442,6 +442,24 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     com.slideindex.app.stash.StashCoordinator.pinImageToScreen(context, bitmap)
                 }
 
+                override fun requestPinShortcut(context: android.content.Context): Boolean =
+                    com.slideindex.app.overlay.filebrowser.FileBrowserLauncherHelper
+                        .requestPinShortcut(context)
+
+                override fun launchImageEditor(
+                    context: android.content.Context,
+                    bitmap: android.graphics.Bitmap,
+                ): Boolean {
+                    val editorPath = com.slideindex.app.imageeditor.ImageEditorLaunchCache
+                        .put(context, bitmap)
+                    com.slideindex.app.imageeditor.SlideIndexImageEditorActivity
+                        .launch(context, editorPath)
+                    return true
+                }
+
+                override fun showSearchPanel(context: android.content.Context): Boolean =
+                    com.slideindex.app.overlay.searchpanel.SearchPanelOverlayWindow.show(context)
+
                 override fun launchTrampoline(context: android.content.Context, path: String?) {
                     com.slideindex.app.service.FileBrowserTrampolineActivity
                         .intent(context, path)
