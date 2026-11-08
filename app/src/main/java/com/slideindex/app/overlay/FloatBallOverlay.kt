@@ -163,7 +163,7 @@ object FloatBallOverlay {
     private var cursorPreviewView: FloatBallCursorPreviewView? = null
     private val screenOffDismissReceiver = ScreenOffDismissReceiver { hideCursor() }
     private var appContext: Context? = null
-    private var positionYPreviewRestore: Float? = null
+    internal var positionYPreviewRestore: Float? = null
 
     /**
      * 已提交、但还没被设置回流确认的 Y 预览值。
@@ -172,9 +172,9 @@ object FloatBallOverlay {
      * 等新值落盘回流后再跳过去（用户看到的就是"先回原位、再跳到正确位置"）。
      * 这里把提交值顶住，直到 incoming 的设置值追上（或超时兜底），与 [committedActiveSideUntilPersist] 同一套做法。
      */
-    private var pendingPositionYFraction: Float? = null
+    internal var pendingPositionYFraction: Float? = null
 
-    private val clearPendingPositionYRunnable = Runnable { pendingPositionYFraction = null }
+    internal val clearPendingPositionYRunnable = Runnable { pendingPositionYFraction = null }
     private var appearancePreviewRestore: FloatBallAppearancePreviewSnapshot? = null
 
     // —— 闲置隐身 ——
@@ -214,7 +214,7 @@ object FloatBallOverlay {
         get() = sceneState?.selectionStart
     private val selectionPreviewBoundsState: MutableState<Rect?>?
         get() = sceneState?.selectionPreviewBounds
-    private val stripZonePreviewState: MutableState<Boolean>?
+    internal val stripZonePreviewState: MutableState<Boolean>?
         get() = sceneState?.stripZonePreview
     private val styleVisualGenerationState: androidx.compose.runtime.MutableIntState?
         get() = sceneState?.styleVisualGeneration
@@ -574,64 +574,18 @@ object FloatBallOverlay {
         pendingChromeRaiseRunnable = null
     }
 
-    fun setStripZonePreviewActive(active: Boolean) {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { setStripZonePreviewActive(active) }
-            return
-        }
-        stripZonePreviewState?.value = active
-    }
+    fun setStripZonePreviewActive(active: Boolean) =
+        FloatBallPositionPreview.setStripZonePreviewActive(active)
 
-    fun previewPositionYFraction(fraction: Float) {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { previewPositionYFraction(fraction) }
-            return
-        }
-        val state = settingsState ?: return
-        setBallForceRevealed(true)
-        // 新的拖动接管，之前那次"待确认"的值作废。
-        cancelPendingPositionY()
-        if (positionYPreviewRestore == null) {
-            positionYPreviewRestore = state.value.floatBallPositionYFraction
-        }
-        val coerced = FloatBallLayout.coercePositionYFraction(fraction)
-        val updated = state.value.let { it.copy(floatBall = it.floatBall.copy(floatBallPositionYFraction = coerced)) }
-        state.value = updated
-        applyAllLayouts(updated)
-    }
+    fun previewPositionYFraction(fraction: Float) =
+        FloatBallPositionPreview.previewPositionYFraction(fraction)
 
-    fun endPositionYPreview(restoreIfNeeded: Boolean) {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { endPositionYPreview(restoreIfNeeded) }
-            return
-        }
-        val baseline = positionYPreviewRestore
-        positionYPreviewRestore = null
-        setBallForceRevealed(false)
-        val state = settingsState ?: return
-        if (!restoreIfNeeded || baseline == null) {
-            // 提交：保留当前预览值，等设置回流到同一个值再放手。
-            pendingPositionYFraction = state.value.floatBallPositionYFraction
-            mainHandler.removeCallbacks(clearPendingPositionYRunnable)
-            mainHandler.postDelayed(clearPendingPositionYRunnable, PENDING_POSITION_Y_TIMEOUT_MS)
-            return
-        }
-        cancelPendingPositionY()
-        val restored = state.value.let { it.copy(floatBall = it.floatBall.copy(floatBallPositionYFraction = baseline)) }
-        state.value = restored
-        applyAllLayouts(restored)
-    }
+    fun endPositionYPreview(restoreIfNeeded: Boolean) =
+        FloatBallPositionPreview.endPositionYPreview(restoreIfNeeded)
 
-    fun clearPositionYPreviewRestore() {
-        positionYPreviewRestore = null
-        cancelPendingPositionY()
-        setBallForceRevealed(false)
-    }
+    fun clearPositionYPreviewRestore() = FloatBallPositionPreview.clearPositionYPreviewRestore()
 
-    private fun cancelPendingPositionY() {
-        pendingPositionYFraction = null
-        mainHandler.removeCallbacks(clearPendingPositionYRunnable)
-    }
+    internal fun cancelPendingPositionY() = FloatBallPositionPreview.cancelPendingPositionY()
 
     fun previewAppearance(
         sizeDp: Float? = null,
@@ -841,7 +795,7 @@ object FloatBallOverlay {
     }
 
     /** 设置预览等场景强制显示：期间不做闲置隐身。 */
-    private fun setBallForceRevealed(active: Boolean) {
+    internal fun setBallForceRevealed(active: Boolean) {
         if (ballForceRevealed == active) return
         ballForceRevealed = active
         val settings = settingsState?.value ?: return
@@ -2835,7 +2789,7 @@ object FloatBallOverlay {
     }
 
 
-    private fun applyAllLayouts(settings: AppSettings, relayoutChrome: Boolean = true) {
+    internal fun applyAllLayouts(settings: AppSettings, relayoutChrome: Boolean = true) {
         applyBallLayout(settings)
         if (relayoutChrome) {
             applyLineLayout(settings)
