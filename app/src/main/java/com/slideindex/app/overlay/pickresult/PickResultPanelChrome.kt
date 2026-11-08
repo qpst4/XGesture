@@ -1361,7 +1361,7 @@ internal fun pickResultDropdownMenuDividerColor(isDark: Boolean): Color =
     if (isDark) Color(0x24FFFFFF) else Color(0x14000000)
 
 @Composable
-internal fun PickResultDropdownMenuInLtr(
+private fun PickResultDropdownMenuInLtr(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
@@ -1383,7 +1383,7 @@ internal fun PickResultDropdownMenuInLtr(
 }
 
 @Composable
-internal fun PickResultActionMenuItem(
+private fun PickResultActionMenuItem(
     label: String,
     icon: ImageVector,
     onClick: () -> Unit,

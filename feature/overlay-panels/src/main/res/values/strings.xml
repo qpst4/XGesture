@@ -233,4 +233,12 @@
     <string name="float_ball_pick_smart_track_express">Track Package</string>
     <string name="float_ball_pick_smart_copy_code">Copy Code</string>
     <string name="float_ball_pick_smart_copied_toast">Copied to clipboard</string>
+    <string name="pick_result_action_save_image">Save image</string>
+    <string name="pick_result_action_image_search">Search by image</string>
+    <string name="pick_result_action_share_image">Share image</string>
+    <string name="pick_result_image_share_to_app">Share to app</string>
+    <string name="pick_result_image_search_pick_engine">Choose search engine</string>
+    <string name="pick_result_action_more">More</string>
+    <string name="pick_result_pin">Pin to screen</string>
+    <string name="pick_result_stash">Ideas</string>
 </resources>

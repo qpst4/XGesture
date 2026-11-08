@@ -70,8 +70,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
-import com.slideindex.app.R
-import com.slideindex.app.di.OverlayDependencyAccess
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.ScreenshotLayoutMeta
 import com.slideindex.app.overlay.overlayContainerHeightDp
 import com.slideindex.app.overlay.overlayIsLandscape
@@ -90,7 +89,7 @@ private val ImageSearchBarBottomPadding = 0.dp
 
 /** 图片区水平内容宽度（面板全宽减去左右 padding）。 */
 @Composable
-internal fun pickResultImageContentWidth(horizontalPadding: Dp = 40.dp): Dp {
+fun pickResultImageContentWidth(horizontalPadding: Dp = 40.dp): Dp {
     val density = LocalDensity.current
     val containerWidth = with(density) {
         LocalWindowInfo.current.containerSize.width.toDp()
@@ -120,7 +119,7 @@ data class PickResultImageDisplaySize(
  * 剩下的真实约束交给面板自身的 0.85/0.92/0.70 高度上限与「可负担高度」预算。
  */
 @Composable
-internal fun pickResultImageMaxHeightDp(): Dp {
+fun pickResultImageMaxHeightDp(): Dp {
     val containerHeight = overlayContainerHeightDp()
     if (!overlayIsLandscape()) return containerHeight * PORTRAIT_IMAGE_MAX_HEIGHT_FRACTION
     val widthDp = with(LocalDensity.current) {
@@ -173,7 +172,7 @@ private fun applyPickResultImageDisplayCaps(
  * [keepWidthOnOverflowHeight] 为 true 时（取词面板用滚动方案），高度超出视口**不再反推缩小宽度**，
  * 只把高度夹到视口；图片本体的真实高度 = 视口宽度 × 宽高比，由调用方用 [pickResultImageNaturalHeight] 取。
  */
-internal fun pickResultImageDisplaySize(
+fun pickResultImageDisplaySize(
     bitmap: Bitmap,
     contentWidth: Dp,
     maxHeight: Dp,
@@ -226,7 +225,7 @@ internal fun pickResultImageDisplaySize(
  * 图片区视口高度由 [pickResultImageDisplaySize] 给出，图片本体比它高多少，就由
  * `PickResultImageSection` 的 verticalScroll 承担多少。
  */
-internal fun pickResultImageNaturalHeight(
+fun pickResultImageNaturalHeight(
     displayWidth: Dp,
     bitmap: Bitmap,
     screenRect: Rect?,
@@ -253,7 +252,7 @@ internal fun pickResultImageNaturalHeight(
     return displayWidth * (baseHeight / baseWidth)
 }
 
-internal fun pickResultImageSectionReservedHeight(
+fun pickResultImageSectionReservedHeight(
     imageMaxHeight: Dp,
     isImageVisible: Boolean,
     includeSearchBar: Boolean = true
@@ -470,9 +469,7 @@ private fun ImageShareEngineChip(
     val context = LocalContext.current.applicationContext
     var appSettings by remember { mutableStateOf(AppSettings()) }
     LaunchedEffect(context) {
-        OverlayDependencyAccess.overlayDependencies(context)
-            ?.settingsRepository
-            ?.settings
+        com.slideindex.app.settings.SettingsFlowHolder.settingsFlow(context)
             ?.collect { appSettings = it }
     }
 
