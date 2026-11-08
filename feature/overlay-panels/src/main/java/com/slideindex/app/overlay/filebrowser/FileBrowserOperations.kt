@@ -30,7 +30,7 @@ data class FileOperationReport(
  * 优先 Java File（可直写路径）；Root 模式退回一次性 su + nsenter。跨卷移动按
  * “复制到最终目标 → 校验 → 删除源”处理，失败时保留源。
  */
-internal object FileBrowserOperations {
+object FileBrowserOperations {
     private const val ROOT_TIMEOUT_SECONDS = 60L
 
     suspend fun transfer(

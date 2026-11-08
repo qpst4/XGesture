@@ -1,8 +1,6 @@
 package com.slideindex.app.overlay.filebrowser
 
 import android.os.Environment
-import com.slideindex.app.privilege.PrivilegeGateway
-import com.slideindex.app.util.TaskManagerUtil
 
 enum class AccessMode {
     /** Root 模式且已实际拿到 root。 */
@@ -39,11 +37,11 @@ data class FileBrowserAccessInfo(
  */
 object FileBrowserAccess {
     fun resolve(): FileBrowserAccessInfo {
-        val rootMode = PrivilegeGateway.isRootMode()
+        val rootMode = FileBrowserHostCalls.isRootMode()
         val privileged = if (rootMode) {
-            TaskManagerUtil.hasPrivilegedAccess()
+            FileBrowserHostCalls.hasPrivilegedAccess()
         } else {
-            TaskManagerUtil.hasShizukuPermission()
+            FileBrowserHostCalls.hasShizukuPermission()
         }
         return FileBrowserAccessInfo(
             rootMode = rootMode,

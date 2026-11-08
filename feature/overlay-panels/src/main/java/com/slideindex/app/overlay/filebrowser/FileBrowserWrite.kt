@@ -13,7 +13,7 @@ import kotlinx.coroutines.withContext
  * 优先使用 Java File（“所有文件访问”/App 可写目录）；Root 模式下退回一次性 su + nsenter。
  * Shizuku 只有 shell 身份，写不了 /data；共享存储则仍可能通过 Java File 直写。
  */
-internal object FileBrowserWrite {
+object FileBrowserWrite {
     private const val TIMEOUT_SECONDS = 12L
 
     suspend fun createDirectory(

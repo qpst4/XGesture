@@ -23,7 +23,7 @@ private val Context.fileBrowserPrefsDataStore: DataStore<Preferences> by prefere
 )
 
 @Serializable
-internal data class FileBrowserPrefs(
+data class FileBrowserPrefs(
     val pinnedPaths: List<String> = emptyList(),
     val lastPath: String? = null,
     val sortOrder: String = FileSortOrder.NAME_ASC.name,
@@ -34,7 +34,7 @@ internal data class FileBrowserPrefs(
     val shortcutOrder: List<String> = emptyList(),
 )
 
-internal object FileBrowserPreferences {
+object FileBrowserPreferences {
     private const val KEY_NAME = "file_browser_prefs"
     private const val MAX_PINS = 8
     private val key = stringPreferencesKey(KEY_NAME)
@@ -300,5 +300,5 @@ internal object FileBrowserPreferences {
     }
 }
 
-internal fun FileBrowserPrefs.sortOrderOrDefault(): FileSortOrder =
+fun FileBrowserPrefs.sortOrderOrDefault(): FileSortOrder =
     FileSortOrder.entries.firstOrNull { it.name == sortOrder } ?: FileSortOrder.NAME_ASC

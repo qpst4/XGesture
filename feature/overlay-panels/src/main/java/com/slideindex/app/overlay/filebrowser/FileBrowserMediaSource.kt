@@ -13,7 +13,7 @@ import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-internal sealed interface FileBrowserMediaResult {
+sealed interface FileBrowserMediaResult {
     data class Success(val page: FileBrowserMediaPage) : FileBrowserMediaResult
     data object PermissionDenied : FileBrowserMediaResult
     data class Failure(val detail: String?) : FileBrowserMediaResult
@@ -24,7 +24,7 @@ internal sealed interface FileBrowserMediaResult {
  *
  * 这是“全共享存储媒体库”，不是文件系统浏览；`Android/data`、`/data` 不会出现在这里。
  */
-internal object FileBrowserMediaSource {
+object FileBrowserMediaSource {
     const val PAGE_SIZE = 120
 
     private val BASE_PROJECTION = arrayOf(

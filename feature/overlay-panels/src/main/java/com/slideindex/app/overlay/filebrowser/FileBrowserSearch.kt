@@ -1,7 +1,6 @@
 package com.slideindex.app.overlay.filebrowser
 
 import com.slideindex.app.shizuku.TaskManagerShellExecutor
-import com.slideindex.app.util.TaskManagerUtil
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -12,7 +11,7 @@ import kotlinx.coroutines.withContext
  * 可直读路径走 Java walk；Root/Shizuku 走 shell find。结果只带名称/路径/类型，
  * 大小与时间留给详情页按需读取，避免搜索时对每个结果再 stat。
  */
-internal object FileBrowserSearch {
+object FileBrowserSearch {
     private const val LIMIT = 200
     private const val MAX_DEPTH = 6
     private const val SHELL_TIMEOUT_MS = 8_000L
@@ -74,7 +73,7 @@ internal object FileBrowserSearch {
             append("if [ -d \"\$f\" ]; then t=d; else t=f; fi; ")
             append("printf '%s|%s\\n' \"\$t\" \"\$f\"; done")
         }
-        val result = TaskManagerUtil.runShellCommandLine(
+        val result = FileBrowserHostCalls.runShellCommandLine(
             command = command,
             useRoot = access.mode == AccessMode.ROOT,
             timeoutMs = SHELL_TIMEOUT_MS,

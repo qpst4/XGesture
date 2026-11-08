@@ -21,7 +21,7 @@ import kotlinx.coroutines.withContext
  *
  * Root 路径只对图片做“按需 base64”缩略图；视频/APK/PDF 仍用类型图标，避免滚动时大量 su。
  */
-internal object FileBrowserThumbnailLoader {
+object FileBrowserThumbnailLoader {
     private const val MAX_EDGE_PX = 128
     private const val MAX_IMAGE_BYTES = 12L * 1024L * 1024L
     private const val MAX_ROOT_IMAGE_BYTES = 4L * 1024L * 1024L

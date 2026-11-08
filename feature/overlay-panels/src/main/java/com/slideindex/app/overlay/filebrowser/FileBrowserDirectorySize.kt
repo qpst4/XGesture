@@ -2,7 +2,6 @@ package com.slideindex.app.overlay.filebrowser
 
 import com.slideindex.app.privilege.root.RootNamespace
 import com.slideindex.app.shizuku.TaskManagerShellExecutor
-import com.slideindex.app.util.TaskManagerUtil
 import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
@@ -20,7 +19,7 @@ import kotlin.coroutines.coroutineContext
  *
  * 这是尽力而为：大目录/超时/没有 du 都返回 null，UI 保留“本层文件大小”而不是卡住。
  */
-internal object FileBrowserDirectorySize {
+object FileBrowserDirectorySize {
     private const val ROOT_TIMEOUT_SECONDS = 5L
     private const val SHIZUKU_TIMEOUT_MS = 8_000L
     private const val DIRECT_WALK_LIMIT = 50_000
@@ -45,7 +44,7 @@ internal object FileBrowserDirectorySize {
     private suspend fun shellSize(path: String, useRoot: Boolean): Long? {
         val command = "du -sk ${TaskManagerShellExecutor.shellQuote(path)} 2>/dev/null"
         if (!useRoot) {
-            val result = TaskManagerUtil.runShellCommandLine(
+            val result = FileBrowserHostCalls.runShellCommandLine(
                 command = command,
                 useRoot = false,
                 timeoutMs = SHIZUKU_TIMEOUT_MS,

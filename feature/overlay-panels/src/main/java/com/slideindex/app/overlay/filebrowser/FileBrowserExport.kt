@@ -13,7 +13,7 @@ import kotlinx.coroutines.withContext
  *
  * 只走 root 一次性 `su`，不占用 RootShellSession；Shizuku 模式下没有 root 写权限，直接失败。
  */
-internal object FileBrowserExport {
+object FileBrowserExport {
     private const val TIMEOUT_SECONDS = 12L
 
     suspend fun exportToCache(context: Context, sourcePath: String): File? =

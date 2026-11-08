@@ -2,7 +2,7 @@ package com.slideindex.app.overlay.filebrowser
 
 import android.net.Uri
 import androidx.annotation.StringRes
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 
 /**
  * FV 式分类的虚拟位置。
@@ -31,7 +31,7 @@ enum class FileBrowserMediaCategory(
 }
 
 /** 偏好/Tab 中保存的路径可能是文件路径，也可能是 media://，统一在这里收敛。 */
-internal object FileBrowserMedia {
+object FileBrowserMedia {
     fun normalizeLocation(path: String, internalRoot: String): String =
         if (FileBrowserMediaCategory.isMediaPath(path)) {
             FileBrowserMediaCategory.forPath(path)?.path
@@ -51,7 +51,7 @@ data class FileBrowserMediaItem(
     val relativePath: String?,
 )
 
-internal data class FileBrowserMediaPage(
+data class FileBrowserMediaPage(
     val items: List<FileBrowserMediaItem>,
     val hasMore: Boolean,
     val totalCount: Int?,

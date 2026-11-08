@@ -20,7 +20,7 @@ data class TrashReport(
  *
  * 只保留最近一批；cache 被系统清理后无法恢复。跨卷移动先复制再删源。
  */
-internal object FileBrowserTrash {
+object FileBrowserTrash {
     private const val TIMEOUT_SECONDS = 60L
 
     suspend fun trash(

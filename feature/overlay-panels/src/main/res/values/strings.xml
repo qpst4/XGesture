@@ -523,4 +523,8 @@
     <string name="quick_menu_unit_tib">Tebibyte</string>
     <string name="quick_menu_scan_torch">Torch</string>
     <string name="quick_menu_scan_close">Close</string>
+    <string name="file_browser_category_pictures">Pictures</string>
+    <string name="file_browser_category_music">Music</string>
+    <string name="file_browser_category_videos">Videos</string>
+    <string name="file_browser_category_documents">Documents</string>
 </resources>
