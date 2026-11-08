@@ -11,6 +11,26 @@ import com.slideindex.app.settings.AppSettings
  * 这里用回调把它们反转：`SlideIndexApp` 启动时注入，未注入时全部降级为"不可用"。
  */
 object PanelRuntimeHooks {
+    /** 搜索历史流（每条只是查询词）。 */
+    @Volatile
+    var searchHistoryQueries: (() -> kotlinx.coroutines.flow.Flow<List<String>>?)? = null
+
+    /** 记录一次搜索查询。 */
+    @Volatile
+    var recordSearchHistory: ((Context, String) -> Unit)? = null
+
+    /** 打开链接（带长按标记）。 */
+    @Volatile
+    var openUrlWithLongPress: ((Context, String, AppSettings, Boolean) -> Unit)? = null
+
+    /** 用搜索引擎搜文本（带长按标记）。 */
+    @Volatile
+    var launchTextSearchWithLongPress: ((Context, Any?, String, AppSettings, Boolean) -> Boolean)? = null
+
+    /** 启动任务/快捷方式条目（`:app` 的 AppShortcutLoader.launchShortcut）。 */
+    @Volatile
+    var launchTaskShortcut: ((Context, String, Any) -> Unit)? = null
+
     /** 取应用图标（Compose ImageBitmap；`:app` 的 PickerAppIconBitmap）。 */
     @Volatile
     var pickerIconBitmap: (suspend (Context, String) -> androidx.compose.ui.graphics.ImageBitmap?)? = null

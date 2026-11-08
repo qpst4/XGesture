@@ -423,6 +423,33 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.peekPickerIconBitmap = { pkg: String ->
             com.slideindex.app.util.PickerAppIconBitmap.peek(pkg)
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.searchHistoryQueries = {
+            com.slideindex.app.search.SearchHistoryAccess.repository?.entries
+                ?.map { entries -> entries.map { it.query } }
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.recordSearchHistory = { ctx, q ->
+            com.slideindex.app.search.SearchHistoryRecorder.record(ctx, q)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.openUrlWithLongPress = { ctx, url, settings, longPress ->
+            com.slideindex.app.overlay.FloatBallTextPick.openUrl(ctx, url, settings, longPress)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchTextSearchWithLongPress =
+            { ctx, engine, text, settings, longPress ->
+                com.slideindex.app.search.SearchEngineLauncher.launchText(
+                    ctx,
+                    engine as com.slideindex.app.settings.SearchEngineConfig,
+                    text,
+                    settings,
+                    longPress,
+                )
+            }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchTaskShortcut = { ctx, pkg, item ->
+            com.slideindex.app.util.AppShortcutLoader.launchShortcut(
+                ctx,
+                pkg,
+                item as com.slideindex.app.overlay.TaskSwitcherMenuItem,
+            )
+        }
         com.slideindex.app.overlay.searchpanel.SearchPanelHostAccess.host =
             object : com.slideindex.app.overlay.searchpanel.SearchPanelHost {
                 override fun freezerState(
