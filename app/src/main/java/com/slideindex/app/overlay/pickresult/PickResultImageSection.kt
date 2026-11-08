@@ -40,7 +40,7 @@ import com.slideindex.app.settings.PickResultImageToolbarPosition
 import com.slideindex.app.settings.SearchEngineConfig
 
 @Composable
-internal fun PickResultImageSection(
+fun PickResultImageSection(
     screenshot: Bitmap?,
     panelImages: List<Bitmap>,
     currentImageIndex: Int,
@@ -95,7 +95,7 @@ internal fun PickResultImageSection(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun PickResultImageSectionGallery(
+fun PickResultImageSectionGallery(
     images: List<Bitmap>,
     currentImageIndex: Int,
     imageDisplaySize: PickResultImageDisplaySize,

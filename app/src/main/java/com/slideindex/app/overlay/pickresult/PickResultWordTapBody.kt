@@ -546,7 +546,6 @@ fun PickResultWordTapBody(
                     start = 0.dp,
                     top = 2.dp,
                     end = 0.dp,
-                    bottom = PickResultWordTapBottomContentPadding + 2.dp,
                 )
                 .onGloballyPositioned {
                     gestureCoordinates = it

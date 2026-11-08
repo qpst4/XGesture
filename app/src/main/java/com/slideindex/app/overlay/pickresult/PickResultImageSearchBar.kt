@@ -105,7 +105,7 @@ internal fun pickResultImageContentWidth(horizontalPadding: Dp = 40.dp): Dp {
  * （高度超出视口时不缩宽度、改由图片自身滚动）才会让 [naturalHeight] 大于 [height]；
  * 当前取词面板走的是「图片让位给搜索区」，两者相等。
  */
-internal data class PickResultImageDisplaySize(
+data class PickResultImageDisplaySize(
     val width: Dp,
     val height: Dp,
     val naturalHeight: Dp = height,

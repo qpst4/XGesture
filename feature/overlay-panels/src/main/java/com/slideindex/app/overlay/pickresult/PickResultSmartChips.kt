@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.slideindex.app.ui.theme.LocalAppDarkTheme
 
 @Composable
-internal fun PickResultSmartChipsRow(
+fun PickResultSmartChipsRow(
     text: String?,
     onCopyText: (String) -> Unit,
     modifier: Modifier = Modifier

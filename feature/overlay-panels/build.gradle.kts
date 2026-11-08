@@ -51,6 +51,7 @@ dependencies {
     implementation(project(":feature:apps"))
 
     implementation(libs.core.ktx)
+    implementation(libs.appcompat)
     implementation(libs.activity.compose)
     implementation(libs.datastore.preferences)
     implementation(libs.kotlinx.serialization.json)

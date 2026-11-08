@@ -61,18 +61,18 @@ import android.content.Context
 
 private val searchEngineBitmapCache = LruCache<String, android.graphics.Bitmap>(48)
 
-internal fun searchEngineIconCacheKey(engine: SearchEngineConfig): String =
+fun searchEngineIconCacheKey(engine: SearchEngineConfig): String =
     "${engine.id}|${engine.iconType}|${engine.iconPath.orEmpty()}|${engine.textIcon.orEmpty()}|" +
-        "${engine.iconSourcePackage.orEmpty()}|${com.slideindex.app.ui.GlobalIconStore.revision}"
+        "${engine.iconSourcePackage.orEmpty()}|${com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconCacheRevision?.invoke().orEmpty()}"
 
-internal fun invalidateSearchEngineIconCache(engineId: String) {
+fun invalidateSearchEngineIconCache(engineId: String) {
     val prefix = "$engineId|"
     searchEngineBitmapCache.snapshot().keys.filter { it.startsWith(prefix) }.forEach { key ->
         searchEngineBitmapCache.remove(key)
     }
 }
 
-internal fun preloadPickResultSearchEngineIcons(
+fun preloadPickResultSearchEngineIcons(
     context: Context,
     engines: List<SearchEngineConfig>,
 ) {
@@ -91,9 +91,9 @@ private fun cachedSearchEngineBitmap(cacheKey: String): android.graphics.Bitmap?
 private val SearchIconSizeDefault = 40.dp
 
 /** 文本区与搜索引擎网格之间、分隔线下方的额外间距（已归一化为对称 12dp）。 */
-internal val PickResultTextSearchGridTopSpacing = 0.dp
+val PickResultTextSearchGridTopSpacing = 0.dp
 
-internal fun searchGridContentHeight(rows: Int, showLabels: Boolean, columns: Int): Dp {
+fun searchGridContentHeight(rows: Int, showLabels: Boolean, columns: Int): Dp {
     val rowCount = rows.coerceIn(1, 4)
     val iconSize = searchIconSizeForColumns(columns)
     val labelHeight = if (showLabels) 18.dp else 0.dp
@@ -102,7 +102,7 @@ internal fun searchGridContentHeight(rows: Int, showLabels: Boolean, columns: In
     return itemHeight * rowCount + rowGap
 }
 
-internal fun pickResultSearchGridReservedHeight(rows: Int, showLabels: Boolean, columns: Int = 5): Dp {
+fun pickResultSearchGridReservedHeight(rows: Int, showLabels: Boolean, columns: Int = 5): Dp {
     val padding = 4.dp // 4.dp top, 0.dp bottom
     val divider = 5.dp // 2.dp padding * 2 + 1.dp
     val gaps = 16.dp // 2 gaps of 8.dp each (from spacedBy)
@@ -111,14 +111,14 @@ internal fun pickResultSearchGridReservedHeight(rows: Int, showLabels: Boolean, 
 }
 
 /** 引擎区图标尺寸：列数越多图标越小；设置页预览与 dock 共用同一口径。 */
-internal fun searchIconSizeForColumns(columns: Int): Dp = when {
+fun searchIconSizeForColumns(columns: Int): Dp = when {
     columns >= 7 -> 32.dp
     columns >= 6 -> 36.dp
     else -> SearchIconSizeDefault
 }
 
 /** 横屏时按可用宽度自动增加列数；竖屏保持用户设置。 */
-internal fun effectiveSearchGridColumns(
+fun effectiveSearchGridColumns(
     configuredColumns: Int,
     availableWidth: Dp,
     isLandscape: Boolean,
@@ -418,7 +418,7 @@ fun SearchEngineIcon(
     }
 }
 
-internal fun loadPickResultSearchEngineBitmap(
+fun loadPickResultSearchEngineBitmap(
     context: Context,
     engine: SearchEngineConfig,
 ): android.graphics.Bitmap? {
@@ -429,7 +429,7 @@ internal fun loadPickResultSearchEngineBitmap(
     }
 }
 
-internal fun resolveSearchEngineBitmap(
+fun resolveSearchEngineBitmap(
     context: Context,
     engine: SearchEngineConfig,
 ): android.graphics.Bitmap? {
@@ -458,7 +458,7 @@ internal fun resolveSearchEngineBitmap(
 
 /** 应用图标：先查全局图标覆盖（扩展 → 图标库），再退回系统图标。 */
 private fun appIconBitmap(context: Context, packageName: String): android.graphics.Bitmap? {
-    com.slideindex.app.ui.AppIconOverride.bitmap(context, packageName, 128)?.let { return it }
+    com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideBitmap?.invoke(context, packageName, 128)?.let { return it }
     return runCatching {
         context.packageManager.getApplicationIcon(packageName).toBitmap(128, 128)
     }.getOrNull()

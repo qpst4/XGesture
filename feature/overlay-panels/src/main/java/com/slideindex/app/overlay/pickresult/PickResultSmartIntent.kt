@@ -11,9 +11,9 @@ import androidx.compose.material.icons.outlined.Password
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 
-internal sealed class PickResultSmartEntity {
+sealed class PickResultSmartEntity {
     abstract val label: String
     /** 去重与 Compose key 用的稳定标识，默认与展示标签一致。 */
     open val entityKey: String get() = label
@@ -118,7 +118,7 @@ internal sealed class PickResultSmartEntity {
     }
 }
 
-internal object PickResultSmartParser {
+object PickResultSmartParser {
     private val phoneRegex = Regex("""(?<!\d)(1[3-9]\d{9}|0\d{2,3}-?\d{7,8})(?!\d)""")
     private val verifyCodeRegex = Regex("""(?i)(?:验证码|校验码|动态码|code)[:：\s]{0,6}([0-9]{4,6})(?!\d)""")
     private val tbTokenRegex = Regex("""(￥[a-zA-Z0-9]{8,18}￥|[a-zA-Z0-9]{11}:/)""")

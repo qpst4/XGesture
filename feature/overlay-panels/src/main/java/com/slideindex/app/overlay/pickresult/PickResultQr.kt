@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets
  * 依次降级：先保可读性，装不下再用容量换成功率和更大的模块（屏幕上也更好扫）。
  * 出图固定 1024px，比快捷菜单默认的 512 更适合长文本。
  */
-internal object PickResultQr {
+object PickResultQr {
 
     /** 出图边长。 */
     const val SIZE_PX = 1024
