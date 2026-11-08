@@ -62,7 +62,7 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 // ---------------------------------------------------------------- 纯逻辑：键盘状态机
 
 /** 计算器上的一个按键。[text] 同时是键面文案与输入字符（`×` / `÷` 由引擎自己认）。 */
-internal sealed interface CalcKey {
+sealed interface CalcKey {
     data class Digit(val text: String) : CalcKey
     data class Op(val text: String) : CalcKey
     object Dot : CalcKey
@@ -82,7 +82,7 @@ internal sealed interface CalcKey {
  * 存**两个**字段而不是只存结果，是因为显示区要按用户要求写成 `12+5 = 17` 的完整形态；
  * 只存结果的话，按下等号之后 `expression` 已经被结果覆盖，就再也拼不出左边那半截了。
  */
-internal data class CalcLastEntry(val expression: String, val result: String) {
+data class CalcLastEntry(val expression: String, val result: String) {
     /** 显示文案：`12+5 = 17`。 */
     val label: String get() = "$expression = $result"
 }
@@ -105,7 +105,7 @@ internal data class CalcLastEntry(val expression: String, val result: String) {
  *
  * 刚按下运算符、或运算符后面只按了一个负号（`12+-`）时，[display] 会是 `0` / `-` 这种"还没有数字"的形态。
  */
-internal data class CalcPadState(
+data class CalcPadState(
     val expression: String = "",
     val display: String = "0",
     val justEvaluated: Boolean = false,
@@ -113,7 +113,7 @@ internal data class CalcPadState(
 )
 
 /** 一次按键的产物：新状态，以及（按下等号且算成功时）这次的结果快照。 */
-internal data class CalcPadOutcome(val state: CalcPadState, val lastResult: String? = null)
+data class CalcPadOutcome(val state: CalcPadState, val lastResult: String? = null)
 
 /** 显示的位数上限：超出就截断，免得一个 `1/3` 把面板撑成一行乱码。 */
 private const val MAX_DISPLAY_CHARS = 24
@@ -135,7 +135,7 @@ private fun isNumericResult(text: String): Boolean {
  *
  * null 在界面上表现为"当前无法求值"，不是错误弹窗 —— 边打边算时表达式本来就大半是半成品。
  */
-internal fun formatCalcResult(raw: String?): String? {
+fun formatCalcResult(raw: String?): String? {
     val cleaned = raw?.trim()?.replace(" ", "")?.takeIf { it.isNotEmpty() } ?: return null
     if (cleaned.length > MAX_DISPLAY_CHARS) return null
     return cleaned.takeIf(::isNumericResult)
@@ -229,7 +229,7 @@ private fun hasUnmatchedOpenParen(expression: String): Boolean {
  *
  * 纯函数（没有 Android / Compose 依赖、没有随机、没有 IO），所以每个键的行为都能在 JVM 单测里钉住。
  */
-internal object QuickMenuCalcPad {
+object QuickMenuCalcPad {
 
     /**
      * 只换算式与主显示、**其余字段原样保留**（尤其是「上一次计算」那一行）。
@@ -465,7 +465,7 @@ internal object QuickMenuCalcPad {
  * 结果是主角的大字，同一个数字不重复出现两遍。规则统一收到这里之后能在 JVM 单测里钉住
  *（见 `QuickMenuCalculatorScreenTest.display_*`）。
  */
-internal data class CalcDisplayModel(
+data class CalcDisplayModel(
     /** 最顶上那一行「上一次计算」（`12+5 = 17`）；null = 没有，整行不渲染、不占位。 */
     val lastCalcLabel: String?,
     /**
@@ -495,7 +495,7 @@ internal data class CalcDisplayModel(
  * 大数字里那个"正在输入的数"永远优先于"实时结果"的一种情形：末尾操作数带显式负号（用户刚按过 `±`
  * 在输一个负数，如 `5×-3`）—— 那时显示区要跟着那个负数走（`-3`），否则 `±` 按下去用户看不到反馈。
  */
-internal fun calcDisplayModel(state: CalcPadState): CalcDisplayModel {
+fun calcDisplayModel(state: CalcPadState): CalcDisplayModel {
     val big = bigNumber(state)
     return CalcDisplayModel(
         lastCalcLabel = state.lastCalc?.label,
@@ -609,7 +609,7 @@ private fun formatLiveResult(raw: String?): String? {
  * 四则运算符用主容器色、等号用 primary 实心 —— 一眼能分出"数"和"算"。
  */
 @Composable
-internal fun QuickMenuCalculatorScreen() {
+fun QuickMenuCalculatorScreen() {
     val context = LocalContext.current
     var pad by remember { mutableStateOf(CalcPadState()) }
 

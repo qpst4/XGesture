@@ -136,7 +136,6 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
  * 这里出错只可能是布局问题（需要真机看）。
  */
 
-private val CONTENT_PADDING = 16.dp
 
 /** 交换按钮的尺寸（对齐 IconButton 默认值），用于标签行的占位。 */
 private val SWAP_ACTION_SIZE = 48.dp
@@ -170,17 +169,6 @@ private const val ENTROPY_FULL_SCALE_BITS = 128
  */
 private const val SCREENSHOT_HIDE_DELAY_MS = 120L
 
-@Composable
-internal fun ToolScaffold(content: @Composable ColumnScope.() -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(CONTENT_PADDING),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        content = content,
-    )
-}
 
 @Composable
 private fun FieldLabel(text: String) {

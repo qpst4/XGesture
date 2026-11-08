@@ -68,7 +68,7 @@ import com.slideindex.app.quickmenu.StopwatchLogic
  * 4. 原实现的两条时长档位语义保持原样：长休是一个**可手动点选**的档位；自动接续时按
  *    [PomodoroLogic.FOCUSES_PER_LONG_BREAK] 规则进入长休。
  *
- * 显示上只用两个已有字符串（[com.slideindex.app.R.string.quick_menu_pomodoro_title] /
+ * 显示上只用两个已有字符串（[com.slideindex.app.overlay.panels.R.string.quick_menu_pomodoro_title] /
  * `_desc`，它们已经在工具列表里用了），按钮一律图标，不再新增文案：当前处于哪一段用图标区分
  * （专注 = 沙漏，休息 = 咖啡杯），会话计数写成 `×已完成的专注数 / 每轮专注数`。
  */
@@ -80,7 +80,7 @@ import com.slideindex.app.quickmenu.StopwatchLogic
  * 状态自己不读时钟。因此"到点自动接续""离开页面很久之后回来补算""暂停冻结剩余量"这些边界都能
  * 在纯 JVM 测试里直接断言，UI 侧只负责每帧调 [remainingAt]。
  */
-internal object PomodoroLogic {
+object PomodoroLogic {
 
     /** 专注时长（分钟）——与参考实现一致。 */
     const val FOCUS_MINUTES = 25
@@ -382,7 +382,7 @@ internal object PomodoroLogic {
  * （QuickDash 原实现正是如此，离开页面即停）。因此状态机与滴答都提到这里，Compose 侧只做只读订阅；
  * 滴答只在确实有计时在跑时存在，停下来就移除，不会常驻一个循环。
  */
-internal object QuickMenuPomodoroRuntime {
+object QuickMenuPomodoroRuntime {
 
     /**
      * 滴答间隔。
@@ -504,7 +504,7 @@ internal object QuickMenuPomodoroRuntime {
 }
 
 @Composable
-internal fun QuickMenuPomodoroScreen() {
+fun QuickMenuPomodoroScreen() {
     // 进入这一页时按真实经过的时间补算一次（离开期间跨过的段都在这一步推完）。
     // 用 LaunchedEffect(Unit)：本页每次被组合都会走一次，resume() 自己是幂等的。
     LaunchedEffect(Unit) { QuickMenuPomodoroRuntime.resume() }

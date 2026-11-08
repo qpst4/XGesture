@@ -1,6 +1,6 @@
 package com.slideindex.app.overlay.quickmenu
 
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import android.Manifest
 import android.app.AlarmManager
 import android.app.NotificationChannel
@@ -58,7 +58,7 @@ import androidx.core.content.ContextCompat
 private val REMINDER_MINUTES = listOf(5, 10, 30, 60)
 
 @Composable
-internal fun QuickMenuReminderScreen() {
+fun QuickMenuReminderScreen() {
     val context = LocalContext.current
     var title by remember { mutableStateOf("") }
     var selectedMinutes by remember { mutableStateOf(REMINDER_MINUTES.first()) }
@@ -146,7 +146,7 @@ internal fun QuickMenuReminderScreen() {
  * 不复用 [com.slideindex.app.stash.StashReminderScheduler.setAlarmDegradingToInexact]：那个实现是
  * **永远退化**（它服务的是"几分钟后提醒一下"这种可容忍漂移的场景）。提醒要准点，所以这里先试精确。
  */
-internal object QuickMenuReminderAlarm {
+object QuickMenuReminderAlarm {
 
     private const val TAG = "QuickMenuReminder"
 
