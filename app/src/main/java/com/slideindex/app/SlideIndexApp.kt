@@ -406,7 +406,7 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         }
         com.slideindex.app.overlay.searchpanel.SearchPanelHostAccess.host =
             object : com.slideindex.app.overlay.searchpanel.SearchPanelHost {
-                override suspend fun freezerState(
+                override fun freezerState(
                     context: android.content.Context,
                     app: com.slideindex.app.data.AppInfo,
                 ): com.slideindex.app.freezer.FreezerAppState =
@@ -427,7 +427,7 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     fullscreen,
                 )
 
-                override suspend fun isPaused(
+                override fun isPaused(
                     context: android.content.Context,
                     app: com.slideindex.app.data.AppInfo,
                 ): Boolean = com.slideindex.app.freezer.FreezerOperations.isPaused(context, app)
