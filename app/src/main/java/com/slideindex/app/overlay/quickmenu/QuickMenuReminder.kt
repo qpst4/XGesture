@@ -1,5 +1,6 @@
 package com.slideindex.app.overlay.quickmenu
 
+import com.slideindex.app.R
 import android.Manifest
 import android.app.AlarmManager
 import android.app.NotificationChannel
@@ -38,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import com.slideindex.app.R
 
 /**
  * 定时提醒：输入一句话 + 选几分钟后 → 到点发一条通知。

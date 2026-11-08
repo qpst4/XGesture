@@ -6,7 +6,7 @@ package com.slideindex.app.overlay.quickmenu
  * 最近使用、文件，以及每个工具分组各自是一张卡；这样工具不会堆成一整块，
  * 拖拽时也只移动一张小卡。顺序由用户长按卡片决定。
  */
-internal sealed interface QuickMenuHomeModule {
+sealed interface QuickMenuHomeModule {
     val id: String
 
     data object Recents : QuickMenuHomeModule {

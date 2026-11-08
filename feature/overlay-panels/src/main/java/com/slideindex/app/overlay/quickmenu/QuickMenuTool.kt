@@ -28,7 +28,7 @@ import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 
 /**
  * 「快捷菜单」的工具分组。

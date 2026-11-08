@@ -19,7 +19,7 @@ private val Context.quickMenuDataStore: DataStore<Preferences> by preferencesDat
  * 抽成纯函数是为了可单测：这里要处理的正是持久化最容易出事的两点——
  * 枚举改名/删除后旧数据怎么办、以及重复/超量条目怎么收敛。
  */
-internal object QuickMenuRecentsCodec {
+object QuickMenuRecentsCodec {
 
     const val MAX_ENTRIES = 4
 
