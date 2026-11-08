@@ -3,7 +3,7 @@ package com.slideindex.app.overlay.searchpanel
 import android.content.Context
 import android.util.Log
 import androidx.core.content.FileProvider
-import com.slideindex.app.BuildConfig
+import com.slideindex.app.overlay.panels.BuildConfig
 import com.slideindex.app.overlay.share.ShareSheetLauncher
 import com.slideindex.app.overlay.share.ShareSheetPayload
 import java.io.BufferedOutputStream
@@ -29,7 +29,7 @@ import kotlinx.coroutines.withContext
  * 带 split 的应用（AAB / Play 安装）把 base + splits 打成一个 `.apks` zip；
  * 只分享 base.apk 会缺 so/资源，对方装不上或闪退。单 APK 应用仍然分享 `.apk`。
  */
-internal object SearchPanelAppShare {
+object SearchPanelAppShare {
     private const val TAG = "SearchPanelAppShare"
     private const val SHARE_DIR = "apk_share"
     private const val MAX_STEM_LENGTH = 60

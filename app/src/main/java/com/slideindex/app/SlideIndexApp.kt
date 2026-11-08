@@ -277,8 +277,11 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.onContentPanelHidden = {
             com.slideindex.app.overlay.compositor.OverlaySceneController.onContentPanelHidden()
         }
-        com.slideindex.app.overlay.panels.PanelFloatBallHooks.scheduleChromeAbovePanels = {
-            com.slideindex.app.overlay.FloatBallOverlay.scheduleChromeAbovePanels()
+        com.slideindex.app.overlay.panels.PanelFloatBallHooks.scheduleChromeAbovePanels = { delayMs ->
+            com.slideindex.app.overlay.FloatBallOverlay.scheduleChromeAbovePanels(delayMs = delayMs)
+        }
+        com.slideindex.app.overlay.panels.PanelFloatBallHooks.isShowing = {
+            com.slideindex.app.overlay.FloatBallOverlay.isShowing
         }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.appDependenciesWrapper =
             object : com.slideindex.app.overlay.panels.PanelComposeWrapper {

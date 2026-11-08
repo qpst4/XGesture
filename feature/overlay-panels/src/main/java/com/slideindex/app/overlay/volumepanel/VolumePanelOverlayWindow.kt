@@ -144,7 +144,7 @@ object VolumePanelOverlayWindow {
         val token = ++bringAboveToken
         fun attempt() {
             if (token != bringAboveToken) return
-            com.slideindex.app.overlay.panels.PanelFloatBallHooks.scheduleChromeAbovePanels?.invoke()
+            com.slideindex.app.overlay.panels.PanelFloatBallHooks.scheduleChromeAbovePanels?.invoke(0L)
         }
         attempt()
         composeView?.post {

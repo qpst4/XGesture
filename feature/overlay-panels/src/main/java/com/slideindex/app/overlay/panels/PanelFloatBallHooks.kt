@@ -29,8 +29,11 @@ object PanelFloatBallHooks {
     /** 关闭暂存浮窗（语音录制开始/结束时会用到）。 */
     var dismissStashPanel: (() -> Unit)? = null
 
-    /** 面板打开后把浮球 chrome 抬到面板之上。 */
-    var scheduleChromeAbovePanels: (() -> Unit)? = null
+    /** 浮球是否正在显示。 */
+    var isShowing: (() -> Boolean)? = null
+
+    /** 面板打开后把浮球 chrome 抬到面板之上（可带延迟）。 */
+    var scheduleChromeAbovePanels: ((Long) -> Unit)? = null
 
     /** 浮层布局度量：density 与屏幕宽度。 */
     @Volatile

@@ -12,6 +12,7 @@ android {
     defaultConfig {
         minSdk = libs.versions.minSdk.get().toInt()
         buildConfigField("boolean", "IME_DIAG", "false")
+        buildConfigField("String", "APPLICATION_ID", "\"com.slideindex.app\"")
     }
 
     compileOptions {
