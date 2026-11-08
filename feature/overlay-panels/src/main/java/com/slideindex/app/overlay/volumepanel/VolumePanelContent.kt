@@ -76,7 +76,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.activity.findForLaunchShortcut
 import com.slideindex.app.data.AppInfo
@@ -85,8 +85,6 @@ import com.slideindex.app.overlay.LocalFrostedGlassBackdrop
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.shouldLaunchFullscreen
 import com.slideindex.app.ui.Md3PickerAppLeading
-import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
-import com.slideindex.app.ui.gesturepicker.launchShortcutDisplayLabel
 import com.slideindex.app.ui.Md3PickerIconLeading
 import com.slideindex.app.ui.Md3PickerLaunchShortcutLeading
 import com.slideindex.app.ui.Md3PickerPackageLeading
@@ -191,38 +189,38 @@ fun VolumePanelContent(
                 } else {
                     null
                 }
-                ExpandPanelSlotPicker(
-                    allApps = allApps,
-                    activityShortcuts = activityShortcuts,
-                    current = editingAction,
-                    editingSubtitle = editingSubtitle,
-                    // 「快捷轮盘 / 打开快捷启动器」的参数页要这两份数据；
-                    // imeBottom 让列表在键盘弹起时让位（面板整体会被抬起，见 VolumePanelOverlayRoot）。
-                    wheels = appSettings.launcher.quickWheels,
-                    panels = appSettings.quickLauncherPanels,
-                    imeBottom = imeBottom,
-                    onSelect = { action ->
-                        if (pickerSlot in slotActions.indices) {
-                            saveSlotAction(pickerSlot, action)
-                        }
-                        isPickerMode = false
-                        pickerSlot = -1
-                    },
-                    onCancel = {
-                        isPickerMode = false
-                        pickerSlot = -1
-                    },
-                    onClearSlot = if (editingAction != null) {
-                        {
+                com.slideindex.app.overlay.volumepanel.PanelSlotPickerHook.picker?.content(
+                    com.slideindex.app.overlay.volumepanel.SlotPickerRequest(
+                        allApps = allApps,
+                        activityShortcuts = activityShortcuts,
+                        current = editingAction,
+                        editingSubtitle = editingSubtitle,
+                        wheels = appSettings.launcher.quickWheels,
+                        panels = appSettings.quickLauncherPanels,
+                        imeBottom = imeBottom,
+                        onSelect = { action ->
                             if (pickerSlot in slotActions.indices) {
-                                saveSlotAction(pickerSlot, null)
+                                saveSlotAction(pickerSlot, action)
                             }
                             isPickerMode = false
                             pickerSlot = -1
-                        }
-                    } else {
-                        null
-                    },
+                        },
+                        onCancel = {
+                            isPickerMode = false
+                            pickerSlot = -1
+                        },
+                        onClearSlot = if (editingAction != null) {
+                            {
+                                if (pickerSlot in slotActions.indices) {
+                                    saveSlotAction(pickerSlot, null)
+                                }
+                                isPickerMode = false
+                                pickerSlot = -1
+                            }
+                        } else {
+                            null
+                        },
+                    ),
                 )
             } else {
                 Column(
@@ -716,10 +714,12 @@ private fun expandPanelSlotLabel(
     is GestureAction.LaunchShortcut -> {
         activityShortcuts.findForLaunchShortcut(action.payloadKey)?.label
             ?.takeIf { it.isNotBlank() }
-            ?: launchShortcutDisplayLabel(action).takeIf { it.isNotBlank() }
+            ?: com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchShortcutLabel
+                ?.invoke(action)?.takeIf { it.isNotBlank() }
             ?: context.getString(R.string.gesture_action_launch_shortcut)
     }
-    else -> gestureActionLabelText(context, action)
+    else -> com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel
+        ?.invoke(context, action).orEmpty()
 }
 
 private val ExpandPanelSlotIconSize = 40.dp
@@ -756,7 +756,7 @@ private fun ExpandPanelSlotIcon(
             Md3PickerIconLeading(
                 icon = gestureActionIcon(action, outlined = true),
                 selected = false,
-                contentDescription = gestureActionLabelText(context, action),
+                contentDescription = com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel?.invoke(context, action),
             )
         }
     }

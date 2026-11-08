@@ -265,6 +265,21 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onResult = { created -> onResult(created) },
             )
         }
+        com.slideindex.app.overlay.volumepanel.PanelSlotPickerHook.picker =
+            com.slideindex.app.overlay.volumepanel.PanelSlotPicker { request ->
+                com.slideindex.app.overlay.volumepanel.ExpandPanelSlotPicker(
+                    allApps = request.allApps,
+                    activityShortcuts = request.activityShortcuts,
+                    current = request.current,
+                    editingSubtitle = request.editingSubtitle,
+                    wheels = request.wheels,
+                    panels = request.panels,
+                    imeBottom = request.imeBottom,
+                    onSelect = request.onSelect,
+                    onCancel = request.onCancel,
+                    onClearSlot = request.onClearSlot,
+                )
+            }
         com.slideindex.app.overlay.pickresult.PickResultHostAccess.host =
             object : com.slideindex.app.overlay.pickresult.PickResultHost {
                 override fun show(
