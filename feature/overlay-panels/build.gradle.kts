@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.miuix.ui)
     implementation(libs.miuix.icons)
     implementation(libs.miuix.preference)
+    implementation(libs.zxing.core)
     implementation(libs.miuix.blur)
     implementation(libs.miuix.shader)
     implementation(libs.materialkolor)
