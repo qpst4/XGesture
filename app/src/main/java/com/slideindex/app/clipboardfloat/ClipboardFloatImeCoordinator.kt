@@ -89,7 +89,8 @@ object ClipboardFloatImeCoordinator {
             applyCommitted(serviceContext, visible = probe.bounds != null)
         } else if (probe.bounds != null && stabilizer.committedVisible) {
             // 已确认可见：只把新的顶缘转发出去（键盘变高 / 表情面板）。
-            dispatchImeTop(serviceContext, probe.bounds.top)
+            val imeBounds = probe.bounds
+            if (imeBounds != null) dispatchImeTop(serviceContext, imeBounds.top)
         }
         scheduleTick(serviceContext)
     }

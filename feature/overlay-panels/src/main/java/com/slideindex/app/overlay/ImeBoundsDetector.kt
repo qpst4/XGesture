@@ -11,7 +11,7 @@ import android.view.WindowInsets
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityWindowInfo
 import android.view.inputmethod.InputMethodManager
-import com.slideindex.app.BuildConfig
+import com.slideindex.app.overlay.panels.BuildConfig
 import kotlin.math.roundToInt
 
 /**
@@ -41,7 +41,7 @@ object ImeBoundsDetector {
     private const val MIN_IME_HEIGHT_DP = 48
 
     /** 一次探测里"IME 顶缘是从哪来的"。诊断日志靠它区分"窗口表可用"与"只能靠兜底读数"。 */
-    internal enum class Source { ACCESSIBILITY_WINDOW, WINDOW_METRICS, NONE }
+    enum class Source { ACCESSIBILITY_WINDOW, WINDOW_METRICS, NONE }
 
     /**
      * 一次探测的完整结果。
@@ -53,7 +53,7 @@ object ImeBoundsDetector {
      * @param rawImeInsetBottom [Source.WINDOW_METRICS] 分支读到的原始 IME inset 高度（px）；
      *   未走该分支时为 -1。真机实测这条读数**会在键盘已经收起后仍然活着**（配合 [Source] 可判定）。
      */
-    internal data class ImeProbe(
+    data class ImeProbe(
         val bounds: Rect?,
         val applicationWindowPresent: Boolean,
         val source: Source,
@@ -63,7 +63,7 @@ object ImeBoundsDetector {
     fun detectImeBounds(service: AccessibilityService): Rect? = detectImeProbe(service).bounds
 
     /** 单次遍历无障碍窗口表，同时拿到 IME 顶缘与"有没有应用窗口"。 */
-    internal fun detectImeProbe(service: AccessibilityService): ImeProbe =
+    fun detectImeProbe(service: AccessibilityService): ImeProbe =
         com.slideindex.app.perf.PerfProbe.probe("IME.detectImeBounds") {
             val minHeightPx =
                 (MIN_IME_HEIGHT_DP * service.resources.displayMetrics.density).roundToInt()
@@ -142,7 +142,7 @@ object ImeBoundsDetector {
  * 工程约束：**只在内容变化或满 [REPEAT_MS] 时输出**——每次事件都打会改变时序与复现率，
  * 测出来的东西就不算数了。
  */
-internal object ImeDiagnostics {
+object ImeDiagnostics {
 
     private const val TAG = "ImeDiag"
     private const val REPEAT_MS = 1000L

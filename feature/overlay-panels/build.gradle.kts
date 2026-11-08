@@ -11,6 +11,7 @@ android {
 
     defaultConfig {
         minSdk = libs.versions.minSdk.get().toInt()
+        buildConfigField("boolean", "IME_DIAG", "false")
     }
 
     compileOptions {
@@ -20,6 +21,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
