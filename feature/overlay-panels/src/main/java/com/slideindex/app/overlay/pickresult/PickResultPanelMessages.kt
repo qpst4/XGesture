@@ -1,7 +1,7 @@
 package com.slideindex.app.overlay.pickresult
 
 import android.content.Context
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 
 /**
  * 面板内提示条的内容。
@@ -9,12 +9,12 @@ import com.slideindex.app.R
  * [success] 决定图标：成功画勾，失败画感叹号。以前这里只有字符串，于是
  * 「操作失败」也顶着一个绿色对勾（用户实测反馈过）。
  */
-internal data class PickResultPanelNotification(
+data class PickResultPanelNotification(
     val text: String,
     val success: Boolean = true,
 )
 
-internal fun translateErrorMessage(context: Context, code: String): String = when (code) {
+fun translateErrorMessage(context: Context, code: String): String = when (code) {
     "mlkit_model_not_installed" -> context.getString(R.string.float_ball_translate_error_model_missing)
     "translate_engine_not_installed" -> context.getString(R.string.float_ball_translate_error_engine_missing)
     "wifi_required" -> context.getString(R.string.float_ball_translate_error_wifi_required)
