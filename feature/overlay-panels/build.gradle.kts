@@ -42,6 +42,8 @@ dependencies {
     implementation(project(":core:stash"))
     implementation(project(":core:ocr"))
     implementation(libs.lifecycle.viewmodel.savedstate)
+    implementation(libs.lifecycle.viewmodel.compose)
+    implementation(libs.savedstate)
     implementation(project(":core:overlay-host"))
     implementation(project(":core:overlay-layout"))
     implementation(project(":core:design"))
