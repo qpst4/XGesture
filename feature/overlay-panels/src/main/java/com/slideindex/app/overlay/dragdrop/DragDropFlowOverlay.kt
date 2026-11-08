@@ -35,16 +35,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toBitmap
-import com.slideindex.app.R
-import com.slideindex.app.di.OverlayDependencyAccess
-import com.slideindex.app.diagnostic.EdgeDiag
-import com.slideindex.app.ocr.OcrDependencyAccess
-import com.slideindex.app.ocr.OcrRecognizeResult
-import com.slideindex.app.overlay.FloatBallImageSearchPanel
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.FloatBallPickResult
-import com.slideindex.app.overlay.FloatBallPickResultPanel
-import com.slideindex.app.overlay.FloatBallTextPick
-import com.slideindex.app.overlay.FloatBallTranslateCoordinator
+import com.slideindex.app.ocr.OcrRecognizeResult
+import com.slideindex.app.diagnostic.EdgeDiag
 import com.slideindex.app.overlay.OverlayCompose
 import com.slideindex.app.overlay.OverlayComposeOwner
 import com.slideindex.app.overlay.OverlayWindowTypes
@@ -53,11 +47,6 @@ import com.slideindex.app.overlay.PickResultTextSource
 import com.slideindex.app.overlay.pickresult.PickResultTextMode
 import com.slideindex.app.overlay.share.ShareSheetLauncher
 import com.slideindex.app.overlay.share.ShareSheetPayload
-import com.slideindex.app.overlay.searchpanel.SearchPanelOverlayWindow
-import com.slideindex.app.overlay.searchpanel.SearchPanelQueryBridge
-import com.slideindex.app.overlay.searchpanel.SearchPanelSessionState
-import com.slideindex.app.search.SearchEngineLauncher
-import com.slideindex.app.service.RegionalScreenshotOcr
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.DragDropFlowPosition
 import com.slideindex.app.settings.SearchEngineCatalog
@@ -614,7 +603,7 @@ class DragDropFlowController(
                 val pkg = engine.targetPackage?.takeIf { it.isNotBlank() } ?: continue
                 val icon = (!engine.iconPath.isNullOrBlank()).let { hasPath ->
                     if (hasPath) runCatching { android.graphics.BitmapFactory.decodeFile(engine.iconPath) }.getOrNull() else null
-                } ?: com.slideindex.app.ui.AppIconOverride.bitmap(context, pkg, 96)
+                } ?: com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideBitmap?.invoke(context, pkg, 96)
                 ?: runCatching { pm.getApplicationIcon(pkg).toBitmap(96, 96) }.getOrNull()
                 if (icon != null) {
                     list.add(
@@ -633,7 +622,7 @@ class DragDropFlowController(
                 val pkg = engine.targetPackage ?: continue
                 val icon = (!engine.iconPath.isNullOrBlank()).let { hasPath ->
                     if (hasPath) runCatching { android.graphics.BitmapFactory.decodeFile(engine.iconPath) }.getOrNull() else null
-                } ?: com.slideindex.app.ui.AppIconOverride.bitmap(context, pkg, 96)
+                } ?: com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideBitmap?.invoke(context, pkg, 96)
                 ?: runCatching { pm.getApplicationIcon(pkg).toBitmap(96, 96) }.getOrNull()
                 if (icon != null) {
                     list.add(
@@ -660,7 +649,7 @@ class DragDropFlowController(
             // 复制、翻译、分享、分词同样是内置动作，开关关着时收在「操作」菜单里。
             for (engine in latestSettings.dragFlowTextEngines.sortedBy { it.sortOrder }) {
                 val pkgIcon = engine.targetPackage?.let { pkg ->
-                    com.slideindex.app.ui.AppIconOverride.bitmap(context, pkg, 96)
+                    com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideBitmap?.invoke(context, pkg, 96)
                         ?: runCatching { pm.getApplicationIcon(pkg).toBitmap(96, 96) }.getOrNull()
                 }
                 list.add(
@@ -692,7 +681,7 @@ class DragDropFlowController(
                     targetId == "builtin_image_search" && uri != null -> {
                         val bitmap = decodeBitmapFromUri(uri)
                         if (bitmap != null) {
-                            FloatBallImageSearchPanel.show(context, bitmap)
+                            com.slideindex.app.overlay.panels.PanelRuntimeHooks.showImageSearchPanel?.invoke(context, bitmap)
                         } else {
                             Toast.makeText(context, context.getString(R.string.drag_drop_flow_toast_image_unreadable), Toast.LENGTH_SHORT).show()
                         }
@@ -703,7 +692,7 @@ class DragDropFlowController(
                             .find { it.id == engineId }
                         val bitmap = decodeBitmapFromUri(uri)
                         if (engine != null && bitmap != null) {
-                            val launched = SearchEngineLauncher.launchImageShare(context, engine, bitmap)
+                            val launched = com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchImageShareSearch?.invoke(context, engine, bitmap) == true
                             if (!launched) {
                                 Toast.makeText(context, context.getString(R.string.drag_drop_flow_toast_launch_failed), Toast.LENGTH_SHORT).show()
                             }
@@ -752,13 +741,13 @@ class DragDropFlowController(
                     targetId == "copy_image" && uri != null -> {
                         val bitmap = decodeBitmapFromUri(uri)
                         if (bitmap != null) {
-                            FloatBallTextPick.copyImage(context, bitmap)
+                            com.slideindex.app.overlay.panels.PanelStashWriteHooks.copyImage?.invoke(context, bitmap)
                         }
                     }
                     targetId == "system_share_image" && uri != null -> {
                         val bitmap = decodeBitmapFromUri(uri)
                         if (bitmap != null) {
-                            val shareUri = FloatBallTextPick.createShareImageUri(context, bitmap)
+                            val shareUri = com.slideindex.app.overlay.panels.PanelRuntimeHooks.createShareImageUri?.invoke(context, bitmap)
                             if (shareUri != null) {
                                 ShareSheetLauncher.share(
                                     context = context,
@@ -775,7 +764,7 @@ class DragDropFlowController(
                         if (engine != null) {
                             // 统一走 launchText：「分享到 App」的引擎由它转去 launchTextShare。
                             // 这里再自己判断 engineType 就会再次漏掉分享类（历史 bug：拖到 QQ 松手没反应）。
-                            val launched = SearchEngineLauncher.launchText(context, engine, text, latestSettings)
+                            val launched = com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchTextSearch?.invoke(context, engine, text, latestSettings) == true
                             EdgeDiag.log(
                                 DIAG_TAG,
                                 "engine id=${engine.id} type=${engine.engineType} " +
@@ -792,7 +781,7 @@ class DragDropFlowController(
                         Toast.makeText(context, context.getString(R.string.drag_drop_flow_toast_text_unreadable), Toast.LENGTH_SHORT).show()
                     }
                     targetId == "copy_text" && !text.isNullOrBlank() -> {
-                        FloatBallTextPick.copyText(context, text)
+                        com.slideindex.app.overlay.panels.PanelStashWriteHooks.copyText?.invoke(context, text)
                         Toast.makeText(context, context.getString(R.string.drag_drop_flow_toast_text_copied), Toast.LENGTH_SHORT).show()
                     }
                     targetId == "segment_text" && !text.isNullOrBlank() -> {
@@ -801,8 +790,8 @@ class DragDropFlowController(
                     targetId == "search_text" && !text.isNullOrBlank() -> {
                         // 进我们自己的搜索面板，不要 ACTION_WEB_SEARCH 弹系统窗口。
                         val hostContext = overlayHostContext() ?: context
-                        SearchPanelQueryBridge.rememberQuery(context, text)
-                        if (!SearchPanelOverlayWindow.show(hostContext)) {
+                        com.slideindex.app.overlay.panels.PanelRuntimeHooks.rememberSearchQuery?.invoke(context, text)
+                        if (com.slideindex.app.overlay.panels.PanelRuntimeHooks.showSearchPanelWindow?.invoke(hostContext) != true) {
                             Toast.makeText(context, context.getString(R.string.shortcut_panel_open_failed), Toast.LENGTH_SHORT).show()
                         }
                     }
@@ -826,10 +815,10 @@ class DragDropFlowController(
                             Toast.makeText(context, context.getString(R.string.drag_drop_flow_toast_image_unreadable), Toast.LENGTH_SHORT).show()
                         } else {
                             val hostContext = overlayHostContext() ?: context
-                            SearchPanelSessionState.pushImage(bitmap)
-                            if (!SearchPanelOverlayWindow.show(hostContext)) {
-                                SearchPanelSessionState.pushImage(null)
-                                FloatBallImageSearchPanel.show(context, bitmap)
+                            com.slideindex.app.overlay.panels.PanelRuntimeHooks.pushSearchPanelImage?.invoke(bitmap)
+                            if (com.slideindex.app.overlay.panels.PanelRuntimeHooks.showSearchPanelWindow?.invoke(hostContext) != true) {
+                                com.slideindex.app.overlay.panels.PanelRuntimeHooks.pushSearchPanelImage?.invoke(null)
+                                com.slideindex.app.overlay.panels.PanelRuntimeHooks.showImageSearchPanel?.invoke(context, bitmap)
                             }
                         }
                     }
@@ -845,11 +834,8 @@ class DragDropFlowController(
                         // 与取词面板 / 剪贴板智能翻译同一条链路：引擎与「即时翻译」开关都生效；
                         // 选「本地 App」或关掉即时翻译时不会打开取词面板。
                         val hostContext = overlayHostContext() ?: context
-                        FloatBallTranslateCoordinator.translateFromExternalEntry(
-                            context = hostContext,
-                            text = text,
-                            openTextPanel = { openTextPickPanel(hostContext, it) },
-                        )
+                        com.slideindex.app.overlay.panels.PanelRuntimeHooks.translateFromExternalEntry
+                            ?.invoke(hostContext, text) { openTextPickPanel(hostContext, it) }
                     }
                     targetId == "system_share_text" && !text.isNullOrBlank() -> {
                         ShareSheetLauncher.share(
@@ -879,8 +865,11 @@ class DragDropFlowController(
      * （`showTranslateLoading` 要求面板已 show），所以这里只负责「先把原文放上面板」。
      */
     private fun openTextPickPanel(hostContext: Context, text: String) {
-        FloatBallPickResultPanel.showResult(
-            context = hostContext,
+        val host = com.slideindex.app.overlay.pickresult.PickResultHostAccess.host ?: return
+        host.show(
+            hostContext,
+            hostContext.resources.displayMetrics.widthPixels / 2f,
+            hostContext.resources.displayMetrics.heightPixels / 2f,
             result = FloatBallPickResult(
                 a11yText = text,
                 ocrText = null,
@@ -889,7 +878,7 @@ class DragDropFlowController(
                 activeSource = PickResultTextSource.A11Y,
                 contentOrigin = PickResultContentOrigin.SCREEN_PICK,
             ),
-            initialTextMode = PickResultTextMode.WORD_TAP,
+            PickResultTextMode.WORD_TAP,
         )
     }
 
@@ -901,12 +890,12 @@ class DragDropFlowController(
         val appContext = context.applicationContext
         scope.launch {
             val settings = runCatching {
-                OverlayDependencyAccess.overlayDependencies(appContext)?.settingsRepository?.readSnapshot()
+                com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot?.invoke(appContext)
             }.getOrNull()
             val modelId = settings?.floatBallOcrModelId.orEmpty()
             val installed = modelId.isNotBlank() &&
                 runCatching {
-                    OcrDependencyAccess.modelRepository(appContext)?.isInstalled(modelId) == true
+                    com.slideindex.app.overlay.panels.PanelRuntimeHooks.isOcrModelInstalled?.invoke(appContext, modelId) == true
                 }.getOrDefault(false)
             if (!installed) {
                 Toast.makeText(context, context.getString(R.string.drag_drop_flow_toast_ocr_unavailable), Toast.LENGTH_SHORT).show()
@@ -914,7 +903,7 @@ class DragDropFlowController(
             }
 
             val recognized = withContext(Dispatchers.IO) {
-                runCatching { RegionalScreenshotOcr.recognizeBitmapPublic(appContext, modelId, bitmap) }.getOrNull()
+                runCatching { com.slideindex.app.overlay.panels.PanelRuntimeHooks.recognizeBitmap?.invoke(appContext, modelId, bitmap) }.getOrNull()
             }
             val text = (recognized as? OcrRecognizeResult.Success)?.text?.trim()
             withContext(Dispatchers.Main) {

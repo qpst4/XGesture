@@ -300,4 +300,27 @@
     <item quantity="one">%d entry</item>
     <item quantity="other">%d entries</item>
     </plurals>
+    <string name="drag_drop_flow_hub">Actions</string>
+    <string name="drag_drop_flow_action_segment">Split words</string>
+    <string name="drag_drop_flow_action_search">Search</string>
+    <string name="drag_drop_flow_action_pin">Pin to screen</string>
+    <string name="drag_drop_flow_target_copy_image">Copy image</string>
+    <string name="drag_drop_flow_target_share_image">Share image</string>
+    <string name="drag_drop_flow_target_share_file">Share file</string>
+    <string name="drag_drop_flow_target_translate">Translate</string>
+    <string name="drag_drop_flow_target_copy_text">Copy text</string>
+    <string name="drag_drop_flow_target_share_text">Share text</string>
+    <string name="drag_drop_flow_toast_cancelled">Drag cancelled</string>
+    <string name="drag_drop_flow_toast_restored">Restored</string>
+    <string name="drag_drop_flow_toast_image_unreadable">Can\'t read the dragged image</string>
+    <string name="drag_drop_flow_toast_file_unreadable">Can\'t read the dragged file</string>
+    <string name="drag_drop_flow_toast_launch_failed">Can\'t open the target app</string>
+    <string name="drag_drop_flow_toast_target_missing">That target is no longer in the flow bar</string>
+    <string name="drag_drop_flow_toast_text_copied">Text copied to clipboard</string>
+    <string name="drag_drop_flow_toast_text_unreadable">Can\'t read the dragged text</string>
+    <string name="drag_drop_flow_toast_share_failed">Sharing failed</string>
+    <string name="drag_drop_flow_toast_pinned">Pinned to the screen</string>
+    <string name="drag_drop_flow_toast_no_text">No text recognised in the image</string>
+    <string name="drag_drop_flow_toast_ocr_unavailable">No OCR engine is available</string>
+    <string name="shortcut_panel_open_failed">Could not open panel. Make sure XGesture is enabled.</string>
 </resources>
