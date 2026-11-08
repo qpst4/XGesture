@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.core.graphics.drawable.toBitmap
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 
 @Composable
 fun SearchPanelActionPillsRow(

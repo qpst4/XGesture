@@ -337,4 +337,13 @@
     <string name="clipboard_float_close">Close</string>
     <string name="clipboard_float_meta_image">Image</string>
     <string name="clipboard_float_opacity_title">Floating window opacity</string>
+    <string name="search_panel_open_link_host">Open %1$s</string>
+    <string name="search_panel_contact_permission_prompt">Tap to allow contacts search</string>
+    <string name="search_panel_file_permission_prompt">Tap to allow file search</string>
+    <string name="search_panel_collapse">Collapse</string>
+    <string name="search_panel_card_expand">Expand</string>
+    <string name="search_panel_file_preview_share">Share</string>
+    <string name="search_panel_file_preview_open">Open</string>
+    <string name="search_panel_file_preview_unable_to_open">Unable to preview %1$s</string>
+    <string name="search_panel_phone_call">Phone call</string>
 </resources>

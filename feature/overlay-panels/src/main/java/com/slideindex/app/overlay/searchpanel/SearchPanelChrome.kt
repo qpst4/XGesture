@@ -29,26 +29,26 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.LocalFrostedGlassBackdrop
 import com.slideindex.app.overlay.pickresult.PickResultPanelCardCorner
 import com.slideindex.app.overlay.pickresult.PickResultPanelCardElevation
 import com.slideindex.app.overlay.pickresult.PickResultPanelCardShape
 import com.slideindex.app.ui.theme.LocalAppDarkTheme
 
-internal val SearchPanelCardCorner = PickResultPanelCardCorner
-internal val SearchPanelCardShape = PickResultPanelCardShape
-internal val SearchPanelCardHorizontalPadding = 12.dp
-internal val SearchPanelCardVerticalSpacing = 10.dp
+val SearchPanelCardCorner = PickResultPanelCardCorner
+val SearchPanelCardShape = PickResultPanelCardShape
+val SearchPanelCardHorizontalPadding = 12.dp
+val SearchPanelCardVerticalSpacing = 10.dp
 
-internal val SearchPanelEngineDockTopPadding = 10.dp
-internal val SearchPanelEngineDockBottomPadding = 2.dp
-internal val SearchPanelPageIndicatorTopPadding = 3.dp
-internal val SearchPanelPageIndicatorBottomPadding = 3.dp
+val SearchPanelEngineDockTopPadding = 10.dp
+val SearchPanelEngineDockBottomPadding = 2.dp
+val SearchPanelPageIndicatorTopPadding = 3.dp
+val SearchPanelPageIndicatorBottomPadding = 3.dp
 private val SearchPanelPageIndicatorBodyHeight = 4.dp
 
 /** 搜索引擎 Dock 内容高度（网格 + 内边距；多页时才含分页指示行）。 */
-internal fun SearchPanelEngineDockHeight(
+fun SearchPanelEngineDockHeight(
     rows: Int,
     showLabels: Boolean,
     columns: Int,

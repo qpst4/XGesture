@@ -41,6 +41,7 @@ dependencies {
     implementation(project(":core:gesture"))
     implementation(project(":core:shortcuts"))
     implementation(project(":core:clipboard"))
+    implementation(project(":core:search"))
     implementation(project(":core:stash"))
     implementation(project(":core:ocr"))
     implementation(libs.lifecycle.viewmodel.savedstate)

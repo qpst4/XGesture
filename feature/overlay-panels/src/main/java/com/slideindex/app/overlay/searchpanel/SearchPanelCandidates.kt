@@ -28,7 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.pickresult.PickResultUrl
 import com.slideindex.app.search.contacts.ContactSearchEntry
 import com.slideindex.app.search.files.DeviceFileEntry
