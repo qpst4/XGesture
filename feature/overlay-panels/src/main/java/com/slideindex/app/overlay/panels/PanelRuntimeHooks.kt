@@ -11,6 +11,10 @@ import com.slideindex.app.settings.AppSettings
  * 这里用回调把它们反转：`SlideIndexApp` 启动时注入，未注入时全部降级为"不可用"。
  */
 object PanelRuntimeHooks {
+    /** 打开文件浏览器浮窗。 */
+    @Volatile
+    var showFileBrowser: ((Context, AppSettings, String?) -> Unit)? = null
+
     /** 设置流（`:app` 的 settingsRepository.settings）。 */
     @Volatile
     var settingsFlow: ((Context) -> kotlinx.coroutines.flow.Flow<AppSettings>?)? = null

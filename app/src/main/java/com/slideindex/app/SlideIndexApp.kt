@@ -365,6 +365,13 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     com.slideindex.app.overlay.FloatBallPickResultPanel.showOcrError(context, reason)
                 }
             }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.showFileBrowser = { ctx, settings, initialPath ->
+            com.slideindex.app.overlay.filebrowser.FileBrowserOverlayWindow.show(
+                context = ctx,
+                settings = settings,
+                initialPath = initialPath,
+            )
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsFlow = { ctx ->
             com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(ctx)
                 ?.settingsRepository?.settings
