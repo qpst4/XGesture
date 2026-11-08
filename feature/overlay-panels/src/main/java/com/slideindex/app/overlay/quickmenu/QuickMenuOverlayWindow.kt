@@ -293,7 +293,9 @@ object QuickMenuOverlayWindow {
                         // **预置入口**（前台活动探测、冰箱、文件浏览器…）：点一下就直接打开对应面板，
                         // 并收起本菜单。刻意**不切页**：这类项没有自己的界面，切过去只会留一个空白子页面。
                         // 打开失败（无障碍宿主刚断等）时也留在列表页，而不是进入空白子页。
-                        if (quickMenuRunEntry(hostContext, tool, current.settings)) {
+                        if (com.slideindex.app.overlay.quickmenu.QuickMenuHostAccess.host
+                    ?.runEntry(hostContext, tool, current.settings) == true
+                ) {
                             hideForExternalShare()
                         } else if (!tool.opensStandalonePanel) {
                             current.page.value = tool

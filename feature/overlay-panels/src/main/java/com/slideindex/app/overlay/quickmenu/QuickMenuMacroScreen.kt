@@ -21,9 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.gesture.GestureAction
-import com.slideindex.app.macro.MacroActionRunner
 
 private const val TAG = "QuickMenuMacro"
 
@@ -62,7 +61,7 @@ internal fun QuickMenuMacroScreen(onRan: () -> Unit) {
                     .fillMaxWidth()
                     .clickable {
                         // 跑起来后把快捷菜单收起来（之前跑完菜单还挂在屏幕上）
-                        val started = MacroActionRunner.run(context, GestureAction.RunMacro(macroId))
+                        val started = com.slideindex.app.overlay.quickmenu.QuickMenuHostAccess.host?.runMacro(context, macroId) == true
                         if (started) onRan() else onRan()
                     }
                     .padding(horizontal = 20.dp, vertical = 14.dp),

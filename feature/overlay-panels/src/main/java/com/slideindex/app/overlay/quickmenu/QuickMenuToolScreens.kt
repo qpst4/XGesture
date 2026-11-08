@@ -4,7 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import com.slideindex.app.di.OverlayDependencyAccess
+import com.slideindex.app.overlay.panels.PanelRuntimeHooks
 import com.slideindex.app.settings.FloatBallTranslateEngine
 import com.slideindex.app.translate.TranslateDependencyAccess
 import com.slideindex.app.translate.TranslateEngine
@@ -96,7 +96,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.barcode.QrCodeGenerator
 import com.slideindex.app.barcode.mergeScanResults
 import com.slideindex.app.barcode.BarcodeScanResult
@@ -773,8 +773,12 @@ internal fun QuickMenuScanDecoderScreen(
                         QuickMenuOverlayWindow.suspendForExternalActivity()
                         // 对齐 performSmartScreenshot 的既有节奏（等一帧 + 120ms）再截。
                         delay(SCREENSHOT_HIDE_DELAY_MS)
-                        val outcome = QuickMenuScreenshot.capture()
+                        val outcome = com.slideindex.app.overlay.quickmenu.QuickMenuHostAccess.host?.captureScreenshot()
                         QuickMenuOverlayWindow.resumeFromExternalActivity()
+                        if (outcome == null) {
+                            showQuickMenuToast(context, R.string.quick_menu_scan_capture_unavailable)
+                            return@launch
+                        }
                         when (outcome) {
                             is ScreenshotCaptureOutcome.Success -> {
                                 val scanned = withContext(Dispatchers.Default) {
@@ -973,7 +977,7 @@ internal object QuickMenuTranslateState {
 internal fun QuickMenuTranslateScreen() {
     val context = LocalContext.current
     val settings = remember(context) {
-        OverlayDependencyAccess.overlayDependencies(context)?.settingsRepository?.readSnapshot()
+        PanelRuntimeHooks.settingsSnapshot?.invoke(context)
     }
     val languages = remember { TranslateLanguageCatalog.options }
     // 目标语言标签用 App 既有的 `translateTargetAutonym`（**各语言用自己的语言写自己**：

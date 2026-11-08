@@ -5,7 +5,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.slideindex.app.stash.StashReminderScheduler
 
 /**
  * 倒计时的"到点"闹钟。
@@ -44,7 +43,7 @@ internal object QuickMenuTimerAlarm {
             ?: return
         val triggerAt = System.currentTimeMillis() + remainingMs
         runCatching {
-            StashReminderScheduler.setAlarmDegradingToInexact(alarmManager, triggerAt, pending)
+            com.slideindex.app.overlay.quickmenu.QuickMenuHostAccess.host?.setReminderAlarm(alarmManager, triggerAt, pending)
         }.onFailure { Log.w(TAG, "schedule failed, triggerAt=$triggerAt", it) }
     }
 

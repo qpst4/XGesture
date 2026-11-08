@@ -61,7 +61,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.barcode.BarcodeScanResult
 import com.slideindex.app.overlay.filebrowser.FileBrowserQuickCard
 import sh.calvin.reorderable.ReorderableItem

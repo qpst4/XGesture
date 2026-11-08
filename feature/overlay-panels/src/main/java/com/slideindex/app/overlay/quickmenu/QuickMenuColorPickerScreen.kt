@@ -67,12 +67,8 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
-import com.slideindex.app.overlay.FloatBallOverlay
-import com.slideindex.app.overlay.FloatingPointerOverlayWindow
-import com.slideindex.app.overlay.history.HistoryHandleCaptureVisibility
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.service.ScreenshotCaptureOutcome
-import com.slideindex.app.service.SlideIndexAccessibilityService
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
@@ -235,30 +231,25 @@ private fun startFullScreenPick(
             // 1) 面板自己让位（窗口还在，只是不可见/不可触摸，Session 保留）。
             QuickMenuOverlayWindow.suspendForExternalActivity()
             // 2) 其余常驻浮层各自是独立窗口，不会因为面板收起而消失，必须逐个藏绘制。
-            FloatingPointerOverlayWindow.suppressForScreenshotCapture()
-            FloatBallOverlay.suppressForScreenshotCapture()
-            HistoryHandleCaptureVisibility.suppress()
-            SlideIndexAccessibilityService.suppressEdgeChromeForCapture()
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.suppressChromeForCapture?.invoke()
 
             // 3) 等"让位"真的合成过：主线程一卡顿，不等就会把浮层拍进冻结帧。
             delay(PICK_HIDE_DELAY_MS)
 
-            when (val outcome = QuickMenuScreenshot.capture()) {
+            when (val outcome = com.slideindex.app.overlay.quickmenu.QuickMenuHostAccess.host
+                ?.captureScreenshot()) {
                 is ScreenshotCaptureOutcome.Success -> {
                     // 先挂冻结帧，再恢复窗口：恢复的第一帧就是全屏取色层，不会闪一下工具页。
                     state.picking = outcome.bitmap
                 }
-                ScreenshotCaptureOutcome.ServiceUnavailable -> state.errorText = unavailable
+                null, ScreenshotCaptureOutcome.ServiceUnavailable -> state.errorText = unavailable
                 ScreenshotCaptureOutcome.Throttled -> state.errorText = throttled
                 is ScreenshotCaptureOutcome.Failed ->
                     state.errorText = failedTemplate.format(outcome.errorCode)
             }
         } finally {
             // 无论成败都必须恢复：漏一条，球/触钮/把手就会永久消失（比多拍一条浮层严重得多）。
-            SlideIndexAccessibilityService.restoreEdgeChromeAfterCapture()
-            HistoryHandleCaptureVisibility.restore()
-            FloatBallOverlay.restoreAfterScreenshotCapture()
-            FloatingPointerOverlayWindow.restoreAfterScreenshotCapture()
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.restoreChromeAfterCapture?.invoke()
             QuickMenuOverlayWindow.resumeFromExternalActivity()
             state.busy = false
         }

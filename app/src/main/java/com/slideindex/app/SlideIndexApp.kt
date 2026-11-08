@@ -404,6 +404,35 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onDone(entries)
             }
         }
+        com.slideindex.app.overlay.quickmenu.QuickMenuHostAccess.host =
+            object : com.slideindex.app.overlay.quickmenu.QuickMenuHost {
+                override fun runEntry(
+                    context: android.content.Context,
+                    tool: com.slideindex.app.overlay.quickmenu.QuickMenuTool,
+                    settings: com.slideindex.app.settings.AppSettings,
+                ): Boolean = com.slideindex.app.overlay.quickmenu.quickMenuRunEntry(context, tool, settings)
+
+                override fun setReminderAlarm(
+                    alarmManager: android.app.AlarmManager,
+                    triggerAtMillis: Long,
+                    operation: android.app.PendingIntent,
+                ) {
+                    com.slideindex.app.stash.StashReminderScheduler.setAlarmDegradingToInexact(
+                        alarmManager,
+                        triggerAtMillis,
+                        operation,
+                    )
+                }
+
+                override suspend fun captureScreenshot(): com.slideindex.app.service.ScreenshotCaptureOutcome? =
+                    com.slideindex.app.overlay.quickmenu.QuickMenuScreenshot.capture()
+
+                override fun runMacro(context: android.content.Context, macroId: String): Boolean =
+                    com.slideindex.app.macro.MacroActionRunner.run(
+                        context,
+                        com.slideindex.app.gesture.GestureAction.RunMacro(macroId),
+                    )
+            }
         com.slideindex.app.overlay.filebrowser.FileBrowserHostAccess.host =
             object : com.slideindex.app.overlay.filebrowser.FileBrowserHost {
                 override fun isRootMode(): Boolean =
