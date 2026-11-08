@@ -8,7 +8,7 @@ import com.slideindex.app.search.files.DeviceFileEntry
 import com.slideindex.app.search.shortcuts.ShortcutSearchEntry
 import com.slideindex.app.search.settings.SystemSettingsSearchEntry
 
-internal data class SearchPanelCandidateCacheEntry(
+data class SearchPanelCandidateCacheEntry(
     val settings: List<SystemSettingsSearchEntry>,
     val contacts: List<ContactSearchEntry>,
     val files: List<DeviceFileEntry>,
@@ -17,7 +17,7 @@ internal data class SearchPanelCandidateCacheEntry(
     val clipboard: List<ClipboardEntry> = emptyList(),
 )
 
-internal object SearchPanelCandidateCache {
+object SearchPanelCandidateCache {
     private const val MAX_ENTRIES = 48
 
     private val cache = LruCache<String, SearchPanelCandidateCacheEntry>(MAX_ENTRIES)
