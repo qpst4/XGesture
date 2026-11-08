@@ -35,7 +35,7 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.barcode.BarcodeScanResult
 import com.slideindex.app.barcode.ZxingBarcodeScanner
 import com.slideindex.app.util.finishWithoutTransition

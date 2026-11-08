@@ -521,4 +521,6 @@
     <string name="quick_menu_unit_mib">Mebibyte</string>
     <string name="quick_menu_unit_gib">Gibibyte</string>
     <string name="quick_menu_unit_tib">Tebibyte</string>
+    <string name="quick_menu_scan_torch">Torch</string>
+    <string name="quick_menu_scan_close">Close</string>
 </resources>
