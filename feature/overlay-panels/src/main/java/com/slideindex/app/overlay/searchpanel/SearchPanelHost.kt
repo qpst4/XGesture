@@ -30,9 +30,24 @@ interface SearchPanelHost {
     suspend fun setFrozen(context: Context, app: AppInfo, frozen: Boolean): Boolean
 }
 
+/** 搜索面板内容（`:app` 的 SearchPanelScreen 组合函数）。 */
+fun interface SearchPanelContent {
+    @androidx.compose.runtime.Composable
+    fun content(
+        visibilityState: androidx.compose.animation.core.MutableTransitionState<Boolean>,
+        onDismiss: () -> Unit,
+    )
+}
+
 /** 模块内服务定位点：`:app` 启动时注入。 */
 object SearchPanelHostAccess {
 
     @Volatile
     var host: SearchPanelHost? = null
+}
+
+/** 搜索面板内容注入点。 */
+object SearchPanelContentAccess {
+    @Volatile
+    var content: SearchPanelContent? = null
 }

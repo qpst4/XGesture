@@ -404,6 +404,19 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onDone(entries)
             }
         }
+        com.slideindex.app.overlay.searchpanel.SearchPanelContentAccess.content =
+            object : com.slideindex.app.overlay.searchpanel.SearchPanelContent {
+                @androidx.compose.runtime.Composable
+                override fun content(
+                    visibilityState: androidx.compose.animation.core.MutableTransitionState<Boolean>,
+                    onDismiss: () -> Unit,
+                ) {
+                    com.slideindex.app.overlay.searchpanel.SearchPanelScreen(
+                        visibilityState = visibilityState,
+                        onDismiss = onDismiss,
+                    )
+                }
+            }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerIconBitmap = { ctx: android.content.Context, pkg: String ->
             com.slideindex.app.util.PickerAppIconBitmap.load(ctx, pkg)
         }

@@ -1,8 +1,6 @@
 package com.slideindex.app.overlay.searchpanel
 
-import com.slideindex.app.overlay.overlayHostContext
 
-import com.slideindex.app.overlay.ScreenOffDismissReceiver
 import android.content.Context
 import android.graphics.PixelFormat
 import android.os.Handler
@@ -21,15 +19,12 @@ import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
-import com.slideindex.app.overlay.FloatBallOverlay
 import com.slideindex.app.overlay.OverlayBlurGate
 import com.slideindex.app.overlay.OverlayCompose
 import com.slideindex.app.overlay.OverlayComposeOwner
 import com.slideindex.app.overlay.OverlayPanelSystemGestureExclusion
 import com.slideindex.app.overlay.OverlayTextToolbarProvider
 import com.slideindex.app.overlay.OverlayWindowTypes
-import com.slideindex.app.overlay.compositor.OverlaySceneController
-import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.settings.SearchPanelBackgroundStyle
 import com.slideindex.app.util.PermissionHelper
 import kotlin.math.roundToInt
@@ -50,7 +45,7 @@ object SearchPanelOverlayWindow {
             composeViewRef = java.lang.ref.WeakReference(value)
         }
     private var owner: OverlayComposeOwner? = null
-    private val screenOffDismissReceiver = ScreenOffDismissReceiver { dismiss() }
+    private var screenOffUnregister: (() -> Unit)? = null
     private var appContext: android.app.Application? = null
     private var layoutParams: WindowManager.LayoutParams? = null
     private var panelVisibilityState: MutableTransitionState<Boolean>? = null
@@ -95,7 +90,7 @@ object SearchPanelOverlayWindow {
         cancelBringAboveRetries()
         fun attempt() {
             if (token != bringAboveToken) return
-            FloatBallOverlay.scheduleChromeAbovePanels()
+            com.slideindex.app.overlay.panels.PanelFloatBallHooks.scheduleChromeAbovePanels?.invoke(0L)
         }
         attempt()
         composeView?.post {
@@ -117,7 +112,7 @@ object SearchPanelOverlayWindow {
         }
         // 预热必须等无障碍宿主就绪：早于它建窗会拿到无效 token（BadTokenException），
         // 之后 show() 的 updateViewLayout 全部失败，面板就变成"窗口在但永远不可见"。
-        val hostContext = overlayHostContext() ?: return
+        val hostContext = com.slideindex.app.overlay.panels.PanelRuntimeHooks.overlayHostContext?.invoke() ?: return
         ensureWindow(hostContext)
         if (!isShowing) {
             applyPanelShellPassive()
@@ -147,7 +142,7 @@ object SearchPanelOverlayWindow {
             composeView?.post {
                 panelVisibilityState?.targetState = true
             }
-            OverlaySceneController.onContentPanelShown()
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.onContentPanelShown?.invoke()
             scheduleBringFloatBallAbovePanels()
             // 面板已经开着时再次呼出（例如键盘被返回键收起后）：把键盘重新拉起来。
             if (imeOnWindowFocusEnabled) {
@@ -160,7 +155,7 @@ object SearchPanelOverlayWindow {
             Log.w(TAG, "show: accessibility service not enabled")
             return false
         }
-        val hostContext = overlayHostContext() ?: run {
+        val hostContext = com.slideindex.app.overlay.panels.PanelRuntimeHooks.overlayHostContext?.invoke() ?: run {
             Log.w(TAG, "show: accessibility service not connected")
             return false
         }
@@ -177,7 +172,7 @@ object SearchPanelOverlayWindow {
             }
             panelVisibilityState?.targetState = true
         }
-        OverlaySceneController.onContentPanelShown()
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.onContentPanelShown?.invoke()
         scheduleBringFloatBallAbovePanels()
         return composeView != null
     }
@@ -196,8 +191,8 @@ object SearchPanelOverlayWindow {
             if (token != dismissToken) return@postDelayed
             if (panelVisibilityState?.targetState == true) return@postDelayed
             applyPanelShellPassive()
-            OverlaySceneController.onContentPanelHidden()
-        }, SEARCH_PANEL_ANIM_MS.toLong())
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.onContentPanelHidden?.invoke()
+        }, 140L)
     }
 
     /**
@@ -506,7 +501,7 @@ object SearchPanelOverlayWindow {
                 setContent {
                     com.slideindex.app.ui.theme.OverlayAwareModuleTheme {
                         OverlayTextToolbarProvider {
-                            SearchPanelScreen(
+                            com.slideindex.app.overlay.searchpanel.SearchPanelContentAccess.content?.content(
                                 visibilityState = panelVisibilityState!!,
                                 onDismiss = { dismiss() },
                             )
@@ -547,12 +542,12 @@ object SearchPanelOverlayWindow {
             destroyWindow()
             return
         }
-        if (FloatBallOverlay.isShowing) {
-            FloatBallOverlay.scheduleChromeAbovePanels(delayMs = 0L)
+        if (com.slideindex.app.overlay.panels.PanelFloatBallHooks.isShowing?.invoke() == true) {
+            com.slideindex.app.overlay.panels.PanelFloatBallHooks.scheduleChromeAbovePanels?.invoke(0L)
         }
         composeView?.let { OverlayPanelSystemGestureExclusion.attach(it) }
 
-        screenOffDismissReceiver.register(hostContext)
+        screenOffUnregister = com.slideindex.app.overlay.panels.PanelRuntimeHooks.registerScreenOffDismiss?.invoke(hostContext) { dismiss() }
     }
 
     private fun destroyWindow() {
@@ -580,7 +575,8 @@ object SearchPanelOverlayWindow {
         nativeBlurActive = false
         imeOnWindowFocusEnabled = false
         panelVisibilityState = null
-        screenOffDismissReceiver.unregister()
+        screenOffUnregister?.invoke()
+        screenOffUnregister = null
         appContext = null
     }
 }

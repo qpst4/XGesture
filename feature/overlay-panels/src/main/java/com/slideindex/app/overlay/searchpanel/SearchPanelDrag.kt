@@ -10,7 +10,6 @@ import android.text.TextPaint
 import android.text.TextUtils
 import android.view.View
 import com.slideindex.app.clipboard.ClipboardEntry
-import com.slideindex.app.clipboard.ClipboardWriter
 import com.slideindex.app.overlay.dragdrop.DragFlowSource
 import com.slideindex.app.overlay.history.HistoryDragPreview
 import com.slideindex.app.overlay.history.HistoryEntryDragHelper
@@ -24,7 +23,7 @@ import com.slideindex.app.search.files.DeviceFileEntry
  * 搜索面板本身在起拖时只 [SearchPanelOverlayWindow.suspendForDrag] 藏起来，不销毁，
  * 所以【恢复】能把搜索词、结果和滚动位置原样带回来。
  */
-internal object SearchPanelDrag {
+object SearchPanelDrag {
 
     /** 计算卡片 / 联系人这类纯文本。 */
     fun text(view: View, text: String, title: String): Boolean {
@@ -36,7 +35,8 @@ internal object SearchPanelDrag {
 
     /** 剪贴板条目：文本 / HTML / 图片 URI 都由 [ClipboardWriter] 统一打包。 */
     fun clipboard(view: View, context: Context, entry: ClipboardEntry): Boolean {
-        val clip = ClipboardWriter.buildClipForEntry(context, entry) ?: return false
+        val clip = com.slideindex.app.overlay.panels.PanelStashWriteHooks
+        .buildClipForEntry?.invoke(context, entry) ?: return false
         val preview = HistoryEntryDragHelper.previewForClipboardEntry(entry, emptyList())
         val title = clip.description.label?.toString()?.takeIf { it.isNotBlank() }
             ?: entry.text.trim().lineSequence().firstOrNull()?.take(40)
