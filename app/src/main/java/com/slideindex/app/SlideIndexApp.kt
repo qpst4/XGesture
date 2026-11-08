@@ -265,6 +265,36 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onResult = { created -> onResult(created) },
             )
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.registerScreenOffDismiss = { ctx, onScreenOff ->
+            val receiver = com.slideindex.app.overlay.ScreenOffDismissReceiver(onScreenOff)
+            receiver.register(ctx)
+            val unregister: () -> Unit = { receiver.unregister() }
+            unregister
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.onContentPanelShown = {
+            com.slideindex.app.overlay.compositor.OverlaySceneController.onContentPanelShown()
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.onContentPanelHidden = {
+            com.slideindex.app.overlay.compositor.OverlaySceneController.onContentPanelHidden()
+        }
+        com.slideindex.app.overlay.panels.PanelFloatBallHooks.scheduleChromeAbovePanels = {
+            com.slideindex.app.overlay.FloatBallOverlay.scheduleChromeAbovePanels()
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.appDependenciesWrapper =
+            object : com.slideindex.app.overlay.panels.PanelComposeWrapper {
+                @androidx.compose.runtime.Composable
+                override fun content(inner: @androidx.compose.runtime.Composable () -> Unit) {
+                    val deps = dagger.hilt.android.EntryPointAccessors.fromApplication(
+                        this@SlideIndexApp,
+                        com.slideindex.app.di.AppGraphEntryPoint::class.java,
+                    ).dependencies()
+                    androidx.compose.runtime.CompositionLocalProvider(
+                        com.slideindex.app.ui.compose.LocalAppDependencies provides deps,
+                    ) {
+                        inner()
+                    }
+                }
+            }
         com.slideindex.app.overlay.volumepanel.PanelSlotPickerHook.picker =
             com.slideindex.app.overlay.volumepanel.PanelSlotPicker { request ->
                 com.slideindex.app.overlay.volumepanel.ExpandPanelSlotPicker(

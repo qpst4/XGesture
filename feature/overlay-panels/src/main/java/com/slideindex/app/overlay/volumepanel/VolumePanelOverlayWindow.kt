@@ -42,18 +42,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.di.AppGraphEntryPoint
-import com.slideindex.app.di.OverlayDependencyAccess
-import com.slideindex.app.ui.compose.LocalAppDependencies
-import dagger.hilt.android.EntryPointAccessors
-import com.slideindex.app.overlay.ScreenOffDismissReceiver
-import com.slideindex.app.overlay.FloatBallOverlay
 import com.slideindex.app.overlay.OverlayCompose
 import com.slideindex.app.overlay.OverlayComposeOwner
 import com.slideindex.app.overlay.OverlayViewBackHandler
 import com.slideindex.app.overlay.OverlayWindowTypes
 import com.slideindex.app.overlay.rememberOverlayImeBottomHeight
-import com.slideindex.app.overlay.compositor.OverlaySceneController
 import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
 import com.slideindex.app.util.PermissionHelper
 
@@ -75,7 +68,7 @@ object VolumePanelOverlayWindow {
         }
     private var owner: OverlayComposeOwner? = null
     private var panelVisibilityState: MutableTransitionState<Boolean>? = null
-    private val screenOffDismissReceiver = ScreenOffDismissReceiver { dismiss() }
+    private var screenOffUnregister: (() -> Unit)? = null
     private var backHandlerRef = java.lang.ref.WeakReference<OverlayViewBackHandler>(null)
     private var backHandler: OverlayViewBackHandler?
         get() = backHandlerRef.get()
@@ -114,8 +107,9 @@ object VolumePanelOverlayWindow {
         ensureWindow(hostContext)
         ++dismissToken
         panelVisibilityState?.targetState = true
-        screenOffDismissReceiver.register(hostContext)
-        OverlaySceneController.onContentPanelShown()
+        screenOffUnregister = com.slideindex.app.overlay.panels.PanelRuntimeHooks.registerScreenOffDismiss
+            ?.invoke(hostContext) { dismiss() }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.onContentPanelShown?.invoke()
         scheduleBringFloatBallAbovePanels()
         composeView?.requestFocus()
         return true
@@ -129,8 +123,9 @@ object VolumePanelOverlayWindow {
         if (composeView == null) return
         val token = ++dismissToken
         panelVisibilityState?.targetState = false
-        screenOffDismissReceiver.unregister()
-        OverlaySceneController.onContentPanelHidden()
+        screenOffUnregister?.invoke()
+        screenOffUnregister = null
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.onContentPanelHidden?.invoke()
         ++bringAboveToken
         mainHandler.postDelayed({
             if (token != dismissToken) return@postDelayed
@@ -149,7 +144,7 @@ object VolumePanelOverlayWindow {
         val token = ++bringAboveToken
         fun attempt() {
             if (token != bringAboveToken) return
-            FloatBallOverlay.scheduleChromeAbovePanels()
+            com.slideindex.app.overlay.panels.PanelFloatBallHooks.scheduleChromeAbovePanels?.invoke()
         }
         attempt()
         composeView?.post {
@@ -169,26 +164,23 @@ object VolumePanelOverlayWindow {
         val overlayContext = OverlayCompose.themedContext(context)
         val composeOwner = OverlayComposeOwner()
         owner = composeOwner
-        val appDeps = runCatching {
-            EntryPointAccessors.fromApplication(
-                context.applicationContext,
-                AppGraphEntryPoint::class.java,
-            ).dependencies()
-        }.getOrNull()
+
         val view = OverlayCompose.createComposeView(overlayContext, composeOwner).apply {
             setContent {
-                CompositionLocalProvider(
-                    *(listOfNotNull(
-                        appDeps?.let { LocalAppDependencies provides it },
-                    ).toTypedArray()),
-                ) {
-                    OverlayAwareModuleTheme {
+                com.slideindex.app.overlay.panels.PanelRuntimeHooks.appDependenciesWrapper
+                    ?.content {
+                        OverlayAwareModuleTheme {
+                            VolumePanelOverlayRoot(
+                                visibilityState = visibilityState,
+                                onDismiss = { dismiss() },
+                            )
+                        }
+                    } ?: OverlayAwareModuleTheme {
                         VolumePanelOverlayRoot(
                             visibilityState = visibilityState,
                             onDismiss = { dismiss() },
                         )
                     }
-                }
             }
         }
         composeView = view

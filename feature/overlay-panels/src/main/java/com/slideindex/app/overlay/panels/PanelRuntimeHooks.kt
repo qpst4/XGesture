@@ -138,6 +138,21 @@ object PanelRuntimeHooks {
             com.slideindex.app.overlay.FloatBallPickResult,
             com.slideindex.app.overlay.pickresult.PickResultTextMode,
         ) -> Unit)? = null
+    /** 屏幕熄灭时注册一次性回调（`:app` 的 ScreenOffDismissReceiver）。返回注销函数。 */
+    @Volatile
+    var registerScreenOffDismiss: ((Context, () -> Unit) -> (() -> Unit))? = null
+
+    /** 内容面板显示/隐藏时的场景通知。 */
+    @Volatile
+    var onContentPanelShown: (() -> Unit)? = null
+
+    /** 见 [onContentPanelShown]。 */
+    @Volatile
+    var onContentPanelHidden: (() -> Unit)? = null
+
+    /** 为面板内容包一层 app 的 CompositionLocal（LocalAppDependencies）。 */
+    @Volatile
+    var appDependenciesWrapper: PanelComposeWrapper? = null
     /** OCR 模型是否已安装。 */
     @Volatile
     var isOcrModelInstalled: ((Context, String) -> Boolean)? = null
@@ -393,4 +408,10 @@ fun interface PanelExpandSlotPicker {
         onDismiss: () -> Unit,
         onPicked: (com.slideindex.app.gesture.GestureAction?) -> Unit,
     )
+}
+
+/** 见 [PanelRuntimeHooks.appDependenciesWrapper]。 */
+fun interface PanelComposeWrapper {
+    @androidx.compose.runtime.Composable
+    fun content(inner: @androidx.compose.runtime.Composable () -> Unit)
 }
