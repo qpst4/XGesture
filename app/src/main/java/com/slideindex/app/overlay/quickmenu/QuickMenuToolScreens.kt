@@ -11,7 +11,7 @@ import com.slideindex.app.translate.TranslateEngine
 import com.slideindex.app.translate.TranslateLanguageCatalog
 import com.slideindex.app.translate.TranslateResult
 import com.slideindex.app.translate.TranslateTargetResolver
-import com.slideindex.app.ui.translateTargetAutonym
+import com.slideindex.app.translate.translateTargetAutonym
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix

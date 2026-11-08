@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="translate_target_follow_app">Follow app language</string>
+    <string name="translate_target_follow_app_summary">%1$s · %2$s</string>
+    <string name="settings_app_language_label_zh">简体中文</string>
+    <string name="settings_app_language_label_en">English</string>
+    <string name="settings_app_language_label_ja">日本語</string>
+    <string name="settings_app_language_label_ar">العربية</string>
+    <string name="translate_target_label_zh_tw">繁體中文</string>
+    <string name="translate_target_label_ko">한국어</string>
+    <string name="translate_target_label_fr">Français</string>
+    <string name="translate_target_label_de">Deutsch</string>
+    <string name="translate_target_label_id">Bahasa Indonesia</string>
+    <string name="translate_target_label_pt_br">Português (Brasil)</string>
+    <string name="translate_target_label_pt_pt">Português (Portugal)</string>
+    <string name="translate_target_label_es">Español</string>
+    <string name="translate_target_label_ru">Русский</string>
+    <string name="translate_target_label_tr">Türkçe</string>
+</resources>

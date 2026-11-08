@@ -37,6 +37,8 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.roundToInt
 import java.util.Locale
+import com.slideindex.app.translate.translateTargetAutonym
+import com.slideindex.app.translate.translateTargetFollowAppDropdownLabel
 
 @Composable
 fun TranslateModelSettingsScreen(

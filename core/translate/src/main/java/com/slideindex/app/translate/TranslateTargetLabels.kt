@@ -1,8 +1,8 @@
-package com.slideindex.app.ui
+package com.slideindex.app.translate
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import com.slideindex.app.R
+import com.slideindex.app.translate.R
 import com.slideindex.app.translate.TranslateTargetLanguages
 import com.slideindex.app.translate.TranslateTargetResolver
 

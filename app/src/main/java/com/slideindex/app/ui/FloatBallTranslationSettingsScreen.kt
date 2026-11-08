@@ -20,6 +20,8 @@ import com.slideindex.app.ui.settings.components.SettingDropdownRow
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
+import com.slideindex.app.translate.translateTargetAutonym
+import com.slideindex.app.translate.translateTargetFollowAppDropdownLabel
 
 @Composable
 fun FloatBallTranslationSettingsScreen(

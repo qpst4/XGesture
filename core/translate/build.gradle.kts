@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -14,6 +15,10 @@ android {
         minSdk = libs.versions.minSdk.get().toInt()
     }
 
+    buildFeatures {
+        compose = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_25
         targetCompatibility = JavaVersion.VERSION_25
@@ -23,6 +28,9 @@ android {
 dependencies {
     implementation(project(":core:native-engine"))
     implementation(libs.core.ktx)
+    implementation(platform(libs.compose.bom.alpha))
+    implementation(libs.compose.ui)
+    implementation(libs.compose.foundation)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp)
