@@ -182,6 +182,17 @@ object PanelRuntimeHooks {
     @Volatile
     var setPickSearchGridExpanded: ((Boolean) -> Unit)? = null
 
+    /** 拖拽开始时挂起取词面板（隐藏但不销毁）。 */
+    @Volatile
+    var suspendPickResultForDrag: (() -> Unit)? = null
+
+    /** 拖拽结束/恢复时恢复取词面板。 */
+    @Volatile
+    var resumePickResultFromDrag: (() -> Unit)? = null
+
+    /** 关闭取词面板。 */
+    @Volatile
+    var dismissPickResultPanel: (() -> Unit)? = null
     /** OCR 模型是否已安装。 */
     @Volatile
     var isOcrModelInstalled: ((Context, String) -> Boolean)? = null

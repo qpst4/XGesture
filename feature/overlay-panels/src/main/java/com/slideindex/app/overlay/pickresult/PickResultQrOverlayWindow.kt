@@ -60,16 +60,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
-import com.slideindex.app.di.OverlayDependencyAccess
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.OverlayCompose
 import com.slideindex.app.overlay.OverlayComposeOwner
 import com.slideindex.app.overlay.OverlayPanelSystemGestureExclusion
 import com.slideindex.app.overlay.OverlayToastWindow
 import com.slideindex.app.overlay.OverlayViewBackHandler
 import com.slideindex.app.overlay.OverlayWindowTypes
-import com.slideindex.app.overlay.ScreenOffDismissReceiver
-import com.slideindex.app.overlay.compositor.OverlaySceneController
 import com.slideindex.app.overlay.dragdrop.DragFlowSource
 import com.slideindex.app.overlay.history.HistoryDragPreview
 import com.slideindex.app.overlay.history.HistoryEntryDragHelper
@@ -93,7 +90,7 @@ import kotlinx.coroutines.withContext
  *
  * 浮窗盖在取词面板上面；点罩层 / 返回 / 关闭按钮只关自己，面板还在。
  */
-internal object PickResultQrOverlayWindow {
+object PickResultQrOverlayWindow {
 
     private const val TAG = "PickResultQrOverlay"
 
@@ -104,7 +101,7 @@ internal object PickResultQrOverlayWindow {
     private var composeView: ComposeView? = null
     private var windowManager: WindowManager? = null
     private var layoutParams: WindowManager.LayoutParams? = null
-    private var screenOffReceiver: ScreenOffDismissReceiver? = null
+    private var screenOffUnregister: (() -> Unit)? = null
     private var backHandler: OverlayViewBackHandler? = null
     private var bitmapState: MutableState<Bitmap?>? = null
     private var loadingState: MutableState<Boolean>? = null
@@ -182,8 +179,8 @@ internal object PickResultQrOverlayWindow {
             if (view != null && wm != null) {
                 runCatching { wm.removeView(view) }
             }
-            screenOffReceiver?.unregister()
-            screenOffReceiver = null
+            screenOffUnregister?.invoke()
+            screenOffUnregister = null
             backHandler?.detach()
             backHandler = null
             OverlayCompose.teardownOverlayCompose(view, currentOwner)
@@ -257,9 +254,10 @@ internal object PickResultQrOverlayWindow {
         layoutParams = params
         appContext = context.applicationContext
         backHandler = OverlayViewBackHandler(compose) { dismiss() }.also { it.attach() }
-        screenOffReceiver = ScreenOffDismissReceiver { dismiss() }.also { it.register(context) }
+        screenOffUnregister = com.slideindex.app.overlay.panels.PanelRuntimeHooks
+            .registerScreenOffDismiss?.invoke(context) { dismiss() }
         OverlayPanelSystemGestureExclusion.attach(compose)
-        OverlaySceneController.onContentPanelShown()
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.onContentPanelShown?.invoke()
         return true
     }
 

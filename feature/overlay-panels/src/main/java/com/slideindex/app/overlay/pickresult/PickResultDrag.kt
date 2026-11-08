@@ -15,7 +15,6 @@ import android.text.TextPaint
 import android.text.TextUtils
 import android.view.View
 import androidx.core.content.FileProvider
-import com.slideindex.app.overlay.FloatBallPickResultPanel
 import com.slideindex.app.overlay.dragdrop.DragFlowSource
 import com.slideindex.app.overlay.history.HistoryDragPreview
 import com.slideindex.app.overlay.history.HistoryEntryDragHelper
@@ -34,7 +33,7 @@ import kotlin.math.ceil
  * 起拖时面板只隐藏不销毁（见 [FloatBallPickResultPanel.suspendForDrag]），
  * 所以中途取消能把文字、图片和滚动位置都原样带回来。
  */
-internal object PickResultDrag {
+object PickResultDrag {
 
     private const val TEXT_LABEL = "pick_text"
     private const val IMAGE_LABEL = "pick_image"
@@ -94,13 +93,13 @@ internal object PickResultDrag {
         view = view,
         clipData = clipData,
         preview = preview,
-        onDragStart = { FloatBallPickResultPanel.suspendForDrag() },
+        onDragStart = { com.slideindex.app.overlay.panels.PanelRuntimeHooks.suspendPickResultForDrag?.invoke() },
         // 没被流转栏认领（开关关闭 / MIME 不支持）时自己兜底把面板放回来。
-        onDragEnd = { FloatBallPickResultPanel.resumeFromDrag() },
+        onDragEnd = { com.slideindex.app.overlay.panels.PanelRuntimeHooks.resumePickResultFromDrag?.invoke() },
         dragShadow = shadow,
         dragFlowSource = DragFlowSource(
-            onRestore = { FloatBallPickResultPanel.resumeFromDrag() },
-            onDiscard = { FloatBallPickResultPanel.dismiss() },
+            onRestore = { com.slideindex.app.overlay.panels.PanelRuntimeHooks.resumePickResultFromDrag?.invoke() },
+            onDiscard = { com.slideindex.app.overlay.panels.PanelRuntimeHooks.dismissPickResultPanel?.invoke() },
         ),
     )
 

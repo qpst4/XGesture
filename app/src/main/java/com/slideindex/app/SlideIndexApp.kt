@@ -362,6 +362,15 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     com.slideindex.app.overlay.FloatBallPickResultPanel.showOcrError(context, reason)
                 }
             }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.suspendPickResultForDrag = {
+            com.slideindex.app.overlay.FloatBallPickResultPanel.suspendForDrag()
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.resumePickResultFromDrag = {
+            com.slideindex.app.overlay.FloatBallPickResultPanel.resumeFromDrag()
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.dismissPickResultPanel = {
+            com.slideindex.app.overlay.FloatBallPickResultPanel.dismiss()
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.setPickSearchGridExpanded = { expanded ->
             hookScope.launch {
                 com.slideindex.app.di.OverlayDependencyAccess

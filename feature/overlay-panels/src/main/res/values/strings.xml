@@ -289,4 +289,11 @@
     <string name="clipboard_action_save_image">Save image</string>
     <string name="history_drag_unsupported">This item cannot be dragged</string>
     <string name="clipboard_history_float_copy">Copy</string>
+    <string name="quick_menu_qr_title">QR code</string>
+    <string name="quick_menu_qr_save">Save</string>
+    <string name="quick_menu_qr_share">Share</string>
+    <string name="quick_menu_qr_saved">Saved to gallery</string>
+    <string name="quick_menu_qr_save_failed">Could not save</string>
+    <string name="pick_result_qr_too_long">Text is too long — select a shorter part</string>
+    <string name="pick_result_qr_drag_hint">Long-press the QR code to drag</string>
 </resources>
