@@ -480,3 +480,44 @@ Adjust、corner、quickwheel、screenshot、volumepanel（+ B2 backpanel 更早�
 3. `service`（无障碍服务 16k：截图/点击/文案提取）
 4. `privilege` + `TaskManagerUtil`（968 行 hub）
 5. `filebrowser` 内部闭环（MediaPage/MediaCategory/AccessInfo）
+
+### 12.11 第三轮进展与收口（2026-11-09 凌晨）
+
+**新增整组**：`filebrowser`（8,632 行，第 18 组）。
+**新增半组/主体**：`quickmenu`（7,616 行，app 侧仅剩 2 个被端口反向引用的实现）、
+`searchpanel`（5,816 行，app 侧仅剩 `SearchPanelScreen` + 查询桥）。
+
+**新增模块/依赖**：
+- `:core:common` 承接 root/shizuku 执行链（TaskManagerShellExecutor / RootShellSession /
+  RootNamespace，约 540 行）与 quickmenu 六个纯逻辑件（953 行）
+- `:core:search` 承接联系人索引、快捷方式索引件、文件缩略图缓存（并开启 compose-ui）
+- `:core:translate` 承接语言标签 helper（开启 Compose）
+- `:feature:overlay-panels` 增加 camera / shizuku / reorderable / translate / ocr 依赖
+
+**新增端口族**：
+- `FileBrowserHost`（特权 / shizuku / shell / 钉屏 / 图片编辑 / 搜索面板 / 固定快捷方式 / 中转）
+- `QuickMenuHost`（runEntry / setReminderAlarm / captureScreenshot / runMacro）
+- `SearchPanelHost`（freezerState / freezerStateOfTarget / launchAndRestore / isPaused / setPaused / setFrozen）
+- `SearchPanelContent`（把 `SearchPanelScreen` 作为组合函数注入模块）
+- `ClipboardFloatHost` / `ClipboardFloatHistorySource` / `ShellRuntimeHooks`
+- `PanelRuntimeHooks` 扩到 130+ 槽位（含 pickerIconBitmap / settingsFlow / suppressChromeForCapture …）
+
+**当前账目**：
+
+| 指标 | 数值 |
+| :--- | :--- |
+| `:feature:overlay-panels` | 0 → **约 82k 行** |
+| `:app` 的 `overlay/` | 136,402 → **约 55k 行（-60%）** |
+| 整组迁出 | **18 组** |
+| 新增模块 | design / shortcuts / overlay-host / clipboard / stash / search / translate（+ common 扩容） |
+| 本地待推提交 | 见 git（未 push） |
+
+**app 侧 `overlay/` 剩余内容（约 55k）**：
+1. `FloatBall*` 簇（Overlay 4.3k / PickResult 1.6k / ImageSearch 1.4k / Chrome 0.6k）
+2. `SearchPanelScreen`（1.9k，已通过 `SearchPanelContent` 端口被模块调用）
+3. `service` 服务本体（无障碍宿主，截图/点击/取词）
+4. 其余 overlay 通用壳（Toast/BlurGate/Compose 宿主等已在 `:core:overlay-host`）
+5. `quickmenu` 两个被端口反向引用的实现（ToolScreens/EntryRouter 侧）
+
+**结论**：面板层的"可迁移面"已经基本搬完；剩下的是 `FloatBall` 单例簇与无障碍服务本体，
+两者都是独立重构项目，不属于迁移批次。
