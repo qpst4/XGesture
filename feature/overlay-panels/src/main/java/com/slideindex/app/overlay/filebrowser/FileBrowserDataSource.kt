@@ -2,7 +2,6 @@ package com.slideindex.app.overlay.filebrowser
 
 import android.content.Context
 import android.os.Environment
-import com.slideindex.app.util.TaskManagerUtil
 import java.io.File
 import java.nio.file.Files
 
@@ -29,7 +28,7 @@ sealed interface FileBrowserListingResult {
  * 的外部存储必须先尝试特权 shell，否则直读会返回**不完整**列表（FUSE 只放行应用自己的文件）。
  * 其余路径直读更快，失败再回退 shell。
  */
-internal class FileBrowserDataSource(
+class FileBrowserDataSource(
     @Suppress("UNUSED_PARAMETER") context: Context,
 ) {
     @Suppress("DEPRECATION")
@@ -154,7 +153,7 @@ internal class FileBrowserDataSource(
     ): FileBrowserListingResult {
         val command = FileBrowserShell.buildListingCommand(path, internalRoot)
         val result = runCatching {
-            TaskManagerUtil.runShellCommandLine(
+            com.slideindex.app.overlay.filebrowser.FileBrowserHostCalls.runShellCommandLine(
                 command = command,
                 useRoot = access.mode == AccessMode.ROOT,
                 timeoutMs = SHELL_TIMEOUT_MS,

@@ -113,15 +113,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.LocalFrostedGlassBackdrop
-import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.ocr.OcrDependencyAccess
 import com.slideindex.app.ocr.OcrEngines
 import com.slideindex.app.ocr.OcrRecognizeResult
-import com.slideindex.app.overlay.searchpanel.SearchPanelOverlayWindow
-import com.slideindex.app.overlay.searchpanel.SearchPanelSessionState
-import com.slideindex.app.stash.StashCoordinator
 import com.slideindex.app.ui.miuix.MiuixSearchField
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -144,7 +140,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * 搜索与详情，并通过回调把“授权/关闭”交给宿主 [FileBrowserOverlayWindow]。
  */
 @Composable
-internal fun FileBrowserPanel(
+fun FileBrowserPanel(
     visible: Boolean,
     controller: FileBrowserController,
     onDismiss: () -> Unit,
@@ -754,13 +750,10 @@ internal fun FileBrowserPanel(
                             onClose = controller::hideMediaPreview,
                             onShare = { item -> shareMediaItems(context, listOf(item)) },
                             onEdit = { bitmap ->
-                                val editorPath = com.slideindex.app.imageeditor.ImageEditorLaunchCache
-                                    .put(context, bitmap)
-                                com.slideindex.app.imageeditor.SlideIndexImageEditorActivity
-                                    .launch(context, editorPath)
+                                com.slideindex.app.overlay.filebrowser.FileBrowserHostCalls.launchImageEditor(context, bitmap)
                             },
                             onPin = { bitmap ->
-                                StashCoordinator.pinImageToScreen(context, bitmap)
+                                com.slideindex.app.overlay.filebrowser.FileBrowserHostCalls.pinImageToScreen(context, bitmap)
                             },
                             onOcr = { bitmap ->
                                 actionScope.launch {
@@ -874,8 +867,8 @@ internal fun FileBrowserPanel(
                             },
                             onAddToHome = {
                                 showMenu = false
-                                if (!FileBrowserLauncherHelper.requestPinShortcut(context)) {
-                                    FileBrowserLauncherHelper.showPinFailedToast(context)
+                                if (!com.slideindex.app.overlay.filebrowser.FileBrowserHostCalls.requestPinShortcut(context)) {
+                                    com.slideindex.app.overlay.filebrowser.FileBrowserHostCalls.showPinFailedToast(context)
                                 }
                             },
                             onTogglePin = {
@@ -992,13 +985,10 @@ internal fun FileBrowserPanel(
                                 onClose = { imagePreview = null },
                                 onShare = { item -> shareMediaItems(context, listOf(item)) },
                                 onEdit = { bitmap ->
-                                    val editorPath = com.slideindex.app.imageeditor.ImageEditorLaunchCache
-                                        .put(context, bitmap)
-                                    com.slideindex.app.imageeditor.SlideIndexImageEditorActivity
-                                        .launch(context, editorPath)
+                                    com.slideindex.app.overlay.filebrowser.FileBrowserHostCalls.launchImageEditor(context, bitmap)
                                 },
                                 onPin = { bitmap ->
-                                    StashCoordinator.pinImageToScreen(context, bitmap)
+                                    com.slideindex.app.overlay.filebrowser.FileBrowserHostCalls.pinImageToScreen(context, bitmap)
                                 },
                                 onOcr = { bitmap ->
                                     actionScope.launch {
@@ -1047,10 +1037,7 @@ internal fun FileBrowserPanel(
                                     controller.showDetails(entry)
                                 },
                                 onEdit = { bitmap ->
-                                    val editorPath = com.slideindex.app.imageeditor.ImageEditorLaunchCache
-                                        .put(context, bitmap)
-                                    com.slideindex.app.imageeditor.SlideIndexImageEditorActivity
-                                        .launch(context, editorPath)
+                                    com.slideindex.app.overlay.filebrowser.FileBrowserHostCalls.launchImageEditor(context, bitmap)
                                 },
                                 onClose = { imagePreview = null },
                             )
@@ -1294,10 +1281,10 @@ private fun tabTitle(path: String): String {
 
 private fun openImageSearch(context: Context, bitmap: Bitmap) {
     // 文件浏览器本身也是 overlay；先收起它，再把图片交给搜索面板的图片模式。
-    SearchPanelSessionState.pushImage(bitmap)
+    com.slideindex.app.overlay.panels.PanelRuntimeHooks.pushSearchPanelImage?.invoke(bitmap)
     FileBrowserOverlayWindow.dismiss()
     android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
-        { SearchPanelOverlayWindow.show(context) },
+        { com.slideindex.app.overlay.filebrowser.FileBrowserHostCalls.showSearchPanel(context) },
         240L,
     )
 }
@@ -1306,9 +1293,7 @@ private suspend fun recognizeImageText(
     context: Context,
     bitmap: Bitmap,
 ): String? {
-    val settings = OverlayDependencyAccess.overlayDependencies(context)
-        ?.settingsRepository
-        ?.readSnapshot()
+    val settings = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot?.invoke(context)
     val configured = settings?.floatBallOcrModelId.orEmpty()
     val catalog = OcrDependencyAccess.catalogProvider(context) ?: return null
     val repository = OcrDependencyAccess.modelRepository(context) ?: return null

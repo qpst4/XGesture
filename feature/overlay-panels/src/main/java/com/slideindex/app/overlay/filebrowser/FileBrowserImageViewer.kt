@@ -47,14 +47,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** 卡片内的图片查看器：缩放/旋转/前后切换/分享；Root 图片先导出到 cache。 */
 @Composable
-internal fun FileBrowserImageViewer(
+fun FileBrowserImageViewer(
     entry: FileBrowserEntry,
     access: FileBrowserAccessInfo?,
     onPrevious: (() -> Unit)?,

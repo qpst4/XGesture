@@ -1,6 +1,5 @@
 package com.slideindex.app.overlay.filebrowser
 
-import com.slideindex.app.overlay.overlayHostContext
 
 import android.content.Context
 import android.content.pm.PackageManager
@@ -11,7 +10,6 @@ import android.util.Log
 import android.view.View
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.overlay.OverlayFullScreenPanelHost
 import com.slideindex.app.overlay.OverlayPanelLayoutParams
 import com.slideindex.app.overlay.OverlayViewBackHandler
@@ -20,7 +18,6 @@ import com.slideindex.app.overlay.searchpanel.FilePermissionTrampolineActivity
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
 import com.slideindex.app.util.PermissionHelper
-import com.slideindex.app.util.TaskManagerUtil
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
@@ -35,7 +32,7 @@ import rikka.shizuku.Shizuku
  * 窗口，系统摘窗/关闭面板后仍保留路径、排序与隐藏开关。目录读取、权限判断全部在
  * [FileBrowserController]；这里只处理窗口、返回层级与外部授权页的挂起/恢复。
  */
-internal object FileBrowserOverlayWindow {
+object FileBrowserOverlayWindow {
     private const val TAG = "FileBrowserOverlay"
     private const val DISMISS_ANIMATION_MS = 180L
     /** 起拖后若收不到 [android.view.DragEvent.ACTION_DRAG_ENDED] 的兜底恢复 */
@@ -120,7 +117,7 @@ internal object FileBrowserOverlayWindow {
             Log.w(TAG, "show: accessibility service not enabled")
             return false
         }
-        val hostContext = overlayHostContext() ?: run {
+        val hostContext = com.slideindex.app.overlay.panels.PanelRuntimeHooks.overlayHostContext?.invoke() ?: run {
             Log.w(TAG, "show: accessibility service not connected")
             return false
         }
@@ -271,7 +268,7 @@ internal object FileBrowserOverlayWindow {
         if (!fileDragSuspended && !force) return
         fileDragSuspended = false
         val current = session ?: return
-        val hostContext = overlayHostContext()
+        val hostContext = com.slideindex.app.overlay.panels.PanelRuntimeHooks.overlayHostContext?.invoke()
         if (hostContext == null) {
             Log.w(TAG, "resumeFromFileDrag: accessibility service not connected")
             return
@@ -307,7 +304,7 @@ internal object FileBrowserOverlayWindow {
     private fun resumeFromExternalActivity() {
         runOnMainSync {
             val current = session ?: return@runOnMainSync
-            val hostContext = overlayHostContext()
+            val hostContext = com.slideindex.app.overlay.panels.PanelRuntimeHooks.overlayHostContext?.invoke()
             if (hostContext == null) {
                 Log.w(TAG, "resume: accessibility service not connected")
                 return@runOnMainSync
@@ -394,11 +391,11 @@ internal object FileBrowserOverlayWindow {
 
     private fun requestShizukuAccess() {
         val context = appContext ?: return
-        if (TaskManagerUtil.hasShizukuPermission()) {
+        if (com.slideindex.app.overlay.filebrowser.FileBrowserHostCalls.hasShizukuPermission()) {
             session?.controller?.refreshAccessAndReload()
             return
         }
-        TaskManagerUtil.requestPermission(context)
+        com.slideindex.app.overlay.filebrowser.FileBrowserHostCalls.requestPermission(context)
     }
 
     private fun requestMediaPermissions() {

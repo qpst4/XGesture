@@ -86,7 +86,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.core.view.drawToBitmap
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.clipboard.ClipboardDragShareFallback
 import com.slideindex.app.overlay.dragdrop.DragFlowSource
 import com.slideindex.app.overlay.history.HistoryDragPreview
@@ -96,7 +96,7 @@ import kotlin.math.abs
 import kotlinx.coroutines.withTimeoutOrNull
 
 @Composable
-internal fun FileBrowserListContent(
+fun FileBrowserListContent(
     state: FileBrowserUiState,
     filtered: List<FileBrowserEntry>,
     internalRoot: String,
@@ -689,7 +689,7 @@ private fun FileBrowserErrorState(
  * 只读访问受限时的轻量横幅。真正失败时由错误卡给动作，这里只在“列出来了但不完整”时提示。
  */
 @Composable
-internal fun FileBrowserLimitedBanner(
+fun FileBrowserLimitedBanner(
     state: FileBrowserUiState,
     internalRoot: String,
     onRequestAllFiles: () -> Unit,
