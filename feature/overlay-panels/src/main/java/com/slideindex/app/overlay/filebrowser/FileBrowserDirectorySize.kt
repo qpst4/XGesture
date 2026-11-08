@@ -97,7 +97,7 @@ object FileBrowserDirectorySize {
     }
 
     /** `du -sk` 输出："12345\t/path" → 12345 * 1024。 */
-    internal fun parseDuKb(output: String): Long? {
+    fun parseDuKb(output: String): Long? {
         val line = output.lineSequence().firstOrNull { it.isNotBlank() } ?: return null
         val kb = line.trim().substringBefore(' ').substringBefore('\t').toLongOrNull() ?: return null
         return kb * 1024L
