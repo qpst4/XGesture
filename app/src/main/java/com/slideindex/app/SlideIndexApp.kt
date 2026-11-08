@@ -404,6 +404,48 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onDone(entries)
             }
         }
+        com.slideindex.app.overlay.filebrowser.FileBrowserHostAccess.host =
+            object : com.slideindex.app.overlay.filebrowser.FileBrowserHost {
+                override fun hasPrivilegedAccess(): Boolean =
+                    com.slideindex.app.util.TaskManagerUtil.hasPrivilegedAccess()
+
+                override fun hasShizukuPermission(): Boolean =
+                    com.slideindex.app.util.TaskManagerUtil.hasShizukuPermission()
+
+                override fun requestShizukuPermission(context: android.content.Context) {
+                    com.slideindex.app.util.TaskManagerUtil.requestPermission(context)
+                }
+
+                override fun runShellCommandLine(
+                    command: String,
+                    useRoot: Boolean,
+                    timeoutMs: Long,
+                ): com.slideindex.app.shizuku.TaskManagerShellExecutor.ShellExecResult {
+                    val result = com.slideindex.app.util.TaskManagerUtil.runShellCommandLine(
+                        command = command,
+                        useRoot = useRoot,
+                        timeoutMs = timeoutMs,
+                    )
+                    return com.slideindex.app.shizuku.TaskManagerShellExecutor.ShellExecResult(
+                        exitCode = result.exitCode,
+                        output = result.output,
+                    )
+                }
+
+                override fun pinImageToScreen(
+                    context: android.content.Context,
+                    bitmap: android.graphics.Bitmap,
+                ) {
+                    com.slideindex.app.stash.StashCoordinator.pinImageToScreen(context, bitmap)
+                }
+
+                override fun launchTrampoline(context: android.content.Context, path: String?) {
+                    com.slideindex.app.service.FileBrowserTrampolineActivity
+                        .intent(context, path)
+                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        .let(context::startActivity)
+                }
+            }
         com.slideindex.app.clipboardfloat.ClipboardFloatHistoryAccess.source = { ctx: android.content.Context ->
             val repo = dagger.hilt.android.EntryPointAccessors.fromApplication(
                 ctx.applicationContext,
