@@ -385,3 +385,38 @@ TaskManagerUtil(968) ← PrivilegeGateway ← TaskManagerShellExecutor ← RootN
 
 即：**再补 1 个钩子（`gestureActionIconDraw`）+ 2 个小函数下沉**即可整组搬走。
 这是当前依赖图下最短的一条"能真正搬完一组"的路。
+
+### 12.8 阶段总结（2026-11-08，第 12 组完成后）
+
+**已迁出（12 组）**：backpanel、carousel、holographic、fingertip、animation、share、
+Adjust、corner、quickwheel、screenshot、volumepanel（+ B2 backpanel 更早）。
+
+**新增模块**：`:core:design`（4.6k）、`:core:shortcuts`、`:core:overlay-host`（3.8k）、
+`:core:clipboard`（3.2k+测试）、`:core:stash`（2.2k+测试）、`:core:search`（18 文件）。
+
+**端口清单（app 侧实现 / 面板侧消费）**：
+- `PanelActionHost`（22 方法，动作/权限/文案）
+- `PanelRuntimeHooks`（60+ 槽位：宿主上下文、设置快照、标签、图标、分享、Intent、
+  触发抑制、点击注入、壁纸模糊、任务、AppRepository、选择器、OCR、截图、图片编辑…）
+- `PanelFloatBallHooks`、`PanelStashWriteHooks`（20+）、`PanelVolumeHooks`
+- `PickResultHost`、`PanelSlotPicker`/`SlotPickerHook`、`PanelActionIconSlot`/`PanelActionIconView`
+- `StashVoiceRecorder`、`StashReminderScheduling`、`ClipboardService`/`ClipboardHistoryQuery`
+
+**剩余 5 组（约 3.1 万行）的共同根因**（已被逐组验证）：
+
+| 组 | 行数 | 根因 |
+| :--- | --- | --- |
+| `pickresult` | 9,193 | FloatBallPickResultPanel 1436 行 + di + ui |
+| `quickmenu` | 7,616 | barcode/macro/pagescroll/service + FloatBall |
+| `filebrowser` | 8,632 | privilege/shizuku/ocr/service |
+| `history`（剩 2 文件） | 3,302 | 与 `HistoryEntryCards` 互引，而后者依赖 `dragdrop` |
+| `dragdrop`（剩 1 文件） | 1,094 | FloatBallImageSearchPanel / Translate / SearchPanel* |
+| `searchpanel` | 5,816 | clipboardfloat + search 启动器 + FloatBall |
+| `ringlauncher` | 3,416 | FloatBallLayout / RecentTasksLoader / AppShortcutLoader |
+
+**结论**：剩余组的阻塞点已不是"缺钩子"，而是三个 app 内子系统本身需要重构：
+1. `FloatBall*` 静态单例（Overlay 4302 行 + PickResult 1636 + ImageSearch 1360…）
+2. `ui` 里的通用组件（PickerListUi 已下沉，但 ActionIconView / GlobalIconStore 等仍在）
+3. `service`（16k：中转 Activity、前台状态、无障碍查询）
+
+每一项都是独立工程，不宜与面板迁移混做。
