@@ -412,6 +412,16 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 ): com.slideindex.app.freezer.FreezerAppState =
                     com.slideindex.app.freezer.FreezerOperations.stateOf(context, app)
 
+                override fun freezerStateOfTarget(
+                    context: android.content.Context,
+                    packageName: String,
+                    cloneUserId: Int,
+                ): com.slideindex.app.freezer.FreezerAppState =
+                    com.slideindex.app.freezer.FreezerOperations.stateOf(
+                        context,
+                        com.slideindex.app.launcher.AppTarget(packageName, cloneUserId),
+                    )
+
                 override suspend fun launchAndRestore(
                     context: android.content.Context,
                     app: com.slideindex.app.data.AppInfo,

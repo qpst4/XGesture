@@ -14,6 +14,9 @@ interface SearchPanelHost {
     /** 该应用的冻结状态。 */
     fun freezerState(context: Context, app: AppInfo): FreezerAppState
 
+    /** 按 (包名, 分身用户) 取冻结状态（快捷动作条用）。 */
+    fun freezerStateOfTarget(context: Context, packageName: String, cloneUserId: Int): FreezerAppState
+
     /** 启动应用（必要时先解冻再启动）。 */
     suspend fun launchAndRestore(context: Context, app: AppInfo, fullscreen: Boolean): Boolean
 

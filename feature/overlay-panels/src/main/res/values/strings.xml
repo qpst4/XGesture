@@ -682,4 +682,10 @@
     <string name="quick_menu_timer_channel_desc">Rings when a countdown in the quick menu finishes</string>
     <string name="quick_menu_timer_notify_title">Countdown finished</string>
     <string name="quick_menu_timer_notify_text">Your %1$s countdown has finished</string>
+    <string name="freezer_action_pause">Pause</string>
+    <string name="freezer_action_unpause">Resume</string>
+    <string name="freezer_action_freeze">Freeze</string>
+    <string name="freezer_action_unfreeze">Unfreeze</string>
+    <string name="search_panel_app_quick_action_share">Share</string>
+    <string name="search_panel_app_quick_action_details">Details</string>
 </resources>

@@ -51,10 +51,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
-import com.slideindex.app.R
-import com.slideindex.app.freezer.FreezerAppState
-import com.slideindex.app.freezer.FreezerOperations
-import com.slideindex.app.launcher.AppTarget
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.util.HapticHelper
 import kotlin.math.roundToInt
@@ -106,7 +103,7 @@ private fun actionForSlot(
 }
 
 @Composable
-internal fun SearchPanelAppQuickActionTarget(
+fun SearchPanelAppQuickActionTarget(
     packageName: String,
     cloneUserId: Int = 0,
     enabled: Boolean,
@@ -120,7 +117,9 @@ internal fun SearchPanelAppQuickActionTarget(
         return
     }
     val context = LocalContext.current
-    val appState = FreezerOperations.stateOf(context, AppTarget(packageName, cloneUserId))
+    val appState = com.slideindex.app.overlay.searchpanel.SearchPanelHostAccess.host
+        ?.freezerStateOfTarget(context, packageName, cloneUserId)
+        ?: com.slideindex.app.freezer.FreezerAppState.ACTIVE
     val view = LocalView.current
     val density = LocalDensity.current
     val yCancelThresholdPx = with(density) { 56.dp.toPx() }
@@ -250,7 +249,7 @@ internal fun SearchPanelAppQuickActionTarget(
 private fun SearchPanelAppQuickActionStrip(
     mode: SearchPanelAppQuickActionStripMode,
     hoveredSlotIndex: Int,
-    appState: FreezerAppState,
+    appState: com.slideindex.app.freezer.FreezerAppState,
 ) {
     val stripBackground = Color(0xFF2C2C2E).copy(alpha = 0.94f)
     Row(
@@ -276,7 +275,7 @@ private fun SearchPanelAppQuickActionStrip(
 private fun SearchPanelAppQuickActionSlot(
     action: SearchPanelAppQuickAction,
     highlighted: Boolean,
-    appState: FreezerAppState,
+    appState: com.slideindex.app.freezer.FreezerAppState,
 ) {
     val icon = when (action) {
         SearchPanelAppQuickAction.FREE_WINDOW -> Icons.Outlined.PictureInPictureAlt
