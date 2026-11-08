@@ -75,10 +75,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.barcode.BarcodeScanResult
-import com.slideindex.app.overlay.FloatBallOverlay
-import com.slideindex.app.overlay.FloatBallPickResultPanel
 import com.slideindex.app.overlay.LocalFrostedGlassBackdrop
 import com.slideindex.app.overlay.PickResultTextSource
 import com.slideindex.app.overlay.overlayBottomPanelMaxHeightFraction
@@ -95,17 +93,17 @@ import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-internal val PANEL_MIN_IMAGE_HEIGHT = 48.dp
-internal val PANEL_VERTICAL_PADDING = 12.dp
-internal val PANEL_ACTION_BAR_BOTTOM_GAP = 20.dp
-internal val TEXT_IMAGE_DIVIDER_HEIGHT = 10.dp
-internal const val LANDSCAPE_DUAL_COLUMN_TEXT_WEIGHT = 0.58f
-internal const val LANDSCAPE_DUAL_COLUMN_AUX_WEIGHT = 0.42f
-internal const val AUXILIARY_COLLAPSE_ANIMATION_MS = 280
-internal const val AUXILIARY_COLLAPSE_DRAG_THRESHOLD = 0.35f
-internal const val EDIT_MODE_ANIMATION_MS = 280
+val PANEL_MIN_IMAGE_HEIGHT = 48.dp
+val PANEL_VERTICAL_PADDING = 12.dp
+val PANEL_ACTION_BAR_BOTTOM_GAP = 20.dp
+val TEXT_IMAGE_DIVIDER_HEIGHT = 10.dp
+const val LANDSCAPE_DUAL_COLUMN_TEXT_WEIGHT = 0.58f
+const val LANDSCAPE_DUAL_COLUMN_AUX_WEIGHT = 0.42f
+const val AUXILIARY_COLLAPSE_ANIMATION_MS = 280
+const val AUXILIARY_COLLAPSE_DRAG_THRESHOLD = 0.35f
+const val EDIT_MODE_ANIMATION_MS = 280
 
-internal fun pickPanelSlideAnimationSpec(durationMs: Int): AnimationSpec<Dp> =
+fun pickPanelSlideAnimationSpec(durationMs: Int): AnimationSpec<Dp> =
     if (durationMs <= 0) {
         snap()
     } else {
@@ -113,7 +111,7 @@ internal fun pickPanelSlideAnimationSpec(durationMs: Int): AnimationSpec<Dp> =
     }
 
 @Stable
-internal class AuxiliaryCollapseController(
+class AuxiliaryCollapseController(
     initialCollapseProgress: Float = 0f,
     initialSearchCollapseProgress: Float = 0f
 ) {
@@ -181,7 +179,7 @@ internal class AuxiliaryCollapseController(
     }
 }
 
-internal data class PickResultCollapseHeights(
+data class PickResultCollapseHeights(
     val imageSectionHeight: Dp,
     val textImageDividerHeight: Dp,
     val searchDividerHeight: Dp,
@@ -190,7 +188,7 @@ internal data class PickResultCollapseHeights(
     val fillTextSpace: Boolean
 )
 
-internal fun computePickResultCollapseHeights(
+fun computePickResultCollapseHeights(
     panelInnerHeight: Dp,
     normalLayoutFactor: Float,
     hasImageContent: Boolean,
@@ -273,7 +271,7 @@ internal fun computePickResultCollapseHeights(
 }
 
 /** 计算完全展开态高度（供面板外层 wrapContent 动画与滑动入场使用）。*/
-internal fun computePickResultExpandedPanelOuterHeight(
+fun computePickResultExpandedPanelOuterHeight(
     panelContentHeight: Dp,
     hasSearchGrid: Boolean,
     hasImageContent: Boolean,
@@ -348,7 +346,7 @@ internal fun computePickResultExpandedPanelOuterHeight(
 }
 
 @Composable
-internal fun PickResultAuxiliaryImageBlock(
+fun PickResultAuxiliaryImageBlock(
     sectionHeight: Dp,
     alphaFactor: Float,
     sectionExpanded: Boolean,
@@ -425,7 +423,7 @@ internal fun PickResultAuxiliaryImageBlock(
 }
 
 @Composable
-internal fun PickResultTextImageDividerBlock(
+fun PickResultTextImageDividerBlock(
     dividerHeight: Dp,
     alphaFactor: Float,
     hasAuxiliaryCollapse: Boolean,
@@ -457,7 +455,7 @@ internal fun PickResultTextImageDividerBlock(
 }
 
 @Composable
-internal fun PickResultAuxiliarySearchBlock(
+fun PickResultAuxiliarySearchBlock(
     searchDividerHeight: Dp,
     searchGridHeight: Dp,
     alphaFactor: Float,
@@ -538,7 +536,7 @@ internal fun PickResultAuxiliarySearchBlock(
 }
 
 @Composable
-internal fun PickResultPanelTextSlot(
+fun PickResultPanelTextSlot(
     useExpandedLayout: Boolean,
     compactBodyMaxHeight: Dp,
     text: String,
@@ -681,7 +679,7 @@ internal fun PickResultPanelTextSlot(
  * [content] ??[freezeCollapseAnimation] ??????????true?????? snap ?? spring??
  */
 @Composable
-internal fun PickResultPanelSlideHost(
+fun PickResultPanelSlideHost(
     panelRevealed: Boolean,
     panelSlideDistance: Dp,
     panelEnterAnimationMs: Int,
@@ -746,7 +744,7 @@ internal fun PickResultPanelSlideHost(
 }
 
 @Composable
-internal fun PickResultCollapsePanelColumn(
+fun PickResultCollapsePanelColumn(
     controller: AuxiliaryCollapseController,
     panelContentHeight: Dp,
     overlayImeBottom: Dp,

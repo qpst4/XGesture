@@ -362,6 +362,12 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     com.slideindex.app.overlay.FloatBallPickResultPanel.showOcrError(context, reason)
                 }
             }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.rememberSearchQuery = { ctx, url ->
+            com.slideindex.app.overlay.searchpanel.SearchPanelQueryBridge.rememberQuery(ctx, url)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.openUrl = { ctx, url, settings ->
+            com.slideindex.app.overlay.FloatBallTextPick.openUrl(ctx, url, settings)
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.isOcrModelInstalled = { ctx, modelId ->
             com.slideindex.app.ocr.OcrDependencyAccess.modelRepository(ctx)?.isInstalled(modelId) == true
         }

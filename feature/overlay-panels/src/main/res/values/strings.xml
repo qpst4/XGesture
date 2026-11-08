@@ -261,4 +261,17 @@
     <string name="pick_result_qr">Generate QR code</string>
     <string name="float_ball_translate_error_cloud_not_configured">API key not set. Configure it in Cloud translate or OCR cloud settings.</string>
     <string name="float_ball_translate_error_cloud_empty">Cloud translation returned no usable text</string>
+    <string name="float_ball_translate_panel_title">Translate</string>
+    <string name="float_ball_action_share">Share</string>
+    <string name="float_ball_action_select_all">Select all</string>
+    <string name="gesture_action_search_panel">Search panel</string>
+    <string name="float_ball_translating">Translating…</string>
+    <string name="share_image_ocr_background_action">Run in background</string>
+    <string name="float_ball_text_not_found">No text recognized</string>
+    <string name="float_ball_recognizing">Recognizing…</string>
+    <string name="float_ball_pick_source_a11y">A11y</string>
+    <string name="float_ball_pick_source_ocr">OCR</string>
+    <string name="float_ball_pick_source_barcode">Scan</string>
+    <string name="float_ball_action_word_select">Word tap</string>
+    <string name="float_ball_action_deselect_all">Deselect all</string>
 </resources>

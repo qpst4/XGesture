@@ -77,12 +77,9 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.barcode.BarcodeScanResult
-import com.slideindex.app.di.OverlayDependencyAccess
-import com.slideindex.app.overlay.FloatBallTextPick
 import com.slideindex.app.overlay.OverlaySelectionToolbarActions
-import com.slideindex.app.overlay.searchpanel.SearchPanelQueryBridge
 import com.slideindex.app.overlay.OverlaySelectionToolbarOverlay
 import com.slideindex.app.overlay.cutTextFieldValue
 import com.slideindex.app.overlay.fieldModifier
@@ -100,7 +97,7 @@ import kotlinx.coroutines.withContext
 private val pickResultTokenCache = android.util.LruCache<String, List<String>>(20)
 
 @Composable
-internal fun PickResultInteractiveTextSection(
+fun PickResultInteractiveTextSection(
     text: String,
     textMode: PickResultTextMode,
     onTextModeChange: (PickResultTextMode) -> Unit,
@@ -172,9 +169,7 @@ internal fun PickResultInteractiveTextSection(
     val keyboardController = LocalSoftwareKeyboardController.current
     var appSettings by remember { mutableStateOf(AppSettings()) }
     LaunchedEffect(appContext) {
-        OverlayDependencyAccess.overlayDependencies(appContext)
-            ?.settingsRepository
-            ?.settings
+        com.slideindex.app.settings.SettingsFlowHolder.settingsFlow(appContext)
             ?.collect { appSettings = it }
     }
     val effectiveAutoSelectAll = autoSelectAll ?: appSettings.floatBallPickAutoSelectAll
@@ -431,8 +426,8 @@ internal fun PickResultInteractiveTextSection(
                     onOpenLink = {
                         when (val action = openLinkAction) {
                             is PickResultOpenLinkAction.Open -> {
-                                SearchPanelQueryBridge.rememberQuery(appContext, action.url)
-                                FloatBallTextPick.openUrl(appContext, action.url, appSettings)
+                                com.slideindex.app.overlay.panels.PanelRuntimeHooks.rememberSearchQuery?.invoke(appContext, action.url)
+                                com.slideindex.app.overlay.panels.PanelRuntimeHooks.openUrl?.invoke(appContext, action.url, appSettings)
                             }
                             is PickResultOpenLinkAction.Choose -> {
                                 openLinkChooserExpanded = true
@@ -441,8 +436,8 @@ internal fun PickResultInteractiveTextSection(
                         }
                     },
                     onOpenLinkChoice = { url ->
-                        SearchPanelQueryBridge.rememberQuery(appContext, url)
-                        FloatBallTextPick.openUrl(appContext, url, appSettings)
+                        com.slideindex.app.overlay.panels.PanelRuntimeHooks.rememberSearchQuery?.invoke(appContext, url)
+                        com.slideindex.app.overlay.panels.PanelRuntimeHooks.openUrl?.invoke(appContext, url, appSettings)
                     },
                     onDismissOpenLinkChooser = { openLinkChooserExpanded = false },
                     onShare = { runOnActiveText(onShare) },
@@ -794,7 +789,7 @@ internal fun PickResultInteractiveTextSection(
 }
 
 @Composable
-internal fun PickResultTextToolbar(
+fun PickResultTextToolbar(
     textMode: PickResultTextMode,
     allSelected: Boolean,
     activeSource: PickResultTextSource,
@@ -1022,7 +1017,7 @@ private fun PickResultTitleIcon(
 }
 
 @Composable
-internal fun PickResultOcrLoadingBody(
+fun PickResultOcrLoadingBody(
     modifier: Modifier = Modifier,
     showBackgroundAction: Boolean = false,
     onBackgroundProcess: () -> Unit = {},
@@ -1061,7 +1056,7 @@ internal fun PickResultOcrLoadingBody(
 }
 
 @Composable
-internal fun PickResultTranslateLoadingBody(
+fun PickResultTranslateLoadingBody(
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -1084,7 +1079,7 @@ internal fun PickResultTranslateLoadingBody(
 }
 
 @Composable
-internal fun PickResultTextBody(
+fun PickResultTextBody(
     textMode: PickResultTextMode,
     textFieldValue: TextFieldValue,
     wordTokens: List<String>,
@@ -1224,7 +1219,7 @@ internal fun PickResultTextBody(
                 editable = true,
                 onCut = {
                     val updated = cutTextFieldValue(textFieldValue) { copied ->
-                        FloatBallTextPick.copyText(appContext, copied)
+                        com.slideindex.app.overlay.panels.PanelStashWriteHooks.copyText?.invoke(appContext, copied)
                     }
                     onTextFieldValueChange(updated)
                 },

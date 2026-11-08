@@ -50,7 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -69,10 +69,10 @@ data class OverlaySelectionToolbarActions(
     val onTranslate: ((String) -> Unit)? = null
 )
 
-internal fun Modifier.suppressSystemTextContextMenu(): Modifier =
+fun Modifier.suppressSystemTextContextMenu(): Modifier =
     filterTextContextMenuComponents { false }
 
-internal fun TextLayoutResult.selectionBounds(selection: TextRange): Rect? {
+fun TextLayoutResult.selectionBounds(selection: TextRange): Rect? {
     if (selection.collapsed || layoutInput.text.isEmpty()) return null
     val start = selection.min.coerceIn(0, layoutInput.text.length)
     val end = selection.max.coerceIn(0, layoutInput.text.length)
@@ -91,7 +91,7 @@ internal fun TextLayoutResult.selectionBounds(selection: TextRange): Rect? {
     return Rect(left, top, right, bottom)
 }
 
-internal fun LayoutCoordinates.boundsInWindow(): Rect? {
+fun LayoutCoordinates.boundsInWindow(): Rect? {
     if (!isAttached) return null
     val topLeft = localToWindow(Offset.Zero)
     val bottomRight = localToWindow(
@@ -103,7 +103,7 @@ internal fun LayoutCoordinates.boundsInWindow(): Rect? {
     return Rect(topLeft, bottomRight)
 }
 
-internal fun selectionRectInWindow(
+fun selectionRectInWindow(
     layoutResult: TextLayoutResult,
     selection: TextRange,
     fieldCoordinates: LayoutCoordinates,
@@ -117,7 +117,7 @@ internal fun selectionRectInWindow(
     return Rect(topLeft, bottomRight)
 }
 
-internal fun TextLayoutResult.selectionAnchorRect(
+fun TextLayoutResult.selectionAnchorRect(
     selection: TextRange,
     scrollOffsetY: Int = 0,
     viewportHeightPx: Float = Float.MAX_VALUE
@@ -146,7 +146,7 @@ internal fun TextLayoutResult.selectionAnchorRect(
     )
 }
 
-internal fun selectionAnchorRectInWindow(
+fun selectionAnchorRectInWindow(
     layoutResult: TextLayoutResult,
     selection: TextRange,
     fieldCoordinates: LayoutCoordinates,
@@ -160,7 +160,7 @@ internal fun selectionAnchorRectInWindow(
     return Rect(topLeft, bottomRight)
 }
 
-internal fun selectionRectInField(
+fun selectionRectInField(
     layoutResult: TextLayoutResult,
     selection: TextRange,
     scrollOffsetY: Int = 0
@@ -176,7 +176,7 @@ internal fun selectionRectInField(
     )
 }
 
-internal fun selectionBoundsInWindow(
+fun selectionBoundsInWindow(
     layoutResult: TextLayoutResult,
     selection: TextRange,
     fieldCoordinates: LayoutCoordinates
@@ -188,18 +188,18 @@ internal fun selectionBoundsInWindow(
     return Rect(topLeft, bottomRight)
 }
 
-internal fun Rect.intersectsVertically(other: Rect, gapPx: Int = 0): Boolean {
+fun Rect.intersectsVertically(other: Rect, gapPx: Int = 0): Boolean {
     val gap = gapPx.toFloat()
     return bottom + gap > other.top && top - gap < other.bottom
 }
 
-internal data class OverlaySelectionToolbarPlacement(
+data class OverlaySelectionToolbarPlacement(
     val anchorRect: Rect,
     val selectionRect: Rect?,
     val viewportRect: Rect
 )
 
-internal fun overlaySelectionToolbarPlacement(
+fun overlaySelectionToolbarPlacement(
     layoutResult: TextLayoutResult?,
     selection: TextRange,
     fieldCoordinates: LayoutCoordinates,
@@ -248,7 +248,7 @@ internal fun overlaySelectionToolbarPlacement(
     )
 }
 
-internal fun selectionRectForToolbar(
+fun selectionRectForToolbar(
     layoutResult: TextLayoutResult?,
     selection: TextRange,
     fieldCoordinates: LayoutCoordinates,
@@ -267,7 +267,7 @@ internal fun selectionRectForToolbar(
     return fieldCenterSelectionRect(fieldCoordinates)
 }
 
-internal fun fieldCenterSelectionRect(fieldCoordinates: LayoutCoordinates): Rect? {
+fun fieldCenterSelectionRect(fieldCoordinates: LayoutCoordinates): Rect? {
     if (!fieldCoordinates.isAttached) return null
     val topLeft = fieldCoordinates.localToWindow(Offset.Zero)
     val bottomRight = fieldCoordinates.localToWindow(
@@ -286,7 +286,7 @@ internal fun fieldCenterSelectionRect(fieldCoordinates: LayoutCoordinates): Rect
     )
 }
 
-internal fun selectedText(text: String, selection: TextRange): String? {
+fun selectedText(text: String, selection: TextRange): String? {
     if (selection.collapsed) return null
     val start = selection.min.coerceIn(0, text.length)
     val end = selection.max.coerceIn(0, text.length)
@@ -294,7 +294,7 @@ internal fun selectedText(text: String, selection: TextRange): String? {
     return text.substring(start, end)
 }
 
-internal fun cutTextFieldValue(
+fun cutTextFieldValue(
     value: TextFieldValue,
     onCopy: (String) -> Unit
 ): TextFieldValue {
@@ -309,7 +309,7 @@ internal fun cutTextFieldValue(
     return TextFieldValue(newText, TextRange(start))
 }
 
-internal fun pasteIntoTextFieldValue(
+fun pasteIntoTextFieldValue(
     context: android.content.Context,
     value: TextFieldValue
 ): TextFieldValue {
@@ -327,13 +327,13 @@ internal fun pasteIntoTextFieldValue(
     return TextFieldValue(newText, TextRange(cursor))
 }
 
-internal fun copyTextToClipboard(context: android.content.Context, text: String) {
+fun copyTextToClipboard(context: android.content.Context, text: String) {
     val clipboard = context.getSystemService(ClipboardManager::class.java) ?: return
     clipboard.setPrimaryClip(ClipData.newPlainText("selection", text))
 }
 
 @Composable
-internal fun OverlaySelectionToolbarOverlay(
+fun OverlaySelectionToolbarOverlay(
     visible: Boolean,
     selection: TextRange,
     text: String,
@@ -358,7 +358,7 @@ internal fun OverlaySelectionToolbarOverlay(
 }
 
 @Composable
-internal fun OverlaySelectionToolbarPopup(
+fun OverlaySelectionToolbarPopup(
     visible: Boolean,
     selection: TextRange,
     text: String,
@@ -532,7 +532,7 @@ private fun OverlaySelectionToolbarIcon(
     }
 }
 
-internal class OverlaySelectionToolbarPositionProvider(
+class OverlaySelectionToolbarPositionProvider(
     private val placementProvider: (IntSize) -> OverlaySelectionToolbarPlacement?,
     private val gapPx: Int
 ) : PopupPositionProvider {
@@ -609,18 +609,18 @@ internal class OverlaySelectionToolbarPositionProvider(
 }
 
 @Composable
-internal fun rememberOverlaySelectionToolbarState(): OverlaySelectionToolbarState {
+fun rememberOverlaySelectionToolbarState(): OverlaySelectionToolbarState {
     return remember { OverlaySelectionToolbarState() }
 }
 
-internal class OverlaySelectionToolbarState {
+class OverlaySelectionToolbarState {
     var textLayoutResult by mutableStateOf<TextLayoutResult?>(null)
     var fieldCoordinates by mutableStateOf<LayoutCoordinates?>(null)
     var viewportCoordinates by mutableStateOf<LayoutCoordinates?>(null)
 }
 
-internal fun Modifier.fieldModifier(state: OverlaySelectionToolbarState): Modifier =
+fun Modifier.fieldModifier(state: OverlaySelectionToolbarState): Modifier =
     onGloballyPositioned { state.fieldCoordinates = it }
 
-internal fun Modifier.viewportModifier(state: OverlaySelectionToolbarState): Modifier =
+fun Modifier.viewportModifier(state: OverlaySelectionToolbarState): Modifier =
     onGloballyPositioned { state.viewportCoordinates = it }

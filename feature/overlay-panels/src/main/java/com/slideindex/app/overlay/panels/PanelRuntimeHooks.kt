@@ -164,6 +164,13 @@ object PanelRuntimeHooks {
     /** 图片编辑链路日志 tag（与 `:app` 的 trampoline 同一个值）。 */
     @Volatile
     var stashImageEditLogTag: String = "StashImageEdit"
+    /** 记住一次查询（搜索面板联动）。 */
+    @Volatile
+    var rememberSearchQuery: ((Context, String) -> Unit)? = null
+
+    /** 打开链接（内置浏览器/系统浏览器按设置）。 */
+    @Volatile
+    var openUrl: ((Context, String, AppSettings) -> Unit)? = null
     /** OCR 模型是否已安装。 */
     @Volatile
     var isOcrModelInstalled: ((Context, String) -> Boolean)? = null
