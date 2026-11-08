@@ -82,7 +82,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -102,7 +102,7 @@ private val mediaViewerBitmapCache = object : LruCache<String, Bitmap>(
  * - 点击缩略图定位，分享/详情在顶栏，编辑/钉图/取词/搜索在底栏。
  */
 @Composable
-internal fun FileBrowserMediaViewer(
+fun FileBrowserMediaViewer(
     items: List<FileBrowserMediaItem>,
     initialItem: FileBrowserMediaItem,
     onClose: () -> Unit,

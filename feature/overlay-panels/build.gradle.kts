@@ -44,6 +44,8 @@ dependencies {
     implementation(project(":core:clipboard"))
     implementation(project(":core:search"))
     implementation(project(":core:translate"))
+    implementation(libs.shizuku.api)
+    implementation(libs.shizuku.provider)
     implementation(libs.camera.core)
     implementation(libs.camera.camera2)
     implementation(libs.camera.lifecycle)

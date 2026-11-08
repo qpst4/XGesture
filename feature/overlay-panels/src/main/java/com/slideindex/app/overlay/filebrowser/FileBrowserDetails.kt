@@ -40,10 +40,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 
 @Composable
-internal fun FileBrowserDetailsOverlay(
+fun FileBrowserDetailsOverlay(
     entry: FileBrowserEntry,
     onCopy: () -> Unit,
     onOpenWith: (() -> Unit)?,

@@ -47,7 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -57,7 +57,7 @@ import kotlinx.coroutines.withContext
  * 只做导航和总容量，不做目录递归统计；点卡片进完整文件浏览器。
  */
 @Composable
-internal fun FileBrowserQuickCard(
+fun FileBrowserQuickCard(
     modifier: Modifier = Modifier,
     onOpen: (String?) -> Unit,
 ) {

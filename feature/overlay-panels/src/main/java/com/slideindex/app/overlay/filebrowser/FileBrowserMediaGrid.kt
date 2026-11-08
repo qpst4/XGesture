@@ -56,7 +56,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -68,7 +68,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
  * 这是媒体模式，不是文件列表；点击交给调用方（图片预览或系统打开）。
  */
 @Composable
-internal fun FileBrowserMediaGrid(
+fun FileBrowserMediaGrid(
     category: FileBrowserMediaCategory,
     items: List<FileBrowserMediaItem>,
     query: String,
