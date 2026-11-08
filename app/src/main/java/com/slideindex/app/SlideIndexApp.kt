@@ -406,6 +406,9 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         }
         com.slideindex.app.overlay.filebrowser.FileBrowserHostAccess.host =
             object : com.slideindex.app.overlay.filebrowser.FileBrowserHost {
+                override fun isRootMode(): Boolean =
+                    com.slideindex.app.privilege.PrivilegeGateway.isRootMode()
+
                 override fun hasPrivilegedAccess(): Boolean =
                     com.slideindex.app.util.TaskManagerUtil.hasPrivilegedAccess()
 

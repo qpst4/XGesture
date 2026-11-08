@@ -10,6 +10,9 @@ import com.slideindex.app.shizuku.TaskManagerShellExecutor
  */
 interface FileBrowserHost {
 
+    /** 当前是否 root 模式。 */
+    fun isRootMode(): Boolean
+
     /** 是否有 root 或已授权的 shizuku。 */
     fun hasPrivilegedAccess(): Boolean
 
