@@ -362,6 +362,20 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     com.slideindex.app.overlay.FloatBallPickResultPanel.showOcrError(context, reason)
                 }
             }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.setPickSearchGridExpanded = { expanded ->
+            hookScope.launch {
+                com.slideindex.app.di.OverlayDependencyAccess
+                    .overlayDependencies(this@SlideIndexApp)
+                    ?.settingsRepository
+                    ?.setFloatBallPickSearchGridLastExpanded(expanded)
+            }
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.imageSearchPanelVisible = {
+            com.slideindex.app.overlay.FloatBallImageSearchPanel.panelVisible
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.requestPickResultPanelFocus = {
+            com.slideindex.app.overlay.FloatBallPickResultPanel.requestPanelFocus()
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.rememberSearchQuery = { ctx, url ->
             com.slideindex.app.overlay.searchpanel.SearchPanelQueryBridge.rememberQuery(ctx, url)
         }

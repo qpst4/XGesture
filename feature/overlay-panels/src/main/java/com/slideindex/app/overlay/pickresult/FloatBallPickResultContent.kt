@@ -38,12 +38,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
-import com.slideindex.app.di.OverlayDependencyAccess
+import com.slideindex.app.overlay.panels.R
 import kotlinx.coroutines.launch
 import com.slideindex.app.barcode.BarcodeScanResult
-import com.slideindex.app.overlay.FloatBallImageSearchPanel
-import com.slideindex.app.overlay.FloatBallPickResultPanel
 import com.slideindex.app.overlay.PickResultContentOrigin
 import com.slideindex.app.overlay.PickResultTextSource
 import com.slideindex.app.overlay.ScreenshotLayoutMeta
@@ -60,7 +57,7 @@ import com.slideindex.app.settings.SearchEngineStore
 import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
 
 @Composable
-internal fun FloatBallPickResultContent(
+fun FloatBallPickResultContent(
     panelShowToken: Int,
     panelRevealed: Boolean,
     panelNotification: PickResultPanelNotification?,
@@ -122,9 +119,7 @@ internal fun FloatBallPickResultContent(
 ) {
     val context = LocalContext.current
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
-    val settingsRepository = remember(context) {
-        OverlayDependencyAccess.overlayDependencies(context)?.settingsRepository
-    }
+
 
     LaunchedEffect(panelNotification) {
         if (panelNotification != null) {
@@ -150,7 +145,9 @@ internal fun FloatBallPickResultContent(
         contentOrigin == PickResultContentOrigin.SCREEN_PICK &&
         !hasImageContent
     val showImageSection = hasImageContent || reserveImageSectionPlaceholder
-    val imageSearchVisible by FloatBallImageSearchPanel.panelVisible
+    val imageSearchState = com.slideindex.app.overlay.panels.PanelRuntimeHooks.imageSearchPanelVisible
+        ?.invoke()
+    val imageSearchVisible = imageSearchState?.value == true
     val pickPanelAlphaTarget = if (imageSearchVisible) {
         1f - imageSearchPickPanelTransparency.coerceIn(0f, 1f)
     } else {
@@ -453,7 +450,7 @@ internal fun FloatBallPickResultContent(
     }
     LaunchedEffect(isEditMode) {
         if (!isEditMode) {
-            FloatBallPickResultPanel.requestPanelFocus()
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.requestPickResultPanelFocus?.invoke()
         }
     }
 
@@ -610,7 +607,8 @@ internal fun FloatBallPickResultContent(
                     isSearchGridVisible.value = next
                     scopedCollapseController.setSearchExpanded(next)
                     coroutineScope.launch {
-                        settingsRepository?.setFloatBallPickSearchGridLastExpanded(next)
+                        com.slideindex.app.overlay.panels.PanelRuntimeHooks
+                            .setPickSearchGridExpanded?.invoke(next)
                     }
                 }
             )

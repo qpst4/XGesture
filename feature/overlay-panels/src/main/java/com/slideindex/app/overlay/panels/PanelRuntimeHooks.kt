@@ -171,6 +171,17 @@ object PanelRuntimeHooks {
     /** 打开链接（内置浏览器/系统浏览器按设置）。 */
     @Volatile
     var openUrl: ((Context, String, AppSettings) -> Unit)? = null
+    /** 取图面板的图片搜索是否可见（`:app` 的 FloatBallImageSearchPanel.panelVisible）。 */
+    @Volatile
+    var imageSearchPanelVisible: (() -> androidx.compose.runtime.State<Boolean>)? = null
+
+    /** 请求把焦点交还取词面板。 */
+    @Volatile
+    var requestPickResultPanelFocus: (() -> Unit)? = null
+    /** 记住取图面板搜索栅格是否展开。 */
+    @Volatile
+    var setPickSearchGridExpanded: ((Boolean) -> Unit)? = null
+
     /** OCR 模型是否已安装。 */
     @Volatile
     var isOcrModelInstalled: ((Context, String) -> Boolean)? = null
