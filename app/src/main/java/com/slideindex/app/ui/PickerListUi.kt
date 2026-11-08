@@ -553,7 +553,7 @@ fun Md3PickerAppLeading(app: AppInfo, sizeDp: Int = 40) {
     Box(modifier = Modifier.size(sizeDp.dp)) {
         // 全局图标覆盖优先（扩展 → 图标库 → 应用图标）
         val iconOverride = remember(app.packageName, com.slideindex.app.ui.GlobalIconStore.revision) {
-            GlobalIconStore.appIcon(context, app.packageName)
+            com.slideindex.app.ui.GlobalIconStore.appIcon(context, app.packageName)
         }
         if (iconOverride != null) {
             ActionIconView(

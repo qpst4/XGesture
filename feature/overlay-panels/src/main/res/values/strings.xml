@@ -184,4 +184,9 @@
     <string name="quick_wheel_hud_long_press">Long press: %1$s</string>
     <string name="quick_wheel_hud_no_action">No action</string>
     <string name="quick_wheel_action_sector_auto">Auto (from trigger position)</string>
+    <string name="shortcut_test_kind_pinned">Pinned</string>
+    <string name="shortcut_test_kind_dynamic">Dynamic</string>
+    <string name="shortcut_test_kind_static">Static</string>
+    <string name="freezer_status_frozen">Frozen</string>
+    <string name="freezer_status_paused">Paused</string>
 </resources>
