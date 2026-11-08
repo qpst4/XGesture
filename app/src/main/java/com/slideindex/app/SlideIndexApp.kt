@@ -404,6 +404,46 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onDone(entries)
             }
         }
+        com.slideindex.app.overlay.searchpanel.SearchPanelHostAccess.host =
+            object : com.slideindex.app.overlay.searchpanel.SearchPanelHost {
+                override suspend fun freezerState(
+                    context: android.content.Context,
+                    app: com.slideindex.app.data.AppInfo,
+                ): com.slideindex.app.freezer.FreezerAppState =
+                    com.slideindex.app.freezer.FreezerOperations.stateOf(context, app)
+
+                override suspend fun launchAndRestore(
+                    context: android.content.Context,
+                    app: com.slideindex.app.data.AppInfo,
+                    fullscreen: Boolean,
+                ): Boolean = com.slideindex.app.freezer.FreezerOperations.launchAndRestore(
+                    context,
+                    dagger.hilt.android.EntryPointAccessors.fromApplication(
+                        this@SlideIndexApp,
+                        com.slideindex.app.di.AppGraphEntryPoint::class.java,
+                    ).dependencies().appRepository,
+                    this@SlideIndexApp.deps.settingsRepository.readSnapshot(),
+                    app,
+                    fullscreen,
+                )
+
+                override suspend fun isPaused(
+                    context: android.content.Context,
+                    app: com.slideindex.app.data.AppInfo,
+                ): Boolean = com.slideindex.app.freezer.FreezerOperations.isPaused(context, app)
+
+                override suspend fun setPaused(
+                    context: android.content.Context,
+                    app: com.slideindex.app.data.AppInfo,
+                    paused: Boolean,
+                ): Boolean = com.slideindex.app.freezer.FreezerOperations.setPaused(context, app, paused)
+
+                override suspend fun setFrozen(
+                    context: android.content.Context,
+                    app: com.slideindex.app.data.AppInfo,
+                    frozen: Boolean,
+                ): Boolean = com.slideindex.app.freezer.FreezerOperations.setFrozen(context, app, frozen)
+            }
         com.slideindex.app.overlay.quickmenu.QuickMenuHostAccess.host =
             object : com.slideindex.app.overlay.quickmenu.QuickMenuHost {
                 override fun runEntry(
