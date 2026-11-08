@@ -362,6 +362,17 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     com.slideindex.app.overlay.FloatBallPickResultPanel.showOcrError(context, reason)
                 }
             }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsRepository = { ctx ->
+            com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(ctx)?.settingsRepository
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.refreshRecentTasks = { repo, onDone ->
+            com.slideindex.app.tasks.TaskSwitcherRepository.refreshAsync(repo) { entries ->
+                onDone(entries)
+            }
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.cachedRecentTasks = {
+            com.slideindex.app.tasks.TaskSwitcherRepository.getCachedEntries()
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.createShareImageUri = { ctx, bmp ->
             com.slideindex.app.overlay.FloatBallTextPick.createShareImageUri(ctx, bmp)
         }

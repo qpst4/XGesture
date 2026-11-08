@@ -220,6 +220,30 @@ object PanelRuntimeHooks {
     @Volatile
     var createShareImageUri: ((Context, android.graphics.Bitmap) -> android.net.Uri?)? = null
 
+    /** 当前设置仓库（`:app` 的 SettingsRepository；面板需要直接读写时用）。 */
+    @Volatile
+    var settingsRepository: ((Context) -> com.slideindex.app.settings.SettingsRepository?)? = null
+
+    /** 刷新最近任务列表（异步回调）。 */
+    @Volatile
+    var refreshRecentTasks:
+        ((com.slideindex.app.data.AppRepository, (List<Any>) -> Unit) -> Unit)? = null
+
+    /** 已缓存的最近任务（每项含 `app: AppInfo`）。 */
+    @Volatile
+    var cachedRecentTasks: (() -> List<Any>)? = null
+    /** 图标底板是否处于深色模式。 */
+    @Volatile
+    var iconPlateCurrentDark: (() -> Boolean)? = null
+
+    /** 图标底板模式（用于缓存 key）。 */
+    @Volatile
+    var iconPlateModeKey: (() -> Any?)? = null
+
+    /** 快捷启动项图标解析（`:app` 的 QuickLauncherIconResolver.iconBitmap）。 */
+    @Volatile
+    var resolveQuickLauncherIcon:
+        ((com.slideindex.app.launcher.QuickLauncherItem, Int, Any?) -> android.graphics.Bitmap?)? = null
     /** OCR 模型是否已安装。 */
     @Volatile
     var isOcrModelInstalled: ((Context, String) -> Boolean)? = null
