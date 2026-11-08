@@ -35,7 +35,6 @@ import com.slideindex.app.R
 import com.slideindex.app.clipboard.ClipboardAccess
 import com.slideindex.app.clipboard.hasImageContent
 import com.slideindex.app.clipboardfloat.ClipboardFloatDisplayMode
-import com.slideindex.app.clipboardfloat.ClipboardFloatListController
 import com.slideindex.app.clipboardfloat.ClipboardFloatRoot
 import com.slideindex.app.clipboardfloat.ClipboardFloatWindowFlags
 import com.slideindex.app.clipboardfloat.ClipboardPasteCoordinator
@@ -82,7 +81,7 @@ class ClipboardFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner
     private lateinit var params: WindowManager.LayoutParams
     private var composeView: ComposeView? = null
     private var composeOwner: OverlayComposeOwner? = null
-    private lateinit var listController: ClipboardFloatListController
+    private lateinit var listController: com.slideindex.app.clipboardfloat.ClipboardFloatListController
     private var backHandler: OverlayViewBackHandler? = null
 
     private var viewAdded = false
@@ -158,8 +157,9 @@ class ClipboardFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner
         savedStateRegistryController.performAttach()
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.currentState = Lifecycle.State.CREATED
-        listController = ClipboardFloatListController(
-            repository = ClipboardAccess.repository,
+        listController = com.slideindex.app.clipboardfloat.ClipboardFloatListController(
+            repository = com.slideindex.app.clipboardfloat.ClipboardFloatHistoryAccess.source
+                ?.invoke(this),
             scope = lifecycleScope
         )
         registerScreenOffReceiver()

@@ -1,7 +1,6 @@
 package com.slideindex.app.clipboardfloat
 
 import com.slideindex.app.clipboard.ClipboardEntry
-import com.slideindex.app.clipboard.ClipboardHistoryRepository
 import com.slideindex.app.settings.ClipboardFloatWindowMetrics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,7 +19,7 @@ import kotlinx.coroutines.withContext
 
 @OptIn(FlowPreview::class)
 class ClipboardFloatListController(
-    private val repository: ClipboardHistoryRepository?,
+    private val repository: com.slideindex.app.clipboardfloat.ClipboardFloatHistorySource?,
     private val scope: CoroutineScope
 ) {
     private val _entries = MutableStateFlow<List<ClipboardEntry>>(emptyList())
@@ -77,12 +76,9 @@ class ClipboardFloatListController(
             if (showLoading) _loading.value = true
             try {
                 val page = withContext(Dispatchers.IO) {
-                    repository.loadHistoryPage(
-                        createdBeforeMs = null,
-                        limit = ClipboardFloatWindowMetrics.PAGE_SIZE
-                    )
+                    repository.loadPage(limit = ClipboardFloatWindowMetrics.PAGE_SIZE)
                 }
-                _entries.value = page.entries
+                _entries.value = page
             } finally {
                 if (showLoading) _loading.value = false
             }
@@ -101,7 +97,7 @@ class ClipboardFloatListController(
             _loading.value = true
             try {
                 _searchResults.value = withContext(Dispatchers.IO) {
-                    repo.searchHistory(trimmed)
+                    repo.search(trimmed)
                 }
             } finally {
                 _loading.value = false

@@ -373,6 +373,28 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onDone(entries)
             }
         }
+        com.slideindex.app.clipboardfloat.ClipboardFloatHistoryAccess.source = { ctx: android.content.Context ->
+            val repo = dagger.hilt.android.EntryPointAccessors.fromApplication(
+                ctx.applicationContext,
+                com.slideindex.app.di.AppGraphEntryPoint::class.java,
+            ).dependencies().clipboardHistoryRepository
+            if (repo == null) {
+                null
+            } else {
+                object : com.slideindex.app.clipboardfloat.ClipboardFloatHistorySource {
+                    override val revision = repo.revision
+                    override suspend fun loadPage(
+                        limit: Int,
+                    ): List<com.slideindex.app.clipboard.ClipboardEntry> =
+                        repo.loadHistoryPage(limit = limit).entries
+
+                    override suspend fun search(
+                        query: String,
+                    ): List<com.slideindex.app.clipboard.ClipboardEntry> =
+                        repo.searchHistory(query)
+                }
+            }
+        }
         com.slideindex.app.clipboardfloat.ClipboardFloatHostAccess.host =
             object : com.slideindex.app.clipboardfloat.ClipboardFloatHost {
                 override fun accessibilityService(): android.accessibilityservice.AccessibilityService? =
