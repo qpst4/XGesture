@@ -362,6 +362,38 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     com.slideindex.app.overlay.FloatBallPickResultPanel.showOcrError(context, reason)
                 }
             }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.createShareImageUri = { ctx, bmp ->
+            com.slideindex.app.overlay.FloatBallTextPick.createShareImageUri(ctx, bmp)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.showImageSearchPanel = { ctx, bmp ->
+            com.slideindex.app.overlay.FloatBallImageSearchPanel.show(ctx, bmp)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchImageShareSearch = { ctx, engine, bmp ->
+            com.slideindex.app.search.SearchEngineLauncher.launchImageShare(
+                ctx,
+                engine as com.slideindex.app.settings.SearchEngineConfig,
+                bmp,
+            )
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchTextSearch = { ctx, engine, text, settings ->
+            com.slideindex.app.search.SearchEngineLauncher.launchText(
+                ctx,
+                engine as com.slideindex.app.settings.SearchEngineConfig,
+                text,
+                settings,
+            )
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.showSearchPanelWindow = { ctx ->
+            com.slideindex.app.overlay.searchpanel.SearchPanelOverlayWindow.show(ctx)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.pushSearchPanelImage = { bmp ->
+            com.slideindex.app.overlay.searchpanel.SearchPanelSessionState.pushImage(bmp)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.translateFromExternalEntry =
+            { ctx, text, openTextPanel ->
+                com.slideindex.app.overlay.FloatBallTranslateCoordinator
+                    .translateFromExternalEntry(ctx, text, openTextPanel)
+            }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.suspendPickResultForDrag = {
             com.slideindex.app.overlay.FloatBallPickResultPanel.suspendForDrag()
         }

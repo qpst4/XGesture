@@ -193,6 +193,33 @@ object PanelRuntimeHooks {
     /** 关闭取词面板。 */
     @Volatile
     var dismissPickResultPanel: (() -> Unit)? = null
+    /** 打开图片搜索面板。 */
+    @Volatile
+    var showImageSearchPanel: ((Context, android.graphics.Bitmap) -> Unit)? = null
+
+    /** 用搜索引擎打开图片。 */
+    @Volatile
+    var launchImageShareSearch: ((Context, Any?, android.graphics.Bitmap) -> Boolean)? = null
+
+    /** 用搜索引擎打开文本。 */
+    @Volatile
+    var launchTextSearch: ((Context, Any?, String, AppSettings) -> Boolean)? = null
+
+    /** 打开搜索面板窗口；返回是否成功。 */
+    @Volatile
+    var showSearchPanelWindow: ((Context) -> Boolean)? = null
+
+    /** 往搜索面板会话塞一张图（null = 清空）。 */
+    @Volatile
+    var pushSearchPanelImage: ((android.graphics.Bitmap?) -> Unit)? = null
+
+    /** 从外部入口发起翻译。 */
+    @Volatile
+    var translateFromExternalEntry: ((Context, String, (String) -> Unit) -> Unit)? = null
+    /** 生成可分享的图片 URI（`:app` 的 FloatBallTextPick.createShareImageUri）。 */
+    @Volatile
+    var createShareImageUri: ((Context, android.graphics.Bitmap) -> android.net.Uri?)? = null
+
     /** OCR 模型是否已安装。 */
     @Volatile
     var isOcrModelInstalled: ((Context, String) -> Boolean)? = null
