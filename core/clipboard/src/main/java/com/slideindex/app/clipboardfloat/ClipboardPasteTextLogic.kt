@@ -4,7 +4,7 @@ package com.slideindex.app.clipboardfloat
  * 无障碍粘贴时的文本归一化与合并逻辑。
  * 部分输入框在无障碍树里会用纯换行占位表示「空」。
  */
-internal object ClipboardPasteTextLogic {
+object ClipboardPasteTextLogic {
 
     data class EditableSnapshot(
         val content: String,
