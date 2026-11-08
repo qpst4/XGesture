@@ -118,12 +118,12 @@ object FloatBallOverlay {
     private var passivePickPreviewAlpha = 1f
     private var passivePickPreviewAnchor: Offset? = null
 
-    private val mainHandler = Handler(Looper.getMainLooper())
+    internal val mainHandler = Handler(Looper.getMainLooper())
     private var overlayScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val dragSession = FloatBallDragSession()
 
-    private var windowManager: WindowManager? = null
-    private var displayView: FloatBallDisplayHost? = null
+    internal var windowManager: WindowManager? = null
+    internal var displayView: FloatBallDisplayHost? = null
 
     /** 球体独立小窗（球大小、常驻可见）；拖动只改它的坐标。 */
     private var ballIconWindow: FloatBallIconWindow? = null
@@ -142,9 +142,9 @@ object FloatBallOverlay {
     private var lastDragLayoutAtMs = 0L
     private var displayLayoutParams: WindowManager.LayoutParams? = null
     private var displayOwner: OverlayComposeOwner? = null
-    private var touchHost: FloatBallTouchHostLayout? = null
+    internal var touchHost: FloatBallTouchHostLayout? = null
     private var touchLayoutParams: WindowManager.LayoutParams? = null
-    private var lineTouchHost: FloatBallStripHost? = null
+    internal var lineTouchHost: FloatBallStripHost? = null
     private var lineTouchLayoutParams: WindowManager.LayoutParams? = null
 
     /**
@@ -200,9 +200,9 @@ object FloatBallOverlay {
         val lineOpacity: Float
     )
 
-    private var sceneState: FloatBallSceneState? = null
+    internal var sceneState: FloatBallSceneState? = null
 
-    private val settingsState: MutableState<AppSettings>?
+    internal val settingsState: MutableState<AppSettings>?
         get() = sceneState?.settingsState
     private val cursorVisibleState: MutableState<Boolean>?
         get() = sceneState?.cursorVisible
@@ -239,7 +239,7 @@ object FloatBallOverlay {
     /** After paste-hint dwell, release commits a11y pick (A) instead of paste. */
     private var dragPastePickUpgraded = false
     private var dragPasteUpgradeRunnable: Runnable? = null
-    private var captureSuppressed = false
+    internal var captureSuppressed = false
     private var chromeDetachedForCapture = false
     private var isDragging = false
     private var chromeZOrderFront = true
@@ -342,7 +342,7 @@ object FloatBallOverlay {
     private var dragOriginatedFromLine = false
     private var lineDragEndedWithGesture = false
     private var dragActiveSideOverrideState: MutableState<FloatBallSide?>? = null
-    private var dragActiveSideOverride: FloatBallSide?
+    internal var dragActiveSideOverride: FloatBallSide?
         get() = dragActiveSideOverrideState?.value
         set(value) {
             dragActiveSideOverrideState?.value = value
@@ -1268,100 +1268,24 @@ object FloatBallOverlay {
         }
     }
 
-    fun suppressForScreenshotCapture() {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { suppressForScreenshotCapture() }
-            return
-        }
-        if (captureSuppressed) return
-        captureSuppressed = true
-        sceneState?.chromeVisible?.value = false
-        sceneState?.ballVisible?.value = false
-        sceneState?.lineVisible?.value = false
-        clearSplitIdleChrome()
-        hideGestureHintWindow()
-        hideCursor()
-        detachChromeWindowsForCapture()
-    }
+    fun suppressForScreenshotCapture() = FloatBallCaptureChrome.suppressForScreenshotCapture()
 
     fun suppressChromeForRegionalPick() = suppressForScreenshotCapture()
 
     /** Hide float-ball chrome during edge regional pick without WM layout churn. */
-    fun hideChromeForEdgeRegionalPick() {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { hideChromeForEdgeRegionalPick() }
-            return
-        }
-        if (sceneState == null) return
-        captureSuppressed = true
-        sceneState?.chromeVisible?.value = false
-        sceneState?.ballVisible?.value = false
-        sceneState?.lineVisible?.value = false
-        dragActiveSideOverride = null
-        clearSplitIdleChrome()
-        hideGestureHintWindow()
-        hideCursor()
-    }
+    fun hideChromeForEdgeRegionalPick() = FloatBallCaptureChrome.hideChromeForEdgeRegionalPick()
 
-    fun restoreAfterScreenshotCapture() {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { restoreAfterScreenshotCapture() }
-            return
-        }
-        if (!captureSuppressed) return
-        captureSuppressed = false
-        reattachChromeWindowsAfterCapture()
-        val settings = settingsState?.value
-        if (settings != null) {
-            updateChromeVisibility(settings)
-            syncSplitIdleChrome(settings)
-        } else {
-            sceneState?.chromeVisible?.value = true
-        }
-    }
+    fun restoreAfterScreenshotCapture() = FloatBallCaptureChrome.restoreAfterScreenshotCapture()
 
     fun restoreChromeAfterRegionalPick() = restoreAfterScreenshotCapture()
 
-    fun hideChromeForRingLauncher() {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { hideChromeForRingLauncher() }
-            return
-        }
-        if (sceneState == null) return
-        captureSuppressed = true
-        sceneState?.chromeVisible?.value = false
-        sceneState?.ballVisible?.value = false
-        sceneState?.lineVisible?.value = false
-        dragActiveSideOverride = null
-        clearSplitIdleChrome()
-        hideGestureHintWindow()
-        cancelCursorPickPreview()
-        displayView?.visibility = View.GONE
-        if (!isLauncherCaptureActive()) {
-            suppressTouchHostsForLauncherOverlay()
-        }
-    }
+    fun hideChromeForRingLauncher() = FloatBallCaptureChrome.hideChromeForRingLauncher()
 
-    fun restoreChromeAfterRingLauncher() {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { restoreChromeAfterRingLauncher() }
-            return
-        }
-        displayView?.visibility = View.VISIBLE
-        touchHost?.visibility = View.VISIBLE
-        lineTouchHost?.visibility = View.VISIBLE
-        restoreChromeAfterRegionalPick()
-        settingsState?.value?.let { recoverIdleTouchCaptureLayouts(it) }
-    }
+    fun restoreChromeAfterRingLauncher() = FloatBallCaptureChrome.restoreChromeAfterRingLauncher()
 
     /** 圆环/蜂窝展示期间强制收起悬浮球触摸层（供启动器在抬手后二次确认）。 */
-    fun suppressTouchHostsForActiveLauncherOverlay() {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { suppressTouchHostsForActiveLauncherOverlay() }
-            return
-        }
-        suppressTouchHostsForLauncherOverlay()
-    }
+    fun suppressTouchHostsForActiveLauncherOverlay() =
+        FloatBallCaptureChrome.suppressTouchHostsForActiveLauncherOverlay()
 
     fun ballCenterForRingLauncher(settings: AppSettings): Pair<Float, Float>? {
         val view = displayView ?: return null
@@ -1399,7 +1323,7 @@ object FloatBallOverlay {
         return ballPx / settings.floatBallSizeDp.coerceIn(36f, 96f)
     }
 
-    private fun detachChromeWindowsForCapture() {
+    internal fun detachChromeWindowsForCapture() {
         if (chromeDetachedForCapture) return
         val wm = windowManager ?: return
         displayView?.let { view ->
@@ -1420,7 +1344,7 @@ object FloatBallOverlay {
         chromeDetachedForCapture = true
     }
 
-    private fun reattachChromeWindowsAfterCapture() {
+    internal fun reattachChromeWindowsAfterCapture() {
         if (!chromeDetachedForCapture) return
         val wm = windowManager ?: return
         val display = displayView
@@ -1833,7 +1757,7 @@ object FloatBallOverlay {
     }
 
     /** 空闲态：从全屏捕获缩回触钮区，并同步 WM 几何（z-order 重挂前必须调用）。 */
-    private fun recoverIdleTouchCaptureLayouts(settings: AppSettings) {
+    internal fun recoverIdleTouchCaptureLayouts(settings: AppSettings) {
         // 启动器接管手势期间不能复位/隐藏触摸窗：窗口一缩一藏，系统就会给正在拖动的窗口
         // 发 ACTION_CANCEL，表现为"线侧长按后不松手选不中槽位"。
         if (isLauncherCaptureActive()) return
@@ -1851,7 +1775,7 @@ object FloatBallOverlay {
         return false
     }
 
-    private fun syncSplitIdleChrome(settings: AppSettings) {
+    internal fun syncSplitIdleChrome(settings: AppSettings) {
         if (!shouldUseSplitIdleChrome(settings)) {
             clearSplitIdleChrome()
             displayView?.visibility = View.VISIBLE
@@ -1891,7 +1815,7 @@ object FloatBallOverlay {
         lineTouchHost?.setIdleChrome(lineIdleChromeView, lineIdleChromeOwner)
     }
 
-    private fun clearSplitIdleChrome() {
+    internal fun clearSplitIdleChrome() {
         touchHost?.setIdleChrome(null, null)
         lineTouchHost?.setIdleChrome(null, null)
     }
@@ -2310,7 +2234,7 @@ object FloatBallOverlay {
         }
     }
 
-    private fun hideGestureHintWindow() {
+    internal fun hideGestureHintWindow() {
         currentGestureHintType = null
         gestureHintWindow.hide()
     }
@@ -2424,14 +2348,14 @@ object FloatBallOverlay {
         }
     }
 
-    private fun isLauncherCaptureActive(): Boolean =
+    internal fun isLauncherCaptureActive(): Boolean =
         touchHost?.isLauncherCaptureMode() == true || lineTouchHost?.isLauncherCaptureMode() == true
 
     /**
      * 圆环/蜂窝展示期间：隐藏并穿透悬浮球触摸窗。
      * 避免 updateViewLayout 把全屏触摸窗抬到启动器之上（部分 OEM 上会挡住圆环）。
      */
-    private fun suppressTouchHostsForLauncherOverlay() {
+    internal fun suppressTouchHostsForLauncherOverlay() {
         if (!RingLauncherOverlayWindow.isShowing && !HoneycombAppPickerOverlayWindow.isShowing) return
         // 正在用"长按 → 不松手拖到槽位"的接管手势时不能隐藏/取消触摸窗：
         // 那会直接 CANCEL 掉正在进行的拖动，导致松手前无法选择槽位。
@@ -3035,7 +2959,7 @@ object FloatBallOverlay {
         )
     }
 
-    private fun updateChromeVisibility(settings: AppSettings) {
+    internal fun updateChromeVisibility(settings: AppSettings) {
         val state = sceneState ?: return
         if (captureSuppressed) {
             state.chromeVisible.value = false
@@ -3573,7 +3497,7 @@ object FloatBallOverlay {
         syncCursorPreviewAppearance()
     }
 
-    private fun cancelCursorPickPreview() {
+    internal fun cancelCursorPickPreview() {
         if (!cursorPreviewActive || isDragging) return
         cursorPreviewActive = false
         passivePickPreviewAlpha = 1f
@@ -3778,7 +3702,7 @@ object FloatBallOverlay {
         setCursorLayersVisible(false)
     }
 
-    private fun hideCursor(restorePassive: Boolean = true) {
+    internal fun hideCursor(restorePassive: Boolean = true) {
         activeSideAtDragStart = null
         if (isDragging) {
             clearCursorUi(restoreLayout = false)
