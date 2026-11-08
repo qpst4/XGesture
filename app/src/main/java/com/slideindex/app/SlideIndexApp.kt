@@ -265,6 +265,61 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onResult = { created -> onResult(created) },
             )
         }
+        com.slideindex.app.overlay.panels.PanelVolumeHooks.readBrightness = {
+            val ctx = com.slideindex.app.overlay.overlayHostContext()
+            if (ctx == null) 0f else com.slideindex.app.util.BrightnessControlHelper.readBrightnessFraction(ctx)
+        }
+        com.slideindex.app.overlay.panels.PanelVolumeHooks.applyBrightness = { fraction ->
+            com.slideindex.app.overlay.overlayHostContext()?.let { ctx ->
+                com.slideindex.app.util.BrightnessControlHelper.applyBrightnessFraction(ctx, fraction)
+            }
+        }
+        com.slideindex.app.overlay.panels.PanelVolumeHooks.setVolume = { stream, fraction ->
+            com.slideindex.app.overlay.overlayHostContext()?.let { ctx ->
+                com.slideindex.app.util.VolumeControlHelper.setFraction(
+                    ctx,
+                    com.slideindex.app.util.VolumeControlHelper.Stream.entries[stream],
+                    fraction,
+                )
+            }
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.setExpandPanelSlotAction = { index, action ->
+            hookScope.launch {
+                com.slideindex.app.di.OverlayDependencyAccess
+                    .overlayDependencies(this@SlideIndexApp)
+                    ?.settingsRepository
+                    ?.setExpandPanelSlotAction(index, action)
+            }
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerAppsLoad = { ctx, repo, freezer ->
+            if (repo == null) emptyList()
+            else com.slideindex.app.ui.picker.PickerApps.load(ctx, repo, freezer)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.defaultGestureRunner =
+            com.slideindex.app.overlay.panels.GestureActionRunner {
+                action, settings, armed, ax, ay, side ->
+                val ctx = com.slideindex.app.overlay.overlayHostContext()
+                val deps = ctx?.let {
+                    com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(it)
+                }
+                val repo = deps?.appRepository
+                if (ctx != null && repo != null) {
+                    com.slideindex.app.gesture.ActionExecutor(
+                        context = ctx,
+                        appRepository = repo,
+                        onShellCommandsPersist = { commands ->
+                            hookScope.launch { deps.settingsRepository.setShellCommands(commands) }
+                        },
+                    ).execute(
+                        action = action,
+                        settings = settings,
+                        longPressArmed = armed,
+                        anchorRawX = ax,
+                        anchorRawY = ay,
+                        panelSide = side,
+                    )
+                }
+            }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.globalIconKey = { pkg ->
             com.slideindex.app.ui.GlobalIconStore.appIcon(this@SlideIndexApp, pkg)
         }

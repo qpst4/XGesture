@@ -80,21 +80,17 @@ import com.slideindex.app.R
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.activity.findForLaunchShortcut
 import com.slideindex.app.data.AppInfo
-import com.slideindex.app.di.OverlayDependencyAccess
-import com.slideindex.app.gesture.ActionExecutor
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.overlay.LocalFrostedGlassBackdrop
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.shouldLaunchFullscreen
 import com.slideindex.app.ui.Md3PickerAppLeading
+import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
+import com.slideindex.app.ui.gesturepicker.launchShortcutDisplayLabel
 import com.slideindex.app.ui.Md3PickerIconLeading
 import com.slideindex.app.ui.Md3PickerLaunchShortcutLeading
 import com.slideindex.app.ui.Md3PickerPackageLeading
 import com.slideindex.app.ui.gestureActionIcon
-import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
-import com.slideindex.app.ui.gesturepicker.launchShortcutDisplayLabel
-import com.slideindex.app.util.BrightnessControlHelper
-import com.slideindex.app.util.VolumeControlHelper
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Icon
@@ -111,7 +107,9 @@ fun VolumePanelContent(
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
-    val deps = remember { OverlayDependencyAccess.overlayDependencies(context) }
+    val settingsFlow = remember(context) {
+        com.slideindex.app.settings.SettingsFlowHolder.settingsFlow(context)
+    }
     val scope = rememberCoroutineScope()
     var slotActions by remember { mutableStateOf(List<GestureAction?>(8) { null }) }
     var activityShortcuts by remember { mutableStateOf<List<ActivityShortcut>>(emptyList()) }
@@ -123,48 +121,41 @@ fun VolumePanelContent(
     val overlayContext = remember(context) {
         overlayHostContext() ?: context
     }
-    val actionExecutor = remember(deps, overlayContext) {
-        val repository = deps?.appRepository ?: return@remember null
-        ActionExecutor(
-            context = overlayContext,
-            appRepository = repository,
-            onShellCommandsPersist = { commands ->
-                scope.launch {
-                    deps.settingsRepository.setShellCommands(commands)
-                }
-            },
-        )
-    }
+    val actionExecutor = remember { com.slideindex.app.overlay.panels.PanelRuntimeHooks.defaultGestureRunner }
 
-    LaunchedEffect(deps) {
-        val repository = deps?.settingsRepository ?: return@LaunchedEffect
-        repository.settings.collect { settings ->
+    LaunchedEffect(settingsFlow) {
+        settingsFlow?.collect { settings ->
             appSettings = settings
             slotActions = settings.expandPanelSlotActions
             activityShortcuts = settings.activityShortcuts
         }
     }
-    LaunchedEffect(deps) {
-        val repository = deps?.appRepository ?: return@LaunchedEffect
-        val targets = deps.settingsRepository.readFreshSnapshot().freezerAppPackages
-        allApps = com.slideindex.app.ui.picker.PickerApps.load(context, repository, targets)
+    LaunchedEffect(context) {
+        val repository = com.slideindex.app.overlay.panels.PanelRuntimeHooks.appRepository?.invoke(context)
+            ?: return@LaunchedEffect
+        val targets = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot
+            ?.invoke(context)?.freezerAppPackages.orEmpty()
+        allApps = com.slideindex.app.overlay.panels.PanelRuntimeHooks.pickerAppsLoad
+            ?.invoke(context, repository, targets).orEmpty()
     }
 
     fun runSlotAction(action: GestureAction, longPressArmed: Boolean = false) {
         onDismiss()
         val metrics = overlayContext.resources.displayMetrics
-        actionExecutor?.execute(
-            action = action,
-            settings = appSettings,
-            longPressArmed = longPressArmed,
-            anchorRawX = metrics.widthPixels / 2f,
-            anchorRawY = metrics.heightPixels / 2f,
+        actionExecutor?.run(
+            action,
+            appSettings,
+            longPressArmed,
+            metrics.widthPixels / 2f,
+            metrics.heightPixels / 2f,
+            null,
         )
     }
 
     fun saveSlotAction(index: Int, action: GestureAction?) {
         scope.launch {
-            deps?.settingsRepository?.setExpandPanelSlotAction(index, action)
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.setExpandPanelSlotAction
+                ?.invoke(index, action)
         }
     }
 
@@ -316,7 +307,7 @@ private fun ExpandPanelSlidersSection() {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
     var brightness by remember {
-        mutableFloatStateOf(BrightnessControlHelper.readBrightnessFraction(context))
+        mutableFloatStateOf(com.slideindex.app.overlay.panels.PanelVolumeHooks.readBrightness?.invoke() ?: 0f)
     }
     val maxAlarm = remember { audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM).coerceAtLeast(1) }
     var alarmVolume by remember {
@@ -351,7 +342,7 @@ private fun ExpandPanelSlidersSection() {
             value = brightness,
             onValueChange = {
                 brightness = it
-                BrightnessControlHelper.applyBrightnessFraction(context, it)
+                com.slideindex.app.overlay.panels.PanelVolumeHooks.applyBrightness?.invoke(it)
             },
         )
         ExpandPanelSliderItem(
@@ -360,7 +351,7 @@ private fun ExpandPanelSlidersSection() {
             value = alarmVolume,
             onValueChange = {
                 alarmVolume = it
-                VolumeControlHelper.setFraction(context, VolumeControlHelper.Stream.ALARM, it)
+                com.slideindex.app.overlay.panels.PanelVolumeHooks.setVolume?.invoke(0, it)
             },
         )
         ExpandPanelSliderItem(
@@ -369,7 +360,7 @@ private fun ExpandPanelSlidersSection() {
             value = notificationVolume,
             onValueChange = {
                 notificationVolume = it
-                VolumeControlHelper.setFraction(context, VolumeControlHelper.Stream.NOTIFICATION, it)
+                com.slideindex.app.overlay.panels.PanelVolumeHooks.setVolume?.invoke(2, it)
             },
         )
         ExpandPanelSliderItem(
@@ -378,7 +369,7 @@ private fun ExpandPanelSlidersSection() {
             value = ringVolume,
             onValueChange = {
                 ringVolume = it
-                VolumeControlHelper.setFraction(context, VolumeControlHelper.Stream.RING, it)
+                com.slideindex.app.overlay.panels.PanelVolumeHooks.setVolume?.invoke(1, it)
             },
         )
         ExpandPanelSliderItem(
@@ -387,7 +378,7 @@ private fun ExpandPanelSlidersSection() {
             value = mediaVolume,
             onValueChange = {
                 mediaVolume = it
-                VolumeControlHelper.setFraction(context, VolumeControlHelper.Stream.MEDIA, it)
+                com.slideindex.app.overlay.panels.PanelVolumeHooks.setVolume?.invoke(3, it)
             },
         )
     }

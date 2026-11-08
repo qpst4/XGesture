@@ -115,6 +115,23 @@ object PanelRuntimeHooks {
     /** 环状启动器：创建快捷方式（host 为 `:app` 的 `AppShortcutLoader.CreateShortcutHost`）。 */
     @Volatile
     var createShortcutLauncher: ((Context, Any, () -> Unit, (Any?) -> Unit) -> Unit)? = null
+    /** 写回展开面板某槽位的动作。 */
+    @Volatile
+    var setExpandPanelSlotAction: ((Int, com.slideindex.app.gesture.GestureAction?) -> Unit)? = null
+
+    /** 选择器用的应用列表（全量加载，含冻结/分身）。 */
+    @Volatile
+    var pickerAppsLoad:
+        (suspend (Context, com.slideindex.app.data.AppRepository?, Set<String>) -> List<com.slideindex.app.data.AppInfo>)? =
+        null
+    /** 展开面板的槽位选择器内容（`:app` 的 ExpandPanelSlotPicker，需 app 侧依赖）。 */
+    @Volatile
+    var expandPanelSlotPicker: PanelExpandSlotPicker? = null
+
+    /** 默认手势执行器（`:app` 的 ActionExecutor），供自带执行逻辑的面板使用。 */
+    @Volatile
+    var defaultGestureRunner: GestureActionRunner? = null
+
     /** 全局图标库里某个包的自定义 iconKey（`:app` 的 GlobalIconStore.appIcon）。 */
     var globalIconKey: ((String) -> String?)? = null
 
@@ -344,5 +361,14 @@ fun interface PanelActionIconView {
         iconKey: String?,
         sizeDp: Int,
         showBackground: Boolean,
+    )
+}
+
+/** 见 [PanelRuntimeHooks.expandPanelSlotPicker]。 */
+fun interface PanelExpandSlotPicker {
+    @androidx.compose.runtime.Composable
+    fun content(
+        onDismiss: () -> Unit,
+        onPicked: (com.slideindex.app.gesture.GestureAction?) -> Unit,
     )
 }
