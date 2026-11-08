@@ -27,7 +27,7 @@ import com.slideindex.app.settings.FvRingLauncherSlotIconOverride
 import com.slideindex.app.shell.ShellCommand
 import kotlin.math.min
 
-internal object RingLauncherRenderer {
+object RingLauncherRenderer {
     private const val ICON_PLATE = 0xFF303034.toInt()
     private const val ICON_SHADOW = 0x55000000
     private const val HIGHLIGHT_RING = 0xFFFFFFFF.toInt()
@@ -305,7 +305,7 @@ internal object RingLauncherRenderer {
         val cornerRadius = diameter * cornerRadiusRatio
 
         // 浅色模式下底板也要跟着变浅
-        iconPlatePaint.color = if (com.slideindex.app.ui.IconPlateModeState.currentDark()) {
+        iconPlatePaint.color = if (com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconPlateCurrentDark?.invoke() == true) {
             ICON_PLATE
         } else {
             0xFFF1F3F7.toInt()
@@ -515,7 +515,7 @@ internal object RingLauncherRenderer {
         }
 
         // 浅色模式下底板也要跟着变浅
-        iconPlatePaint.color = if (com.slideindex.app.ui.IconPlateModeState.currentDark()) {
+        iconPlatePaint.color = if (com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconPlateCurrentDark?.invoke() == true) {
             ICON_PLATE
         } else {
             0xFFF1F3F7.toInt()

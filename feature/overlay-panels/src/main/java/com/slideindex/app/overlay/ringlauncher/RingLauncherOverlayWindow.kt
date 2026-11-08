@@ -12,13 +12,9 @@ import android.os.Looper
 import android.util.Log
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.data.AppRepository
-import com.slideindex.app.di.OverlayDependencyAccess
-import com.slideindex.app.gesture.ActionExecutor
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemType
 import com.slideindex.app.overlay.ScreenOffDismissReceiver
-import com.slideindex.app.overlay.FloatBallLayout
-import com.slideindex.app.overlay.FloatBallOverlay
 import com.slideindex.app.overlay.OverlayComposeDialogHost
 import com.slideindex.app.overlay.OverlayDisplayMetrics
 import com.slideindex.app.overlay.HoneycombIconLoader
@@ -33,9 +29,7 @@ import com.slideindex.app.settings.FvRingLauncherAxisMergeDirection
 import com.slideindex.app.settings.FvRingLauncherSettings
 import com.slideindex.app.settings.fvRingLauncherFor
 import com.slideindex.app.settings.toAxis
-import com.slideindex.app.ui.ringlauncher.RingLauncherSlotConfigSheet
 import com.slideindex.app.util.PermissionHelper
-import com.slideindex.app.util.RecentTasksLoader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -173,7 +167,7 @@ object RingLauncherOverlayWindow {
                                     createHost,
                                     { RingLauncherOverlayWindow.dismiss() },
                                 ) { created ->
-                                    onResult(created as? com.slideindex.app.util.AppShortcutLoader.CreatedShortcut)
+                                    onResult(created)
                                 }
                         },
                     )
@@ -300,7 +294,8 @@ object RingLauncherOverlayWindow {
             settingsScope.launch {
                 HoneycombIconLoader.warmAppIcons(appRepository, resolvedItems, iconSizePx)
             }
-            com.slideindex.app.tasks.TaskSwitcherRepository.refreshAsync(appRepository) { recentEntries ->
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.refreshRecentTasks
+            ?.invoke(appRepository) { recentEntries ->
                 if (recentEntries.isNotEmpty()) {
                     refreshFromSettings()
                 }
@@ -340,8 +335,8 @@ object RingLauncherOverlayWindow {
                 }
 
                 override fun onCircleCountChange(circleCount: Int) {
-                    val deps = com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
-        val repository = deps.settingsRepository
+                    val repository = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsRepository
+                        ?.invoke(hostContext) ?: return
                     val axis = side.toAxis()
                     settingsScope.launch {
                         repository.setFvRingLauncherCircleCount(axis, circleCount)
@@ -368,8 +363,8 @@ object RingLauncherOverlayWindow {
                 }
 
                 override fun onSettingsChange(settings: FvRingLauncherSettings) {
-                    val deps = com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
-        val repository = deps.settingsRepository
+                    val repository = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsRepository
+                        ?.invoke(hostContext) ?: return
                     val axis = side.toAxis()
                     settingsScope.launch {
                         repository.setFvRingLauncherSettings(axis, settings)
@@ -399,8 +394,8 @@ object RingLauncherOverlayWindow {
                     enabled: Boolean,
                     mergeDirection: FvRingLauncherAxisMergeDirection?,
                 ) {
-                    val deps = com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
-        val repository = deps.settingsRepository
+                    val repository = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsRepository
+                        ?.invoke(hostContext) ?: return
                     val axis = side.toAxis()
                     settingsScope.launch {
                         repository.setFvRingLauncherLinkAppearanceAxes(enabled, axis, mergeDirection)
@@ -432,8 +427,8 @@ object RingLauncherOverlayWindow {
                     enabled: Boolean,
                     mergeDirection: FvRingLauncherAxisMergeDirection?,
                 ) {
-                    val deps = com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
-        val repository = deps.settingsRepository
+                    val repository = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsRepository
+                        ?.invoke(hostContext) ?: return
                     val axis = side.toAxis()
                     settingsScope.launch {
                         repository.setFvRingLauncherLinkSlotAxes(enabled, axis, mergeDirection)
@@ -467,8 +462,8 @@ object RingLauncherOverlayWindow {
                 }
 
                 override fun onSlotsSwapped(fromSlot: Int, toSlot: Int) {
-                    val deps = com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
-        val repository = deps.settingsRepository
+                    val repository = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsRepository
+                        ?.invoke(hostContext) ?: return
                     val axis = side.toAxis()
                     settingsScope.launch {
                         repository.swapFvRingLauncherSlots(axis, fromSlot, toSlot)
@@ -529,7 +524,7 @@ object RingLauncherOverlayWindow {
     fun confirmSelection(
         rawX: Float,
         rawY: Float,
-        actionExecutor: ActionExecutor,
+        actionExecutor: Any,
         settings: AppSettings,
     ) {
         if (Looper.myLooper() != Looper.getMainLooper()) {
@@ -689,8 +684,12 @@ object RingLauncherOverlayWindow {
 
         val autoFillQueue = ArrayDeque<AppInfo>()
         if (appRepository != null) {
-            val cachedRecents = com.slideindex.app.tasks.TaskSwitcherRepository.getCachedEntries()
-                .map { it.app }
+            val cachedRecents = (com.slideindex.app.overlay.panels.PanelRuntimeHooks.cachedRecentTasks
+                ?.invoke().orEmpty()).mapNotNull { entry ->
+                    runCatching {
+                        entry.javaClass.getMethod("getApp").invoke(entry) as? com.slideindex.app.data.AppInfo
+                    }.getOrNull()
+                }
                 // 任务切换器现在会显示本应用；圆环的「最近应用」自动填充仍然不要把自己塞进去。
                 .filter { it.packageName != context.packageName }
             for (app in cachedRecents) {

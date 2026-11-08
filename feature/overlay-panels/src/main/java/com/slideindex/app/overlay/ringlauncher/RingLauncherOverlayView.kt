@@ -59,11 +59,10 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.launcher.QuickLauncherItemType
-import com.slideindex.app.overlay.FloatBallOverlay
 import com.slideindex.app.overlay.HoneycombRuntimeTarget
 import com.slideindex.app.overlay.OverlayComposeDialogHost
 import com.slideindex.app.overlay.layout.FvRingLauncherSide
@@ -79,12 +78,11 @@ import com.slideindex.app.settings.shouldLaunchFullscreen
 import com.slideindex.app.settings.launchPolicyLongPressEligible
 import com.slideindex.app.settings.moveFvRingLauncherSlot
 import com.slideindex.app.util.HapticHelper
-import com.slideindex.app.util.InputMethodHelper
 import kotlin.math.roundToInt
 import com.slideindex.app.ui.miuix.theme.ModuleTheme
 
 @SuppressLint("ViewConstructor")
-internal class RingLauncherOverlayView(
+class RingLauncherOverlayView(
     context: Context,
     private val onLaunch: (HoneycombRuntimeTarget, Boolean) -> Unit,
     private val onClosed: () -> Unit,
@@ -187,7 +185,7 @@ internal class RingLauncherOverlayView(
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        com.slideindex.app.ui.GlobalIconStore.addIconChangeListener(iconChangeListener)
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.addIconChangeListener?.invoke(iconChangeListener)
     }
 
     fun configure(
@@ -506,7 +504,7 @@ internal class RingLauncherOverlayView(
                 // 裸调 InputMethodManager.showInputMethodPicker() 要求**当前窗口持有输入法焦点**，
                 // 圆环是 overlay 窗口拿不到 IME 焦点，会被系统静默忽略（点了像没反应）。
                 // switchInputMethod 内部有"临时挂一个可获焦点的 accessibility overlay"兜底。
-                InputMethodHelper.switchInputMethod(context)
+                com.slideindex.app.overlay.panels.PanelRuntimeHooks.switchInputMethod?.invoke(context)
                 return true
             }
             sessionMode == SessionMode.EDIT && editDragFromSlot >= 0 -> {
@@ -893,14 +891,14 @@ internal class RingLauncherOverlayView(
     }
 
     override fun onDetachedFromWindow() {
-        com.slideindex.app.ui.GlobalIconStore.removeIconChangeListener(iconChangeListener)
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.removeIconChangeListener?.invoke(iconChangeListener)
         super.onDetachedFromWindow()
         composeDialogHost.dismiss()
     }
 }
 
 @Composable
-internal fun RingLauncherAppearanceDialogContent(
+fun RingLauncherAppearanceDialogContent(
     currentSettings: FvRingLauncherSettings,
     activeAxis: FvRingLauncherAxis,
     linkAppearanceAxes: Boolean,

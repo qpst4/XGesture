@@ -18,7 +18,7 @@ import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.FvRingLauncherAxisMergeDirection
 import com.slideindex.app.settings.FvRingLauncherSettings
 
-internal class RingLauncherOverlayController(
+class RingLauncherOverlayController(
     private val context: Context,
     private val mainHandler: Handler,
 ) {
