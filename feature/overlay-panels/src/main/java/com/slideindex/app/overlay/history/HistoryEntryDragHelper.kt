@@ -5,7 +5,6 @@ import android.content.ClipDescription
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.slideindex.app.util.AccessibilityForegroundResolver
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -20,7 +19,6 @@ import com.slideindex.app.clipboard.ClipboardContentBlock
 import com.slideindex.app.clipboard.ClipboardEntry
 import com.slideindex.app.clipboard.ClipboardDragClipHelper
 import com.slideindex.app.clipboard.ClipboardHtmlParser
-import com.slideindex.app.clipboard.ClipboardWriter
 import com.slideindex.app.clipboard.DragFileMirror
 import com.slideindex.app.clipboard.audioText
 import com.slideindex.app.clipboard.resolvedContentBlocks
@@ -32,7 +30,7 @@ import com.slideindex.app.stash.StashRepository
 import com.slideindex.app.stash.exportText
 import com.slideindex.app.stash.resolvedContentBlocks
 
-internal data class HistoryDragPreview(
+data class HistoryDragPreview(
     val text: String = "",
     val bitmap: Bitmap? = null,
     /**
@@ -45,7 +43,7 @@ internal data class HistoryDragPreview(
     val snapshot: Bitmap? = null,
 )
 
-internal object HistoryEntryDragHelper {
+object HistoryEntryDragHelper {
 
     fun buildClipForStashEntry(context: Context, entry: StashEntry, repo: StashRepository?): ClipData? {
         return when (entry.type) {
@@ -205,7 +203,7 @@ internal object HistoryEntryDragHelper {
         dragFlowSource: DragFlowSource? = null,
     ): Boolean {
         val context = view.context
-        val targetPackage = AccessibilityForegroundResolver.resolve(context)
+        val targetPackage = com.slideindex.app.clipboard.ClipboardForeground.resolvePackage?.invoke(context)
         val preparation = ClipboardDragClipHelper.remapForHostIfNeeded(
             context = context,
             clipData = clipData,

@@ -29,13 +29,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.clipboard.ClipboardDragShareFallback
 import com.slideindex.app.clipboard.ClipboardEntry
 import com.slideindex.app.clipboard.ClipboardEntryType
 import com.slideindex.app.clipboard.ClipboardImageLabel
 import com.slideindex.app.clipboard.ClipboardThumbnailCache
-import com.slideindex.app.clipboard.ClipboardWriter
 import com.slideindex.app.clipboard.displayTypeLabelKey
 import com.slideindex.app.clipboard.hasImageContent
 import com.slideindex.app.clipboard.hasRichPinContent
@@ -134,7 +133,8 @@ fun HistoryClipboardEntryCard(
     val deleteLabel = stringResource(R.string.stash_action_delete)
     val moreLabel = stringResource(R.string.notification_filter_more_menu)
     val onLongPressDrag: () -> Unit = {
-        val clipData = ClipboardWriter.buildClipForEntry(context, entry)
+        val clipData = com.slideindex.app.overlay.panels.PanelStashWriteHooks
+                        .buildClipForEntry?.invoke(context, entry)
         if (clipData == null) {
             onShowMessage(R.string.history_drag_unsupported)
         } else {
