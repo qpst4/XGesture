@@ -420,3 +420,32 @@ Adjust、corner、quickwheel、screenshot、volumepanel（+ B2 backpanel 更早�
 3. `service`（16k：中转 Activity、前台状态、无障碍查询）
 
 每一项都是独立工程，不宜与面板迁移混做。
+
+### 12.9 最终账目（2026-11-08，W1-A/B + 第一轮 P1/P3）
+
+| 指标 | 数值 |
+| :--- | :--- |
+| `:feature:overlay-panels` | 0 → **58,489 行**（13 个整组 + pickresult/history 全量文件） |
+| `:app` 的 `overlay/` | 136,402 → **79,329 行（-42%）** |
+| 整组迁出 | **14 组**：backpanel、carousel、holographic、fingertip、animation、share、Adjust、corner、quickwheel、screenshot、volumepanel、pickresult、history |
+| 新增模块 | `:core:design`（约 4.8k）、`:core:shortcuts`、`:core:overlay-host`（3.8k）、`:core:clipboard`（3.2k+测试）、`:core:stash`（2.2k+测试）、`:core:search`（18 文件） |
+| 端口 | `PanelActionHost`（22 方法）、`PanelRuntimeHooks`（80+ 槽位）、`PanelStashWriteHooks`（20+）、`PanelFloatBallHooks`、`PanelVolumeHooks`、`PickResultHost`（7 方法）、`PanelSlotPicker`、`PanelActionIconSlot`/`View`、`StashVoiceRecorder`、`StashReminderScheduling`、`ClipboardHistoryQuery`/`ClipboardService`/`ClipboardForeground` |
+| 验证 | `unitTests` 650 tasks 全绿；`:app:installFullDebug` 真机装机成功（MEIZU 21） |
+| 待推提交 | 101 个（未 push） |
+
+**未完成（明确记录）**：
+
+| 组 | 行数 | 阻塞原因 |
+| :--- | :--- | :--- |
+| `dragdrop`（剩 1 文件） | 1,094 | 10+ 条文案、`FloatBallPickResultPanel.showResult` 调用改写 |
+| `searchpanel` | 5,816 | `clipboardfloat` 子系统、`SearchEngineLauncher`、FloatBall 面板 |
+| `quickmenu` | 7,616 | barcode / macro / pagescroll / service / FloatBall |
+| `filebrowser` | 8,632 | privilege / shizuku / ocr / service |
+| `ringlauncher` | 3,416 | `FloatBallLayout` / `RecentTasksLoader` / `AppShortcutLoader` |
+
+**下一阶段的三个前置工程**（每一项都独立于面板迁移）：
+1. `FloatBall*` 单例重构为 `FloatBallPort`（overlay 4,302 行 / PickResult 1,636 / ImageSearch 1,360）
+2. `service` 拆分（16k：中转 Activity、前台状态、无障碍查询）
+3. `TaskManagerUtil`（968 行 hub）拆分，才能动 `privilege`
+
+**已落地的可复用资产**：`PanelRuntimeHooks` 的钩子模式在本仓库已被 14 组面板使用，并有明确的退役计划（见 §12.4）——这些槽位是迁移期脚手架，不是最终架构。
