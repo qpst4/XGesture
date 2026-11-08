@@ -265,6 +265,26 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onResult = { created -> onResult(created) },
             )
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.globalIconKey = { pkg ->
+            com.slideindex.app.ui.GlobalIconStore.appIcon(this@SlideIndexApp, pkg)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconView =
+            object : com.slideindex.app.overlay.panels.PanelActionIconView {
+                @androidx.compose.runtime.Composable
+                override fun content(
+                    action: com.slideindex.app.gesture.GestureAction,
+                    iconKey: String?,
+                    sizeDp: Int,
+                    showBackground: Boolean,
+                ) {
+                    com.slideindex.app.ui.ActionIconView(
+                        action = action,
+                        iconKey = iconKey,
+                        sizeDp = sizeDp,
+                        showBackground = showBackground,
+                    )
+                }
+            }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconSlot =
             object : com.slideindex.app.overlay.panels.PanelActionIconSlot {
                 @androidx.compose.runtime.Composable

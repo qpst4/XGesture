@@ -115,6 +115,13 @@ object PanelRuntimeHooks {
     /** 环状启动器：创建快捷方式（host 为 `:app` 的 `AppShortcutLoader.CreateShortcutHost`）。 */
     @Volatile
     var createShortcutLauncher: ((Context, Any, () -> Unit, (Any?) -> Unit) -> Unit)? = null
+    /** 全局图标库里某个包的自定义 iconKey（`:app` 的 GlobalIconStore.appIcon）。 */
+    var globalIconKey: ((String) -> String?)? = null
+
+    /** 带 iconKey 的动作图标（`:app` 的 ActionIconView，选择器用）。 */
+    @Volatile
+    var actionIconView: PanelActionIconView? = null
+
     /** 内置动作图标的 Composable（`:app` 的 ActionIconSlot）。 */
     @Volatile
     var actionIconSlot: PanelActionIconSlot? = null
@@ -326,5 +333,16 @@ fun interface PanelActionIconSlot {
     fun content(
         action: com.slideindex.app.gesture.GestureAction,
         sizeDp: Int,
+    )
+}
+
+/** 见 [PanelRuntimeHooks.actionIconView]。 */
+fun interface PanelActionIconView {
+    @androidx.compose.runtime.Composable
+    fun content(
+        action: com.slideindex.app.gesture.GestureAction,
+        iconKey: String?,
+        sizeDp: Int,
+        showBackground: Boolean,
     )
 }

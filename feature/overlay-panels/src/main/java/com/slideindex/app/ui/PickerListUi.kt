@@ -55,7 +55,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.activity.ActivityShortcutKind
 import com.slideindex.app.activity.findForLaunchShortcut
@@ -65,7 +65,7 @@ import com.slideindex.app.launcher.isShellActivityShortcut
 import com.slideindex.app.launcher.showsShellActivityShortcutBadge
 import com.slideindex.app.overlay.ShellCommandBadgeOverlay
 import com.slideindex.app.overlay.ShortcutBadgeOverlay
-import com.slideindex.app.ui.miuix.miuixGroupedCardItem
+import com.slideindex.app.ui.miuix.pickerGroupedCardItem
 import com.slideindex.app.util.ShortcutKind
 import com.slideindex.app.util.toSafeImageBitmap
 import top.yukonga.miuix.kmp.basic.BasicComponent
@@ -250,7 +250,7 @@ fun Md3PickerListRow(
      */
     highlightPulse: Float = 0f,
 ) {
-    val cardModifier = modifier.miuixGroupedCardItem(
+    val cardModifier = modifier.pickerGroupedCardItem(
         index = segmentIndex,
         count = segmentCount,
         color = if (highlightPulse > 0f) {
@@ -400,7 +400,7 @@ fun Md3PickerManagedShortcutLeading(
         shortcut.iconPath,
         shortcut.identityKey(),
         // 宿主应用的全局图标覆盖变了，快捷方式回退到应用图标时要跟着换
-        com.slideindex.app.ui.GlobalIconStore.revision,
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconCacheRevision?.invoke().orEmpty(),
     ) {
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutManagedDrawable?.invoke(context, shortcut)
             ?.toBitmap(96, 96)
@@ -552,19 +552,18 @@ fun Md3PickerAppLeading(app: AppInfo, sizeDp: Int = 40) {
     // 必须在这里统一画出来，否则同一个应用在不同列表里的样子会不一致。
     Box(modifier = Modifier.size(sizeDp.dp)) {
         // 全局图标覆盖优先（扩展 → 图标库 → 应用图标）
-        val iconOverride = remember(app.packageName, com.slideindex.app.ui.GlobalIconStore.revision) {
-            com.slideindex.app.ui.GlobalIconStore.appIcon(context, app.packageName)
+        val iconOverride = remember(app.packageName, com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconCacheRevision?.invoke().orEmpty()) {
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.globalIconKey?.invoke(app.packageName)
         }
         if (iconOverride != null) {
-            ActionIconView(
-                action = com.slideindex.app.gesture.GestureAction.LaunchApp(
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconView?.content(
+                com.slideindex.app.gesture.GestureAction.LaunchApp(
                     app.packageName,
                     cloneUserId = app.cloneUserId,
                 ),
-                iconKey = iconOverride,
-                sizeDp = sizeDp,
-                // 与其它真实图标保持一致：不画底色方块。
-                showBackground = false,
+                iconOverride,
+                sizeDp,
+                false,
             )
         } else {
             var bitmap by remember(app.packageName) {

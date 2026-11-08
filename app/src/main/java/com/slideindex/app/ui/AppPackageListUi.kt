@@ -7,15 +7,6 @@ import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
 import com.slideindex.app.data.AppInfo
 
-sealed class AppPackageEntry {
-    abstract val packageName: String
-
-    data class Installed(val app: AppInfo) : AppPackageEntry() {
-        override val packageName: String = app.packageName
-    }
-
-    data class Missing(override val packageName: String) : AppPackageEntry()
-}
 
 @Composable
 fun AppPackageListRow(
