@@ -28,6 +28,9 @@ interface FileBrowserHost {
     /** 把图片钉到屏幕上（暂存夹能力）。 */
     fun pinImageToScreen(context: Context, bitmap: android.graphics.Bitmap)
 
+    /** 固定快捷方式失败时的提示。 */
+    fun showPinFailedToast(context: Context)
+
     /** 请求把文件浏览器固定到桌面（返回是否发起成功）。 */
     fun requestPinShortcut(context: Context): Boolean
 

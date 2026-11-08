@@ -442,6 +442,11 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     com.slideindex.app.stash.StashCoordinator.pinImageToScreen(context, bitmap)
                 }
 
+                override fun showPinFailedToast(context: android.content.Context) {
+                    com.slideindex.app.overlay.filebrowser.FileBrowserLauncherHelper
+                        .showPinFailedToast(context)
+                }
+
                 override fun requestPinShortcut(context: android.content.Context): Boolean =
                     com.slideindex.app.overlay.filebrowser.FileBrowserLauncherHelper
                         .requestPinShortcut(context)

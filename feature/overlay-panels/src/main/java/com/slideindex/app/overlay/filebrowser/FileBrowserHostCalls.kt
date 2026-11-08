@@ -33,6 +33,10 @@ object FileBrowserHostCalls {
         FileBrowserHostAccess.host?.pinImageToScreen(context, bitmap)
     }
 
+    fun showPinFailedToast(context: Context) {
+        FileBrowserHostAccess.host?.showPinFailedToast(context)
+    }
+
     fun requestPinShortcut(context: Context): Boolean =
         FileBrowserHostAccess.host?.requestPinShortcut(context) == true
 

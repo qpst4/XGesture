@@ -44,6 +44,7 @@ dependencies {
     implementation(project(":core:clipboard"))
     implementation(project(":core:search"))
     implementation(project(":core:translate"))
+    implementation(libs.reorderable)
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
     implementation(libs.camera.core)
