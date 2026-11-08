@@ -521,3 +521,42 @@ Adjust、corner、quickwheel、screenshot、volumepanel（+ B2 backpanel 更早�
 
 **结论**：面板层的"可迁移面"已经基本搬完；剩下的是 `FloatBall` 单例簇与无障碍服务本体，
 两者都是独立重构项目，不属于迁移批次。
+
+#### 12.11.1 剩余 `:app` overlay 目录精算（2026-11-09）
+
+面板组目录**已全部清空**（每个都是 0 行）：
+
+```
+animation / backpanel / carousel / compositor / corner / dragdrop / fingertip /
+history / holographic / pickresult / quickwheel / ringlauncher / screenshot / share
+```
+
+仍有残余的只有 4 个目录 + 根目录：
+
+| 位置 | 行数 | 说明 |
+| :--- | ---: | :--- |
+| `overlay/` 根目录 | 51,946 | FloatBall 簇、边缘/侧边/CNotice、指针会话、拦截层等 |
+| `overlay/searchpanel` | 1,963 | `SearchPanelScreen`（通过 `SearchPanelContent` 端口被模块调用） |
+| `overlay/volumepanel` | 581 | `ExpandPanelSlotPicker`（通过 `PanelSlotPickerHook` 提供） |
+| `overlay/quickmenu` | 156 | `QuickMenuExtraScreens`（入口路由，已被 `QuickMenuHost` 包住） |
+| `overlay/filebrowser` | 47 | `FileBrowserLauncherHelper`（桌面快捷方式，已被 `FileBrowserHost` 包住） |
+| `overlay/preview` | 122 | 预览辅助 |
+
+根目录前 10 大文件（合计约占 16k）：
+
+| 文件 | 行数 |
+| :--- | ---: |
+| `FloatBallOverlay` | 4,302 |
+| `ScreenPinManager` | 2,177 |
+| `CNoticeOverlayWindow` | 1,641 |
+| `FloatBallPickResultPanel` | 1,636 |
+| `EdgeCardOverlayWindow` | 1,529 |
+| `FloatBallImageSearchPanel` | 1,360 |
+| `QuickLauncherOverlayController` | 1,302 |
+| `QuickLauncherRenderer` | 993 |
+| `EdgeGestureOverlayView` | 871 |
+| `FloatingPointerSession` | 861 |
+
+这些文件的共同点：**都是"单例入口 + 服务回调"结构**，面板侧已经通过端口在消费它们
+（`PanelFloatBallHooks` / `PickResultHost` / `PanelRuntimeHooks`），迁移它们等于重写这些单例，
+不属于"把面板搬出去"，而是"把宿主重构成服务"——单独立项。
