@@ -323,4 +323,8 @@
     <string name="drag_drop_flow_toast_no_text">No text recognised in the image</string>
     <string name="drag_drop_flow_toast_ocr_unavailable">No OCR engine is available</string>
     <string name="shortcut_panel_open_failed">Could not open panel. Make sure XGesture is enabled.</string>
+    <string name="clipboard_float_paste_failed">Paste failed. No pasteable input field found.</string>
+    <string name="clipboard_float_paste_no_window">Paste failed. No active input window found.</string>
+    <string name="clipboard_float_paste_insert_failed">Paste failed. This app does not support automatic insertion.</string>
+    <string name="clipboard_paste_pick_content_desc">Tap the input field to paste into</string>
 </resources>

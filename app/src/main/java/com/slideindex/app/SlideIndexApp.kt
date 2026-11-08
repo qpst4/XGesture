@@ -362,6 +362,9 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     com.slideindex.app.overlay.FloatBallPickResultPanel.showOcrError(context, reason)
                 }
             }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.overlayHostContext = {
+            com.slideindex.app.di.OverlayDependencyAccess.overlayHostContext()
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsRepository = { ctx ->
             com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(ctx)?.settingsRepository
         }
@@ -386,6 +389,13 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                         showChip = showChip,
                     )
                 }
+
+                override fun editableBounds(
+                    service: android.accessibilityservice.AccessibilityService,
+                ): List<android.graphics.Rect> =
+                    com.slideindex.app.service.AccessibilityTextExtractor
+                        .collectEditableBoundsCache(service)
+                        .map { android.graphics.Rect(it.rect) }
 
                 override fun dispatchTap(
                     service: android.accessibilityservice.AccessibilityService,

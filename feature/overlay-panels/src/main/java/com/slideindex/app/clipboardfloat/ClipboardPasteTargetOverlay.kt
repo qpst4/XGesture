@@ -13,9 +13,8 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.clipboard.ClipboardEntry
-import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.overlay.OverlayWindowTypes
 import java.lang.ref.WeakReference
 import kotlin.math.roundToInt
@@ -44,7 +43,8 @@ object ClipboardPasteTargetOverlay {
         handler.post {
             dismiss()
             pendingCallback = onFinished
-            val hostContext = OverlayDependencyAccess.overlayHostContext() ?: context.applicationContext
+            val hostContext = com.slideindex.app.overlay.panels.PanelRuntimeHooks.overlayHostContext
+            ?.invoke() ?: context.applicationContext
             val density = hostContext.resources.displayMetrics.density
             val strokePx = (2.5f * density).coerceAtLeast(1f)
             val screenTargets = targets.map { Rect(it) }

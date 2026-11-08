@@ -4,9 +4,8 @@ import android.accessibilityservice.AccessibilityService
 import android.content.Context
 import android.graphics.Rect
 import android.widget.Toast
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.clipboard.ClipboardEntry
-import com.slideindex.app.clipboard.ClipboardWriter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -30,7 +29,7 @@ object ClipboardPasteCoordinator {
     ) {
         scope.launch {
             if (writeToClipboardFirst) {
-                ClipboardWriter.write(context, entry)
+                com.slideindex.app.overlay.panels.PanelStashWriteHooks.writeClipboardEntry?.invoke(context, entry)
             }
             if (!fvStyle) {
                 val result = withContext(Dispatchers.Default) {

@@ -18,6 +18,9 @@ interface ClipboardFloatHost {
     /** 隐藏浮窗。 */
     fun hide(context: Context)
 
+    /** 可编辑控件的外框缓存（由小到大去重前）。 */
+    fun editableBounds(service: AccessibilityService): List<android.graphics.Rect>
+
     /** 在无障碍服务上同步派发一次点击。 */
     fun dispatchTap(service: AccessibilityService, x: Float, y: Float)
 
