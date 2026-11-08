@@ -103,17 +103,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.overlayIsLandscape
-import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.util.HapticHelper
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.filled.MoreVert
 
-internal val PickResultPanelMaxWidth = 400.dp
-internal const val PickResultMaxVisibleTextLines = 7
+val PickResultPanelMaxWidth = 400.dp
+const val PickResultMaxVisibleTextLines = 7
 private const val PickResultLandscapeMaxVisibleTextLines = 5
 private const val PickResultPortraitMinTextBodyLines = 6
 private const val PickResultLandscapeMinTextBodyLines = 4
@@ -124,7 +123,7 @@ private const val PickResultLandscapeMinTextBodyLines = 4
  * 长按搜索按钮会在按钮上方弹出横向滑选条，选择本次搜索的窗口形态（全屏 / 小窗），
  * 松手即按选中项搜索；[initialFullscreen] 是上一次使用的形态，作为初始选中项。
  */
-internal data class PickResultSearchQuickLaunch(
+data class PickResultSearchQuickLaunch(
     /** 小窗是否可选；未开启小窗时滑选条只剩「全屏」，此时长按直接搜索。 */
     val offerFreeWindow: Boolean,
     val initialFullscreen: Boolean,
@@ -139,23 +138,23 @@ private val PickResultQuickLaunchYCancel = 60.dp
 private val PickResultQuickLaunchScreenMargin = 8.dp
 
 /** 长按滑选条的可选项：开启小窗时两项（全屏 / 小窗），否则只剩全屏。 */
-internal fun pickResultSearchQuickLaunchOptions(offerFreeWindow: Boolean): List<Boolean> =
+fun pickResultSearchQuickLaunchOptions(offerFreeWindow: Boolean): List<Boolean> =
     if (offerFreeWindow) listOf(true, false) else listOf(true)
 
 /** 滑选条初始选中项：上次使用的形态；该形态不可用时落到首项。 */
-internal fun pickResultSearchQuickLaunchStartIndex(
+fun pickResultSearchQuickLaunchStartIndex(
     options: List<Boolean>,
     initialFullscreen: Boolean,
 ): Int = options.indexOf(initialFullscreen).coerceAtLeast(0)
 
 @Composable
 
-internal fun pickResultMaxVisibleTextLines(): Int =
+fun pickResultMaxVisibleTextLines(): Int =
 if (overlayIsLandscape()) PickResultLandscapeMaxVisibleTextLines else PickResultMaxVisibleTextLines
 
 @Composable
 
-internal fun pickResultMinTextBodyLines(): Int =
+fun pickResultMinTextBodyLines(): Int =
 if (overlayIsLandscape()) PickResultLandscapeMinTextBodyLines else PickResultPortraitMinTextBodyLines
 /** 分词 chip 正文行高比例，与 [PickResultWordTapBody] 一致。*/
 private const val PickResultWordTapLineHeightRatio = 20f / 15f
@@ -165,7 +164,7 @@ private const val PickResultChipVerticalPaddingDp = 8f
 private const val PickResultFlowRowLineSpacingDp = 4f
 /** 点词正文区底?padding，避免末?chip 贴边被裁切。*/
 
-internal val PickResultWordTapBottomContentPadding = 4.dp
+val PickResultWordTapBottomContentPadding = 4.dp
 /** 文本区高度上限：屏幕高度比例，避免大屏占满卡片。*/
 private const val PickResultTextHeightScreenFractionCap = 0.50f
 /**
@@ -175,7 +174,7 @@ private const val PickResultTextHeightScreenFractionCap = 0.50f
 
 @Composable
 
-internal fun pickResultWindowHeightDp(fraction: Float): Dp {
+fun pickResultWindowHeightDp(fraction: Float): Dp {
 val density = LocalDensity.current
 val containerHeight = with(density) {
 LocalWindowInfo.current.containerSize.height.toDp()
@@ -185,7 +184,7 @@ return containerHeight * fraction
 
 @Composable
 
-internal fun pickResultMaxTextHeight(textSizeSp: Float): Dp {
+fun pickResultMaxTextHeight(textSizeSp: Float): Dp {
 val density = LocalDensity.current
 val lineHeightDp = with(density) {
 (textSizeSp * PickResultWordTapLineHeightRatio).sp.toDp()
@@ -203,12 +202,12 @@ return minOf(contentHeight, screenCap)
 
 @Composable
 
-internal fun pickResultTextBodyAllocatedHeight(textSizeSp: Float): Dp =
+fun pickResultTextBodyAllocatedHeight(textSizeSp: Float): Dp =
 pickResultMaxTextHeight(textSizeSp) + PickResultTextBodyVerticalPadding
 
 @Composable
 
-internal fun pickResultMinTextBodyAllocatedHeight(textSizeSp: Float, lines: Int = 6): Dp {
+fun pickResultMinTextBodyAllocatedHeight(textSizeSp: Float, lines: Int = 6): Dp {
 val density = LocalDensity.current
 val lineHeightDp = with(density) {
 (textSizeSp * PickResultWordTapLineHeightRatio).sp.toDp()
@@ -221,41 +220,41 @@ PickResultWordTapBottomContentPadding
 return contentHeight + PickResultTextBodyVerticalPadding
 }
 /** 翻译面板等独立区块标题行（含上下 padding）。*/
-internal val PickResultTextSectionHeaderReservedHeight = 46.dp
+val PickResultTextSectionHeaderReservedHeight = 46.dp
 
 /** 分 Tab 样式顶部药丸切换栏高度（含上下 padding 与边距）。*/
-internal val PickResultTabHeaderReservedHeight = 46.dp
+val PickResultTabHeaderReservedHeight = 46.dp
 
 /** 取词面板：文本标题 + 来源切换 + 编辑工具栏合并行。*/
-internal val PickResultTextSectionToolbarReservedHeight = 40.dp
+val PickResultTextSectionToolbarReservedHeight = 40.dp
 /** 仅编辑工具栏行（翻译面板等无合并标题时使用）。*/
 
-internal val PickResultTextToolbarReservedHeight = 38.dp
+val PickResultTextToolbarReservedHeight = 38.dp
 /** 底部操作栏（分享 / 复制 / 翻译等）。*/
 
-internal val PickResultTextActionBarReservedHeight = 48.dp
+val PickResultTextActionBarReservedHeight = 48.dp
 /** 文本区内：工具栏与正文之间的垂直间距。*/
 
-internal val PickResultTextToolbarBodySpacing = 4.dp
+val PickResultTextToolbarBodySpacing = 4.dp
 /** 文本区内：正文与操作栏之间的垂直间距（与操作栏下方分割区视觉平衡）。*/
 
-internal val PickResultTextBodyActionBarSpacing = 4.dp
+val PickResultTextBodyActionBarSpacing = 4.dp
 /** 工具栏、正文、操作栏间距合计。*/
 
-internal val PickResultTextSectionInnerSpacing =
+val PickResultTextSectionInnerSpacing =
 PickResultTextToolbarBodySpacing + PickResultTextBodyActionBarSpacing
 /** 文本操作栏顶部留白（正文与操作栏之间）。*/
 
-internal val PickResultTextActionBarTopPadding = PickResultTextBodyActionBarSpacing
+val PickResultTextActionBarTopPadding = PickResultTextBodyActionBarSpacing
 /** 操作栏底部留白（与面板底边距同步插值；搜索区展开时为 0）。*/
 
-internal val PickResultTextActionBarBottomPaddingWhenAlone = 4.dp
+val PickResultTextActionBarBottomPaddingWhenAlone = 4.dp
 /** 正文区顶?padding（底部不留白，避免操作栏上方空隙偏大）。*/
 
-internal val PickResultTextBodyTopPadding = 4.dp
+val PickResultTextBodyTopPadding = 4.dp
 /** 正文区上?padding 合计（与 [PickResultTextBody] paddedModifier 一致）。*/
 
-internal val PickResultTextBodyVerticalPadding = 28.dp
+val PickResultTextBodyVerticalPadding = 28.dp
 
 /**
  * 非分词（长按选中）模式正文区的**高度下限**。
@@ -267,34 +266,34 @@ internal val PickResultTextBodyVerticalPadding = 28.dp
  *
  * 注意它只是**下限**：文字多到超过可用空间时仍以可用空间为准（内部滚动）。
  */
-internal val PickResultTextBodyMinVisibleHeight = 240.dp
+val PickResultTextBodyMinVisibleHeight = 240.dp
 
-internal fun pickResultTextSectionChromeReservedHeight(): Dp =
+fun pickResultTextSectionChromeReservedHeight(): Dp =
 PickResultTextSectionToolbarReservedHeight +
 PickResultTextActionBarReservedHeight +
 PickResultTextSectionInnerSpacing
 /** 编辑工具?+ 操作?+ 其间距（不含合并标题行）。*/
 
-internal fun pickResultInteractiveTextChromeReservedHeight(): Dp =
+fun pickResultInteractiveTextChromeReservedHeight(): Dp =
 PickResultTextToolbarReservedHeight +
 PickResultTextActionBarReservedHeight +
 PickResultTextSectionInnerSpacing
 
-internal val PickResultPanelCardCorner = 28.dp
+val PickResultPanelCardCorner = 28.dp
 
-internal val PickResultPanelCardShape = RoundedCornerShape(PickResultPanelCardCorner)
+val PickResultPanelCardShape = RoundedCornerShape(PickResultPanelCardCorner)
 
-internal val PickResultBottomPanelShape = RoundedCornerShape(
+val PickResultBottomPanelShape = RoundedCornerShape(
     topStart = PickResultPanelCardCorner,
     topEnd = PickResultPanelCardCorner,
     bottomStart = 0.dp,
     bottomEnd = 0.dp,
 )
 
-internal val PickResultPanelCardElevation = 16.dp
+val PickResultPanelCardElevation = 16.dp
 
 @Composable
-internal fun Modifier.pickResultPanelCard(): Modifier {
+fun Modifier.pickResultPanelCard(): Modifier {
     val isDark = LocalAppDarkTheme.current
     return this
         .shadow(
@@ -311,7 +310,7 @@ internal fun Modifier.pickResultPanelCard(): Modifier {
 }
 
 @Composable
-internal fun Modifier.pickResultBottomPanelCard(suppressShadow: Boolean = false): Modifier {
+fun Modifier.pickResultBottomPanelCard(suppressShadow: Boolean = false): Modifier {
     val isDark = LocalAppDarkTheme.current
     return this
         .then(
@@ -371,9 +370,7 @@ private fun PickResultSearchActionButton(
     val view = LocalView.current
     var appSettings by remember { mutableStateOf(AppSettings()) }
     LaunchedEffect(appContext) {
-        OverlayDependencyAccess.overlayDependencies(appContext)
-            ?.settingsRepository
-            ?.settings
+        com.slideindex.app.settings.SettingsFlowHolder.settingsFlow(appContext)
             ?.collect { appSettings = it }
     }
     val currentAppSettings = rememberUpdatedState(appSettings)
@@ -617,7 +614,7 @@ private fun PickResultSearchQuickLaunchRow(
 }
 
 @Composable
-internal fun PickResultSectionHeader(
+fun PickResultSectionHeader(
     title: String,
     expanded: Boolean,
     onToggle: () -> Unit,
@@ -655,7 +652,7 @@ internal fun PickResultSectionHeader(
 
 @Composable
 
-internal fun PickResultTextActionBar(
+fun PickResultTextActionBar(
     enabled: Boolean,
     translateEnabled: Boolean = true,
     translateSelected: Boolean = false,
@@ -1357,63 +1354,8 @@ internal fun PickResultTextActionBar(
 }
 
 /** 取词面板统一下拉容器（与打开链接菜单一致）。 */
-internal fun pickResultDropdownMenuDividerColor(isDark: Boolean): Color =
+fun pickResultDropdownMenuDividerColor(isDark: Boolean): Color =
     if (isDark) Color(0x24FFFFFF) else Color(0x14000000)
-
-@Composable
-private fun PickResultDropdownMenuInLtr(
-    expanded: Boolean,
-    onDismissRequest: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    val isDark = LocalAppDarkTheme.current
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = onDismissRequest,
-            modifier = modifier.widthIn(min = 140.dp, max = 280.dp),
-            shape = RoundedCornerShape(16.dp),
-            containerColor = if (isDark) Color(0xFF28282A) else Color(0xFFFFFFFF),
-            shadowElevation = 6.dp,
-            tonalElevation = 0.dp,
-            content = content,
-        )
-    }
-}
-
-@Composable
-private fun PickResultActionMenuItem(
-    label: String,
-    icon: ImageVector,
-    onClick: () -> Unit,
-    iconModifier: Modifier = Modifier,
-) {
-    val isDark = LocalAppDarkTheme.current
-    val textColor = if (isDark) Color(0xFFECECED) else Color(0xFF1F1F1F)
-    val iconTint = if (isDark) Color(0xFFE0E0E6) else Color(0xFF333333)
-    DropdownMenuItem(
-        text = {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 14.sp,
-                    color = textColor,
-                ),
-            )
-        },
-        leadingIcon = {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp).then(iconModifier),
-                tint = iconTint,
-            )
-        },
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-        onClick = onClick,
-    )
-}
 
 /** 二级页：系统文本菜单里那些第三方 App 入口（`ACTION_PROCESS_TEXT`）。 */
 @Composable
@@ -1518,7 +1460,7 @@ private fun PickResultProcessTextMenuItem(
 
 @Composable
 
-internal fun PickResultToolbarIcon(
+fun PickResultToolbarIcon(
 icon: ImageVector,
 enabled: Boolean,
 onClick: () -> Unit,
@@ -1543,7 +1485,7 @@ else -> MaterialTheme.colorScheme.onSurface
 }
 /** 使用屏幕空间 dragAmount 驱动折叠，避免拖动时行随布局移动导致 local Y 失真。*/
 
-internal fun Modifier.pickResultLinkedVerticalDrag(
+fun Modifier.pickResultLinkedVerticalDrag(
 onDragDelta: (dragAmount: Float) -> Unit,
 onDragEnd: () -> Unit,
 ): Modifier = composed {
@@ -1562,7 +1504,7 @@ onDragEnd = { onDragEndState.value() },
 * 垂直拖动优先于子?clickable：未超过 slop 时不消费事件，短按仍可点击；
 * 判定为垂直拖动后再消费并上报增量。
 */
-internal suspend fun androidx.compose.ui.input.pointer.PointerInputScope
+suspend fun androidx.compose.ui.input.pointer.PointerInputScope
 .detectPickResultLinkedVerticalDragGestures(
 onDragDelta: (dragAmount: Float) -> Unit,
 onDragEnd: () -> Unit,
@@ -1603,7 +1545,7 @@ onDragDelta(delta.y)
 * 仅当按下与抬起都在面板外、且移动未超?slop 时关闭面板；
 * 按下在面板内时本次手势不触发关闭（避免上滑滑出面板后?dismiss）。
 */
-internal suspend fun androidx.compose.ui.input.pointer.PointerInputScope
+suspend fun androidx.compose.ui.input.pointer.PointerInputScope
 .detectPickResultDismissOutsidePanelTap(
 panelBoundsInRoot: () -> Rect,
 onDismiss: () -> Unit,
@@ -1635,7 +1577,7 @@ totalMove += delta
 
 @Composable
 
-internal fun pickResultTranslateErrorLabel(code: String): String = when (code) {
+fun pickResultTranslateErrorLabel(code: String): String = when (code) {
 "mlkit_model_not_installed" -> stringResource(R.string.float_ball_translate_error_model_missing)
 "translate_engine_not_installed" -> stringResource(R.string.float_ball_translate_error_engine_missing)
 "wifi_required" -> stringResource(R.string.float_ball_translate_error_wifi_required)
@@ -1647,7 +1589,7 @@ else -> code
 }
 
 @Composable
-internal fun PickResultSegmentedTabHeader(
+fun PickResultSegmentedTabHeader(
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,

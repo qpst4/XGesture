@@ -241,4 +241,22 @@
     <string name="pick_result_action_more">More</string>
     <string name="pick_result_pin">Pin to screen</string>
     <string name="pick_result_stash">Ideas</string>
+    <string name="float_ball_translate_error_model_missing">Download the ML Kit language pack for this language first</string>
+    <string name="float_ball_translate_error_engine_missing">Download the offline translate engine first (Extension → Runtime engines)</string>
+    <string name="float_ball_translate_error_wifi_required">A Wi-Fi connection is required to download language packs</string>
+    <string name="float_ball_translate_error_unsupported_language">This target language is not supported</string>
+    <string name="float_ball_translate_error_unavailable">Translation service unavailable</string>
+    <string name="float_ball_translate_error_network">Check your network connection and whether Google Translate is reachable</string>
+    <string name="float_ball_pick_panel_tab_text">Text</string>
+    <string name="float_ball_pick_panel_tab_image">Screenshot</string>
+    <string name="float_ball_action_trim_spaces">Trim spaces</string>
+    <string name="search_panel_overlay_fullscreen">Fullscreen</string>
+    <string name="search_panel_app_quick_action_free_window">Freeform</string>
+    <string name="pick_result_copy_selection">Copy selection</string>
+    <string name="pick_result_copied">Copied</string>
+    <string name="pick_result_share">Share</string>
+    <string name="pick_result_open_link">Open link</string>
+    <string name="pick_result_process_text">Process with another app</string>
+    <string name="pick_result_process_text_empty">No app can process text</string>
+    <string name="pick_result_qr">Generate QR code</string>
 </resources>
