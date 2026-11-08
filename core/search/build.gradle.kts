@@ -26,6 +26,7 @@ android {
  */
 dependencies {
     implementation(project(":core:common"))
+    implementation(project(":feature:settings"))
     implementation(libs.core.ktx)
     implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.junit)
