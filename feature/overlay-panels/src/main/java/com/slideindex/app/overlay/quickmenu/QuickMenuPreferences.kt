@@ -35,7 +35,7 @@ private const val DEFAULT_CURRENCY_TO = "CNY"
  * 只存**选择**，不存**内容**：扫到的二维码原文、输入框里的文本属于会话数据，不该跨次留存。
  */
 @Serializable
-internal data class QuickMenuPrefs(
+data class QuickMenuPrefs(
     val passwordLength: Int = DEFAULT_PASSWORD_LENGTH,
     val passwordDigits: Boolean = true,
     val passwordSymbols: Boolean = false,
@@ -59,7 +59,7 @@ internal data class QuickMenuPrefs(
  * 包名/枚举/引擎都可能变：密码长度夹到合法区间，货币代码必须真的存在，否则宁可退回默认值，
  * 也不要让界面拿着一个查不到的代码去算汇率。
  */
-internal object QuickMenuPrefsCodec {
+object QuickMenuPrefsCodec {
 
     fun sanitize(prefs: QuickMenuPrefs): QuickMenuPrefs = prefs.copy(
         passwordLength = prefs.passwordLength.coerceIn(
@@ -81,7 +81,7 @@ internal object QuickMenuPrefsCodec {
  *
  * 读取一律兜底：DataStore 抛错或数据损坏时返回默认值，面板照常可用。
  */
-internal object QuickMenuPreferencesStore {
+object QuickMenuPreferencesStore {
 
     private val KEY = stringPreferencesKey("quick_menu_prefs")
     private val json = Json { ignoreUnknownKeys = true }
@@ -112,7 +112,7 @@ internal object QuickMenuPreferencesStore {
  * - [preview]：只改内存（拖滑杆过程中），不写盘；
  * - [update]：改内存并写盘（拖拽结束、拨开关、切选项）。
  */
-internal object QuickMenuPreferences {
+object QuickMenuPreferences {
 
     var current by mutableStateOf(QuickMenuPrefs())
         private set
