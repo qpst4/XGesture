@@ -1,6 +1,5 @@
 package com.slideindex.app.overlay.quickmenu
 
-import com.slideindex.app.overlay.overlayHostContext
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -10,7 +9,6 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.slideindex.app.barcode.BarcodeScanResult
-import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.overlay.OverlayFullScreenPanelHost
 import com.slideindex.app.overlay.OverlayPanelLayoutParams
 import com.slideindex.app.overlay.OverlayViewBackHandler
@@ -153,7 +151,8 @@ object QuickMenuOverlayWindow {
             Log.w(TAG, "show: accessibility service not enabled")
             return false
         }
-        val hostContext = overlayHostContext() ?: run {
+        val hostContext = com.slideindex.app.overlay.panels.PanelRuntimeHooks.overlayHostContext
+            ?.invoke() ?: run {
             Log.w(TAG, "show: accessibility service not connected")
             return false
         }
@@ -207,7 +206,8 @@ object QuickMenuOverlayWindow {
         runOnMainSync {
             val current = session ?: return@runOnMainSync
             suspendedForExternal = false
-            val hostContext = overlayHostContext()
+            val hostContext = com.slideindex.app.overlay.panels.PanelRuntimeHooks.overlayHostContext
+                ?.invoke()
             if (hostContext == null) {
                 Log.w(TAG, "resume: accessibility service not connected")
                 return@runOnMainSync
