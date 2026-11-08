@@ -555,6 +555,21 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.stash.StashReminderScheduling.cancel = { ctx, entryId ->
             com.slideindex.app.stash.StashReminderScheduler.cancel(ctx, entryId)
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.editStashImage = { ctx, path, onResult ->
+            com.slideindex.app.service.StashEditImageTrampolineActivity.markEditInFlight(true)
+            com.slideindex.app.service.StashEditImageTrampolineActivity.launch(ctx, path) { edited ->
+                com.slideindex.app.service.StashEditImageTrampolineActivity.markEditInFlight(false)
+                onResult(edited)
+            }
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.isStashImageEditing = {
+            com.slideindex.app.service.StashEditImageTrampolineActivity.editInFlight
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.stashImageEditLogTag =
+            com.slideindex.app.service.StashEditImageTrampolineActivity.LOG_TAG
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.writeClipboardEntry = { ctx, entry ->
+            com.slideindex.app.clipboard.ClipboardWriter.write(ctx, entry)
+        }
         com.slideindex.app.overlay.panels.PanelStashWriteHooks.writeRichBlocks =
             { ctx, blocks, html, dataUri, contentUri, dims ->
                 com.slideindex.app.clipboard.ClipboardWriter.writeBlocks(

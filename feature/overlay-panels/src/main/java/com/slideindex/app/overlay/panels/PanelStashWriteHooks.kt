@@ -67,6 +67,9 @@ object PanelStashWriteHooks {
     /** 暂存富内容贴屏。 */
     @Volatile
     var pinStashRich: ((Context, StashEntry) -> Unit)? = null
+    /** 把一条剪贴板历史写回系统剪贴板（`:app` 的 ClipboardWriter.write）。 */
+    @Volatile
+    var writeClipboardEntry: ((Context, ClipboardEntry) -> Unit)? = null
     /** 拖动卡片时隐藏/恢复暂存浮窗。 */
     @Volatile
     var setStashDragHidden: ((Boolean) -> Unit)? = null

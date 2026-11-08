@@ -153,6 +153,17 @@ object PanelRuntimeHooks {
     /** 为面板内容包一层 app 的 CompositionLocal（LocalAppDependencies）。 */
     @Volatile
     var appDependenciesWrapper: PanelComposeWrapper? = null
+    /** 内置图片编辑：拉起编辑器并回调结果路径（`:app` 的 StashEditImageTrampolineActivity）。 */
+    @Volatile
+    var editStashImage: ((Context, String, (String?) -> Unit) -> Unit)? = null
+
+    /** 图片编辑是否有在途任务。 */
+    @Volatile
+    var isStashImageEditing: (() -> Boolean)? = null
+
+    /** 图片编辑链路日志 tag（与 `:app` 的 trampoline 同一个值）。 */
+    @Volatile
+    var stashImageEditLogTag: String = "StashImageEdit"
     /** OCR 模型是否已安装。 */
     @Volatile
     var isOcrModelInstalled: ((Context, String) -> Boolean)? = null
