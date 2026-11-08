@@ -370,6 +370,21 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 onDone(entries)
             }
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.quickLauncherIconBitmap =
+            { item, appsByPackage, sizePx, ctx, shortcuts, shells ->
+                com.slideindex.app.util.QuickLauncherIconResolver.iconBitmap(
+                    item = item,
+                    appsByPackage = appsByPackage,
+                    size = sizePx,
+                    context = ctx,
+                    actionIconTintArgb = android.graphics.Color.WHITE,
+                    activityShortcuts = shortcuts,
+                    shellCommands = shells,
+                )
+            }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.cloneBadgeDecorate = { bmp, isClone ->
+            com.slideindex.app.util.CloneBadge.decorate(bmp, isClone)
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.cachedRecentTasks = {
             com.slideindex.app.tasks.TaskSwitcherRepository.getCachedEntries()
         }

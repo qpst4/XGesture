@@ -229,6 +229,23 @@ object PanelRuntimeHooks {
     var refreshRecentTasks:
         ((com.slideindex.app.data.AppRepository, (List<Any>) -> Unit) -> Unit)? = null
 
+    /** 快捷启动项图标的最终解析（7 参数版，`:app` 的 QuickLauncherIconResolver.iconBitmap）。 */
+    @Volatile
+    var quickLauncherIconBitmap: (
+        (
+            com.slideindex.app.launcher.QuickLauncherItem,
+            Map<String, com.slideindex.app.data.AppInfo>,
+            Int,
+            Context,
+            List<com.slideindex.app.activity.ActivityShortcut>,
+            List<com.slideindex.app.shell.ShellCommand>,
+        ) -> android.graphics.Bitmap?
+    )? = null
+
+    /** 分身角标装饰（`:app` 的 CloneBadge.decorate）。 */
+    @Volatile
+    var cloneBadgeDecorate: ((android.graphics.Bitmap, Boolean) -> android.graphics.Bitmap?)? = null
+
     /** 已缓存的最近任务（每项含 `app: AppInfo`）。 */
     @Volatile
     var cachedRecentTasks: (() -> List<Any>)? = null

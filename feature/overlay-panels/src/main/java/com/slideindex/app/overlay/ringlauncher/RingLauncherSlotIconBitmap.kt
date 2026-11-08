@@ -12,9 +12,8 @@ import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemType
 import com.slideindex.app.settings.FvRingLauncherSlotIconOverride
 import com.slideindex.app.shell.ShellCommand
-import com.slideindex.app.util.QuickLauncherIconResolver
 
-internal object RingLauncherSlotIconBitmap {
+object RingLauncherSlotIconBitmap {
     private val cache = object : LruCache<String, Bitmap>(96) {}
 
     fun clear() {
@@ -33,7 +32,7 @@ internal object RingLauncherSlotIconBitmap {
         iconOverride: FvRingLauncherSlotIconOverride? = null,
     ): Bitmap {
         // 图标覆盖变更后必须换 key，否则一直是旧缓存
-        val cacheKey = "${item.type}:${item.payload}:${item.label}:$sizePx:${iconOverride?.iconPath}:${iconOverride?.textIcon}:${com.slideindex.app.ui.GlobalIconStore.revision}:${com.slideindex.app.ui.IconPlateModeState.mode}:${com.slideindex.app.ui.IconPlateModeState.lastResolvedDark}"
+        val cacheKey = "${item.type}:${item.payload}:${item.label}:$sizePx:${iconOverride?.iconPath}:${iconOverride?.textIcon}:${com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconCacheRevision?.invoke()}:${com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconPlateModeKey?.invoke()}"
         cache.get(cacheKey)?.let { return it }
         val bitmap = resolveBitmap(
             context = context,
@@ -47,7 +46,8 @@ internal object RingLauncherSlotIconBitmap {
             iconOverride = iconOverride,
         ) ?: createPlaceholderBitmap(sizePx, item.label.ifBlank { item.payload })
         // 分身条目在图标右上角补黄点（主实例原样返回）。
-        val decorated = com.slideindex.app.util.CloneBadge.decorate(bitmap, item.appTarget?.isClone == true) ?: bitmap
+        val decorated = com.slideindex.app.overlay.panels.PanelRuntimeHooks.cloneBadgeDecorate
+            ?.invoke(bitmap, item.appTarget?.isClone == true) ?: bitmap
         cache.put(cacheKey, decorated)
         return bitmap
     }
@@ -76,8 +76,8 @@ internal object RingLauncherSlotIconBitmap {
         // 先走 resolvedIcon 的话覆盖永远不生效（真机实测）。
         if (item.type == QuickLauncherItemType.APP && item.payload.isNotBlank()) {
             val packageName = item.appTarget?.packageName ?: item.payload
-            com.slideindex.app.ui.AppIconOverride
-                .bitmap(context, packageName, sizePx)
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideBitmap
+                ?.invoke(context, packageName, sizePx)
                 ?.let { return it }
         }
         resolvedIcon?.let { return drawableToBitmap(it, sizePx) }
@@ -86,15 +86,8 @@ internal object RingLauncherSlotIconBitmap {
             appRepository.peekLaunchIconBitmap(packageName, sizePx)?.let { return it }
             appRepository.peekLaunchIconDrawable(packageName)?.let { return drawableToBitmap(it, sizePx) }
         }
-        return QuickLauncherIconResolver.iconBitmap(
-            item = item,
-            appsByPackage = appsByPackage,
-            size = sizePx,
-            context = context,
-            actionIconTintArgb = android.graphics.Color.WHITE,
-            activityShortcuts = activityShortcuts,
-            shellCommands = shellCommands,
-        )
+        return com.slideindex.app.overlay.panels.PanelRuntimeHooks.quickLauncherIconBitmap
+            ?.invoke(item, appsByPackage, sizePx, context, activityShortcuts, shellCommands)
     }
 
     private fun createPlaceholderBitmap(sizePx: Int, label: String): Bitmap {
