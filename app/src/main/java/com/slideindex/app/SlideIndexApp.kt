@@ -387,6 +387,15 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     )
                 }
 
+                override fun dispatchTap(
+                    service: android.accessibilityservice.AccessibilityService,
+                    x: Float,
+                    y: Float,
+                ) {
+                    com.slideindex.app.service.SlideIndexAccessibilityGestureInjector
+                        .dispatchTapSync(service, x, y)
+                }
+
                 override fun resolveForegroundPackage(
                     service: android.accessibilityservice.AccessibilityService,
                 ): String? = com.slideindex.app.util.AccessibilityForegroundResolver.resolve(service)
@@ -685,6 +694,9 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
             com.slideindex.app.service.StashEditImageTrampolineActivity.LOG_TAG
         com.slideindex.app.overlay.panels.PanelStashWriteHooks.buildClipForEntry = { ctx, entry ->
             com.slideindex.app.clipboard.ClipboardWriter.buildClipForEntry(ctx, entry)
+        }
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.writeClipboardForPaste = { ctx, entry ->
+            com.slideindex.app.clipboard.ClipboardWriter.writeForPaste(ctx, entry)
         }
         com.slideindex.app.overlay.panels.PanelStashWriteHooks.writeClipboardEntry = { ctx, entry ->
             com.slideindex.app.clipboard.ClipboardWriter.write(ctx, entry)

@@ -71,6 +71,10 @@ object PanelStashWriteHooks {
     @Volatile
     var buildClipForEntry: ((Context, ClipboardEntry) -> android.content.ClipData?)? = null
 
+    /** 为"粘贴"准备剪贴板（`:app` 的 ClipboardWriter.writeForPaste）。 */
+    @Volatile
+    var writeClipboardForPaste: ((Context, ClipboardEntry) -> Unit)? = null
+
     /** 把一条剪贴板历史写回系统剪贴板（`:app` 的 ClipboardWriter.write）。 */
     @Volatile
     var writeClipboardEntry: ((Context, ClipboardEntry) -> Unit)? = null

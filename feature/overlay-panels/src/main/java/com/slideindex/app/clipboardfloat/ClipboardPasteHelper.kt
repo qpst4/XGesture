@@ -14,11 +14,9 @@ import com.slideindex.app.clipboard.ClipboardBlockKind
 import com.slideindex.app.clipboard.ClipboardEntry
 import com.slideindex.app.clipboard.ClipboardImageLabel
 import com.slideindex.app.clipboard.ClipboardImageStore
-import com.slideindex.app.clipboard.ClipboardWriter
 import com.slideindex.app.clipboard.hasImageContent
 import com.slideindex.app.clipboard.isPureImageEntry
 import com.slideindex.app.clipboard.resolvedContentBlocks
-import com.slideindex.app.service.SlideIndexAccessibilityGestureInjector
 import com.slideindex.app.settings.ClipboardFloatEntryClickAction
 
 enum class PasteFailureReason {
@@ -118,7 +116,7 @@ object ClipboardPasteHelper {
         val px = x.toInt()
         val py = y.toInt()
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            SlideIndexAccessibilityGestureInjector.dispatchTapSync(service, x, y)
+            com.slideindex.app.clipboardfloat.ClipboardFloatHostAccess.host?.dispatchTap(service, x, y)
             SystemClock.sleep(PASTE_SETTLE_MS)
         }
         val node = findPasteTargetAtPointAcrossWindows(service, px, py)
@@ -139,7 +137,7 @@ object ClipboardPasteHelper {
     ): PasteResult {
         return when (action) {
             ClipboardFloatEntryClickAction.COPY -> {
-                ClipboardWriter.write(context, entry)
+                com.slideindex.app.overlay.panels.PanelStashWriteHooks.writeClipboardEntry?.invoke(context, entry)
                 PasteResult.Success
             }
             ClipboardFloatEntryClickAction.PASTE -> {
@@ -151,7 +149,7 @@ object ClipboardPasteHelper {
                 )
             }
             ClipboardFloatEntryClickAction.COPY_AND_PASTE -> {
-                ClipboardWriter.write(context, entry)
+                com.slideindex.app.overlay.panels.PanelStashWriteHooks.writeClipboardEntry?.invoke(context, entry)
                 pasteIntoFocusedField(
                     service = service,
                     context = context,
@@ -208,7 +206,7 @@ object ClipboardPasteHelper {
             // (e.g. Telegram puts hint in node.text instead of hintText).
             if (supportsPaste(node)) {
                 if (!clipboardAlreadyPrepared) {
-                    ClipboardWriter.writeForPaste(context, entry)
+                    com.slideindex.app.overlay.panels.PanelStashWriteHooks.writeClipboardForPaste?.invoke(context, entry)
                 }
                 if (node.performAction(AccessibilityNodeInfo.ACTION_PASTE) &&
                     verifyTextPaste(node, entryText, beforeText)
@@ -225,7 +223,7 @@ object ClipboardPasteHelper {
 
         if (!clipboardAlreadyPrepared) {
             try {
-                ClipboardWriter.writeForPaste(context, entry)
+                com.slideindex.app.overlay.panels.PanelStashWriteHooks.writeClipboardForPaste?.invoke(context, entry)
             } catch (_: RuntimeException) {
                 // TransactionTooLargeException fallback: try text-only paste.
                 if (entryText != null && canTrySetText(node)) {
