@@ -61,18 +61,6 @@ import kotlinx.coroutines.cancel
  * 放在文件顶层而不是伴生对象里：Kotlin 只允许通过 `外层类.成员` 访问伴生对象里的**函数/属性**，
  * 伴生对象里的**类型**必须写成 `外层类.Companion.类型`，很别扭。
  */
-sealed interface ScreenshotCaptureOutcome {
-    data class Success(val bitmap: android.graphics.Bitmap) : ScreenshotCaptureOutcome
-
-    /** 无障碍服务未连接，或系统低于 API 30。 */
-    data object ServiceUnavailable : ScreenshotCaptureOutcome
-
-    /** 系统限流：距上一次截图太近。 */
-    data object Throttled : ScreenshotCaptureOutcome
-
-    /** 其它失败，[errorCode] 为系统返回码。 */
-    data class Failed(val errorCode: Int) : ScreenshotCaptureOutcome
-}
 
 @dagger.hilt.android.AndroidEntryPoint
 class SlideIndexAccessibilityService : AccessibilityService() {
