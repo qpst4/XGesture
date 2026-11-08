@@ -112,13 +112,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.data.AppInfo
-import com.slideindex.app.di.OverlayDependencyAccess
-import com.slideindex.app.freezer.FreezerOperations
-import com.slideindex.app.overlay.BlurredWallpaperCache
-import com.slideindex.app.overlay.FloatBallImageSearchPanel
-import com.slideindex.app.overlay.FloatBallTextPick
 import com.slideindex.app.overlay.OverlayBlurGate
 import com.slideindex.app.overlay.OverlaySelectionToolbarActions
 import com.slideindex.app.overlay.OverlaySelectionToolbarPopup
@@ -132,26 +127,17 @@ import com.slideindex.app.overlay.pickresult.PickResultTextSearchGrid
 import com.slideindex.app.overlay.pickresult.PickResultUrl
 import com.slideindex.app.overlay.rememberOverlaySelectionToolbarState
 import com.slideindex.app.overlay.suppressSystemTextContextMenu
-import com.slideindex.app.search.SearchEngineLauncher
-import com.slideindex.app.search.SearchHistoryAccess
-import com.slideindex.app.search.SearchHistoryRecorder
 import com.slideindex.app.search.calculator.CalculatorUtils
-import com.slideindex.app.search.clipboard.ClipboardSearchIndex
 import com.slideindex.app.search.contacts.ContactSearchEntry
 import com.slideindex.app.search.contacts.ContactSearchIndex
 import com.slideindex.app.search.contacts.ContactSearchLauncher
 import com.slideindex.app.search.files.DeviceFileEntry
 import com.slideindex.app.search.files.FileSearchFilterOptions
 import com.slideindex.app.search.files.FileSearchIndex
-import com.slideindex.app.search.files.FileSearchLauncher
 import com.slideindex.app.search.files.FileType
 import com.slideindex.app.search.files.FileTypeUtils
 import com.slideindex.app.search.shortcuts.ShortcutSearchEntry
-import com.slideindex.app.search.shortcuts.ShortcutSearchIndex
 import com.slideindex.app.search.settings.SystemSettingsSearchEntry
-import com.slideindex.app.search.settings.SystemSettingsSearchIndex
-import com.slideindex.app.search.settings.SystemSettingsSearchLauncher
-import com.slideindex.app.search.websuggestions.WebSuggestionsUtils
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.SearchEngineConfig
 import com.slideindex.app.settings.SearchEngineStore
@@ -165,10 +151,8 @@ import com.slideindex.app.settings.SearchPanelListOrder
 import com.slideindex.app.settings.launchPolicyLongPressEligible
 import com.slideindex.app.settings.shouldLaunchFullscreen
 import com.slideindex.app.clipboard.ClipboardEntry
-import com.slideindex.app.clipboard.ClipboardWriter
 import com.slideindex.app.clipboardfloat.ClipboardPasteCoordinator
 import com.slideindex.app.clipboardfloat.PasteResult
-import com.slideindex.app.util.AppShortcutLoader
 import com.slideindex.app.overlay.TaskSwitcherMenuItem
 import com.slideindex.app.overlay.TaskSwitcherMenuItemType
 import kotlinx.coroutines.CompletableDeferred
@@ -203,7 +187,7 @@ private const val SEARCH_PANEL_IME_FOCUS_ATTEMPTS = 3
  *
  * 超过 200ms 呼出会有明显「慢」的感觉，压到 0 又会像闪一下，这里取 140ms。
  */
-internal const val SEARCH_PANEL_ANIM_MS = 140
+const val SEARCH_PANEL_ANIM_MS = 140
 
 /** 单行搜索框粘贴多行文本时，换行符会导致 TextField 内容不可见。 */
 private fun normalizeSearchPanelQuery(input: String): String =
@@ -226,16 +210,15 @@ fun SearchPanelScreen(
     val context = LocalContext.current
     val settingsHolder = remember { mutableStateOf(AppSettings()) }
     LaunchedEffect(context) {
-        val flow = OverlayDependencyAccess.overlayDependencies(context)
-            ?.settingsRepository
-            ?.settings
+        val flow = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsFlow
+            ?.invoke(context)
             ?: return@LaunchedEffect
         flow.collect { settingsHolder.value = it }
     }
     val settings = settingsHolder.value
     val longPressEnabled = settings.launchPolicyLongPressEligible()
     val appRepository = remember(context) {
-        OverlayDependencyAccess.overlayDependencies(context)?.appRepository
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.appRepository?.invoke(context)
     }
 
     // 呈现方式固定为全屏（原「呈现方式」设置项已移除）。
@@ -255,13 +238,14 @@ fun SearchPanelScreen(
     val textQuery = textFieldValue.text
     var showSearchHistory by remember { mutableStateOf(false) }
     val emptySearchHistoryFlow = remember {
-        kotlinx.coroutines.flow.flowOf(emptyList<com.slideindex.app.search.SearchHistoryEntry>())
+        kotlinx.coroutines.flow.flowOf(emptyList<String>())
     }
     val searchHistoryEntries by (
-        SearchHistoryAccess.repository?.entries ?: emptySearchHistoryFlow
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.searchHistoryQueries?.invoke()
+            ?: emptySearchHistoryFlow
         ).collectAsState(initial = emptyList())
     val searchHistoryQueries = remember(searchHistoryEntries) {
-        searchHistoryEntries.map { it.query }
+        searchHistoryEntries
     }
     var debouncedQuery by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
@@ -402,7 +386,7 @@ fun SearchPanelScreen(
         val repository = appRepository ?: return@LaunchedEffect
         repository.loadAppsForSearch()
         withContext(Dispatchers.IO) {
-            SystemSettingsSearchIndex.ensureLoaded(context)
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.ensureSystemSettingsIndex?.invoke(context)
         }
     }
 
@@ -413,7 +397,8 @@ fun SearchPanelScreen(
         SearchPanelCandidateCache.clear()
         // 快捷方式目录解析较慢（要读各 App 清单），在面板刚呼出、用户还没输入时先预热。
         withContext(Dispatchers.IO) {
-            ShortcutSearchIndex.ensureLoaded(context, repository.getCachedAppsForSearch())
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.ensureShortcutIndex
+                    ?.invoke(context, repository.getCachedAppsForSearch())
         }
     }
 
@@ -443,19 +428,18 @@ fun SearchPanelScreen(
                     backgroundBitmap = null
                     return@LaunchedEffect
                 }
-                val service = overlayHostContext() as? AccessibilityService
+                val service = com.slideindex.app.overlay.panels.PanelRuntimeHooks.overlayHostContext
+            ?.invoke() as? AccessibilityService
                 if (service == null) {
                     backgroundBitmap = null
                     return@LaunchedEffect
                 }
                 val deferred = CompletableDeferred<Bitmap?>()
-                val cached = BlurredWallpaperCache.captureFromDisplay(
-                    service,
-                    context,
-                    blurRadiusDp,
-                ) { bitmap ->
-                    deferred.complete(bitmap)
-                }
+                val cached = com.slideindex.app.overlay.panels.PanelRuntimeHooks
+                    .captureBlurredWallpaper
+                    ?.invoke(service, context, blurRadiusDp) { bitmap ->
+                        deferred.complete(bitmap)
+                    }
                 backgroundBitmap = cached ?: deferred.await()
             }
             else -> {
@@ -501,11 +485,12 @@ fun SearchPanelScreen(
         }
         val query = debouncedQuery
         val results = withContext(Dispatchers.IO) {
-            WebSuggestionsUtils.getSuggestions(query)
+            (com.slideindex.app.overlay.panels.PanelRuntimeHooks.webSuggestions?.invoke(query)
+                    ?: emptyList())
                 .take(settings.searchPanelWebSuggestionsCount)
         }
         if (debouncedQuery == query) {
-            webSuggestions = results
+            webSuggestions = results.map { it.toString() }
         }
     }
 
@@ -584,7 +569,9 @@ fun SearchPanelScreen(
         coroutineScope {
             val settingsDeferred = async(Dispatchers.IO) {
                 if (fetchSettings) {
-                    SystemSettingsSearchIndex.search(context, query, SETTINGS_CANDIDATE_LIMIT)
+                    com.slideindex.app.overlay.panels.PanelRuntimeHooks.searchSystemSettings
+                        ?.invoke(context, query, SETTINGS_CANDIDATE_LIMIT)
+                    ?: emptyList()
                 } else {
                     emptyList()
                 }
@@ -624,19 +611,18 @@ fun SearchPanelScreen(
             }
             val shortcutsDeferred = async(Dispatchers.IO) {
                 if (fetchShortcuts) {
-                    ShortcutSearchIndex.search(
-                        context = context,
-                        apps = appsForSearch,
-                        query = query,
-                        limit = SHORTCUT_CANDIDATE_LIMIT,
-                    )
+                    com.slideindex.app.overlay.panels.PanelRuntimeHooks.searchShortcuts
+                        ?.invoke(context, appsForSearch, query, SHORTCUT_CANDIDATE_LIMIT)
+                        ?: emptyList()
                 } else {
                     emptyList()
                 }
             }
             val clipboardDeferred = async(Dispatchers.IO) {
                 if (fetchClipboard) {
-                    ClipboardSearchIndex.search(query, CLIPBOARD_CANDIDATE_LIMIT)
+                    com.slideindex.app.overlay.panels.PanelRuntimeHooks.searchClipboardHistory
+                        ?.invoke(query, CLIPBOARD_CANDIDATE_LIMIT)
+                    ?: emptyList()
                 } else {
                     emptyList()
                 }
@@ -845,16 +831,20 @@ fun SearchPanelScreen(
                 selection = TextRange(query.length),
             )
             SearchPanelSessionState.lastTextQuery = query
-            SearchHistoryRecorder.record(context, query)
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.recordSearchHistory
+                ?.invoke(context, query)
             showSearchHistory = false
             // 统一入口：分享到 App 的引擎由 launchText 转去系统分享，别在这里再判断一次类型。
-            SearchEngineLauncher.launchText(context, engine, query, settings, longPressTriggered)
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchTextSearchWithLongPress
+                ?.invoke(context, engine, query, settings, longPressTriggered)
             dismissPanel()
         } else if (mode == SearchMode.IMAGE && imageBitmap != null) {
             if (engine.id == "slideindex_aggregate_image_search") {
-                FloatBallImageSearchPanel.show(context, imageBitmap!!)
+                com.slideindex.app.overlay.panels.PanelRuntimeHooks.showImageSearchPanel
+                    ?.invoke(context, imageBitmap!!)
             } else {
-                SearchEngineLauncher.launchImageShare(context, engine, imageBitmap!!)
+                com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchImageShareSearch
+                    ?.invoke(context, engine, imageBitmap!!)
             }
             dismissPanel()
         }
@@ -862,9 +852,11 @@ fun SearchPanelScreen(
 
     fun openUrl(url: String, longPressTriggered: Boolean) {
         persistTextQuery()
-        SearchHistoryRecorder.record(context, url)
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.recordSearchHistory
+            ?.invoke(context, url)
         showSearchHistory = false
-        FloatBallTextPick.openUrl(context, url, settings, longPressTriggered)
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.openUrlWithLongPress
+            ?.invoke(context, url, settings, longPressTriggered)
         dismissPanel()
     }
 
@@ -872,8 +864,9 @@ fun SearchPanelScreen(
         val repository = appRepository ?: return
         val fullscreen = settings.shouldLaunchFullscreen(longPressTriggered)
         coroutineScope.launch {
-            val wasInactive = !FreezerOperations.stateOf(context, app).isActive
-            if (FreezerOperations.launchAndRestore(context, repository, settings, app, fullscreen)) {
+            val wasInactive = com.slideindex.app.overlay.panels.PanelRuntimeHooks.freezerStateOfApp?.invoke(context, app)?.isActive != true
+            if (com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchAppFromSearch
+                ?.invoke(context, app, fullscreen) == true) {
                 if (wasInactive) {
                     repository.loadAppsForSearch(force = true)
                     SearchPanelCandidateCache.clear()
@@ -888,8 +881,9 @@ fun SearchPanelScreen(
             SearchPanelAppQuickAction.FREE_WINDOW -> {
                 val repository = appRepository ?: return
                 coroutineScope.launch {
-                    val wasInactive = !FreezerOperations.stateOf(context, app).isActive
-                    if (FreezerOperations.launchAndRestore(context, repository, settings, app, fullscreen = false)) {
+                    val wasInactive = com.slideindex.app.overlay.panels.PanelRuntimeHooks.freezerStateOfApp?.invoke(context, app)?.isActive != true
+                    if (com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchAppFromSearch
+                ?.invoke(context, app, false) == true) {
                         if (wasInactive) {
                             repository.loadAppsForSearch(force = true)
                             SearchPanelCandidateCache.clear()
@@ -917,8 +911,9 @@ fun SearchPanelScreen(
             }
             SearchPanelAppQuickAction.FREEZE -> {
                 coroutineScope.launch {
-                    val frozen = FreezerOperations.isFrozen(context, app)
-                    val ok = FreezerOperations.setFrozen(context, app, frozen = !frozen)
+                    val frozen = com.slideindex.app.overlay.panels.PanelRuntimeHooks.isAppFrozen?.invoke(context, app) == true
+                    val ok = com.slideindex.app.overlay.panels.PanelRuntimeHooks.setAppFrozen
+            ?.invoke(context, app, !frozen) == true
                     if (ok) {
                         appRepository?.loadAppsForSearch(force = true)
                         SearchPanelCandidateCache.clear()
@@ -928,8 +923,9 @@ fun SearchPanelScreen(
             }
             SearchPanelAppQuickAction.PAUSE -> {
                 coroutineScope.launch {
-                    val paused = FreezerOperations.isPaused(context, app)
-                    val ok = FreezerOperations.setPaused(context, app, paused = !paused)
+                    val paused = com.slideindex.app.overlay.panels.PanelRuntimeHooks.isAppPaused?.invoke(context, app) == true
+                    val ok = com.slideindex.app.overlay.panels.PanelRuntimeHooks.setAppPaused
+            ?.invoke(context, app, !paused) == true
                     if (ok) {
                         appRepository?.loadAppsForSearch(force = true)
                         SearchPanelCandidateCache.clear()
@@ -952,7 +948,9 @@ fun SearchPanelScreen(
     }
 
     fun launchSettingsCandidate(entry: SystemSettingsSearchEntry, longPressTriggered: Boolean) {
-        if (SystemSettingsSearchLauncher.launch(context, entry, settings, longPressTriggered)) {
+        if (com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchSystemSetting
+            ?.invoke(context, entry, settings, longPressTriggered) == true
+        ) {
             dismissPanel()
         }
     }
@@ -966,20 +964,23 @@ fun SearchPanelScreen(
             kind = entry.kind,
         )
         hideSearchKeyboard()
-        AppShortcutLoader.launchShortcut(context, entry.packageName, item)
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchTaskShortcut
+            ?.invoke(context, entry.packageName, item)
         dismissPanel()
     }
 
     /** 剪贴板候选：点按 = 复制回剪贴板。 */
     fun copyClipboardCandidate(entry: ClipboardEntry) {
         hideSearchKeyboard()
-        ClipboardWriter.write(context, entry)
+        com.slideindex.app.overlay.panels.PanelStashWriteHooks.writeClipboardEntry
+            ?.invoke(context, entry)
         dismissPanel()
     }
 
     /** 剪贴板候选：长按 = 复制并粘贴到目标输入框（面板收起后再粘，避免粘回搜索框）。 */
     fun pasteClipboardCandidate(entry: ClipboardEntry) {
-        val service = overlayHostContext() as? AccessibilityService
+        val service = com.slideindex.app.overlay.panels.PanelRuntimeHooks.overlayHostContext
+            ?.invoke() as? AccessibilityService
         if (service == null) {
             copyClipboardCandidate(entry)
             return
@@ -1091,7 +1092,9 @@ fun SearchPanelScreen(
             previewVisibilityState.targetState = true
             return
         }
-        if (FileSearchLauncher.open(context, file)) {
+        if (com.slideindex.app.overlay.panels.PanelRuntimeHooks.openFileEntry
+            ?.invoke(context, file) == true
+        ) {
             dismissPanel()
         }
     }
@@ -1252,7 +1255,7 @@ fun SearchPanelScreen(
                                             val searchToolbarActions = OverlaySelectionToolbarActions(
                                                 editable = true,
                                                 onCopy = { copied ->
-                                                    FloatBallTextPick.copyText(context, copied)
+                                                    com.slideindex.app.overlay.panels.PanelStashWriteHooks.copyText?.invoke(context, copied)
                                                     // 复制后必须有反馈：本面板是全屏覆盖层窗口，
                                                     // 系统 toast 会被它整个盖住（用户反馈"没有反馈"），
                                                     // 所以走挂在无障碍层的 OverlayToastWindow。
@@ -1263,7 +1266,7 @@ fun SearchPanelScreen(
                                                 },
                                                 onCut = {
                                                     textFieldValue = cutTextFieldValue(textFieldValue) { copied ->
-                                                        FloatBallTextPick.copyText(context, copied)
+                                                        com.slideindex.app.overlay.panels.PanelStashWriteHooks.copyText?.invoke(context, copied)
                                                         OverlayToastWindow.show(
                                                             context,
                                                             copiedToastText
@@ -1907,12 +1910,16 @@ fun SearchPanelScreen(
                 onDismissRequest = { dismissPreview() },
                 onOpen = {
                     clearPreviewState()
-                    if (FileSearchLauncher.open(context, previewTarget)) {
+                    if (com.slideindex.app.overlay.panels.PanelRuntimeHooks.openFileEntry
+                        ?.invoke(context, previewTarget) == true
+                    ) {
                         dismissPanel()
                     }
                 },
                 onShare = {
-                    if (FileSearchLauncher.share(context, previewTarget) { dismissPanel() }) {
+                    if (com.slideindex.app.overlay.panels.PanelRuntimeHooks.shareFileEntry
+                        ?.invoke(context, previewTarget) { dismissPanel() } == true
+                    ) {
                         clearPreviewState()
                     }
                 },

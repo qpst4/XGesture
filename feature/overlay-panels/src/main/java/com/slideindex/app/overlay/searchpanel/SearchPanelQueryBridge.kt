@@ -1,7 +1,6 @@
 package com.slideindex.app.overlay.searchpanel
 
 import android.content.Context
-import com.slideindex.app.search.SearchHistoryRecorder
 
 /** Syncs pick/search jump queries into the search panel input session + history. */
 object SearchPanelQueryBridge {
@@ -9,6 +8,6 @@ object SearchPanelQueryBridge {
         val trimmed = query.trim()
         if (trimmed.isEmpty()) return
         SearchPanelSessionState.lastTextQuery = trimmed
-        SearchHistoryRecorder.record(context, trimmed)
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.recordSearchHistory?.invoke(context, trimmed)
     }
 }

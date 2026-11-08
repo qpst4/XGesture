@@ -423,6 +423,73 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.peekPickerIconBitmap = { pkg: String ->
             com.slideindex.app.util.PickerAppIconBitmap.peek(pkg)
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.freezerStateOfApp = { ctx, app ->
+            com.slideindex.app.freezer.FreezerOperations.stateOf(ctx, app)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchAppFromSearch = { ctx, app, fullscreen ->
+            com.slideindex.app.freezer.FreezerOperations.launchAndRestore(
+                ctx,
+                dagger.hilt.android.EntryPointAccessors.fromApplication(
+                    this@SlideIndexApp,
+                    com.slideindex.app.di.AppGraphEntryPoint::class.java,
+                ).dependencies().appRepository,
+                this@SlideIndexApp.deps.settingsRepository.readSnapshot(),
+                app,
+                fullscreen,
+            )
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.isAppFrozen = { ctx, app ->
+            com.slideindex.app.freezer.FreezerOperations.isFrozen(ctx, app)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.setAppFrozen = { ctx, app, frozen ->
+            com.slideindex.app.freezer.FreezerOperations.setFrozen(ctx, app, frozen)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.isAppPaused = { ctx, app ->
+            com.slideindex.app.freezer.FreezerOperations.isPaused(ctx, app)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.setAppPaused = { ctx, app, paused ->
+            com.slideindex.app.freezer.FreezerOperations.setPaused(ctx, app, paused)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.ensureSystemSettingsIndex = { ctx ->
+            com.slideindex.app.search.settings.SystemSettingsSearchIndex.ensureLoaded(ctx)
+            Unit
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.ensureShortcutIndex = { ctx, apps ->
+            com.slideindex.app.search.shortcuts.ShortcutSearchIndex.ensureLoaded(ctx, apps)
+            Unit
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.searchSystemSettings = { ctx, query, limit ->
+            com.slideindex.app.search.settings.SystemSettingsSearchIndex.search(ctx, query, limit)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.searchShortcuts = { ctx, apps, query, limit ->
+            com.slideindex.app.search.shortcuts.ShortcutSearchIndex.search(
+                context = ctx,
+                apps = apps,
+                query = query,
+                limit = limit,
+            )
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.searchClipboardHistory = { query, limit ->
+            com.slideindex.app.search.clipboard.ClipboardSearchIndex.search(query, limit)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.webSuggestions = { query ->
+            com.slideindex.app.search.websuggestions.WebSuggestionsUtils.getSuggestions(query)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchSystemSetting =
+            { ctx, entry, settings, longPress ->
+                com.slideindex.app.search.settings.SystemSettingsSearchLauncher.launch(
+                    ctx,
+                    entry,
+                    settings,
+                    longPress,
+                )
+            }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.openFileEntry = { ctx, entry ->
+            com.slideindex.app.search.files.FileSearchLauncher.open(ctx, entry)
+        }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.shareFileEntry = { ctx, entry, onDismiss ->
+            com.slideindex.app.search.files.FileSearchLauncher.share(ctx, entry, onDismiss)
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.searchHistoryQueries = {
             com.slideindex.app.search.SearchHistoryAccess.repository?.entries
                 ?.map { entries -> entries.map { it.query } }

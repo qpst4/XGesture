@@ -11,6 +11,70 @@ import com.slideindex.app.settings.AppSettings
  * 这里用回调把它们反转：`SlideIndexApp` 启动时注入，未注入时全部降级为"不可用"。
  */
 object PanelRuntimeHooks {
+    /** 应用冻结状态。 */
+    @Volatile
+    var freezerStateOfApp: ((Context, com.slideindex.app.data.AppInfo) -> com.slideindex.app.freezer.FreezerAppState)? = null
+
+    /** 启动应用（必要时先解冻）。 */
+    @Volatile
+    var launchAppFromSearch: (suspend (Context, com.slideindex.app.data.AppInfo, Boolean) -> Boolean)? = null
+
+    /** 冻结状态判断/切换。 */
+    @Volatile
+    var isAppFrozen: ((Context, com.slideindex.app.data.AppInfo) -> Boolean)? = null
+
+    /** 见 [isAppFrozen]。 */
+    @Volatile
+    var setAppFrozen: (suspend (Context, com.slideindex.app.data.AppInfo, Boolean) -> Boolean)? = null
+
+    /** 暂停状态判断/切换。 */
+    @Volatile
+    var isAppPaused: ((Context, com.slideindex.app.data.AppInfo) -> Boolean)? = null
+
+    /** 见 [isAppPaused]。 */
+    @Volatile
+    var setAppPaused: (suspend (Context, com.slideindex.app.data.AppInfo, Boolean) -> Boolean)? = null
+
+    /** 预热系统设置索引。 */
+    @Volatile
+    var ensureSystemSettingsIndex: (suspend (Context) -> Unit)? = null
+
+    /** 预热快捷方式索引。 */
+    @Volatile
+    var ensureShortcutIndex: (suspend (android.content.Context, List<com.slideindex.app.data.AppInfo>) -> Unit)? = null
+
+    /** 系统设置搜索。 */
+    @Volatile
+    var searchSystemSettings:
+        (suspend (Context, String, Int) -> List<com.slideindex.app.search.settings.SystemSettingsSearchEntry>)? = null
+
+    /** 快捷方式搜索。 */
+    @Volatile
+    var searchShortcuts:
+        (suspend (Context, List<com.slideindex.app.data.AppInfo>, String, Int) ->
+            List<com.slideindex.app.search.shortcuts.ShortcutSearchEntry>)? = null
+
+    /** 剪贴板历史搜索。 */
+    @Volatile
+    var searchClipboardHistory:
+        (suspend (String, Int) -> List<com.slideindex.app.clipboard.ClipboardEntry>)? = null
+
+    /** 网络搜索建议。 */
+    @Volatile
+    var webSuggestions: (suspend (String) -> List<Any>)? = null
+
+    /** 启动一条系统设置项。 */
+    @Volatile
+    var launchSystemSetting: ((Context, com.slideindex.app.search.settings.SystemSettingsSearchEntry, AppSettings, Boolean) -> Boolean)? = null
+
+    /** 打开/分享本地文件。 */
+    @Volatile
+    var openFileEntry: ((Context, com.slideindex.app.search.files.DeviceFileEntry) -> Boolean)? = null
+
+    /** 分享本地文件；`onDismiss` 在分享发起后回调。 */
+    @Volatile
+    var shareFileEntry: ((Context, com.slideindex.app.search.files.DeviceFileEntry, () -> Unit) -> Boolean)? = null
+
     /** 搜索历史流（每条只是查询词）。 */
     @Volatile
     var searchHistoryQueries: (() -> kotlinx.coroutines.flow.Flow<List<String>>?)? = null
