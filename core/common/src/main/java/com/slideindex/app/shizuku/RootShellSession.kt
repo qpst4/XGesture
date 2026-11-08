@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Keeps one interactive root shell alive so Root mode does not spawn a new `su` per command.
  */
-internal object RootShellSession {
+object RootShellSession {
 
     private const val TAG = "RootShellSession"
 

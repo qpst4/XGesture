@@ -14,7 +14,7 @@ import java.io.File
  * 这里统一走 toybox 的 `nsenter -t 1 -m` 进入 init 的全局 namespace；不可用时退回调用方
  * 原有的命令，保证老 ROM/老 Root 方案还能工作。
  */
-internal object RootNamespace {
+object RootNamespace {
     private const val TAG = "RootNamespace"
 
     const val NSENTER_PATH = "/system/bin/nsenter"

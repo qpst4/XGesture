@@ -3,13 +3,13 @@ package com.slideindex.app.shizuku
 import android.content.Context
 import android.os.Process
 import androidx.annotation.StringRes
-import com.slideindex.app.R
-import com.slideindex.app.privilege.PrivilegeGateway
+import com.slideindex.app.common.R
+import com.slideindex.app.shell.ShellRuntimeHooks
 
-internal object TaskManagerShellExecutor {
+object TaskManagerShellExecutor {
 
-    @StringRes
-    val SHELL_DOWNGRADE_HINT_RES: Int = R.string.shell_downgrade_hint
+    @Deprecated("模块侧不再持有资源 id")
+    val SHELL_DOWNGRADE_HINT_RES: Int = 0
     const val SHELL_COMMAND_TIMEOUT_MS = 2_500L
 
     private const val SYSTEM_SH = "/system/bin/sh"
@@ -17,7 +17,7 @@ internal object TaskManagerShellExecutor {
 
     data class ShellExecResult(val exitCode: Int, val output: String)
 
-    fun shellDowngradeHint(context: Context): String = context.getString(SHELL_DOWNGRADE_HINT_RES)
+    fun shellDowngradeHint(context: Context): String = ShellRuntimeHooks.stringOf(context, "shell_downgrade_hint") ?: "已降级为 adb/shell 身份"
 
     fun shellCommand(vararg cmd: String): Boolean =
         shellCommandWithOutput(*cmd).exitCode == 0
@@ -80,7 +80,7 @@ internal object TaskManagerShellExecutor {
         }
         val root = runAsRootUser(command, timeoutMs)
         if (hasUsableOutput(root) || root.exitCode == 0) return root
-        if (PrivilegeGateway.isRootMode()) return root
+        if (ShellRuntimeHooks.isRootMode()) return root
         val su = resolveSuInvocation()
         val q = shellQuote(command)
         val sh = resolveShPath()
@@ -133,7 +133,7 @@ internal object TaskManagerShellExecutor {
         val wrapper = findShellDowngradeWrapper()
             ?: return ShellExecResult(
                 exitCode = -1,
-                output = context?.getString(R.string.shell_downgrade_failed)
+                output = ShellRuntimeHooks.stringOf(context, "shell_downgrade_failed")
                     ?: "Cannot downgrade to adb/shell identity."
             )
         val result = shellCommandWithOutput(resolveShPath(), "-c", wrapper(command))
@@ -208,7 +208,7 @@ internal object TaskManagerShellExecutor {
         timeoutMs: Long = SHELL_COMMAND_TIMEOUT_MS,
         context: Context? = null
     ): ShellExecResult {
-        val fallback = context?.getString(R.string.shell_su_exec_failed) ?: "su execution failed"
+        val fallback = ShellRuntimeHooks.stringOf(context, "shell_su_exec_failed") ?: "su execution failed"
         var last = ShellExecResult(-1, fallback)
         for (script in scripts) {
             val result = shellCommandWithOutput(timeoutMs, resolveShPath(), "-c", script)
@@ -218,7 +218,7 @@ internal object TaskManagerShellExecutor {
         return last
     }
 
-    internal fun parseNumericUid(output: String): Int? {
+    fun parseNumericUid(output: String): Int? {
         val trimmed = output.trim()
         trimmed.toIntOrNull()?.let { return it }
         return Regex("""uid=(\d+)""").find(trimmed)?.groupValues?.get(1)?.toIntOrNull()

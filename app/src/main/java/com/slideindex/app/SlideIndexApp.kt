@@ -365,6 +365,13 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     com.slideindex.app.overlay.FloatBallPickResultPanel.showOcrError(context, reason)
                 }
             }
+        com.slideindex.app.shell.ShellRuntimeHooks.stringResolver = { ctx, name ->
+            val id = ctx.resources.getIdentifier(name, "string", ctx.packageName)
+            if (id == 0) null else ctx.getString(id)
+        }
+        com.slideindex.app.shell.ShellRuntimeHooks.rootModeProvider = {
+            com.slideindex.app.privilege.PrivilegeGateway.isRootMode()
+        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.suppressChromeForCapture = {
             com.slideindex.app.overlay.FloatingPointerOverlayWindow.suppressForScreenshotCapture()
             com.slideindex.app.overlay.FloatBallOverlay.suppressForScreenshotCapture()
