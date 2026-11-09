@@ -62,6 +62,19 @@ class EdgeOverlayHost(
     private var displayRotationMonitor: OverlayDisplayRotationMonitor? = null
     private var triggerHealJob: Job? = null
     private var linkProbeJob: Job? = null
+
+    /**
+     * 是否已经用“真实设置快照”跑过一次 apply。
+     *
+     * 真机故障：进程/服务重建后，设置回流的第一帧可能早于宿主就绪而被丢掉，之后设置没有变化
+     * 就不会再有回流 —— `OverlayManager.currentSettings` 一直停在默认值（`serviceEnabled=false`），
+     * 表现是**触钮永远不挂、面板专用宿主建不出来（快速启动器点了没反应）**，
+     * 只有用户手动改一次设置才恢复。这里用“主动补一次”替代等回流。
+     */
+    private var settingsApplied = false
+
+    /** 最近一次真正应用出去的 serviceEnabled（用于识别“只应用过默认值”的假健康）。 */
+    private var appliedServiceEnabled = false
     /** 宿主被显式 stop 后不再自动重建；租约兜底拆卸不属于此列。 */
     private var stopRequested = false
 
@@ -141,6 +154,33 @@ class EdgeOverlayHost(
         OverlaySnoozeController.onStateChanged = {
             refreshOverlaySuppression()
         }
+        // 宿主刚建好就立刻用当前快照跑一次：不能只等设置回流（首帧可能已被丢掉，
+        // 见 [settingsApplied] 的说明），否则触钮/面板宿主会一直缺席到用户改一次设置。
+        if (!settingsApplied) {
+            runCatching { applySettingsToHosts(deps.settingsRepository.readSnapshot()) }
+                .onFailure { Log.e(TAG, "initial applySettings after host start failed", it) }
+        }
+    }
+
+    /** 设置 → 各宿主的唯一应用口径（设置回流与宿主首次创建共用）。 */
+    private fun applySettingsToHosts(settings: AppSettings) {
+        // 「按应用分档」：把前台命中的那一档贴到全局之上（没命中就是原样）。
+        appliedProfileId = activeGestureProfileId(settings)
+        val effectiveSettings = settings
+            .withActiveGestureProfile(OverlayService.foregroundPackage)
+            .withGestureAnglesPreview()
+            .withOverlayLayoutPreview()
+        floatBallController?.apply(effectiveSettings)
+        updatePerformanceMonitor(effectiveSettings.debugPerformanceMonitorEnabled)
+        overlayManager?.applySettings(effectiveSettings)
+        settingsApplied = true
+        appliedServiceEnabled = settings.serviceEnabled
+        if (KeyboardTriggerImeState.imeVisible) {
+            FloatBallOverlay.onKeyboardImeChanged()
+        }
+        if (previewActive) {
+            overlayManager?.setPreviewMode(true, previewContent, previewFocus)
+        }
     }
 
     /** 一次性资源：设置/应用订阅与失联租约。窗口宿主拆掉后这些订阅仍需存活，用于触发重建。 */
@@ -154,6 +194,13 @@ class EdgeOverlayHost(
                     if (stopRequested) return@launch
                     if (!PermissionHelper.isAccessibilityServiceEnabled(context)) continue
                     ensureStarted()
+                    // 兜底：只应用过默认设置（全 false）时，用当前快照补一次。
+                    // 覆盖“宿主创建时设置还没加载完、之后又没有任何设置变化”的启动窗口。
+                    val snapshot = deps.settingsRepository.readSnapshot()
+                    if (!settingsApplied || (snapshot.serviceEnabled && !appliedServiceEnabled)) {
+                        runCatching { applySettingsToHosts(snapshot) }
+                            .onFailure { Log.e(TAG, "heal fallback applySettings failed", it) }
+                    }
                     runCatching { overlayManager?.healTriggerAttachments() }
                     // 悬浮球没有触钮那条“窗口没了就重挂”的路径：这里按服务代次再 apply 一次，
                     // 命中代次变化时它会自己 dismiss + 重建（幂等，正常路径下只是一次设置比对）。
@@ -221,21 +268,7 @@ class EdgeOverlayHost(
                         return@collectLatest
                     }
                     ensureStarted()
-                    // 「按应用分档」：把前台命中的那一档贴到全局之上（没命中就是原样）。
-                    appliedProfileId = activeGestureProfileId(settings)
-                    val effectiveSettings = settings
-                        .withActiveGestureProfile(OverlayService.foregroundPackage)
-                        .withGestureAnglesPreview()
-                        .withOverlayLayoutPreview()
-                    floatBallController?.apply(effectiveSettings)
-                    updatePerformanceMonitor(effectiveSettings.debugPerformanceMonitorEnabled)
-                    overlayManager?.applySettings(effectiveSettings)
-                    if (KeyboardTriggerImeState.imeVisible) {
-                        FloatBallOverlay.onKeyboardImeChanged()
-                    }
-                    if (previewActive) {
-                        overlayManager?.setPreviewMode(true, previewContent, previewFocus)
-                    }
+                    applySettingsToHosts(settings)
                 }
             }
         }
@@ -321,6 +354,8 @@ class EdgeOverlayHost(
         overlayManager = null
         OverlayService.foregroundPackage = null
         appliedProfileId = null
+        settingsApplied = false
+        appliedServiceEnabled = false
         profileSettleHandler.removeCallbacks(leaveProfileRunnable)
         previewActive = false
     }
