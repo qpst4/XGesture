@@ -68,11 +68,8 @@ import kotlin.math.roundToInt
 /** Shorter than system long-press for quicker word-split feedback. */
 private const val WORD_SPLIT_LONG_PRESS_MS = 280L
 
-/** 与多字词 chip 一致的垂直内边距。 */
-private val WORD_TAP_CHIP_VERTICAL_PADDING = 8.dp
-
 /** 空格 chip 视觉宽度（略宽于真实空格，避免占满词间距）。 */
-private val WORD_WHITESPACE_VISUAL_WIDTH = 12.dp
+private val WORD_WHITESPACE_VISUAL_WIDTH = 14.dp
 private val WORD_WHITESPACE_FULL_WIDTH = 16.dp
 private val WORD_WHITESPACE_TAB_WIDTH = 22.dp
 
@@ -669,7 +666,7 @@ private fun WordTapTokenChip(
         val whitespaceWidth = when (token) {
             "\u3000" -> WORD_WHITESPACE_FULL_WIDTH
             "\t" -> WORD_WHITESPACE_TAB_WIDTH
-            else -> 14.dp
+            else -> WORD_WHITESPACE_VISUAL_WIDTH
         }
         val density = LocalDensity.current
         val whitespaceContentHeight = with(density) { (bodyLineHeight.toDp() + 8.dp) }
@@ -755,7 +752,7 @@ private fun WordTapTokenChip(
                         )
                         .clip(chipShape)
                         .background(background)
-                        .border(1.dp, borderColor, chipShape)
+                        .border(1.5.dp, borderColor, chipShape)
                 } else {
                     Modifier
                         .clip(chipShape)
@@ -763,12 +760,15 @@ private fun WordTapTokenChip(
                         .border(0.5.dp, borderColor, chipShape)
                 }
             )
+            // 选中态只改绘制（背景 / 描边 / 文字颜色），**不改内边距与字重**：
+            // 一旦 padding 或 fontWeight 随选中变化，chip 会被撑宽 2dp（单字还会矮 2dp），
+            // 行尾 chip 换行、整段文字重排；划选过程中手指下的命中索引也会跟着跳。
             .padding(
-                horizontal = if (selected) (if (isSingleChar) 7.dp else 9.dp) else (if (isSingleChar) 6.dp else 8.dp),
-                vertical = if (selected) (if (isSingleChar) 5.dp else 6.dp) else 6.dp,
+                horizontal = if (isSingleChar) 7.dp else 9.dp,
+                vertical = 6.dp,
             ),
         fontSize = if (isDelimiter) delimiterTextSize else bodyTextSize,
-        fontWeight = if (selected) androidx.compose.ui.text.font.FontWeight.SemiBold else androidx.compose.ui.text.font.FontWeight.Normal,
+        fontWeight = androidx.compose.ui.text.font.FontWeight.Normal,
         lineHeight = bodyLineHeight,
         color = textColor,
     )
