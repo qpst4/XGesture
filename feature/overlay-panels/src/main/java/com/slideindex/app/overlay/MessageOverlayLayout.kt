@@ -9,9 +9,9 @@ import com.slideindex.app.message.MessageSettings
 import com.slideindex.app.message.SideBubbleHorizontalEdge
 import kotlin.math.roundToInt
 
-internal object MessageOverlayLayout {
-    const val FLOAT_ICON_EDGE_MARGIN_DP = FloatIconOverlayWindow.EDGE_MARGIN_DP
-    const val SIDE_BUBBLE_EDGE_MARGIN_DP = SideBubbleOverlayWindow.EDGE_MARGIN_DP.toFloat()
+object MessageOverlayLayout {
+    const val FLOAT_ICON_EDGE_MARGIN_DP = 16f
+    const val SIDE_BUBBLE_EDGE_MARGIN_DP = 12f
 
     /**
      * 悬浮球为投影预留的四周空间（dp）。

@@ -66,11 +66,11 @@ import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
 
  */
 
-internal object CNoticePanelOverlayWindow {
+object CNoticePanelOverlayWindow {
 
     private const val TAG = "CNoticePanel"
 
-    private const val DISMISS_MS = CNoticeOverlayWindow.ANIMATION_MS.toLong()
+    private const val DISMISS_MS = 280L
 
 
 
@@ -258,9 +258,9 @@ internal object CNoticePanelOverlayWindow {
 
 
 
-        val resolvedHostContext = MessageOverlayHost.resolveContentPanelContext(context)
+        val resolvedHostContext = context.applicationContext
 
-            ?: MessageOverlayHost.resolveHostContext(context)
+            ?: com.slideindex.app.overlay.panels.PanelRuntimeHooks.overlayHostContext?.invoke()
 
             ?: return
 
@@ -650,7 +650,7 @@ private fun CNoticePanelOverlayRoot(
 
 ) {
 
-    val fadeSpec = tween<Float>(CNoticeOverlayWindow.ANIMATION_MS)
+    val fadeSpec = tween<Float>(280)
 
     val hostContext = LocalContext.current.applicationContext
 

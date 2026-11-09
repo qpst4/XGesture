@@ -62,7 +62,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.message.NotificationData
 import com.slideindex.app.message.NotificationMessage
 import com.slideindex.app.message.NotificationMessagingHistory
@@ -76,7 +76,7 @@ import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.icon.extended.Ok
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 
-internal data class CNoticePanelEntryUi(
+data class CNoticePanelEntryUi(
     val conversationSourceKey: String,
     val data: NotificationData,
     val unreadCount: Int,
@@ -88,7 +88,7 @@ internal data class CNoticePanelEntryUi(
 private val ReplyInputShape = RoundedCornerShape(20.dp)
 
 @Composable
-internal fun CNoticePanelContent(
+fun CNoticePanelContent(
     entries: List<CNoticePanelEntryUi>,
     selectedKey: String,
     horizontalEdge: SideBubbleHorizontalEdge,

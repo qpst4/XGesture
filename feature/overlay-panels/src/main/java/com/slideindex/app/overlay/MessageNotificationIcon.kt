@@ -23,10 +23,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 
 @Composable
-internal fun MessageNotificationIcon(
+fun MessageNotificationIcon(
     iconBitmap: Bitmap?,
     appIconBitmap: Bitmap?,
     sizeDp: Dp,

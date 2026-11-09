@@ -5,7 +5,7 @@ import com.slideindex.app.message.MessageSettings
 import com.slideindex.app.message.NotificationData
 import com.slideindex.app.message.NotificationMessage
 
-internal enum class CNoticeListPhase {
+enum class CNoticeListPhase {
     Collapsed,
     CollapsedDimmed,
     CollapsedGhost,
@@ -14,7 +14,7 @@ internal enum class CNoticeListPhase {
     ExpandedGhost,
 }
 
-internal object CNoticeListUiState {
+object CNoticeListUiState {
     fun isCollapsedFamily(phase: CNoticeListPhase): Boolean =
         when (phase) {
             CNoticeListPhase.Collapsed,
