@@ -192,6 +192,7 @@ object SearchPanelOverlayWindow {
             if (panelVisibilityState?.targetState == true) return@postDelayed
             applyPanelShellPassive()
             com.slideindex.app.overlay.panels.PanelRuntimeHooks.onContentPanelHidden?.invoke()
+            destroyWindow()
         }, 140L)
     }
 

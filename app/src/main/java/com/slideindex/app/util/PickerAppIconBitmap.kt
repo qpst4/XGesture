@@ -6,18 +6,22 @@ import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.util.LruCache
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 object PickerAppIconBitmap {
     // 挑应用网格里的图标按 58dp 渲染，3x 屏是 174px，这里取 176px 留余量。
-    // 单条约 124KB（176² × 4B），缓存顶满 256 条约 32MB；实际条目数通常 100~200。
+    // 单条约 124KB（176² × 4B），统一按字节淘汰，上限 16MB。
     private const val ICON_SIZE_PX = 176
+    private const val MAX_CACHE_BYTES = 16 * 1024 * 1024
 
-    private val cache = object : LruCache<String, ImageBitmap>(
-        (Runtime.getRuntime().maxMemory() / 1024 / 16).toInt().coerceIn(48, 256),
-    ) {}
+    private val cache = object : LruCache<String, ImageBitmap>(MAX_CACHE_BYTES) {
+        override fun sizeOf(key: String, value: ImageBitmap): Int =
+            runCatching { value.asAndroidBitmap().allocationByteCount }
+                .getOrDefault(ICON_SIZE_PX * ICON_SIZE_PX * 4)
+    }
 
     /**
      * 缓存 key 带上图标修订号：在图标库里改完应用图标，这里不会再吐旧图。

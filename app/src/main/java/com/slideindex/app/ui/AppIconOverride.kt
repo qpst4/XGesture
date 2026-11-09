@@ -46,7 +46,11 @@ import com.slideindex.app.iconpack.IconThemeStore
  */
 object AppIconOverride {
 
-    private val cache = object : LruCache<String, Bitmap>(128) {}
+    private const val MAX_CACHE_BYTES = 16 * 1024 * 1024
+
+    private val cache = object : LruCache<String, Bitmap>(MAX_CACHE_BYTES) {
+        override fun sizeOf(key: String, value: Bitmap): Int = value.allocationByteCount
+    }
 
     fun clear() {
         cache.evictAll()

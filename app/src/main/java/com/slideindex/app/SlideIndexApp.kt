@@ -1408,7 +1408,6 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
             if (deps.settingsRepository.readSnapshot().onboardingCompleted) {
                 deps.applicationScope.launch(Dispatchers.IO) {
                     deps.appRepository.loadApps()
-                    com.slideindex.app.widget.WidgetCatalog.preload(this@SlideIndexApp)
                 }
             }
             }, STARTUP_HEAVY_TASK_DELAY_MS)
@@ -1456,6 +1455,15 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         if (level >= TRIM_MEMORY_RUNNING_CRITICAL || level >= TRIM_MEMORY_UI_HIDDEN) {
             com.slideindex.app.clipboard.ClipboardThumbnailCache.evictAll()
             com.slideindex.app.util.GestureActionIconBitmap.evictAll()
+            com.slideindex.app.util.PickerAppIconBitmap.clear()
+            com.slideindex.app.ui.AppIconOverride.clear()
+            com.slideindex.app.util.QuickLauncherIconResolver.clear()
+            com.slideindex.app.widget.WidgetAppIconCache.clear()
+            runCatching {
+                if (::deps.isInitialized) {
+                    deps.appRepository.clearIconCache()
+                }
+            }
         }
     }
 

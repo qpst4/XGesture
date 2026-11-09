@@ -926,8 +926,6 @@ object FloatBallOverlay {
 
     internal fun ensureWindows(hostContext: Context, settings: AppSettings) {
         FloatBallStashPanel.warmUpBelowChrome(hostContext)
-        FloatBallPickResultPanel.warmUp(hostContext)
-        com.slideindex.app.overlay.searchpanel.SearchPanelOverlayWindow.warmUp(hostContext)
         val wm = hostContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager ?: return
         val overlayContext = OverlayCompose.themedContext(hostContext)
         val state = FloatBallSceneState(settings)
@@ -1637,8 +1635,7 @@ object FloatBallOverlay {
     ): WindowManager.LayoutParams {
         var flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-            WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
         if (!touchModal) {
             flags = flags or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
         }

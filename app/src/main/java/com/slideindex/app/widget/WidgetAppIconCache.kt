@@ -26,6 +26,10 @@ internal object WidgetAppIconCache {
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
   private val mainHandler = Handler(Looper.getMainLooper())
 
+  fun clear() {
+    cache.evictAll()
+  }
+
   fun peek(packageName: String): Bitmap? =
     if (packageName.isBlank()) null else cache.get(packageName)
 

@@ -319,6 +319,11 @@ class AppRepository @Inject constructor(
         _appsForSearch.value = emptyList()
     }
 
+    /** 内存紧张时释放图标缓存。 */
+    fun clearIconCache() {
+        launchIconCache.clear()
+    }
+
     /**
      * 应用图标的四个入口都先问一次「全局覆盖」。
      *
@@ -411,7 +416,6 @@ class AppRepository @Inject constructor(
             .mapNotNull { appInfo ->
                 val label = runCatching { pm.getApplicationLabel(appInfo).toString() }
                     .getOrDefault(appInfo.packageName)
-                launchIconCache.loadDrawable(appInfo)
                 val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0 ||
                     (appInfo.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0
                 buildAppInfo(appInfo.packageName, label, isSystem)
@@ -581,7 +585,6 @@ class AppRepository @Inject constructor(
                 pm.getApplicationInfo(packageName, PackageManager.MATCH_DISABLED_COMPONENTS)
             }
             val label = pm.getApplicationLabel(appInfo).toString()
-            launchIconCache.loadDrawable(appInfo)
             val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
             buildAppInfo(packageName, label, isSystem)
         } catch (_: PackageManager.NameNotFoundException) {

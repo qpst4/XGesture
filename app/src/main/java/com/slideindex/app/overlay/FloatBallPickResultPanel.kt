@@ -938,6 +938,7 @@ object FloatBallPickResultPanel {
                 }
                 clearTranslateState()
                 applyPanelShellPassive()
+                destroy()
                 panelDismissing = false
                 com.slideindex.app.service.SlideIndexAccessibilityService.recoverTriggerInteraction(forceReAddChrome = true)
                 com.slideindex.app.service.SlideIndexAccessibilityService.refreshOverlaySuppression()

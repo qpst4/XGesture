@@ -17,15 +17,7 @@ import android.util.Log
 object EdgeIdlePresentationPolicy {
 
     /** true = 保持原来的「配了触钮就空闲常驻」；false = 空闲摘窗、按下再挂。 */
-    val keepPresentationWhileIdle: Boolean by lazy {
-        val keep = !isOplusAntiFraudRom()
-        Log.i(
-            "EdgeIdlePresentation",
-            "keepIdlePresentation=$keep manufacturer=${Build.MANUFACTURER} " +
-                "brand=${Build.BRAND} sdk=${Build.VERSION.SDK_INT}"
-        )
-        keep
-    }
+    val keepPresentationWhileIdle: Boolean = false
 
     /**
      * 是否 Oplus 的反诈规则区。参数留口子便于单测，默认取当前设备。

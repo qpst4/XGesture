@@ -34,9 +34,11 @@ object QuickLauncherIconResolver {
      * （Flyme: `FlymeThemeHelper.cropTransparentSpace` 逐像素 `Bitmap.getPixel`），单个图标可达秒级
      * —— 编辑器一次要画几十个图标，不缓存就是"等一分钟"（真机实测）。
      */
-    private val bitmapCache = object : LruCache<String, Bitmap>(
-        (Runtime.getRuntime().maxMemory() / 1024 / 24).toInt().coerceIn(48, 256)
-    ) {}
+    private const val MAX_CACHE_BYTES = 16 * 1024 * 1024
+
+    private val bitmapCache = object : LruCache<String, Bitmap>(MAX_CACHE_BYTES) {
+        override fun sizeOf(key: String, value: Bitmap): Int = value.allocationByteCount
+    }
 
     fun clear() {
         bitmapCache.evictAll()
