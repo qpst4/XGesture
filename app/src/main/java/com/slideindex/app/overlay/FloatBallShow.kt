@@ -39,6 +39,21 @@ internal object FloatBallShow {
 
         FloatBallOverlay.onPositionPersisted = onPositionPersisted
         FloatBallOverlay.onActiveSidePersisted = onActiveSidePersisted
+
+        // 服务代次变了（无障碍被系统摘掉后重连）：上一代窗口已被系统删除，
+        // 但 View.isAttachedToWindow 可能仍为 true。必须先清掉再按新代次重建，
+        // 否则 isShowing 恒真 → 永远走不到 ensureWindows（“重开无障碍后球消失”）。
+        val currentGeneration =
+            com.slideindex.app.service.SlideIndexAccessibilityService.overlayHostGeneration()
+        if (FloatBallOverlay.isShowing && FloatBallOverlay.windowGeneration != currentGeneration) {
+            Log.i(
+                FloatBallOverlay.TAG,
+                "rebuild float ball: service generation changed " +
+                    "${FloatBallOverlay.windowGeneration} → $currentGeneration",
+            )
+            FloatBallOverlay.dismiss()
+        }
+
         if (FloatBallOverlay.isShowing && !FloatBallOverlay.areChromeWindowsAttached()) {
             // 熄屏/锁屏后系统可能摘掉 TYPE_ACCESSIBILITY_OVERLAY，本地引用仍在。
             // 先清理再重建，避免 isShowing=true 却永远不 ensureWindows。

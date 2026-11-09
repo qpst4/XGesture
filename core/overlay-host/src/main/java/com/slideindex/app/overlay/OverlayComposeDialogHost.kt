@@ -136,7 +136,7 @@ class OverlayComposeDialogHost(
 
         val added = runCatching {
 
-            windowManager.addView(view, params)
+            OverlayWindowGuard.addView(windowManager, view, params, "compose-dialog")
 
             composeView = view
 
@@ -292,7 +292,7 @@ class OverlayComposeDialogHost(
 
         runCatching {
 
-            windowManager.addView(view, params)
+            OverlayWindowGuard.addView(windowManager, view, params, "compose-dialog-restore")
 
         }.onFailure { error -> Log.e(TAG, "Failed to restore overlay dialog", error) }
 

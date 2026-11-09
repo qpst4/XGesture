@@ -15,6 +15,7 @@ import com.slideindex.app.overlay.ModuleForwardedTouchGate
 import com.slideindex.app.overlay.OverlayBlurGate
 import com.slideindex.app.overlay.OverlayPassthrough
 import com.slideindex.app.overlay.OverlayScreenMetrics
+import com.slideindex.app.overlay.OverlayWindowGuard
 import com.slideindex.app.overlay.OverlayWindowTypes
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.CornerGestureSettings
@@ -262,7 +263,9 @@ class CornerGestureController(
         OverlayWindowTypes.applyPresentationPassthroughFlags(params)
         if (!previewAttached) {
             OverlayWindowTypes.ensureNoBrightnessOverride(params)
-            runCatching { windowManager.addView(root, params) }
+            runCatching {
+                OverlayWindowGuard.addView(windowManager, root, params, "corner-zone-preview")
+            }
                 .onSuccess { previewAttached = true }
                 .onFailure { Log.e(TAG, "Failed to attach corner zone preview", it) }
         } else {
@@ -381,7 +384,9 @@ class CornerGestureController(
         }
         if (slot.host.parent == null) {
             OverlayWindowTypes.ensureNoBrightnessOverride(params)
-            runCatching { windowManager.addView(slot.host, params) }
+            runCatching {
+                OverlayWindowGuard.addView(windowManager, slot.host, params, "corner-capture")
+            }
                 .onFailure { Log.e(TAG, "Failed to attach corner capture", it) }
         } else {
             OverlayWindowTypes.ensureNoBrightnessOverride(params)
@@ -557,7 +562,9 @@ class CornerGestureController(
         OverlayWindowTypes.applyPresentationInteractiveFlags(params)
         OverlayWindowTypes.ensureNoBrightnessOverride(params)
         applyBackgroundBlurFlags(params, active = false)
-        runCatching { windowManager.addView(root, params) }
+        runCatching {
+            OverlayWindowGuard.addView(windowManager, root, params, "corner-overlay")
+        }
             .onSuccess {
                 overlayAttached = true
                 view.applySettings(settings, density)

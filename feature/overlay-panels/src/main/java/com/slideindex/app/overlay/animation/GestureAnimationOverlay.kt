@@ -248,6 +248,9 @@ class GestureAnimationOverlayController(
 
     fun detach() {
         hide()
+        // 主题 context 是从上一代无障碍服务申请出来的：留着它，下一次 attach 会继续用
+        // 已死服务的 context 建视图（典型表现：组合能跑、屏幕上画不出来）。
+        themedOverlayContext = null
         val view = composeView ?: return
         val dialogOwner = owner
         runCatching { (view.parent as? ViewGroup)?.removeView(view) }

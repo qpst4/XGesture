@@ -130,6 +130,16 @@ object FloatBallOverlay {
     internal var windowManager: WindowManager? = null
     internal var displayView: FloatBallDisplayHost? = null
 
+    /**
+     * 当前这批球窗口创建时所用的无障碍服务代次。
+     *
+     * 用途：服务被系统摘掉再重连后，旧窗口会被系统整片删除，但 `View.isAttachedToWindow`
+     * 在真机上**仍可能返回 true**（本仓库多处注释记录过），于是 `showOrUpdate()` 会误判
+     * “球还在显示”，永远不再重建 —— 表现就是“重开无障碍后悬浮球消失，只能重启 App”。
+     * 代次变化即强制重建，不信任何视图树状态。
+     */
+    internal var windowGeneration: Int = -1
+
     /** 球体独立小窗（球大小、常驻可见）；拖动只改它的坐标。 */
     private var ballIconWindow: FloatBallIconWindow? = null
 
@@ -1250,6 +1260,8 @@ object FloatBallOverlay {
         }
 
         windowManager = wm
+        windowGeneration = com.slideindex.app.service.SlideIndexAccessibilityService
+            .overlayHostGeneration()
         displayView = displayHost
         displayLayoutParams = displayLp
         displayOwner = displayDialogOwner

@@ -748,7 +748,20 @@ class SideOverlayController(
         }
     }
 
+    /** 当前手势动画 overlay 所属的无障碍服务代次；变化时必须丢掉旧 Compose 组合再重挂。 */
+    private var hintOverlayGeneration = -1
+
     private fun attachHintOverlays(container: FrameLayout) {
+        val generation = com.slideindex.app.service.SlideIndexAccessibilityService
+            .overlayHostGeneration()
+        if (hintOverlayGeneration != generation) {
+            // 系统摘掉无障碍连接时会把它那代窗口整片删掉，但动画的 Compose 组合可能还活着：
+            // 表现就是 onDrag/snapTo 日志照打、屏幕上什么都不画。代次一变先 detach，
+            // 下一行 attach 会拿新容器 + 新 context 重建组合。
+            runCatching { GestureAnimationOverlayRegistry.controller(side).detach() }
+            runCatching { BackPanelOverlayRegistry.controller(side).detach() }
+            hintOverlayGeneration = generation
+        }
         GestureAnimationOverlayRegistry.controller(side).attach(container, overlayContext)
         GestureAnimationOverlayRegistry.controller(side).applySettings(settings)
         val back = BackPanelOverlayRegistry.controller(side)

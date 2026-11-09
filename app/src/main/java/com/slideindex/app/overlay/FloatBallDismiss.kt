@@ -57,6 +57,7 @@ internal object FloatBallDismiss {
             FloatBallPickResultPanel.destroy()
         }
         FloatBallOverlay.displayOwner = null
+        FloatBallOverlay.windowGeneration = -1
         FloatBallOverlay.displayView = null
         FloatBallOverlay.displayLayoutParams = null
         FloatBallOverlay.touchHost = null

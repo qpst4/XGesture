@@ -13,6 +13,7 @@ import android.view.accessibility.AccessibilityWindowInfo
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.PointerSwipeConfig
 import com.slideindex.app.gesture.PointerSwipeDirection
+import com.slideindex.app.overlay.AccessibilityLink
 import com.slideindex.app.overlay.FloatBallStashPanel
 import com.slideindex.app.overlay.GlobalOverlayDismissHelper
 import com.slideindex.app.overlay.WidgetPickerOverlayWindow
@@ -95,7 +96,11 @@ internal object SlideIndexAccessibilityGestureInjector {
                         // 这条正常路吃掉了，导致小组件面板/添加页等浮窗"手势返回没反应"。
                         // 拦不住的敌人、却误伤自己人 —— 因此撤掉闸门，改为把这些浮窗**直接接进手势返回链路**
                         // （见上面 when 里的路由），让返回不再依赖系统回声。
-                        service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
+                        performGlobalActionTracked(
+                            service,
+                            AccessibilityService.GLOBAL_ACTION_BACK,
+                            "Back",
+                        )
                     }
                 }
             }
@@ -105,26 +110,44 @@ internal object SlideIndexAccessibilityGestureInjector {
                 // 所有自有触发源（悬浮球 / 触钮 / 轮盘 / 摇一摇 / 屏幕控制条 / 外部调用）都汇到本漏斗，
                 // 所以在这里先清场、再执行系统动作，等于一次覆盖全部入口。
                 GlobalOverlayDismissHelper.dismissContentPanelsForSystemNavigation()
-                service.performGlobalAction(
+                performGlobalActionTracked(
+                    service,
                     if (action == GestureAction.Home) {
                         AccessibilityService.GLOBAL_ACTION_HOME
                     } else {
                         AccessibilityService.GLOBAL_ACTION_RECENTS
-                    }
+                    },
+                    if (action == GestureAction.Home) "Home" else "Recents",
                 )
             }
             GestureAction.OpenNotifications ->
-                service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS)
+                performGlobalActionTracked(
+                    service,
+                    AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS,
+                    "OpenNotifications",
+                )
             GestureAction.OpenQuickSettings ->
-                service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_QUICK_SETTINGS)
+                performGlobalActionTracked(
+                    service,
+                    AccessibilityService.GLOBAL_ACTION_QUICK_SETTINGS,
+                    "OpenQuickSettings",
+                )
             GestureAction.LockScreen ->
-                service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN)
+                performGlobalActionTracked(
+                    service,
+                    AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN,
+                    "LockScreen",
+                )
             GestureAction.Screenshot -> {
                 service.takeScreenshotDelayed()
                 true
             }
             GestureAction.PowerMenu ->
-                service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_POWER_DIALOG)
+                performGlobalActionTracked(
+                    service,
+                    AccessibilityService.GLOBAL_ACTION_POWER_DIALOG,
+                    "PowerMenu",
+                )
             GestureAction.PreviousApp -> service.launchPreviousApp()
             GestureAction.KeepScreenOn -> service.toggleKeepScreenOn()
             GestureAction.ScrollToTop -> scheduleFastVerticalScroll(service, toTop = true)
@@ -137,6 +160,27 @@ internal object SlideIndexAccessibilityGestureInjector {
             Log.w(TAG, "perform($action): returned false")
         }
         return result
+    }
+
+    /**
+     * 全局动作的统一出口。
+     *
+     * `performGlobalAction` 返回 false 只有两种可能：服务连接已被系统摘掉，或这次注入被系统拒绝。
+     * 两种都意味着“现在做不了系统动作”，必须记成 [AccessibilityLink] 的真实证据，
+     * 否则用户看到的就是“划了没反应、也没有任何提示”，而 App 内部还以为一切正常。
+     */
+    private fun performGlobalActionTracked(
+        service: SlideIndexAccessibilityService,
+        action: Int,
+        actionName: String,
+    ): Boolean {
+        val ok = service.performGlobalAction(action)
+        if (ok) {
+            AccessibilityLink.noteAlive("performGlobalAction($actionName)")
+        } else {
+            AccessibilityLink.noteBroken("performGlobalAction($actionName)")
+        }
+        return ok
     }
 
     private fun scheduleFastVerticalScroll(service: SlideIndexAccessibilityService, toTop: Boolean): Boolean {

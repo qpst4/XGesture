@@ -19,7 +19,10 @@ import com.slideindex.app.settings.withActiveGestureProfile
 import android.util.Log
 import com.slideindex.app.overlay.corner.CornerGestureHost
 import com.slideindex.app.overlay.dragdrop.DragDropFlowController
+import com.slideindex.app.service.AccessibilityRecoverNotifier
+import com.slideindex.app.service.AccessibilityRecoverOutcome
 import com.slideindex.app.service.OverlayService
+import com.slideindex.app.service.OverlayServiceLifecycle
 import com.slideindex.app.service.SlideIndexAccessibilityService
 import com.slideindex.app.util.OverlaySnoozeController
 import com.slideindex.app.util.PermissionHelper
@@ -32,6 +35,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Hosts edge gesture overlays on the accessibility service process (SideGesture-style).
@@ -57,11 +61,14 @@ class EdgeOverlayHost(
     private val profileSettleHandler = Handler(Looper.getMainLooper())
     private var displayRotationMonitor: OverlayDisplayRotationMonitor? = null
     private var triggerHealJob: Job? = null
+    private var linkProbeJob: Job? = null
     /** 宿主被显式 stop 后不再自动重建；租约兜底拆卸不属于此列。 */
     private var stopRequested = false
 
     fun start() {
         stopRequested = false
+        AccessibilityLink.noteAlive("host.start")
+        AccessibilityLink.attachRecovery(::onAccessibilityLinkBroken)
         Log.d("XGStartup", "host.start cachedServiceEnabled=" +
             deps.settingsRepository.readSnapshot().serviceEnabled)
         startCollectorsAndLease()
@@ -148,6 +155,37 @@ class EdgeOverlayHost(
                     if (!PermissionHelper.isAccessibilityServiceEnabled(context)) continue
                     ensureStarted()
                     runCatching { overlayManager?.healTriggerAttachments() }
+                    // 悬浮球没有触钮那条“窗口没了就重挂”的路径：这里按服务代次再 apply 一次，
+                    // 命中代次变化时它会自己 dismiss + 重建（幂等，正常路径下只是一次设置比对）。
+                    runCatching { floatBallController?.apply(deps.settingsRepository.readSnapshot()) }
+                }
+            }
+        }
+        if (linkProbeJob == null) {
+            // 进程内探活：系统摘连接**不会**回调 onUnbind，只能自己定期问一次。
+            // `Service.windows` 是少数几个“连接没了就返回空列表”的只读接口，代价是一次 binder 调用。
+            // 连续两次为空才判掉线，避免锁屏/窗口过渡的瞬间误伤。
+            linkProbeJob = scope.launch {
+                var consecutiveFailures = 0
+                while (isActive) {
+                    delay(LINK_PROBE_INTERVAL_MS)
+                    if (stopRequested) return@launch
+                    val service = SlideIndexAccessibilityService.accessibilityInstance() ?: continue
+                    val windowsAlive = withContext(Dispatchers.Default) {
+                        runCatching { service.windows?.isNotEmpty() == true }.getOrDefault(false)
+                    }
+                    if (windowsAlive) {
+                        consecutiveFailures = 0
+                        AccessibilityLink.noteAlive("probe")
+                    } else {
+                        consecutiveFailures++
+                        if (consecutiveFailures >= LINK_PROBE_FAILURES_TO_BROKEN) {
+                            AccessibilityLink.noteBroken(
+                                "probe",
+                                "windows empty for ${consecutiveFailures * LINK_PROBE_INTERVAL_MS / 1000}s",
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -205,17 +243,20 @@ class EdgeOverlayHost(
         // 也会由 OverlayHostLease 把这里的窗口摘掉，避免全屏直触窗留下吞触摸。
         OverlayHostLease.register(
             key = HOST_LEASE_KEY,
-            // 同进程内直接看服务实例：比读 Settings.Secure 更准，也不会在
-            // 覆盖安装/系统重绑的窗口期被一次性误判成"服务已死"而拆家。
-            isOwnerAlive = { SlideIndexAccessibilityService.accessibilityInstance() != null },
+            // 同进程内直接看“链路是否可用”，而不是“实例还在不在”：
+            // 系统摘连接时实例不会消失，只看实例就会把半死状态当成健康，永远不拆窗。
+            isOwnerAlive = { SlideIndexAccessibilityService.isConnected() },
             teardown = ::teardownOverlayWindows,
         )
     }
 
     fun stop() {
         stopRequested = true
+        AccessibilityLink.detachRecovery()
         triggerHealJob?.cancel()
         triggerHealJob = null
+        linkProbeJob?.cancel()
+        linkProbeJob = null
         OverlaySnoozeController.onStateChanged = null
         OverlaySnoozeController.cancel()
         OverlayPerformanceMonitorBinding.onOverlayHidden(context)
@@ -229,6 +270,32 @@ class EdgeOverlayHost(
         OverlayCompose.clearWindowContextCache()
         // 放在最后：万一上面的拆卸半途失败，租约超时还能兜底把残留窗口再摘一次。
         OverlayHostLease.unregister(HOST_LEASE_KEY)
+    }
+
+    /**
+     * 无障碍链路失效时的唯一恢复入口（由 [AccessibilityLink] 调用，已做 60s 节流）。
+     *
+     * 顺序刻意是“先拆、再重绑、最后提示”：
+     * 1. 拆窗：当前所有浮层都建在这一代连接上，连接没了它们要么是僵尸窗口、要么再也挂不上；
+     * 2. 重绑：有 WRITE_SECURE_SETTINGS（Shizuku / adb）时改写系统条目强制重绑；
+     * 3. 提示：重绑失败就发一条可点击的通知 —— ColorOS 上这是唯一 100% 可靠的出路。
+     */
+    private fun onAccessibilityLinkBroken(reason: String) {
+        scope.launch {
+            Log.e(TAG, "accessibility link broken: $reason → teardown + rebind")
+            runCatching { teardownOverlayWindows() }
+                .onFailure { Log.e(TAG, "teardown after link broken failed", it) }
+            val settings = deps.settingsRepository.readSnapshot()
+            val outcome = runCatching {
+                OverlayServiceLifecycle.recoverAccessibilityBindingWithRetries(context, settings)
+            }.getOrNull()
+            if (outcome == AccessibilityRecoverOutcome.Connected) {
+                AccessibilityLink.noteAlive("recover")
+            } else {
+                Log.w(TAG, "accessibility recovery failed (outcome=$outcome), notifying user")
+                runCatching { AccessibilityRecoverNotifier.notifyOffline(context) }
+            }
+        }
     }
 
     /**
@@ -589,6 +656,12 @@ class EdgeOverlayHost(
 
         /** 触钮自愈巡检间隔：足够快（用户几乎察觉不到）又足够便宜。 */
         const val TRIGGER_HEAL_INTERVAL_MS = 12_000L
+
+        /** 无障碍链路探活间隔（连续两次失败才判掉线，见 [LINK_PROBE_FAILURES_TO_BROKEN]）。 */
+        const val LINK_PROBE_INTERVAL_MS = 15_000L
+
+        /** 探活连续失败几次才判掉线：一次空窗口可能只是锁屏/窗口过渡的瞬态。 */
+        const val LINK_PROBE_FAILURES_TO_BROKEN = 2
 
         /** 离开「按应用分档」的迟滞：拉通知栏/弹键盘/过渡态的前台抖动短于此值时不动触钮。 */
         const val PROFILE_SETTLE_MS = 400L

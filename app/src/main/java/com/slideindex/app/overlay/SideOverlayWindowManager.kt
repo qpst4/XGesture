@@ -50,7 +50,12 @@ internal class SideOverlayWindowManager(
 
     private fun addOverlayView(view: View, params: WindowManager.LayoutParams) {
         OverlayWindowTypes.ensureNoBrightnessOverride(params)
-        windowManager.addView(view, params)
+        OverlayWindowGuard.addView(
+            windowManager,
+            view,
+            params,
+            "side-${side}-${view.javaClass.simpleName}",
+        )
         com.slideindex.app.perf.OverlayDrawProbe.attach(
             view,
             "edge-${view.javaClass.simpleName}@${System.identityHashCode(view) % 1000}",

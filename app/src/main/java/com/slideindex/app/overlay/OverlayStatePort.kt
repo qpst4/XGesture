@@ -61,15 +61,22 @@ object OverlayStatePort {
     /** 单进程里本进程就是权威，永远可信。 */
     fun hasServiceState(): Boolean = true
 
-    /** 单进程里没有镜像延迟，永远新鲜。 */
+    /**
+     * 链路是否“新鲜可用”。
+     *
+     * ⚠️ 不能再恒 true：`OverlayGuard` 用 `isServiceConnected() && isServiceStateFresh()`
+     * 做第一道判定，恒 true 会让守护在任何半死状态下都直接返回 Healthy，
+     * 后面的“改设置强制重绑 / 发通知”永远走不到（ColorOS 掉线不自愈的直接原因）。
+     */
     fun isServiceStateFresh(
         @Suppress("UNUSED_PARAMETER") nowMs: Long = 0L,
         @Suppress("UNUSED_PARAMETER") maxAgeMs: Long = 0L,
-    ): Boolean = true
+    ): Boolean = AccessibilityLink.isUsable()
 
+    /** 链路不可用时返回 null，让等待方立刻超时而不是空等。 */
     fun millisSinceServiceState(
         @Suppress("UNUSED_PARAMETER") nowMs: Long = 0L,
-    ): Long? = 0L
+    ): Long? = if (AccessibilityLink.isUsable()) 0L else null
 
     fun foregroundPackage(): String? =
         OverlayService.foregroundPackage ?: SlideIndexAccessibilityService.currentForegroundPackage()
