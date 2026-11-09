@@ -607,3 +607,42 @@ history / holographic / pickresult / quickwheel / ringlauncher / screenshot / sh
 
 **P1-2 口径**：原计划"拆 4 类"已达成（实际 5 类）。
 **P1-3 口径**：面板侧静态入口已全部端口化；根包单例的静态入口未收敛，属 A3 剩余部分。
+
+### 12.14 阶段 C 的真实成本与下一步方案（2026-11-09）
+
+**结论：阶段 C 不能靠"逐文件搬"，必须先把根目录的宿主单例接口化。**
+
+本轮三次尝试（`SideBubble`+`FloatIcon` 1.1k、`FloatBall*` 辅助视图 0.96k、
+leaf 视图 + 布局 2k）全部回退，原因一致：根目录文件之间以及与宿主单例之间的引用密度太高。
+
+根目录 125 个文件的引用密度实测（`overlay/` 根目录内相互引用次数）：
+
+| 符号 | 引用数 |
+| :--- | ---: |
+| `FloatBallOverlay` | 267 |
+| `FloatBallLayout` | 93 |
+| `OverlayManager` | 53 |
+| `FloatBallCursorPreviewView` | 22 |
+| `QuickLauncherOverlayController` | 19 |
+| `EdgeCardOverlayWindow` | 17 |
+| `MessageOverlayHost` | 16 |
+| `RegionalPickOverlay` | 13 |
+| `FloatingPointerOverlayWindow` | 12 |
+
+也就是说：**任何单个文件搬走，平均会连锁 2–5 个未定义符号**；而 `FloatBallOverlay`（267 次）
+不接口化，它周围 100 多个文件全都搬不动。
+
+**建议的 A3 收尾方案（下一步）**：
+
+1. 定义 `FloatBallPort`（只出 6 个方法：`suppressForScreenshotCapture` / `restoreAfterScreenshotCapture` /
+   `scheduleChromeAbovePanels` / `isShowing` / `hideChromeForRingLauncher` / `bringChromeAbovePanels`），
+   `FloatBallOverlay` 实现它，根目录文件改为依赖接口而不是单例。
+2. 同样给 `OverlayManager`（53 次）与 `RegionalPickOverlay`（13 次）各定义一个窄接口。
+3. 三个接口稳定后，根目录的**叶子文件**（视图/渲染器/协调器，约 40 个文件、1.2 万行）就能成批搬入
+   `:feature:overlay-panels`；宿主单例（`FloatBallOverlay` / `ScreenPinManager` / `OverlayManager` /
+   `CNoticeOverlayWindow` / `EdgeCardOverlayWindow`）继续留在 `:app` 作为服务实现。
+4. 这一步做完，`P1-3`（静态入口收敛）与 `P1-1`（`:app` ≤20 万行）才有达成路径：
+   预计可再搬 1.2 万行 + 现有已搬部分，`:app` 落到 22 万左右，还需继续搬 `ui` 才到 20 万以内。
+
+**已交付部分不受影响**：19 个面板组、`:app/overlay` 已从 136,402 降到 50,463 行（-63%），
+编译与全量单测均通过。
