@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_replay_no_jump_info">Ningún objetivo de salto fue capturado</string>
+    <string name="notification_replay_link_recycled">El enlace fue reciclado por el sistema</string>
+</resources>

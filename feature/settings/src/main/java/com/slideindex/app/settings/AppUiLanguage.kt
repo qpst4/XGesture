@@ -5,6 +5,7 @@ enum class AppUiLanguage {
     SYSTEM,
     ZH,
     EN,
+    ES,
     JA,
     AR,
     RU,
@@ -14,6 +15,7 @@ enum class AppUiLanguage {
         SYSTEM -> ""
         ZH -> "zh"
         EN -> "en"
+        ES -> "es"
         JA -> "ja"
         AR -> "ar"
         RU -> "ru"
@@ -23,20 +25,25 @@ enum class AppUiLanguage {
         SYSTEM -> null
         ZH -> "zh"
         EN -> "en"
+        ES -> "es"
         JA -> "ja"
         AR -> "ar"
         RU -> "ru"
     }
 
     companion object {
-        fun fromStorageTag(tag: String?): AppUiLanguage = when (tag?.trim()?.lowercase()) {
-            null, "" -> SYSTEM
-            "zh", "zh-cn", "zh-hans" -> ZH
-            "en" -> EN
-            "ja" -> JA
-            "ar" -> AR
-            "ru" -> RU
-            else -> SYSTEM
+        fun fromStorageTag(tag: String?): AppUiLanguage {
+            val normalized = tag?.trim()?.lowercase().orEmpty()
+            return when {
+                normalized.isEmpty() -> SYSTEM
+                normalized == "zh" || normalized == "zh-cn" || normalized == "zh-hans" -> ZH
+                normalized == "en" -> EN
+                normalized == "es" || normalized.startsWith("es-") -> ES
+                normalized == "ja" -> JA
+                normalized == "ar" -> AR
+                normalized == "ru" -> RU
+                else -> SYSTEM
+            }
         }
     }
 }

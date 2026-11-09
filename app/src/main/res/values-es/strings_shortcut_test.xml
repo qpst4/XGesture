@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="extension_shortcut_test_title">Atajos de prueba</string>
+    <string name="extension_shortcut_test_subtitle">Escaneo publico atajos dinámicos/pintados (requiere Shizuku o Root)</string>
+    <string name="shortcut_test_title">Prueba de acceso directo</string>
+    <string name="shortcut_test_tip">Sólo lectura del servicio de acceso directo del sistema a través de atajos dumpsys. Se requiere Shizuku o Root. Tapping atajo sólo lo lanza a través de la API del sistema.</string>
+    <string name="shortcut_test_search_hint">Aplicación de búsqueda, paquete o acceso directo</string>
+    <string name="shortcut_test_status_loading">Escaneando...</string>
+    <string name="shortcut_test_status_ready">Escáner completo</string>
+    <string name="shortcut_test_status_failed">Scan falló</string>
+    <string name="shortcut_test_status_detail">Aplicaciones %1$d·%2$d pinned /%3$d dinámica /%4$d estática</string>
+    <string name="shortcut_test_status_meta">%1$d ms · crudo %2$d KB</string>
+    <string name="shortcut_test_results">Resultados (%1$d)</string>
+    <string name="shortcut_test_empty">No hay atajos encontrados</string>
+    <string name="shortcut_test_search_empty">Sin atajos iguales</string>
+    <string name="shortcut_test_no_privilege">Se requiere acceso Shizuku o Root. Enable en Ajustes primero.</string>
+    <string name="shortcut_test_command_failed">dumpsys atajo fallado:%1$s</string>
+    <string name="shortcut_test_empty_output">dumpsys atajo no devolvió salida</string>
+    <string name="shortcut_test_parse_empty">No se pueden cortar bloques de Info (%1$s)</string>
+    <string name="shortcut_test_kind_pinned">Pinned</string>
+    <string name="shortcut_test_kind_dynamic">Dinámico</string>
+    <string name="shortcut_test_kind_static">Estático</string>
+    <string name="shortcut_test_copy">Orden de identificación</string>
+    <string name="shortcut_test_copied">Orden de intención copiado</string>
+    <string name="shortcut_test_copy_failed">No podía copiar información de acceso directo</string>
+    <string name="shortcut_test_launch">Ejecución del comando</string>
+    <string name="shortcut_test_launch_failed">El comando falló</string>
+    <string name="shortcut_test_rescan">Rescan</string>
+    <string name="shortcut_test_source_root">Root</string>
+    <string name="shortcut_test_source_shizuku">Shizuku</string>
+    <string name="shortcut_port_tip">Escanear el servicio de acceso directo del sistema, luego lanzar a través del lanzador de acceso directo unificado como Shizuku o Root.</string>
+    <string name="shortcut_port_loading">Carga de atajos...</string>
+    <string name="shortcut_port_ready">Atajos %1$d</string>
+    <string name="shortcut_port_exec_success">El comando tuvo éxito:%1$s</string>
+    <string name="shortcut_port_exec_failed">El comando falló:%1$s</string>
+    <string name="shortcut_port_mode">Modo %1$s</string>
+    <string name="shortcut_port_root">Root</string>
+    <string name="shortcut_port_shizuku">Shizuku</string>
+    <string name="shortcut_port_unknown">—</string>
+    <string name="shortcut_port_rescan">Rescan</string>
+    <string name="shortcut_port_apps">Aplicaciones %1$d</string>
+    <string name="shortcut_port_kinds">Pinned %1$d/ Dynamic %2$d/ Static %3$d</string>
+    <string name="shortcut_port_duration">%1$d ms</string>
+    <string name="shortcut_port_exec_no_output">No hay salida de am</string>
+</resources>

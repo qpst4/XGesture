@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="file_browser_media_today">Hoy</string>
+    <string name="file_browser_media_yesterday">Ayer</string>
+    <string name="file_browser_media_empty">No hay archivos multimedia.</string>
+    <string name="file_browser_media_permission_title">Acceso a los medios necesarios</string>
+    <string name="file_browser_media_permission_hint">Aceptar acceso foto/video/audio, o permitir el acceso de todos los archivos, para navegar por la biblioteca multimedia.</string>
+    <string name="file_browser_media_grant">Acceso a los medios de comunicación</string>
+    <string name="file_browser_media_open_failed">No puedo abrir este archivo multimedia.</string>
+    <string name="file_browser_media_summary">%1$s·%2$d items ·%3$s</string>
+    <string name="file_browser_media_count_size">Artículos %1$d·%2$s</string>
+    <string name="file_browser_media_more">Cargar más</string>
+    <string name="file_browser_media_previous">Anterior</string>
+    <string name="file_browser_media_next">Siguiente</string>
+    <string name="file_browser_media_rotate">Rotar</string>
+    <string name="file_browser_media_image_failed">No puedo abrir esta imagen.</string>
+    <string name="file_browser_media_selected">%1$d seleccionado</string>
+    <string name="file_browser_media_edit">Editar</string>
+    <string name="file_browser_media_pin">Fijar</string>
+    <string name="file_browser_media_ocr">Texto extra</string>
+    <string name="file_browser_media_search">Buscar</string>
+    <string name="file_browser_media_continuous">Continuo</string>
+    <string name="file_browser_media_single">Individual</string>
+    <string name="file_browser_media_details">Detalles</string>
+    <string name="file_browser_media_fit">Fit</string>
+    <string name="file_browser_media_actual_size">1:1</string>
+    <string name="file_browser_media_ocr_empty">No se ha encontrado ningún texto.</string>
+    <string name="file_browser_media_ocr_failed">El reconocimiento de texto falló.</string>
+    <string name="file_browser_media_details_name">Nombre</string>
+    <string name="file_browser_media_details_path">Camino</string>
+    <string name="file_browser_media_details_mime">Tipo</string>
+    <string name="file_browser_media_details_size">Tamaño</string>
+</resources>

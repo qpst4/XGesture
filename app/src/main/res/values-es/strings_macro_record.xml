@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="macro_record_badge">Macro</string>
+    <string name="macro_record_running">Grabación</string>
+    <string name="macro_record_drag_handle">Arrastre</string>
+    <string name="macro_record_counts">Acciones %1$d</string>
+    <string name="macro_record_counts_with_waits">Acciones %1$d· Espera %2$d</string>
+    <string name="macro_record_pause">Pausar</string>
+    <string name="macro_record_resume">Reanudar</string>
+    <string name="macro_record_stop">Detener</string>
+    <string name="macro_record_save">Guardar</string>
+    <string name="macro_record_confirm_discard">¿Desvelar esta grabación?</string>
+    <string name="macro_record_discard">Divulgación</string>
+    <string name="macro_record_keep">Conservar</string>
+    <string name="macro_record_nothing">Todavía no se han registrado pasos.</string>
+    <string name="macro_record_saved">Macro salvó:%1$s</string>
+</resources>
