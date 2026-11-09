@@ -23,6 +23,11 @@ object OverlayWindowGuard {
         params: WindowManager.LayoutParams,
         tag: String,
     ) {
+        // 无名窗口在 `dumpsys window` 里只能看到一个包名，排查泄漏时没法反推来源。
+        // tag 本来就是调用方传进来的稳定标识（如 "corner-overlay"），直接拿来当标题。
+        if (params.title.isNullOrBlank()) {
+            params.title = "XG:$tag"
+        }
         try {
             windowManager.addView(view, params)
         } catch (error: WindowManager.BadTokenException) {

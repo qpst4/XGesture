@@ -40,7 +40,10 @@ object OverlayPanelLayoutParams {
             },
             PixelFormat.TRANSLUCENT
         ).apply {
-            title?.let { this.title = it }
+            // 没显式给 title 的窗口，用"调用者类名"兜底：
+            // `dumpsys window` 里无名窗口无法反推是谁建的，排查内存/窗口泄漏时只能靠猜。
+            // 这里只影响窗口标题（纯诊断信息），不改尺寸/类型/触摸行为。
+            this.title = title ?: "XG:auto-${callerSimpleName()}"
             gravity = Gravity.TOP or Gravity.START
             @Suppress("DEPRECATION")
             this.softInputMode = softInputMode
@@ -94,4 +97,21 @@ object OverlayPanelLayoutParams {
             windowType = OverlayWindowTypes.contentPanelWindowType(context),
             title = "XG:pick-result-panel",
         )
+
+    /**
+     * 距离本次调用最近的、本项目里的那个类名（只用于诊断标题）。
+     *
+     * 跳过本文件自身的栈帧，避免把所有窗口都标成 `OverlayPanelLayoutParams`。
+     * 线程栈只在建窗时取一次，不在热路径上。
+     */
+    private fun callerSimpleName(): String {
+        val frames = Throwable().stackTrace
+        for (frame in frames) {
+            val name = frame.className
+            if (!name.startsWith("com.slideindex")) continue
+            if (name.endsWith("OverlayPanelLayoutParams")) continue
+            return name.substringAfterLast('.')
+        }
+        return "unknown"
+    }
 }
