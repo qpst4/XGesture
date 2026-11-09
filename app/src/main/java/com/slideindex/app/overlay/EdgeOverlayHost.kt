@@ -79,6 +79,10 @@ class EdgeOverlayHost(
     private var stopRequested = false
 
     fun start() {
+        // 进程内只允许一份浮层宿主。系统重绑 / 重复 onServiceConnected 时，新宿主不能只是
+        // 把旧引用覆盖掉：旧宿主的触钮捕获窗与协程会继续活着，和新宿主叠成两套完全重合的
+        // 窗口（点击穿透注入的那一下会被旧层吞掉，真机表现就是「触钮消失底下还有一层」）。
+        stopPreviousHostOnStart()
         stopRequested = false
         AccessibilityLink.noteAlive("host.start")
         AccessibilityLink.attachRecovery(::onAccessibilityLinkBroken)
@@ -87,6 +91,25 @@ class EdgeOverlayHost(
         startCollectorsAndLease()
         ensureStarted()
         Log.d("XGStartup", "host.start done overlayManager=${overlayManager != null}")
+    }
+
+    /**
+     * 新宿主启动前回收进程内上一代宿主。
+     *
+     * 这是「同一进程出现两套触钮窗口」的最后一道防线：即使服务侧漏了 stop，
+     * 新宿主也会在这里把旧宿主的窗口/订阅停干净，保证屏幕上永远只有一套触钮。
+     */
+    private fun stopPreviousHostOnStart() {
+        val previous = synchronized(hostLock) {
+            val existing = activeHost
+            activeHost = this
+            existing
+        }
+        if (previous == null || previous === this) return
+        Log.w(TAG, "start: 上一代 EdgeOverlayHost 仍存活 → 先 stop，避免两套触钮窗口叠加")
+        EdgeDiag.log("host", "start: 上一代 host 仍存活，先 stop 再启动新宿主")
+        runCatching { previous.stop() }
+            .onFailure { Log.e(TAG, "stop previous host failed", it) }
     }
 
     /**
@@ -310,6 +333,9 @@ class EdgeOverlayHost(
         OverlayCompose.clearWindowContextCache()
         // 放在最后：万一上面的拆卸半途失败，租约超时还能兜底把残留窗口再摘一次。
         OverlayHostLease.unregister(HOST_LEASE_KEY)
+        synchronized(hostLock) {
+            if (activeHost === this) activeHost = null
+        }
     }
 
     /**
@@ -697,6 +723,10 @@ class EdgeOverlayHost(
     private companion object {
         const val TAG = "EdgeOverlayHost"
         const val HOST_LEASE_KEY = "edge-overlay-host"
+
+        /** 进程内当前唯一存活的浮层宿主；新宿主 start 时用它回收上一代（见 [stopPreviousHostOnStart]）。 */
+        val hostLock = Any()
+        var activeHost: EdgeOverlayHost? = null
 
         /** 触钮自愈巡检间隔：足够快（用户几乎察觉不到）又足够便宜。 */
         const val TRIGGER_HEAL_INTERVAL_MS = 12_000L

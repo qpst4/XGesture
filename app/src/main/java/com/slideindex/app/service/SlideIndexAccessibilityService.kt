@@ -1005,6 +1005,13 @@ class SlideIndexAccessibilityService : AccessibilityService() {
         instance = this
         instanceGeneration++
         AccessibilityLink.noteAlive("onServiceConnected")
+        // 同一服务实例可能被系统重复回调 onServiceConnected（重绑 / 抖动重绑）。
+        // 旧看门狗注册的熄屏广播与唤醒锁必须先解绑：字段被覆盖后旧对象再没人引用，
+        // 它注册的接收者会一直留着，每重连一次就多一份。
+        if (::watchdog.isInitialized) {
+            runCatching { watchdog.unregisterScreenLockReceiver() }
+            runCatching { watchdog.releaseWakeLock() }
+        }
         // 上一代手势动画的 Compose 组合属于已被系统摘掉的窗口：不丢就会出现
         // “状态机在跑（onDrag/snapTo 都有）但屏幕上一个像素都没有”。重连即重建。
         runCatching { GestureAnimationOverlayRegistry.detachAll() }
@@ -1021,6 +1028,11 @@ class SlideIndexAccessibilityService : AccessibilityService() {
             }
         )
         watchdog.syncLockScreenState()
+        // 重复连接时旧宿主必须显式 stop：只覆盖引用会让它的触钮窗口与协程继续活着，
+        // 和新宿主叠成两套完全重合的窗口——点击穿透注入的那一下会被旧层吞掉，
+        // 真机表现就是「触钮消失底下还有一层」。
+        runCatching { edgeOverlayHost?.stop() }
+        edgeOverlayHost = null
         edgeOverlayHost = EdgeOverlayHost(this, serviceScope, deps).also { it.start() }
         watchdog.registerScreenLockReceiver()
         lastOrientation = resources.configuration.orientation
