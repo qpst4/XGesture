@@ -16,7 +16,7 @@ import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
 import com.slideindex.app.gesture.SelectedHintMetrics
 import com.slideindex.app.overlay.SystemWallpaperBlurHelper
-import com.slideindex.app.overlay.WallpaperPermissionTrampolineActivity
+import com.slideindex.app.overlay.WallpaperPermissionLauncher
 import com.slideindex.app.settings.HoneycombDisplaySettings
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_100

@@ -28,9 +28,23 @@ class LaunchTrampolineActivity : Activity() {
         val fallbackIntent = readFallbackIntent()
         val launchIntent = readLaunchIntent()
         val shortcutPackage = intent.getStringExtra(EXTRA_SHORTCUT_PACKAGE)
+        val wantsAssist = intent.getBooleanExtra(EXTRA_ASSIST, false)
+        val wantsRestorePin = intent.getBooleanExtra(EXTRA_RESTORE_PIN, false)
+        val wantsWallpaperPermission = intent.getBooleanExtra(EXTRA_WALLPAPER_PERMISSION, false)
         val shortcutId = intent.getStringExtra(EXTRA_SHORTCUT_ID)
         window.decorView.post {
             when {
+                wantsAssist -> {
+                    com.slideindex.app.util.AssistantLauncher.launchFromActivity(this)
+                }
+                wantsRestorePin -> {
+                    com.slideindex.app.stash.StashPinNotificationHelper
+                        .restoreToScreenPin(applicationContext)
+                }
+                wantsWallpaperPermission -> {
+                    com.slideindex.app.overlay.SystemWallpaperBlurHelper
+                        .requestWallpaperPermission(this)
+                }
                 !pendingIntentEncoded.isNullOrBlank() -> {
                     sendStoredPendingIntent(pendingIntentEncoded, fallbackIntent)
                 }
@@ -212,6 +226,30 @@ class LaunchTrampolineActivity : Activity() {
         private const val EXTRA_SHARE_PROXY = "share_proxy"
         private const val EXTRA_SHORTCUT_PACKAGE = "shortcut_package"
         private const val EXTRA_SHORTCUT_ID = "shortcut_id"
+        private const val EXTRA_ASSIST = "assist_launch"
+        private const val EXTRA_RESTORE_PIN = "restore_pin"
+        private const val EXTRA_WALLPAPER_PERMISSION = "wallpaper_permission"
+
+        /** 拉起系统助手：「助手」类 Intent 必须在 Activity 里发起。 */
+        fun createAssistIntent(context: Context): Intent =
+            Intent(context, LaunchTrampolineActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                putExtra(EXTRA_ASSIST, true)
+            }
+
+        /** 通知里「恢复钉图」的一次性入口（内容 Intent 不能用 BroadcastReceiver）。 */
+        fun createRestorePinIntent(context: Context): Intent =
+            Intent(context, LaunchTrampolineActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                putExtra(EXTRA_RESTORE_PIN, true)
+            }
+
+        /** 跳转「所有文件访问权限」页：壁纸模糊需要。 */
+        fun createWallpaperPermissionIntent(context: Context): Intent =
+            Intent(context, LaunchTrampolineActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                putExtra(EXTRA_WALLPAPER_PERMISSION, true)
+            }
 
         fun createPendingIntentIntent(
             context: Context,

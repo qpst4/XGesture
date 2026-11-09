@@ -18,7 +18,7 @@ import android.os.Looper
 import android.os.Process
 import android.provider.Settings
 import android.util.Log
-import com.slideindex.app.service.AssistTrampolineActivity
+import com.slideindex.app.service.LaunchTrampolineActivity
 
 /**
  * Launch the user's default digital assistant (Gemini, Bixby, 小爱, 小艺, Aicy, etc.).
@@ -57,7 +57,7 @@ object AssistantLauncher {
         }.start()
     }
 
-    /** Called from [AssistTrampolineActivity] while in the foreground. */
+    /** Called from [LaunchTrampolineActivity] while in the foreground. */
     internal fun launchFromActivity(activity: Activity): Boolean {
         if (tryLaunchCore(activity)) return true
         if (tryLaunchViaShizuku(activity)) return true
@@ -184,7 +184,7 @@ object AssistantLauncher {
     private fun startTrampolineActivity(context: Context): Boolean =
         runCatching {
             context.startActivity(
-                AssistTrampolineActivity.createIntent(context).apply {
+                LaunchTrampolineActivity.createAssistIntent(context).apply {
                     flags = flags or LAUNCH_FLAGS
                 },
             )
@@ -197,7 +197,7 @@ object AssistantLauncher {
 
     private fun startPendingIntentTrampoline(context: Context): Boolean =
         runCatching {
-            val intent = AssistTrampolineActivity.createIntent(context)
+            val intent = LaunchTrampolineActivity.createAssistIntent(context)
             val pendingIntent = createTrampolinePendingIntent(context, intent)
             val sendOptions = createPendingIntentSendOptions()
             if (sendOptions != null) {

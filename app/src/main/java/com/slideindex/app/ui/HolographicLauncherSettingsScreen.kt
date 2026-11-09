@@ -13,7 +13,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
 import com.slideindex.app.overlay.SystemWallpaperBlurHelper
-import com.slideindex.app.overlay.WallpaperPermissionTrampolineActivity
+import com.slideindex.app.overlay.WallpaperPermissionLauncher
 import com.slideindex.app.settings.HolographicAppMode
 import com.slideindex.app.settings.HolographicLauncherSettings
 import com.slideindex.app.ui.miuix.groupedCardItems

@@ -16,7 +16,7 @@ import com.slideindex.app.ui.gesturepicker.gestureActionPermissionHintText
 import com.slideindex.app.ui.gesturepicker.isGestureActionEnabledOnDevice
 import com.slideindex.app.ui.gesturepicker.requestPermissionForAdjustAction
 import com.slideindex.app.overlay.SystemWallpaperBlurHelper
-import com.slideindex.app.overlay.WallpaperPermissionTrampolineActivity
+import com.slideindex.app.overlay.WallpaperPermissionLauncher
 import com.slideindex.app.settings.HoneycombDisplaySettings
 import com.slideindex.app.settings.HolographicLauncherSettings
 import com.slideindex.app.settings.SearchPanelBackgroundStyle

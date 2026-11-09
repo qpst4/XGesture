@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
 import com.slideindex.app.overlay.SystemWallpaperBlurHelper
-import com.slideindex.app.overlay.WallpaperPermissionTrampolineActivity
+import com.slideindex.app.overlay.WallpaperPermissionLauncher
 import com.slideindex.app.overlay.pickresult.SearchEngineIcon
 import com.slideindex.app.overlay.pickresult.searchIconSizeForColumns
 import com.slideindex.app.settings.AppSettings

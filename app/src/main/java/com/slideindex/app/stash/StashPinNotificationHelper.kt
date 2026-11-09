@@ -13,7 +13,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.slideindex.app.R
 import com.slideindex.app.overlay.ScreenPinManager
-import com.slideindex.app.service.PinNotificationRestoreTrampolineActivity
+import com.slideindex.app.service.LaunchTrampolineActivity
 import java.io.File
 import java.io.FileOutputStream
 import kotlinx.serialization.json.Json
@@ -71,7 +71,7 @@ internal object StashPinNotificationHelper {
         val contentIntent = PendingIntent.getActivity(
             context,
             RESTORE_REQUEST_CODE,
-            Intent(context, PinNotificationRestoreTrampolineActivity::class.java).apply {
+            LaunchTrampolineActivity.createRestorePinIntent(context).apply {
                 action = ACTION_RESTORE_PIN
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE

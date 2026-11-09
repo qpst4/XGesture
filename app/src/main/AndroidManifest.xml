@@ -214,17 +214,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
-        <activity
-            android:name=".service.AssistTrampolineActivity"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:noHistory="true"
-            android:taskAffinity=""
-            android:theme="@style/Theme.SlideIndex.Transparent" />
-
-        <activity
+<activity
             android:name=".service.InputMethodPickerTrampolineActivity"
             android:excludeFromRecents="true"
             android:exported="false"
@@ -506,17 +496,7 @@
             android:launchMode="singleTask"
             android:taskAffinity=""
             android:theme="@style/Theme.SlideIndex.Transparent" />
-
-        <activity
-            android:name=".overlay.WallpaperPermissionTrampolineActivity"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:noHistory="true"
-            android:taskAffinity=""
-            android:theme="@style/Theme.SlideIndex.Transparent" />
-
-        <activity
+<activity
             android:name=".service.ToggleGestureTrampolineActivity"
             android:excludeFromRecents="true"
             android:exported="true"
@@ -894,15 +874,7 @@
                 <data android:scheme="package" />
             </intent-filter>
         </receiver>
-
-        <activity
-            android:name=".service.PinNotificationRestoreTrampolineActivity"
-            android:exported="false"
-            android:excludeFromRecents="true"
-            android:noHistory="true"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-
-        <receiver
+<receiver
             android:name=".receiver.NotificationBootReceiver"
             android:exported="false">
             <intent-filter>
