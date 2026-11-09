@@ -190,8 +190,14 @@ class EdgeOverlayHost(
             // 周期自愈：触钮"设置里开着、屏幕上没有"时自己挂回来。
             // 只发生在事件丢失/半重建之后，正常路径下是一次很便宜的判断。
             triggerHealJob = scope.launch {
+                val startedAtMs = android.os.SystemClock.elapsedRealtime()
                 while (isActive) {
-                    delay(TRIGGER_HEAL_INTERVAL_MS)
+                    // 启动期用更密的节奏：设置在进程冷启动后 1~10s 才加载完是常态，
+                    // 12s 一次的节奏会让触钮比悬浮球晚十几秒才出现（真机实测 9~11s）。
+                    // 启动窗口内 1.5s 一次，加载完立刻补 apply；之后恢复 12s 的日常节奏。
+                    val warmingUp = android.os.SystemClock.elapsedRealtime() - startedAtMs <
+                        STARTUP_WARMUP_MS
+                    delay(if (warmingUp) STARTUP_HEAL_INTERVAL_MS else TRIGGER_HEAL_INTERVAL_MS)
                     if (stopRequested) return@launch
                     if (!PermissionHelper.isAccessibilityServiceEnabled(context)) continue
                     ensureStarted()
@@ -694,6 +700,12 @@ class EdgeOverlayHost(
 
         /** 触钮自愈巡检间隔：足够快（用户几乎察觉不到）又足够便宜。 */
         const val TRIGGER_HEAL_INTERVAL_MS = 12_000L
+
+        /** 启动期自愈的加速窗口：这段时间内用 [STARTUP_HEAL_INTERVAL_MS] 的节奏。 */
+        const val STARTUP_WARMUP_MS = 20_000L
+
+        /** 启动期自愈间隔：只用来尽快补上“设置加载完但还没应用”的那一帧。 */
+        const val STARTUP_HEAL_INTERVAL_MS = 1_500L
 
         /** 无障碍链路探活间隔（连续两次失败才判掉线，见 [LINK_PROBE_FAILURES_TO_BROKEN]）。 */
         const val LINK_PROBE_INTERVAL_MS = 15_000L
