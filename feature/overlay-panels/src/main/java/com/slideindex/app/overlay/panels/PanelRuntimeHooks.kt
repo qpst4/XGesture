@@ -244,16 +244,6 @@ object PanelRuntimeHooks {
     @Volatile
     var expandPanelSlotPicker: PanelExpandSlotPicker? = null
 
-    /** 打开取词/取图结果面板（`:app` 的 FloatBallPickResultPanel）。 */
-    @Volatile
-    var showPickResultPanel:
-        ((
-            Context,
-            Float,
-            Float,
-            com.slideindex.app.overlay.FloatBallPickResult,
-            com.slideindex.app.overlay.pickresult.PickResultTextMode,
-        ) -> Unit)? = null
     /** 屏幕熄灭时注册一次性回调（`:app` 的 ScreenOffDismissReceiver）。返回注销函数。 */
     @Volatile
     var registerScreenOffDismiss: ((Context, () -> Unit) -> (() -> Unit))? = null
