@@ -62,8 +62,11 @@ class EdgeOverlayHost(
 
     fun start() {
         stopRequested = false
+        Log.d("XGStartup", "host.start cachedServiceEnabled=" +
+            deps.settingsRepository.readSnapshot().serviceEnabled)
         startCollectorsAndLease()
         ensureStarted()
+        Log.d("XGStartup", "host.start done overlayManager=${overlayManager != null}")
     }
 
     /**
@@ -172,6 +175,8 @@ class EdgeOverlayHost(
                 ) { _, _ ->
                     deps.settingsRepository.readSnapshot()
                 }.collectLatest { settings ->
+                    Log.d("XGStartup", "settings emission serviceEnabled=" +
+                        settings.serviceEnabled + " manager=" + (overlayManager != null))
                     if (!PermissionHelper.isAccessibilityServiceEnabled(context)) {
                         // 服务不可用：拆掉窗口，但保留订阅，恢复后由 ensureStarted() 重建。
                         teardownOverlayWindows()

@@ -58,8 +58,11 @@ class OverlayManager(
     private var refreshVisibilityPending = false
 
     fun applySettings(settings: AppSettings) {
+        Log.d("XGStartup", "applySettings serviceEnabled=" + settings.serviceEnabled +
+            " triggersShown=" + triggersShown + " suppressed=" + triggersSuppressed)
         currentSettings = settings
         if (!settings.serviceEnabled) {
+            Log.d("XGStartup", "applySettings SKIP: serviceEnabled=false")
             clearAllOverlayBrightness()
             leftController?.destroy()
             rightController?.destroy()
@@ -97,7 +100,16 @@ class OverlayManager(
         settings: AppSettings,
         metrics: ScreenMetricsSnapshot = OverlayScreenMetrics.snapshot(context)
     ) {
-        if (!settings.serviceEnabled || triggersSuppressed) return
+        if (!settings.serviceEnabled || triggersSuppressed) {
+            Log.d("XGStartup", "ensureSideEdges SKIP serviceEnabled=" + settings.serviceEnabled +
+                " suppressed=" + triggersSuppressed)
+            return
+        }
+        Log.d("XGStartup", "ensureSideEdges attach left=" +
+            settings.runtimeTriggerHandles(PanelSide.LEFT, metrics.isLandscape).size +
+            " right=" + settings.runtimeTriggerHandles(PanelSide.RIGHT, metrics.isLandscape).size +
+            " bottom=" + settings.runtimeTriggerHandles(PanelSide.BOTTOM, metrics.isLandscape).size +
+            " top=" + settings.runtimeTriggerHandles(PanelSide.TOP, metrics.isLandscape).size)
         ensureSideEdge(PanelSide.LEFT, leftController, settings, metrics)
         ensureSideEdge(PanelSide.RIGHT, rightController, settings, metrics)
         ensureSideEdge(PanelSide.BOTTOM, bottomController, settings, metrics)
@@ -155,9 +167,18 @@ class OverlayManager(
     fun healTriggerAttachments(
         metrics: ScreenMetricsSnapshot = OverlayScreenMetrics.snapshot(context)
     ): Boolean {
-        if (!currentSettings.serviceEnabled) return false
-        if (OverlayTrampolineGuard.blocksOverlayPresentationTouch()) return false
-        if (shouldSuppressTrigger()) return false
+        if (!currentSettings.serviceEnabled) {
+            Log.d("XGStartup", "heal SKIP serviceEnabled=false")
+            return false
+        }
+        if (OverlayTrampolineGuard.blocksOverlayPresentationTouch()) {
+            Log.d("XGStartup", "heal SKIP trampolineGuard")
+            return false
+        }
+        if (shouldSuppressTrigger()) {
+            Log.d("XGStartup", "heal SKIP suppressed")
+            return false
+        }
 
         val sides = listOf(
             PanelSide.LEFT to leftController,
@@ -170,7 +191,10 @@ class OverlayManager(
                 currentSettings.runtimeTriggerHandles(side, metrics.isLandscape).isNotEmpty() &&
                 !controller.hasTriggerAttachments()
         }
-        if (missing.isEmpty()) return false
+        if (missing.isEmpty()) {
+            Log.d("XGStartup", "heal nothing-missing")
+            return false
+        }
 
         Log.w(
             TAG,
