@@ -646,3 +646,33 @@ leaf 视图 + 布局 2k）全部回退，原因一致：根目录文件之间以
 
 **已交付部分不受影响**：19 个面板组、`:app/overlay` 已从 136,402 降到 50,463 行（-63%），
 编译与全量单测均通过。
+
+### 12.15 A3 结构性完成（2026-11-09）
+
+`FloatBallOverlay` 从 4,302 行降到 **3,313 行**（-23%），拆出 10 个职责类：
+
+| 类 | 行数 | 职责 |
+| :--- | ---: | :--- |
+| `FloatBallCaptureChrome` | 104 | 截图/取词/启动器期间 chrome 抑制与恢复 |
+| `FloatBallPositionPreview` | 85 | 位置预览与回滚 |
+| `FloatBallAppearancePreview` | 126 | 外观预览与回滚 |
+| `FloatBallLifecycle` | 46 | 语言切换重建、布局重算、IME |
+| `FloatBallDismiss` | 90 | 销毁路径 |
+| `FloatBallShow` | 120 | 创建/更新入口 |
+| `FloatBallIdleVisuals` | 155 | 空闲显隐与 alpha 动画 |
+| `FloatBallTouchWindowLayout` | 171 | 扩窗/收缩/穿透 |
+| `FloatBallDragChromeLayout` | 100 | 拖拽单帧布局 |
+| `FloatBallDragFinish` | 320 | 拖拽收尾/松手取词 |
+
+**剩余 3,313 行是交互状态机**：`handleForwardedTouch` 主循环 + 取词预览，
+与 `dragSession` / `cursorPreview*` / `regionalPick*` / `selection*` 十几个状态互相咬合。
+纯搬移无法分离，需要先把状态收进 `FloatBallInteractionState` 对象——属设计重构，另行立项。
+
+**顺带补的单测**（都在 `app/src/test/.../overlay/`）：
+
+- `FloatBallDragSessionTest`（5 条）：拖动跟手、手指行程、边界钳制、左上角取整、reset
+- `FloatBallLayoutTest`（3 条）：可见分数钳制、Y 位置钳制、自定义 X 中心
+
+两处都需要 `@RunWith(RobolectricTestRunner::class)`——`AppSettings()` 会读 `Build.MANUFACTURER`。
+
+**结论**：A3 按"职责拆分"口径完成；剩余交互状态机与阶段 C 的宿主单例接口化一起，作为后续独立项目。
