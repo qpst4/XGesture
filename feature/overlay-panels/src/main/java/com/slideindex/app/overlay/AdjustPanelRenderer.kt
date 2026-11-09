@@ -219,23 +219,23 @@ class AdjustPanelRenderer(
     }
 
     private fun resolveVolumePanelVisual(): VolumePanelVisual? {
+        val executor = host.actionHost()
         ctrl.adjustPanelState?.takeIf { it.mode == com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME }?.let { state ->
             return VolumePanelVisual(
                 expanded = state.volumeExpanded,
                 ringFraction = state.ringFraction,
                 notificationFraction = state.notificationFraction,
                 ringerMode = state.ringerMode,
-                interruptionFilter = state.interruptionFilter
+                dndEnabled = executor.isDndFilter(state.interruptionFilter)
             )
         }
         if (host.currentAdjustMode() != com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME) return null
-        val executor = host.actionHost()
         return VolumePanelVisual(
             expanded = false,
             ringFraction = executor.readVolumeFraction(com.slideindex.app.overlay.panels.PanelVolumeStream.RING),
             notificationFraction = executor.readVolumeFraction(com.slideindex.app.overlay.panels.PanelVolumeStream.NOTIFICATION),
             ringerMode = executor.readRingerMode(),
-            interruptionFilter = executor.readInterruptionFilter()
+            dndEnabled = executor.isDndFilter(executor.readInterruptionFilter())
         )
     }
 

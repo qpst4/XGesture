@@ -35,7 +35,8 @@ data class VolumePanelVisual(
     val ringFraction: Float,
     val notificationFraction: Float,
     val ringerMode: Int,
-    val interruptionFilter: Int
+    /** 勿扰是否开启。由 [com.slideindex.app.overlay.panels.PanelActionHost.isDndFilter] 判定后传入，渲染层不再自行解释 filter。 */
+    val dndEnabled: Boolean
 )
 
 data class AdjustLevelIndicatorLayout(

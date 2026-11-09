@@ -52,9 +52,7 @@ object AdjustLevelIndicatorRenderer {
                         density = density,
                         alphaScale = alphaScale,
                         shadowAlphaScale = shadowAlphaScale,
-                        dndEnabled = volumePanel?.let {
-                            it.interruptionFilter.let { f -> true }
-                        } == true,
+                        dndEnabled = volumePanel?.dndEnabled == true,
                         context = context
                     )
                 }
