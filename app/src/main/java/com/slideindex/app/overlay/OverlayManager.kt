@@ -205,14 +205,11 @@ class OverlayManager(
             return false
         }
 
-        Log.w(
-            TAG,
-            "触钮缺失，自愈重挂: $missing " +
-                "(serviceEnabled=${currentSettings.serviceEnabled}, " +
-                "triggersShown=$triggersShown, " +
-                "triggersSuppressed=$triggersSuppressed, " +
-                "foreground=${OverlayService.foregroundPackage})",
-        )
+        Log.w(TAG, "触钮缺失，自愈重挂: $missing " +
+            "(serviceEnabled=${currentSettings.serviceEnabled}, " +
+            "triggersShown=$triggersShown, " +
+            "triggersSuppressed=$triggersSuppressed, " +
+            "foreground=${OverlayService.foregroundPackage})")
         triggersSuppressed = false
         triggersShown = true
         ensureSideEdgesForHandles(currentSettings, metrics)
@@ -431,10 +428,7 @@ class OverlayManager(
         if (missingTriggerSides().isEmpty()) return
         triggerAttachRetryPending = true
         triggerAttachRetriesLeft--
-        Log.w(
-            TAG,
-            "触钮未挂齐，${TRIGGER_ATTACH_RETRY_MS}ms 后补挂（剩余 $triggerAttachRetriesLeft 次）",
-        )
+        Log.w(TAG, "触钮未挂齐，${TRIGGER_ATTACH_RETRY_MS}ms 后补挂（剩余 $triggerAttachRetriesLeft 次）")
         mainHandler.postDelayed({
             triggerAttachRetryPending = false
             refreshTriggerVisibilityNow()

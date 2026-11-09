@@ -1,5 +1,6 @@
 package com.slideindex.app.overlay.history
 
+import android.text.format.DateFormat
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalLocale
@@ -22,7 +23,7 @@ fun formatHistoryRelativeTime(epochMs: Long): String {
             val now = Calendar.getInstance()
             val then = Calendar.getInstance().apply { timeInMillis = epochMs }
             val pattern = if (now.get(Calendar.YEAR) == then.get(Calendar.YEAR)) {
-                if (locale.language == "zh") "M月d日" else "MMM d"
+                DateFormat.getBestDateTimePattern(locale, "MMMd")
             } else {
                 "yyyy/M/d"
             }
@@ -49,7 +50,7 @@ fun formatReminderTime(epochMs: Long): String {
             stringResource(R.string.stash_remind_tomorrow)
         }
         else -> {
-            val pattern = if (locale.language == "zh") "M月d日" else "MMM d"
+            val pattern = DateFormat.getBestDateTimePattern(locale, "MMMd")
             SimpleDateFormat(pattern, locale).format(Date(epochMs))
         }
     }

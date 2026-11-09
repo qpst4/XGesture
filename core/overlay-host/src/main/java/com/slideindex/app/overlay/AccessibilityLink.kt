@@ -81,7 +81,12 @@ object AccessibilityLink {
 
     fun lastRecoveryResult(): String = lastRecoveryResult
 
-    /** 记录一次恢复结果（成功 / 失败原因），诊断报告会原样带出。 */
+    /**
+     * 记录一次恢复结果，诊断报告会原样带出。
+     *
+     * 传**与语言无关的 ASCII 标识**（`ok` / `in_progress` / `failed(<outcome>)`）：这个值会进
+     * 崩溃报告，既不该被当作可翻译的 UI 字符串，也更利于日志检索。
+     */
     fun noteRecoveryResult(result: String) {
         lastRecoveryResult = result
     }
@@ -120,7 +125,7 @@ object AccessibilityLink {
         }
         lastRecoveryAtMs = now
         recoveryAttempts++
-        lastRecoveryResult = "进行中"
+        lastRecoveryResult = "in_progress"
         val handler = recoveryHandler
         if (handler == null) {
             Log.w(TAG, "no recovery handler attached, only logging")

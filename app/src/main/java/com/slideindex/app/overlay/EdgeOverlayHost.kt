@@ -331,10 +331,10 @@ class EdgeOverlayHost(
             }.getOrNull()
             if (outcome == AccessibilityRecoverOutcome.Connected) {
                 AccessibilityLink.noteAlive("recover")
-                AccessibilityLink.noteRecoveryResult("成功")
+                AccessibilityLink.noteRecoveryResult("ok")
             } else {
                 Log.w(TAG, "accessibility recovery failed (outcome=$outcome), notifying user")
-                AccessibilityLink.noteRecoveryResult("失败（$outcome，已发通知）")
+                AccessibilityLink.noteRecoveryResult("failed($outcome)")
                 runCatching { AccessibilityRecoverNotifier.notifyOffline(context) }
             }
         }

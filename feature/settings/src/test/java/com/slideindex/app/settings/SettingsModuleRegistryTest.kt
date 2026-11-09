@@ -90,10 +90,11 @@ class SettingsModuleRegistryTest {
             .toSet()
 
     private companion object {
-        // 670 = 666 + app_carousel_slide_{reversed,sensitivity}（QUICK_LAUNCHER）
+        // 671 = 666 + app_carousel_slide_{reversed,sensitivity}（QUICK_LAUNCHER）
         //       + shake_menus_json / shake_menu_guard_ms / shake_menu_display_delay_ms（SHAKE）
-        //       - shake_menu_actions（bad9b0b0 起被上面三个键取代）。
-        const val EXPECTED_TOTAL_KEYS = 670
+        //       - shake_menu_actions（bad9b0b0 起被上面三个键取代）
+        //       + settings_schema_version（GENERAL，96da46a5 的 schema 版本键）。
+        const val EXPECTED_TOTAL_KEYS = 671
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
             SettingsModule.EDGE_GESTURE to 84,
@@ -116,7 +117,7 @@ class SettingsModuleRegistryTest {
             SettingsModule.SHELL to 1,
             SettingsModule.ACTIVITY_SHORTCUTS to 3,
             SettingsModule.THEME_UI to 19,
-            SettingsModule.GENERAL to 23,
+            SettingsModule.GENERAL to 24,
         )
     }
 }

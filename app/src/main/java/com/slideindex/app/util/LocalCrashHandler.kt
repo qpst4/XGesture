@@ -1,3 +1,5 @@
+// i18n-ignore-file —— 本文件只拼中文「诊断与排错报告」，是用户复制给开发者看的诊断数据，
+// 不随界面语言切换，不是 UI 文案；故整体豁免 scripts/check-hardcoded-strings.py。
 package com.slideindex.app.util
 
 import android.content.Context
