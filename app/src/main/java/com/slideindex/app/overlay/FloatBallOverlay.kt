@@ -105,10 +105,10 @@ object FloatBallOverlay {
     private const val FLOAT_BALL_PASSTHROUGH_RESTORE_DELAY_MS = 140L
 
     /** 闲置隐身：显形 / 隐身的淡入淡出时长。 */
-    private const val BALL_REVEAL_FADE_MS = 120L
-    private const val BALL_HIDE_FADE_MS = 200L
+    internal const val BALL_REVEAL_FADE_MS = 120L
+    internal const val BALL_HIDE_FADE_MS = 200L
     /** 闲置判定时长上限（与设置层 clamp 一致）。 */
-    private const val BALL_IDLE_DELAY_MAX_MS = 10_000
+    internal const val BALL_IDLE_DELAY_MAX_MS = 10_000
 
     /** "提交后的 Y 预览值"顶住多久；设置落盘正常都在几十毫秒内，超时就放手避免卡住旧值。 */
     private const val PENDING_POSITION_Y_TIMEOUT_MS = 1_500L
@@ -186,10 +186,10 @@ object FloatBallOverlay {
     private var ballForceRevealed = false
     /** 最近一次写入 alpha 后视镜：null = 跟随设置不透明度。 */
     internal var ballAlphaOverrideValue: Float? = null
-    private var ballAlphaAnimator: ValueAnimator? = null
-    private var ballIdleHideRunnable: Runnable? = null
+    internal var ballAlphaAnimator: ValueAnimator? = null
+    internal var ballIdleHideRunnable: Runnable? = null
     /** 当前挂着的隐身计时用的是多长判定时长（-1 = 没有计时）。 */
-    private var ballIdleHideDelayMs = -1
+    internal var ballIdleHideDelayMs = -1
 
     internal var sceneState: FloatBallSceneState? = null
 
@@ -609,157 +609,25 @@ object FloatBallOverlay {
 
     // —— 闲置隐身 ——
 
-    /**
-     * 按当前设置把球的渲染 alpha 对齐到「显示 / 闲置」。
-     *
-     * [animate] 只用于"触摸显形 / 回到闲置"两个瞬间；设置回流、开关切换一律立即生效。
-     */
-    internal fun syncBallIdleAlpha(settings: AppSettings, animate: Boolean) {
-        if (ballIconView == null) return
-        val shown = ballRevealed || ballPressed || ballForceRevealed || isDragging
-        publishBallIdleTarget(settings, shown)
-        applyBallGifFreeze(settings, shown)
-        if (!idleVisualsEnabled(settings)) {
-            cancelBallAlphaAnimation()
-            cancelBallIdleHide()
-            ballRevealed = true
-            applyBallAlpha(null)
-            return
-        }
-        val target = if (shown || !settings.floatBallHideWhenIdle) null else settings.floatBallIdleOpacity
-        if (animate) {
-            animateBallAlphaTo(target, settings)
-        } else {
-            cancelBallAlphaAnimation()
-            applyBallAlpha(target)
-        }
-        if (shown && !ballPressed && !ballForceRevealed && !isDragging) {
-            ensureBallIdleHideScheduled(settings)
-        }
+    internal fun syncBallIdleAlpha(settings: AppSettings, animate: Boolean) =
+        FloatBallIdleVisuals.syncBallIdleAlpha(settings, animate)
+
+    internal fun cancelBallAlphaAnimation() = FloatBallIdleVisuals.cancelBallAlphaAnimation()
+
+    internal fun onFloatBallPressed() = FloatBallIdleVisuals.onFloatBallPressed()
+
+    internal fun onFloatBallReleased() = FloatBallIdleVisuals.onFloatBallReleased()
+
+    internal fun isBallForceRevealed(): Boolean = ballForceRevealed
+
+    internal fun setBallForceRevealedFlag(value: Boolean) {
+        ballForceRevealed = value
     }
 
-    /** null = 跟随设置不透明度；非 null = 闲置隐身直接指定的 alpha。 */
-    private fun applyBallAlpha(value: Float?) {
-        ballAlphaOverrideValue = value
-        ballIconView?.setAlphaOverride(value)
-    }
+    internal fun setBallForceRevealed(active: Boolean) =
+        FloatBallIdleVisuals.setBallForceRevealed(active)
 
-    /** 闲置相关的视觉开关：隐身和「闲置定格动图」任意一个开着，都继续跑闲置计时。 */
-    private fun idleVisualsEnabled(settings: AppSettings): Boolean =
-        settings.floatBallHideWhenIdle || settings.floatBallIdleFreezeGif
-
-    /** 闲置定格：球仍可见，但停止 GIF 出帧；触摸/拖动由 shown 恢复。 */
-    private fun applyBallGifFreeze(settings: AppSettings, shown: Boolean) {
-                ballIconView?.setGifFrozen(!shown && settings.floatBallIdleFreezeGif)
-    }
-
-    /** 把「当前该不该隐身」发布给窗内那份球（BOTH_EDGES 模式下球画在触摸窗里）。 */
-    private fun publishBallIdleTarget(settings: AppSettings, shown: Boolean) {
-        val state = sceneState ?: return
-        state.ballIdleHidden.value = settings.floatBallHideWhenIdle && !shown
-        state.ballIdleOpacity.value = settings.floatBallIdleOpacity.coerceIn(0f, 1f)
-    }
-
-    private fun animateBallAlphaTo(target: Float?, settings: AppSettings) {
-        val end = target ?: settings.floatBallOpacity
-        val start = ballAlphaOverrideValue ?: settings.floatBallOpacity
-        if (abs(start - end) < 0.01f) {
-            cancelBallAlphaAnimation()
-            applyBallAlpha(target)
-            return
-        }
-        cancelBallAlphaAnimation()
-        val animator = ValueAnimator.ofFloat(start, end)
-        animator.duration = if (end < start) BALL_HIDE_FADE_MS else BALL_REVEAL_FADE_MS
-        animator.addUpdateListener { animation ->
-            applyBallAlpha(animation.animatedValue as Float)
-        }
-        animator.addListener(object : AnimatorListenerAdapter() {
-            private var cancelled = false
-
-            override fun onAnimationCancel(animation: Animator) {
-                cancelled = true
-            }
-
-            override fun onAnimationEnd(animation: Animator) {
-                if (!cancelled) applyBallAlpha(target)
-            }
-        })
-        ballAlphaAnimator = animator
-        animator.start()
-    }
-
-    internal fun cancelBallAlphaAnimation() {
-        val animator = ballAlphaAnimator
-        ballAlphaAnimator = null
-        animator?.cancel()
-    }
-
-    /** 触摸按下、命中球区：立即显形并取消待隐身。 */
-    private fun onFloatBallPressed() {
-        // 新一轮按下（按在球上）：清掉上一轮可能残留的侧向覆盖。
-        // 残留会让下一次拖动把红十字的起点算到对面去（"像从另一侧拖过来"）。
-        dragActiveSideOverride = null
-        activeSideAtDragStart = null
-        ballPressed = true
-        cancelBallIdleHide()
-        if (ballRevealed) return
-        ballRevealed = true
-        settingsState?.value?.let { syncBallIdleAlpha(it, animate = true) }
-    }
-
-    /** 抬手/取消/手势收尾：按闲置判定时长安排隐身。 */
-    private fun onFloatBallReleased() {
-        ballPressed = false
-        settingsState?.value?.let { scheduleBallIdleHide(it) }
-    }
-
-    /** 设置预览等场景强制显示：期间不做闲置隐身。 */
-    internal fun setBallForceRevealed(active: Boolean) {
-        if (ballForceRevealed == active) return
-        ballForceRevealed = active
-        val settings = settingsState?.value ?: return
-        if (active) {
-            cancelBallIdleHide()
-            if (!ballRevealed) {
-                ballRevealed = true
-                syncBallIdleAlpha(settings, animate = false)
-            }
-        } else if (ballRevealed) {
-            scheduleBallIdleHide(settings)
-        }
-    }
-
-    private fun ensureBallIdleHideScheduled(settings: AppSettings) {
-        val delayMs = settings.floatBallIdleDelayMs.coerceIn(0, BALL_IDLE_DELAY_MAX_MS)
-        if (ballIdleHideRunnable != null && ballIdleHideDelayMs == delayMs) return
-        scheduleBallIdleHide(settings)
-    }
-
-    private fun scheduleBallIdleHide(settings: AppSettings) {
-        cancelBallIdleHide()
-        if (!idleVisualsEnabled(settings) || ballPressed || ballForceRevealed || isDragging) return
-        val delayMs = settings.floatBallIdleDelayMs.coerceIn(0, BALL_IDLE_DELAY_MAX_MS)
-        val runnable = Runnable {
-            ballIdleHideRunnable = null
-            ballIdleHideDelayMs = -1
-            val current = settingsState?.value ?: return@Runnable
-            if (!idleVisualsEnabled(current) || ballPressed || ballForceRevealed || isDragging) {
-                return@Runnable
-            }
-            ballRevealed = false
-            syncBallIdleAlpha(current, animate = true)
-        }
-        ballIdleHideRunnable = runnable
-        ballIdleHideDelayMs = delayMs
-        mainHandler.postDelayed(runnable, delayMs.toLong())
-    }
-
-    internal fun cancelBallIdleHide() {
-        ballIdleHideRunnable?.let { mainHandler.removeCallbacks(it) }
-        ballIdleHideRunnable = null
-        ballIdleHideDelayMs = -1
-    }
+    internal fun cancelBallIdleHide() = FloatBallIdleVisuals.cancelBallIdleHide()
 
     fun refreshStyleVisual() {
         if (Looper.myLooper() != Looper.getMainLooper()) {
