@@ -62,7 +62,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.R
+import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.message.NotificationData
 import com.slideindex.app.message.NotificationMessage
 import com.slideindex.app.message.NotificationMessagingHistory
@@ -149,7 +149,8 @@ object CNoticeDetailOverlayWindow {
             dismiss()
         }
 
-        val hostContext = MessageOverlayHost.resolveHostContext(context)
+        val hostContext = com.slideindex.app.overlay.panels.PanelRuntimeHooks.overlayHostContext
+            ?.invoke()
             ?: run {
                 Log.w(TAG, "overlay permission not granted")
                 return
@@ -233,7 +234,7 @@ object CNoticeDetailOverlayWindow {
     }
 
     fun dismiss() {
-        CNoticeOverlayWindow.closePanel()
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.closeCNoticePanel?.invoke()
         if (Looper.myLooper() != Looper.getMainLooper()) {
             mainHandler.post { dismissLegacyWindow() }
             return

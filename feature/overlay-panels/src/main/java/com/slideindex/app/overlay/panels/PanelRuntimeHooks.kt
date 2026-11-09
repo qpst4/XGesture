@@ -11,6 +11,10 @@ import com.slideindex.app.settings.AppSettings
  * 这里用回调把它们反转：`SlideIndexApp` 启动时注入，未注入时全部降级为"不可用"。
  */
 object PanelRuntimeHooks {
+    /** 关闭 CNotice 面板（`:app` 的 CNoticeOverlayWindow.closePanel）。 */
+    @Volatile
+    var closeCNoticePanel: (() -> Unit)? = null
+
     /** 应用冻结状态。 */
     @Volatile
     var freezerStateOfApp: ((Context, com.slideindex.app.data.AppInfo) -> com.slideindex.app.freezer.FreezerAppState)? = null

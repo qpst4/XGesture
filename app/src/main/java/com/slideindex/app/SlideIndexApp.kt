@@ -517,6 +517,9 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 item as com.slideindex.app.overlay.TaskSwitcherMenuItem,
             )
         }
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.closeCNoticePanel = {
+            com.slideindex.app.overlay.CNoticeOverlayWindow.closePanel()
+        }
         com.slideindex.app.overlay.searchpanel.SearchPanelHostAccess.host =
             object : com.slideindex.app.overlay.searchpanel.SearchPanelHost {
                 override fun freezerState(
