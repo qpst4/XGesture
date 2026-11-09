@@ -159,7 +159,7 @@ object FloatBallOverlay {
     private var lineIdleChromeOwner: OverlayComposeOwner? = null
     private var ballIdleChromeView: ComposeView? = null
     private var lineIdleChromeView: ComposeView? = null
-    private var ballIconView: FloatBallIconView? = null
+    internal var ballIconView: FloatBallIconView? = null
     private var cursorPreviewView: FloatBallCursorPreviewView? = null
     private val screenOffDismissReceiver = ScreenOffDismissReceiver { hideCursor() }
     private var appContext: Context? = null
@@ -175,7 +175,7 @@ object FloatBallOverlay {
     internal var pendingPositionYFraction: Float? = null
 
     internal val clearPendingPositionYRunnable = Runnable { pendingPositionYFraction = null }
-    private var appearancePreviewRestore: FloatBallAppearancePreviewSnapshot? = null
+    internal var appearancePreviewRestore: FloatBallAppearancePreview.Snapshot? = null
 
     // —— 闲置隐身 ——
     /** 当前是否处于「显示」状态（false = 按闲置不透明度绘制）。 */
@@ -190,15 +190,6 @@ object FloatBallOverlay {
     private var ballIdleHideRunnable: Runnable? = null
     /** 当前挂着的隐身计时用的是多长判定时长（-1 = 没有计时）。 */
     private var ballIdleHideDelayMs = -1
-
-    private data class FloatBallAppearancePreviewSnapshot(
-        val sizeDp: Float,
-        val opacity: Float,
-        val visibleFraction: Float,
-        val lineHeightFraction: Float,
-        val lineWidthDp: Float,
-        val lineOpacity: Float
-    )
 
     internal var sceneState: FloatBallSceneState? = null
 
@@ -594,98 +585,25 @@ object FloatBallOverlay {
         lineHeightFraction: Float? = null,
         lineWidthDp: Float? = null,
         lineOpacity: Float? = null
-    ) {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post {
-                previewAppearance(
-                    sizeDp,
-                    opacity,
-                    visibleFraction,
-                    lineHeightFraction,
-                    lineWidthDp,
-                    lineOpacity
-                )
-            }
-            return
-        }
-        val state = settingsState ?: return
-        if (appearancePreviewRestore == null) {
-            val current = state.value
-            appearancePreviewRestore = FloatBallAppearancePreviewSnapshot(
-                sizeDp = current.floatBallSizeDp,
-                opacity = current.floatBallOpacity,
-                visibleFraction = current.floatBallVisibleFraction,
-                lineHeightFraction = current.floatBallLineHeightFraction,
-                lineWidthDp = current.floatBallLineWidthDp,
-                lineOpacity = current.floatBallLineOpacity
-            )
-        }
-        val current = state.value
-        val updated = current.copy(
-            floatBall = current.floatBall.copy(
-                floatBallSizeDp = sizeDp?.coerceIn(36f, 96f) ?: current.floatBallSizeDp,
-                floatBallOpacity = opacity?.coerceIn(0f, 1f) ?: current.floatBallOpacity,
-                floatBallVisibleFraction = visibleFraction?.let(FloatBallLayout::coerceVisibleFraction)
-                    ?: current.floatBallVisibleFraction,
-                floatBallLineHeightFraction = lineHeightFraction?.coerceIn(0.04f, 0.4f)
-                    ?: current.floatBallLineHeightFraction,
-                floatBallLineWidthDp = lineWidthDp?.coerceIn(
-                    FloatBallSettings.MIN_LINE_WIDTH_DP,
-                    FloatBallSettings.MAX_LINE_WIDTH_DP
-                ) ?: current.floatBallLineWidthDp,
-                floatBallLineOpacity = lineOpacity?.coerceIn(0f, 1f) ?: current.floatBallLineOpacity
-            )
-        )
-        state.value = updated
-        // 调外观时必须看得见球，否则改了大小/位置/不透明度也不知道结果。
-        setBallForceRevealed(true)
-        invalidateChrome()
-        val layoutChanged = sizeDp != null || visibleFraction != null ||
-            lineHeightFraction != null || lineWidthDp != null
-        if (layoutChanged) {
-            applyAllLayouts(updated)
-            syncTouchWindowLayout(updated)
-        }
-    }
+    ) = FloatBallAppearancePreview.previewAppearance(
+        sizeDp,
+        opacity,
+        visibleFraction,
+        lineHeightFraction,
+        lineWidthDp,
+        lineOpacity
+    )
 
-    fun endAppearancePreview(restoreIfNeeded: Boolean) {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { endAppearancePreview(restoreIfNeeded) }
-            return
-        }
-        val baseline = appearancePreviewRestore
-        appearancePreviewRestore = null
-        setBallForceRevealed(false)
-        if (!restoreIfNeeded || baseline == null) return
-        val state = settingsState ?: return
-        val restored = state.value.let { current ->
-            current.copy(
-                floatBall = current.floatBall.copy(
-                    floatBallSizeDp = baseline.sizeDp,
-                    floatBallOpacity = baseline.opacity,
-                    floatBallVisibleFraction = baseline.visibleFraction,
-                    floatBallLineHeightFraction = baseline.lineHeightFraction,
-                    floatBallLineWidthDp = baseline.lineWidthDp,
-                    floatBallLineOpacity = baseline.lineOpacity
-                )
-            )
-        }
-        state.value = restored
-        invalidateChrome()
-        bumpScreenLayoutGeneration()
-        applyAllLayouts(restored)
-        syncTouchWindowLayout(restored)
-    }
+    fun endAppearancePreview(restoreIfNeeded: Boolean) =
+        FloatBallAppearancePreview.endAppearancePreview(restoreIfNeeded)
 
-    private fun invalidateChrome() {
+    internal fun invalidateChrome() {
         ballIconView?.invalidate()
         displayView?.invalidate()
     }
 
-    fun clearAppearancePreviewRestore() {
-        appearancePreviewRestore = null
-        setBallForceRevealed(false)
-    }
+    fun clearAppearancePreviewRestore() =
+        FloatBallAppearancePreview.clearAppearancePreviewRestore()
 
     // —— 闲置隐身 ——
 
@@ -1216,7 +1134,7 @@ object FloatBallOverlay {
         bumpScreenLayoutGeneration()
     }
 
-    private fun bumpScreenLayoutGeneration() {
+    internal fun bumpScreenLayoutGeneration() {
         sceneState?.screenLayoutGeneration?.let { state ->
             state.intValue = state.intValue + 1
         }
@@ -2061,7 +1979,7 @@ object FloatBallOverlay {
             .onFailure { Log.w(TAG, "syncLineTouchWindowLayout failed", it) }
     }
 
-    private fun syncTouchWindowLayout(settings: AppSettings) {
+    internal fun syncTouchWindowLayout(settings: AppSettings) {
         syncBallTouchWindowLayout(settings)
         syncLineTouchWindowLayout(settings)
     }
