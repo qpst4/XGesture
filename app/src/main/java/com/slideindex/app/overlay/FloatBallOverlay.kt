@@ -154,7 +154,7 @@ object FloatBallOverlay {
      * 收尾时必须缩回原尺寸，否则会留下一个常驻的 1080×2340 透明窗——
      * 它不可见，但每次重绘都是整屏重绘（真机实测能跑到 120fps）。
      */
-    private val fullscreenTouchBackup = HashMap<Any, IntArray>()
+    internal val fullscreenTouchBackup = HashMap<Any, IntArray>()
     private var ballIdleChromeOwner: OverlayComposeOwner? = null
     private var lineIdleChromeOwner: OverlayComposeOwner? = null
     private var ballIdleChromeView: ComposeView? = null
@@ -340,7 +340,7 @@ object FloatBallOverlay {
         set(value) {
             dragActiveSideOverrideState?.value = value
         }
-    private var passthroughRestorePending = false
+    internal var passthroughRestorePending = false
     internal var committedActiveSideUntilPersist: FloatBallSide? = null
 
     /**
@@ -1386,121 +1386,28 @@ object FloatBallOverlay {
         }
     }
 
-    private fun setLineTouchHostEnabled(enabled: Boolean) {
-        val view = lineTouchHost ?: return
-        val wm = windowManager ?: return
-        val params = lineTouchLayoutParams ?: return
-        val state = sceneState
-        val settings = settingsState?.value
-        if (state != null && settings != null) {
-            val metrics = view.resources.displayMetrics
-            val (screenW, screenH) = FloatBallScreenMetrics.sizePx(view.context, wm)
-            val inactiveSide = FloatBallSide.opposite(effectiveActiveSide(settings))
-            val isLandscape = isLandscapeLayout()
-            val bounds = state.lineHitRect(
-                settings = settings,
-                metrics = metrics,
-                inactiveSide = inactiveSide,
-                screenWidthPx = screenW,
-                screenHeightPx = screenH,
-                isLandscape = isLandscape,
-            )
-            params.x = bounds.left
-            params.y = bounds.top
-            params.width = bounds.width().coerceAtLeast(1)
-            params.height = bounds.height().coerceAtLeast(1)
-        } else {
-            params.width = 1
-            params.height = 1
-        }
-        view.visibility = if (enabled) View.VISIBLE else View.GONE
-        if (enabled) {
-            params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
-        } else {
-            params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-        }
-        if (view.isAttachedToWindow) {
-            runCatching { wm.updateViewLayout(view, params) }
-        }
-    }
+    internal fun setLineTouchHostEnabled(enabled: Boolean) =
+        FloatBallTouchWindowLayout.setLineTouchHostEnabled(enabled)
 
-    /** 球体拖出：全屏捕获手势，隐藏线条触摸窗。 */
-    private fun expandBallTouchCapture() {
-        setLineTouchHostEnabled(false)
-        expandTouchHostToFullscreen(touchHost, touchLayoutParams)
-    }
+    internal fun expandBallTouchCapture() =
+        FloatBallTouchWindowLayout.expandBallTouchCapture()
 
-    /**
-     * 线条拖出：全屏扩展必须在 [lineTouchHost] 上（手势在此窗发起），
-     * 不可改由球体窗接管，否则 MOVE/UP 丢失。
-     */
-    private fun expandLineTouchCapture() {
-        setBallTouchHostPassthrough(true)
-        expandTouchHostToFullscreen(lineTouchHost, lineTouchLayoutParams)
-    }
+    internal fun expandLineTouchCapture() =
+        FloatBallTouchWindowLayout.expandLineTouchCapture()
 
-    private fun expandTouchHostToFullscreen(
+    internal fun expandTouchHostToFullscreen(
         view: View?,
         params: WindowManager.LayoutParams?
-    ) {
-        val wm = windowManager ?: return
-        if (view == null || params == null) return
-        if (params.width == WindowManager.LayoutParams.MATCH_PARENT &&
-            params.height == WindowManager.LayoutParams.MATCH_PARENT
-        ) {
-            return
-        }
-        fullscreenTouchBackup[params] = intArrayOf(
-            params.width,
-            params.height,
-            params.x,
-            params.y,
-            params.flags,
-        )
-        params.x = 0
-        params.y = 0
-        params.width = WindowManager.LayoutParams.MATCH_PARENT
-        params.height = WindowManager.LayoutParams.MATCH_PARENT
-        params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
-        runCatching { wm.updateViewLayout(view, params) }
-            .onFailure { Log.w(TAG, "expandTouchHostToFullscreen failed", it) }
-    }
+    ) =
+        FloatBallTouchWindowLayout.expandTouchHostToFullscreen(view, params)
 
-    private fun collapseLineTouchHostFromFullscreen() {
-        val view = lineTouchHost ?: return
-        val wm = windowManager ?: return
-        val params = lineTouchLayoutParams ?: return
-        if (params.width != WindowManager.LayoutParams.MATCH_PARENT &&
-            params.height != WindowManager.LayoutParams.MATCH_PARENT
-        ) {
-            return
-        }
-        settingsState?.value?.let { syncLineTouchWindowLayout(it) }
-        if (isTouchHostFullscreen(params)) {
-            restoreTouchHostFromFullscreen(view, params, wm)
-        } else {
-            fullscreenTouchBackup.remove(params)
-        }
-    }
+    internal fun collapseLineTouchHostFromFullscreen() =
+        FloatBallTouchWindowLayout.collapseLineTouchHostFromFullscreen()
 
-    private fun collapseBallTouchHostFromFullscreen() {
-        val view = touchHost ?: return
-        val wm = windowManager ?: return
-        val params = touchLayoutParams ?: return
-        if (params.width != WindowManager.LayoutParams.MATCH_PARENT &&
-            params.height != WindowManager.LayoutParams.MATCH_PARENT
-        ) {
-            return
-        }
-        settingsState?.value?.let { syncBallTouchWindowLayout(it) }
-        if (isTouchHostFullscreen(params)) {
-            restoreTouchHostFromFullscreen(view, params, wm)
-        } else {
-            fullscreenTouchBackup.remove(params)
-        }
-    }
+    internal fun collapseBallTouchHostFromFullscreen() =
+        FloatBallTouchWindowLayout.collapseBallTouchHostFromFullscreen()
 
-    private fun isTouchHostFullscreen(params: WindowManager.LayoutParams): Boolean =
+    internal fun isTouchHostFullscreen(params: WindowManager.LayoutParams): Boolean =
         params.width == WindowManager.LayoutParams.MATCH_PARENT &&
             params.height == WindowManager.LayoutParams.MATCH_PARENT
 
@@ -1511,55 +1418,22 @@ object FloatBallOverlay {
      * 光靠它收不回来；这里按撑大前的快照还原尺寸与 flags。没有快照（旧会话遗留的
      * 全屏窗）就缩到 1×1 并置为不可触摸，避免整屏窗常驻、每帧整屏重绘。
      */
-    private fun restoreTouchHostFromFullscreen(
+    fun restoreTouchHostFromFullscreen(
         view: View,
         params: WindowManager.LayoutParams,
         wm: WindowManager,
-    ) {
-        val backup = fullscreenTouchBackup.remove(params)
-        if (backup != null) {
-            params.width = backup[0]
-            params.height = backup[1]
-            params.x = backup[2]
-            params.y = backup[3]
-            params.flags = backup[4]
-        } else {
-            params.width = 1
-            params.height = 1
-            params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-        }
-        runCatching { wm.updateViewLayout(view, params) }
-            .onFailure { Log.w(TAG, "restoreTouchHostFromFullscreen failed", it) }
-    }
+    ) =
+        FloatBallTouchWindowLayout.isTouchHostFullscreen(params)
 
-    private fun setBallTouchHostPassthrough(passthrough: Boolean) {
-        val view = touchHost ?: return
-        val wm = windowManager ?: return
-        val params = touchLayoutParams ?: return
-        if (passthrough) {
-            params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-        } else if (!captureSuppressed && !passthroughRestorePending) {
-            params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
-        }
-        runCatching { wm.updateViewLayout(view, params) }
-            .onFailure { Log.w(TAG, "setBallTouchHostPassthrough failed", it) }
-    }
+    internal fun setBallTouchHostPassthrough(passthrough: Boolean) =
+        FloatBallTouchWindowLayout.setBallTouchHostPassthrough(passthrough)
 
-    private fun setLineTouchHostPassthrough(passthrough: Boolean) {
-        val view = lineTouchHost ?: return
-        val wm = windowManager ?: return
-        val params = lineTouchLayoutParams ?: return
-        if (passthrough) {
-            params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-        } else if (!captureSuppressed && !passthroughRestorePending) {
-            params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
-        }
-        runCatching { wm.updateViewLayout(view, params) }
-            .onFailure { Log.w(TAG, "setLineTouchHostPassthrough failed", it) }
-    }
+    internal fun setLineTouchHostPassthrough(passthrough: Boolean) =
+        FloatBallTouchWindowLayout.setLineTouchHostPassthrough(passthrough)
+
 
     /** 空闲态：球体触摸窗仅覆盖球区（WM 小块，避免挡屏）。 */
-    private fun syncBallTouchWindowLayout(settings: AppSettings) {
+    internal fun syncBallTouchWindowLayout(settings: AppSettings) {
         if (isDragging && !captureSuppressed) return
         val view = touchHost ?: return
         val wm = windowManager ?: return
@@ -1598,7 +1472,7 @@ object FloatBallOverlay {
     }
 
     /** 空闲态：线条触摸窗仅覆盖线条触发区。 */
-    private fun syncLineTouchWindowLayout(settings: AppSettings) {
+    internal fun syncLineTouchWindowLayout(settings: AppSettings) {
         if (isLauncherCaptureActive()) return
         if (isDragging) {
             if (!dragOriginatedFromLine) {
@@ -1904,7 +1778,7 @@ object FloatBallOverlay {
         applyTouchHostOverlayPassthroughFlags()
     }
 
-    private fun applyTouchHostOverlayPassthroughFlags() {
+    internal fun applyTouchHostOverlayPassthroughFlags() {
         val wm = windowManager ?: return
         touchHost?.let { view ->
             val params = touchLayoutParams ?: return@let
@@ -2538,7 +2412,7 @@ object FloatBallOverlay {
         syncDisplayBallLayout(settings)
     }
 
-    private fun effectiveActiveSide(settings: AppSettings): FloatBallSide =
+    internal fun effectiveActiveSide(settings: AppSettings): FloatBallSide =
         dragActiveSideOverride ?: FloatBallLayout.resolvedActiveSide(settings)
 
     private fun prepareLineDrag(
@@ -3753,7 +3627,7 @@ object FloatBallOverlay {
         }
     }
 
-    private fun isLandscapeLayout(): Boolean {
+    internal fun isLandscapeLayout(): Boolean {
         val view = displayView ?: touchHost ?: lineTouchHost ?: return false
         return view.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     }
