@@ -212,8 +212,8 @@ object FloatBallOverlay {
     private val ballDraggingState: MutableState<Boolean>?
         get() = sceneState?.ballDragging
 
-    private var onPositionPersisted: ((xFraction: Float, yFraction: Float) -> Unit)? = null
-    private var onActiveSidePersisted: ((FloatBallSide) -> Unit)? = null
+    internal var onPositionPersisted: ((xFraction: Float, yFraction: Float) -> Unit)? = null
+    internal var onActiveSidePersisted: ((FloatBallSide) -> Unit)? = null
     private var pauseRunnable: Runnable? = null
     private var passiveLineRestoreRunnable: Runnable? = null
     private var deferredGifResumeRunnable: Runnable? = null
@@ -232,7 +232,7 @@ object FloatBallOverlay {
     private var dragPasteUpgradeRunnable: Runnable? = null
     internal var captureSuppressed = false
     private var chromeDetachedForCapture = false
-    private var isDragging = false
+    internal var isDragging = false
     private var chromeZOrderFront = true
     /** Panel opened during drag; defer WM remove/add until [restoreAfterDragEnd]. */
     private var chromeRaiseDeferredForDrag = false
@@ -889,19 +889,7 @@ object FloatBallOverlay {
     }
 
     /** 应用内语言切换后重建悬浮球窗口，使 Compose/资源使用新 Locale。 */
-    fun recreateForLocaleChange() {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { recreateForLocaleChange() }
-            return
-        }
-        if (!isShowing) return
-        val hostContext = overlayHostContext() ?: return
-        val settings = settingsState?.value ?: return
-        val persistPosition = onPositionPersisted ?: return
-        val persistSide = onActiveSidePersisted ?: {}
-        dismiss()
-        showOrUpdate(hostContext, settings, persistPosition, persistSide)
-    }
+    fun recreateForLocaleChange() = FloatBallLifecycle.recreateForLocaleChange()
 
     fun showOrUpdate(
         context: Context,
@@ -1094,27 +1082,11 @@ object FloatBallOverlay {
         chromeDetachedForCapture = false
     }
 
-    fun relayout() {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { relayout() }
-            return
-        }
-        if (captureSuppressed) return
-        settingsState?.value ?: return
-        val view = displayView
-        if (view != null && view.isAttachedToWindow) {
-            view.post { relayoutNow() }
-        } else {
-            relayoutNow()
-        }
-    }
+    fun relayout() = FloatBallLifecycle.relayout()
 
-    fun onKeyboardImeChanged() {
-        if (!isShowing || isDragging) return
-        relayout()
-    }
+    fun onKeyboardImeChanged() = FloatBallLifecycle.onKeyboardImeChanged()
 
-    private fun relayoutNow() {
+    internal fun relayoutNow() {
         if (captureSuppressed) return
         val currentSettings = settingsState?.value ?: return
         if (isDragging) {
