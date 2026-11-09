@@ -96,7 +96,7 @@ object FloatBallOverlay {
     /** Defer chrome z-order sync until side-panel enter animation settles. */
     private const val CHROME_RAISE_DEFER_MS = 320L
     /** 确认"chrome 真的被系统摘掉"的等待时长（排除窗口过渡瞬间的误判）。 */
-    private const val CHROME_REBUILD_CONFIRM_MS = 250L
+    internal const val CHROME_REBUILD_CONFIRM_MS = 250L
     /** After deferred pick screenshot lands, let panel layout settle before chrome WM work. */
     private const val PICK_SCREENSHOT_CHROME_SETTLE_MS = 48L
     /** Fallback when deferred screenshot never arrives. */
@@ -113,7 +113,7 @@ object FloatBallOverlay {
     /** "提交后的 Y 预览值"顶住多久；设置落盘正常都在几十毫秒内，超时就放手避免卡住旧值。 */
     private const val PENDING_POSITION_Y_TIMEOUT_MS = 1_500L
     /** 浮点比较容差：设置落盘经过序列化，不能要求按位相等。 */
-    private const val POSITION_Y_EPSILON = 0.0005f
+    internal const val POSITION_Y_EPSILON = 0.0005f
 
     private var passivePickPreviewAlpha = 1f
     private var passivePickPreviewAnchor: Offset? = null
@@ -241,7 +241,7 @@ object FloatBallOverlay {
     private var pendingChromeRaiseRunnable: Runnable? = null
 
     /** 正在等待"确认 chrome 真的被摘掉"的重建窗口（见 showOrUpdate）。 */
-    private var pendingChromeRebuild = false
+    internal var pendingChromeRebuild = false
     private var pendingPickScreenshotChromeFallback: Runnable? = null
 
     /**
@@ -614,7 +614,7 @@ object FloatBallOverlay {
      *
      * [animate] 只用于"触摸显形 / 回到闲置"两个瞬间；设置回流、开关切换一律立即生效。
      */
-    private fun syncBallIdleAlpha(settings: AppSettings, animate: Boolean) {
+    internal fun syncBallIdleAlpha(settings: AppSettings, animate: Boolean) {
         if (ballIconView == null) return
         val shown = ballRevealed || ballPressed || ballForceRevealed || isDragging
         publishBallIdleTarget(settings, shown)
@@ -898,116 +898,7 @@ object FloatBallOverlay {
         settings: AppSettings,
         onPositionPersisted: (xFraction: Float, yFraction: Float) -> Unit,
         onActiveSidePersisted: (FloatBallSide) -> Unit = {}
-    ) {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { showOrUpdate(context, settings, onPositionPersisted, onActiveSidePersisted) }
-            return
-        }
-        if (!PermissionHelper.isAccessibilityServiceEnabledForOverlays(context)) {
-            dismiss()
-            return
-        }
-        if (RegionalPickOverlay.isActive) {
-            settingsState?.value = settings
-            return
-        }
-        val hostContext = overlayHostContext()
-            ?: run {
-                Log.w(TAG, "accessibility service not connected")
-                return
-            }
-
-        this.onPositionPersisted = onPositionPersisted
-        this.onActiveSidePersisted = onActiveSidePersisted
-        if (isShowing && !areChromeWindowsAttached()) {
-            // 熄屏/锁屏后系统可能摘掉 TYPE_ACCESSIBILITY_OVERLAY，本地引用仍在。
-            // 先清理再重建，避免 isShowing=true 却永远不 ensureWindows。
-            //
-            // 真机修复：窗口过渡瞬间（例如面板出现 / 前台包名变化）isAttachedToWindow 会短暂为 false，
-            // 但窗口其实还在 WM 里。此处若立刻 dismiss()+ensureWindows()，就是把悬浮球拆掉又装回 ——
-            // 用户看到"每次触发面板，悬浮球闪一下"。logcat 实测调用栈：
-            //   EdgeOverlayHost.refreshOverlaySuppression ← onForegroundPackageChanged
-            //     ← updateForegroundPackage ← SlideIndexAccessibilityForegroundTracker
-            // 因此先延后确认，仍然没挂上才真正重建。
-            if (!pendingChromeRebuild) {
-                pendingChromeRebuild = true
-                mainHandler.postDelayed({
-                    pendingChromeRebuild = false
-                    if (isShowing && !areChromeWindowsAttached()) {
-                        val persistPosition = onPositionPersisted
-                        val persistSide = onActiveSidePersisted
-                        dismiss()
-                        this.onPositionPersisted = persistPosition
-                        this.onActiveSidePersisted = persistSide
-                        ensureWindows(hostContext, settings)
-                    }
-                }, CHROME_REBUILD_CONFIRM_MS)
-            }
-        } else if (!isShowing) {
-            ensureWindows(hostContext, settings)
-        } else {
-            val incoming = settings
-            val pendingSide = committedActiveSideUntilPersist
-            if (pendingSide != null && incoming.floatBallActiveSide != pendingSide) {
-                settingsState?.value =
-                    incoming.copy(floatBall = incoming.floatBall.copy(floatBallActiveSide = pendingSide))
-                return
-            }
-            if (pendingSide != null && incoming.floatBallActiveSide == pendingSide) {
-                committedActiveSideUntilPersist = null
-            }
-            val current = settingsState?.value
-            val merged = when {
-                appearancePreviewRestore != null && current != null -> incoming.copy(
-                    floatBall = incoming.floatBall.copy(
-                        floatBallSizeDp = current.floatBallSizeDp,
-                        floatBallOpacity = current.floatBallOpacity,
-                        floatBallVisibleFraction = current.floatBallVisibleFraction,
-                        floatBallLineHeightFraction = current.floatBallLineHeightFraction,
-                        floatBallLineWidthDp = current.floatBallLineWidthDp,
-                        floatBallLineOpacity = current.floatBallLineOpacity
-                    )
-                )
-                // 拖动期：任何回流（别的设置写入、本次提交前后的中间态）都不许把 Y 拉回旧值。
-                positionYPreviewRestore != null && current != null -> incoming.copy(
-                    floatBall = incoming.floatBall.copy(
-                        floatBallPositionYFraction = current.floatBallPositionYFraction
-                    )
-                )
-                // 提交后、落盘回流前：继续顶住预览值，等 incoming 追上同一个值就放手。
-                pendingPositionYFraction != null && current != null -> {
-                    val pending = pendingPositionYFraction!!
-                    if (kotlin.math.abs(incoming.floatBallPositionYFraction - pending) <= POSITION_Y_EPSILON) {
-                        cancelPendingPositionY()
-                        incoming
-                    } else {
-                        incoming.copy(
-                            floatBall = incoming.floatBall.copy(
-                                floatBallPositionYFraction = current.floatBallPositionYFraction
-                            )
-                        )
-                    }
-                }
-                isDragging &&
-                    current != null &&
-                    incoming.floatBallActiveSide != current.floatBallActiveSide -> incoming.copy(
-                    floatBall = incoming.floatBall.copy(floatBallActiveSide = current.floatBallActiveSide)
-                )
-                else -> incoming
-            }
-            settingsState?.value = merged
-            syncBallIdleAlpha(merged, animate = false)
-            if (floatBallStyleSignature(current) != floatBallStyleSignature(merged)) {
-                refreshStyleVisual()
-            }
-            touchHost?.updateSettings(merged)
-            lineTouchHost?.updateSettings(merged)
-            if (!isDragging) {
-                recoverIdleTouchCaptureLayouts(merged)
-                restorePassiveOverlayLayout(merged)
-            }
-        }
-    }
+    ) = FloatBallShow.showOrUpdate(context, settings, onPositionPersisted, onActiveSidePersisted)
 
     fun dismiss(destroyPickPanelShell: Boolean = false) =
         FloatBallDismiss.dismiss(destroyPickPanelShell)
@@ -1152,7 +1043,7 @@ object FloatBallOverlay {
         hideCursor()
     }
 
-    private fun ensureWindows(hostContext: Context, settings: AppSettings) {
+    internal fun ensureWindows(hostContext: Context, settings: AppSettings) {
         FloatBallStashPanel.warmUpBelowChrome(hostContext)
         FloatBallPickResultPanel.warmUp(hostContext)
         com.slideindex.app.overlay.searchpanel.SearchPanelOverlayWindow.warmUp(hostContext)
@@ -2503,7 +2394,7 @@ object FloatBallOverlay {
         return cursorAnchorState?.value
     }
 
-    private fun restorePassiveOverlayLayout(
+    internal fun restorePassiveOverlayLayout(
         settings: AppSettings,
         @Suppress("UNUSED_PARAMETER") fixZOrder: Boolean = true,
         deferLineRestore: Boolean = false,
@@ -2562,7 +2453,7 @@ object FloatBallOverlay {
         flushDeferredChromeRaiseIfNeeded()
     }
 
-    private fun areChromeWindowsAttached(): Boolean {
+    internal fun areChromeWindowsAttached(): Boolean {
         val display = displayView ?: return false
         val touch = touchHost ?: return false
         if (!display.isAttachedToWindow || !touch.isAttachedToWindow) return false
@@ -3975,7 +3866,7 @@ object FloatBallOverlay {
         flushDragChromeLayout()
     }
 
-    private fun floatBallStyleSignature(settings: AppSettings?): String {
+    internal fun floatBallStyleSignature(settings: AppSettings?): String {
         if (settings == null) return ""
         return buildString {
             append(settings.floatBallStyleType.storageKey)
