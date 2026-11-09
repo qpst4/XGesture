@@ -664,3 +664,66 @@ override fun attachBaseContext(base: Context) {
 | 无签名校验 | `update/ApkInstaller.kt` 全文（仅 size 校验） |
 
 > 本报告未修改任何源码。若需要，我可以直接从 §10 第 1 周的第一条开始动手，但会按 `AGENTS.md` 的红线：只改点名文件、逐个 `git add`、不 push。
+
+---
+
+## 12. 执行回执（2026-11-09）
+
+> 本节是**事后对账**，不改动上文原始评审的任何结论。原始评审基于 HEAD `ee2b7978`（v1.62.0）；
+> 本节记录到提交 `2d85c1b2 + 172` 为止的执行结果。完整修订计划见
+> [overlay-migration-final-status.md](overlay-migration-final-status.md)。
+
+### 12.1 P0 / P1 / P2 逐条状态
+
+| 编号 | 原文问题 | 最终状态 | 说明 |
+| :--- | :--- | :--- | :--- |
+| **P0-1** | 主干红灯测试 + CI 不跑测试 | ✅ **完成** | `ci.yml` 新增 `unit-tests` job；当天修掉 12 条红（原报告只发现 1 条） |
+| **P1-1** | `:app` 是 87% 巨石 | 🟡 **部分（约 60%）** | 见 §12.2；`:app` 从 ≈28.6 万行降到 **24.2 万行**，新增 `:core:overlay-host`/`:core:design`/`:core:search`/`:feature:overlay-panels`（9.1 万行） |
+| **P1-2** | `FloatBallOverlay` 4,302 行上帝类 | ✅ **超额完成** | 4,302 → **3,313 行**，拆出 **10 个职责类**（含拖拽收尾 320 行、触摸窗口 171 行） |
+| **P1-3** | 85 个静态入口焊死设置层与服务层 | 🟡 **面板侧完成，根包未做** | 面板改用端口注入；根包单例静态入口未收敛（`FloatBallOverlay` 仍被根目录引用 267 次） |
+| **P1-4** | 构建配置 3 处静默失效 | ✅ (a)(b) 完成 | 两个 `lint {}` 已合并、`checkReleaseBuilds = true` 生效；baselineprofile 已接线（选"接线"而非删） |
+| **P1-5** | 设置仓库单快照 + 切片 | ✅ **完成** | `SettingsPreferencesEditor.snapshotFlow` 单一解析 + `shareIn`；`settings` 故意保持冷流（写后立刻读的 30+ 处依赖该语义） |
+| **P1-6** | Roborazzi 截图基线 | ⏸ **按计划推迟** | 前提"面板内容抽成纯 composable"仍未完成（面板仍是窗口宿主） |
+| **P1-7** | 启动期 `runBlocking` | 🟡 **语言路径完成** | `AppLocaleApplier.primeFromContext()` 已改同步镜像；其余启动读取仍在 IO 线程 |
+| **P1-8** | 安装前校验签名 + sha256 | ⏸ **按计划暂缓** | 收益偏防御性，但需动 `release.yml` 与发版脚本 |
+| **P2-11** | 更新链路变体提示 | ⏸ **已取消** | 维护者判断不值得（引擎在 `filesDir`，Full→Lite 不会丢） |
+| **P2-1 ~ P2-10** | 其余卫生项 | ⏸ **未动** | 不在本轮范围 |
+| **§4.3** | 51 个 Activity（跳板） | 🟡 33 → **30** | 3 个已并入 `LaunchTrampolineActivity`；剩余主动停止（见 §12.3） |
+
+### 12.2 W1 结构重构（overlay 迁移）结果
+
+| 阶段 | 目标 | 结果 |
+| :--- | :--- | :--- |
+| **A 拆底座** | 主题层 / 宿主 / 根包单例 | 🟡 主题层 ✅、宿主 ✅、`overlayHostContext` 去 DI ✅；单例只拆了 `FloatBallOverlay` |
+| **B 搬面板组** | 19 组面板出 `:app` | ✅ **完成**，`overlay/` 从 136,402 → **50,675 行（−63%）**，根目录 220 → 129 文件 |
+| **C 收根目录** | 220 个文件 | 🟡 **约 5%**（`CNotice` 簇 6 文件 / 2,551 行），其余**主动停止** |
+| **P1-1 第②步** | `:app` ≤ 20 万行 | ❌ **未达成**，且**建议放弃该指标**（见 §12.4） |
+
+### 12.3 W3 工程卫生
+
+| 条目 | 状态 |
+| :--- | :--- |
+| **W3-2** 设置 schema 版本 + 迁移表 | ✅ **完成**：`SettingsSchemaMigrations`（`CURRENT_VERSION` + 有序表 + `pending()`）、键 `settings_schema_version`、仓库 init 先跑迁移、4 条单测 |
+| **W3-1** trampoline 合并 | 🟡 部分（33 → 30）后**主动停止**：`Assist` / `PinNotificationRestore` / `WallpaperPermission` 已并入 `LaunchTrampolineActivity` |
+
+### 12.4 对原报告判断的更正（5 条）
+
+| 原文判断 | 实测结论 |
+| :--- | :--- |
+| §4.3「39/51 个 trampoline 拖慢冷启动清单」 | **错误**。跳板不参与启动，只在被调用时实例化；W3-1 的冷启动收益≈0 |
+| §10「阶段 C 收完根目录即可达成 P1-1」 | **不成立**。根目录引用密度：`FloatBallOverlay` 267 次、`FloatBallLayout` 93、`OverlayManager` 53；单文件搬走平均连锁 2–5 个未定义符号 |
+| §10「P1-1 值得追求」 | **价值低**。为把 `:app` 压到 20 万行而搬宿主单例属"为指标而重构" |
+| §P1-2「拆 4 类即可」 | **低估**。实际拆到 10 类才把行数降到 3,313；剩余 3.3k 是交互状态机，纯搬移无法再拆 |
+| §11.5「拆出的类可立即补单测」 | **多数不可测**。10 个类里 9 个依赖单例状态 / Looper，需先做 `FloatBallInteractionState` 状态对象化 |
+
+### 12.5 遗留风险（发版前必须处理）
+
+| 风险 | 说明 |
+| :--- | :--- |
+| **172 个提交仅本地** | 基线 `2d85c1b2` 之后累计，未 push |
+| 3 个跳板合并未真机验证 | 助手拉起 / 通知恢复钉图 / 壁纸权限跳转 |
+| Baseline Profile 产物缺失且过期 | 记录的是旧启动路径；发版前需重采并提交 |
+
+> 结论：原始评审的 P0、P1-2、P1-4、P1-5、P1-1（第①步）已落地；
+> **P1-1 的"20 万行"指标、阶段 C、W3-1 剩余部分经实测判定不值得继续**，
+> 理由与替代方案见 [overlay-migration-final-status.md](overlay-migration-final-status.md) §4–§5。
