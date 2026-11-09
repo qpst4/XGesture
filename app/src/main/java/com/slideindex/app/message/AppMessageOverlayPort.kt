@@ -60,6 +60,17 @@ class AppMessageOverlayPort @Inject constructor(
 ) : MessageOverlayPort {
     private val settingsWriteScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    /**
+     * 主线程 Handler。
+     *
+     * ⚠️ 必须声明在 `init` **之前**：`init` 里启动的协程会立刻 collect 设置流，
+     * 并在 IO 线程上调用 `mainHandler.post`。Kotlin 按声明顺序初始化属性，
+     * 一旦本行排在 `init` 之后，构造函数执行到 `init` 时它还是 null ——
+     * 冷启动（IO 线程空闲 + 设置流已有值 + 构造函数被抢占）三者同时成立时会 NPE
+     * 直接崩进程（真机 2026-11-09 14:41:54 已发生一次，栈在 AppMessageOverlayPort.kt:75）。
+     */
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     init {
         CNoticeOverlayWindow.historyLoader = cNoticeHistoryLoader
         CNoticeOverlayWindow.placementPersistHandler = { edge, yFraction ->
@@ -79,7 +90,6 @@ class AppMessageOverlayPort @Inject constructor(
         }
     }
     private var unlockConfirmationHost: OverlayComposeDialogHost? = null
-    private val mainHandler = Handler(Looper.getMainLooper())
     private var unlockBringToFrontRunnable: Runnable? = null
     private var unlockAutoDismissRunnable: Runnable? = null
 
