@@ -773,6 +773,34 @@ class ExtensionSettingsViewModel @Inject constructor(
             settingsRepository.setFloatBallPickImageToolbarPosition(position)
         }
 
+    fun setFloatBallPickIconBarEnabled(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setFloatBallPickIconBarEnabled(enabled)
+    }
+
+    fun setFloatBallPickTextBarOrder(order: List<String>) = launchSettingsWrite {
+        settingsRepository.setFloatBallPickTextBarOrder(order)
+    }
+
+    fun setFloatBallPickTextBarHidden(hidden: Set<String>) = launchSettingsWrite {
+        settingsRepository.setFloatBallPickTextBarHidden(hidden)
+    }
+
+    fun setFloatBallPickImageBarOrder(order: List<String>) = launchSettingsWrite {
+        settingsRepository.setFloatBallPickImageBarOrder(order)
+    }
+
+    fun setFloatBallPickImageBarHidden(hidden: Set<String>) = launchSettingsWrite {
+        settingsRepository.setFloatBallPickImageBarHidden(hidden)
+    }
+
+    /** 底栏按钮顺序与显隐一次性恢复默认（顺序清空 = 走默认顺序，隐藏集合清空 = 全部显示）。 */
+    fun resetFloatBallPickBarButtons() = launchSettingsWrite {
+        settingsRepository.setFloatBallPickTextBarOrder(emptyList())
+        settingsRepository.setFloatBallPickTextBarHidden(emptySet())
+        settingsRepository.setFloatBallPickImageBarOrder(emptyList())
+        settingsRepository.setFloatBallPickImageBarHidden(emptySet())
+    }
+
     fun setFloatBallPickHapticEnabled(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setFloatBallPickHapticEnabled(enabled)
     }

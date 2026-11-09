@@ -1074,6 +1074,31 @@ class OverlaySettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.FLOAT_BALL_PICK_IMAGE_TOOLBAR_POSITION] = position.storageKey
     }
 
+    suspend fun setFloatBallPickIconBarEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.FLOAT_BALL_PICK_ICON_BAR_ENABLED] = enabled
+    }
+
+    /** 文本区底栏按钮顺序：落盘前过一遍归一化，避免 UI 层传进来未知 id。 */
+    suspend fun setFloatBallPickTextBarOrder(order: List<String>) = editor.edit {
+        it[SettingsPreferenceKeys.FLOAT_BALL_PICK_TEXT_BAR_ORDER] =
+            PickResultBarButtons.encodeOrder(PickResultBarButtons.normalizeText(order).map { it.id })
+    }
+
+    suspend fun setFloatBallPickTextBarHidden(hidden: Set<String>) = editor.edit {
+        it[SettingsPreferenceKeys.FLOAT_BALL_PICK_TEXT_BAR_HIDDEN] =
+            PickResultBarButtons.sanitizeHiddenText(hidden)
+    }
+
+    suspend fun setFloatBallPickImageBarOrder(order: List<String>) = editor.edit {
+        it[SettingsPreferenceKeys.FLOAT_BALL_PICK_IMAGE_BAR_ORDER] =
+            PickResultBarButtons.encodeOrder(PickResultBarButtons.normalizeImage(order).map { it.id })
+    }
+
+    suspend fun setFloatBallPickImageBarHidden(hidden: Set<String>) = editor.edit {
+        it[SettingsPreferenceKeys.FLOAT_BALL_PICK_IMAGE_BAR_HIDDEN] =
+            PickResultBarButtons.sanitizeHiddenImage(hidden)
+    }
+
     suspend fun setFloatBallPickHapticEnabled(enabled: Boolean) = editor.edit {
         it[SettingsPreferenceKeys.FLOAT_BALL_PICK_HAPTIC_ENABLED] = enabled
     }

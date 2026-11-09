@@ -48,6 +48,10 @@ fun PickResultImageSection(
     searchEngines: List<com.slideindex.app.settings.SearchEngineConfig>,
     showImageSearchBar: Boolean = true,
     imageToolbarPosition: PickResultImageToolbarPosition = PickResultImageToolbarPosition.LEFT,
+    /** 纯图标模式：图片区底栏不再画分享引擎主芯片。 */
+    iconBarEnabled: Boolean = false,
+    iconBarOrder: List<String> = emptyList(),
+    iconBarHidden: Set<String> = emptySet(),
     modifier: Modifier = Modifier,
     onSave: () -> Unit,
     onSaveLongClick: (() -> Unit)? = null,
@@ -75,6 +79,9 @@ fun PickResultImageSection(
                 searchEngines = searchEngines,
                 showImageSearchBar = showImageSearchBar,
                 imageToolbarPosition = imageToolbarPosition,
+                iconBarEnabled = iconBarEnabled,
+                iconBarOrder = iconBarOrder,
+                iconBarHidden = iconBarHidden,
                 onSave = onSave,
                 onSaveLongClick = onSaveLongClick,
                 onShare = onShare,
@@ -102,6 +109,10 @@ fun PickResultImageSectionGallery(
     searchEngines: List<com.slideindex.app.settings.SearchEngineConfig>,
     showImageSearchBar: Boolean = true,
     imageToolbarPosition: PickResultImageToolbarPosition = PickResultImageToolbarPosition.LEFT,
+    /** 纯图标模式：图片区底栏不再画分享引擎主芯片。 */
+    iconBarEnabled: Boolean = false,
+    iconBarOrder: List<String> = emptyList(),
+    iconBarHidden: Set<String> = emptySet(),
     onSave: () -> Unit,
     onSaveLongClick: (() -> Unit)? = null,
     onShare: () -> Unit,
@@ -276,6 +287,9 @@ fun PickResultImageSectionGallery(
                     onStash = onStash,
                     compactEmbedded = true,
                     imageToolbarPosition = imageToolbarPosition,
+                    iconBarEnabled = iconBarEnabled,
+                    iconBarOrder = iconBarOrder,
+                    iconBarHidden = iconBarHidden,
                 )
             }
         }

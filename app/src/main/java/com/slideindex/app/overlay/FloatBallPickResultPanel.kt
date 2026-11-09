@@ -44,7 +44,9 @@ import com.slideindex.app.overlay.pickresult.PickResultTextModeStore
 import com.slideindex.app.overlay.pickresult.preloadPickResultSearchEngineIcons
 import com.slideindex.app.overlay.pickresult.resolvePickResultEnterTextMode
 import com.slideindex.app.overlay.pickresult.translateErrorMessage
+import com.slideindex.app.overlay.searchpanel.SearchPanelOverlayWindow
 import com.slideindex.app.overlay.searchpanel.SearchPanelQueryBridge
+import com.slideindex.app.overlay.searchpanel.SearchPanelSessionState
 import com.slideindex.app.perf.PickPerf
 import com.slideindex.app.search.SearchEngineLauncher
 import com.slideindex.app.service.RegionalScreenshotOcr
@@ -1422,8 +1424,31 @@ object FloatBallPickResultPanel {
                         }
                     },
                     onImageSearch = {
-                        val bitmap = screenshotHolder.value ?: return@FloatBallPickResultContent
-                        FloatBallImageSearchPanel.show(context, bitmap)
+                        val bitmap = screenshotHolder.value
+                            ?.takeIf { !it.isRecycled }
+                            ?: return@FloatBallPickResultContent
+                        // 图片走搜索面板的「搜图」模式（与系统分享 / 拖拽进来的图片同一条路）。
+                        // 取词面板这里**不收起**：搜索面板盖在上面，返回后自然回到取词面板。
+                        //
+                        // 交给搜索面板的是**副本**：取词面板 dismiss 时会 recycle 自己那张图，
+                        // 搜索面板还活着的话共享引用会直接踩到 recycled bitmap。
+                        val shareCopy = runCatching {
+                            bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, false)
+                        }.getOrNull()
+                        if (shareCopy == null) {
+                            FloatBallImageSearchPanel.show(context, bitmap)
+                        } else {
+                            SearchPanelSessionState.pushImage(shareCopy)
+                            if (!SearchPanelOverlayWindow.show(context)) {
+                                // 面板没起来（无障碍/宿主未就绪）时保留旧行为，别让搜图变成无响应。
+                                SearchPanelSessionState.pushImage(null)
+                                shareCopy.recycle()
+                                FloatBallImageSearchPanel.show(context, bitmap)
+                            } else {
+                                // 取词面板留在下层：同层窗口后添加者在上，把搜索面板重新提上来。
+                                SearchPanelOverlayWindow.bringAboveContentPanels()
+                            }
+                        }
                     },
                     onCopyImage = {
                         // 长按图片 = 复制当前页（翻页时 screenshotHolder 已同步成当前这张）。

@@ -649,6 +649,16 @@ internal object SettingsPreferenceKeys {
     val FLOAT_BALL_PICK_COPY_DISMISS_PANEL = booleanPreferencesKey("float_ball_pick_copy_dismiss_panel")
     val FLOAT_BALL_PICK_COPY_BUTTON_POSITION = stringPreferencesKey("float_ball_pick_copy_button_position")
     val FLOAT_BALL_PICK_IMAGE_TOOLBAR_POSITION = stringPreferencesKey("float_ball_pick_image_toolbar_position")
+    /** 底栏纯图标模式：文本区与图片区一起切换，开启后两项「位置」设置不再生效。 */
+    val FLOAT_BALL_PICK_ICON_BAR_ENABLED = booleanPreferencesKey("float_ball_pick_icon_bar_enabled")
+    /** 文本区底栏按钮顺序（id 以 U+001F 拼接，见 PickResultBarButtons）。 */
+    val FLOAT_BALL_PICK_TEXT_BAR_ORDER = stringPreferencesKey("float_ball_pick_text_bar_order")
+    /** 文本区底栏被隐藏的按钮 id。 */
+    val FLOAT_BALL_PICK_TEXT_BAR_HIDDEN = stringSetPreferencesKey("float_ball_pick_text_bar_hidden")
+    /** 图片区底栏按钮顺序。 */
+    val FLOAT_BALL_PICK_IMAGE_BAR_ORDER = stringPreferencesKey("float_ball_pick_image_bar_order")
+    /** 图片区底栏被隐藏的按钮 id。 */
+    val FLOAT_BALL_PICK_IMAGE_BAR_HIDDEN = stringSetPreferencesKey("float_ball_pick_image_bar_hidden")
     val FLOAT_BALL_PICK_HAPTIC_ENABLED = booleanPreferencesKey("float_ball_pick_haptic_enabled")
     /** 拖动悬浮球是否取词（关 = 拖动只跟手，不弹取词光标/选区）。 */
     val FLOAT_BALL_DRAG_PICK_ENABLED = booleanPreferencesKey("float_ball_drag_pick_enabled")

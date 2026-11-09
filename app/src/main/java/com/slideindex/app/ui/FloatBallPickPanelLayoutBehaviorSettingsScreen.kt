@@ -10,7 +10,9 @@ import com.slideindex.app.R
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.PickPanelSlideAnimationDefaults
 import com.slideindex.app.ui.miuix.groupedCardItems
+import com.slideindex.app.ui.settings.components.SettingExpandableRow
 import com.slideindex.app.ui.settings.components.SettingExpandableSwitchRow
+import com.slideindex.app.ui.settings.components.SettingLinkRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
@@ -31,6 +33,8 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     onPickCopyDismissPanelChange: (Boolean) -> Unit,
     onPickCopyButtonPositionChange: (com.slideindex.app.settings.PickResultCopyButtonPosition) -> Unit,
     onPickImageToolbarPositionChange: (com.slideindex.app.settings.PickResultImageToolbarPosition) -> Unit,
+    onPickIconBarEnabledChange: (Boolean) -> Unit,
+    onOpenPickBarButtonOrder: () -> Unit,
     onPickTextSizeChange: (Float) -> Unit,
     onPickHapticEnabledChange: (Boolean) -> Unit,
     onPickPanelEnterAnimationMsChange: (Int) -> Unit,
@@ -42,6 +46,8 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     val feedbackSectionTitle = stringResource(R.string.pick_settings_section_panel_feedback)
     val panelAnimationsTitle = stringResource(R.string.pick_settings_panel_animations)
     val panelAnimExpanded = remember { mutableStateOf(false) }
+    // 经典样式才需要这两项；纯图标模式下顺序由「底栏按钮」决定，这里默认收起、置灰。
+    val classicBarPositionsExpanded = remember { mutableStateOf(false) }
 
     val integratedLabel = stringResource(R.string.float_ball_pick_panel_style_integrated)
     val tabPagedLabel = stringResource(R.string.float_ball_pick_panel_style_tab_paged)
@@ -203,37 +209,62 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                     },
                 )
                 add(
-                    settingsCardScopeItem("copy-button-position") {
-                        SettingSpinnerRow(
-                            title = stringResource(R.string.float_ball_pick_copy_button_position),
-                            subtitle = copyButtonPositionOptions.getOrNull(selectedCopyButtonPositionIndex)?.second.orEmpty(),
-                            dialogButtonText = stringResource(R.string.cancel),
-                            items = copyButtonPositionItems,
-                            selectedIndex = selectedCopyButtonPositionIndex,
+                    settingsCardScopeItem("icon-bar") {
+                        SettingSwitchRow(
+                            title = stringResource(R.string.float_ball_pick_icon_bar),
+                            subtitle = stringResource(R.string.float_ball_pick_icon_bar_desc),
+                            checked = settings.floatBallPickIconBarEnabled,
                             enabled = true,
-                            onSelectedIndexChange = { index ->
-                                val selected = copyButtonPositionOptions.getOrNull(index)?.first
-                                    ?: return@SettingSpinnerRow
-                                onPickCopyButtonPositionChange(selected)
-                            },
+                            onCheckedChange = onPickIconBarEnabledChange,
                         )
                     },
                 )
+                if (settings.floatBallPickIconBarEnabled) {
+                    add(
+                        settingsCardScopeItem("bar-button-order") {
+                            SettingLinkRow(
+                                title = stringResource(R.string.float_ball_pick_bar_buttons),
+                                subtitle = stringResource(R.string.float_ball_pick_bar_buttons_desc),
+                                onClick = onOpenPickBarButtonOrder,
+                            )
+                        },
+                    )
+                }
                 add(
-                    settingsCardScopeItem("image-toolbar-position") {
-                        SettingSpinnerRow(
-                            title = stringResource(R.string.float_ball_pick_image_toolbar_position),
-                            subtitle = imageToolbarPositionOptions.getOrNull(selectedImageToolbarPositionIndex)?.second.orEmpty(),
-                            dialogButtonText = stringResource(R.string.cancel),
-                            items = imageToolbarPositionItems,
-                            selectedIndex = selectedImageToolbarPositionIndex,
-                            enabled = true,
-                            onSelectedIndexChange = { index ->
-                                val selected = imageToolbarPositionOptions.getOrNull(index)?.first
-                                    ?: return@SettingSpinnerRow
-                                onPickImageToolbarPositionChange(selected)
-                            },
-                        )
+                    settingsCardScopeItem("classic-bar-positions") {
+                        SettingExpandableRow(
+                            title = stringResource(R.string.float_ball_pick_bar_positions_title),
+                            subtitle = stringResource(R.string.float_ball_pick_bar_positions_desc),
+                            expanded = classicBarPositionsExpanded.value,
+                            onExpandedChange = { classicBarPositionsExpanded.value = it },
+                        ) {
+                            SettingSpinnerRow(
+                                title = stringResource(R.string.float_ball_pick_copy_button_position),
+                                subtitle = copyButtonPositionOptions.getOrNull(selectedCopyButtonPositionIndex)?.second.orEmpty(),
+                                dialogButtonText = stringResource(R.string.cancel),
+                                items = copyButtonPositionItems,
+                                selectedIndex = selectedCopyButtonPositionIndex,
+                                enabled = !settings.floatBallPickIconBarEnabled,
+                                onSelectedIndexChange = { index ->
+                                    val selected = copyButtonPositionOptions.getOrNull(index)?.first
+                                        ?: return@SettingSpinnerRow
+                                    onPickCopyButtonPositionChange(selected)
+                                },
+                            )
+                            SettingSpinnerRow(
+                                title = stringResource(R.string.float_ball_pick_image_toolbar_position),
+                                subtitle = imageToolbarPositionOptions.getOrNull(selectedImageToolbarPositionIndex)?.second.orEmpty(),
+                                dialogButtonText = stringResource(R.string.cancel),
+                                items = imageToolbarPositionItems,
+                                selectedIndex = selectedImageToolbarPositionIndex,
+                                enabled = !settings.floatBallPickIconBarEnabled,
+                                onSelectedIndexChange = { index ->
+                                    val selected = imageToolbarPositionOptions.getOrNull(index)?.first
+                                        ?: return@SettingSpinnerRow
+                                    onPickImageToolbarPositionChange(selected)
+                                },
+                            )
+                        }
                     },
                 )
             },

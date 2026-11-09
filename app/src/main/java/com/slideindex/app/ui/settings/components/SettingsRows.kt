@@ -76,6 +76,38 @@ fun SettingsCardScope.SettingSwitchRow(
     }
 }
 
+/** 纯展开行（不带开关）：点标题展开/收起子行，默认收起，用于「先收起、别碍事」的次级设置。 */
+@Composable
+fun SettingsCardScope.SettingExpandableRow(
+    title: String,
+    subtitle: String? = null,
+    expanded: Boolean,
+    enabled: Boolean = true,
+    onExpandedChange: (Boolean) -> Unit,
+    expandedContent: @Composable () -> Unit,
+) {
+    SettingsCardRow(key = "$title-expandable") { position ->
+        Column(modifier = Modifier.settingsGroupedRowBackground(position.index, position.count)) {
+            ArrowPreference(
+                modifier = Modifier.fillMaxWidth(),
+                title = title,
+                summary = subtitle,
+                enabled = enabled,
+                onClick = { if (enabled) onExpandedChange(!expanded) },
+            )
+            AnimatedVisibility(
+                visible = expanded && enabled,
+                enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+                exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    expandedContent()
+                }
+            }
+        }
+    }
+}
+
 /** Mishka-style switch with animated child rows in the same card segment. */
 @Composable
 fun SettingsCardScope.SettingExpandableSwitchRow(

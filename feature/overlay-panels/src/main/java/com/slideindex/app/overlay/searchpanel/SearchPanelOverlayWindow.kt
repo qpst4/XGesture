@@ -105,6 +105,41 @@ object SearchPanelOverlayWindow {
         mainHandler.postDelayed(delayedB, 800)
     }
 
+    /**
+     * 同层窗口 `updateViewLayout` 不会改变 z-order。
+     *
+     * 取词面板是后添加的内容面板，会盖住先建好的搜索面板（warmUp 保活窗口）。这里 remove + add
+     * 把搜索面板重新提到最上层，让「取词面板留在下面、返回后自然露出」成立；Compose 组合与
+     * 滚动位置不受影响，只是重新 attach。
+     */
+    private fun bringToFrontInternal() {
+        val wm = windowManager ?: return
+        val view = composeView ?: return
+        val params = layoutParams ?: return
+        if (!view.isAttachedToWindow) return
+        // 分开 catch：remove 成功而 add 失败时窗口已经离屏，下次 show 会走「stale shell」重建；
+        // 反过来 remove 失败时绝不能再 add（重复 add 会 BadToken/IllegalState）。
+        if (runCatching { wm.removeView(view) }.isFailure) return
+        runCatching { wm.addView(view, params) }
+            .onFailure { Log.w(TAG, "bringToFront: re-add failed, window will be rebuilt on next show", it) }
+        scheduleBringFloatBallAbovePanels()
+    }
+
+    /**
+     * 从下层内容面板（取词面板）呼出搜索面板后调用：把窗口重排到最上层。
+     *
+     * 只给「取词面板 → 搜图」这一条路用。其他入口（浮球、快捷方式、系统分享）若也走 remove + add，
+     * 会在面板已经显示时无谓地重新 attach，把输入法焦点打断。
+     */
+    fun bringAboveContentPanels() {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            mainHandler.post { bringAboveContentPanels() }
+            return
+        }
+        // show() 内部用 post 设置 targetState，这里同队列排一次，保证窗口已经 attach。
+        mainHandler.post { bringToFrontInternal() }
+    }
+
     fun warmUp(context: Context) {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             mainHandler.post { warmUp(context) }

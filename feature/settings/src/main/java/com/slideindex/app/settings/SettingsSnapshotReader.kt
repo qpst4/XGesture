@@ -531,6 +531,20 @@ internal object SettingsSnapshotReader {
                 PickResultImageToolbarPosition.fromStorageKey(
                     prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_IMAGE_TOOLBAR_POSITION],
                 ),
+            floatBallPickIconBarEnabled =
+                prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_ICON_BAR_ENABLED] ?: false,
+            floatBallPickTextBarOrder = PickResultBarButtons.decodeOrder(
+                prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_TEXT_BAR_ORDER],
+            ),
+            floatBallPickTextBarHidden = PickResultBarButtons.sanitizeHiddenText(
+                prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_TEXT_BAR_HIDDEN].orEmpty(),
+            ),
+            floatBallPickImageBarOrder = PickResultBarButtons.decodeOrder(
+                prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_IMAGE_BAR_ORDER],
+            ),
+            floatBallPickImageBarHidden = PickResultBarButtons.sanitizeHiddenImage(
+                prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_IMAGE_BAR_HIDDEN].orEmpty(),
+            ),
             floatBallPickHapticEnabled =
                 prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_HAPTIC_ENABLED] ?: true,
             floatBallDragPickEnabled =

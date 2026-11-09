@@ -334,6 +334,16 @@ data class FloatBallSettings(
     /** Pick panel: primary copy chip on the left or right of the bottom action bar. */
     val floatBallPickCopyButtonPosition: PickResultCopyButtonPosition = PickResultCopyButtonPosition.LEFT,
     val floatBallPickImageToolbarPosition: PickResultImageToolbarPosition = PickResultImageToolbarPosition.LEFT,
+    /** Pick panel: 底栏纯图标模式（文本区 + 图片区一起切换）。开启后两项「位置」设置不再生效。 */
+    val floatBallPickIconBarEnabled: Boolean = false,
+    /** 文本区底栏按钮顺序（空 = 默认顺序）。 */
+    val floatBallPickTextBarOrder: List<String> = emptyList(),
+    /** 文本区底栏被隐藏的按钮 id。 */
+    val floatBallPickTextBarHidden: Set<String> = emptySet(),
+    /** 图片区底栏按钮顺序（空 = 默认顺序）。 */
+    val floatBallPickImageBarOrder: List<String> = emptyList(),
+    /** 图片区底栏被隐藏的按钮 id。 */
+    val floatBallPickImageBarHidden: Set<String> = emptySet(),
     /** Pick panel: enable subtle haptic feedback for copy and word tap drag selection. */
     val floatBallPickHapticEnabled: Boolean = true,
     /**

@@ -702,6 +702,21 @@ class SettingsRepository @Inject constructor(
     suspend fun setFloatBallPickImageToolbarPosition(position: PickResultImageToolbarPosition) =
         overlay.setFloatBallPickImageToolbarPosition(position)
 
+    suspend fun setFloatBallPickIconBarEnabled(enabled: Boolean) =
+        overlay.setFloatBallPickIconBarEnabled(enabled)
+
+    suspend fun setFloatBallPickTextBarOrder(order: List<String>) =
+        overlay.setFloatBallPickTextBarOrder(order)
+
+    suspend fun setFloatBallPickTextBarHidden(hidden: Set<String>) =
+        overlay.setFloatBallPickTextBarHidden(hidden)
+
+    suspend fun setFloatBallPickImageBarOrder(order: List<String>) =
+        overlay.setFloatBallPickImageBarOrder(order)
+
+    suspend fun setFloatBallPickImageBarHidden(hidden: Set<String>) =
+        overlay.setFloatBallPickImageBarHidden(hidden)
+
     suspend fun setFloatBallPickHapticEnabled(enabled: Boolean) =
         overlay.setFloatBallPickHapticEnabled(enabled)
 

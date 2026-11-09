@@ -371,6 +371,9 @@ fun PickResultAuxiliaryImageBlock(
     showImageSearchBar: Boolean = true,
     imageToolbarPosition: com.slideindex.app.settings.PickResultImageToolbarPosition =
         com.slideindex.app.settings.PickResultImageToolbarPosition.LEFT,
+    iconBarEnabled: Boolean = false,
+    iconBarOrder: List<String> = emptyList(),
+    iconBarHidden: Set<String> = emptySet(),
     collapseDragActive: Boolean = false,
     auxiliaryDragEnabled: Boolean = false,
     onDragEnd: () -> Unit = {},
@@ -386,6 +389,9 @@ fun PickResultAuxiliaryImageBlock(
         searchEngines = searchEngines,
         showImageSearchBar = showImageSearchBar,
         imageToolbarPosition = imageToolbarPosition,
+        iconBarEnabled = iconBarEnabled,
+        iconBarOrder = iconBarOrder,
+        iconBarHidden = iconBarHidden,
         modifier = Modifier
             .fillMaxWidth()
             .height(sectionHeight)
@@ -1259,6 +1265,9 @@ fun PickResultCollapsePanelColumn(
             onSectionExpandedChange = onImageSectionExpandedChange,
             showImageSearchBar = true,
             imageToolbarPosition = appSettings.floatBallPickImageToolbarPosition,
+            iconBarEnabled = appSettings.floatBallPickIconBarEnabled,
+            iconBarOrder = appSettings.floatBallPickImageBarOrder,
+            iconBarHidden = appSettings.floatBallPickImageBarHidden,
             collapseDragActive = imageCollapseDragActive,
             auxiliaryDragEnabled = auxiliaryDragEnabled,
             onDragEnd = onDragEnd,

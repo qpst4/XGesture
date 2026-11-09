@@ -602,6 +602,8 @@ sealed interface AppNavKey : NavKey {
     /** 「取词 → 拾取与手感」：拾取十字与指针手感参数（原「取词拾取配置」页）。 */
     @Serializable data object FloatBallPickHandfeel : AppNavKey
     @Serializable data object FloatBallPickPanelLayoutBehavior : AppNavKey
+    /** 取词面板底栏按钮的顺序与显隐（纯图标模式）。 */
+    @Serializable data object FloatBallPickBarButtons : AppNavKey
     @Serializable data object ShareImageOcrHistory : AppNavKey
     @Serializable data object FloatBallTranslation : AppNavKey
     @Serializable data object CloudTranslateSettings : AppNavKey

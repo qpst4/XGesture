@@ -8,6 +8,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
@@ -40,6 +44,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,6 +59,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
+import android.os.SystemClock
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -280,11 +287,31 @@ fun PickResultImageSearchBar(
     overlayMode: Boolean = false,
     compactEmbedded: Boolean = false,
     imageToolbarPosition: PickResultImageToolbarPosition = PickResultImageToolbarPosition.LEFT,
+    /** 纯图标模式：不再画分享引擎主芯片，整排同规格小图标；按钮顺序/显隐由设置决定。 */
+    iconBarEnabled: Boolean = false,
+    iconBarOrder: List<String> = emptyList(),
+    iconBarHidden: Set<String> = emptySet(),
 ) {
     val shareEngines = SearchEngineStore.imageSharePanelEngines(engines)
     val isDark = LocalAppDarkTheme.current
 
     if (compactEmbedded) {
+        if (iconBarEnabled) {
+            PickResultImageIconBar(
+                order = iconBarOrder,
+                hidden = iconBarHidden,
+                engines = shareEngines,
+                onShareEngineClick = onShareEngineClick,
+                onImageSearch = onImageSearch,
+                onShare = onShare,
+                onSave = onSave,
+                onSaveLongClick = onSaveLongClick,
+                onStartImageDrag = onStartImageDrag,
+                onPinToScreen = onPinToScreen,
+                onStash = onStash,
+            )
+            return
+        }
         val toolbarOnRight = imageToolbarPosition == PickResultImageToolbarPosition.RIGHT
 
         @Composable
@@ -666,6 +693,299 @@ private fun ImageShareEngineChip(
                         engines = engines,
                         hoveredIndex = hoveredIndex,
                     )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 纯图标模式下的「搜图」键：
+ * - 单击：把当前图片交给搜索面板的图片模式（由上层 [onImageSearch] 落地）；
+ * - 长按后不松手左右滑动：快速选择已配置的分享引擎，松手即分享（原分享主芯片的长按行为）。
+ *
+ * 手势必须自己接管长按：`detectDragGesturesAfterLongPress` 在抬手时要求 up 未被消费，
+ * 而同一节点的 `clickable` 是内层、会先拿走这次 up，于是「长按后原地松手」会被判成 cancel。
+ * 与底栏搜索键（[PickResultSearchActionButton]）用同一套写法。
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ImageSearchIconButton(
+    engines: List<SearchEngineConfig>,
+    onImageSearch: () -> Unit,
+    onShareEngineClick: (SearchEngineConfig) -> Unit,
+) {
+    val (displayEngine, rememberEngine) = rememberLastUsedImageShareEngine(engines)
+    var anchorCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    var isDragging by remember { mutableStateOf(false) }
+    var hoveredIndex by remember { mutableIntStateOf(-1) }
+    var rowAnchorLeftInWindow by remember { mutableFloatStateOf(0f) }
+    var dragStartFingerY by remember { mutableFloatStateOf(0f) }
+    // 滑选抬手后短暂抑制点击：`clickable` 与长按手势的派发先后不做保证。
+    var suppressClickUntilMs by remember { mutableLongStateOf(0L) }
+
+    val isDark = LocalAppDarkTheme.current
+    val iconTint = if (isDark) Color(0xFFE0E0E6) else Color(0xFF333333)
+
+    val quickSwitchItemWidth = 40.dp
+    val quickSwitchItemSpacing = 6.dp
+    val quickSwitchRowPaddingStart = 10.dp
+    val quickSwitchRowPaddingEnd = 10.dp
+    val quickSwitchRowVerticalPadding = 6.dp
+    val quickSwitchPopupGapAboveChip = 8.dp
+    val quickSwitchYCancelThreshold = 60.dp
+    val quickSwitchScreenMargin = 8.dp
+
+    val density = LocalDensity.current
+    val itemWidthPx = with(density) { quickSwitchItemWidth.toPx() }
+    val itemSpacingPx = with(density) { quickSwitchItemSpacing.toPx() }
+    val rowPaddingStartPx = with(density) { quickSwitchRowPaddingStart.toPx() }
+    val rowPaddingEndPx = with(density) { quickSwitchRowPaddingEnd.toPx() }
+    val popupOffsetAboveChipPx = with(density) {
+        (quickSwitchItemWidth + quickSwitchRowVerticalPadding * 2 + quickSwitchPopupGapAboveChip).toPx()
+    }
+    val yCancelThresholdPx = with(density) { quickSwitchYCancelThreshold.toPx() }
+    val screenMarginPx = with(density) { quickSwitchScreenMargin.toPx() }
+    val totalItemStridePx = itemWidthPx + itemSpacingPx
+    val screenWidthPx = LocalWindowInfo.current.containerSize.width.toFloat()
+
+    val view = LocalView.current
+    val context = LocalContext.current.applicationContext
+    var appSettings by remember { mutableStateOf(AppSettings()) }
+    LaunchedEffect(context) {
+        com.slideindex.app.settings.SettingsFlowHolder.settingsFlow(context)
+            ?.collect { appSettings = it }
+    }
+
+    val quickSwitchEnabled = engines.size > 1
+
+    fun quickSwitchRowWidthPx(): Float {
+        val itemCount = engines.size
+        return rowPaddingStartPx + rowPaddingEndPx +
+            itemCount * itemWidthPx +
+            (itemCount - 1).coerceAtLeast(0) * itemSpacingPx
+    }
+
+    fun clampRowAnchorLeft(left: Float): Float {
+        val rowWidth = quickSwitchRowWidthPx()
+        return left.coerceIn(
+            screenMarginPx,
+            (screenWidthPx - rowWidth - screenMarginPx).coerceAtLeast(screenMarginPx),
+        )
+    }
+
+    fun indexAtFingerX(fingerX: Float): Int {
+        val localX = fingerX - rowAnchorLeftInWindow - rowPaddingStartPx
+        return (localX / totalItemStridePx).toInt().coerceIn(0, engines.lastIndex)
+    }
+
+    fun anchorRowUnderFinger(fingerX: Float, underIndex: Int) {
+        val desiredLeft = fingerX - rowPaddingStartPx - underIndex * totalItemStridePx - itemWidthPx / 2f
+        rowAnchorLeftInWindow = clampRowAnchorLeft(desiredLeft)
+    }
+
+    Box(
+        modifier = Modifier
+            .size(42.dp)
+            .clip(CircleShape)
+            .onGloballyPositioned { anchorCoordinates = it }
+            .then(
+                if (quickSwitchEnabled) {
+                    Modifier.pointerInput(engines, displayEngine) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            if (engines.isEmpty()) return@awaitEachGesture
+                            // 长按成立前抬手 / 移动过大 → null，这次仍按普通单击处理
+                            val longPress = awaitLongPressOrCancellation(down.id)
+                                ?: return@awaitEachGesture
+                            val coords = anchorCoordinates ?: return@awaitEachGesture
+
+                            val startIndex = engines.indexOf(displayEngine).coerceAtLeast(0)
+                            val finger = coords.localToWindow(longPress.position)
+                            dragStartFingerY = finger.y
+                            anchorRowUnderFinger(finger.x, startIndex)
+                            hoveredIndex = indexAtFingerX(finger.x)
+                            isDragging = true
+                            // 长按一成立就封住点击：up 由谁先消费不做保证，这里两头都堵住。
+                            suppressClickUntilMs = Long.MAX_VALUE
+                            HapticHelper.appTick(view, appSettings)
+
+                            var confirmedIndex = startIndex
+                            var released = false
+                            try {
+                                while (true) {
+                                    val event = awaitPointerEvent()
+                                    val change = event.changes.firstOrNull { it.id == longPress.id }
+                                    if (change == null || !change.pressed) {
+                                        // 抬手即确认：这里**不看 isConsumed**（旧实现看的正是它）。
+                                        released = event.changes.none { it.pressed }
+                                        if (released) change?.consume()
+                                        break
+                                    }
+                                    if (change.positionChanged()) {
+                                        change.consume()
+                                        val current = coords.localToWindow(change.position)
+                                        if (kotlin.math.abs(current.y - dragStartFingerY) > yCancelThresholdPx) {
+                                            if (hoveredIndex != -1) {
+                                                hoveredIndex = -1
+                                                HapticHelper.appTick(view, appSettings)
+                                            }
+                                        } else {
+                                            val index = indexAtFingerX(current.x)
+                                            if (index != hoveredIndex) {
+                                                hoveredIndex = index
+                                                HapticHelper.appTick(view, appSettings)
+                                            }
+                                        }
+                                        confirmedIndex = hoveredIndex
+                                    }
+                                }
+                            } finally {
+                                isDragging = false
+                                hoveredIndex = -1
+                                suppressClickUntilMs = SystemClock.uptimeMillis() + 250L
+                            }
+
+                            if (released && confirmedIndex in engines.indices) {
+                                val engine = engines[confirmedIndex]
+                                rememberEngine(engine)
+                                onShareEngineClick(engine)
+                            }
+                        }
+                    }
+                } else {
+                    Modifier
+                }
+            )
+            .clickable {
+                if (!isDragging && SystemClock.uptimeMillis() >= suppressClickUntilMs) onImageSearch()
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.ImageSearch,
+            contentDescription = stringResource(R.string.pick_result_action_image_search),
+            tint = iconTint,
+            modifier = Modifier.size(22.dp),
+        )
+    }
+
+    if (isDragging) {
+        val coords = anchorCoordinates
+        if (coords != null && coords.isAttached) {
+            val anchorTopLeft = coords.boundsInWindow().topLeft
+            // 与分享主芯片一致：滑选条强制 Ltr，位置与命中都按窗口 x 从左往右算。
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Popup(
+                    alignment = Alignment.TopStart,
+                    offset = IntOffset(
+                        (rowAnchorLeftInWindow - anchorTopLeft.x).roundToInt(),
+                        (-popupOffsetAboveChipPx).roundToInt(),
+                    ),
+                ) {
+                    ImageShareEngineQuickSwitchRow(
+                        engines = engines,
+                        hoveredIndex = hoveredIndex,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PickResultImageIconBar(
+    order: List<String>,
+    hidden: Set<String>,
+    engines: List<SearchEngineConfig>,
+    onShareEngineClick: (SearchEngineConfig) -> Unit,
+    onImageSearch: () -> Unit,
+    onShare: () -> Unit,
+    onSave: () -> Unit,
+    onSaveLongClick: (() -> Unit)? = null,
+    onStartImageDrag: (() -> Unit)? = null,
+    onPinToScreen: (() -> Unit)? = null,
+    onStash: (() -> Unit)? = null,
+) {
+    val buttons = remember(order) {
+        com.slideindex.app.settings.PickResultBarButtons.normalizeImage(order)
+    }
+    val hiddenIds = remember(hidden) {
+        com.slideindex.app.settings.PickResultBarButtons.sanitizeHiddenImage(hidden)
+    }
+    var moreMenuExpanded by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
+    ) {
+        buttons.forEach { button ->
+            if (button.id in hiddenIds) return@forEach
+            when (button) {
+                com.slideindex.app.settings.PickResultImageBarButton.IMAGE_SEARCH ->
+                    ImageSearchIconButton(
+                        engines = engines,
+                        onImageSearch = onImageSearch,
+                        onShareEngineClick = onShareEngineClick,
+                    )
+
+                com.slideindex.app.settings.PickResultImageBarButton.SAVE ->
+                    PickResultActionIcon(
+                        icon = Icons.Outlined.Save,
+                        enabled = true,
+                        onClick = onSave,
+                        onLongClick = onSaveLongClick,
+                        contentDescription = stringResource(R.string.pick_result_action_save_image),
+                    )
+
+                com.slideindex.app.settings.PickResultImageBarButton.SHARE ->
+                    PickResultActionIcon(
+                        icon = Icons.Outlined.Share,
+                        enabled = true,
+                        onClick = onShare,
+                        onLongClick = onStartImageDrag,
+                        contentDescription = stringResource(R.string.pick_result_action_share_image),
+                    )
+
+                com.slideindex.app.settings.PickResultImageBarButton.MORE -> {
+                    if (onPinToScreen != null || onStash != null) {
+                        Box {
+                            PickResultActionIcon(
+                                icon = Icons.Filled.MoreVert,
+                                enabled = true,
+                                onClick = { moreMenuExpanded = true },
+                                contentDescription = stringResource(R.string.pick_result_action_more),
+                            )
+                            PickResultDropdownMenuInLtr(
+                                expanded = moreMenuExpanded,
+                                onDismissRequest = { moreMenuExpanded = false },
+                            ) {
+                                onPinToScreen?.let { pinAction ->
+                                    PickResultActionMenuItem(
+                                        label = stringResource(R.string.pick_result_pin),
+                                        icon = Icons.Outlined.PushPin,
+                                        onClick = {
+                                            moreMenuExpanded = false
+                                            pinAction()
+                                        },
+                                    )
+                                }
+                                onStash?.let { stashAction ->
+                                    PickResultActionMenuItem(
+                                        label = stringResource(R.string.pick_result_stash),
+                                        icon = Icons.Outlined.Archive,
+                                        onClick = {
+                                            moreMenuExpanded = false
+                                            stashAction()
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
