@@ -39,6 +39,16 @@ object AccessibilityLink {
     @Volatile
     private var lastRecoveryAtMs = 0L
 
+    /** 累计掉线次数 / 恢复尝试次数 / 最近一次恢复结果，供诊断报告使用。 */
+    @Volatile
+    private var brokenCount = 0
+
+    @Volatile
+    private var recoveryAttempts = 0
+
+    @Volatile
+    private var lastRecoveryResult: String = "-"
+
     /**
      * 掉线恢复入口。必须由持有浮层宿主的一方在 start/stop 里成对设置与清空；
      * 没有设置时本对象只记日志，不做任何事。
@@ -65,6 +75,17 @@ object AccessibilityLink {
 
     fun lastAliveAtMs(): Long = lastAliveAtMs
 
+    fun brokenCount(): Int = brokenCount
+
+    fun recoveryAttempts(): Int = recoveryAttempts
+
+    fun lastRecoveryResult(): String = lastRecoveryResult
+
+    /** 记录一次恢复结果（成功 / 失败原因），诊断报告会原样带出。 */
+    fun noteRecoveryResult(result: String) {
+        lastRecoveryResult = result
+    }
+
     /** 记录一次“连接确实还能用”的证据（任意成功调用 / 探活成功都会走这里）。 */
     fun noteAlive(source: String) {
         if (broken) {
@@ -86,6 +107,9 @@ object AccessibilityLink {
         val wasBroken = broken
         broken = true
         brokenReason = reason
+        if (!wasBroken) {
+            brokenCount++
+        }
         if (wasBroken) return false
 
         Log.e(TAG, "accessibility link broken: $reason")
@@ -95,6 +119,8 @@ object AccessibilityLink {
             return false
         }
         lastRecoveryAtMs = now
+        recoveryAttempts++
+        lastRecoveryResult = "进行中"
         val handler = recoveryHandler
         if (handler == null) {
             Log.w(TAG, "no recovery handler attached, only logging")

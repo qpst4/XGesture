@@ -16,9 +16,14 @@ object SecureSettingsHelper {
 
     const val PERMISSION = Manifest.permission.WRITE_SECURE_SETTINGS
 
-    /** 重绑时两次写之间的默认间隔：覆盖安装/被杀之后，系统需要观察到一次真正的「解绑」。 */
-    const val DEFAULT_REBIND_GAP_MS = 800L
-    private const val MIN_REBIND_GAP_MS = 300L
+    /**
+     * 重绑时两次写之间的默认间隔：覆盖安装/被杀之后，系统需要观察到一次真正的「解绑」。
+     *
+     * 真机实测（本仓库注释与线上反馈一致）：60ms 会被 ContentObserver 合并成一次写，
+     * 等于没解绑；3s 稳定生效。这里取 2.5s 折中——既稳定，又不至于让恢复流程等太久。
+     */
+    const val DEFAULT_REBIND_GAP_MS = 2_500L
+    private const val MIN_REBIND_GAP_MS = 800L
 
     fun hasWriteSecureSettings(context: Context): Boolean =
         context.checkSelfPermission(PERMISSION) == PackageManager.PERMISSION_GRANTED
@@ -111,14 +116,13 @@ object SecureSettingsHelper {
                     it.equals(shortId, ignoreCase = true)
             }
 
+        // ⚠️ 只摘掉自己这一条，**不碰** ACCESSIBILITY_ENABLED 全局开关：
+        // 把它置 0 会顺手把用户开着的其它无障碍服务一起关掉，重绑失败时更是灾难。
         Settings.Secure.putString(
             resolver,
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-            if (others.isEmpty()) "" else TextUtils.join(":", others),
+            TextUtils.join(":", others),
         )
-        if (others.isEmpty()) {
-            Settings.Secure.putInt(resolver, Settings.Secure.ACCESSIBILITY_ENABLED, 0)
-        }
 
         // 给系统留出观察到「解绑」的时间：间隔太短会被 ContentObserver 合并，服务不会重绑。
         try {

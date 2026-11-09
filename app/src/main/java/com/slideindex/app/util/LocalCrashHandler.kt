@@ -7,6 +7,8 @@ import android.provider.Settings
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import com.slideindex.app.clipboard.ClipboardPermissionHelper
+import com.slideindex.app.overlay.AccessibilityLink
+import com.slideindex.app.overlay.OverlayStatePort
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -254,6 +256,43 @@ object LocalCrashHandler {
             appendLine("- 无障碍服务 (Accessibility): ${if (accessibilityGranted) "✅ 已开启" else "❌ 未开启"}")
             appendLine("- 通知监听服务 (Notification Listener): ${if (notificationListenerGranted) "✅ 已开启" else "❌ 未开启"}")
             appendLine("- 读取日志 (READ_LOGS): ${if (ClipboardPermissionHelper.hasReadLogsPermission(context)) "✅ 已授予" else "❌ 未授予"}")
+            appendLine()
+
+            // 无障碍链路健康度：ColorOS 这类 ROM 上「开关开着但连不上」是最高频的故障，
+            // 这里把链路状态、掉线次数、恢复结果、设置回流与自愈计数一次性带出来，
+            // 用户一键复制就能定位是“服务死了”还是“设置没应用上”。
+            appendLine("#### 无障碍链路")
+            val linkUsable = runCatching { AccessibilityLink.isUsable() }.getOrDefault(true)
+            val linkBrokenReason = runCatching { AccessibilityLink.brokenReason() }.getOrNull()
+            val lastAliveAgeMs = runCatching {
+                val last = AccessibilityLink.lastAliveAtMs()
+                if (last <= 0L) -1L
+                else android.os.SystemClock.elapsedRealtime() - last
+            }.getOrDefault(-1L)
+            appendLine(
+                "- 链路状态: " + if (linkUsable) "✅ 可用" else "❌ 不可用" +
+                    (linkBrokenReason?.let { "（原因: $it）" } ?: ""),
+            )
+            appendLine(
+                "- 上次成功调用: " +
+                    if (lastAliveAgeMs >= 0) "${lastAliveAgeMs / 1000}s 前" else "本次进程内尚无记录",
+            )
+            appendLine(
+                "- 掉线次数: ${runCatching { AccessibilityLink.brokenCount() }.getOrDefault(0)} / " +
+                    "恢复尝试: ${runCatching { AccessibilityLink.recoveryAttempts() }.getOrDefault(0)} / " +
+                    "最近结果: ${runCatching { AccessibilityLink.lastRecoveryResult() }.getOrDefault("-")}",
+            )
+            appendLine(
+                "- 设置应用: ${runCatching { OverlayStatePort.settingsApplyCount() }.getOrDefault(0)} 次" +
+                    "（最近 " + runCatching {
+                        val at = OverlayStatePort.lastSettingsApplyAtMs()
+                        if (at <= 0L) "无" else "${(android.os.SystemClock.elapsedRealtime() - at) / 1000}s 前"
+                    }.getOrDefault("无") + "）",
+            )
+            appendLine(
+                "- 触钮自愈: 巡检 ${runCatching { OverlayStatePort.healTickCount() }.getOrDefault(0)} 次 / " +
+                    "跳过 ${runCatching { OverlayStatePort.healSkipCount() }.getOrDefault(0)} 次",
+            )
             appendLine()
             if (crashReports.isEmpty()) {
                 appendLine("#### 崩溃日志记录")

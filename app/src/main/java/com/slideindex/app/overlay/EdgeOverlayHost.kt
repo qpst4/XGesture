@@ -175,6 +175,7 @@ class EdgeOverlayHost(
         overlayManager?.applySettings(effectiveSettings)
         settingsApplied = true
         appliedServiceEnabled = settings.serviceEnabled
+        OverlayStatePort.noteSettingsApplied()
         if (KeyboardTriggerImeState.imeVisible) {
             FloatBallOverlay.onKeyboardImeChanged()
         }
@@ -324,8 +325,10 @@ class EdgeOverlayHost(
             }.getOrNull()
             if (outcome == AccessibilityRecoverOutcome.Connected) {
                 AccessibilityLink.noteAlive("recover")
+                AccessibilityLink.noteRecoveryResult("成功")
             } else {
                 Log.w(TAG, "accessibility recovery failed (outcome=$outcome), notifying user")
+                AccessibilityLink.noteRecoveryResult("失败（$outcome，已发通知）")
                 runCatching { AccessibilityRecoverNotifier.notifyOffline(context) }
             }
         }

@@ -57,6 +57,9 @@ class OverlayManager(
     private val mainHandler = Handler(Looper.getMainLooper())
     private var refreshVisibilityPending = false
 
+    /** 自愈巡检日志节流（前后台切换时这条路径可能每秒被调多次）。 */
+    private var lastHealLogAtMs = 0L
+
     fun applySettings(settings: AppSettings) {
         Log.d("XGStartup", "applySettings serviceEnabled=" + settings.serviceEnabled +
             " triggersShown=" + triggersShown + " suppressed=" + triggersSuppressed)
@@ -164,19 +167,30 @@ class OverlayManager(
      *
      * 由周期巡检、环境变化与预览入口调用；只有真的重挂了才返回 true。
      */
+    /** 自愈巡检的调试日志：同一条路径高频调用，统一节流，避免刷屏淹没真正的问题。 */
+    private fun logHealThrottled(message: String) {
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (now - lastHealLogAtMs < HEAL_LOG_THROTTLE_MS) return
+        lastHealLogAtMs = now
+        Log.d("XGStartup", message)
+    }
+
     fun healTriggerAttachments(
         metrics: ScreenMetricsSnapshot = OverlayScreenMetrics.snapshot(context)
     ): Boolean {
         if (!currentSettings.serviceEnabled) {
-            Log.d("XGStartup", "heal SKIP serviceEnabled=false")
+            OverlayStatePort.noteHealTick(skipped = true)
+            logHealThrottled("heal SKIP serviceEnabled=false")
             return false
         }
         if (OverlayTrampolineGuard.blocksOverlayPresentationTouch()) {
-            Log.d("XGStartup", "heal SKIP trampolineGuard")
+            OverlayStatePort.noteHealTick(skipped = true)
+            logHealThrottled("heal SKIP trampolineGuard")
             return false
         }
         if (shouldSuppressTrigger()) {
-            Log.d("XGStartup", "heal SKIP suppressed")
+            OverlayStatePort.noteHealTick(skipped = true)
+            logHealThrottled("heal SKIP suppressed")
             return false
         }
 
@@ -192,7 +206,8 @@ class OverlayManager(
                 !controller.hasTriggerAttachments()
         }
         if (missing.isEmpty()) {
-            Log.d("XGStartup", "heal nothing-missing")
+            OverlayStatePort.noteHealTick(skipped = false)
+            logHealThrottled("heal nothing-missing")
             return false
         }
 
@@ -731,6 +746,9 @@ class OverlayManager(
 
     private companion object {
         private const val REFRESH_VISIBILITY_DEBOUNCE_MS = 150L
+
+        /** 自愈巡检日志的最小间隔：够看清趋势，又不会把 logcat 刷满。 */
+        private const val HEAL_LOG_THROTTLE_MS = 5_000L
         private const val TAG = "OverlayManager"
 
         /** 没有明确触发侧时，按这个顺序找"有画布的那一侧"。 */
