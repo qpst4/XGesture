@@ -120,6 +120,11 @@ object FloatBallOverlay {
 
     internal val mainHandler = Handler(Looper.getMainLooper())
     internal var overlayScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    internal var pendingPickAnchor: Offset? = null
+
+
+    internal var dragScreenBounds: OverlayScreenBounds? = null
+
     internal val dragSession = FloatBallDragSession()
 
     internal var windowManager: WindowManager? = null
@@ -195,13 +200,13 @@ object FloatBallOverlay {
 
     internal val settingsState: MutableState<AppSettings>?
         get() = sceneState?.settingsState
-    private val cursorVisibleState: MutableState<Boolean>?
+    internal val cursorVisibleState: MutableState<Boolean>?
         get() = sceneState?.cursorVisible
-    private val cursorPausedState: MutableState<Boolean>?
+    internal val cursorPausedState: MutableState<Boolean>?
         get() = sceneState?.cursorPaused
-    private val cursorAnchorState: MutableState<Offset>?
+    internal val cursorAnchorState: MutableState<Offset>?
         get() = sceneState?.cursorAnchor
-    private val selectionStartState: MutableState<Offset?>?
+    internal val selectionStartState: MutableState<Offset?>?
         get() = sceneState?.selectionStart
     private val selectionPreviewBoundsState: MutableState<Rect?>?
         get() = sceneState?.selectionPreviewBounds
@@ -352,13 +357,11 @@ object FloatBallOverlay {
     internal var moveModeExitRunnable: Runnable? = null
     internal var activeSideAtDragStart: FloatBallSide? = null
     private var finishDragRequested = false
-    private var dragChromeLayoutFrameScheduled = false
-    private var cursorCommitFrameScheduled = false
-    private var pendingPickAnchor: Offset? = null
-    private var pendingCursorFrameAnchor: Offset? = null
-    private var currentDragPickAnchor = Offset.Zero
+    internal var dragChromeLayoutFrameScheduled = false
+    internal var cursorCommitFrameScheduled = false
+    internal var pendingCursorFrameAnchor: Offset? = null
+    internal var currentDragPickAnchor = Offset.Zero
     private var cursorPreviewActive = false
-    private var dragScreenBounds: OverlayScreenBounds? = null
     private var boundsLookupGeneration = 0
     /** Latched after yellow pause + small finger move; stays until drag ends (FV regional mode). */
     private var regionalPickActive = false
@@ -2085,7 +2088,7 @@ object FloatBallOverlay {
         syncCursorPreviewAppearance()
     }
 
-    private fun syncCursorPreviewAppearance() {
+    internal fun syncCursorPreviewAppearance() {
         val view = cursorPreviewView ?: return
         val settings = settingsState?.value
         val layersVisible = cursorVisibleState?.value == true
@@ -2257,7 +2260,7 @@ object FloatBallOverlay {
         syncDisplayBallLayout(settings)
     }
 
-    private fun syncDisplayBallLayout(
+    internal fun syncDisplayBallLayout(
         settings: AppSettings,
         layoutOnly: Boolean = false,
         overrideCenter: Offset? = null
@@ -3286,7 +3289,7 @@ object FloatBallOverlay {
     }
 
     /** FV o1.r(x,y): instant hit-test on cached rects — coalesced to one pass per animation frame. */
-    private fun applyPreviewBoundsFromCache() {
+    internal fun applyPreviewBoundsFromCache() {
         if (!isDragging || cursorVisibleState?.value != true) return
         if (regionalPickActive) return
         if (cursorPausedState?.value == true && selectionStartState?.value != null) return
@@ -3488,96 +3491,33 @@ object FloatBallOverlay {
         syncCursorChromeAppearance()
     }
 
-    internal fun cancelDragChromeLayoutFrame() {
-        dragChromeLayoutFrameScheduled = false
-        pendingCursorFrameAnchor = null
-    }
+    internal fun cancelDragChromeLayoutFrame() =
+        FloatBallDragChromeLayout.cancelDragChromeLayoutFrame()
 
-    private fun scheduleDragChromeLayoutOnNextFrame() {
-        val view = displayView ?: cursorPreviewView ?: return
-        if (dragChromeLayoutFrameScheduled) return
-        dragChromeLayoutFrameScheduled = true
-        view.postOnAnimation {
-            dragChromeLayoutFrameScheduled = false
-            if (!isDragging) return@postOnAnimation
-            commitDragChromeLayoutFrame()
-        }
-    }
+    internal fun scheduleDragChromeLayoutOnNextFrame() =
+        FloatBallDragChromeLayout.scheduleDragChromeLayoutOnNextFrame()
 
-    private fun flushDragChromeLayout(syncAnchorState: Boolean = false) {
-        cancelDragChromeLayoutFrame()
-        if (!isDragging && !syncAnchorState) return
-        commitDragChromeLayoutFrame(forceAnchorState = syncAnchorState)
-    }
+    internal fun flushDragChromeLayout(syncAnchorState: Boolean = false) =
+        FloatBallDragChromeLayout.flushDragChromeLayout(syncAnchorState)
 
-    /** Ball + cursor chrome in one animation tick (FV-style single-frame move). */
-    private fun commitDragChromeLayoutFrame(forceAnchorState: Boolean = false) {
-        val pick = pendingCursorFrameAnchor ?: currentDragPickAnchor
-        pendingCursorFrameAnchor = null
-        if (!moveModeActive) {
-            syncCursorPreviewAppearance()
-        }
-        settingsState?.value?.let { applyDragBallLayout(it) }
-        // 移动模式下不维护取词光标锚点/预览边界：这一趟拖动只是为了挪球。
-        if (moveModeActive) return
-        val needsPreviewAnchor = forceAnchorState ||
-            cursorPausedState?.value == true ||
-            selectionStartState?.value != null
-        if (needsPreviewAnchor) {
-            cursorAnchorState?.value = pick
-        }
-        if (isDragging && cursorVisibleState?.value == true) {
-            applyPreviewBoundsFromCache()
-        }
-    }
+    internal fun commitDragChromeLayoutFrame(forceAnchorState: Boolean = false) =
+        FloatBallDragChromeLayout.commitDragChromeLayoutFrame(forceAnchorState)
 
-    internal fun cancelCursorCommitFrame() {
-        cursorCommitFrameScheduled = false
-        pendingPickAnchor = null
-    }
+    internal fun cancelCursorCommitFrame() =
+        FloatBallDragChromeLayout.cancelCursorCommitFrame()
 
-    private fun scheduleCursorCommitOnNextFrame() {
-        val view = displayView ?: return
-        if (cursorCommitFrameScheduled) return
-        cursorCommitFrameScheduled = true
-        view.postOnAnimation {
-            cursorCommitFrameScheduled = false
-            if (!isDragging) return@postOnAnimation
-            commitPickAnchor()
-        }
-    }
+    internal fun scheduleCursorCommitOnNextFrame() =
+        FloatBallDragChromeLayout.scheduleCursorCommitOnNextFrame()
 
-    private fun commitPickAnchor() {
-        val pick = pendingPickAnchor ?: return
-        pendingPickAnchor = null
-        cursorAnchorState?.value = pick
-    }
+    internal fun commitPickAnchor() =
+        FloatBallDragChromeLayout.commitPickAnchor()
 
-    private fun applyPickAnchor(pick: Offset) {
-        if (isDragging) {
-            currentDragPickAnchor = pick
-            pendingCursorFrameAnchor = pick
-            return
-        }
-        pendingPickAnchor = pick
-        scheduleCursorCommitOnNextFrame()
-    }
+    internal fun applyPickAnchor(pick: Offset) =
+        FloatBallDragChromeLayout.applyPickAnchor(pick)
 
-    private fun applyDragBallLayout(settings: AppSettings) {
-        val view = displayView ?: return
-        val metrics = view.resources.displayMetrics
-        val ballSize = FloatBallLayout.ballSize(settings, metrics.density)
-        val marginPx = FloatBallLayout.marginPx(metrics.density)
-        val screenBounds = dragScreenBounds ?: FloatBallScreenMetrics.bounds(view.context, windowManager)
-            .also { dragScreenBounds = it }
-        val center = dragSession.clampedBallCenter(
-            ballSize = ballSize,
-            marginPx = marginPx,
-            screenWidth = screenBounds.width.roundToInt(),
-            screenHeight = screenBounds.height.roundToInt()
-        )
-        syncDisplayBallLayout(settings, layoutOnly = true, overrideCenter = center)
-    }
+    internal fun applyDragBallLayout(settings: AppSettings) =
+        FloatBallDragChromeLayout.applyDragBallLayout(settings)
+
 
     private fun updatePickAndBallFromFinger(moveBallWindow: Boolean) {
         val view = displayView ?: return
