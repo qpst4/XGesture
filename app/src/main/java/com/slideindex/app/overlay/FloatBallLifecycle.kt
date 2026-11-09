@@ -39,7 +39,7 @@ internal object FloatBallLifecycle {
     }
 
     fun onKeyboardImeChanged() {
-        if (!FloatBallOverlay.isShowing || FloatBallOverlay.isDragging) return
+        if (!FloatBallOverlay.isShowing || FloatBallOverlay.isDraggingNow()) return
         relayout()
     }
 }

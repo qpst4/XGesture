@@ -77,7 +77,7 @@ private const val PICK_PREVIEW_ALPHA_MIN = 0.25f
  */
 @SuppressLint("StaticFieldLeak")
 object FloatBallOverlay {
-    private const val TAG = "FloatBallOverlay"
+    internal const val TAG = "FloatBallOverlay"
     private const val EDGE_MARGIN_DP = 8f
 
     /** 圆环工具栏「移动」：进入移动模式时球朝屏幕中心内移的距离（纯提示，不落盘）。 */
@@ -119,8 +119,8 @@ object FloatBallOverlay {
     private var passivePickPreviewAnchor: Offset? = null
 
     internal val mainHandler = Handler(Looper.getMainLooper())
-    private var overlayScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    private val dragSession = FloatBallDragSession()
+    internal var overlayScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    internal val dragSession = FloatBallDragSession()
 
     internal var windowManager: WindowManager? = null
     internal var displayView: FloatBallDisplayHost? = null
@@ -129,23 +129,23 @@ object FloatBallOverlay {
     private var ballIconWindow: FloatBallIconWindow? = null
 
     /** 左右两条边缘线各自的独立窄窗。 */
-    private var lineWindowLeft: FloatBallLineWindow? = null
-    private var lineWindowRight: FloatBallLineWindow? = null
+    internal var lineWindowLeft: FloatBallLineWindow? = null
+    internal var lineWindowRight: FloatBallLineWindow? = null
 
     /** 落在"触发区条带窗"里的那条线：条带窗自己画线 + 自己收触摸，省掉独立触摸窗。 */
-    private var stripLineView: FloatBallLineView? = null
+    internal var stripLineView: FloatBallLineView? = null
 
     /** 诊断：本次拖动已打印的球心日志条数。 */
     private var dragCenterLogCount = 0
 
     /** 诊断：上一次拖动布局的时间点（用于检测主线程停顿）。 */
     private var lastDragLayoutAtMs = 0L
-    private var displayLayoutParams: WindowManager.LayoutParams? = null
-    private var displayOwner: OverlayComposeOwner? = null
+    internal var displayLayoutParams: WindowManager.LayoutParams? = null
+    internal var displayOwner: OverlayComposeOwner? = null
     internal var touchHost: FloatBallTouchHostLayout? = null
-    private var touchLayoutParams: WindowManager.LayoutParams? = null
+    internal var touchLayoutParams: WindowManager.LayoutParams? = null
     internal var lineTouchHost: FloatBallStripHost? = null
-    private var lineTouchLayoutParams: WindowManager.LayoutParams? = null
+    internal var lineTouchLayoutParams: WindowManager.LayoutParams? = null
 
     /**
      * 触摸窗被撑成全屏前的参数快照（key = 该窗的 LayoutParams）。
@@ -160,9 +160,9 @@ object FloatBallOverlay {
     private var ballIdleChromeView: ComposeView? = null
     private var lineIdleChromeView: ComposeView? = null
     internal var ballIconView: FloatBallIconView? = null
-    private var cursorPreviewView: FloatBallCursorPreviewView? = null
-    private val screenOffDismissReceiver = ScreenOffDismissReceiver { hideCursor() }
-    private var appContext: Context? = null
+    internal var cursorPreviewView: FloatBallCursorPreviewView? = null
+    internal val screenOffDismissReceiver = ScreenOffDismissReceiver { hideCursor() }
+    internal var appContext: Context? = null
     internal var positionYPreviewRestore: Float? = null
 
     /**
@@ -179,13 +179,13 @@ object FloatBallOverlay {
 
     // —— 闲置隐身 ——
     /** 当前是否处于「显示」状态（false = 按闲置不透明度绘制）。 */
-    private var ballRevealed = true
+    internal var ballRevealed = true
     /** 手指是否正按在球上。 */
-    private var ballPressed = false
+    internal var ballPressed = false
     /** 设置预览等强制显示期间：不做闲置隐身。 */
     private var ballForceRevealed = false
     /** 最近一次写入 alpha 后视镜：null = 跟随设置不透明度。 */
-    private var ballAlphaOverrideValue: Float? = null
+    internal var ballAlphaOverrideValue: Float? = null
     private var ballAlphaAnimator: ValueAnimator? = null
     private var ballIdleHideRunnable: Runnable? = null
     /** 当前挂着的隐身计时用的是多长判定时长（-1 = 没有计时）。 */
@@ -231,9 +231,9 @@ object FloatBallOverlay {
     private var dragPastePickUpgraded = false
     private var dragPasteUpgradeRunnable: Runnable? = null
     internal var captureSuppressed = false
-    private var chromeDetachedForCapture = false
-    internal var isDragging = false
-    private var chromeZOrderFront = true
+    internal var chromeDetachedForCapture = false
+    private var isDragging = false
+    internal var chromeZOrderFront = true
     /** Panel opened during drag; defer WM remove/add until [restoreAfterDragEnd]. */
     private var chromeRaiseDeferredForDrag = false
     /** Non-null: only re-add triggers on these sides; null = all sides (center/fullscreen panels). */
@@ -250,7 +250,9 @@ object FloatBallOverlay {
      */
 
 
-    private fun setDragging(dragging: Boolean) {
+    internal fun isDraggingNow(): Boolean = isDragging
+
+    internal fun setDragging(dragging: Boolean) {
         val wasDragging = isDragging
         isDragging = dragging
         when {
@@ -286,7 +288,7 @@ object FloatBallOverlay {
         settingsState?.value?.let { syncBallIdleAlpha(it, animate = !dragging) }
     }
 
-    private fun cancelDeferredGifResume() {
+    internal fun cancelDeferredGifResume() {
         deferredGifResumeRunnable?.let { mainHandler.removeCallbacks(it) }
         deferredGifResumeRunnable = null
     }
@@ -308,7 +310,7 @@ object FloatBallOverlay {
         host.postOnAnimation(runnable)
     }
 
-    private fun cancelDeferredDragStart() {
+    internal fun cancelDeferredDragStart() {
         deferredDragStartGeneration++
     }
 
@@ -330,25 +332,25 @@ object FloatBallOverlay {
         settingsState?.value?.let { updateChromeVisibility(it) }
     }
 
-    private var dragOriginatedFromLine = false
-    private var lineDragEndedWithGesture = false
-    private var dragActiveSideOverrideState: MutableState<FloatBallSide?>? = null
+    internal var dragOriginatedFromLine = false
+    internal var lineDragEndedWithGesture = false
+    internal var dragActiveSideOverrideState: MutableState<FloatBallSide?>? = null
     internal var dragActiveSideOverride: FloatBallSide?
         get() = dragActiveSideOverrideState?.value
         set(value) {
             dragActiveSideOverrideState?.value = value
         }
     private var passthroughRestorePending = false
-    private var committedActiveSideUntilPersist: FloatBallSide? = null
+    internal var committedActiveSideUntilPersist: FloatBallSide? = null
 
     /**
      * 圆环工具栏「移动」进入的临时移动模式：**只在内存里**，不写任何位置设置（自由位置 CUSTOM 模式存不住，
      * FloatBallPositionMode.fromStorageKey 会把 CUSTOM 读回 RIGHT）。
      * 开启时球朝屏幕中心内移一点作为提示；拖动时只跟手、不取词；松手按落点选边 + 存竖直位置并吸附回边缘。
      */
-    private var moveModeActive = false
-    private var moveModeExitRunnable: Runnable? = null
-    private var activeSideAtDragStart: FloatBallSide? = null
+    internal var moveModeActive = false
+    internal var moveModeExitRunnable: Runnable? = null
+    internal var activeSideAtDragStart: FloatBallSide? = null
     private var finishDragRequested = false
     private var dragChromeLayoutFrameScheduled = false
     private var cursorCommitFrameScheduled = false
@@ -360,8 +362,8 @@ object FloatBallOverlay {
     private var boundsLookupGeneration = 0
     /** Latched after yellow pause + small finger move; stays until drag ends (FV regional mode). */
     private var regionalPickActive = false
-    private val gestureHintWindow = FloatBallGestureHintWindow()
-    private var currentGestureHintType: FloatBallGestureType? = null
+    internal val gestureHintWindow = FloatBallGestureHintWindow()
+    internal var currentGestureHintType: FloatBallGestureType? = null
     /** slop 内球体已跟手，超 slop 后升级为完整取词拖。 */
     private var slopPhaseBallFollowActive = false
 
@@ -560,7 +562,7 @@ object FloatBallOverlay {
         }
     }
 
-    private fun cancelPendingChromeRaise() {
+    internal fun cancelPendingChromeRaise() {
         pendingChromeRaiseRunnable?.let { mainHandler.removeCallbacks(it) }
         pendingChromeRaiseRunnable = null
     }
@@ -687,7 +689,7 @@ object FloatBallOverlay {
         animator.start()
     }
 
-    private fun cancelBallAlphaAnimation() {
+    internal fun cancelBallAlphaAnimation() {
         val animator = ballAlphaAnimator
         ballAlphaAnimator = null
         animator?.cancel()
@@ -753,7 +755,7 @@ object FloatBallOverlay {
         mainHandler.postDelayed(runnable, delayMs.toLong())
     }
 
-    private fun cancelBallIdleHide() {
+    internal fun cancelBallIdleHide() {
         ballIdleHideRunnable?.let { mainHandler.removeCallbacks(it) }
         ballIdleHideRunnable = null
         ballIdleHideDelayMs = -1
@@ -1007,80 +1009,9 @@ object FloatBallOverlay {
         }
     }
 
-    fun dismiss(destroyPickPanelShell: Boolean = false) {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { dismiss(destroyPickPanelShell) }
-            return
-        }
-        cancelPassiveLineRestore()
-        cancelDeferredGifResume()
-        cancelDeferredDragStart()
-        moveModeActive = false
-        touchHost?.setMoveMode(false)
-        moveModeExitRunnable?.let { mainHandler.removeCallbacks(it) }
-        moveModeExitRunnable = null
-        hideCursor(restorePassive = false)
-        ballIconView?.release()
-        cancelPauseTimer()
-        cancelPendingChromeRaise()
-        val wm = windowManager
-        stripLineView = null
-        lineWindowLeft?.dispose()
-        lineWindowLeft = null
-        lineWindowRight?.dispose()
-        lineWindowRight = null
-        displayView?.let { view -> wm?.let { runCatching { it.removeView(view) } } }
-        touchHost?.let { view -> wm?.let { runCatching { it.removeView(view) } } }
-        lineTouchHost?.let { view -> wm?.let { runCatching { it.removeView(view) } } }
-        destroySplitIdleChrome()
-        cancelBallAlphaAnimation()
-        cancelBallIdleHide()
-        ballAlphaOverrideValue = null
-        ballRevealed = true
-        ballPressed = false
-        ballForceRevealed = false
-        gestureHintWindow.detach()
-        displayView?.dispose()
-        displayOwner?.destroy()
-        if (FloatBallPickResultPanel.isShowing) {
-            Log.i(TAG, "dismiss: skip pick result panel destroy while panel is showing")
-        } else if (destroyPickPanelShell) {
-            FloatBallPickResultPanel.destroy()
-        }
-        displayOwner = null
-        displayView = null
-        displayLayoutParams = null
-        touchHost = null
-        touchLayoutParams = null
-        lineTouchHost = null
-        lineTouchLayoutParams = null
-        ballIconView = null
-        cursorPreviewView = null
-        windowManager = null
-        sceneState = null
-        dragActiveSideOverrideState = null
-        cancelPendingPositionY()
-        onPositionPersisted = null
-        onActiveSidePersisted = null
-        screenOffDismissReceiver.unregister()
-        appContext = null
-        setDragging(false)
-        dragOriginatedFromLine = false
-        overlayScope.cancel()
-        overlayScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-        lineDragEndedWithGesture = false
-        dragActiveSideOverride = null
-        committedActiveSideUntilPersist = null
-        activeSideAtDragStart = null
-        cancelDragChromeLayoutFrame()
-        cancelCursorCommitFrame()
-        dragSession.reset()
-        currentGestureHintType = null
-        chromeZOrderFront = true
-        cancelPendingChromeRaise()
-        captureSuppressed = false
-        chromeDetachedForCapture = false
-    }
+    fun dismiss(destroyPickPanelShell: Boolean = false) =
+        FloatBallDismiss.dismiss(destroyPickPanelShell)
+
 
     fun relayout() = FloatBallLifecycle.relayout()
 
@@ -1664,7 +1595,7 @@ object FloatBallOverlay {
         lineTouchHost?.setIdleChrome(null, null)
     }
 
-    private fun destroySplitIdleChrome() {
+    internal fun destroySplitIdleChrome() {
         clearSplitIdleChrome()
         OverlayCompose.disposeComposeView(ballIdleChromeView)
         OverlayCompose.disposeComposeView(lineIdleChromeView)
@@ -2591,7 +2522,7 @@ object FloatBallOverlay {
         }
     }
 
-    private fun cancelPassiveLineRestore() {
+    internal fun cancelPassiveLineRestore() {
         passiveLineRestoreRunnable?.let { mainHandler.removeCallbacks(it) }
         passiveLineRestoreRunnable = null
     }
@@ -3884,7 +3815,7 @@ object FloatBallOverlay {
         return Rect(left, top, right, bottom)
     }
 
-    private fun cancelPauseTimer() {
+    internal fun cancelPauseTimer() {
         pauseRunnable?.let { mainHandler.removeCallbacks(it) }
         pauseRunnable = null
     }
@@ -3924,7 +3855,7 @@ object FloatBallOverlay {
         syncCursorChromeAppearance()
     }
 
-    private fun cancelDragChromeLayoutFrame() {
+    internal fun cancelDragChromeLayoutFrame() {
         dragChromeLayoutFrameScheduled = false
         pendingCursorFrameAnchor = null
     }
@@ -3967,7 +3898,7 @@ object FloatBallOverlay {
         }
     }
 
-    private fun cancelCursorCommitFrame() {
+    internal fun cancelCursorCommitFrame() {
         cursorCommitFrameScheduled = false
         pendingPickAnchor = null
     }
