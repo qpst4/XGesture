@@ -77,6 +77,7 @@ class SettingsRepository @Inject constructor(
             // 修复动作失败不能拖死快照收集：否则 readSnapshot() 永远停在默认值
             // （历史上表现为 overlay 进程按默认手势动作执行，例如短滑=返回）。
             runCatching {
+                runSettingsSchemaMigrations()
                 editor.cleanupLegacyClipboardKeysOnce()
                 overlay.migrateFvRingLauncherPreferenceKeysOnce()
                 overlay.migrateFloatBallInstantTranslateDefaultOnOnce()
@@ -934,6 +935,24 @@ class SettingsRepository @Inject constructor(
      * 只在首次执行（标记见 [SettingsPreferenceKeys.SEARCH_ENGINE_ICON_SOURCE_MIGRATED]）：
      * 备份导入的旧数据不会被反复改写，用户手动切回固定图标的结果也不会被覆盖。
      */
+    /**
+     * 按 [SettingsSchemaMigrations] 的版本表执行未完成的 schema 迁移。
+     *
+     * 与下面那些 `*Once` 一次性修复的区别：这里由**版本号**驱动，顺序由表定义，
+     * 不再依赖「每个键一个布尔标记 + init 里的排列顺序」。失败时不写版本号，下次启动整批重跑。
+     */
+    private suspend fun runSettingsSchemaMigrations() {
+        val current = editor.readRawPreferences()[SettingsPreferenceKeys.SETTINGS_SCHEMA_VERSION] ?: 0
+        if (current >= SettingsSchemaMigrations.CURRENT_VERSION) return
+        SettingsSchemaMigrations.pending(current).forEach { migration ->
+            editor.edit { prefs -> migration.block(prefs) }.getOrThrow()
+        }
+        editor.edit { prefs ->
+            prefs[SettingsPreferenceKeys.SETTINGS_SCHEMA_VERSION] =
+                SettingsSchemaMigrations.CURRENT_VERSION
+        }.getOrThrow()
+    }
+
     private suspend fun migrateSearchEngineIconSourcesOnce() = editor.edit { prefs ->
         if (prefs[SettingsPreferenceKeys.SEARCH_ENGINE_ICON_SOURCE_MIGRATED] == true) return@edit
         prefs[SettingsPreferenceKeys.SEARCH_ENGINE_ICON_SOURCE_MIGRATED] = true

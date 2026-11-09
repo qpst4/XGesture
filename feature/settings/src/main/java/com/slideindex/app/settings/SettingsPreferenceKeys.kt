@@ -9,6 +9,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 
 internal object SettingsPreferenceKeys {
+
+    /** 设置 schema 版本（见 SettingsSchemaMigrations）。 */
+    val SETTINGS_SCHEMA_VERSION = intPreferencesKey("settings_schema_version")
     val SERVICE_ENABLED = booleanPreferencesKey("service_enabled")
     val LEFT_EDGE_ENABLED = booleanPreferencesKey("left_edge_enabled")
     val RIGHT_EDGE_ENABLED = booleanPreferencesKey("right_edge_enabled")
