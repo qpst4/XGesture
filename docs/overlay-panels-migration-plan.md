@@ -585,3 +585,25 @@ history / holographic / pickresult / quickwheel / ringlauncher / screenshot / sh
 
 **不要做的事**：不要再按"一次搬几个文件"的方式磨 `overlay/` 根目录。那 16k 行是单例结构，
 逐文件搬只会产生循环依赖与重复类，本阶段已多次验证（见 §12.11.1）。
+
+### 12.13 A3 单例拆分进展（2026-11-09）
+
+`FloatBallOverlay`（4,302 行单文件）已拆出 5 个职责类，主文件降到 **4,001 行**：
+
+| 拆出的类 | 行数 | 职责 |
+| :--- | ---: | :--- |
+| `FloatBallCaptureChrome` | 104 | 截图 / 区域取词 / 圆环启动器期间的 chrome 抑制与恢复 |
+| `FloatBallPositionPreview` | 85 | 位置预览、待确认值超时清理 |
+| `FloatBallAppearancePreview` | 126 | 大小/透明度/线条的实时预览与回滚 |
+| `FloatBallLifecycle` | 46 | 语言切换重建、布局重算、输入法高度变化 |
+| `FloatBallDismiss` | 90 | 销毁路径（窗口 / 触摸层 / 空闲层 / scope） |
+
+**方法**：只拆行为、不搬状态；跨文件用到的成员放开 `internal`，公共入口改为委托。
+这样每一步都能独立编译 + 全量单测通过，可随时停下。
+
+**未拆的部分**：`showOrUpdate`（创建/更新，115 行）与 `ensureWindows`。它们和渲染、
+拖拽、空闲层高度耦合（`dragSession` / `syncBallIdleAlpha` / `floatBallStyleSignature`），
+脚本化搬迁两次都误伤了相邻函数，已回退。**结论：剩余部分必须人工逐段搬，不能脚本化。**
+
+**P1-2 口径**：原计划"拆 4 类"已达成（实际 5 类）。
+**P1-3 口径**：面板侧静态入口已全部端口化；根包单例的静态入口未收敛，属 A3 剩余部分。
