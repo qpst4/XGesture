@@ -668,11 +668,8 @@ leaf 视图 + 布局 2k）全部回退，原因一致：根目录文件之间以
 与 `dragSession` / `cursorPreview*` / `regionalPick*` / `selection*` 十几个状态互相咬合。
 纯搬移无法分离，需要先把状态收进 `FloatBallInteractionState` 对象——属设计重构，另行立项。
 
-**顺带补的单测**（都在 `app/src/test/.../overlay/`）：
-
-- `FloatBallDragSessionTest`（5 条）：拖动跟手、手指行程、边界钳制、左上角取整、reset
-- `FloatBallLayoutTest`（3 条）：可见分数钳制、Y 位置钳制、自定义 X 中心
-
-两处都需要 `@RunWith(RobolectricTestRunner::class)`——`AppSettings()` 会读 `Build.MANUFACTURER`。
+**关于单测**：拖拽数学其实早已有覆盖（`FloatBallDragSessionTest` 483 行、
+`FloatBallLayoutTest` 237 行，都是既有文件）。本次一度把这两个文件整文件覆盖成短版本，
+已按原样完全恢复并单独提交修正；后续补测应在这两个文件里**追加**用例，不要新建同名文件。
 
 **结论**：A3 按"职责拆分"口径完成；剩余交互状态机与阶段 C 的宿主单例接口化一起，作为后续独立项目。
