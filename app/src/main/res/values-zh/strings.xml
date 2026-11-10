@@ -1989,8 +1989,8 @@
     <string name="float_ball_pick_search_grid_state_collapsed">每次呼出始终收起</string>
     <string name="float_ball_pick_text_mode_state_title">点词默认状态</string>
     <string name="float_ball_pick_word_tap_granularity_title">点词粒度</string>
-    <string name="float_ball_pick_word_tap_granularity_word">分词（显示词块）</string>
-    <string name="float_ball_pick_word_tap_granularity_character">不分词（按字符选，不显示词块）</string>
+    <string name="float_ball_pick_word_tap_granularity_word">分词</string>
+    <string name="float_ball_pick_word_tap_granularity_character">按字</string>
     <string name="float_ball_pick_text_mode_state_remember">记住上次使用状态（推荐）</string>
     <string name="float_ball_pick_text_mode_state_always_on">每次呼出始终开启</string>
     <string name="float_ball_pick_text_mode_state_always_off">每次呼出始终关闭</string>

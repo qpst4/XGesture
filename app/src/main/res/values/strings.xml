@@ -1076,8 +1076,8 @@
     <string name="float_ball_pick_search_grid_state_collapsed">Always collapsed on launch</string>
     <string name="float_ball_pick_text_mode_state_title">Word tap on panel open</string>
     <string name="float_ball_pick_word_tap_granularity_title">Word tap granularity</string>
-    <string name="float_ball_pick_word_tap_granularity_word">Words (chips)</string>
-    <string name="float_ball_pick_word_tap_granularity_character">Characters (no chips)</string>
+    <string name="float_ball_pick_word_tap_granularity_word">Words</string>
+    <string name="float_ball_pick_word_tap_granularity_character">Characters</string>
     <string name="float_ball_pick_text_mode_state_remember">Remember last state (Recommended)</string>
     <string name="float_ball_pick_text_mode_state_always_on">Always on when the panel opens</string>
     <string name="float_ball_pick_text_mode_state_always_off">Always off when the panel opens</string>
