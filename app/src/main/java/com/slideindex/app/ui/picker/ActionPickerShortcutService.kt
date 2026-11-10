@@ -135,7 +135,10 @@ suspend fun loadActionPickerShortcutService(
             if (items.isEmpty()) null else AppShortcutLoader.AppShortcutGroup(app, items)
         }.sortedBy { PinyinHelper.sortKey(it.app.label) }
 
-        if (groups.isEmpty()) {
+        // 脱敏判定：先按 App 数「整组都是 ***」的情况，再决定是否整表改用静态清单。
+        // 详见 [ShortcutCatalogRedaction]：只切不并，避免跨源 id 去重对不上。
+        val redactionPlan = ShortcutCatalogRedaction.plan(groups)
+        if (groups.isEmpty() || redactionPlan.useStatic) {
             val fallback = runCatching {
                 AppShortcutLoader.loadShortcutCatalog(
                     context = context,
@@ -143,7 +146,9 @@ suspend fun loadActionPickerShortcutService(
                     forceRefresh = true,
                 )
             }.getOrNull()
-            if (fallback != null) {
+            // 空目录时沿用老行为（静态也为空就返回空目录）；系统性脱敏时只有静态真的有条目才切，
+            // 否则退回过滤后的系统目录，别把整页变成空态。
+            if (fallback != null && (groups.isEmpty() || fallback.groups.isNotEmpty())) {
                 return@withContext ActionPickerShortcutServiceResult(
                     catalog = fallback,
                     source = "静态",
@@ -153,15 +158,16 @@ suspend fun loadActionPickerShortcutService(
             }
         }
 
+        val usableGroups = redactionPlan.usableGroups
         val createHosts = AppShortcutLoader.queryCreateShortcutActivities(context)
         val catalog = AppShortcutLoader.ShortcutCatalog(
             createHosts = createHosts,
-            staticGroups = groups,
+            staticGroups = usableGroups,
         )
         ActionPickerShortcutServiceResult(
             catalog = catalog,
             source = if (mode == ActionPickerShortcutMode.ROOT) "Root" else "Shizuku",
-            total = groups.sumOf { it.shortcuts.size },
+            total = usableGroups.sumOf { it.shortcuts.size },
             error = error,
         )
     }
