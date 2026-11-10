@@ -22,10 +22,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.launcher.cloneTargetUserId
+import com.slideindex.app.overlay.CloneAppsIndex
 import com.slideindex.app.overlay.FloatingPointerRadialMenuPreview
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.FloatingPointerRadialMenuCodec
@@ -148,13 +151,14 @@ fun FloatingPointerRadialMenuSettingsScreen(
         val longPressAction = settings.floatingPointerJoystickLongPressAction
         SettingNavigationRow(
             icon = { label ->
-                Icon(
-                    imageVector = gestureActionIcon(longPressAction),
-                    contentDescription = label
+                GestureSlotActionIcon(
+                    action = longPressAction,
+                    settings = settings,
+                    contentDescription = label,
                 )
             },
             title = stringResource(R.string.floating_pointer_joystick_long_press_action),
-            subtitle = gestureActionLabel(longPressAction),
+            subtitle = radialSlotActionSubtitle(longPressAction),
             onClick = onOpenLongPressActionPick
         )
         SettingsSliderRow(
@@ -178,9 +182,10 @@ fun FloatingPointerRadialMenuSettingsScreen(
             }
             SettingNavigationRow(
                 icon = { label ->
-                    Icon(
-                        imageVector = gestureActionIcon(action),
-                        contentDescription = label
+                    GestureSlotActionIcon(
+                        action = action,
+                        settings = settings,
+                        contentDescription = label,
                     )
                 },
                 title = radialSlotDirectionLabel(index),
@@ -421,7 +426,13 @@ private fun radialSlotDirectionLabel(index: Int): String = when (index) {
 
 @Composable
 private fun radialSlotActionSubtitle(action: GestureAction): String {
-    val base = gestureActionLabel(action)
+    val context = LocalContext.current
+    val cloneUserId = action.cloneTargetUserId(context)
+    val base = if (cloneUserId > 0) {
+        CloneAppsIndex.labelForUser(context, cloneUserId, gestureActionLabel(action))
+    } else {
+        gestureActionLabel(action)
+    }
     return if (action is GestureAction.SimulatePointerSwipe) {
         stringResource(R.string.pointer_swipe_action_summary, base)
     } else if (action is GestureAction.ExecuteShellCommand && action.command.isNotBlank()) {

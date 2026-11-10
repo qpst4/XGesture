@@ -433,6 +433,7 @@ internal fun FloatingPointerDisplay(
                         translate(-radialCenter.x, -radialCenter.y)
                     }) {
                         drawFloatingPointerRadialMenu(
+                            context = context,
                             center = radialCenter,
                             settings = settings,
                             slots = settings.floatingPointerRadialSlotActions,

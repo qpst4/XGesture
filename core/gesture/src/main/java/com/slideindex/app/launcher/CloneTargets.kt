@@ -20,24 +20,33 @@ fun QuickLauncherItem.isCloneTarget(context: Context): Boolean {
     return action.isCloneTarget(context)
 }
 
-fun GestureAction.isCloneTarget(context: Context): Boolean = when (this) {
-    is GestureAction.LaunchApp -> cloneUserId > 0
-    is GestureAction.RunMacro -> macroTargetIsClone(context, macroId)
-    else -> false
+fun GestureAction.isCloneTarget(context: Context): Boolean =
+    cloneTargetUserId(context) > 0
+
+/**
+ * 返回该动作实际作用的目标 user：0 = 主实例，>0 = 分身 / 工作资料。
+ *
+ * `LaunchApp` 直接带 cloneUserId；`RunMacro` 从宏目标包名解析。
+ * 供功能环角标、设置行角标和副标题共用同一套判定。
+ */
+fun GestureAction.cloneTargetUserId(context: Context): Int = when (this) {
+    is GestureAction.LaunchApp -> cloneUserId
+    is GestureAction.RunMacro -> macroTargetCloneUserId(context, macroId)
+    else -> 0
 }
 
 private var cachedRevision = -1
-private var cachedCloneByMacroId: Map<String, Boolean> = emptyMap()
+private var cachedCloneUserIdByMacroId: Map<String, Int> = emptyMap()
 
 @Synchronized
-private fun macroTargetIsClone(context: Context, macroId: String): Boolean {
-    if (macroId.isBlank()) return false
+private fun macroTargetCloneUserId(context: Context, macroId: String): Int {
+    if (macroId.isBlank()) return 0
     val revision = MacroStore.revision
     if (revision != cachedRevision) {
-        cachedCloneByMacroId = MacroStore.all(context).associate { macro ->
-            macro.id to AppTarget.parse(macro.targetPackage).isClone
+        cachedCloneUserIdByMacroId = MacroStore.all(context).associate { macro ->
+            macro.id to AppTarget.parse(macro.targetPackage).cloneUserId
         }
         cachedRevision = revision
     }
-    return cachedCloneByMacroId[macroId] == true
+    return cachedCloneUserIdByMacroId[macroId] ?: 0
 }

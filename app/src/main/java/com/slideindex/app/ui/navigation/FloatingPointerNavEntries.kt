@@ -109,8 +109,9 @@ fun NavEntryBuilder.floatingPointerNavEntries(ctx: MainNavContext) {
 
     hiltEntry<AppNavKey.FloatingPointerRadialMenu> {
         val viewModel: ExtensionSettingsViewModel = hiltViewModel()
-        val overlaySettings by viewModel.overlaySettings.collectAsStateWithLifecycle()
-        val settings = overlaySettings.toMinimalAppSettings()
+        // 功能环设置页的预览/行图标必须拿到完整 launcher 数据：
+        // activityShortcuts 决定快捷方式自定义图标，shellCommands 决定 shell 图标。
+        val settings by viewModel.settings.collectAsStateWithLifecycle()
         FloatingPointerRadialMenuSettingsScreen(
             settings = settings,
             onBack = { ctx.navigateBackTo(AppNavKey.FloatingPointer) },

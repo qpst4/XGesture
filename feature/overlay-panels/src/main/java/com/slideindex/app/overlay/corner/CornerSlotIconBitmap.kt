@@ -29,6 +29,8 @@ object CornerSlotIconBitmap {
         shellCommands: List<ShellCommand> = emptyList(),
         appRepository: AppRepository? = null,
         shape: FvIconShape = FvIconShape.CIRCLE,
+        /** false = 普通动作不烘底板，只返回裸矢量图标（摇杆功能环等场景）。 */
+        plateFallback: Boolean = true,
     ): Bitmap {
         // 全局图标覆盖优先（扩展 → 图标库）
         if (action is GestureAction.LaunchApp) {
@@ -89,9 +91,9 @@ object CornerSlotIconBitmap {
         return com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconBitmapFull?.invoke(
             action,
             sizePx,
-            android.graphics.Color.WHITE,
+            tintArgb,
             true,
-            true,
+            plateFallback,
             shape.toPlateShapeOrdinal(),
         ) ?: Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
     }

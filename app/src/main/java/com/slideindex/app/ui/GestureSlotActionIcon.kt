@@ -16,7 +16,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.launcher.showsShellCommandBadge
+import com.slideindex.app.overlay.CloneBadgeOverlay
+import com.slideindex.app.overlay.MacroBadgeOverlay
 import com.slideindex.app.overlay.ShellCommandBadgeOverlay
+import com.slideindex.app.overlay.actionIconBadges
 import com.slideindex.app.overlay.corner.CornerSlotIconBitmap
 import com.slideindex.app.settings.AppSettings
 
@@ -35,21 +38,36 @@ fun GestureSlotActionIcon(
                 GlobalIconStore.appIcon(context, it.packageName)
             }
     }
+    val badges = action.actionIconBadges(
+        context = context,
+        activityShortcuts = settings.activityShortcuts,
+        shellCommands = settings.shellCommands,
+    )
     if (overrideKey != null) {
-        ActionIconView(
-            action = action,
-            iconKey = overrideKey,
-            sizeDp = 24,
-            showBackground = false,
-        )
+        Box(modifier = Modifier.size(24.dp)) {
+            ActionIconView(
+                action = action,
+                iconKey = overrideKey,
+                sizeDp = 24,
+                showBackground = false,
+            )
+            if (badges.isClone) {
+                CloneBadgeOverlay(iconSize = 24.dp, circular = false)
+            }
+        }
         return
     }
     when (action) {
         is GestureAction.LaunchApp -> {
-            Md3PickerPackageLeading(
-                packageName = action.packageName,
-                contentDescription = contentDescription,
-            )
+            Box(modifier = Modifier.size(40.dp)) {
+                Md3PickerPackageLeading(
+                    packageName = action.packageName,
+                    contentDescription = contentDescription,
+                )
+                if (badges.isClone) {
+                    CloneBadgeOverlay(iconSize = 40.dp, circular = false)
+                }
+            }
         }
         is GestureAction.LaunchShortcut -> {
             Md3PickerLaunchShortcutLeading(
@@ -63,6 +81,24 @@ fun GestureSlotActionIcon(
                 settings = settings,
                 contentDescription = contentDescription,
             )
+        }
+        is GestureAction.RunMacro -> {
+            Box(
+                modifier = Modifier.size(40.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = gestureActionIcon(action),
+                    contentDescription = contentDescription,
+                    modifier = Modifier.size(24.dp),
+                )
+                if (badges.showMacro) {
+                    MacroBadgeOverlay(iconSize = 40.dp)
+                }
+                if (badges.isClone) {
+                    CloneBadgeOverlay(iconSize = 40.dp, circular = false)
+                }
+            }
         }
         else -> {
             Icon(

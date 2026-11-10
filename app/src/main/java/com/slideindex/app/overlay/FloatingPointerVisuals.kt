@@ -338,6 +338,7 @@ fun FloatingPointerRadialMenuPreview(
     modifier: Modifier = Modifier,
     highlightedSlot: Int = -1
 ) {
+    val context = LocalContext.current
     Canvas(
         modifier = modifier
             .fillMaxWidth()
@@ -364,6 +365,7 @@ fun FloatingPointerRadialMenuPreview(
             pressed = true
         )
         drawFloatingPointerRadialMenu(
+            context = context,
             center = Offset(size.width / 2f, size.height / 2f),
             settings = previewSettings,
             slots = slots,

@@ -1,5 +1,6 @@
 package com.slideindex.app.overlay
 
+import android.content.Context
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -10,9 +11,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.overlay.corner.CornerSlotIconBitmap
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.FloatingPointerRadialMenuCodec
-import com.slideindex.app.util.GestureActionIconBitmap
+import com.slideindex.app.util.CloneBadge
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.hypot
@@ -57,6 +59,7 @@ internal object FloatingPointerRadialMenu {
 }
 
 internal fun DrawScope.drawFloatingPointerRadialMenu(
+    context: Context,
     center: Offset,
     settings: AppSettings,
     slots: List<GestureAction>,
@@ -121,10 +124,62 @@ internal fun DrawScope.drawFloatingPointerRadialMenu(
                 innerRadius = innerRadius,
                 outerRadius = outerRadius
             )
-            val bitmap = GestureActionIconBitmap.get(action, iconSizePx, iconTint)
+            val bitmap = CornerSlotIconBitmap.get(
+                context = context,
+                action = action,
+                sizePx = iconSizePx,
+                tintArgb = iconTint,
+                activityShortcuts = settings.activityShortcuts,
+                shellCommands = settings.shellCommands,
+                shape = com.slideindex.app.overlay.layout.FvIconShape.CIRCLE,
+                plateFallback = false,
+            )
             val left = iconCenter.x - bitmap.width / 2f
             val top = iconCenter.y - bitmap.height / 2f
             androidCanvas.drawBitmap(bitmap, left, top, iconPaint)
+
+            val iconDiameter = bitmap.width.toFloat()
+            val badges = action.actionIconBadges(
+                context = context,
+                activityShortcuts = settings.activityShortcuts,
+                shellCommands = settings.shellCommands,
+            )
+            when {
+                badges.showShortcut -> ShortcutBadgeRenderer.draw(
+                    androidCanvas,
+                    iconCenter.x,
+                    iconCenter.y,
+                    iconDiameter,
+                    alphaScale,
+                    density,
+                )
+                badges.showShellCommand -> ShellCommandBadgeRenderer.draw(
+                    androidCanvas,
+                    iconCenter.x,
+                    iconCenter.y,
+                    iconDiameter,
+                    alphaScale,
+                    density,
+                )
+                badges.showMacro -> MacroBadgeRenderer.draw(
+                    androidCanvas,
+                    iconCenter.x,
+                    iconCenter.y,
+                    iconDiameter,
+                    alphaScale,
+                    density,
+                )
+            }
+            if (badges.isClone) {
+                CloneBadge.draw(
+                    androidCanvas,
+                    iconCenter.x,
+                    iconCenter.y,
+                    iconDiameter,
+                    alphaScale,
+                    circular = true,
+                )
+            }
         }
     }
 }
