@@ -563,7 +563,7 @@ fun NavEntryBuilder.notificationNavEntries(ctx: MainNavContext) {
         OtpRulesScreen(
             settings = otpSettings.toMinimalAppSettings(),
             officialRules = officialRules,
-            onBack = { ctx.navigateBackTo(AppNavKey.OtpHub) },
+            onBack = { ctx.navigateBack() },
             onRefreshOfficialRules = viewModel::refreshOfficialRules,
             onOfficialRuleEnabledChange = viewModel::setOtpOfficialRuleEnabled,
             onUserRulesChange = viewModel::setOtpUserMatchRules,

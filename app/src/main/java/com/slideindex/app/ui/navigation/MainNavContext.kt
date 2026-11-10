@@ -83,6 +83,9 @@ class MainNavContext(
 
     fun navigateBackTo(key: AppNavKey) = backStack.navigateBackTo(key)
 
+    /** 只回退一层（回来源页）；不要用 [navigateBackTo] 代替，它会跳过中间页。 */
+    fun navigateBack() = backStack.pop()
+
     fun replaceRoot(key: AppNavKey) = backStack.replaceRoot(key)
 
     fun launch(block: suspend () -> Unit) {

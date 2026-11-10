@@ -217,6 +217,6 @@ internal fun RulesMenuOption(label: String, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = 0.dp, vertical = 16.dp),
     )
 }
