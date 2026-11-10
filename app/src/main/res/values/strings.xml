@@ -689,6 +689,7 @@
     <string name="pick_settings_how_to_trigger_tip">How to pick text\n① Float ball: turn it on, drag over text, and hover.\n② Handle sets: bind Regional screenshot &amp; pick (continuous) to a handle, then drag from the screen edge.\n③ Floating pointer: in Floating pointer settings, turn on Hover to box-select, then drag the pointer from the screen edge and hover to pick.</string>
     <string name="pick_settings_image_open_edit_hint">Opens when you tap an image in the pick panel</string>
     <string name="pick_settings_section_panel_appearance">Appearance &amp; layout</string>
+    <string name="pick_settings_section_text_display">Text display</string>
     <string name="pick_settings_section_panel_content_search">Content &amp; search bar</string>
     <string name="pick_settings_section_panel_select_copy">Selection &amp; copy</string>
     <string name="pick_settings_section_panel_feedback">Feedback &amp; motion</string>

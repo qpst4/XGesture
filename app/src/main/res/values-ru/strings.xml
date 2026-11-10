@@ -661,6 +661,7 @@
     <string name="pick_settings_how_to_trigger_tip">Как выделить текст\n① Плавающий шарик: включите его, проведите по тексту и задержите.\n② Наборы маркеров: привяжите «Региональный скриншот и выделение (непрерывное)» к маркеру, затем ведите от края экрана.\n③ Плавающий указатель: в настройках плавающего указателя включите «Задержка для выделения рамкой», затем ведите указателем от края экрана и задержите для выделения.</string>
     <string name="pick_settings_image_open_edit_hint">Открывается при нажатии на изображение в панели выделения</string>
     <string name="pick_settings_section_panel_appearance">Внешний вид и расположение</string>
+    <string name="pick_settings_section_text_display">Отображение текста</string>
     <string name="pick_settings_section_panel_content_search">Содержимое и строка поиска</string>
     <string name="pick_settings_section_panel_select_copy">Выделение и копирование</string>
     <string name="pick_settings_section_panel_feedback">Отклик и анимация</string>

@@ -1919,6 +1919,7 @@
     <string name="pick_settings_how_to_trigger_tip">触发取词\n① 悬浮球：开启后拖到文字上悬停。\n② 触钮集合：为触钮绑定「区域截图&amp;取词」持续手势，从屏幕边缘拖出可持续取词。\n③ 悬浮指针：在「悬浮指针」设置中开启「悬停进入框选」，从屏幕边缘拖出指针后悬停取词。</string>
     <string name="pick_settings_image_open_edit_hint">在取词面板中单击图片时打开</string>
     <string name="pick_settings_section_panel_appearance">外观与结构</string>
+    <string name="pick_settings_section_text_display">文本显示</string>
     <string name="pick_settings_section_panel_content_search">内容与搜索区</string>
     <string name="pick_settings_section_panel_select_copy">选取与复制</string>
     <string name="pick_settings_section_panel_feedback">反馈与动效</string>

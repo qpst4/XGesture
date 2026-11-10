@@ -1773,6 +1773,7 @@
     <string name="pick_settings_how_to_trigger_tip">كيف تلتقط النص\n① الكرة العائمة: فعّلها واسحب فوق النص وتوقف.\n② مجموعات المقابض: اربط «لقطة منطقة&amp;التقاط نص» المستمرة بمقبض واسحب من حافة الشاشة.\n③ المؤشر العائم: في إعدادات «المؤشر العائم» فعّل «الدخول لتحديد المنطقة عند التمرير»، ثم اسحب المؤشر من حافة الشاشة وتوقف عليه للالتقاط.</string>
     <string name="pick_settings_image_open_edit_hint">يُفتح عند النقر على صورة في لوحة الالتقاط</string>
     <string name="pick_settings_section_panel_appearance">المظهر والتخطيط</string>
+    <string name="pick_settings_section_text_display">عرض النص</string>
     <string name="pick_settings_section_panel_content_search">المحتوى وشريط البحث</string>
     <string name="pick_settings_section_panel_select_copy">التحديد والنسخ</string>
     <string name="pick_settings_section_panel_feedback">التفاعل والحركة</string>

@@ -36,6 +36,7 @@ import com.slideindex.app.ui.settings.components.settingsGroupedRowBackground
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import kotlin.math.roundToInt
 import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -65,6 +66,7 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     onPickPanelExitAnimationMsChange: (Int) -> Unit,
 ) {
     val appearanceSectionTitle = stringResource(R.string.pick_settings_section_panel_appearance)
+    val textSectionTitle = stringResource(R.string.pick_settings_section_text_display)
     val contentSearchSectionTitle = stringResource(R.string.pick_settings_section_panel_content_search)
     val selectCopySectionTitle = stringResource(R.string.pick_settings_section_panel_select_copy)
     val feedbackSectionTitle = stringResource(R.string.pick_settings_section_panel_feedback)
@@ -76,6 +78,10 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     var localIconBarEnabled by remember { mutableStateOf(settings.floatBallPickIconBarEnabled) }
     var localPanelStyle by remember { mutableStateOf(settings.floatBallPickPanelStyle) }
     var localPanelPlacement by remember { mutableStateOf(settings.floatBallPickPanelPlacement) }
+    var localGranularity by remember { mutableStateOf(settings.floatBallPickWordTapGranularity) }
+    LaunchedEffect(settings.floatBallPickWordTapGranularity) {
+        localGranularity = settings.floatBallPickWordTapGranularity
+    }
     LaunchedEffect(settings.floatBallPickIconBarEnabled) {
         localIconBarEnabled = settings.floatBallPickIconBarEnabled
     }
@@ -126,25 +132,6 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     }
     val textModeItems = remember(textModeOptions) {
         textModeOptions.map { DropdownItem(text = it.second) }
-    }
-
-    val granularityWordLabel = stringResource(R.string.float_ball_pick_word_tap_granularity_word)
-    val granularityCharacterLabel = stringResource(R.string.float_ball_pick_word_tap_granularity_character)
-    val granularityOptions = remember(granularityWordLabel, granularityCharacterLabel) {
-        listOf(
-            com.slideindex.app.settings.PickResultWordTapGranularity.WORD to granularityWordLabel,
-            com.slideindex.app.settings.PickResultWordTapGranularity.CHARACTER to granularityCharacterLabel,
-        )
-    }
-    val selectedGranularityIndex = remember(
-        settings.floatBallPickWordTapGranularity,
-        granularityOptions,
-    ) {
-        granularityOptions.indexOfFirst { it.first == settings.floatBallPickWordTapGranularity }
-            .coerceAtLeast(0)
-    }
-    val granularityItems = remember(granularityOptions) {
-        granularityOptions.map { DropdownItem(text = it.second) }
     }
 
     val copyButtonPositionLeftLabel = stringResource(R.string.float_ball_pick_copy_button_position_left)
@@ -238,19 +225,6 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                         )
                     },
                 )
-                add(
-                    settingsCardScopeItem("text-size") {
-                        SettingsSliderRow(
-                            title = stringResource(R.string.float_ball_pick_text_size),
-                            value = settings.floatBallPickTextSizeSp,
-                            valueRange = 12f..22f,
-                            steps = 9,
-                            enabled = true,
-                            label = stringResource(R.string.float_ball_text_size_value, settings.floatBallPickTextSizeSp),
-                            onValueChange = onPickTextSizeChange,
-                        )
-                    },
-                )
                 // 底栏样式放卡片最底部：样式行 + 对应配置（经典位置 / 纯图标工具条）。
                 add(
                     settingsCardScopeItem("pick-bar-style") {
@@ -264,10 +238,10 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                                         .padding(16.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
-                                    Text(
+                                    MiuixText(
                                         text = stringResource(R.string.float_ball_pick_bar_style_title),
-                                        style = MaterialTheme.typography.titleSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        style = MiuixTheme.textStyles.body2,
+                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                     )
                                     SegmentedControl(
                                         items = listOf(false, true),
@@ -286,10 +260,10 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                                         containerColor = MiuixTheme.colorScheme.surface,
                                         indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
                                     )
-                                    Text(
+                                    MiuixText(
                                         text = stringResource(R.string.float_ball_pick_bar_style_desc),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                        style = MiuixTheme.textStyles.footnote1,
+                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                     )
                                 }
                             }
@@ -351,10 +325,10 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                                             .padding(16.dp),
                                         verticalArrangement = Arrangement.spacedBy(8.dp),
                                     ) {
-                                        Text(
+                                        MiuixText(
                                             text = barButtonsTitle,
-                                            style = MaterialTheme.typography.titleSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            style = MiuixTheme.textStyles.body2,
+                                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                         )
                                         PickResultBarButtonSection(
                                             textOrder = settings.floatBallPickTextBarOrder,
@@ -371,6 +345,29 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                                 }
                             }
                         }
+                    },
+                )
+            },
+        )
+        // 文本显示：字号这种「看文字」的参数不跟面板/底栏布局混在同一张卡里。
+        settingsLazySmallTitle(
+            key = "panel-text-section",
+            title = textSectionTitle,
+        )
+        groupedCardItems(
+            keyPrefix = "fb-pick-panel-text",
+            items = buildList {
+                add(
+                    settingsCardScopeItem("text-size") {
+                        SettingsSliderRow(
+                            title = stringResource(R.string.float_ball_pick_text_size),
+                            value = settings.floatBallPickTextSizeSp,
+                            valueRange = 12f..22f,
+                            steps = 9,
+                            enabled = true,
+                            label = stringResource(R.string.float_ball_text_size_value, settings.floatBallPickTextSizeSp),
+                            onValueChange = onPickTextSizeChange,
+                        )
                     },
                 )
             },
@@ -442,17 +439,25 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                 )
                 add(
                     settingsCardScopeItem("word-tap-granularity") {
-                        SettingSpinnerRow(
+                        SettingSegmentedRow(
                             title = stringResource(R.string.float_ball_pick_word_tap_granularity_title),
-                            subtitle = granularityOptions.getOrNull(selectedGranularityIndex)?.second.orEmpty(),
-                            dialogButtonText = stringResource(R.string.cancel),
-                            items = granularityItems,
-                            selectedIndex = selectedGranularityIndex,
-                            enabled = true,
-                            onSelectedIndexChange = { index ->
-                                val selected = granularityOptions.getOrNull(index)?.first
-                                    ?: return@SettingSpinnerRow
-                                onPickWordTapGranularityChange(selected)
+                            items = listOf(
+                                com.slideindex.app.settings.PickResultWordTapGranularity.WORD,
+                                com.slideindex.app.settings.PickResultWordTapGranularity.CHARACTER,
+                            ),
+                            selected = localGranularity,
+                            labelRes = { granularity ->
+                                when (granularity) {
+                                    com.slideindex.app.settings.PickResultWordTapGranularity.WORD ->
+                                        R.string.float_ball_pick_word_tap_granularity_word
+
+                                    com.slideindex.app.settings.PickResultWordTapGranularity.CHARACTER ->
+                                        R.string.float_ball_pick_word_tap_granularity_character
+                                }
+                            },
+                            onSelect = { granularity ->
+                                localGranularity = granularity
+                                onPickWordTapGranularityChange(granularity)
                             },
                         )
                     },
@@ -559,15 +564,15 @@ private fun <T> SettingsCardScope.SettingSegmentedRow(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(
+            MiuixText(
                 text = title,
-                style = MaterialTheme.typography.titleSmall,
+                style = MiuixTheme.textStyles.body2,
             )
             subtitle?.let {
-                Text(
+                MiuixText(
                     text = it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
             }
             SegmentedControl(

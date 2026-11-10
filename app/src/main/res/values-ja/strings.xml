@@ -1785,6 +1785,7 @@
     <string name="pick_settings_how_to_trigger_tip">取詞のしかた\n① フローティングボール：オンにして文字の上でホバー。\n② ハンドルセット：ハンドルに「領域スクリーンショット&amp;取詞」（継続）を割り当て、画面端からドラッグ。\n③ フローティングポインター：「フローティングポインター」設定で「ホバーで範囲選択」をオンにし、画面端からポインターをドラッグしてホバーで取詞。</string>
     <string name="pick_settings_image_open_edit_hint">取詞パネルで画像をタップしたときに開く</string>
     <string name="pick_settings_section_panel_appearance">外観とレイアウト</string>
+    <string name="pick_settings_section_text_display">テキスト表示</string>
     <string name="pick_settings_section_panel_content_search">コンテンツと検索バー</string>
     <string name="pick_settings_section_panel_select_copy">選択とコピー</string>
     <string name="pick_settings_section_panel_feedback">フィードバックと動き</string>
