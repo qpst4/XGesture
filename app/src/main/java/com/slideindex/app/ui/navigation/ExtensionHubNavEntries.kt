@@ -467,7 +467,12 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
 /** 动作详情页的「打开配置」跳转；没有独立配置页的动作返回 null。 */
 private fun actionConfigRoute(action: com.slideindex.app.gesture.GestureAction): AppNavKey? = when (action.type) {
     GestureActionType.EXECUTE_SHELL_COMMAND -> AppNavKey.ShellCommands
+    GestureActionType.SHELL_COMMAND_PANEL -> AppNavKey.ShellCommands
     GestureActionType.QUICK_LAUNCHER -> AppNavKey.QuickLauncher
+    GestureActionType.HONEYCOMB_LAUNCHER -> AppNavKey.HoneycombLauncher
+    GestureActionType.APP_RING_LAUNCHER -> AppNavKey.RingLauncherSettings
+    GestureActionType.HOLOGRAPHIC_LAUNCHER -> AppNavKey.HolographicLauncherSettings
+    GestureActionType.WIDGET_POPUP_OVERLAY -> AppNavKey.WidgetPanel
     GestureActionType.QUICK_WHEEL -> AppNavKey.QuickWheelList
     GestureActionType.RUN_MACRO -> AppNavKey.MacroList
     else -> null

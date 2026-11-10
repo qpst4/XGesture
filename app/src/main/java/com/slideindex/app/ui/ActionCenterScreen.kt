@@ -72,11 +72,20 @@ fun ActionCenterScreen(
             key = "action-center-launch-grid",
             entries = ActionCenterLaunchEntry.entries,
             entryContent = { entry ->
+                val targetAction = entry.actionType?.let { type ->
+                    actions.firstOrNull { it.type == type }
+                }
                 ActionGridCell(
                     icon = entry.icon,
                     label = stringResource(entry.titleRes),
                     hasParams = false,
-                    onClick = { onOpenLaunchEntry(entry) },
+                    onClick = {
+                        if (targetAction != null) {
+                            onOpenActionDetail(targetAction)
+                        } else {
+                            onOpenLaunchEntry(entry)
+                        }
+                    },
                 )
             },
         )
@@ -105,19 +114,48 @@ fun ActionCenterScreen(
     }
 }
 
-/** 网格第一段：不是 `GestureAction`，而是面板/启动器的配置入口。 */
+/** 网格第一段：面板/启动器的配置入口；带 [actionType] 的会先进入动作详情页。 */
 enum class ActionCenterLaunchEntry(
     val titleRes: Int,
     val icon: ImageVector,
+    val actionType: GestureActionType?,
 ) {
-    LayoutSettings(R.string.layout_settings_entry_title, HubLeadingIcons.layoutSettings(true)),
-    QuickLauncher(R.string.quick_launcher_editor_title, HubLeadingIcons.quickLauncher(true)),
-    HoneycombLauncher(R.string.honeycomb_launcher_editor_title, HubLeadingIcons.honeycombLauncher(true)),
-    RingLauncher(R.string.fv_ring_launcher_entry_title, HubLeadingIcons.ringLauncher(true)),
-    HolographicLauncher(R.string.holographic_launcher_entry_title, HubLeadingIcons.holographicLauncher(true)),
-    WidgetPanel(R.string.widget_panel_settings_title, HubLeadingIcons.widgetPanel(true)),
-    QuickWheel(R.string.extension_quick_wheel_entry_title, gestureActionTypeOutlinedIcon(GestureActionType.QUICK_WHEEL)),
-    ShellPanel(R.string.shell_panel_entry_title, HubLeadingIcons.shellCommand(true)),
+    LayoutSettings(R.string.layout_settings_entry_title, HubLeadingIcons.layoutSettings(true), null),
+    QuickLauncher(
+        R.string.quick_launcher_editor_title,
+        HubLeadingIcons.quickLauncher(true),
+        GestureActionType.QUICK_LAUNCHER,
+    ),
+    HoneycombLauncher(
+        R.string.honeycomb_launcher_editor_title,
+        HubLeadingIcons.honeycombLauncher(true),
+        GestureActionType.HONEYCOMB_LAUNCHER,
+    ),
+    RingLauncher(
+        R.string.fv_ring_launcher_entry_title,
+        HubLeadingIcons.ringLauncher(true),
+        GestureActionType.APP_RING_LAUNCHER,
+    ),
+    HolographicLauncher(
+        R.string.holographic_launcher_entry_title,
+        HubLeadingIcons.holographicLauncher(true),
+        GestureActionType.HOLOGRAPHIC_LAUNCHER,
+    ),
+    WidgetPanel(
+        R.string.widget_panel_settings_title,
+        HubLeadingIcons.widgetPanel(true),
+        GestureActionType.WIDGET_POPUP_OVERLAY,
+    ),
+    QuickWheel(
+        R.string.extension_quick_wheel_entry_title,
+        gestureActionTypeOutlinedIcon(GestureActionType.QUICK_WHEEL),
+        GestureActionType.QUICK_WHEEL,
+    ),
+    ShellPanel(
+        R.string.shell_panel_entry_title,
+        HubLeadingIcons.shellCommand(true),
+        GestureActionType.SHELL_COMMAND_PANEL,
+    ),
 }
 
 private fun LazyListScope.actionCenterActionGrid(
@@ -221,6 +259,7 @@ private fun ActionGridCell(
             text = label,
             style = MiuixTheme.textStyles.body2,
             color = MiuixTheme.colorScheme.onSurface,
+            minLines = 2,
             maxLines = 2,
             textAlign = TextAlign.Center,
         )
