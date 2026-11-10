@@ -1838,11 +1838,11 @@
     <string name="float_ball_pick_panel_placement_center">منتصف الشاشة</string>
     <string name="float_ball_pick_search_grid_state_title">طريقة توسيع شريط البحث</string>
     <string name="float_ball_pick_search_grid_state_desc">الحالة الابتدائية لمنطقة محركات البحث السفلية عند فتح اللوحة</string>
-    <string name="float_ball_pick_search_grid_state_remember">تذكر آخر حالة (موصى به)</string>
+    <string name="float_ball_pick_search_grid_state_remember">تذكر آخر حالة</string>
     <string name="float_ball_pick_search_grid_state_expanded">موسّع دائمًا عند الفتح</string>
     <string name="float_ball_pick_search_grid_state_collapsed">مطوي دائمًا عند الفتح</string>
     <string name="float_ball_pick_text_mode_state_title">الحالة الافتراضية لاختيار كلمة</string>
-    <string name="float_ball_pick_text_mode_state_remember">تذكر آخر حالة (موصى به)</string>
+    <string name="float_ball_pick_text_mode_state_remember">تذكر آخر حالة</string>
     <string name="float_ball_pick_text_mode_state_always_on">مفعّل دائماً عند فتح اللوحة</string>
     <string name="float_ball_pick_text_mode_state_always_off">معطّل دائماً عند فتح اللوحة</string>
     <string name="float_ball_pick_default_engine_desc">اضغط مطوّلًا على زر البحث في لوحة الالتقاط للبحث مباشرة؛ لا استجابة عند عدم التعيين</string>

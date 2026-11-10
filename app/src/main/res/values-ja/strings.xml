@@ -1850,11 +1850,11 @@
     <string name="float_ball_pick_panel_placement_center">画面中央</string>
     <string name="float_ball_pick_search_grid_state_title">検索バーの展開方式</string>
     <string name="float_ball_pick_search_grid_state_desc">パネル表示時の検索エンジンエリアの初期表示状態を制御します</string>
-    <string name="float_ball_pick_search_grid_state_remember">前回の状態を記憶（推奨）</string>
+    <string name="float_ball_pick_search_grid_state_remember">前回の状態を記憶</string>
     <string name="float_ball_pick_search_grid_state_expanded">常に展開して表示</string>
     <string name="float_ball_pick_search_grid_state_collapsed">常に折りたたんで表示</string>
     <string name="float_ball_pick_text_mode_state_title">単語タップの初期状態</string>
-    <string name="float_ball_pick_text_mode_state_remember">前回の状態を記憶（推奨）</string>
+    <string name="float_ball_pick_text_mode_state_remember">前回の状態を記憶</string>
     <string name="float_ball_pick_text_mode_state_always_on">パネルを開くたびに常にオン</string>
     <string name="float_ball_pick_text_mode_state_always_off">パネルを開くたびに常にオフ</string>
     <string name="float_ball_pick_default_engine_desc">取词パネルの検索ボタンを長押しすると直接検索できます。未設定時は長押ししても反応しません</string>

@@ -1042,11 +1042,11 @@
     <string name="float_ball_pick_panel_placement_center">Центр экрана</string>
     <string name="float_ball_pick_search_grid_state_title">Режим раскрытия строки поиска</string>
     <string name="float_ball_pick_search_grid_state_desc">Управляет начальным состоянием нижней области поисковых систем при открытии панели</string>
-    <string name="float_ball_pick_search_grid_state_remember">Запоминать последнее состояние (рекомендуется)</string>
+    <string name="float_ball_pick_search_grid_state_remember">Запоминать последнее состояние</string>
     <string name="float_ball_pick_search_grid_state_expanded">Всегда развёрнута при запуске</string>
     <string name="float_ball_pick_search_grid_state_collapsed">Всегда свёрнута при запуске</string>
     <string name="float_ball_pick_text_mode_state_title">Нажатие на слово при открытии панели</string>
-    <string name="float_ball_pick_text_mode_state_remember">Запоминать последнее состояние (рекомендуется)</string>
+    <string name="float_ball_pick_text_mode_state_remember">Запоминать последнее состояние</string>
     <string name="float_ball_pick_text_mode_state_always_on">Всегда включено при открытии панели</string>
     <string name="float_ball_pick_text_mode_state_always_off">Всегда выключено при открытии панели</string>
     <string name="float_ball_pick_default_engine_desc">Долгое нажатие на кнопку поиска панели выделения — поиск напрямую; бездействует, если не задано</string>
