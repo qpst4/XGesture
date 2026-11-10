@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,9 +58,17 @@ import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
-internal fun Modifier.settingsGroupedRowBackground(index: Int, count: Int): Modifier {
+internal fun Modifier.settingsGroupedRowBackground(
+    index: Int,
+    count: Int,
+    color: Color? = null,
+): Modifier {
     if (LocalSettingsCardSegmentMode.current) return fillMaxWidth()
-    return miuixGroupedCardItem(index, count)
+    return if (color == null) {
+        miuixGroupedCardItem(index, count)
+    } else {
+        miuixGroupedCardItem(index, count, color = color)
+    }
 }
 
 @Composable
@@ -421,12 +430,14 @@ fun SettingsCardScope.SettingNavigationRow(
     onClick: () -> Unit,
     trailingContent: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    /** 行卡片底色；null 用默认 surfaceContainer（白）。bottom sheet 内容可传 secondaryContainer 拿灰卡。 */
+    backgroundColor: Color? = null,
 ) {
     val deferredClick = rememberDeferredNavigationClick(onClick)
     SettingsCardRow(key = title) { position ->
         if (trailingContent != null) {
             BasicComponent(
-                modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
+                modifier = Modifier.settingsGroupedRowBackground(position.index, position.count, backgroundColor),
                 insideMargin = insideMargin,
                 title = title,
                 summary = subtitle,
@@ -437,7 +448,7 @@ fun SettingsCardScope.SettingNavigationRow(
             )
         } else {
             ArrowPreference(
-                modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
+                modifier = Modifier.settingsGroupedRowBackground(position.index, position.count, backgroundColor),
                 insideMargin = insideMargin,
                 title = title,
                 summary = subtitle,

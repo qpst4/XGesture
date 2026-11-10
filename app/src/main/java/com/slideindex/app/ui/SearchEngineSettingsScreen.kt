@@ -199,6 +199,7 @@ fun SearchEngineSettingsScreen(
                 },
                 title = stringResource(R.string.search_engine_settings_preset_catalog),
                 subtitle = stringResource(R.string.search_engine_settings_preset_catalog_subtitle),
+                backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
                 onClick = {
                     showAddSheet = false
                     onOpenPresetPicker()
@@ -215,6 +216,7 @@ fun SearchEngineSettingsScreen(
                 },
                 title = stringResource(R.string.search_engine_settings_import),
                 subtitle = stringResource(R.string.search_engine_settings_import_subtitle),
+                backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
                 onClick = {
                     showAddSheet = false
                     importLauncher.launch(
@@ -238,6 +240,7 @@ fun SearchEngineSettingsScreen(
                 },
                 title = stringResource(R.string.search_engine_add_title),
                 subtitle = stringResource(R.string.search_engine_add_subtitle),
+                backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
                 onClick = {
                     showAddSheet = false
                     onOpenEditor(null)
