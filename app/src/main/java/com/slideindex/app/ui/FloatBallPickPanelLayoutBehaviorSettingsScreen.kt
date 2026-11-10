@@ -14,8 +14,11 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -25,6 +28,7 @@ import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.PickPanelSlideAnimationDefaults
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingsCardRow
+import com.slideindex.app.ui.settings.components.SettingsCardScope
 import com.slideindex.app.ui.settings.components.SettingExpandableSwitchRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
@@ -68,34 +72,18 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     val barButtonsTitle = stringResource(R.string.float_ball_pick_bar_buttons)
     val panelAnimExpanded = remember { mutableStateOf(false) }
 
-    val integratedLabel = stringResource(R.string.float_ball_pick_panel_style_integrated)
-    val tabPagedLabel = stringResource(R.string.float_ball_pick_panel_style_tab_paged)
-    val panelStyleOptions = remember(integratedLabel, tabPagedLabel) {
-        listOf(
-            com.slideindex.app.settings.PickResultPanelStyle.TAB_PAGED to tabPagedLabel,
-            com.slideindex.app.settings.PickResultPanelStyle.INTEGRATED_BOTTOM_BAR to integratedLabel,
-        )
+    // 本地乐观状态：点选后立刻生效，不等 DataStore 写盘 + settings flow 回流。
+    var localIconBarEnabled by remember { mutableStateOf(settings.floatBallPickIconBarEnabled) }
+    var localPanelStyle by remember { mutableStateOf(settings.floatBallPickPanelStyle) }
+    var localPanelPlacement by remember { mutableStateOf(settings.floatBallPickPanelPlacement) }
+    LaunchedEffect(settings.floatBallPickIconBarEnabled) {
+        localIconBarEnabled = settings.floatBallPickIconBarEnabled
     }
-    val selectedPanelStyleIndex = remember(settings.floatBallPickPanelStyle, panelStyleOptions) {
-        panelStyleOptions.indexOfFirst { it.first == settings.floatBallPickPanelStyle }.coerceAtLeast(0)
+    LaunchedEffect(settings.floatBallPickPanelStyle) {
+        localPanelStyle = settings.floatBallPickPanelStyle
     }
-    val panelStyleItems = remember(panelStyleOptions) {
-        panelStyleOptions.map { DropdownItem(text = it.second) }
-    }
-
-    val placementBottomLabel = stringResource(R.string.float_ball_pick_panel_placement_bottom)
-    val placementCenterLabel = stringResource(R.string.float_ball_pick_panel_placement_center)
-    val placementOptions = remember(placementBottomLabel, placementCenterLabel) {
-        listOf(
-            com.slideindex.app.settings.PickResultPanelPlacement.BOTTOM_DOCKED to placementBottomLabel,
-            com.slideindex.app.settings.PickResultPanelPlacement.CENTER to placementCenterLabel,
-        )
-    }
-    val selectedPlacementIndex = remember(settings.floatBallPickPanelPlacement, placementOptions) {
-        placementOptions.indexOfFirst { it.first == settings.floatBallPickPanelPlacement }.coerceAtLeast(0)
-    }
-    val placementItems = remember(placementOptions) {
-        placementOptions.map { DropdownItem(text = it.second) }
+    LaunchedEffect(settings.floatBallPickPanelPlacement) {
+        localPanelPlacement = settings.floatBallPickPanelPlacement
     }
 
     val searchGridStateRememberLabel = stringResource(R.string.float_ball_pick_search_grid_state_remember)
@@ -200,7 +188,70 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
         groupedCardItems(
             keyPrefix = "fb-pick-panel-appearance",
             items = buildList {
-                // 底栏样式：一张卡里既放模式选择，也放对应配置（经典位置 / 纯图标工具条）。
+                add(
+                    settingsCardScopeItem("panel-style") {
+                        SettingSegmentedRow(
+                            title = stringResource(R.string.float_ball_pick_panel_style),
+                            items = listOf(
+                                com.slideindex.app.settings.PickResultPanelStyle.TAB_PAGED,
+                                com.slideindex.app.settings.PickResultPanelStyle.INTEGRATED_BOTTOM_BAR,
+                            ),
+                            selected = localPanelStyle,
+                            labelRes = { style ->
+                                when (style) {
+                                    com.slideindex.app.settings.PickResultPanelStyle.TAB_PAGED ->
+                                        R.string.float_ball_pick_panel_style_tab_paged
+
+                                    com.slideindex.app.settings.PickResultPanelStyle.INTEGRATED_BOTTOM_BAR ->
+                                        R.string.float_ball_pick_panel_style_integrated
+                                }
+                            },
+                            onSelect = { style ->
+                                localPanelStyle = style
+                                onPickPanelStyleChange(style)
+                            },
+                        )
+                    },
+                )
+                add(
+                    settingsCardScopeItem("panel-placement") {
+                        SettingSegmentedRow(
+                            title = stringResource(R.string.float_ball_pick_panel_placement),
+                            items = listOf(
+                                com.slideindex.app.settings.PickResultPanelPlacement.BOTTOM_DOCKED,
+                                com.slideindex.app.settings.PickResultPanelPlacement.CENTER,
+                            ),
+                            selected = localPanelPlacement,
+                            labelRes = { placement ->
+                                when (placement) {
+                                    com.slideindex.app.settings.PickResultPanelPlacement.BOTTOM_DOCKED ->
+                                        R.string.float_ball_pick_panel_placement_bottom
+
+                                    com.slideindex.app.settings.PickResultPanelPlacement.CENTER ->
+                                        R.string.float_ball_pick_panel_placement_center
+                                }
+                            },
+                            onSelect = { placement ->
+                                localPanelPlacement = placement
+                                onPickPanelPlacementChange(placement)
+                            },
+                        )
+                    },
+                )
+                add(
+                    settingsCardScopeItem("text-size") {
+                        SettingsSliderRow(
+                            title = stringResource(R.string.float_ball_pick_text_size),
+                            value = settings.floatBallPickTextSizeSp,
+                            valueRange = 12f..22f,
+                            steps = 9,
+                            enabled = true,
+                            label = stringResource(R.string.float_ball_text_size_value, settings.floatBallPickTextSizeSp),
+                            onValueChange = onPickTextSizeChange,
+                        )
+                    },
+                )
+                // 底栏样式放卡片最底部：样式行 + 对应配置（经典位置 / 纯图标工具条）。
                 add(
                     settingsCardScopeItem("pick-bar-style") {
                         SettingsCardRow(key = "pick-bar-style-row") { position ->
@@ -220,7 +271,7 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                                     )
                                     SegmentedControl(
                                         items = listOf(false, true),
-                                        selected = settings.floatBallPickIconBarEnabled,
+                                        selected = localIconBarEnabled,
                                         labelRes = { iconOnly ->
                                             if (iconOnly) {
                                                 R.string.float_ball_pick_bar_style_icon
@@ -228,7 +279,10 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                                                 R.string.float_ball_pick_bar_style_classic
                                             }
                                         },
-                                        onSelect = onPickIconBarEnabledChange,
+                                        onSelect = { iconOnly ->
+                                            localIconBarEnabled = iconOnly
+                                            onPickIconBarEnabledChange(iconOnly)
+                                        },
                                         containerColor = MiuixTheme.colorScheme.surface,
                                         indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
                                     )
@@ -243,7 +297,7 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                     },
                 )
                 // 经典样式的两个位置项只在经典模式下出现。
-                if (!settings.floatBallPickIconBarEnabled) {
+                if (!localIconBarEnabled) {
                     add(
                         settingsCardScopeItem("copy-button-position") {
                             SettingSpinnerRow(
@@ -287,7 +341,7 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                                 modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
                             ) {
                                 AnimatedVisibility(
-                                    visible = settings.floatBallPickIconBarEnabled,
+                                    visible = localIconBarEnabled,
                                     enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
                                     exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
                                 ) {
@@ -319,52 +373,6 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                         }
                     },
                 )
-                add(
-                    settingsCardScopeItem("panel-style") {
-                        SettingSpinnerRow(
-                            title = stringResource(R.string.float_ball_pick_panel_style),
-                            subtitle = panelStyleOptions.getOrNull(selectedPanelStyleIndex)?.second.orEmpty(),
-                            dialogButtonText = stringResource(R.string.cancel),
-                            items = panelStyleItems,
-                            selectedIndex = selectedPanelStyleIndex,
-                            enabled = true,
-                            onSelectedIndexChange = { index ->
-                                val selected = panelStyleOptions.getOrNull(index)?.first ?: return@SettingSpinnerRow
-                                onPickPanelStyleChange(selected)
-                            },
-                        )
-                    },
-                )
-                add(
-                    settingsCardScopeItem("panel-placement") {
-                        SettingSpinnerRow(
-                            title = stringResource(R.string.float_ball_pick_panel_placement),
-                            subtitle = placementOptions.getOrNull(selectedPlacementIndex)?.second.orEmpty(),
-                            dialogButtonText = stringResource(R.string.cancel),
-                            items = placementItems,
-                            selectedIndex = selectedPlacementIndex,
-                            enabled = true,
-                            onSelectedIndexChange = { index ->
-                                val selected = placementOptions.getOrNull(index)?.first
-                                    ?: return@SettingSpinnerRow
-                                onPickPanelPlacementChange(selected)
-                            },
-                        )
-                    },
-                )
-                add(
-                    settingsCardScopeItem("text-size") {
-                        SettingsSliderRow(
-                            title = stringResource(R.string.float_ball_pick_text_size),
-                            value = settings.floatBallPickTextSizeSp,
-                            valueRange = 12f..22f,
-                            steps = 9,
-                            enabled = true,
-                            label = stringResource(R.string.float_ball_text_size_value, settings.floatBallPickTextSizeSp),
-                            onValueChange = onPickTextSizeChange,
-                        )
-                    },
-                )
             },
         )
         settingsLazySmallTitle(
@@ -374,7 +382,7 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
         groupedCardItems(
             keyPrefix = "fb-pick-panel-content-search",
             items = buildList {
-                if (settings.floatBallPickPanelStyle ==
+                if (localPanelStyle ==
                     com.slideindex.app.settings.PickResultPanelStyle.INTEGRATED_BOTTOM_BAR
                 ) {
                     add(
@@ -530,5 +538,46 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                 )
             },
         )
+    }
+}
+
+/** 设置行：标题 + 副标题 + 一整行 SegmentedControl（替代只有两项的下拉）。 */
+@Composable
+private fun <T> SettingsCardScope.SettingSegmentedRow(
+    title: String,
+    subtitle: String? = null,
+    items: List<T>,
+    selected: T,
+    labelRes: (T) -> Int,
+    onSelect: (T) -> Unit,
+) {
+    SettingsCardRow(key = title) { position ->
+        Column(
+            modifier = Modifier
+                .settingsGroupedRowBackground(position.index, position.count)
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+            )
+            subtitle?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                )
+            }
+            SegmentedControl(
+                items = items,
+                selected = selected,
+                labelRes = labelRes,
+                onSelect = onSelect,
+                containerColor = MiuixTheme.colorScheme.surface,
+                indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
+            )
+        }
     }
 }
