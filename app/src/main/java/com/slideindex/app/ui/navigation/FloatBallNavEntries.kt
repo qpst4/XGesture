@@ -19,7 +19,6 @@ import com.slideindex.app.ui.FloatBallAppearanceSettingsScreen
 import com.slideindex.app.ui.FloatBallGestureSettingsScreen
 import com.slideindex.app.ui.FloatBallGestureTuningScreen
 import com.slideindex.app.ui.floatBallGestureLabel
-import com.slideindex.app.ui.FloatBallPickBarButtonSettingsScreen
 import com.slideindex.app.ui.FloatBallPickHandfeelSettingsScreen
 import com.slideindex.app.ui.FloatBallPickPanelLayoutBehaviorSettingsScreen
 import com.slideindex.app.ui.FloatBallPickSettingsScreen
@@ -728,29 +727,15 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
             onPickCopyButtonPositionChange = viewModel::setFloatBallPickCopyButtonPosition,
             onPickImageToolbarPositionChange = viewModel::setFloatBallPickImageToolbarPosition,
             onPickIconBarEnabledChange = viewModel::setFloatBallPickIconBarEnabled,
-            onOpenPickBarButtonOrder = { ctx.navigate(AppNavKey.FloatBallPickBarButtons) },
+            onPickBarTextOrderChange = viewModel::setFloatBallPickTextBarOrder,
+            onPickBarTextHiddenChange = viewModel::setFloatBallPickTextBarHidden,
+            onPickBarImageOrderChange = viewModel::setFloatBallPickImageBarOrder,
+            onPickBarImageHiddenChange = viewModel::setFloatBallPickImageBarHidden,
+            onResetPickBarButtons = viewModel::resetFloatBallPickBarButtons,
             onPickTextSizeChange = viewModel::setFloatBallPickTextSizeSp,
             onPickHapticEnabledChange = viewModel::setFloatBallPickHapticEnabled,
             onPickPanelEnterAnimationMsChange = viewModel::setFloatBallPickPanelEnterAnimationMs,
             onPickPanelExitAnimationMsChange = viewModel::setFloatBallPickPanelExitAnimationMs,
-        )
-    }
-
-    hiltEntry<AppNavKey.FloatBallPickBarButtons> {
-        val viewModel: ExtensionSettingsViewModel = hiltViewModel()
-        val overlaySettings by viewModel.overlaySettings.collectAsStateWithLifecycle()
-        val settings = overlaySettings.toMinimalAppSettings()
-        FloatBallPickBarButtonSettingsScreen(
-            textOrder = settings.floatBallPickTextBarOrder,
-            textHidden = settings.floatBallPickTextBarHidden,
-            imageOrder = settings.floatBallPickImageBarOrder,
-            imageHidden = settings.floatBallPickImageBarHidden,
-            onTextOrderChange = viewModel::setFloatBallPickTextBarOrder,
-            onTextHiddenChange = viewModel::setFloatBallPickTextBarHidden,
-            onImageOrderChange = viewModel::setFloatBallPickImageBarOrder,
-            onImageHiddenChange = viewModel::setFloatBallPickImageBarHidden,
-            onRestoreDefaults = viewModel::resetFloatBallPickBarButtons,
-            onBack = { ctx.navigateBackTo(AppNavKey.FloatBallPickPanelLayoutBehavior) },
         )
     }
 

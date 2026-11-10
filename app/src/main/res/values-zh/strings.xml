@@ -2016,12 +2016,10 @@
     <string name="float_ball_pick_icon_bar">纯图标底栏</string>
     <string name="float_ball_pick_icon_bar_desc">文本区与图片区都改成一排小图标，不再显示「复制选中」与分享引擎大按钮</string>
     <string name="float_ball_pick_bar_buttons">底栏按钮</string>
-    <string name="float_ball_pick_bar_buttons_desc">调整顺序、显示或隐藏</string>
     <string name="float_ball_pick_bar_positions_title">经典样式按钮位置</string>
     <string name="float_ball_pick_bar_positions_desc">仅在「纯图标底栏」关闭时生效</string>
     <string name="float_ball_pick_bar_text_title">文本区按钮</string>
     <string name="float_ball_pick_bar_image_title">图片区按钮</string>
-    <string name="float_ball_pick_bar_hint">点选查看说明，再点切换显示；长按拖动可排序。</string>
     <string name="float_ball_pick_bar_shown">显示在底栏</string>
     <string name="float_ball_pick_bar_hidden">已隐藏，不显示在底栏</string>
     <string name="float_ball_pick_bar_copy">复制选中</string>

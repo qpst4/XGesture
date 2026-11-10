@@ -4407,12 +4407,10 @@
     <string name="float_ball_pick_icon_bar">アイコンだけのボトムバー</string>
     <string name="float_ball_pick_icon_bar_desc">テキスト欄と画像欄を小さなアイコン1列にまとめ、「コピー」や共有エンジンの大きなボタンを表示しません</string>
     <string name="float_ball_pick_bar_buttons">ボトムバーのボタン</string>
-    <string name="float_ball_pick_bar_buttons_desc">順番の変更、表示／非表示</string>
     <string name="float_ball_pick_bar_positions_title">クラシックスタイルのボタン位置</string>
     <string name="float_ball_pick_bar_positions_desc">「アイコンだけのボトムバー」がオフのときのみ有効</string>
     <string name="float_ball_pick_bar_text_title">テキスト欄のボタン</string>
     <string name="float_ball_pick_bar_image_title">画像欄のボタン</string>
-    <string name="float_ball_pick_bar_hint">タップで説明、もう一度タップで表示/非表示。長押しでドラッグして並べ替え。</string>
     <string name="float_ball_pick_bar_shown">バーに表示</string>
     <string name="float_ball_pick_bar_hidden">バーでは非表示</string>
     <string name="float_ball_pick_bar_copy">選択範囲をコピー</string>

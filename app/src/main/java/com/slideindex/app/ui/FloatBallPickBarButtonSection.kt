@@ -1,6 +1,7 @@
 package com.slideindex.app.ui
 
 import android.os.SystemClock
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -48,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -62,8 +64,6 @@ import com.slideindex.app.R
 import com.slideindex.app.settings.PickResultBarButtons
 import com.slideindex.app.settings.PickResultImageBarButton
 import com.slideindex.app.settings.PickResultTextBarButton
-import com.slideindex.app.ui.settings.components.LazySettingsItem
-import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
 import kotlin.math.roundToInt
 
 /** 一颗底栏按钮在设置页里的展示信息。id 与 settings 模块的枚举一一对应。 */
@@ -164,13 +164,19 @@ private val imageBarSpecs: List<BarButtonSpec> = listOf(
     ),
 )
 
+private enum class PickResultBarTab(val labelRes: Int) {
+    IMAGE(R.string.float_ball_pick_bar_image_title),
+    TEXT(R.string.float_ball_pick_bar_text_title),
+}
+
 /**
- * 取词面板底栏按钮：按择定的「图标条」样式（点选查看说明、再点切换显示、长按拖动排序）。
+ * 取词面板底栏按钮的「图标条」设置段：直接嵌在面板布局设置页里（不跳子页）。
  *
- * 顺序与显隐落盘；顺序只对「纯图标模式」生效，经典样式的位置仍由另外两项设置决定。
+ * 交互照竞品：图片/文字分段 tab → 一排工具图标 → 点选显示当前动作与说明 →
+ * 再点同一颗切换显隐 → 长按拖动排序（实时换位 + 让位动画 + 换位震动）→ 恢复默认。
  */
 @Composable
-fun FloatBallPickBarButtonSettingsScreen(
+fun PickResultBarButtonSection(
     textOrder: List<String>,
     textHidden: Set<String>,
     imageOrder: List<String>,
@@ -180,145 +186,100 @@ fun FloatBallPickBarButtonSettingsScreen(
     onImageOrderChange: (List<String>) -> Unit,
     onImageHiddenChange: (Set<String>) -> Unit,
     onRestoreDefaults: () -> Unit,
-    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    var tab by remember { mutableIntStateOf(0) }
-    val isText = tab == 1
-    val entries = remember(tab, textOrder, imageOrder) {
-        val ids = if (tab == 1) {
-            PickResultBarButtons.normalizeText(textOrder).map { it.id }
+    var tab by remember { mutableStateOf(PickResultBarTab.IMAGE) }
+    val isText = tab == PickResultBarTab.TEXT
+
+    // 乐观本地状态：点击先立即改本地，再异步落盘；settings 回流后用 LaunchedEffect 对齐。
+    var localTextOrder by remember { mutableStateOf(textOrder) }
+    var localTextHidden by remember { mutableStateOf(textHidden) }
+    var localImageOrder by remember { mutableStateOf(imageOrder) }
+    var localImageHidden by remember { mutableStateOf(imageHidden) }
+    LaunchedEffect(textOrder) { localTextOrder = textOrder }
+    LaunchedEffect(textHidden) { localTextHidden = textHidden }
+    LaunchedEffect(imageOrder) { localImageOrder = imageOrder }
+    LaunchedEffect(imageHidden) { localImageHidden = imageHidden }
+
+    val order = if (isText) localTextOrder else localImageOrder
+    val hidden = if (isText) localTextHidden else localImageHidden
+    val entries = remember(tab, order) {
+        val ids = if (isText) {
+            PickResultBarButtons.normalizeText(order).map { it.id }
         } else {
-            PickResultBarButtons.normalizeImage(imageOrder).map { it.id }
+            PickResultBarButtons.normalizeImage(order).map { it.id }
         }
-        val specs = if (tab == 1) textBarSpecs else imageBarSpecs
+        val specs = if (isText) textBarSpecs else imageBarSpecs
         ids.mapNotNull { id -> specs.firstOrNull { it.id == id } }
     }
-    val hidden = if (isText) textHidden else imageHidden
+
     var selectedId by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(tab) { selectedId = null }
 
-    SettingsLazyScreenScaffold(
-        title = stringResource(R.string.float_ball_pick_bar_buttons),
-        pageHint = stringResource(R.string.float_ball_pick_bar_hint),
-        onBack = onBack,
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        LazySettingsItem(key = "pick-bar-tabs") {
-            BarTabRow(
-                textSelected = isText,
-                onSelect = { text -> tab = if (text) 1 else 0 },
-            )
-        }
-        LazySettingsItem(key = "pick-bar-strip") {
-            BarButtonStrip(
-                entries = entries,
-                hidden = hidden,
-                selectedId = selectedId,
-                onSelectToggle = { id ->
-                    if (selectedId != id) {
-                        selectedId = id
+        SegmentedControl(
+            items = PickResultBarTab.entries,
+            selected = tab,
+            labelRes = { it.labelRes },
+            onSelect = { tab = it },
+        )
+        BarButtonStrip(
+            entries = entries,
+            hidden = hidden,
+            selectedId = selectedId,
+            onSelectToggle = { id ->
+                if (selectedId != id) {
+                    selectedId = id
+                } else {
+                    val next = if (id in hidden) hidden - id else hidden + id
+                    if (isText) {
+                        localTextHidden = next
+                        onTextHiddenChange(next)
                     } else {
-                        val next = if (id in hidden) hidden - id else hidden + id
-                        if (isText) onTextHiddenChange(next) else onImageHiddenChange(next)
+                        localImageHidden = next
+                        onImageHiddenChange(next)
                     }
-                },
-                onReorder = { ids ->
-                    if (isText) onTextOrderChange(ids) else onImageOrderChange(ids)
-                },
-            )
-        }
-        LazySettingsItem(key = "pick-bar-description") {
-            BarButtonDescription(
-                selected = entries.firstOrNull { it.id == selectedId },
-                hint = stringResource(R.string.float_ball_pick_bar_select_hint),
-                empty = stringResource(R.string.float_ball_pick_bar_select_empty),
-            )
-        }
-        LazySettingsItem(key = "pick-bar-restore") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                TextButton(onClick = onRestoreDefaults) {
-                    Icon(
-                        imageVector = Icons.Outlined.Refresh,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Text(
-                        text = stringResource(R.string.float_ball_pick_bar_restore_default),
-                        modifier = Modifier.padding(start = 6.dp),
-                    )
                 }
+            },
+            onReorder = { ids ->
+                if (isText) {
+                    localTextOrder = ids
+                    onTextOrderChange(ids)
+                } else {
+                    localImageOrder = ids
+                    onImageOrderChange(ids)
+                }
+            },
+        )
+        BarButtonDescription(
+            selected = entries.firstOrNull { it.id == selectedId },
+            hint = stringResource(R.string.float_ball_pick_bar_select_hint),
+            empty = stringResource(R.string.float_ball_pick_bar_select_empty),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            TextButton(onClick = onRestoreDefaults) {
+                Icon(
+                    imageVector = Icons.Outlined.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Text(
+                    text = stringResource(R.string.float_ball_pick_bar_restore_default),
+                    modifier = Modifier.padding(start = 6.dp),
+                )
             }
         }
     }
 }
 
-@Composable
-private fun BarTabRow(
-    textSelected: Boolean,
-    onSelect: (Boolean) -> Unit,
-) {
-    val container = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-    val active = MaterialTheme.colorScheme.surface
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(22.dp))
-            .background(container)
-            .padding(3.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        BarTabItem(
-            label = stringResource(R.string.float_ball_pick_bar_image_title),
-            selected = !textSelected,
-            activeColor = active,
-            modifier = Modifier.weight(1f),
-            onClick = { onSelect(false) },
-        )
-        BarTabItem(
-            label = stringResource(R.string.float_ball_pick_bar_text_title),
-            selected = textSelected,
-            activeColor = active,
-            modifier = Modifier.weight(1f),
-            onClick = { onSelect(true) },
-        )
-    }
-}
-
-@Composable
-private fun BarTabItem(
-    label: String,
-    selected: Boolean,
-    activeColor: androidx.compose.ui.graphics.Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(19.dp))
-            .background(if (selected) activeColor else androidx.compose.ui.graphics.Color.Transparent)
-            .clickable(onClick = onClick)
-            .padding(vertical = 9.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            color = if (selected) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            },
-        )
-    }
-}
-
 /**
- * 图标条：点选查看说明；再点同一颗切换显示/隐藏；长按后拖动调整顺序。
+ * 横向图标条：点选切换说明、再点切显隐；长按后拖动实时换位。
  *
  * 手势自己接管长按（`awaitLongPressOrCancellation`）：`detectDragGesturesAfterLongPress`
  * 在抬手时要求 up 未被消费，而同一节点的 `clickable` 会先拿走 up，原地松手会被判 cancel。
@@ -333,28 +294,45 @@ private fun BarButtonStrip(
 ) {
     var localIds by remember(entries) { mutableStateOf(entries.map { it.id }) }
     LaunchedEffect(entries) { localIds = entries.map { it.id } }
-    var draggingId by remember { mutableStateOf<String?>(null) }
+
+    var dragId by remember { mutableStateOf<String?>(null) }
+    var dragStartIndex by remember { mutableIntStateOf(-1) }
+    var dragTargetIndex by remember { mutableIntStateOf(-1) }
     var dragOffsetX by remember { mutableFloatStateOf(0f) }
+    var dragSnapshot by remember { mutableStateOf<List<String>?>(null) }
     var suppressTapUntil by remember { mutableLongStateOf(0L) }
 
     val itemStridePx = with(LocalDensity.current) { (BarItemSize + BarItemSpacing).toPx() }
     val haptic = LocalHapticFeedback.current
+    val scrollState = rememberScrollState()
+    val displayIds = dragSnapshot ?: localIds
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 10.dp),
+            .horizontalScroll(scrollState)
+            .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(BarItemSpacing),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        localIds.forEach { id ->
-            val entry = entries.firstOrNull { it.id == id } ?: return@forEach
-            val isDragging = draggingId == id
+        displayIds.forEachIndexed { index, id ->
+            val entry = entries.firstOrNull { it.id == id } ?: return@forEachIndexed
+            val isDragging = dragId == id
+            val displacement by animateFloatAsState(
+                targetValue = displacementForIndex(
+                    index = index,
+                    fromIndex = dragStartIndex,
+                    toIndex = dragTargetIndex,
+                    itemStridePx = itemStridePx,
+                ),
+                label = "barItemDisplacement",
+            )
+            val itemOffsetX = if (isDragging) dragOffsetX else displacement
+
             Box(
                 modifier = Modifier
                     .zIndex(if (isDragging) 1f else 0f)
-                    .offset { IntOffset(if (isDragging) dragOffsetX.roundToInt() else 0, 0) }
+                    .offset { IntOffset(itemOffsetX.roundToInt(), 0) }
                     .pointerInput(id) {
                         awaitEachGesture {
                             val down = awaitFirstDown(requireUnconsumed = false)
@@ -363,43 +341,57 @@ private fun BarButtonStrip(
                             val startIndex = localIds.indexOf(id)
                             if (startIndex < 0) return@awaitEachGesture
 
-                            draggingId = id
+                            val snapshot = localIds
+                            dragId = id
+                            dragStartIndex = startIndex
+                            dragTargetIndex = startIndex
                             dragOffsetX = 0f
+                            dragSnapshot = snapshot
                             // 长按一成立就封住点击：up 由谁先消费不做保证。
                             suppressTapUntil = Long.MAX_VALUE
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
 
-                            var targetIndex = startIndex
+                            var target = startIndex
                             try {
                                 while (true) {
                                     val event = awaitPointerEvent()
                                     val change = event.changes.firstOrNull { it.id == longPress.id }
                                     if (change == null || !change.pressed) break
                                     dragOffsetX += change.positionChange().x
-                                    targetIndex = (startIndex + (dragOffsetX / itemStridePx).roundToInt())
-                                        .coerceIn(0, localIds.lastIndex)
+                                    val newTarget = (startIndex + (dragOffsetX / itemStridePx).roundToInt())
+                                        .coerceIn(0, snapshot.lastIndex)
+                                    if (newTarget != target) {
+                                        target = newTarget
+                                        dragTargetIndex = target
+                                        haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                                    }
                                     change.consume()
                                 }
                             } finally {
-                                val finishedIds = if (targetIndex != startIndex) {
-                                    localIds.toMutableList().apply {
-                                        val moved = removeAt(startIndex)
-                                        add(targetIndex.coerceIn(0, size), moved)
+                                val finished = if (target != startIndex) {
+                                    snapshot.toMutableList().apply {
+                                        add(target.coerceIn(0, size), removeAt(startIndex))
                                     }
                                 } else {
-                                    localIds
+                                    snapshot
                                 }
-                                localIds = finishedIds
-                                draggingId = null
+                                localIds = finished
+                                dragId = null
+                                dragStartIndex = -1
+                                dragTargetIndex = -1
                                 dragOffsetX = 0f
+                                dragSnapshot = null
                                 suppressTapUntil = SystemClock.uptimeMillis() + 250L
-                                onReorder(finishedIds)
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                if (target != startIndex) onReorder(finished)
+                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                             }
                         }
                     }
                     .clickable {
-                        if (SystemClock.uptimeMillis() >= suppressTapUntil) onSelectToggle(id)
+                        if (SystemClock.uptimeMillis() >= suppressTapUntil) {
+                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                            onSelectToggle(id)
+                        }
                     },
             ) {
                 BarButtonCell(
@@ -411,6 +403,19 @@ private fun BarButtonStrip(
             }
         }
     }
+}
+
+private fun displacementForIndex(
+    index: Int,
+    fromIndex: Int,
+    toIndex: Int,
+    itemStridePx: Float,
+): Float = when {
+    fromIndex < 0 || toIndex < 0 || fromIndex == toIndex -> 0f
+    index == fromIndex -> 0f
+    fromIndex < toIndex && index in (fromIndex + 1)..toIndex -> -itemStridePx
+    fromIndex > toIndex && index in toIndex until fromIndex -> itemStridePx
+    else -> 0f
 }
 
 @Composable
@@ -430,10 +435,15 @@ private fun BarButtonCell(
         visible -> MaterialTheme.colorScheme.onSurface
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
+    val dragScale by animateFloatAsState(
+        targetValue = if (dragging) 1.08f else 1f,
+        label = "barItemDragScale",
+    )
     Box(
         modifier = Modifier
             .size(BarItemSize)
-            .zIndex(if (dragging) 1f else 0f)
+            .scale(dragScale)
+            .alpha(if (dragging) 0.95f else 1f)
             .clip(shape)
             .background(container)
             .then(
@@ -442,8 +452,7 @@ private fun BarButtonCell(
                 } else {
                     Modifier
                 }
-            )
-            .then(if (dragging) Modifier.alpha(0.9f) else Modifier),
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -464,9 +473,7 @@ private fun BarButtonDescription(
     empty: String,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(

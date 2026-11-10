@@ -1077,12 +1077,10 @@
     <string name="float_ball_pick_icon_bar">Нижняя панель только с иконками</string>
     <string name="float_ball_pick_icon_bar_desc">Текстовая и графическая секции используют один ряд маленьких кнопок-иконок вместо больших кнопок «Копировать» и движка</string>
     <string name="float_ball_pick_bar_buttons">Кнопки нижней панели</string>
-    <string name="float_ball_pick_bar_buttons_desc">Порядок, показ и скрытие</string>
     <string name="float_ball_pick_bar_positions_title">Положение кнопок классического стиля</string>
     <string name="float_ball_pick_bar_positions_desc">Действует только когда панель с иконками выключена</string>
     <string name="float_ball_pick_bar_text_title">Кнопки текстовой секции</string>
     <string name="float_ball_pick_bar_image_title">Кнопки графической секции</string>
-    <string name="float_ball_pick_bar_hint">Нажмите, чтобы посмотреть описание; нажмите ещё раз, чтобы скрыть или показать. Долгое нажатие — перетаскивание для сортировки.</string>
     <string name="float_ball_pick_bar_shown">Показывается на панели</string>
     <string name="float_ball_pick_bar_hidden">Скрыто с панели</string>
     <string name="float_ball_pick_bar_copy">Копировать выделенное</string>

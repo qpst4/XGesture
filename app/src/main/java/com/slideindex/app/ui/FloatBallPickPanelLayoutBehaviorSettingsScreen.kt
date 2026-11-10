@@ -1,23 +1,31 @@
 package com.slideindex.app.ui
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.PickPanelSlideAnimationDefaults
 import com.slideindex.app.ui.miuix.groupedCardItems
+import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingExpandableRow
 import com.slideindex.app.ui.settings.components.SettingExpandableSwitchRow
-import com.slideindex.app.ui.settings.components.SettingLinkRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import kotlin.math.roundToInt
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -34,7 +42,11 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     onPickCopyButtonPositionChange: (com.slideindex.app.settings.PickResultCopyButtonPosition) -> Unit,
     onPickImageToolbarPositionChange: (com.slideindex.app.settings.PickResultImageToolbarPosition) -> Unit,
     onPickIconBarEnabledChange: (Boolean) -> Unit,
-    onOpenPickBarButtonOrder: () -> Unit,
+    onPickBarTextOrderChange: (List<String>) -> Unit,
+    onPickBarTextHiddenChange: (Set<String>) -> Unit,
+    onPickBarImageOrderChange: (List<String>) -> Unit,
+    onPickBarImageHiddenChange: (Set<String>) -> Unit,
+    onResetPickBarButtons: () -> Unit,
     onPickTextSizeChange: (Float) -> Unit,
     onPickHapticEnabledChange: (Boolean) -> Unit,
     onPickPanelEnterAnimationMsChange: (Int) -> Unit,
@@ -45,6 +57,7 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     val selectCopySectionTitle = stringResource(R.string.pick_settings_section_panel_select_copy)
     val feedbackSectionTitle = stringResource(R.string.pick_settings_section_panel_feedback)
     val panelAnimationsTitle = stringResource(R.string.pick_settings_panel_animations)
+    val barButtonsTitle = stringResource(R.string.float_ball_pick_bar_buttons)
     val panelAnimExpanded = remember { mutableStateOf(false) }
     // 经典样式才需要这两项；纯图标模式下顺序由「底栏按钮」决定，这里默认收起、置灰。
     val classicBarPositionsExpanded = remember { mutableStateOf(false) }
@@ -219,17 +232,6 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                         )
                     },
                 )
-                if (settings.floatBallPickIconBarEnabled) {
-                    add(
-                        settingsCardScopeItem("bar-button-order") {
-                            SettingLinkRow(
-                                title = stringResource(R.string.float_ball_pick_bar_buttons),
-                                subtitle = stringResource(R.string.float_ball_pick_bar_buttons_desc),
-                                onClick = onOpenPickBarButtonOrder,
-                            )
-                        },
-                    )
-                }
                 add(
                     settingsCardScopeItem("classic-bar-positions") {
                         SettingExpandableRow(
@@ -269,6 +271,37 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                 )
             },
         )
+        if (settings.floatBallPickIconBarEnabled) {
+            settingsLazySmallTitle(
+                key = "pick-bar-buttons-title",
+                title = barButtonsTitle,
+            )
+            // 与竞品一致：整段底栏按钮设置直接铺在本页，不再跳子页。
+            LazySettingsItem(key = "pick-bar-buttons-section") {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    colors = CardDefaults.defaultColors(
+                        color = MiuixTheme.colorScheme.surfaceContainer,
+                        contentColor = MiuixTheme.colorScheme.onSurfaceContainer,
+                    ),
+                    insideMargin = PaddingValues(16.dp),
+                ) {
+                    PickResultBarButtonSection(
+                        textOrder = settings.floatBallPickTextBarOrder,
+                        textHidden = settings.floatBallPickTextBarHidden,
+                        imageOrder = settings.floatBallPickImageBarOrder,
+                        imageHidden = settings.floatBallPickImageBarHidden,
+                        onTextOrderChange = onPickBarTextOrderChange,
+                        onTextHiddenChange = onPickBarTextHiddenChange,
+                        onImageOrderChange = onPickBarImageOrderChange,
+                        onImageHiddenChange = onPickBarImageHiddenChange,
+                        onRestoreDefaults = onResetPickBarButtons,
+                    )
+                }
+            }
+        }
         settingsLazySmallTitle(
             key = "panel-content-search-section",
             title = contentSearchSectionTitle,

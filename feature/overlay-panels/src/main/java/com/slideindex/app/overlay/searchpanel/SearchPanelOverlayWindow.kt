@@ -118,7 +118,9 @@ object SearchPanelOverlayWindow {
             mainHandler.post { releaseWarmShellForPickPanel() }
             return
         }
-        if (isShowing) return
+        // 无条件销毁：只要残留的是预热壳（甚至上一轮没完全收起的窗口），show() 都只会
+        // updateViewLayout（不改 z-order），窗口就停在比取词面板更低的层级。
+        // 释放后 show() 重新建窗，新窗口最后 add，天然压在取词面板之上。
         releaseWarmUp()
     }
 

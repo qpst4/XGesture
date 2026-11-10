@@ -1105,12 +1105,10 @@
     <string name="float_ball_pick_icon_bar">Icon-only bottom bar</string>
     <string name="float_ball_pick_icon_bar_desc">Text and image sections use one row of small icon buttons instead of the big Copy selection / share-engine buttons</string>
     <string name="float_ball_pick_bar_buttons">Bottom bar buttons</string>
-    <string name="float_ball_pick_bar_buttons_desc">Reorder, show or hide each button</string>
     <string name="float_ball_pick_bar_positions_title">Classic style button positions</string>
     <string name="float_ball_pick_bar_positions_desc">Only used when the icon-only bottom bar is off</string>
     <string name="float_ball_pick_bar_text_title">Text section buttons</string>
     <string name="float_ball_pick_bar_image_title">Image section buttons</string>
-    <string name="float_ball_pick_bar_hint">Tap a button to inspect it, tap again to show or hide it; long-press and drag to reorder.</string>
     <string name="float_ball_pick_bar_shown">Shown in the bottom bar</string>
     <string name="float_ball_pick_bar_hidden">Hidden from the bottom bar</string>
     <string name="float_ball_pick_bar_copy">Copy selection</string>
