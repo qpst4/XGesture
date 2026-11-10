@@ -43,7 +43,7 @@ class NotificationFilterPreferences @Inject constructor(
                     NotificationFilterSettings.MIN_NOTIFICATION_HISTORY_MAX_COUNT,
                     NotificationFilterSettings.MAX_NOTIFICATION_HISTORY_MAX_COUNT,
                 ),
-            groupHistoryByApp = prefs[GROUP_HISTORY_BY_APP] ?: true,
+            groupHistoryByApp = prefs[GROUP_HISTORY_BY_APP] ?: false,
         )
     }
 
