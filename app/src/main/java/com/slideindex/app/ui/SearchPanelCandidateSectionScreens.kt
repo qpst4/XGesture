@@ -29,6 +29,7 @@ import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingsHintText
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
+import com.slideindex.app.ui.settings.components.settingsLazyHint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -192,13 +193,9 @@ fun SearchPanelClipboardSearchSettingsScreen(
                         )
                     },
                 )
-                add(
-                    settingsCardScopeItem("index-hint") {
-                        SettingsHintText(indexHint)
-                    },
-                )
             },
         )
+        settingsLazyHint(key = "clipboard-index-hint", text = indexHint)
     }
 
     MiuixConfirmDialog(
