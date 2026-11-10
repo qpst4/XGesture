@@ -127,10 +127,12 @@ fun SideGestureSlotConfigScreen(
 
     val storedMode = settings.slotTriggerMode(configSide, selectedTrigger, handleId)
     val sideDefaultMode = settings.defaultTriggerModeFor(configSide)
-    // 「默认」已不对用户暴露：未设置过时按松手触发；只能持续触发的动作固定为持续触发。
+    // 「默认」已不对用户暴露：未设置过时按松手触发；只能持续触发的动作固定为持续触发
+    // （仅限能按住拖动的槽位；单击/双击/点按没有持续阶段，按松手兜底）。
     val selectedMode = when {
         storedMode != GestureTriggerMode.DEFAULT -> storedMode
-        selectedAction.requiresContinuousTriggerOnly() -> GestureTriggerMode.CONTINUOUS
+        selectedAction.requiresContinuousTriggerOnly() &&
+            trigger !in GestureTriggerType.pressTapEntries() -> GestureTriggerMode.CONTINUOUS
         else -> GestureTriggerMode.ON_RELEASE
     }
 
@@ -597,6 +599,9 @@ fun SideGestureTriggerModePickerScreen(
 
 ) {
 
+    // 单击/双击/点按槽位没有按住拖动的持续阶段，不提供「持续触发」模式。
+    val continuousUsable = trigger !in GestureTriggerType.pressTapEntries()
+
     val modes = if (includeDefaultOption) {
 
         GestureTriggerMode.configurableEntries
@@ -605,7 +610,7 @@ fun SideGestureTriggerModePickerScreen(
 
         GestureTriggerMode.configurableEntries.filter { it != GestureTriggerMode.DEFAULT }
 
-    }
+    }.filter { it != GestureTriggerMode.CONTINUOUS || continuousUsable }
 
     val modeItems = buildList {
 

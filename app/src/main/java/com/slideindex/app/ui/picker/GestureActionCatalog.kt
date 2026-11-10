@@ -9,6 +9,7 @@ import com.slideindex.app.gesture.GestureTriggerType
 import com.slideindex.app.gesture.ActionPickerCatalogPolicy
 import com.slideindex.app.gesture.SlotPickerKind
 import com.slideindex.app.gesture.isEligibleForSlotPicker
+import com.slideindex.app.gesture.requiresContinuousTriggerOnly
 import com.slideindex.app.gesture.slotPickerKindOrNull
 import com.slideindex.app.ui.gesturepicker.filterGestureActions
 
@@ -48,10 +49,19 @@ object GestureActionCatalog {
             GestureActionCatalogScope.QuickLauncher -> buildQuickLauncherActions()
         }
         val slotPickerKind = catalogPolicy.slotPickerKindOrNull()
-        return if (slotPickerKind == null) {
+        val base = if (slotPickerKind == null) {
             actions
         } else {
             actions.filter { it.isEligibleForSlotPicker(slotPickerKind) }
+        }
+        // 「只能持续触发」的动作需要按住拖动阶段；单击/双击/点按槽位没有这个阶段，即使
+        // EdgeGesture 策略整体保留持续动作，也要按当前槽位的触发类型再过滤一次。
+        val acceptsContinuousOnly = slotPickerKind == null &&
+            trigger !in GestureTriggerType.pressTapEntries()
+        return if (acceptsContinuousOnly) {
+            base
+        } else {
+            base.filterNot { it.requiresContinuousTriggerOnly() }
         }
     }
 
