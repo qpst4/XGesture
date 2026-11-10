@@ -35,10 +35,23 @@ object CornerSlotIconBitmap {
             val cacheKey = "app:${action.packageName}:${action.cloneUserId}:$sizePx"
             appIconCache.get(cacheKey)?.let { return it }
             resolveAppIconBitmap(action.packageName, sizePx, appRepository, context)?.let { bitmap ->
-                val decorated = com.slideindex.app.util.CloneBadge.decorate(bitmap, action.cloneUserId > 0) ?: bitmap
-                appIconCache.put(cacheKey, decorated)
-                return decorated
+                // 分身黄点不烘进位图：圆形槽位会把它裁掉，改由渲染器在裁剪外画
+                appIconCache.put(cacheKey, bitmap)
+                return bitmap
             }
+        }
+        // 「运行宏」：复用快速启动器的统一解析（宏目标 App 图标），否则只会落到通用播放键
+        if (action is GestureAction.RunMacro) {
+            val macroKey = "macro:${action.macroId}:$sizePx:${com.slideindex.app.macro.MacroStore.revision}"
+            appIconCache.get(macroKey)?.let { return it }
+            val item = com.slideindex.app.launcher.QuickLauncherItem.action(action)
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.quickLauncherIconDrawable
+                ?.invoke(item, emptyMap(), context, activityShortcuts, shellCommands)
+                ?.let { drawable ->
+                    val bitmap = drawableToBitmap(drawable, sizePx)
+                    appIconCache.put(macroKey, bitmap)
+                    return bitmap
+                }
         }
         if (action is GestureAction.LaunchShortcut) {
             val managedKey = "managed:${action.payloadKey}:$sizePx:${activityShortcuts.map { it.identityKey() to it.iconPath }.hashCode()}"

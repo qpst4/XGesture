@@ -780,9 +780,6 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     shellCommands = shells,
                 )
             }
-        com.slideindex.app.overlay.panels.PanelRuntimeHooks.cloneBadgeDecorate = { bmp, isClone ->
-            com.slideindex.app.util.CloneBadge.decorate(bmp, isClone)
-        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.cachedRecentTasks = {
             com.slideindex.app.tasks.TaskSwitcherRepository.getCachedEntries()
         }

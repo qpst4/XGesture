@@ -60,10 +60,9 @@ object HoneycombIconLoader {
                     shellCommands
                 )
                 if (drawable != null) {
-                    target.icon = com.slideindex.app.util.CloneBadge.wrap(
-                        drawable,
-                        target.item.appTarget?.isClone == true,
-                    ) ?: drawable
+                    // 分身黄点不在这里烘：蜂窝会按圆形裁剪图标，烘进角上会被切掉。
+                    // 由 HoneycombOverlayView 在裁剪之外按 target.isClone 绘制。
+                    target.icon = drawable
                     updated = true
                 }
             }

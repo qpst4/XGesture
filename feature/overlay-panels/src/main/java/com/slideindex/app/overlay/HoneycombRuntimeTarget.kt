@@ -16,7 +16,9 @@ class HoneycombRuntimeTarget(
     val item: QuickLauncherItem,
     @JvmField val label: String,
     @JvmField var icon: Drawable?,
-    shellCommands: List<ShellCommand> = emptyList()
+    shellCommands: List<ShellCommand> = emptyList(),
+    /** 分身条目：右上角黄点由渲染器在形状裁剪之外绘制。 */
+    @JvmField val isClone: Boolean = false,
 ) {
     val isShortcut: Boolean = item.showsShortcutBadge()
     val isShellCommandBadge: Boolean = item.showsShellCommandBadge(shellCommands)

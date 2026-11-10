@@ -17,6 +17,7 @@ import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.launcher.QuickLauncherItemType
 import com.slideindex.app.launcher.QuickLauncherLabels
+import com.slideindex.app.launcher.isCloneTarget
 import com.slideindex.app.launcher.showsMacroBadge
 import com.slideindex.app.launcher.showsShellCommandBadge
 import com.slideindex.app.launcher.showsShortcutBadge
@@ -288,16 +289,13 @@ internal class QuickLauncherRenderer(
             key = key,
             urgent = urgent,
             load = {
-                com.slideindex.app.util.CloneBadge.decorate(
-                    resolveQuickLauncherIcon(
+                resolveQuickLauncherIcon(
                     item = item,
                     size = size,
                     context = appContext,
                     appsByPackage = appsByPackage,
                     activityShortcuts = activityShortcuts,
                     shellCommands = shellCommands
-                    ),
-                    item.appTarget?.isClone == true,
                 )
             },
             onReady = { ctrl.invalidateQuickLauncherPanel() }
@@ -470,6 +468,7 @@ internal class QuickLauncherRenderer(
                 showShortcutBadge = item.showsShortcutBadge(),
                 showShellCommandBadge = item.showsShellCommandBadge(host.settings().shellCommands),
             showMacroBadge = item.showsMacroBadge(),
+            isClone = item.isCloneTarget(host.context),
                 longPressArmed = recordCells &&
                     index == host.panelGridSession().highlightedIndex &&
                     ctrl.quickLauncherLongPressArmed,
@@ -543,6 +542,7 @@ internal class QuickLauncherRenderer(
             showShortcutBadge = item.showsShortcutBadge(),
             showShellCommandBadge = item.showsShellCommandBadge(host.settings().shellCommands),
             showMacroBadge = item.showsMacroBadge(),
+            isClone = item.isCloneTarget(host.context),
             iconSize = quickLauncherGridIconSize * scale,
             iconTopInset = quickLauncherGridIconTopInset * scale,
             iconLabelGap = quickLauncherGridIconLabelGap * scale,
@@ -603,6 +603,7 @@ internal class QuickLauncherRenderer(
         showShortcutBadge: Boolean = false,
         showShellCommandBadge: Boolean = false,
         showMacroBadge: Boolean = false,
+        isClone: Boolean = false,
         longPressArmed: Boolean = false,
         iconSize: Float = quickLauncherGridIconSize,
         iconTopInset: Float = quickLauncherGridIconTopInset,
@@ -697,6 +698,17 @@ internal class QuickLauncherRenderer(
                 iconSize,
                 1f,
                 host.dp(1f)
+            )
+        }
+        // 分身黄点：画在图标形状裁剪之外，圆形图标用 45° 圆内安全位
+        if (isClone) {
+            com.slideindex.app.util.CloneBadge.draw(
+                canvas,
+                iconCenterX,
+                iconCenterY,
+                iconSize,
+                1f,
+                circular = quickLauncherIconShape == QuickLauncherDisplaySettings.ICON_SHAPE_CIRCLE,
             )
         }
         if (showLabels) {
@@ -934,6 +946,7 @@ internal class QuickLauncherRenderer(
                 showShortcutBadge = child.showsShortcutBadge(),
                 showShellCommandBadge = child.showsShellCommandBadge(host.settings().shellCommands),
                 showMacroBadge = child.showsMacroBadge(),
+                isClone = child.isCloneTarget(host.context),
                 longPressArmed = childGlobalIndex == ctrl.folderHighlightLocalIndex && ctrl.folderLongPressArmed,
                 labelMaxWidth = folderLayout.cellW - gridCellInset * 2
             )
@@ -1007,6 +1020,7 @@ internal class QuickLauncherRenderer(
             showShortcutBadge = item.showsShortcutBadge(),
             showShellCommandBadge = item.showsShellCommandBadge(host.settings().shellCommands),
             showMacroBadge = item.showsMacroBadge(),
+            isClone = item.isCloneTarget(host.context),
             iconSize = quickLauncherGridIconSize * scale,
             iconTopInset = quickLauncherGridIconTopInset * scale,
             iconLabelGap = quickLauncherGridIconLabelGap * scale,

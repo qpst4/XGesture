@@ -11,6 +11,7 @@ import com.slideindex.app.data.AppInfo
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemType
+import com.slideindex.app.launcher.isCloneTarget
 import com.slideindex.app.shell.ShellCommand
 
 object HoneycombTargetResolver {
@@ -51,6 +52,12 @@ object HoneycombTargetResolver {
                     )
                 else -> null
             }
-            HoneycombRuntimeTarget(item, label, icon, shellCommands)
+            HoneycombRuntimeTarget(
+                item = item,
+                label = label,
+                icon = icon,
+                shellCommands = shellCommands,
+                isClone = item.isCloneTarget(context),
+            )
         }
 }

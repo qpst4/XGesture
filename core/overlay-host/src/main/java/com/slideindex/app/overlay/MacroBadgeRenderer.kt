@@ -3,6 +3,7 @@ package com.slideindex.app.overlay
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
+import kotlin.jvm.JvmStatic
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -22,6 +23,7 @@ object MacroBadgeRenderer {
     }
     private val playPath = Path()
 
+    @JvmStatic
     fun draw(
         canvas: Canvas,
         iconCenterX: Float,

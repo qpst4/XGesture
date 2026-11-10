@@ -14,15 +14,18 @@ import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.SelectedHintMetrics
+import com.slideindex.app.launcher.isCloneTarget
 import com.slideindex.app.launcher.isShellActivityShortcut
 import com.slideindex.app.launcher.showsShellActivityShortcutBadge
 import com.slideindex.app.launcher.showsShellCommandBadge
 import com.slideindex.app.overlay.HintRingRenderer
+import com.slideindex.app.overlay.MacroBadgeRenderer
 import com.slideindex.app.overlay.ShellCommandBadgeRenderer
 import com.slideindex.app.overlay.ShortcutBadgeRenderer
 import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.settings.CornerGestureSettings
 import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.util.CloneBadge
 import kotlin.math.min
 
 object CornerRadialMenuRenderer {
@@ -501,6 +504,15 @@ object CornerRadialMenuRenderer {
                 progress,
                 density,
             )
+        } else if (action is GestureAction.RunMacro) {
+            MacroBadgeRenderer.draw(
+                canvas,
+                iconLeft + iconSize / 2f,
+                centerY,
+                iconSize,
+                progress,
+                density,
+            )
         }
 
         val metrics = namePaint.fontMetrics
@@ -631,6 +643,27 @@ object CornerRadialMenuRenderer {
                 drawSize,
                 progress,
                 density,
+            )
+        } else if (action is GestureAction.RunMacro) {
+            MacroBadgeRenderer.draw(
+                canvas,
+                centerX,
+                centerY,
+                drawSize,
+                progress,
+                density,
+            )
+        }
+
+        // 分身黄点画在形状裁剪之外，圆形槽位也不会被裁（烘焙版会掉一半）
+        if (action.isCloneTarget(context)) {
+            CloneBadge.draw(
+                canvas,
+                centerX,
+                centerY,
+                drawSize,
+                progress,
+                circular = shape == FvIconShape.CIRCLE,
             )
         }
     }

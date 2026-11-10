@@ -42,9 +42,11 @@ import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherLabels
 import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.launcher.QuickLauncherItemType
+import com.slideindex.app.launcher.isCloneTarget
 import com.slideindex.app.launcher.showsMacroBadge
 import com.slideindex.app.launcher.showsShellCommandBadge
 import com.slideindex.app.launcher.showsShortcutBadge
+import com.slideindex.app.overlay.CloneBadgeOverlay
 import com.slideindex.app.overlay.MacroBadgeOverlay
 import com.slideindex.app.overlay.ShellCommandBadgeOverlay
 import com.slideindex.app.overlay.ShortcutBadgeOverlay
@@ -175,6 +177,9 @@ internal fun QuickLauncherGridCell(
     val showShortcutBadge = item.showsShortcutBadge()
     val showShellCommandBadge = !showShortcutBadge && item.showsShellCommandBadge(shellCommands)
     val showMacroBadge = !showShortcutBadge && !showShellCommandBadge && item.showsMacroBadge()
+    val isClone = remember(item, com.slideindex.app.macro.MacroStore.revision) {
+        item.isCloneTarget(context)
+    }
     val iconSize = iconSizeDp.coerceIn(
         QuickLauncherDisplaySettings.MIN_ICON_SIZE_DP,
         QuickLauncherDisplaySettings.MAX_ICON_SIZE_DP,
@@ -250,6 +255,12 @@ internal fun QuickLauncherGridCell(
                     ShellCommandBadgeOverlay(iconSize = iconSize)
                 } else if (showMacroBadge) {
                     MacroBadgeOverlay(iconSize = iconSize)
+                }
+                if (isClone) {
+                    CloneBadgeOverlay(
+                        iconSize = iconSize,
+                        circular = iconShape == QuickLauncherDisplaySettings.ICON_SHAPE_CIRCLE,
+                    )
                 }
             }
             if (showLabels) {

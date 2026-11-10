@@ -348,10 +348,6 @@ object PanelRuntimeHooks {
         ) -> android.graphics.Bitmap?
     )? = null
 
-    /** 分身角标装饰（`:app` 的 CloneBadge.decorate）。 */
-    @Volatile
-    var cloneBadgeDecorate: ((android.graphics.Bitmap, Boolean) -> android.graphics.Bitmap?)? = null
-
     /** 已缓存的最近任务（每项含 `app: AppInfo`）。 */
     @Volatile
     var cachedRecentTasks: (() -> List<Any>)? = null
