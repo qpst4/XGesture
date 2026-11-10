@@ -198,6 +198,36 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.accessibilityService = {
             com.slideindex.app.service.SlideIndexAccessibilityService.accessibilityInstance()
         }
+        // 面板（应用切换器里的分身卡等）也要能执行手势动作；与悬浮球/圆环共用同一套 ActionExecutor。
+        val panelGestureExecutor = com.slideindex.app.gesture.ActionExecutor(
+            context = this,
+            appRepository = deps.appRepository,
+            onShellCommandsPersist = { commands ->
+                deps.applicationScope.launch {
+                    deps.settingsRepository.setShellCommands(commands)
+                }
+            },
+        )
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionRunner =
+            object : com.slideindex.app.overlay.panels.GestureActionRunner {
+                override fun run(
+                    action: com.slideindex.app.gesture.GestureAction,
+                    settings: com.slideindex.app.settings.AppSettings,
+                    longPressArmed: Boolean,
+                    anchorRawX: Float?,
+                    anchorRawY: Float?,
+                    panelSide: com.slideindex.app.overlay.PanelSide?,
+                ) {
+                    panelGestureExecutor.execute(
+                        action = action,
+                        settings = settings,
+                        longPressArmed = longPressArmed,
+                        anchorRawX = anchorRawX,
+                        anchorRawY = anchorRawY,
+                        panelSide = panelSide,
+                    )
+                }
+            }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.recentTaskIdentifiers = {
             runCatching {
                 com.slideindex.app.util.TaskManagerUtil.refreshRecentTasks().map { it.identifier }

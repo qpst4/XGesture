@@ -7,6 +7,7 @@ import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureTriggerMode
 import com.slideindex.app.gesture.SelectedHintMetrics
 import com.slideindex.app.launcher.QuickLauncherItemCodec
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.shell.ShellCommand
 import com.slideindex.app.shell.ShellCommandCodec
 import com.slideindex.app.activity.ActivityShortcutCodec
@@ -1050,6 +1051,12 @@ class OverlaySettingsMutator @Inject constructor(
         }
     }
 
+    suspend fun setFloatBallPickWordTapGranularity(
+        granularity: PickResultWordTapGranularity,
+    ) = editor.edit {
+        it[SettingsPreferenceKeys.FLOAT_BALL_PICK_WORD_TAP_GRANULARITY] = granularity.storageKey
+    }
+
     suspend fun setFloatBallPickDefaultSearchEngineId(id: String?) = editor.edit {
         if (id.isNullOrBlank()) {
             it.remove(SettingsPreferenceKeys.FLOAT_BALL_PICK_DEFAULT_SEARCH_ENGINE_ID)
@@ -1744,6 +1751,10 @@ class OverlaySettingsMutator @Inject constructor(
     suspend fun setCornerGestureWheelLayerCount(value: Int) = editor.edit {
         it[SettingsPreferenceKeys.CORNER_GESTURE_WHEEL_LAYER_COUNT] =
             CornerGestureSettings.clampWheelLayerCount(value)
+    }
+
+    suspend fun setCornerGestureSlotIconShape(shape: FvIconShape) = editor.edit {
+        it[SettingsPreferenceKeys.CORNER_GESTURE_SLOT_ICON_SHAPE] = shape.name
     }
 
     suspend fun setCornerGestureLeftSlotAction(index: Int, action: GestureAction) = editor.edit { prefs ->

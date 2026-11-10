@@ -39,6 +39,7 @@ import kotlin.math.roundToInt
 @Composable
 fun FaceDownSettingsScreen(
     faceDownSettings: FaceDownGestureSettings,
+    appSettings: com.slideindex.app.settings.AppSettings? = null,
     onBack: () -> Unit,
     onEnabledChange: (Boolean) -> Unit,
     onHoldDurationChange: (Long) -> Unit,
@@ -92,6 +93,8 @@ fun FaceDownSettingsScreen(
                         FaceDownActionRow(
                             action = faceDownSettings.action,
                             enabled = faceDownSettings.enabled,
+                            activityShortcuts = appSettings?.activityShortcuts.orEmpty(),
+                            shellCommands = appSettings?.shellCommands.orEmpty(),
                             onClick = onOpenActionPick
                         )
                     }
@@ -195,6 +198,8 @@ fun FaceDownSettingsScreen(
 private fun SettingsCardScope.FaceDownActionRow(
     action: GestureAction,
     enabled: Boolean,
+    activityShortcuts: List<com.slideindex.app.activity.ActivityShortcut> = emptyList(),
+    shellCommands: List<com.slideindex.app.shell.ShellCommand> = emptyList(),
     onClick: () -> Unit
 ) {
     SettingNavigationRow(
@@ -213,6 +218,8 @@ private fun SettingsCardScope.FaceDownActionRow(
             GestureActionSettingTrailing(
                 action = action,
                 enabled = enabled,
+                activityShortcuts = activityShortcuts,
+                shellCommands = shellCommands,
                 onClick = onClick
             )
         }

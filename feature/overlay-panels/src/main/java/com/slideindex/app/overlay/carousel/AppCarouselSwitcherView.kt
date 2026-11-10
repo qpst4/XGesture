@@ -22,10 +22,12 @@ import android.view.animation.DecelerateInterpolator
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toBitmap
 import com.slideindex.app.overlay.panels.R
+import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.settings.AppCarouselSwitcherSettings
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.util.HapticHelper
 import com.slideindex.app.util.PermissionHelper
+import com.slideindex.app.util.RecentAppEntry
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -35,6 +37,13 @@ data class AppCarouselItem(
     val iconBitmap: Bitmap,
     val cardColors: AppCarouselCardColors,
     val isCloseAll: Boolean = false,
+    /** 最近任务里的任务 id；0 = 只有 UsageStats / 已安装应用，没有任务。 */
+    val taskId: Int = 0,
+    val rawIdentifier: String = packageName,
+    val topComponent: String = "",
+    /** 分身/工作资料所在 user；0 = 主用户。 */
+    val userId: Int = 0,
+    val isClone: Boolean = false,
 )
 
 enum class CarouselVerticalAction {
@@ -71,6 +80,9 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
     private val items = mutableListOf<AppCarouselItem>()
     private var selectedIndex = 0
     private var lastHapticIndex = 0
+    private var loadGeneration = 0
+    private var basePackages: List<String> = emptyList()
+    private var recentTaskEntries: List<RecentAppEntry> = emptyList()
 
     private var initialTouchX = 0f
     private var initialTouchY = 0f
@@ -93,6 +105,13 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
     }
     private val iconPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         isFilterBitmap = true
+    }
+    private val cloneDotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = 0xFFFFC107.toInt()
+    }
+    private val cloneDotRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        color = 0xFFFFFFFF.toInt()
     }
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
@@ -196,26 +215,26 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
                         .map { it.packageName }
                         .distinct()
                         .filter { pm.getLaunchIntentForPackage(it) != null }
-                        .take(8)
+                        .take(MAX_ITEMS)
                         .forEach { recentPackages.add(it) }
                 }
             }
         }
 
-        // 2. 尝试从最近任务中补充
-        if (recentPackages.size < 8) {
+        // 2. 尝试从最近任务中补充（任务条目带 taskId/userId 的同步版本在回调里合并）
+        if (recentPackages.size < MAX_ITEMS) {
             val taskRefs = com.slideindex.app.overlay.panels.PanelRuntimeHooks.recentTaskIdentifiers?.invoke().orEmpty()
             for (ref in taskRefs) {
                 val pkg = ref.substringBefore('/').trim()
                 if (pkg.isNotEmpty() && pm.getLaunchIntentForPackage(pkg) != null) {
                     recentPackages.add(pkg)
-                    if (recentPackages.size >= 8) break
+                    if (recentPackages.size >= MAX_ITEMS) break
                 }
             }
         }
 
         // 3. 回退至常用/已安装可启动应用补充至 8 个
-        if (recentPackages.size < 8) {
+        if (recentPackages.size < MAX_ITEMS) {
             val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
                 addCategory(Intent.CATEGORY_LAUNCHER)
             }
@@ -224,34 +243,74 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
                 val pkg = info.activityInfo.packageName
                 if (pm.getLaunchIntentForPackage(pkg) != null) {
                     recentPackages.add(pkg)
-                    if (recentPackages.size >= 8) break
+                    if (recentPackages.size >= MAX_ITEMS) break
                 }
             }
         }
 
+        basePackages = recentPackages.take(MAX_ITEMS)
+        recentTaskEntries = emptyList()
+        rebuildItems()
+        refreshRecentTasksAsync()
+    }
+
+    /**
+     * 异步取任务级条目：任务条目带 taskId/userId，才能把「微信分身」和主微信分开。
+     * UsageStats 只有包名，只适合做补充；任务回来之前先显示包名列表，回来后原地重建。
+     */
+    private fun refreshRecentTasksAsync() {
+        val repo = com.slideindex.app.overlay.panels.PanelRuntimeHooks.appRepository?.invoke(context)
+            ?: return
+        val refresh = com.slideindex.app.overlay.panels.PanelRuntimeHooks.refreshRecentTasks
+            ?: return
+        val generation = ++loadGeneration
+        refresh(repo) { entries ->
+            if (generation != loadGeneration) return@refresh
+            recentTaskEntries = entries
+            rebuildItems()
+            invalidate()
+        }
+    }
+
+    private fun rebuildItems() {
+        val excluded = appSettings?.previousAppExcludedPackages.orEmpty()
         val loaded = mutableListOf<AppCarouselItem>()
-        for (pkg in recentPackages.take(8)) {
-            val appInfo = runCatching { pm.getApplicationInfo(pkg, 0) }.getOrNull() ?: continue
-            val label = pm.getApplicationLabel(appInfo).toString()
-            val iconDrawable: Drawable = try {
-                pm.getApplicationIcon(appInfo)
-            } catch (_: Exception) {
-                pm.defaultActivityIcon
+        val seen = mutableSetOf<String>()
+
+        // 任务条目优先：同一包的主实例与分身会以不同 taskId/userId 各占一张卡。
+        for (entry in recentTaskEntries) {
+            if (loaded.size >= MAX_ITEMS) break
+            val pkg = entry.app.packageName
+            if (pkg.isBlank() || pkg in excluded) continue
+            val key = if (entry.taskId > 0) {
+                "task:${entry.taskId}"
+            } else {
+                "pkg:$pkg:${entry.userId}"
             }
-            val iconSizePx = (48f * density).roundToInt().coerceAtLeast(32)
-            val bitmap = com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideBitmap?.invoke(context, pkg, iconSizePx)
-                ?: try {
-                    iconDrawable.toBitmap(iconSizePx, iconSizePx, Bitmap.Config.ARGB_8888)
-                } catch (_: Exception) {
-                    createBitmap(iconSizePx, iconSizePx).apply {
-                        eraseColor(Color.GRAY)
-                    }
-                }
-            val colors = AppCarouselPaletteResolver.resolveCardColors(pkg, bitmap)
-            loaded.add(AppCarouselItem(pkg, label, bitmap, colors, isCloseAll = false))
+            if (!seen.add(key)) continue
+            val item = buildCarouselItem(
+                packageName = pkg,
+                label = entry.app.label,
+                isClone = entry.isClone,
+                taskId = entry.taskId,
+                rawIdentifier = entry.rawIdentifier,
+                topComponent = entry.topComponent,
+                userId = entry.userId,
+            ) ?: continue
+            loaded.add(item)
         }
 
-        // 4. 末尾追加 ×（关闭所有应用）卡片
+        // UsageStats / 已安装应用补充主实例；已出现主实例的包不重复。
+        for (pkg in basePackages) {
+            if (loaded.size >= MAX_ITEMS) break
+            if (pkg in excluded) continue
+            if (loaded.any { it.packageName == pkg && !it.isClone }) continue
+            val item = buildCarouselItem(packageName = pkg) ?: continue
+            if (!seen.add("pkg:$pkg:0")) continue
+            loaded.add(item)
+        }
+
+        // 末尾追加 ×（关闭所有应用）卡片
         val closeAllIconSizePx = (48f * density).roundToInt().coerceAtLeast(32)
         val closeAllBitmap = createCloseAllBitmap(closeAllIconSizePx)
         val closeAllColors = AppCarouselCardColors(
@@ -272,6 +331,58 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
 
         items.clear()
         items.addAll(loaded)
+        if (selectedIndex !in items.indices) {
+            selectedIndex = if (items.size > 2) 1 else 0
+            lastHapticIndex = selectedIndex
+            targetScrollOffset = computeScrollOffsetForIndex(selectedIndex)
+            scrollOffset = targetScrollOffset
+        }
+    }
+
+    private fun buildCarouselItem(
+        packageName: String,
+        label: String = "",
+        isClone: Boolean = false,
+        taskId: Int = 0,
+        rawIdentifier: String = packageName,
+        topComponent: String = "",
+        userId: Int = 0,
+    ): AppCarouselItem? {
+        if (packageName.isBlank()) return null
+        val pm = context.packageManager
+        val appInfo = runCatching { pm.getApplicationInfo(packageName, 0) }.getOrNull() ?: return null
+        val resolvedLabel = label.ifBlank { pm.getApplicationLabel(appInfo).toString() }
+        val iconDrawable: Drawable = try {
+            pm.getApplicationIcon(appInfo)
+        } catch (_: Exception) {
+            pm.defaultActivityIcon
+        }
+        val iconSizePx = (48f * density).roundToInt().coerceAtLeast(32)
+        val bitmap = com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideBitmap?.invoke(context, packageName, iconSizePx)
+            ?: try {
+                iconDrawable.toBitmap(iconSizePx, iconSizePx, Bitmap.Config.ARGB_8888)
+            } catch (_: Exception) {
+                createBitmap(iconSizePx, iconSizePx).apply {
+                    eraseColor(Color.GRAY)
+                }
+            }
+        val colors = AppCarouselPaletteResolver.resolveCardColors(packageName, bitmap)
+        return AppCarouselItem(
+            packageName = packageName,
+            label = resolvedLabel,
+            iconBitmap = bitmap,
+            cardColors = colors,
+            isCloseAll = false,
+            taskId = taskId,
+            rawIdentifier = rawIdentifier,
+            topComponent = topComponent,
+            userId = userId.coerceAtLeast(0),
+            isClone = isClone,
+        )
+    }
+
+    private companion object {
+        const val MAX_ITEMS = 8
     }
 
     fun onExternalMove(rawX: Float, rawY: Float) {
@@ -417,10 +528,10 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
         appSettings?.let { HapticHelper.confirmLaunch(this, it) }
         when (selectedVerticalAction) {
             CarouselVerticalAction.NONE -> {
-                launchPackage(target.packageName)
+                launchItem(target)
             }
             CarouselVerticalAction.SPLIT_SCREEN -> {
-                executeSplitScreen(target.packageName)
+                executeSplitScreen(target)
             }
             CarouselVerticalAction.FLOATING -> {
                 executeFloating(target.packageName)
@@ -460,18 +571,18 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchFreeWindow?.invoke(context, packageName, effective, onDismissRequest)
     }
 
-    private fun executeSplitScreen(packageName: String) {
+    private fun executeSplitScreen(item: AppCarouselItem) {
         val service = com.slideindex.app.overlay.panels.PanelRuntimeHooks.accessibilityService?.invoke()
         if (service != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             val ok = service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_TOGGLE_SPLIT_SCREEN)
             if (ok) {
                 postDelayed({
-                    launchPackage(packageName)
+                    launchItem(item)
                 }, 350L)
                 return
             }
         }
-        launchPackage(packageName)
+        launchItem(item)
     }
 
     private fun smoothScrollToIndex(index: Int) {
@@ -566,6 +677,15 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
             iconRect.set(iconLeft, iconTop, iconLeft + iconSize, iconTop + iconSize)
             canvas.drawBitmap(item.iconBitmap, null, iconRect, iconPaint)
             canvas.restoreToCount(clipSaveCount)
+
+            if (item.isClone) {
+                val dotRadius = (iconSize * 0.11f).coerceIn(3f * density, 7f * density)
+                val dotCx = iconRect.right - dotRadius * 0.9f
+                val dotCy = iconRect.top + dotRadius * 0.9f
+                cloneDotRingPaint.strokeWidth = 1.5f * density
+                canvas.drawCircle(dotCx, dotCy, dotRadius, cloneDotPaint)
+                canvas.drawCircle(dotCx, dotCy, dotRadius, cloneDotRingPaint)
+            }
 
             // 高亮外描边
             if (isSelected) {
@@ -761,6 +881,26 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
         val textX = iconRight + 10f * density
         val textY = iconCenterY - (optionTextPaint.descent() + optionTextPaint.ascent()) / 2f
         canvas.drawText(label, textX, textY, optionTextPaint)
+    }
+
+    private fun launchItem(item: AppCarouselItem) {
+        // 分身必须带 cloneUserId 走统一动作执行器；getLaunchIntentForPackage 只能开主实例。
+        if (item.isClone && item.userId > 0) {
+            val runner = com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionRunner
+            val settings = appSettings
+            if (runner != null && settings != null) {
+                runner.run(
+                    GestureAction.LaunchApp(item.packageName, cloneUserId = item.userId),
+                    settings,
+                    false,
+                    null,
+                    null,
+                    null,
+                )
+                return
+            }
+        }
+        launchPackage(item.packageName)
     }
 
     private fun launchPackage(packageName: String) {

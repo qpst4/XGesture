@@ -330,10 +330,10 @@ object PanelRuntimeHooks {
     @Volatile
     var settingsRepository: ((Context) -> com.slideindex.app.settings.SettingsRepository?)? = null
 
-    /** 刷新最近任务列表（异步回调）。 */
+    /** 刷新最近任务列表（异步回调；条目带 taskId / userId，可用于分身）。 */
     @Volatile
     var refreshRecentTasks:
-        ((com.slideindex.app.data.AppRepository, (List<Any>) -> Unit) -> Unit)? = null
+        ((com.slideindex.app.data.AppRepository, (List<com.slideindex.app.util.RecentAppEntry>) -> Unit) -> Unit)? = null
 
     /** 快捷启动项图标的最终解析（7 参数版，`:app` 的 QuickLauncherIconResolver.iconBitmap）。 */
     @Volatile

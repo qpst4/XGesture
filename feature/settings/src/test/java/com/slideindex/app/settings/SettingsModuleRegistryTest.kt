@@ -90,17 +90,15 @@ class SettingsModuleRegistryTest {
             .toSet()
 
     private companion object {
-        // 671 = 666 + app_carousel_slide_{reversed,sensitivity}（QUICK_LAUNCHER）
-        //       + shake_menus_json / shake_menu_guard_ms / shake_menu_display_delay_ms（SHAKE）
-        //       - shake_menu_actions（bad9b0b0 起被上面三个键取代）
-        //       + settings_schema_version（GENERAL，96da46a5 的 schema 版本键）。
-        const val EXPECTED_TOTAL_KEYS = 671
+        // 673 = 671 + corner_gesture_slot_icon_shape（CORNER_WHEEL）
+        //       + float_ball_pick_word_tap_granularity（FLOAT_BALL）。
+        const val EXPECTED_TOTAL_KEYS = 673
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
             SettingsModule.EDGE_GESTURE to 84,
-            SettingsModule.CORNER_WHEEL to 34,
+            SettingsModule.CORNER_WHEEL to 35,
             SettingsModule.QUICK_WHEEL to 2,
-            SettingsModule.FLOAT_BALL to 70,
+            SettingsModule.FLOAT_BALL to 71,
             SettingsModule.FLOATING_POINTER to 52,
             SettingsModule.FINGERTIP_RING to 13,
             SettingsModule.QUICK_LAUNCHER to 93,

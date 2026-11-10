@@ -43,7 +43,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
+import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.shell.ShellCommand
 import com.slideindex.app.ui.miuix.CardItem
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
@@ -200,17 +202,20 @@ fun GestureActionSettingTrailing(
     enabled: Boolean = true,
     showSettings: Boolean = false,
     onSettingsClick: (() -> Unit)? = null,
+    activityShortcuts: List<ActivityShortcut> = emptyList(),
+    shellCommands: List<ShellCommand> = emptyList(),
     onClick: () -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Icon(
-            imageVector = gestureActionIcon(action, outlined = true),
+        GestureActionTargetIcon(
+            action = action,
+            activityShortcuts = activityShortcuts,
+            shellCommands = shellCommands,
+            size = 20.dp,
             contentDescription = gestureActionLabel(action),
-            modifier = Modifier.size(18.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         if (showSettings) {
             IconButton(

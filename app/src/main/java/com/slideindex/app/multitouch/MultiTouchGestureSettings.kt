@@ -191,6 +191,36 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         prefs.edit().putString(KEY_ENTRIES, serialize(entries)).apply()
     }
 
+    /** 备份用：开关 + 全部条目（含手绘轨迹）。 */
+    fun exportRawJson(): String {
+        val current = _state.value
+        return JSONObject()
+            .put("enabled", current.enabled)
+            .put("entries", JSONArray(serialize(current.entries)))
+            .toString()
+    }
+
+    /**
+     * 恢复用：写回 prefs 并同步内存态。
+     *
+     * 备份文件里的条目就是完整列表，不再和默认条目合并；否则用户删掉的默认手势会复活。
+     */
+    fun importRawJson(raw: String) {
+        if (raw.isBlank()) return
+        val obj = runCatching { JSONObject(raw) }.getOrNull() ?: return
+        val enabled = obj.optBoolean("enabled", false)
+        val entries = runCatching {
+            parse(obj.optJSONArray("entries")?.toString() ?: "[]")
+        }.getOrDefault(emptyList())
+        val sorted = sortEntries(entries).ifEmpty { MultiTouchGestureSettings.defaultEntries() }
+        prefs.edit()
+            .putBoolean(KEY_ENABLED, enabled)
+            .putString(KEY_ENTRIES, serialize(sorted))
+            .putBoolean(KEY_DEFAULTS_MERGED, true)
+            .apply()
+        _state.value = MultiTouchGestureSettings(enabled = enabled, entries = sorted)
+    }
+
     private fun read(): MultiTouchGestureSettings {
         val all = prefs.all
         val raw = all[KEY_ENTRIES] as? String

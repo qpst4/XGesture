@@ -19,6 +19,7 @@ import com.slideindex.app.gesture.SideGestureDefaults
 import com.slideindex.app.gesture.TriggerHandle
 import com.slideindex.app.gesture.TriggerHandleCodec
 import com.slideindex.app.launcher.QuickLauncherItemCodec
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.message.MessageSettings
 import com.slideindex.app.message.MessageSettingsCodec
 import com.slideindex.app.message.MessageStyle
@@ -517,6 +518,10 @@ internal object SettingsSnapshotReader {
                 ),
             floatBallPickTextModeLastMode =
                 prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_TEXT_MODE_LAST_MODE].orEmpty(),
+            floatBallPickWordTapGranularity =
+                PickResultWordTapGranularity.fromStorageKey(
+                    prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_WORD_TAP_GRANULARITY],
+                ),
             floatBallPickDefaultSearchEngineId =
                 prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_DEFAULT_SEARCH_ENGINE_ID],
             floatBallPickAutoSelectAll =
@@ -1009,6 +1014,12 @@ internal object SettingsSnapshotReader {
             innerDiameterDp = CornerGestureSettings.clampInnerDiameterDp(inner),
             ringSpacingDp = ringSpacingDp,
             bubbleSizeDp = bubbleSizeDp,
+            slotIconShape = FvIconShape.entries.firstOrNull {
+                it.name.equals(
+                    prefs[SettingsPreferenceKeys.CORNER_GESTURE_SLOT_ICON_SHAPE],
+                    ignoreCase = true,
+                )
+            } ?: FvIconShape.CIRCLE,
             wheelLayerCount = wheelLayerCount,
             cancelOutsideWheel = prefs[SettingsPreferenceKeys.CORNER_GESTURE_CANCEL_OUTSIDE_WHEEL] ?: true,
             progressiveLayers = prefs[SettingsPreferenceKeys.CORNER_GESTURE_PROGRESSIVE_LAYERS] ?: false,

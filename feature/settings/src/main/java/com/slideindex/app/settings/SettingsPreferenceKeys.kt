@@ -644,6 +644,9 @@ internal object SettingsPreferenceKeys {
     val FLOAT_BALL_PICK_SEARCH_GRID_LAST_EXPANDED = booleanPreferencesKey("float_ball_pick_search_grid_last_expanded")
     val FLOAT_BALL_PICK_TEXT_MODE_DEFAULT = stringPreferencesKey("float_ball_pick_text_mode_default")
     val FLOAT_BALL_PICK_TEXT_MODE_LAST_MODE = stringPreferencesKey("float_ball_pick_text_mode_last_mode")
+    /** 点词粒度：word / character（character = 不分词，按字符选且不画 chip）。 */
+    val FLOAT_BALL_PICK_WORD_TAP_GRANULARITY =
+        stringPreferencesKey("float_ball_pick_word_tap_granularity")
     val FLOAT_BALL_PICK_DEFAULT_SEARCH_ENGINE_ID = stringPreferencesKey("float_ball_pick_default_search_engine_id")
     val FLOAT_BALL_PICK_AUTO_SELECT_ALL = booleanPreferencesKey("float_ball_pick_auto_select_all")
     val FLOAT_BALL_PICK_COPY_DISMISS_PANEL = booleanPreferencesKey("float_ball_pick_copy_dismiss_panel")
@@ -846,6 +849,8 @@ internal object SettingsPreferenceKeys {
     /** 层与层之间的环间距（dp）。取代未发布的 corner_gesture_outer_diameter_dp。 */
     val CORNER_GESTURE_RING_SPACING_DP = floatPreferencesKey("corner_gesture_ring_spacing_dp")
     val CORNER_GESTURE_BUBBLE_SIZE_DP = floatPreferencesKey("corner_gesture_bubble_size_dp")
+    /** 槽位气泡/图标形状（FvIconShape.name）；缺省按圆形处理，保持历史观感。 */
+    val CORNER_GESTURE_SLOT_ICON_SHAPE = stringPreferencesKey("corner_gesture_slot_icon_shape")
     /** 轮盘层数（3/4/5）。取代未发布的 corner_gesture_layer4_enabled / layer5_enabled 两个布尔键。 */
     val CORNER_GESTURE_WHEEL_LAYER_COUNT = intPreferencesKey("corner_gesture_wheel_layer_count")
     val CORNER_GESTURE_LEFT_SLOTS = stringSetPreferencesKey("corner_gesture_left_slots")

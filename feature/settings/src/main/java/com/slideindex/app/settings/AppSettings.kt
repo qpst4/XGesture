@@ -329,6 +329,7 @@ data class AppSettings(
     val floatBallPickSearchGridLastExpanded get() = floatBall.floatBallPickSearchGridLastExpanded
     val floatBallPickTextModeDefault get() = floatBall.floatBallPickTextModeDefault
     val floatBallPickTextModeLastMode get() = floatBall.floatBallPickTextModeLastMode
+    val floatBallPickWordTapGranularity get() = floatBall.floatBallPickWordTapGranularity
     val floatBallPickDefaultSearchEngineId get() = floatBall.floatBallPickDefaultSearchEngineId
     val floatBallPickAutoSelectAll get() = floatBall.floatBallPickAutoSelectAll
     val floatBallPickCopyDismissPanel get() = floatBall.floatBallPickCopyDismissPanel

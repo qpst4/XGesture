@@ -131,6 +131,7 @@ object TaskSwitcherRepository {
                 rawIdentifier = ref.identifier,
                 topComponent = ref.topComponent.orEmpty(),
                 isClone = isClone,
+                userId = ref.userId.coerceAtLeast(0),
             )
         }
 

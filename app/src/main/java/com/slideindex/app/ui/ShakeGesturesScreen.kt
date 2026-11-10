@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.shake.ShakeGestureSettings
 import com.slideindex.app.shake.ShakeGestureType
 import com.slideindex.app.shake.ShakeSensitivityScale
@@ -65,6 +66,7 @@ import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 @Composable
 fun ShakeGesturesScreen(
     settings: ShakeGestureSettings,
+    appSettings: AppSettings? = null,
     bottomContentPadding: Dp = 0.dp,
     bottomNavReselectCount: Int = 0,
     onEnabledChange: (Boolean) -> Unit,
@@ -153,6 +155,8 @@ fun ShakeGesturesScreen(
                                 title = shakeGestureLabel(type),
                                 action = settings.actionFor(type),
                                 enabled = true,
+                                activityShortcuts = appSettings?.activityShortcuts.orEmpty(),
+                                shellCommands = appSettings?.shellCommands.orEmpty(),
                                 onClick = { onOpenBasicActionPick(type) },
                             )
                         },
@@ -460,6 +464,8 @@ private fun SettingsCardScope.ShakeActionRow(
     title: String,
     action: GestureAction,
     enabled: Boolean,
+    activityShortcuts: List<com.slideindex.app.activity.ActivityShortcut> = emptyList(),
+    shellCommands: List<com.slideindex.app.shell.ShellCommand> = emptyList(),
     onClick: () -> Unit,
 ) {
     SettingNavigationRow(
@@ -474,6 +480,8 @@ private fun SettingsCardScope.ShakeActionRow(
             GestureActionSettingTrailing(
                 action = action,
                 enabled = enabled,
+                activityShortcuts = activityShortcuts,
+                shellCommands = shellCommands,
                 onClick = onClick,
             )
         },

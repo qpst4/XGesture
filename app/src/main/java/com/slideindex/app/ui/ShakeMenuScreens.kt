@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.shake.ShakeGestureSettings
 import com.slideindex.app.shake.ShakeGestureType
 import com.slideindex.app.shake.ShakeMenu
@@ -226,6 +227,7 @@ fun ShakeMenuSettingsScreen(
 @Composable
 fun ShakeMenuEditScreen(
     menu: ShakeMenu?,
+    appSettings: AppSettings? = null,
     onBack: () -> Unit,
     onRename: (String) -> Unit,
     onOpenActionPick: (ShakeGestureType) -> Unit,
@@ -289,6 +291,8 @@ fun ShakeMenuEditScreen(
                     ShakeGestureActionRow(
                         type = type,
                         action = menu.actionFor(type),
+                        activityShortcuts = appSettings?.activityShortcuts.orEmpty(),
+                        shellCommands = appSettings?.shellCommands.orEmpty(),
                         onClick = { onOpenActionPick(type) },
                     )
                 }

@@ -18,6 +18,14 @@ class PickResultWordTokenizerTest {
     }
 
     @Test
+    fun `tokenizeSelectableChars keeps every code point and whitespace`() {
+        val text = "a 我😀\n"
+        val tokens = PickResultWordTokenizer.tokenizeSelectableChars(text)
+        assertEquals(listOf("a", " ", "我", "😀", "\n"), tokens)
+        assertEquals(text, tokens.joinToString(""))
+    }
+
+    @Test
     fun `isWhitespaceToken detects whitespace tokens`() {
         assertTrue(PickResultWordTokenizer.isWhitespaceToken(" "))
         assertTrue(PickResultWordTokenizer.isWhitespaceToken("\u3000"))

@@ -135,6 +135,9 @@ data class OverlaySettings(
     val floatBallPickSearchGridLastExpanded: Boolean = false,
     val floatBallPickTextModeDefault: PickResultTextModeDefault = PickResultTextModeDefault.ALWAYS_ON,
     val floatBallPickTextModeLastMode: String = "",
+    /** 点词粒度；CHARACTER = 不分词、无 chip 外观。 */
+    val floatBallPickWordTapGranularity: PickResultWordTapGranularity =
+        PickResultWordTapGranularity.WORD,
     val floatBallPickDefaultSearchEngineId: String? = null,
     val floatBallPickAutoSelectAll: Boolean = false,
     val floatBallPickCopyDismissPanel: Boolean = false,
@@ -380,6 +383,7 @@ data class OverlaySettings(
             floatBallPickSearchGridLastExpanded = settings.floatBallPickSearchGridLastExpanded,
             floatBallPickTextModeDefault = settings.floatBallPickTextModeDefault,
             floatBallPickTextModeLastMode = settings.floatBallPickTextModeLastMode,
+            floatBallPickWordTapGranularity = settings.floatBallPickWordTapGranularity,
             floatBallPickDefaultSearchEngineId = settings.floatBallPickDefaultSearchEngineId,
             floatBallPickAutoSelectAll = settings.floatBallPickAutoSelectAll,
             floatBallPickCopyDismissPanel = settings.floatBallPickCopyDismissPanel,

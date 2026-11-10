@@ -81,6 +81,8 @@ private val WORD_WHITESPACE_HIT_EXPAND = 8.dp
 
 /** FlowRow 分组 token 数，避免单块过大影响测量。 */
 private const val WORD_TAP_ROW_CHUNK_SIZE = 40
+/** 不分词模式一屏内通常有几百个字符；分块太大性能差、太小会每 40 字强制换行。 */
+private const val WORD_TAP_CHIP_FREE_ROW_CHUNK_SIZE = 240
 
 /** 划选时接近上下边缘触发自动滚动的区域。 */
 private val WORD_DRAG_EDGE_ZONE = 36.dp
@@ -214,15 +216,17 @@ fun PickResultWordTapBody(
     fillAvailableHeight: Boolean = false,
     hapticEnabled: Boolean = true,
     onScrollableChange: ((Boolean) -> Unit)? = null,
+    chipFree: Boolean = false,
 ) {
     val view = LocalView.current
     val bodyTextSize = textSizeSp.sp
     val delimiterTextSize = (textSizeSp * 13f / 15f).sp
     val bodyLineHeight = (textSizeSp * 20f / 15f).sp
-    val chunks = remember(wordTokens) {
-        wordTokens.chunked(WORD_TAP_ROW_CHUNK_SIZE).mapIndexed { chunkIndex, tokens ->
+    val chunkSize = if (chipFree) WORD_TAP_CHIP_FREE_ROW_CHUNK_SIZE else WORD_TAP_ROW_CHUNK_SIZE
+    val chunks = remember(wordTokens, chunkSize) {
+        wordTokens.chunked(chunkSize).mapIndexed { chunkIndex, tokens ->
             WordTapChunk(
-                startIndex = chunkIndex * WORD_TAP_ROW_CHUNK_SIZE,
+                startIndex = chunkIndex * chunkSize,
                 tokens = tokens,
             )
         }
@@ -550,18 +554,18 @@ fun PickResultWordTapBody(
                 .onGloballyPositioned {
                     gestureCoordinates = it
                 },
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(if (chipFree) 0.dp else 4.dp),
         ) {
             chunks.forEach { chunk ->
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(0.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(if (chipFree) 0.dp else 4.dp),
                 ) {
                     chunk.tokens.forEachIndexed { localIndex, token ->
                         val index = chunk.startIndex + localIndex
                         val nextToken = chunk.tokens.getOrNull(localIndex + 1)
-                        val trailingGap = nextToken != null &&
+                        val trailingGap = !chipFree && nextToken != null &&
                             !PickResultWordTokenizer.isWhitespaceToken(token) &&
                             !PickResultWordTokenizer.isWhitespaceToken(nextToken)
                         WordTapTokenChip(
@@ -571,6 +575,7 @@ fun PickResultWordTapBody(
                             delimiterTextSize = delimiterTextSize,
                             bodyLineHeight = bodyLineHeight,
                             trailingGap = trailingGap,
+                            chipFree = chipFree,
                             onPositioned = { coordinates -> recordChipBounds(index, coordinates) },
                         )
                     }
@@ -649,6 +654,7 @@ private fun WordTapTokenChip(
     delimiterTextSize: androidx.compose.ui.unit.TextUnit,
     bodyLineHeight: androidx.compose.ui.unit.TextUnit,
     trailingGap: Boolean,
+    chipFree: Boolean,
     onPositioned: (LayoutCoordinates) -> Unit,
 ) {
     val isWhitespace = PickResultWordTokenizer.isWhitespaceToken(token)
@@ -661,6 +667,24 @@ private fun WordTapTokenChip(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(1.dp)
+            )
+            return
+        }
+
+        if (chipFree) {
+            // 不分词模式：空白就是真正的空白，不再画固定宽度的“小砖”。
+            val shown = when (token) {
+                " " -> "\u00A0"
+                "\t" -> "\u00A0\u00A0\u00A0\u00A0"
+                else -> token
+            }
+            Text(
+                text = shown,
+                modifier = Modifier.onGloballyPositioned(onPositioned),
+                fontSize = bodyTextSize,
+                lineHeight = bodyLineHeight,
+                color = if (isDark) androidx.compose.ui.graphics.Color(0xFFE8E8ED)
+                else androidx.compose.ui.graphics.Color(0xFF1E2430),
             )
             return
         }
@@ -715,7 +739,36 @@ private fun WordTapTokenChip(
     val display = token.trim().ifEmpty { token }
     val isSingleChar = display.length == 1
     val isDelimiter = PickResultWordTokenizer.isDelimiterToken(display)
-    
+
+    if (chipFree) {
+        // 不分词模式：正常文字排版，选中只铺一层高亮，不加边框/阴影/内边距，也不改字重。
+        val highlight = if (isDark) {
+            primaryColor.copy(alpha = 0.35f)
+        } else {
+            primaryColor.copy(alpha = 0.22f)
+        }
+        Text(
+            text = display,
+            modifier = Modifier
+                .onGloballyPositioned(onPositioned)
+                .then(
+                    if (selected) {
+                        Modifier
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(highlight)
+                    } else {
+                        Modifier
+                    },
+                ),
+            fontSize = if (isDelimiter) delimiterTextSize else bodyTextSize,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Normal,
+            lineHeight = bodyLineHeight,
+            color = if (isDark) androidx.compose.ui.graphics.Color(0xFFE8E8ED)
+            else androidx.compose.ui.graphics.Color(0xFF1E2430),
+        )
+        return
+    }
+
     val textColor = when {
         selected -> if (isDark) androidx.compose.ui.graphics.Color(0xFFDDD6FE) else androidx.compose.ui.graphics.Color(0xFF5B21B6)
         else -> if (isDark) androidx.compose.ui.graphics.Color(0xFFE8E8ED) else androidx.compose.ui.graphics.Color(0xFF1E2430)

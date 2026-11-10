@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.shake.ShakeGestureType
 import com.slideindex.app.shake.ShakeSensitivityScale
 import com.slideindex.app.ui.miuix.groupedCardItems
@@ -39,6 +40,7 @@ fun ShakeActionSetSettingsScreen(
     title: String,
     subtitle: String,
     actions: Map<ShakeGestureType, GestureAction>,
+    appSettings: AppSettings? = null,
     onBack: () -> Unit,
     onOpenActionPick: (ShakeGestureType) -> Unit,
 ) {
@@ -56,6 +58,8 @@ fun ShakeActionSetSettingsScreen(
                             ShakeGestureActionRow(
                                 type = type,
                                 action = actions[type] ?: GestureAction.None,
+                                activityShortcuts = appSettings?.activityShortcuts.orEmpty(),
+                                shellCommands = appSettings?.shellCommands.orEmpty(),
                                 onClick = { onOpenActionPick(type) },
                             )
                         },
@@ -121,6 +125,8 @@ internal fun SettingsCardScope.ShakeGestureActionRow(
     type: ShakeGestureType,
     action: GestureAction,
     enabled: Boolean = true,
+    activityShortcuts: List<com.slideindex.app.activity.ActivityShortcut> = emptyList(),
+    shellCommands: List<com.slideindex.app.shell.ShellCommand> = emptyList(),
     onClick: () -> Unit,
 ) {
     SettingNavigationRow(
@@ -139,6 +145,8 @@ internal fun SettingsCardScope.ShakeGestureActionRow(
             GestureActionSettingTrailing(
                 action = action,
                 enabled = enabled,
+                activityShortcuts = activityShortcuts,
+                shellCommands = shellCommands,
                 onClick = onClick,
             )
         },

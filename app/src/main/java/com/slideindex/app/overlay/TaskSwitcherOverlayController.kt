@@ -172,11 +172,18 @@ internal class TaskSwitcherOverlayController(
                 dismissTaskSwitcherContextMenu(immediate = true)
             }
             taskSwitcherLoading = false
-            recentApps = fresh.toMutableList()
+            // 与「切换上一应用」共用黑名单：用户把它当“不想在切换器里看到”的列表。
+            val excluded = host.settings().previousAppExcludedPackages
+            val filtered = if (excluded.isEmpty()) {
+                fresh
+            } else {
+                fresh.filterNot { it.app.packageName in excluded }
+            }
+            recentApps = filtered.toMutableList()
             taskSwitcherLayout = null
             val iconSize = host.dp(30f).toInt().coerceAtLeast(48)
             host.appRepository().warmLaunchIconBitmapsAsync(
-                fresh.map { it.app.packageName },
+                filtered.map { it.app.packageName },
                 iconSize
             )
             invalidateTaskSwitcherPanel()

@@ -34,14 +34,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
+import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.di.AppGraphEntryPoint
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.overlay.OverlayCompose
 import com.slideindex.app.overlay.OverlayComposeOwner
 import com.slideindex.app.overlay.OverlayWindowTypes
 import com.slideindex.app.service.SlideIndexAccessibilityService
+import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.ui.GestureActionTargetIcon
 import com.slideindex.app.ui.compose.LocalAppDependencies
-import com.slideindex.app.ui.gestureActionIcon
 import com.slideindex.app.ui.gestureActionSettingSubtitle
 import com.slideindex.app.ui.shakeGestureIcon
 import com.slideindex.app.ui.shakeGestureLabel
@@ -83,7 +85,14 @@ object ShakeMenuOverlay {
                 }
                 CompositionLocalProvider(LocalAppDependencies provides appDeps) {
                     OverlayAwareModuleTheme {
-                        ShakeMenuPanel(menu)
+                        val appSettings = remember(appDeps) {
+                            appDeps.settingsRepository.readSnapshot()
+                        }
+                        ShakeMenuPanel(
+                            menu = menu,
+                            activityShortcuts = appSettings.activityShortcuts,
+                            shellCommands = appSettings.shellCommands,
+                        )
                     }
                 }
             }
@@ -164,7 +173,11 @@ object ShakeMenuOverlay {
     }
 
     @Composable
-    private fun ShakeMenuPanel(menu: ShakeMenu) {
+    private fun ShakeMenuPanel(
+        menu: ShakeMenu,
+        activityShortcuts: List<ActivityShortcut>,
+        shellCommands: List<ShellCommand>,
+    ) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.TopCenter,
@@ -203,6 +216,8 @@ object ShakeMenuOverlay {
                         MenuDirectionRow(
                             type = type,
                             action = menu.actionFor(type),
+                            activityShortcuts = activityShortcuts,
+                            shellCommands = shellCommands,
                         )
                     }
                 }
@@ -211,7 +226,12 @@ object ShakeMenuOverlay {
     }
 
     @Composable
-    private fun MenuDirectionRow(type: ShakeGestureType, action: GestureAction) {
+    private fun MenuDirectionRow(
+        type: ShakeGestureType,
+        action: GestureAction,
+        activityShortcuts: List<ActivityShortcut>,
+        shellCommands: List<ShellCommand>,
+    ) {
         val bound = action != GestureAction.None
         Row(
             modifier = Modifier
@@ -252,11 +272,11 @@ object ShakeMenuOverlay {
                 overflow = TextOverflow.Ellipsis,
             )
             if (bound) {
-                Icon(
-                    imageVector = gestureActionIcon(action),
-                    contentDescription = null,
-                    tint = Color.White.copy(alpha = 0.86f),
-                    modifier = Modifier.size(18.dp),
+                GestureActionTargetIcon(
+                    action = action,
+                    activityShortcuts = activityShortcuts,
+                    shellCommands = shellCommands,
+                    size = 18.dp,
                 )
             }
         }
