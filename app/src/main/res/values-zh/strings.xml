@@ -767,6 +767,7 @@
     <string name="previous_app_blacklist_desc">切换上一应用时将跳过黑名单中的应用；输入法始终会自动排除</string>
     <string name="previous_app_blacklist_section_blocked">已忽略</string>
     <string name="previous_app_blacklist_section_add">添加应用</string>
+    <string name="previous_app_blacklist_section_add_desc">选择切换上一应用时要跳过的应用</string>
     <string name="previous_app_blacklist_empty">暂无忽略的应用</string>
     <string name="previous_app_blacklist_remove">移除</string>
     <string name="app_package_uninstalled">应用已卸载</string>
@@ -786,6 +787,7 @@
     <string name="excluded_apps_scope_dialog_hint">选择在此应用中要隐藏的功能；至少保留一项。</string>
     <string name="excluded_apps_section_excluded">已禁用</string>
     <string name="excluded_apps_section_add">添加应用</string>
+    <string name="excluded_apps_section_add_desc">选择要隐藏触钮、轮盘与悬浮球的应用</string>
     <string name="excluded_apps_empty">暂无禁用应用</string>
     <string name="excluded_apps_remove">取消禁用</string>
     <string name="layout_settings_title">应用索引</string>

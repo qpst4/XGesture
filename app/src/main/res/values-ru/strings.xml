@@ -2295,6 +2295,7 @@
     <string name="previous_app_blacklist_desc">Приложения из этого списка пропускаются при переключении на предыдущее приложение. Методы ввода всегда исключаются автоматически.</string>
     <string name="previous_app_blacklist_section_blocked">Пропускаемые</string>
     <string name="previous_app_blacklist_section_add">Добавить приложение</string>
+    <string name="previous_app_blacklist_section_add_desc">Выберите приложения, пропускаемые при переключении на предыдущее</string>
     <string name="previous_app_blacklist_empty">Нет пропускаемых приложений</string>
     <string name="previous_app_blacklist_remove">Удалить</string>
     <string name="app_package_uninstalled">Приложение удалено</string>
@@ -2302,6 +2303,7 @@
     <string name="excluded_apps_entry_count">Отключённых приложений: %1$d</string>
     <string name="excluded_apps_section_excluded">Отключённые</string>
     <string name="excluded_apps_section_add">Добавить приложение</string>
+    <string name="excluded_apps_section_add_desc">Выберите приложения, где скрыть триггер, колесо и плавающий шар</string>
     <string name="excluded_apps_empty">Нет исключённых приложений</string>
     <string name="excluded_apps_remove">Удалить исключение</string>
     <string name="settings_section_gestures">Жесты-ярлыки</string>

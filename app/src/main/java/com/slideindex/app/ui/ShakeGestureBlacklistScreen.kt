@@ -30,6 +30,7 @@ fun ShakeGestureBlacklistScreen(
     emptyRes: Int = R.string.shake_gestures_blacklist_empty,
     removeActionDescriptionRes: Int = R.string.shake_gestures_blacklist_remove,
     addSectionTitleRes: Int = R.string.shake_gestures_blacklist_section_add,
+    addSectionSubtitleRes: Int? = null,
     showPageHint: Boolean = true,
 ) {
     val appRepository = rememberAppRepository()
@@ -83,6 +84,9 @@ fun ShakeGestureBlacklistScreen(
         }
         managedAppListAddRow(
             title = { stringResource(addSectionTitleRes) },
+            subtitle = {
+                addSectionSubtitleRes?.let { stringResource(it) } ?: ""
+            },
             onClick = onOpenAddApp,
         )
     }

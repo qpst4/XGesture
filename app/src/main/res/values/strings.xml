@@ -2325,6 +2325,7 @@
     <string name="previous_app_blacklist_desc">Apps on this list are skipped when switching to the previous app. Input methods are always excluded automatically.</string>
     <string name="previous_app_blacklist_section_blocked">Skipped</string>
     <string name="previous_app_blacklist_section_add">Add app</string>
+    <string name="previous_app_blacklist_section_add_desc">Pick apps to skip when switching to the previous app</string>
     <string name="previous_app_blacklist_empty">No apps skipped</string>
     <string name="previous_app_blacklist_remove">Remove</string>
     <string name="app_package_uninstalled">App uninstalled</string>
@@ -2332,6 +2333,7 @@
     <string name="excluded_apps_entry_count">Disabled apps: %1$d</string>
     <string name="excluded_apps_section_excluded">Disabled</string>
     <string name="excluded_apps_section_add">Add app</string>
+    <string name="excluded_apps_section_add_desc">Pick apps to hide the handle, wheel and floating ball</string>
     <string name="excluded_apps_empty">No excluded apps</string>
     <string name="excluded_apps_remove">Remove exclusion</string>
     <string name="settings_section_gestures">Shortcut gestures</string>

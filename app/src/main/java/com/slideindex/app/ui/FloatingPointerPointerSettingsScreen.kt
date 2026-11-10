@@ -33,6 +33,7 @@ import com.slideindex.app.ui.settings.components.SettingsCardRow
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsGroupedRowBackground
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import kotlin.math.roundToInt
 
@@ -389,17 +390,14 @@ fun FloatingPointerPointerSettingsScreen(
                                         }
                                     },
                                     onSelect = onTrailTypeChange,
+                                    containerColor = MiuixTheme.colorScheme.surface,
+                                    indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
                                 )
                             }
                         }
                     },
                 )
-            },
-        )
-        if (trailType != FloatingPointerTrailType.OFF) {
-            groupedCardItems(
-                keyPrefix = "fp-trail-detail",
-                items = buildList {
+                if (trailType != FloatingPointerTrailType.OFF) {
                     add(
                         settingsCardScopeItem("trail-duration") {
                             SettingsSliderRow(
@@ -430,8 +428,8 @@ fun FloatingPointerPointerSettingsScreen(
                         }
                     )
                 }
-            )
-        }
+            },
+        )
 
         settingsLazySmallTitle(key = "fp-other-section", title = otherSectionTitle)
         groupedCardItems(

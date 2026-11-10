@@ -1716,6 +1716,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             emptyRes = R.string.previous_app_blacklist_empty,
             removeActionDescriptionRes = R.string.previous_app_blacklist_remove,
             addSectionTitleRes = R.string.previous_app_blacklist_section_add,
+            addSectionSubtitleRes = R.string.previous_app_blacklist_section_add_desc,
         )
     }
 

@@ -24,6 +24,7 @@ import com.slideindex.app.gesture.PointerSwipeDistance
 import com.slideindex.app.ui.settings.components.SettingsCardRow
 import com.slideindex.app.ui.settings.components.settingsCardItems
 import com.slideindex.app.ui.settings.components.settingsGroupedRowBackground
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -59,6 +60,8 @@ fun PointerSwipeConfigScreen(
                         }
                     },
                     onSelect = { direction = it },
+                    containerColor = MiuixTheme.colorScheme.surface,
+                    indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
                 )
             }
         }

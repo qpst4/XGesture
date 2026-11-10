@@ -739,6 +739,7 @@
     <string name="previous_app_blacklist_desc">سيتم تجاوز التطبيقات الموجودة في القائمة السوداء عند التبديل إلى التطبيق السابق؛ وسيتم استبعاد لوحات المفاتيح تلقائيًا دائمًا</string>
     <string name="previous_app_blacklist_section_blocked">تم التجاهل</string>
     <string name="previous_app_blacklist_section_add">إضافة تطبيق</string>
+    <string name="previous_app_blacklist_section_add_desc">اختر التطبيقات التي تُتخطى عند التبديل إلى التطبيق السابق</string>
     <string name="previous_app_blacklist_empty">لا توجد تطبيقات مهملة</string>
     <string name="previous_app_blacklist_remove">إزالة</string>
     <string name="app_package_uninstalled">تم إلغاء تثبيت التطبيق</string>
@@ -758,6 +759,7 @@
     <string name="excluded_apps_scope_dialog_hint">اختر الميزات المراد إخفائها في هذا التطبيق؛ احتفظ بواحدة على الأقل.</string>
     <string name="excluded_apps_section_excluded">معطل</string>
     <string name="excluded_apps_section_add">إضافة تطبيق</string>
+    <string name="excluded_apps_section_add_desc">اختر التطبيقات لإخفاء المقبض والعجلة والكرة العائمة</string>
     <string name="excluded_apps_empty">لا توجد تطبيقات معطلة</string>
     <string name="excluded_apps_remove">إلغاء التعطيل</string>
     <string name="layout_settings_title">فهرس التطبيقات</string>

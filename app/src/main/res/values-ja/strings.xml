@@ -734,6 +734,7 @@
     <string name="previous_app_blacklist_desc">このリストのアプリは前のアプリへの切り替え時にスキップされます。入力方法は常に自動で除外されます。</string>
     <string name="previous_app_blacklist_section_blocked">スキップ</string>
     <string name="previous_app_blacklist_section_add">アプリを追加</string>
+    <string name="previous_app_blacklist_section_add_desc">前のアプリへ切り替える際にスキップするアプリを選択</string>
     <string name="previous_app_blacklist_empty">スキップするアプリはありません</string>
     <string name="previous_app_blacklist_remove">削除</string>
     <string name="app_package_uninstalled">アプリがアンインストールされました</string>
@@ -753,6 +754,7 @@
     <string name="excluded_apps_scope_dialog_hint">このアプリで非表示にする項目を選択。少なくとも 1 つは有効にしてください。</string>
     <string name="excluded_apps_section_excluded">無効</string>
     <string name="excluded_apps_section_add">アプリを追加</string>
+    <string name="excluded_apps_section_add_desc">触钮・ホイール・フローティングボールを隠すアプリを選択</string>
     <string name="excluded_apps_empty">除外アプリはありません</string>
     <string name="excluded_apps_remove">除外を解除</string>
     <string name="layout_settings_title">アプリインデックス</string>

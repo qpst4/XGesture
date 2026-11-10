@@ -142,6 +142,7 @@ fun ExcludedAppsScreen(
         }
         managedAppListAddRow(
             title = { stringResource(R.string.excluded_apps_section_add) },
+            subtitle = { stringResource(R.string.excluded_apps_section_add_desc) },
             onClick = onOpenAddApp
         )
     }

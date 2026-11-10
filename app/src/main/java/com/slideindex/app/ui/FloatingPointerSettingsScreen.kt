@@ -141,7 +141,7 @@ fun FloatingPointerSettingsScreen(
                         SettingNavigationRow(
                             icon = { label ->
                                 Icon(
-                                    imageVector = ThinActionIcons.RemoteControl2,
+                                    imageVector = ThinActionIcons.Gesture,
                                     contentDescription = label
                                 )
                             },

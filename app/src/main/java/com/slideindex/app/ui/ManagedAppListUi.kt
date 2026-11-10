@@ -91,6 +91,7 @@ fun LazyListScope.managedAppPackageRows(
 fun LazyListScope.managedAppListAddRow(
     key: String = "managed-add-app",
     title: @Composable () -> String,
+    subtitle: @Composable () -> String = { "" },
     onClick: () -> Unit,
 ) {
     groupedCardItems(
@@ -102,7 +103,7 @@ fun LazyListScope.managedAppListAddRow(
                         Icon(Icons.Default.Add, contentDescription = label)
                     },
                     title = title(),
-                    subtitle = "",
+                    subtitle = subtitle(),
                     onClick = onClick,
                 )
             },
