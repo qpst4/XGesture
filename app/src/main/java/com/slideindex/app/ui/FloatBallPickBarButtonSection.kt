@@ -5,7 +5,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -53,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -70,6 +70,7 @@ import com.slideindex.app.settings.PickResultImageBarButton
 import com.slideindex.app.settings.PickResultTextBarButton
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /** 一颗底栏按钮在设置页里的展示信息。id 与 settings 模块的枚举一一对应。 */
 private data class BarButtonSpec(
@@ -320,89 +321,97 @@ private fun BarButtonStrip(
     val haptic = LocalHapticFeedback.current
     val itemStridePx = with(LocalDensity.current) { (BarItemSize + BarItemSpacing).toPx() }
 
-    LazyRow(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(BarItemSpacing),
-        verticalAlignment = Alignment.CenterVertically,
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+            .padding(4.dp),
     ) {
-        items(items = workingIds, key = { it }) { id ->
-            val entry = entries.firstOrNull { it.id == id } ?: return@items
-            val isDragging = dragId == id
-            Box(
-                modifier = Modifier
-                    // 被拖项跟手，不参与 LazyRow 的换位动画；其他项靠 animateItem 平滑让位。
-                    .then(if (isDragging) Modifier else Modifier.animateItem())
-                    .zIndex(if (isDragging) 1f else 0f)
-                    .offset {
-                        IntOffset(if (isDragging) dragOffsetX.roundToInt() else 0, 0)
-                    }
-                    .pointerInput(id) {
-                        awaitEachGesture {
-                            val down = awaitFirstDown(requireUnconsumed = false)
-                            val longPress = awaitLongPressOrCancellation(down.id)
-                                ?: return@awaitEachGesture
-                            var currentIndex = workingIds.indexOf(id)
-                            if (currentIndex < 0) return@awaitEachGesture
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(BarItemSpacing),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            items(items = workingIds, key = { it }) { id ->
+                val entry = entries.firstOrNull { it.id == id } ?: return@items
+                val isDragging = dragId == id
+                Box(
+                    modifier = Modifier
+                        // 被拖项跟手，不参与 LazyRow 的换位动画；其他项靠 animateItem 平滑让位。
+                        .then(if (isDragging) Modifier else Modifier.animateItem())
+                        .zIndex(if (isDragging) 1f else 0f)
+                        .offset {
+                            IntOffset(if (isDragging) dragOffsetX.roundToInt() else 0, 0)
+                        }
+                        .pointerInput(id) {
+                            awaitEachGesture {
+                                val down = awaitFirstDown(requireUnconsumed = false)
+                                val longPress = awaitLongPressOrCancellation(down.id)
+                                    ?: return@awaitEachGesture
+                                var currentIndex = workingIds.indexOf(id)
+                                if (currentIndex < 0) return@awaitEachGesture
 
-                            settleJob?.cancel()
-                            settleJob = null
-                            dragId = id
-                            dragOffsetX = 0f
-                            // 长按一成立就封住点击：up 由谁先消费不做保证。
-                            suppressTapUntil = Long.MAX_VALUE
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                settleJob?.cancel()
+                                settleJob = null
+                                dragId = id
+                                dragOffsetX = 0f
+                                // 长按一成立就封住点击：up 由谁先消费不做保证。
+                                suppressTapUntil = Long.MAX_VALUE
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
 
-                            try {
-                                while (true) {
-                                    val event = awaitPointerEvent()
-                                    val change = event.changes.firstOrNull { it.id == longPress.id }
-                                    if (change == null || !change.pressed) break
-                                    val delta = change.positionChange().x
-                                    if (delta != 0f) {
-                                        dragOffsetX += delta
-                                        val target = (
-                                            currentIndex + (dragOffsetX / itemStridePx).roundToInt()
-                                            ).coerceIn(0, workingIds.lastIndex)
-                                        if (target != currentIndex) {
-                                            workingIds = workingIds.toMutableList().apply {
-                                                add(target, removeAt(currentIndex))
+                                try {
+                                    while (true) {
+                                        val event = awaitPointerEvent()
+                                        val change = event.changes.firstOrNull { it.id == longPress.id }
+                                        if (change == null || !change.pressed) break
+                                        val delta = change.positionChange().x
+                                        if (delta != 0f) {
+                                            dragOffsetX += delta
+                                            val target = (
+                                                currentIndex + (dragOffsetX / itemStridePx).roundToInt()
+                                                ).coerceIn(0, workingIds.lastIndex)
+                                            if (target != currentIndex) {
+                                                workingIds = workingIds.toMutableList().apply {
+                                                    add(target, removeAt(currentIndex))
+                                                }
+                                                // 位置已交换：把跟手位移补回一个槽位，手指下的图标保持不动。
+                                                dragOffsetX -= (target - currentIndex) * itemStridePx
+                                                currentIndex = target
+                                                haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
                                             }
-                                            // 位置已交换：把跟手位移补回一个槽位，手指下的图标保持不动。
-                                            dragOffsetX -= (target - currentIndex) * itemStridePx
-                                            currentIndex = target
-                                            haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                                            change.consume()
                                         }
-                                        change.consume()
                                     }
-                                }
-                            } finally {
-                                suppressTapUntil = SystemClock.uptimeMillis() + 250L
-                                // 顺序已是最终态：只把跟手 offset 平滑归零，不再重排。
-                                // 受限手势作用域里不能直接 await 普通 suspend 函数，交给普通协程。
-                                val startOffset = dragOffsetX
-                                settleJob = scope.launch {
-                                    val settle = Animatable(startOffset)
-                                    settle.animateTo(0f, tween(140)) { dragOffsetX = value }
-                                    dragId = null
-                                    onReorder(workingIds)
-                                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                } finally {
+                                    suppressTapUntil = SystemClock.uptimeMillis() + 250L
+                                    // 顺序已是最终态：只把跟手 offset 平滑归零，不再重排。
+                                    // 受限手势作用域里不能直接 await 普通 suspend 函数，交给普通协程。
+                                    val startOffset = dragOffsetX
+                                    settleJob = scope.launch {
+                                        val settle = Animatable(startOffset)
+                                        settle.animateTo(0f, tween(140)) { dragOffsetX = value }
+                                        dragId = null
+                                        onReorder(workingIds)
+                                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                    }
                                 }
                             }
                         }
-                    }
-                    .clickable {
-                        if (SystemClock.uptimeMillis() >= suppressTapUntil) {
-                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                            onSelectToggle(id)
-                        }
-                    },
-            ) {
-                BarButtonCell(
-                    spec = entry,
-                    visible = id !in hidden,
-                    selected = id == selectedId,
-                    dragging = isDragging,
-                )
+                        .clickable {
+                            if (SystemClock.uptimeMillis() >= suppressTapUntil) {
+                                haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                onSelectToggle(id)
+                            }
+                        },
+                ) {
+                    BarButtonCell(
+                        spec = entry,
+                        visible = id !in hidden,
+                        selected = id == selectedId,
+                        dragging = isDragging,
+                    )
+                }
             }
         }
     }
@@ -416,12 +425,10 @@ private fun BarButtonCell(
     dragging: Boolean,
 ) {
     val shape = RoundedCornerShape(12.dp)
-    val container = when {
-        selected -> MaterialTheme.colorScheme.primaryContainer
-        else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
-    }
+    // 整条图标栏已有一层灰底容器：未选中项透明，选中项用 surface 抬成一颗白色 pill（与竞品一致）。
+    val container = if (selected) MaterialTheme.colorScheme.surface else Color.Transparent
     val tint = when {
-        selected -> MaterialTheme.colorScheme.onPrimaryContainer
+        selected -> MaterialTheme.colorScheme.primary
         visible -> MaterialTheme.colorScheme.onSurface
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
@@ -435,14 +442,7 @@ private fun BarButtonCell(
             .scale(dragScale)
             .alpha(if (dragging) 0.95f else 1f)
             .clip(shape)
-            .background(container)
-            .then(
-                if (selected) {
-                    Modifier.border(1.5.dp, MaterialTheme.colorScheme.primary, shape)
-                } else {
-                    Modifier
-                }
-            ),
+            .background(container),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -450,7 +450,7 @@ private fun BarButtonCell(
             contentDescription = stringResource(spec.labelRes),
             tint = tint,
             modifier = Modifier
-                .size(18.dp)
+                .size(20.dp)
                 .alpha(if (visible) 1f else 0.38f),
         )
     }
@@ -492,5 +492,5 @@ private fun BarButtonDescription(
     }
 }
 
-private val BarItemSize = 36.dp
-private val BarItemSpacing = 4.dp
+private val BarItemSize = 42.dp
+private val BarItemSpacing = 3.dp
