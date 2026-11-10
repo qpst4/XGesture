@@ -62,6 +62,7 @@
     <string name="shake_gestures_lock_screen_settings_desc">ロック中または画面オフ時に以下のシェイクアクションを使用</string>
     <string name="shake_gestures_per_app_configured">設定済みのアプリ</string>
     <string name="shake_gestures_per_app_add">アプリを追加</string>
+    <string name="shake_gestures_per_app_add_desc">揺れジェスチャーを個別に設定するアプリを選択</string>
     <string name="shake_gestures_per_app_empty">設定済みのアプリはまだありません</string>
     <string name="shake_gestures_per_app_remove">設定を削除</string>
     <string name="shake_gestures_per_app_actions_title">%1$s のシェイクアクション</string>

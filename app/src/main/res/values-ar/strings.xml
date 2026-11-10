@@ -62,6 +62,7 @@
     <string name="shake_gestures_lock_screen_settings_desc">استخدام إجراءات الهز التالية عند قفل الشاشة أو إطفائها</string>
     <string name="shake_gestures_per_app_configured">التطبيقات المهيأة</string>
     <string name="shake_gestures_per_app_add">إضافة تطبيق</string>
+    <string name="shake_gestures_per_app_add_desc">اختر التطبيقات لضبط إيماءات الاهتزاز بشكل منفصل</string>
     <string name="shake_gestures_per_app_empty">لا توجد تطبيقات مهيأة</string>
     <string name="shake_gestures_per_app_remove">إزالة التهيئة</string>
     <string name="shake_gestures_per_app_actions_title">إجراءات هز %1$s</string>

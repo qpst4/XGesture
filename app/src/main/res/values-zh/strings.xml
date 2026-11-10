@@ -89,6 +89,7 @@
     <string name="shake_gestures_lock_screen_settings_desc">锁屏或熄屏时使用以下晃动动作</string>
     <string name="shake_gestures_per_app_configured">已配置应用</string>
     <string name="shake_gestures_per_app_add">添加应用</string>
+    <string name="shake_gestures_per_app_add_desc">选择要单独配置晃动动作的应用</string>
     <string name="shake_gestures_per_app_empty">暂无已配置应用</string>
     <string name="shake_gestures_per_app_remove">移除配置</string>
     <string name="shake_gestures_per_app_actions_title">%1$s 晃动动作</string>

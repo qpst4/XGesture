@@ -42,7 +42,6 @@ import com.slideindex.app.otp.OtpRecordCategory
 import com.slideindex.app.otp.OtpRecordFillStatus
 import com.slideindex.app.ui.miuix.CardItem
 import com.slideindex.app.ui.miuix.groupedCardItems
-import com.slideindex.app.ui.miuix.MiuixBottomSheet
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
@@ -50,14 +49,11 @@ import com.slideindex.app.ui.viewmodel.OtpRecordsViewModel
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.preference.RadioButtonLocation
-import top.yukonga.miuix.kmp.preference.RadioButtonPreference
 import java.text.DateFormat
 import java.util.Date
 
@@ -83,7 +79,6 @@ fun rememberOtpRecordsUi(
     val records by viewModel.records.collectAsStateWithLifecycle()
     var sortOrder by remember { mutableStateOf(OtpRecordSortOrder.NEWEST_FIRST) }
     var filterPackage by remember { mutableStateOf<String?>(null) }
-    var showFilterSheet by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<OtpRecord?>(null) }
     val dateFormat = remember { DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT) }
 
@@ -100,6 +95,33 @@ fun rememberOtpRecordsUi(
     val packageOptions = remember(records) {
         records.map { it.packageName }.distinct().sorted()
     }
+    val appFilterLabels = remember(packageOptions) {
+        packageOptions.associateWith { pkg -> viewModel.ensureAppInfo(pkg)?.label ?: pkg }
+    }
+    val allFilterLabel = stringResource(R.string.otp_records_filter_all)
+    // 筛选也是"小列表里选一项"，和排序一样用下拉菜单，不再开 bottom sheet。
+    val filterEntry = remember(packageOptions, filterPackage, appFilterLabels, allFilterLabel) {
+        DropdownEntry(
+            items = buildList {
+                add(
+                    DropdownItem(
+                        text = allFilterLabel,
+                        selected = filterPackage == null,
+                        onClick = { filterPackage = null },
+                    ),
+                )
+                packageOptions.forEach { pkg ->
+                    add(
+                        DropdownItem(
+                            text = appFilterLabels[pkg] ?: pkg,
+                            selected = filterPackage == pkg,
+                            onClick = { filterPackage = pkg },
+                        ),
+                    )
+                }
+            },
+        )
+    }
     val filteredRecords = remember(records, filterPackage, sortOrder) {
         val filtered = if (filterPackage == null) {
             records
@@ -115,7 +137,7 @@ fun rememberOtpRecordsUi(
     val filterSortActions: @Composable RowScope.() -> Unit = {
         OtpRecordsFilterSortActions(
             sortOrder = sortOrder,
-            onShowFilterSheet = { showFilterSheet = true },
+            filterEntry = filterEntry,
             onSortNewest = { sortOrder = OtpRecordSortOrder.NEWEST_FIRST },
             onSortOldest = { sortOrder = OtpRecordSortOrder.OLDEST_FIRST },
         )
@@ -129,7 +151,7 @@ fun rememberOtpRecordsUi(
                 OtpRecordsEmbeddedToolbar(
                     embeddedInHub = true,
                     sortOrder = sortOrder,
-                    onShowFilterSheet = { showFilterSheet = true },
+                    filterEntry = filterEntry,
                     onSortNewest = { sortOrder = OtpRecordSortOrder.NEWEST_FIRST },
                     onSortOldest = { sortOrder = OtpRecordSortOrder.OLDEST_FIRST },
                 )
@@ -157,37 +179,6 @@ fun rememberOtpRecordsUi(
     }
 
     val overlays: @Composable () -> Unit = {
-        MiuixBottomSheet(
-            show = showFilterSheet,
-            title = stringResource(R.string.otp_records_filter),
-            onDismissRequest = { showFilterSheet = false },
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(0.dp),
-            ) {
-                OtpRecordFilterOption(
-                    label = stringResource(R.string.otp_records_filter_all),
-                    selected = filterPackage == null,
-                    onClick = {
-                        filterPackage = null
-                        showFilterSheet = false
-                    },
-                )
-                packageOptions.forEach { packageName ->
-                    val appInfo = viewModel.ensureAppInfo(packageName)
-                    OtpRecordFilterOption(
-                        label = appInfo?.label ?: packageName,
-                        selected = filterPackage == packageName,
-                        onClick = {
-                            filterPackage = packageName
-                            showFilterSheet = false
-                        },
-                    )
-                }
-            }
-        }
-
         val deleteRecord = pendingDelete
         MiuixConfirmDialog(
             show = deleteRecord != null,
@@ -273,7 +264,7 @@ fun LazyListScope.otpRecordsListItems(
 @Composable
 private fun OtpRecordsFilterSortActions(
     sortOrder: OtpRecordSortOrder,
-    onShowFilterSheet: () -> Unit,
+    filterEntry: DropdownEntry,
     onSortNewest: () -> Unit,
     onSortOldest: () -> Unit,
 ) {
@@ -295,8 +286,12 @@ private fun OtpRecordsFilterSortActions(
             ),
         )
     }
-    IconButton(onClick = onShowFilterSheet) {
-        Icon(Icons.Default.FilterList, contentDescription = stringResource(R.string.otp_records_filter))
+    OverlayIconDropdownMenu(entry = filterEntry) {
+        Icon(
+            Icons.Default.FilterList,
+            contentDescription = stringResource(R.string.otp_records_filter),
+            tint = MiuixTheme.colorScheme.onBackground,
+        )
     }
     OverlayIconDropdownMenu(entry = sortEntry) {
         Icon(
@@ -311,7 +306,7 @@ private fun OtpRecordsFilterSortActions(
 private fun OtpRecordsEmbeddedToolbar(
     embeddedInHub: Boolean,
     sortOrder: OtpRecordSortOrder,
-    onShowFilterSheet: () -> Unit,
+    filterEntry: DropdownEntry,
     onSortNewest: () -> Unit,
     onSortOldest: () -> Unit,
 ) {
@@ -333,26 +328,11 @@ private fun OtpRecordsEmbeddedToolbar(
         )
         OtpRecordsFilterSortActions(
             sortOrder = sortOrder,
-            onShowFilterSheet = onShowFilterSheet,
+            filterEntry = filterEntry,
             onSortNewest = onSortNewest,
             onSortOldest = onSortOldest,
         )
     }
-}
-
-@Composable
-private fun OtpRecordFilterOption(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    RadioButtonPreference(
-        modifier = Modifier.fillMaxWidth(),
-        title = label,
-        selected = selected,
-        onClick = onClick,
-        radioButtonLocation = RadioButtonLocation.End,
-    )
 }
 
 @Composable

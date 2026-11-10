@@ -93,6 +93,7 @@
     <string name="shake_gestures_lock_screen_settings_desc">Используйте эти действия встряхивания в заблокированном состоянии или при выключенном экране</string>
     <string name="shake_gestures_per_app_configured">Настроенные приложения</string>
     <string name="shake_gestures_per_app_add">Добавить приложение</string>
+    <string name="shake_gestures_per_app_add_desc">Выберите приложения для отдельной настройки встряхивания</string>
     <string name="shake_gestures_per_app_empty">Настроенных приложений пока нет</string>
     <string name="shake_gestures_per_app_remove">Удалить настройку</string>
     <string name="shake_gestures_per_app_actions_title">Действия встряхивания: %1$s</string>

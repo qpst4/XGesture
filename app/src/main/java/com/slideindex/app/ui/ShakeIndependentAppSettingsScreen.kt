@@ -72,6 +72,7 @@ fun ShakeIndependentAppSettingsScreen(
         }
         managedAppListAddRow(
             title = { stringResource(R.string.shake_gestures_per_app_add) },
+            subtitle = { stringResource(R.string.shake_gestures_per_app_add_desc) },
             onClick = onOpenAddApp,
         )
     }

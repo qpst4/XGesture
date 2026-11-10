@@ -120,6 +120,7 @@
     <string name="shake_gestures_lock_screen_settings_desc">Use these shake actions while locked or with the screen off</string>
     <string name="shake_gestures_per_app_configured">Configured apps</string>
     <string name="shake_gestures_per_app_add">Add app</string>
+    <string name="shake_gestures_per_app_add_desc">Pick apps to configure shake gestures separately</string>
     <string name="shake_gestures_per_app_empty">No configured apps yet</string>
     <string name="shake_gestures_per_app_remove">Remove config</string>
     <string name="shake_gestures_per_app_actions_title">%1$s shake actions</string>
