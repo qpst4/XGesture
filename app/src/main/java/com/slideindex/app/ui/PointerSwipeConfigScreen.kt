@@ -1,6 +1,7 @@
 package com.slideindex.app.ui
 
 import top.yukonga.miuix.kmp.basic.SmallTitle
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -20,7 +21,9 @@ import com.slideindex.app.R
 import com.slideindex.app.gesture.PointerSwipeConfig
 import com.slideindex.app.gesture.PointerSwipeDirection
 import com.slideindex.app.gesture.PointerSwipeDistance
+import com.slideindex.app.ui.settings.components.SettingsCardRow
 import com.slideindex.app.ui.settings.components.settingsCardItems
+import com.slideindex.app.ui.settings.components.settingsGroupedRowBackground
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -38,12 +41,26 @@ fun PointerSwipeConfigScreen(
     val directionSectionTitle = stringResource(R.string.pointer_swipe_direction_title)
 
     val directionCard = settingsCardItems(direction) {
-        PointerSwipeDirection.entries.forEach { option ->
-            SettingRadioRow(
-                title = pointerSwipeDirectionLabel(option),
-                selected = direction == option,
-                onClick = { direction = option },
-            )
+        SettingsCardRow(key = "direction") { position ->
+            Column(
+                modifier = Modifier
+                    .settingsGroupedRowBackground(position.index, position.count)
+                    .padding(16.dp),
+            ) {
+                SegmentedControl(
+                    items = PointerSwipeDirection.entries,
+                    selected = direction,
+                    labelRes = { option ->
+                        when (option) {
+                            PointerSwipeDirection.LEFT -> R.string.pointer_swipe_direction_left
+                            PointerSwipeDirection.UP -> R.string.pointer_swipe_direction_up
+                            PointerSwipeDirection.RIGHT -> R.string.pointer_swipe_direction_right
+                            PointerSwipeDirection.DOWN -> R.string.pointer_swipe_direction_down
+                        }
+                    },
+                    onSelect = { direction = it },
+                )
+            }
         }
     }
 
@@ -105,14 +122,6 @@ fun PointerSwipeConfigScreen(
         directionCard.RenderRows()
         optionsCard.RenderRows()
     }
-}
-
-@Composable
-private fun pointerSwipeDirectionLabel(direction: PointerSwipeDirection): String = when (direction) {
-    PointerSwipeDirection.LEFT -> stringResource(R.string.pointer_swipe_direction_left)
-    PointerSwipeDirection.UP -> stringResource(R.string.pointer_swipe_direction_up)
-    PointerSwipeDirection.RIGHT -> stringResource(R.string.pointer_swipe_direction_right)
-    PointerSwipeDirection.DOWN -> stringResource(R.string.pointer_swipe_direction_down)
 }
 
 @Composable

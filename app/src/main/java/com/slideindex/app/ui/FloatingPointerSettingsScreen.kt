@@ -1,4 +1,4 @@
-﻿package com.slideindex.app.ui
+package com.slideindex.app.ui
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
@@ -141,7 +141,7 @@ fun FloatingPointerSettingsScreen(
                         SettingNavigationRow(
                             icon = { label ->
                                 Icon(
-                                    gestureActionTypeOutlinedIcon(GestureActionType.SIMULATE_POINTER_SWIPE),
+                                    imageVector = ThinActionIcons.RemoteControl2,
                                     contentDescription = label
                                 )
                             },

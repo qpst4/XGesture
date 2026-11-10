@@ -1,5 +1,6 @@
 package com.slideindex.app.ui
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -28,7 +29,9 @@ import com.slideindex.app.ui.animationstyle.AnimationStyleColorRow
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingExpandableSwitchRow
 import com.slideindex.app.ui.settings.components.SettingSpinnerRow
+import com.slideindex.app.ui.settings.components.SettingsCardRow
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
+import com.slideindex.app.ui.settings.components.settingsGroupedRowBackground
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import kotlin.math.roundToInt
@@ -361,36 +364,37 @@ fun FloatingPointerPointerSettingsScreen(
         settingsLazySmallTitle(key = "fp-trail-section", title = trailSectionTitle)
         groupedCardItems(
             keyPrefix = "fp-trail-type",
-            selectableGroup = true,
             items = buildList {
                 add(
-                    settingsCardScopeItem("trail-off") {
-                        SettingRadioRow(
-                            title = stringResource(R.string.floating_pointer_trail_off),
-                            selected = trailType == FloatingPointerTrailType.OFF,
-                            onClick = { onTrailTypeChange(FloatingPointerTrailType.OFF) }
-                        )
-                    }
+                    settingsCardScopeItem("trail-type") {
+                        SettingsCardRow(key = "trail-type-row") { position ->
+                            Column(
+                                modifier = Modifier
+                                    .settingsGroupedRowBackground(position.index, position.count)
+                                    .padding(16.dp),
+                            ) {
+                                SegmentedControl(
+                                    items = FloatingPointerTrailType.entries,
+                                    selected = trailType,
+                                    labelRes = { type ->
+                                        when (type) {
+                                            FloatingPointerTrailType.OFF ->
+                                                R.string.floating_pointer_trail_off
+
+                                            FloatingPointerTrailType.SIMPLE ->
+                                                R.string.floating_pointer_trail_simple
+
+                                            FloatingPointerTrailType.HIGH_DETAIL ->
+                                                R.string.floating_pointer_trail_high_detail
+                                        }
+                                    },
+                                    onSelect = onTrailTypeChange,
+                                )
+                            }
+                        }
+                    },
                 )
-                add(
-                    settingsCardScopeItem("trail-simple") {
-                        SettingRadioRow(
-                            title = stringResource(R.string.floating_pointer_trail_simple),
-                            selected = trailType == FloatingPointerTrailType.SIMPLE,
-                            onClick = { onTrailTypeChange(FloatingPointerTrailType.SIMPLE) }
-                        )
-                    }
-                )
-                add(
-                    settingsCardScopeItem("trail-high-detail") {
-                        SettingRadioRow(
-                            title = stringResource(R.string.floating_pointer_trail_high_detail),
-                            selected = trailType == FloatingPointerTrailType.HIGH_DETAIL,
-                            onClick = { onTrailTypeChange(FloatingPointerTrailType.HIGH_DETAIL) }
-                        )
-                    }
-                )
-            }
+            },
         )
         if (trailType != FloatingPointerTrailType.OFF) {
             groupedCardItems(
