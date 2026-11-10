@@ -1,13 +1,17 @@
 package com.slideindex.app.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -243,59 +247,80 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                         }
                     },
                 )
-                // 经典样式的两个位置项只在经典模式下出现。
-                if (!localIconBarEnabled) {
-                    add(
-                        settingsCardScopeItem("copy-button-position") {
-                            SettingSegmentedRow(
-                                title = stringResource(R.string.float_ball_pick_copy_button_position),
-                                items = listOf(
-                                    com.slideindex.app.settings.PickResultCopyButtonPosition.LEFT,
-                                    com.slideindex.app.settings.PickResultCopyButtonPosition.RIGHT,
-                                ),
-                                selected = localCopyPosition,
-                                labelRes = { position ->
-                                    when (position) {
-                                        com.slideindex.app.settings.PickResultCopyButtonPosition.LEFT ->
-                                            R.string.float_ball_pick_copy_button_position_left
+                // 经典位置：常驻 item，靠 AnimatedVisibility 收起/展开（与图标条互补，切换时高度连续变化）。
+                add(
+                    settingsCardScopeItem("classic-bar-positions") {
+                        SettingsCardRow(key = "classic-bar-positions-row") { position ->
+                            Column(
+                                modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
+                            ) {
+                                AnimatedVisibility(
+                                    visible = !localIconBarEnabled,
+                                    enter = expandVertically(
+                                        animationSpec = tween(220),
+                                        expandFrom = Alignment.Top,
+                                    ) + fadeIn(tween(220)),
+                                    exit = shrinkVertically(
+                                        animationSpec = tween(220),
+                                        shrinkTowards = Alignment.Top,
+                                    ) + fadeOut(tween(220)),
+                                ) {
+                                    Column(modifier = Modifier.fillMaxWidth()) {
+                                        SegmentedSettingBlock(
+                                            title = stringResource(R.string.float_ball_pick_copy_button_position),
+                                            items = listOf(
+                                                com.slideindex.app.settings.PickResultCopyButtonPosition.LEFT,
+                                                com.slideindex.app.settings.PickResultCopyButtonPosition.RIGHT,
+                                            ),
+                                            selected = localCopyPosition,
+                                            labelRes = { position ->
+                                                when (position) {
+                                                    com.slideindex.app.settings.PickResultCopyButtonPosition.LEFT ->
+                                                        R.string.float_ball_pick_copy_button_position_left
 
-                                        com.slideindex.app.settings.PickResultCopyButtonPosition.RIGHT ->
-                                            R.string.float_ball_pick_copy_button_position_right
-                                    }
-                                },
-                                onSelect = { position ->
-                                    localCopyPosition = position
-                                    onPickCopyButtonPositionChange(position)
-                                },
-                            )
-                        },
-                    )
-                    add(
-                        settingsCardScopeItem("image-toolbar-position") {
-                            SettingSegmentedRow(
-                                title = stringResource(R.string.float_ball_pick_image_toolbar_position),
-                                items = listOf(
-                                    com.slideindex.app.settings.PickResultImageToolbarPosition.LEFT,
-                                    com.slideindex.app.settings.PickResultImageToolbarPosition.RIGHT,
-                                ),
-                                selected = localImageToolbarPosition,
-                                labelRes = { position ->
-                                    when (position) {
-                                        com.slideindex.app.settings.PickResultImageToolbarPosition.LEFT ->
-                                            R.string.float_ball_pick_image_toolbar_position_left
+                                                    com.slideindex.app.settings.PickResultCopyButtonPosition.RIGHT ->
+                                                        R.string.float_ball_pick_copy_button_position_right
+                                                }
+                                            },
+                                            onSelect = { position ->
+                                                localCopyPosition = position
+                                                onPickCopyButtonPositionChange(position)
+                                            },
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 16.dp)
+                                                .height(0.5.dp)
+                                                .background(MiuixTheme.colorScheme.dividerLine),
+                                        )
+                                        SegmentedSettingBlock(
+                                            title = stringResource(R.string.float_ball_pick_image_toolbar_position),
+                                            items = listOf(
+                                                com.slideindex.app.settings.PickResultImageToolbarPosition.LEFT,
+                                                com.slideindex.app.settings.PickResultImageToolbarPosition.RIGHT,
+                                            ),
+                                            selected = localImageToolbarPosition,
+                                            labelRes = { position ->
+                                                when (position) {
+                                                    com.slideindex.app.settings.PickResultImageToolbarPosition.LEFT ->
+                                                        R.string.float_ball_pick_image_toolbar_position_left
 
-                                        com.slideindex.app.settings.PickResultImageToolbarPosition.RIGHT ->
-                                            R.string.float_ball_pick_image_toolbar_position_right
+                                                    com.slideindex.app.settings.PickResultImageToolbarPosition.RIGHT ->
+                                                        R.string.float_ball_pick_image_toolbar_position_right
+                                                }
+                                            },
+                                            onSelect = { position ->
+                                                localImageToolbarPosition = position
+                                                onPickImageToolbarPositionChange(position)
+                                            },
+                                        )
                                     }
-                                },
-                                onSelect = { position ->
-                                    localImageToolbarPosition = position
-                                    onPickImageToolbarPositionChange(position)
-                                },
-                            )
-                        },
-                    )
-                }
+                                }
+                            }
+                        }
+                    },
+                )
                 // 图标条行常驻（不随模式增删），靠 AnimatedVisibility 做展开/收起，切换模式才有动画。
                 add(
                     settingsCardScopeItem("pick-bar-buttons") {
@@ -305,8 +330,14 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                             ) {
                                 AnimatedVisibility(
                                     visible = localIconBarEnabled,
-                                    enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
-                                    exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+                                    enter = expandVertically(
+                                        animationSpec = tween(220),
+                                        expandFrom = Alignment.Top,
+                                    ) + fadeIn(tween(220)),
+                                    exit = shrinkVertically(
+                                        animationSpec = tween(220),
+                                        shrinkTowards = Alignment.Top,
+                                    ) + fadeOut(tween(220)),
                                 ) {
                                     Column(
                                         modifier = Modifier
@@ -529,6 +560,37 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                     },
                 )
             },
+        )
+    }
+}
+
+/** 卡片行内的「标题 + 一整行 SegmentedControl」块（不单独占用分段，供 AnimatedVisibility 包住）。 */
+@Composable
+private fun <T> SegmentedSettingBlock(
+    title: String,
+    items: List<T>,
+    selected: T,
+    labelRes: (T) -> Int,
+    onSelect: (T) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        MiuixText(
+            text = title,
+            style = MiuixTheme.textStyles.headline1,
+            fontWeight = FontWeight.Medium,
+        )
+        SegmentedControl(
+            items = items,
+            selected = selected,
+            labelRes = labelRes,
+            onSelect = onSelect,
+            containerColor = MiuixTheme.colorScheme.surface,
+            indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
         )
     }
 }
