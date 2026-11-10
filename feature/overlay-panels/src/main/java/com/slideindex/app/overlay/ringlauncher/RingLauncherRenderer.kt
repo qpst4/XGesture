@@ -18,6 +18,7 @@ import com.slideindex.app.data.AppRepository
 import com.slideindex.app.overlay.HoneycombRuntimeTarget
 import com.slideindex.app.overlay.ShellCommandBadgeRenderer
 import com.slideindex.app.overlay.HintRingRenderer
+import com.slideindex.app.overlay.MacroBadgeRenderer
 import com.slideindex.app.overlay.ShortcutBadgeRenderer
 import com.slideindex.app.overlay.layout.FvRingLauncherSide
 import com.slideindex.app.overlay.layout.FvCircleLayoutEngine
@@ -180,6 +181,9 @@ object RingLauncherRenderer {
                     if (target.isShellCommandBadge) {
                         ShellCommandBadgeRenderer.draw(canvas, centerX, centerY, drawSize, progress, density)
                     }
+                    if (target.isMacroBadge) {
+                        MacroBadgeRenderer.draw(canvas, centerX, centerY, drawSize, progress, density)
+                    }
                 }
             }
         }
@@ -268,6 +272,9 @@ object RingLauncherRenderer {
                     }
                     if (target.isShellCommandBadge) {
                         ShellCommandBadgeRenderer.draw(canvas, badgeCx, badgeCy, badgeSize, progress, density)
+                    }
+                    if (target.isMacroBadge) {
+                        MacroBadgeRenderer.draw(canvas, badgeCx, badgeCy, badgeSize, progress, density)
                     }
                 }
             }

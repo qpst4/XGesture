@@ -17,6 +17,7 @@ import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.launcher.QuickLauncherItemType
 import com.slideindex.app.launcher.QuickLauncherLabels
+import com.slideindex.app.launcher.showsMacroBadge
 import com.slideindex.app.launcher.showsShellCommandBadge
 import com.slideindex.app.launcher.showsShortcutBadge
 import com.slideindex.app.overlay.layout.visualColumn
@@ -468,6 +469,7 @@ internal class QuickLauncherRenderer(
                 iconProvider = { quickLauncherItemIcon(item) },
                 showShortcutBadge = item.showsShortcutBadge(),
                 showShellCommandBadge = item.showsShellCommandBadge(host.settings().shellCommands),
+            showMacroBadge = item.showsMacroBadge(),
                 longPressArmed = recordCells &&
                     index == host.panelGridSession().highlightedIndex &&
                     ctrl.quickLauncherLongPressArmed,
@@ -540,6 +542,7 @@ internal class QuickLauncherRenderer(
             iconProvider = { quickLauncherItemIcon(item) },
             showShortcutBadge = item.showsShortcutBadge(),
             showShellCommandBadge = item.showsShellCommandBadge(host.settings().shellCommands),
+            showMacroBadge = item.showsMacroBadge(),
             iconSize = quickLauncherGridIconSize * scale,
             iconTopInset = quickLauncherGridIconTopInset * scale,
             iconLabelGap = quickLauncherGridIconLabelGap * scale,
@@ -599,6 +602,7 @@ internal class QuickLauncherRenderer(
         iconProvider: () -> Bitmap?,
         showShortcutBadge: Boolean = false,
         showShellCommandBadge: Boolean = false,
+        showMacroBadge: Boolean = false,
         longPressArmed: Boolean = false,
         iconSize: Float = quickLauncherGridIconSize,
         iconTopInset: Float = quickLauncherGridIconTopInset,
@@ -677,6 +681,16 @@ internal class QuickLauncherRenderer(
             )
         } else if (showShellCommandBadge) {
             ShellCommandBadgeRenderer.draw(
+                canvas,
+                iconCenterX,
+                iconCenterY,
+                iconSize,
+                1f,
+                host.dp(1f)
+            )
+        } else if (showMacroBadge) {
+            // 「运行宏」显示的是目标 App 图标，角标用来和「打开应用」区分
+            MacroBadgeRenderer.draw(
                 canvas,
                 iconCenterX,
                 iconCenterY,
@@ -919,6 +933,7 @@ internal class QuickLauncherRenderer(
                 iconProvider = { quickLauncherItemIcon(child) },
                 showShortcutBadge = child.showsShortcutBadge(),
                 showShellCommandBadge = child.showsShellCommandBadge(host.settings().shellCommands),
+                showMacroBadge = child.showsMacroBadge(),
                 longPressArmed = childGlobalIndex == ctrl.folderHighlightLocalIndex && ctrl.folderLongPressArmed,
                 labelMaxWidth = folderLayout.cellW - gridCellInset * 2
             )
@@ -991,6 +1006,7 @@ internal class QuickLauncherRenderer(
             iconProvider = { quickLauncherItemIcon(item) },
             showShortcutBadge = item.showsShortcutBadge(),
             showShellCommandBadge = item.showsShellCommandBadge(host.settings().shellCommands),
+            showMacroBadge = item.showsMacroBadge(),
             iconSize = quickLauncherGridIconSize * scale,
             iconTopInset = quickLauncherGridIconTopInset * scale,
             iconLabelGap = quickLauncherGridIconLabelGap * scale,

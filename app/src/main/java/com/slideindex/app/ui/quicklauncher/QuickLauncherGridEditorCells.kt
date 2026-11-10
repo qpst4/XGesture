@@ -42,8 +42,10 @@ import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherLabels
 import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.launcher.QuickLauncherItemType
+import com.slideindex.app.launcher.showsMacroBadge
 import com.slideindex.app.launcher.showsShellCommandBadge
 import com.slideindex.app.launcher.showsShortcutBadge
+import com.slideindex.app.overlay.MacroBadgeOverlay
 import com.slideindex.app.overlay.ShellCommandBadgeOverlay
 import com.slideindex.app.overlay.ShortcutBadgeOverlay
 import com.slideindex.app.shell.ShellCommand
@@ -172,6 +174,7 @@ internal fun QuickLauncherGridCell(
     val resolvedIconBitmap = iconBitmap
     val showShortcutBadge = item.showsShortcutBadge()
     val showShellCommandBadge = !showShortcutBadge && item.showsShellCommandBadge(shellCommands)
+    val showMacroBadge = !showShortcutBadge && !showShellCommandBadge && item.showsMacroBadge()
     val iconSize = iconSizeDp.coerceIn(
         QuickLauncherDisplaySettings.MIN_ICON_SIZE_DP,
         QuickLauncherDisplaySettings.MAX_ICON_SIZE_DP,
@@ -245,6 +248,8 @@ internal fun QuickLauncherGridCell(
                     ShortcutBadgeOverlay(iconSize = iconSize)
                 } else if (showShellCommandBadge) {
                     ShellCommandBadgeOverlay(iconSize = iconSize)
+                } else if (showMacroBadge) {
+                    MacroBadgeOverlay(iconSize = iconSize)
                 }
             }
             if (showLabels) {
