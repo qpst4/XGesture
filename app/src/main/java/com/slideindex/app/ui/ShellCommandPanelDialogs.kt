@@ -277,6 +277,9 @@ private fun ShellCommandEditorFields(
                 }
             },
             onSelect = onResultDisplayChange,
+            // 在卡片内：容器与页面同灰，选中 pill 用卡片白。
+            containerColor = MiuixTheme.colorScheme.surface,
+            indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
         )
     }
 }

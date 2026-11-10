@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -50,6 +51,10 @@ internal fun <T> SegmentedControl(
     selected: T,
     labelRes: (T) -> Int,
     onSelect: (T) -> Unit,
+    /** 容器底色；null 用默认的 surfaceContainerHigh。卡片内调用可传 surface 与页面同灰。 */
+    containerColor: Color? = null,
+    /** 选中 pill 底色；null 用默认的 surface。 */
+    indicatorColor: Color? = null,
 ) {
     val labels = items.map { item -> stringResource(labelRes(item)) }
     val selectedIndex = items.indexOf(selected).coerceAtLeast(0)
@@ -59,7 +64,7 @@ internal fun <T> SegmentedControl(
             .fillMaxWidth()
             .height(40.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+            .background(containerColor ?: MiuixTheme.colorScheme.surfaceContainerHigh)
             .border(
                 width = 1.dp,
                 color = MiuixTheme.colorScheme.dividerLine,
@@ -93,7 +98,7 @@ internal fun <T> SegmentedControl(
                 .width(segmentWidth)
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(11.dp))
-                .background(MiuixTheme.colorScheme.surface),
+                .background(indicatorColor ?: MiuixTheme.colorScheme.surface),
         )
 
         Row(

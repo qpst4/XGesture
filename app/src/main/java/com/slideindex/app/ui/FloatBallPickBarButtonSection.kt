@@ -231,6 +231,9 @@ fun PickResultBarButtonSection(
             selected = tab,
             labelRes = { it.labelRes },
             onSelect = { tab = it },
+            // 卡片内：容器用页面灰，选中 pill 用卡片白，层次和竞品一致。
+            containerColor = MiuixTheme.colorScheme.surface,
+            indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
         )
         BarButtonStrip(
             entries = entries,
@@ -325,7 +328,7 @@ private fun BarButtonStrip(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+            .background(MiuixTheme.colorScheme.surface)
             .padding(4.dp),
     ) {
         LazyRow(
