@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -41,7 +39,8 @@ fun PointerSwipeConfigScreen(
 
     val directionSectionTitle = stringResource(R.string.pointer_swipe_direction_title)
 
-    val directionCard = settingsCardItems(direction) {
+    // 方向与三个滑条放在同一张卡里，避免两张卡贴在一起。
+    val configCard = settingsCardItems(direction, distance, durationMs, pointerCount) {
         SettingsCardRow(key = "direction") { position ->
             Column(
                 modifier = Modifier
@@ -65,9 +64,6 @@ fun PointerSwipeConfigScreen(
                 )
             }
         }
-    }
-
-    val optionsCard = settingsCardItems(distance, durationMs, pointerCount) {
         SettingsSliderRow(
             title = stringResource(R.string.pointer_swipe_distance_title),
             value = distance.id.toFloat(),
@@ -95,12 +91,6 @@ fun PointerSwipeConfigScreen(
             label = pointerCount.toString(),
             onValueChange = { pointerCount = it.roundToInt().coerceIn(1, 5) },
         )
-        Text(
-            text = stringResource(R.string.pointer_swipe_config_desc),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        )
     }
 
     SettingsFormScreen(
@@ -122,8 +112,7 @@ fun PointerSwipeConfigScreen(
             text = directionSectionTitle,
             modifier = Modifier.fillMaxWidth(),
         )
-        directionCard.RenderRows()
-        optionsCard.RenderRows()
+        configCard.RenderRows()
     }
 }
 

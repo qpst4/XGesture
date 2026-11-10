@@ -1873,6 +1873,31 @@ object ThinActionIcons {
         }
     }
 
+    val Joystick: ImageVector by lazy {
+        createThinIcon("ThinJoystick") {
+            path(
+                stroke = strokeBrush,
+                strokeLineWidth = STROKE_WIDTH,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                // 底座
+                moveTo(4f, 19.5f)
+                lineTo(20f, 19.5f)
+                // 摇杆杆
+                moveTo(12f, 19.5f)
+                lineTo(12f, 13.5f)
+                // 顶帽
+                moveTo(12f, 6f)
+                curveTo(14.2f, 6f, 16f, 7.8f, 16f, 10f)
+                curveTo(16f, 12.2f, 14.2f, 14f, 12f, 14f)
+                curveTo(9.8f, 14f, 8f, 12.2f, 8f, 10f)
+                curveTo(8f, 7.8f, 9.8f, 6f, 12f, 6f)
+                close()
+            }
+        }
+    }
+
     val PenTablet: ImageVector by lazy {
         createThinIcon("ThinPenTablet") {
             // 与细线集同宽（原来是写死的 2f，比同组粗 33%）
