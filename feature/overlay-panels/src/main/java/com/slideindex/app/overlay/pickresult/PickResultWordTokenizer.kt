@@ -89,6 +89,23 @@ object PickResultWordTokenizer {
         return tokens
     }
 
+    /**
+     * 不分词模式：每个 code point 一个 token（代理对不拆），空白/换行也各占一个 token。
+     * 选择逻辑沿用现有的 token 下标，因此点按、拖选、自动全选都不用重写。
+     */
+    fun tokenizeSelectableChars(text: String): List<String> {
+        if (text.isEmpty()) return emptyList()
+        val tokens = ArrayList<String>(text.length)
+        var offset = 0
+        while (offset < text.length) {
+            val codePoint = text.codePointAt(offset)
+            val next = offset + Character.charCount(codePoint)
+            tokens += text.substring(offset, next)
+            offset = next
+        }
+        return tokens
+    }
+
     fun splitSelectedTokensToChars(
         tokens: List<String>,
         selectedIndices: Set<Int>,

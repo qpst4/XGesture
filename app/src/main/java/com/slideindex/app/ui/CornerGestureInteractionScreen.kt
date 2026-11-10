@@ -14,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
 import com.slideindex.app.gesture.SelectedHintMetrics
 import com.slideindex.app.overlay.corner.CornerWheelLayout
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.CornerGestureSettings
 import com.slideindex.app.ui.miuix.groupedCardItems
@@ -23,6 +24,7 @@ import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import kotlin.math.roundToInt
+import top.yukonga.miuix.kmp.basic.DropdownItem
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -49,6 +51,7 @@ fun CornerGestureInteractionScreen(
     onInnerDiameterChange: (Float) -> Unit,
     onRingSpacingChange: (Float) -> Unit,
     onBubbleSizeChange: (Float) -> Unit,
+    onSlotIconShapeChange: (FvIconShape) -> Unit,
     onCancelOutsideWheelChange: (Boolean) -> Unit,
     onProgressiveLayersChange: (Boolean) -> Unit,
     onSlotHapticChange: (Boolean) -> Unit = {},
@@ -277,6 +280,33 @@ fun CornerGestureInteractionScreen(
                                 corner.bubbleSizeDp.roundToInt()
                             ),
                             onValueChange = onBubbleSizeChange
+                        )
+                    }
+                )
+                add(
+                    settingsCardScopeItem("slot-icon-shape") {
+                        val shapes = remember {
+                            listOf(
+                                FvIconShape.ROUNDED_RECT to R.string.fv_icon_shape_rounded_rect,
+                                FvIconShape.CIRCLE to R.string.fv_icon_shape_circle,
+                                FvIconShape.SQUIRCLE to R.string.fv_icon_shape_squircle,
+                                FvIconShape.SQUARE to R.string.fv_icon_shape_square,
+                            )
+                        }
+                        SettingSpinnerRow(
+                            title = stringResource(R.string.corner_gesture_slot_icon_shape),
+                            subtitle = stringResource(
+                                shapes.firstOrNull { it.first == corner.slotIconShape }?.second
+                                    ?: R.string.fv_icon_shape_circle,
+                            ),
+                            dialogButtonText = stringResource(R.string.cancel),
+                            items = shapes.map { DropdownItem(text = stringResource(it.second)) },
+                            selectedIndex = shapes.indexOfFirst { it.first == corner.slotIconShape }
+                                .coerceAtLeast(0),
+                            enabled = serviceEnabled && corner.enabled,
+                            onSelectedIndexChange = { index ->
+                                shapes.getOrNull(index)?.first?.let(onSlotIconShapeChange)
+                            },
                         )
                     }
                 )

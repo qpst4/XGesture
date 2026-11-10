@@ -496,6 +496,7 @@
     <string name="corner_gesture_ring_spacing">层间距</string>
     <string name="corner_gesture_ring_spacing_value">%1$d dp · 外沿约 %2$d dp</string>
     <string name="corner_gesture_bubble_size">气泡大小</string>
+    <string name="corner_gesture_slot_icon_shape">槽位图标形状</string>
     <string name="corner_gesture_zone_dp_value">%1$d dp</string>
     <string name="corner_gesture_behavior_section">行为</string>
     <string name="corner_gesture_hide_landscape">横屏时禁用</string>
@@ -1986,6 +1987,9 @@
     <string name="float_ball_pick_search_grid_state_expanded">每次呼出始终展开</string>
     <string name="float_ball_pick_search_grid_state_collapsed">每次呼出始终收起</string>
     <string name="float_ball_pick_text_mode_state_title">点词默认状态</string>
+    <string name="float_ball_pick_word_tap_granularity_title">点词粒度</string>
+    <string name="float_ball_pick_word_tap_granularity_word">分词（显示词块）</string>
+    <string name="float_ball_pick_word_tap_granularity_character">不分词（按字符选，不显示词块）</string>
     <string name="float_ball_pick_text_mode_state_remember">记住上次使用状态（推荐）</string>
     <string name="float_ball_pick_text_mode_state_always_on">每次呼出始终开启</string>
     <string name="float_ball_pick_text_mode_state_always_off">每次呼出始终关闭</string>

@@ -9,6 +9,7 @@ import androidx.core.graphics.createBitmap
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.shell.ShellCommand
 import com.slideindex.app.shell.ShellCommandIconResolver
 
@@ -27,6 +28,7 @@ object CornerSlotIconBitmap {
         activityShortcuts: List<ActivityShortcut> = emptyList(),
         shellCommands: List<ShellCommand> = emptyList(),
         appRepository: AppRepository? = null,
+        shape: FvIconShape = FvIconShape.CIRCLE,
     ): Bitmap {
         // 全局图标覆盖优先（扩展 → 图标库）
         if (action is GestureAction.LaunchApp) {
@@ -77,8 +79,20 @@ object CornerSlotIconBitmap {
             android.graphics.Color.WHITE,
             true,
             true,
-            1, // CIRCLE
+            shape.toPlateShapeOrdinal(),
         ) ?: Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+    }
+
+    /**
+     * [GestureActionPlateShape] 在 `:app` 里的声明顺序：
+     * ROUNDED_RECT / CIRCLE / SQUIRCLE / SQUARE。
+     * 面板侧不能依赖 `:app`，所以只在这里维护这一份序号映射。
+     */
+    private fun FvIconShape.toPlateShapeOrdinal(): Int = when (this) {
+        FvIconShape.ROUNDED_RECT -> 0
+        FvIconShape.CIRCLE -> 1
+        FvIconShape.SQUIRCLE -> 2
+        FvIconShape.SQUARE -> 3
     }
 
     private fun resolveAppIconBitmap(

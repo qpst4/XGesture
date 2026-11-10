@@ -51,6 +51,7 @@ internal object SettingsBackupCodec {
             otpAutoFillStatsJson = sensitive?.otpAutoFillStatsJson,
             shellOutputHistoryJson = sensitive?.shellOutputHistoryJson,
             searchPanelHistoryJson = sensitive?.searchPanelHistoryJson,
+            multiTouchGestureJson = sensitive?.multiTouchGestureJson,
         )
         return json.encodeToString(document)
     }
@@ -75,6 +76,7 @@ internal object SettingsBackupCodec {
             otpAutoFillStatsJson = otpAutoFillStatsJson,
             shellOutputHistoryJson = shellOutputHistoryJson,
             searchPanelHistoryJson = searchPanelHistoryJson,
+            multiTouchGestureJson = multiTouchGestureJson,
         )
 
     fun apply(document: SettingsBackupDocument, prefs: MutablePreferences) {

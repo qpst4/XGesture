@@ -2,6 +2,7 @@ package com.slideindex.app.settings
 
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.SelectedHintMetrics
+import com.slideindex.app.overlay.layout.FvIconShape
 
 data class CornerGestureSettings(
     val enabled: Boolean = false,
@@ -30,6 +31,8 @@ data class CornerGestureSettings(
      */
     val ringSpacingDp: Float = 58f,
     val bubbleSizeDp: Float = 24f,
+    /** 槽位气泡/图标的裁切形状；默认圆形 = 历史观感。 */
+    val slotIconShape: FvIconShape = FvIconShape.CIRCLE,
     /**
      * 轮盘层数（3 / 4 / 5）。第 4 层是槽位 16–24，第 5 层是槽位 25–35。
      * 层数只决定"画几圈"，不改变任何已有环的半径与间距（见 CornerWheelLayout.layerRadiusPx）。

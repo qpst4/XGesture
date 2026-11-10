@@ -721,6 +721,7 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
             onPickPanelPlacementChange = viewModel::setFloatBallPickPanelPlacement,
             onPickSearchGridDefaultStateChange = viewModel::setFloatBallPickSearchGridDefaultState,
             onPickTextModeDefaultChange = viewModel::setFloatBallPickTextModeDefault,
+            onPickWordTapGranularityChange = viewModel::setFloatBallPickWordTapGranularity,
             onPickTextFirstPanelChange = viewModel::setFloatBallPickTextFirstPanel,
             onPickAutoSelectAllChange = viewModel::setFloatBallPickAutoSelectAll,
             onPickCopyDismissPanelChange = viewModel::setFloatBallPickCopyDismissPanel,

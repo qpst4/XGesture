@@ -272,6 +272,10 @@ private fun SettingsCardScope.FloatBallGestureActionRow(
 
                 onSettingsClick = onSettingsClick,
 
+                activityShortcuts = settings.activityShortcuts,
+
+                shellCommands = settings.shellCommands,
+
                 onClick = onClick
 
             )

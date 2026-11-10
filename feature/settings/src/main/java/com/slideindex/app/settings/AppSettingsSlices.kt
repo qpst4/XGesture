@@ -325,6 +325,9 @@ data class FloatBallSettings(
      * 空串表示还没有记录过，读取方需回落默认值。
      */
     val floatBallPickTextModeLastMode: String = "",
+    /** 点词粒度：分词（可见 chip）或不分词（按字符选、无 chip）。 */
+    val floatBallPickWordTapGranularity: PickResultWordTapGranularity =
+        PickResultWordTapGranularity.WORD,
     /** Pick panel: engine used by search-button long-press quick search (null = long press idle). */
     val floatBallPickDefaultSearchEngineId: String? = null,
     /** Pick panel: auto-select all text when the panel opens after word pick or screenshot. */

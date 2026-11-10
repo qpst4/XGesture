@@ -20,12 +20,15 @@ import com.slideindex.app.launcher.showsShellCommandBadge
 import com.slideindex.app.overlay.HintRingRenderer
 import com.slideindex.app.overlay.ShellCommandBadgeRenderer
 import com.slideindex.app.overlay.ShortcutBadgeRenderer
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.settings.CornerGestureSettings
 import com.slideindex.app.shell.ShellCommand
 import kotlin.math.min
 
 object CornerRadialMenuRenderer {
     private val slotIconClipPath = Path()
+    private val slotShapePath = Path()
+    private val slotShapeRect = RectF()
     /** 提示卡片里图标外圈的进度用矩形（复用，避免每帧分配）。 */
     private val hintRingRect = RectF()
     private const val ICON_TINT = 0xFF374151.toInt()
@@ -135,6 +138,7 @@ object CornerRadialMenuRenderer {
                     shadowPaint = shadowPaint,
                     fillPaint = fillPaint,
                     strokePaint = strokePaint,
+                    shape = settings.slotIconShape,
                 )
                 plusPaint.color = if (highlighted) PLUS_COLOR_HIGHLIGHT else PLUS_COLOR
                 plusPaint.textSize = radius * 1.1f
@@ -157,6 +161,7 @@ object CornerRadialMenuRenderer {
                     activityShortcuts = activityShortcuts,
                     shellCommands = shellCommands,
                     appRepository = appRepository,
+                    shape = settings.slotIconShape,
                 )
             }
         }
@@ -192,6 +197,7 @@ object CornerRadialMenuRenderer {
                     activityShortcuts = activityShortcuts,
                     shellCommands = shellCommands,
                     appRepository = appRepository,
+                    shape = settings.slotIconShape,
                     longPressRingProgress = longPressRingProgress,
                     hintLabelSuffix = hintLabelSuffix,
                     hintPipArmed = hintPipArmed,
@@ -364,6 +370,7 @@ object CornerRadialMenuRenderer {
         activityShortcuts: List<ActivityShortcut>,
         shellCommands: List<ShellCommand>,
         appRepository: AppRepository?,
+        shape: FvIconShape,
         /** 提示卡片里图标外圈的进度：0..1；-1 = 不画。 */
         longPressRingProgress: Float = -1f,
         /** 长按到时间后拼到名字后面的后缀（如 "-小窗" / "-全屏"）；空串表示不加。 */
@@ -424,6 +431,7 @@ object CornerRadialMenuRenderer {
             activityShortcuts = activityShortcuts,
             shellCommands = shellCommands,
             appRepository = appRepository,
+            shape = shape,
         )
         val iconLeft = left + paddingX
         val iconTop = centerY - iconSize / 2f
@@ -500,6 +508,40 @@ object CornerRadialMenuRenderer {
         canvas.drawText(fitted, 0, fitted.length, iconLeft + iconSize + gap, baseline, namePaint)
     }
 
+    private fun drawSlotShape(
+        canvas: Canvas,
+        centerX: Float,
+        centerY: Float,
+        radius: Float,
+        shape: FvIconShape,
+        paint: Paint,
+    ) {
+        if (shape == FvIconShape.CIRCLE) {
+            canvas.drawCircle(centerX, centerY, radius, paint)
+            return
+        }
+        slotShapePath.rewind()
+        buildSlotShapePath(centerX, centerY, radius, shape, slotShapePath)
+        canvas.drawPath(slotShapePath, paint)
+    }
+
+    private fun buildSlotShapePath(
+        centerX: Float,
+        centerY: Float,
+        radius: Float,
+        shape: FvIconShape,
+        path: Path,
+    ) {
+        path.rewind()
+        if (shape == FvIconShape.CIRCLE) {
+            path.addCircle(centerX, centerY, radius, Path.Direction.CW)
+            return
+        }
+        slotShapeRect.set(centerX - radius, centerY - radius, centerX + radius, centerY + radius)
+        val corner = radius * 2f * shape.cornerRadiusRatio
+        path.addRoundRect(slotShapeRect, corner, corner, Path.Direction.CW)
+    }
+
     private fun drawFilledSlotIcon(
         canvas: Canvas,
         context: Context,
@@ -516,9 +558,17 @@ object CornerRadialMenuRenderer {
         activityShortcuts: List<ActivityShortcut>,
         shellCommands: List<ShellCommand>,
         appRepository: AppRepository?,
+        shape: FvIconShape,
     ) {
         val shadowOffset = 3f * density * progress
-        canvas.drawCircle(centerX + shadowOffset, centerY + shadowOffset, radius, shadowPaint)
+        drawSlotShape(
+            canvas = canvas,
+            centerX = centerX + shadowOffset,
+            centerY = centerY + shadowOffset,
+            radius = radius,
+            shape = shape,
+            paint = shadowPaint,
+        )
 
         val diameterPx = (radius * 2f).toInt().coerceAtLeast(12)
         val bitmap = CornerSlotIconBitmap.get(
@@ -529,18 +579,26 @@ object CornerRadialMenuRenderer {
             activityShortcuts = activityShortcuts,
             shellCommands = shellCommands,
             appRepository = appRepository,
+            shape = shape,
         )
         val drawSize = radius * 2f
         val left = centerX - drawSize / 2f
         val top = centerY - drawSize / 2f
         slotIconClipPath.rewind()
-        slotIconClipPath.addCircle(centerX, centerY, radius, Path.Direction.CW)
+        buildSlotShapePath(centerX, centerY, radius, shape, slotIconClipPath)
         canvas.withClip(slotIconClipPath) {
             canvas.drawBitmap(bitmap, left, top, iconPaint)
         }
 
         strokePaint.color = if (highlighted) BUBBLE_STROKE_HIGHLIGHT else BUBBLE_STROKE
-        canvas.drawCircle(centerX, centerY, radius, strokePaint)
+        drawSlotShape(
+            canvas = canvas,
+            centerX = centerX,
+            centerY = centerY,
+            radius = radius,
+            shape = shape,
+            paint = strokePaint,
+        )
 
         if (action is GestureAction.LaunchShortcut) {
             when {
@@ -589,21 +647,29 @@ object CornerRadialMenuRenderer {
         shadowPaint: Paint,
         fillPaint: Paint,
         strokePaint: Paint,
+        shape: FvIconShape,
     ) {
         val shadowOffset = 3f * density * progress
-        canvas.drawCircle(centerX + shadowOffset, centerY + shadowOffset, radius, shadowPaint)
+        drawSlotShape(
+            canvas = canvas,
+            centerX = centerX + shadowOffset,
+            centerY = centerY + shadowOffset,
+            radius = radius,
+            shape = shape,
+            paint = shadowPaint,
+        )
         fillPaint.color = when {
             highlighted -> BUBBLE_FILL_HIGHLIGHT
             empty -> BUBBLE_FILL_EMPTY
             else -> BUBBLE_FILL
         }
-        canvas.drawCircle(centerX, centerY, radius, fillPaint)
+        drawSlotShape(canvas, centerX, centerY, radius, shape, fillPaint)
         strokePaint.color = when {
             highlighted -> BUBBLE_STROKE_HIGHLIGHT
             empty -> BUBBLE_STROKE_EMPTY
             else -> BUBBLE_STROKE
         }
-        canvas.drawCircle(centerX, centerY, radius, strokePaint)
+        drawSlotShape(canvas, centerX, centerY, radius, shape, strokePaint)
     }
 
     private fun drawEditButton(

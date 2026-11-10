@@ -10,6 +10,7 @@ import com.slideindex.app.search.SearchHistoryRepository
 import com.slideindex.app.service.ShareImageOcrHistoryRepository
 import com.slideindex.app.settings.SettingsBackupImportResult
 import com.slideindex.app.shell.ShellOutputHistoryRepository
+import com.slideindex.app.multitouch.MultiTouchGestureSettingsStore
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,6 +32,7 @@ class BackupImportApplier @Inject constructor(
     private val searchHistoryRepository: SearchHistoryRepository,
     private val clipboardHistoryRepository: ClipboardHistoryRepository,
     private val shareImageOcrHistoryRepository: ShareImageOcrHistoryRepository,
+    private val multiTouchGestureSettingsStore: MultiTouchGestureSettingsStore,
 ) {
     suspend fun apply(result: SettingsBackupImportResult) {
         val sections = result.sensitive
@@ -41,6 +43,7 @@ class BackupImportApplier @Inject constructor(
         sections.otpAutoFillStatsJson?.let { otpAutoFillStatsRepository.importRawJson(it) }
         sections.shellOutputHistoryJson?.let { shellOutputHistoryRepository.importRawJson(it) }
         sections.searchPanelHistoryJson?.let { searchHistoryRepository.importRawJson(it) }
+        sections.multiTouchGestureJson?.let { multiTouchGestureSettingsStore.importRawJson(it) }
         if (result.importedClipboardDirectory) {
             clipboardHistoryRepository.reloadFromDisk()
         }

@@ -22,6 +22,8 @@ data class SettingsBackupDocument(
     val otpAutoFillStatsJson: String? = null,
     val shellOutputHistoryJson: String? = null,
     val searchPanelHistoryJson: String? = null,
+    /** 全局触控（多指手势）的开关 + 条目 + 手绘轨迹；存在独立 SharedPreferences 里。 */
+    val multiTouchGestureJson: String? = null,
 )
 
 @Serializable
@@ -33,6 +35,8 @@ data class SensitiveBackupSections(
     val otpAutoFillStatsJson: String? = null,
     val shellOutputHistoryJson: String? = null,
     val searchPanelHistoryJson: String? = null,
+    /** 全局触控（多指手势）的开关、条目与手绘轨迹。 */
+    val multiTouchGestureJson: String? = null,
     val includeDirectories: Boolean = false,
 ) {
     val hasAny: Boolean
@@ -45,6 +49,7 @@ data class SensitiveBackupSections(
                 otpAutoFillStatsJson,
                 shellOutputHistoryJson,
                 searchPanelHistoryJson,
+                multiTouchGestureJson,
             ).any { !it.isNullOrBlank() }
 }
 

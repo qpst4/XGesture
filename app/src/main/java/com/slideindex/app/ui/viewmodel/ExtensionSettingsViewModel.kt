@@ -751,6 +751,12 @@ class ExtensionSettingsViewModel @Inject constructor(
             settingsRepository.setFloatBallPickTextModeDefault(state)
         }
 
+    fun setFloatBallPickWordTapGranularity(
+        granularity: com.slideindex.app.settings.PickResultWordTapGranularity,
+    ) = launchSettingsWrite {
+        settingsRepository.setFloatBallPickWordTapGranularity(granularity)
+    }
+
     fun setFloatBallPickDefaultSearchEngineId(id: String?) = launchSettingsWrite {
         settingsRepository.setFloatBallPickDefaultSearchEngineId(id)
     }

@@ -36,6 +36,7 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     onPickPanelPlacementChange: (com.slideindex.app.settings.PickResultPanelPlacement) -> Unit,
     onPickSearchGridDefaultStateChange: (com.slideindex.app.settings.PickResultSearchGridDefaultState) -> Unit,
     onPickTextModeDefaultChange: (com.slideindex.app.settings.PickResultTextModeDefault) -> Unit,
+    onPickWordTapGranularityChange: (com.slideindex.app.settings.PickResultWordTapGranularity) -> Unit,
     onPickTextFirstPanelChange: (Boolean) -> Unit,
     onPickAutoSelectAllChange: (Boolean) -> Unit,
     onPickCopyDismissPanelChange: (Boolean) -> Unit,
@@ -132,6 +133,25 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     }
     val textModeItems = remember(textModeOptions) {
         textModeOptions.map { DropdownItem(text = it.second) }
+    }
+
+    val granularityWordLabel = stringResource(R.string.float_ball_pick_word_tap_granularity_word)
+    val granularityCharacterLabel = stringResource(R.string.float_ball_pick_word_tap_granularity_character)
+    val granularityOptions = remember(granularityWordLabel, granularityCharacterLabel) {
+        listOf(
+            com.slideindex.app.settings.PickResultWordTapGranularity.WORD to granularityWordLabel,
+            com.slideindex.app.settings.PickResultWordTapGranularity.CHARACTER to granularityCharacterLabel,
+        )
+    }
+    val selectedGranularityIndex = remember(
+        settings.floatBallPickWordTapGranularity,
+        granularityOptions,
+    ) {
+        granularityOptions.indexOfFirst { it.first == settings.floatBallPickWordTapGranularity }
+            .coerceAtLeast(0)
+    }
+    val granularityItems = remember(granularityOptions) {
+        granularityOptions.map { DropdownItem(text = it.second) }
     }
 
     val copyButtonPositionLeftLabel = stringResource(R.string.float_ball_pick_copy_button_position_left)
@@ -363,6 +383,23 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                                 val selected = textModeOptions.getOrNull(index)?.first
                                     ?: return@SettingSpinnerRow
                                 onPickTextModeDefaultChange(selected)
+                            },
+                        )
+                    },
+                )
+                add(
+                    settingsCardScopeItem("word-tap-granularity") {
+                        SettingSpinnerRow(
+                            title = stringResource(R.string.float_ball_pick_word_tap_granularity_title),
+                            subtitle = granularityOptions.getOrNull(selectedGranularityIndex)?.second.orEmpty(),
+                            dialogButtonText = stringResource(R.string.cancel),
+                            items = granularityItems,
+                            selectedIndex = selectedGranularityIndex,
+                            enabled = true,
+                            onSelectedIndexChange = { index ->
+                                val selected = granularityOptions.getOrNull(index)?.first
+                                    ?: return@SettingSpinnerRow
+                                onPickWordTapGranularityChange(selected)
                             },
                         )
                     },

@@ -333,6 +333,7 @@ class SettingsBackupManager @Inject constructor(
             otpAutoFillStatsJson = otpAutoFillStatsJson,
             shellOutputHistoryJson = shellOutputHistoryJson,
             searchPanelHistoryJson = searchPanelHistoryJson,
+            multiTouchGestureJson = multiTouchGestureJson,
         )
 
     /** 只保留选中模块的分区；`modules == null` 时原样返回。 */
@@ -349,6 +350,7 @@ class SettingsBackupManager @Inject constructor(
             otpAutoFillStatsJson = otpAutoFillStatsJson.takeIf { keep(SettingsModule.OTP) },
             shellOutputHistoryJson = shellOutputHistoryJson.takeIf { keep(SettingsModule.SHELL) },
             searchPanelHistoryJson = searchPanelHistoryJson.takeIf { keep(SettingsModule.SEARCH) },
+            multiTouchGestureJson = multiTouchGestureJson.takeIf { keep(SettingsModule.EDGE_GESTURE) },
         )
     }
 

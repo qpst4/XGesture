@@ -11,4 +11,6 @@ data class RecentAppEntry(
     val topComponent: String = "",
     /** 多开/分身实例：与主实例同包名同图标，靠名字后缀 + 图标角标区分。 */
     val isClone: Boolean = false,
+    /** 分身/工作资料所在的 user；0 = 主用户或未知。 */
+    val userId: Int = 0,
 )
