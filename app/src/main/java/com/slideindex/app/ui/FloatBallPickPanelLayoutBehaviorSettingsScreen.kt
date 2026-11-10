@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.settings.AppSettings
@@ -240,8 +241,8 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                                 ) {
                                     MiuixText(
                                         text = stringResource(R.string.float_ball_pick_bar_style_title),
-                                        style = MiuixTheme.textStyles.body2,
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                        style = MiuixTheme.textStyles.headline1,
+                                        fontWeight = FontWeight.Medium,
                                     )
                                     SegmentedControl(
                                         items = listOf(false, true),
@@ -262,7 +263,7 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                                     )
                                     MiuixText(
                                         text = stringResource(R.string.float_ball_pick_bar_style_desc),
-                                        style = MiuixTheme.textStyles.footnote1,
+                                        style = MiuixTheme.textStyles.body2,
                                         color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                     )
                                 }
@@ -327,8 +328,8 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                                     ) {
                                         MiuixText(
                                             text = barButtonsTitle,
-                                            style = MiuixTheme.textStyles.body2,
-                                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                            style = MiuixTheme.textStyles.headline1,
+                                            fontWeight = FontWeight.Medium,
                                         )
                                         PickResultBarButtonSection(
                                             textOrder = settings.floatBallPickTextBarOrder,
@@ -566,12 +567,13 @@ private fun <T> SettingsCardScope.SettingSegmentedRow(
         ) {
             MiuixText(
                 text = title,
-                style = MiuixTheme.textStyles.body2,
+                style = MiuixTheme.textStyles.headline1,
+                fontWeight = FontWeight.Medium,
             )
             subtitle?.let {
                 MiuixText(
                     text = it,
-                    style = MiuixTheme.textStyles.footnote1,
+                    style = MiuixTheme.textStyles.body2,
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
             }
