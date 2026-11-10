@@ -557,6 +557,7 @@
     <string name="corner_gesture_bubble_size">Размер пузыря</string>
     <string name="corner_gesture_zone_dp_value">%1$d dp</string>
     <string name="corner_gesture_behavior_section">Поведение</string>
+    <string name="corner_gesture_appearance_section">Внешний вид</string>
     <string name="corner_gesture_hide_landscape">Отключить в альбомной ориентации</string>
     <string name="corner_gesture_hide_landscape_desc">Скрывать угловые зоны срабатывания в альбомной ориентации</string>
     <string name="corner_gesture_landscape_prevent_false_touch">Защита от ложных касаний в альбомной ориентации</string>

@@ -471,6 +471,7 @@
     <string name="corner_gesture_bubble_size">حجم الفقاعة</string>
     <string name="corner_gesture_zone_dp_value">%1$d dp</string>
     <string name="corner_gesture_behavior_section">السلوك</string>
+    <string name="corner_gesture_appearance_section">المظهر</string>
     <string name="corner_gesture_hide_landscape">تعطيل في الوضع الأفقي</string>
     <string name="corner_gesture_hide_landscape_desc">عدم عرض منطقة تشغيل الزاوية في الوضع الأفقي</string>
     <string name="corner_gesture_landscape_prevent_false_touch">منع اللمس الخاطئ في الوضع الأفقي</string>

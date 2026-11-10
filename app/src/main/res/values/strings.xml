@@ -585,6 +585,7 @@
     <string name="corner_gesture_slot_icon_shape">Slot icon shape</string>
     <string name="corner_gesture_zone_dp_value">%1$d dp</string>
     <string name="corner_gesture_behavior_section">Behavior</string>
+    <string name="corner_gesture_appearance_section">Appearance</string>
     <string name="corner_gesture_hide_landscape">Disable in landscape</string>
     <string name="corner_gesture_hide_landscape_desc">Hide corner trigger zones in landscape</string>
     <string name="corner_gesture_landscape_prevent_false_touch">Landscape false-touch guard</string>

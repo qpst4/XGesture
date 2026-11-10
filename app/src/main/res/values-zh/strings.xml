@@ -499,6 +499,7 @@
     <string name="corner_gesture_slot_icon_shape">槽位图标形状</string>
     <string name="corner_gesture_zone_dp_value">%1$d dp</string>
     <string name="corner_gesture_behavior_section">行为</string>
+    <string name="corner_gesture_appearance_section">外观</string>
     <string name="corner_gesture_hide_landscape">横屏时禁用</string>
     <string name="corner_gesture_hide_landscape_desc">横屏下不显示角部触发区</string>
     <string name="corner_gesture_landscape_prevent_false_touch">横屏防误触</string>

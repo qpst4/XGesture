@@ -471,6 +471,7 @@
     <string name="corner_gesture_bubble_size">バブルサイズ</string>
     <string name="corner_gesture_zone_dp_value">%1$d dp</string>
     <string name="corner_gesture_behavior_section">動作</string>
+    <string name="corner_gesture_appearance_section">外観</string>
     <string name="corner_gesture_hide_landscape">横向きで無効</string>
     <string name="corner_gesture_hide_landscape_desc">横向きでコーナートリガーゾーンを非表示</string>
     <string name="corner_gesture_landscape_prevent_false_touch">横向き誤タッチ防止</string>

@@ -106,6 +106,7 @@ fun CornerGestureInteractionScreen(
     val triggerSectionTitle = stringResource(R.string.corner_gesture_trigger_section)
     val zonePreviewHint = stringResource(R.string.corner_gesture_zone_preview_hint)
     val behaviorSectionTitle = stringResource(R.string.corner_gesture_behavior_section)
+    val appearanceSectionTitle = stringResource(R.string.corner_gesture_appearance_section)
 
     SettingsScreenScaffold(
         title = stringResource(R.string.corner_gesture_interaction_appearance_title),
@@ -283,33 +284,6 @@ fun CornerGestureInteractionScreen(
                         )
                     }
                 )
-                add(
-                    settingsCardScopeItem("slot-icon-shape") {
-                        val shapes = remember {
-                            listOf(
-                                FvIconShape.ROUNDED_RECT to R.string.fv_icon_shape_rounded_rect,
-                                FvIconShape.CIRCLE to R.string.fv_icon_shape_circle,
-                                FvIconShape.SQUIRCLE to R.string.fv_icon_shape_squircle,
-                                FvIconShape.SQUARE to R.string.fv_icon_shape_square,
-                            )
-                        }
-                        SettingSpinnerRow(
-                            title = stringResource(R.string.corner_gesture_slot_icon_shape),
-                            subtitle = stringResource(
-                                shapes.firstOrNull { it.first == corner.slotIconShape }?.second
-                                    ?: R.string.fv_icon_shape_circle,
-                            ),
-                            dialogButtonText = stringResource(R.string.cancel),
-                            items = shapes.map { DropdownItem(text = stringResource(it.second)) },
-                            selectedIndex = shapes.indexOfFirst { it.first == corner.slotIconShape }
-                                .coerceAtLeast(0),
-                            enabled = serviceEnabled && corner.enabled,
-                            onSelectedIndexChange = { index ->
-                                shapes.getOrNull(index)?.first?.let(onSlotIconShapeChange)
-                            },
-                        )
-                    }
-                )
             }
         )
         settingsLazySmallTitle(
@@ -360,6 +334,42 @@ fun CornerGestureInteractionScreen(
                             checked = corner.cancelOutsideWheel,
                             enabled = serviceEnabled && corner.enabled,
                             onCheckedChange = onCancelOutsideWheelChange
+                        )
+                    }
+                )
+            }
+        )
+        settingsLazySmallTitle(
+            key = "corner-appearance-section",
+            title = appearanceSectionTitle
+        )
+        groupedCardItems(
+            keyPrefix = "corner-appearance",
+            items = buildList {
+                add(
+                    settingsCardScopeItem("slot-icon-shape") {
+                        val shapes = remember {
+                            listOf(
+                                FvIconShape.ROUNDED_RECT to R.string.fv_icon_shape_rounded_rect,
+                                FvIconShape.CIRCLE to R.string.fv_icon_shape_circle,
+                                FvIconShape.SQUIRCLE to R.string.fv_icon_shape_squircle,
+                                FvIconShape.SQUARE to R.string.fv_icon_shape_square,
+                            )
+                        }
+                        SettingSpinnerRow(
+                            title = stringResource(R.string.corner_gesture_slot_icon_shape),
+                            subtitle = stringResource(
+                                shapes.firstOrNull { it.first == corner.slotIconShape }?.second
+                                    ?: R.string.fv_icon_shape_circle,
+                            ),
+                            dialogButtonText = stringResource(R.string.cancel),
+                            items = shapes.map { DropdownItem(text = stringResource(it.second)) },
+                            selectedIndex = shapes.indexOfFirst { it.first == corner.slotIconShape }
+                                .coerceAtLeast(0),
+                            enabled = serviceEnabled && corner.enabled,
+                            onSelectedIndexChange = { index ->
+                                shapes.getOrNull(index)?.first?.let(onSlotIconShapeChange)
+                            },
                         )
                     }
                 )
@@ -474,7 +484,7 @@ fun CornerGestureInteractionScreen(
                         )
                     }
                 )
-            }
+            },
         )
     }
 }
