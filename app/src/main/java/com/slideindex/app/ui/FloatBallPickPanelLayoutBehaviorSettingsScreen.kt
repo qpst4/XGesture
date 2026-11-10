@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,14 +24,13 @@ import com.slideindex.app.R
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.PickPanelSlideAnimationDefaults
 import com.slideindex.app.ui.miuix.groupedCardItems
-import com.slideindex.app.ui.settings.components.LazySettingsItem
+import com.slideindex.app.ui.settings.components.SettingsCardRow
 import com.slideindex.app.ui.settings.components.SettingExpandableSwitchRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
+import com.slideindex.app.ui.settings.components.settingsGroupedRowBackground
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import kotlin.math.roundToInt
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -199,49 +197,128 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
             key = "panel-appearance-section",
             title = appearanceSectionTitle,
         )
-        // 底栏样式：经典 / 纯图标二选一，代替原来的「开关 + 置灰折叠组」。
-        LazySettingsItem(key = "pick-bar-style") {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                colors = CardDefaults.defaultColors(
-                    color = MiuixTheme.colorScheme.surfaceContainer,
-                    contentColor = MiuixTheme.colorScheme.onSurfaceContainer,
-                ),
-                insideMargin = PaddingValues(16.dp),
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = stringResource(R.string.float_ball_pick_bar_style_title),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    SegmentedControl(
-                        items = listOf(false, true),
-                        selected = settings.floatBallPickIconBarEnabled,
-                        labelRes = { iconOnly ->
-                            if (iconOnly) {
-                                R.string.float_ball_pick_bar_style_icon
-                            } else {
-                                R.string.float_ball_pick_bar_style_classic
-                            }
-                        },
-                        onSelect = onPickIconBarEnabledChange,
-                        containerColor = MiuixTheme.colorScheme.surface,
-                        indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
-                    )
-                    Text(
-                        text = stringResource(R.string.float_ball_pick_bar_style_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                    )
-                }
-            }
-        }
         groupedCardItems(
             keyPrefix = "fb-pick-panel-appearance",
             items = buildList {
+                // 底栏样式：一张卡里既放模式选择，也放对应配置（经典位置 / 纯图标工具条）。
+                add(
+                    settingsCardScopeItem("pick-bar-style") {
+                        SettingsCardRow(key = "pick-bar-style-row") { position ->
+                            Column(
+                                modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.float_ball_pick_bar_style_title),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    SegmentedControl(
+                                        items = listOf(false, true),
+                                        selected = settings.floatBallPickIconBarEnabled,
+                                        labelRes = { iconOnly ->
+                                            if (iconOnly) {
+                                                R.string.float_ball_pick_bar_style_icon
+                                            } else {
+                                                R.string.float_ball_pick_bar_style_classic
+                                            }
+                                        },
+                                        onSelect = onPickIconBarEnabledChange,
+                                        containerColor = MiuixTheme.colorScheme.surface,
+                                        indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.float_ball_pick_bar_style_desc),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                    )
+                                }
+                            }
+                        }
+                    },
+                )
+                // 经典样式的两个位置项只在经典模式下出现。
+                if (!settings.floatBallPickIconBarEnabled) {
+                    add(
+                        settingsCardScopeItem("copy-button-position") {
+                            SettingSpinnerRow(
+                                title = stringResource(R.string.float_ball_pick_copy_button_position),
+                                subtitle = copyButtonPositionOptions.getOrNull(selectedCopyButtonPositionIndex)?.second.orEmpty(),
+                                dialogButtonText = stringResource(R.string.cancel),
+                                items = copyButtonPositionItems,
+                                selectedIndex = selectedCopyButtonPositionIndex,
+                                enabled = true,
+                                onSelectedIndexChange = { index ->
+                                    val selected = copyButtonPositionOptions.getOrNull(index)?.first
+                                        ?: return@SettingSpinnerRow
+                                    onPickCopyButtonPositionChange(selected)
+                                },
+                            )
+                        },
+                    )
+                    add(
+                        settingsCardScopeItem("image-toolbar-position") {
+                            SettingSpinnerRow(
+                                title = stringResource(R.string.float_ball_pick_image_toolbar_position),
+                                subtitle = imageToolbarPositionOptions.getOrNull(selectedImageToolbarPositionIndex)?.second.orEmpty(),
+                                dialogButtonText = stringResource(R.string.cancel),
+                                items = imageToolbarPositionItems,
+                                selectedIndex = selectedImageToolbarPositionIndex,
+                                enabled = true,
+                                onSelectedIndexChange = { index ->
+                                    val selected = imageToolbarPositionOptions.getOrNull(index)?.first
+                                        ?: return@SettingSpinnerRow
+                                    onPickImageToolbarPositionChange(selected)
+                                },
+                            )
+                        },
+                    )
+                }
+                // 图标条行常驻（不随模式增删），靠 AnimatedVisibility 做展开/收起，切换模式才有动画。
+                add(
+                    settingsCardScopeItem("pick-bar-buttons") {
+                        SettingsCardRow(key = "pick-bar-buttons-row") { position ->
+                            Column(
+                                modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
+                            ) {
+                                AnimatedVisibility(
+                                    visible = settings.floatBallPickIconBarEnabled,
+                                    enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+                                    exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Text(
+                                            text = barButtonsTitle,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        PickResultBarButtonSection(
+                                            textOrder = settings.floatBallPickTextBarOrder,
+                                            textHidden = settings.floatBallPickTextBarHidden,
+                                            imageOrder = settings.floatBallPickImageBarOrder,
+                                            imageHidden = settings.floatBallPickImageBarHidden,
+                                            onTextOrderChange = onPickBarTextOrderChange,
+                                            onTextHiddenChange = onPickBarTextHiddenChange,
+                                            onImageOrderChange = onPickBarImageOrderChange,
+                                            onImageHiddenChange = onPickBarImageHiddenChange,
+                                            onRestoreDefaults = onResetPickBarButtons,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    },
+                )
                 add(
                     settingsCardScopeItem("panel-style") {
                         SettingSpinnerRow(
@@ -288,84 +365,8 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                         )
                     },
                 )
-                // 经典样式的两个位置项只在经典模式下出现；纯图标模式的内容在下方独立卡片里。
-                if (!settings.floatBallPickIconBarEnabled) {
-                    add(
-                        settingsCardScopeItem("copy-button-position") {
-                            SettingSpinnerRow(
-                                title = stringResource(R.string.float_ball_pick_copy_button_position),
-                                subtitle = copyButtonPositionOptions.getOrNull(selectedCopyButtonPositionIndex)?.second.orEmpty(),
-                                dialogButtonText = stringResource(R.string.cancel),
-                                items = copyButtonPositionItems,
-                                selectedIndex = selectedCopyButtonPositionIndex,
-                                enabled = true,
-                                onSelectedIndexChange = { index ->
-                                    val selected = copyButtonPositionOptions.getOrNull(index)?.first
-                                        ?: return@SettingSpinnerRow
-                                    onPickCopyButtonPositionChange(selected)
-                                },
-                            )
-                        },
-                    )
-                    add(
-                        settingsCardScopeItem("image-toolbar-position") {
-                            SettingSpinnerRow(
-                                title = stringResource(R.string.float_ball_pick_image_toolbar_position),
-                                subtitle = imageToolbarPositionOptions.getOrNull(selectedImageToolbarPositionIndex)?.second.orEmpty(),
-                                dialogButtonText = stringResource(R.string.cancel),
-                                items = imageToolbarPositionItems,
-                                selectedIndex = selectedImageToolbarPositionIndex,
-                                enabled = true,
-                                onSelectedIndexChange = { index ->
-                                    val selected = imageToolbarPositionOptions.getOrNull(index)?.first
-                                        ?: return@SettingSpinnerRow
-                                    onPickImageToolbarPositionChange(selected)
-                                },
-                            )
-                        },
-                    )
-                }
             },
         )
-        // 底栏按钮卡片：Lazy item 常驻，不要用 if 增删（列表项增删没有过渡）；
-        // 只靠 AnimatedVisibility 做展开/收起 + 淡入淡出。
-        LazySettingsItem(key = "pick-bar-buttons-section") {
-            AnimatedVisibility(
-                visible = settings.floatBallPickIconBarEnabled,
-                enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
-                exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
-            ) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    colors = CardDefaults.defaultColors(
-                        color = MiuixTheme.colorScheme.surfaceContainer,
-                        contentColor = MiuixTheme.colorScheme.onSurfaceContainer,
-                    ),
-                    insideMargin = PaddingValues(16.dp),
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            text = barButtonsTitle,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        PickResultBarButtonSection(
-                            textOrder = settings.floatBallPickTextBarOrder,
-                            textHidden = settings.floatBallPickTextBarHidden,
-                            imageOrder = settings.floatBallPickImageBarOrder,
-                            imageHidden = settings.floatBallPickImageBarHidden,
-                            onTextOrderChange = onPickBarTextOrderChange,
-                            onTextHiddenChange = onPickBarTextHiddenChange,
-                            onImageOrderChange = onPickBarImageOrderChange,
-                            onImageHiddenChange = onPickBarImageHiddenChange,
-                            onRestoreDefaults = onResetPickBarButtons,
-                        )
-                    }
-                }
-            }
-        }
         settingsLazySmallTitle(
             key = "panel-content-search-section",
             title = contentSearchSectionTitle,
