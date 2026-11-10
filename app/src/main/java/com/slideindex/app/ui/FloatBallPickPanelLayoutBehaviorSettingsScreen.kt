@@ -30,13 +30,13 @@ import com.slideindex.app.settings.PickPanelSlideAnimationDefaults
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingsCardRow
 import com.slideindex.app.ui.settings.components.SettingsCardScope
+import com.slideindex.app.ui.settings.components.SettingDropdownRow
 import com.slideindex.app.ui.settings.components.SettingExpandableSwitchRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsGroupedRowBackground
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import kotlin.math.roundToInt
-import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -92,6 +92,14 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     LaunchedEffect(settings.floatBallPickPanelPlacement) {
         localPanelPlacement = settings.floatBallPickPanelPlacement
     }
+    var localCopyPosition by remember { mutableStateOf(settings.floatBallPickCopyButtonPosition) }
+    var localImageToolbarPosition by remember { mutableStateOf(settings.floatBallPickImageToolbarPosition) }
+    LaunchedEffect(settings.floatBallPickCopyButtonPosition) {
+        localCopyPosition = settings.floatBallPickCopyButtonPosition
+    }
+    LaunchedEffect(settings.floatBallPickImageToolbarPosition) {
+        localImageToolbarPosition = settings.floatBallPickImageToolbarPosition
+    }
 
     val searchGridStateRememberLabel = stringResource(R.string.float_ball_pick_search_grid_state_remember)
     val searchGridStateExpandedLabel = stringResource(R.string.float_ball_pick_search_grid_state_expanded)
@@ -110,9 +118,6 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     val selectedSearchGridStateIndex = remember(settings.floatBallPickSearchGridDefaultState, searchGridStateOptions) {
         searchGridStateOptions.indexOfFirst { it.first == settings.floatBallPickSearchGridDefaultState }.coerceAtLeast(0)
     }
-    val searchGridStateItems = remember(searchGridStateOptions) {
-        searchGridStateOptions.map { DropdownItem(text = it.second) }
-    }
 
     val textModeRememberLabel = stringResource(R.string.float_ball_pick_text_mode_state_remember)
     val textModeAlwaysOnLabel = stringResource(R.string.float_ball_pick_text_mode_state_always_on)
@@ -130,39 +135,6 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     }
     val selectedTextModeIndex = remember(settings.floatBallPickTextModeDefault, textModeOptions) {
         textModeOptions.indexOfFirst { it.first == settings.floatBallPickTextModeDefault }.coerceAtLeast(0)
-    }
-    val textModeItems = remember(textModeOptions) {
-        textModeOptions.map { DropdownItem(text = it.second) }
-    }
-
-    val copyButtonPositionLeftLabel = stringResource(R.string.float_ball_pick_copy_button_position_left)
-    val copyButtonPositionRightLabel = stringResource(R.string.float_ball_pick_copy_button_position_right)
-    val copyButtonPositionOptions = remember(copyButtonPositionLeftLabel, copyButtonPositionRightLabel) {
-        listOf(
-            com.slideindex.app.settings.PickResultCopyButtonPosition.LEFT to copyButtonPositionLeftLabel,
-            com.slideindex.app.settings.PickResultCopyButtonPosition.RIGHT to copyButtonPositionRightLabel,
-        )
-    }
-    val selectedCopyButtonPositionIndex = remember(settings.floatBallPickCopyButtonPosition, copyButtonPositionOptions) {
-        copyButtonPositionOptions.indexOfFirst { it.first == settings.floatBallPickCopyButtonPosition }.coerceAtLeast(0)
-    }
-    val copyButtonPositionItems = remember(copyButtonPositionOptions) {
-        copyButtonPositionOptions.map { DropdownItem(text = it.second) }
-    }
-
-    val imageToolbarPositionLeftLabel = stringResource(R.string.float_ball_pick_image_toolbar_position_left)
-    val imageToolbarPositionRightLabel = stringResource(R.string.float_ball_pick_image_toolbar_position_right)
-    val imageToolbarPositionOptions = remember(imageToolbarPositionLeftLabel, imageToolbarPositionRightLabel) {
-        listOf(
-            com.slideindex.app.settings.PickResultImageToolbarPosition.LEFT to imageToolbarPositionLeftLabel,
-            com.slideindex.app.settings.PickResultImageToolbarPosition.RIGHT to imageToolbarPositionRightLabel,
-        )
-    }
-    val selectedImageToolbarPositionIndex = remember(settings.floatBallPickImageToolbarPosition, imageToolbarPositionOptions) {
-        imageToolbarPositionOptions.indexOfFirst { it.first == settings.floatBallPickImageToolbarPosition }.coerceAtLeast(0)
-    }
-    val imageToolbarPositionItems = remember(imageToolbarPositionOptions) {
-        imageToolbarPositionOptions.map { DropdownItem(text = it.second) }
     }
 
     SettingsScreenScaffold(
@@ -275,34 +247,50 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                 if (!localIconBarEnabled) {
                     add(
                         settingsCardScopeItem("copy-button-position") {
-                            SettingSpinnerRow(
+                            SettingSegmentedRow(
                                 title = stringResource(R.string.float_ball_pick_copy_button_position),
-                                subtitle = copyButtonPositionOptions.getOrNull(selectedCopyButtonPositionIndex)?.second.orEmpty(),
-                                dialogButtonText = stringResource(R.string.cancel),
-                                items = copyButtonPositionItems,
-                                selectedIndex = selectedCopyButtonPositionIndex,
-                                enabled = true,
-                                onSelectedIndexChange = { index ->
-                                    val selected = copyButtonPositionOptions.getOrNull(index)?.first
-                                        ?: return@SettingSpinnerRow
-                                    onPickCopyButtonPositionChange(selected)
+                                items = listOf(
+                                    com.slideindex.app.settings.PickResultCopyButtonPosition.LEFT,
+                                    com.slideindex.app.settings.PickResultCopyButtonPosition.RIGHT,
+                                ),
+                                selected = localCopyPosition,
+                                labelRes = { position ->
+                                    when (position) {
+                                        com.slideindex.app.settings.PickResultCopyButtonPosition.LEFT ->
+                                            R.string.float_ball_pick_copy_button_position_left
+
+                                        com.slideindex.app.settings.PickResultCopyButtonPosition.RIGHT ->
+                                            R.string.float_ball_pick_copy_button_position_right
+                                    }
+                                },
+                                onSelect = { position ->
+                                    localCopyPosition = position
+                                    onPickCopyButtonPositionChange(position)
                                 },
                             )
                         },
                     )
                     add(
                         settingsCardScopeItem("image-toolbar-position") {
-                            SettingSpinnerRow(
+                            SettingSegmentedRow(
                                 title = stringResource(R.string.float_ball_pick_image_toolbar_position),
-                                subtitle = imageToolbarPositionOptions.getOrNull(selectedImageToolbarPositionIndex)?.second.orEmpty(),
-                                dialogButtonText = stringResource(R.string.cancel),
-                                items = imageToolbarPositionItems,
-                                selectedIndex = selectedImageToolbarPositionIndex,
-                                enabled = true,
-                                onSelectedIndexChange = { index ->
-                                    val selected = imageToolbarPositionOptions.getOrNull(index)?.first
-                                        ?: return@SettingSpinnerRow
-                                    onPickImageToolbarPositionChange(selected)
+                                items = listOf(
+                                    com.slideindex.app.settings.PickResultImageToolbarPosition.LEFT,
+                                    com.slideindex.app.settings.PickResultImageToolbarPosition.RIGHT,
+                                ),
+                                selected = localImageToolbarPosition,
+                                labelRes = { position ->
+                                    when (position) {
+                                        com.slideindex.app.settings.PickResultImageToolbarPosition.LEFT ->
+                                            R.string.float_ball_pick_image_toolbar_position_left
+
+                                        com.slideindex.app.settings.PickResultImageToolbarPosition.RIGHT ->
+                                            R.string.float_ball_pick_image_toolbar_position_right
+                                    }
+                                },
+                                onSelect = { position ->
+                                    localImageToolbarPosition = position
+                                    onPickImageToolbarPositionChange(position)
                                 },
                             )
                         },
@@ -397,16 +385,15 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                 }
                 add(
                     settingsCardScopeItem("search-grid-default-state") {
-                        SettingSpinnerRow(
+                        SettingDropdownRow(
                             title = stringResource(R.string.float_ball_pick_search_grid_state_title),
                             subtitle = searchGridStateOptions.getOrNull(selectedSearchGridStateIndex)?.second.orEmpty(),
-                            dialogButtonText = stringResource(R.string.cancel),
-                            items = searchGridStateItems,
+                            items = searchGridStateOptions.map { it.second },
                             selectedIndex = selectedSearchGridStateIndex,
                             enabled = true,
                             onSelectedIndexChange = { index ->
                                 val selected = searchGridStateOptions.getOrNull(index)?.first
-                                    ?: return@SettingSpinnerRow
+                                    ?: return@SettingDropdownRow
                                 onPickSearchGridDefaultStateChange(selected)
                             },
                         )
@@ -423,16 +410,15 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
             items = buildList {
                 add(
                     settingsCardScopeItem("text-mode-default-state") {
-                        SettingSpinnerRow(
+                        SettingDropdownRow(
                             title = stringResource(R.string.float_ball_pick_text_mode_state_title),
                             subtitle = textModeOptions.getOrNull(selectedTextModeIndex)?.second.orEmpty(),
-                            dialogButtonText = stringResource(R.string.cancel),
-                            items = textModeItems,
+                            items = textModeOptions.map { it.second },
                             selectedIndex = selectedTextModeIndex,
                             enabled = true,
                             onSelectedIndexChange = { index ->
                                 val selected = textModeOptions.getOrNull(index)?.first
-                                    ?: return@SettingSpinnerRow
+                                    ?: return@SettingDropdownRow
                                 onPickTextModeDefaultChange(selected)
                             },
                         )
