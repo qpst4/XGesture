@@ -6,12 +6,9 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -71,8 +68,6 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     onPickPanelExitAnimationMsChange: (Int) -> Unit,
 ) {
     val appearanceSectionTitle = stringResource(R.string.pick_settings_section_panel_appearance)
-    val textSectionTitle = stringResource(R.string.pick_settings_section_text_display)
-    val contentSearchSectionTitle = stringResource(R.string.pick_settings_section_panel_content_search)
     val selectCopySectionTitle = stringResource(R.string.pick_settings_section_panel_select_copy)
     val feedbackSectionTitle = stringResource(R.string.pick_settings_section_panel_feedback)
     val panelAnimationsTitle = stringResource(R.string.pick_settings_panel_animations)
@@ -287,13 +282,6 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                                                 onPickCopyButtonPositionChange(position)
                                             },
                                         )
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 16.dp)
-                                                .height(0.5.dp)
-                                                .background(MiuixTheme.colorScheme.dividerLine),
-                                        )
                                         SegmentedSettingBlock(
                                             title = stringResource(R.string.float_ball_pick_image_toolbar_position),
                                             items = listOf(
@@ -367,16 +355,7 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                         }
                     },
                 )
-            },
-        )
-        // 文本显示：字号这种「看文字」的参数不跟面板/底栏布局混在同一张卡里。
-        settingsLazySmallTitle(
-            key = "panel-text-section",
-            title = textSectionTitle,
-        )
-        groupedCardItems(
-            keyPrefix = "fb-pick-panel-text",
-            items = buildList {
+                // 字号放整张卡最后一行：末行有真实高度，卡片底部圆角才正常。
                 add(
                     settingsCardScopeItem("text-size") {
                         SettingsSliderRow(
@@ -387,46 +366,6 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                             enabled = true,
                             label = stringResource(R.string.float_ball_text_size_value, settings.floatBallPickTextSizeSp),
                             onValueChange = onPickTextSizeChange,
-                        )
-                    },
-                )
-            },
-        )
-        settingsLazySmallTitle(
-            key = "panel-content-search-section",
-            title = contentSearchSectionTitle,
-        )
-        groupedCardItems(
-            keyPrefix = "fb-pick-panel-content-search",
-            items = buildList {
-                if (localPanelStyle ==
-                    com.slideindex.app.settings.PickResultPanelStyle.INTEGRATED_BOTTOM_BAR
-                ) {
-                    add(
-                        settingsCardScopeItem("text-first-panel") {
-                            SettingSwitchRow(
-                                title = stringResource(R.string.float_ball_pick_text_first_panel),
-                                subtitle = stringResource(R.string.float_ball_pick_text_first_panel_desc),
-                                checked = settings.floatBallPickTextFirstPanel,
-                                enabled = true,
-                                onCheckedChange = onPickTextFirstPanelChange,
-                            )
-                        },
-                    )
-                }
-                add(
-                    settingsCardScopeItem("search-grid-default-state") {
-                        SettingDropdownRow(
-                            title = stringResource(R.string.float_ball_pick_search_grid_state_title),
-                            subtitle = searchGridStateOptions.getOrNull(selectedSearchGridStateIndex)?.second.orEmpty(),
-                            items = searchGridStateOptions.map { it.second },
-                            selectedIndex = selectedSearchGridStateIndex,
-                            enabled = true,
-                            onSelectedIndexChange = { index ->
-                                val selected = searchGridStateOptions.getOrNull(index)?.first
-                                    ?: return@SettingDropdownRow
-                                onPickSearchGridDefaultStateChange(selected)
-                            },
                         )
                     },
                 )
@@ -499,6 +438,37 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                             checked = settings.floatBallPickCopyDismissPanel,
                             enabled = true,
                             onCheckedChange = onPickCopyDismissPanelChange,
+                        )
+                    },
+                )
+                if (localPanelStyle ==
+                    com.slideindex.app.settings.PickResultPanelStyle.INTEGRATED_BOTTOM_BAR
+                ) {
+                    add(
+                        settingsCardScopeItem("text-first-panel") {
+                            SettingSwitchRow(
+                                title = stringResource(R.string.float_ball_pick_text_first_panel),
+                                subtitle = stringResource(R.string.float_ball_pick_text_first_panel_desc),
+                                checked = settings.floatBallPickTextFirstPanel,
+                                enabled = true,
+                                onCheckedChange = onPickTextFirstPanelChange,
+                            )
+                        },
+                    )
+                }
+                add(
+                    settingsCardScopeItem("search-grid-default-state") {
+                        SettingDropdownRow(
+                            title = stringResource(R.string.float_ball_pick_search_grid_state_title),
+                            subtitle = searchGridStateOptions.getOrNull(selectedSearchGridStateIndex)?.second.orEmpty(),
+                            items = searchGridStateOptions.map { it.second },
+                            selectedIndex = selectedSearchGridStateIndex,
+                            enabled = true,
+                            onSelectedIndexChange = { index ->
+                                val selected = searchGridStateOptions.getOrNull(index)?.first
+                                    ?: return@SettingDropdownRow
+                                onPickSearchGridDefaultStateChange(selected)
+                            },
                         )
                     },
                 )
