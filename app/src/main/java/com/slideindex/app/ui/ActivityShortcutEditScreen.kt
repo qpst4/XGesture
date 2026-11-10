@@ -1,5 +1,6 @@
 package com.slideindex.app.ui
 
+import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Shortcut
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -50,7 +52,10 @@ import com.slideindex.app.activity.ActivityShortcutKind
 import com.slideindex.app.activity.ActivityShortcutParams
 import com.slideindex.app.activity.ActivityShortcutShellSupport
 import com.slideindex.app.activity.ManagedShortcutIconResolver
+import com.slideindex.app.activity.ShortcutIconPackBridge
 import com.slideindex.app.activity.ShortcutIconStorage
+import com.slideindex.app.iconpack.IconPackTarget
+import com.slideindex.app.service.IconPackPickerTrampolineActivity
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.settings.components.LazySettingsItem
@@ -144,6 +149,22 @@ fun ActivityShortcutEditScreen(
                 ShortcutIconStorage.saveIconFromUri(context, uri)
             } ?: return@launch
             // 旧图不在这里删：用户可能取消保存；等 commitSave 再清理。
+            iconPath = path
+        }
+    }
+
+    // 「从图标包选择」：选择页先落一张 PNG 到全局图标目录，这里再复制进 shortcut_icons
+    // （快捷方式的 iconPath 只认这个目录，见 ShortcutIconStorage.loadBitmap）。
+    val iconPackLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        if (result.resultCode != Activity.RESULT_OK) return@rememberLauncherForActivityResult
+        val picked = result.data?.getStringExtra(IconPackPickerTrampolineActivity.EXTRA_PICKED_PATH)
+            ?: return@rememberLauncherForActivityResult
+        scope.launch {
+            val path = withContext(Dispatchers.IO) {
+                ShortcutIconPackBridge.importPickedIcon(context, shortcut.id, picked)
+            } ?: return@launch
             iconPath = path
         }
     }
@@ -359,6 +380,7 @@ fun ActivityShortcutEditScreen(
                             resolving = resolving,
                         )
 
+                        // 两行两列：三个来源 + 恢复默认。挤成一行时 4 个按钮在窄屏上会截字。
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -369,6 +391,30 @@ fun ActivityShortcutEditScreen(
                                 onClick = { iconPicker.launch("image/*") },
                                 modifier = Modifier.weight(1f),
                             )
+                            IconSourceAction(
+                                icon = Icons.Default.Apps,
+                                label = stringResource(R.string.activity_shortcut_icon_from_icon_pack),
+                                onClick = {
+                                    iconPackLauncher.launch(
+                                        IconPackPickerTrampolineActivity.createIntent(
+                                            context = context,
+                                            target = IconPackTarget(
+                                                packageName = effectivePackage.trim(),
+                                                activityName = activityClassName.trim()
+                                                    .takeIf { it.isNotBlank() },
+                                                label = label.trim(),
+                                            ),
+                                            storageKey = ShortcutIconPackBridge.storageKey(shortcut.id),
+                                        ),
+                                    )
+                                },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
                             IconSourceAction(
                                 icon = MiuixIcons.GridView,
                                 label = stringResource(R.string.activity_shortcut_icon_from_app),
