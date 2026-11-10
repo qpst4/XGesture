@@ -43,10 +43,10 @@
         <item quantity="other">Добавлено %d цели</item>
     </plurals>
     <plurals name="float_ball_style_slideshow_hint">
-        <item quantity="one">Выбрано %d изображение, смена каждые 3 секунды</item>
-        <item quantity="few">Выбрано %d изображения, смена каждые 3 секунды</item>
-        <item quantity="many">Выбрано %d изображений, смена каждые 3 секунды</item>
-        <item quantity="other">Выбрано %d изображения, смена каждые 3 секунды</item>
+        <item quantity="one">Выбрано %1$d изображение, смена каждые %2$s</item>
+        <item quantity="few">Выбрано %1$d изображения, смена каждые %2$s</item>
+        <item quantity="many">Выбрано %1$d изображений, смена каждые %2$s</item>
+        <item quantity="other">Выбрано %1$d изображения, смена каждые %2$s</item>
     </plurals>
     <plurals name="share_image_ocr_history_entry_desc_count">
         <item quantity="one">%d запись — нажмите, чтобы открыть</item>

@@ -669,6 +669,10 @@ class ExtensionSettingsViewModel @Inject constructor(
         settingsRepository.setFloatBallSlideshowUris(stored)
     }
 
+    fun setFloatBallSlideshowIntervalSeconds(seconds: Int) = launchSettingsWrite {
+        settingsRepository.setFloatBallSlideshowIntervalSeconds(seconds)
+    }
+
     fun setFloatBallGifUri(uri: String) = launchSettingsWrite {
         val stored = withContext(Dispatchers.IO) {
             FloatBallStyleAssetStore.importGif(appContext, uri.toUri())

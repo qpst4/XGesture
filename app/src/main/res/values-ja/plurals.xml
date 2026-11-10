@@ -22,7 +22,7 @@
         <item quantity="other">共有先を %d 件追加しました</item>
     </plurals>
     <plurals name="float_ball_style_slideshow_hint">
-        <item quantity="other">%d 枚の画像を選択、3 秒ごとに切り替え</item>
+        <item quantity="other">%1$d 枚の画像を選択、%2$sごとに切り替え</item>
     </plurals>
     <plurals name="share_image_ocr_history_entry_desc_count">
         <item quantity="other">%d 件の履歴 — タップして開く</item>

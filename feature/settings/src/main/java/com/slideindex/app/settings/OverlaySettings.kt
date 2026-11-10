@@ -124,6 +124,8 @@ data class OverlaySettings(
     val floatBallCustomImageNoCrop: Boolean = false,
     val floatBallCustomImageAspect: Float = 0f,
     val floatBallSlideshowUris: List<String> = emptyList(),
+    /** 幻灯片切换间隔（秒）。 */
+    val floatBallSlideshowIntervalSeconds: Int = FloatBallSettings.DEFAULT_SLIDESHOW_INTERVAL_SECONDS,
     val floatBallGifUri: String = "",
     val floatBallPickOffsetDp: Float = 48f,
     val floatBallPickTextSizeSp: Float = 15f,
@@ -378,6 +380,7 @@ data class OverlaySettings(
             floatBallCustomImageNoCrop = settings.floatBallCustomImageNoCrop,
             floatBallCustomImageAspect = settings.floatBallCustomImageAspect,
             floatBallSlideshowUris = settings.floatBallSlideshowUris,
+            floatBallSlideshowIntervalSeconds = settings.floatBallSlideshowIntervalSeconds,
             floatBallGifUri = settings.floatBallGifUri,
             floatBallPickOffsetDp = settings.floatBallPickOffsetDp,
             floatBallPickTextSizeSp = settings.floatBallPickTextSizeSp,

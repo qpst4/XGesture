@@ -29,8 +29,8 @@
         <item quantity="other">Added %d share targets</item>
     </plurals>
     <plurals name="float_ball_style_slideshow_hint">
-        <item quantity="one">%d image selected, switching every 3 seconds</item>
-        <item quantity="other">%d images selected, switching every 3 seconds</item>
+        <item quantity="one">%1$d image selected, switching every %2$s</item>
+        <item quantity="other">%1$d images selected, switching every %2$s</item>
     </plurals>
     <plurals name="share_image_ocr_history_entry_desc_count">
         <item quantity="one">%d entry — tap to open</item>

@@ -22,7 +22,7 @@
         <item quantity="other">已添加 %d 个分享目标</item>
     </plurals>
     <plurals name="float_ball_style_slideshow_hint">
-        <item quantity="other">已选择 %d 张图片，每 3 秒切换</item>
+        <item quantity="other">已选择 %1$d 张图片，每%2$s切换</item>
     </plurals>
     <plurals name="share_image_ocr_history_entry_desc_count">
         <item quantity="other">%d 条记录，点击查看</item>

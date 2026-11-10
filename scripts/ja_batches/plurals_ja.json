@@ -5,7 +5,7 @@
   {"name": "image_search_engine_settings_summary", "ja": "共有先 %1$d 件 · 集約エンジン %2$d 件"},
   {"name": "search_engine_import_preview_count", "ja": "新規 %1$d 件、重複スキップ %2$d 件"},
   {"name": "search_engine_import_success", "ja": "%1$d 個のエンジンをインポートしました（%2$s）"},
-  {"name": "float_ball_style_slideshow_hint", "ja": "%d 枚の画像を選択、3 秒ごとに切り替え"},
+  {"name": "float_ball_style_slideshow_hint", "ja": "%1$d 枚の画像を選択、%2$sごとに切り替え"},
   {"name": "share_image_ocr_history_entry_desc_count", "ja": "%d 件の履歴 — タップして開く"},
   {"name": "floating_pointer_edge_side_summary", "ja": "%1$d 個のゾーン · %2$s"},
   {"name": "apps_per_row_value_label", "ja": "%d 列"},

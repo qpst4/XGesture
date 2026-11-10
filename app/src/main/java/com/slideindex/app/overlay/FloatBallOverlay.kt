@@ -3353,6 +3353,13 @@ object FloatBallOverlay {
             append(settings.floatBallCustomImageAspect)
             append('|')
             append(settings.floatBallSlideshowUris.joinToString(","))
+            append('|')
+            // 间隔本身不改窗口尺寸，但改完必须让 FloatBallIconView 重新 bind 以重建计时器。
+            append(
+                com.slideindex.app.settings.FloatBallSettings.normalizeSlideshowIntervalSeconds(
+                    settings.floatBallSlideshowIntervalSeconds,
+                ),
+            )
         }
     }
 

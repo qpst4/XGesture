@@ -655,6 +655,9 @@ class SettingsRepository @Inject constructor(
     suspend fun setFloatBallSlideshowUris(uris: List<String>) =
         overlay.setFloatBallSlideshowUris(uris)
 
+    suspend fun setFloatBallSlideshowIntervalSeconds(seconds: Int) =
+        overlay.setFloatBallSlideshowIntervalSeconds(seconds)
+
     suspend fun setFloatBallGifUri(uri: String) =
         overlay.setFloatBallGifUri(uri)
 

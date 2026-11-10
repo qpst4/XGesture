@@ -344,6 +344,7 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
             onCustomImageUriChange = viewModel::setFloatBallCustomImageUri,
             onCustomImageNoCropChange = viewModel::setFloatBallCustomImageNoCrop,
             onSlideshowUrisChange = viewModel::setFloatBallSlideshowUris,
+            onSlideshowIntervalChange = viewModel::setFloatBallSlideshowIntervalSeconds,
             onGifUriChange = viewModel::setFloatBallGifUri,
         )
     }

@@ -13,6 +13,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.FloatBallPositionMode
+import com.slideindex.app.settings.FloatBallSettings
 import com.slideindex.app.settings.FloatBallSide
 import com.slideindex.app.settings.FloatBallStyleType
 import com.slideindex.app.ui.miuix.theme.resolveAppAccentArgb
@@ -57,6 +58,7 @@ internal class FloatBallIconView(context: Context) : FrameLayout(context) {
     private var ownedBitmap: Bitmap? = null
     private var slideshowUris: List<String> = emptyList()
     private var slideshowIndex = 0
+    private var slideshowIntervalMs = 3_000L
     private var gifDecodeToken = 0
     private var gifSequenceHandle: FloatBallGifSequenceCache.Handle? = null
 
@@ -65,7 +67,7 @@ internal class FloatBallIconView(context: Context) : FrameLayout(context) {
             if (contentMode != ContentMode.STATIC || slideshowUris.size <= 1) return
             slideshowIndex = (slideshowIndex + 1) % slideshowUris.size
             showStaticUri(slideshowUris[slideshowIndex], currentOpacity())
-            mainHandler.postDelayed(this, SLIDESHOW_INTERVAL_MS)
+            mainHandler.postDelayed(this, slideshowIntervalMs)
         }
     }
 
@@ -100,6 +102,9 @@ internal class FloatBallIconView(context: Context) : FrameLayout(context) {
         val noCrop = FloatBallLayout.usesOriginalImageGeometry(settings)
         val opacity = settings.floatBallOpacity.coerceIn(0f, 1f)
         currentOpacityValue = opacity
+        slideshowIntervalMs = FloatBallSettings.normalizeSlideshowIntervalSeconds(
+            settings.floatBallSlideshowIntervalSeconds,
+        ) * 1000L
         // 有效 alpha：闲置隐身期间用覆盖值。GIF 是 SurfaceView，不吃父级 alpha，必须单独喂给它。
         val effectiveOpacity = alphaOverride ?: opacity
         alpha = effectiveOpacity
@@ -140,12 +145,15 @@ internal class FloatBallIconView(context: Context) : FrameLayout(context) {
                     stopSlideshow()
                     showStaticBitmap(FloatBallDragVisualRenderer.render(context, settings), owns = true)
                 } else {
+                    // 只改间隔时保留当前图片；换图/换顺序才回到第一张。
+                    if (slideshowUris != uris || slideshowIndex !in uris.indices) {
+                        slideshowIndex = 0
+                    }
                     slideshowUris = uris
-                    slideshowIndex = 0
-                    showStaticUri(uris.first(), opacity)
+                    showStaticUri(uris[slideshowIndex], opacity)
                     stopSlideshow()
                     if (uris.size > 1) {
-                        mainHandler.postDelayed(slideshowRunnable, SLIDESHOW_INTERVAL_MS)
+                        mainHandler.postDelayed(slideshowRunnable, slideshowIntervalMs)
                     }
                 }
             }
@@ -238,6 +246,13 @@ internal class FloatBallIconView(context: Context) : FrameLayout(context) {
         append(settings.floatBallGifUri)
         append('|')
         append(settings.floatBallSlideshowUris.joinToString(","))
+        append('|')
+        // 间隔改变也要重新 bind：否则 early-return 后计时器仍是旧间隔。
+        append(
+            FloatBallSettings.normalizeSlideshowIntervalSeconds(
+                settings.floatBallSlideshowIntervalSeconds,
+            ),
+        )
     }
 
     private fun currentOpacity(): Float = currentOpacityValue
@@ -461,6 +476,5 @@ internal class FloatBallIconView(context: Context) : FrameLayout(context) {
 
     companion object {
         private const val TAG = "FloatBallIcon"
-        private const val SLIDESHOW_INTERVAL_MS = 3_000L
     }
 }

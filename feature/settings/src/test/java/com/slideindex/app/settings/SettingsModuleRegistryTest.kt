@@ -112,14 +112,14 @@ class SettingsModuleRegistryTest {
             .toSet()
 
     private companion object {
-        // 678 = 673 + 5（近期新增的 FLOAT_BALL 键）。
-        const val EXPECTED_TOTAL_KEYS = 678
+        // 679 = 678 + 1（幻灯片间隔）。
+        const val EXPECTED_TOTAL_KEYS = 679
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
             SettingsModule.EDGE_GESTURE to 84,
             SettingsModule.CORNER_WHEEL to 35,
             SettingsModule.QUICK_WHEEL to 2,
-            SettingsModule.FLOAT_BALL to 76,
+            SettingsModule.FLOAT_BALL to 77,
             SettingsModule.FLOATING_POINTER to 52,
             SettingsModule.FINGERTIP_RING to 13,
             SettingsModule.QUICK_LAUNCHER to 93,

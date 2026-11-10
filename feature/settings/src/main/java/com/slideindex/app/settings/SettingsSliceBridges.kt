@@ -207,6 +207,7 @@ fun OverlaySettings.toMinimalAppSettings(): AppSettings = AppSettings(
         floatBallCustomImageNoCrop = floatBallCustomImageNoCrop,
         floatBallCustomImageAspect = floatBallCustomImageAspect,
         floatBallSlideshowUris = floatBallSlideshowUris,
+        floatBallSlideshowIntervalSeconds = floatBallSlideshowIntervalSeconds,
         floatBallGifUri = floatBallGifUri,
         floatBallPickOffsetDp = floatBallPickOffsetDp,
         floatBallPickTextSizeSp = floatBallPickTextSizeSp,

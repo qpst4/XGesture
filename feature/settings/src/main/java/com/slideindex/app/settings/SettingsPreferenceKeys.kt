@@ -625,6 +625,9 @@ internal object SettingsPreferenceKeys {
     /** 自定义图片原图宽高比（width / height），导入时写入；0 表示未知。 */
     val FLOAT_BALL_CUSTOM_IMAGE_ASPECT = floatPreferencesKey("float_ball_custom_image_aspect")
     val FLOAT_BALL_SLIDESHOW_URIS = stringSetPreferencesKey("float_ball_slideshow_uris")
+    /** 幻灯片切换间隔（秒）。 */
+    val FLOAT_BALL_SLIDESHOW_INTERVAL_SECONDS =
+        intPreferencesKey("float_ball_slideshow_interval_seconds")
     val FLOAT_BALL_GIF_URI = stringPreferencesKey("float_ball_gif_uri")
     val FLOAT_BALL_PICK_OFFSET_DP = floatPreferencesKey("float_ball_pick_offset_dp")
     val FLOAT_BALL_PICK_TEXT_SIZE_SP = floatPreferencesKey("float_ball_pick_text_size_sp")

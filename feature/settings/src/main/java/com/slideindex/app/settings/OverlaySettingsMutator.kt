@@ -1002,6 +1002,11 @@ class OverlaySettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.FLOAT_BALL_SLIDESHOW_URIS] = uris.filter { it.isNotBlank() }.toSet()
     }
 
+    suspend fun setFloatBallSlideshowIntervalSeconds(seconds: Int) = editor.edit {
+        it[SettingsPreferenceKeys.FLOAT_BALL_SLIDESHOW_INTERVAL_SECONDS] =
+            FloatBallSettings.normalizeSlideshowIntervalSeconds(seconds)
+    }
+
     suspend fun setFloatBallGifUri(uri: String) = editor.edit {
         it[SettingsPreferenceKeys.FLOAT_BALL_GIF_URI] = uri
     }

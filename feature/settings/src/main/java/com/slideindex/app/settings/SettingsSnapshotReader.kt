@@ -492,6 +492,10 @@ internal object SettingsSnapshotReader {
                 ?.filter { it.isNotBlank() }
                 ?.toList()
                 ?: emptyList(),
+            floatBallSlideshowIntervalSeconds = FloatBallSettings.normalizeSlideshowIntervalSeconds(
+                prefs[SettingsPreferenceKeys.FLOAT_BALL_SLIDESHOW_INTERVAL_SECONDS]
+                    ?: FloatBallSettings.DEFAULT_SLIDESHOW_INTERVAL_SECONDS,
+            ),
             floatBallGifUri = prefs[SettingsPreferenceKeys.FLOAT_BALL_GIF_URI].orEmpty(),
             floatBallPickOffsetDp = prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_OFFSET_DP] ?: 48f,
             floatBallPickTextSizeSp =

@@ -3,10 +3,11 @@
 package com.slideindex.app.ui
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -15,13 +16,15 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.settings.FloatBallSettings
 import com.slideindex.app.settings.FloatBallStyleType
-import com.slideindex.app.ui.miuix.MiuixHintText
 import com.slideindex.app.ui.miuix.groupedCardItems
+import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingRadioRow
+import com.slideindex.app.ui.settings.components.SettingSpinnerRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
-import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,6 +37,7 @@ fun FloatBallStyleSettingsScreen(
     onCustomImageUriChange: (String) -> Unit,
     onCustomImageNoCropChange: (Boolean) -> Unit,
     onSlideshowUrisChange: (List<String>) -> Unit,
+    onSlideshowIntervalChange: (Int) -> Unit,
     onGifUriChange: (String) -> Unit
 ) {
     val imagePicker = rememberLauncherForActivityResult(
@@ -42,7 +46,7 @@ fun FloatBallStyleSettingsScreen(
         uri?.let { onCustomImageUriChange(it.toString()) }
     }
     val slideshowPicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenMultipleDocuments()
+        contract = ActivityResultContracts.PickMultipleVisualMedia(50)
     ) { uris ->
         if (uris.isNotEmpty()) {
             onSlideshowUrisChange(uris.map { it.toString() })
@@ -53,6 +57,17 @@ fun FloatBallStyleSettingsScreen(
     ) { uri ->
         uri?.let { onGifUriChange(it.toString()) }
     }
+
+    val intervalOptions = FloatBallSettings.SLIDESHOW_INTERVAL_OPTIONS_SECONDS
+    val selectedIntervalIndex = intervalOptions.indexOf(
+        FloatBallSettings.normalizeSlideshowIntervalSeconds(
+            settings.floatBallSlideshowIntervalSeconds,
+        ),
+    ).coerceAtLeast(0)
+    val intervalItems = intervalOptions.map { seconds ->
+        DropdownItem(text = slideshowIntervalLabel(seconds))
+    }
+    val intervalText = slideshowIntervalLabel(settings.floatBallSlideshowIntervalSeconds)
 
     SettingsScreenScaffold(
         title = stringResource(R.string.float_ball_style_picker_title),
@@ -78,95 +93,142 @@ fun FloatBallStyleSettingsScreen(
             }
         )
 
-        // 「不处理」只对自定义图片成立：开关单独一张卡，避免和样式单选混在一个可选组里。
-        if (settings.floatBallStyleType == FloatBallStyleType.CUSTOM_IMAGE) {
-            groupedCardItems(
-                keyPrefix = "fb-style-custom-image",
-                items = listOf(
-                    settingsCardScopeItem("custom-image-no-crop") {
-                        SettingSwitchRow(
-                            title = stringResource(R.string.float_ball_style_custom_image_no_crop),
-                            subtitle = stringResource(R.string.float_ball_style_custom_image_no_crop_hint),
-                            checked = settings.floatBallCustomImageNoCrop,
-                            enabled = enabled,
-                            onCheckedChange = onCustomImageNoCropChange,
-                        )
-                    }
-                )
-            )
-        }
-
-        item(key = "float-ball-style-extra") {
-            when (settings.floatBallStyleType) {
-                FloatBallStyleType.CUSTOM_IMAGE -> {
-                    Column {
-                        if (settings.floatBallCustomImageUri.isNotBlank()) {
-                            MiuixHintText(stringResource(R.string.float_ball_style_image_selected))
-                        } else {
-                            MiuixHintText(stringResource(R.string.float_ball_style_custom_image_hint))
-                        }
-                        BasicComponent(
-                            title = stringResource(R.string.float_ball_style_pick_image),
-                            summary = stringResource(R.string.float_ball_style_custom_image),
-                            enabled = enabled,
-                            startAction = {
-                                Icon(
-                                    Icons.Outlined.Image,
-                                    contentDescription = null,
-                                    tint = MiuixTheme.colorScheme.onSurfaceVariantSummary
-                                )
-                            },
-                            onClick = { imagePicker.launch("image/*") }
-                        )
-                    }
-                }
-                FloatBallStyleType.SLIDESHOW -> {
-                    Column {
-                        MiuixHintText(
-                            pluralStringResource(
-                                R.plurals.float_ball_style_slideshow_hint,
-                                settings.floatBallSlideshowUris.size,
-                                settings.floatBallSlideshowUris.size
+        when (settings.floatBallStyleType) {
+            FloatBallStyleType.CUSTOM_IMAGE -> {
+                groupedCardItems(
+                    keyPrefix = "fb-style-custom-image",
+                    items = listOf(
+                        settingsCardScopeItem("custom-image") {
+                            SettingNavigationRow(
+                                icon = { label ->
+                                    Icon(
+                                        Icons.Outlined.Image,
+                                        contentDescription = label,
+                                        tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    )
+                                },
+                                title = stringResource(R.string.float_ball_style_pick_image),
+                                subtitle = if (settings.floatBallCustomImageUri.isNotBlank()) {
+                                    stringResource(R.string.float_ball_style_image_selected)
+                                } else {
+                                    stringResource(R.string.float_ball_style_custom_image_hint)
+                                },
+                                enabled = enabled,
+                                onClick = { imagePicker.launch("image/*") },
                             )
-                        )
-                        BasicComponent(
-                            title = stringResource(R.string.float_ball_style_pick_slideshow),
-                            summary = stringResource(R.string.float_ball_style_slideshow),
-                            enabled = enabled,
-                            startAction = {
-                                Icon(
-                                    Icons.Outlined.Image,
-                                    contentDescription = null,
-                                    tint = MiuixTheme.colorScheme.onSurfaceVariantSummary
-                                )
-                            },
-                            onClick = { slideshowPicker.launch(arrayOf("image/*")) }
-                        )
-                    }
-                }
-                FloatBallStyleType.GIF -> {
-                    Column {
-                        if (settings.floatBallGifUri.isBlank()) {
-                            MiuixHintText(stringResource(R.string.float_ball_style_gif_hint))
-                        }
-                        BasicComponent(
-                            title = stringResource(R.string.float_ball_style_pick_gif),
-                            summary = stringResource(R.string.float_ball_style_gif),
-                            enabled = enabled,
-                            startAction = {
-                                Icon(
-                                    Icons.Outlined.Image,
-                                    contentDescription = null,
-                                    tint = MiuixTheme.colorScheme.onSurfaceVariantSummary
-                                )
-                            },
-                            onClick = { gifPicker.launch("image/*") }
-                        )
-                    }
-                }
-                else -> Unit
+                        },
+                        settingsCardScopeItem("custom-image-no-crop") {
+                            SettingSwitchRow(
+                                title = stringResource(R.string.float_ball_style_custom_image_no_crop),
+                                subtitle = stringResource(R.string.float_ball_style_custom_image_no_crop_hint),
+                                checked = settings.floatBallCustomImageNoCrop,
+                                enabled = enabled,
+                                onCheckedChange = onCustomImageNoCropChange,
+                            )
+                        },
+                    ),
+                )
             }
+
+            FloatBallStyleType.SLIDESHOW -> {
+                groupedCardItems(
+                    keyPrefix = "fb-style-slideshow",
+                    items = listOf(
+                        settingsCardScopeItem("slideshow-images") {
+                            SettingNavigationRow(
+                                icon = { label ->
+                                    Icon(
+                                        Icons.Outlined.Image,
+                                        contentDescription = label,
+                                        tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    )
+                                },
+                                title = stringResource(R.string.float_ball_style_pick_slideshow),
+                                subtitle = pluralStringResource(
+                                    R.plurals.float_ball_style_slideshow_hint,
+                                    settings.floatBallSlideshowUris.size,
+                                    settings.floatBallSlideshowUris.size,
+                                    intervalText,
+                                ),
+                                enabled = enabled,
+                                onClick = {
+                                    slideshowPicker.launch(
+                                        PickVisualMediaRequest(
+                                            ActivityResultContracts.PickVisualMedia.ImageOnly,
+                                        ),
+                                    )
+                                },
+                            )
+                        },
+                        settingsCardScopeItem("slideshow-interval") {
+                            SettingSpinnerRow(
+                                title = stringResource(R.string.float_ball_style_slideshow_interval),
+                                dialogButtonText = stringResource(
+                                    R.string.float_ball_style_slideshow_interval_confirm,
+                                ),
+                                items = intervalItems,
+                                selectedIndex = selectedIntervalIndex,
+                                enabled = enabled,
+                                icon = { label ->
+                                    Icon(
+                                        Icons.Outlined.Timer,
+                                        contentDescription = label,
+                                        tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    )
+                                },
+                                onSelectedIndexChange = { index ->
+                                    intervalOptions.getOrNull(index)?.let(onSlideshowIntervalChange)
+                                },
+                            )
+                        },
+                    ),
+                )
+            }
+
+            FloatBallStyleType.GIF -> {
+                groupedCardItems(
+                    keyPrefix = "fb-style-gif",
+                    items = listOf(
+                        settingsCardScopeItem("gif") {
+                            SettingNavigationRow(
+                                icon = { label ->
+                                    Icon(
+                                        Icons.Outlined.Image,
+                                        contentDescription = label,
+                                        tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    )
+                                },
+                                title = stringResource(R.string.float_ball_style_pick_gif),
+                                subtitle = if (settings.floatBallGifUri.isBlank()) {
+                                    stringResource(R.string.float_ball_style_gif_hint)
+                                } else {
+                                    stringResource(R.string.float_ball_style_gif)
+                                },
+                                enabled = enabled,
+                                onClick = { gifPicker.launch("image/*") },
+                            )
+                        },
+                    ),
+                )
+            }
+
+            else -> Unit
         }
+    }
+}
+
+@Composable
+private fun slideshowIntervalLabel(seconds: Int): String {
+    val value = FloatBallSettings.normalizeSlideshowIntervalSeconds(seconds)
+    return when {
+        value % 86_400 == 0 ->
+            stringResource(R.string.float_ball_style_slideshow_interval_days, value / 86_400)
+        value % 3_600 == 0 ->
+            stringResource(R.string.float_ball_style_slideshow_interval_hours, value / 3_600)
+        value % 60 == 0 ->
+            stringResource(R.string.float_ball_style_slideshow_interval_minutes, value / 60)
+        else ->
+            stringResource(R.string.float_ball_style_slideshow_interval_seconds, value)
     }
 }
 

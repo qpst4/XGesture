@@ -298,6 +298,8 @@ data class FloatBallSettings(
     val floatBallCustomImageAspect: Float = 0f,
     /** 幻灯片图片 URI 列表（[floatBallStyleType] 为 SLIDESHOW 时使用）。 */
     val floatBallSlideshowUris: List<String> = emptyList(),
+    /** 幻灯片切换间隔（秒）；1 秒 ~ 7 天，默认 3 秒 = 历史固定值。 */
+    val floatBallSlideshowIntervalSeconds: Int = DEFAULT_SLIDESHOW_INTERVAL_SECONDS,
     /** GIF 图片 URI（[floatBallStyleType] 为 GIF 时使用）。 */
     val floatBallGifUri: String = "",
     /** Gap between ball edge and pick crosshair in dp (above / below). */
@@ -425,6 +427,29 @@ data class FloatBallSettings(
          */
         const val IMAGE_ASPECT_MIN = 0.05f
         const val IMAGE_ASPECT_MAX = 20f
+
+        /** 幻灯片默认切换间隔（秒）。与 FV 一致，默认 10 秒。 */
+        const val DEFAULT_SLIDESHOW_INTERVAL_SECONDS = 10
+
+        /** FV 同款固定选项：10 秒 ~ 7 天。 */
+        val SLIDESHOW_INTERVAL_OPTIONS_SECONDS: List<Int> = listOf(
+            10,
+            60,
+            3 * 60,
+            5 * 60,
+            10 * 60,
+            30 * 60,
+            60 * 60,
+            12 * 60 * 60,
+            24 * 60 * 60,
+            7 * 24 * 60 * 60,
+        )
+
+        /** 只接受 FV 选项；旧值/脏值按最接近的选项归一。 */
+        fun normalizeSlideshowIntervalSeconds(value: Int): Int =
+            SLIDESHOW_INTERVAL_OPTIONS_SECONDS.minByOrNull { option ->
+                kotlin.math.abs(option - value)
+            } ?: DEFAULT_SLIDESHOW_INTERVAL_SECONDS
 
         /** 触发带宽度的默认值：与旧默认 4%（在 1080px / density 3 的竖屏上被 24dp 下限顶住）一致。 */
         const val DEFAULT_LINE_WIDTH_DP = 24f

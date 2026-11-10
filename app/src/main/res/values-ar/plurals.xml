@@ -57,12 +57,12 @@
         <item quantity="other">تمت إضافة %d أهداف مشاركة</item>
     </plurals>
     <plurals name="float_ball_style_slideshow_hint">
-        <item quantity="zero">تم اختيار %d صور، التبديل كل 3 ثوانٍ</item>
-        <item quantity="one">تم اختيار %d صورة، التبديل كل 3 ثوانٍ</item>
-        <item quantity="two">تم اختيار %d صورة، التبديل كل 3 ثوانٍ</item>
-        <item quantity="few">تم اختيار %d صور، التبديل كل 3 ثوانٍ</item>
-        <item quantity="many">تم اختيار %d صور، التبديل كل 3 ثوانٍ</item>
-        <item quantity="other">تم اختيار %d صور، التبديل كل 3 ثوانٍ</item>
+        <item quantity="zero">تم اختيار %1$d صور، التبديل كل %2$s</item>
+        <item quantity="one">تم اختيار %1$d صورة، التبديل كل %2$s</item>
+        <item quantity="two">تم اختيار %1$d صورة، التبديل كل %2$s</item>
+        <item quantity="few">تم اختيار %1$d صور، التبديل كل %2$s</item>
+        <item quantity="many">تم اختيار %1$d صور، التبديل كل %2$s</item>
+        <item quantity="other">تم اختيار %1$d صور، التبديل كل %2$s</item>
     </plurals>
     <plurals name="share_image_ocr_history_entry_desc_count">
         <item quantity="zero">%d سجلات — انقر للفتح</item>

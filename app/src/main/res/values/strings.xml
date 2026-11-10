@@ -1028,6 +1028,12 @@
     <string name="float_ball_style_animated_orbit">Orbit</string>
     <string name="float_ball_style_custom_image">Custom image</string>
     <string name="float_ball_style_slideshow">Slideshow</string>
+    <string name="float_ball_style_slideshow_interval">Interval</string>
+    <string name="float_ball_style_slideshow_interval_confirm">OK</string>
+    <string name="float_ball_style_slideshow_interval_seconds">%1$d s</string>
+    <string name="float_ball_style_slideshow_interval_minutes">%1$d min</string>
+    <string name="float_ball_style_slideshow_interval_hours">%1$d h</string>
+    <string name="float_ball_style_slideshow_interval_days">%1$d d</string>
     <string name="float_ball_style_gif">GIF</string>
     <string name="float_ball_style_custom_image_hint">Pick a custom image for the float ball</string>
     <string name="float_ball_style_custom_image_no_crop">Show as original</string>
