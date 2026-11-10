@@ -112,20 +112,6 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
     hiltEntry<AppNavKey.ActionCenter> {
         ActionCenterScreen(
             onBack = { ctx.navigateBack() },
-            onOpenLaunchEntry = { entry ->
-                ctx.navigate(
-                    when (entry) {
-                        ActionCenterLaunchEntry.LayoutSettings -> AppNavKey.HomeLayout
-                        ActionCenterLaunchEntry.QuickLauncher -> AppNavKey.QuickLauncher
-                        ActionCenterLaunchEntry.HoneycombLauncher -> AppNavKey.HoneycombLauncher
-                        ActionCenterLaunchEntry.RingLauncher -> AppNavKey.RingLauncherSettings
-                        ActionCenterLaunchEntry.HolographicLauncher -> AppNavKey.HolographicLauncherSettings
-                        ActionCenterLaunchEntry.WidgetPanel -> AppNavKey.WidgetPanel
-                        ActionCenterLaunchEntry.QuickWheel -> AppNavKey.QuickWheelList
-                        ActionCenterLaunchEntry.ShellPanel -> AppNavKey.ShellCommands
-                    },
-                )
-            },
             onOpenActionDetail = { action ->
                 ctx.navigate(AppNavKey.ActionDetail(action.type.name))
             },
@@ -466,6 +452,7 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
 
 /** 动作详情页的「打开配置」跳转；没有独立配置页的动作返回 null。 */
 private fun actionConfigRoute(action: com.slideindex.app.gesture.GestureAction): AppNavKey? = when (action.type) {
+    GestureActionType.OPEN_INDEX -> AppNavKey.HomeLayout
     GestureActionType.EXECUTE_SHELL_COMMAND -> AppNavKey.ShellCommands
     GestureActionType.SHELL_COMMAND_PANEL -> AppNavKey.ShellCommands
     GestureActionType.QUICK_LAUNCHER -> AppNavKey.QuickLauncher

@@ -806,6 +806,7 @@
     <string name="excluded_apps_remove">取消禁用</string>
     <string name="layout_settings_title">应用索引</string>
     <string name="layout_settings_entry_title">应用索引</string>
+    <string name="extension_action_index_layout_title">应用索引布局</string>
     <string name="layout_settings_entry_desc">调节字母索引长度、列数与面板透明度</string>
     <string name="layout_settings_entry_summary">索引 %1$d 列</string>
     <string name="settings_section_gestures">快捷手势</string>

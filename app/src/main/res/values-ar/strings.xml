@@ -792,6 +792,7 @@
     <string name="excluded_apps_remove">إلغاء التعطيل</string>
     <string name="layout_settings_title">فهرس التطبيقات</string>
     <string name="layout_settings_entry_title">فهرس التطبيقات</string>
+    <string name="extension_action_index_layout_title">تخطيط فهرس التطبيقات</string>
     <string name="layout_settings_entry_desc">ضبط طول الفهرس الأبجدي، عدد الأعمدة، وشفافية اللوحة</string>
     <string name="layout_settings_entry_summary">الفهرس %1$d أعمدة</string>
     <string name="settings_section_gestures">إيماءات سريعة</string>

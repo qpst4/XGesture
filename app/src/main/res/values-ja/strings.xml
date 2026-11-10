@@ -787,6 +787,7 @@
     <string name="excluded_apps_remove">除外を解除</string>
     <string name="layout_settings_title">アプリインデックス</string>
     <string name="layout_settings_entry_title">アプリインデックス</string>
+    <string name="extension_action_index_layout_title">アプリ索引レイアウト</string>
     <string name="layout_settings_entry_desc">文字インデックスの高さ、列数、パネル不透明度を調整</string>
     <string name="layout_settings_entry_summary">インデックス列数: %1$d</string>
     <string name="settings_section_gestures">ショートカットジェスチャー</string>

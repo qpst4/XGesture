@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
@@ -25,9 +26,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
+import com.slideindex.app.gesture.ActionPickerCatalogPolicy
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureActionType
-import com.slideindex.app.gesture.ActionPickerCatalogPolicy
 import com.slideindex.app.ui.gesturepicker.ACTION_GRID_COLUMNS
 import com.slideindex.app.ui.gesturepicker.actionHasDetailParams
 import com.slideindex.app.ui.picker.GestureActionCatalog
@@ -37,13 +38,12 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
- * 「内置动作」浏览页：把原来的「启动与面板」入口和全部动作收进一张网格，
- * 顺序为「启动与面板 → 可配置动作 → 普通动作」。
+ * 「内置动作」浏览页：第一段是面板/启动器入口（含应用索引动作），
+ * 后面按「可配置动作 → 普通动作」排；第一段出现的动作类型不再在下面重复。
  */
 @Composable
 fun ActionCenterScreen(
     onBack: () -> Unit,
-    onOpenLaunchEntry: (ActionCenterLaunchEntry) -> Unit,
     onOpenActionDetail: (GestureAction) -> Unit,
 ) {
     val actions = remember {
@@ -52,8 +52,13 @@ fun ActionCenterScreen(
             catalogPolicy = ActionPickerCatalogPolicy.EdgeGesture,
         ).filter { it.type != GestureActionType.NONE }
     }
-    val configurable = remember(actions) { actions.filter { actionHasDetailParams(it.type) } }
-    val plain = remember(actions) { actions.filterNot { actionHasDetailParams(it.type) } }
+    val launchTypes = remember { ActionCenterLaunchEntry.entries.map { it.actionType }.toSet() }
+    val configurable = remember(actions, launchTypes) {
+        actions.filter { actionHasDetailParams(it.type) && it.type !in launchTypes }
+    }
+    val plain = remember(actions, launchTypes) {
+        actions.filter { !actionHasDetailParams(it.type) && it.type !in launchTypes }
+    }
     // SettingsLazyScreenScaffold 的 content 是 LazyListScope（非 @Composable），标题必须提前取好。
     val launchPanelTitle = stringResource(R.string.extension_section_launch_panel)
     val configurableTitle = stringResource(R.string.action_center_configurable_section)
@@ -72,20 +77,12 @@ fun ActionCenterScreen(
             key = "action-center-launch-grid",
             entries = ActionCenterLaunchEntry.entries,
             entryContent = { entry ->
-                val targetAction = entry.actionType?.let { type ->
-                    actions.firstOrNull { it.type == type }
-                }
+                val targetAction = actions.firstOrNull { it.type == entry.actionType }
                 ActionGridCell(
                     icon = entry.icon,
                     label = stringResource(entry.titleRes),
                     hasParams = false,
-                    onClick = {
-                        if (targetAction != null) {
-                            onOpenActionDetail(targetAction)
-                        } else {
-                            onOpenLaunchEntry(entry)
-                        }
-                    },
+                    onClick = { targetAction?.let(onOpenActionDetail) },
                 )
             },
         )
@@ -114,13 +111,13 @@ fun ActionCenterScreen(
     }
 }
 
-/** 网格第一段：面板/启动器的配置入口；带 [actionType] 的会先进入动作详情页。 */
+/** 网格第一段：面板/启动器/应用索引入口，全部走动作详情页。 */
 enum class ActionCenterLaunchEntry(
     val titleRes: Int,
     val icon: ImageVector,
-    val actionType: GestureActionType?,
+    val actionType: GestureActionType,
 ) {
-    LayoutSettings(R.string.layout_settings_entry_title, HubLeadingIcons.layoutSettings(true), null),
+    OpenIndex(R.string.gesture_action_open_index, HubLeadingIcons.layoutSettings(true), GestureActionType.OPEN_INDEX),
     QuickLauncher(
         R.string.quick_launcher_editor_title,
         HubLeadingIcons.quickLauncher(true),
@@ -225,6 +222,7 @@ private fun ActionGridCell(
 ) {
     Column(
         modifier = modifier
+            .heightIn(min = 104.dp)
             .clip(RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
             .padding(vertical = 6.dp),

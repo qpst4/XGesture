@@ -533,6 +533,7 @@
     <string name="system_gesture_takeover_tip" formatted="false">Если включено, модуль перехватывает область срабатывания этого края на системном слое ввода: системные жесты там (вытягивание строки состояния, «Назад», свайп вверх на главный экран) больше не срабатывают, а касания обрабатываются этим приложением. Касания без привязанного действия не передаются в систему. Это не то же самое, что «Перехват системного жеста «Назад»» в настройках триггеров или «Переопределение системных жестов навигации» в угловом колесе.</string>
     <string name="layout_settings_title">Индекс приложений</string>
     <string name="layout_settings_entry_title">Индекс приложений</string>
+    <string name="extension_action_index_layout_title">Макет индекса приложений</string>
     <string name="layout_settings_entry_desc">Настройте высоту буквенного индекса, столбцы и прозрачность панели</string>
     <string name="layout_settings_entry_summary">Столбцов индекса: %1$d</string>
     <string name="quick_launcher_entry_desc">Изменить элементы быстрого лаунчера</string>

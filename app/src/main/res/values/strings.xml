@@ -546,6 +546,7 @@
     <string name="system_gesture_takeover_tip" formatted="false">When enabled, the module takes over the trigger area of that edge at the system input layer: system gestures there (status bar pull-down, back, swipe up to home) no longer fire and touches are handled by this app. Touches without a bound action are not forwarded to the system. This is not the same as “Intercept system back gesture” in trigger settings or “Override system navigation gestures” in the corner wheel.</string>
     <string name="layout_settings_title">App index</string>
     <string name="layout_settings_entry_title">App index</string>
+    <string name="extension_action_index_layout_title">App index layout</string>
     <string name="layout_settings_entry_desc">Adjust letter index height, columns, and panel opacity</string>
     <string name="layout_settings_entry_summary">Index columns: %1$d</string>
     <string name="quick_launcher_entry_desc">Edit quick launcher items</string>

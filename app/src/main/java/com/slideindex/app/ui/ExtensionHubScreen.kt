@@ -175,6 +175,16 @@ fun ExtensionHubScreen(
                         )
                     }
                 )
+                add(
+                    settingsCardScopeItem("layout-settings") {
+                        SettingNavigationRow(
+                            icon = { label -> Icon(HubLeadingIcons.layoutSettings(true), contentDescription = label) },
+                            title = stringResource(R.string.extension_action_index_layout_title),
+                            subtitle = stringResource(R.string.layout_settings_entry_desc),
+                            onClick = onOpenLayoutSettings,
+                        )
+                    }
+                )
             }
         )
 
