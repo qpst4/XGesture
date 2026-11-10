@@ -143,6 +143,8 @@ fun ShakeGesturesScreen(
             ),
         )
         settingsLazySmallTitle(key = "shake-basic", title = basicSectionTitle)
+        val workModes = settings.workModes
+        // 基础动作与生效时段合到同一张卡：基础动作下面是"什么时候生效"，语义上是一组。
         groupedCardItems(
             keyPrefix = "shake-basic-actions",
             items = buildList {
@@ -162,13 +164,6 @@ fun ShakeGesturesScreen(
                         },
                     )
                 }
-            },
-        )
-        settingsLazySmallTitle(key = "shake-work-mode", title = workModeSectionTitle)
-        val workModes = settings.workModes
-        groupedCardItems(
-            keyPrefix = "shake-work-mode",
-            items = buildList {
                 add(
                     settingsCardScopeItem("shake-work-mode-always") {
                         SettingCheckboxRow(
@@ -250,6 +245,7 @@ fun ShakeGesturesScreen(
             },
         )
         settingsLazySmallTitle(key = "shake-sensitivity", title = sensitivitySectionTitle)
+        // 灵敏度与反馈都是"手感"，合到同一张卡。
         groupedCardItems(
             keyPrefix = "shake-sensitivity",
             items = buildList {
@@ -288,13 +284,6 @@ fun ShakeGesturesScreen(
                         )
                     },
                 )
-            },
-        )
-        settingsLazyHint(key = "shake-sensitivity-hint", text = sensitivityHint)
-        settingsLazySmallTitle(key = "shake-feedback", title = feedbackSectionTitle)
-        groupedCardItems(
-            keyPrefix = "shake-feedback",
-            items = buildList {
                 add(
                     settingsCardScopeItem("shake-vibration-feedback") {
                         SettingSwitchRow(
@@ -329,6 +318,7 @@ fun ShakeGesturesScreen(
                 }
             },
         )
+        settingsLazyHint(key = "shake-sensitivity-hint", text = sensitivityHint)
         settingsLazySmallTitle(key = "shake-advanced-features", title = advancedFeaturesSectionTitle)
         groupedCardItems(
             keyPrefix = "shake-advanced-features",
