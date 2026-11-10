@@ -35,7 +35,7 @@ import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingsCardRow
 import com.slideindex.app.ui.settings.components.SettingsCardScope
 import com.slideindex.app.ui.settings.components.SettingDropdownRow
-import com.slideindex.app.ui.settings.components.SettingExpandableSwitchRow
+import com.slideindex.app.ui.settings.components.SettingExpandableRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsGroupedRowBackground
@@ -524,11 +524,10 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                 )
                 add(
                     settingsCardScopeItem("panel-animations") {
-                        SettingExpandableSwitchRow(
+                        SettingExpandableRow(
                             title = panelAnimationsTitle,
-                            checked = panelAnimExpanded.value,
-                            enabled = true,
-                            onCheckedChange = { panelAnimExpanded.value = it },
+                            expanded = panelAnimExpanded.value,
+                            onExpandedChange = { panelAnimExpanded.value = it },
                         ) {
                             SettingsSliderRow(
                                 title = stringResource(R.string.float_ball_pick_panel_enter_animation),
