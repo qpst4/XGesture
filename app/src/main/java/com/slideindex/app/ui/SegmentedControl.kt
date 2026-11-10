@@ -112,7 +112,7 @@ internal fun <T> SegmentedControl(
                     Box(
                         modifier = Modifier
                             .width(1.dp)
-                            .height(24.dp)
+                            .height(18.dp)
                             .background(MiuixTheme.colorScheme.dividerLine),
                     )
                 }
