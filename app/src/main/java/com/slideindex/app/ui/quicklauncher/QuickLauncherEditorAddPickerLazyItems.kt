@@ -41,7 +41,6 @@ import com.slideindex.app.overlay.TaskSwitcherMenuItem
 import com.slideindex.app.ui.AppPackageEntry
 import com.slideindex.app.ui.gestureActionIcon
 import com.slideindex.app.ui.gesturepicker.gestureActionDescription
-import com.slideindex.app.ui.gesturepicker.gestureActionLabel
 import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
 import com.slideindex.app.ui.picker.FilteredShortcutCatalog
 import com.slideindex.app.ui.picker.GestureActionCatalog
@@ -133,7 +132,9 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
                     val cellLabel = if (action.type == GestureActionType.RUN_MACRO) {
                         stringResource(R.string.macro_action_run_macro)
                     } else {
-                        gestureActionLabel(action)
+                        // 不能在这里用可组合版 gestureActionLabel()：这块添加区被浮层面板复用
+                        //（圆环槽位编辑），浮层合成里没有 LocalAppDependencies，调用会直接抛异常。
+                        gestureActionLabelText(context, action)
                     }
                     PickerGridCell(
                         label = cellLabel,

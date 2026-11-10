@@ -117,7 +117,16 @@ object RingLauncherOverlayWindow {
         val currentItem = settings.fvRingLauncherFor(axis).itemAt(slotIndex)
         val dialogHost = slotConfigDialogHost ?: OverlayComposeDialogHost(
             context = hostContext,
-            applyTheme = { content -> ModuleTheme(settings = lastSettings) { content() } },
+            applyTheme = { content ->
+                ModuleTheme(settings = lastSettings) {
+                    // 槽位面板复用快捷启动器的「添加」区，里面的可组合会读 AppRepository。
+                    // 浮层合成默认没有 LocalAppDependencies，必须在这里补上，
+                    // 否则点开槽位就抛 "AppDependencies not provided" 闪退。
+                    val provider =
+                        com.slideindex.app.overlay.panels.PanelRuntimeHooks.appDependenciesComposition
+                    if (provider != null) provider.provide(content) else content()
+                }
+            },
         ).also { slotConfigDialogHost = it }
 
         // 圆环槽位的应用列表要和动作选择 / 索引一致：带分身条目、带冻结 / 暂停状态。
