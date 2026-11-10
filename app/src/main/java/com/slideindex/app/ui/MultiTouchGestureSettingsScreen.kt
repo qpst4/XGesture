@@ -53,6 +53,7 @@ import com.slideindex.app.multitouch.encodePathStrokes
 import com.slideindex.app.multitouch.multiTouchPresetKinds
 import com.slideindex.app.ui.miuix.MiuixArrowRow
 import com.slideindex.app.ui.miuix.MiuixArrowRow
+import com.slideindex.app.ui.miuix.MiuixBottomSheet
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.MiuixNavigationRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
@@ -108,7 +109,7 @@ fun MultiTouchGestureSettingsScreen(
             text = tipText,
         )
         groupedCardItems(
-            keyPrefix = "multitouch",
+            keyPrefix = "multitouch-status",
             items = buildList {
                 add(
                     settingsCardScopeItem("multitouch-enabled") {
@@ -148,6 +149,11 @@ fun MultiTouchGestureSettingsScreen(
                         )
                     }
                 )
+            },
+        )
+        groupedCardItems(
+            keyPrefix = "multitouch-entries",
+            items = buildList {
                 add(
                     settingsCardScopeItem("multitouch-add") {
                         MiuixNavigationRow(
@@ -178,7 +184,7 @@ fun MultiTouchGestureSettingsScreen(
     }
 
     if (showKindPicker) {
-        WindowDialog(
+        MiuixBottomSheet(
             show = true,
             title = stringResource(R.string.multitouch_pick_kind_title),
             onDismissRequest = { showKindPicker = false },
@@ -212,16 +218,21 @@ fun MultiTouchGestureSettingsScreen(
 
     val kind = pendingKind
     if (kind != null) {
-        WindowDialog(
+        MiuixBottomSheet(
             show = true,
             title = stringResource(R.string.multitouch_finger_count_title),
-            summary = stringResource(
-                R.string.multitouch_finger_count_summary,
-                kind.displayName(),
-            ),
             onDismissRequest = { pendingKind = null },
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = stringResource(
+                        R.string.multitouch_finger_count_summary,
+                        kind.displayName(),
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
