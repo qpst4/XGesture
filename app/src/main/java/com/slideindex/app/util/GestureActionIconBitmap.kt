@@ -24,13 +24,22 @@ import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.ui.gestureActionImageVector
 
-enum class GestureActionPlateShape {
-    ROUNDED_RECT,
-    CIRCLE,
+enum class GestureActionPlateShape(val cornerRadiusRatio: Float) {
+    /** 经典圆角矩形（22% 圆角）。 */
+    ROUNDED_RECT(0.22f),
+
+    /** 圆形（底板直接画圆）。 */
+    CIRCLE(0.50f),
+
+    /** 平滑方圆（35% 圆角）。 */
+    SQUIRCLE(0.35f),
+
+    /** 微圆角方形（8% 圆角）。 */
+    SQUARE(0.08f),
 }
 
 object GestureActionIconBitmap {
-    private const val CACHE_VERSION = 39
+    private const val CACHE_VERSION = 40
 
     /** 保持与 Filled 面板内边距一致的比例（无底板时） */
     private const val CONTENT_SCALE_BARE = 0.75f
@@ -199,7 +208,7 @@ object GestureActionIconBitmap {
         isDark: Boolean,
     ) {
         val plateRect = RectF(0f, 0f, sizePx.toFloat(), sizePx.toFloat())
-        val cornerRadius = sizePx * 0.22f
+        val cornerRadius = sizePx * plateShape.cornerRadiusRatio
         val center = sizePx / 2f
         val plateRadius = center
 
@@ -215,11 +224,10 @@ object GestureActionIconBitmap {
         val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             this.shader = shader
         }
-        when (plateShape) {
-            GestureActionPlateShape.ROUNDED_RECT ->
-                canvas.drawRoundRect(plateRect, cornerRadius, cornerRadius, bgPaint)
-            GestureActionPlateShape.CIRCLE ->
-                canvas.drawCircle(center, center, plateRadius, bgPaint)
+        if (plateShape == GestureActionPlateShape.CIRCLE) {
+            canvas.drawCircle(center, center, plateRadius, bgPaint)
+        } else {
+            canvas.drawRoundRect(plateRect, cornerRadius, cornerRadius, bgPaint)
         }
 
         val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -228,13 +236,16 @@ object GestureActionIconBitmap {
             color = if (isDark) 0x33FFFFFF.toInt() else 0x1A000000.toInt()
         }
         val inset = strokePaint.strokeWidth / 2f
-        when (plateShape) {
-            GestureActionPlateShape.ROUNDED_RECT -> {
-                plateRect.inset(inset, inset)
-                canvas.drawRoundRect(plateRect, cornerRadius - inset, cornerRadius - inset, strokePaint)
-            }
-            GestureActionPlateShape.CIRCLE ->
-                canvas.drawCircle(center, center, plateRadius - inset, strokePaint)
+        if (plateShape == GestureActionPlateShape.CIRCLE) {
+            canvas.drawCircle(center, center, plateRadius - inset, strokePaint)
+        } else {
+            plateRect.inset(inset, inset)
+            canvas.drawRoundRect(
+                plateRect,
+                (cornerRadius - inset).coerceAtLeast(0f),
+                (cornerRadius - inset).coerceAtLeast(0f),
+                strokePaint,
+            )
         }
     }
 

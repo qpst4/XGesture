@@ -197,6 +197,7 @@ object CornerRadialMenuRenderer {
                     activityShortcuts = activityShortcuts,
                     shellCommands = shellCommands,
                     appRepository = appRepository,
+                    shape = settings.slotIconShape,
                     longPressRingProgress = longPressRingProgress,
                     hintLabelSuffix = hintLabelSuffix,
                     hintPipArmed = hintPipArmed,
@@ -369,6 +370,7 @@ object CornerRadialMenuRenderer {
         activityShortcuts: List<ActivityShortcut>,
         shellCommands: List<ShellCommand>,
         appRepository: AppRepository?,
+        shape: FvIconShape,
         /** 提示卡片里图标外圈的进度：0..1；-1 = 不画。 */
         longPressRingProgress: Float = -1f,
         /** 长按到时间后拼到名字后面的后缀（如 "-小窗" / "-全屏"）；空串表示不加。 */
@@ -429,6 +431,7 @@ object CornerRadialMenuRenderer {
             activityShortcuts = activityShortcuts,
             shellCommands = shellCommands,
             appRepository = appRepository,
+            shape = shape,
         )
         val iconLeft = left + paddingX
         val iconTop = centerY - iconSize / 2f
@@ -576,6 +579,7 @@ object CornerRadialMenuRenderer {
             activityShortcuts = activityShortcuts,
             shellCommands = shellCommands,
             appRepository = appRepository,
+            shape = shape,
         )
         val drawSize = radius * 2f
         val left = centerX - drawSize / 2f
