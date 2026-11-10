@@ -598,5 +598,7 @@ object SearchPanelOverlayWindow {
         screenOffUnregister?.invoke()
         screenOffUnregister = null
         appContext = null
+        // 所有关闭路径都收敛在这里：通知「因搜图而隐藏」的取词面板恢复。
+        SearchPanelSessionState.onPanelClosed?.invoke()
     }
 }

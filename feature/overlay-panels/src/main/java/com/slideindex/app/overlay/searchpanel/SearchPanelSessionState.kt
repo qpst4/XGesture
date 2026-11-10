@@ -28,6 +28,13 @@ object SearchPanelSessionState {
     /** Return true if back was consumed (e.g. dismiss file preview only). */
     var onBackPressed: (() -> Boolean)? = null
     /**
+     * 面板窗口销毁时回调（dismiss / 系统返回 / Home / 熄屏都会走
+     * `SearchPanelOverlayWindow.destroyWindow()`）。
+     *
+     * 目前只给「搜图期间隐藏取词面板」这条路径用：取词面板在隐藏时注册、恢复后清空。
+     */
+    var onPanelClosed: (() -> Unit)? = null
+    /**
      * 窗口获得焦点时由浮层窗口调用：把焦点交给搜索框（返回是否成功，输入框可能还没进入组合）。
      *
      * 走这条回调是为了绕开 Compose 重组延迟，尽早把焦点就绪，好让输入法更早被拉起。
