@@ -6,6 +6,9 @@ package com.slideindex.app.settings
  * [id] 会落盘（顺序 + 隐藏集合），**改名等于丢用户配置**，只许新增。
  * 这里只放 id 与顺序归一化；图标、文案、动作由各自的 UI 层按 id 映射
  * （overlay-panels 负责底栏渲染，app 负责设置页）。
+ *
+ * 没有「更多」：原来收在三点菜单里的钉住 / 暂存 / 二维码 / 用其他应用处理
+ * 现在都是底栏按钮本身。
  */
 enum class PickResultTextBarButton(val id: String) {
     /** 复制当前选中（经典样式里的「复制选中」主按钮）。 */
@@ -23,8 +26,17 @@ enum class PickResultTextBarButton(val id: String) {
     /** 分享当前选中（长按 = 起系统拖拽）。 */
     SHARE("share"),
 
-    /** 更多菜单（钉选 / 暂存 / 二维码 / 其他应用处理 / 去空格等）。 */
-    MORE("more"),
+    /** 钉在屏幕。 */
+    PIN("pin"),
+
+    /** 暂存（保存到想法）。 */
+    STASH("stash"),
+
+    /** 生成二维码（只在有文字时出现）。 */
+    QR("qr"),
+
+    /** 用其他应用处理（列出系统文本菜单里的 PROCESS_TEXT 入口）。 */
+    PROCESS_TEXT("process_text"),
     ;
 
     companion object {
@@ -43,8 +55,11 @@ enum class PickResultImageBarButton(val id: String) {
     /** 分享当前图片（长按 = 起系统拖拽）。 */
     SHARE("share"),
 
-    /** 更多菜单（钉选 / 暂存）。 */
-    MORE("more"),
+    /** 钉在屏幕。 */
+    PIN("pin"),
+
+    /** 暂存（保存到想法）。 */
+    STASH("stash"),
     ;
 
     companion object {
@@ -60,21 +75,25 @@ enum class PickResultImageBarButton(val id: String) {
  */
 object PickResultBarButtons {
 
-    /** 默认顺序 = 经典样式的视觉顺序（复制在最左，更多在最右）。 */
+    /** 默认顺序 = 视觉顺序（复制在最左；钉住/暂存/二维码/其他应用处理排在分享之后）。 */
     val defaultTextOrder: List<String> = listOf(
         PickResultTextBarButton.COPY.id,
         PickResultTextBarButton.OPEN_LINK.id,
         PickResultTextBarButton.SEARCH.id,
         PickResultTextBarButton.TRANSLATE.id,
         PickResultTextBarButton.SHARE.id,
-        PickResultTextBarButton.MORE.id,
+        PickResultTextBarButton.PIN.id,
+        PickResultTextBarButton.STASH.id,
+        PickResultTextBarButton.QR.id,
+        PickResultTextBarButton.PROCESS_TEXT.id,
     )
 
     val defaultImageOrder: List<String> = listOf(
         PickResultImageBarButton.IMAGE_SEARCH.id,
         PickResultImageBarButton.SAVE.id,
         PickResultImageBarButton.SHARE.id,
-        PickResultImageBarButton.MORE.id,
+        PickResultImageBarButton.PIN.id,
+        PickResultImageBarButton.STASH.id,
     )
 
     fun normalizeText(saved: List<String>): List<PickResultTextBarButton> =

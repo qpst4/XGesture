@@ -913,7 +913,16 @@ private fun PickResultImageIconBar(
     val hiddenIds = remember(hidden) {
         com.slideindex.app.settings.PickResultBarButtons.sanitizeHiddenImage(hidden)
     }
-    var moreMenuExpanded by remember { mutableStateOf(false) }
+
+    val visible = buttons.filter { button ->
+        button.id !in hiddenIds && when (button) {
+            com.slideindex.app.settings.PickResultImageBarButton.IMAGE_SEARCH -> true
+            com.slideindex.app.settings.PickResultImageBarButton.SAVE -> true
+            com.slideindex.app.settings.PickResultImageBarButton.SHARE -> true
+            com.slideindex.app.settings.PickResultImageBarButton.PIN -> onPinToScreen != null
+            com.slideindex.app.settings.PickResultImageBarButton.STASH -> onStash != null
+        }
+    }
 
     Row(
         modifier = Modifier
@@ -922,8 +931,7 @@ private fun PickResultImageIconBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
     ) {
-        buttons.forEach { button ->
-            if (button.id in hiddenIds) return@forEach
+        visible.forEach { button ->
             when (button) {
                 com.slideindex.app.settings.PickResultImageBarButton.IMAGE_SEARCH ->
                     ImageSearchIconButton(
@@ -950,43 +958,21 @@ private fun PickResultImageIconBar(
                         contentDescription = stringResource(R.string.pick_result_action_share_image),
                     )
 
-                com.slideindex.app.settings.PickResultImageBarButton.MORE -> {
-                    if (onPinToScreen != null || onStash != null) {
-                        Box {
-                            PickResultActionIcon(
-                                icon = Icons.Filled.MoreVert,
-                                enabled = true,
-                                onClick = { moreMenuExpanded = true },
-                                contentDescription = stringResource(R.string.pick_result_action_more),
-                            )
-                            PickResultDropdownMenuInLtr(
-                                expanded = moreMenuExpanded,
-                                onDismissRequest = { moreMenuExpanded = false },
-                            ) {
-                                onPinToScreen?.let { pinAction ->
-                                    PickResultActionMenuItem(
-                                        label = stringResource(R.string.pick_result_pin),
-                                        icon = Icons.Outlined.PushPin,
-                                        onClick = {
-                                            moreMenuExpanded = false
-                                            pinAction()
-                                        },
-                                    )
-                                }
-                                onStash?.let { stashAction ->
-                                    PickResultActionMenuItem(
-                                        label = stringResource(R.string.pick_result_stash),
-                                        icon = Icons.Outlined.Archive,
-                                        onClick = {
-                                            moreMenuExpanded = false
-                                            stashAction()
-                                        },
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+                com.slideindex.app.settings.PickResultImageBarButton.PIN ->
+                    PickResultActionIcon(
+                        icon = Icons.Outlined.PushPin,
+                        enabled = true,
+                        onClick = { onPinToScreen?.invoke() },
+                        contentDescription = stringResource(R.string.pick_result_pin),
+                    )
+
+                com.slideindex.app.settings.PickResultImageBarButton.STASH ->
+                    PickResultActionIcon(
+                        icon = Icons.Outlined.Archive,
+                        enabled = true,
+                        onClick = { onStash?.invoke() },
+                        contentDescription = stringResource(R.string.pick_result_stash),
+                    )
             }
         }
     }

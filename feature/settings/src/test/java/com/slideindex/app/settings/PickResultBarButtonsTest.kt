@@ -41,17 +41,20 @@ class PickResultBarButtonsTest {
     @Test
     fun savedOrder_keepsUserOrder_andAppendsNewButtonsAtEnd() {
         val saved = listOf(
-            PickResultTextBarButton.MORE.id,
+            PickResultTextBarButton.SHARE.id,
             PickResultTextBarButton.COPY.id,
         )
         assertEquals(
             listOf(
-                PickResultTextBarButton.MORE,
+                PickResultTextBarButton.SHARE,
                 PickResultTextBarButton.COPY,
                 PickResultTextBarButton.OPEN_LINK,
                 PickResultTextBarButton.SEARCH,
                 PickResultTextBarButton.TRANSLATE,
-                PickResultTextBarButton.SHARE,
+                PickResultTextBarButton.PIN,
+                PickResultTextBarButton.STASH,
+                PickResultTextBarButton.QR,
+                PickResultTextBarButton.PROCESS_TEXT,
             ),
             PickResultBarButtons.normalizeText(saved),
         )
@@ -70,10 +73,32 @@ class PickResultBarButtonsTest {
                 PickResultImageBarButton.SHARE,
                 PickResultImageBarButton.SAVE,
                 PickResultImageBarButton.IMAGE_SEARCH,
-                PickResultImageBarButton.MORE,
+                PickResultImageBarButton.PIN,
+                PickResultImageBarButton.STASH,
             ),
             PickResultBarButtons.normalizeImage(saved),
         )
+    }
+
+    @Test
+    fun legacyMoreId_isDroppedByNormalization() {
+        // 旧版本（去掉三点菜单之前）落盘过 "more"，升级后必须被安静丢弃。
+        val saved = listOf("more", PickResultTextBarButton.COPY.id)
+        assertEquals(
+            listOf(
+                PickResultTextBarButton.COPY,
+                PickResultTextBarButton.OPEN_LINK,
+                PickResultTextBarButton.SEARCH,
+                PickResultTextBarButton.TRANSLATE,
+                PickResultTextBarButton.SHARE,
+                PickResultTextBarButton.PIN,
+                PickResultTextBarButton.STASH,
+                PickResultTextBarButton.QR,
+                PickResultTextBarButton.PROCESS_TEXT,
+            ),
+            PickResultBarButtons.normalizeText(saved),
+        )
+        assertTrue("more" !in PickResultBarButtons.defaultImageOrder)
     }
 
     @Test
@@ -82,8 +107,8 @@ class PickResultBarButtonsTest {
         val raw = PickResultBarButtons.encodeOrder(ids)
         assertEquals(ids, PickResultBarButtons.decodeOrder(raw))
         assertEquals(
-            listOf("copy", "more"),
-            PickResultBarButtons.decodeOrder("\u001Fcopy\u001F\u001F  \u001Fmore\u001F"),
+            listOf("copy", "share"),
+            PickResultBarButtons.decodeOrder("\u001Fcopy\u001F\u001F  \u001Fshare\u001F"),
         )
         assertEquals(emptyList<String>(), PickResultBarButtons.decodeOrder(null))
     }

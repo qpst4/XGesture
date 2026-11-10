@@ -7,8 +7,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
@@ -874,80 +877,28 @@ fun PickResultTextActionBar(
         }
 
         @Composable
-        fun IconBarMoreButton() {
+        fun IconBarProcessTextButton() {
             Box {
-                IconButton(
-                    onClick = { moreMenuExpanded = true },
-                    enabled = enabled,
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(RoundedCornerShape(21.dp)),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = stringResource(R.string.pick_result_action_more),
-                        tint = iconBarTint,
-                        modifier = Modifier.size(22.dp),
-                    )
-                }
-
+                IconBarActionButton(
+                    icon = Icons.Outlined.Apps,
+                    contentDescription = stringResource(R.string.pick_result_process_text),
+                    tint = iconBarTint,
+                    actionEnabled = enabled,
+                    onClick = { processTextMenuExpanded = true },
+                )
                 PickResultDropdownMenuInLtr(
-                    expanded = moreMenuExpanded,
-                    onDismissRequest = {
-                        moreMenuExpanded = false
-                        processTextMenuExpanded = false
-                    }
+                    expanded = processTextMenuExpanded,
+                    onDismissRequest = { processTextMenuExpanded = false },
                 ) {
-                    if (processTextMenuExpanded) {
-                        PickResultProcessTextTargetList(
-                            targets = processTextTargets.orEmpty(),
-                            loading = processTextTargets == null,
-                            onBack = { processTextMenuExpanded = false },
-                            onSelect = { target ->
-                                moreMenuExpanded = false
-                                processTextMenuExpanded = false
-                                onProcessText?.invoke(target)
-                            },
-                        )
-                    } else {
-                        onPinToScreen?.let { pinAction ->
-                            PickResultActionMenuItem(
-                                label = stringResource(R.string.pick_result_pin),
-                                icon = Icons.Outlined.PushPin,
-                                onClick = {
-                                    moreMenuExpanded = false
-                                    pinAction()
-                                },
-                            )
-                        }
-                        onStash?.let { stashAction ->
-                            PickResultActionMenuItem(
-                                label = stringResource(R.string.pick_result_stash),
-                                icon = Icons.Outlined.Archive,
-                                onClick = {
-                                    moreMenuExpanded = false
-                                    stashAction()
-                                },
-                            )
-                        }
-                        onGenerateQr?.let { generateQr ->
-                            PickResultActionMenuItem(
-                                label = stringResource(R.string.pick_result_qr),
-                                icon = Icons.Outlined.QrCode,
-                                onClick = {
-                                    moreMenuExpanded = false
-                                    generateQr()
-                                },
-                            )
-                        }
-                        onProcessText?.let {
-                            PickResultActionMenuItem(
-                                label = stringResource(R.string.pick_result_process_text),
-                                icon = Icons.Outlined.Apps,
-                                onClick = { processTextMenuExpanded = true },
-                            )
-                        }
-                    }
+                    PickResultProcessTextTargetList(
+                        targets = processTextTargets.orEmpty(),
+                        loading = processTextTargets == null,
+                        onBack = { processTextMenuExpanded = false },
+                        onSelect = { target ->
+                            processTextMenuExpanded = false
+                            onProcessText?.invoke(target)
+                        },
+                    )
                 }
             }
         }
@@ -960,70 +911,135 @@ fun PickResultTextActionBar(
             val hidden = remember(iconBarHidden) {
                 com.slideindex.app.settings.PickResultBarButtons.sanitizeHiddenText(iconBarHidden)
             }
-            Row(
+            // 可见集合由「排序 + 隐藏 + 当前是否有文字/链接/搜索网格」共同决定。
+            // 链接出现时是 9 颗，1080p 手机上会超出几 dp，所以溢出时整行可横向滑。
+            val visible = buttons.filter { button ->
+                button.id !in hidden && when (button) {
+                    com.slideindex.app.settings.PickResultTextBarButton.COPY -> true
+                    com.slideindex.app.settings.PickResultTextBarButton.OPEN_LINK -> showOpenLink
+                    com.slideindex.app.settings.PickResultTextBarButton.SEARCH -> showSearch
+                    com.slideindex.app.settings.PickResultTextBarButton.TRANSLATE -> translateEnabled
+                    com.slideindex.app.settings.PickResultTextBarButton.SHARE -> true
+                    com.slideindex.app.settings.PickResultTextBarButton.PIN -> onPinToScreen != null
+                    com.slideindex.app.settings.PickResultTextBarButton.STASH -> onStash != null
+                    com.slideindex.app.settings.PickResultTextBarButton.QR -> onGenerateQr != null
+                    com.slideindex.app.settings.PickResultTextBarButton.PROCESS_TEXT -> onProcessText != null
+                }
+            }
+
+            @Composable
+            fun BarButton(button: com.slideindex.app.settings.PickResultTextBarButton) {
+                when (button) {
+                    com.slideindex.app.settings.PickResultTextBarButton.COPY ->
+                        IconBarCopyButton()
+
+                    com.slideindex.app.settings.PickResultTextBarButton.OPEN_LINK ->
+                        IconBarOpenLinkButton()
+
+                    com.slideindex.app.settings.PickResultTextBarButton.SEARCH -> {
+                        val searchTint = when {
+                            !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                            searchSelected -> MaterialTheme.colorScheme.primary
+                            else -> iconBarTint
+                        }
+                        PickResultSearchActionButton(
+                            enabled = enabled,
+                            selected = searchSelected,
+                            tint = searchTint,
+                            background = Color.Transparent,
+                            buttonSize = 42.dp,
+                            cornerRadius = 21.dp,
+                            iconSize = 22.dp,
+                            quickLaunch = searchQuickLaunch,
+                            onClick = onSearch,
+                        )
+                    }
+
+                    com.slideindex.app.settings.PickResultTextBarButton.TRANSLATE -> {
+                        val translateTint = when {
+                            !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                            translateSelected -> MaterialTheme.colorScheme.primary
+                            else -> iconBarTint
+                        }
+                        IconBarActionButton(
+                            icon = Icons.Outlined.Translate,
+                            contentDescription = null,
+                            tint = translateTint,
+                            actionEnabled = enabled && translateEnabled,
+                            onClick = onTranslate,
+                        )
+                    }
+
+                    com.slideindex.app.settings.PickResultTextBarButton.SHARE ->
+                        IconBarActionButton(
+                            icon = Icons.Outlined.Share,
+                            contentDescription = stringResource(R.string.pick_result_share),
+                            tint = iconBarTint,
+                            actionEnabled = enabled,
+                            onClick = onShare,
+                            onLongClick = onStartDrag,
+                        )
+
+                    com.slideindex.app.settings.PickResultTextBarButton.PIN ->
+                        IconBarActionButton(
+                            icon = Icons.Outlined.PushPin,
+                            contentDescription = stringResource(R.string.pick_result_pin),
+                            tint = iconBarTint,
+                            actionEnabled = enabled,
+                            onClick = { onPinToScreen?.invoke() },
+                        )
+
+                    com.slideindex.app.settings.PickResultTextBarButton.STASH ->
+                        IconBarActionButton(
+                            icon = Icons.Outlined.Archive,
+                            contentDescription = stringResource(R.string.pick_result_stash),
+                            tint = iconBarTint,
+                            actionEnabled = enabled,
+                            onClick = { onStash?.invoke() },
+                        )
+
+                    com.slideindex.app.settings.PickResultTextBarButton.QR ->
+                        IconBarActionButton(
+                            icon = Icons.Outlined.QrCode,
+                            contentDescription = stringResource(R.string.pick_result_qr),
+                            tint = iconBarTint,
+                            actionEnabled = enabled,
+                            onClick = { onGenerateQr?.invoke() },
+                        )
+
+                    com.slideindex.app.settings.PickResultTextBarButton.PROCESS_TEXT ->
+                        IconBarProcessTextButton()
+                }
+            }
+
+            val itemSize = 42.dp
+            val itemSpacing = 2.dp
+            val contentWidth = itemSize * visible.size +
+                itemSpacing * (visible.size - 1).coerceAtLeast(0)
+
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 4.dp, bottom = bottomPadding, start = 2.dp, end = 2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
             ) {
-                buttons.forEach { button ->
-                    if (button.id in hidden) return@forEach
-                    when (button) {
-                        com.slideindex.app.settings.PickResultTextBarButton.COPY ->
-                            IconBarCopyButton()
-
-                        com.slideindex.app.settings.PickResultTextBarButton.OPEN_LINK ->
-                            if (showOpenLink) IconBarOpenLinkButton()
-
-                        com.slideindex.app.settings.PickResultTextBarButton.SEARCH ->
-                            if (showSearch) {
-                                val searchTint = when {
-                                    !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-                                    searchSelected -> MaterialTheme.colorScheme.primary
-                                    else -> iconBarTint
-                                }
-                                PickResultSearchActionButton(
-                                    enabled = enabled,
-                                    selected = searchSelected,
-                                    tint = searchTint,
-                                    background = Color.Transparent,
-                                    buttonSize = 42.dp,
-                                    cornerRadius = 21.dp,
-                                    iconSize = 22.dp,
-                                    quickLaunch = searchQuickLaunch,
-                                    onClick = onSearch,
-                                )
-                            }
-
-                        com.slideindex.app.settings.PickResultTextBarButton.TRANSLATE ->
-                            if (translateEnabled) {
-                                val translateTint = when {
-                                    !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-                                    translateSelected -> MaterialTheme.colorScheme.primary
-                                    else -> iconBarTint
-                                }
-                                IconBarActionButton(
-                                    icon = Icons.Outlined.Translate,
-                                    contentDescription = null,
-                                    tint = translateTint,
-                                    actionEnabled = enabled && translateEnabled,
-                                    onClick = onTranslate,
-                                )
-                            }
-
-                        com.slideindex.app.settings.PickResultTextBarButton.SHARE ->
-                            IconBarActionButton(
-                                icon = Icons.Outlined.Share,
-                                contentDescription = stringResource(R.string.pick_result_share),
-                                tint = iconBarTint,
-                                actionEnabled = enabled,
-                                onClick = onShare,
-                                onLongClick = onStartDrag,
-                            )
-
-                        com.slideindex.app.settings.PickResultTextBarButton.MORE ->
-                            IconBarMoreButton()
+                if (contentWidth <= maxWidth) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(itemSpacing, Alignment.CenterHorizontally),
+                    ) {
+                        visible.forEach { button -> BarButton(button) }
+                    }
+                } else {
+                    // 溢出（有链接时 9 颗）才横向滑动，平时看不出来。
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(itemSpacing, Alignment.Start),
+                    ) {
+                        visible.forEach { button -> BarButton(button) }
                     }
                 }
             }
