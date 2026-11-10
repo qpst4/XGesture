@@ -516,6 +516,36 @@ class StashMetaRepository @Inject constructor(
         }
     }
 
+    /* ---------------- 备份 ---------------- */
+
+    /** 备份用：`stash_meta.json` 原文；文件不存在时返回空串。 */
+    suspend fun exportRawJson(): String = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            if (storeFile.exists()) storeFile.readText() else ""
+        }
+    }
+
+    /**
+     * 恢复用：整份写回并同步内存态。
+     *
+     * 写完之后由调用方负责重排提醒（`StashReminderScheduler.rescheduleAll`）——core 层不依赖 app。
+     *
+     * @return 内容能解析并落盘时 true。
+     */
+    suspend fun importRawJson(raw: String): Boolean {
+        if (raw.isBlank()) return false
+        val decoded = runCatching {
+            json.decodeFromString<StashMetaStore>(raw)
+        }.getOrNull() ?: return false
+        mutex.withLock {
+            withContext(Dispatchers.IO) { writeToDiskSync(decoded) }
+            readFailed = false
+            _store.value = decoded
+        }
+        com.slideindex.app.util.CrossProcessStore.notifyChanged(appContext, storeFile)
+        return true
+    }
+
     /* ---------------- 底层 ---------------- */
 
     private suspend fun mutate(transform: (StashMetaStore) -> StashMetaStore) {

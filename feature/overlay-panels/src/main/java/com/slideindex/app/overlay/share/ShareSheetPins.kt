@@ -69,4 +69,24 @@ object ShareSheetPins {
         }
         return updated
     }
+
+    /** 备份用：DataStore 里的原始 JSON。 */
+    suspend fun exportRawJson(context: Context): String =
+        runCatching { context.shareSheetDataStore.data.first()[KEY] }
+            .getOrNull()
+            .orEmpty()
+
+    /** 恢复用：整份写回并替换内存缓存。 */
+    suspend fun importRawJson(context: Context, raw: String) {
+        if (raw.isBlank()) return
+        val decoded = runCatching { json.decodeFromString<List<String>>(raw) }
+            .getOrNull() ?: return
+        val sanitized = decoded.distinct().take(MAX_PINS)
+        runCatching {
+            context.shareSheetDataStore.edit { prefs ->
+                prefs[KEY] = json.encodeToString(sanitized)
+            }
+        }
+        cached = sanitized
+    }
 }

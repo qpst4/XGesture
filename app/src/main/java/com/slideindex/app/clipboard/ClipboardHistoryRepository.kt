@@ -29,6 +29,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 
@@ -495,6 +496,31 @@ class ClipboardHistoryRepository @Inject constructor(
             refreshEntryCountLocked()
             bumpRevisionLocked()
         }
+    }
+
+    /** 备份用：整份剪贴板历史（文字 + 图片文件名），图片文件本身在 `files/clipboard/` 目录里。 */
+    suspend fun exportRawJson(): String = withContext(Dispatchers.IO) {
+        writeMutex.withLock {
+            json.encodeToString(store.queryAll())
+        }
+    }
+
+    /**
+     * 恢复用：整表替换并刷新计数/版本。
+     *
+     * @return 数据能解析并写回时 true。
+     */
+    suspend fun importRawJson(raw: String): Boolean = withContext(Dispatchers.IO) {
+        if (raw.isBlank()) return@withContext false
+        val entries = runCatching {
+            json.decodeFromString<List<ClipboardEntry>>(raw)
+        }.getOrNull() ?: return@withContext false
+        writeMutex.withLock {
+            store.replaceAll(entries)
+            refreshEntryCountLocked()
+            bumpRevisionLocked()
+        }
+        true
     }
 
     suspend fun peekLatestEntry(): ClipboardEntry? = withContext(Dispatchers.IO) {

@@ -155,7 +155,10 @@ class SettingsBackupManager @Inject constructor(
             val filteredPreferences = finalDocument.preferences.filter { entry ->
                 modules == null || SettingsModuleRegistry.moduleOf(entry.key) in modules
             }
-            val filteredDocument = finalDocument.copy(preferences = filteredPreferences)
+            val filteredDocument = finalDocument.copy(
+                preferences = filteredPreferences,
+                externalStores = finalDocument.externalStores.forModules(modules),
+            )
 
             editor.edit { prefs ->
                 if (replaceExisting) {
@@ -334,6 +337,7 @@ class SettingsBackupManager @Inject constructor(
             shellOutputHistoryJson = shellOutputHistoryJson,
             searchPanelHistoryJson = searchPanelHistoryJson,
             multiTouchGestureJson = multiTouchGestureJson,
+            externalStores = externalStores,
         )
 
     /** 只保留选中模块的分区；`modules == null` 时原样返回。 */
@@ -351,6 +355,7 @@ class SettingsBackupManager @Inject constructor(
             shellOutputHistoryJson = shellOutputHistoryJson.takeIf { keep(SettingsModule.SHELL) },
             searchPanelHistoryJson = searchPanelHistoryJson.takeIf { keep(SettingsModule.SEARCH) },
             multiTouchGestureJson = multiTouchGestureJson.takeIf { keep(SettingsModule.EDGE_GESTURE) },
+            externalStores = externalStores.forModules(modules),
         )
     }
 

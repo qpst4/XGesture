@@ -21,6 +21,8 @@ import android.graphics.Bitmap
  * - `showGestureTracking`：运行时轨迹浮层开关，由 overlay 那侧读取
  */
 object FvGesturePrefs {
+    const val PREFS_NAME = "fv_gesture"
+
     private const val KEY_ADD_MIRROR = "addMirrorGesture"      // FV 原键名
     private const val KEY_SHOW_TRACKING = "showGestureTracking" // FV 原键名
 
@@ -34,7 +36,7 @@ object FvGesturePrefs {
         prefs(context).getBoolean(KEY_SHOW_TRACKING, false)
 
     private fun prefs(context: Context) =
-        context.getSharedPreferences("fv_gesture", Context.MODE_PRIVATE)
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 }
 
 /**

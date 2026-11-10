@@ -52,6 +52,7 @@ internal object SettingsBackupCodec {
             shellOutputHistoryJson = sensitive?.shellOutputHistoryJson,
             searchPanelHistoryJson = sensitive?.searchPanelHistoryJson,
             multiTouchGestureJson = sensitive?.multiTouchGestureJson,
+            externalStores = sensitive?.externalStores.orEmpty().forModules(modules),
         )
         return json.encodeToString(document)
     }
@@ -77,6 +78,7 @@ internal object SettingsBackupCodec {
             shellOutputHistoryJson = shellOutputHistoryJson,
             searchPanelHistoryJson = searchPanelHistoryJson,
             multiTouchGestureJson = multiTouchGestureJson,
+            externalStores = externalStores,
         )
 
     fun apply(document: SettingsBackupDocument, prefs: MutablePreferences) {

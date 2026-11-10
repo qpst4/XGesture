@@ -52,10 +52,32 @@ class SettingsModuleRegistryTest {
         assertEquals(SettingsModule.SHELL, SettingsModuleRegistry.moduleOfDirectory("shell_icons"))
         assertEquals(SettingsModule.ACTIVITY_SHORTCUTS, SettingsModuleRegistry.moduleOfDirectory("shortcut_icons"))
         assertEquals(SettingsModule.FLOAT_BALL, SettingsModuleRegistry.moduleOfDirectory("float_ball_assets"))
+        assertEquals(SettingsModule.FLOAT_BALL, SettingsModuleRegistry.moduleOfDirectory("fooView"))
+        assertEquals(SettingsModule.THEME_UI, SettingsModuleRegistry.moduleOfDirectory("action_icons"))
+        assertEquals(SettingsModule.QUICK_WHEEL, SettingsModuleRegistry.moduleOfDirectory("quick_wheel_icons"))
+        assertEquals(SettingsModule.QUICK_LAUNCHER, SettingsModuleRegistry.moduleOfDirectory("fv_slot_icons"))
         assertEquals(SettingsModule.STASH, SettingsModuleRegistry.moduleOfDirectory("stash"))
         assertEquals(SettingsModule.CLIPBOARD, SettingsModuleRegistry.moduleOfDirectory("clipboard"))
         assertEquals(SettingsModule.SEARCH, SettingsModuleRegistry.moduleOfDirectory("share_image_ocr_history"))
         assertEquals(null, SettingsModuleRegistry.moduleOfDirectory("not_a_backup_dir"))
+    }
+
+    @Test
+    fun externalStoresMapToOwningModulesAndFilterByModule() {
+        assertEquals(SettingsModule.EDGE_GESTURE, SettingsBackupExternalStore.MACRO.module)
+        assertEquals(SettingsModule.CLIPBOARD, SettingsBackupExternalStore.CLIPBOARD_HISTORY.module)
+        assertTrue(SettingsBackupExternalStore.CLIPBOARD_HISTORY.sensitive)
+        assertEquals(SettingsModule.STASH, SettingsBackupExternalStore.STASH_META.module)
+        assertEquals(SettingsModule.FLOAT_BALL, SettingsBackupExternalStore.FV_GESTURE.module)
+
+        val all = mapOf(
+            SettingsBackupExternalStore.MACRO.id to "{}",
+            SettingsBackupExternalStore.CLIPBOARD_HISTORY.id to "[]",
+        )
+        assertEquals(
+            mapOf(SettingsBackupExternalStore.CLIPBOARD_HISTORY.id to "[]"),
+            all.forModules(setOf(SettingsModule.CLIPBOARD)),
+        )
     }
 
     @Test
@@ -90,15 +112,14 @@ class SettingsModuleRegistryTest {
             .toSet()
 
     private companion object {
-        // 673 = 671 + corner_gesture_slot_icon_shape（CORNER_WHEEL）
-        //       + float_ball_pick_word_tap_granularity（FLOAT_BALL）。
-        const val EXPECTED_TOTAL_KEYS = 673
+        // 678 = 673 + 5（近期新增的 FLOAT_BALL 键）。
+        const val EXPECTED_TOTAL_KEYS = 678
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
             SettingsModule.EDGE_GESTURE to 84,
             SettingsModule.CORNER_WHEEL to 35,
             SettingsModule.QUICK_WHEEL to 2,
-            SettingsModule.FLOAT_BALL to 71,
+            SettingsModule.FLOAT_BALL to 76,
             SettingsModule.FLOATING_POINTER to 52,
             SettingsModule.FINGERTIP_RING to 13,
             SettingsModule.QUICK_LAUNCHER to 93,

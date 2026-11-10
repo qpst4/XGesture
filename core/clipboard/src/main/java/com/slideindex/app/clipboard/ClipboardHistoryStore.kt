@@ -181,6 +181,44 @@ class ClipboardHistoryStore(
         }
     }
 
+    /** 备份用：按时间倒序取出全部条目。 */
+    fun queryAll(): List<ClipboardEntry> {
+        val db = readableDatabase
+        return db.query(
+            TABLE,
+            arrayOf(COL_JSON),
+            null,
+            null,
+            null,
+            null,
+            "$COL_CREATED DESC",
+        ).use { cursor ->
+            buildList {
+                while (cursor.moveToNext()) {
+                    decodeEntry(cursor.getString(0))?.let(::add)
+                }
+            }
+        }
+    }
+
+    /**
+     * 恢复用：整表替换。
+     *
+     * 走数据库事务而不是覆盖 `.db` 文件——文件里还有 WAL/FTS 辅助表，直接拷文件在进程打开时
+     * 会读到半截数据；这里按条目重建，FTS 也会一起同步。
+     */
+    fun replaceAll(entries: List<ClipboardEntry>) {
+        val db = writableDatabase
+        db.transaction {
+            if (ftsEnabled) delete(FTS_TABLE, null, null)
+            delete(TABLE, null, null)
+            entries.forEach { entry ->
+                insertWithOnConflict(TABLE, null, entryToValues(entry), SQLiteDatabase.CONFLICT_REPLACE)
+                if (ftsEnabled) syncFts(this, entry)
+            }
+        }
+    }
+
     fun trimToMax(max: Int): List<ClipboardEntry> {
         if (max < 0) return emptyList()
         if (count() <= max) return emptyList()

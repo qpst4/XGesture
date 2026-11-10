@@ -298,6 +298,23 @@ object FileBrowserPreferences {
             }
         }
     }
+
+    /** 备份用：DataStore 里的原始 JSON；没有存过时返回空串。 */
+    suspend fun exportRawJson(context: Context): String =
+        runCatching { context.fileBrowserPrefsDataStore.data.first()[key] }
+            .getOrNull()
+            .orEmpty()
+
+    /** 恢复用：整份写回并同步内存态（面板下次打开就是恢复后的值）。 */
+    suspend fun importRawJson(context: Context, raw: String) {
+        if (raw.isBlank()) return
+        val decoded = runCatching { json.decodeFromString<FileBrowserPrefs>(raw) }
+            .getOrNull() ?: return
+        appContext = context.applicationContext
+        loaded = true
+        current = sanitize(decoded)
+        write(context, current)
+    }
 }
 
 fun FileBrowserPrefs.sortOrderOrDefault(): FileSortOrder =

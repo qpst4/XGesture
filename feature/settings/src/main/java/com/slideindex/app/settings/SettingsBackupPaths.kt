@@ -9,6 +9,13 @@ internal object SettingsBackupPaths {
         "shortcut_icons",
         "float_ball_assets",
         "stash",
+        // 悬浮球「自定义手势」：GestureStore 二进制 + 元数据 JSON。
+        "fooView",
+        // 动作/应用自定义图标。
+        "action_icons",
+        // 快捷轮盘 / 圆环槽位自定义图标。
+        "quick_wheel_icons",
+        "fv_slot_icons",
     )
 
     val SENSITIVE_BACKUP_DIRS = listOf(

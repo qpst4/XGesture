@@ -52,7 +52,13 @@ object GlobalIconStore {
      */
     fun notifyIconSourceChanged() = notifyIconChanged()
 
-    private const val PREFS = "global_icon_overrides"
+    /** 从备份恢复覆盖表后调用：revision 自增（Compose 失效）+ 清位图缓存 + 通知面板重绘。 */
+    fun refreshAfterImport() {
+        revision++
+        notifyIconChanged()
+    }
+
+    const val PREFS = "global_icon_overrides"
     private const val ACTION_PREFIX = "action:"
     private const val APP_PREFIX = "app:"
 

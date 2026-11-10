@@ -29,6 +29,7 @@ class SettingsBackupSectionsProvider @Inject constructor(
     private val shellOutputHistoryRepository: ShellOutputHistoryRepository,
     private val searchHistoryRepository: SearchHistoryRepository,
     private val multiTouchGestureSettingsStore: MultiTouchGestureSettingsStore,
+    private val externalStores: SettingsBackupExternalStores,
 ) {
     /**
      * [includeSensitiveData] 为 false 时仍然带上"非敏感但必须跟随设置一起走"的分区
@@ -40,6 +41,7 @@ class SettingsBackupSectionsProvider @Inject constructor(
         val otpAutoFillStatsJson = otpAutoFillStatsRepository.exportRawJson()
         val searchPanelHistoryJson = searchHistoryRepository.exportRawJson()
         val multiTouchGestureJson = multiTouchGestureSettingsStore.exportRawJson()
+        val externalStoreValues = externalStores.export(includeSensitiveData)
 
         if (!includeSensitiveData) {
             return SensitiveBackupSections(
@@ -48,6 +50,7 @@ class SettingsBackupSectionsProvider @Inject constructor(
                 otpAutoFillStatsJson = otpAutoFillStatsJson,
                 searchPanelHistoryJson = searchPanelHistoryJson,
                 multiTouchGestureJson = multiTouchGestureJson,
+                externalStores = externalStoreValues,
             )
         }
 
@@ -61,6 +64,7 @@ class SettingsBackupSectionsProvider @Inject constructor(
             searchPanelHistoryJson = searchPanelHistoryJson,
             multiTouchGestureJson = multiTouchGestureJson,
             includeDirectories = true,
+            externalStores = externalStoreValues,
         )
     }
 }

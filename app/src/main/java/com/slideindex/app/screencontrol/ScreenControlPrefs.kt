@@ -22,7 +22,7 @@ object ScreenControlPrefs {
     const val DEFAULT_WIDTH_DP = 176
     const val DEFAULT_HEIGHT_DP = 352
 
-    private const val PREFS_NAME = "screen_control"
+    const val PREFS_NAME = "screen_control"
     private const val KEY_VERSION = "geometry_version"
     private const val KEY_WIDTH_DP = "panel_width_dp"
     private const val KEY_HEIGHT_DP = "panel_height_dp"

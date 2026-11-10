@@ -101,6 +101,26 @@ object QuickMenuPreferencesStore {
             }
         }
     }
+
+    /** 备份用：DataStore 里的原始 JSON。 */
+    suspend fun exportRawJson(context: Context): String =
+        runCatching { context.quickMenuPrefsDataStore.data.first()[KEY] }
+            .getOrNull()
+            .orEmpty()
+
+    /** 恢复用：整份写回；返回收敛后的内存态，解析失败返回 null。 */
+    suspend fun importRawJson(context: Context, raw: String): QuickMenuPrefs? {
+        if (raw.isBlank()) return null
+        val decoded = runCatching { json.decodeFromString<QuickMenuPrefs>(raw) }
+            .getOrNull() ?: return null
+        val sanitized = QuickMenuPrefsCodec.sanitize(decoded)
+        runCatching {
+            context.quickMenuPrefsDataStore.edit { mutable ->
+                mutable[KEY] = json.encodeToString(sanitized)
+            }
+        }
+        return sanitized
+    }
 }
 
 /**
@@ -143,6 +163,18 @@ object QuickMenuPreferences {
         val context = appContext ?: return
         val snapshot = current
         QuickMenuWork.launch { QuickMenuPreferencesStore.write(context, snapshot) }
+    }
+
+    /** 备份用：DataStore 里的原始 JSON。 */
+    suspend fun exportRawJson(context: Context): String =
+        QuickMenuPreferencesStore.exportRawJson(context)
+
+    /** 恢复备份：写盘并同步内存态，面板下次打开直接生效。 */
+    suspend fun importRawJson(context: Context, raw: String) {
+        val decoded = QuickMenuPreferencesStore.importRawJson(context, raw) ?: return
+        appContext = context.applicationContext
+        loaded = true
+        current = decoded
     }
 
     fun homeModules(): List<QuickMenuHomeModule> =

@@ -24,6 +24,13 @@ data class SettingsBackupDocument(
     val searchPanelHistoryJson: String? = null,
     /** 全局触控（多指手势）的开关 + 条目 + 手绘轨迹；存在独立 SharedPreferences 里。 */
     val multiTouchGestureJson: String? = null,
+    /**
+     * 主 DataStore 之外的独立存储（宏、剪贴板历史、stash_meta、动作自定义名/图标等）。
+     *
+     * key = [SettingsBackupExternalStore.id]，value 由各存储自己编码（JSON / 原文）。
+     * 旧版本读不到这个字段时按空处理；新版本对空 map 不做任何覆盖。
+     */
+    val externalStores: Map<String, String> = emptyMap(),
 )
 
 @Serializable
@@ -38,9 +45,12 @@ data class SensitiveBackupSections(
     /** 全局触控（多指手势）的开关、条目与手绘轨迹。 */
     val multiTouchGestureJson: String? = null,
     val includeDirectories: Boolean = false,
+    /** 主 DataStore 之外的独立存储；见 [SettingsBackupExternalStore]。 */
+    val externalStores: Map<String, String> = emptyMap(),
 ) {
     val hasAny: Boolean
         get() = includeDirectories ||
+            externalStores.isNotEmpty() ||
             listOf(
                 otpRecordsJson,
                 notificationHistoryJson,

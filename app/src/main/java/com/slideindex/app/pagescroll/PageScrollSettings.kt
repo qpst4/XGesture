@@ -38,7 +38,7 @@ data class PageScrollSettings(
 /** 「页面滚动」偏好读写。 */
 object PageScrollPrefs {
 
-    private const val PREFS_NAME = "page_scroll"
+    const val PREFS_NAME = "page_scroll"
     private const val KEY_SPEED_LEVEL = "speed_level"
     private const val KEY_BAR_IDLE_ALPHA = "control_bar_idle_alpha"
     private const val KEY_LAST_SIDE = "last_side"

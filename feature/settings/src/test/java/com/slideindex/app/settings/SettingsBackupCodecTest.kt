@@ -213,6 +213,26 @@ class SettingsBackupCodecTest {
         // 未选中的「边缘手势」模块保持本地值 false，不能被备份里的 true 覆盖。
         assertFalse(restored.leftEdgeEnabled)
     }
+
+    @Test
+    fun exportImport_roundTrip_preservesExternalStores() = runBlocking {
+        val external = mapOf(
+            SettingsBackupExternalStore.MACRO.id to """{"macros_v2_json":"[]"}""",
+            SettingsBackupExternalStore.STASH_META.id to """{"version":1}""",
+        )
+        val outStream = ByteArrayOutputStream()
+        repository.exportSettings(
+            "1.2.0",
+            SensitiveBackupSections(externalStores = external),
+            outStream,
+        ).getOrThrow()
+
+        val result = repository.importSettings(
+            ByteArrayInputStream(outStream.toByteArray()),
+        ).getOrThrow()
+
+        assertEquals(external, result.sensitive.externalStores)
+    }
 }
 
 private suspend fun clearTestSettings(context: Context) {

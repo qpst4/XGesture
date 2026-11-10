@@ -19,7 +19,7 @@ import com.slideindex.app.gesture.GestureAction
  */
 object ActionDisplayNameStore {
 
-    private const val PREFS_NAME = "action_display_names"
+    const val PREFS_NAME = "action_display_names"
 
     private fun sharedPrefs(context: Context): SharedPreferences =
         context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
