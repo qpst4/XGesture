@@ -517,42 +517,46 @@ private fun FloatBallTranslatePanelContent(
 
                         if (result.isNotBlank()) {
 
-                            PickResultInteractiveTextSection(
+                            OverlayTextToolbarProvider {
 
-                                modifier = Modifier
-                                    .padding(horizontal = 12.dp),
+                                PickResultInteractiveTextSection(
 
-                                text = result,
+                                    modifier = Modifier
+                                        .padding(horizontal = 12.dp),
 
-                                textMode = textMode,
+                                    text = result,
 
-                                textSizeSp = textSizeSp,
+                                    textMode = textMode,
 
-                                onTextModeChange = onTextModeChange,
+                                    textSizeSp = textSizeSp,
 
-                                onTextChange = onTextChange,
+                                    onTextModeChange = onTextModeChange,
 
-                                showSourceChips = false,
+                                    onTextChange = onTextChange,
 
-                                translateEnabled = false,
+                                    showSourceChips = false,
 
-                                pinActionBarOutside = true,
+                                    translateEnabled = false,
 
-                                bodyMaxHeight = translateTextBodyMaxHeight,
+                                    pinActionBarOutside = true,
 
-                                showSearch = true,
+                                    bodyMaxHeight = translateTextBodyMaxHeight,
 
-                                onSearch = onSearch,
+                                    showSearch = true,
 
-                                onShare = onShare,
+                                    onSearch = onSearch,
 
-                                onCopy = onCopy,
+                                    onShare = onShare,
 
-                                onTranslate = {},
+                                    onCopy = onCopy,
 
-                                onRemoveSpaces = onRemoveSpaces
+                                    onTranslate = {},
 
-                            )
+                                    onRemoveSpaces = onRemoveSpaces
+
+                                )
+
+                            }
 
                         }
 

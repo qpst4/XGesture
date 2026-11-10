@@ -754,7 +754,9 @@ fun PickResultInteractiveTextSection(
                                 com.slideindex.app.settings.PickResultWordTapGranularity.CHARACTER,
                             onZoomText = onZoomText,
                             onExitEditMode = ::exitEditMode,
-                            selectionToolbarActions = selectionToolbarActions,
+                            selectionToolbarActions = selectionToolbarActions.takeIf {
+                                textMode != PickResultTextMode.SELECT
+                            },
                             onWordTapScrollableChange = { wordTapScrollable = it },
                         )
                     }
@@ -838,7 +840,9 @@ fun PickResultInteractiveTextSection(
                         com.slideindex.app.settings.PickResultWordTapGranularity.CHARACTER,
                     onZoomText = onZoomText,
                     onExitEditMode = ::exitEditMode,
-                    selectionToolbarActions = selectionToolbarActions,
+                    selectionToolbarActions = selectionToolbarActions.takeIf {
+                        textMode != PickResultTextMode.SELECT
+                    },
                     onWordTapScrollableChange = { wordTapScrollable = it },
                 )
                 }
