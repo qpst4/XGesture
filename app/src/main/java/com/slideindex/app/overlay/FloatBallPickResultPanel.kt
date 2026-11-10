@@ -1439,14 +1439,15 @@ object FloatBallPickResultPanel {
                             FloatBallImageSearchPanel.show(context, bitmap)
                         } else {
                             SearchPanelSessionState.pushImage(shareCopy)
+                            // 预热壳会先于取词面板挂窗，直接 show 会被取词面板盖住；先释放预热壳，
+                            // 让 show 重新建窗（新窗口最后 add，天然在最上层）。
+                            // 不能用 remove+add 抢层：会销毁 Compose 组合并触发 ViewTreeLifecycleOwner 崩溃。
+                            SearchPanelOverlayWindow.releaseWarmShellForPickPanel()
                             if (!SearchPanelOverlayWindow.show(context)) {
                                 // 面板没起来（无障碍/宿主未就绪）时保留旧行为，别让搜图变成无响应。
                                 SearchPanelSessionState.pushImage(null)
                                 shareCopy.recycle()
                                 FloatBallImageSearchPanel.show(context, bitmap)
-                            } else {
-                                // 取词面板留在下层：同层窗口后添加者在上，把搜索面板重新提上来。
-                                SearchPanelOverlayWindow.bringAboveContentPanels()
                             }
                         }
                     },
