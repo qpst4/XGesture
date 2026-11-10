@@ -1,5 +1,6 @@
 package com.slideindex.app.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -7,14 +8,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.macro.MacroStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
@@ -38,9 +47,34 @@ fun ActionIconSlot(
                 GlobalIconStore.appIcon(context, it.packageName)
             }
     }
+    // 「运行宏」没有自己的图标，用宏目标 App 的图标（与宏列表那一行一致）。
+    // 模板动作（macroId 为空）拿不到目标，保持通用播放键。
+    val macroRevision = MacroStore.revision
+    val macroId = (action as? GestureAction.RunMacro)?.macroId.orEmpty()
+    var macroIcon by remember(action, macroRevision) {
+        mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
+    }
+    LaunchedEffect(macroId, macroRevision, revision, override) {
+        macroIcon = if (override != null || macroId.isBlank()) {
+            null
+        } else {
+            withContext(Dispatchers.IO) {
+                com.slideindex.app.macro.MacroTargetIconResolver
+                    .bitmap(context, macroId, 96)
+                    ?.asImageBitmap()
+            }
+        }
+    }
 
+    val loadedMacroIcon = macroIcon
     if (override != null) {
         ActionIconView(action = action, iconKey = override, sizeDp = sizeDp, modifier = modifier, showBackground = false)
+    } else if (loadedMacroIcon != null) {
+        Image(
+            bitmap = loadedMacroIcon,
+            contentDescription = null,
+            modifier = modifier.size(sizeDp.dp),
+        )
     } else {
         Box(
             modifier = modifier.size(sizeDp.dp),

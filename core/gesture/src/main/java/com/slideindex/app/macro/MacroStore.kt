@@ -15,6 +15,17 @@ object MacroStore {
 
     const val PREFS_NAME = "xgesture_macros"
 
+    /**
+     * 宏数据代次：任何写操作后 +1。
+     *
+     * 宏本身没有可观察的数据流，而图标 / 名字这些派生显示都带缓存（面板格子、编辑器预览）。
+     * 缓存键必须带上它，否则改了宏（目标 App、名字）之后，已经画出来的格子还是旧值。
+     * 进程内计数即可：宏表只在本进程读写。
+     */
+    @Volatile
+    var revision: Int = 0
+        private set
+
     /** 读出全部宏（坏数据自动退化成空列表，见 [MacroJson.decode]）。 */
     fun all(context: Context): List<Macro> =
         MacroJson.decode(prefs(context).getString(MacroJson.PREF_KEY, null))
@@ -24,6 +35,7 @@ object MacroStore {
         prefs(context).edit()
             .putString(MacroJson.PREF_KEY, MacroJson.encode(macros))
             .apply()
+        revision++
     }
 
     /** 新增或按 id 覆盖一条，返回写回后的完整列表。 */

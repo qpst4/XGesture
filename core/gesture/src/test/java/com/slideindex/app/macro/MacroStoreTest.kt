@@ -104,4 +104,16 @@ class MacroStoreTest {
 
         assertTrue(MacroStore.all(context).isEmpty())
     }
+
+    @Test
+    fun everyWrite_bumpsRevision() {
+        // 图标 / 名字都按 revision 做缓存失效：写宏必须让代次前进，否则面板上改完不刷新。
+        val beforeUpsert = MacroStore.revision
+        MacroStore.upsert(context, macro("rev"))
+        assertTrue(MacroStore.revision > beforeUpsert)
+
+        val beforeDelete = MacroStore.revision
+        MacroStore.delete(context, "rev")
+        assertTrue(MacroStore.revision > beforeDelete)
+    }
 }

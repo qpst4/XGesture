@@ -1016,7 +1016,9 @@ internal class QuickLauncherOverlayController(
         quickLauncherPanelController.displayItems(host.settings(), activeQuickLauncherPanel())
 
     internal fun quickLauncherItemCacheKey(item: QuickLauncherItem): String =
-        "${item.type.id}\u0000${item.payload}"
+        // 宏会影响「运行宏」条目的图标与名字（标签每次按宏表解析），代次必须进 key，
+        // 否则改了宏之后面板还是旧的图标 / 名字。
+        "${item.type.id}\u0000${item.payload}\u0000${com.slideindex.app.macro.MacroStore.revision}"
 
     internal fun rebuildQuickLauncherAppsByPackage(apps: List<AppInfo> = host.apps()) {
         // 同一个包可能同时有主实例和分身（cloneUserId > 0），而快速启动器条目的 payload

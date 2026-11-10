@@ -11,6 +11,7 @@ import androidx.core.graphics.withClip
 import com.slideindex.app.R
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.data.AppInfo
+import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.launcher.QuickLauncherGridLogic
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemCodec
@@ -203,6 +204,18 @@ internal class QuickLauncherRenderer(
                     tintArgb = android.graphics.Color.WHITE,
                     withPlate = true,
                 )?.let { return it }
+                // 「运行宏」要显示宏目标 App 的图标；拿不到（宏被删 / 目标 App 卸载）
+                // 再落回下面的通用播放键，别把整格变成首字母占位。
+                if (action is GestureAction.RunMacro) {
+                    QuickLauncherIconResolver.iconBitmap(
+                        item = item,
+                        appsByPackage = appsByPackage,
+                        size = size,
+                        context = context,
+                        activityShortcuts = activityShortcuts,
+                        shellCommands = shellCommands,
+                    )?.let { return it }
+                }
             }
         }
         if (item.type == QuickLauncherItemType.ACTION &&
@@ -294,6 +307,7 @@ internal class QuickLauncherRenderer(
         "${ctrl.quickLauncherItemCacheKey(item)}\u0000$size\u0000$quickLauncherIconShape" +
             "\u0000v35\u0000${quickLauncherIconCatalogStamp()}\u0000${ctrl.quickLauncherAppsRevision}" +
             "\u0000${com.slideindex.app.ui.GlobalIconStore.revision}" +
+            "\u0000${com.slideindex.app.macro.MacroStore.revision}" +
             "\u0000${com.slideindex.app.ui.IconPlateModeState.mode}" +
             "\u0000${com.slideindex.app.ui.IconPlateModeState.lastResolvedDark}"
 
