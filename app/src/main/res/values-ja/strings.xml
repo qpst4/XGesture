@@ -4444,6 +4444,10 @@
     <string name="float_ball_pick_bar_current_action">現在の動作：%1$s</string>
     <string name="float_ball_pick_bar_select_hint">タップで説明を表示、もう一度タップで表示/非表示</string>
     <string name="float_ball_pick_bar_select_empty">上のボタンをタップして説明を表示</string>
+    <string name="float_ball_pick_bar_style_title">ボトムバーのスタイル</string>
+    <string name="float_ball_pick_bar_style_classic">クラシック</string>
+    <string name="float_ball_pick_bar_style_icon">アイコンのみ</string>
+    <string name="float_ball_pick_bar_style_desc">クラシックは「コピー」と共有エンジンの大きなボタンを残します。アイコンのみは小さなアイコン1列で、選択・非表示・並べ替えができます。</string>
     <string name="float_ball_drag_pick_enabled">フローティングボールのドラッグで単語抽出</string>
     <string name="float_ball_drag_pick_enabled_desc">オフにすると、ドラッグしても抽出の十字カーソルやテキスト選択が表示されません。位置を移動するには、ボールを長押ししてリングツールバーの「移動」を使用します</string>
     <string name="float_ball_drag_paste_requires_pick">上の「フローティングボールのドラッグで単語抽出」をオンにしてください</string>

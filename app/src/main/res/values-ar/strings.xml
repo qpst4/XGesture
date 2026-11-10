@@ -4538,6 +4538,10 @@
     <string name="float_ball_pick_bar_current_action">الإجراء الحالي: %1$s</string>
     <string name="float_ball_pick_bar_select_hint">اضغط للاطلاع، واضغط مرة أخرى للإظهار أو الإخفاء</string>
     <string name="float_ball_pick_bar_select_empty">اضغط على زر أعلاه لمعرفة وظيفته</string>
+    <string name="float_ball_pick_bar_style_title">نمط الشريط السفلي</string>
+    <string name="float_ball_pick_bar_style_classic">كلاسيكي</string>
+    <string name="float_ball_pick_bar_style_icon">أيقونات فقط</string>
+    <string name="float_ball_pick_bar_style_desc">يحتفظ النمط الكلاسيكي بزر النسخ وزر محرك المشاركة الكبيرين. «أيقونات فقط» صف واحد من الأزرار الصغيرة يمكن اختيارها وإخفاؤها وإعادة ترتيبها.</string>
     <string name="clipboard_float_gesture_click">الضغط على عنصر</string>
     <string name="clipboard_float_gesture_long_press">الضغط المطوّل على عنصر</string>
     <string name="clipboard_float_long_press_action_word_tap">اختيار الكلمة / التقسيم</string>

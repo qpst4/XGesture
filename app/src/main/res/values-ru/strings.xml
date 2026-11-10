@@ -1114,6 +1114,10 @@
     <string name="float_ball_pick_bar_current_action">Текущее действие: %1$s</string>
     <string name="float_ball_pick_bar_select_hint">Нажмите, чтобы посмотреть описание; нажмите ещё раз, чтобы скрыть или показать</string>
     <string name="float_ball_pick_bar_select_empty">Нажмите кнопку выше, чтобы увидеть описание</string>
+    <string name="float_ball_pick_bar_style_title">Стиль нижней панели</string>
+    <string name="float_ball_pick_bar_style_classic">Классический</string>
+    <string name="float_ball_pick_bar_style_icon">Только иконки</string>
+    <string name="float_ball_pick_bar_style_desc">Классический сохраняет большие кнопки «Копировать» и движка. «Только иконки» — один ряд маленьких кнопок, которые можно выбирать, скрывать и сортировать.</string>
     <string name="float_ball_drag_pick_enabled">Извлечение текста при перетаскивании шарика</string>
     <string name="float_ball_drag_pick_enabled_desc">Если выключено, при перетаскивании шарика не показывается прицел извлечения и текст не выделяется. Чтобы переместить шарик, удерживайте его и выберите «Переместить» на панели кольца</string>
     <string name="float_ball_drag_paste_requires_pick">Требуется включить «Извлечение текста при перетаскивании шарика» выше</string>

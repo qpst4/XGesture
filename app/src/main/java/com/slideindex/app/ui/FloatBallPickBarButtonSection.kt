@@ -35,10 +35,12 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -62,6 +64,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.slideindex.app.R
@@ -279,20 +282,23 @@ fun PickResultBarButtonSection(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
-            TextButton(
-                onClick = onRestoreDefaults,
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Refresh,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                )
-                Text(
-                    text = stringResource(R.string.float_ball_pick_bar_restore_default),
-                    style = MaterialTheme.typography.labelMedium,
-                    modifier = Modifier.padding(start = 4.dp),
-                )
+            // TextButton 默认带 48dp 最小交互高度，会把这一行撑得上下都是空隙；这里压回文字高度。
+            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+                TextButton(
+                    onClick = onRestoreDefaults,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.float_ball_pick_bar_restore_default),
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(start = 4.dp),
+                    )
+                }
             }
         }
     }

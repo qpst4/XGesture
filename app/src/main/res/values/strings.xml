@@ -1146,6 +1146,10 @@
     <string name="float_ball_pick_bar_current_action">Current action: %1$s</string>
     <string name="float_ball_pick_bar_select_hint">Tap to inspect, tap again to show or hide</string>
     <string name="float_ball_pick_bar_select_empty">Tap a button above to see what it does</string>
+    <string name="float_ball_pick_bar_style_title">Bottom bar style</string>
+    <string name="float_ball_pick_bar_style_classic">Classic</string>
+    <string name="float_ball_pick_bar_style_icon">Icons</string>
+    <string name="float_ball_pick_bar_style_desc">Classic keeps the big Copy / share-engine buttons. Icons shows one row of small icon buttons you can pick, hide and reorder.</string>
     <string name="float_ball_drag_pick_enabled">Pick text when dragging the ball</string>
     <string name="float_ball_drag_pick_enabled_desc">Off: dragging the ball no longer shows the pick crosshair or selects text. To reposition the ball, long-press it and use Move in the ring toolbar</string>
     <string name="float_ball_drag_paste_requires_pick">Needs “Pick text when dragging the ball” above</string>

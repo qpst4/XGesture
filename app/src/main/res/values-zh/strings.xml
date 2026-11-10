@@ -2057,6 +2057,10 @@
     <string name="float_ball_pick_bar_current_action">当前动作：%1$s</string>
     <string name="float_ball_pick_bar_select_hint">点选查看说明，再点切换显示</string>
     <string name="float_ball_pick_bar_select_empty">点选上方的按钮查看说明</string>
+    <string name="float_ball_pick_bar_style_title">底栏样式</string>
+    <string name="float_ball_pick_bar_style_classic">经典</string>
+    <string name="float_ball_pick_bar_style_icon">纯图标</string>
+    <string name="float_ball_pick_bar_style_desc">经典样式保留「复制选中」与分享引擎大按钮；纯图标样式是一排小图标，可点选、隐藏和排序。</string>
     <string name="float_ball_pick_haptic_enabled">取词面板触感反馈</string>
     <string name="float_ball_pick_haptic_enabled_desc">复制选中成功或在分词模式中连续划选字砖时提供清脆微瞬震动</string>
     <string name="float_ball_drag_pick_enabled">拖动悬浮球取词</string>
