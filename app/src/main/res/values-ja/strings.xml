@@ -2787,6 +2787,7 @@
     <string name="activity_shortcut_reset_icon">アイコンをリセット</string>
     <string name="activity_shortcut_icon_from_gallery">ギャラリー</string>
     <string name="activity_shortcut_icon_from_app">アプリから</string>
+    <string name="activity_shortcut_icon_from_icon_pack">アイコンパックから</string>
     <string name="activity_shortcut_add">ショートカットを追加</string>
     <string name="activity_shortcut_pick_app_title">アプリを選択</string>
     <string name="activity_shortcut_preset_add">追加</string>

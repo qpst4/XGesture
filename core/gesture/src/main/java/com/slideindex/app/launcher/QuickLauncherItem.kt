@@ -502,6 +502,18 @@ fun QuickLauncherItem.showsShortcutBadge(): Boolean =
         (type == QuickLauncherItemType.ACTION && payload.startsWith("action:"))
 
 /**
+ * 是否在图标右下角显示「运行宏」角标。
+ *
+ * 宏格子显示的是目标 App 的图标（见 `MacroTargetIconResolver`），
+ * 不额外标一下就和「打开这个 App」长得一样；快捷方式 / Shell 命令各有自己的角标，
+ * 宏属于同一类"有额外行为"的条目，所以用第三枚角标区分。
+ */
+fun QuickLauncherItem.showsMacroBadge(): Boolean {
+    if (type != QuickLauncherItemType.ACTION) return false
+    return QuickLauncherItemCodec.parseActionPayload(payload) is GestureAction.RunMacro
+}
+
+/**
  * 将索引 [from] 处的图标合并到索引 [target] 处的图标/文件夹中。
  * 若 [from] 本身是文件夹，则拒绝合并以防止嵌套。
  */

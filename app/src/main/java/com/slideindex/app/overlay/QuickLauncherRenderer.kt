@@ -11,11 +11,14 @@ import androidx.core.graphics.withClip
 import com.slideindex.app.R
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.data.AppInfo
+import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.launcher.QuickLauncherGridLogic
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.launcher.QuickLauncherItemType
 import com.slideindex.app.launcher.QuickLauncherLabels
+import com.slideindex.app.launcher.isCloneTarget
+import com.slideindex.app.launcher.showsMacroBadge
 import com.slideindex.app.launcher.showsShellCommandBadge
 import com.slideindex.app.launcher.showsShortcutBadge
 import com.slideindex.app.overlay.layout.visualColumn
@@ -203,6 +206,18 @@ internal class QuickLauncherRenderer(
                     tintArgb = android.graphics.Color.WHITE,
                     withPlate = true,
                 )?.let { return it }
+                // 「运行宏」要显示宏目标 App 的图标；拿不到（宏被删 / 目标 App 卸载）
+                // 再落回下面的通用播放键，别把整格变成首字母占位。
+                if (action is GestureAction.RunMacro) {
+                    QuickLauncherIconResolver.iconBitmap(
+                        item = item,
+                        appsByPackage = appsByPackage,
+                        size = size,
+                        context = context,
+                        activityShortcuts = activityShortcuts,
+                        shellCommands = shellCommands,
+                    )?.let { return it }
+                }
             }
         }
         if (item.type == QuickLauncherItemType.ACTION &&
@@ -274,16 +289,13 @@ internal class QuickLauncherRenderer(
             key = key,
             urgent = urgent,
             load = {
-                com.slideindex.app.util.CloneBadge.decorate(
-                    resolveQuickLauncherIcon(
+                resolveQuickLauncherIcon(
                     item = item,
                     size = size,
                     context = appContext,
                     appsByPackage = appsByPackage,
                     activityShortcuts = activityShortcuts,
                     shellCommands = shellCommands
-                    ),
-                    item.appTarget?.isClone == true,
                 )
             },
             onReady = { ctrl.invalidateQuickLauncherPanel() }
@@ -294,6 +306,7 @@ internal class QuickLauncherRenderer(
         "${ctrl.quickLauncherItemCacheKey(item)}\u0000$size\u0000$quickLauncherIconShape" +
             "\u0000v35\u0000${quickLauncherIconCatalogStamp()}\u0000${ctrl.quickLauncherAppsRevision}" +
             "\u0000${com.slideindex.app.ui.GlobalIconStore.revision}" +
+            "\u0000${com.slideindex.app.macro.MacroStore.revision}" +
             "\u0000${com.slideindex.app.ui.IconPlateModeState.mode}" +
             "\u0000${com.slideindex.app.ui.IconPlateModeState.lastResolvedDark}"
 
@@ -454,6 +467,8 @@ internal class QuickLauncherRenderer(
                 iconProvider = { quickLauncherItemIcon(item) },
                 showShortcutBadge = item.showsShortcutBadge(),
                 showShellCommandBadge = item.showsShellCommandBadge(host.settings().shellCommands),
+            showMacroBadge = item.showsMacroBadge(),
+            isClone = item.isCloneTarget(host.context),
                 longPressArmed = recordCells &&
                     index == host.panelGridSession().highlightedIndex &&
                     ctrl.quickLauncherLongPressArmed,
@@ -526,6 +541,8 @@ internal class QuickLauncherRenderer(
             iconProvider = { quickLauncherItemIcon(item) },
             showShortcutBadge = item.showsShortcutBadge(),
             showShellCommandBadge = item.showsShellCommandBadge(host.settings().shellCommands),
+            showMacroBadge = item.showsMacroBadge(),
+            isClone = item.isCloneTarget(host.context),
             iconSize = quickLauncherGridIconSize * scale,
             iconTopInset = quickLauncherGridIconTopInset * scale,
             iconLabelGap = quickLauncherGridIconLabelGap * scale,
@@ -585,6 +602,8 @@ internal class QuickLauncherRenderer(
         iconProvider: () -> Bitmap?,
         showShortcutBadge: Boolean = false,
         showShellCommandBadge: Boolean = false,
+        showMacroBadge: Boolean = false,
+        isClone: Boolean = false,
         longPressArmed: Boolean = false,
         iconSize: Float = quickLauncherGridIconSize,
         iconTopInset: Float = quickLauncherGridIconTopInset,
@@ -669,6 +688,27 @@ internal class QuickLauncherRenderer(
                 iconSize,
                 1f,
                 host.dp(1f)
+            )
+        } else if (showMacroBadge) {
+            // 「运行宏」显示的是目标 App 图标，角标用来和「打开应用」区分
+            MacroBadgeRenderer.draw(
+                canvas,
+                iconCenterX,
+                iconCenterY,
+                iconSize,
+                1f,
+                host.dp(1f)
+            )
+        }
+        // 分身黄点：画在图标形状裁剪之外，圆形图标用 45° 圆内安全位
+        if (isClone) {
+            com.slideindex.app.util.CloneBadge.draw(
+                canvas,
+                iconCenterX,
+                iconCenterY,
+                iconSize,
+                1f,
+                circular = quickLauncherIconShape == QuickLauncherDisplaySettings.ICON_SHAPE_CIRCLE,
             )
         }
         if (showLabels) {
@@ -905,6 +945,8 @@ internal class QuickLauncherRenderer(
                 iconProvider = { quickLauncherItemIcon(child) },
                 showShortcutBadge = child.showsShortcutBadge(),
                 showShellCommandBadge = child.showsShellCommandBadge(host.settings().shellCommands),
+                showMacroBadge = child.showsMacroBadge(),
+                isClone = child.isCloneTarget(host.context),
                 longPressArmed = childGlobalIndex == ctrl.folderHighlightLocalIndex && ctrl.folderLongPressArmed,
                 labelMaxWidth = folderLayout.cellW - gridCellInset * 2
             )
@@ -977,6 +1019,8 @@ internal class QuickLauncherRenderer(
             iconProvider = { quickLauncherItemIcon(item) },
             showShortcutBadge = item.showsShortcutBadge(),
             showShellCommandBadge = item.showsShellCommandBadge(host.settings().shellCommands),
+            showMacroBadge = item.showsMacroBadge(),
+            isClone = item.isCloneTarget(host.context),
             iconSize = quickLauncherGridIconSize * scale,
             iconTopInset = quickLauncherGridIconTopInset * scale,
             iconLabelGap = quickLauncherGridIconLabelGap * scale,

@@ -808,6 +808,13 @@ public final class HoneycombOverlayView extends View {
             ShortcutBadgeRenderer.draw(canvas, x, y, diameter, alpha, density);
         } else if (target.isShellCommandBadge()) {
             ShellCommandBadgeRenderer.draw(canvas, x, y, diameter, alpha, density);
+        } else if (target.isMacroBadge()) {
+            MacroBadgeRenderer.draw(canvas, x, y, diameter, alpha, density);
+        }
+        // 分身黄点：画在圆形裁剪之外，否则方角上的点会被裁掉
+        if (target.isClone) {
+            com.slideindex.app.util.CloneBadge.INSTANCE.draw(
+                    canvas, x, y, diameter, alpha, forceCircularIcons);
         }
     }
 
@@ -855,6 +862,12 @@ public final class HoneycombOverlayView extends View {
             ShortcutBadgeRenderer.draw(canvas, left + size / 2f, centerY, size, alpha, density);
         } else if (target.isShellCommandBadge()) {
             ShellCommandBadgeRenderer.draw(canvas, left + size / 2f, centerY, size, alpha, density);
+        } else if (target.isMacroBadge()) {
+            MacroBadgeRenderer.draw(canvas, left + size / 2f, centerY, size, alpha, density);
+        }
+        if (target.isClone) {
+            com.slideindex.app.util.CloneBadge.INSTANCE.draw(
+                    canvas, left + size / 2f, centerY, size, alpha, forceCircularIcons);
         }
     }
 

@@ -18,6 +18,7 @@ import com.slideindex.app.data.AppRepository
 import com.slideindex.app.overlay.HoneycombRuntimeTarget
 import com.slideindex.app.overlay.ShellCommandBadgeRenderer
 import com.slideindex.app.overlay.HintRingRenderer
+import com.slideindex.app.overlay.MacroBadgeRenderer
 import com.slideindex.app.overlay.ShortcutBadgeRenderer
 import com.slideindex.app.overlay.layout.FvRingLauncherSide
 import com.slideindex.app.overlay.layout.FvCircleLayoutEngine
@@ -172,6 +173,7 @@ object RingLauncherRenderer {
                         shadowPaint = shadowPaint,
                         strokePaint = strokePaint,
                         iconPaint = iconPaint,
+                        isClone = target.isClone,
                     )
                     val drawSize = min(bitmap.width.toFloat(), radius * 2f)
                     if (target.isShortcut) {
@@ -179,6 +181,9 @@ object RingLauncherRenderer {
                     }
                     if (target.isShellCommandBadge) {
                         ShellCommandBadgeRenderer.draw(canvas, centerX, centerY, drawSize, progress, density)
+                    }
+                    if (target.isMacroBadge) {
+                        MacroBadgeRenderer.draw(canvas, centerX, centerY, drawSize, progress, density)
                     }
                 }
             }
@@ -223,6 +228,7 @@ object RingLauncherRenderer {
                     centerY = editDragY,
                     radius = dragRadius,
                     bitmap = bitmap,
+                    isClone = dragTarget.isClone,
                     highlighted = true,
                     density = density,
                     progress = progress,
@@ -260,6 +266,7 @@ object RingLauncherRenderer {
                     cornerRadiusRatio = layout.cornerRadiusRatio,
                     hintRingProgress = hintRingProgress,
                     hintPipArmed = hintPipArmed,
+                    isClone = target.isClone,
                 )
                 if (previewBadgeInfo != null) {
                     val (badgeCx, badgeCy, badgeSize) = previewBadgeInfo
@@ -268,6 +275,9 @@ object RingLauncherRenderer {
                     }
                     if (target.isShellCommandBadge) {
                         ShellCommandBadgeRenderer.draw(canvas, badgeCx, badgeCy, badgeSize, progress, density)
+                    }
+                    if (target.isMacroBadge) {
+                        MacroBadgeRenderer.draw(canvas, badgeCx, badgeCy, badgeSize, progress, density)
                     }
                 }
             }
@@ -295,6 +305,7 @@ object RingLauncherRenderer {
         shadowPaint: Paint,
         strokePaint: Paint,
         iconPaint: Paint,
+        isClone: Boolean,
     ) {
         val diameter = radius * 2f
         val left = centerX - radius
@@ -340,6 +351,18 @@ object RingLauncherRenderer {
         iconPaint.alpha = 255
         canvas.drawBitmap(bitmap, null, iconDstRect, iconPaint)
         canvas.restoreToCount(iconClipSaveCount)
+
+        // 分身黄点：裁剪之外画，圆形图标用 45° 圆内安全位
+        if (isClone) {
+            com.slideindex.app.util.CloneBadge.draw(
+                canvas,
+                centerX,
+                centerY,
+                diameter,
+                progress,
+                circular = cornerRadiusRatio >= 0.49f,
+            )
+        }
 
         strokePaint.style = Paint.Style.STROKE
         strokePaint.pathEffect = null
@@ -474,6 +497,8 @@ object RingLauncherRenderer {
         hintRingProgress: Float = -1f,
         /** 长按到时间且目标是"小窗"时，在图标右下角画画中画角标。 */
         hintPipArmed: Boolean = false,
+        /** 分身条目：图标右上角补黄点（画在形状裁剪之外）。 */
+        isClone: Boolean = false,
     ): Triple<Float, Float, Float>? {
         val centerX = canvas.width * 0.5f
         val iconSizePx = 54f * density
@@ -540,6 +565,17 @@ object RingLauncherRenderer {
         }
         canvas.drawBitmap(bitmap, null, iconRect, previewIconPaint)
         canvas.restoreToCount(previewClipSaveCount)
+
+        if (isClone) {
+            com.slideindex.app.util.CloneBadge.draw(
+                canvas,
+                centerX,
+                iconCenterY,
+                iconSizePx,
+                alpha / 255f,
+                circular = cornerRadiusRatio >= 0.49f,
+            )
+        }
 
         // 图标外圈的进度线（长按倒计时）：外扩 = 半边笔宽 + 1dp 间隙，贴在图标外侧。
         if (hintRingProgress >= 0f) {

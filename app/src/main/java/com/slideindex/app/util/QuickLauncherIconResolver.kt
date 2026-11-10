@@ -62,6 +62,8 @@ object QuickLauncherIconResolver {
             append('\u0000').append(com.slideindex.app.ui.GlobalIconStore.revision)
             append('\u0000').append(com.slideindex.app.ui.IconPlateModeState.mode)
             append('\u0000').append(com.slideindex.app.ui.IconPlateModeState.lastResolvedDark)
+            // 「运行宏」的图标按宏目标 App 解析：宏改了目标 App / 改名都要重取
+            append('\u0000').append(com.slideindex.app.macro.MacroStore.revision)
         }
         bitmapCache.get(cacheKey)?.let { return it }
         val bitmap = resolveIconBitmap(
@@ -99,7 +101,18 @@ object QuickLauncherIconResolver {
         }
     }
 
-    if (item.type == QuickLauncherItemType.FOLDER) {
+        // 「运行宏」也属于"有应用身份"的动作：它只存宏 id，需要按宏表反查目标 App。
+        // 放在通用矢量图标之前，否则永远只会画到「运行宏」的播放键。
+        if (item.type == QuickLauncherItemType.ACTION && context != null) {
+            val action = QuickLauncherItemCodec.parseActionPayload(item.payload)
+            if (action is GestureAction.RunMacro) {
+                com.slideindex.app.macro.MacroTargetIconResolver
+                    .drawable(context, action.macroId, size)
+                    ?.let { return iconBitmapFromDrawable(it, size) }
+            }
+        }
+
+        if (item.type == QuickLauncherItemType.FOLDER) {
             return renderFolderBitmap(
                 item = item,
                 appsByPackage = appsByPackage,
@@ -189,6 +202,14 @@ object QuickLauncherIconResolver {
                             )?.let { return it }
                         }
                         gestureShortcutDrawable(action.payloadKey, context)
+                    }
+                    is GestureAction.RunMacro -> {
+                        context?.let { ctx ->
+                            com.slideindex.app.macro.MacroTargetIconResolver
+                                .drawable(ctx, action.macroId, 128)
+                                ?.let { return it }
+                        }
+                        gestureActionDrawable(action, context)
                     }
                     is GestureAction.ExecuteShellCommand -> {
                         val matched = ShellCommandIconResolver.findForCommandLine(action.command, shellCommands)

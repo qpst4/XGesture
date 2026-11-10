@@ -1,5 +1,6 @@
 package com.slideindex.app.ui
 
+import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -40,8 +41,11 @@ import com.slideindex.app.activity.ActivityShortcutKind
 import com.slideindex.app.activity.ActivityShortcutLauncher
 import com.slideindex.app.activity.ActivityShortcutPreset
 import com.slideindex.app.activity.ManagedShortcutIconResolver
+import com.slideindex.app.activity.ShortcutIconPackBridge
 import com.slideindex.app.activity.ShortcutIconStorage
 import com.slideindex.app.activity.subtitleDetail
+import com.slideindex.app.iconpack.IconPackTarget
+import com.slideindex.app.service.IconPackPickerTrampolineActivity
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.ui.compose.rememberAppRepository
 import com.slideindex.app.ui.miuix.CardItem
@@ -103,6 +107,33 @@ fun ActivityShortcutScreen(
         scope.launch {
             val path = withContext(Dispatchers.IO) {
                 ShortcutIconStorage.saveIconFromUri(context, uri)
+            } ?: return@launch
+            withContext(Dispatchers.IO) {
+                ShortcutIconStorage.deleteIconIfOwned(context, target.iconPath)
+            }
+            persist(
+                shortcuts.map { shortcut ->
+                    if (shortcut.id == target.id) shortcut.copy(iconPath = path) else shortcut
+                }
+            )
+        }
+    }
+
+    // 「从图标包选择」：选择页回传的是全局图标目录里的 PNG，复制进 shortcut_icons 再用
+    // （快捷方式的 iconPath 只认这个目录，见 ShortcutIconStorage.loadBitmap）。
+    val packIconLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val target = changingIconShortcut
+        changingIconShortcut = null
+        if (result.resultCode != Activity.RESULT_OK || target == null) {
+            return@rememberLauncherForActivityResult
+        }
+        val picked = result.data?.getStringExtra(IconPackPickerTrampolineActivity.EXTRA_PICKED_PATH)
+            ?: return@rememberLauncherForActivityResult
+        scope.launch {
+            val path = withContext(Dispatchers.IO) {
+                ShortcutIconPackBridge.importPickedIcon(context, target.id, picked)
             } ?: return@launch
             withContext(Dispatchers.IO) {
                 ShortcutIconStorage.deleteIconIfOwned(context, target.iconPath)
@@ -190,6 +221,21 @@ fun ActivityShortcutScreen(
             onChangeIcon = {
                 changingIconShortcut = it
                 pickIconLauncher.launch("image/*")
+            },
+            onChangeIconFromPack = { target ->
+                changingIconShortcut = target
+                packIconLauncher.launch(
+                    IconPackPickerTrampolineActivity.createIntent(
+                        context = context,
+                        target = IconPackTarget(
+                            packageName = target.packageName.trim(),
+                            activityName = target.activityClassName.trim()
+                                .takeIf { it.isNotBlank() },
+                            label = target.label,
+                        ),
+                        storageKey = ShortcutIconPackBridge.storageKey(target.id),
+                    ),
+                )
             },
             onResetIcon = { target ->
                 ShortcutIconStorage.deleteIconIfOwned(context, target.iconPath)
@@ -284,6 +330,7 @@ private fun LazyListScope.activityShortcutMineListItems(
     onLaunch: (ActivityShortcut) -> Unit,
     onEdit: (ActivityShortcut) -> Unit,
     onChangeIcon: (ActivityShortcut) -> Unit,
+    onChangeIconFromPack: (ActivityShortcut) -> Unit,
     onResetIcon: (ActivityShortcut) -> Unit,
     onDelete: (ActivityShortcut) -> Unit
 ) {
@@ -337,6 +384,7 @@ private fun LazyListScope.activityShortcutMineListItems(
                     onLaunch = { onLaunch(shortcut) },
                     onEdit = { onEdit(shortcut) },
                     onChangeIcon = { onChangeIcon(shortcut) },
+                    onChangeIconFromPack = { onChangeIconFromPack(shortcut) },
                     onResetIcon = { onResetIcon(shortcut) },
                     onDelete = { onDelete(shortcut) }
                 )
@@ -398,18 +446,21 @@ private fun ActivityShortcutSavedRowContent(
     onLaunch: () -> Unit,
     onEdit: () -> Unit,
     onChangeIcon: () -> Unit,
+    onChangeIconFromPack: () -> Unit,
     onResetIcon: () -> Unit,
     onDelete: () -> Unit
 ) {
     val context = LocalContext.current
     val openText = stringResource(R.string.activity_shortcut_open)
     val changeIconText = stringResource(R.string.activity_shortcut_change_icon)
+    val iconFromPackText = stringResource(R.string.activity_shortcut_icon_from_icon_pack)
     val resetIconText = stringResource(R.string.activity_shortcut_reset_icon)
     val deleteText = stringResource(R.string.stash_action_delete)
     val moreMenuDesc = stringResource(R.string.notification_filter_more_menu)
     val menuEntry = DropdownEntry(
         items = buildList {
             add(DropdownItem(text = changeIconText, onClick = onChangeIcon))
+            add(DropdownItem(text = iconFromPackText, onClick = onChangeIconFromPack))
             if (!shortcut.iconPath.isNullOrBlank()) {
                 add(DropdownItem(text = resetIconText, onClick = onResetIcon))
             }

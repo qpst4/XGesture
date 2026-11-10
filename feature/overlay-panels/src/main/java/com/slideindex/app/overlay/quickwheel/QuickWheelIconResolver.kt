@@ -140,22 +140,27 @@ object QuickWheelIconResolver {
      */
     fun actionBitmapFor(context: Context, action: GestureAction, targetSizePx: Int): ImageBitmap? =
         when (action) {
-            is GestureAction.LaunchApp -> {
-                val bitmap = appIcon(context, action.packageName, targetSizePx)
-                if (action.cloneUserId > 0 && bitmap != null) {
-                    com.slideindex.app.util.CloneBadge
-                        .decorate(bitmap.asAndroidBitmap(), true)
-                        ?.asImageBitmap()
-                } else {
-                    bitmap
-                }
-            }
+            // 分身黄点不烘进位图（容器会做圆形裁剪），由 QuickWheelContainer 在裁剪外画
+            is GestureAction.LaunchApp -> appIcon(context, action.packageName, targetSizePx)
 
             is GestureAction.LaunchShortcut ->
                 shortcutIcon(context, action, targetSizePx)
                     ?: com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutHostPackage
                         ?.invoke(action.payloadKey)
                         ?.let { host -> appIcon(context, host, targetSizePx) }
+
+            // 「运行宏」：复用快速启动器统一解析，显示宏目标 App 图标
+            is GestureAction.RunMacro ->
+                com.slideindex.app.overlay.panels.PanelRuntimeHooks.quickLauncherIconBitmap
+                    ?.invoke(
+                        com.slideindex.app.launcher.QuickLauncherItem.action(action),
+                        emptyMap(),
+                        targetSizePx,
+                        context,
+                        emptyList(),
+                        emptyList(),
+                    )
+                    ?.asImageBitmap()
 
             else -> null
         }

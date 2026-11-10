@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureActionType
+import com.slideindex.app.launcher.isCloneTarget
 import com.slideindex.app.launcher.showsShellActivityShortcutBadge
 import com.slideindex.app.overlay.ShellCommandBadgeOverlay
 import com.slideindex.app.overlay.ShortcutBadgeOverlay
@@ -319,6 +320,13 @@ fun QuickWheelSlotIcon(
             action = badgeAction,
             iconSize = if (bitmap != null || actionBitmap != null) rasterDp else builtinDp,
         )
+        // 分身黄点：绘制期叠在图标上，避免被容器圆形裁剪（烘进位图会掉一半）
+        if (fallbackAction?.isCloneTarget(context) == true) {
+            com.slideindex.app.overlay.CloneBadgeOverlay(
+                iconSize = if (bitmap != null || actionBitmap != null) rasterDp else builtinDp,
+                circular = true,
+            )
+        }
     }
 }
 
@@ -335,6 +343,11 @@ fun QuickWheelSlotIcon(
  */
 @Composable
 fun QuickWheelIconBadge(action: GestureAction, iconSize: Dp) {
+    // 「运行宏」格子显示目标 App 图标：加宏角标，和「打开应用」区分
+    if (action is GestureAction.RunMacro) {
+        com.slideindex.app.overlay.MacroBadgeOverlay(iconSize = iconSize)
+        return
+    }
     val shortcut = action as? GestureAction.LaunchShortcut ?: return
     val context = LocalContext.current
     val isShell = remember(shortcut) {

@@ -67,9 +67,12 @@ import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.launcher.QuickLauncherItem
+import com.slideindex.app.launcher.showsMacroBadge
 import com.slideindex.app.launcher.showsShellCommandBadge
 import com.slideindex.app.launcher.showsShortcutBadge
 import com.slideindex.app.overlay.HoneycombGeometry
+import com.slideindex.app.overlay.drawCloneBadge
+import com.slideindex.app.overlay.drawMacroBadge
 import com.slideindex.app.overlay.drawShellCommandBadge
 import com.slideindex.app.overlay.drawShortcutBadge
 import com.slideindex.app.settings.HoneycombDisplaySettings
@@ -468,6 +471,8 @@ private fun HoneycombLayoutPreview(
                     showShortcutBadge = items.getOrNull(index)?.showsShortcutBadge() == true,
                     showShellCommandBadge = items.getOrNull(index)
                         ?.let { !it.showsShortcutBadge() && it.showsShellCommandBadge(shellCommands) } == true,
+                    showMacroBadge = items.getOrNull(index)?.showsMacroBadge() == true,
+                    isClone = items.getOrNull(index)?.appTarget?.isClone == true,
                 )
             }
 
@@ -492,6 +497,8 @@ private fun HoneycombLayoutPreview(
                     showShortcutBadge = items[dragIndex].showsShortcutBadge(),
                     showShellCommandBadge = !items[dragIndex].showsShortcutBadge() &&
                         items[dragIndex].showsShellCommandBadge(shellCommands),
+                    showMacroBadge = items[dragIndex].showsMacroBadge(),
+                    isClone = items[dragIndex].appTarget?.isClone == true,
                 )
             }
         }
@@ -675,6 +682,8 @@ private fun DrawScope.drawHoneycombIcon(
     alpha: Float = 1f,
     showShortcutBadge: Boolean = false,
     showShellCommandBadge: Boolean = false,
+    showMacroBadge: Boolean = false,
+    isClone: Boolean = false,
 ) {
     drawCircle(color = IconPlateColor, radius = radius, center = center, alpha = alpha)
     if (bitmap != null) {
@@ -701,6 +710,25 @@ private fun DrawScope.drawHoneycombIcon(
             iconCenterX = center.x,
             iconCenterY = center.y,
             iconDiameter = radius * 2f,
+            alpha = alpha,
+            density = densityValue,
+        )
+    } else if (showMacroBadge) {
+        drawMacroBadge(
+            iconCenterX = center.x,
+            iconCenterY = center.y,
+            iconDiameter = radius * 2f,
+            alpha = alpha,
+            density = densityValue,
+        )
+    }
+    if (isClone) {
+        // 蜂窝图标是圆形：黄点必须走 45° 圆内安全位
+        drawCloneBadge(
+            iconCenterX = center.x,
+            iconCenterY = center.y,
+            iconSize = radius * 2f,
+            circular = true,
             alpha = alpha,
             density = densityValue,
         )

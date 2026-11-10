@@ -192,6 +192,8 @@ fun QuickLauncherGridEditor(
         settings.shellCommands,
         // 图标库里改完应用图标要重新取图，否则编辑页一直显示改动前的缓存
         com.slideindex.app.ui.GlobalIconStore.revision,
+        // 「运行宏」条目的图标来自宏表：改了宏的目标 App 要重新取图
+        com.slideindex.app.macro.MacroStore.revision,
     ) {
         iconBitmapCache = withContext(Dispatchers.IO) {
             // 受限并发：串行解析在 OEM 主题图标设备上要等一分钟，全并发又会把 CPU 打满。

@@ -45,10 +45,9 @@ object RingLauncherSlotIconBitmap {
             appRepository = appRepository,
             iconOverride = iconOverride,
         ) ?: createPlaceholderBitmap(sizePx, item.label.ifBlank { item.payload })
-        // 分身条目在图标右上角补黄点（主实例原样返回）。
-        val decorated = com.slideindex.app.overlay.panels.PanelRuntimeHooks.cloneBadgeDecorate
-            ?.invoke(bitmap, item.appTarget?.isClone == true) ?: bitmap
-        cache.put(cacheKey, decorated)
+        // 分身黄点不烘进位图：圆环按圆形/圆角裁剪图标，角上的点会被裁掉。
+        // 由 RingLauncherRenderer 在裁剪之外按 target.isClone 绘制。
+        cache.put(cacheKey, bitmap)
         return bitmap
     }
 
