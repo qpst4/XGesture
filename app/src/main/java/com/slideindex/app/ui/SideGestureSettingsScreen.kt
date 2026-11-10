@@ -180,6 +180,19 @@ fun SideGestureSettingsScreen(
                             text = hoverSectionTitle,
                             insideMargin = PaddingValues(top = 8.dp, bottom = 4.dp),
                         )
+                        RenderSideGestureSlotItems(
+                            sideGestureSlotCardItems(
+                                settings = settings,
+                                slotSide = slotSide,
+                                handleId = handleId,
+                                side = side,
+                                triggers = SwipeDirectionFamily.orderedEntries().map { it.hoverTrigger },
+                                titleStyle = SideGestureSlotTitleStyle.TriggerLabel,
+                                onOpenSlotConfig = onOpenSlotConfig,
+                                rowInsideMargin = MiuixInsetCardComponentMargin,
+                            ),
+                        )
+                        // 悬停时长滑条放到卡片最底部，避免把「直向」和「悬停」两组槽位夹断。
                         MiuixSliderRow(
                             title = stringResource(R.string.side_gestures_hover_duration),
                             summary = hoverDurationSummary,
@@ -198,18 +211,6 @@ fun SideGestureSettingsScreen(
                                 )
                             },
                             onValueChange = { onSwipeHoverDurationChange(it.roundToInt()) },
-                        )
-                        RenderSideGestureSlotItems(
-                            sideGestureSlotCardItems(
-                                settings = settings,
-                                slotSide = slotSide,
-                                handleId = handleId,
-                                side = side,
-                                triggers = SwipeDirectionFamily.orderedEntries().map { it.hoverTrigger },
-                                titleStyle = SideGestureSlotTitleStyle.TriggerLabel,
-                                onOpenSlotConfig = onOpenSlotConfig,
-                                rowInsideMargin = MiuixInsetCardComponentMargin,
-                            ),
                         )
                     }
 
