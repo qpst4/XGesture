@@ -32,6 +32,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
@@ -106,7 +107,8 @@ internal fun <T> SegmentedControl(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             labels.forEachIndexed { index, label ->
-                if (index > 0) {
+                // 选中项两侧不画竖线：两个 tab 时中间自然没有线，三个以上也保持选中 pill 周围干净。
+                if (index > 0 && index != selectedIndex && index - 1 != selectedIndex) {
                     Box(
                         modifier = Modifier
                             .width(1.dp)
@@ -132,6 +134,11 @@ internal fun <T> SegmentedControl(
                     MiuixText(
                         text = label,
                         style = MiuixTheme.textStyles.body2,
+                        fontWeight = if (index == selectedIndex) {
+                            FontWeight.Bold
+                        } else {
+                            FontWeight.Normal
+                        },
                         color = if (index == selectedIndex) {
                             MiuixTheme.colorScheme.primary
                         } else {
