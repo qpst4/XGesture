@@ -537,6 +537,14 @@ class OverlayManager(
             .any { it.edgePresentationNeedsChromeRaise() }
     }
 
+    /** 任一侧的音量/亮度条是否正在显示（悬浮球要让出触摸）。 */
+    fun edgePresentationHasAdjustPanel(): Boolean {
+        if (!currentSettings.serviceEnabled) return false
+        return sequenceOf(leftController, rightController, bottomController, topController)
+            .filterNotNull()
+            .any { it.hasAdjustPanel() }
+    }
+
     fun notifyEdgeChromeBelowPanel() {
         if (!currentSettings.serviceEnabled) return
         leftController?.markChromeBelowPanel()

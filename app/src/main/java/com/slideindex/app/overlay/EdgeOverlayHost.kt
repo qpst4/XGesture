@@ -585,6 +585,9 @@ class EdgeOverlayHost(
     fun edgePresentationNeedsChromeRaise(): Boolean =
         overlayManager?.edgePresentationNeedsChromeRaise() == true
 
+    fun edgePresentationHasAdjustPanel(): Boolean =
+        overlayManager?.edgePresentationHasAdjustPanel() == true
+
     fun notifyEdgeChromeBelowPanel() {
         overlayManager?.notifyEdgeChromeBelowPanel()
     }

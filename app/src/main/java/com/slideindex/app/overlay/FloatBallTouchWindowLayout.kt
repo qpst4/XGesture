@@ -162,7 +162,10 @@ internal object FloatBallTouchWindowLayout {
         val view = FloatBallOverlay.touchHost ?: return
         val wm = FloatBallOverlay.windowManager ?: return
         val params = FloatBallOverlay.touchLayoutParams ?: return
-        if (passthrough) {
+        // 音量条显示期间球必须让出触摸：这个条件要盖过 [restoreAfterDragEnd] 等处的 passthrough=false
+        // （那些调用发生在条已经显示之后，见 FloatBallOverlay.isAdjustBarCoveringBall）。
+        val shouldPassthrough = passthrough || FloatBallOverlay.isAdjustBarCoveringBall()
+        if (shouldPassthrough) {
             params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
         } else if (!FloatBallOverlay.captureSuppressed && !FloatBallOverlay.passthroughRestorePending) {
             params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()

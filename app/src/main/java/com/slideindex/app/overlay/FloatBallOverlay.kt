@@ -405,6 +405,37 @@ object FloatBallOverlay {
     }
 
     /**
+     * 是否有音量/亮度条正在边缘浮层上显示（条会占住全屏触摸，且和球同层）。
+     *
+     * 条显示期间，它所在的全屏 presentation 会切成可触摸（见 `EdgeGestureLayoutCoordinator`），
+     * 而球和它是**同类型窗口**：z 序只能靠 remove/add 抢。实际顺序是「条先出现（手指还按着，
+     * 拖动中不抬球）→ 松手后把球抬到条上面」，于是球正好盖住条的中段（球 48dp、条 52dp
+     * 且都贴同一边，条的锚点又是手指位置）——手指一落就滑到球上，条收不到那一拍。
+     *
+     * 因此条显示期间球**让出触摸**、并且**不再抢 z 序**（见 [syncTouchForPanelState] 与
+     * [bringChromeAbovePanelsNow] 的早退）。查询是实时的，没有额外状态位，
+     * 窗口被摘/退场动画开始/服务重启后自然恢复为 false。
+     */
+    fun isAdjustBarCoveringBall(): Boolean =
+        SlideIndexAccessibilityService.edgePresentationHasAdjustPanel()
+
+    /**
+     * 面板/音量条的触摸需求变化后，同步球触摸窗的穿透状态。
+     *
+     * 只在「该让触摸 / 该收回来」时改一次 flags，**不做 remove/add**，所以不会翻层级。
+     * 手势进行中一律不动窗口 flags：WM 改 flags 会给正在拖动的窗口发 ACTION_CANCEL；
+     * 那一拍由 [restoreAfterDragEnd] → [setBallTouchHostPassthrough] 按同一份实时条件补上。
+     */
+    fun syncTouchForPanelState() {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            mainHandler.post { syncTouchForPanelState() }
+            return
+        }
+        if (isDragging) return
+        settingsState?.value?.let { syncBallTouchWindowLayout(it) }
+    }
+
+    /**
      * Edge gesture ended with no content panel: presentation is gone or was tracking-only.
      * Clears deferred z-order flags without WM remove/add (avoids trigger/ball flash on tap).
      */
@@ -518,6 +549,16 @@ object FloatBallOverlay {
             if (!chromeZOrderFront) {
                 chromeRaiseDeferredForDrag = true
             }
+            return
+        }
+        // 音量条显示期间：球已经让出触摸（见 isAdjustBarCoveringBall），这里再 remove/add 抬球
+        // 只会让球盖住条、并在松手那一帧翻一次层级。只补一次触摸窗同步，不动窗口顺序。
+        if (isAdjustBarCoveringBall()) {
+            EdgeDiag.log(
+                "zorder",
+                "音量条显示中：跳过 chrome 抬升（球让触摸）chromeFront=$chromeZOrderFront",
+            )
+            settingsState?.value?.let { syncBallTouchWindowLayout(it) }
             return
         }
         // 只有「面板真的还压在 chrome 上面」时，remove+add 抬 z 序才是必须的。
@@ -1471,7 +1512,7 @@ object FloatBallOverlay {
             screenHeightPx = screenH,
             isLandscape = isLandscape,
         )
-        if (captureSuppressed || passthroughRestorePending) {
+        if (captureSuppressed || passthroughRestorePending || isAdjustBarCoveringBall()) {
             params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
         } else {
             params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()

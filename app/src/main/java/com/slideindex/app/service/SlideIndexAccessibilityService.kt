@@ -824,6 +824,15 @@ class SlideIndexAccessibilityService : AccessibilityService() {
         fun edgePresentationNeedsChromeRaise(): Boolean =
             instance?.edgeOverlayHost?.edgePresentationNeedsChromeRaise() == true
 
+        /**
+         * 音量/亮度条是否正在边缘 presentation 上显示。
+         *
+         * 条显示期间它会切成可触摸的全屏窗，而悬浮球和它是同类型窗口（只能靠 remove/add 抢 z 序）。
+         * 悬浮球据此让出触摸、并停止抬升，见 `FloatBallOverlay.isAdjustBarCoveringBall`。
+         */
+        fun edgePresentationHasAdjustPanel(): Boolean =
+            instance?.edgeOverlayHost?.edgePresentationHasAdjustPanel() == true
+
         fun notifyEdgeChromeBelowPanel() {
             instance?.edgeOverlayHost?.notifyEdgeChromeBelowPanel()
         }

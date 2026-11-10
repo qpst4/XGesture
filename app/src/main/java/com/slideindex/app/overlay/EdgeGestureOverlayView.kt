@@ -489,6 +489,9 @@ class EdgeGestureOverlayView(
 
     fun hasAdjustPanel(): Boolean = adjustPanelController.hasAdjustPanel()
 
+    /** 条已开始退场：这一段 presentation 已经立刻让出触摸（见 `dismissAdjustPanel`），球要同步收回。 */
+    fun isAdjustPanelDismissing(): Boolean = adjustPanelController.isDismissing()
+
     /** True when presentation shows real panel chrome, not mere finger-down gesture tracking. */
     fun needsChromeRaisedAbovePresentation(): Boolean =
         panelMode() != OverlayPanelMode.NONE ||
