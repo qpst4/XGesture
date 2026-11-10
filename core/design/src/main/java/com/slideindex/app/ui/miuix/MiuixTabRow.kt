@@ -31,13 +31,13 @@ fun miuixTabRowContourColors(host: MiuixTabRowContourHost): TabRowColors {
             backgroundColor = if (isDark) Color(0xFF242426) else Color(0xFFF0F0F0),
             selectedBackgroundColor = if (isDark) Color(0xFF3A3A3C) else Color.White,
             contentColor = if (isDark) Color(0xFF8E8E93) else Color(0xFF8E8E93),
-            selectedContentColor = if (isDark) Color.White else Color(0xFF1C1C1E),
+            selectedContentColor = MiuixTheme.colorScheme.primary,
         )
         MiuixTabRowContourHost.SurfaceContainer -> TabRowDefaults.tabRowColors(
             backgroundColor = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF0F0F0),
             selectedBackgroundColor = if (isDark) Color(0xFF3A3A3C) else Color.White,
             contentColor = if (isDark) Color(0xFF8E8E93) else Color(0xFF8E8E93),
-            selectedContentColor = if (isDark) Color.White else Color(0xFF1C1C1E),
+            selectedContentColor = MiuixTheme.colorScheme.primary,
         )
     }
 }
