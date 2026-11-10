@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,6 +26,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.ui.miuix.MiuixConfirmDialog
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Delete
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.shake.ShakeGestureSettings
 import com.slideindex.app.shake.ShakeGestureType
@@ -72,25 +75,17 @@ fun ShakeMenuSettingsScreen(
     val emptyDesc = stringResource(R.string.shake_menu_empty_desc)
 
     pendingRemoval?.let { menu ->
-        AlertDialog(
+        MiuixConfirmDialog(
+            show = true,
             onDismissRequest = { pendingRemoval = null },
-            title = { Text(stringResource(R.string.shake_menu_delete)) },
-            text = { Text(stringResource(R.string.shake_menu_delete_confirm, menu.name)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        pendingRemoval = null
-                        onRemoveMenu(menu.id)
-                    },
-                ) {
-                    Text(stringResource(R.string.confirm))
-                }
+            title = stringResource(R.string.shake_menu_delete),
+            message = stringResource(R.string.shake_menu_delete_confirm, menu.name),
+            confirmText = stringResource(R.string.confirm),
+            onConfirm = {
+                pendingRemoval = null
+                onRemoveMenu(menu.id)
             },
-            dismissButton = {
-                TextButton(onClick = { pendingRemoval = null }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            },
+            dismissText = stringResource(R.string.cancel),
         )
     }
 
@@ -184,9 +179,9 @@ fun ShakeMenuSettingsScreen(
                             trailingContent = {
                                 IconButton(onClick = { pendingRemoval = menu }) {
                                     Icon(
-                                        imageVector = Icons.Default.RemoveCircleOutline,
+                                        imageVector = MiuixIcons.Delete,
                                         contentDescription = stringResource(R.string.shake_menu_delete),
-                                        tint = MaterialTheme.colorScheme.error,
+                                        tint = MiuixTheme.colorScheme.error,
                                     )
                                 }
                             },

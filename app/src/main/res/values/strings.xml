@@ -114,6 +114,7 @@
     <string name="shake_gestures_app_blacklist_desc">Disable shake gestures in blacklisted apps</string>
     <string name="shake_gestures_blacklist_section_blocked">Blocked apps</string>
     <string name="shake_gestures_blacklist_section_add">Add app</string>
+    <string name="shake_gestures_blacklist_section_add_desc">Pick apps where shake gestures are ignored</string>
     <string name="shake_gestures_blacklist_empty">No blocked apps</string>
     <string name="shake_gestures_blacklist_remove">Remove from blacklist</string>
     <string name="shake_gestures_lock_screen_settings_desc">Use these shake actions while locked or with the screen off</string>

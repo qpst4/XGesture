@@ -56,6 +56,7 @@
     <string name="shake_gestures_app_blacklist_desc">ブラックリストのアプリでシェイクジェスチャを無効化</string>
     <string name="shake_gestures_blacklist_section_blocked">ブロック中のアプリ</string>
     <string name="shake_gestures_blacklist_section_add">アプリを追加</string>
+    <string name="shake_gestures_blacklist_section_add_desc">揺れジェスチャーを無視するアプリを選択</string>
     <string name="shake_gestures_blacklist_empty">ブロック中のアプリはありません</string>
     <string name="shake_gestures_blacklist_remove">ブラックリストから削除</string>
     <string name="shake_gestures_lock_screen_settings_desc">ロック中または画面オフ時に以下のシェイクアクションを使用</string>

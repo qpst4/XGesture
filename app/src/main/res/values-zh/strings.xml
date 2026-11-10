@@ -83,6 +83,7 @@
     <string name="shake_gestures_app_blacklist_desc">在黑名单应用中禁用晃动</string>
     <string name="shake_gestures_blacklist_section_blocked">已屏蔽应用</string>
     <string name="shake_gestures_blacklist_section_add">添加应用</string>
+    <string name="shake_gestures_blacklist_section_add_desc">选择要忽略晃动动作的应用</string>
     <string name="shake_gestures_blacklist_empty">暂无屏蔽应用</string>
     <string name="shake_gestures_blacklist_remove">移出黑名单</string>
     <string name="shake_gestures_lock_screen_settings_desc">锁屏或熄屏时使用以下晃动动作</string>

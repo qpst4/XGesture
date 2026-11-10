@@ -56,6 +56,7 @@
     <string name="shake_gestures_app_blacklist_desc">تعطيل الهز في التطبيقات الموجودة في القائمة السوداء</string>
     <string name="shake_gestures_blacklist_section_blocked">التطبيقات المحظورة</string>
     <string name="shake_gestures_blacklist_section_add">إضافة تطبيق</string>
+    <string name="shake_gestures_blacklist_section_add_desc">اختر التطبيقات التي تُتجاهل فيها إيماءات الاهتزاز</string>
     <string name="shake_gestures_blacklist_empty">لا توجد تطبيقات محظورة</string>
     <string name="shake_gestures_blacklist_remove">إزالة من القائمة السوداء</string>
     <string name="shake_gestures_lock_screen_settings_desc">استخدام إجراءات الهز التالية عند قفل الشاشة أو إطفائها</string>

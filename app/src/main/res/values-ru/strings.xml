@@ -87,6 +87,7 @@
     <string name="shake_gestures_app_blacklist_desc">Отключить жесты встряхивания в заблокированных приложениях</string>
     <string name="shake_gestures_blacklist_section_blocked">Заблокированные приложения</string>
     <string name="shake_gestures_blacklist_section_add">Добавить приложение</string>
+    <string name="shake_gestures_blacklist_section_add_desc">Выберите приложения, где игнорировать встряхивание</string>
     <string name="shake_gestures_blacklist_empty">Нет заблокированных приложений</string>
     <string name="shake_gestures_blacklist_remove">Убрать из списка блокировки</string>
     <string name="shake_gestures_lock_screen_settings_desc">Используйте эти действия встряхивания в заблокированном состоянии или при выключенном экране</string>
