@@ -27,7 +27,6 @@ import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.SearchEngineConfig
 import com.slideindex.app.settings.SearchEngineStore
 import com.slideindex.app.ui.settings.components.LazySettingsItem
-import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_01
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.SettingsVerticalReorderList
 import com.slideindex.app.ui.miuix.groupedCardItems
@@ -38,7 +37,6 @@ import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
-import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,7 +48,6 @@ fun ImageSearchEngineSettingsScreen(
     onReorderShareEngines: (List<SearchEngineConfig>) -> Unit,
     onReorderAggregatedEngines: (List<AggregatedImageSearchEngineConfig>) -> Unit,
     onOpenAggregatedEngine: (String) -> Unit,
-    onImageSearchPickPanelTransparencyChange: (Float) -> Unit,
     onOpenEditor: (String?) -> Unit,
     onOpenBatchPicker: () -> Unit,
 ) {
@@ -84,26 +81,6 @@ fun ImageSearchEngineSettingsScreen(
         subtitle = stringResource(R.string.image_search_engine_settings_subtitle),
         onBack = onBack,
     ) {
-        groupedCardItems(
-            keyPrefix = "image-search-transparency",
-            items = listOf(
-                settingsCardScopeItem("transparency") {
-                    SettingsSliderRow(
-                        title = stringResource(R.string.float_ball_image_search_pick_panel_transparency),
-                        value = settings.floatBallImageSearchPickPanelTransparency,
-                        valueRange = 0f..1f,
-                        enabled = true,
-                        label = stringResource(
-                            R.string.floating_pointer_percent_value,
-                            (settings.floatBallImageSearchPickPanelTransparency * 100).roundToInt(),
-                        ),
-                        keyPoints = SETTINGS_SLIDER_PERCENT_KEY_POINTS_01,
-                        onValueChange = onImageSearchPickPanelTransparencyChange,
-                    )
-                },
-            ),
-        )
-
         settingsLazySmallTitle(
             key = "image-search-share-section",
             title = shareSectionTitle,

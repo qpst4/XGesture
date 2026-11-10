@@ -686,10 +686,6 @@ class SearchEngineSettingsViewModel @Inject constructor(
             }
     }
 
-    fun setImageSearchPickPanelTransparency(value: Float) = launchSettingsWrite {
-        settingsRepository.setFloatBallImageSearchPickPanelTransparency(value)
-    }
-
     private suspend fun persistEngines(
         engines: List<SearchEngineConfig>,
         onSuccess: () -> Unit = {},

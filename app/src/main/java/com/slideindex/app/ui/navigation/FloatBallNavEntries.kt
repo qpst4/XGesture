@@ -566,8 +566,7 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
             onOpenAggregatedEngine = { engineId ->
                 ctx.navigate(AppNavKey.FloatBallImageSearchEngineDetail(engineId))
             },
-            onImageSearchPickPanelTransparencyChange = viewModel::setImageSearchPickPanelTransparency,
-            onOpenEditor = { engineId ->
+                onOpenEditor = { engineId ->
                 ctx.navigate(AppNavKey.FloatBallImageSearchEngineEditor(engineId.orEmpty()))
             },
             onOpenBatchPicker = {
