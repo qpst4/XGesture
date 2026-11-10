@@ -5,8 +5,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -14,6 +16,10 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
 import com.slideindex.app.gesture.GestureActionPermissionAuditor
+import com.slideindex.app.gesture.GestureActionType
+import com.slideindex.app.ui.ActionCenterLaunchEntry
+import com.slideindex.app.ui.ActionCenterScreen
+import com.slideindex.app.ui.ActionDetailScreen
 import com.slideindex.app.ui.CloudBackupScreen
 import com.slideindex.app.ui.CloudStorageConfigEditorScreen
 import com.slideindex.app.ui.CloudStorageSettingsScreen
@@ -37,6 +43,10 @@ import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
 import com.slideindex.app.ui.picker.MyShortcutsFolderScreen
 import com.slideindex.app.ui.picker.PresetShortcutsFolderScreen
 import com.slideindex.app.gesture.ActionPickerCatalogPolicy
+import com.slideindex.app.R
+import com.slideindex.app.ui.picker.GestureActionCatalog
+import com.slideindex.app.ui.picker.GestureActionCatalogScope
+import kotlinx.coroutines.flow.first
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureTriggerType
@@ -72,6 +82,7 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             stashEntryCount = stashEntryCount,
             bottomContentPadding = ctx.rootBottomContentPadding,
             bottomNavReselectCount = ctx.bottomNavReselectCount,
+            onOpenActionCenter = { ctx.navigate(AppNavKey.ActionCenter) },
             onOpenLayoutSettings = { ctx.navigate(AppNavKey.HomeLayout) },
             onOpenQuickLauncher = { ctx.navigate(AppNavKey.QuickLauncher) },
             onOpenQuickWheel = { ctx.navigate(AppNavKey.QuickWheelList) },
@@ -96,6 +107,67 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             onOpenIconTheme = { ctx.navigate(AppNavKey.IconThemeSettings) },
             onOpenAbout = { ctx.navigate(AppNavKey.ExtensionAbout) },
         )
+    }
+
+    hiltEntry<AppNavKey.ActionCenter> {
+        ActionCenterScreen(
+            onBack = { ctx.navigateBack() },
+            onOpenLaunchEntry = { entry ->
+                ctx.navigate(
+                    when (entry) {
+                        ActionCenterLaunchEntry.LayoutSettings -> AppNavKey.HomeLayout
+                        ActionCenterLaunchEntry.QuickLauncher -> AppNavKey.QuickLauncher
+                        ActionCenterLaunchEntry.HoneycombLauncher -> AppNavKey.HoneycombLauncher
+                        ActionCenterLaunchEntry.RingLauncher -> AppNavKey.RingLauncherSettings
+                        ActionCenterLaunchEntry.HolographicLauncher -> AppNavKey.HolographicLauncherSettings
+                        ActionCenterLaunchEntry.WidgetPanel -> AppNavKey.WidgetPanel
+                        ActionCenterLaunchEntry.QuickWheel -> AppNavKey.QuickWheelList
+                        ActionCenterLaunchEntry.ShellPanel -> AppNavKey.ShellCommands
+                    },
+                )
+            },
+            onOpenActionDetail = { action ->
+                ctx.navigate(AppNavKey.ActionDetail(action.type.name))
+            },
+        )
+    }
+
+    hiltEntry<AppNavKey.ActionDetail> { key ->
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+        val actionType = remember(key.actionType) {
+            runCatching { GestureActionType.valueOf(key.actionType) }.getOrNull()
+        }
+        val action = remember(actionType) {
+            GestureActionCatalog.build(
+                scope = GestureActionCatalogScope.GesturePicker,
+                catalogPolicy = ActionPickerCatalogPolicy.EdgeGesture,
+            ).firstOrNull { it.type == actionType }
+        }
+        if (action != null) {
+            ActionDetailScreen(
+                action = action,
+                onBack = { ctx.navigateBack() },
+                onRun = {
+                    val runner = com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionRunner
+                    val settingsFlow = com.slideindex.app.settings.SettingsFlowHolder.settingsFlow(context)
+                    if (runner == null || settingsFlow == null) {
+                        Toast.makeText(context, context.getString(R.string.action_detail_run), Toast.LENGTH_SHORT).show()
+                    } else {
+                        scope.launch {
+                            runCatching {
+                                runner.run(action, settingsFlow.first(), false, null, null, null)
+                            }.onFailure {
+                                Toast.makeText(context, it.message ?: "", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                },
+                onOpenConfig = actionConfigRoute(action)?.let { route ->
+                    { ctx.navigate(route) }
+                },
+            )
+        }
     }
 
     multiTouchNavEntries(ctx, AppNavKey.ExtensionHub)
@@ -390,4 +462,13 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             onBack = { ctx.navigateBackTo(AppNavKey.ExtensionBackup) },
         )
     }
+}
+
+/** 动作详情页的「打开配置」跳转；没有独立配置页的动作返回 null。 */
+private fun actionConfigRoute(action: com.slideindex.app.gesture.GestureAction): AppNavKey? = when (action.type) {
+    GestureActionType.EXECUTE_SHELL_COMMAND -> AppNavKey.ShellCommands
+    GestureActionType.QUICK_LAUNCHER -> AppNavKey.QuickLauncher
+    GestureActionType.QUICK_WHEEL -> AppNavKey.QuickWheelList
+    GestureActionType.RUN_MACRO -> AppNavKey.MacroList
+    else -> null
 }

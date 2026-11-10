@@ -331,6 +331,10 @@ sealed interface AppNavKey : NavKey {
 
     // Extension tab
     @Serializable data object ExtensionHub : AppNavKey
+    /** 内置动作浏览页（启动与面板 + 动作网格）。 */
+    @Serializable data object ActionCenter : AppNavKey
+    /** 动作详情页；[actionType] 是 `GestureActionType.name`。 */
+    @Serializable data class ActionDetail(val actionType: String) : AppNavKey
     /** 多指手势设置（Shizuku evdev 观察模式）。 */
     @Serializable data object ExtensionMultiTouchGesture : AppNavKey
     /** 路径手势录制页；`entryId` 非空表示重录已有条目（只覆盖轨迹）。 */

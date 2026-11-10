@@ -37,6 +37,7 @@ fun ExtensionHubScreen(
     stashEntryCount: Int,
     bottomContentPadding: Dp = 0.dp,
     bottomNavReselectCount: Int = 0,
+    onOpenActionCenter: () -> Unit,
     onOpenLayoutSettings: () -> Unit,
     onOpenQuickLauncher: () -> Unit,
     onOpenQuickWheel: () -> Unit,
@@ -67,7 +68,7 @@ fun ExtensionHubScreen(
         listState = listState
     )
 
-    val launchPanelTitle = stringResource(R.string.extension_section_launch_panel)
+    val actionsTitle = stringResource(R.string.extension_section_actions)
     val toolsTitle = stringResource(R.string.extension_section_tools)
     val shortcutsTitle = stringResource(R.string.extension_section_shortcuts)
     val maintenanceTitle = stringResource(R.string.extension_section_maintenance)
@@ -79,72 +80,28 @@ fun ExtensionHubScreen(
         bottomContentPadding = bottomContentPadding
     ) {
         settingsLazySmallTitle(
-            key = "launch_panel_section",
-            title = launchPanelTitle
+            key = "actions_section",
+            title = actionsTitle
         )
         groupedCardItems(
-            keyPrefix = "extension_launch_panel",
+            keyPrefix = "extension_actions",
             items = buildList {
-                // 行 1：应用索引 & 快速启动器 (Bento 网格)
                 add(
-                    settingsCardScopeItem("grid-index-quick") {
-                        SettingGrid2Row(
-                            leftIcon = { label -> Icon(HubLeadingIcons.layoutSettings(true), contentDescription = label) },
-                            leftTitle = stringResource(R.string.layout_settings_entry_title),
-                            leftEnabled = gestureActive,
-                            onLeftClick = onOpenLayoutSettings,
-                            rightIcon = { label -> Icon(HubLeadingIcons.quickLauncher(true), contentDescription = label) },
-                            rightTitle = stringResource(R.string.quick_launcher_editor_title),
-                            rightEnabled = gestureActive,
-                            onRightClick = onOpenQuickLauncher,
+                    settingsCardScopeItem("action-center") {
+                        SettingNavigationRow(
+                            icon = { label -> Icon(ThinActionIcons.Gesture, contentDescription = label) },
+                            title = stringResource(R.string.extension_action_center_title),
+                            subtitle = stringResource(R.string.extension_action_center_subtitle),
+                            onClick = onOpenActionCenter,
                         )
                     }
                 )
-                // 行 2：蜂窝启动器 & 圆环启动器 (Bento 网格)
                 add(
-                    settingsCardScopeItem("grid-honeycomb-ring") {
-                        SettingGrid2Row(
-                            leftIcon = { label -> Icon(HubLeadingIcons.honeycombLauncher(true), contentDescription = label) },
-                            leftTitle = stringResource(R.string.honeycomb_launcher_editor_title),
-                            leftEnabled = gestureActive,
-                            onLeftClick = onOpenHoneycombLauncher,
-                            rightIcon = { label -> Icon(HubLeadingIcons.ringLauncher(true), contentDescription = label) },
-                            rightTitle = stringResource(R.string.fv_ring_launcher_entry_title),
-                            rightEnabled = gestureActive,
-                            onRightClick = onOpenRingLauncher,
-                        )
-                    }
-                )
-                // 行 3：全息启动器 & 小组件面板 (Bento 网格)
-                add(
-                    settingsCardScopeItem("grid-holo-widget") {
-                        SettingGrid2Row(
-                            leftIcon = { label -> Icon(HubLeadingIcons.holographicLauncher(true), contentDescription = label) },
-                            leftTitle = stringResource(R.string.holographic_launcher_entry_title),
-                            leftEnabled = gestureActive,
-                            onLeftClick = onOpenHolographicLauncher,
-                            rightIcon = { label -> Icon(HubLeadingIcons.widgetPanel(true), contentDescription = label) },
-                            rightTitle = stringResource(R.string.widget_panel_settings_title),
-                            rightEnabled = gestureActive,
-                            onRightClick = onOpenWidgetPanel,
-                        )
-                    }
-                )
-                // 行 4：快捷轮盘 & Shell 命令面板（两者都是手势唤出的面板，并成一行）
-                add(
-                    settingsCardScopeItem("grid-wheel-shell") {
-                        SettingGrid2Row(
-                            leftIcon = { label ->
-                                Icon(
-                                    gestureActionTypeOutlinedIcon(GestureActionType.QUICK_WHEEL),
-                                    contentDescription = label,
-                                )
-                            },
-                            leftTitle = stringResource(R.string.extension_quick_wheel_entry_title),
-                            onLeftClick = onOpenQuickWheel,
-                            rightIcon = { label -> Icon(HubLeadingIcons.shellCommand(true), contentDescription = label) },
-                            rightTitle = stringResource(R.string.shell_panel_entry_title),
-                            onRightClick = onOpenShellCommands,
+                    settingsCardScopeItem("activity-shortcut") {
+                        ActivityShortcutEntryCard(
+                            shortcutCount = settings.activityShortcutCount,
+                            outlinedLeadingIcons = true,
+                            onClick = onOpenActivityShortcuts,
                         )
                     }
                 )
@@ -208,6 +165,16 @@ fun ExtensionHubScreen(
                         PageScrollEntryCard(onClick = onOpenPageScroll)
                     }
                 )
+                add(
+                    settingsCardScopeItem("shell-panel") {
+                        SettingNavigationRow(
+                            icon = { label -> Icon(HubLeadingIcons.shellCommand(true), contentDescription = label) },
+                            title = stringResource(R.string.shell_panel_entry_title),
+                            subtitle = stringResource(R.string.shell_panel_entry_desc),
+                            onClick = onOpenShellCommands,
+                        )
+                    }
+                )
             }
         )
 
@@ -218,22 +185,6 @@ fun ExtensionHubScreen(
         groupedCardItems(
             keyPrefix = "extension_shortcuts",
             items = buildList {
-                add(
-                    settingsCardScopeItem("activity-shortcut") {
-                        ActivityShortcutEntryCard(
-                            shortcutCount = settings.activityShortcutCount,
-                            outlinedLeadingIcons = true,
-                            onClick = onOpenActivityShortcuts
-                        )
-                    }
-                )
-                add(
-                    settingsCardScopeItem("external-invocation") {
-                        ExternalInvocationEntryCard(
-                            onClick = onOpenExternalInvocations
-                        )
-                    }
-                )
                 add(
                     settingsCardScopeItem("share-sheet") {
                         SettingNavigationRow(
