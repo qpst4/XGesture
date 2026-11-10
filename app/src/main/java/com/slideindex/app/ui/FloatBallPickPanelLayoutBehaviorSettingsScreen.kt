@@ -31,7 +31,6 @@ import com.slideindex.app.settings.PickPanelSlideAnimationDefaults
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingsCardRow
 import com.slideindex.app.ui.settings.components.SettingsCardScope
-import com.slideindex.app.ui.settings.components.SettingDropdownRow
 import com.slideindex.app.ui.settings.components.SettingExpandableRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
@@ -100,40 +99,13 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
         localImageToolbarPosition = settings.floatBallPickImageToolbarPosition
     }
 
-    val searchGridStateRememberLabel = stringResource(R.string.float_ball_pick_search_grid_state_remember)
-    val searchGridStateExpandedLabel = stringResource(R.string.float_ball_pick_search_grid_state_expanded)
-    val searchGridStateCollapsedLabel = stringResource(R.string.float_ball_pick_search_grid_state_collapsed)
-    val searchGridStateOptions = remember(
-        searchGridStateRememberLabel,
-        searchGridStateExpandedLabel,
-        searchGridStateCollapsedLabel,
-    ) {
-        listOf(
-            com.slideindex.app.settings.PickResultSearchGridDefaultState.REMEMBER_LAST to searchGridStateRememberLabel,
-            com.slideindex.app.settings.PickResultSearchGridDefaultState.ALWAYS_EXPANDED to searchGridStateExpandedLabel,
-            com.slideindex.app.settings.PickResultSearchGridDefaultState.ALWAYS_COLLAPSED to searchGridStateCollapsedLabel,
-        )
+    var localSearchGridState by remember { mutableStateOf(settings.floatBallPickSearchGridDefaultState) }
+    var localTextModeDefault by remember { mutableStateOf(settings.floatBallPickTextModeDefault) }
+    LaunchedEffect(settings.floatBallPickSearchGridDefaultState) {
+        localSearchGridState = settings.floatBallPickSearchGridDefaultState
     }
-    val selectedSearchGridStateIndex = remember(settings.floatBallPickSearchGridDefaultState, searchGridStateOptions) {
-        searchGridStateOptions.indexOfFirst { it.first == settings.floatBallPickSearchGridDefaultState }.coerceAtLeast(0)
-    }
-
-    val textModeRememberLabel = stringResource(R.string.float_ball_pick_text_mode_state_remember)
-    val textModeAlwaysOnLabel = stringResource(R.string.float_ball_pick_text_mode_state_always_on)
-    val textModeAlwaysOffLabel = stringResource(R.string.float_ball_pick_text_mode_state_always_off)
-    val textModeOptions = remember(
-        textModeRememberLabel,
-        textModeAlwaysOnLabel,
-        textModeAlwaysOffLabel,
-    ) {
-        listOf(
-            com.slideindex.app.settings.PickResultTextModeDefault.REMEMBER_LAST to textModeRememberLabel,
-            com.slideindex.app.settings.PickResultTextModeDefault.ALWAYS_ON to textModeAlwaysOnLabel,
-            com.slideindex.app.settings.PickResultTextModeDefault.ALWAYS_OFF to textModeAlwaysOffLabel,
-        )
-    }
-    val selectedTextModeIndex = remember(settings.floatBallPickTextModeDefault, textModeOptions) {
-        textModeOptions.indexOfFirst { it.first == settings.floatBallPickTextModeDefault }.coerceAtLeast(0)
+    LaunchedEffect(settings.floatBallPickTextModeDefault) {
+        localTextModeDefault = settings.floatBallPickTextModeDefault
     }
 
     SettingsScreenScaffold(
@@ -380,16 +352,29 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
             items = buildList {
                 add(
                     settingsCardScopeItem("text-mode-default-state") {
-                        SettingDropdownRow(
+                        SettingSegmentedRow(
                             title = stringResource(R.string.float_ball_pick_text_mode_state_title),
-                            subtitle = textModeOptions.getOrNull(selectedTextModeIndex)?.second.orEmpty(),
-                            items = textModeOptions.map { it.second },
-                            selectedIndex = selectedTextModeIndex,
-                            enabled = true,
-                            onSelectedIndexChange = { index ->
-                                val selected = textModeOptions.getOrNull(index)?.first
-                                    ?: return@SettingDropdownRow
-                                onPickTextModeDefaultChange(selected)
+                            items = listOf(
+                                com.slideindex.app.settings.PickResultTextModeDefault.REMEMBER_LAST,
+                                com.slideindex.app.settings.PickResultTextModeDefault.ALWAYS_ON,
+                                com.slideindex.app.settings.PickResultTextModeDefault.ALWAYS_OFF,
+                            ),
+                            selected = localTextModeDefault,
+                            labelRes = { mode ->
+                                when (mode) {
+                                    com.slideindex.app.settings.PickResultTextModeDefault.REMEMBER_LAST ->
+                                        R.string.float_ball_pick_text_mode_state_remember
+
+                                    com.slideindex.app.settings.PickResultTextModeDefault.ALWAYS_ON ->
+                                        R.string.float_ball_pick_text_mode_state_always_on
+
+                                    com.slideindex.app.settings.PickResultTextModeDefault.ALWAYS_OFF ->
+                                        R.string.float_ball_pick_text_mode_state_always_off
+                                }
+                            },
+                            onSelect = { mode ->
+                                localTextModeDefault = mode
+                                onPickTextModeDefaultChange(mode)
                             },
                         )
                     },
@@ -458,16 +443,29 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                 }
                 add(
                     settingsCardScopeItem("search-grid-default-state") {
-                        SettingDropdownRow(
+                        SettingSegmentedRow(
                             title = stringResource(R.string.float_ball_pick_search_grid_state_title),
-                            subtitle = searchGridStateOptions.getOrNull(selectedSearchGridStateIndex)?.second.orEmpty(),
-                            items = searchGridStateOptions.map { it.second },
-                            selectedIndex = selectedSearchGridStateIndex,
-                            enabled = true,
-                            onSelectedIndexChange = { index ->
-                                val selected = searchGridStateOptions.getOrNull(index)?.first
-                                    ?: return@SettingDropdownRow
-                                onPickSearchGridDefaultStateChange(selected)
+                            items = listOf(
+                                com.slideindex.app.settings.PickResultSearchGridDefaultState.REMEMBER_LAST,
+                                com.slideindex.app.settings.PickResultSearchGridDefaultState.ALWAYS_EXPANDED,
+                                com.slideindex.app.settings.PickResultSearchGridDefaultState.ALWAYS_COLLAPSED,
+                            ),
+                            selected = localSearchGridState,
+                            labelRes = { state ->
+                                when (state) {
+                                    com.slideindex.app.settings.PickResultSearchGridDefaultState.REMEMBER_LAST ->
+                                        R.string.float_ball_pick_search_grid_state_remember
+
+                                    com.slideindex.app.settings.PickResultSearchGridDefaultState.ALWAYS_EXPANDED ->
+                                        R.string.float_ball_pick_search_grid_state_expanded
+
+                                    com.slideindex.app.settings.PickResultSearchGridDefaultState.ALWAYS_COLLAPSED ->
+                                        R.string.float_ball_pick_search_grid_state_collapsed
+                                }
+                            },
+                            onSelect = { state ->
+                                localSearchGridState = state
+                                onPickSearchGridDefaultStateChange(state)
                             },
                         )
                     },
