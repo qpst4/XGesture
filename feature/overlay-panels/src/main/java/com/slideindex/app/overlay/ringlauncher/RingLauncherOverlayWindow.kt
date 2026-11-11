@@ -235,17 +235,22 @@ object RingLauncherOverlayWindow {
         val appsByPackage = apps.associateBy { it.packageName }
 
         val wm = hostContext.getSystemService(android.view.WindowManager::class.java)
-        val (density, screenWidth) = com.slideindex.app.overlay.panels.PanelFloatBallHooks.overlayLayoutMetrics?.invoke(settings)
-            ?: (context.resources.displayMetrics.density to
-                context.resources.displayMetrics.widthPixels.toFloat())
-            ?: run {
-                val layoutMetrics = OverlayDisplayMetrics.resolve(hostContext, wm, null)
-                layoutMetrics.density to OverlayDisplayMetrics.screenWidthPx(hostContext, wm, layoutMetrics)
-            }
-        val screenHeight = run {
-            val layoutMetrics = OverlayDisplayMetrics.resolve(hostContext, wm, density)
-            layoutMetrics.heightPixels.toFloat().coerceAtLeast(1f)
-        }
+        // 一次算清 density / 宽 / 高：三者必须来自**同一帧** WindowMetrics。
+        // 分两次读的话，旋转瞬间 bounds 可能已经换了一帧，宽度和高度来自不同方向，
+        // resolveFvSide() 就会把左右上下判错（表现为圆环贴错边）。
+        //
+        // 密度允许带提示（悬浮球按自己的视图反推的那个），但宽度绝不允许从外面传进来：
+        // 1.64.x 的故障就是兜底常量把假密度（1f）和假宽度（1080f）一起带了进来，
+        // 圆环按 1dp=1px 画，在 2.75 密度的机器上只剩 36%，还贴着屏幕左边。
+        val layoutMetrics = OverlayDisplayMetrics.resolve(
+            context = hostContext,
+            windowManager = wm,
+            densityHint = com.slideindex.app.overlay.panels.PanelFloatBallHooks.layoutDensityHint
+                ?.invoke(settings),
+        )
+        val density = layoutMetrics.density
+        val screenWidth = layoutMetrics.widthPixels.toFloat().coerceAtLeast(1f)
+        val screenHeight = layoutMetrics.heightPixels.toFloat().coerceAtLeast(1f)
         val side = resolveFvSide(anchorRawX, anchorRawY, screenWidth, screenHeight, edgePanelSide)
         activeSide = side
         val fvSettings = settings.fvRingLauncherFor(side)

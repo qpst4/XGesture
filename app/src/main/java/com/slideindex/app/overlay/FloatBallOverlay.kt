@@ -890,19 +890,21 @@ object FloatBallOverlay {
         return centerX to centerY
     }
 
-    /** 与悬浮球 Compose 窗体一致的布局密度与屏幕宽（圆环启动器须同源，避免 applicationContext 密度偏低）。 */
-    fun overlayLayoutMetrics(settings: AppSettings? = null): Pair<Float, Float>? {
+    /**
+     * 浮层布局用的密度提示（让圆环与球的手感同源，并纠正部分 ROM 上 applicationContext 密度偏低）。
+     *
+     * 只回传**密度**，不回传屏幕宽：宽度必须由调用方按**当前方向**自己算。历史上这里回传的是
+     * `(density, screenWidth)` 一整对，调用方一兜底常量就把假宽度（1080f）和假密度（1f）
+     * 一起带了进来，圆环整圈按 1dp=1px 画（只有正常的 36%）。
+     *
+     * 返回 null 表示"没有更好的参考值"：球窗没建起来（未开启 / 被排除应用、临时暂停、锁屏
+     * 抑制而 dismiss）时都属于这种情况，调用方按真实屏幕度量算即可。
+     */
+    fun ballDensityHint(settings: AppSettings? = null): Float? {
         val view = displayView ?: return null
-        val wm = windowManager
-        val viewMetrics = view.resources.displayMetrics
-        val ballDensityHint = settings?.let { ballLayoutDensityHint(it, viewMetrics.density) }
-        val layoutMetrics = OverlayDisplayMetrics.resolve(
-            context = view.context,
-            windowManager = wm,
-            densityHint = ballDensityHint ?: viewMetrics.density
-        )
-        val screenWidth = OverlayDisplayMetrics.screenWidthPx(view.context, wm, layoutMetrics)
-        return layoutMetrics.density to screenWidth
+        val viewDensity = view.resources.displayMetrics.density
+        // 有设置时按球的实际尺寸反推；没有就退回球视图自己的密度。
+        return settings?.let { ballLayoutDensityHint(it, viewDensity) } ?: viewDensity
     }
 
     private fun ballLayoutDensityHint(settings: AppSettings, viewDensity: Float): Float {
