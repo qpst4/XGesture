@@ -15,10 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -177,11 +173,15 @@ private fun MiuixFloatingNavItem(
 
 @Composable
 private fun mainFloatingNavIcon(destination: MainBottomNavDestination): ImageVector = when (destination) {
-    MainBottomNavDestination.Home -> Icons.Outlined.Home
+    // 与设置页行首图标同一套 Material Symbols（wght=350）；「晃动」只有自绘线稿，保持原样。
+    MainBottomNavDestination.Home -> navSymbol("Home")
     MainBottomNavDestination.Shake -> ImageVector.vectorResource(R.drawable.ic_nav_shake_outlined)
-    MainBottomNavDestination.Notification -> Icons.Outlined.Notifications
-    MainBottomNavDestination.Extension -> Icons.Outlined.Widgets
+    MainBottomNavDestination.Notification -> navSymbol("Notifications")
+    MainBottomNavDestination.Extension -> navSymbol("Widgets")
 }
+
+private fun navSymbol(name: String): ImageVector =
+    requireNotNull(MaterialSymbolVectors.get(name)) { "unknown Material Symbol: $name" }
 
 @Composable
 private fun mainFloatingNavLabel(destination: MainBottomNavDestination): String = when (destination) {

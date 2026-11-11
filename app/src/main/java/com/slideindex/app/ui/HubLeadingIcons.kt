@@ -3,76 +3,66 @@ package com.slideindex.app.ui
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Launch
 import androidx.compose.material.icons.automirrored.outlined.Launch
-import androidx.compose.material.icons.filled.Apps
-import androidx.compose.material.icons.filled.Backup
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.ContentPaste
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Hive
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Password
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.SortByAlpha
-import androidx.compose.material.icons.filled.Widgets
-import androidx.compose.material.icons.outlined.Backup
-import androidx.compose.material.icons.outlined.History
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Password
-import com.slideindex.app.gesture.GestureActionType
+import androidx.compose.ui.graphics.vector.ImageVector
 
-/** 消息 / 扩展 Hub 列表项 leading icon（与首页 `outlinedLeadingIcons` 一致）。 */
+/**
+ * 消息 / 扩展 Hub 列表项的 leading icon（与首页同一套 Material Symbols，wght=350）。
+ *
+ * 与 [HomeLeadingIcons] 一样：`outlined` 参数只为兼容调用方保留，不再影响返回值；
+ * 方向性图标仍用 `Icons.AutoMirrored.*`（Symbols 不会按 RTL 镜像）。
+ */
 internal object HubLeadingIcons {
-    fun notifications(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.Default.Notifications, Icons.Outlined.Notifications)
+    @Suppress("UNUSED_PARAMETER")
+    fun notifications(outlined: Boolean) = symbol("Notifications")
 
-    fun notificationHistory(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.Default.History, Icons.Outlined.History)
+    @Suppress("UNUSED_PARAMETER")
+    fun notificationHistory(outlined: Boolean) = symbol("History")
 
-    fun otpHub(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.Default.Password, Icons.Outlined.Password)
+    @Suppress("UNUSED_PARAMETER")
+    fun otpHub(outlined: Boolean) = symbol("Password")
 
-    fun layoutSettings(outlined: Boolean) =
-        if (outlined) gestureActionTypeOutlinedIcon(GestureActionType.OPEN_INDEX) else Icons.Default.SortByAlpha
+    @Suppress("UNUSED_PARAMETER")
+    fun layoutSettings(outlined: Boolean) = symbol("SortByAlpha")
 
-    fun quickLauncher(outlined: Boolean) =
-        if (outlined) gestureActionTypeOutlinedIcon(GestureActionType.QUICK_LAUNCHER) else Icons.Default.Apps
+    @Suppress("UNUSED_PARAMETER")
+    fun quickLauncher(outlined: Boolean) = symbol("Apps")
 
-    fun honeycombLauncher(outlined: Boolean) =
-        if (outlined) gestureActionTypeOutlinedIcon(GestureActionType.HONEYCOMB_LAUNCHER) else Icons.Default.Hive
+    @Suppress("UNUSED_PARAMETER")
+    fun honeycombLauncher(outlined: Boolean) = symbol("Hive")
 
-    /**
-     * 圆环启动器：只有一张线稿（半圆 + 两道环 + 外带槽位格），没有填充版，
-     * 所以 filled/outlined 两种状态共用同一张图，避免退回 [Icons.Default.Apps] 那个九宫格。
-     */
-    fun ringLauncher(@Suppress("UNUSED_PARAMETER") outlined: Boolean) = ThinActionIcons.RingLauncher
+    /** 圆环启动器：只有一张线稿（半圆 + 两道环 + 外带槽位格），没有 Material 对应字形。 */
+    @Suppress("UNUSED_PARAMETER")
+    fun ringLauncher(outlined: Boolean) = ThinActionIcons.RingLauncher
 
-    fun holographicLauncher(outlined: Boolean) =
-        if (outlined) gestureActionTypeOutlinedIcon(GestureActionType.HOLOGRAPHIC_LAUNCHER) else Icons.Default.Apps
+    @Suppress("UNUSED_PARAMETER")
+    fun holographicLauncher(outlined: Boolean) = symbol("Globe")
 
-    fun activityShortcut(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.AutoMirrored.Filled.Launch, Icons.AutoMirrored.Outlined.Launch)
+    /** 方向性图标：Symbols 不会自动镜像，继续用 AutoMirrored。 */
+    @Suppress("UNUSED_PARAMETER")
+    fun activityShortcut(outlined: Boolean): ImageVector =
+        if (outlined) Icons.AutoMirrored.Outlined.Launch else Icons.AutoMirrored.Filled.Launch
 
-    fun shellCommand(outlined: Boolean) =
-        if (outlined) gestureActionTypeOutlinedIcon(GestureActionType.SHELL_COMMAND_PANEL) else Icons.Default.Code
+    @Suppress("UNUSED_PARAMETER")
+    fun shellCommand(outlined: Boolean) = symbol("Code")
 
-    fun widgetPanel(outlined: Boolean) =
-        if (outlined) gestureActionTypeOutlinedIcon(GestureActionType.WIDGET_POPUP_OVERLAY) else Icons.Default.Widgets
+    @Suppress("UNUSED_PARAMETER")
+    fun widgetPanel(outlined: Boolean) = symbol("Widgets")
 
-    fun floatingPointer(outlined: Boolean) =
-        if (outlined) gestureActionTypeOutlinedIcon(GestureActionType.FLOATING_POINTER) else Icons.Default.MyLocation
+    @Suppress("UNUSED_PARAMETER")
+    fun floatingPointer(outlined: Boolean) = symbol("MyLocation")
 
-    fun stashClipboard(outlined: Boolean) =
-        if (outlined) gestureActionTypeOutlinedIcon(GestureActionType.OPEN_CLIPBOARD_PANEL) else Icons.Default.ContentPaste
+    @Suppress("UNUSED_PARAMETER")
+    fun stashClipboard(outlined: Boolean) = symbol("ContentPaste")
 
-    fun searchPanel(outlined: Boolean) =
-        if (outlined) gestureActionTypeOutlinedIcon(GestureActionType.SEARCH_PANEL) else Icons.Default.Search
+    @Suppress("UNUSED_PARAMETER")
+    fun searchPanel(outlined: Boolean) = symbol("Search")
 
-    fun settingsBackup(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.Default.Backup, Icons.Outlined.Backup)
+    @Suppress("UNUSED_PARAMETER")
+    fun settingsBackup(outlined: Boolean) = symbol("Backup")
 
-    fun about(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.Default.Info, Icons.Outlined.Info)
+    @Suppress("UNUSED_PARAMETER")
+    fun about(outlined: Boolean) = symbol("Info")
 }
+
+private fun symbol(name: String): ImageVector =
+    requireNotNull(MaterialSymbolVectors.get(name)) { "unknown Material Symbol: $name" }

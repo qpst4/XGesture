@@ -1,59 +1,33 @@
 package com.slideindex.app.ui
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Animation
-import androidx.compose.material.icons.filled.BatteryChargingFull
-import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.BrightnessMedium
-import androidx.compose.material.icons.filled.Colorize
-import androidx.compose.material.icons.filled.Contrast
-import androidx.compose.material.icons.filled.Gesture
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Keyboard
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.PictureInPictureAlt
-import androidx.compose.material.icons.filled.RadioButtonChecked
-import androidx.compose.material.icons.filled.ScreenRotation
-import androidx.compose.material.icons.filled.Style
-import androidx.compose.material.icons.filled.TouchApp
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.Vibration
-import androidx.compose.material.icons.outlined.Animation
-import androidx.compose.material.icons.outlined.Block
-import androidx.compose.material.icons.outlined.Brightness6
-import androidx.compose.material.icons.outlined.Circle
-import androidx.compose.material.icons.outlined.Colorize
-import androidx.compose.material.icons.outlined.Contrast
-import androidx.compose.material.icons.outlined.Gesture
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Keyboard
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.PictureInPicture
-import androidx.compose.material.icons.outlined.ScreenRotation
-import androidx.compose.material.icons.outlined.Style
-import androidx.compose.material.icons.outlined.SwapHoriz
-import androidx.compose.material.icons.outlined.TouchApp
-import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.material.icons.outlined.Security
 import androidx.compose.ui.graphics.vector.ImageVector
 
-internal fun homeLeadingIcon(outlined: Boolean, filled: ImageVector, outlinedIcon: ImageVector): ImageVector =
-    if (outlined) outlinedIcon else filled
-
+/**
+ * 首页列表行的行首图标。
+ *
+ * 已统一到 Material Symbols（wght=350，线性），与设置子页的 [SymbolsIcon] 同一套字形；
+ * `outlined` 参数只为兼容调用方保留（Symbols 只有线性一档），不再影响返回值。
+ *
+ * 两个例外：方向性图标仍用 `Icons.AutoMirrored.*`（Symbols 不会按 RTL 自动镜像）。
+ */
 internal object HomeLeadingIcons {
-    fun gesture(outlined: Boolean) = homeLeadingIcon(outlined, Icons.Default.Gesture, Icons.Outlined.Gesture)
-    fun batteryKeepAlive(outlined: Boolean) =
-        if (outlined) HomeCustomIcons.BatteryKeepAliveOutlined else Icons.Default.BatteryChargingFull
-    fun privilegeMode(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.Default.Security, Icons.Outlined.Security)
+    @Suppress("UNUSED_PARAMETER")
+    fun gesture(outlined: Boolean) = symbol("Gesture")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun batteryKeepAlive(outlined: Boolean) = symbol("BatteryChargingFull")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun privilegeMode(outlined: Boolean) = symbol("Security")
+
+    @Suppress("UNUSED_PARAMETER")
     fun cornerWheel(outlined: Boolean) = HomeCustomIcons.CornerWheel
-    fun triggerCollection(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.Default.TouchApp, Icons.Outlined.TouchApp)
+
+    @Suppress("UNUSED_PARAMETER")
+    fun triggerCollection(outlined: Boolean) = symbol("TouchApp")
 
     /**
      * 「按应用分档」。
@@ -63,29 +37,59 @@ internal object HomeLeadingIcons {
      * 画的是"九宫格 + 加号"，而用户要的是 Material Symbols 新版"九宫格 + 铅笔"，所以自绘见
      * [HomeCustomIcons.DashboardCustomizeOutlined]。
      */
+    @Suppress("UNUSED_PARAMETER")
     fun gestureAppProfiles(outlined: Boolean) = HomeCustomIcons.DashboardCustomizeOutlined
-    fun floatBall(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.Default.RadioButtonChecked, Icons.Outlined.Circle)
-    fun gestureAngle(outlined: Boolean) = homeLeadingIcon(outlined, Icons.Default.Tune, Icons.Outlined.Tune)
-    fun gestureAnimation(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.Default.Animation, Icons.Outlined.Animation)
-    fun systemBackGestureWidth(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.AutoMirrored.Filled.ArrowBack, Icons.AutoMirrored.Outlined.ArrowBack)
-    fun excludedApps(outlined: Boolean) = homeLeadingIcon(outlined, Icons.Default.Block, Icons.Outlined.Block)
-    fun previousAppBlacklist(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.Default.SwapHoriz, Icons.Outlined.SwapHoriz)
-    fun hideTriggerLandscape(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.Default.ScreenRotation, Icons.Outlined.ScreenRotation)
-    fun hideTriggerLock(outlined: Boolean) = homeLeadingIcon(outlined, Icons.Default.Lock, Icons.Outlined.Lock)
-    fun hideTriggerLauncher(outlined: Boolean) = homeLeadingIcon(outlined, Icons.Default.Home, Icons.Outlined.Home)
-    fun freeWindow(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.Default.PictureInPictureAlt, Icons.Outlined.PictureInPicture)
-    fun keyboardTrigger(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.Default.Keyboard, Icons.Outlined.Keyboard)
-    fun haptic(outlined: Boolean) = homeLeadingIcon(outlined, Icons.Default.Vibration, Icons.Outlined.Vibration)
-    fun themeMode(outlined: Boolean) =
-        homeLeadingIcon(outlined, Icons.Default.BrightnessMedium, Icons.Outlined.Brightness6)
-    fun themeSeedColor(outlined: Boolean) = homeLeadingIcon(outlined, Icons.Default.Colorize, Icons.Outlined.Colorize)
-    fun themePalette(outlined: Boolean) = homeLeadingIcon(outlined, Icons.Default.Style, Icons.Outlined.Style)
-    fun themeColorSpec(outlined: Boolean) = homeLeadingIcon(outlined, Icons.Default.Contrast, Icons.Outlined.Contrast)
+
+    @Suppress("UNUSED_PARAMETER")
+    fun floatBall(outlined: Boolean) = symbol("Circle")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun gestureAngle(outlined: Boolean) = symbol("Tune")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun gestureAnimation(outlined: Boolean) = symbol("Animation")
+
+    /** 方向性图标：Symbols 不会自动镜像，继续用 AutoMirrored。 */
+    @Suppress("UNUSED_PARAMETER")
+    fun systemBackGestureWidth(outlined: Boolean): ImageVector =
+        if (outlined) Icons.AutoMirrored.Outlined.ArrowBack else Icons.AutoMirrored.Filled.ArrowBack
+
+    @Suppress("UNUSED_PARAMETER")
+    fun excludedApps(outlined: Boolean) = symbol("Block")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun previousAppBlacklist(outlined: Boolean) = symbol("SwapHoriz")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun hideTriggerLandscape(outlined: Boolean) = symbol("ScreenRotation")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun hideTriggerLock(outlined: Boolean) = symbol("Lock")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun hideTriggerLauncher(outlined: Boolean) = symbol("Home")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun freeWindow(outlined: Boolean) = symbol("PictureInPictureAlt")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun keyboardTrigger(outlined: Boolean) = symbol("Keyboard")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun haptic(outlined: Boolean) = symbol("Vibration")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun themeMode(outlined: Boolean) = symbol("BrightnessMedium")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun themeSeedColor(outlined: Boolean) = symbol("Colorize")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun themePalette(outlined: Boolean) = symbol("Style")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun themeColorSpec(outlined: Boolean) = symbol("Contrast")
 }
+
+private fun symbol(name: String): ImageVector =
+    requireNotNull(MaterialSymbolVectors.get(name)) { "unknown Material Symbol: $name" }
