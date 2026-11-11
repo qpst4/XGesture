@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,8 +24,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.RotateLeft
 import androidx.compose.material.icons.outlined.RotateRight
@@ -75,12 +74,16 @@ import com.slideindex.app.ui.settings.components.settingsLazyTipCard
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.preference.RadioButtonLocation
 import top.yukonga.miuix.kmp.preference.RadioButtonPreference
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Close
+import top.yukonga.miuix.kmp.icon.extended.Refresh
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 import kotlinx.coroutines.delay
@@ -362,9 +365,10 @@ fun MultiTouchGestureSettingsScreen(
             title = stringResource(R.string.multitouch_status_title),
             startAction = {
                 IconButton(onClick = { showDiagnostics = false }) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
+                    MiuixIcon(
+                        imageVector = MiuixIcons.Medium.Close,
                         contentDescription = stringResource(R.string.multitouch_diagnostics_close),
+                        tint = MiuixTheme.colorScheme.onBackground,
                     )
                 }
             },
@@ -375,9 +379,10 @@ fun MultiTouchGestureSettingsScreen(
                         onRetry()
                     },
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
+                    MiuixIcon(
+                        imageVector = MiuixIcons.Medium.Refresh,
                         contentDescription = stringResource(R.string.multitouch_diagnostics_retry),
+                        tint = MiuixTheme.colorScheme.onBackground,
                     )
                 }
             },
@@ -385,7 +390,10 @@ fun MultiTouchGestureSettingsScreen(
         ) {
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
                 item {
-                    SmallTitle(text = stringResource(R.string.multitouch_diagnostics_title))
+                    SmallTitle(
+                        text = stringResource(R.string.multitouch_diagnostics_title),
+                        insideMargin = PaddingValues(16.dp, 8.dp),
+                    )
                     Card(
                         modifier = Modifier.padding(bottom = 16.dp),
                         colors = CardDefaults.defaultColors(
@@ -403,7 +411,10 @@ fun MultiTouchGestureSettingsScreen(
                     }
                 }
                 item {
-                    SmallTitle(text = stringResource(R.string.multitouch_device_title))
+                    SmallTitle(
+                        text = stringResource(R.string.multitouch_device_title),
+                        insideMargin = PaddingValues(16.dp, 8.dp),
+                    )
                     Card(
                         modifier = Modifier.padding(bottom = 16.dp),
                         colors = CardDefaults.defaultColors(
