@@ -162,6 +162,8 @@ class MultiTouchGestureCoordinator @Inject constructor(
         }
 
         override fun onObserverState(running: Boolean, detail: String) {
+            // 旧版 service 仍会转发「stopped」：主动停止时新会话可能已经开始，不能再把它当成当前状态。
+            if (!running && detail == "stopped") return
             val device = if (detail.startsWith("watching:")) {
                 detail.removePrefix("watching:")
             } else {
@@ -247,6 +249,22 @@ class MultiTouchGestureCoordinator @Inject constructor(
     suspend fun readDiagnostics(): String {
         val service = observingService ?: rootService ?: return ""
         return runCatching { service.getMultiTouchDiagnostics() }.getOrDefault("")
+    }
+
+    /**
+     * 设置页打开时刷新一次状态。
+     *
+     * 只校准「开关值」这个真实来源；如果确实没有任何观察通道，再补一次完整同步。
+     * 不在有通道时重启观察器，避免开页面就打断手势。
+     */
+    fun refreshStatus() {
+        applicationScope.launch(Dispatchers.IO) {
+            val settings = settingsStore.state.value
+            _status.value = _status.value.copy(enabled = settings.enabled)
+            if (settings.enabled && observingService == null && rootService == null) {
+                syncNow()
+            }
+        }
     }
 
     /** 录制路径手势期间暂停识别。 */

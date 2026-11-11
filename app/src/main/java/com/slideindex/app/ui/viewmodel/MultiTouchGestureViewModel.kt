@@ -52,6 +52,11 @@ class MultiTouchGestureViewModel @Inject constructor(
         }
     }
 
+    /** 进页面时校准一次状态（只修正开关值，不主动重启观察器）。 */
+    fun refreshStatus() {
+        coordinator.refreshStatus()
+    }
+
     /** 动作选择页回写：预设类型按「类型 + 接触点数」覆盖；绘制手势总是新增（带 entryId 才编辑）。 */
     fun applyEntry(
         kind: MultiPointerGesture,

@@ -65,7 +65,10 @@ fun NavEntryBuilder.multiTouchNavEntries(ctx: MainNavContext, backKey: AppNavKey
         val settings by viewModel.settings.collectAsStateWithLifecycle()
         val status by viewModel.status.collectAsStateWithLifecycle()
         val diagnostics by viewModel.diagnostics.collectAsStateWithLifecycle()
-        LaunchedEffect(Unit) { viewModel.refreshDiagnostics() }
+        LaunchedEffect(Unit) {
+            viewModel.refreshStatus()
+            viewModel.refreshDiagnostics()
+        }
         MultiTouchGestureSettingsScreen(
             settings = settings,
             status = status,

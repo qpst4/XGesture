@@ -120,7 +120,12 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
                 runCatching { callback.onInputConflict(devices) }
             },
             onState = { running, detail ->
-                runCatching { callback.onObserverState(running, detail) }
+                // 「stopped」是 app 主动停止触发的：此时正在切换观察器，
+                // 转发这条 false 会把新会话刚设好的 running=true 覆盖掉（页面显示"未运行"但手势正常）。
+                // 真正的异常状态（no-touchscreen / reader-error）照常转发。
+                if (running || detail != "stopped") {
+                    runCatching { callback.onObserverState(running, detail) }
+                }
             },
         )
         touchObserver = observer

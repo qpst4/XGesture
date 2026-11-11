@@ -67,6 +67,7 @@ import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
@@ -146,14 +147,14 @@ fun MultiTouchGestureSettingsScreen(
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                         ) {
-                            Text(
+                            MiuixText(
                                 text = stringResource(R.string.multitouch_protocol_title),
                                 fontSize = MiuixTheme.textStyles.headline1.fontSize,
                                 fontWeight = FontWeight.Medium,
                                 color = MiuixTheme.colorScheme.onBackground,
                             )
                             Spacer(Modifier.height(4.dp))
-                            Text(
+                            MiuixText(
                                 text = stringResource(R.string.multitouch_protocol_summary),
                                 fontSize = MiuixTheme.textStyles.body2.fontSize,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
@@ -186,14 +187,15 @@ fun MultiTouchGestureSettingsScreen(
                 add(
                     settingsCardScopeItem("multitouch-status") {
                         val conflict = status.conflictDevices
+                        val enabled = settings.enabled
                         val tone = when {
-                            !status.enabled -> StatusTone.Neutral
+                            !enabled -> StatusTone.Neutral
                             conflict != null -> StatusTone.Bad
                             status.running -> StatusTone.Good
                             else -> StatusTone.Bad
                         }
                         val pill = when {
-                            !status.enabled -> stringResource(R.string.multitouch_status_disabled)
+                            !enabled -> stringResource(R.string.multitouch_status_disabled)
                             conflict != null ->
                                 stringResource(R.string.multitouch_status_conflict_pill)
 
@@ -204,7 +206,7 @@ fun MultiTouchGestureSettingsScreen(
                             title = stringResource(R.string.multitouch_status_title),
                             pill = pill,
                             tone = tone,
-                            detail = multiTouchStatusDetail(status),
+                            detail = multiTouchStatusDetail(status, enabled),
                             segmentKey = "multitouch-status",
                             onClick = {
                                 showDiagnostics = true
@@ -327,7 +329,7 @@ fun MultiTouchGestureSettingsScreen(
 
     if (showDiagnostics) {
         val stateText = when {
-            !status.enabled -> stringResource(R.string.multitouch_status_disabled)
+            !settings.enabled -> stringResource(R.string.multitouch_status_disabled)
             status.running -> stringResource(R.string.multitouch_status_running)
             else -> stringResource(R.string.multitouch_status_stopped)
         }
@@ -617,9 +619,9 @@ private val GEOMETRY_GESTURES = setOf(
 
 /** 状态行说明：设备 / 模式 / 特权通道 / 冲突，全部收在这一行里。 */
 @Composable
-private fun multiTouchStatusDetail(status: MultiTouchStatus): String {
+private fun multiTouchStatusDetail(status: MultiTouchStatus, enabled: Boolean): String {
     val base = when {
-        !status.enabled -> stringResource(R.string.multitouch_detail_disabled)
+        !enabled -> stringResource(R.string.multitouch_detail_disabled)
         status.detail == "recording" -> stringResource(R.string.multitouch_detail_recording)
         status.running -> {
             val channel = when (status.channel) {
