@@ -1880,9 +1880,9 @@
     <string name="gesture_action_universal_copy_desc">Select text blocks on screen and copy</string>
     <string name="gesture_action_open_internet_panel">Native internet panel</string>
     <string name="gesture_action_open_internet_panel_desc">Show system native Wi-Fi &amp; mobile network panel</string>
-    <string name="gesture_action_open_volume_panel">Volume panel (settings page)</string>
-    <string name="gesture_action_open_volume_panel_desc">Open the system volume settings panel with per-stream sliders</string>
-    <string name="gesture_action_open_volume_slider">Volume slider (no level change)</string>
+    <string name="gesture_action_open_volume_panel">Native volume panel</string>
+    <string name="gesture_action_open_volume_panel_desc">Show system native volume slider popup</string>
+    <string name="gesture_action_open_volume_slider">Volume slider (volume-key style)</string>
     <string name="gesture_action_open_volume_slider_desc">Show the system volume slider without changing the level</string>
     <string name="gesture_action_volume_up">Volume up</string>
     <string name="gesture_action_volume_up_desc">Raise media volume by one step and show the system volume panel</string>

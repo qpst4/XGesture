@@ -1106,10 +1106,10 @@
     <string name="screen_search_ocr_requires_ppocr">OCR 模式需选用 PP-OCR 模型（取词 → OCR 模型）</string>
     <string name="gesture_action_open_internet_panel">原生网络连接面板</string>
     <string name="gesture_action_open_internet_panel_desc">弹出系统原生 Wi-Fi 与移动网络控制面板</string>
-    <string name="gesture_action_open_volume_panel">音量面板（设置页）</string>
-    <string name="gesture_action_open_volume_panel_desc">打开系统的音量设置面板（含多路滑块）</string>
-    <string name="gesture_action_open_volume_slider">音量条（不改音量）</string>
-    <string name="gesture_action_open_volume_slider_desc">弹出系统音量条（与音量键同款），不改变音量</string>
+    <string name="gesture_action_open_volume_panel">原生声音调节面板</string>
+    <string name="gesture_action_open_volume_panel_desc">调出系统原生音量调节条浮窗</string>
+    <string name="gesture_action_open_volume_slider">音量条（音量键同款）</string>
+    <string name="gesture_action_open_volume_slider_desc">弹出系统音量条，不改变音量</string>
     <string name="gesture_action_volume_up">音量增加</string>
     <string name="gesture_action_volume_up_desc">媒体音量增加一级，并弹出系统音量面板</string>
     <string name="gesture_action_volume_down">音量减小</string>
