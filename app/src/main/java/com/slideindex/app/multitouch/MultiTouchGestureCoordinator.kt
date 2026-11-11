@@ -251,6 +251,12 @@ class MultiTouchGestureCoordinator @Inject constructor(
         return runCatching { service.getMultiTouchDiagnostics() }.getOrDefault("")
     }
 
+    /** 触摸设备候选（每行 `eventPath|name|protocol|width|height`），设置页选择用。 */
+    suspend fun readTouchDevices(): List<String> {
+        val service = observingService ?: rootService ?: return emptyList()
+        return runCatching { service.touchDevices.toList() }.getOrDefault(emptyList())
+    }
+
     /**
      * 设置页打开时刷新一次状态。
      *

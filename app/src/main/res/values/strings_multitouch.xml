@@ -83,6 +83,13 @@
     <string name="multitouch_diagnostics_title">Touch diagnostics</string>
     <string name="multitouch_diagnostics_empty">No diagnostics yet — try enabling global touch and swallowing a finger</string>
     <string name="multitouch_diagnostics_last_run">last known state</string>
+    <string name="multitouch_diagnostics_current">current state</string>
     <string name="multitouch_diagnostics_retry">Restart</string>
     <string name="multitouch_diagnostics_close">Close</string>
+    <string name="multitouch_device_title">Touch device</string>
+    <string name="multitouch_device_auto">Auto</string>
+    <string name="multitouch_device_summary_auto">Auto (best match)</string>
+    <string name="multitouch_device_summary_auto_current">Auto · current %1$s</string>
+    <string name="multitouch_device_pick_title">Choose touch device</string>
+    <string name="multitouch_device_empty">No candidate devices found yet</string>
 </resources>

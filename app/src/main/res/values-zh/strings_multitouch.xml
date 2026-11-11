@@ -83,6 +83,13 @@
     <string name="multitouch_diagnostics_title">触摸诊断</string>
     <string name="multitouch_diagnostics_empty">还没有诊断信息，先启用全局触控并摸一下屏幕</string>
     <string name="multitouch_diagnostics_last_run">上次运行结果</string>
+    <string name="multitouch_diagnostics_current">当前运行结果</string>
     <string name="multitouch_diagnostics_retry">重启观察</string>
     <string name="multitouch_diagnostics_close">关闭</string>
+    <string name="multitouch_device_title">触摸设备</string>
+    <string name="multitouch_device_auto">自动</string>
+    <string name="multitouch_device_summary_auto">自动（按能力挑选）</string>
+    <string name="multitouch_device_summary_auto_current">自动 · 当前 %1$s</string>
+    <string name="multitouch_device_pick_title">选择触摸设备</string>
+    <string name="multitouch_device_empty">暂时没有候选设备</string>
 </resources>

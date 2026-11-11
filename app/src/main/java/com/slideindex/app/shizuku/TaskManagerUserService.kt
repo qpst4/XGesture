@@ -34,6 +34,10 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
     @Volatile
     private var multitouchDiagnostics: String = ""
 
+    /** 最近一次枚举到的触摸设备候选，每行 `eventPath|name|protocol|width|height`。 */
+    @Volatile
+    private var touchDevices: Array<String> = emptyArray()
+
     private val shell = TaskManagerShellExecutor
     private val shellRunner = ShellCommandRunner { args -> shell.shellCommand(*args) }
     private val tasks = TaskManagerTaskOperations(shellRunner)
@@ -68,6 +72,8 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
 
     override fun getMultiTouchDiagnostics(): String = multitouchDiagnostics
 
+    override fun getTouchDevices(): Array<String> = touchDevices
+
     override fun startMultiTouchObservation(
         callback: IOnMultiTouchGesture,
         pathPriority: Boolean,
@@ -78,6 +84,7 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
             protocolOverride = { protocolOverride },
             devicePathOverride = { devicePathOverride },
             onDiagnostics = { multitouchDiagnostics = it },
+            onDevices = { touchDevices = it.toTypedArray() },
             onGesture = { gestures, eventTimeMs, anchor ->
                 runCatching {
                     Log.i(
@@ -160,6 +167,7 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
             protocolOverride = { protocolOverride },
             devicePathOverride = { devicePathOverride },
             onDiagnostics = { multitouchDiagnostics = it },
+            onDevices = { touchDevices = it.toTypedArray() },
             onGesture = { gestures, _, anchor ->
                 for (gesture in gestures) {
                     pollingEvents += "g:${gesture.gesture.ordinal}:${gesture.fingerCount}:" +

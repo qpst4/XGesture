@@ -41,6 +41,8 @@ class EvdevTouchObserver(
     private val devicePathOverride: () -> String = { "" },
     /** 诊断信息（设备/协议/候选），服务端会转给设置页。 */
     private val onDiagnostics: (String) -> Unit = {},
+    /** 触摸设备候选（每行 `eventPath|name|protocol|width|height`），设置页「触摸设备」用。 */
+    private val onDevices: (List<String>) -> Unit = {},
     private val log: (String) -> Unit = { Log.i(TAG, it) },
 ) {
     @Volatile
@@ -496,6 +498,12 @@ class EvdevTouchObserver(
             }
         }
         flush()
+        onDevices(
+            candidates.map { device ->
+                "${device.eventPath}|${device.name}|${device.protocol}|" +
+                    "${device.width.toInt()}|${device.height.toInt()}"
+            },
+        )
         val overridePath = runCatching { devicePathOverride() }.getOrDefault("")
         val pool = if (overridePath.isBlank()) {
             candidates

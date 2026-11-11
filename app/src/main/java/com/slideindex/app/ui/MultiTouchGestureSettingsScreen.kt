@@ -5,15 +5,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.captionBar
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -66,8 +72,18 @@ import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.preference.RadioButtonLocation
+import top.yukonga.miuix.kmp.preference.RadioButtonPreference
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Close
+import top.yukonga.miuix.kmp.icon.extended.Refresh
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 import kotlinx.coroutines.delay
@@ -91,10 +107,13 @@ fun MultiTouchGestureSettingsScreen(
     settings: MultiTouchGestureSettings,
     status: MultiTouchStatus,
     diagnostics: String = "",
+    touchDevices: List<String> = emptyList(),
     onBack: () -> Unit,
     onEnabledChange: (Boolean) -> Unit,
     onProtocolChange: (String) -> Unit = {},
     onRefreshDiagnostics: () -> Unit = {},
+    onRefreshTouchDevices: () -> Unit = {},
+    onDevicePathChange: (String) -> Unit = {},
     onRetry: () -> Unit,
     onOpenActionPick: (MultiPointerGesture, Int, String, String) -> Unit = { _, _, _, _ -> },
     onOpenRecorder: () -> Unit = {},
@@ -106,11 +125,18 @@ fun MultiTouchGestureSettingsScreen(
     var editingEntry by remember { mutableStateOf<MultiTouchGestureEntry?>(null) }
     var showDiagnostics by remember { mutableStateOf(false) }
 
-    // 协议切换会重启观察器：弹窗开着时延时再取一次，避免显示切换前的旧状态。
-    LaunchedEffect(showDiagnostics, settings.protocol) {
+    // 打开状态/诊断 sheet 时取一次；协议或设备切换会重启观察器，延时再刷新。
+    LaunchedEffect(showDiagnostics) {
+        if (showDiagnostics) {
+            onRefreshDiagnostics()
+            onRefreshTouchDevices()
+        }
+    }
+    LaunchedEffect(showDiagnostics, settings.protocol, settings.devicePath) {
         if (showDiagnostics) {
             delay(600)
             onRefreshDiagnostics()
+            onRefreshTouchDevices()
         }
     }
 
@@ -211,6 +237,7 @@ fun MultiTouchGestureSettingsScreen(
                             onClick = {
                                 showDiagnostics = true
                                 onRefreshDiagnostics()
+                                onRefreshTouchDevices()
                             },
                         )
                     }
@@ -328,59 +355,121 @@ fun MultiTouchGestureSettingsScreen(
     }
 
     if (showDiagnostics) {
-        val stateText = when {
-            !settings.enabled -> stringResource(R.string.multitouch_status_disabled)
-            status.running -> stringResource(R.string.multitouch_status_running)
-            else -> stringResource(R.string.multitouch_status_stopped)
-        }
-        WindowDialog(
+        val currentDeviceName = Regex("name=(\\S+)")
+            .find(diagnostics)
+            ?.groupValues
+            ?.getOrNull(1)
+            .orEmpty()
+        MiuixBottomSheet(
             show = true,
-            title = stringResource(R.string.multitouch_diagnostics_title),
-            onDismissRequest = { showDiagnostics = false },
-        ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "$stateText · ${stringResource(R.string.multitouch_diagnostics_last_run)}",
-                    fontSize = MiuixTheme.textStyles.body2.fontSize,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                )
-                Spacer(Modifier.height(8.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 360.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .verticalScroll(rememberScrollState())
-                        .padding(12.dp),
-                ) {
-                    Text(
-                        text = diagnostics.ifBlank {
-                            stringResource(R.string.multitouch_diagnostics_empty)
-                        },
-                        style = MaterialTheme.typography.bodySmall,
+            title = stringResource(R.string.multitouch_status_title),
+            startAction = {
+                IconButton(onClick = { showDiagnostics = false }) {
+                    MiuixIcon(
+                        imageVector = MiuixIcons.Medium.Close,
+                        contentDescription = stringResource(R.string.multitouch_diagnostics_close),
+                        tint = MiuixTheme.colorScheme.onBackground,
                     )
                 }
-                Spacer(Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+            },
+            endAction = {
+                IconButton(
+                    onClick = {
+                        showDiagnostics = false
+                        onRetry()
+                    },
                 ) {
-                    TextButton(
-                        text = stringResource(R.string.multitouch_diagnostics_close),
-                        onClick = { showDiagnostics = false },
-                        modifier = Modifier.weight(1f),
-                        minHeight = 44.dp,
+                    MiuixIcon(
+                        imageVector = MiuixIcons.Medium.Refresh,
+                        contentDescription = stringResource(R.string.multitouch_diagnostics_retry),
+                        tint = MiuixTheme.colorScheme.onBackground,
                     )
-                    TextButton(
-                        text = stringResource(R.string.multitouch_diagnostics_retry),
-                        onClick = {
-                            showDiagnostics = false
-                            onRetry()
-                        },
-                        modifier = Modifier.weight(1f),
-                        minHeight = 44.dp,
-                        colors = ButtonDefaults.textButtonColorsPrimary(),
+                }
+            },
+            onDismissRequest = { showDiagnostics = false },
+        ) {
+            LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                item {
+                    SmallTitle(
+                        text = stringResource(R.string.multitouch_diagnostics_title),
+                        insideMargin = PaddingValues(16.dp, 8.dp),
+                    )
+                    Card(
+                        modifier = Modifier.padding(bottom = 16.dp),
+                        colors = CardDefaults.defaultColors(
+                            color = MiuixTheme.colorScheme.secondaryContainer,
+                        ),
+                    ) {
+                        MiuixText(
+                            text = diagnostics.ifBlank {
+                                stringResource(R.string.multitouch_diagnostics_empty)
+                            },
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            modifier = Modifier.padding(16.dp),
+                        )
+                    }
+                }
+                item {
+                    SmallTitle(
+                        text = stringResource(R.string.multitouch_device_title),
+                        insideMargin = PaddingValues(16.dp, 8.dp),
+                    )
+                    Card(
+                        modifier = Modifier.padding(bottom = 16.dp),
+                        colors = CardDefaults.defaultColors(
+                            color = MiuixTheme.colorScheme.secondaryContainer,
+                        ),
+                    ) {
+                        RadioButtonPreference(
+                            title = stringResource(R.string.multitouch_device_auto),
+                            summary = if (currentDeviceName.isNotBlank()) {
+                                stringResource(
+                                    R.string.multitouch_device_summary_auto_current,
+                                    currentDeviceName,
+                                )
+                            } else {
+                                stringResource(R.string.multitouch_device_summary_auto)
+                            },
+                            selected = settings.devicePath.isBlank(),
+                            onClick = { onDevicePathChange("") },
+                            radioButtonLocation = RadioButtonLocation.End,
+                        )
+                        touchDevices.forEach { line ->
+                            val parts = line.split('|')
+                            val path = parts.getOrNull(0).orEmpty()
+                            val name = parts.getOrNull(1).orEmpty()
+                            val protocol = parts.getOrNull(2).orEmpty()
+                            val range = "${parts.getOrNull(3).orEmpty()}×" +
+                                parts.getOrNull(4).orEmpty()
+                            RadioButtonPreference(
+                                title = name.ifBlank { path },
+                                summary = "$path · $protocol · $range",
+                                selected = settings.devicePath == path,
+                                onClick = { onDevicePathChange(path) },
+                                radioButtonLocation = RadioButtonLocation.End,
+                            )
+                        }
+                        if (touchDevices.isEmpty()) {
+                            MiuixText(
+                                text = stringResource(R.string.multitouch_device_empty),
+                                style = MiuixTheme.textStyles.body2,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                modifier = Modifier.padding(16.dp),
+                            )
+                        }
+                    }
+                }
+                item {
+                    Spacer(
+                        Modifier.padding(
+                            bottom = WindowInsets.navigationBars
+                                .asPaddingValues()
+                                .calculateBottomPadding() +
+                                WindowInsets.captionBar
+                                    .asPaddingValues()
+                                    .calculateBottomPadding(),
+                        ),
                     )
                 }
             }

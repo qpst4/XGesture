@@ -224,6 +224,10 @@ internal class TaskManagerRpcClient(
     override fun getMultiTouchDiagnostics(): String =
         (TaskManagerDaemonRpc.execute(port, 105, emptyList()) as RpcValue.Str).value ?: ""
 
+    /** 触摸设备候选（旧守护进程没有 106，返回空数组）。 */
+    override fun getTouchDevices(): Array<String> =
+        (TaskManagerDaemonRpc.execute(port, 106, emptyList()) as RpcValue.StrArr).value
+
 }
 
 
