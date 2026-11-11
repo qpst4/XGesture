@@ -8,6 +8,50 @@ identical to the Chinese file so that the release pipeline can line up both lang
 
 Where the two files differ, `CHANGELOG.md` is authoritative.
 
+## [1.64.0] - 2026-11-11
+
+### Added
+- Added NFC and Bluetooth toggle actions that open system settings when unprivileged
+- Global touch supports the Type A protocol, so older devices and some ROMs can read fingers
+- Global touch can select the touch device and protocol manually, with auto mode sniffing the real event stream
+- Global touch status is now a diagnostics panel showing the device, protocol and candidates, with a restart action
+- Added a pure-icon bottom bar to the pick panel, with buttons that can be reordered, hidden and reset
+- Pick panel offers word granularity (words / characters) and text state options
+- Activity shortcut icons can be selected from third-party icon packs
+- Float ball slideshow intervals are now fixed steps from 10 seconds to 7 days, using the system photo picker
+- Settings backup now covers macros, clipboard, custom gestures, action icons and quick menus
+- Added accessibility link diagnostics showing drop counts and recovery results
+- Macro targets and macro tiles show the target app icon with a macro badge
+- Corner wheel slot icons support multiple shapes
+
+### Changed
+- Settings pages follow Miuix conventions: two-option rows use segments, three-option rows use dropdowns
+- Shake, swipe, corner wheel, global touch and floating pointer pages are merged into single cards
+- The pick bar supports classic and pure-icon styles and applies the change immediately
+- The hover duration slider on the trigger page moved to the bottom of the card
+- Single and double tap slots no longer list actions that can only be held
+- Notification history grouping by app is off by default
+- Triggers and the float ball now appear together, removing the roughly 9-second startup delay
+- Resident graphics memory drops from about 205MB to 83MB and physical memory from about 511MB to 263MB
+- Accessibility re-binding no longer rewrites the system master switch
+- Settings section icons use a thin-line style
+
+### Fixed
+- Fixed back gestures and all overlays failing after the accessibility service dropped, with automatic recovery
+- Fixed a cold-start crash from a null handler in the message overlay
+- Fixed overlapping trigger windows after reconnect that broke tap-through
+- Fixed triggers and panels missing right after the host starts
+- Fixed the volume bar being covered by the float ball so the slider missed touches
+- Fixed the DND icon in the volume panel not following the real state
+- Fixed a crash when opening image search from the pick panel
+- Fixed the pick panel not hiding during image search
+- Fixed the whole shortcut list disappearing when system shortcuts are redacted
+- Fixed the selection toolbar appearing in non-tap mode
+- Fixed clone badges missing on some surfaces, with macro icons and badges completed for honeycomb and wheel launchers
+- Fixed a crash when editing a ring launcher slot
+- Fixed global touch misreading gesture directions in landscape
+- Fixed the NFC toggle blocking the main thread
+
 ## [1.62.0] - 2026-11-06
 
 ### Added
