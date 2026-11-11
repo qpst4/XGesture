@@ -57,7 +57,9 @@ fun HoneycombLauncherEditorScreen(
     onAdd: () -> Unit
 ) {
     val uiState = HoneycombLauncherUiState(
-        items = settings.honeycombLauncher.honeycombRuntimeItems(),
+        // 编辑器用完整列表：运行时过滤（honeycombRuntimeItems）只影响蜂窝实际显示，
+        // 不能拿过滤后的列表来画「蜂窝位置」预览，否则非 APP/SHORTCUT/ACTION 项会让预览变空。
+        items = settings.honeycombLauncher,
         displaySettings = settings.honeycombDisplay
     )
     HoneycombLauncherEditorContent(
