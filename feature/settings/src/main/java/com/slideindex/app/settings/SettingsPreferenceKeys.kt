@@ -729,6 +729,26 @@ internal object SettingsPreferenceKeys {
         intPreferencesKey("clipboard_history_float_handle_y_portrait")
     val CLIPBOARD_HISTORY_FLOAT_HANDLE_Y_LANDSCAPE =
         intPreferencesKey("clipboard_history_float_handle_y_landscape")
+    // ⚠️ 这三个 key 的**名字**必须带 `_v2`：历史上同名 key 是 int 类型
+    // （`clipboard_history_float_handle_width_dp`，见 e473d6b1 / ee017975），
+    // 而 DataStore 的 `Preferences.Key` 只按名字判等、值保留旧类型 ——
+    // 沿用旧名会在老数据上抛 `ClassCastException: Integer cannot be cast to Float`，
+    // 位置是 SettingsSnapshotReader 读设置那一行，表现是**一启动就崩、无障碍服务被记成 crashed**。
+    val CLIPBOARD_HISTORY_FLOAT_HANDLE_WIDTH_DP =
+        floatPreferencesKey("clipboard_history_float_handle_width_dp_v2")
+    val CLIPBOARD_HISTORY_FLOAT_HANDLE_HEIGHT_DP =
+        floatPreferencesKey("clipboard_history_float_handle_height_dp_v2")
+    val CLIPBOARD_HISTORY_FLOAT_HANDLE_ALPHA =
+        floatPreferencesKey("clipboard_history_float_handle_alpha_v2")
+
+    /**
+     * @deprecated 旧「剪贴历史贴边手柄宽度」，int 类型（v1.10.x 起就存在）。
+     *
+     * 只由 [SettingsSchemaMigrations] 读一次并删除，**任何读设置的地方都不许再碰它**：
+     * 按 float 读同名键会抛 `ClassCastException`（真机：升级后一启动就崩）。
+     */
+    val LEGACY_CLIPBOARD_HISTORY_FLOAT_HANDLE_WIDTH_DP =
+        intPreferencesKey("clipboard_history_float_handle_width_dp")
     val CLIPBOARD_FLOAT_ENABLED = booleanPreferencesKey("clipboard_float_enabled")
     val CLIPBOARD_FLOAT_SHOW_CHIP = booleanPreferencesKey("clipboard_float_show_chip")
     val CLIPBOARD_FLOAT_PIN_POSITION = booleanPreferencesKey("clipboard_float_pin_position")

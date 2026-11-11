@@ -113,7 +113,10 @@ class SettingsModuleRegistryTest {
 
     private companion object {
         // 679 = 678 + 1（幻灯片间隔）。
-        const val EXPECTED_TOTAL_KEYS = 679
+        // 683 = 679 + 4：剪贴历史贴边把手外观的三个新键（宽/高/透明度，均带 `_v2`）
+        //            + 1 个 int→float 迁移用的 legacy 键（只被 SettingsSchemaMigrations 读一次）。
+        // 四个都落 CLIPBOARD（前缀 `clipboard_`）。
+        const val EXPECTED_TOTAL_KEYS = 683
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
             SettingsModule.EDGE_GESTURE to 84,
@@ -127,7 +130,7 @@ class SettingsModuleRegistryTest {
             SettingsModule.MESSAGE to 73,
             SettingsModule.OTP to 24,
             SettingsModule.SHAKE to 44,
-            SettingsModule.CLIPBOARD to 59,
+            SettingsModule.CLIPBOARD to 63,
             SettingsModule.DRAG_DROP to 5,
             SettingsModule.STASH to 5,
             SettingsModule.SEARCH to 40,
