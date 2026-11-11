@@ -82,7 +82,7 @@ class SwipePathRecognizer(
         } else {
             shortDistanceDp + MIN_DISTANCE_GAP_DP
         }
-        longDistanceDp = longDp.coerceIn(longMin, MAX_DISTANCE_DP)
+        longDistanceDp = longDp.coerceIn(longMin, MAX_LONG_DISTANCE_DP)
     }
 
     fun applyAngles(angles: GestureAngles) {
@@ -977,7 +977,10 @@ class SwipePathRecognizer(
 
     companion object {
         private const val MIN_DISTANCE_DP = 24f
+        /** 短距硬上限（UI 的软上限见 [SHORT_DISTANCE_MAX_DP]）。 */
         private const val MAX_DISTANCE_DP = 240f
+        /** 长距硬上限：与短距解耦，允许把"短滑宽容带"拉到 320dp 以上（issue #52）。 */
+        private const val MAX_LONG_DISTANCE_DP = 320f
         private const val MIN_DISTANCE_GAP_DP = 16f
 
         const val DEFAULT_SHORT_DISTANCE_DP = 60f
@@ -985,7 +988,7 @@ class SwipePathRecognizer(
         const val SHORT_DISTANCE_MIN_DP = 0f
         const val SHORT_DISTANCE_MAX_DP = 160f
         const val LONG_DISTANCE_MIN_DP = MIN_DISTANCE_GAP_DP
-        const val LONG_DISTANCE_MAX_DP = MAX_DISTANCE_DP
+        const val LONG_DISTANCE_MAX_DP = MAX_LONG_DISTANCE_DP
         const val LONG_PRESS_MS = 450L
         private const val TAP_SLOP_DP = 12f
         private const val TAP_LENIENT_SLOP_DP = 36f

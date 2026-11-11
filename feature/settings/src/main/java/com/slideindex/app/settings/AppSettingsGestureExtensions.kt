@@ -6,6 +6,7 @@ import com.slideindex.app.gesture.GestureRule
 import com.slideindex.app.gesture.GestureTriggerMode
 import com.slideindex.app.gesture.GestureTriggerType
 import com.slideindex.app.gesture.SideGestureDefaults
+import com.slideindex.app.gesture.SwipePathRecognizer
 import com.slideindex.app.gesture.TriggerHandle
 import com.slideindex.app.gesture.isEffective
 import com.slideindex.app.gesture.requiresContinuousTriggerOnly
@@ -580,9 +581,10 @@ fun AppSettings.withUpdatedTriggerHandleDistances(
                 ?.coerceIn(0f, 160f) ?: handle.shortSwipeDistanceDp
             val longMin = if (short <= 0f) 16f else short + 16f
             var long = longSwipeDistanceDp?.roundToInt()?.toFloat()
-                ?.coerceIn(longMin, 240f) ?: handle.longSwipeDistanceDp
+                ?.coerceIn(longMin, SwipePathRecognizer.LONG_DISTANCE_MAX_DP)
+                ?: handle.longSwipeDistanceDp
             if (long < longMin) {
-                long = longMin.coerceAtMost(240f)
+                long = longMin.coerceAtMost(SwipePathRecognizer.LONG_DISTANCE_MAX_DP)
             }
             handle.copy(
                 shortSwipeDistanceDp = short,
