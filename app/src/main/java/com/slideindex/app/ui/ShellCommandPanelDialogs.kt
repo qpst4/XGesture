@@ -614,6 +614,8 @@ fun ShellCommandResultOverlaySheet(
                     text = command,
                     style = MiuixTheme.textStyles.body2,
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    maxLines = 3,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                 )
                 MiuixText(
                     text = stringResource(R.string.shell_panel_exit_code, exitCode),
@@ -625,15 +627,21 @@ fun ShellCommandResultOverlaySheet(
                     },
                 )
                 val scrollState = rememberScrollState()
-                MiuixText(
-                    text = output.ifBlank { stringResource(R.string.shell_panel_no_output) },
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurface,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 300.dp)
-                        .verticalScroll(scrollState),
-                )
+                        .weight(1f, fill = false),
+                ) {
+                    MiuixText(
+                        text = output.ifBlank { stringResource(R.string.shell_panel_no_output) },
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 300.dp)
+                            .verticalScroll(scrollState),
+                    )
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
