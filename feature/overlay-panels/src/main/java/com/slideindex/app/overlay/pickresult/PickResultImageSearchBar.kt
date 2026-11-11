@@ -430,7 +430,7 @@ fun PickResultImageSearchBar(
 @Composable
 private fun rememberLastUsedImageShareEngine(
     engines: List<SearchEngineConfig>,
-): Pair<SearchEngineConfig, (SearchEngineConfig) -> Unit> {
+): Pair<SearchEngineConfig?, (SearchEngineConfig) -> Unit> {
     val context = LocalContext.current.applicationContext
     var lastUsedEngineId by remember {
         mutableStateOf(
@@ -438,8 +438,10 @@ private fun rememberLastUsedImageShareEngine(
                 .getString(PickResultImageSharePrefs.KEY_LAST_USED_ENGINE_ID, null),
         )
     }
+    // 图片分享引擎可以为空：默认引擎只有网页搜索，用户也没配「分享到 App」时就是空列表。
+    // 这里必须容忍空列表，否则纯图标底栏在组合阶段会因 first() 抛 NoSuchElementException。
     val displayEngine = remember(engines, lastUsedEngineId) {
-        engines.find { it.id == lastUsedEngineId } ?: engines.first()
+        engines.find { it.id == lastUsedEngineId } ?: engines.firstOrNull()
     }
     val rememberEngine: (SearchEngineConfig) -> Unit = { engine ->
         PickResultImageSharePrefs.rememberLastUsedEngine(context, engine)
@@ -454,7 +456,9 @@ private fun ImageShareEngineChip(
     onShareEngineClick: (SearchEngineConfig) -> Unit,
     compact: Boolean = false,
 ) {
-    val (displayEngine, rememberEngine) = rememberLastUsedImageShareEngine(engines)
+    val (displayEngineOrNull, rememberEngine) = rememberLastUsedImageShareEngine(engines)
+    // 调用方只在有引擎时才挂这个芯片；这里再兜一层，避免空列表从别的入口进来。
+    val displayEngine = displayEngineOrNull ?: return
     var menuExpanded by remember { mutableStateOf(false) }
     val showEnginePicker = engines.size > 1
     val shareLabel = stringResource(R.string.pick_result_image_share_to_app)
@@ -794,13 +798,14 @@ private fun ImageSearchIconButton(
                     Modifier.pointerInput(engines, displayEngine) {
                         awaitEachGesture {
                             val down = awaitFirstDown(requireUnconsumed = false)
-                            if (engines.isEmpty()) return@awaitEachGesture
+                            // 没有分享引擎时 displayEngine 为 null：整段长按滑选直接退出，单击仍可搜图。
+                            val currentEngine = displayEngine ?: return@awaitEachGesture
                             // 长按成立前抬手 / 移动过大 → null，这次仍按普通单击处理
                             val longPress = awaitLongPressOrCancellation(down.id)
                                 ?: return@awaitEachGesture
                             val coords = anchorCoordinates ?: return@awaitEachGesture
 
-                            val startIndex = engines.indexOf(displayEngine).coerceAtLeast(0)
+                            val startIndex = engines.indexOf(currentEngine).coerceAtLeast(0)
                             val finger = coords.localToWindow(longPress.position)
                             dragStartFingerY = finger.y
                             anchorRowUnderFinger(finger.x, startIndex)
