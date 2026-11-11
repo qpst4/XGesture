@@ -5027,4 +5027,15 @@
     <string name="search_engine_empty_enabled">لا توجد محركات بحث مفعلة. أضف واحداً من المحركات المخفية أدناه أو انقر على + لإنشاء جديد</string>
     <string name="search_engine_action_hide">نقل إلى المخفي</string>
     <string name="search_engine_action_restore">استعادة إلى اللوحة</string>
+
+    <!-- Search engine management -->
+    <string name="search_engine_add_import_description">إضافة محرك بحث أو استيراده</string>
+    <string name="search_engine_status_visible">الحالة: مفعّل (يظهر في اللوحة)</string>
+    <string name="search_engine_status_hidden">الحالة: مخفي</string>
+    <string name="search_engine_action_hide_summary">إخفاؤه من لوحة البحث مع الاحتفاظ بالإعدادات</string>
+    <string name="search_engine_action_restore_summary">إظهاره في نهاية لوحة البحث</string>
+    <string name="search_engine_action_edit">تعديل الإعدادات</string>
+    <string name="search_engine_action_edit_summary">تغيير عنوان URL للبحث أو الأيقونة أو الاسم</string>
+    <string name="search_engine_action_delete">حذف محرك البحث</string>
+    <string name="search_engine_action_delete_summary">إزالة هذا العنصر نهائيًا من القائمة المحلية</string>
 </resources>

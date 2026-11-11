@@ -5023,4 +5023,15 @@
     <string name="search_engine_empty_enabled">有効な検索エンジンがありません。下の非表示プールから追加するか、右下の + をタップして新規作成してください</string>
     <string name="search_engine_action_hide">非表示プールに移動</string>
     <string name="search_engine_action_restore">パネル表示に戻す</string>
+
+    <!-- Search engine management -->
+    <string name="search_engine_add_import_description">検索エンジンの追加とインポート</string>
+    <string name="search_engine_status_visible">状態：有効（パネルに表示）</string>
+    <string name="search_engine_status_hidden">状態：非表示</string>
+    <string name="search_engine_action_hide_summary">設定を残したまま検索パネルから非表示にします</string>
+    <string name="search_engine_action_restore_summary">検索パネルの末尾に表示します</string>
+    <string name="search_engine_action_edit">設定を編集</string>
+    <string name="search_engine_action_edit_summary">検索 URL、アイコン、名前を変更します</string>
+    <string name="search_engine_action_delete">検索エンジンを削除</string>
+    <string name="search_engine_action_delete_summary">この項目をローカルリストから完全に削除します</string>
 </resources>
