@@ -149,6 +149,18 @@ internal object TaskManagerDaemonRpc {
 
             102 -> RpcValue.StrArr(service.pollMultiTouchEvents())
 
+            103 -> {
+                service.setMultiTouchDisplay(args.int(0), args.int(1), args.int(2))
+                RpcValue.Void
+            }
+
+            104 -> {
+                service.setMultiTouchConfig(args.string(0), args.string(1))
+                RpcValue.Void
+            }
+
+            105 -> RpcValue.Str(service.getMultiTouchDiagnostics())
+
             else -> throw IOException("unknown op=$op")
 
         }

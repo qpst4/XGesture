@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.Keep
 import androidx.annotation.StringRes
+import com.slideindex.app.gesture.multitouch.TouchDisplayTransform
 import com.slideindex.app.multitouch.EvdevTouchObserver
 import com.slideindex.app.multitouch.encodePathStrokes
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -11,6 +12,27 @@ import java.util.concurrent.ConcurrentLinkedQueue
 class TaskManagerUserService() : ITaskManagerService.Stub() {
 
     private var appContext: Context? = null
+
+    /**
+     * 当前屏幕方向/尺寸；app 通过 [setMultiTouchDisplay] 更新。
+     *
+     * 观察器每帧读取它，把面板坐标旋转成屏幕坐标（对齐 GMD 的入口旋转）。
+     * 默认 IDENTITY = 不做换算，兼容还没拿到尺寸的极短窗口。
+     */
+    @Volatile
+    private var displayTransform: TouchDisplayTransform = TouchDisplayTransform.IDENTITY
+
+    /** 手动协议覆盖：auto / type_a / type_b。 */
+    @Volatile
+    private var protocolOverride: String = "auto"
+
+    /** 指定触摸设备路径；空串 = 自动挑。 */
+    @Volatile
+    private var devicePathOverride: String = ""
+
+    /** 最近一次观察诊断（设备/协议/候选），设置页读取。 */
+    @Volatile
+    private var multitouchDiagnostics: String = ""
 
     private val shell = TaskManagerShellExecutor
     private val shellRunner = ShellCommandRunner { args -> shell.shellCommand(*args) }
@@ -31,12 +53,31 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
         System.exit(0)
     }
 
+    override fun setMultiTouchDisplay(rotation: Int, screenWidthPx: Int, screenHeightPx: Int) {
+        displayTransform = TouchDisplayTransform(
+            rotation = rotation,
+            screenWidthPx = screenWidthPx,
+            screenHeightPx = screenHeightPx,
+        )
+    }
+
+    override fun setMultiTouchConfig(protocol: String?, devicePath: String?) {
+        protocolOverride = protocol ?: "auto"
+        devicePathOverride = devicePath ?: ""
+    }
+
+    override fun getMultiTouchDiagnostics(): String = multitouchDiagnostics
+
     override fun startMultiTouchObservation(
         callback: IOnMultiTouchGesture,
         pathPriority: Boolean,
     ): Boolean {
         stopMultiTouchObservation()
         val observer = EvdevTouchObserver(
+            displayTransform = { displayTransform },
+            protocolOverride = { protocolOverride },
+            devicePathOverride = { devicePathOverride },
+            onDiagnostics = { multitouchDiagnostics = it },
             onGesture = { gestures, eventTimeMs, anchor ->
                 runCatching {
                     Log.i(
@@ -79,7 +120,12 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
                 runCatching { callback.onInputConflict(devices) }
             },
             onState = { running, detail ->
-                runCatching { callback.onObserverState(running, detail) }
+                // 「stopped」是 app 主动停止触发的：此时正在切换观察器，
+                // 转发这条 false 会把新会话刚设好的 running=true 覆盖掉（页面显示"未运行"但手势正常）。
+                // 真正的异常状态（no-touchscreen / reader-error）照常转发。
+                if (running || detail != "stopped") {
+                    runCatching { callback.onObserverState(running, detail) }
+                }
             },
         )
         touchObserver = observer
@@ -110,6 +156,10 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
     override fun startMultiTouchPolling(pathPriority: Boolean): Boolean {
         stopMultiTouchPolling()
         val observer = EvdevTouchObserver(
+            displayTransform = { displayTransform },
+            protocolOverride = { protocolOverride },
+            devicePathOverride = { devicePathOverride },
+            onDiagnostics = { multitouchDiagnostics = it },
             onGesture = { gestures, _, anchor ->
                 for (gesture in gestures) {
                     pollingEvents += "g:${gesture.gesture.ordinal}:${gesture.fingerCount}:" +

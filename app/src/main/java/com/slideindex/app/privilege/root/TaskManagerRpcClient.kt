@@ -206,6 +206,24 @@ internal class TaskManagerRpcClient(
         runCatching { TaskManagerDaemonRpc.execute(port, 101, emptyList()) }
     }
 
+    /** 横屏方向补偿：把显示状态推给守护进程里的观察器（旧守护进程没有 103，调用会失败，app 侧回退）。 */
+    override fun setMultiTouchDisplay(rotation: Int, screenWidthPx: Int, screenHeightPx: Int) {
+        TaskManagerDaemonRpc.execute(
+            port,
+            103,
+            listOf(rotation.toString(), screenWidthPx.toString(), screenHeightPx.toString()),
+        )
+    }
+
+    /** 手动协议/设备覆盖（旧守护进程没有 104，调用会失败，保持 auto）。 */
+    override fun setMultiTouchConfig(protocol: String?, devicePath: String?) {
+        TaskManagerDaemonRpc.execute(port, 104, listOf(protocol, devicePath))
+    }
+
+    /** 触摸诊断信息（旧守护进程没有 105，返回空串）。 */
+    override fun getMultiTouchDiagnostics(): String =
+        (TaskManagerDaemonRpc.execute(port, 105, emptyList()) as RpcValue.Str).value ?: ""
+
 }
 
 

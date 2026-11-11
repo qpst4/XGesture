@@ -75,4 +75,14 @@
     <string name="multitouch_record_drawn_count">%1$d/5 strokes drawn</string>
     <string name="multitouch_record_clear">Redraw</string>
     <string name="multitouch_back">Back</string>
+    <string name="multitouch_protocol_title">Touch protocol</string>
+    <string name="multitouch_protocol_summary">Auto sniffs the real event stream; switch manually only if a driver is misdetected</string>
+    <string name="multitouch_protocol_auto">Auto</string>
+    <string name="multitouch_protocol_type_a">Type A</string>
+    <string name="multitouch_protocol_type_b">Type B</string>
+    <string name="multitouch_diagnostics_title">Touch diagnostics</string>
+    <string name="multitouch_diagnostics_empty">No diagnostics yet — try enabling global touch and swallowing a finger</string>
+    <string name="multitouch_diagnostics_last_run">last known state</string>
+    <string name="multitouch_diagnostics_retry">Restart</string>
+    <string name="multitouch_diagnostics_close">Close</string>
 </resources>
