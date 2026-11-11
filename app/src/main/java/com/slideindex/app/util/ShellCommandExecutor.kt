@@ -1,7 +1,7 @@
 package com.slideindex.app.util
 
-import com.slideindex.app.R
 import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.shell.ShellCommandModeResolver
 import com.slideindex.app.shell.ShellCommandTemplate
 import com.slideindex.app.shell.ShellTemplateContext
 
@@ -11,12 +11,9 @@ object ShellCommandExecutor {
         command: ShellCommand,
         templateContext: ShellTemplateContext? = null,
     ): TaskManagerUtil.ShellCommandResult {
-        val mode = command.executionMode
-            ?: return TaskManagerUtil.ShellCommandResult(
-                exitCode = -1,
-                output = TaskManagerUtil.applicationContext()
-                    .getString(R.string.shell_no_execution_mode),
-            )
+        // 没有显式执行方式的命令（旧数据、动作现场填的文本）跟随全局权限模式，
+        // 不再写死 Shizuku，也不再因为「未设置」直接拒绝执行。
+        val mode = command.executionMode ?: ShellCommandModeResolver.currentDefault()
         val expanded = templateContext?.let {
             ShellCommandTemplate.expand(command.command, it)
         } ?: command.command

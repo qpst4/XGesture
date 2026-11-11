@@ -22,6 +22,7 @@ import com.slideindex.app.settings.FreeWindowMode
 import com.slideindex.app.settings.resolvedFreeWindowMode
 import com.slideindex.app.settings.shouldLaunchFullscreen
 import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.shell.ShellCommandModeResolver
 import com.slideindex.app.util.AppShortcutLoader
 import com.slideindex.app.util.CloneAppLauncher
 import com.slideindex.app.util.ShellCommandRunner
@@ -432,12 +433,19 @@ internal class ActionExecutorLaunch(
             if (ActivityShortcutShellSupport.isShellUri(uri)) {
                 val command = ActivityShortcutShellSupport.decodeCommand(uri)
                 if (command.isNotBlank()) {
+                    val mode = ShellCommandModeResolver.forShortcut(
+                        shortcutId = null,
+                        command = command,
+                        savedCommands = settings.shellCommands,
+                        defaultMode = ShellCommandModeResolver.currentDefault(),
+                    )
                     Thread {
                         ShellCommandRunner.execute(
                             context = context,
                             command = ShellCommand(
                                 label = label.ifBlank { "Shortcut" },
                                 command = command,
+                                executionMode = mode,
                             ),
                         )
                     }.start()

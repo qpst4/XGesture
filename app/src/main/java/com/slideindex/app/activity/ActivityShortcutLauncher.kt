@@ -3,13 +3,19 @@ package com.slideindex.app.activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.widget.Toast
 import com.slideindex.app.R
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.shouldLaunchFullscreen
+import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.shell.ShellCommandModeResolver
 import com.slideindex.app.util.AppShortcutLoader
 import com.slideindex.app.util.FreeWindowLauncher
+import com.slideindex.app.util.ShellCommandRunner
+import com.slideindex.app.util.ShellResultFormatter
 import com.slideindex.app.util.ShortcutLaunchDispatcher
 import com.slideindex.app.util.TaskManagerUtil
 
@@ -112,13 +118,32 @@ object ActivityShortcutLauncher {
             if (ActivityShortcutShellSupport.isShellUri(uri)) {
                 val command = ActivityShortcutShellSupport.decodeCommand(uri)
                 if (command.isNotBlank()) {
-                    com.slideindex.app.util.ShellCommandRunner.execute(
-                        context = context,
-                        command = com.slideindex.app.shell.ShellCommand(
-                            label = shortcut.label,
-                            command = command
-                        )
+                    val mode = ShellCommandModeResolver.forShortcut(
+                        shortcutId = shortcut.shortcutId,
+                        command = command,
+                        savedCommands = settings.shellCommands,
+                        defaultMode = ShellCommandModeResolver.currentDefault(),
                     )
+                    // 执行可能耗时数秒，不能占着拉起快捷方式的主线程。
+                    Thread {
+                        val outcome = ShellCommandRunner.execute(
+                            context = context,
+                            command = ShellCommand(
+                                label = shortcut.label,
+                                command = command,
+                                executionMode = mode,
+                            ),
+                        )
+                        if (outcome.exitCode != 0) {
+                            Handler(Looper.getMainLooper()).post {
+                                Toast.makeText(
+                                    context,
+                                    ShellResultFormatter.toast(context, outcome.exitCode, outcome.output),
+                                    Toast.LENGTH_LONG,
+                                ).show()
+                            }
+                        }
+                    }.start()
                     return true
                 }
                 continue

@@ -1,16 +1,17 @@
 package com.slideindex.app.shell
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ShellCommandCodecTest {
     @Test
-    fun legacyCommandWithoutModeDefaultsToShizuku() {
+    fun legacyCommandWithoutModeStaysUnset() {
         val legacy = listOf("id-1", "旧命令", "echo hi").joinToString("\u001E")
 
         val decoded = ShellCommandCodec.decode(legacy)
 
-        assertEquals(ShellExecutionMode.SHIZUKU, decoded?.executionMode)
+        assertNull(decoded?.executionMode)
     }
 
     @Test

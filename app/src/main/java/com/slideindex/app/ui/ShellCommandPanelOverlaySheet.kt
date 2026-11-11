@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.privilege.PrivilegeGateway
 import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.shell.ShellCommandModeResolver
 import com.slideindex.app.shell.ShellExecutionMode
 import com.slideindex.app.ui.miuix.MiuixSettingsFab
 import com.slideindex.app.util.ShellCommandRunner
@@ -85,7 +86,6 @@ fun ShellCommandPanelOverlaySheet(
     val shellTimeoutMessage = stringResource(R.string.shell_panel_execute_timeout)
     val shizukuUnavailableMessage = stringResource(R.string.shell_panel_mode_unavailable_shizuku)
     val rootUnavailableMessage = stringResource(R.string.shell_panel_mode_unavailable_root)
-    val unsetModeMessage = stringResource(R.string.shell_panel_mode_unavailable_unset)
     val scope = rememberCoroutineScope()
     var commands by remember(initialCommands) { mutableStateOf(initialCommands) }
     var editorTarget by remember { mutableStateOf<ShellCommand?>(null) }
@@ -110,11 +110,11 @@ fun ShellCommandPanelOverlaySheet(
         }
     }
 
-    fun canRun(item: ShellCommand): Boolean = when (item.executionMode) {
-        ShellExecutionMode.ROOT -> rootAvailable == true
-        ShellExecutionMode.SHIZUKU -> shizukuGranted
-        null -> false
-    }
+    fun canRun(item: ShellCommand): Boolean =
+        when (item.executionMode ?: ShellCommandModeResolver.currentDefault()) {
+            ShellExecutionMode.ROOT -> rootAvailable == true
+            ShellExecutionMode.SHIZUKU -> shizukuGranted
+        }
 
     SideEffect {
         registerContinuousDismissHandler?.invoke {
@@ -247,10 +247,12 @@ fun ShellCommandPanelOverlaySheet(
                                             label = item.label,
                                             command = item.command,
                                             exitCode = -1,
-                                            output = when (item.executionMode) {
+                                            output = when (
+                                                item.executionMode
+                                                    ?: ShellCommandModeResolver.currentDefault()
+                                            ) {
                                                 ShellExecutionMode.SHIZUKU -> shizukuUnavailableMessage
                                                 ShellExecutionMode.ROOT -> rootUnavailableMessage
-                                                null -> unsetModeMessage
                                             },
                                         )
                                         return@ShellCommandCard

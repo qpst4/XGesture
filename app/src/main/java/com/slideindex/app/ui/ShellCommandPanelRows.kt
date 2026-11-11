@@ -37,6 +37,7 @@ import com.slideindex.app.privilege.PrivilegeGateway
 import com.slideindex.app.privilege.PrivilegeUiStrings
 import androidx.compose.foundation.layout.width
 import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.shell.ShellCommandModeResolver
 import com.slideindex.app.shell.ShellExecutionMode
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.settings.components.SettingLinkRow
@@ -335,10 +336,9 @@ internal fun ShellCommandCard(
                 )
                 Text(
                     text = stringResource(
-                        when (item.executionMode) {
+                        when (item.executionMode ?: ShellCommandModeResolver.currentDefault()) {
                             ShellExecutionMode.ROOT -> R.string.shell_panel_mode_root
                             ShellExecutionMode.SHIZUKU -> R.string.shell_panel_mode_shizuku
-                            null -> R.string.shell_panel_mode_unset
                         },
                     ) + if (!available) {
                         " · " + stringResource(R.string.shell_panel_mode_status_unavailable)

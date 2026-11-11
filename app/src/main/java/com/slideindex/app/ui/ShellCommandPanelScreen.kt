@@ -213,14 +213,6 @@ fun ShellCommandPanelScreen(
 
     fun runCommand(item: ShellCommand) {
 
-        if (item.executionMode == null) {
-
-            onOpenEditor(item.id)
-
-            return
-
-        }
-
         scope.launch {
 
             runningCommandId = item.id

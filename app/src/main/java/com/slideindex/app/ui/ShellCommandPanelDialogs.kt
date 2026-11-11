@@ -50,8 +50,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
-import com.slideindex.app.privilege.PrivilegeGateway
 import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.shell.ShellCommandModeResolver
 import com.slideindex.app.shell.ShellExecutionMode
 import com.slideindex.app.shell.ShellResultDisplay
 import com.slideindex.app.shell.normalizeShellCommand
@@ -298,11 +298,7 @@ fun ShellCommandEditorScreen(
     var command by remember(initial) { mutableStateOf(initial?.command.orEmpty()) }
     var executionMode by remember(initial) {
         mutableStateOf(
-            initial?.executionMode ?: if (PrivilegeGateway.isRootMode()) {
-                ShellExecutionMode.ROOT
-            } else {
-                ShellExecutionMode.SHIZUKU
-            },
+            initial?.executionMode ?: ShellCommandModeResolver.currentDefault(),
         )
     }
     var resultDisplay by remember(initial) {
@@ -697,11 +693,7 @@ fun ShellCommandEditorOverlaySheet(
     var command by remember(initial) { mutableStateOf(initial?.command.orEmpty()) }
     var executionMode by remember(initial) {
         mutableStateOf(
-            initial?.executionMode ?: if (PrivilegeGateway.isRootMode()) {
-                ShellExecutionMode.ROOT
-            } else {
-                ShellExecutionMode.SHIZUKU
-            },
+            initial?.executionMode ?: ShellCommandModeResolver.currentDefault(),
         )
     }
     var resultDisplay by remember(initial) {

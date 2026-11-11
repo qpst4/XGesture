@@ -53,7 +53,9 @@ import com.slideindex.app.service.SlideIndexAccessibilityService
 import com.slideindex.app.translate.overlay.ScreenTranslationController
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.shell.ShellCommandModeResolver
 import com.slideindex.app.util.ShellCommandRunner
+import com.slideindex.app.util.ShellResultFormatter
 import com.slideindex.app.util.AssistantLauncher
 import com.slideindex.app.util.VoiceActionHelper
 import com.slideindex.app.util.ContinuousAdjustController
@@ -667,13 +669,25 @@ class ActionExecutor(
         val commandLine = action.command.trim()
         if (commandLine.isEmpty()) return false
         Thread {
-            ShellCommandRunner.execute(
+            val outcome = ShellCommandRunner.execute(
                 context = context,
                 command = ShellCommand(
                     label = "Gesture",
-                    command = commandLine
+                    command = commandLine,
+                    // 动作没有单独的执行方式：跟随全局权限模式，
+                    // 避免 1.62 之后被固定成默认的 Shizuku。
+                    executionMode = ShellCommandModeResolver.currentDefault(),
                 )
             )
+            if (outcome.exitCode != 0) {
+                Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(
+                        context,
+                        ShellResultFormatter.toast(context, outcome.exitCode, outcome.output),
+                        Toast.LENGTH_LONG,
+                    ).show()
+                }
+            }
         }.start()
         return true
     }
