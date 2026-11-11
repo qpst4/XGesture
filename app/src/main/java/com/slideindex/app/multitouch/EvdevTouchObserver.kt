@@ -2,11 +2,11 @@ package com.slideindex.app.multitouch
 
 import android.util.Log
 import com.slideindex.app.gesture.multitouch.CollectedPath
+import com.slideindex.app.gesture.multitouch.MtTouchFrameDecoder
 import com.slideindex.app.gesture.multitouch.MultiPointerGestureRecognizer
 import com.slideindex.app.gesture.multitouch.PathGestureCollector
 import com.slideindex.app.gesture.multitouch.RecognizedMultiPointerGesture
 import com.slideindex.app.gesture.multitouch.TouchAnchor
-import com.slideindex.app.gesture.multitouch.TouchPointer
 import com.slideindex.app.gesture.multitouch.touchAnchorOf
 import java.io.FileInputStream
 import java.io.IOException
@@ -101,9 +101,10 @@ class EvdevTouchObserver(
             }
             reportConflict(device.virtualDevices)
             recognizer.reset()
+            log("touch device=${device.eventPath} protocol=${device.protocol}")
             onState(true, "watching:${device.eventPath}")
             try {
-                readDevice(device.eventPath, AbsRanges(device.width, device.height))
+                readDevice(device.eventPath, AbsRanges(device.width, device.height), device.protocol)
             } catch (error: Throwable) {
                 if (running) {
                     log("touch reader stopped: ${error.message}")
@@ -118,97 +119,59 @@ class EvdevTouchObserver(
         onState(false, "stopped")
     }
 
-    private fun readDevice(eventPath: String, ranges: AbsRanges) {
+    private fun readDevice(
+        eventPath: String,
+        ranges: AbsRanges,
+        protocol: MtTouchFrameDecoder.Protocol,
+    ) {
         FileInputStream(eventPath).use { stream ->
             openStream = stream
             val buffer = ByteArray(EVENT_SIZE)
-            val slots = HashMap<Int, Slot>()
-            var currentSlot = 0
-            var touchDown = false
+            // Type A / Type B 的差异全部收在解码器里：这里只负责读事件、喂帧、驱动识别。
+            val decoder = MtTouchFrameDecoder(protocol = protocol, panelHeight = ranges.height)
 
             while (running) {
                 if (!readFully(stream, buffer)) break
                 val type = readShort(buffer, 16)
                 val code = readShort(buffer, 18)
                 val value = readInt(buffer, 20)
-                when (type) {
-                    EV_ABS -> when (code) {
-                        ABS_MT_SLOT -> currentSlot = value
-                        ABS_MT_TRACKING_ID -> {
-                            val slot = slots.getOrPut(currentSlot) { Slot() }
-                            slot.trackingId = value
-                            if (value < 0) {
-                                slot.x = Float.NaN
-                                slot.y = Float.NaN
-                            }
-                        }
-                        ABS_MT_POSITION_X -> {
-                            slots.getOrPut(currentSlot) { Slot() }.x = value.toFloat()
-                        }
-                        ABS_MT_POSITION_Y -> {
-                            slots.getOrPut(currentSlot) { Slot() }.y = value.toFloat()
-                        }
-                    }
 
-                    EV_KEY -> if (code == BTN_TOUCH) {
-                        touchDown = value != 0
-                    }
+                val frameReady = decoder.onEvent(type, code, value)
+                if (type == MtTouchFrameDecoder.EV_SYN && code == MtTouchFrameDecoder.SYN_DROPPED) {
+                    recognizer.reset()
+                }
+                if (!frameReady) continue
 
-                    EV_SYN -> when (code) {
-                        SYN_REPORT -> {
-                            val now = android.os.SystemClock.elapsedRealtime()
-                            val pointers = collectPointers(slots, ranges)
-                            val gestures = recognizer.onFrame(pointers, now)
-                            if (gestures.isNotEmpty()) {
-                                for (gesture in gestures) {
-                                    log(
-                                        "recognized ${gesture.gesture} " +
-                                            "x${gesture.fingerCount} ${gesture.debug}"
-                                    )
-                                }
-                                // 同一次触摸的候选共用基准质心，取第一条即可。
-                                val anchor = touchAnchorOf(
-                                    anchorX = gestures.first().anchorX,
-                                    anchorY = gestures.first().anchorY,
-                                    panelWidth = ranges.width,
-                                    panelHeight = ranges.height,
-                                )
-                                onGesture(gestures, now, anchor)
-                            }
-                            // 路径轨迹与几何识别并行采集：最终由 app 侧按条目去重。
-                            val path = pathCollector.onFrame(pointers)
-                            if (path != null) {
-                                log(
-                                    "path x${path.fingerCount} " +
-                                        "points=${path.strokes.sumOf { it.points.size }}"
-                                )
-                                onPathGesture(path, now, pathAnchor(path, ranges))
-                            }
-                        }
-
-                        SYN_DROPPED -> {
-                            slots.clear()
-                            currentSlot = 0
-                            touchDown = false
-                            recognizer.reset()
-                        }
+                val pointers = decoder.pointers
+                val now = android.os.SystemClock.elapsedRealtime()
+                val gestures = recognizer.onFrame(pointers, now)
+                if (gestures.isNotEmpty()) {
+                    for (gesture in gestures) {
+                        log(
+                            "recognized ${gesture.gesture} " +
+                                "x${gesture.fingerCount} ${gesture.debug}"
+                        )
                     }
+                    // 同一次触摸的候选共用基准质心，取第一条即可。
+                    val anchor = touchAnchorOf(
+                        anchorX = gestures.first().anchorX,
+                        anchorY = gestures.first().anchorY,
+                        panelWidth = ranges.width,
+                        panelHeight = ranges.height,
+                    )
+                    onGesture(gestures, now, anchor)
+                }
+                // 路径轨迹与几何识别并行采集：最终由 app 侧按条目去重。
+                val path = pathCollector.onFrame(pointers)
+                if (path != null) {
+                    log(
+                        "path x${path.fingerCount} " +
+                            "points=${path.strokes.sumOf { it.points.size }}"
+                    )
+                    onPathGesture(path, now, pathAnchor(path, ranges))
                 }
             }
         }
-    }
-
-    private fun collectPointers(slots: Map<Int, Slot>, ranges: AbsRanges): List<TouchPointer> {
-        val result = ArrayList<TouchPointer>(slots.size)
-        if (ranges.width <= 0f || ranges.height <= 0f) return result
-        // 统一按屏幕高度归一化：x、y 同一尺度，旋转/捏合/滑动阈值在横竖方向一致。
-        for ((index, slot) in slots) {
-            if (slot.trackingId < 0 || slot.x.isNaN() || slot.y.isNaN()) continue
-            val nx = slot.x / ranges.height
-            val ny = slot.y / ranges.height
-            result += TouchPointer(id = index, x = nx, y = ny)
-        }
-        return result
     }
 
     /**
@@ -237,12 +200,6 @@ class EvdevTouchObserver(
         )
     }
 
-    private data class Slot(
-        var trackingId: Int = -1,
-        var x: Float = Float.NaN,
-        var y: Float = Float.NaN,
-    )
-
     private data class AbsRanges(val width: Float, val height: Float)
 
     private data class Touchscreen(
@@ -250,6 +207,7 @@ class EvdevTouchObserver(
         val name: String,
         val width: Float,
         val height: Float,
+        val protocol: MtTouchFrameDecoder.Protocol,
         val virtualDevices: List<String> = emptyList(),
     )
 
@@ -322,12 +280,16 @@ class EvdevTouchObserver(
         var currentName = ""
         var maxX = 0
         var maxY = 0
+        var hasMtPositionX = false
+        var hasMtPositionY = false
+        var hasMtSlot = false
+        var hasTrackingId = false
         var found: Touchscreen? = null
         val virtualDevices = ArrayList<String>()
 
         fun flush() {
             val path = currentPath ?: return
-            val hasTouchRange = maxX > 1 && maxY > 1
+            val hasTouchRange = hasMtPositionX && hasMtPositionY && maxX > 1 && maxY > 1
             // 虚拟/中继设备：记录名字用于冲突提示，但绝不选作触摸屏。
             val isVirtual = currentName.contains("uinput", ignoreCase = true) ||
                 currentName.contains("virtual", ignoreCase = true) ||
@@ -339,7 +301,19 @@ class EvdevTouchObserver(
                 return
             }
             if (found != null || !hasTouchRange) return
-            found = Touchscreen(path, currentName, maxX.toFloat(), maxY.toFloat())
+            // 有 slot + tracking id 才是现代 Type B；否则按 Type A（SYN_MT_REPORT 分隔）解析。
+            val protocol = if (hasMtSlot && hasTrackingId) {
+                MtTouchFrameDecoder.Protocol.TYPE_B
+            } else {
+                MtTouchFrameDecoder.Protocol.TYPE_A
+            }
+            found = Touchscreen(
+                eventPath = path,
+                name = currentName,
+                width = maxX.toFloat(),
+                height = maxY.toFloat(),
+                protocol = protocol,
+            )
         }
 
         for (line in output.lineSequence()) {
@@ -350,6 +324,10 @@ class EvdevTouchObserver(
                 currentName = ""
                 maxX = 0
                 maxY = 0
+                hasMtPositionX = false
+                hasMtPositionY = false
+                hasMtSlot = false
+                hasTrackingId = false
                 continue
             }
             if (currentPath == null) continue
@@ -357,11 +335,21 @@ class EvdevTouchObserver(
                 trimmed.startsWith("name:") ->
                     currentName = trimmed.substringAfter("name:").trim().trim('"')
 
-                trimmed.startsWith("0035") ->
-                    maxX = MAX_PATTERN.find(trimmed)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: maxX
+                // ABS_MT_SLOT（0x2f）：Type B 才有的槽位。
+                trimmed.startsWith("002f") -> hasMtSlot = true
 
-                trimmed.startsWith("0036") ->
+                // ABS_MT_TRACKING_ID（0x39）：Type B 的手指编号。
+                trimmed.startsWith("0039") -> hasTrackingId = true
+
+                trimmed.startsWith("0035") -> {
+                    hasMtPositionX = true
+                    maxX = MAX_PATTERN.find(trimmed)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: maxX
+                }
+
+                trimmed.startsWith("0036") -> {
+                    hasMtPositionY = true
                     maxY = MAX_PATTERN.find(trimmed)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: maxY
+                }
             }
         }
         flush()
@@ -407,23 +395,10 @@ class EvdevTouchObserver(
         /** 64 位 timeval：16 + type 2 + code 2 + value 4。 */
         const val EVENT_SIZE = 24
 
-        const val EV_SYN = 0
-        const val EV_KEY = 1
-        const val EV_ABS = 3
-
         /** 运行期冲突检测间隔：其它触控工具可能随时创建设备。 */
         const val CONFLICT_CHECK_INTERVAL_MS = 5_000L
 
         /** 点按延迟判定的定时器间隔。 */
         const val TICK_INTERVAL_MS = 40L
-
-        const val SYN_REPORT = 0
-        const val SYN_DROPPED = 3
-
-        const val ABS_MT_SLOT = 47
-        const val ABS_MT_POSITION_X = 53
-        const val ABS_MT_POSITION_Y = 54
-        const val ABS_MT_TRACKING_ID = 57
-        const val BTN_TOUCH = 330
     }
 }

@@ -16,6 +16,7 @@ import com.slideindex.app.gesture.multitouch.PathGestureTemplate
 import com.slideindex.app.gesture.multitouch.PathPoint
 import com.slideindex.app.gesture.multitouch.PathStroke
 import com.slideindex.app.gesture.multitouch.TouchAnchor
+import com.slideindex.app.gesture.multitouch.forDisplayRotation
 import com.slideindex.app.gesture.multitouch.mapTouchAnchorToScreen
 import com.slideindex.app.overlay.OverlayScreenMetrics
 import com.slideindex.app.overlay.PanelSide
@@ -470,17 +471,28 @@ class MultiTouchGestureCoordinator @Inject constructor(
     private fun isMainProcess(): Boolean =
         runCatching { Application.getProcessName() == context.packageName }.getOrDefault(true)
 
+    /** 当前屏幕方向（`Surface.ROTATION_*`）；取不到就按竖屏处理。 */
+    private fun currentDisplayRotation(): Int =
+        runCatching { OverlayScreenMetrics.displayRotation(context) }.getOrDefault(0)
+
     /** 候选按顺序匹配条目，命中第一个就执行并返回 true。 */
     private fun dispatchGesture(gesture: Int, fingerCount: Int, anchor: TouchAnchor?): Boolean {
-        val kind = MultiPointerGesture.entries.getOrNull(gesture) ?: return false
+        val panelKind = MultiPointerGesture.entries.getOrNull(gesture) ?: return false
+        // 识别器在 shell 进程里读的是「面板自然方向」的原始坐标：横屏时用户看到的「右滑」，
+        // 在面板坐标里可能是「下滑」。匹配条目之前先按当前屏幕方向把方向掰正。
+        val rotation = currentDisplayRotation()
+        val kind = panelKind.forDisplayRotation(rotation)
         val entry = settingsStore.state.value.entries.firstOrNull {
             it.kind == kind && it.fingerCount == fingerCount &&
                 it.action != GestureAction.None
         } ?: run {
-            Log.i(TAG, "no entry for ${kind.name} x$fingerCount")
+            Log.i(TAG, "no entry for ${kind.name} x$fingerCount（panel=${panelKind.name} rot=$rotation）")
             return false
         }
-        Log.i(TAG, "gesture ${kind.name} x$fingerCount -> ${entry.action}")
+        Log.i(
+            TAG,
+            "gesture ${kind.name} x$fingerCount（panel=${panelKind.name} rot=$rotation）-> ${entry.action}",
+        )
         mainHandler.post { performAction(entry.action, kind, fingerCount, anchor) }
         return true
     }
