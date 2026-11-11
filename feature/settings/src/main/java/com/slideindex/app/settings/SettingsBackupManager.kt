@@ -164,7 +164,11 @@ class SettingsBackupManager @Inject constructor(
                 if (replaceExisting) {
                     prefs.asMap().keys
                         .filter { key ->
+                            // 这两个键不属于"某模块的设置"，不能被整块覆盖清掉：
+                            // - 引导完成标记是设备状态；
+                            // - schema 版本被清掉会变成 0，下次启动把全部迁移重放一遍。
                             key.name != SettingsPreferenceKeys.ONBOARDING_COMPLETED.name &&
+                                key.name != SettingsPreferenceKeys.SETTINGS_SCHEMA_VERSION.name &&
                                 (modules == null || SettingsModuleRegistry.moduleOf(key.name) in modules)
                         }
                         .forEach { key -> prefs.remove(key) }

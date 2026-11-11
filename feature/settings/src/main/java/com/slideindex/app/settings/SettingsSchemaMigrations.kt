@@ -24,7 +24,7 @@ import androidx.datastore.preferences.core.MutablePreferences
 internal object SettingsSchemaMigrations {
 
     /** 当前 schema 版本；每次新增迁移都必须同步加一。 */
-    const val CURRENT_VERSION = 1
+    const val CURRENT_VERSION = 2
 
     class Migration(
         val version: Int,
@@ -34,10 +34,28 @@ internal object SettingsSchemaMigrations {
     /**
      * 有序迁移表。
      *
-     * 目前为空：既有的一次性修复（旧剪贴板键清理、FV 环启动器键迁移等）仍在
-     * `SettingsRepository.init` 里按原顺序执行，行为不变；后续新增的格式变更一律进这张表。
+     * 既有的一次性修复（旧剪贴板键清理、FV 环启动器键迁移等）仍在 `SettingsRepository.init`
+     * 里按原顺序执行，行为不变；后续新增的格式变更一律进这张表。
      */
-    val all: List<Migration> = emptyList()
+    val all: List<Migration> = listOf(
+        Migration(2) { prefs -> dropLegacyClipboardHistoryFloatHandleWidth(prefs) },
+    )
+
+    /**
+     * 剪贴历史贴边手柄宽度：旧键是 int（v1.10.x 起就有），新代码改用 float 的 `_v2` 键。
+     *
+     * 同名换类型会让 DataStore 在**读**的时候抛 `ClassCastException: Integer cannot be cast to Float`
+     * —— 真机故障：升级后一启动就崩，无障碍服务被系统记成 crashed，所有浮层挂不上。
+     *
+     * **旧值不沿用**：旧量程 24..50dp 与新版 5..14dp 完全不重叠，任何换算都是猜：
+     * 按相对位置会把"旧版最细 24dp"推成"新版最细 5dp"（比原来细一大截），
+     * 直接钳位又会把"最细"推成"最粗"。所以只删旧键，外观回落到新版默认值，用户想调自己调。
+     */
+    private fun dropLegacyClipboardHistoryFloatHandleWidth(prefs: MutablePreferences) {
+        // 只按名字删：这条记录可能是 int（历史版本），也可能被旧备份还原成别的类型，
+        // 不带类型的 remove 才不会在读值时抛 CCE。
+        prefs.remove(SettingsPreferenceKeys.LEGACY_CLIPBOARD_HISTORY_FLOAT_HANDLE_WIDTH_DP)
+    }
 
     /** 需要从 [fromVersion] 升级到 [CURRENT_VERSION] 时，按版本号升序执行的迁移。 */
     fun pending(fromVersion: Int): List<Migration> =

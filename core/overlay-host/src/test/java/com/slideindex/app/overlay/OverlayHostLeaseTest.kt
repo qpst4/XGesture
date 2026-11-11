@@ -21,7 +21,7 @@ class OverlayHostLeaseTest {
     }
 
     @Test
-    fun `owner gone triggers teardown on next check`() {
+    fun `owner gone triggers teardown after two consecutive checks`() {
         var torndown = false
         OverlayHostLease.register(
             key = "edge",
@@ -29,9 +29,13 @@ class OverlayHostLeaseTest {
             teardown = { torndown = true },
         )
 
+        // 第 1 次巡检（t≈2s）只观察：瞬时抖动里拆家会把用户正在用的浮层全清掉。
         idleFor(3_000L)
+        assertFalse("单次失联不得立刻拆卸", torndown)
 
-        assertTrue("宿主服务已不在时必须摘掉残留浮层", torndown)
+        // 第 2 次巡检（t≈4s）仍失联才摘掉残留浮层。
+        idleFor(2_000L)
+        assertTrue("连续两次判定失联后必须摘掉残留浮层", torndown)
     }
 
     @Test

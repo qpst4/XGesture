@@ -1069,8 +1069,10 @@
     <string name="screen_search_ocr_requires_ppocr">وضع OCR يتطلب نموذج PP-OCR (التقاط النص → نماذج OCR)</string>
     <string name="gesture_action_open_internet_panel">لوحة اتصال الشبكة الأصلية</string>
     <string name="gesture_action_open_internet_panel_desc">عرض لوحة تحكم Wi-Fi وشبكة البيانات المحمولة الأصلية للنظام</string>
-    <string name="gesture_action_open_volume_panel">لوحة ضبط الصوت الأصلية</string>
-    <string name="gesture_action_open_volume_panel_desc">استدعاء نافذة ضبط الصوت الأصلية للنظام</string>
+    <string name="gesture_action_open_volume_panel">لوحة مستوى الصوت (صفحة الإعدادات)</string>
+    <string name="gesture_action_open_volume_panel_desc">فتح لوحة إعدادات الصوت في النظام مع منزلقات لكل مسار</string>
+    <string name="gesture_action_open_volume_slider">شريط مستوى الصوت (بدون تغيير المستوى)</string>
+    <string name="gesture_action_open_volume_slider_desc">عرض شريط مستوى الصوت في النظام دون تغيير المستوى</string>
     <string name="gesture_action_volume_up">رفع الصوت</string>
     <string name="gesture_action_volume_up_desc">رفع صوت الوسائط درجة واحدة وإظهار لوحة الصوت في النظام</string>
     <string name="gesture_action_volume_down">خفض الصوت</string>

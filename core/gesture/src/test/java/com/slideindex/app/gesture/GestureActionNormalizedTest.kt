@@ -95,6 +95,16 @@ class GestureActionNormalizedTest {
     }
 
     @Test
+    fun volumeSlider_roundTripsThroughId() {
+        // 115 = 「音量条（不改音量）」：id 是持久化 ABI，新动作只能往后追加（见上一条测试）。
+        assertEquals(GestureActionType.OPEN_VOLUME_SLIDER, GestureActionType.fromId(115))
+        assertEquals(
+            GestureAction.OpenVolumeSlider,
+            GestureAction.from(GestureActionType.OPEN_VOLUME_SLIDER, ""),
+        )
+    }
+
+    @Test
     fun gestureRuleCodec_decodeAll_migratesLegacyRemindActions() {
         val rule = GestureRule.slot(
             side = com.slideindex.app.overlay.PanelSide.LEFT,

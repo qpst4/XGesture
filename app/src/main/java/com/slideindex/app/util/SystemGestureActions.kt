@@ -102,6 +102,23 @@ object SystemGestureActions {
         }.getOrDefault(false)
     }
 
+    /**
+     * 弹出系统音量条（与音量键同款），但不改变音量。
+     *
+     * `adjustVolume(ADJUST_SAME, FLAG_SHOW_UI)` 的语义是"挑最相关的 stream、只弹 UI"，所以
+     * 通话中弹通话条、放歌时弹媒体条，和按音量键一致。少数 ROM 会把 SAME 当 no-op 连 UI
+     * 一起吞掉——这种情况没有可探测的返回值，只能靠真机反馈；异常路径回落到设置面板。
+     */
+    fun openNativeVolumeHud(context: Context): Boolean {
+        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            ?: return openNativeVolumePanel(context)
+        val shown = runCatching {
+            audioManager.adjustVolume(AudioManager.ADJUST_SAME, AudioManager.FLAG_SHOW_UI)
+            true
+        }.getOrDefault(false)
+        return shown || openNativeVolumePanel(context)
+    }
+
     /** 调出系统原生声音调节面板（Settings.Panel.ACTION_VOLUME）。 */
     fun openNativeVolumePanel(context: Context): Boolean {
         val panelIntent = Intent(Settings.Panel.ACTION_VOLUME).apply {

@@ -27,8 +27,15 @@ object AccessibilityLink {
     /** 恢复尝试的最小间隔：避免“拆窗 → 重绑 → 再失败”打成死循环。 */
     private const val RECOVERY_THROTTLE_MS = 60_000L
 
+    /** 弱证据（动作被拒）要连续出现几次才升级成“掉线”。 */
+    private const val WEAK_BREAK_CONFIRMATIONS = 3
+
     @Volatile
     private var broken = false
+
+    /** 弱证据的连续计数：任意一次成功调用（[noteAlive]）或复位都会清零。 */
+    @Volatile
+    private var weakBrokenCount = 0
 
     @Volatile
     private var brokenReason: String? = null
@@ -98,7 +105,29 @@ object AccessibilityLink {
         }
         broken = false
         brokenReason = null
+        weakBrokenCount = 0
         lastAliveAtMs = SystemClock.elapsedRealtime()
+    }
+
+    /**
+     * 记录一次**弱证据**：动作被系统拒绝，不等于连接已经断开。
+     *
+     * `performGlobalAction` 返回 false 的真实原因里，有一大半与链路无关：旧机型没有截图 /
+     * 电源菜单 / 快捷设置这些动作、全屏视频里动作被系统拒绝、锁屏期间某些动作不可用。
+     * 以前这种 false 会直接 [noteBroken]，于是"一次动作没做成"就升级成"无障碍断线"，
+     * 看门狗随即拆掉整批浮层（触钮、悬浮球、轮盘全没），而重绑需要 WRITE_SECURE_SETTINGS，
+     * 普通用户只能手动开关一次才能恢复。
+     *
+     * 所以弱证据必须**连续**出现 [WEAK_BREAK_CONFIRMATIONS] 次才升级成掉线。
+     */
+    fun noteSuspect(source: String, detail: String? = null) {
+        weakBrokenCount += 1
+        if (weakBrokenCount < WEAK_BREAK_CONFIRMATIONS) {
+            Log.w(TAG, "suspect failure $weakBrokenCount/$WEAK_BREAK_CONFIRMATIONS: $source")
+            return
+        }
+        weakBrokenCount = 0
+        noteBroken(source, detail)
     }
 
     /**
@@ -144,12 +173,14 @@ object AccessibilityLink {
     fun reset() {
         broken = false
         brokenReason = null
+        weakBrokenCount = 0
     }
 
     @VisibleForTesting
     internal fun resetForTest() {
         broken = false
         brokenReason = null
+        weakBrokenCount = 0
         lastAliveAtMs = 0L
         lastRecoveryAtMs = 0L
         recoveryHandler = null

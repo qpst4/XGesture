@@ -35,7 +35,15 @@ object PanelFloatBallHooks {
     /** 面板打开后把浮球 chrome 抬到面板之上（可带延迟）。 */
     var scheduleChromeAbovePanels: ((Long) -> Unit)? = null
 
-    /** 浮层布局度量：density 与屏幕宽度。 */
+    /**
+     * 浮层布局的**密度提示**：只给密度，屏宽/屏高由调用方按当前方向自己算。
+     *
+     * 为什么只给密度：1.64.x 这里回传的是 `(density, screenWidth)` 一整对，调用方一兜底常量
+     * 就把假宽度（1080f）和假密度（1f）一起带了进来，圆环整圈按 1dp=1px 画（只有正常的 36%）。
+     * 只留一个 `Float?`，宽度在类型上就塞不进来了。
+     *
+     * 返回 null 表示「没有更好的参考值」（悬浮球窗没建起来），调用方按真实屏幕度量算即可。
+     */
     @Volatile
-    var overlayLayoutMetrics: ((AppSettings) -> Pair<Float, Float>)? = null
+    var layoutDensityHint: ((AppSettings) -> Float?)? = null
 }

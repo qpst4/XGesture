@@ -280,8 +280,10 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.panels.PanelFloatBallHooks.suppressTouchHostsForActiveLauncherOverlay = {
             com.slideindex.app.overlay.FloatBallOverlay.suppressTouchHostsForActiveLauncherOverlay()
         }
-        com.slideindex.app.overlay.panels.PanelFloatBallHooks.overlayLayoutMetrics = { settings ->
-            com.slideindex.app.overlay.FloatBallOverlay.overlayLayoutMetrics(settings) ?: (1f to 1080f)
+        com.slideindex.app.overlay.panels.PanelFloatBallHooks.layoutDensityHint = { settings ->
+            // 只交密度提示：屏宽由圆环按当前方向自己算，钩子没有口子能塞进假宽度。
+            // 拿不到（球窗没建起来）就是 null，圆环退回真实屏幕度量。
+            com.slideindex.app.overlay.FloatBallOverlay.ballDensityHint(settings)
         }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.ringSlotIconEditorIntent = { ctx, axis, slotIndex ->
             com.slideindex.app.service.RingLauncherSlotIconEditorTrampolineActivity

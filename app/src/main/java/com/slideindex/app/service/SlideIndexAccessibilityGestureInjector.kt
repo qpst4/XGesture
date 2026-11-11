@@ -165,9 +165,10 @@ internal object SlideIndexAccessibilityGestureInjector {
     /**
      * 全局动作的统一出口。
      *
-     * `performGlobalAction` 返回 false 只有两种可能：服务连接已被系统摘掉，或这次注入被系统拒绝。
-     * 两种都意味着“现在做不了系统动作”，必须记成 [AccessibilityLink] 的真实证据，
-     * 否则用户看到的就是“划了没反应、也没有任何提示”，而 App 内部还以为一切正常。
+     * 成功一律记成“链路可用”的正面证据。失败只记**弱证据**（[AccessibilityLink.noteSuspect]）：
+     * `false` 只说明“这次动作没做成”，原因可能是旧机型根本没这个动作（截图 / 电源菜单 /
+     * 快捷设置）、全屏视频里被系统拒绝、锁屏期间不可用 —— 把一次 false 当成“连接已断”，
+     * 会让看门狗拆掉整批浮层，而重绑又需要 WRITE_SECURE_SETTINGS，用户只能手动开关一次。
      */
     private fun performGlobalActionTracked(
         service: SlideIndexAccessibilityService,
@@ -178,7 +179,7 @@ internal object SlideIndexAccessibilityGestureInjector {
         if (ok) {
             AccessibilityLink.noteAlive("performGlobalAction($actionName)")
         } else {
-            AccessibilityLink.noteBroken("performGlobalAction($actionName)")
+            AccessibilityLink.noteSuspect("performGlobalAction($actionName)")
         }
         return ok
     }

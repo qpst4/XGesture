@@ -27,6 +27,9 @@ object OverlayHostLease {
     /** 巡检间隔：单进程下只用来兜底"服务没了但窗口还在"这一种情况。 */
     private const val CHECK_INTERVAL_MS = 2_000L
 
+    /** 连续多少次判定失联才真的拆卸（一次抖动不算，见 watchdog 里的说明）。 */
+    private const val OWNER_LOST_CONFIRMATIONS = 2
+
     /**
      * 宿主失联时的诊断回调。
      *
@@ -47,6 +50,9 @@ object OverlayHostLease {
 
     private var watchdogScheduled = false
 
+    /** 连续判定“宿主失联”的次数：至少两次才动手拆，见 [OWNER_LOST_CONFIRMATIONS]。 */
+    private var consecutiveOwnerFailures = 0
+
     private val watchdog = Runnable {
         watchdogScheduled = false
         if (registrations.isEmpty()) return@Runnable
@@ -55,6 +61,18 @@ object OverlayHostLease {
             runCatching { registration.isOwnerAlive() }.getOrDefault(true)
         }
         if (!ownerAlive) {
+            consecutiveOwnerFailures += 1
+            // 只失联一次不动手：重绑/窗口过渡的瞬时抖动里拆家，会把用户正在用的浮层全清掉，
+            // 而重挂要等设置回流或 12s 自愈（没有 REBIND 权限时甚至要手动开关一次）。
+            // 连续两次（约 4s）仍失联才认为是真的没了。
+            if (consecutiveOwnerFailures < OWNER_LOST_CONFIRMATIONS) {
+                Log.w(
+                    TAG,
+                    "浮层宿主疑似失联（$consecutiveOwnerFailures/$OWNER_LOST_CONFIRMATIONS），先观察再拆",
+                )
+                scheduleWatchdog()
+                return@Runnable
+            }
             val pending = registrations.values.map { it.teardown }
             registrations.clear()
             onHostLost?.invoke(
@@ -70,6 +88,7 @@ object OverlayHostLease {
             }
             return@Runnable
         }
+        consecutiveOwnerFailures = 0
         scheduleWatchdog()
     }
 
@@ -108,6 +127,7 @@ object OverlayHostLease {
         mainHandler.removeCallbacks(watchdog)
         registrations.clear()
         watchdogScheduled = false
+        consecutiveOwnerFailures = 0
     }
 
     /** 仅测试使用：手动触发一次守护检查。 */
