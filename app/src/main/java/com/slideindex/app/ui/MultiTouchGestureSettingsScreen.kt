@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -339,35 +340,66 @@ fun MultiTouchGestureSettingsScreen(
     }
 
     if (showDiagnostics) {
+        val running = settings.enabled && status.running
         val stateText = when {
             !settings.enabled -> stringResource(R.string.multitouch_status_disabled)
             status.running -> stringResource(R.string.multitouch_status_running)
             else -> stringResource(R.string.multitouch_status_stopped)
         }
+        val resultCaption = stringResource(
+            if (running) {
+                R.string.multitouch_diagnostics_current
+            } else {
+                R.string.multitouch_diagnostics_last_run
+            },
+        )
+        val currentDeviceName = Regex("name=(\\S+)")
+            .find(diagnostics)
+            ?.groupValues
+            ?.getOrNull(1)
+            .orEmpty()
         MiuixBottomSheet(
             show = true,
             title = stringResource(R.string.multitouch_status_title),
             onDismissRequest = { showDiagnostics = false },
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding(),
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 520.dp)
-                        .verticalScroll(rememberScrollState()),
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp),
                 ) {
                     MiuixText(
-                        text = "$stateText · " +
-                            stringResource(R.string.multitouch_diagnostics_last_run),
-                        style = MiuixTheme.textStyles.body2,
+                        text = stateText,
+                        style = MiuixTheme.textStyles.headline1,
+                        fontWeight = FontWeight.Medium,
+                        color = MiuixTheme.colorScheme.onBackground,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    MiuixText(
+                        text = resultCaption,
+                        style = MiuixTheme.textStyles.footnote1,
                         color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(16.dp))
+                    MiuixText(
+                        text = stringResource(R.string.multitouch_diagnostics_title),
+                        style = MiuixTheme.textStyles.subtitle,
+                        fontWeight = FontWeight.Medium,
+                        color = MiuixTheme.colorScheme.onBackground,
+                    )
+                    Spacer(Modifier.height(6.dp))
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
                             .padding(12.dp),
                     ) {
                         Text(
@@ -375,26 +407,34 @@ fun MultiTouchGestureSettingsScreen(
                                 stringResource(R.string.multitouch_diagnostics_empty)
                             },
                             style = MaterialTheme.typography.bodySmall,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         )
                     }
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(20.dp))
                     MiuixText(
                         text = stringResource(R.string.multitouch_device_title),
-                        style = MiuixTheme.textStyles.headline1,
+                        style = MiuixTheme.textStyles.title4,
                         fontWeight = FontWeight.Medium,
                         color = MiuixTheme.colorScheme.onBackground,
                     )
                     Spacer(Modifier.height(4.dp))
                     DevicePickerRow(
                         title = stringResource(R.string.multitouch_device_auto),
-                        summary = stringResource(R.string.multitouch_device_summary_auto),
+                        summary = if (currentDeviceName.isNotBlank()) {
+                            stringResource(
+                                R.string.multitouch_device_summary_auto_current,
+                                currentDeviceName,
+                            )
+                        } else {
+                            stringResource(R.string.multitouch_device_summary_auto)
+                        },
                         selected = settings.devicePath.isBlank(),
                         onClick = { onDevicePathChange("") },
                     )
                     if (touchDevices.isEmpty()) {
                         MiuixText(
                             text = stringResource(R.string.multitouch_device_empty),
-                            style = MiuixTheme.textStyles.body2,
+                            style = MiuixTheme.textStyles.footnote1,
                             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         )
                     } else {
@@ -405,6 +445,12 @@ fun MultiTouchGestureSettingsScreen(
                             val protocol = parts.getOrNull(2).orEmpty()
                             val range = "${parts.getOrNull(3).orEmpty()}×" +
                                 parts.getOrNull(4).orEmpty()
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(0.5.dp)
+                                    .background(MiuixTheme.colorScheme.dividerLine),
+                            )
                             DevicePickerRow(
                                 title = name.ifBlank { path },
                                 summary = "$path · $protocol · $range",
@@ -413,10 +459,18 @@ fun MultiTouchGestureSettingsScreen(
                             )
                         }
                     }
+                    Spacer(Modifier.height(8.dp))
                 }
-                Spacer(Modifier.height(12.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(0.5.dp)
+                        .background(MiuixTheme.colorScheme.dividerLine),
+                )
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     TextButton(
@@ -710,7 +764,7 @@ private fun multiTouchStatusDetail(status: MultiTouchStatus, enabled: Boolean): 
     return base + stringResource(R.string.multitouch_detail_conflict, name)
 }
 
-/** 「触摸设备」选择弹窗里的一行：设备名 + 路径/协议/量程。 */
+/** 「触摸设备」选择行：标题 + 路径/协议/量程，选中的右侧打勾。 */
 @Composable
 private fun DevicePickerRow(
     title: String,
@@ -718,16 +772,17 @@ private fun DevicePickerRow(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 10.dp),
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.weight(1f)) {
             MiuixText(
                 text = title,
-                style = MiuixTheme.textStyles.headline1,
+                style = MiuixTheme.textStyles.body1,
                 fontWeight = FontWeight.Medium,
                 color = if (selected) {
                     MiuixTheme.colorScheme.primary
@@ -735,19 +790,20 @@ private fun DevicePickerRow(
                     MiuixTheme.colorScheme.onBackground
                 },
             )
-            if (selected) {
-                Spacer(Modifier.width(6.dp))
-                MiuixText(
-                    text = "✓",
-                    style = MiuixTheme.textStyles.headline1,
-                    color = MiuixTheme.colorScheme.primary,
-                )
-            }
+            Spacer(Modifier.height(2.dp))
+            MiuixText(
+                text = summary,
+                style = MiuixTheme.textStyles.footnote1,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            )
         }
-        MiuixText(
-            text = summary,
-            style = MiuixTheme.textStyles.body2,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-        )
+        if (selected) {
+            Spacer(Modifier.width(8.dp))
+            MiuixText(
+                text = "✓",
+                style = MiuixTheme.textStyles.body1,
+                color = MiuixTheme.colorScheme.primary,
+            )
+        }
     }
 }
