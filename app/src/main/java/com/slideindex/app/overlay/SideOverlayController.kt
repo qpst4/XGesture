@@ -357,10 +357,24 @@ class SideOverlayController(
         }
     }
 
-    fun showEdge(metrics: ScreenMetricsSnapshot? = null) {
+    /**
+     * 挂上这一侧的画布与触摸捕获窗。
+     *
+     * [sourceSettings] 传进来就用它按**当前方向**刷新一次设置缓存：`canHoldPresentation()` 读的是
+     * 缓存里的 `triggerHandles`，缓存停在另一个方向（横屏那份该侧没有触钮）时会立刻 `hideEdge()`，
+     * 调用方看到 `isEdgeInitialized()==false` 又反复调 `showEdge` —— 死循环，只能等下一次改设置
+     * （= 手动开关一次手势）才解开。旋转重挂必须带上最新设置，见 OverlayManager.ensureSideEdge。
+     */
+    fun showEdge(
+        metrics: ScreenMetricsSnapshot? = null,
+        sourceSettings: AppSettings? = null,
+    ) {
         val resolvedMetrics = metrics ?: OverlayScreenMetrics.snapshot(context)
         val isLandscape = resolvedMetrics.isLandscape
         lastIsLandscape = isLandscape
+        if (sourceSettings != null) {
+            settings = effectiveSettings(sourceSettings, resolvedMetrics)
+        }
 
         screenWidthPx = resolvedMetrics.widthPx
         screenHeightPx = resolvedMetrics.heightPx

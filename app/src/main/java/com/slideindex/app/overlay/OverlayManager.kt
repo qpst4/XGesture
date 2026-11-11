@@ -146,7 +146,9 @@ class OverlayManager(
         }
         if (triggersShown) {
             if (!controller.isEdgeInitialized()) {
-                controller.showEdge(metrics)
+                // 带上 settings：showEdge 内部要先按当前方向刷新缓存，否则 canHoldPresentation()
+                // 会拿另一方向的触钮列表判死，把刚建好的窗口又 hideEdge 掉（旋转后触钮永不恢复）。
+                controller.showEdge(metrics, settings)
             } else {
                 controller.updateSettings(settings, metrics)
             }
@@ -198,20 +200,30 @@ class OverlayManager(
             return false
         }
 
+        // 自愈不变量：抑制条件已经不成立，但可见性标志还停在“被抑制 / 未显示” → 就地复位。
+        //
+        // 不复位的话：ensureSideEdgesForHandles 会被 triggersSuppressed 一票否决；而下面 missing
+        // 的判据只看“窗口在不在”，被面板专用宿主撑着窗口的边会直接早退 —— 标志就永远停在那儿，
+        // 只能靠用户手动开关一次手势恢复（真机反馈：横屏全屏回竖屏后触钮不回来）。
+        val staleVisibilityFlags = triggersSuppressed || !triggersShown
+
         val missing = missingTriggerSides(metrics)
-        if (missing.isEmpty()) {
+        if (missing.isEmpty() && !staleVisibilityFlags) {
             OverlayStatePort.noteHealTick(skipped = false)
             logHealThrottled("heal nothing-missing")
             return false
         }
 
-        Log.w(TAG, "触钮缺失，自愈重挂: $missing " +
-            "(serviceEnabled=${currentSettings.serviceEnabled}, " +
+        Log.w(TAG, "触钮恢复挂载: missing=$missing " +
+            "(staleFlags=$staleVisibilityFlags, " +
+            "serviceEnabled=${currentSettings.serviceEnabled}, " +
             "triggersShown=$triggersShown, " +
             "triggersSuppressed=$triggersSuppressed, " +
             "foreground=${OverlayService.foregroundPackage})")
         triggersSuppressed = false
         triggersShown = true
+        // 给这轮重挂留几次短重试额度：窗口过渡期间第一次 attach 可能被守卫打断。
+        triggerAttachRetriesLeft = TRIGGER_ATTACH_RETRY_ATTEMPTS
         ensureSideEdgesForHandles(currentSettings, metrics)
         updateForwardingCapability()
         refreshTriggerVisibility()

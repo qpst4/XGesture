@@ -348,7 +348,29 @@ class EdgeOverlayHost(
      */
     private fun onAccessibilityLinkBroken(reason: String) {
         scope.launch {
-            Log.e(TAG, "accessibility link broken: $reason → teardown + rebind")
+            Log.e(TAG, "accessibility link broken: $reason → verify before teardown")
+            // 拆家之前先做一次**真实探活**。
+            //
+            // 单次建窗失败 / 一次动作被拒都不代表连接已经断了，而拆掉整批窗口的代价极高：
+            // 触钮、悬浮球、轮盘同时消失，重绑又需要 WRITE_SECURE_SETTINGS，没有权限的用户
+            // 只能手动开关一次无障碍才能恢复。探活（`Service.windows` 为空才是真断）能把
+            // 绝大多数误判挡在拆窗之前。
+            val service = SlideIndexAccessibilityService.accessibilityInstance()
+            val windowsAlive = if (service == null) {
+                false
+            } else {
+                withContext(Dispatchers.Default) {
+                    runCatching { service.windows?.isNotEmpty() == true }.getOrDefault(false)
+                }
+            }
+            if (windowsAlive) {
+                Log.w(TAG, "link probe says alive (reason=$reason) → 撤销掉线判定，不拆窗")
+                AccessibilityLink.noteAlive("recover-probe")
+                AccessibilityLink.noteRecoveryResult("ok")
+                return@launch
+            }
+
+            Log.e(TAG, "link probe says dead (reason=$reason) → teardown + rebind")
             runCatching { teardownOverlayWindows() }
                 .onFailure { Log.e(TAG, "teardown after link broken failed", it) }
             val settings = deps.settingsRepository.readSnapshot()
@@ -358,6 +380,10 @@ class EdgeOverlayHost(
             if (outcome == AccessibilityRecoverOutcome.Connected) {
                 AccessibilityLink.noteAlive("recover")
                 AccessibilityLink.noteRecoveryResult("ok")
+                // 拆掉的窗口立刻按当前设置重挂，不等 12s 自愈巡检：
+                // 否则用户看到的是"触钮没了十几秒"，很容易以为"再也回不来了"。
+                runCatching { ensureStarted() }
+                    .onFailure { Log.e(TAG, "rebuild overlays after recovery failed", it) }
             } else {
                 Log.w(TAG, "accessibility recovery failed (outcome=$outcome), notifying user")
                 AccessibilityLink.noteRecoveryResult("failed($outcome)")
