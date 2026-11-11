@@ -1,6 +1,5 @@
 package com.slideindex.app.ui
 
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -133,7 +132,7 @@ fun SearchPanelShortcutSearchSettingsScreen(
                 add(
                     settingsCardScopeItem("index-refresh") {
                         SettingNavigationRow(
-                            icon = { label -> Icon(Icons.Default.Bolt, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("Bolt", contentDescription = label) },
                             title = stringResource(R.string.search_panel_shortcut_index_refresh),
                             subtitle = indexCount?.let {
                                 pluralStringResource(R.plurals.search_panel_shortcut_index_count, it, it)

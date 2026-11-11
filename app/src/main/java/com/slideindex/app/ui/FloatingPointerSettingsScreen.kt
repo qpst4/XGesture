@@ -1,6 +1,5 @@
 package com.slideindex.app.ui
 
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.ui.gestureActionTypeOutlinedIcon
@@ -172,7 +171,7 @@ fun FloatingPointerSettingsScreen(
                 add(
                     settingsCardScopeItem("edge-settings") {
                         SettingNavigationRow(
-                            icon = { label -> Icon(Icons.Outlined.KeyboardArrowUp, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("KeyboardArrowUp", contentDescription = label) },
                             title = stringResource(R.string.floating_pointer_edge_settings_title),
                             subtitle = stringResource(R.string.floating_pointer_edge_settings_summary),
                             onClick = onOpenEdgeActionsSettings

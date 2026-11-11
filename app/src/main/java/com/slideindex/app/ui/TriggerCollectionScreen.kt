@@ -259,8 +259,7 @@ fun TriggerCollectionScreen(
                 items = listOf(
                     settingsCardScopeItem("profile-restore-from-global-row") {
                         SettingNavigationRow(
-                            icon = { label ->
-                                Icon(Icons.Default.Restore, contentDescription = label)
+                            icon = { label -> SymbolsIcon("Restore", contentDescription = label)
                             },
                             title = stringResource(R.string.gesture_app_profiles_restore_from_global),
                             subtitle = stringResource(

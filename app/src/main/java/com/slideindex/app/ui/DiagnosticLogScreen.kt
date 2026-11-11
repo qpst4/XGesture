@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -259,7 +258,7 @@ private fun SettingsCardScope.CrashReportRow(
         DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(entry.timestampMs))
     }
     SettingNavigationRow(
-        icon = { label -> Icon(Icons.Outlined.BugReport, contentDescription = label) },
+        icon = { label -> SymbolsIcon("BugReport", contentDescription = label) },
         title = entry.fileName,
         subtitle = buildString {
             append(timeLabel)

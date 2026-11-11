@@ -1,6 +1,5 @@
 package com.slideindex.app.ui
 
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -113,7 +112,7 @@ fun HoneycombDisplaySettingsScreen(
                 add(
                     settingsCardScopeItem("empty-tap-close") {
                         SettingToggleRow(
-                            icon = { label -> Icon(Icons.Default.TouchApp, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("TouchApp", contentDescription = label) },
                             title = stringResource(R.string.honeycomb_empty_tap_close),
                             subtitle = stringResource(R.string.honeycomb_empty_tap_close_desc),
                             checked = localDisplay.emptyTapClose,
@@ -124,7 +123,7 @@ fun HoneycombDisplaySettingsScreen(
                 add(
                     settingsCardScopeItem("show-selected-name") {
                         SettingToggleRow(
-                            icon = { label -> Icon(Icons.Default.Tune, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("Tune", contentDescription = label) },
                             title = stringResource(R.string.honeycomb_show_selected_name),
                             subtitle = stringResource(R.string.honeycomb_show_selected_name_desc),
                             checked = localDisplay.showSelectedName,
@@ -163,7 +162,7 @@ fun HoneycombDisplaySettingsScreen(
                 add(
                     settingsCardScopeItem("follow-finger") {
                         SettingToggleRow(
-                            icon = { label -> Icon(Icons.Default.TouchApp, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("TouchApp", contentDescription = label) },
                             title = stringResource(R.string.honeycomb_follow_finger),
                             subtitle = stringResource(R.string.honeycomb_follow_finger_desc),
                             checked = localDisplay.followFinger,

@@ -183,7 +183,7 @@ private fun SettingsCardScope.ExternalInvocationCopyRow(
 @Composable
 fun SettingsCardScope.ExternalInvocationEntryCard(onClick: () -> Unit) {
     SettingNavigationRow(
-        icon = { label -> Icon(Icons.Outlined.Link, contentDescription = label) },
+        icon = { label -> SymbolsIcon("Link", contentDescription = label) },
         title = stringResource(R.string.external_invocation_entry_title),
         subtitle = stringResource(R.string.external_invocation_entry_desc),
         onClick = onClick

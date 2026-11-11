@@ -37,10 +37,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.BugReport
-import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.NewReleases
-import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -403,7 +401,7 @@ private fun AboutContent(
                     add(
                         settingsCardScopeItem("auto-check-update") {
                             SettingToggleRow(
-                                icon = { label -> Icon(Icons.Outlined.Schedule, contentDescription = label) },
+                                icon = { label -> SymbolsIcon("Schedule", contentDescription = label) },
                                 title = stringResource(R.string.auto_check_update_title),
                                 subtitle = stringResource(R.string.auto_check_update_hint),
                                 checked = autoCheckUpdate,
@@ -414,7 +412,7 @@ private fun AboutContent(
                     add(
                         settingsCardScopeItem("release-notes") {
                             SettingNavigationRow(
-                                icon = { label -> Icon(Icons.Outlined.NewReleases, contentDescription = label) },
+                                icon = { label -> SymbolsIcon("NewReleases", contentDescription = label) },
                                 title = stringResource(R.string.about_release_notes_title),
                                 subtitle = stringResource(R.string.about_release_notes_subtitle),
                                 onClick = {
@@ -427,7 +425,7 @@ private fun AboutContent(
                     add(
                         settingsCardScopeItem("replay-onboarding") {
                             SettingNavigationRow(
-                                icon = { label -> Icon(Icons.Outlined.School, contentDescription = label) },
+                                icon = { label -> SymbolsIcon("School", contentDescription = label) },
                                 title = stringResource(R.string.about_replay_onboarding_title),
                                 subtitle = stringResource(R.string.about_replay_onboarding_subtitle),
                                 onClick = { OnboardingPracticeSession.open() }
@@ -463,7 +461,7 @@ private fun AboutContent(
                     add(
                         settingsCardScopeItem("issues-feedback") {
                             SettingNavigationRow(
-                                icon = { label -> Icon(Icons.Outlined.BugReport, contentDescription = label) },
+                                icon = { label -> SymbolsIcon("BugReport", contentDescription = label) },
                                 title = stringResource(R.string.about_feedback_issues_title),
                                 subtitle = stringResource(R.string.about_feedback_issues_desc),
                                 onClick = {
@@ -512,7 +510,7 @@ private fun AboutContent(
                     add(
                         settingsCardScopeItem("help-translate") {
                             SettingNavigationRow(
-                                icon = { label -> Icon(Icons.Outlined.Language, contentDescription = label) },
+                                icon = { label -> SymbolsIcon("Language", contentDescription = label) },
                                 title = stringResource(R.string.about_help_translate_title),
                                 subtitle = stringResource(R.string.about_help_translate_desc),
                                 onClick = {

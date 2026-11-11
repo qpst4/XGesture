@@ -1,6 +1,5 @@
 package com.slideindex.app.ui
 
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Launch
 import androidx.compose.material.icons.outlined.AspectRatio
 import androidx.compose.material.icons.outlined.Layers
@@ -92,7 +91,7 @@ fun FreeWindowSettingsScreen(
                 add(
                     settingsCardScopeItem("free-window-enabled") {
                         SettingToggleRow(
-                            icon = { label -> Icon(Icons.Outlined.PowerSettingsNew, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("PowerSettingsNew", contentDescription = label) },
                             title = stringResource(R.string.free_window_enabled),
                             subtitle = stringResource(R.string.free_window_enabled_desc),
                             checked = settings.freeWindowEnabled,
@@ -103,8 +102,7 @@ fun FreeWindowSettingsScreen(
                 add(
                     settingsCardScopeItem("launch-policy") {
                         SettingDropdownRow(
-                            icon = { label ->
-                                Icon(Icons.AutoMirrored.Outlined.Launch, contentDescription = label)
+                            icon = { label -> SymbolsIcon("Launch", contentDescription = label, mirrored = true)
                             },
                             title = stringResource(R.string.launch_policy_title),
                             subtitle = null,
@@ -149,7 +147,7 @@ fun FreeWindowSettingsScreen(
                 add(
                     settingsCardScopeItem("free-window-launch-mode") {
                         SettingNavigationRow(
-                            icon = { label -> Icon(Icons.Outlined.Layers, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("Layers", contentDescription = label) },
                             title = stringResource(R.string.free_window_launch_mode),
                             subtitle = stringResource(selectedMode.titleRes),
                             enabled = settings.freeWindowEnabled,
@@ -160,7 +158,7 @@ fun FreeWindowSettingsScreen(
                 add(
                     settingsCardScopeItem("free-window-adjust-layout") {
                         SettingNavigationRow(
-                            icon = { label -> Icon(Icons.Outlined.AspectRatio, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("AspectRatio", contentDescription = label) },
                             title = stringResource(R.string.free_window_adjust_layout),
                             subtitle = if (layoutApplies) {
                                 stringResource(
@@ -181,7 +179,7 @@ fun FreeWindowSettingsScreen(
                 add(
                     settingsCardScopeItem("free-window-follow-trigger") {
                         SettingToggleRow(
-                            icon = { label -> Icon(Icons.Outlined.TouchApp, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("TouchApp", contentDescription = label) },
                             title = stringResource(R.string.free_window_follow_trigger),
                             subtitle = stringResource(R.string.free_window_follow_trigger_desc),
                             checked = settings.freeWindowFollowTriggerSide,

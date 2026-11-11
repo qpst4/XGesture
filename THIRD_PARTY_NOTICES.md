@@ -195,8 +195,8 @@ XGesture（`com.slideindex.app`）在 [GNU Affero General Public License v3.0](L
 - **Copyright:** Google LLC
 - **License:** [Apache License 2.0](app/src/main/assets/licenses/Apache-2.0.txt)
 - **Source:** https://github.com/google/material-design-icons
-- **Used in:** `app/src/main/res/font/material_symbols_outlined.ttf`（Material Symbols Outlined 可变字体，页面行首图标 `SymbolsIcon` 用）
-- **Modifications:** 按本项目实际使用的字形子集化（129 个字形，wght 轴 100–700 保留）；名字→码点表见 `MaterialSymbolsGlyphs`
+- **Used in:** `app/src/main/java/com/slideindex/app/ui/MaterialSymbolVectors.kt`（由 Material Symbols 字形生成的矢量图标，页面行首图标 `SymbolsIcon` 用）
+- **Modifications:** 以脚本把可变字体实例化到 wght=350 / opsz=24 后取字形轮廓，转成 130 个 `ImageVector`（24 单位视口）；不再随包分发字体文件
 
 ---
 

@@ -171,7 +171,7 @@ fun FloatingPointerEdgeActionsSettingsScreen(
                     add(
                         settingsCardScopeItem("reset") {
                             SettingNavigationRow(
-                                icon = { label -> Icon(Icons.Default.Restore, contentDescription = label) },
+                                icon = { label -> SymbolsIcon("Restore", contentDescription = label) },
                                 title = stringResource(R.string.floating_pointer_edge_reset_defaults),
                                 subtitle = stringResource(R.string.floating_pointer_edge_reset_defaults_desc),
                                 onClick = onResetDefaults

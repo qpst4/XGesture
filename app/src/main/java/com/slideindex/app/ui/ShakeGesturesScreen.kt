@@ -12,15 +12,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.RotateLeft
-import androidx.compose.material.icons.automirrored.filled.RotateRight
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.ScreenRotation
-import androidx.compose.material.icons.filled.SwipeLeft
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -133,7 +130,7 @@ fun ShakeGesturesScreen(
                         SettingSwitchRow(
                             title = stringResource(R.string.shake_gestures_title),
                             subtitle = null,
-                            icon = { label -> Icon(Icons.Default.ScreenRotation, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("ScreenRotation", contentDescription = label) },
                             checked = settings.enabled,
                             enabled = true,
                             onCheckedChange = onEnabledChange,

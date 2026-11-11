@@ -1,6 +1,5 @@
 package com.slideindex.app.ui
 
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Keyboard
 import androidx.compose.material.icons.automirrored.outlined.Rule
@@ -162,7 +161,7 @@ fun OtpHubScreen(
     val entryItems = listOf(
         settingsCardScopeItem("entry-extraction") {
             SettingNavigationRow(
-                icon = { label -> Icon(Icons.Outlined.Sms, contentDescription = label) },
+                icon = { label -> SymbolsIcon("Sms", contentDescription = label) },
                 title = stringResource(R.string.otp_extraction_entry_title),
                 subtitle = stringResource(R.string.otp_extraction_entry_desc),
                 onClick = onOpenExtraction,
@@ -170,7 +169,7 @@ fun OtpHubScreen(
         },
         settingsCardScopeItem("entry-auto-fill") {
             SettingNavigationRow(
-                icon = { label -> Icon(Icons.Outlined.Keyboard, contentDescription = label) },
+                icon = { label -> SymbolsIcon("Keyboard", contentDescription = label) },
                 title = stringResource(R.string.otp_auto_input_entry_title),
                 subtitle = stringResource(R.string.otp_auto_input_entry_desc),
                 onClick = onOpenAutoFill,
@@ -178,7 +177,7 @@ fun OtpHubScreen(
         },
         settingsCardScopeItem("entry-rules") {
             SettingNavigationRow(
-                icon = { label -> Icon(Icons.AutoMirrored.Outlined.Rule, contentDescription = label) },
+                icon = { label -> SymbolsIcon("Rule", contentDescription = label, mirrored = true) },
                 title = stringResource(R.string.otp_match_rules_entry_title),
                 subtitle = stringResource(R.string.otp_match_rules_entry_desc),
                 onClick = onOpenRules,
@@ -186,7 +185,7 @@ fun OtpHubScreen(
         },
         settingsCardScopeItem("entry-records") {
             SettingNavigationRow(
-                icon = { label -> Icon(Icons.Outlined.History, contentDescription = label) },
+                icon = { label -> SymbolsIcon("History", contentDescription = label) },
                 title = stringResource(R.string.otp_records_title),
                 subtitle = stringResource(R.string.otp_records_entry_desc),
                 onClick = onOpenRecords,

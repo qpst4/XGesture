@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -99,8 +98,7 @@ fun LazyListScope.managedAppListAddRow(
         items = listOf(
             settingsCardScopeItem("nav") {
                 SettingNavigationRow(
-                    icon = { label ->
-                        Icon(Icons.Default.Add, contentDescription = label)
+                    icon = { label -> SymbolsIcon("Add", contentDescription = label)
                     },
                     title = title(),
                     subtitle = subtitle(),

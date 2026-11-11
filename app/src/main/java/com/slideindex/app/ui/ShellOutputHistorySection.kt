@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -50,7 +49,7 @@ fun SettingsCardScope.ShellOutputHistoryEntryRow(
     onClick: () -> Unit,
 ) {
     SettingNavigationRow(
-        icon = { label -> Icon(Icons.Default.History, contentDescription = label) },
+        icon = { label -> SymbolsIcon("History", contentDescription = label) },
         title = stringResource(R.string.shell_panel_history_entry_title),
         subtitle = if (historyCount > 0) {
             pluralStringResource(

@@ -1,6 +1,5 @@
 package com.slideindex.app.ui
 
-import androidx.compose.material.icons.Icons
 import com.slideindex.app.ui.HomeLeadingIcons
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.TextFields
@@ -72,7 +71,7 @@ fun FloatBallSettingsScreen(
                 add(
                     settingsCardScopeItem("appearance") {
                         SettingNavigationRow(
-                            icon = { label -> Icon(Icons.Outlined.Palette, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("Palette", contentDescription = label) },
                             title = stringResource(R.string.float_ball_appearance_settings_title),
                             subtitle = stringResource(
                                 R.string.float_ball_appearance_settings_summary,
@@ -135,7 +134,7 @@ fun FloatBallSettingsScreen(
                 add(
                     settingsCardScopeItem("pick-handfeel") {
                         SettingNavigationRow(
-                            icon = { label -> Icon(Icons.Outlined.TouchApp, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("TouchApp", contentDescription = label) },
                             title = stringResource(R.string.float_ball_pick_word_config_title),
                             subtitle = stringResource(R.string.float_ball_pick_word_config_moved_desc),
                             enabled = accessibilityGranted,
@@ -189,8 +188,7 @@ fun SettingsCardScope.PickSettingsEntryCard(
         )
     }
     SettingNavigationRow(
-        icon = { label ->
-            Icon(Icons.Outlined.TextFields, contentDescription = label)
+        icon = { label -> SymbolsIcon("TextFields", contentDescription = label)
         },
         title = stringResource(R.string.float_ball_pick_settings_title),
         subtitle = subtitle,

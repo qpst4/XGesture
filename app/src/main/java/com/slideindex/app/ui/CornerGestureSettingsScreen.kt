@@ -1,6 +1,5 @@
 package com.slideindex.app.ui
 
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -83,7 +82,7 @@ fun CornerGestureSettingsScreen(
                 add(
                     settingsCardScopeItem("interaction-appearance") {
                         SettingNavigationRow(
-                            icon = { label -> Icon(Icons.Outlined.Tune, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("Tune", contentDescription = label) },
                             title = stringResource(R.string.corner_gesture_interaction_appearance_title),
                             subtitle = stringResource(R.string.corner_gesture_interaction_appearance_desc),
                             enabled = subSettingsEnabled,

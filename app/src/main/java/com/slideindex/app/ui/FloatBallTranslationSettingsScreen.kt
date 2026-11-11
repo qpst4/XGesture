@@ -1,6 +1,5 @@
 package com.slideindex.app.ui
 
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Translate
@@ -63,7 +62,7 @@ fun FloatBallTranslationSettingsScreen(
                 add(
                     settingsCardScopeItem("engine") {
                         SettingDropdownRow(
-                            icon = { label -> Icon(Icons.Default.Translate, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("Translate", contentDescription = label) },
                             title = stringResource(R.string.float_ball_translate_engine),
                             items = engineEntries.map { translateEngineLabel(it) },
                             selectedIndex = engineEntries.indexOf(engine).coerceAtLeast(0),
@@ -76,7 +75,7 @@ fun FloatBallTranslationSettingsScreen(
                     add(
                         settingsCardScopeItem("target-lang") {
                             SettingDropdownRow(
-                                icon = { label -> Icon(Icons.Default.Translate, contentDescription = label) },
+                                icon = { label -> SymbolsIcon("Translate", contentDescription = label) },
                                 title = stringResource(R.string.float_ball_translate_target_lang),
                                 items = targetLangDropdownItems,
                                 selectedIndex = langIndex,
@@ -115,7 +114,7 @@ fun FloatBallTranslationSettingsScreen(
                     add(
                         settingsCardScopeItem("translate-app") {
                             SettingNavigationRow(
-                                icon = { label -> Icon(Icons.Outlined.Apps, contentDescription = label) },
+                                icon = { label -> SymbolsIcon("Apps", contentDescription = label) },
                                 title = stringResource(R.string.float_ball_translate_app),
                                 subtitle = translateAppSubtitle(settings.floatBallTranslateAppPackage),
                                 enabled = true,
@@ -133,7 +132,7 @@ fun FloatBallTranslationSettingsScreen(
                     add(
                         settingsCardScopeItem("mlkit-models") {
                             SettingNavigationRow(
-                                icon = { label -> Icon(Icons.Default.Download, contentDescription = label) },
+                                icon = { label -> SymbolsIcon("Download", contentDescription = label) },
                                 title = stringResource(R.string.float_ball_translate_mlkit_models),
                                 subtitle = stringResource(R.string.float_ball_translate_mlkit_models_desc),
                                 enabled = true,
@@ -151,7 +150,7 @@ fun FloatBallTranslationSettingsScreen(
                     add(
                         settingsCardScopeItem("cloud-translate-config") {
                             SettingNavigationRow(
-                                icon = { label -> Icon(Icons.Default.Cloud, contentDescription = label) },
+                                icon = { label -> SymbolsIcon("Cloud", contentDescription = label) },
                                 title = stringResource(R.string.cloud_translate_settings_title),
                                 subtitle = stringResource(R.string.float_ball_translate_cloud_config_desc),
                                 enabled = true,

@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -99,8 +98,7 @@ fun HoneycombLauncherEditorContent(
             items = listOf(
                 settingsCardScopeItem("display-settings") {
                     SettingNavigationRow(
-                        icon = { label ->
-                            Icon(Icons.Outlined.Tune, contentDescription = label)
+                        icon = { label -> SymbolsIcon("Tune", contentDescription = label)
                         },
                         title = stringResource(R.string.honeycomb_display_settings_entry),
                         subtitle = stringResource(R.string.honeycomb_display_settings_entry_desc),

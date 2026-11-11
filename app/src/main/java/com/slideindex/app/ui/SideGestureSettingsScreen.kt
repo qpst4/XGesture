@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.Animation
 import androidx.compose.material.icons.outlined.Brush
@@ -315,7 +314,7 @@ fun SideGestureSettingsScreen(
                 add(
                     settingsCardScopeItem("trigger-design") {
                         SettingNavigationRow(
-                            icon = { label -> Icon(Icons.Outlined.Brush, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("Brush", contentDescription = label) },
                             title = stringResource(R.string.trigger_design_title),
                             subtitle = triggerDesignSummary(selectedHandle.design),
                             onClick = onOpenDesignSettings,
@@ -325,7 +324,7 @@ fun SideGestureSettingsScreen(
                 add(
                     settingsCardScopeItem("trigger-appearance") {
                         SettingNavigationRow(
-                            icon = { label -> Icon(Icons.Outlined.Animation, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("Animation", contentDescription = label) },
                             title = stringResource(R.string.trigger_appearance_title),
                             subtitle = triggerAppearanceSummary(settings, side, handleId),
                             onClick = onOpenAppearanceSettings,
@@ -573,13 +572,13 @@ private fun SettingsCardScope.GestureSlotRow(
 @Composable
 fun SettingsCardScope.SideGesturesEntryCard(onOpenLeft: () -> Unit, onOpenRight: () -> Unit) {
     SettingNavigationRow(
-        icon = { label -> Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = label) },
+        icon = { label -> SymbolsIcon("ArrowForward", contentDescription = label, mirrored = true) },
         title = stringResource(R.string.side_gestures_entry_left),
         subtitle = stringResource(R.string.side_gestures_entry_desc),
         onClick = onOpenLeft,
     )
     SettingNavigationRow(
-        icon = { label -> Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = label) },
+        icon = { label -> SymbolsIcon("ArrowForward", contentDescription = label, mirrored = true) },
         title = stringResource(R.string.side_gestures_entry_right),
         subtitle = stringResource(R.string.side_gestures_entry_desc),
         onClick = onOpenRight,

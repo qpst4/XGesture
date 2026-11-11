@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.FolderShared
 import androidx.compose.material.icons.outlined.ImageSearch
@@ -94,7 +93,7 @@ fun DragDropFlowSettingsScreen(
                         SettingSwitchRow(
                             title = stringResource(R.string.drag_drop_flow_enable_title),
                             subtitle = stringResource(R.string.drag_drop_flow_enable_summary),
-                            icon = { label: String -> Icon(Icons.Outlined.PowerSettingsNew, contentDescription = label) },
+                            icon = { label: String -> SymbolsIcon("PowerSettingsNew", contentDescription = label) },
                             checked = settings.dragDropFlowEnabled,
                             enabled = true,
                             onCheckedChange = { checked ->
@@ -139,7 +138,7 @@ fun DragDropFlowSettingsScreen(
                             items = positionLabels,
                             selectedIndex = positionIndex,
                             enabled = settings.dragDropFlowEnabled,
-                            icon = { label: String -> Icon(Icons.Outlined.OpenWith, contentDescription = label) },
+                            icon = { label: String -> SymbolsIcon("OpenWith", contentDescription = label) },
                             onSelectedIndexChange = { index ->
                                 val target = DragDropFlowPosition.fromId(index)
                                 onPositionChange(target)
@@ -152,7 +151,7 @@ fun DragDropFlowSettingsScreen(
                         SettingSwitchRow(
                             title = stringResource(R.string.drag_drop_flow_haptic_title),
                             subtitle = stringResource(R.string.drag_drop_flow_haptic_summary),
-                            icon = { label: String -> Icon(Icons.Outlined.Vibration, contentDescription = label) },
+                            icon = { label: String -> SymbolsIcon("Vibration", contentDescription = label) },
                             checked = settings.dragDropFlowHapticEnabled,
                             enabled = settings.dragDropFlowEnabled,
                             onCheckedChange = onHapticChange,
@@ -164,7 +163,7 @@ fun DragDropFlowSettingsScreen(
                         SettingSwitchRow(
                             title = stringResource(R.string.drag_drop_flow_inline_actions_title),
                             subtitle = stringResource(R.string.drag_drop_flow_inline_actions_summary),
-                            icon = { label: String -> Icon(Icons.Outlined.Apps, contentDescription = label) },
+                            icon = { label: String -> SymbolsIcon("Apps", contentDescription = label) },
                             checked = settings.dragDropFlowActionsInline,
                             enabled = settings.dragDropFlowEnabled,
                             onCheckedChange = onActionsInlineChange,
@@ -187,7 +186,7 @@ fun DragDropFlowSettingsScreen(
                             SettingNavigationRow(
                                 title = stringResource(R.string.drag_drop_flow_text_engines_title),
                                 subtitle = stringResource(R.string.drag_drop_flow_text_engines_summary),
-                                icon = { label: String -> Icon(Icons.Outlined.Search, contentDescription = label) },
+                                icon = { label: String -> SymbolsIcon("Search", contentDescription = label) },
                                 enabled = settings.dragDropFlowEnabled,
                                 onClick = onOpenTextSearchEngines,
                             )
@@ -200,7 +199,7 @@ fun DragDropFlowSettingsScreen(
                             SettingNavigationRow(
                                 title = stringResource(R.string.drag_drop_flow_image_engines_title),
                                 subtitle = stringResource(R.string.drag_drop_flow_image_engines_summary),
-                                icon = { label: String -> Icon(Icons.Outlined.ImageSearch, contentDescription = label) },
+                                icon = { label: String -> SymbolsIcon("ImageSearch", contentDescription = label) },
                                 enabled = settings.dragDropFlowEnabled,
                                 onClick = onOpenImageSearchEngines,
                             )
@@ -213,7 +212,7 @@ fun DragDropFlowSettingsScreen(
                             SettingNavigationRow(
                                 title = stringResource(R.string.drag_drop_flow_file_engines_title),
                                 subtitle = stringResource(R.string.drag_drop_flow_file_engines_summary),
-                                icon = { label: String -> Icon(Icons.Outlined.FolderShared, contentDescription = label) },
+                                icon = { label: String -> SymbolsIcon("FolderShared", contentDescription = label) },
                                 enabled = settings.dragDropFlowEnabled,
                                 onClick = onOpenFileShareEngines,
                             )

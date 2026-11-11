@@ -6,7 +6,6 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Layers
@@ -106,7 +105,7 @@ fun StashClipboardSettingsScreen(
             items = listOf(
                 settingsCardScopeItem("clipboard-history") {
                     SettingNavigationRow(
-                        icon = { label -> Icon(Icons.Outlined.History, contentDescription = label) },
+                        icon = { label -> SymbolsIcon("History", contentDescription = label) },
                         title = stringResource(R.string.stash_clipboard_section_clipboard),
                         subtitle = clipboardIndexHistorySubtitle(settings, monitoringUi, clipboardEntryCount),
                         onClick = onOpenClipboardHistory,
@@ -114,7 +113,7 @@ fun StashClipboardSettingsScreen(
                 },
                 settingsCardScopeItem("stash-panel") {
                     SettingNavigationRow(
-                        icon = { label -> Icon(Icons.Outlined.Layers, contentDescription = label) },
+                        icon = { label -> SymbolsIcon("Layers", contentDescription = label) },
                         title = stringResource(R.string.floating_panel_title),
                         subtitle = stringResource(R.string.stash_clipboard_index_stash_panel_desc),
                         onClick = onOpenStashPanel,
@@ -122,7 +121,7 @@ fun StashClipboardSettingsScreen(
                 },
                 settingsCardScopeItem("clipboard-float") {
                     SettingNavigationRow(
-                        icon = { label -> Icon(Icons.Outlined.ContentPaste, contentDescription = label) },
+                        icon = { label -> SymbolsIcon("ContentPaste", contentDescription = label) },
                         title = stringResource(R.string.clipboard_float_section),
                         subtitle = stringResource(R.string.stash_clipboard_index_clipboard_float_desc),
                         onClick = onOpenClipboardFloat,

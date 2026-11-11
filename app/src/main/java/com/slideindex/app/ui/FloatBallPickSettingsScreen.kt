@@ -6,7 +6,6 @@ import androidx.compose.foundation.Image
 
 import androidx.compose.foundation.layout.size
 
-import androidx.compose.material.icons.Icons
 
 import androidx.compose.material.icons.outlined.DocumentScanner
 import androidx.compose.material.icons.outlined.ImageSearch
@@ -224,7 +223,7 @@ fun FloatBallPickSettingsScreen(
 
                     SettingNavigationRow(
 
-                        icon = { label -> Icon(Icons.Outlined.ViewAgenda, contentDescription = label) },
+                        icon = { label -> SymbolsIcon("ViewAgenda", contentDescription = label) },
 
                         title = panelLayoutBehaviorTitle,
 
@@ -242,7 +241,7 @@ fun FloatBallPickSettingsScreen(
 
                     SettingNavigationRow(
 
-                        icon = { label -> Icon(Icons.Outlined.TouchApp, contentDescription = label) },
+                        icon = { label -> SymbolsIcon("TouchApp", contentDescription = label) },
 
                         title = pickHandfeelTitle,
 
@@ -282,7 +281,7 @@ fun FloatBallPickSettingsScreen(
 
                         subtitle = ocrModelSelectionSubtitle(settings.floatBallOcrModelId),
 
-                        icon = { label -> Icon(Icons.Outlined.DocumentScanner, contentDescription = label) },
+                        icon = { label -> SymbolsIcon("DocumentScanner", contentDescription = label) },
 
                         checked = settings.floatBallOcrFallbackEnabled,
 
@@ -300,7 +299,7 @@ fun FloatBallPickSettingsScreen(
 
                     SettingNavigationRow(
 
-                        icon = { label -> Icon(Icons.Outlined.Translate, contentDescription = label) },
+                        icon = { label -> SymbolsIcon("Translate", contentDescription = label) },
 
                         title = stringResource(R.string.float_ball_translation_settings_title),
 
@@ -338,7 +337,7 @@ fun FloatBallPickSettingsScreen(
 
                         SettingNavigationRow(
 
-                            icon = { label -> Icon(Icons.Outlined.Search, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("Search", contentDescription = label) },
 
                             title = stringResource(R.string.search_engine_settings_title),
 
@@ -372,7 +371,7 @@ fun FloatBallPickSettingsScreen(
 
                             subtitle = stringResource(R.string.float_ball_pick_default_engine_desc),
 
-                            icon = { label -> Icon(Icons.Outlined.StarBorder, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("StarBorder", contentDescription = label) },
 
                             items = defaultEngineItems,
 
@@ -402,7 +401,7 @@ fun FloatBallPickSettingsScreen(
 
                         SettingNavigationRow(
 
-                            icon = { label -> Icon(Icons.Outlined.ImageSearch, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("ImageSearch", contentDescription = label) },
 
                             title = stringResource(R.string.image_search_engine_settings_title),
 

@@ -1,6 +1,5 @@
 package com.slideindex.app.ui
 
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -87,7 +86,7 @@ fun FloatingPointerEdgeSideSettingsScreen(
                     add(
                         settingsCardScopeItem("add") {
                             SettingNavigationRow(
-                                icon = { label -> Icon(Icons.Default.Add, contentDescription = label) },
+                                icon = { label -> SymbolsIcon("Add", contentDescription = label) },
                                 title = stringResource(R.string.floating_pointer_edge_add_zone),
                                 subtitle = stringResource(R.string.floating_pointer_edge_add_zone_desc),
                                 onClick = onAddSlot

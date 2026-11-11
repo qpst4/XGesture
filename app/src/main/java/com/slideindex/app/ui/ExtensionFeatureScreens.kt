@@ -1,6 +1,5 @@
 package com.slideindex.app.ui
 
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -56,7 +55,7 @@ fun BackTapSettingsScreen(
                         SettingSwitchRow(
                             title = stringResource(R.string.back_tap_enabled),
                             subtitle = stringResource(R.string.extension_back_tap_subtitle),
-                            icon = { label -> Icon(Icons.Default.TouchApp, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("TouchApp", contentDescription = label) },
                             checked = backTap.enabled,
                             enabled = true,
                             onCheckedChange = { scope.launch { settingsRepository.setBackTapEnabled(it) } }
@@ -66,7 +65,7 @@ fun BackTapSettingsScreen(
                 add(
                     settingsCardScopeItem("action") {
                         SettingNavigationRow(
-                            icon = { label -> Icon(Icons.Default.TouchApp, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("TouchApp", contentDescription = label) },
                             title = stringResource(R.string.back_tap_action),
                             subtitle = gestureActionLabelText(context, backTap.action),
                             enabled = backTap.enabled,

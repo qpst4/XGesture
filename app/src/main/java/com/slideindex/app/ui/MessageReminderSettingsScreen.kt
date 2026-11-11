@@ -180,7 +180,7 @@ fun MessageReminderSettingsScreen(
                         SettingSwitchRow(
                             title = stringResource(R.string.message_reminder_enabled),
                             subtitle = stringResource(R.string.message_reminder_enabled_desc),
-                            icon = { label -> Icon(Icons.Outlined.Notifications, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("Notifications", contentDescription = label) },
                             checked = settings.enabled,
                             enabled = notificationListenerEnabled && overlayPermissionGranted,
                             onCheckedChange = onEnabledChange,
@@ -192,7 +192,7 @@ fun MessageReminderSettingsScreen(
                         SettingSwitchRow(
                             title = stringResource(R.string.message_reminder_intercept_notifications),
                             subtitle = stringResource(R.string.message_reminder_intercept_notifications_desc),
-                            icon = { label -> Icon(Icons.Outlined.DoNotDisturbOn, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("DoNotDisturbOn", contentDescription = label) },
                             checked = settings.interceptNotifications,
                             enabled = notificationListenerEnabled,
                             onCheckedChange = onInterceptNotificationsChange,
@@ -204,7 +204,7 @@ fun MessageReminderSettingsScreen(
                         SettingSwitchNavigationRow(
                             title = stringResource(R.string.message_reminder_open_last_on_unlock),
                             subtitle = stringResource(R.string.message_reminder_open_last_on_unlock_desc),
-                            icon = { label -> Icon(Icons.Outlined.LockOpen, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("LockOpen", contentDescription = label) },
                             checked = settings.openLastMessageOnUnlock,
                             enabled = controlsEnabled,
                             onCheckedChange = onOpenLastMessageOnUnlockChange,

@@ -172,7 +172,7 @@ fun SettingsCardScope.HiddenAppsEntryCard(
         stringResource(descriptionRes)
     }
     SettingNavigationRow(
-        icon = { label -> Icon(Icons.Default.VisibilityOff, contentDescription = label) },
+        icon = { label -> SymbolsIcon("VisibilityOff", contentDescription = label) },
         title = stringResource(titleRes),
         subtitle = subtitle,
         onClick = onClick

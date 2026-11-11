@@ -43,6 +43,7 @@ import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
 import com.slideindex.app.util.PickerAppIconBitmap
+import com.slideindex.app.ui.SymbolsIcon
 
 /**
  * 宏的新建 / 编辑页。
@@ -180,7 +181,7 @@ fun MacroEditScreen(
             items = listOf(
                 settingsCardScopeItem("macro-start-recording") {
                     SettingNavigationRow(
-                        icon = { label -> Icon(Icons.Outlined.Videocam, contentDescription = label) },
+                        icon = { label -> SymbolsIcon("Videocam", contentDescription = label) },
                         title = stringResource(
                             if (recording) R.string.macro_recording else R.string.macro_start_recording,
                         ),
@@ -199,7 +200,7 @@ fun MacroEditScreen(
                 // 「试运行」：不绑手势也能跑一次，方便判断"回放本身"到底有没有生效。
                 settingsCardScopeItem("macro-test-run") {
                     SettingNavigationRow(
-                        icon = { label -> Icon(Icons.Outlined.PlayArrow, contentDescription = label) },
+                        icon = { label -> SymbolsIcon("PlayArrow", contentDescription = label) },
                         title = stringResource(R.string.macro_test_run),
                         subtitle = stringResource(R.string.macro_test_run_desc),
                         enabled = !recording && targetPackage.isNotBlank(),
