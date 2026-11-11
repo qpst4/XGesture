@@ -5,11 +5,6 @@ package com.slideindex.app.ui
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.outlined.Apps
-import androidx.compose.material.icons.outlined.ContentPaste
-import androidx.compose.material.icons.outlined.StarBorder
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Contacts
 import top.yukonga.miuix.kmp.icon.extended.File
@@ -173,7 +168,7 @@ fun SearchPanelSettingsScreen(
                 add(
                     settingsCardScopeItem("default-engine") {
                         SettingDropdownRow(
-                            icon = { label -> Icon(Icons.Outlined.StarBorder, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("StarBorder", contentDescription = label) },
                             title = stringResource(R.string.search_panel_default_engine_title),
                             subtitle = stringResource(R.string.search_panel_default_engine_desc),
                             items = defaultEngineItems,
@@ -209,7 +204,7 @@ fun SearchPanelSettingsScreen(
                         SettingSwitchNavigationRow(
                             title = appsTitle,
                             subtitle = stringResource(R.string.search_panel_app_search_desc),
-                            icon = { label -> Icon(Icons.Outlined.Apps, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("Apps", contentDescription = label) },
                             checked = settings.searchPanelAppSearchEnabled,
                             enabled = true,
                             onCheckedChange = onSetSearchPanelAppSearchEnabled,
@@ -235,7 +230,7 @@ fun SearchPanelSettingsScreen(
                         SettingSwitchNavigationRow(
                             title = shortcutsTitle,
                             subtitle = stringResource(R.string.search_panel_shortcut_search_desc),
-                            icon = { label -> Icon(Icons.Default.Bolt, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("Bolt", contentDescription = label) },
                             checked = settings.searchPanelShortcutSearchEnabled,
                             enabled = true,
                             onCheckedChange = onSetSearchPanelShortcutSearchEnabled,
@@ -351,7 +346,7 @@ fun SearchPanelSettingsScreen(
                         SettingSwitchNavigationRow(
                             title = clipboardTitle,
                             subtitle = stringResource(R.string.search_panel_clipboard_search_desc),
-                            icon = { label -> Icon(Icons.Outlined.ContentPaste, contentDescription = label) },
+                            icon = { label -> SymbolsIcon("ContentPaste", contentDescription = label) },
                             checked = settings.searchPanelClipboardSearchEnabled,
                             enabled = true,
                             onCheckedChange = onSetSearchPanelClipboardSearchEnabled,

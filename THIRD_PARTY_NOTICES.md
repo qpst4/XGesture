@@ -190,6 +190,16 @@ XGesture（`com.slideindex.app`）在 [GNU Affero General Public License v3.0](L
 
 ---
 
+## Material Symbols（Google）
+
+- **Copyright:** Google LLC
+- **License:** [Apache License 2.0](app/src/main/assets/licenses/Apache-2.0.txt)
+- **Source:** https://github.com/google/material-design-icons
+- **Used in:** `app/src/main/res/font/material_symbols_outlined.ttf`（Material Symbols Outlined 可变字体，页面行首图标 `SymbolsIcon` 用）
+- **Modifications:** 按本项目实际使用的字形子集化（129 个字形，wght 轴 100–700 保留）；名字→码点表见 `MaterialSymbolsGlyphs`
+
+---
+
 ## 许可证全文
 
 - [Apache License 2.0](app/src/main/assets/licenses/Apache-2.0.txt)
