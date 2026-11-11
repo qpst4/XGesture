@@ -47,6 +47,10 @@ object MaterialSymbolThinIcons {
         "11.25H21.75V12.75H17.254L20.704 16.25L19.65 17.304L15.096 12.75H12.75V15.096L17.304 19.65L16.25 20.704L12.75 " +
         "17.254V21.75Z"
 
+    private const val BLUETOOTH_PATH =
+        "M11.5,21.31v-8.1l-5.1,5.1L5.69,17.6l5.6-5.6L5.69,6.4L6.4,5.69l5.1,5.1V2.69H12L17.01,7.7L12.71,12l4.3," +
+        "4.3L12,21.31H11.5Zm1-10.52L15.59,7.7L12.5,4.62v6.17Zm0,8.59l3.09-3.08L12.5,13.21v6.17Z"
+
     private const val BRIGHTNESSAUTO_PATH =
         "M7.992 16H9.265L10.181 13.546H13.869L14.785 16H16.046L12.569 7H11.45ZM10.554 12.496 11.95 8.612H12.05L13.465 " +
         "12.496ZM12 22.608 8.862 19.5H4.5V15.138L1.392 12L4.5 8.862V4.5H8.862L12 1.392L15.138 4.5H19.5V8.862L22.608 " +
@@ -102,6 +106,13 @@ object MaterialSymbolThinIcons {
         "10.085 9.409Q10.085 9.102 9.882 8.899Q9.679 8.696 9.369 8.696Q9.083 8.696 8.872 8.899Q8.662 9.102 8.662 " +
         "9.412Q8.662 9.698 8.874 9.909Q9.087 10.119 9.371 10.119Z"
 
+    private const val NFC_PATH =
+        "M8,16h8V8H12.5q-0.42,0-0.71,0.29T11.5,9v2.07q-0.23,0.12-0.4,0.34T10.92,12q0,0.46 0.3,0.77T12,13.08q0.42,0 " +
+        "0.75-0.31T13.08,12q0-0.36-0.18-0.59t-0.4-0.34V9H15v6H9V9h1V8H8v8ZM5.62,20q-0.69,0-1.15-0.46T4,18.38V5.62Q4," +
+        "4.92 4.46,4.46T5.62,4H18.38q0.69,0 1.15,0.46T20,5.62V18.38q0,0.69-0.46,1.15T18.38,20H5.62Zm0-1H18.38q0.23," +
+        "0 0.42-0.19T19,18.38V5.62q0-0.23-0.19-0.42T18.38,5H5.62Q5.38,5 5.19,5.19T5,5.62V18.38q0,0.23 0.19,0.42T5.62," +
+        "19ZM5,5Q5,5 5,5.17T5,5.62V18.38q0,0.27 0,0.44T5,19q0,0 0-0.17t0-0.44V5.62Q5,5.35 5,5.17T5,5Z"
+
     private const val PHOTOLIBRARY_PATH =
         "M9.077 13.846H18.423L15.319 9.769L12.942 12.808L11.373 10.865ZM8.058 17.5Q7.3 17.5 6.775 16.975Q6.25 16.45 " +
         "6.25 15.692V4.308Q6.25 3.55 6.775 3.025Q7.3 2.5 8.058 2.5H19.442Q20.2 2.5 20.725 3.025Q21.25 3.55 21.25 " +
@@ -154,11 +165,13 @@ object MaterialSymbolThinIcons {
         "7.172Q5.796 7.535 5.996 7.885ZM12.185 15.635Q12.185 15.635 12.185 15.635Q12.185 15.635 12.185 15.635Q12.185 " +
         "15.635 12.185 15.635Q12.185 15.635 12.185 15.635Q12.185 15.635 12.185 15.635Q12.185 15.635 12.185 15.635Z"
     val AcUnit: ImageVector by lazy { icon("SymbolThinAcUnit", ACUNIT_PATH) }
+    val Bluetooth: ImageVector by lazy { icon("SymbolThinBluetooth", BLUETOOTH_PATH) }
     val BrightnessAuto: ImageVector by lazy { icon("SymbolThinBrightnessAuto", BRIGHTNESSAUTO_PATH) }
     val Folder: ImageVector by lazy { icon("SymbolThinFolder", FOLDER_PATH) }
     val Handyman: ImageVector by lazy { icon("SymbolThinHandyman", HANDYMAN_PATH) }
     val Link: ImageVector by lazy { icon("SymbolThinLink", LINK_PATH) }
     val MobileRotate: ImageVector by lazy { icon("SymbolThinMobileRotate", MOBILEROTATE_PATH) }
+    val Nfc: ImageVector by lazy { icon("SymbolThinNfc", NFC_PATH) }
     val PhotoLibrary: ImageVector by lazy { icon("SymbolThinPhotoLibrary", PHOTOLIBRARY_PATH) }
     val RemoteGen: ImageVector by lazy { icon("SymbolThinRemoteGen", REMOTEGEN_PATH) }
     val SwapVert: ImageVector by lazy { icon("SymbolThinSwapVert", SWAPVERT_PATH) }
