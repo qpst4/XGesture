@@ -46,6 +46,11 @@ object FileBrowserOpen {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        return runCatching { context.startActivity(chooser) }.isSuccess
+        val started = runCatching { context.startActivity(chooser) }.isSuccess
+        // 「用其他应用打开」后目标应用/chooser 会被压在本浮窗下面，只在底部露出一条（issue #49）：
+        // 浮窗是 ACCESSIBILITY_OVERLAY，永远盖在应用窗口之上。与分享链路同一处理——交付给外部
+        // 应用后收起本面板；startActivity 失败时保持原样，免得白关一次。
+        if (started) FileBrowserOverlayWindow.dismiss()
+        return started
     }
 }
