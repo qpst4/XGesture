@@ -65,18 +65,23 @@ fun NavEntryBuilder.multiTouchNavEntries(ctx: MainNavContext, backKey: AppNavKey
         val settings by viewModel.settings.collectAsStateWithLifecycle()
         val status by viewModel.status.collectAsStateWithLifecycle()
         val diagnostics by viewModel.diagnostics.collectAsStateWithLifecycle()
+        val touchDevices by viewModel.touchDevices.collectAsStateWithLifecycle()
         LaunchedEffect(Unit) {
             viewModel.refreshStatus()
             viewModel.refreshDiagnostics()
+            viewModel.refreshTouchDevices()
         }
         MultiTouchGestureSettingsScreen(
             settings = settings,
             status = status,
             diagnostics = diagnostics,
+            touchDevices = touchDevices,
             onBack = { ctx.navigateBackTo(backKey) },
             onEnabledChange = viewModel::setEnabled,
             onProtocolChange = viewModel::setProtocol,
             onRefreshDiagnostics = viewModel::refreshDiagnostics,
+            onRefreshTouchDevices = viewModel::refreshTouchDevices,
+            onDevicePathChange = viewModel::setDevicePath,
             onRetry = viewModel::retry,
             onOpenActionPick = { kind, fingers, pending, entryId ->
                 ctx.navigate(

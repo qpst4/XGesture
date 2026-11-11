@@ -91,10 +91,13 @@ fun MultiTouchGestureSettingsScreen(
     settings: MultiTouchGestureSettings,
     status: MultiTouchStatus,
     diagnostics: String = "",
+    touchDevices: List<String> = emptyList(),
     onBack: () -> Unit,
     onEnabledChange: (Boolean) -> Unit,
     onProtocolChange: (String) -> Unit = {},
     onRefreshDiagnostics: () -> Unit = {},
+    onRefreshTouchDevices: () -> Unit = {},
+    onDevicePathChange: (String) -> Unit = {},
     onRetry: () -> Unit,
     onOpenActionPick: (MultiPointerGesture, Int, String, String) -> Unit = { _, _, _, _ -> },
     onOpenRecorder: () -> Unit = {},
@@ -105,6 +108,7 @@ fun MultiTouchGestureSettingsScreen(
     var pendingKind by remember { mutableStateOf<MultiPointerGesture?>(null) }
     var editingEntry by remember { mutableStateOf<MultiTouchGestureEntry?>(null) }
     var showDiagnostics by remember { mutableStateOf(false) }
+    var showDevicePicker by remember { mutableStateOf(false) }
 
     // 协议切换会重启观察器：弹窗开着时延时再取一次，避免显示切换前的旧状态。
     LaunchedEffect(showDiagnostics, settings.protocol) {
@@ -182,6 +186,31 @@ fun MultiTouchGestureSettingsScreen(
                                 indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
                             )
                         }
+                    }
+                )
+                add(
+                    settingsCardScopeItem("multitouch-device") {
+                        val selectedPath = settings.devicePath
+                        val selectedName = touchDevices
+                            .firstOrNull { it.startsWith("$selectedPath|") }
+                            ?.split('|')
+                            ?.getOrNull(1)
+                        val summary = when {
+                            selectedPath.isBlank() ->
+                                stringResource(R.string.multitouch_device_summary_auto)
+
+                            selectedName.isNullOrBlank() -> selectedPath
+                            else -> "$selectedPath · $selectedName"
+                        }
+                        MiuixNavigationRow(
+                            title = stringResource(R.string.multitouch_device_title),
+                            summary = summary,
+                            enabled = true,
+                            onClick = {
+                                showDevicePicker = true
+                                onRefreshTouchDevices()
+                            },
+                        )
                     }
                 )
                 add(
@@ -383,6 +412,65 @@ fun MultiTouchGestureSettingsScreen(
                         colors = ButtonDefaults.textButtonColorsPrimary(),
                     )
                 }
+            }
+        }
+    }
+
+    if (showDevicePicker) {
+        WindowDialog(
+            show = true,
+            title = stringResource(R.string.multitouch_device_pick_title),
+            onDismissRequest = { showDevicePicker = false },
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    DevicePickerRow(
+                        title = stringResource(R.string.multitouch_device_auto),
+                        summary = stringResource(R.string.multitouch_device_summary_auto),
+                        selected = settings.devicePath.isBlank(),
+                        onClick = {
+                            onDevicePathChange("")
+                            showDevicePicker = false
+                        },
+                    )
+                    if (touchDevices.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.multitouch_device_empty),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        touchDevices.forEach { line ->
+                            val parts = line.split('|')
+                            val path = parts.getOrNull(0).orEmpty()
+                            val name = parts.getOrNull(1).orEmpty()
+                            val protocol = parts.getOrNull(2).orEmpty()
+                            val range = "${parts.getOrNull(3).orEmpty()}×" +
+                                parts.getOrNull(4).orEmpty()
+                            DevicePickerRow(
+                                title = name.ifBlank { path },
+                                summary = "$path · $protocol · $range",
+                                selected = settings.devicePath == path,
+                                onClick = {
+                                    onDevicePathChange(path)
+                                    showDevicePicker = false
+                                },
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                TextButton(
+                    text = stringResource(R.string.multitouch_diagnostics_close),
+                    onClick = { showDevicePicker = false },
+                    modifier = Modifier.align(Alignment.End),
+                    minHeight = 44.dp,
+                )
             }
         }
     }
@@ -619,8 +707,7 @@ private val GEOMETRY_GESTURES = setOf(
 
 /** 状态行说明：设备 / 模式 / 特权通道 / 冲突，全部收在这一行里。 */
 @Composable
-private fun multiTouchStatusDetail(status: MultiTouchStatus, enabled: Boolean): String {
-    val base = when {
+private fun multiTouchStatusDetail(status: MultiTouchStatus, enabled: Boolean): String {    val base = when {
         !enabled -> stringResource(R.string.multitouch_detail_disabled)
         status.detail == "recording" -> stringResource(R.string.multitouch_detail_recording)
         status.running -> {
@@ -656,4 +743,46 @@ private fun multiTouchStatusDetail(status: MultiTouchStatus, enabled: Boolean): 
     val conflict = status.conflictDevices ?: return base
     val name = if (conflict.length > 30) conflict.take(30) + "…" else conflict
     return base + stringResource(R.string.multitouch_detail_conflict, name)
+}
+
+/** 「触摸设备」选择弹窗里的一行：设备名 + 路径/协议/量程。 */
+@Composable
+private fun DevicePickerRow(
+    title: String,
+    summary: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 10.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            MiuixText(
+                text = title,
+                style = MiuixTheme.textStyles.headline1,
+                fontWeight = FontWeight.Medium,
+                color = if (selected) {
+                    MiuixTheme.colorScheme.primary
+                } else {
+                    MiuixTheme.colorScheme.onBackground
+                },
+            )
+            if (selected) {
+                Spacer(Modifier.width(6.dp))
+                MiuixText(
+                    text = "✓",
+                    style = MiuixTheme.textStyles.headline1,
+                    color = MiuixTheme.colorScheme.primary,
+                )
+            }
+        }
+        MiuixText(
+            text = summary,
+            style = MiuixTheme.textStyles.body2,
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+        )
+    }
 }

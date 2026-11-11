@@ -45,10 +45,21 @@ class MultiTouchGestureViewModel @Inject constructor(
     private val _diagnostics = MutableStateFlow("")
     val diagnostics: StateFlow<String> = _diagnostics.asStateFlow()
 
+    private val _touchDevices = MutableStateFlow<List<String>>(emptyList())
+    val touchDevices: StateFlow<List<String>> = _touchDevices.asStateFlow()
+
     /** 从 service 读取当前设备/协议诊断。 */
     fun refreshDiagnostics() {
         viewModelScope.launch {
             _diagnostics.value = runCatching { coordinator.readDiagnostics() }.getOrDefault("")
+        }
+    }
+
+    /** 从 service 读取触摸设备候选（设置页「触摸设备」选择用）。 */
+    fun refreshTouchDevices() {
+        viewModelScope.launch {
+            _touchDevices.value = runCatching { coordinator.readTouchDevices() }
+                .getOrDefault(emptyList())
         }
     }
 

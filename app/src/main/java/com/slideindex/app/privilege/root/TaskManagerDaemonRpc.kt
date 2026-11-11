@@ -161,6 +161,8 @@ internal object TaskManagerDaemonRpc {
 
             105 -> RpcValue.Str(service.getMultiTouchDiagnostics())
 
+            106 -> RpcValue.StrArr(service.getTouchDevices())
+
             else -> throw IOException("unknown op=$op")
 
         }

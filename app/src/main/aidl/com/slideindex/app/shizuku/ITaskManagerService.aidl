@@ -72,4 +72,10 @@ interface ITaskManagerService {
 
     /** 多指观察诊断（选中设备/协议/候选列表），设置页「诊断」展示用。 */
     String getMultiTouchDiagnostics() = 28;
+
+    /**
+     * 触摸设备候选列表，每行 `eventPath|name|protocol|width|height`。
+     * 设置页「触摸设备」选择用；空数组表示还没枚举到。
+     */
+    String[] getTouchDevices() = 29;
 }
