@@ -1,9 +1,5 @@
 package com.slideindex.app.ui
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -77,11 +73,15 @@ fun MiuixFloatingBottomNavBar(
 
 @Composable
 private fun mainLiquidGlassNavIcon(destination: MainBottomNavDestination): ImageVector = when (destination) {
-    MainBottomNavDestination.Home -> Icons.Outlined.Home
+    // 与悬浮栏、设置页行首图标同一套 Material Symbols（wght=350）；「晃动」只有自绘线稿，保持原样。
+    MainBottomNavDestination.Home -> navSymbol("Home")
     MainBottomNavDestination.Shake -> ImageVector.vectorResource(R.drawable.ic_nav_shake_outlined)
-    MainBottomNavDestination.Notification -> Icons.Outlined.Notifications
-    MainBottomNavDestination.Extension -> Icons.Outlined.Widgets
+    MainBottomNavDestination.Notification -> navSymbol("Notifications")
+    MainBottomNavDestination.Extension -> navSymbol("Widgets")
 }
+
+private fun navSymbol(name: String): ImageVector =
+    requireNotNull(MaterialSymbolVectors.get(name)) { "unknown Material Symbol: $name" }
 
 @Composable
 private fun mainBottomNavLabel(destination: MainBottomNavDestination): String = when (destination) {

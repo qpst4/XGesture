@@ -6,13 +6,6 @@ package com.slideindex.app.ui
  */
 
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Widgets
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -44,7 +37,7 @@ fun MainMiuixNavigationRail(
         NavigationRailItem(
             selected = selected == MainBottomNavDestination.Home,
             onClick = { onDestinationSelected(MainBottomNavDestination.Home) },
-            icon = if (selected == MainBottomNavDestination.Home) Icons.Filled.Home else Icons.Outlined.Home,
+            icon = navSymbol("Home"),
             label = stringResource(R.string.main_nav_home),
         )
         NavigationRailItem(
@@ -56,18 +49,17 @@ fun MainMiuixNavigationRail(
         NavigationRailItem(
             selected = selected == MainBottomNavDestination.Notification,
             onClick = { onDestinationSelected(MainBottomNavDestination.Notification) },
-            icon = if (selected == MainBottomNavDestination.Notification) {
-                Icons.Filled.Notifications
-            } else {
-                Icons.Outlined.Notifications
-            },
+            icon = navSymbol("Notifications"),
             label = stringResource(R.string.main_nav_notification),
         )
         NavigationRailItem(
             selected = selected == MainBottomNavDestination.Extension,
             onClick = { onDestinationSelected(MainBottomNavDestination.Extension) },
-            icon = if (selected == MainBottomNavDestination.Extension) Icons.Filled.Widgets else Icons.Outlined.Widgets,
+            icon = navSymbol("Widgets"),
             label = stringResource(R.string.main_nav_extension),
         )
     }
 }
+
+private fun navSymbol(name: String): ImageVector =
+    requireNotNull(MaterialSymbolVectors.get(name)) { "unknown Material Symbol: $name" }
