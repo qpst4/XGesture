@@ -4992,6 +4992,10 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="shell_panel_shizuku_ready">Authorized</string>
     <string name="shell_panel_shizuku_unavailable">Not authorized</string>
     <string name="shell_panel_mode_unavailable">The selected execution mode is unavailable.</string>
+    <string name="shell_panel_mode_status_unavailable">Unavailable</string>
+    <string name="shell_panel_mode_unavailable_shizuku">This command needs Shizuku, but Shizuku is not authorized. Authorize it and try again.</string>
+    <string name="shell_panel_mode_unavailable_root">This command needs Root, but Root is unavailable. Switch it to Shizuku or edit the command.</string>
+    <string name="shell_panel_mode_unavailable_unset">This command has no execution mode. Edit the command first.</string>
     <string name="shell_panel_result_exit_ok">exit 0 (no output)</string>
     <string name="shell_panel_result_exit_only">exit %1$d (no output)</string>
     <string name="shell_panel_test_result">Test result</string>

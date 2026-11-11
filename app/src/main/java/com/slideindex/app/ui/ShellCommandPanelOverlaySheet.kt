@@ -83,7 +83,9 @@ fun ShellCommandPanelOverlaySheet(
 ) {
     val context = LocalContext.current
     val shellTimeoutMessage = stringResource(R.string.shell_panel_execute_timeout)
-    val modeUnavailableMessage = stringResource(R.string.shell_panel_mode_unavailable)
+    val shizukuUnavailableMessage = stringResource(R.string.shell_panel_mode_unavailable_shizuku)
+    val rootUnavailableMessage = stringResource(R.string.shell_panel_mode_unavailable_root)
+    val unsetModeMessage = stringResource(R.string.shell_panel_mode_unavailable_unset)
     val scope = rememberCoroutineScope()
     var commands by remember(initialCommands) { mutableStateOf(initialCommands) }
     var editorTarget by remember { mutableStateOf<ShellCommand?>(null) }
@@ -229,21 +231,27 @@ fun ShellCommandPanelOverlaySheet(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(commands, key = { it.id }) { item ->
+                            val canRunItem = canRun(item)
                             ShellCommandCard(
                                 item = item,
                                 running = runningCommandId == item.id,
-                                enabled = canRun(item) && runningCommandId == null,
+                                enabled = runningCommandId == null,
+                                available = canRunItem,
                                 onEdit = {
                                     editorTarget = item
                                     showEditor = true
                                 },
                                 onRun = {
-                                    if (!canRun(item)) {
+                                    if (!canRunItem) {
                                         resultDialog = ShellPanelResultState(
                                             label = item.label,
                                             command = item.command,
                                             exitCode = -1,
-                                            output = modeUnavailableMessage,
+                                            output = when (item.executionMode) {
+                                                ShellExecutionMode.SHIZUKU -> shizukuUnavailableMessage
+                                                ShellExecutionMode.ROOT -> rootUnavailableMessage
+                                                null -> unsetModeMessage
+                                            },
                                         )
                                         return@ShellCommandCard
                                     }
@@ -314,11 +322,11 @@ private fun ShellOverlayEnvironmentRow(
     } else {
         stringResource(R.string.shell_panel_shizuku_unavailable)
     }
-    val statusColor = when {
-        checkingRoot -> MaterialTheme.colorScheme.outline
-        rootAvailable == false || !shizukuGranted -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.primary
-    }
+    val statusColor = shellEnvironmentStatus(
+        checking = checkingRoot,
+        rootAvailable = rootAvailable,
+        shizukuGranted = shizukuGranted,
+    ).color()
 
     Row(
         modifier = Modifier
