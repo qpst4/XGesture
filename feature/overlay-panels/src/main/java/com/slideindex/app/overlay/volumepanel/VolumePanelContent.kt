@@ -82,6 +82,7 @@ import com.slideindex.app.activity.findForLaunchShortcut
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.overlay.LocalFrostedGlassBackdrop
+import com.slideindex.app.overlay.panels.PanelAudioStream
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.shouldLaunchFullscreen
 import com.slideindex.app.ui.Md3PickerAppLeading
@@ -349,7 +350,7 @@ private fun ExpandPanelSlidersSection() {
             value = alarmVolume,
             onValueChange = {
                 alarmVolume = it
-                com.slideindex.app.overlay.panels.PanelVolumeHooks.setVolume?.invoke(0, it)
+                com.slideindex.app.overlay.panels.PanelVolumeHooks.setVolume?.invoke(PanelAudioStream.ALARM, it)
             },
         )
         ExpandPanelSliderItem(
@@ -358,7 +359,7 @@ private fun ExpandPanelSlidersSection() {
             value = notificationVolume,
             onValueChange = {
                 notificationVolume = it
-                com.slideindex.app.overlay.panels.PanelVolumeHooks.setVolume?.invoke(2, it)
+                com.slideindex.app.overlay.panels.PanelVolumeHooks.setVolume?.invoke(PanelAudioStream.NOTIFICATION, it)
             },
         )
         ExpandPanelSliderItem(
@@ -367,7 +368,7 @@ private fun ExpandPanelSlidersSection() {
             value = ringVolume,
             onValueChange = {
                 ringVolume = it
-                com.slideindex.app.overlay.panels.PanelVolumeHooks.setVolume?.invoke(1, it)
+                com.slideindex.app.overlay.panels.PanelVolumeHooks.setVolume?.invoke(PanelAudioStream.RING, it)
             },
         )
         ExpandPanelSliderItem(
@@ -376,7 +377,7 @@ private fun ExpandPanelSlidersSection() {
             value = mediaVolume,
             onValueChange = {
                 mediaVolume = it
-                com.slideindex.app.overlay.panels.PanelVolumeHooks.setVolume?.invoke(3, it)
+                com.slideindex.app.overlay.panels.PanelVolumeHooks.setVolume?.invoke(PanelAudioStream.MEDIA, it)
             },
         )
     }

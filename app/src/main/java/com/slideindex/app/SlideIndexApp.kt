@@ -869,9 +869,19 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         }
         com.slideindex.app.overlay.panels.PanelVolumeHooks.setVolume = { stream, fraction ->
             com.slideindex.app.overlay.overlayHostContext()?.let { ctx ->
+                val targetStream = when (stream) {
+                    com.slideindex.app.overlay.panels.PanelAudioStream.MEDIA ->
+                        com.slideindex.app.util.VolumeControlHelper.Stream.MEDIA
+                    com.slideindex.app.overlay.panels.PanelAudioStream.RING ->
+                        com.slideindex.app.util.VolumeControlHelper.Stream.RING
+                    com.slideindex.app.overlay.panels.PanelAudioStream.NOTIFICATION ->
+                        com.slideindex.app.util.VolumeControlHelper.Stream.NOTIFICATION
+                    com.slideindex.app.overlay.panels.PanelAudioStream.ALARM ->
+                        com.slideindex.app.util.VolumeControlHelper.Stream.ALARM
+                }
                 com.slideindex.app.util.VolumeControlHelper.setFraction(
                     ctx,
-                    com.slideindex.app.util.VolumeControlHelper.Stream.entries[stream],
+                    targetStream,
                     fraction,
                 )
             }
