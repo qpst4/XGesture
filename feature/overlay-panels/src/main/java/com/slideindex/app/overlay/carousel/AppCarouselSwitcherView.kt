@@ -25,6 +25,7 @@ import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.settings.AppCarouselSwitcherSettings
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.util.CloneBadge
 import com.slideindex.app.util.HapticHelper
 import com.slideindex.app.util.PermissionHelper
 import com.slideindex.app.util.RecentAppEntry
@@ -105,13 +106,6 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
     }
     private val iconPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         isFilterBitmap = true
-    }
-    private val cloneDotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = 0xFFFFC107.toInt()
-    }
-    private val cloneDotRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE
-        color = 0xFFFFFFFF.toInt()
     }
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
@@ -679,12 +673,13 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
             canvas.restoreToCount(clipSaveCount)
 
             if (item.isClone) {
-                val dotRadius = (iconSize * 0.11f).coerceIn(3f * density, 7f * density)
-                val dotCx = iconRect.right - dotRadius * 0.9f
-                val dotCy = iconRect.top + dotRadius * 0.9f
-                cloneDotRingPaint.strokeWidth = 1.5f * density
-                canvas.drawCircle(dotCx, dotCy, dotRadius, cloneDotPaint)
-                canvas.drawCircle(dotCx, dotCy, dotRadius, cloneDotRingPaint)
+                CloneBadge.draw(
+                    canvas,
+                    iconRect.centerX(),
+                    iconRect.centerY(),
+                    iconSize,
+                    circular = false,
+                )
             }
 
             // 高亮外描边

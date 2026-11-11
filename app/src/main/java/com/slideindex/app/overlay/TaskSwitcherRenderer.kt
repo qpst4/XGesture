@@ -15,6 +15,7 @@ import com.slideindex.app.privilege.PrivilegeUiStrings
 import com.slideindex.app.overlay.layout.TaskSwitcherLayoutEngine
 import com.slideindex.app.overlay.layout.TaskSwitcherPanelLayout
 import com.slideindex.app.util.AppLocaleApplier
+import com.slideindex.app.util.CloneBadge
 import com.slideindex.app.util.RecentAppEntry
 
 internal data class TaskSwitcherRenderState(
@@ -41,14 +42,6 @@ internal class TaskSwitcherRenderer(
     private val elevatedCardPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val elevatedShadowPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val iconBitmapPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-    /** 多开/分身角标：图标右下角一个黄色小圆点（与系统分身标识同色），和主实例区分。 */
-    private val cloneBadgeBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = CLONE_BADGE_COLOR
-    }
-    private val cloneBadgeRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE
-        color = Color.argb(200, 0, 0, 0)
-    }
     private val highlightPath = Path()
     private val tmpRect = RectF()
 
@@ -75,7 +68,6 @@ internal class TaskSwitcherRenderer(
             strokeCap = Paint.Cap.ROUND
         }
         val gripPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = theme.grip }
-        cloneBadgeRingPaint.strokeWidth = host.dp(1.2f)
 
         val panel = layout.panelRect
         val panelCorner = host.dp(13f)
@@ -156,11 +148,13 @@ internal class TaskSwitcherRenderer(
                 val iconTop = row.rowRect.centerY() - iconSize / 2f
                 drawScaledIcon(this, entry.app, iconLeft, iconTop, iconSize)
                 if (entry.isClone) {
-                    val badgeRadius = host.dp(5.5f)
-                    val badgeCx = iconLeft + iconSize - badgeRadius * 0.15f
-                    val badgeCy = iconTop + badgeRadius * 0.15f
-                    drawCircle(badgeCx, badgeCy, badgeRadius, cloneBadgeBgPaint)
-                    drawCircle(badgeCx, badgeCy, badgeRadius, cloneBadgeRingPaint)
+                    CloneBadge.draw(
+                        this,
+                        iconLeft + iconSize / 2f,
+                        iconTop + iconSize / 2f,
+                        iconSize,
+                        circular = false,
+                    )
                 }
                 val labelX = iconLeft + iconSize + host.dp(9f)
                 val labelMaxWidth = TaskSwitcherLayoutEngine.labelMaxWidth(host, row, labelX)
@@ -443,7 +437,5 @@ internal class TaskSwitcherRenderer(
 
     companion object {
         private const val TASK_SWITCHER_OVERSCROLL_STRETCH = 0.22f
-        /** 分身角标黄：与系统（Flyme 平行空间 / MIUI 分身）的黄色分身标识看齐。 */
-        private const val CLONE_BADGE_COLOR = 0xFFFFC107.toInt()
     }
 }

@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.data.AppRepository
+import com.slideindex.app.overlay.CloneBadgeOverlay
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.SettingsRepository
 import com.slideindex.app.util.PickerAppIconBitmap
@@ -67,9 +68,6 @@ import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.popup.OverlayDropdownDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-
-/** 分身黄点：与索引 / 任务切换器一致。 */
-private val CloneBadgeColor = Color(0xFFFFC107)
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class)
 @Composable
@@ -593,20 +591,10 @@ private fun FreezerGridItem(
             // 暂停与冻结都是灰度，靠角标区分：暂停图标仍在桌面，冻结图标已从桌面消失。
             // 多选态下它让位给勾选圈 —— 64dp 里塞两枚角标会挤到一起。
             if (app.isClone && !selectionMode) {
-                // 分身黄点：与索引 / 任务切换器 / 系统分身标识同色。
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .size(14.dp)
-                        .background(MaterialTheme.colorScheme.surface, CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .background(CloneBadgeColor, CircleShape),
-                    )
-                }
+                CloneBadgeOverlay(
+                    iconSize = 64.dp,
+                    circular = false,
+                )
             }
             if (state.isPaused && !selectionMode) {
                 Box(

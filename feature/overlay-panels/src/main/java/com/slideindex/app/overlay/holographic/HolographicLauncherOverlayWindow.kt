@@ -209,9 +209,7 @@ object HolographicLauncherOverlayWindow {
                         val base = com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconOverrideDrawable
                             ?.invoke(context, info.packageName, 128)
                             ?: appRepository.peekLaunchIconDrawable(info.packageName)
-                        base?.let {
-                            com.slideindex.app.util.CloneBadge.wrap(it, info.cloneUserId > 0)
-                        }
+                        base
                     },
                     cloneUserId = info.cloneUserId,
                 )

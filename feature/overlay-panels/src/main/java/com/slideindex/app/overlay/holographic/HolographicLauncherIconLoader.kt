@@ -38,7 +38,7 @@ internal object HolographicLauncherIconLoader {
                     ?.invoke(context, app.packageName, 128)
                     ?: appRepository.launchIconDrawable(app.packageName)
                     ?: continue
-                app.icon = com.slideindex.app.util.CloneBadge.wrap(drawable, app.cloneUserId > 0) ?: drawable
+                app.icon = drawable
                 updated = true
             }
             if (updated) {

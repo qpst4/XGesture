@@ -177,7 +177,7 @@ internal fun DrawScope.drawFloatingPointerRadialMenu(
                     iconCenter.y,
                     iconDiameter,
                     alphaScale,
-                    circular = true,
+                    circular = false,
                 )
             }
         }

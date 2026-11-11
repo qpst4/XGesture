@@ -17,6 +17,7 @@ import com.slideindex.app.overlay.layout.GridLayoutInfo
 import com.slideindex.app.overlay.layout.gridLayoutInfo
 import com.slideindex.app.overlay.layout.visualColumn
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.util.CloneBadge
 import com.slideindex.app.util.coerceSafe
 
 internal class IndexPanelRenderer(
@@ -77,14 +78,6 @@ internal class IndexPanelRenderer(
         strokeWidth = host.dp(1.8f)
         strokeCap = Paint.Cap.ROUND
     }
-    /** 分身黄点：与系统分身标识同色。 */
-    private val cloneDotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = 0xFFFFC107.toInt()
-    }
-    private val cloneDotRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(200, 0, 0, 0)
-    }
-
     private val tmpRect = RectF()
 
     private val cellHeight get() = host.dp(72f)
@@ -323,7 +316,13 @@ internal class IndexPanelRenderer(
                 app.isPaused -> drawPausedBadge(canvas, iconCenterX, iconTop)
             }
             if (app.isClone) {
-                drawCloneDot(canvas, iconCenterX, iconTop)
+                CloneBadge.draw(
+                    canvas,
+                    iconCenterX,
+                    iconTop + gridIconSize / 2f,
+                    gridIconSize,
+                    circular = false,
+                )
             }
             canvas.drawText(label, iconCenterX, labelBaseline, appLabelPaint)
         }
@@ -339,15 +338,6 @@ internal class IndexPanelRenderer(
         val barOffset = radius * 0.30f
         canvas.drawLine(cx - barOffset, cy - barHeight / 2f, cx - barOffset, cy + barHeight / 2f, pausedBadgeBarPaint)
         canvas.drawLine(cx + barOffset, cy - barHeight / 2f, cx + barOffset, cy + barHeight / 2f, pausedBadgeBarPaint)
-    }
-
-    /** 分身角标：图标右上角一个黄点（与任务切换器 / 系统分身标识同色）。 */
-    private fun drawCloneDot(canvas: Canvas, iconCenterX: Float, iconTop: Float) {
-        val radius = host.dp(5.5f)
-        val cx = iconCenterX + gridIconSize * 0.42f
-        val cy = iconTop + gridIconSize * 0.16f
-        canvas.drawCircle(cx, cy, radius, cloneDotRingPaint)
-        canvas.drawCircle(cx, cy, radius - host.dp(1f), cloneDotPaint)
     }
 
     /** 冻结角标：图标右下角一个小圆 + 斜杠，语言无关地表示"当前不可直接启动"。 */

@@ -63,6 +63,7 @@ import com.slideindex.app.data.AppInfo
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.launcher.isShellActivityShortcut
 import com.slideindex.app.launcher.showsShellActivityShortcutBadge
+import com.slideindex.app.overlay.CloneBadgeOverlay
 import com.slideindex.app.overlay.ShellCommandBadgeOverlay
 import com.slideindex.app.overlay.ShortcutBadgeOverlay
 import com.slideindex.app.ui.miuix.pickerGroupedCardItem
@@ -588,14 +589,11 @@ fun Md3PickerAppLeading(app: AppInfo, sizeDp: Int = 40) {
                 sizeDp = sizeDp,
             )
         }
-        // 分身标记：右上角黄点，与索引 / 搜索面板同色。
+        // 分身标记：与索引 / 任务切换器 / 功能环共用同一套位置与尺寸。
         if (app.isClone) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(9.dp)
-                    .background(Color(0xFFFFC107), CircleShape)
-                    .border(1.dp, Color(0xB3000000), CircleShape),
+            CloneBadgeOverlay(
+                iconSize = sizeDp.dp,
+                circular = false,
             )
         }
         // 冻结 / 暂停：右下角，与冰箱网格、搜索面板一致。

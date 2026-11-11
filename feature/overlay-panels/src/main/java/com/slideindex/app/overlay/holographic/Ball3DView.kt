@@ -18,6 +18,7 @@ import android.view.ViewParent
 import androidx.core.view.ViewCompat
 import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.settings.HolographicLauncherSettings
+import com.slideindex.app.util.CloneBadge
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.hypot
@@ -198,6 +199,16 @@ class Ball3DView @JvmOverloads constructor(
         icon.alpha = node.alpha
         icon.draw(canvas)
         icon.alpha = savedAlpha
+        if (node.app.cloneUserId > 0) {
+            CloneBadge.draw(
+                canvas,
+                node.screenX,
+                node.screenY,
+                size.toFloat(),
+                node.alpha / 255f,
+                circular = false,
+            )
+        }
         if (node.scale <= 0.55f || node.alpha <= 100) return
         textPaint.alpha = node.alpha
         val label = node.app.label.take(4)

@@ -80,7 +80,20 @@ class WidgetCardContainer(
       val appView = android.widget.LinearLayout(context).apply {
         orientation = android.widget.LinearLayout.VERTICAL
         gravity = Gravity.CENTER
-        val iconView = android.widget.ImageView(context).apply {
+        val iconView = object : android.widget.ImageView(context) {
+          override fun onDraw(canvas: Canvas) {
+            super.onDraw(canvas)
+            if (item.cloneUserId > 0) {
+              com.slideindex.app.util.CloneBadge.draw(
+                canvas,
+                width / 2f,
+                height / 2f,
+                minOf(width, height).toFloat(),
+                circular = false,
+              )
+            }
+          }
+        }.apply {
           val icon = if (item.itemType == ITEM_TYPE_ACTION) {
             val action = com.slideindex.app.launcher.QuickLauncherItemCodec.parseActionPayload(item.intentUri)
             val iconSizePx = (44 * density).roundToInt()
@@ -119,9 +132,7 @@ class WidgetCardContainer(
             tag = iconPackage
             WidgetAppIconCache.load(context, iconPackage) { bitmap ->
               if (tag == iconPackage) {
-                setImageDrawable(
-                  com.slideindex.app.util.CloneBadge.decorate(bitmap, item.cloneUserId > 0)?.toDrawable(resources),
-                )
+                setImageDrawable(bitmap.toDrawable(resources))
               }
             }
           }

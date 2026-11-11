@@ -89,6 +89,7 @@ import android.content.ClipData
 import android.icu.text.SimpleDateFormat
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.ui.platform.LocalConfiguration
+import com.slideindex.app.overlay.CloneBadgeOverlay
 import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.freezer.FreezerAppState
 import com.slideindex.app.clipboard.ClipboardEntry
@@ -569,14 +570,11 @@ private fun SearchPanelAppIcon(
                 tint = MaterialTheme.colorScheme.primary,
             )
         }
-        // 分身标记：右上角黄点，与侧边索引 / 任务切换器同色（0xFFFFC107）。
+        // 分身标记：与索引 / 任务切换器 / 功能环共用同一套位置与尺寸。
         if (isClone) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(10.dp)
-                    .background(Color(0xFFFFC107), CircleShape)
-                    .border(1.dp, Color(0xB3000000), CircleShape),
+            CloneBadgeOverlay(
+                iconSize = size,
+                circular = false,
             )
         }
         // 冻结 / 暂停标记：右下角，与冰箱网格一致（暂停 = 双竖杠，冻结 = 雪花）。
