@@ -75,4 +75,21 @@
     <string name="multitouch_record_drawn_count">Нарисовано %1$d/5</string>
     <string name="multitouch_record_clear">Перерисовать</string>
     <string name="multitouch_back">Назад</string>
+    <string name="multitouch_protocol_title">Протокол касаний</string>
+    <string name="multitouch_protocol_summary">Авто определяет реальный поток событий; переключайте вручную, только если драйвер определён неверно</string>
+    <string name="multitouch_protocol_auto">Авто</string>
+    <string name="multitouch_protocol_type_a">Тип A</string>
+    <string name="multitouch_protocol_type_b">Тип B</string>
+    <string name="multitouch_diagnostics_title">Диагностика касаний</string>
+    <string name="multitouch_diagnostics_empty">Диагностических данных пока нет — включите глобальные касания и проведите пальцем</string>
+    <string name="multitouch_diagnostics_last_run">последнее состояние</string>
+    <string name="multitouch_diagnostics_current">текущее состояние</string>
+    <string name="multitouch_diagnostics_retry">Перезапустить</string>
+    <string name="multitouch_diagnostics_close">Закрыть</string>
+    <string name="multitouch_device_title">Сенсорное устройство</string>
+    <string name="multitouch_device_auto">Авто</string>
+    <string name="multitouch_device_summary_auto">Авто (лучшее совпадение)</string>
+    <string name="multitouch_device_summary_auto_current">Авто · текущее %1$s</string>
+    <string name="multitouch_device_pick_title">Выберите сенсорное устройство</string>
+    <string name="multitouch_device_empty">Подходящие устройства пока не найдены</string>
 </resources>

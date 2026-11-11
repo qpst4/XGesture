@@ -2,6 +2,16 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">XGesture</string>
     <!-- Bottom nav "Notifications" groups filter box + verification codes; "Messages" may fit better in some contexts -->
+    <string name="corner_gesture_slot_icon_shape">Форма значка слота</string>
+    <string name="float_ball_pick_word_tap_granularity_character">Символы</string>
+    <string name="float_ball_pick_word_tap_granularity_title">Точность выделения слов</string>
+    <string name="float_ball_pick_word_tap_granularity_word">Слова</string>
+    <string name="float_ball_style_slideshow_interval">Интервал</string>
+    <string name="float_ball_style_slideshow_interval_confirm">ОК</string>
+    <string name="float_ball_style_slideshow_interval_days">%1$d д</string>
+    <string name="float_ball_style_slideshow_interval_hours">%1$d ч</string>
+    <string name="float_ball_style_slideshow_interval_minutes">%1$d мин</string>
+    <string name="float_ball_style_slideshow_interval_seconds">%1$d с</string>
     <string name="main_nav_home">Главная</string>
     <string name="main_nav_shake">Встряхивание</string>
     <string name="main_nav_notification">Сообщения</string>
@@ -413,6 +423,10 @@
     <string name="permission_root_grant">Открыть настройки</string>
     <string name="privileged_access_required_shizuku">Требуется разрешение Shizuku</string>
     <string name="privileged_access_required_root">Требуется разрешение Root</string>
+    <string name="shell_panel_mode_status_unavailable">Недоступно</string>
+    <string name="shell_panel_mode_unavailable_root">Этой команде нужен Root, но он недоступен. Переключите команду на Shizuku или измените её.</string>
+    <string name="shell_panel_mode_unavailable_shizuku">Этой команде нужен Shizuku, но он не авторизован. Авторизуйте Shizuku и повторите попытку.</string>
+    <string name="shell_panel_mode_unavailable_unset">Для этой команды не задан способ выполнения. Сначала измените команду.</string>
     <string name="task_switcher_no_privileged_access">Для показа фоновых задач требуется привилегированный доступ</string>
     <string name="app_keep_alive_entry_desc">Поддержание работы в фоне и разрешения</string>
     <string name="app_keep_alive_entry_summary_battery">В исключениях батареи</string>

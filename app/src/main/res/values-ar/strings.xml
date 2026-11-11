@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">XGesture</string>
+    <string name="corner_gesture_slot_icon_shape">شكل أيقونة الفتحة</string>
+    <string name="float_ball_pick_word_tap_granularity_character">أحرف</string>
+    <string name="float_ball_pick_word_tap_granularity_title">دقة تحديد الكلمات</string>
+    <string name="float_ball_pick_word_tap_granularity_word">كلمات</string>
+    <string name="float_ball_style_slideshow_interval">الفاصل الزمني</string>
+    <string name="float_ball_style_slideshow_interval_confirm">موافق</string>
+    <string name="float_ball_style_slideshow_interval_days">%1$d ي</string>
+    <string name="float_ball_style_slideshow_interval_hours">%1$d س</string>
+    <string name="float_ball_style_slideshow_interval_minutes">%1$d د</string>
+    <string name="float_ball_style_slideshow_interval_seconds">%1$d ث</string>
     <string name="main_nav_home">الرئيسية</string>
     <string name="main_nav_shake">الهز</string>
     <string name="main_nav_notification">الرسائل</string>
@@ -386,6 +396,10 @@
     <string name="permission_root_grant">عرض الإعدادات</string>
     <string name="privileged_access_required_shizuku">يتطلب صلاحيات Shizuku</string>
     <string name="privileged_access_required_root">يتطلب صلاحيات Root</string>
+    <string name="shell_panel_mode_status_unavailable">غير متاح</string>
+    <string name="shell_panel_mode_unavailable_root">يحتاج هذا الأمر إلى Root، لكنه غير متاح. حوّله إلى Shizuku أو عدّل الأمر.</string>
+    <string name="shell_panel_mode_unavailable_shizuku">يحتاج هذا الأمر إلى Shizuku، لكنه غير مصرّح به. امنح الإذن ثم أعد المحاولة.</string>
+    <string name="shell_panel_mode_unavailable_unset">لا يوجد وضع تنفيذ لهذا الأمر. عدّل الأمر أولًا.</string>
     <string name="task_switcher_no_privileged_access">يتطلب صلاحيات امتياز لعرض مهام الخلفية</string>
     <string name="app_keep_alive_entry_desc">الإبقاء على التطبيق في الخلفية والأذونات ذات الصلة</string>
     <string name="app_keep_alive_entry_summary_battery">تمت إضافته للقائمة البيضاء للبطارية</string>

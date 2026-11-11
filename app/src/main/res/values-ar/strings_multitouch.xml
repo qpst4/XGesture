@@ -75,4 +75,21 @@
     <string name="multitouch_record_drawn_count">تم رسم %1$d/5</string>
     <string name="multitouch_record_clear">إعادة الرسم</string>
     <string name="multitouch_back">رجوع</string>
+    <string name="multitouch_protocol_title">بروتوكول اللمس</string>
+    <string name="multitouch_protocol_summary">يكتشف الوضع التلقائي تدفق الأحداث الحقيقي؛ بدّل يدويًا فقط إذا أُخطئ في اكتشاف برنامج التشغيل</string>
+    <string name="multitouch_protocol_auto">تلقائي</string>
+    <string name="multitouch_protocol_type_a">النوع A</string>
+    <string name="multitouch_protocol_type_b">النوع B</string>
+    <string name="multitouch_diagnostics_title">تشخيص اللمس</string>
+    <string name="multitouch_diagnostics_empty">لا يوجد تشخيص بعد — جرّب تمكين اللمس العام وتمرير إصبع</string>
+    <string name="multitouch_diagnostics_last_run">آخر حالة معروفة</string>
+    <string name="multitouch_diagnostics_current">الحالة الحالية</string>
+    <string name="multitouch_diagnostics_retry">إعادة التشغيل</string>
+    <string name="multitouch_diagnostics_close">إغلاق</string>
+    <string name="multitouch_device_title">جهاز اللمس</string>
+    <string name="multitouch_device_auto">تلقائي</string>
+    <string name="multitouch_device_summary_auto">تلقائي (أفضل تطابق)</string>
+    <string name="multitouch_device_summary_auto_current">تلقائي · الحالي %1$s</string>
+    <string name="multitouch_device_pick_title">اختر جهاز اللمس</string>
+    <string name="multitouch_device_empty">لم يتم العثور على أجهزة مرشحة بعد</string>
 </resources>

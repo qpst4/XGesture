@@ -75,4 +75,21 @@
     <string name="multitouch_record_drawn_count">%1$d/5 本描画済み</string>
     <string name="multitouch_record_clear">描き直す</string>
     <string name="multitouch_back">戻る</string>
+    <string name="multitouch_protocol_title">タッチプロトコル</string>
+    <string name="multitouch_protocol_summary">自動で実際のイベントを検出します。ドライバの判定が誤っている場合のみ手動で切り替えてください</string>
+    <string name="multitouch_protocol_auto">自動</string>
+    <string name="multitouch_protocol_type_a">タイプ A</string>
+    <string name="multitouch_protocol_type_b">タイプ B</string>
+    <string name="multitouch_diagnostics_title">タッチ診断</string>
+    <string name="multitouch_diagnostics_empty">診断情報はまだありません。グローバルタッチを有効にして指で操作してみてください</string>
+    <string name="multitouch_diagnostics_last_run">前回の状態</string>
+    <string name="multitouch_diagnostics_current">現在の状態</string>
+    <string name="multitouch_diagnostics_retry">再起動</string>
+    <string name="multitouch_diagnostics_close">閉じる</string>
+    <string name="multitouch_device_title">タッチデバイス</string>
+    <string name="multitouch_device_auto">自動</string>
+    <string name="multitouch_device_summary_auto">自動（最適なデバイス）</string>
+    <string name="multitouch_device_summary_auto_current">自動 · 現在 %1$s</string>
+    <string name="multitouch_device_pick_title">タッチデバイスを選択</string>
+    <string name="multitouch_device_empty">候補デバイスがまだ見つかりません</string>
 </resources>

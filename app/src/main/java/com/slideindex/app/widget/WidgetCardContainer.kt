@@ -80,7 +80,7 @@ class WidgetCardContainer(
       val appView = android.widget.LinearLayout(context).apply {
         orientation = android.widget.LinearLayout.VERTICAL
         gravity = Gravity.CENTER
-        val iconView = object : android.widget.ImageView(context) {
+        val iconView = object : androidx.appcompat.widget.AppCompatImageView(context) {
           override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
             if (item.cloneUserId > 0) {

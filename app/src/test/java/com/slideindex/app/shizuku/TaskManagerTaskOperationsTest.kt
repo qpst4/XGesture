@@ -256,5 +256,18 @@ class TaskManagerTaskOperationsTest {
         override fun pollMultiTouchEvents(): Array<String> = emptyArray()
 
         override fun stopMultiTouchPolling() = Unit
+
+        // 显示方向/尺寸、手动协议覆盖与诊断：本测试只覆盖任务操作，桩里保持默认值。
+        override fun setMultiTouchDisplay(
+            rotation: Int,
+            screenWidthPx: Int,
+            screenHeightPx: Int,
+        ) = Unit
+
+        override fun setMultiTouchConfig(protocol: String?, devicePath: String?) = Unit
+
+        override fun getMultiTouchDiagnostics(): String = ""
+
+        override fun getTouchDevices(): Array<String> = emptyArray()
     }
 }
