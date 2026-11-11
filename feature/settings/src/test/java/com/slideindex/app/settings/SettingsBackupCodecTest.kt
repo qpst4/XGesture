@@ -1,6 +1,7 @@
 package com.slideindex.app.settings
 
 import android.content.Context
+import androidx.datastore.preferences.core.mutablePreferencesOf
 import com.slideindex.app.shell.ShellCommand
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -232,6 +233,50 @@ class SettingsBackupCodecTest {
         ).getOrThrow()
 
         assertEquals(external, result.sensitive.externalStores)
+    }
+
+    // ---- schema 版本不是用户数据：不许跟着备份走 ----
+
+    @Test
+    fun export_skipsSettingsSchemaVersion() {
+        val prefs = mutablePreferencesOf(
+            SettingsPreferenceKeys.SETTINGS_SCHEMA_VERSION to 2,
+            SettingsPreferenceKeys.CLIPBOARD_FLOAT_ENABLED to true,
+        )
+
+        val json = SettingsBackupCodec.encode(prefs, "1.2.3")
+
+        assertFalse(
+            "schema 版本不该进备份：还原旧备份会把版本回滚、下次启动重放全部迁移",
+            json.contains(SettingsPreferenceKeys.SETTINGS_SCHEMA_VERSION.name),
+        )
+        assertTrue("普通设置仍要照常导出", json.contains(SettingsPreferenceKeys.CLIPBOARD_FLOAT_ENABLED.name))
+    }
+
+    @Test
+    fun import_neverRollsBackSettingsSchemaVersion() {
+        // 旧备份文件里仍然带着 schema 版本（当时还没有这条排除规则）。
+        val prefs = mutablePreferencesOf(SettingsPreferenceKeys.SETTINGS_SCHEMA_VERSION to 2)
+        val legacyDocument = SettingsBackupDocument(
+            formatVersion = 1,
+            exportedAtEpochMs = 0L,
+            appVersionName = "1.10.0",
+            preferences = listOf(
+                SettingsPreferenceEntry(
+                    key = SettingsPreferenceKeys.SETTINGS_SCHEMA_VERSION.name,
+                    type = "int",
+                    value = "0",
+                ),
+            ),
+        )
+
+        SettingsBackupCodec.apply(legacyDocument, prefs)
+
+        assertEquals(
+            "导入必须忽略备份里的 schema 版本，否则迁移会重放",
+            2,
+            prefs[SettingsPreferenceKeys.SETTINGS_SCHEMA_VERSION],
+        )
     }
 }
 
