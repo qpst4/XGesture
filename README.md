@@ -32,7 +32,7 @@
 Easily trigger **50+ system actions** via customizable multi-angle screen-edge swipes, reachability floating pointers, multi-functional floating ball, device shaking, desk-flipping, or back-tap gestures. Deeply integrates **100% offline on-device OCR**, word segmentation, and reverse image search aggregation—delivering high-efficiency overlay launchers, app freezing, OTP verification code extraction, notification management, and OEM freeform windows on top of any app, completely free from ads and cloud trackers.
 
 - **Package Name:** `com.slideindex.app`
-- **Current Version:** 1.64.0 (versionCode 86)
+- **Current Version:** 1.64.1 (versionCode 87)
 - **Requirements:** Android 12+ (API 31+)
 - **License:** [AGPL-3.0 License](LICENSE)
 
