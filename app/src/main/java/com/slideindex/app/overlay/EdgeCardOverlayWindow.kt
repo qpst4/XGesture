@@ -143,12 +143,9 @@ object EdgeCardOverlayWindow {
             Log.w(TAG, "overlay host unavailable")
             return
         }
-        if (appContext == null || windowManager == null) {
-            appContext = hostContext
-            windowManager = hostContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
-        }
-        // 每次 show 都确保监听已挂上（幂等）：窗口在更早的 show 里创建过时，上面的 if 不进，
-        // 之前就没有任何回调在旋转后重算 x，表现为卡片停在旧坐标或被推出屏幕。
+        if (!bindHost(hostContext)) return
+        // 每次 show 都确保监听已挂上（幂等）：窗口在更早的 show 里创建过时，
+        // 之前没有任何回调在旋转后重算 x，表现为卡片停在旧坐标或被推出屏幕。
         registerDisplayListener(hostContext)
         entries.filter { it.preview }.forEach { removeEntry(it, notifyDismiss = false) }
 
@@ -227,10 +224,9 @@ object EdgeCardOverlayWindow {
         // 之后再取 host / 重新注册，否则 ensureWindow 里 wm == null 会静默 return，预览永远不出现。
         dismissAllInternal(notifyDismiss = false)
         val hostContext = MessageOverlayHost.resolveHostContext(context)
-        Log.d(TAG, "installPreview host=${hostContext != null} wm=${windowManager != null}")
         if (hostContext == null) return
-        appContext = hostContext
-        windowManager = hostContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+        if (!bindHost(hostContext)) return
+        Log.d(TAG, "installPreview wm=${windowManager != null}")
         registerDisplayListener(hostContext)
 
         val appCtx = context.applicationContext
@@ -345,8 +341,7 @@ object EdgeCardOverlayWindow {
             return
         }
         Log.d(TAG, "replayAfterUnlock: entries=${entries.size}")
-        appContext = hostContext
-        windowManager = hostContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+        if (!bindHost(hostContext)) return
         registerDisplayListener(hostContext)
         // createdAt 用的是 uptimeMillis，这里必须同一基准；混用 currentTimeMillis
         // 会把所有条目算成“几十年前创建”，解锁时被当成过期全部删掉。
@@ -379,8 +374,7 @@ object EdgeCardOverlayWindow {
     fun updateWindowPlacement(context: Context, settings: MessageSettings) {
         entries.forEach { it.plan = it.plan.copy(settings = settings) }
         val hostContext = MessageOverlayHost.resolveHostContext(context) ?: return
-        appContext = hostContext
-        windowManager = hostContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+        if (!bindHost(hostContext)) return
         entries.forEach { entry ->
             val view = entry.view ?: return@forEach
             val params = entry.params ?: return@forEach
@@ -389,6 +383,46 @@ object EdgeCardOverlayWindow {
             applyEntry(entry, animated = false)
         }
         relayout()
+    }
+
+    /**
+     * 把窗口缓存对齐到当前宿主。
+     *
+     * 贴边卡长期复用 [windowManager] 建窗，而窗口类型每次按传入的 [hostContext] 现算。
+     * 覆盖安装后进程重启、无障碍服务重新绑定，宿主会在 Application 与新的无障碍实例之间切换；
+     * 旧 WindowManager 配新窗口类型会被系统拒绝（`BadTokenException: token null`），
+     * 之后每条消息都在同一处失败，表现为贴边卡永久不再弹出。
+     *
+     * 宿主变化时先摘掉旧窗口（保留 entry 里的消息与未读数），下一次 show/replay 用新宿主重建。
+     */
+    private fun bindHost(hostContext: Context): Boolean {
+        val wm = hostContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+        if (wm == null) {
+            Log.w(TAG, "bindHost skipped: windowManager null")
+            return false
+        }
+        if (appContext !== hostContext) {
+            entries.toList().forEach { entry ->
+                cancelAutoCollapse(entry)
+                entry.spring?.cancel()
+                entry.spring = null
+                val view = entry.view
+                entry.view = null
+                entry.params = null
+                if (view != null) {
+                    runCatching { windowManager?.removeView(view) }
+                        .onFailure { Log.w(TAG, "removeView on host change failed key=${entry.key}", it) }
+                }
+            }
+            Log.d(
+                TAG,
+                "host rebound entries=${entries.size} " +
+                    "type=${OverlayWindowTypes.overlayWindowType(hostContext)}",
+            )
+        }
+        appContext = hostContext
+        windowManager = wm
+        return true
     }
 
     fun dismissEntry(key: String, postTime: Long) {
