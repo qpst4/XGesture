@@ -30,7 +30,7 @@ fun NavEntryBuilder.honeycombLauncherNavEntries(ctx: MainNavContext) {
         val viewModel: HoneycombLauncherEditorViewModel = hiltViewModel()
         HoneycombLauncherEditorScreen(
             viewModel = viewModel,
-            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
+            onBack = { ctx.navigateBack() },
             onOpenDisplaySettings = { ctx.navigate(AppNavKey.HoneycombDisplaySettings) },
             onAdd = { ctx.navigate(AppNavKey.HoneycombLauncherAdd) },
         )

@@ -10,7 +10,7 @@ fun NavEntryBuilder.widgetPanelNavEntries(ctx: MainNavContext) {
         val viewModel: WidgetPanelEditorViewModel = hiltViewModel()
         WidgetPanelSettingsScreen(
             viewModel = viewModel,
-            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
+            onBack = { ctx.navigateBack() },
             onPreviewWidget = { ctx.showWidgetPanelPreview() },
         )
     }

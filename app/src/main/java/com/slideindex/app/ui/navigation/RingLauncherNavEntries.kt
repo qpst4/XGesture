@@ -13,7 +13,7 @@ fun NavEntryBuilder.ringLauncherNavEntries(ctx: MainNavContext) {
         val appSettings by viewModel.settings.collectAsStateWithLifecycle()
         RingLauncherSettingsScreen(
             appSettings = appSettings,
-            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
+            onBack = { ctx.navigateBack() },
             onSettingsChange = { axis, settings ->
                 viewModel.setFvRingLauncherSettings(axis, settings)
             },

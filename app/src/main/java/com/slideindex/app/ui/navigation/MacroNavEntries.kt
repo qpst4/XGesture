@@ -110,7 +110,7 @@ fun NavEntryBuilder.macroNavEntries(ctx: MainNavContext) {
         }
         MacroListScreen(
             macros = macros,
-            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
+            onBack = { ctx.navigateBack() },
             onCreate = { createMacroDraftAndOpen(ctx) },
             onOpenMacro = { macroId -> ctx.navigate(AppNavKey.MacroEdit(macroId)) },
             onDeleteMacro = { macroId ->

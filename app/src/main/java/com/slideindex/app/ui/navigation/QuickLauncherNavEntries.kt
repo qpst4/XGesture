@@ -32,7 +32,7 @@ fun NavEntryBuilder.quickLauncherNavEntries(ctx: MainNavContext) {
         val viewModel: QuickLauncherEditorViewModel = hiltViewModel()
         QuickLauncherEditorScreen(
             viewModel = viewModel,
-            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
+            onBack = { ctx.navigateBack() },
             onAdd = { panelId, folderIndex ->
                 ctx.navigate(AppNavKey.QuickLauncherAdd(panelId, folderIndex))
             },

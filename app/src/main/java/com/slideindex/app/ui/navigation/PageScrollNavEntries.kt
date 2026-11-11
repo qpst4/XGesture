@@ -7,7 +7,7 @@ import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
 fun NavEntryBuilder.pageScrollNavEntries(ctx: MainNavContext) {
     hiltEntry<AppNavKey.PageScrollSettings> {
         PageScrollSettingsScreen(
-            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
+            onBack = { ctx.navigateBack() },
         )
     }
 }

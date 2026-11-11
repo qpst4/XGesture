@@ -57,7 +57,7 @@ fun NavEntryBuilder.quickWheelNavEntries(ctx: MainNavContext) {
         val context = LocalContext.current
         QuickWheelListScreen(
             wheels = wheels,
-            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
+            onBack = { ctx.navigateBack() },
             onCreate = {
                 val wheel = QuickWheelCodec.newWheel(
                     id = UUID.randomUUID().toString(),

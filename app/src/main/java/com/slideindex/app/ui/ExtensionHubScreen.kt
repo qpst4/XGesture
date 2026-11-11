@@ -161,27 +161,12 @@ fun ExtensionHubScreen(
                     }
                 )
                 add(
-                    settingsCardScopeItem("page-scroll") {
-                        PageScrollEntryCard(onClick = onOpenPageScroll)
-                    }
-                )
-                add(
                     settingsCardScopeItem("shell-panel") {
                         SettingNavigationRow(
                             icon = { label -> Icon(HubLeadingIcons.shellCommand(true), contentDescription = label) },
                             title = stringResource(R.string.shell_panel_entry_title),
                             subtitle = stringResource(R.string.shell_panel_entry_desc),
                             onClick = onOpenShellCommands,
-                        )
-                    }
-                )
-                add(
-                    settingsCardScopeItem("layout-settings") {
-                        SettingNavigationRow(
-                            icon = { label -> Icon(HubLeadingIcons.layoutSettings(true), contentDescription = label) },
-                            title = stringResource(R.string.extension_action_index_layout_title),
-                            subtitle = stringResource(R.string.layout_settings_entry_desc),
-                            onClick = onOpenLayoutSettings,
                         )
                     }
                 )

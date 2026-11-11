@@ -1797,7 +1797,7 @@ fun NavEntryBuilder.layoutSettingsNavEntries(ctx: MainNavContext) {
             onBack = {
                 ctx.clearOverlayLayoutPreview()
                 ctx.stopLayoutPreview()
-                ctx.navigateBackTo(AppNavKey.ExtensionHub)
+                ctx.navigateBack()
             },
             onIndexHeightChange = viewModel::setIndexHeightFraction,
             onIndexVerticalPositionChange = viewModel::setIndexVerticalPositionFraction,

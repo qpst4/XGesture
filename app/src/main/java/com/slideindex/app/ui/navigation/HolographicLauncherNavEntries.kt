@@ -20,7 +20,7 @@ fun NavEntryBuilder.holographicLauncherNavEntries(ctx: MainNavContext) {
         }
         HolographicLauncherSettingsScreen(
             settings = holographicSettings,
-            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
+            onBack = { ctx.navigateBack() },
             onTimeoutSecondsChange = viewModel::setHolographicLauncherTimeoutSeconds,
             onRotationSensitivityChange = viewModel::setHolographicRotationSensitivity,
             onHapticLevelChange = viewModel::setHolographicHapticLevel,

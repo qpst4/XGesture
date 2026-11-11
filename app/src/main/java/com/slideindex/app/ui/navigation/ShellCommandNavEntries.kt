@@ -33,7 +33,7 @@ fun NavEntryBuilder.shellCommandNavEntries(ctx: MainNavContext) {
         ShellCommandPanelScreen(
             settings = settings,
             shizukuGranted = permissions.shizukuGranted,
-            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
+            onBack = { ctx.navigateBack() },
             onSaveCommands = viewModel::setShellCommands,
             onRequestShizuku = { ctx.requestShizuku() },
             shellViewModel = shellViewModel,

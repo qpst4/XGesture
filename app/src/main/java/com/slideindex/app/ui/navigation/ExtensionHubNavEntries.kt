@@ -35,6 +35,8 @@ import com.slideindex.app.ui.LicenseTextScreen
 import com.slideindex.app.ui.LauncherShortcutMenuScreen
 import com.slideindex.app.ui.MissingGesturePermissionsScreen
 import com.slideindex.app.ui.MultiTouchGestureSettingsScreen
+import com.slideindex.app.ui.GestureOpenLinkScreen
+import com.slideindex.app.ui.GestureSimulateKeyEventScreen
 import com.slideindex.app.ui.GestureActionPickerScreen
 import com.slideindex.app.ui.GestureExecuteShellCommandScreen
 import com.slideindex.app.ui.MultiTouchPathRecordScreen
@@ -154,6 +156,22 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
                 },
             )
         }
+    }
+
+    hiltEntry<AppNavKey.ActionOpenLink> {
+        GestureOpenLinkScreen(
+            initialUrl = "",
+            onBack = { ctx.navigateBack() },
+            onConfirm = { _, _ -> ctx.navigateBack() },
+        )
+    }
+
+    hiltEntry<AppNavKey.ActionSimulateKeyEvent> {
+        GestureSimulateKeyEventScreen(
+            initialAction = null,
+            onBack = { ctx.navigateBack() },
+            onConfirm = { _ -> ctx.navigateBack() },
+        )
     }
 
     multiTouchNavEntries(ctx, AppNavKey.ExtensionHub)
@@ -453,6 +471,9 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
 /** 动作详情页的「打开配置」跳转；没有独立配置页的动作返回 null。 */
 private fun actionConfigRoute(action: com.slideindex.app.gesture.GestureAction): AppNavKey? = when (action.type) {
     GestureActionType.OPEN_INDEX -> AppNavKey.HomeLayout
+    GestureActionType.PAGE_SCROLL -> AppNavKey.PageScrollSettings
+    GestureActionType.OPEN_LINK -> AppNavKey.ActionOpenLink
+    GestureActionType.SIMULATE_KEY_EVENT -> AppNavKey.ActionSimulateKeyEvent
     GestureActionType.EXECUTE_SHELL_COMMAND -> AppNavKey.ShellCommands
     GestureActionType.SHELL_COMMAND_PANEL -> AppNavKey.ShellCommands
     GestureActionType.QUICK_LAUNCHER -> AppNavKey.QuickLauncher
