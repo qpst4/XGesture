@@ -53,7 +53,6 @@ import com.slideindex.app.multitouch.MultiTouchGestureSettings
 import com.slideindex.app.multitouch.MultiTouchStatus
 import com.slideindex.app.multitouch.encodePathStrokes
 import com.slideindex.app.multitouch.multiTouchPresetKinds
-import com.slideindex.app.ui.picker.AppPickerTabRow
 import com.slideindex.app.ui.miuix.MiuixArrowRow
 import com.slideindex.app.ui.miuix.MiuixArrowRow
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
@@ -149,37 +148,38 @@ fun MultiTouchGestureSettingsScreen(
                         ) {
                             MiuixText(
                                 text = stringResource(R.string.multitouch_protocol_title),
-                                fontSize = MiuixTheme.textStyles.headline1.fontSize,
+                                style = MiuixTheme.textStyles.headline1,
                                 fontWeight = FontWeight.Medium,
                                 color = MiuixTheme.colorScheme.onBackground,
                             )
                             Spacer(Modifier.height(4.dp))
                             MiuixText(
                                 text = stringResource(R.string.multitouch_protocol_summary),
-                                fontSize = MiuixTheme.textStyles.body2.fontSize,
+                                style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
                             Spacer(Modifier.height(8.dp))
-                            AppPickerTabRow(
-                                tabs = listOf(
-                                    stringResource(R.string.multitouch_protocol_auto),
-                                    stringResource(R.string.multitouch_protocol_type_a),
-                                    stringResource(R.string.multitouch_protocol_type_b),
+                            SegmentedControl(
+                                items = listOf(
+                                    MultiTouchGestureSettings.PROTOCOL_AUTO,
+                                    MultiTouchGestureSettings.PROTOCOL_TYPE_A,
+                                    MultiTouchGestureSettings.PROTOCOL_TYPE_B,
                                 ),
-                                selectedTabIndex = when (settings.protocol) {
-                                    MultiTouchGestureSettings.PROTOCOL_TYPE_A -> 1
-                                    MultiTouchGestureSettings.PROTOCOL_TYPE_B -> 2
-                                    else -> 0
+                                selected = settings.protocol,
+                                labelRes = { protocol ->
+                                    when (protocol) {
+                                        MultiTouchGestureSettings.PROTOCOL_TYPE_A ->
+                                            R.string.multitouch_protocol_type_a
+
+                                        MultiTouchGestureSettings.PROTOCOL_TYPE_B ->
+                                            R.string.multitouch_protocol_type_b
+
+                                        else -> R.string.multitouch_protocol_auto
+                                    }
                                 },
-                                onTabSelected = { index ->
-                                    onProtocolChange(
-                                        when (index) {
-                                            1 -> MultiTouchGestureSettings.PROTOCOL_TYPE_A
-                                            2 -> MultiTouchGestureSettings.PROTOCOL_TYPE_B
-                                            else -> MultiTouchGestureSettings.PROTOCOL_AUTO
-                                        },
-                                    )
-                                },
+                                onSelect = onProtocolChange,
+                                containerColor = MiuixTheme.colorScheme.surface,
+                                indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
                             )
                         }
                     }
