@@ -42,8 +42,7 @@
     <string name="shake_menu_delete_confirm">「%1$s」里的方向动作会一起删除。</string>
     <string name="shake_gestures_section_feedback">反馈效果</string>
     <string name="shake_gestures_section_advanced_features">高级功能</string>
-    <string name="shake_gestures_section_action_scope">锁屏与独立应用</string>
-    <string name="shake_gestures_section_other">其他手势</string>
+    <string name="shake_gestures_section_action_scope">应用与生效范围</string>
     <string name="shake_gestures_other_hint">扣桌和背部敲击有各自独立的开关与模式，不受上面的晃动工作模式影响。</string>
     <string name="shake_work_mode_section">晃动工作模式</string>
     <string name="shake_work_mode_always">始终</string>
@@ -80,7 +79,7 @@
     <string name="shake_gestures_animation_color">动画颜色</string>
     <string name="shake_gestures_disable_landscape">横屏禁用</string>
     <string name="shake_gestures_app_blacklist">应用黑名单</string>
-    <string name="shake_gestures_app_blacklist_desc">在黑名单应用中禁用晃动</string>
+    <string name="shake_gestures_app_blacklist_desc">在这些应用中禁用晃动与扣桌</string>
     <string name="shake_gestures_blacklist_section_blocked">已屏蔽应用</string>
     <string name="shake_gestures_blacklist_section_add">添加应用</string>
     <string name="shake_gestures_blacklist_section_add_desc">选择要忽略晃动动作的应用</string>
