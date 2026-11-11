@@ -229,6 +229,9 @@ enum class GestureActionType(val id: Int) {
 
     /** 「蓝牙开关」：把蓝牙取反；与 [TOGGLE_NFC] 同一套特权/降级策略（`cmd bluetooth_manager`）。 */
     TOGGLE_BLUETOOTH(114),
+
+    /** 音量条：弹出音量键那种系统音量条，但不改变音量值。 */
+    OPEN_VOLUME_SLIDER(115),
     ;
 
     companion object {
@@ -1110,9 +1113,15 @@ sealed class GestureAction {
         override val payload = ""
     }
 
-    /** 调出系统原生声音调节面板。 */
+    /** 调出系统原生声音调节面板（设置页样式的多路滑块）。 */
     data object OpenVolumePanel : GestureAction() {
         override val type = GestureActionType.OPEN_VOLUME_PANEL
+        override val payload = ""
+    }
+
+    /** 弹出系统音量条（与音量键同款），但不改变音量。 */
+    data object OpenVolumeSlider : GestureAction() {
+        override val type = GestureActionType.OPEN_VOLUME_SLIDER
         override val payload = ""
     }
 
@@ -1336,6 +1345,7 @@ sealed class GestureAction {
                 GestureActionType.TOGGLE_AUTO_BRIGHTNESS -> ToggleAutoBrightness
                 GestureActionType.OPEN_INTERNET_PANEL -> OpenInternetPanel
                 GestureActionType.OPEN_VOLUME_PANEL -> OpenVolumePanel
+                GestureActionType.OPEN_VOLUME_SLIDER -> OpenVolumeSlider
                 GestureActionType.CURRENT_APP_INFO -> CurrentAppInfo
                 GestureActionType.SIMULATE_KEY_EVENT -> SimulateKeyEvent.fromPayload(payload)
                 GestureActionType.SCREEN_OFF_KEEP_AWAKE -> ScreenOffKeepAwake

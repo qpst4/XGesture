@@ -1085,8 +1085,10 @@
     <string name="gesture_action_universal_copy_desc">画面上のテキストブロックを選択してコピー</string>
     <string name="gesture_action_open_internet_panel">ネイティブネットワークパネル</string>
     <string name="gesture_action_open_internet_panel_desc">システムネイティブの Wi-Fi とモバイルネットワークパネルを表示</string>
-    <string name="gesture_action_open_volume_panel">ネイティブ音量パネル</string>
-    <string name="gesture_action_open_volume_panel_desc">システムネイティブの音量スライダーポップアップを表示</string>
+    <string name="gesture_action_open_volume_panel">音量パネル（設定画面）</string>
+    <string name="gesture_action_open_volume_panel_desc">システムの音量設定パネルを開く（ストリーム別スライダー）</string>
+    <string name="gesture_action_open_volume_slider">音量スライダー（音量を変えない）</string>
+    <string name="gesture_action_open_volume_slider_desc">システムの音量スライダーを表示（音量は変更しない）</string>
     <string name="gesture_action_volume_up">音量を上げる</string>
     <string name="gesture_action_volume_up_desc">メディア音量を1段階上げ、システム音量パネルを表示します</string>
     <string name="gesture_action_volume_down">音量を下げる</string>

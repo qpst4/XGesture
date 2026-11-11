@@ -1857,8 +1857,10 @@
     <string name="gesture_action_universal_copy_desc">Выделение текстовых блоков на экране и копирование</string>
     <string name="gesture_action_open_internet_panel">Нативная панель интернета</string>
     <string name="gesture_action_open_internet_panel_desc">Показать системную нативную панель Wi-Fi и мобильной сети</string>
-    <string name="gesture_action_open_volume_panel">Нативная панель громкости</string>
-    <string name="gesture_action_open_volume_panel_desc">Показать системное нативное всплывающее окно громкости</string>
+    <string name="gesture_action_open_volume_panel">Панель громкости (страница настроек)</string>
+    <string name="gesture_action_open_volume_panel_desc">Открыть системную панель настроек громкости с ползунками по потокам</string>
+    <string name="gesture_action_open_volume_slider">Ползунок громкости (без изменения уровня)</string>
+    <string name="gesture_action_open_volume_slider_desc">Показать системный ползунок громкости, не меняя уровень</string>
     <string name="gesture_action_volume_up">Громче</string>
     <string name="gesture_action_volume_up_desc">Увеличить медиагромкость на шаг и показать системную панель громкости</string>
     <string name="gesture_action_volume_down">Тише</string>
