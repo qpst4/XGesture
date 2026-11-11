@@ -299,6 +299,7 @@ internal fun ShellCommandCard(
     onRun: () -> Unit,
 ) {
     Card(
+        onClick = onEdit,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -316,15 +317,13 @@ internal fun ShellCommandCard(
                     command = item,
                     modifier = Modifier
                         .padding(top = 2.dp, end = 8.dp)
-                        .size(32.dp)
-                        .clickable(onClick = onEdit),
+                        .size(32.dp),
                 )
             }
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 4.dp)
-                    .clickable(onClick = onEdit),
+                    .padding(end = 4.dp),
             ) {
                 Text(
                     text = item.label,
