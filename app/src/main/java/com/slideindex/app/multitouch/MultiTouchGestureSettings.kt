@@ -24,9 +24,16 @@ import org.json.JSONObject
  */
 data class MultiTouchGestureSettings(
     val enabled: Boolean = false,
+    /** 触摸协议：auto / type_a / type_b（auto 时由事件流嗅探）。 */
+    val protocol: String = PROTOCOL_AUTO,
+    /** 指定触摸设备（`/dev/input/eventX`）；空串 = 自动挑最合适的。 */
+    val devicePath: String = "",
     val entries: List<MultiTouchGestureEntry> = defaultEntries(),
 ) {
     companion object {
+        const val PROTOCOL_AUTO = "auto"
+        const val PROTOCOL_TYPE_A = "type_a"
+        const val PROTOCOL_TYPE_B = "type_b"
         fun defaultEntries(): List<MultiTouchGestureEntry> = listOf(
             entry("pinch3", MultiPointerGesture.PINCH, 3, GestureAction.Home),
             entry("spread3", MultiPointerGesture.SPREAD, 3, GestureAction.Screenshot),
@@ -85,6 +92,26 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         if (_state.value.enabled == enabled) return
         prefs.edit().putBoolean(KEY_ENABLED, enabled).apply()
         _state.value = _state.value.copy(enabled = enabled)
+    }
+
+    /** 触摸协议：auto / type_a / type_b。 */
+    fun setProtocol(protocol: String) {
+        val normalized = when (protocol) {
+            MultiTouchGestureSettings.PROTOCOL_TYPE_A,
+            MultiTouchGestureSettings.PROTOCOL_TYPE_B -> protocol
+            else -> MultiTouchGestureSettings.PROTOCOL_AUTO
+        }
+        if (_state.value.protocol == normalized) return
+        prefs.edit().putString(KEY_PROTOCOL, normalized).apply()
+        _state.value = _state.value.copy(protocol = normalized)
+    }
+
+    /** 指定触摸设备路径；空串 = 自动。 */
+    fun setDevicePath(path: String) {
+        val normalized = path.trim()
+        if (_state.value.devicePath == normalized) return
+        prefs.edit().putString(KEY_DEVICE_PATH, normalized).apply()
+        _state.value = _state.value.copy(devicePath = normalized)
     }
 
     /**
@@ -218,7 +245,12 @@ class MultiTouchGestureSettingsStore @Inject constructor(
             .putString(KEY_ENTRIES, serialize(sorted))
             .putBoolean(KEY_DEFAULTS_MERGED, true)
             .apply()
-        _state.value = MultiTouchGestureSettings(enabled = enabled, entries = sorted)
+        _state.value = MultiTouchGestureSettings(
+            enabled = enabled,
+            protocol = _state.value.protocol,
+            devicePath = _state.value.devicePath,
+            entries = sorted,
+        )
     }
 
     private fun read(): MultiTouchGestureSettings {
@@ -237,6 +269,9 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         }
         return MultiTouchGestureSettings(
             enabled = prefs.getBoolean(KEY_ENABLED, false),
+            protocol = prefs.getString(KEY_PROTOCOL, MultiTouchGestureSettings.PROTOCOL_AUTO)
+                ?: MultiTouchGestureSettings.PROTOCOL_AUTO,
+            devicePath = prefs.getString(KEY_DEVICE_PATH, "") ?: "",
             entries = sortEntries(merged).ifEmpty { MultiTouchGestureSettings.defaultEntries() },
         )
     }
@@ -365,6 +400,8 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         const val KEY_ENABLED = "enabled"
         const val KEY_ENTRIES = "gesture_entries"
         const val KEY_DEFAULTS_MERGED = "defaults_merged"
+        const val KEY_PROTOCOL = "touch_protocol"
+        const val KEY_DEVICE_PATH = "touch_device_path"
     }
 }
 

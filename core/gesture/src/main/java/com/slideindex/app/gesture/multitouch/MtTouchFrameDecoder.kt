@@ -18,8 +18,15 @@ package com.slideindex.app.gesture.multitouch
  * （见 [TouchPointer]）。
  */
 class MtTouchFrameDecoder(
-    private val protocol: Protocol,
+    val protocol: Protocol,
     private val panelHeight: Float,
+    /**
+     * Type B 的变体：设备有 slot，但不发 tracking id（少数混合驱动）。
+     *
+     * 这种情况下没有「单指抬起」的事件，只能靠 `BTN_TOUCH` 判断整体抬起；
+     * 触点数变化也只会在全部抬起后重新按下时体现。
+     */
+    val trackingIdOptional: Boolean = false,
 ) {
     enum class Protocol {
         /** 老式协议：无 slot / tracking id，靠 `SYN_MT_REPORT` 分隔接触点。 */
@@ -68,9 +75,14 @@ class MtTouchFrameDecoder(
 
             EV_KEY -> if (code == BTN_TOUCH) {
                 touchDown = value != 0
-                if (!touchDown && protocol == Protocol.TYPE_A) {
-                    frameContacts.clear()
-                    currentContact = null
+                if (!touchDown) {
+                    if (protocol == Protocol.TYPE_A) {
+                        frameContacts.clear()
+                        currentContact = null
+                    } else if (trackingIdOptional) {
+                        // B 的变体：没有 tracking id，BTN_TOUCH=0 就是「所有手指都抬起了」。
+                        slots.clear()
+                    }
                 }
             }
 
@@ -140,12 +152,23 @@ class MtTouchFrameDecoder(
         val frame = ArrayList<TouchPointer>(4)
         when (protocol) {
             Protocol.TYPE_B -> {
-                slots.entries
-                    .filter { it.value.hasPosition && it.value.trackingId >= 0 }
-                    .sortedBy { it.key }
-                    .forEach { (slot, contact) -> frame += toPointer(slot, contact) }
-                // 抬起的槽位留到本帧之后再清，避免同一帧里「先抬起后又按下」被误删。
-                slots.entries.removeAll { it.value.trackingId < 0 }
+                if (trackingIdOptional && !touchDown) {
+                    // 已经在 BTN_TOUCH 抬起时清过槽位；这里再兜一层，避免残留。
+                    slots.clear()
+                } else {
+                    slots.entries
+                        .filter {
+                            it.value.hasPosition &&
+                                (trackingIdOptional || it.value.trackingId >= 0)
+                        }
+                        .sortedBy { it.key }
+                        .forEach { (slot, contact) -> frame += toPointer(slot, contact) }
+                    // 抬起的槽位留到本帧之后再清，避免同一帧里「先抬起后又按下」被误删。
+                    // 变体模式下 trackingId 恒为 -1，不能按它清理。
+                    if (!trackingIdOptional) {
+                        slots.entries.removeAll { it.value.trackingId < 0 }
+                    }
+                }
             }
 
             Protocol.TYPE_A -> {

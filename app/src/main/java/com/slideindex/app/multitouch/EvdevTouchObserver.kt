@@ -2,6 +2,7 @@ package com.slideindex.app.multitouch
 
 import android.util.Log
 import com.slideindex.app.gesture.multitouch.CollectedPath
+import com.slideindex.app.gesture.multitouch.MtProtocolSniffer
 import com.slideindex.app.gesture.multitouch.MtTouchFrameDecoder
 import com.slideindex.app.gesture.multitouch.MultiPointerGestureRecognizer
 import com.slideindex.app.gesture.multitouch.PathGestureCollector
@@ -34,6 +35,12 @@ class EvdevTouchObserver(
      * 识别器看到的滑动方向、路径形状、锚点就都是用户眼里的屏幕方向。
      */
     private val displayTransform: () -> TouchDisplayTransform = { TouchDisplayTransform.IDENTITY },
+    /** 手动协议覆盖：auto / type_a / type_b。 */
+    private val protocolOverride: () -> String = { MultiTouchGestureSettings.PROTOCOL_AUTO },
+    /** 手动指定触摸设备路径；空串 = 自动挑。 */
+    private val devicePathOverride: () -> String = { "" },
+    /** 诊断信息（设备/协议/候选），服务端会转给设置页。 */
+    private val onDiagnostics: (String) -> Unit = {},
     private val log: (String) -> Unit = { Log.i(TAG, it) },
 ) {
     @Volatile
@@ -109,10 +116,19 @@ class EvdevTouchObserver(
             }
             reportConflict(device.virtualDevices)
             recognizer.reset()
-            log("touch device=${device.eventPath} protocol=${device.protocol}")
+            log(
+                "touch device=${device.eventPath} name=${device.name} protocol=${device.protocol} " +
+                    "slot=${device.hasSlot} track=${device.hasTrackingId} btn=${device.hasBtnTouch} " +
+                    "range=${device.width}x${device.height}",
+            )
             onState(true, "watching:${device.eventPath}")
             try {
-                readDevice(device.eventPath, AbsRanges(device.width, device.height), device.protocol)
+                readDevice(
+                    eventPath = device.eventPath,
+                    ranges = AbsRanges(device.width, device.height),
+                    protocol = device.protocol,
+                    trackingIdOptionalHint = device.trackingIdOptionalHint,
+                )
             } catch (error: Throwable) {
                 if (running) {
                     log("touch reader stopped: ${error.message}")
@@ -131,28 +147,69 @@ class EvdevTouchObserver(
         eventPath: String,
         ranges: AbsRanges,
         protocol: MtTouchFrameDecoder.Protocol,
+        trackingIdOptionalHint: Boolean,
     ) {
         FileInputStream(eventPath).use { stream ->
             openStream = stream
             val buffer = ByteArray(EVENT_SIZE)
             // Type A / Type B 的差异全部收在解码器里：这里只负责读事件、喂帧、驱动识别。
-            val decoder = MtTouchFrameDecoder(protocol = protocol, panelHeight = ranges.height)
+            var decoder = MtTouchFrameDecoder(
+                protocol = protocol,
+                panelHeight = ranges.height,
+                trackingIdOptional = trackingIdOptionalHint,
+            )
+            // 静态能力表只是初判：第一次真正摸上来时用真实事件流定案（防混合驱动判错）。
+            // 手动指定协议时尊重用户选择，不再自动嗅探/回退。
+            val allowSniffing = runCatching { protocolOverride() }
+                .getOrDefault(MultiTouchGestureSettings.PROTOCOL_AUTO) ==
+                MultiTouchGestureSettings.PROTOCOL_AUTO
+            val sniffer = MtProtocolSniffer()
+            var sniffing = allowSniffing
+            var rawEvents = 0
+            var pointerFrames = 0
+            var fallbackTried = !allowSniffing
+            val startedAtMs = android.os.SystemClock.elapsedRealtime()
 
             while (running) {
                 if (!readFully(stream, buffer)) break
                 val type = readShort(buffer, 16)
                 val code = readShort(buffer, 18)
                 val value = readInt(buffer, 20)
+                rawEvents++
+                if (sniffing) sniffer.onEvent(type, code, value)
 
                 val frameReady = decoder.onEvent(type, code, value)
                 if (type == MtTouchFrameDecoder.EV_SYN && code == MtTouchFrameDecoder.SYN_DROPPED) {
                     recognizer.reset()
+                    pathCollector.cancel()
                 }
                 if (!frameReady) continue
+
+                if (sniffing && sniffer.sawTouch) {
+                    sniffing = false
+                    val decided = sniffer.protocol
+                    val optional = sniffer.trackingIdOptional
+                    if (decided != decoder.protocol || optional != decoder.trackingIdOptional) {
+                        decoder = MtTouchFrameDecoder(
+                            protocol = decided,
+                            panelHeight = ranges.height,
+                            trackingIdOptional = optional,
+                        )
+                        recognizer.reset()
+                        pathCollector.cancel()
+                        log(
+                            "protocol sniff: static=${protocol}(optional=$trackingIdOptionalHint) " +
+                                "-> $decided(optional=$optional)",
+                        )
+                        continue
+                    }
+                    log("protocol confirmed $decided optional=$optional")
+                }
 
                 val transform = runCatching { displayTransform() }
                     .getOrDefault(TouchDisplayTransform.IDENTITY)
                 val pointers = transformPointers(decoder.pointers, transform, ranges)
+                if (pointers.isNotEmpty()) pointerFrames++
                 // 锚点用与触点同一套归一化：旋转到屏幕后按屏幕宽高算 u/v，app 侧不再旋转。
                 val anchorRanges = if (transform.valid) {
                     AbsRanges(transform.screenWidthPx.toFloat(), transform.screenHeightPx.toFloat())
@@ -185,6 +242,27 @@ class EvdevTouchObserver(
                             "points=${path.strokes.sumOf { it.points.size }}"
                     )
                     onPathGesture(path, now, pathAnchor(path, anchorRanges))
+                }
+
+                // 兜底：有原始事件、但两类判定都没产出任何触点 —— 换另一种协议再试一次。
+                if (!fallbackTried && !sniffing && pointerFrames == 0 &&
+                    rawEvents >= 200 &&
+                    android.os.SystemClock.elapsedRealtime() - startedAtMs >= 1_500L
+                ) {
+                    fallbackTried = true
+                    val other = if (decoder.protocol == MtTouchFrameDecoder.Protocol.TYPE_B) {
+                        MtTouchFrameDecoder.Protocol.TYPE_A
+                    } else {
+                        MtTouchFrameDecoder.Protocol.TYPE_B
+                    }
+                    decoder = MtTouchFrameDecoder(
+                        protocol = other,
+                        panelHeight = ranges.height,
+                        trackingIdOptional = other == MtTouchFrameDecoder.Protocol.TYPE_B,
+                    )
+                    recognizer.reset()
+                    pathCollector.cancel()
+                    log("protocol fallback -> $other (no pointers after $rawEvents events)")
                 }
             }
         }
@@ -253,6 +331,11 @@ class EvdevTouchObserver(
         val width: Float,
         val height: Float,
         val protocol: MtTouchFrameDecoder.Protocol,
+        /** 静态能力表看起来像「有 slot 没 tracking id」的 B 变体。 */
+        val trackingIdOptionalHint: Boolean = false,
+        val hasSlot: Boolean = false,
+        val hasTrackingId: Boolean = false,
+        val hasBtnTouch: Boolean = false,
         val virtualDevices: List<String> = emptyList(),
     )
 
@@ -329,7 +412,8 @@ class EvdevTouchObserver(
         var hasMtPositionY = false
         var hasMtSlot = false
         var hasTrackingId = false
-        var found: Touchscreen? = null
+        var hasBtnTouch = false
+        val candidates = ArrayList<Touchscreen>()
         val virtualDevices = ArrayList<String>()
 
         fun flush() {
@@ -345,19 +429,29 @@ class EvdevTouchObserver(
                 }
                 return
             }
-            if (found != null || !hasTouchRange) return
-            // 有 slot + tracking id 才是现代 Type B；否则按 Type A（SYN_MT_REPORT 分隔）解析。
-            val protocol = if (hasMtSlot && hasTrackingId) {
-                MtTouchFrameDecoder.Protocol.TYPE_B
-            } else {
-                MtTouchFrameDecoder.Protocol.TYPE_A
+            if (!hasTouchRange) return
+            // 手动覆盖优先；auto 时先按能力表初判，第一帧真正触摸再由嗅探纠正。
+            val protocolMode = runCatching { protocolOverride() }
+                .getOrDefault(MultiTouchGestureSettings.PROTOCOL_AUTO)
+            val protocol = when (protocolMode) {
+                MultiTouchGestureSettings.PROTOCOL_TYPE_A -> MtTouchFrameDecoder.Protocol.TYPE_A
+                MultiTouchGestureSettings.PROTOCOL_TYPE_B -> MtTouchFrameDecoder.Protocol.TYPE_B
+                else -> if (hasMtSlot && hasTrackingId) {
+                    MtTouchFrameDecoder.Protocol.TYPE_B
+                } else {
+                    MtTouchFrameDecoder.Protocol.TYPE_A
+                }
             }
-            found = Touchscreen(
+            candidates += Touchscreen(
                 eventPath = path,
                 name = currentName,
                 width = maxX.toFloat(),
                 height = maxY.toFloat(),
                 protocol = protocol,
+                trackingIdOptionalHint = hasMtSlot && !hasTrackingId,
+                hasSlot = hasMtSlot,
+                hasTrackingId = hasTrackingId,
+                hasBtnTouch = hasBtnTouch,
             )
         }
 
@@ -373,6 +467,7 @@ class EvdevTouchObserver(
                 hasMtPositionY = false
                 hasMtSlot = false
                 hasTrackingId = false
+                hasBtnTouch = false
                 continue
             }
             if (currentPath == null) continue
@@ -386,6 +481,9 @@ class EvdevTouchObserver(
                 // ABS_MT_TRACKING_ID（0x39）：Type B 的手指编号。
                 trimmed.startsWith("0039") -> hasTrackingId = true
 
+                // BTN_TOUCH（0x14a）：没有 tracking id 时用它判断整体抬起。
+                trimmed.startsWith("014a") -> hasBtnTouch = true
+
                 trimmed.startsWith("0035") -> {
                     hasMtPositionX = true
                     maxX = MAX_PATTERN.find(trimmed)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: maxX
@@ -398,7 +496,49 @@ class EvdevTouchObserver(
             }
         }
         flush()
-        return found?.copy(virtualDevices = virtualDevices.toList())
+        val overridePath = runCatching { devicePathOverride() }.getOrDefault("")
+        val pool = if (overridePath.isBlank()) {
+            candidates
+        } else {
+            candidates.filter { it.eventPath == overridePath }.ifEmpty {
+                val available = candidates.joinToString { it.eventPath }
+                log("指定触摸设备 $overridePath 不在候选里：$available")
+                onDiagnostics("指定设备不存在：$overridePath（候选：$available）")
+                return null
+            }
+        }
+        if (pool.isEmpty()) return null
+        val best = pool.maxWithOrNull(
+            compareBy<Touchscreen> { scoreOf(it) }
+                .thenBy { (it.width * it.height).toLong() },
+        ) ?: pool.first()
+        val diagnostics = "device=${best.eventPath} name=${best.name} protocol=${best.protocol} " +
+            "slot=${best.hasSlot} track=${best.hasTrackingId} btn=${best.hasBtnTouch} " +
+            "range=${best.width}x${best.height} candidates=${pool.size}"
+        log("touch candidates: " + pool.joinToString(" | ") { device ->
+            "${device.eventPath}(${device.name}," +
+                "slot=${device.hasSlot},track=${device.hasTrackingId},btn=${device.hasBtnTouch}," +
+                "range=${device.width}x${device.height},score=${scoreOf(device)})"
+        })
+        log(diagnostics)
+        onDiagnostics(diagnostics)
+        return best.copy(virtualDevices = virtualDevices.toList())
+    }
+
+    /**
+     * 触摸设备打分：优先现代 Type B，其次有 BTN_TOUCH 的，最后按量程大小。
+     * 名字像手写笔/数字化仪的降权（但不硬排除，避免误杀名字奇怪的机型）。
+     */
+    private fun scoreOf(device: Touchscreen): Int {
+        var score = 0
+        if (device.hasSlot && device.hasTrackingId) score += 8
+        else if (device.hasSlot || device.hasTrackingId) score += 4
+        if (device.hasBtnTouch) score += 2
+        val name = device.name.lowercase()
+        if (name.contains("pen") || name.contains("stylus") || name.contains("digitizer")) {
+            score -= 6
+        }
+        return score
     }
 
     private fun readFully(stream: FileInputStream, buffer: ByteArray): Boolean {

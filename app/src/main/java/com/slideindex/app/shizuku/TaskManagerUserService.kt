@@ -22,6 +22,18 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
     @Volatile
     private var displayTransform: TouchDisplayTransform = TouchDisplayTransform.IDENTITY
 
+    /** 手动协议覆盖：auto / type_a / type_b。 */
+    @Volatile
+    private var protocolOverride: String = "auto"
+
+    /** 指定触摸设备路径；空串 = 自动挑。 */
+    @Volatile
+    private var devicePathOverride: String = ""
+
+    /** 最近一次观察诊断（设备/协议/候选），设置页读取。 */
+    @Volatile
+    private var multitouchDiagnostics: String = ""
+
     private val shell = TaskManagerShellExecutor
     private val shellRunner = ShellCommandRunner { args -> shell.shellCommand(*args) }
     private val tasks = TaskManagerTaskOperations(shellRunner)
@@ -49,6 +61,13 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
         )
     }
 
+    override fun setMultiTouchConfig(protocol: String?, devicePath: String?) {
+        protocolOverride = protocol ?: "auto"
+        devicePathOverride = devicePath ?: ""
+    }
+
+    override fun getMultiTouchDiagnostics(): String = multitouchDiagnostics
+
     override fun startMultiTouchObservation(
         callback: IOnMultiTouchGesture,
         pathPriority: Boolean,
@@ -56,6 +75,9 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
         stopMultiTouchObservation()
         val observer = EvdevTouchObserver(
             displayTransform = { displayTransform },
+            protocolOverride = { protocolOverride },
+            devicePathOverride = { devicePathOverride },
+            onDiagnostics = { multitouchDiagnostics = it },
             onGesture = { gestures, eventTimeMs, anchor ->
                 runCatching {
                     Log.i(
@@ -130,6 +152,9 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
         stopMultiTouchPolling()
         val observer = EvdevTouchObserver(
             displayTransform = { displayTransform },
+            protocolOverride = { protocolOverride },
+            devicePathOverride = { devicePathOverride },
+            onDiagnostics = { multitouchDiagnostics = it },
             onGesture = { gestures, _, anchor ->
                 for (gesture in gestures) {
                     pollingEvents += "g:${gesture.gesture.ordinal}:${gesture.fingerCount}:" +

@@ -63,4 +63,13 @@ interface ITaskManagerService {
      * app 侧回退到「panel 坐标 + 方向重映射」的旧行为。
      */
     void setMultiTouchDisplay(int rotation, int screenWidthPx, int screenHeightPx) = 26;
+
+    /**
+     * 手动覆盖触摸协议 / 设备。protocol = auto|type_a|type_b；devicePath 空串 = 自动。
+     * 自动模式下观测器还会用真实事件流嗅探协议，这里的手动值优先级最高。
+     */
+    void setMultiTouchConfig(String protocol, String devicePath) = 27;
+
+    /** 多指观察诊断（选中设备/协议/候选列表），设置页「诊断」展示用。 */
+    String getMultiTouchDiagnostics() = 28;
 }

@@ -215,6 +215,15 @@ internal class TaskManagerRpcClient(
         )
     }
 
+    /** 手动协议/设备覆盖（旧守护进程没有 104，调用会失败，保持 auto）。 */
+    override fun setMultiTouchConfig(protocol: String?, devicePath: String?) {
+        TaskManagerDaemonRpc.execute(port, 104, listOf(protocol, devicePath))
+    }
+
+    /** 触摸诊断信息（旧守护进程没有 105，返回空串）。 */
+    override fun getMultiTouchDiagnostics(): String =
+        (TaskManagerDaemonRpc.execute(port, 105, emptyList()) as RpcValue.Str).value ?: ""
+
 }
 
 

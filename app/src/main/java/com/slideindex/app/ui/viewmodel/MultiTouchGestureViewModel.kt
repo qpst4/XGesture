@@ -1,6 +1,7 @@
 package com.slideindex.app.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
 import com.slideindex.app.multitouch.MultiTouchGestureCoordinator
@@ -8,6 +9,10 @@ import com.slideindex.app.multitouch.MultiTouchGestureSettingsStore
 import com.slideindex.app.multitouch.decodePathStrokes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class MultiTouchGestureViewModel @Inject constructor(
@@ -25,6 +30,26 @@ class MultiTouchGestureViewModel @Inject constructor(
 
     fun setEnabled(enabled: Boolean) {
         settingsStore.setEnabled(enabled)
+    }
+
+    /** 触摸协议：auto / type_a / type_b。 */
+    fun setProtocol(protocol: String) {
+        settingsStore.setProtocol(protocol)
+    }
+
+    /** 指定触摸设备路径；空串 = 自动。 */
+    fun setDevicePath(path: String) {
+        settingsStore.setDevicePath(path)
+    }
+
+    private val _diagnostics = MutableStateFlow("")
+    val diagnostics: StateFlow<String> = _diagnostics.asStateFlow()
+
+    /** 从 service 读取当前设备/协议诊断。 */
+    fun refreshDiagnostics() {
+        viewModelScope.launch {
+            _diagnostics.value = runCatching { coordinator.readDiagnostics() }.getOrDefault("")
+        }
     }
 
     /** 动作选择页回写：预设类型按「类型 + 接触点数」覆盖；绘制手势总是新增（带 entryId 才编辑）。 */

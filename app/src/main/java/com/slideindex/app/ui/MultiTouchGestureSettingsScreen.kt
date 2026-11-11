@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +42,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,6 +53,7 @@ import com.slideindex.app.multitouch.MultiTouchGestureSettings
 import com.slideindex.app.multitouch.MultiTouchStatus
 import com.slideindex.app.multitouch.encodePathStrokes
 import com.slideindex.app.multitouch.multiTouchPresetKinds
+import com.slideindex.app.ui.picker.AppPickerTabRow
 import com.slideindex.app.ui.miuix.MiuixArrowRow
 import com.slideindex.app.ui.miuix.MiuixArrowRow
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
@@ -65,7 +68,9 @@ import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
+import kotlinx.coroutines.delay
 
 private val PreviewColors = listOf(
     Color(0xFF1E88E5),
@@ -85,8 +90,11 @@ private val PreviewColors = listOf(
 fun MultiTouchGestureSettingsScreen(
     settings: MultiTouchGestureSettings,
     status: MultiTouchStatus,
+    diagnostics: String = "",
     onBack: () -> Unit,
     onEnabledChange: (Boolean) -> Unit,
+    onProtocolChange: (String) -> Unit = {},
+    onRefreshDiagnostics: () -> Unit = {},
     onRetry: () -> Unit,
     onOpenActionPick: (MultiPointerGesture, Int, String, String) -> Unit = { _, _, _, _ -> },
     onOpenRecorder: () -> Unit = {},
@@ -96,6 +104,15 @@ fun MultiTouchGestureSettingsScreen(
     var showKindPicker by remember { mutableStateOf(false) }
     var pendingKind by remember { mutableStateOf<MultiPointerGesture?>(null) }
     var editingEntry by remember { mutableStateOf<MultiTouchGestureEntry?>(null) }
+    var showDiagnostics by remember { mutableStateOf(false) }
+
+    // 协议切换会重启观察器：弹窗开着时延时再取一次，避免显示切换前的旧状态。
+    LaunchedEffect(showDiagnostics, settings.protocol) {
+        if (showDiagnostics) {
+            delay(600)
+            onRefreshDiagnostics()
+        }
+    }
 
     // SettingsScreenScaffold 的 content 是 LazyListScope 扩展，不是 @Composable 上下文，
     // 所以标题/说明/底部提示的文案要先在这里取出来。
@@ -123,6 +140,50 @@ fun MultiTouchGestureSettingsScreen(
                     }
                 )
                 add(
+                    settingsCardScopeItem("multitouch-protocol") {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.multitouch_protocol_title),
+                                fontSize = MiuixTheme.textStyles.headline1.fontSize,
+                                fontWeight = FontWeight.Medium,
+                                color = MiuixTheme.colorScheme.onBackground,
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = stringResource(R.string.multitouch_protocol_summary),
+                                fontSize = MiuixTheme.textStyles.body2.fontSize,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            AppPickerTabRow(
+                                tabs = listOf(
+                                    stringResource(R.string.multitouch_protocol_auto),
+                                    stringResource(R.string.multitouch_protocol_type_a),
+                                    stringResource(R.string.multitouch_protocol_type_b),
+                                ),
+                                selectedTabIndex = when (settings.protocol) {
+                                    MultiTouchGestureSettings.PROTOCOL_TYPE_A -> 1
+                                    MultiTouchGestureSettings.PROTOCOL_TYPE_B -> 2
+                                    else -> 0
+                                },
+                                onTabSelected = { index ->
+                                    onProtocolChange(
+                                        when (index) {
+                                            1 -> MultiTouchGestureSettings.PROTOCOL_TYPE_A
+                                            2 -> MultiTouchGestureSettings.PROTOCOL_TYPE_B
+                                            else -> MultiTouchGestureSettings.PROTOCOL_AUTO
+                                        },
+                                    )
+                                },
+                            )
+                        }
+                    }
+                )
+                add(
                     settingsCardScopeItem("multitouch-status") {
                         val conflict = status.conflictDevices
                         val tone = when {
@@ -145,7 +206,10 @@ fun MultiTouchGestureSettingsScreen(
                             tone = tone,
                             detail = multiTouchStatusDetail(status),
                             segmentKey = "multitouch-status",
-                            onClick = onRetry,
+                            onClick = {
+                                showDiagnostics = true
+                                onRefreshDiagnostics()
+                            },
                         )
                     }
                 )
@@ -257,6 +321,66 @@ fun MultiTouchGestureSettingsScreen(
                     onClick = { pendingKind = null },
                     modifier = Modifier.align(Alignment.End),
                 )
+            }
+        }
+    }
+
+    if (showDiagnostics) {
+        val stateText = when {
+            !status.enabled -> stringResource(R.string.multitouch_status_disabled)
+            status.running -> stringResource(R.string.multitouch_status_running)
+            else -> stringResource(R.string.multitouch_status_stopped)
+        }
+        WindowDialog(
+            show = true,
+            title = stringResource(R.string.multitouch_diagnostics_title),
+            onDismissRequest = { showDiagnostics = false },
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "$stateText · ${stringResource(R.string.multitouch_diagnostics_last_run)}",
+                    fontSize = MiuixTheme.textStyles.body2.fontSize,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                )
+                Spacer(Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 360.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .verticalScroll(rememberScrollState())
+                        .padding(12.dp),
+                ) {
+                    Text(
+                        text = diagnostics.ifBlank {
+                            stringResource(R.string.multitouch_diagnostics_empty)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    TextButton(
+                        text = stringResource(R.string.multitouch_diagnostics_close),
+                        onClick = { showDiagnostics = false },
+                        modifier = Modifier.weight(1f),
+                        minHeight = 44.dp,
+                    )
+                    TextButton(
+                        text = stringResource(R.string.multitouch_diagnostics_retry),
+                        onClick = {
+                            showDiagnostics = false
+                            onRetry()
+                        },
+                        modifier = Modifier.weight(1f),
+                        minHeight = 44.dp,
+                        colors = ButtonDefaults.textButtonColorsPrimary(),
+                    )
+                }
             }
         }
     }

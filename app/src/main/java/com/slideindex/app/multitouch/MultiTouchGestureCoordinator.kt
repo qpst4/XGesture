@@ -217,9 +217,9 @@ class MultiTouchGestureCoordinator @Inject constructor(
             Shizuku.addBinderReceivedListenerSticky(binderReceivedListener)
         }
         applicationScope.launch(Dispatchers.IO) {
-            // 只有开关变化才需要重启观察器，改手势条目不用重启。
+            // 开关、协议或设备变化都需要重启观察器；改手势条目不用重启。
             settingsStore.state
-                .map { it.enabled }
+                .map { Triple(it.enabled, it.protocol, it.devicePath) }
                 .distinctUntilChanged()
                 .collect { syncNow() }
         }
@@ -241,6 +241,12 @@ class MultiTouchGestureCoordinator @Inject constructor(
             runCatching { ShizukuUserServiceHost.drop(context) }
             syncNow()
         }
+    }
+
+    /** 诊断：service 里观察器的当前设备/协议状态，设置页展示用。 */
+    suspend fun readDiagnostics(): String {
+        val service = observingService ?: rootService ?: return ""
+        return runCatching { service.getMultiTouchDiagnostics() }.getOrDefault("")
     }
 
     /** 录制路径手势期间暂停识别。 */
@@ -295,8 +301,8 @@ class MultiTouchGestureCoordinator @Inject constructor(
                 Log.i(TAG, "sync: user service unavailable")
                 return
             }
-            // 先把当前屏幕方向/尺寸推给 service：观察器从第一帧起就在屏幕坐标系里识别。
-            pushDisplayTransform(service)
+            // 先把当前协议/设备/显示状态推给 service：观察器从第一帧起就按用户配置工作。
+            pushMultiTouchConfig(service)
             val startedObservation = runCatching {
                 service.startMultiTouchObservation(callback, false)
             }.getOrDefault(false)
@@ -356,7 +362,7 @@ class MultiTouchGestureCoordinator @Inject constructor(
             Log.i(TAG, "sync: root daemon unavailable")
             return
         }
-        pushDisplayTransform(root)
+        pushMultiTouchConfig(root)
         val started = runCatching { root.startMultiTouchPolling(pathPriority) }.getOrDefault(false)
         Log.i(TAG, "sync: root start polling=$started")
         if (!started) {
@@ -526,6 +532,22 @@ class MultiTouchGestureCoordinator @Inject constructor(
         )
         mainHandler.post { performAction(entry.action, kind, fingerCount, anchor) }
         return true
+    }
+
+    /**
+     * 协议/设备覆盖 + 显示状态：一次推给 service。
+     *
+     * 手动选协议后观察器不再自动嗅探/回退；没推成功（旧 service）就保持默认 auto。
+     */
+    private fun pushMultiTouchConfig(service: ITaskManagerService) {
+        val settings = settingsStore.state.value
+        val configOk = runCatching {
+            service.setMultiTouchConfig(settings.protocol, settings.devicePath)
+        }.isSuccess
+        if (!configOk) {
+            Log.i(TAG, "service 不支持 setMultiTouchConfig：协议/设备覆盖不可用")
+        }
+        pushDisplayTransform(service)
     }
 
     /**

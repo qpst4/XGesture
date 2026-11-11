@@ -28,6 +28,8 @@ object ShizukuUserServiceHost {
     /**
      * Bump when the remote service code/ABI changes; drives processNameSuffix.
      *
+     * 69：观察器增加运行时协议嗅探（第一帧真实触摸时用事件流纠正静态判断，失败再兜底换协议），
+     *     新增 setMultiTouchConfig（手动协议/设备覆盖）与 getMultiTouchDiagnostics；root op=104/105。
      * 68：新增 setMultiTouchDisplay：触摸坐标在 service 侧按显示方向旋转成屏幕坐标（对齐 GMD 的
      *     入口旋转），路径录制/匹配、滑动方向、锚点因此天然一致；root RPC 增加 op=103。
      *     旧 service 没有该接口，app 侧回退到原来的方向重映射。
@@ -75,7 +77,7 @@ object ShizukuUserServiceHost {
      *     16 次候选调用）。查询逻辑在用户服务进程里，必须换进程名才能让新包生效。
      * 升号后进程名变成 `task_manager_v65`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
      */
-    const val SERVICE_BUILD = 68
+    const val SERVICE_BUILD = 69
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bindLock = Any()
