@@ -19,10 +19,8 @@ fun MiuixBottomSheet(
     insideMargin: DpSize? = null,
     content: @Composable () -> Unit,
 ) {
-    if (!show) return
-
     WindowBottomSheet(
-        show = true,
+        show = show,
         modifier = modifier,
         title = title,
         allowDismiss = allowDismiss,

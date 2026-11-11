@@ -593,9 +593,8 @@ private fun AppIconPickerBottomSheet(
     onDismissRequest: () -> Unit,
     onSelect: (AppIconTheme) -> Unit
 ) {
-    if (!show) return
     MiuixBottomSheet(
-        show = true,
+        show = show,
         title = stringResource(R.string.app_icon_theme_title),
         onDismissRequest = onDismissRequest
     ) {
