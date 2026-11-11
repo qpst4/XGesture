@@ -6,14 +6,42 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.graphics.vector.group
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 import kotlin.math.cos
 import kotlin.math.sin
 
-/** 首页设置用的自绘描边图标（24dp，与 Material Outlined 视觉权重一致）。 */
+/** 首页设置用的自绘图标（24dp；多数为 1.75 描边，App保活为填充路径）。 */
 internal object HomeCustomIcons {
+  /**
+   * App保活：盾牌 + 锁（设计稿 SVG，24 网格，填充路径）。
+   *
+   * 线宽约 1.5，比首页 1.75 的自绘略细；用白色填充，由 `Icon` 的 tint 着色。
+   */
+  val AppKeepAlive: ImageVector by lazy {
+    ImageVector.Builder(
+      name = "AppKeepAlive",
+      defaultWidth = 24.dp,
+      defaultHeight = 24.dp,
+      viewportWidth = 24f,
+      viewportHeight = 24f
+    ).apply {
+      addPath(
+        pathData = PathParser().parsePathString(APP_KEEP_ALIVE_PATH).toNodes(),
+        fill = SolidColor(Color.White),
+      )
+    }.build()
+  }
+
+  private const val APP_KEEP_ALIVE_PATH =
+    "M12,21.48Q8.76,20.6 6.63,17.66T4.5,11.1V5.35L12,2.54l7.5,2.81V11.1q0,3.63-2.13,6.56T12," +
+    "21.48Zm0-1.58q2.6-0.82 4.3-3.3T18,11.1V6.38L12,4.13L6,6.38V11.1q0,3.03 1.7,5.5T12," +
+    "19.9Zm0-7.89Zm-1.98,3.82h3.96q0.38,0 0.64-0.26t0.26-0.64V11.96q0-0.38-0.26-0.64t-0.64-0.26H13.89v-1q0" +
+    "-0.79-0.55-1.34T12.01,8.17T10.67,8.72t-0.55,1.34v1H10.02q-0.38,0-0.64,0.26T9.12,11.96v2.96q0,0.38 " +
+    "0.26,0.64t0.64,0.26Zm0.99-4.77v-1q0-0.43 0.29-0.71t0.71-0.29t0.71,0.29t0.29,0.71v1h-2Z"
+
   /**
    * 边角轮盘：左下等长 L 边 + 以直边为半径的 1/4 圆弧上（不含两端点）三等分的三个描边圆槽位。
    */

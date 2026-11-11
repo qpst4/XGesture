@@ -1704,6 +1704,21 @@ object ThinActionIcons {
         }
     }
 
+    /** 应用内直达：标准 OpenInNew（方框 + 右上外跳箭头，约 1.5 填充）。 */
+    val OpenInNew: ImageVector by lazy {
+        createThinIcon("ThinOpenInNew") {
+            addPath(
+                pathData = PathParser().parsePathString(OPEN_IN_NEW_PATH).toNodes(),
+                fill = SolidColor(Color.White),
+            )
+        }
+    }
+
+    private const val OPEN_IN_NEW_PATH =
+        "M5.31,20.5q-0.76,0-1.28-0.52T3.5,18.69V5.31q0-0.76 0.52-1.28T5.31,3.5h6.31V5H5.31Q5.19,5 5.1,5.1T5," +
+        "5.31V18.69q0,0.12 0.1,0.21T5.31,19H18.69q0.12,0 0.21-0.1T19,18.69V12.38h1.5v6.31q0,0.76-0.52," +
+        "1.28T18.69,20.5H5.31Zm4.41-5.17L8.67,14.28L17.95,5H14V3.5h6.5V10H19V6.05L9.72,15.33Z"
+
     val VisibilityOff: ImageVector by lazy {
         createThinIcon("ThinVisibilityOff") {
             path(
@@ -1934,7 +1949,7 @@ object ThinActionIcons {
 
     val Favicon: ImageVector by lazy {
         createThinIcon("ThinFavicon") {
-            val strokeWidth = 2f
+            val strokeWidth = 1.75f
             val paths = listOf(
                 "M2 8a3 3 0 0 1 3 -3h14a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-14a3 3 0 0 1 -3 -3l0 -8",
                 "M6 10v4",
@@ -1955,11 +1970,11 @@ object ThinActionIcons {
 
     /**
      * Tabler `icons`：圆 / 三角 / 叉 / 方块四种形状，表达「一套图标」。
-     * 用于扩展页「图标包」入口；描边 2f，与同组 Material Outlined 行观感一致。
+     * 用于扩展页「图标包」入口；描边 1.75f，与同组 Material Symbols 行观感一致。
      */
     val IconSet: ImageVector by lazy {
         createThinIcon("ThinIconSet") {
-            val strokeWidth = 2f
+            val strokeWidth = 1.75f
             val paths = listOf(
                 "M3 6.5a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0 -7 0",
                 "M2.5 21h8l-4 -7l-4 7",

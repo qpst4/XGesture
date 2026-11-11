@@ -4,8 +4,6 @@ package com.slideindex.app.ui
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Shortcut
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Gavel
@@ -251,7 +249,7 @@ fun ExtensionHubScreen(
                         SettingNavigationRow(
                             icon = { label ->
                                 Icon(
-                                    Icons.AutoMirrored.Filled.Shortcut,
+                                    ThinActionIcons.Shortcut,
                                     contentDescription = label,
                                 )
                             },

@@ -1,15 +1,11 @@
 package com.slideindex.app.ui
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Launch
-import androidx.compose.material.icons.automirrored.outlined.Launch
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
  * 消息 / 扩展 Hub 列表项的 leading icon（与首页同一套 Material Symbols，wght=350）。
  *
- * 与 [HomeLeadingIcons] 一样：`outlined` 参数只为兼容调用方保留，不再影响返回值；
- * 方向性图标仍用 `Icons.AutoMirrored.*`（Symbols 不会按 RTL 镜像）。
+ * 与 [HomeLeadingIcons] 一样：`outlined` 参数只为兼容调用方保留，不再影响返回值。
  */
 internal object HubLeadingIcons {
     @Suppress("UNUSED_PARAMETER")
@@ -37,10 +33,9 @@ internal object HubLeadingIcons {
     @Suppress("UNUSED_PARAMETER")
     fun holographicLauncher(outlined: Boolean) = symbol("Globe")
 
-    /** 方向性图标：Symbols 不会自动镜像，继续用 AutoMirrored。 */
+    /** 应用内直达：窗口 + 外跳箭头（1.75 描边，替代旧 Material Launch 的 2dp）。 */
     @Suppress("UNUSED_PARAMETER")
-    fun activityShortcut(outlined: Boolean): ImageVector =
-        if (outlined) Icons.AutoMirrored.Outlined.Launch else Icons.AutoMirrored.Filled.Launch
+    fun activityShortcut(outlined: Boolean): ImageVector = ThinActionIcons.OpenInNew
 
     @Suppress("UNUSED_PARAMETER")
     fun shellCommand(outlined: Boolean) = symbol("Code")

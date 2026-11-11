@@ -18,7 +18,7 @@ internal object HomeLeadingIcons {
     fun gesture(outlined: Boolean) = symbol("Gesture")
 
     @Suppress("UNUSED_PARAMETER")
-    fun batteryKeepAlive(outlined: Boolean) = symbol("BatteryChargingFull")
+    fun batteryKeepAlive(outlined: Boolean) = HomeCustomIcons.AppKeepAlive
 
     @Suppress("UNUSED_PARAMETER")
     fun privilegeMode(outlined: Boolean) = symbol("Security")
