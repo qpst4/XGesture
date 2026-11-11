@@ -117,7 +117,7 @@ class OverlaySettingsMutator @Inject constructor(
 
     suspend fun setFloatingPointerSensitivityFraction(value: Float) = editor.edit {
         it[SettingsPreferenceKeys.FLOATING_POINTER_SENSITIVITY] =
-            value.coerceIn(0.2f, 0.75f)
+            value.coerceIn(0.2f, 1f)
     }
 
     suspend fun setFloatingPointerJoystickDiameterPx(value: Float) = editor.edit {

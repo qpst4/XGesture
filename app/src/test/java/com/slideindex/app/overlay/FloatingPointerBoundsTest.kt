@@ -19,6 +19,13 @@ class FloatingPointerBoundsTest {
     }
 
     @Test
+    fun travelFractionFromSpeed_hundredPercentIsTenTimes() {
+        // 100% → 手指行程 10% 屏宽（10 倍）；75% 仍是 20%（5 倍），旧档位手感不变。
+        assertEquals(0.1f, FloatingPointerBounds.travelFractionFromSpeed(1f), 0.001f)
+        assertEquals(0.2f, FloatingPointerBounds.travelFractionFromSpeed(0.75f), 0.001f)
+    }
+
+    @Test
     fun travelFractionFromSpeed_zeroPercentIsSlowest() {
         // 取词「加号」速度滑杆下限已放开到 0%，对应约 95% 屏幕的指针行程。
         val slowest =

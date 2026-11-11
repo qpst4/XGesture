@@ -1090,7 +1090,7 @@ internal object SettingsSnapshotReader {
 
     private fun readFloatingPointerSensitivityFraction(prefs: Preferences): Float {
         prefs[SettingsPreferenceKeys.FLOATING_POINTER_SENSITIVITY]?.let { stored ->
-            return stored.coerceIn(0.2f, 0.75f)
+            return stored.coerceIn(0.2f, 1f)
         }
         val legacyWidth = prefs[SettingsPreferenceKeys.FLOATING_POINTER_JOYSTICK_AREA_WIDTH] ?: 703f
         val legacyZoom = prefs[SettingsPreferenceKeys.FLOATING_POINTER_JOYSTICK_AREA_ZOOM] ?: 0.8f

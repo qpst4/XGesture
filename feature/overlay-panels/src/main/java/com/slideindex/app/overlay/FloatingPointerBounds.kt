@@ -15,7 +15,13 @@ object FloatingPointerBounds {
     const val EDGE_CURVE_POWER_Y = 1.0f
 
     const val SENSITIVITY_MIN = 0.2f
+
+    /** 取词「加号」光标速度上限（0%–75%）。 */
     const val SENSITIVITY_MAX = 0.75f
+
+    /** 悬浮指针「指针移动速度」上限：100% = 10 倍（手指行程 10% 屏宽）。 */
+    const val FLOATING_POINTER_SPEED_MAX = 1f
+
     const val DEFAULT_SENSITIVITY_FRACTION = 0.52f
 
     /**
@@ -92,14 +98,21 @@ object FloatingPointerBounds {
     private const val MIGRATION_REFERENCE_SCREEN_WIDTH = 1080f
 
     fun sensitivityFraction(settings: AppSettings): Float =
-        settings.floatingPointerSensitivityFraction.coerceIn(SENSITIVITY_MIN, SENSITIVITY_MAX)
+        settings.floatingPointerSensitivityFraction
+            .coerceIn(SENSITIVITY_MIN, FLOATING_POINTER_SPEED_MAX)
 
     /** UI speed fraction (higher = faster) → finger travel fraction (lower = faster). */
     fun travelFractionFromSpeed(speedFraction: Float): Float {
         // 下限取 0：取词「加号」滑杆允许 0%（最慢）。其余入口在读取设置时已限制在
         // [SENSITIVITY_MIN] 以上，因此不受影响。
-        val speed = speedFraction.coerceIn(PICK_POINTER_SPEED_MIN, SENSITIVITY_MAX)
-        return SENSITIVITY_MIN + SENSITIVITY_MAX - speed
+        val speed = speedFraction.coerceIn(PICK_POINTER_SPEED_MIN, FLOATING_POINTER_SPEED_MAX)
+        // 75% 以上继续压缩行程（100% → 10% 屏宽 = 10 倍）。不能一路用 0.95 - speed：
+        // 那样到 95% 行程就归零、指针直接不动。
+        return if (speed <= SENSITIVITY_MAX) {
+            0.95f - speed
+        } else {
+            0.1f + (1f - speed) * 0.4f
+        }
     }
 
     /**
