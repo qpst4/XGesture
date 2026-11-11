@@ -53,7 +53,10 @@ object ShellCommandCodec {
         }
         val iconPath = parts.getOrNull(4)?.takeIf { it.isNotBlank() }
         val textIcon = parts.getOrNull(5)?.takeIf { it.isNotBlank() }
+        // 旧版本没有 executionMode 字段；历史上命令面板默认走 Shizuku，
+        // 这里补齐默认值，避免旧命令在逐条模式判断下变成永久不可执行。
         val executionMode = ShellExecutionMode.fromStorage(parts.getOrNull(6))
+            ?: ShellExecutionMode.SHIZUKU
         val resultDisplay = ShellResultDisplay.fromStorage(parts.getOrNull(7))
         return ShellCommand(
             id = id,
