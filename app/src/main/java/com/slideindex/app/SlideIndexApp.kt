@@ -913,8 +913,10 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     )
                 }
             }
-        com.slideindex.app.overlay.panels.PanelRuntimeHooks.globalIconKey = { pkg ->
-            com.slideindex.app.ui.GlobalIconStore.appIcon(this@SlideIndexApp, pkg)
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.globalIconKey = { key ->
+            // 动作类型覆盖优先，其次应用覆盖（两者前缀不同，不会互相命中）
+            com.slideindex.app.ui.GlobalIconStore.actionIcon(this@SlideIndexApp, key)
+                ?: com.slideindex.app.ui.GlobalIconStore.appIcon(this@SlideIndexApp, key)
         }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconView =
             object : com.slideindex.app.overlay.panels.PanelActionIconView {
@@ -1281,8 +1283,16 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
             com.slideindex.app.overlay.CloneAppsIndex.labelForUser(ctx, userId, base)
         }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconBitmapFull =
-            { action, sizePx, tint, outlined, withPlate, plateShapeOrdinal ->
-                com.slideindex.app.util.GestureActionIconBitmap.get(
+            { ctx, action, sizePx, tint, outlined, withPlate, plateShapeOrdinal ->
+                // 全局图标覆盖优先（扩展 → 图标库）：边角轮盘 / 指尖环 / 悬浮指针都走这里，
+                // 不先查覆盖就会一直画默认图标（快速启动器那边是查的，两边会不一致）。
+                com.slideindex.app.ui.ActionIconBitmap.load(
+                    context = ctx,
+                    action = action,
+                    sizePx = sizePx,
+                    tintArgb = tint,
+                    withPlate = withPlate,
+                ) ?: com.slideindex.app.util.GestureActionIconBitmap.get(
                     action = action,
                     sizePx = sizePx,
                     tintArgb = tint,
@@ -1291,8 +1301,13 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     plateShape = com.slideindex.app.util.GestureActionPlateShape.entries[plateShapeOrdinal],
                 )
             }
-        com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconBitmap = { action, sizePx, tint ->
-            com.slideindex.app.util.GestureActionIconBitmap.get(action, sizePx, tint)
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconBitmap = { ctx, action, sizePx, tint ->
+            com.slideindex.app.ui.ActionIconBitmap.load(
+                context = ctx,
+                action = action,
+                sizePx = sizePx,
+                tintArgb = tint,
+            ) ?: com.slideindex.app.util.GestureActionIconBitmap.get(action, sizePx, tint)
         }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.cornerSlotIconBitmap =
             { ctx, action, sizePx, tint, shortcuts, shellCommands ->

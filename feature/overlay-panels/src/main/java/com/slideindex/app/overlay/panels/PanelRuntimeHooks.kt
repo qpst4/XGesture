@@ -164,15 +164,25 @@ object PanelRuntimeHooks {
     @Volatile
     var cloneAppLabel: ((Context, Int, String) -> String)? = null
 
-    /** 手势动作图标（`:app` 的 GestureActionIconBitmap）。 */
+    /**
+     * 手势动作图标（`:app` 的 GestureActionIconBitmap）。
+     *
+     * 实现侧**必须先查全局图标覆盖**（扩展 → 图标库）再回退内置矢量：面板和 `:app` 自己的
+     * 页面显示的是同一个动作，不能一边跟着覆盖走（快速启动器走 `QuickLauncherIconResolver`，
+     * 那里是查的）、一边还是默认图标。带 [Context] 就是为了读覆盖表和字体资源。
+     */
     @Volatile
     var actionIconBitmap:
-        ((com.slideindex.app.gesture.GestureAction, Int, Int) -> android.graphics.Bitmap?)? = null
+        ((Context, com.slideindex.app.gesture.GestureAction, Int, Int) -> android.graphics.Bitmap?)? = null
 
-    /** 手势动作图标（完整参数：动作/尺寸/着色/描边/底板/形状序号）。 */
+    /**
+     * 手势动作图标（完整参数：context/动作/尺寸/着色/描边/底板/形状序号）。
+     *
+     * 覆盖优先，同 [actionIconBitmap]。
+     */
     @Volatile
     var actionIconBitmapFull:
-        ((com.slideindex.app.gesture.GestureAction, Int, Int, Boolean, Boolean, Int) -> android.graphics.Bitmap?)? = null
+        ((Context, com.slideindex.app.gesture.GestureAction, Int, Int, Boolean, Boolean, Int) -> android.graphics.Bitmap?)? = null
     /** 手势动作执行器；面板只表达"选了哪个动作"。 */
     @Volatile
     var gestureActionRunner: GestureActionRunner? = null
@@ -379,7 +389,14 @@ object PanelRuntimeHooks {
     @Volatile
     var defaultGestureRunner: GestureActionRunner? = null
 
-    /** 全局图标库里某个包的自定义 iconKey（`:app` 的 GlobalIconStore.appIcon）。 */
+    /**
+     * 全局图标库里的自定义 iconKey，key 可以是**应用包名**，也可以是**动作类型名**
+     * （`GestureAction.type.name`，如 `LAUNCH_APP`）。
+     *
+     * `:app` 侧先查动作覆盖、再查应用覆盖——两者在 SharedPreferences 里前缀不同，不会撞。
+     * 面板只拿 key：字体 / 图片图标得由 [actionIconBitmap] / [actionIconBitmapFull] 渲染，
+     * 面板解析不了 `:app` 的字体表。
+     */
     var globalIconKey: ((String) -> String?)? = null
 
     /** 带 iconKey 的动作图标（`:app` 的 ActionIconView，选择器用）。 */

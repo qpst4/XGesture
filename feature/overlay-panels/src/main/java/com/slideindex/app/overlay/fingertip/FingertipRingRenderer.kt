@@ -123,7 +123,8 @@ internal object FingertipRingRenderer {
             activityShortcuts,
             shellCommands,
         )
-        else -> com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconBitmap?.invoke(action, iconSizeInt, ICON_TINT)
+        else -> com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconBitmap
+            ?.invoke(context, action, iconSizeInt, ICON_TINT)
     }
 
     private fun applyAlpha(argb: Int, scale: Float): Int {

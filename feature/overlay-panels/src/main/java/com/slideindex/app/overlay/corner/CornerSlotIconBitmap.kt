@@ -32,7 +32,34 @@ object CornerSlotIconBitmap {
         /** false = 普通动作不烘底板，只返回裸矢量图标（摇杆功能环等场景）。 */
         plateFallback: Boolean = true,
     ): Bitmap {
-        // 全局图标覆盖优先（扩展 → 图标库）
+        // 全局图标覆盖优先（扩展 → 图标库），且必须排在下面四个「真实图标」分支之前：
+        // 图标库里按**动作类型**设图标，「打开应用 / 快捷方式 / 运行宏 / 执行命令」也是动作类型，
+        // 只在末尾兜底里查会让这四类继续画默认图标。
+        // 面板模块看不到 `:app` 的 GlobalIconStore：key 走 globalIconKey，位图交回 `:app` 渲染
+        // （字体表在 `:app`，面板解析不了）。
+        // 位图必须缓存：轮盘是每帧重绘，字体图标每次都要重新排版。覆盖变更时
+        // GlobalIconStore 会 clear() 本对象，底板模式变更同理，所以 key 不必再带修订号。
+        val overrideKey = com.slideindex.app.overlay.panels.PanelRuntimeHooks.globalIconKey
+            ?.invoke(action.type.name)
+        if (!overrideKey.isNullOrBlank()) {
+            val overrideCacheKey =
+                "ovr:${action.type.name}:$overrideKey:$sizePx:$tintArgb:$plateFallback:${shape.name}"
+            appIconCache.get(overrideCacheKey)?.let { return it }
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconBitmapFull
+                ?.invoke(
+                    context,
+                    action,
+                    sizePx,
+                    tintArgb,
+                    true,
+                    plateFallback,
+                    shape.toPlateShapeOrdinal(),
+                )
+                ?.let { bitmap ->
+                    appIconCache.put(overrideCacheKey, bitmap)
+                    return bitmap
+                }
+        }
         if (action is GestureAction.LaunchApp) {
             val cacheKey = "app:${action.packageName}:${action.cloneUserId}:$sizePx"
             appIconCache.get(cacheKey)?.let { return it }
@@ -89,6 +116,7 @@ object CornerSlotIconBitmap {
             }
         }
         return com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconBitmapFull?.invoke(
+            context,
             action,
             sizePx,
             tintArgb,
