@@ -2,10 +2,12 @@ package com.slideindex.app.multitouch
 
 import android.app.Application
 import android.content.Context
+import android.hardware.display.DisplayManager
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
+import android.view.Display
 import com.slideindex.app.R
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.gesture.ActionExecutor
@@ -15,6 +17,7 @@ import com.slideindex.app.gesture.multitouch.PathGestureMatcher
 import com.slideindex.app.gesture.multitouch.PathGestureTemplate
 import com.slideindex.app.gesture.multitouch.PathPoint
 import com.slideindex.app.gesture.multitouch.PathStroke
+import com.slideindex.app.gesture.multitouch.ScreenAnchor
 import com.slideindex.app.gesture.multitouch.TouchAnchor
 import com.slideindex.app.gesture.multitouch.forDisplayRotation
 import com.slideindex.app.gesture.multitouch.mapTouchAnchorToScreen
@@ -87,6 +90,17 @@ class MultiTouchGestureCoordinator @Inject constructor(
 
     @Volatile
     private var observingService: ITaskManagerService? = null
+
+    /**
+     * service 是否支持「入口旋转」。
+     *
+     * true：触点、路径、锚点都已经是屏幕坐标，app 侧不再做方向翻译；
+     * false：旧 service / 旧 root 守护进程，回退到 app 侧的 [forDisplayRotation] 重映射。
+     */
+    @Volatile
+    private var serviceHandlesRotation = false
+
+    private var displayListener: DisplayManager.DisplayListener? = null
 
     @Volatile
     private var rootService: TaskManagerRpcClient? = null
@@ -198,6 +212,7 @@ class MultiTouchGestureCoordinator @Inject constructor(
         if (started) return
         started = true
         if (!isMainProcess()) return
+        runCatching { registerDisplayListener() }
         runCatching {
             Shizuku.addBinderReceivedListenerSticky(binderReceivedListener)
         }
@@ -280,6 +295,8 @@ class MultiTouchGestureCoordinator @Inject constructor(
                 Log.i(TAG, "sync: user service unavailable")
                 return
             }
+            // 先把当前屏幕方向/尺寸推给 service：观察器从第一帧起就在屏幕坐标系里识别。
+            pushDisplayTransform(service)
             val startedObservation = runCatching {
                 service.startMultiTouchObservation(callback, false)
             }.getOrDefault(false)
@@ -306,6 +323,7 @@ class MultiTouchGestureCoordinator @Inject constructor(
         if (root != null) {
             runCatching { root.stopMultiTouchPolling() }
         }
+        serviceHandlesRotation = false
         _status.value = _status.value.copy(channel = "", device = "")
     }
 
@@ -338,6 +356,7 @@ class MultiTouchGestureCoordinator @Inject constructor(
             Log.i(TAG, "sync: root daemon unavailable")
             return
         }
+        pushDisplayTransform(root)
         val started = runCatching { root.startMultiTouchPolling(pathPriority) }.getOrDefault(false)
         Log.i(TAG, "sync: root start polling=$started")
         if (!started) {
@@ -450,17 +469,26 @@ class MultiTouchGestureCoordinator @Inject constructor(
      */
     private fun resolveTriggerAnchor(anchor: TouchAnchor): TriggerAnchor {
         val metrics = OverlayScreenMetrics.snapshot(context)
-        val point = mapTouchAnchorToScreen(
-            anchor = anchor,
-            widthPx = metrics.widthPx,
-            heightPx = metrics.heightPx,
-            rotation = metrics.rotation,
-        )
+        val point = if (serviceHandlesRotation) {
+            // service 已把触点旋转到屏幕坐标：u/v 就是屏幕宽高比例，直接还原像素。
+            ScreenAnchor(
+                x = anchor.u * metrics.widthPx,
+                y = anchor.v * metrics.heightPx,
+            )
+        } else {
+            mapTouchAnchorToScreen(
+                anchor = anchor,
+                widthPx = metrics.widthPx,
+                heightPx = metrics.heightPx,
+                rotation = metrics.rotation,
+            )
+        }
         val side = if (point.x < metrics.widthPx / 2f) PanelSide.LEFT else PanelSide.RIGHT
         Log.i(
             TAG,
             "anchor u=${anchor.u} v=${anchor.v} rotation=${metrics.rotation} " +
-                "screen=${metrics.widthPx}x${metrics.heightPx} -> " +
+                "screen=${metrics.widthPx}x${metrics.heightPx} " +
+                "mode=${if (serviceHandlesRotation) "screen-space" else "legacy-remap"} -> " +
                 "(${point.x},${point.y}) side=$side",
         )
         return TriggerAnchor(side = side, x = point.x, y = point.y)
@@ -478,23 +506,76 @@ class MultiTouchGestureCoordinator @Inject constructor(
     /** 候选按顺序匹配条目，命中第一个就执行并返回 true。 */
     private fun dispatchGesture(gesture: Int, fingerCount: Int, anchor: TouchAnchor?): Boolean {
         val panelKind = MultiPointerGesture.entries.getOrNull(gesture) ?: return false
-        // 识别器在 shell 进程里读的是「面板自然方向」的原始坐标：横屏时用户看到的「右滑」，
-        // 在面板坐标里可能是「下滑」。匹配条目之前先按当前屏幕方向把方向掰正。
+        // service 支持入口旋转时，识别结果已经是屏幕方向；否则回退到 app 侧方向翻译。
         val rotation = currentDisplayRotation()
-        val kind = panelKind.forDisplayRotation(rotation)
+        val kind = if (serviceHandlesRotation) panelKind else panelKind.forDisplayRotation(rotation)
         val entry = settingsStore.state.value.entries.firstOrNull {
             it.kind == kind && it.fingerCount == fingerCount &&
                 it.action != GestureAction.None
         } ?: run {
-            Log.i(TAG, "no entry for ${kind.name} x$fingerCount（panel=${panelKind.name} rot=$rotation）")
+            Log.i(
+                TAG,
+                "no entry for ${kind.name} x$fingerCount（panel=${panelKind.name} rot=$rotation）",
+            )
             return false
         }
         Log.i(
             TAG,
-            "gesture ${kind.name} x$fingerCount（panel=${panelKind.name} rot=$rotation）-> ${entry.action}",
+            "gesture ${kind.name} x$fingerCount（panel=${panelKind.name} rot=$rotation " +
+                "mode=${if (serviceHandlesRotation) "screen-space" else "legacy-remap"}）-> ${entry.action}",
         )
         mainHandler.post { performAction(entry.action, kind, fingerCount, anchor) }
         return true
+    }
+
+    /**
+     * 告诉 service 当前屏幕方向/尺寸（GMD 式入口旋转）。
+     *
+     * 旧版 service / 旧 root 守护进程没有 [ITaskManagerService.setMultiTouchDisplay]，
+     * 调用失败就回退到 app 侧方向重映射，保证升级顺序不会把功能弄坏。
+     */
+    private fun pushDisplayTransform(service: ITaskManagerService) {
+        val metrics = runCatching { OverlayScreenMetrics.snapshot(context) }.getOrNull() ?: return
+        val ok = runCatching {
+            service.setMultiTouchDisplay(metrics.rotation, metrics.widthPx, metrics.heightPx)
+        }.isSuccess
+        serviceHandlesRotation = ok
+        if (!ok) {
+            Log.i(
+                TAG,
+                "service 不支持 setMultiTouchDisplay：回退 app 侧方向重映射（重启特权服务后生效）",
+            )
+        }
+    }
+
+    /** 屏幕旋转变化：把新的方向/尺寸推给正在观察的 service，不需要重启观察器。 */
+    private fun pushDisplayTransformToObservers() {
+        val service = observingService
+        if (service != null) {
+            pushDisplayTransform(service)
+            return
+        }
+        val root = rootService
+        if (root != null) {
+            pushDisplayTransform(root)
+        }
+    }
+
+    private fun registerDisplayListener() {
+        if (displayListener != null) return
+        val manager = context.getSystemService(DisplayManager::class.java) ?: return
+        val listener = object : DisplayManager.DisplayListener {
+            override fun onDisplayAdded(displayId: Int) = Unit
+
+            override fun onDisplayRemoved(displayId: Int) = Unit
+
+            override fun onDisplayChanged(displayId: Int) {
+                if (displayId != Display.DEFAULT_DISPLAY) return
+                applicationScope.launch(Dispatchers.IO) { pushDisplayTransformToObservers() }
+            }
+        }
+        manager.registerDisplayListener(listener, mainHandler)
+        displayListener = listener
     }
 
     private companion object {

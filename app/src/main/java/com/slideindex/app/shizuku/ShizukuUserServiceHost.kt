@@ -28,6 +28,12 @@ object ShizukuUserServiceHost {
     /**
      * Bump when the remote service code/ABI changes; drives processNameSuffix.
      *
+     * 68：新增 setMultiTouchDisplay：触摸坐标在 service 侧按显示方向旋转成屏幕坐标（对齐 GMD 的
+     *     入口旋转），路径录制/匹配、滑动方向、锚点因此天然一致；root RPC 增加 op=103。
+     *     旧 service 没有该接口，app 侧回退到原来的方向重映射。
+     * 67：多指观察器改用 core 的 MtTouchFrameDecoder：支持 Type A（SYN_MT_REPORT 分隔接触点）
+     *     协议，getevent 枚举时探测 002f/0039 选择 A/B。ABI 未变，但旧进程里是旧的解析代码，
+     *     必须换进程名才能让 Type A 设备真正读到手指。
      * 65：多指手势回调带上触摸锚点（onGestureBatch / onPathGesture 追加 anchorU/anchorV），
      *     root 轮询事件同步扩展为 `g:kind:fingers:u:v` / `p:fingers:u:v:strokes`。
      *     回调 ABI 变了：旧进程会用旧协议调 app 的新 Stub，两个锚点参数会读成 0（坐标变成左上角），
@@ -69,7 +75,7 @@ object ShizukuUserServiceHost {
      *     16 次候选调用）。查询逻辑在用户服务进程里，必须换进程名才能让新包生效。
      * 升号后进程名变成 `task_manager_v65`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
      */
-    const val SERVICE_BUILD = 66
+    const val SERVICE_BUILD = 68
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bindLock = Any()

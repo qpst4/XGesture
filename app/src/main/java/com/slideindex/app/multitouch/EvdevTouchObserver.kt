@@ -7,6 +7,9 @@ import com.slideindex.app.gesture.multitouch.MultiPointerGestureRecognizer
 import com.slideindex.app.gesture.multitouch.PathGestureCollector
 import com.slideindex.app.gesture.multitouch.RecognizedMultiPointerGesture
 import com.slideindex.app.gesture.multitouch.TouchAnchor
+import com.slideindex.app.gesture.multitouch.TouchDisplayTransform
+import com.slideindex.app.gesture.multitouch.TouchPointer
+import com.slideindex.app.gesture.multitouch.rotatePanelPointToScreen
 import com.slideindex.app.gesture.multitouch.touchAnchorOf
 import java.io.FileInputStream
 import java.io.IOException
@@ -26,6 +29,11 @@ class EvdevTouchObserver(
     private val onPathGesture: (CollectedPath, Long, TouchAnchor) -> Unit = { _, _, _ -> },
     private val onInputConflict: (String?) -> Unit = {},
     private val onState: (Boolean, String) -> Unit = { _, _ -> },
+    /**
+     * 当前屏幕方向/尺寸。有效时把面板坐标旋转成屏幕坐标（对齐 GMD 的入口旋转）：
+     * 识别器看到的滑动方向、路径形状、锚点就都是用户眼里的屏幕方向。
+     */
+    private val displayTransform: () -> TouchDisplayTransform = { TouchDisplayTransform.IDENTITY },
     private val log: (String) -> Unit = { Log.i(TAG, it) },
 ) {
     @Volatile
@@ -142,7 +150,15 @@ class EvdevTouchObserver(
                 }
                 if (!frameReady) continue
 
-                val pointers = decoder.pointers
+                val transform = runCatching { displayTransform() }
+                    .getOrDefault(TouchDisplayTransform.IDENTITY)
+                val pointers = transformPointers(decoder.pointers, transform, ranges)
+                // 锚点用与触点同一套归一化：旋转到屏幕后按屏幕宽高算 u/v，app 侧不再旋转。
+                val anchorRanges = if (transform.valid) {
+                    AbsRanges(transform.screenWidthPx.toFloat(), transform.screenHeightPx.toFloat())
+                } else {
+                    ranges
+                }
                 val now = android.os.SystemClock.elapsedRealtime()
                 val gestures = recognizer.onFrame(pointers, now)
                 if (gestures.isNotEmpty()) {
@@ -156,8 +172,8 @@ class EvdevTouchObserver(
                     val anchor = touchAnchorOf(
                         anchorX = gestures.first().anchorX,
                         anchorY = gestures.first().anchorY,
-                        panelWidth = ranges.width,
-                        panelHeight = ranges.height,
+                        panelWidth = anchorRanges.width,
+                        panelHeight = anchorRanges.height,
                     )
                     onGesture(gestures, now, anchor)
                 }
@@ -168,9 +184,38 @@ class EvdevTouchObserver(
                         "path x${path.fingerCount} " +
                             "points=${path.strokes.sumOf { it.points.size }}"
                     )
-                    onPathGesture(path, now, pathAnchor(path, ranges))
+                    onPathGesture(path, now, pathAnchor(path, anchorRanges))
                 }
             }
+        }
+    }
+
+    /**
+     * 把解码器输出的「面板坐标（按面板高度归一化）」旋转成「屏幕坐标（按屏幕高度归一化）」。
+     *
+     * 旋转不在 app 侧做，是因为识别和路径采集都发生在 service 里；在入口一次转完，
+     * 滑动方向、路径匹配、锚点就全部天然是屏幕方向（GMD 的 parser 也是这么做的）。
+     */
+    private fun transformPointers(
+        pointers: List<TouchPointer>,
+        transform: TouchDisplayTransform,
+        ranges: AbsRanges,
+    ): List<TouchPointer> {
+        if (!transform.valid || pointers.isEmpty()) return pointers
+        val screenHeight = transform.screenHeightPx.toFloat()
+        return pointers.map { pointer ->
+            val (screenX, screenY) = rotatePanelPointToScreen(
+                x = pointer.x * ranges.height,
+                y = pointer.y * ranges.height,
+                panelWidth = ranges.width,
+                panelHeight = ranges.height,
+                transform = transform,
+            )
+            TouchPointer(
+                id = pointer.id,
+                x = screenX / screenHeight,
+                y = screenY / screenHeight,
+            )
         }
     }
 
