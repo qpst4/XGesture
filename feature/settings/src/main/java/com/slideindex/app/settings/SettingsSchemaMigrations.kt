@@ -38,7 +38,7 @@ internal object SettingsSchemaMigrations {
      * 里按原顺序执行，行为不变；后续新增的格式变更一律进这张表。
      */
     val all: List<Migration> = listOf(
-        Migration(2) { prefs -> migrateClipboardHistoryFloatHandleWidth(prefs) },
+        Migration(2) { prefs -> dropLegacyClipboardHistoryFloatHandleWidth(prefs) },
     )
 
     /**
@@ -46,37 +46,15 @@ internal object SettingsSchemaMigrations {
      *
      * 同名换类型会让 DataStore 在**读**的时候抛 `ClassCastException: Integer cannot be cast to Float`
      * —— 真机故障：升级后一启动就崩，无障碍服务被系统记成 crashed，所有浮层挂不上。
-     * 这里把旧值搬到新键再删旧键。
      *
-     * 读旧值走 `asMap()` 而不是 `prefs[intKey]`：万一那条记录的类型不是 int（例如被旧备份
-     * 还原成别的类型），带类型的读取会抛 CCE，而迁移本身绝不能崩。
+     * **旧值不沿用**：旧量程 24..50dp 与新版 5..14dp 完全不重叠，任何换算都是猜：
+     * 按相对位置会把"旧版最细 24dp"推成"新版最细 5dp"（比原来细一大截），
+     * 直接钳位又会把"最细"推成"最粗"。所以只删旧键，外观回落到新版默认值，用户想调自己调。
      */
-    private fun migrateClipboardHistoryFloatHandleWidth(prefs: MutablePreferences) {
-        val legacyKey = SettingsPreferenceKeys.LEGACY_CLIPBOARD_HISTORY_FLOAT_HANDLE_WIDTH_DP
-        val legacy = prefs.asMap()[legacyKey] as? Int ?: return
-        val newKey = SettingsPreferenceKeys.CLIPBOARD_HISTORY_FLOAT_HANDLE_WIDTH_DP
-        // 新键已经有值（用户升级后已经在 UI 里调过）就不覆盖，只清理旧键。
-        if (prefs.asMap()[newKey] == null) {
-            prefs[newKey] = legacyWidthToAppearanceDp(legacy)
-        }
-        prefs.remove(legacyKey)
-    }
-
-    /**
-     * 旧宽度 → 新外观宽度的换算。
-     *
-     * 两套量程**不重叠**：旧滑条是 24..50dp，新版是 5..14dp（把手被重新设计得更细）。
-     * 所以"原值 + 钳位"会把旧版选了**最细** 24dp 的人推到新版**最粗** 14dp，意图正好反过来。
-     * 这里按相对位置映射（24→5dp、50→14dp、旧默认 32→约 7.8dp），保留"他当年想要多细"。
-     */
-    private fun legacyWidthToAppearanceDp(legacyWidthDp: Int): Float {
-        // 旧量程已随旧实现删除，这里按历史常量硬编码（见 e473d6b1 的 HistoryFloatHandleWidth）。
-        val legacyMinDp = 24f
-        val legacyMaxDp = 50f
-        val ratio = (legacyWidthDp.coerceIn(24, 50).toFloat() - legacyMinDp) / (legacyMaxDp - legacyMinDp)
-        val newWidthDp = HistoryFloatHandleAppearance.MIN_WIDTH_DP +
-            ratio * (HistoryFloatHandleAppearance.MAX_WIDTH_DP - HistoryFloatHandleAppearance.MIN_WIDTH_DP)
-        return HistoryFloatHandleAppearance.coerceWidthDp(newWidthDp)
+    private fun dropLegacyClipboardHistoryFloatHandleWidth(prefs: MutablePreferences) {
+        // 只按名字删：这条记录可能是 int（历史版本），也可能被旧备份还原成别的类型，
+        // 不带类型的 remove 才不会在读值时抛 CCE。
+        prefs.remove(SettingsPreferenceKeys.LEGACY_CLIPBOARD_HISTORY_FLOAT_HANDLE_WIDTH_DP)
     }
 
     /** 需要从 [fromVersion] 升级到 [CURRENT_VERSION] 时，按版本号升序执行的迁移。 */

@@ -49,7 +49,7 @@ class SettingsSchemaMigrationsTest {
         assertEquals(versions.size, versions.distinct().size)
     }
 
-    // ---- 同名换类型（int → float）的一次性迁移 ----
+    // ---- 同名换类型（int → float）的一次性清理 ----
 
     private val legacyKey = SettingsPreferenceKeys.LEGACY_CLIPBOARD_HISTORY_FLOAT_HANDLE_WIDTH_DP
     private val widthKey = SettingsPreferenceKeys.CLIPBOARD_HISTORY_FLOAT_HANDLE_WIDTH_DP
@@ -59,60 +59,47 @@ class SettingsSchemaMigrationsTest {
     }
 
     @Test
-    fun `legacy int handle width moves into the v2 float key`() {
-        // 旧版本留下的 int 24dp（旧滑条最细一档）→ 新版量程最细 5dp。
+    fun `legacy int handle width is dropped without inventing a new value`() {
+        // 旧版本留下的 int 24dp。两套量程（旧 24..50 / 新 5..14）不重叠，任何换算都是猜，
+        // 所以只删旧键：外观回落到新版默认值，而不是被映射成 5dp（最细）或 14dp（最粗）。
         val prefs = mutablePreferencesOf(legacyKey to 24)
 
         migrate(prefs)
 
-        assertEquals(5f, prefs[widthKey] ?: -1f, 0.001f)
-        assertNull("迁移完必须删掉旧键，否则会继续被导出进备份", prefs[legacyKey])
+        assertNull("不该凭空写一个新宽度", prefs[widthKey])
+        assertNull("旧键必须删掉，否则会继续被导出进备份", prefs[legacyKey])
     }
 
     @Test
-    fun `legacy width maps by relative position, not by clamping`() {
-        // 旧量程 24..50 与新量程 5..14 不重叠：直接钳位会把"当年选最细"的人推到"最粗"，
-        // 所以按相对位置映射（最粗 → 最粗）。
-        val widest = mutablePreferencesOf(legacyKey to 50)
-        migrate(widest)
-        assertEquals(14f, widest[widthKey] ?: -1f, 0.001f)
-
-        // 旧默认 32dp 应落在新量程中间段（不对新默认做硬约束，只锁住单调性）。
-        val defaulted = mutablePreferencesOf(legacyKey to 32)
-        migrate(defaulted)
-        val mapped = defaulted[widthKey] ?: -1f
-        assertTrue("旧默认值应落在新量程中间段，实际 $mapped", mapped > 5f && mapped < 14f)
-    }
-
-    @Test
-    fun `value already written by the new code wins over the legacy one`() {
-        val prefs = mutablePreferencesOf(legacyKey to 24, widthKey to 31f)
+    fun `existing new value is never touched by the cleanup`() {
+        val prefs = mutablePreferencesOf(legacyKey to 24, widthKey to 8.6f)
 
         migrate(prefs)
 
-        assertEquals("用户升级后已经调过的宽度不能被旧值盖掉", 31f, prefs[widthKey] ?: -1f, 0.001f)
+        assertEquals(8.6f, prefs[widthKey] ?: -1f, 0.001f)
         assertNull(prefs[legacyKey])
     }
 
     @Test
-    fun `handle width migration is idempotent`() {
+    fun `handle width cleanup is idempotent`() {
         val prefs = mutablePreferencesOf(legacyKey to 24)
 
         migrate(prefs)
         migrate(prefs)
 
-        assertEquals(5f, prefs[widthKey] ?: -1f, 0.001f)
+        assertNull(prefs[widthKey])
         assertNull(prefs[legacyKey])
     }
 
     @Test
-    fun `unexpected legacy type does not crash the migration`() {
-        // 旧备份还原等场景可能把同名键写成别的类型：迁移必须跳过而不是抛 CCE。
+    fun `legacy key is removed even when its type is not int`() {
+        // 旧备份还原可能把同名键写成别的类型：清理只按名字删，不读值，所以不会抛 CCE。
         val wrongType = floatPreferencesKey("clipboard_history_float_handle_width_dp")
         val prefs = mutablePreferencesOf(wrongType to 12f)
 
         migrate(prefs)
 
-        assertNull("类型不是 int 时不该写出新键", prefs[widthKey])
+        assertNull("同名记录必须清掉，不管它是什么类型", prefs.asMap()[wrongType])
+        assertNull(prefs[widthKey])
     }
 }
