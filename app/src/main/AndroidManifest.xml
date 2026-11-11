@@ -39,6 +39,8 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- 仅用于读 NFC 开关状态（开关本身走 Shizuku/Root 的 svc nfc）；普通权限，无运行时弹窗。 -->
+    <uses-permission android:name="android.permission.NFC" />
     <uses-permission
         android:name="android.permission.WRITE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
@@ -61,6 +63,11 @@
 
     <uses-feature
         android:name="android.hardware.camera"
+        android:required="false" />
+
+    <!-- 声明了 NFC 权限会被商店当成「必须有 NFC」，这里显式降为可选：无 NFC 机型照常可装。 -->
+    <uses-feature
+        android:name="android.hardware.nfc"
         android:required="false" />
 
     <queries>

@@ -2770,6 +2770,9 @@
     <string name="gesture_action_toggle_float_ball_snoozed">Плавающий шарик включён; оверлеи приостановлены, и он появится в ближайшее время</string>
     <string name="gesture_action_toggle_float_ball_suppressed">Плавающий шарик включён, но правило для текущего экрана его скрывает</string>
     <string name="gesture_action_toggle_mobile_data">Переключить мобильные данные</string>
+    <string name="gesture_action_toggle_nfc">Переключить NFC</string>
+    <string name="gesture_action_toggle_bluetooth">Переключить Bluetooth</string>
+    <string name="gesture_action_nfc_unsupported">На этом устройстве нет NFC</string>
     <string name="gesture_action_screen_record_permission">Нужно разрешение «Отображение поверх других приложений»</string>
     <string name="screen_record_channel_name">Запись экрана</string>
     <string name="screen_record_notification_recording">Запись экрана…</string>

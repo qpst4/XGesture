@@ -238,6 +238,9 @@ fun gestureActionSearchAliases(context: Context, action: GestureAction): List<St
         context.getString(R.string.gesture_search_float_ball_show),
         "float ball",
     )
+    // 中文界面里搜「bluetooth」「near field」也能找到这两个开关（标签本身只有中/本地化文案）。
+    GestureActionType.TOGGLE_NFC -> listOf("near field", "nfc toggle")
+    GestureActionType.TOGGLE_BLUETOOTH -> listOf("bluetooth", "bt")
     else -> emptyList()
 }
 
@@ -438,6 +441,8 @@ fun gestureActionLabelText(context: Context, action: GestureAction): String = wh
         GestureActionType.TOGGLE_SHAKE_GESTURE -> context.getString(R.string.gesture_action_toggle_shake)
         GestureActionType.TOGGLE_FLOAT_BALL -> context.getString(R.string.gesture_action_toggle_float_ball)
         GestureActionType.TOGGLE_MOBILE_DATA -> context.getString(R.string.gesture_action_toggle_mobile_data)
+        GestureActionType.TOGGLE_NFC -> context.getString(R.string.gesture_action_toggle_nfc)
+        GestureActionType.TOGGLE_BLUETOOTH -> context.getString(R.string.gesture_action_toggle_bluetooth)
         GestureActionType.SWITCH_INPUT_METHOD -> context.getString(R.string.gesture_action_switch_input_method)
         GestureActionType.OPEN_INTERNET_PANEL -> context.getString(R.string.gesture_action_open_internet_panel)
         GestureActionType.OPEN_VOLUME_PANEL -> context.getString(R.string.gesture_action_open_volume_panel)
@@ -608,6 +613,8 @@ fun gestureActionLabel(action: GestureAction, settings: AppSettings? = null): St
         GestureActionType.TOGGLE_SHAKE_GESTURE -> stringResource(R.string.gesture_action_toggle_shake)
         GestureActionType.TOGGLE_FLOAT_BALL -> stringResource(R.string.gesture_action_toggle_float_ball)
         GestureActionType.TOGGLE_MOBILE_DATA -> stringResource(R.string.gesture_action_toggle_mobile_data)
+        GestureActionType.TOGGLE_NFC -> stringResource(R.string.gesture_action_toggle_nfc)
+        GestureActionType.TOGGLE_BLUETOOTH -> stringResource(R.string.gesture_action_toggle_bluetooth)
         GestureActionType.SWITCH_INPUT_METHOD -> stringResource(R.string.gesture_action_switch_input_method)
         GestureActionType.OPEN_INTERNET_PANEL -> stringResource(R.string.gesture_action_open_internet_panel)
         GestureActionType.OPEN_VOLUME_PANEL -> stringResource(R.string.gesture_action_open_volume_panel)
@@ -788,6 +795,7 @@ fun gestureActionPermissionHintText(context: Context, action: GestureAction): St
             }
         }
         GestureActionType.TOGGLE_WIFI, GestureActionType.TOGGLE_MOBILE_DATA,
+        GestureActionType.TOGGLE_NFC, GestureActionType.TOGGLE_BLUETOOTH,
         GestureActionType.EXECUTE_SHELL_COMMAND,
         GestureActionType.FORCE_STOP_CURRENT_APP,
         -> {

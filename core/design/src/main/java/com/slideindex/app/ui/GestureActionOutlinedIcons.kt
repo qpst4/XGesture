@@ -1,5 +1,8 @@
 package com.slideindex.app.ui
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.Nfc
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.overlay.PanelSide
@@ -104,6 +107,8 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.TOGGLE_SHAKE_GESTURE -> ThinActionIcons.Gesture
     GestureActionType.TOGGLE_FLOAT_BALL -> ThinActionIcons.FloatBall
     GestureActionType.TOGGLE_MOBILE_DATA -> ThinActionIcons.Cellular
+    GestureActionType.TOGGLE_NFC -> Icons.Filled.Nfc
+    GestureActionType.TOGGLE_BLUETOOTH -> Icons.Filled.Bluetooth
     GestureActionType.SWITCH_INPUT_METHOD -> ThinActionIcons.Keyboard
     GestureActionType.OPEN_INTERNET_PANEL -> ThinActionIcons.Wifi
     GestureActionType.OPEN_VOLUME_PANEL -> ThinActionIcons.VolumeUp
@@ -216,6 +221,8 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.TOGGLE_SHAKE_GESTURE -> ThinActionIcons.Gesture
     GestureActionType.TOGGLE_FLOAT_BALL -> ThinActionIcons.FloatBall
     GestureActionType.TOGGLE_MOBILE_DATA -> ThinActionIcons.Cellular
+    GestureActionType.TOGGLE_NFC -> Icons.Filled.Nfc
+    GestureActionType.TOGGLE_BLUETOOTH -> Icons.Filled.Bluetooth
     GestureActionType.SWITCH_INPUT_METHOD -> ThinActionIcons.Keyboard
     GestureActionType.OPEN_INTERNET_PANEL -> ThinActionIcons.Wifi
     GestureActionType.OPEN_VOLUME_PANEL -> ThinActionIcons.VolumeUp

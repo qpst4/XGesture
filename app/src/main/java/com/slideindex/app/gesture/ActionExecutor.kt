@@ -402,6 +402,8 @@ class ActionExecutor(
             }
             GestureAction.ToggleWifi -> QuickToolsHelper.toggleWifi(context) == true
             GestureAction.ToggleMobileData -> QuickToolsHelper.toggleMobileData(context) == true
+            GestureAction.ToggleNfc -> toggleNfcAction()
+            GestureAction.ToggleBluetooth -> toggleBluetoothAction()
             GestureAction.ToggleShakeGesture -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     val deps = com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(context)
@@ -633,6 +635,31 @@ class ActionExecutor(
             InputTapUtil.dispatchTap(rawX, rawY)
             onComplete()
         }
+    }
+
+    /**
+     * NFC 开关：有 Shizuku / Root 时直接切；没有特权（或 `svc nfc` 在某些 ROM 上不可用）就降级
+     * 打开系统 NFC 设置页 —— 总比「按了没反应」强。没有 NFC 硬件的机型只给一句提示。
+     */
+    private fun toggleNfcAction(): Boolean {
+        if (!QuickToolsHelper.hasNfcHardware(context)) {
+            QuickToolsHelper.notifyNfcUnsupported(context)
+            return false
+        }
+        if (QuickToolsHelper.toggleNfc(context) == null) {
+            QuickToolsHelper.openNfcSettings(context)
+            return false
+        }
+        return true
+    }
+
+    /** 蓝牙开关：与 [toggleNfcAction] 同一套策略，无特权时降级打开蓝牙设置页。 */
+    private fun toggleBluetoothAction(): Boolean {
+        if (QuickToolsHelper.toggleBluetooth(context) == null) {
+            QuickToolsHelper.openBluetoothSettings(context)
+            return false
+        }
+        return true
     }
 
     private fun executeShellCommand(action: GestureAction.ExecuteShellCommand): Boolean {

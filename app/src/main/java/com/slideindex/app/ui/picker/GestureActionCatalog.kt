@@ -133,6 +133,8 @@ object GestureActionCatalog {
         // 2. 开关与调节 (Controls & Media)
         GestureActionType.TOGGLE_WIFI,
         GestureActionType.TOGGLE_MOBILE_DATA,
+        GestureActionType.TOGGLE_NFC,
+        GestureActionType.TOGGLE_BLUETOOTH,
         GestureActionType.FLASHLIGHT,
         GestureActionType.TOGGLE_DND,
         GestureActionType.TIMED_DND,
@@ -305,6 +307,8 @@ object GestureActionCatalog {
         // 2. 开关与调节 (Controls & Media)
         GestureAction.ToggleWifi,
         GestureAction.ToggleMobileData,
+        GestureAction.ToggleNfc,
+        GestureAction.ToggleBluetooth,
         GestureAction.OpenInternetPanel,
         GestureAction.Flashlight,
         GestureAction.ToggleDnd,

@@ -1524,6 +1524,9 @@
     <string name="gesture_action_toggle_float_ball_snoozed">تم تمكين الكرة العائمة؛ الطبقات معطّلة مؤقتًا وستظهر بعد قليل</string>
     <string name="gesture_action_toggle_float_ball_suppressed">تم تمكين الكرة العائمة، لكن قاعدة الشاشة الحالية تخفيها</string>
     <string name="gesture_action_toggle_mobile_data">تبديل بيانات الجوال</string>
+    <string name="gesture_action_toggle_nfc">تبديل NFC</string>
+    <string name="gesture_action_toggle_bluetooth">تبديل Bluetooth</string>
+    <string name="gesture_action_nfc_unsupported">هذا الجهاز لا يدعم NFC</string>
     <string name="gesture_action_switch_input_method">تبديل لوحة المفاتيح</string>
     <string name="gesture_action_screen_record_permission">يتطلب إذن «العرض فوق التطبيقات الأخرى»</string>
     <string name="screen_record_channel_name">تسجيل الشاشة</string>

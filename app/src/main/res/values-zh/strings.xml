@@ -1591,6 +1591,9 @@
     <string name="gesture_action_toggle_float_ball_snoozed">悬浮球已开启，悬浮层暂停中，稍后显示</string>
     <string name="gesture_action_toggle_float_ball_suppressed">悬浮球已开启，但当前界面按规则不显示</string>
     <string name="gesture_action_toggle_mobile_data">移动数据开关</string>
+    <string name="gesture_action_toggle_nfc">NFC 开关</string>
+    <string name="gesture_action_toggle_bluetooth">蓝牙开关</string>
+    <string name="gesture_action_nfc_unsupported">本机不支持 NFC</string>
     <string name="gesture_action_switch_input_method">切换输入法</string>
     <string name="gesture_action_screen_record_permission">需要“显示在其他应用上层”权限</string>
     <string name="screen_record_channel_name">屏幕录制</string>

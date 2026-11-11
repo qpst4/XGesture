@@ -2805,6 +2805,9 @@
     <string name="gesture_action_toggle_float_ball_snoozed">Float ball enabled; overlays are paused and it will appear shortly</string>
     <string name="gesture_action_toggle_float_ball_suppressed">Float ball enabled, but the rule for the current screen hides it</string>
     <string name="gesture_action_toggle_mobile_data">Toggle mobile data</string>
+    <string name="gesture_action_toggle_nfc">Toggle NFC</string>
+    <string name="gesture_action_toggle_bluetooth">Toggle Bluetooth</string>
+    <string name="gesture_action_nfc_unsupported">This device has no NFC</string>
     <string name="gesture_action_screen_record_permission">Needs “Display over other apps” permission</string>
     <string name="screen_record_channel_name">Screen recording</string>
     <string name="screen_record_notification_recording">Recording screen…</string>

@@ -1536,6 +1536,9 @@
     <string name="gesture_action_toggle_float_ball_snoozed">フローティングボールを有効にしました。オーバーレイは一時停止中で、まもなく表示されます</string>
     <string name="gesture_action_toggle_float_ball_suppressed">フローティングボールを有効にしましたが、現在の画面のルールにより表示されません</string>
     <string name="gesture_action_toggle_mobile_data">モバイルデータの切り替え</string>
+    <string name="gesture_action_toggle_nfc">NFC の切り替え</string>
+    <string name="gesture_action_toggle_bluetooth">Bluetooth の切り替え</string>
+    <string name="gesture_action_nfc_unsupported">この端末は NFC に対応していません</string>
     <string name="gesture_action_switch_input_method">入力方式を切り替え</string>
     <string name="gesture_action_screen_record_permission">「他のアプリの上に表示」権限が必要です</string>
     <string name="screen_record_channel_name">画面録画</string>

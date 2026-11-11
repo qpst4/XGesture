@@ -438,6 +438,8 @@ internal fun GestureSession.handleClassifiedGesture(
         GestureAction.ScreenRecord,
         GestureAction.ToggleWifi,
         GestureAction.ToggleMobileData,
+        GestureAction.ToggleNfc,
+        GestureAction.ToggleBluetooth,
         GestureAction.ToggleAutoBrightness,
         GestureAction.ToggleAutoRotate,
         GestureAction.ForcePortrait,
