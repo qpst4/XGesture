@@ -61,6 +61,7 @@ import com.slideindex.app.util.FlashlightHelper
 import com.slideindex.app.util.FreeWindowTriggerAnchor
 import com.slideindex.app.util.InputMethodHelper
 import com.slideindex.app.util.InputTapUtil
+import com.slideindex.app.util.NfcToggleHelper
 import com.slideindex.app.util.OverlayBrightnessControl
 import com.slideindex.app.util.QuickToolsHelper
 import com.slideindex.app.util.ScreenRecordHelper
@@ -402,7 +403,11 @@ class ActionExecutor(
             }
             GestureAction.ToggleWifi -> QuickToolsHelper.toggleWifi(context) == true
             GestureAction.ToggleMobileData -> QuickToolsHelper.toggleMobileData(context) == true
-            GestureAction.ToggleNfc -> toggleNfcAction()
+            GestureAction.ToggleNfc -> {
+                // NFC 的开关调用走反射 / binder，绝不放主线程（历史上 `svc nfc` 不退出，直接把主线程卡到 ANR）。
+                CoroutineScope(Dispatchers.IO).launch { performNfcToggle() }
+                true
+            }
             GestureAction.ToggleBluetooth -> toggleBluetoothAction()
             GestureAction.ToggleShakeGesture -> {
                 CoroutineScope(Dispatchers.IO).launch {
@@ -638,22 +643,18 @@ class ActionExecutor(
     }
 
     /**
-     * NFC 开关：有 Shizuku / Root 时直接切；没有特权（或 `svc nfc` 在某些 ROM 上不可用）就降级
-     * 打开系统 NFC 设置页 —— 总比「按了没反应」强。没有 NFC 硬件的机型只给一句提示。
+     * NFC 开关（在 IO 线程执行）：优先进程内反射，其次 Shizuku binder，最后降级系统设置页。
+     * 没有 NFC 硬件的机型只给一句提示。
      */
-    private fun toggleNfcAction(): Boolean {
-        if (!QuickToolsHelper.hasNfcHardware(context)) {
-            QuickToolsHelper.notifyNfcUnsupported(context)
-            return false
+    private fun performNfcToggle() {
+        when (NfcToggleHelper.toggle(context)) {
+            NfcToggleHelper.Outcome.TOGGLED -> Unit
+            NfcToggleHelper.Outcome.UNSUPPORTED -> NfcToggleHelper.notifyUnsupported(context)
+            NfcToggleHelper.Outcome.NEEDS_SETTINGS -> NfcToggleHelper.openSettings(context)
         }
-        if (QuickToolsHelper.toggleNfc(context) == null) {
-            QuickToolsHelper.openNfcSettings(context)
-            return false
-        }
-        return true
     }
 
-    /** 蓝牙开关：与 [toggleNfcAction] 同一套策略，无特权时降级打开蓝牙设置页。 */
+    /** 蓝牙开关：无特权时降级打开蓝牙设置页。 */
     private fun toggleBluetoothAction(): Boolean {
         if (QuickToolsHelper.toggleBluetooth(context) == null) {
             QuickToolsHelper.openBluetoothSettings(context)

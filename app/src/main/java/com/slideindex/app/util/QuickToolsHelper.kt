@@ -3,7 +3,6 @@ package com.slideindex.app.util
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.nfc.NfcManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -11,7 +10,6 @@ import android.provider.Settings
 import android.util.Log
 import android.view.Surface
 import android.widget.Toast
-import com.slideindex.app.R
 import com.slideindex.app.diagnostic.EdgeDiag
 
 object QuickToolsHelper {
@@ -129,50 +127,7 @@ object QuickToolsHelper {
         return null
     }
 
-    // ---- NFC ----
-
-    /** 本机有没有 NFC 硬件：没有硬件的机型不该给用户一个按了没反应的开关。 */
-    fun hasNfcHardware(context: Context): Boolean = runCatching {
-        context.applicationContext.packageManager.hasSystemFeature(PackageManager.FEATURE_NFC)
-    }.getOrDefault(false)
-
-    /**
-     * 读 NFC 开关状态。
-     *
-     * 读有公开 API（[NfcManager.defaultAdapter] 的 `isEnabled()`，需清单里的 NFC 普通权限，无运行时弹窗）；
-     * 写没有公开 API —— `NfcAdapter.enable()/disable()` 被 `WRITE_SECURE_SETTINGS` 拦住，见 [toggleNfc]。
-     */
-    fun readNfcEnabled(context: Context): Boolean? {
-        if (!hasNfcHardware(context)) return null
-        return runCatching {
-            context.applicationContext.getSystemService(NfcManager::class.java)
-                ?.defaultAdapter
-                ?.isEnabled
-        }.getOrNull()
-    }
-
-    /**
-     * 切换 NFC。
-     *
-     * `svc nfc enable|disable` 只在 shell 身份下可用，所以与 Wi-Fi / 移动数据走同一条
-     * Shizuku / Root 通道。
-     *
-     * @return 切换后的状态；读不到状态或没有特权时返回 null（由调用方降级打开系统 NFC 设置页）。
-     */
-    fun toggleNfc(context: Context): Boolean? {
-        val current = readNfcEnabled(context) ?: return null
-        if (!TaskManagerUtil.hasPermission()) return null
-        val enable = !current
-        val ok = TaskManagerUtil.runShellCommand("svc", "nfc", if (enable) "enable" else "disable")
-        if (!ok) return null
-        // 部分 ROM 的 NFC 服务异步生效，读回可能还是旧值：读不到就按命令结果返回（与 toggleWifi 同口径）。
-        return readNfcEnabled(context) ?: enable
-    }
-
-    /** 没有特权时的降级：打开系统 NFC / 蓝牙设置页。 */
-    fun openNfcSettings(context: Context): Boolean =
-        openSystemSettings(context, Settings.ACTION_NFC_SETTINGS)
-
+    /** 没有特权时的降级：打开系统设置页。 */
     fun openBluetoothSettings(context: Context): Boolean =
         openSystemSettings(context, Settings.ACTION_BLUETOOTH_SETTINGS)
 
@@ -183,11 +138,6 @@ object QuickToolsHelper {
             return false
         }
         return runCatching { appContext.startActivity(intent) }.isSuccess
-    }
-
-    /** 设备没有 NFC 硬件时的提示（由动作执行器调用）。 */
-    fun notifyNfcUnsupported(context: Context) {
-        postToast(context, context.getString(R.string.gesture_action_nfc_unsupported))
     }
 
     fun readAutoRotateEnabled(context: Context): Boolean {

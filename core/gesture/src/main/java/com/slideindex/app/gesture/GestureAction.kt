@@ -219,9 +219,11 @@ enum class GestureActionType(val id: Int) {
     /**
      * 「NFC 开关」：把 NFC 取反。
      *
-     * NFC 没有「第三方 App 直接开关」的公开 API（`NfcAdapter.enable()` 被 `WRITE_SECURE_SETTINGS`
-     * 拦住，只有系统身份能调），所以实现借 Shizuku / Root 的 shell 身份走 `svc nfc enable|disable`；
-     * 没有特权时执行器降级打开系统 NFC 设置页。设备没有 NFC 硬件时只吐一句提示。
+     * NFC 没有「第三方 App 直接开关」的公开 API（`NfcAdapter.enable()` 是 @SystemApi，且被
+     * `WRITE_SECURE_SETTINGS` 拦住），但有两条不需要系统签名的路：给本应用授一次
+     * `WRITE_SECURE_SETTINGS` 后进程内反射调用，或借 Shizuku 的 shell 身份直调 NFC 的 binder。
+     * **不要用 `svc nfc`**：它在部分 ROM 上执行完不退出，等待进程结束会把主线程卡到 ANR。
+     * 两条路都不通时执行器降级打开系统 NFC 设置页；没有 NFC 硬件的机型只吐一句提示。
      */
     TOGGLE_NFC(113),
 
@@ -899,7 +901,8 @@ sealed class GestureAction {
         override val payload = ""
     }
 
-    /** 「NFC 开关」：需 Shizuku / Root（`svc nfc`）；无特权时执行器打开系统 NFC 设置页。 */
+    /** 「NFC 开关」：优先进程内反射（需 `WRITE_SECURE_SETTINGS`，可由 Shizuku/Root 代授），
+     *  其次 Shizuku binder，否则打开系统 NFC 设置页。 */
     data object ToggleNfc : GestureAction() {
         override val type = GestureActionType.TOGGLE_NFC
         override val payload = ""
