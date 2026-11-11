@@ -81,21 +81,20 @@ fun UpdateHost(
     }
 
     val rationaleShowing = uiState.showNotificationRationale
-    if (uiState.showDialog && !rationaleShowing) {
-        UpdateDialog(
-            state = uiState,
-            onDismissRequest = viewModel::dismiss,
-            onIgnore = viewModel::onIgnoreVersion,
-            onConfirm = viewModel::onConfirmUpdate,
-            onInstall = viewModel::onInstall,
-            onMoveToBackground = viewModel::onMoveToBackground,
-            onOpenRelease = {
-                context.startActivity(
-                    Intent(Intent.ACTION_VIEW, UpdateChecker.RELEASES_PAGE_URL.toUri()),
-                )
-            },
-        )
-    }
+    UpdateDialog(
+        show = uiState.showDialog && !rationaleShowing,
+        state = uiState,
+        onDismissRequest = viewModel::dismiss,
+        onIgnore = viewModel::onIgnoreVersion,
+        onConfirm = viewModel::onConfirmUpdate,
+        onInstall = viewModel::onInstall,
+        onMoveToBackground = viewModel::onMoveToBackground,
+        onOpenRelease = {
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW, UpdateChecker.RELEASES_PAGE_URL.toUri()),
+            )
+        },
+    )
 
     if (uiState.showCheckFailedDialog && !rationaleShowing) {
         val titleRes = when (uiState.checkFailedReason) {

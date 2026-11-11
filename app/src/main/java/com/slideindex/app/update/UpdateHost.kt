@@ -54,6 +54,7 @@ import top.yukonga.miuix.kmp.basic.IconButton
 
 @Composable
 fun UpdateDialog(
+    show: Boolean,
     state: UpdateViewModel.UiState,
     onDismissRequest: () -> Unit,
     onIgnore: () -> Unit,
@@ -70,7 +71,7 @@ fun UpdateDialog(
     }
 
     MiuixBottomSheet(
-        show = true,
+        show = show,
         title = stringResource(titleRes),
         onDismissRequest = onDismissRequest,
         endAction = {

@@ -276,202 +276,198 @@ fun MultiTouchGestureSettingsScreen(
         )
     }
 
-    if (showKindPicker) {
-        MiuixBottomSheet(
-            show = true,
-            title = stringResource(R.string.multitouch_pick_kind_title),
-            onDismissRequest = { showKindPicker = false },
+    MiuixBottomSheet(
+        show = showKindPicker,
+        title = stringResource(R.string.multitouch_pick_kind_title),
+        onDismissRequest = { showKindPicker = false },
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 460.dp)
+                .verticalScroll(rememberScrollState()),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 460.dp)
-                    .verticalScroll(rememberScrollState()),
-            ) {
+            MiuixArrowRow(
+                title = stringResource(R.string.multitouch_kind_path),
+                summary = stringResource(R.string.multitouch_draw_summary),
+                onClick = {
+                    showKindPicker = false
+                    onOpenRecorder()
+                },
+            )
+            multiTouchPresetKinds.forEach { kind ->
                 MiuixArrowRow(
-                    title = stringResource(R.string.multitouch_kind_path),
-                    summary = stringResource(R.string.multitouch_draw_summary),
+                    title = kind.displayName(),
                     onClick = {
                         showKindPicker = false
-                        onOpenRecorder()
+                        pendingKind = kind
                     },
                 )
-                multiTouchPresetKinds.forEach { kind ->
-                    MiuixArrowRow(
-                        title = kind.displayName(),
+            }
+        }
+    }
+
+    val selectedKind = pendingKind
+    // 给个非空兜底值，保证 sheet 在关闭动画期间仍可组合；显示与否由 pendingKind 控制。
+    val kind = selectedKind ?: MultiPointerGesture.SWIPE_UP
+    MiuixBottomSheet(
+        show = selectedKind != null,
+        title = stringResource(R.string.multitouch_finger_count_title),
+        onDismissRequest = { pendingKind = null },
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = stringResource(
+                    R.string.multitouch_finger_count_summary,
+                    kind.displayName(),
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                for (fingers in 1..5) {
+                    // 捏合/张开/旋转是几何手势：质心与半径在多指下才有意义，单指必然触发不了。
+                    val geometry = kind in GEOMETRY_GESTURES
+                    FingerCell(
+                        fingers = fingers,
+                        modifier = Modifier.weight(1f),
+                        enabled = !geometry || fingers >= 2,
                         onClick = {
-                            showKindPicker = false
-                            pendingKind = kind
+                            pendingKind = null
+                            onOpenActionPick(kind, fingers, "", "")
                         },
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(12.dp))
+            TextButton(
+                text = stringResource(R.string.cancel),
+                onClick = { pendingKind = null },
+                modifier = Modifier.align(Alignment.End),
+            )
         }
     }
 
-    val kind = pendingKind
-    if (kind != null) {
-        MiuixBottomSheet(
-            show = true,
-            title = stringResource(R.string.multitouch_finger_count_title),
-            onDismissRequest = { pendingKind = null },
-        ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = stringResource(
-                        R.string.multitouch_finger_count_summary,
-                        kind.displayName(),
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    for (fingers in 1..5) {
-                        // 捏合/张开/旋转是几何手势：质心与半径在多指下才有意义，单指必然触发不了。
-                        val geometry = kind in GEOMETRY_GESTURES
-                        FingerCell(
-                            fingers = fingers,
-                            modifier = Modifier.weight(1f),
-                            enabled = !geometry || fingers >= 2,
-                            onClick = {
-                                pendingKind = null
-                                onOpenActionPick(kind, fingers, "", "")
-                            },
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                TextButton(
-                    text = stringResource(R.string.cancel),
-                    onClick = { pendingKind = null },
-                    modifier = Modifier.align(Alignment.End),
+    val currentDeviceName = Regex("name=(\\S+)")
+        .find(diagnostics)
+        ?.groupValues
+        ?.getOrNull(1)
+        .orEmpty()
+    MiuixBottomSheet(
+        show = showDiagnostics,
+        title = stringResource(R.string.multitouch_status_title),
+        startAction = {
+            IconButton(onClick = { showDiagnostics = false }) {
+                MiuixIcon(
+                    imageVector = MiuixIcons.Medium.Close,
+                    contentDescription = stringResource(R.string.multitouch_diagnostics_close),
+                    tint = MiuixTheme.colorScheme.onBackground,
                 )
             }
-        }
-    }
-
-    if (showDiagnostics) {
-        val currentDeviceName = Regex("name=(\\S+)")
-            .find(diagnostics)
-            ?.groupValues
-            ?.getOrNull(1)
-            .orEmpty()
-        MiuixBottomSheet(
-            show = true,
-            title = stringResource(R.string.multitouch_status_title),
-            startAction = {
-                IconButton(onClick = { showDiagnostics = false }) {
-                    MiuixIcon(
-                        imageVector = MiuixIcons.Medium.Close,
-                        contentDescription = stringResource(R.string.multitouch_diagnostics_close),
-                        tint = MiuixTheme.colorScheme.onBackground,
-                    )
-                }
-            },
-            endAction = {
-                IconButton(
-                    onClick = {
-                        showDiagnostics = false
-                        onRetry()
-                    },
+        },
+        endAction = {
+            IconButton(
+                onClick = {
+                    showDiagnostics = false
+                    onRetry()
+                },
+            ) {
+                MiuixIcon(
+                    imageVector = MiuixIcons.Medium.Refresh,
+                    contentDescription = stringResource(R.string.multitouch_diagnostics_retry),
+                    tint = MiuixTheme.colorScheme.onBackground,
+                )
+            }
+        },
+        onDismissRequest = { showDiagnostics = false },
+    ) {
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+            item {
+                SmallTitle(
+                    text = stringResource(R.string.multitouch_diagnostics_title),
+                    insideMargin = PaddingValues(16.dp, 8.dp),
+                )
+                Card(
+                    modifier = Modifier.padding(bottom = 16.dp),
+                    colors = CardDefaults.defaultColors(
+                        color = MiuixTheme.colorScheme.secondaryContainer,
+                    ),
                 ) {
-                    MiuixIcon(
-                        imageVector = MiuixIcons.Medium.Refresh,
-                        contentDescription = stringResource(R.string.multitouch_diagnostics_retry),
-                        tint = MiuixTheme.colorScheme.onBackground,
+                    MiuixText(
+                        text = diagnostics.ifBlank {
+                            stringResource(R.string.multitouch_diagnostics_empty)
+                        },
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        modifier = Modifier.padding(16.dp),
                     )
                 }
-            },
-            onDismissRequest = { showDiagnostics = false },
-        ) {
-            LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                item {
-                    SmallTitle(
-                        text = stringResource(R.string.multitouch_diagnostics_title),
-                        insideMargin = PaddingValues(16.dp, 8.dp),
+            }
+            item {
+                SmallTitle(
+                    text = stringResource(R.string.multitouch_device_title),
+                    insideMargin = PaddingValues(16.dp, 8.dp),
+                )
+                Card(
+                    modifier = Modifier.padding(bottom = 16.dp),
+                    colors = CardDefaults.defaultColors(
+                        color = MiuixTheme.colorScheme.secondaryContainer,
+                    ),
+                ) {
+                    RadioButtonPreference(
+                        title = stringResource(R.string.multitouch_device_auto),
+                        summary = if (currentDeviceName.isNotBlank()) {
+                            stringResource(
+                                R.string.multitouch_device_summary_auto_current,
+                                currentDeviceName,
+                            )
+                        } else {
+                            stringResource(R.string.multitouch_device_summary_auto)
+                        },
+                        selected = settings.devicePath.isBlank(),
+                        onClick = { onDevicePathChange("") },
+                        radioButtonLocation = RadioButtonLocation.End,
                     )
-                    Card(
-                        modifier = Modifier.padding(bottom = 16.dp),
-                        colors = CardDefaults.defaultColors(
-                            color = MiuixTheme.colorScheme.secondaryContainer,
-                        ),
-                    ) {
+                    touchDevices.forEach { line ->
+                        val parts = line.split('|')
+                        val path = parts.getOrNull(0).orEmpty()
+                        val name = parts.getOrNull(1).orEmpty()
+                        val protocol = parts.getOrNull(2).orEmpty()
+                        val range = "${parts.getOrNull(3).orEmpty()}×" +
+                            parts.getOrNull(4).orEmpty()
+                        RadioButtonPreference(
+                            title = name.ifBlank { path },
+                            summary = "$path · $protocol · $range",
+                            selected = settings.devicePath == path,
+                            onClick = { onDevicePathChange(path) },
+                            radioButtonLocation = RadioButtonLocation.End,
+                        )
+                    }
+                    if (touchDevices.isEmpty()) {
                         MiuixText(
-                            text = diagnostics.ifBlank {
-                                stringResource(R.string.multitouch_diagnostics_empty)
-                            },
+                            text = stringResource(R.string.multitouch_device_empty),
                             style = MiuixTheme.textStyles.body2,
                             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             modifier = Modifier.padding(16.dp),
                         )
                     }
                 }
-                item {
-                    SmallTitle(
-                        text = stringResource(R.string.multitouch_device_title),
-                        insideMargin = PaddingValues(16.dp, 8.dp),
-                    )
-                    Card(
-                        modifier = Modifier.padding(bottom = 16.dp),
-                        colors = CardDefaults.defaultColors(
-                            color = MiuixTheme.colorScheme.secondaryContainer,
-                        ),
-                    ) {
-                        RadioButtonPreference(
-                            title = stringResource(R.string.multitouch_device_auto),
-                            summary = if (currentDeviceName.isNotBlank()) {
-                                stringResource(
-                                    R.string.multitouch_device_summary_auto_current,
-                                    currentDeviceName,
-                                )
-                            } else {
-                                stringResource(R.string.multitouch_device_summary_auto)
-                            },
-                            selected = settings.devicePath.isBlank(),
-                            onClick = { onDevicePathChange("") },
-                            radioButtonLocation = RadioButtonLocation.End,
-                        )
-                        touchDevices.forEach { line ->
-                            val parts = line.split('|')
-                            val path = parts.getOrNull(0).orEmpty()
-                            val name = parts.getOrNull(1).orEmpty()
-                            val protocol = parts.getOrNull(2).orEmpty()
-                            val range = "${parts.getOrNull(3).orEmpty()}×" +
-                                parts.getOrNull(4).orEmpty()
-                            RadioButtonPreference(
-                                title = name.ifBlank { path },
-                                summary = "$path · $protocol · $range",
-                                selected = settings.devicePath == path,
-                                onClick = { onDevicePathChange(path) },
-                                radioButtonLocation = RadioButtonLocation.End,
-                            )
-                        }
-                        if (touchDevices.isEmpty()) {
-                            MiuixText(
-                                text = stringResource(R.string.multitouch_device_empty),
-                                style = MiuixTheme.textStyles.body2,
-                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                modifier = Modifier.padding(16.dp),
-                            )
-                        }
-                    }
-                }
-                item {
-                    Spacer(
-                        Modifier.padding(
-                            bottom = WindowInsets.navigationBars
+            }
+            item {
+                Spacer(
+                    Modifier.padding(
+                        bottom = WindowInsets.navigationBars
+                            .asPaddingValues()
+                            .calculateBottomPadding() +
+                            WindowInsets.captionBar
                                 .asPaddingValues()
-                                .calculateBottomPadding() +
-                                WindowInsets.captionBar
-                                    .asPaddingValues()
-                                    .calculateBottomPadding(),
-                        ),
-                    )
-                }
+                                .calculateBottomPadding(),
+                    ),
+                )
             }
         }
     }
