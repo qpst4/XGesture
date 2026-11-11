@@ -335,10 +335,6 @@ sealed interface AppNavKey : NavKey {
     @Serializable data object ActionCenter : AppNavKey
     /** 动作详情页；[actionType] 是 `GestureActionType.name`。 */
     @Serializable data class ActionDetail(val actionType: String) : AppNavKey
-    /** 打开链接动作的配置页。 */
-    @Serializable data object ActionOpenLink : AppNavKey
-    /** 模拟按键动作的配置页。 */
-    @Serializable data object ActionSimulateKeyEvent : AppNavKey
     /** 多指手势设置（Shizuku evdev 观察模式）。 */
     @Serializable data object ExtensionMultiTouchGesture : AppNavKey
     /** 路径手势录制页；`entryId` 非空表示重录已有条目（只覆盖轨迹）。 */

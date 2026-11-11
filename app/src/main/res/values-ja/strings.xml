@@ -29,6 +29,7 @@
     <string name="action_detail_deeplink">ディープリンク</string>
     <string name="action_detail_no_config">このアクションは設定不要です</string>
     <string name="action_detail_config_hint">このアクションは設定が必要です</string>
+    <string name="action_detail_config_on_bind">このアクションは割り当て時に設定します</string>
     <string name="extension_section_shortcuts">ショートカットとアクション</string>
     <string name="extension_section_tools">ツール</string>
     <string name="extension_section_maintenance">メンテナンス</string>

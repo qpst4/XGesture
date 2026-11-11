@@ -19,6 +19,7 @@
     <string name="action_detail_deeplink">深链</string>
     <string name="action_detail_no_config">该动作无需配置，可直接执行</string>
     <string name="action_detail_config_hint">该动作需要配置</string>
+    <string name="action_detail_config_on_bind">该动作在绑定时配置</string>
     <string name="extension_section_shortcuts">快捷操作</string>
     <string name="extension_section_tools">工具</string>
     <string name="extension_section_maintenance">维护</string>

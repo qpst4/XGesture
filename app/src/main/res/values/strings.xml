@@ -20,6 +20,7 @@
     <string name="action_detail_deeplink">Deep link</string>
     <string name="action_detail_no_config">This action needs no configuration</string>
     <string name="action_detail_config_hint">This action needs configuration</string>
+    <string name="action_detail_config_on_bind">Configure this action when binding</string>
     <string name="extension_section_shortcuts">Shortcuts &amp; actions</string>
     <string name="extension_section_tools">Tools</string>
     <string name="extension_section_maintenance">Maintenance</string>

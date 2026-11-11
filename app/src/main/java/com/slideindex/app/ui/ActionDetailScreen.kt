@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import com.slideindex.app.R
 import com.slideindex.app.external.ExternalInvocationCatalog
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.ui.gesturepicker.actionHasDetailParams
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
@@ -131,9 +132,16 @@ fun ActionDetailScreen(
                             onClick = onOpenConfig,
                         )
                     } else {
+                        // 内容型动作（打开链接/模拟按键/执行 Shell 命令）没有全局配置页：
+                        // 参数在绑定时现场填，这里只说明归属，不再给假入口。
+                        val hintRes = if (actionHasDetailParams(action.type)) {
+                            R.string.action_detail_config_on_bind
+                        } else {
+                            R.string.action_detail_no_config
+                        }
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = stringResource(R.string.action_detail_no_config),
+                                text = stringResource(hintRes),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )

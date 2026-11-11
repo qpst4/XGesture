@@ -30,6 +30,7 @@
     <string name="action_detail_deeplink">Диплинк</string>
     <string name="action_detail_no_config">Действие не требует настройки</string>
     <string name="action_detail_config_hint">Действие требует настройки</string>
+    <string name="action_detail_config_on_bind">Это действие настраивается при привязке</string>
     <string name="extension_section_shortcuts">Ярлыки и действия</string>
     <string name="extension_section_tools">Инструменты</string>
     <string name="extension_section_maintenance">Обслуживание</string>

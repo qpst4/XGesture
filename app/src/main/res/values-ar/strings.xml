@@ -29,6 +29,7 @@
     <string name="action_detail_deeplink">رابط عميق</string>
     <string name="action_detail_no_config">لا يحتاج هذا الإجراء إلى ضبط</string>
     <string name="action_detail_config_hint">يحتاج هذا الإجراء إلى ضبط</string>
+    <string name="action_detail_config_on_bind">يُضبط هذا الإجراء عند الربط</string>
     <string name="extension_section_shortcuts">إجراءات الاختصارات</string>
     <string name="extension_section_tools">الأدوات</string>
     <string name="extension_section_maintenance">الصيانة</string>
