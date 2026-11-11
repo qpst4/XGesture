@@ -8,14 +8,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -24,7 +23,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
 import com.slideindex.app.gesture.ActionPickerCatalogPolicy
 import com.slideindex.app.gesture.GestureAction
@@ -73,40 +74,54 @@ fun ActionCenterScreen(
             key = "action-center-launch-panel",
             title = launchPanelTitle,
         )
-        actionCenterGrid(
-            key = "action-center-launch-grid",
+        actionCenterRows(
+            keyPrefix = "action-center-launch-grid",
             entries = ActionCenterLaunchEntry.entries,
-            entryContent = { entry ->
-                val targetAction = actions.firstOrNull { it.type == entry.actionType }
-                ActionGridCell(
-                    icon = entry.icon,
-                    label = stringResource(entry.titleRes),
-                    hasParams = false,
-                    onClick = { targetAction?.let(onOpenActionDetail) },
-                )
-            },
-        )
+        ) { entry, cellModifier ->
+            val targetAction = actions.firstOrNull { it.type == entry.actionType }
+            ActionGridCell(
+                modifier = cellModifier,
+                icon = entry.icon,
+                label = stringResource(entry.titleRes),
+                hasParams = false,
+                onClick = { targetAction?.let(onOpenActionDetail) },
+            )
+        }
         if (configurable.isNotEmpty()) {
             settingsLazySmallTitle(
                 key = "action-center-configurable",
                 title = configurableTitle,
             )
-            actionCenterActionGrid(
+            actionCenterRows(
                 keyPrefix = "action-center-configurable",
-                actions = configurable,
-                onOpenActionDetail = onOpenActionDetail,
-            )
+                entries = configurable,
+            ) { action, cellModifier ->
+                ActionGridCell(
+                    modifier = cellModifier,
+                    icon = gestureActionTypeOutlinedIcon(action.type),
+                    label = gestureActionLabel(action),
+                    hasParams = true,
+                    onClick = { onOpenActionDetail(action) },
+                )
+            }
         }
         if (plain.isNotEmpty()) {
             settingsLazySmallTitle(
                 key = "action-center-plain",
                 title = plainTitle,
             )
-            actionCenterActionGrid(
+            actionCenterRows(
                 keyPrefix = "action-center-plain",
-                actions = plain,
-                onOpenActionDetail = onOpenActionDetail,
-            )
+                entries = plain,
+            ) { action, cellModifier ->
+                ActionGridCell(
+                    modifier = cellModifier,
+                    icon = gestureActionTypeOutlinedIcon(action.type),
+                    label = gestureActionLabel(action),
+                    hasParams = false,
+                    onClick = { onOpenActionDetail(action) },
+                )
+            }
         }
     }
 }
@@ -155,54 +170,25 @@ enum class ActionCenterLaunchEntry(
     ),
 }
 
-private fun LazyListScope.actionCenterActionGrid(
+/**
+ * 网格行：和「选择操作类型」页同一套做法 —— 格子直接吃 `weight(1f)`（不是包在 Box 里再让
+ * 内容自己定宽），所以每列宽度严格相等，图标和文字都居中于列宽，同列上下一定在一条竖线上。
+ */
+private fun <T> LazyListScope.actionCenterRows(
     keyPrefix: String,
-    actions: List<GestureAction>,
-    onOpenActionDetail: (GestureAction) -> Unit,
+    entries: List<T>,
+    cell: @Composable (T, Modifier) -> Unit,
 ) {
-    actions.chunked(ACTION_GRID_COLUMNS).forEachIndexed { rowIndex, rowActions ->
+    entries.chunked(ACTION_GRID_COLUMNS).forEachIndexed { rowIndex, rowEntries ->
         item(key = "$keyPrefix-row-$rowIndex") {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                rowActions.forEach { action ->
-                    Box(modifier = Modifier.weight(1f)) {
-                        ActionGridCell(
-                            icon = gestureActionTypeOutlinedIcon(action.type),
-                            label = gestureActionLabel(action),
-                            hasParams = actionHasDetailParams(action.type),
-                            onClick = { onOpenActionDetail(action) },
-                        )
-                    }
-                }
-                repeat(ACTION_GRID_COLUMNS - rowActions.size) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
-        }
-    }
-}
-
-private fun <T> LazyListScope.actionCenterGrid(
-    key: String,
-    entries: List<T>,
-    entryContent: @Composable (T) -> Unit,
-) {
-    entries.chunked(ACTION_GRID_COLUMNS).forEachIndexed { rowIndex, rowEntries ->
-        item(key = "$key-row-$rowIndex") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 rowEntries.forEach { entry ->
-                    Box(modifier = Modifier.weight(1f)) {
-                        entryContent(entry)
-                    }
+                    cell(entry, Modifier.weight(1f))
                 }
                 repeat(ACTION_GRID_COLUMNS - rowEntries.size) {
                     Spacer(modifier = Modifier.weight(1f))
@@ -214,52 +200,55 @@ private fun <T> LazyListScope.actionCenterGrid(
 
 @Composable
 private fun ActionGridCell(
+    modifier: Modifier,
     icon: ImageVector,
     label: String,
     hasParams: Boolean,
-    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     Column(
         modifier = modifier
-            .heightIn(min = 104.dp)
             .clip(RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
-            .padding(vertical = 6.dp),
+            .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(
-            modifier = Modifier
-                .size(56.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(MiuixTheme.colorScheme.surfaceContainer),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = MiuixTheme.colorScheme.onSurface,
-                modifier = Modifier.size(26.dp),
-            )
+        Box(contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .size(58.dp)
+                    .clip(RoundedCornerShape(17.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(27.dp),
+                )
+            }
             if (hasParams) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(6.dp)
-                        .size(6.dp)
+                        .size(9.dp)
                         .clip(CircleShape)
-                        .background(MiuixTheme.colorScheme.primary),
+                        .background(MaterialTheme.colorScheme.primary),
                 )
             }
         }
-        Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = label,
-            style = MiuixTheme.textStyles.body2,
-            color = MiuixTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
             minLines = 2,
             maxLines = 2,
-            textAlign = TextAlign.Center,
+            overflow = TextOverflow.Ellipsis,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            modifier = Modifier.padding(top = 5.dp, start = 2.dp, end = 2.dp),
         )
     }
 }
