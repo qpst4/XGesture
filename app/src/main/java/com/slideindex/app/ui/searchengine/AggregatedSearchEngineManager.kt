@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
+import androidx.compose.ui.res.stringResource
+import com.slideindex.app.R
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.LaunchedEffect
@@ -376,7 +378,7 @@ fun AggregatedSearchEngineManager(
                         contentAlignment = Alignment.Center,
                     ) {
                         MiuixText(
-                            text = "暂无启用的搜索引擎，可从下方已隐藏池添加或点击右下角 + 新建",
+                            text = stringResource(R.string.search_engine_empty_enabled),
                             style = MiuixTheme.textStyles.body2,
                             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             textAlign = TextAlign.Center,
@@ -504,7 +506,7 @@ fun AggregatedSearchEngineManager(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         MiuixText(
-                            text = "已隐藏",
+                            text = stringResource(R.string.search_engine_hidden_header),
                             style = MiuixTheme.textStyles.title4,
                             fontWeight = FontWeight.SemiBold,
                             color = MiuixTheme.colorScheme.onSurface,
@@ -518,7 +520,7 @@ fun AggregatedSearchEngineManager(
 
                     if (hiddenEngines.isEmpty()) {
                         MiuixText(
-                            text = "可将上方引擎拖拽到此处隐藏",
+                            text = stringResource(R.string.search_engine_hidden_hint),
                             style = MiuixTheme.textStyles.body2,
                             color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f),
                             modifier = Modifier.padding(vertical = 10.dp),
@@ -623,7 +625,7 @@ private fun PageHeaderRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             MiuixText(
-                text = "第 ${pageIndex + 1} 页",
+                text = stringResource(R.string.search_engine_page_header, pageIndex + 1),
                 style = MiuixTheme.textStyles.title4,
                 fontWeight = FontWeight.SemiBold,
                 color = MiuixTheme.colorScheme.onSurface,
@@ -919,7 +921,7 @@ private fun MiuixEngineActionDialog(
                             color = MiuixTheme.colorScheme.onSurface,
                         )
                         MiuixText(
-                            text = if (engine.showInPickPanel) "当前状态：已启用（展示于面板）" else "当前状态：已隐藏",
+                            text = if (engine.showInPickPanel) stringResource(R.string.search_engine_status_visible) else stringResource(R.string.search_engine_status_hidden),
                             style = MiuixTheme.textStyles.body2,
                             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         )
@@ -931,18 +933,18 @@ private fun MiuixEngineActionDialog(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     ArrowPreference(
-                        title = if (engine.showInPickPanel) "移入已隐藏池" else "恢复至面板展示",
-                        summary = if (engine.showInPickPanel) "不在聚合搜索面板显示，但保留配置" else "放回聚合搜索面板最后展示",
+                        title = if (engine.showInPickPanel) stringResource(R.string.search_engine_action_hide) else stringResource(R.string.search_engine_action_restore),
+                        summary = if (engine.showInPickPanel) stringResource(R.string.search_engine_action_hide_summary) else stringResource(R.string.search_engine_action_restore_summary),
                         onClick = onToggleVisibility,
                     )
                     ArrowPreference(
-                        title = "编辑配置",
-                        summary = "修改搜索 URL、图标或标题",
+                        title = stringResource(R.string.search_engine_action_edit),
+                        summary = stringResource(R.string.search_engine_action_edit_summary),
                         onClick = onEdit,
                     )
                     ArrowPreference(
-                        title = "删除搜索引擎",
-                        summary = "永久从本地列表中移除此项",
+                        title = stringResource(R.string.search_engine_action_delete),
+                        summary = stringResource(R.string.search_engine_action_delete_summary),
                         onClick = onDelete,
                     )
                 }

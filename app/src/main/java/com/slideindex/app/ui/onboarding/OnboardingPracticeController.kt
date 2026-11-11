@@ -608,7 +608,13 @@ class OnboardingPracticeController(
                     FloatBallPickEvents.results.first { !it.text.isNullOrBlank() }
                 }
                 if (result != null) {
-                    pickedText = result.text?.trim()?.take(MAX_PICKED_PREVIEW)
+                    pickedText = result.text?.trim()?.let { text ->
+                        if (text.length > MAX_PICKED_PREVIEW) {
+                            text.take(MAX_PICKED_PREVIEW).trimEnd() + "…"
+                        } else {
+                            text
+                        }
+                    }
                     ballState = PracticeTaskState.DONE
                     hintRes = null
                     Log.i(TAG, "awaitPickTest: picked '${pickedText}'")
@@ -687,6 +693,6 @@ class OnboardingPracticeController(
         /** 点「在屏幕上标出触钮」后，标记亮多久。 */
         const val INDEX_HINT_DURATION_MS = 20_000L
         const val POLL_INTERVAL_MS = 250L
-        const val MAX_PICKED_PREVIEW = 24
+        const val MAX_PICKED_PREVIEW = 120
     }
 }

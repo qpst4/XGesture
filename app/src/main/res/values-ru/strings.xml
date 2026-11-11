@@ -3523,7 +3523,7 @@
     <string name="onboarding_grant_overlay">Предоставить разрешение на оверлей</string>
     <string name="onboarding_accessibility_title">Служба специальных возможностей</string>
     <string name="onboarding_back">Назад</string>
-    <string name="onboarding_enter_app">Войти в приложение</string>
+    <string name="onboarding_enter_app">Запустить</string>
     <string name="onboarding_disclaimer_title">Отказ от ответственности</string>
     <string name="onboarding_disclaimer_body">Это приложение и его модули предназначены исключительно для личного управления устройством и повышения продуктивности, а не для обхода правил, средств контроля доступа или несанкционированных операций.\n\nУбедитесь, что вы понимаете, как работают эти функции, и несёте ответственность за любые включённые правила, изменения или настройки.</string>
     <string name="onboarding_disclaimer_agree">Я прочитал(а) и согласен(на) с отказом от ответственности</string>
@@ -3726,7 +3726,7 @@
     <string name="about_project_url_desc">https://github.com/qpst4/XGesture</string>
     <string name="about_star_github_title">Репозиторий GitHub ⭐</string>
     <string name="about_star_github_desc">https://github.com/qpst4/XGesture · Поставьте звезду в поддержку разработки</string>
-    <string name="about_feedback_issues_title">Issues и предложения функций</string>
+    <string name="about_feedback_issues_title">Ошибки и предложения</string>
     <string name="about_feedback_issues_desc">Сообщайте об ошибках, предлагайте функции или делитесь пресетами на GitHub</string>
     <string name="about_help_translate_title">Помочь с переводом</string>
     <string name="about_help_translate_desc">Помогите нам перевести это приложение</string>
@@ -5039,4 +5039,31 @@
     <string name="shell_panel_shizuku_ready">Авторизован</string>
     <string name="shell_panel_shizuku_unavailable">Не авторизован</string>
     <string name="shell_panel_test_result">Результат теста</string>
+
+    <!-- Flow Bar Card in Search Engine Settings -->
+    <string name="flow_bar_title">Панель передачи</string>
+    <string name="flow_bar_drag_targets_title">Действия при перетаскивании текста</string>
+    <string name="flow_bar_drag_empty_hint">Пока нет действий. Нажмите и удерживайте любой поисковый значок снизу и перетащите на эту карточку, чтобы добавить копию (исходный список не изменится).</string>
+    <string name="flow_bar_remove_target">Убрать с панели передачи</string>
+
+    <!-- Search Engine Manager / Aggregated -->
+    <string name="search_engine_hidden_header">Скрыто</string>
+    <string name="search_engine_hidden_hint">Перетащите поисковую систему сюда, чтобы скрыть её</string>
+    <string name="search_engine_page_header">Страница %1$d</string>
+    <string name="search_engine_move_page_up">Переместить страницу вверх</string>
+    <string name="search_engine_move_page_down">Переместить страницу вниз</string>
+    <string name="search_engine_empty_enabled">Нет включённых поисковых систем, добавьте их из скрытого пула или нажмите +</string>
+    <string name="search_engine_action_hide">Скрыть</string>
+    <string name="search_engine_action_restore">Восстановить на панели</string>
+
+    <!-- Search engine management -->
+    <string name="search_engine_add_import_description">Добавить или импортировать поисковую систему</string>
+    <string name="search_engine_status_visible">Состояние: включено (на панели)</string>
+    <string name="search_engine_status_hidden">Состояние: скрыто</string>
+    <string name="search_engine_action_hide_summary">Скрыть с панели поиска, сохранив настройки</string>
+    <string name="search_engine_action_restore_summary">Показать в конце панели поиска</string>
+    <string name="search_engine_action_edit">Изменить настройки</string>
+    <string name="search_engine_action_edit_summary">Изменить адрес поиска, значок или название</string>
+    <string name="search_engine_action_delete">Удалить поисковую систему</string>
+    <string name="search_engine_action_delete_summary">Удалить этот пункт из локального списка</string>
 </resources>

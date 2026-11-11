@@ -128,7 +128,7 @@ fun SearchEngineSettingsScreen(
             MiuixSettingsFab(
                 onClick = { showAddSheet = true },
                 icon = Icons.Default.Add,
-                contentDescription = "添加搜索引擎与导入",
+                contentDescription = stringResource(R.string.search_engine_add_import_description),
             )
         },
     ) {
@@ -311,19 +311,19 @@ private fun DragFlowBarCard(
         ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             MiuixText(
-                text = "流转栏",
+                text = stringResource(R.string.flow_bar_title),
                 style = MiuixTheme.textStyles.title4,
                 fontWeight = FontWeight.SemiBold,
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = "拖文字时出现的目标",
+                text = stringResource(R.string.flow_bar_drag_targets_title),
                 style = MaterialTheme.typography.bodySmall,
                 color = scheme.onSurface.copy(alpha = 0.62f),
                 modifier = Modifier.weight(1f),
             )
             Text(
-                text = "${engines.size} 个",
+                text = "${engines.size}",
                 style = MaterialTheme.typography.bodySmall,
                 color = scheme.onSurface.copy(alpha = 0.62f),
             )
@@ -331,7 +331,7 @@ private fun DragFlowBarCard(
 
         if (engines.isEmpty()) {
             Text(
-                text = "还没有目标。长按下面任意一个搜索引擎图标，拖到这张卡片上松手即可加入一份（原列表不变）。",
+                text = stringResource(R.string.flow_bar_drag_empty_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = scheme.onSurface.copy(alpha = 0.72f),
             )
@@ -360,7 +360,7 @@ private fun DragFlowBarCard(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "从流转栏移除",
+                                    contentDescription = stringResource(R.string.flow_bar_remove_target),
                                     tint = scheme.onSurface,
                                     modifier = Modifier.size(12.dp),
                                 )
