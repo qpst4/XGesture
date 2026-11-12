@@ -1,6 +1,10 @@
 package com.slideindex.app.overlay.pickresult
 
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
@@ -49,16 +53,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -74,6 +85,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import com.slideindex.app.overlay.panels.R
@@ -727,8 +740,47 @@ fun PickResultPanelSlideHost(
     val isDark = LocalAppDarkTheme.current
     val frostedTint = if (isDark) 0x661C1C1E.toInt() else 0x66F5F5F7.toInt()
 
+    // 阴影位图：Compose 的 Modifier.shadow（RenderNode elevation）在悬浮窗里不渲染，
+    // 这里自己生成一张「中间透明、只在卡片外缘有模糊」的位图，画在卡片后面。
+    val shadowPaddingPx = with(density) { 28.dp.toPx() }
+    var cardSize by remember { mutableStateOf(IntSize.Zero) }
+    val panelShadow by produceState<ImageBitmap?>(null, cardSize, isDark) {
+        if (cardSize.width <= 0 || cardSize.height <= 0) {
+            value = null
+            return@produceState
+        }
+        // 折叠/展开动画里尺寸会连续变化：等稳定 120ms 再生成，避免每帧做一次模糊。
+        delay(120)
+        value = withContext(Dispatchers.Default) {
+            createPickPanelShadowBitmap(
+                widthPx = cardSize.width,
+                heightPx = cardSize.height,
+                cornerPx = cornerPx,
+                paddingPx = shadowPaddingPx,
+                blurPx = with(density) { 18.dp.toPx() },
+                dyPx = with(density) { 4.dp.toPx() },
+                color = if (isDark) 0x8C000000.toInt() else 0x3D000000.toInt(),
+            )
+        }
+    }
+
     Box(
         modifier = Modifier
+            .drawBehind {
+                val shadow = panelShadow
+                if (shadow != null && panelRevealed && !isPanelSlideAnimating) {
+                    val pad = shadowPaddingPx.roundToInt()
+                    drawImage(
+                        image = shadow,
+                        dstOffset = IntOffset(-pad, -pad),
+                        dstSize = IntSize(
+                            size.width.roundToInt() + pad * 2,
+                            size.height.roundToInt() + pad * 2,
+                        ),
+                        filterQuality = FilterQuality.Medium,
+                    )
+                }
+            }
             .graphicsLayer {
                 translationY = with(density) { panelSlideOffset.toPx() }
                 compositingStrategy = if (isPanelSlideAnimating) {
@@ -744,6 +796,7 @@ fun PickResultPanelSlideHost(
                     Modifier.pickResultBottomPanelCard(suppressShadow = isPanelSlideAnimating)
                 }
             )
+            .onSizeChanged { cardSize = it }
             .onGloballyPositioned { coords ->
                 if (!isPanelSlideAnimating) {
                     onPanelBoundsInRoot(coords.boundsInRoot())
@@ -1504,4 +1557,50 @@ fun PickResultCollapsePanelColumn(
             }
         }
     }
+}
+
+/**
+ * 生成「只在卡片外缘有阴影、中心透明」的软阴影位图。
+ *
+ * 用软件 [Bitmap] + `Paint.setShadowLayer` 画：悬浮窗的 Compose 内容拿不到
+ * LinkGo 那种自定义 View 的 `onDraw`，但可以离线画一张图，再在 Compose 里当背景贴。
+ * 中心用 `PorterDuff.CLEAR` 挖掉，避免半透明磨砂面板被阴影压暗。
+ *
+ * 位图按 0.5 倍分辨率生成（阴影本身是模糊的，放大后看不出），控制内存。
+ */
+private fun createPickPanelShadowBitmap(
+    widthPx: Int,
+    heightPx: Int,
+    cornerPx: Float,
+    paddingPx: Float,
+    blurPx: Float,
+    dyPx: Float,
+    color: Int,
+): ImageBitmap? {
+    if (widthPx <= 0 || heightPx <= 0) return null
+    val scale = 0.5f
+    val outWidth = ((widthPx + paddingPx * 2f) * scale).roundToInt().coerceAtLeast(1)
+    val outHeight = ((heightPx + paddingPx * 2f) * scale).roundToInt().coerceAtLeast(1)
+    val bitmap = Bitmap.createBitmap(outWidth, outHeight, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val pad = paddingPx * scale
+    val left = pad
+    val top = pad
+    val right = pad + widthPx * scale
+    val bottom = pad + heightPx * scale
+    val radius = cornerPx * scale
+
+    val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.DITHER_FLAG).apply {
+        this.color = color
+        setShadowLayer(blurPx * scale, 0f, dyPx * scale, color)
+    }
+    canvas.drawRoundRect(left, top, right, bottom, radius, radius, shadowPaint)
+
+    // 中心挖空：只保留卡片外缘的阴影，面板底下不能有深色。
+    val clearPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
+    }
+    canvas.drawRoundRect(left, top, right, bottom, radius, radius, clearPaint)
+
+    return bitmap.asImageBitmap()
 }
