@@ -339,6 +339,7 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     editingSubtitle = request.editingSubtitle,
                     wheels = request.wheels,
                     panels = request.panels,
+                    widgetPanelPages = request.widgetPanelPages,
                     imeBottom = request.imeBottom,
                     onSelect = request.onSelect,
                     onCancel = request.onCancel,

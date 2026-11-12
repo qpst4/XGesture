@@ -22,6 +22,8 @@ data class SlotPickerRequest(
     val editingSubtitle: String? = null,
     val wheels: List<QuickWheel> = emptyList(),
     val panels: List<QuickLauncherPanel> = emptyList(),
+    /** 「小组件面板」动作的页数据源（动作里存页 id）。 */
+    val widgetPanelPages: List<com.slideindex.app.widget.WidgetPanelPage> = emptyList(),
     val imeBottom: Dp = 0.dp,
     val onSelect: (GestureAction?) -> Unit,
     val onCancel: () -> Unit,

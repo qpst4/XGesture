@@ -198,6 +198,7 @@ fun VolumePanelContent(
                         editingSubtitle = editingSubtitle,
                         wheels = appSettings.launcher.quickWheels,
                         panels = appSettings.quickLauncherPanels,
+                        widgetPanelPages = appSettings.widgetPanelPages,
                         imeBottom = imeBottom,
                         onSelect = { action ->
                             if (pickerSlot in slotActions.indices) {

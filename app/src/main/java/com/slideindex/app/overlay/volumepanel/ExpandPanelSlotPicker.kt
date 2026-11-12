@@ -99,6 +99,7 @@ private enum class ExpandPanelPickerSubScreen {
     LINK,
     WHEEL,
     LAUNCHER,
+    WIDGET_PANEL,
 }
 
 @Composable
@@ -114,6 +115,8 @@ fun ExpandPanelSlotPicker(
     wheels: List<QuickWheel> = emptyList(),
     /** 「打开快捷启动器」参数页的数据源。 */
     panels: List<QuickLauncherPanel> = emptyList(),
+    /** 「小组件面板」参数页的数据源（动作里存的是页 id）。 */
+    widgetPanelPages: List<com.slideindex.app.widget.WidgetPanelPage> = emptyList(),
     /** overlay 窗里的键盘高度：列表按它让位，否则键盘会盖住下半截（见 rememberOverlayImeBottomHeight）。 */
     imeBottom: Dp = 0.dp,
 ) {
@@ -246,6 +249,19 @@ fun ExpandPanelSlotPicker(
             }
             return
         }
+        ExpandPanelPickerSubScreen.WIDGET_PANEL -> {
+            com.slideindex.app.ui.gesturepicker.WidgetPanelPagePickOverlay(
+                pages = widgetPanelPages,
+                initialPageId = (currentAction as? GestureAction.WidgetPopupOverlay)?.panelId,
+                listHeight = listHeight,
+                onBack = { subScreen = ExpandPanelPickerSubScreen.LIST },
+                onConfirm = { page ->
+                    subScreen = ExpandPanelPickerSubScreen.LIST
+                    onSelect(GestureAction.WidgetPopupOverlay(page.id.toString()))
+                },
+            )
+            return
+        }
         ExpandPanelPickerSubScreen.LIST -> Unit
     }
 
@@ -328,6 +344,14 @@ fun ExpandPanelSlotPicker(
                             onOpenExecuteShellCommand = { onSelect(GestureAction.ExecuteShellCommand()) },
                             onOpenSimulateKeyEvent = { onSelect(GestureAction.SimulateKeyEvent()) },
                             onOpenOpenLink = { subScreen = ExpandPanelPickerSubScreen.LINK },
+                            onOpenWidgetPanel = {
+                                val only = widgetPanelPages.singleOrNull()
+                                if (only != null) {
+                                    onSelect(GestureAction.WidgetPopupOverlay(only.id.toString()))
+                                } else {
+                                    subScreen = ExpandPanelPickerSubScreen.WIDGET_PANEL
+                                }
+                            },
                         )
                     }
                     ExpandPanelPickerTab.APPS -> {
