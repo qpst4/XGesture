@@ -20,7 +20,7 @@
 | 入口 | 宿主页面（整页） | 让位/恢复 | 兜底 |
 | :- | :- | :- | :- |
 | 小组件面板 | `WidgetPickerTrampolineActivity`（`WidgetPickerScreen`） | `WidgetPopupOverlayWindow.setWidgetAddFlowActive(true/false)`（hide/resume） | `WidgetPickerOverlayWindow` |
-| 快速启动器 | `QuickLauncherAddTrampolineActivity` + `QuickLauncherAddFlowScreen`（**与设置入口同一套页面**：`QuickLauncherAddPickerScreen` / `QuickLauncherCreateFolderScreen` / 快捷键、应用、Shell、链接、按键子页，持久化走 `ExtensionSettingsViewModel`） | `QuickLauncherOverlayController.suspendForAddFlow()` / `resumeAfterAddFlow()`：**面板只隐身、不结束会话**，页索引/文件夹/编辑态/钉住落位全保留 | 同一个浮层 sheet（不参与整页；Activity 起不来时回退） |
+| 快速启动器 | `QuickLauncherAddTrampolineActivity` + `QuickLauncherAddFlowScreen`（**与设置入口同一套页面**：`QuickLauncherAddPickerScreen` / `QuickLauncherCreateFolderScreen` / 快捷键、应用、Shell、链接、按键子页，持久化走 `ExtensionSettingsViewModel`） | `QuickLauncherOverlayController`：进页前 `dismissFromBack()` 正常结束会话并记下页索引；Activity 关闭后按原面板/钉住态/锚点重开，重开派发的会话恢复该页。进页期间不抢焦点，触钮/悬浮球按普通手势工作 | 同一个浮层 sheet（不参与整页；Activity 起不来时回退） |
 | 圆环启动器 | `RingLauncherSlotConfigActivity` + `RingLauncherSlotConfigSheet(pageMode = true)`，页面壳用 `MiuixContentScaffold`（顶栏/毛玻璃/insets 与设置页一致，内容区不强制 LazyColumn）；自定义图标内联子页 | `RingLauncherOverlayWindow.suspendForSlotIconEditor()` / `resumeAfterSlotIconEditor()`（+ 前台自愈） | 原浮层 sheet（`pageMode = false`） |
 | 边角轮盘 | `CornerGestureSlotPickTrampolineActivity`（`CornerGestureSlotEditorHost`） | `CornerGestureController.suspendOverlayForExternalActivity()` / `resumeAfterSlotPicker()`（+ 前台自愈） | 无（改造前就是 Activity） |
 
@@ -36,22 +36,23 @@
 | 宿主 | 做法 | 为什么 |
 | :- | :- | :- |
 | 圆环 / 边角（独立浮层窗） | 窗口 `visibility=GONE` + `FLAG_NOT_TOUCHABLE`，退出时恢复 | 窗口只画自己，隐藏很干净 |
-| 快速启动器（与触钮共享 edge overlay 窗） | 只设“挂起”标志：`draw()` 早退、`handleTouch()` 早退、`pinnedWindowRect()` 返回 null；`needsPresentationDirectTouch()` 放行 → presentation 窗切 passthrough；**不结束会话、不动触钮窗** | 不能整窗 GONE/`suspendEdgeOverlay()`（会把触钮一起摘掉，真机表现为“那一侧没了”）；也不能 `endSession()`（页索引会归零）。触钮保留可用，与圆环/边角一致 |
+| 快速启动器（与触钮共享 edge overlay 窗） | **不挂起**：进页前 `dismissFromBack()` 结束会话并记下页索引，Activity 关闭后 dispatch 重开并恢复该页；进页后不再 `setPanelPresentationFocus(true)` | 挂起（保留会话）会让 presentation 窗/触钮/悬浮球以为自己还“开着”：新起的手势被全局压制，且浮层抢走 IME 焦点，搜索框弹不出键盘（真机 dumpsys 已证实）。结束会话最干净 |
 | 小组件面板（独立浮层窗） | `root.visibility = GONE` + 不可触摸，退出时恢复 | 同上 |
 
-快速启动器这条**必须同时改窗口触摸判定**：`EdgeGestureLayoutCoordinator.needsPresentationDirectTouch()`
-在 `panelMode != NONE` 时会先返回 true；挂起期间要提前返回 false，否则那扇看不见的全屏
-presentation 窗会把 Activity 的点击全部吃掉（表现：页面点不动）。
-
-另外 `OverlayTrampolineGuard` 不再把快速启动器加进去：边缘触钮要在添加页开着时照常可用
-（与圆环/边角一致）；`presentationShouldPassthroughTouches()` 也只认真正的浮层内弹窗。
+快速启动器这条的教训：不要用“保留会话 + 全局挂起旗标”。挂起期间
+`EdgeGestureLayoutCoordinator.needsPresentationDirectTouch()` 会被迫返回 false 来让出触摸，
+但同一个旗标也会把触钮/悬浮球新起的手势一起压掉；而只要浮层窗还挂着，
+`setPanelPresentationFocus(true)` 就会把 IME 焦点从 Activity 抢走（搜索框弹不出键盘）。
+现在的做法是**结束会话 + 重开恢复页索引**，`OverlayTrampolineGuard` 也不再把快速启动器加进去。
 
 ## 4. 新增一个入口时必须做的四件事
 
 1. **透明 Activity 壳**：`ComponentActivity` + `enableEdgeToEdge(auto)` + 依赖/主题包裹
    （`CompositionLocalProvider(LocalAppDependencies provides deps)` + `ModuleTheme(settings)`）。
-2. **让宿主浮层让位**：复用各宿主已有的 suspend/hide 能力；**不要**用 `dismiss()`/`endSession()`
-   图省事——那会丢页索引 / 钉住状态 / 文件夹状态。
+2. **让宿主浮层让位**：优先复用各宿主已有的 suspend/hide 能力；如果选择
+   `dismiss()`/`endSession()`（overlay 状态最干净），**必须**在退出时重开并恢复页索引/
+   钉住态/锚点，否则会丢页索引。不要用“保留会话 + 全局挂起旗标”——它会同时压掉
+   触钮/悬浮球新起的手势，还会让浮层抢走 Activity 的 IME 焦点。
 3. **结果一次性交付**：`finishPicker()` 用 `finished/delivered` 布尔守卫；`onDestroy` 兜底
    （没交付就补取消/恢复），否则面板会卡在隐藏态。
 4. **失败回退**：`startActivity` 用 `runCatching`；失败时回到浮层实现或至少恢复面板，
