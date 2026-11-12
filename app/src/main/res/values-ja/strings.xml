@@ -2620,6 +2620,8 @@
     <string name="notification_history_entry_desc">ライブ通知とアーカイブを表示。非表示と再表示</string>
     <string name="notification_history_entry_summary">保存済み通知: %1$d</string>
     <string name="notification_history_entry_permission_needed">通知アクセスが必要です</string>
+    <string name="notification_history_day_today">今日</string>
+    <string name="notification_history_day_yesterday">昨日</string>
     <string name="notification_history_title">通知フィルターボックス</string>
     <string name="notification_history_empty">通知はまだありません。記録を開始するには通知アクセスを有効にしてください。</string>
     <string name="notification_history_search_hint">通知を検索…</string>

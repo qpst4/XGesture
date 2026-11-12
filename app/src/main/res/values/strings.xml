@@ -1516,6 +1516,8 @@
     <string name="notification_history_entry_desc">View live and archived notifications; hide and reopen</string>
     <string name="notification_history_entry_summary">Saved notifications: %1$d</string>
     <string name="notification_history_entry_permission_needed">Notification access required</string>
+    <string name="notification_history_day_today">Today</string>
+    <string name="notification_history_day_yesterday">Yesterday</string>
     <string name="notification_history_title">Notification filter box</string>
     <string name="notification_history_empty">No notifications yet. Enable notification access to start recording.</string>
     <string name="notification_history_search_hint">Search notifications…</string>

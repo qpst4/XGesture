@@ -46,7 +46,7 @@ internal fun LazyListScope.activeNotificationsItems(
     expandedGroups: Set<String>,
     onToggleGroup: (String) -> Unit,
     itemMeta: (NotificationHistoryItem) -> NotificationHistoryItemMeta,
-    dateFormat: DateFormat,
+    timeFormat: DateFormat,
     viewModel: NotificationHistoryViewModel,
     onHideItem: (NotificationHistoryItem, String?) -> Unit,
 ) {
@@ -86,12 +86,12 @@ internal fun LazyListScope.activeNotificationsItems(
                     packageName = packageName,
                     count = count,
                     latestItem = displayItem,
-                    timeLabel = dateFormat.format(Date(entry.postedAtMs)),
+                    timeLabel = timeFormat.format(Date(entry.postedAtMs)),
                     expanded = expanded,
                     onToggle = { onToggleGroup(packageName) },
                 )
             },
-            rowContent = { entry ->
+            rowContent = { entry, showTopLine, showBottomLine ->
                 val historyItem = entry.historyItem
                 val displayItem = historyItem ?: entry.toHistoryItem()
                 val meta = historyItem?.let(itemMeta) ?: itemMeta(displayItem)
@@ -99,12 +99,14 @@ internal fun LazyListScope.activeNotificationsItems(
                 NotificationHistoryRow(
                     item = displayItem,
                     appInfo = appInfo,
-                    timeLabel = dateFormat.format(Date(entry.postedAtMs)),
+                    timeLabel = timeFormat.format(Date(entry.postedAtMs)),
                     isActiveInShade = false,
                     matchingRule = meta.matchingHideRule,
                     showHiddenBadge = meta.isHidden,
                     showRestoreAction = meta.isHidden,
                     showDeleteAction = historyItem != null,
+                    showTopLine = showTopLine,
+                    showBottomLine = showBottomLine,
                     onOpen = { viewModel.replayActive(entry) },
                     onHide = {
                         onHideItem(displayItem, historyItem?.id)
@@ -130,7 +132,7 @@ internal fun LazyListScope.historyNotificationsItems(
     onToggleGroup: (String) -> Unit,
     activeKeys: Set<String>,
     itemMeta: (NotificationHistoryItem) -> NotificationHistoryItemMeta,
-    dateFormat: DateFormat,
+    timeFormat: DateFormat,
     viewModel: NotificationHistoryViewModel,
     onHideItem: (NotificationHistoryItem, String?) -> Unit,
     onDelete: (NotificationHistoryItem) -> Unit,
@@ -170,22 +172,24 @@ internal fun LazyListScope.historyNotificationsItems(
                     packageName = packageName,
                     count = count,
                     latestItem = item,
-                    timeLabel = dateFormat.format(Date(item.postedAtMs)),
+                    timeLabel = timeFormat.format(Date(item.postedAtMs)),
                     expanded = expanded,
                     onToggle = { onToggleGroup(packageName) },
                 )
             },
-            rowContent = { item ->
+            rowContent = { item, showTopLine, showBottomLine ->
                 val meta = itemMeta(item)
                 val appInfo = rememberResolvableAppInfo(viewModel, item.packageName)
                 NotificationHistoryRow(
                     item = item,
                     appInfo = appInfo,
-                    timeLabel = dateFormat.format(Date(item.postedAtMs)),
+                    timeLabel = timeFormat.format(Date(item.postedAtMs)),
                     isActiveInShade = item.notificationKey?.let { it in activeKeys } == true,
                     matchingRule = meta.matchingHideRule,
                     showHiddenBadge = meta.isHidden,
                     showRestoreAction = false,
+                    showTopLine = showTopLine,
+                    showBottomLine = showBottomLine,
                     onOpen = { viewModel.replay(item) },
                     onHide = { onHideItem(item, item.id) },
                     onUnhide = {},
@@ -205,7 +209,7 @@ internal fun LazyListScope.hiddenNotificationsItems(
     onToggleGroup: (String) -> Unit,
     activeKeys: Set<String>,
     itemMeta: (NotificationHistoryItem) -> NotificationHistoryItemMeta,
-    dateFormat: DateFormat,
+    timeFormat: DateFormat,
     viewModel: NotificationHistoryViewModel,
     onDelete: (NotificationHistoryItem) -> Unit,
 ) {
@@ -244,21 +248,23 @@ internal fun LazyListScope.hiddenNotificationsItems(
                     packageName = packageName,
                     count = count,
                     latestItem = item,
-                    timeLabel = dateFormat.format(Date(item.postedAtMs)),
+                    timeLabel = timeFormat.format(Date(item.postedAtMs)),
                     expanded = expanded,
                     onToggle = { onToggleGroup(packageName) },
                 )
             },
-            rowContent = { item ->
+            rowContent = { item, showTopLine, showBottomLine ->
                 val appInfo = rememberResolvableAppInfo(viewModel, item.packageName)
                 NotificationHistoryRow(
                     item = item,
                     appInfo = appInfo,
-                    timeLabel = dateFormat.format(Date(item.postedAtMs)),
+                    timeLabel = timeFormat.format(Date(item.postedAtMs)),
                     isActiveInShade = item.notificationKey?.let { it in activeKeys } == true,
                     matchingRule = itemMeta(item).matchingHideRule,
                     showHiddenBadge = true,
                     showRestoreAction = true,
+                    showTopLine = showTopLine,
+                    showBottomLine = showBottomLine,
                     onOpen = { viewModel.replay(item) },
                     onHide = {},
                     onUnhide = { viewModel.restoreSnoozed(item) },

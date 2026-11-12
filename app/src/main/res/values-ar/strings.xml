@@ -2617,6 +2617,8 @@
     <string name="notification_history_entry_desc">عرض الإشعارات المباشرة والسجل، يدعم الإخفاء وإعادة الفتح</string>
     <string name="notification_history_entry_summary">تم تسجيل %1$d إشعار</string>
     <string name="notification_history_entry_permission_needed">يتطلب تفعيل إذن قراءة الإشعارات</string>
+    <string name="notification_history_day_today">اليوم</string>
+    <string name="notification_history_day_yesterday">أمس</string>
     <string name="notification_history_title">مرشح الإشعارات</string>
     <string name="notification_history_empty">لا توجد سجلات إشعارات. سيتم حفظ الإشعارات الجديدة هنا تلقائياً بعد تفعيل إذن قراءة الإشعارات.</string>
     <string name="notification_history_search_hint">البحث في الإشعارات…</string>

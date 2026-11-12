@@ -50,7 +50,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.withContext
-import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.util.Locale
 import top.yukonga.miuix.kmp.icon.extended.Tune
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.More
@@ -92,7 +93,7 @@ fun NotificationHistoryScreen(
     val activeNotifications = uiState.activeNotifications
     val activeKeys = uiState.activeKeys
     val classification = uiState.classification
-    val dateFormat = remember { DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT) }
+    val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
 
     val context = LocalContext.current
     LaunchedEffect(selectedTab, searchQuery) {
@@ -262,7 +263,7 @@ fun NotificationHistoryScreen(
                 expandedGroups = expandedGroups,
                 onToggleGroup = toggleGroup,
                 itemMeta = { item -> classification.metaFor(item) },
-                dateFormat = dateFormat,
+                timeFormat = timeFormat,
                 viewModel = viewModel,
                 onHideItem = ::performHide,
             )
@@ -275,7 +276,7 @@ fun NotificationHistoryScreen(
                 onToggleGroup = toggleGroup,
                 activeKeys = activeKeys,
                 itemMeta = { item -> classification.metaFor(item) },
-                dateFormat = dateFormat,
+                timeFormat = timeFormat,
                 viewModel = viewModel,
                 onHideItem = ::performHide,
                 onDelete = { pendingDeleteItem = it },
@@ -289,7 +290,7 @@ fun NotificationHistoryScreen(
                 onToggleGroup = toggleGroup,
                 activeKeys = activeKeys,
                 itemMeta = { item -> classification.metaFor(item) },
-                dateFormat = dateFormat,
+                timeFormat = timeFormat,
                 viewModel = viewModel,
                 onDelete = { pendingDeleteItem = it },
             )

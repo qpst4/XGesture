@@ -1493,6 +1493,8 @@
     <string name="notification_history_entry_desc">Просмотр активных и архивных уведомлений; скрытие и повторное открытие</string>
     <string name="notification_history_entry_summary">Сохранённых уведомлений: %1$d</string>
     <string name="notification_history_entry_permission_needed">Требуется доступ к уведомлениям</string>
+    <string name="notification_history_day_today">Сегодня</string>
+    <string name="notification_history_day_yesterday">Вчера</string>
     <string name="notification_history_title">Фильтр уведомлений</string>
     <string name="notification_history_empty">Уведомлений пока нет. Включите доступ к уведомлениям, чтобы начать запись.</string>
     <string name="notification_history_search_hint">Поиск уведомлений…</string>

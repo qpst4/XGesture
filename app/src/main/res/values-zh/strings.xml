@@ -2826,6 +2826,8 @@
     <string name="notification_history_entry_desc">查看实时通知与历史记录，支持隐藏与重新打开</string>
     <string name="notification_history_entry_summary">已记录 %1$d 条通知</string>
     <string name="notification_history_entry_permission_needed">需要开启通知读取权限</string>
+    <string name="notification_history_day_today">今天</string>
+    <string name="notification_history_day_yesterday">昨天</string>
     <string name="notification_history_title">通知滤盒</string>
     <string name="notification_history_empty">暂无通知记录。开启通知读取权限后，新通知会自动保存到这里。</string>
     <string name="notification_history_search_hint">搜索通知…</string>
