@@ -36,12 +36,15 @@
 | 宿主 | 做法 | 为什么 |
 | :- | :- | :- |
 | 圆环 / 边角（独立浮层窗） | 窗口 `visibility=GONE` + `FLAG_NOT_TOUCHABLE`，退出时恢复 | 窗口只画自己，隐藏很干净 |
-| 快速启动器（与触钮共享 edge overlay 窗） | 只设“挂起”标志：`draw()` 早退、`handleTouch()` 早退、`pinnedWindowRect()` 返回 null；**不结束会话** | 不能整窗 GONE（会连触钮/手势一起没了）；也不能 `endSession()`（页索引会归零） |
+| 快速启动器（与触钮共享 edge overlay 窗） | 只设“挂起”标志：`draw()` 早退、`handleTouch()` 早退、`pinnedWindowRect()` 返回 null；`needsPresentationDirectTouch()` 放行 → presentation 窗切 passthrough；**不结束会话、不动触钮窗** | 不能整窗 GONE/`suspendEdgeOverlay()`（会把触钮一起摘掉，真机表现为“那一侧没了”）；也不能 `endSession()`（页索引会归零）。触钮保留可用，与圆环/边角一致 |
 | 小组件面板（独立浮层窗） | `root.visibility = GONE` + 不可触摸，退出时恢复 | 同上 |
 
 快速启动器这条**必须同时改窗口触摸判定**：`EdgeGestureLayoutCoordinator.needsPresentationDirectTouch()`
 在 `panelMode != NONE` 时会先返回 true；挂起期间要提前返回 false，否则那扇看不见的全屏
 presentation 窗会把 Activity 的点击全部吃掉（表现：页面点不动）。
+
+另外 `OverlayTrampolineGuard` 不再把快速启动器加进去：边缘触钮要在添加页开着时照常可用
+（与圆环/边角一致）；`presentationShouldPassthroughTouches()` 也只认真正的浮层内弹窗。
 
 ## 4. 新增一个入口时必须做的四件事
 
