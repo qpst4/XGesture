@@ -4493,6 +4493,8 @@
     <string name="float_ball_pick_bar_open_link_desc">本文内のリンクを開く（複数ある場合は選択）</string>
     <string name="float_ball_pick_bar_search_desc">タップで検索グリッドを開閉、長押しで全画面/小窓を選んで検索</string>
     <string name="float_ball_pick_bar_translate_desc">選択中のテキストを翻訳</string>
+    <string name="float_ball_pick_bar_speak">音声で読み上げ</string>
+    <string name="float_ball_pick_bar_speak_desc">現在のテキストをシステム音声で読み上げます。もう一度押すと停止</string>
     <string name="float_ball_pick_bar_share_desc">選択中のテキストを共有（長押しで他のアプリへドラッグ）</string>
     <string name="float_ball_pick_bar_pin_desc">現在の内容を画面に固定</string>
     <string name="float_ball_pick_bar_stash_desc">現在の内容をアイデアに保存</string>

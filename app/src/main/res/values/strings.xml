@@ -1147,6 +1147,8 @@
     <string name="float_ball_pick_bar_open_link_desc">Open the link found in the text; pick one if there are several</string>
     <string name="float_ball_pick_bar_search_desc">Tap to show or hide the search grid; long-press to pick full screen or a small window</string>
     <string name="float_ball_pick_bar_translate_desc">Translate the selected text</string>
+    <string name="float_ball_pick_bar_speak">Read aloud</string>
+    <string name="float_ball_pick_bar_speak_desc">Read the current text with system TTS; tap again to stop</string>
     <string name="float_ball_pick_bar_share_desc">Share the selected text; long-press to drag it to another app</string>
     <string name="float_ball_pick_bar_pin_desc">Pin the current content to the screen</string>
     <string name="float_ball_pick_bar_stash_desc">Save the current content to Ideas</string>

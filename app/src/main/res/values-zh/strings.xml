@@ -2081,6 +2081,8 @@
     <string name="float_ball_pick_bar_open_link_desc">打开正文里的链接；有多个时可以选择</string>
     <string name="float_ball_pick_bar_search_desc">单击展开或收起搜索网格；长按选择全屏或小窗直接搜索</string>
     <string name="float_ball_pick_bar_translate_desc">翻译当前选中的文字</string>
+    <string name="float_ball_pick_bar_speak">朗读文字</string>
+    <string name="float_ball_pick_bar_speak_desc">用系统语音念出当前文字；再点一次停止</string>
     <string name="float_ball_pick_bar_share_desc">分享当前选中的文字；长按可拖到其他应用</string>
     <string name="float_ball_pick_bar_pin_desc">把当前内容钉在屏幕上</string>
     <string name="float_ball_pick_bar_stash_desc">把当前内容保存到想法</string>

@@ -33,6 +33,7 @@ import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material.icons.outlined.VolumeUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -102,6 +103,12 @@ private val textBarSpecs: List<BarButtonSpec> = listOf(
         R.string.float_ball_pick_bar_translate,
         R.string.float_ball_pick_bar_translate_desc,
         Icons.Outlined.Translate,
+    ),
+    BarButtonSpec(
+        PickResultTextBarButton.SPEAK.id,
+        R.string.float_ball_pick_bar_speak,
+        R.string.float_ball_pick_bar_speak_desc,
+        Icons.Outlined.VolumeUp,
     ),
     BarButtonSpec(
         PickResultTextBarButton.SHARE.id,

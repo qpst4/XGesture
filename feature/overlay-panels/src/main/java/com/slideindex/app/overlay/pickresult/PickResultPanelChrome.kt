@@ -956,6 +956,7 @@ fun PickResultTextActionBar(
                     com.slideindex.app.settings.PickResultTextBarButton.STASH -> onStash != null
                     com.slideindex.app.settings.PickResultTextBarButton.QR -> onGenerateQr != null
                     com.slideindex.app.settings.PickResultTextBarButton.PROCESS_TEXT -> onProcessText != null
+                    com.slideindex.app.settings.PickResultTextBarButton.SPEAK -> onSpeakToggle != null
                 }
             }
 
@@ -1042,6 +1043,17 @@ fun PickResultTextActionBar(
 
                     com.slideindex.app.settings.PickResultTextBarButton.PROCESS_TEXT ->
                         IconBarProcessTextButton()
+
+                    com.slideindex.app.settings.PickResultTextBarButton.SPEAK ->
+                        IconBarActionButton(
+                            icon = if (speaking) Icons.Outlined.Stop else Icons.Outlined.VolumeUp,
+                            contentDescription = stringResource(
+                                if (speaking) R.string.pick_result_tts_stop else R.string.pick_result_tts_speak
+                            ),
+                            tint = if (speaking) MaterialTheme.colorScheme.primary else iconBarTint,
+                            actionEnabled = enabled,
+                            onClick = { onSpeakToggle?.invoke() },
+                        )
                 }
             }
 
@@ -1181,29 +1193,6 @@ fun PickResultTextActionBar(
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // 2.0 朗读 / 停止朗读（issue #50）：纯图标底栏里的第一个按钮
-                if (onSpeakToggle != null) {
-                    IconButton(
-                        onClick = { onSpeakToggle.invoke() },
-                        enabled = enabled,
-                        modifier = Modifier
-                            .size(42.dp)
-                            .clip(RoundedCornerShape(21.dp))
-                    ) {
-                        Icon(
-                            imageVector = if (speaking) Icons.Outlined.Stop else Icons.Outlined.VolumeUp,
-                            contentDescription = stringResource(
-                                if (speaking) R.string.pick_result_tts_stop else R.string.pick_result_tts_speak
-                            ),
-                            tint = if (!enabled) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-                            else if (speaking) MaterialTheme.colorScheme.primary
-                            else if (isDark) androidx.compose.ui.graphics.Color(0xFFE0E0E6)
-                            else androidx.compose.ui.graphics.Color(0xFF333333),
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                }
-
                 // 2.1 打开链接（位于搜索左侧，有链接时外显）
                 if (showOpenLink) {
                     Box {
@@ -1376,18 +1365,6 @@ fun PickResultTextActionBar(
                                 },
                             )
                         } else {
-                            onSpeakToggle?.let { speakAction ->
-                                PickResultActionMenuItem(
-                                    label = stringResource(
-                                        if (speaking) R.string.pick_result_tts_stop else R.string.pick_result_tts_speak
-                                    ),
-                                    icon = if (speaking) Icons.Outlined.Stop else Icons.Outlined.VolumeUp,
-                                    onClick = {
-                                        moreMenuExpanded = false
-                                        speakAction()
-                                    },
-                                )
-                            }
                             onPinToScreen?.let { pinAction ->
                                 PickResultActionMenuItem(
                                     label = stringResource(R.string.pick_result_pin),
@@ -1644,33 +1621,6 @@ fun PickResultTextActionBar(
                 )
             }
 
-            // 3.5 朗读 / 停止朗读（issue #50）：动作条上的独立按钮，与「复制/搜索/翻译」同级。
-            if (onSpeakToggle != null) {
-                IconButton(
-                    onClick = { onSpeakToggle.invoke() },
-                    enabled = enabled,
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(19.dp))
-                        .background(
-                            if (speaking) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
-                            else androidx.compose.ui.graphics.Color.Transparent
-                        )
-                ) {
-                    Icon(
-                        imageVector = if (speaking) Icons.Outlined.Stop else Icons.Outlined.VolumeUp,
-                        contentDescription = stringResource(
-                            if (speaking) R.string.pick_result_tts_stop else R.string.pick_result_tts_speak
-                        ),
-                        tint = if (!enabled) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-                        else if (speaking) MaterialTheme.colorScheme.primary
-                        else if (isDark) androidx.compose.ui.graphics.Color(0xFFE0E0E6)
-                        else androidx.compose.ui.graphics.Color(0xFF333333),
-                        modifier = Modifier.size(19.dp)
-                    )
-                }
-            }
-
             // Small Divider
             Box(
                 modifier = Modifier
@@ -1699,6 +1649,18 @@ fun PickResultTextActionBar(
                     expanded = moreMenuExpanded,
                     onDismissRequest = { moreMenuExpanded = false }
                 ) {
+                    onSpeakToggle?.let { speakAction ->
+                        PickResultActionMenuItem(
+                            label = stringResource(
+                                if (speaking) R.string.pick_result_tts_stop else R.string.pick_result_tts_speak
+                            ),
+                            icon = if (speaking) Icons.Outlined.Stop else Icons.Outlined.VolumeUp,
+                            onClick = {
+                                moreMenuExpanded = false
+                                speakAction()
+                            },
+                        )
+                    }
                     PickResultActionMenuItem(
                         label = stringResource(R.string.pick_result_share),
                         icon = Icons.Outlined.Share,

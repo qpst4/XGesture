@@ -4587,6 +4587,8 @@
     <string name="float_ball_pick_bar_open_link_desc">فتح الرابط الموجود في النص؛ اختر واحدًا إذا كان هناك عدة روابط</string>
     <string name="float_ball_pick_bar_search_desc">اضغط لإظهار أو إخفاء شبكة البحث؛ اضغط مطولًا لاختيار ملء الشاشة أو نافذة صغيرة</string>
     <string name="float_ball_pick_bar_translate_desc">ترجمة النص المحدد</string>
+    <string name="float_ball_pick_bar_speak">قراءة بصوت عالٍ</string>
+    <string name="float_ball_pick_bar_speak_desc">قراءة النص الحالي بصوت النظام؛ اضغط مرة أخرى للإيقاف</string>
     <string name="float_ball_pick_bar_share_desc">مشاركة النص المحدد؛ اضغط مطولًا لسحبه إلى تطبيق آخر</string>
     <string name="float_ball_pick_bar_pin_desc">تثبيت المحتوى الحالي على الشاشة</string>
     <string name="float_ball_pick_bar_stash_desc">حفظ المحتوى الحالي في الأفكار</string>

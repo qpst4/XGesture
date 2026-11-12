@@ -1123,6 +1123,8 @@
     <string name="float_ball_pick_bar_open_link_desc">Открыть ссылку из текста; если их несколько — выбрать</string>
     <string name="float_ball_pick_bar_search_desc">Нажатие открывает или скрывает сетку поиска; долгое нажатие — выбор полного экрана или окна</string>
     <string name="float_ball_pick_bar_translate_desc">Перевести выделенный текст</string>
+    <string name="float_ball_pick_bar_speak">Прочитать вслух</string>
+    <string name="float_ball_pick_bar_speak_desc">Прочитать текущий текст системным голосом; нажмите ещё раз, чтобы остановить</string>
     <string name="float_ball_pick_bar_share_desc">Поделиться выделенным текстом; долгое нажатие — перетащить в другое приложение</string>
     <string name="float_ball_pick_bar_pin_desc">Закрепить текущее содержимое на экране</string>
     <string name="float_ball_pick_bar_stash_desc">Сохранить текущее содержимое в идеи</string>
