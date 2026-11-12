@@ -360,7 +360,7 @@ object GestureActionCatalog {
         GestureAction.ClipboardPick,
         GestureAction.ClipboardPaste,
         GestureAction.StashPanel,
-        GestureAction.WidgetPopupOverlay,
+        GestureAction.WidgetPopupOverlay(),
         GestureAction.QuickToolsOverlay,
         GestureAction.QuickMenu,
         GestureAction.OpenShakeMenu(),

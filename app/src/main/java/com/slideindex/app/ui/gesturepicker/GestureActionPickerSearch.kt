@@ -512,6 +512,16 @@ fun gestureActionLabel(action: GestureAction, settings: AppSettings? = null): St
             )
         }
     }
+    is GestureAction.WidgetPopupOverlay -> {
+        if (action.panelId.isBlank() || settings == null) {
+            stringResource(R.string.gesture_action_widget_popup_overlay)
+        } else {
+            stringResource(
+                R.string.gesture_action_widget_popup_overlay_named,
+                com.slideindex.app.ui.widgetPanelPageLabel(settings, action.panelId),
+            )
+        }
+    }
     is GestureAction.ExecuteShellCommand -> {
         if (action.command.isBlank()) {
             stringResource(R.string.gesture_action_execute_shell_command)
@@ -958,7 +968,7 @@ fun requestPermissionForAdjustAction(context: Context, action: GestureAction) {
                 context.startActivity(PermissionHelper.accessibilitySettingsIntent())
             }
         }
-        GestureAction.WidgetPopupOverlay -> {
+        is GestureAction.WidgetPopupOverlay -> {
             if (!PermissionHelper.isAccessibilityServiceEnabledForOverlays(context)) {
                 context.startActivity(PermissionHelper.accessibilitySettingsIntent())
             }

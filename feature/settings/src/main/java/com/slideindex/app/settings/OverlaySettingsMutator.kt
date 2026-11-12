@@ -6,6 +6,7 @@ import com.slideindex.app.floatball.FloatBallGestureType
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureTriggerMode
 import com.slideindex.app.gesture.SelectedHintMetrics
+import com.slideindex.app.gesture.WidgetPanelActionRefs
 import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.shell.ShellCommand
@@ -838,7 +839,62 @@ class OverlaySettingsMutator @Inject constructor(
     suspend fun setWidgetPanelPages(
         pages: List<com.slideindex.app.widget.WidgetPanelPage>,
     ) = editor.edit { prefs ->
+        val previousPages = WidgetPanelCodec.decodeAll(
+            prefs[SettingsPreferenceKeys.WIDGET_PANEL_PAGES] ?: emptySet(),
+        )
         prefs[SettingsPreferenceKeys.WIDGET_PANEL_PAGES] = WidgetPanelCodec.encodeAll(pages)
+        val remaining = com.slideindex.app.widget.WidgetPanelDefaults.effectivePages(pages)
+        val remainingIds = remaining.map { it.id.toString() }.toSet()
+        val removedIds = previousPages
+            .map { it.id.toString() }
+            .filterNot { it in remainingIds }
+        if (removedIds.isEmpty()) return@edit
+        // 页被删后，指向它的「打开小组件面板」动作要钉到存活页上，否则运行期会静默
+        // 回落到第一页（与快速启动器面板删除时同一条规则）。
+        remapWidgetPanelPageReferences(
+            prefs = prefs,
+            removedPageIds = removedIds,
+            fallbackPageId = remaining.first().id.toString(),
+        )
+    }
+
+    /**
+     * 把 [removedPageIds] 指向的「打开小组件面板」动作改写到 [fallbackPageId]。
+     *
+     * 动作散落在手势规则、圆环槽位、启动面板条目、悬浮球手势等键里，编码格式统一，
+     * 所以按字符串遍历所有 `String` / `Set<String>` 值做一次精确改写，新增的存储位置也能自动覆盖。
+     */
+    private fun remapWidgetPanelPageReferences(
+        prefs: androidx.datastore.preferences.core.MutablePreferences,
+        removedPageIds: List<String>,
+        fallbackPageId: String,
+    ) {
+        val snapshot = prefs.asMap().toMap()
+        snapshot.forEach { (key, value) ->
+            when (value) {
+                is String -> {
+                    val updated = removedPageIds.fold(value) { acc, removedId ->
+                        WidgetPanelActionRefs.remap(acc, removedId, fallbackPageId)
+                    }
+                    if (updated != value) {
+                        @Suppress("UNCHECKED_CAST")
+                        prefs[key as Preferences.Key<String>] = updated
+                    }
+                }
+                is Set<*> -> {
+                    val strings = value.filterIsInstance<String>().toSet()
+                    if (strings.size != value.size) return@forEach
+                    val updated = removedPageIds.fold(strings) { acc, removedId ->
+                        WidgetPanelActionRefs.remap(acc, removedId, fallbackPageId)
+                    }
+                    if (updated != strings) {
+                        @Suppress("UNCHECKED_CAST")
+                        prefs[key as Preferences.Key<Set<String>>] = updated
+                    }
+                }
+                else -> Unit
+            }
+        }
     }
 
     suspend fun setWidgetPanelBlurEnabled(enabled: Boolean) = editor.edit { prefs ->

@@ -722,10 +722,16 @@ sealed class GestureAction {
         override val payload = ""
     }
 
-    /** Samsung OHO+ style widget popup hosting system App Widgets via [com.slideindex.app.overlay.WidgetPopupOverlayWindow]. */
-    data object WidgetPopupOverlay : GestureAction() {
+    /**
+     * Samsung OHO+ style widget popup hosting system App Widgets via
+     * [com.slideindex.app.overlay.WidgetPopupOverlayWindow].
+     *
+     * @param panelId 打开时停在哪一页（`WidgetPanelPage.id` 的十进制字符串）。
+     *   空串 = 第一页：旧数据没有这个字段，解析出来就是空串，行为与以前一致。
+     */
+    data class WidgetPopupOverlay(val panelId: String = "") : GestureAction() {
         override val type = GestureActionType.WIDGET_POPUP_OVERLAY
-        override val payload = ""
+        override val payload = panelId
     }
     /** Edge-gesture regional screenshot & text pick (no persistent float ball). */
     data object RegionalScreenshotPick : GestureAction() {
@@ -1296,7 +1302,7 @@ sealed class GestureAction {
                 GestureActionType.QUICK_TOOLS_OVERLAY -> QuickToolsOverlay
                 GestureActionType.QUICK_MENU -> QuickMenu
                 GestureActionType.SHAKE_MENU -> OpenShakeMenu(payload)
-                GestureActionType.WIDGET_POPUP_OVERLAY -> WidgetPopupOverlay
+                GestureActionType.WIDGET_POPUP_OVERLAY -> WidgetPopupOverlay(payload)
                 GestureActionType.OPEN_STASH_PANEL -> StashPanel
                 GestureActionType.OPEN_CLIPBOARD_PANEL -> ClipboardPanel
                 GestureActionType.OPEN_CLIPBOARD_FLOAT -> ClipboardFloat

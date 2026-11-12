@@ -60,6 +60,7 @@ import com.slideindex.app.ui.picker.rememberLoadedShortcutCatalog
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
 import com.slideindex.app.ui.viewmodel.ExtensionSettingsViewModel
 import com.slideindex.app.util.AppShortcutLoader
+import com.slideindex.app.widget.WidgetPanelDefaults
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -135,6 +136,11 @@ fun GestureActionPickerScreen(
         Triple(ql?.panelId.orEmpty(), ql?.pinned == true, ql?.pinCurrentApp == true)
     }
     var quickLauncherConfigVisible by remember { mutableStateOf(false) }
+    // 「小组件面板」动作可以指定打开哪一页（有多个页时先弹选择）。
+    val widgetPanelPages = remember(appSettings.widgetPanelPages) {
+        WidgetPanelDefaults.effectivePages(appSettings.widgetPanelPages)
+    }
+    var widgetPanelPickVisible by remember { mutableStateOf(false) }
     val quickWheelInitialAnchorMode = remember(current) {
         (current as? GestureAction.QuickWheel)?.anchorMode ?: QuickWheelAnchorMode.FOLLOW_FINGER
     }
@@ -322,6 +328,15 @@ fun GestureActionPickerScreen(
                         },
                         onOpenQuickWheel = { quickWheelConfigVisible = true },
                         onOpenQuickLauncher = { quickLauncherConfigVisible = true },
+                        onOpenWidgetPanel = {
+                            val only = widgetPanelPages.singleOrNull()
+                            if (only != null) {
+                                // 只有一页时不必多问一步，保持「点一下就好」。
+                                safeSelect(GestureAction.WidgetPopupOverlay(only.id.toString()))
+                            } else {
+                                widgetPanelPickVisible = true
+                            }
+                        },
                         highlightPulse = pickerHighlightPulse.value,
                     )
                 }
@@ -437,6 +452,18 @@ fun GestureActionPickerScreen(
                     overlayMode = true,
                 )
             }
+        }
+
+        if (widgetPanelPickVisible) {
+            com.slideindex.app.ui.gesturepicker.WidgetPanelPagePickDialog(
+                pages = widgetPanelPages,
+                selectedPageId = (current as? GestureAction.WidgetPopupOverlay)?.panelId,
+                onDismissRequest = { widgetPanelPickVisible = false },
+                onPick = { page ->
+                    widgetPanelPickVisible = false
+                    safeSelect(GestureAction.WidgetPopupOverlay(page.id.toString()))
+                },
+            )
         }
 
         pendingLaunchApp?.let { app ->

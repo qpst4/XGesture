@@ -470,7 +470,7 @@ internal fun GestureSession.handleClassifiedGesture(
         GestureAction.QuickToolsOverlay,
         GestureAction.QuickMenu,
         GestureAction.HolographicLauncher,
-        GestureAction.WidgetPopupOverlay,
+        is GestureAction.WidgetPopupOverlay,
         GestureAction.StashPanel,
         GestureAction.ClipboardPanel,
         GestureAction.ClipboardFloat,

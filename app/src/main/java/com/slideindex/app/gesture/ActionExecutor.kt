@@ -314,9 +314,15 @@ class ActionExecutor(
                         anchorMode = action.anchorMode,
                     )
                 }
-            GestureAction.WidgetPopupOverlay ->
+            is GestureAction.WidgetPopupOverlay ->
                 overlayPanels.showStandaloneOverlay(anchorRawY) { y ->
-                    WidgetPopupOverlayWindow.show(context, settings, resolvedSide, y)
+                    WidgetPopupOverlayWindow.show(
+                        context = context,
+                        settings = settings,
+                        side = resolvedSide,
+                        anchorRawY = y,
+                        initialPageId = action.panelId,
+                    )
                 }
             GestureAction.StashPanel -> FloatBallStashPanel.toggle(
                 context = context,

@@ -81,13 +81,18 @@ object WidgetPopupOverlayWindow {
     context: Context,
     settings: AppSettings,
     side: PanelSide? = null,
-    anchorRawY: Float? = null
+    anchorRawY: Float? = null,
+    /**
+     * 打开时停在哪一页（`WidgetPanelPage.id` 的十进制字符串；动作绑定里存的就是它）。
+     * null / 空串 / 已删除的页 = 第一页，与旧版行为一致。
+     */
+    initialPageId: String? = null,
   ): Boolean {
     if (Looper.myLooper() != Looper.getMainLooper()) {
       var result = false
       val latch = java.util.concurrent.CountDownLatch(1)
       mainHandler.post {
-        result = show(context, settings, side, anchorRawY)
+        result = show(context, settings, side, anchorRawY, initialPageId)
         latch.countDown()
       }
       runCatching { latch.await(500, java.util.concurrent.TimeUnit.MILLISECONDS) }
@@ -125,7 +130,11 @@ object WidgetPopupOverlayWindow {
     val density = hostContext.resources.displayMetrics.density
     val screenWidthPx = hostContext.resources.displayMetrics.widthPixels
     val effectivePages = WidgetPanelDefaults.effectivePages(settings.widgetPanelPages)
-    val initialPage = effectivePages.firstOrNull() ?: WidgetPanelPage()
+    // 动作可以指定「打开哪一页」；取不到（空串/页已删）就退回第一页。
+    val initialPageIndex = effectivePages
+      .indexOfFirst { it.id.toString() == initialPageId }
+      .takeIf { it >= 0 } ?: 0
+    val initialPage = effectivePages[initialPageIndex]
     val initialBox = WidgetPanelLayoutMetrics.computePanelBox(
       screenWidthPx = screenWidthPx,
       page = initialPage,
@@ -139,6 +148,7 @@ object WidgetPopupOverlayWindow {
       hostContext = hostContext,
       deps = deps,
       settings = settings,
+      initialPageIndex = initialPageIndex,
       onDismiss = { dismiss() },
       onSavePages = { pages -> savePages(pages) }
     )

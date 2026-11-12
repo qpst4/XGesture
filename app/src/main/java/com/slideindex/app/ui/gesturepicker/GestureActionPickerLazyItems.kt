@@ -60,6 +60,7 @@ internal const val ACTION_GRID_COLUMNS = 4
 internal fun actionHasDetailParams(type: GestureActionType): Boolean = when (type) {
     GestureActionType.QUICK_LAUNCHER,
     GestureActionType.QUICK_WHEEL,
+    GestureActionType.WIDGET_POPUP_OVERLAY,
     GestureActionType.EXECUTE_SHELL_COMMAND,
     GestureActionType.OPEN_LINK,
     GestureActionType.SIMULATE_KEY_EVENT,
@@ -207,6 +208,8 @@ fun LazyListScope.actionPickerActionItems(
     onOpenSimulateKeyEvent: (() -> Unit)? = null,
     onOpenQuickWheel: (() -> Unit)? = null,
     onOpenQuickLauncher: (() -> Unit)? = null,
+    /** 「小组件面板」：有多个页时先选页；只有一个页时直接选中（调用方决定）。 */
+    onOpenWidgetPanel: (() -> Unit)? = null,
     /** 定位到"当前已绑定动作"之后闪一下的强度（0..1），只作用在当前那一行上。 */
     highlightPulse: Float = 0f,
 ) {
@@ -263,6 +266,8 @@ fun LazyListScope.actionPickerActionItems(
                                         onOpenQuickWheel != null -> onOpenQuickWheel()
                                     action.type == GestureActionType.QUICK_LAUNCHER &&
                                         onOpenQuickLauncher != null -> onOpenQuickLauncher()
+                                    action.type == GestureActionType.WIDGET_POPUP_OVERLAY &&
+                                        onOpenWidgetPanel != null -> onOpenWidgetPanel()
                                     else -> onSelect(action)
                                 }
                             },
