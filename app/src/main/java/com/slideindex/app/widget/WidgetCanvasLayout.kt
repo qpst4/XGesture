@@ -180,7 +180,7 @@ class WidgetCanvasLayout(context: Context) : ViewGroup(context) {
     for (item in page.items) {
       addWidgetCard(hostContext, item)
     }
-    post { refreshAllWidgetLayouts() }
+    postRefreshAllWidgetLayouts()
     requestLayout()
     invalidate()
   }
@@ -357,7 +357,21 @@ class WidgetCanvasLayout(context: Context) : ViewGroup(context) {
     canvasInteractionActive = active
     onInteractionActiveChange?.invoke(active)
     if (!active && !anyChildPreviewingResize()) {
-      post { refreshAllWidgetLayouts() }
+      postRefreshAllWidgetLayouts()
+    }
+  }
+
+  /**
+   * 排队刷新所有卡片布局。
+   *
+   * 排出去的 runnable 可能在页面被 RecyclerView 回收/重绑之后才执行；那时卡片都已 detach，
+   * 刷新会落到 detached 的宿主视图上（`View.getHandler()` 为 null → NPE）。
+   * 真机现象：滑到第 2 页长按（进编辑态会重绑所有页）闪退。
+   */
+  private fun postRefreshAllWidgetLayouts() {
+    post {
+      if (!isAttachedToWindow) return@post
+      refreshAllWidgetLayouts()
     }
   }
 
@@ -445,7 +459,7 @@ class WidgetCanvasLayout(context: Context) : ViewGroup(context) {
     if (currentGridStepPx != lastGridStepPx) {
       lastGridStepPx = currentGridStepPx
       if (!canvasInteractionActive && !browseTouchTracking) {
-        post { refreshAllWidgetLayouts() }
+        postRefreshAllWidgetLayouts()
       }
     }
   }

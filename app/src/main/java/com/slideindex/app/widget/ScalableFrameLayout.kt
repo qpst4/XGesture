@@ -72,7 +72,14 @@ class ScalableFrameLayout @JvmOverloads constructor(
     private const val STANDARD_CELL_WIDTH_DP = 90
     private const val STANDARD_CELL_HEIGHT_DP = 90
     private const val CELL_GAP_DP = 8
-    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    /**
+     * 尺寸下发用的 Handler。
+     *
+     * ⚠️ 名字**不能**叫 `handler`：`View` 有公开的 `getHandler()`，Kotlin 会把 Java getter
+     * 当合成属性，且类成员优先于 companion 成员 —— 那样 `handler.post` 实际调的是
+     * `this.getHandler()`，视图 detach 后返回 null，直接 NPE（真机：滑到第 2 页长按闪退）。
+     */
+    private val optionsPushHandler = android.os.Handler(android.os.Looper.getMainLooper())
   }
 
   init {
@@ -258,7 +265,9 @@ class ScalableFrameLayout @JvmOverloads constructor(
   }
 
   private fun scheduleOptionsPush(child: AppWidgetHostView, widthDp: Int, heightDp: Int) {
-    pendingOptionsPush?.let { handler.removeCallbacks(it) }
+    // post 出去的 runnable 可能在页面被回收/重绑后才执行；detach 后不再排。
+    if (!isAttachedToWindow) return
+    pendingOptionsPush?.let { optionsPushHandler.removeCallbacks(it) }
     pendingOptionsPush = Runnable {
       pendingOptionsPush = null
       if (child.parent == null) {
@@ -284,7 +293,13 @@ class ScalableFrameLayout @JvmOverloads constructor(
       // updateAppWidgetSize 内部会调用 updateAppWidgetOptions，只此一次，别再重复推。
       child.updateAppWidgetSize(options, listOf(sizeF))
       child.requestLayout()
-    }.also { handler.post(it) }
+    }.also { optionsPushHandler.post(it) }
+  }
+
+  override fun onDetachedFromWindow() {
+    pendingOptionsPush?.let { optionsPushHandler.removeCallbacks(it) }
+    pendingOptionsPush = null
+    super.onDetachedFromWindow()
   }
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
