@@ -1,8 +1,8 @@
 # 「添加条目」Activity 化：现状、约定与四入口建议
 
-> 2026-11-12。本文记录一次实际改造：把四个启动器的「添加条目」浮层统一成
-> **透明 Activity 页面**（浮层只作兜底），以及闪退修复的根因。
-> 相关提交：`ea864008`（闪退）、`527bd77a`（小组件面板/快速启动器）、`f303c7da`（圆环）。
+> 2026-11-12。记录一次实际改造：四个启动器的「添加条目」统一成**透明 Activity 的整页**，
+> 浮层只作兜底；以及小组件面板闪退修复。相关提交：`ea864008`（闪退）、
+> `527bd77a`（小组件面板/快速启动器）、`f303c7da`（圆环）、后续「整页 + 挂起」两笔。
 
 ## 1. 为什么不再用浮层
 
@@ -17,55 +17,66 @@
 
 ## 2. 四入口现状（改造后）
 
-| 入口 | 宿主页面 | 让位/恢复 | 兜底 |
+| 入口 | 宿主页面（整页） | 让位/恢复 | 兜底 |
 | :- | :- | :- | :- |
 | 小组件面板 | `WidgetPickerTrampolineActivity`（`WidgetPickerScreen`） | `WidgetPopupOverlayWindow.setWidgetAddFlowActive(true/false)`（hide/resume） | `WidgetPickerOverlayWindow` |
-| 快速启动器 | `QuickLauncherAddTrampolineActivity`（`QuickLauncherAddOverlaySheet`） | 关闭面板（`dismissFromBack`）→ 结束后 `dispatchExternalGestureAction(QuickLauncher(panelId, pinned, pinCurrentApp))` 重开，失败重试 2 次 | 同一个 sheet 在浮层里弹（`showAddSheet`） |
-| 圆环启动器 | `RingLauncherSlotConfigActivity`（整页 `RingLauncherSlotConfigSheet`，自定义图标内联子页） | `RingLauncherOverlayWindow.suspendForSlotIconEditor()` / `resumeAfterSlotIconEditor()`（+ 前台自愈） | 原来的浮层 sheet |
+| 快速启动器 | `QuickLauncherAddTrampolineActivity` + `QuickLauncherAddOverlaySheet(pageMode = true)` | `QuickLauncherOverlayController.suspendForAddFlow()` / `resumeAfterAddFlow()`：**面板只隐身、不结束会话**，页索引/文件夹/编辑态/钉住落位全保留 | 同一个 sheet 以浮层形态弹（`pageMode = false`） |
+| 圆环启动器 | `RingLauncherSlotConfigActivity` + `RingLauncherSlotConfigSheet(pageMode = true)`（自定义图标内联子页） | `RingLauncherOverlayWindow.suspendForSlotIconEditor()` / `resumeAfterSlotIconEditor()`（+ 前台自愈） | 原浮层 sheet（`pageMode = false`） |
 | 边角轮盘 | `CornerGestureSlotPickTrampolineActivity`（`CornerGestureSlotEditorHost`） | `CornerGestureController.suspendOverlayForExternalActivity()` / `resumeAfterSlotPicker()`（+ 前台自愈） | 无（改造前就是 Activity） |
 
 共同点：
 
 - 都是 `Theme.SlideIndex.Transparent` + `taskAffinity=""` + `excludeFromRecents` 的透明壳；
-- 页面本身与浮层共用同一套 Composable（`WidgetPickerScreen` / `QuickLauncherAddOverlaySheet` / `RingLauncherSlotConfigSheet`），不维护两份 UI；
-- 启动成功与否都要有明确结果：失败回退浮层，成功则在退出时恢复宿主面板。
+- 页面本身与浮层共用同一套 Composable：`pageMode = true` 时去掉 scrim / 82% 高度 / 底部圆角 /
+  点外部关闭，改成 `fillMaxSize` + 状态栏/导航栏/IME insets；`pageMode = false` 保持原 sheet；
+- 启动成功与否都有明确结果：失败回退浮层，成功则在退出时恢复宿主面板。
 
-## 3. 新增一个入口时必须做的四件事
+## 3. 让位/恢复的两种实现（不要混用）
 
-1. **透明 Activity 壳**：`ComponentActivity` + `enableEdgeToEdge(transparent)` + 依赖/主题包裹
+| 宿主 | 做法 | 为什么 |
+| :- | :- | :- |
+| 圆环 / 边角（独立浮层窗） | 窗口 `visibility=GONE` + `FLAG_NOT_TOUCHABLE`，退出时恢复 | 窗口只画自己，隐藏很干净 |
+| 快速启动器（与触钮共享 edge overlay 窗） | 只设“挂起”标志：`draw()` 早退、`handleTouch()` 早退、`pinnedWindowRect()` 返回 null；**不结束会话** | 不能整窗 GONE（会连触钮/手势一起没了）；也不能 `endSession()`（页索引会归零） |
+| 小组件面板（独立浮层窗） | `root.visibility = GONE` + 不可触摸，退出时恢复 | 同上 |
+
+快速启动器这条**必须同时改窗口触摸判定**：`EdgeGestureLayoutCoordinator.needsPresentationDirectTouch()`
+在 `panelMode != NONE` 时会先返回 true；挂起期间要提前返回 false，否则那扇看不见的全屏
+presentation 窗会把 Activity 的点击全部吃掉（表现：页面点不动）。
+
+## 4. 新增一个入口时必须做的四件事
+
+1. **透明 Activity 壳**：`ComponentActivity` + `enableEdgeToEdge(auto)` + 依赖/主题包裹
    （`CompositionLocalProvider(LocalAppDependencies provides deps)` + `ModuleTheme(settings)`）。
-2. **让宿主浮层让位**：复用各宿主已有的 suspend/hide 能力，不要直接 `dismiss()` 一了百了
-   （会丢面板位置/钉住状态）。
+2. **让宿主浮层让位**：复用各宿主已有的 suspend/hide 能力；**不要**用 `dismiss()`/`endSession()`
+   图省事——那会丢页索引 / 钉住状态 / 文件夹状态。
 3. **结果一次性交付**：`finishPicker()` 用 `finished/delivered` 布尔守卫；`onDestroy` 兜底
    （没交付就补取消/恢复），否则面板会卡在隐藏态。
 4. **失败回退**：`startActivity` 用 `runCatching`；失败时回到浮层实现或至少恢复面板，
    不要“点了没反应”。
 
-## 4. 四入口要不要合成一个 Activity？
+## 5. 四入口要不要合成一个 Activity？
 
 建议：**不要合并成一个**，保留四个薄壳，共用页面与行为约定。
 
 理由：
 
-- 启动参数与结果语义不同：小组件面板要“页索引 + 继续去绑定系统小组件”（`WidgetBindTrampolineActivity`）；
-  快速启动器要“多选增删 + 返回后按原面板重开”；圆环/边角要“槽位轴 + 索引 + 让位/恢复”；
-- 合并只能省掉 3 个 manifest 条目，却把所有分支塞进一个类，和现在的“不同实现”风险正好相反；
-- 真正值得统一的是**上面 §3 的四件事**和**共用 Composable**，这部分已经统一。
+- 启动参数与结果语义不同：小组件面板要“页索引 + 继续去绑定系统小组件”；快速启动器要
+  “多选增删 + 返回后原样恢复”；圆环/边角要“槽位轴 + 索引 + 让位/恢复”；
+- 合并只能省 3 个 manifest 条目，却把所有分支塞进一个类；
+- 真正值得统一的是 §4 的四件事和共用 Composable，这部分已经统一。
 
-如果要进一步收敛，优先抽一个 `AddFlowActivityBase`（只放：edge-to-edge、`finishOnce()`、
-`onDestroy` 兜底），四个子类只保留各自的参数/结果差异；不建议动 widget 的“绑定继续”链路。
-
-## 5. 已知边界
+## 6. 已知边界
 
 - **后台启动 Activity**：Android 10+ 与 OEM 策略可能拦截；现有代码已用 `NEW_TASK` + 透明主题，
-  并在失败时回退浮层。若后续再遇到“点了没反应”，先查这里。
+  并在失败时回退浮层。
 - **首帧主题**：Activity 初始 settings 用 `readSnapshot()` 同步读，避免先画默认主题再跳。
-- **进程死亡**：结果回调是进程内对象，进程被杀后无法恢复；面板的 `onDestroy` 兜底会恢复浮层，
-  但“添加了一半”的状态不会恢复（与所有 trampoline 一致）。
-- **圆环图标编辑**已内联进 `RingLauncherSlotConfigActivity` 子页，避免再起一个 Activity
-  造成 suspend/resume 嵌套。
+- **进程死亡**：结果回调是进程内对象，进程被杀后无法恢复。
+- **添加页留在后台**：快速启动器 Activity 未 destroy 时，其挂起态会一直保持（
+  `QuickLauncherAddTrampoline.isActive()` 也仍然挡住浮层恢复）；目前靠 Activity 的 `onDestroy`
+  兜底，后续可像圆环/边角那样补前台自愈。
+- **圆环图标编辑**已内联进 `RingLauncherSlotConfigActivity` 子页，避免 suspend/resume 嵌套。
 
-## 6. 闪退修复（同一轮）
+## 7. 闪退修复（同一轮）
 
 `ScalableFrameLayout` 的 companion `handler` 被 `View.getHandler()` 遮蔽：Kotlin 把 Java getter
 当合成属性且类成员优先，字节码实际调 `this.getHandler()`；视图 detach 后返回 null →
