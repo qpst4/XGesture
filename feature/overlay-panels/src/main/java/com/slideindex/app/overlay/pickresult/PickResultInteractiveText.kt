@@ -476,6 +476,8 @@ fun PickResultInteractiveTextSection(
             val actionBarContent: @Composable () -> Unit = {
                 PickResultTextActionBar(
                     enabled = text.isNotBlank() || barcodeResults.isNotEmpty(),
+                    speaking = PickResultTts.isSpeaking,
+                    onSpeakToggle = { PickResultTts.toggle(ttsContext, text) },
                     translateEnabled = translateEnabled,
                     translateSelected = showingTranslation,
                     showSearch = showSearch,

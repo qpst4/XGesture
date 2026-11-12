@@ -36,6 +36,8 @@ import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.material.icons.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.QrCode
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.TextFields
@@ -694,6 +696,9 @@ fun PickResultTextActionBar(
     /** 用其他应用处理（二级页列出 PROCESS_TEXT 入口）；null 时菜单里不显示这一项。 */
     onProcessText: ((PickResultProcessTextTarget) -> Unit)? = null,
     onTrimSpaces: (() -> Unit)? = null,
+    /** 朗读 / 停止朗读：经典样式没有文字区工具栏，这一项放进三点菜单（issue #50）。 */
+    speaking: Boolean = false,
+    onSpeakToggle: (() -> Unit)? = null,
     hasImageContent: Boolean = false,
     onImageSearch: (() -> Unit)? = null,
     onSaveScreenshot: (() -> Unit)? = null,
@@ -1348,6 +1353,18 @@ fun PickResultTextActionBar(
                                 },
                             )
                         } else {
+                            onSpeakToggle?.let { speakAction ->
+                                PickResultActionMenuItem(
+                                    label = stringResource(
+                                        if (speaking) R.string.pick_result_tts_stop else R.string.pick_result_tts_speak
+                                    ),
+                                    icon = if (speaking) Icons.Outlined.Stop else Icons.Outlined.VolumeUp,
+                                    onClick = {
+                                        moreMenuExpanded = false
+                                        speakAction()
+                                    },
+                                )
+                            }
                             onPinToScreen?.let { pinAction ->
                                 PickResultActionMenuItem(
                                     label = stringResource(R.string.pick_result_pin),
