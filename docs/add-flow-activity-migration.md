@@ -20,15 +20,15 @@
 | 入口 | 宿主页面（整页） | 让位/恢复 | 兜底 |
 | :- | :- | :- | :- |
 | 小组件面板 | `WidgetPickerTrampolineActivity`（`WidgetPickerScreen`） | `WidgetPopupOverlayWindow.setWidgetAddFlowActive(true/false)`（hide/resume） | `WidgetPickerOverlayWindow` |
-| 快速启动器 | `QuickLauncherAddTrampolineActivity` + `QuickLauncherAddOverlaySheet(pageMode = true)` | `QuickLauncherOverlayController.suspendForAddFlow()` / `resumeAfterAddFlow()`：**面板只隐身、不结束会话**，页索引/文件夹/编辑态/钉住落位全保留 | 同一个 sheet 以浮层形态弹（`pageMode = false`） |
-| 圆环启动器 | `RingLauncherSlotConfigActivity` + `RingLauncherSlotConfigSheet(pageMode = true)`（自定义图标内联子页） | `RingLauncherOverlayWindow.suspendForSlotIconEditor()` / `resumeAfterSlotIconEditor()`（+ 前台自愈） | 原浮层 sheet（`pageMode = false`） |
+| 快速启动器 | `QuickLauncherAddTrampolineActivity` + `QuickLauncherAddFlowScreen`（**与设置入口同一套页面**：`QuickLauncherAddPickerScreen` / `QuickLauncherCreateFolderScreen` / 快捷键、应用、Shell、链接、按键子页，持久化走 `ExtensionSettingsViewModel`） | `QuickLauncherOverlayController.suspendForAddFlow()` / `resumeAfterAddFlow()`：**面板只隐身、不结束会话**，页索引/文件夹/编辑态/钉住落位全保留 | 同一个浮层 sheet（不参与整页；Activity 起不来时回退） |
+| 圆环启动器 | `RingLauncherSlotConfigActivity` + `RingLauncherSlotConfigSheet(pageMode = true)`，页面壳用 `MiuixContentScaffold`（顶栏/毛玻璃/insets 与设置页一致，内容区不强制 LazyColumn）；自定义图标内联子页 | `RingLauncherOverlayWindow.suspendForSlotIconEditor()` / `resumeAfterSlotIconEditor()`（+ 前台自愈） | 原浮层 sheet（`pageMode = false`） |
 | 边角轮盘 | `CornerGestureSlotPickTrampolineActivity`（`CornerGestureSlotEditorHost`） | `CornerGestureController.suspendOverlayForExternalActivity()` / `resumeAfterSlotPicker()`（+ 前台自愈） | 无（改造前就是 Activity） |
 
 共同点：
 
 - 都是 `Theme.SlideIndex.Transparent` + `taskAffinity=""` + `excludeFromRecents` 的透明壳；
-- 页面本身与浮层共用同一套 Composable：`pageMode = true` 时去掉 scrim / 82% 高度 / 底部圆角 /
-  点外部关闭，改成 `fillMaxSize` + 状态栏/导航栏/IME insets；`pageMode = false` 保持原 sheet；
+- 整页 UI 与设置页共用同一套 Miuix 页面（`SettingsLazyScreenScaffold` / `MiuixContentScaffold` +
+  `Card`/`SmallTitle` + `MiuixTheme` 色彩/字号），不再各自手写 M3 `Surface` 顶栏；
 - 启动成功与否都有明确结果：失败回退浮层，成功则在退出时恢复宿主面板。
 
 ## 3. 让位/恢复的两种实现（不要混用）
