@@ -1492,9 +1492,10 @@ object FloatBallPickResultPanel {
                         }
                     },
                     onShareScreenshot = {
+                        // 同文字分享：弹出面板时先留着本面板，点中目标（或退回系统面板）时才收 ——
+                        // 否则取消分享会把 OCR 结果和这张图一起丢掉。
                         val bitmap = screenshotHolder.value ?: return@FloatBallPickResultContent
-                        FloatBallTextPick.shareScreenshot(context, bitmap)
-                        dismiss()
+                        FloatBallTextPick.shareScreenshot(context, bitmap) { dismiss() }
                     },
                     onShareScreenshotToDefault = {
                         // 设了默认目标：点一下直接发；没发出去（没设/已卸载）回退到弹面板。
