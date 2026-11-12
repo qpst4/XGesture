@@ -458,6 +458,30 @@ object ThinActionIcons {
         }
     }
 
+    /**
+     * 禁止触摸：手指 + 斜杠（用户指定的 24dp 填充图标，直接转 ImageVector）。
+     *
+     * 与 [TouchApp] 的细线风格不同，这个图是实心路径；动作列表里用它区分
+     * 「禁止触摸」和普通「点击/触摸」。
+     */
+    val TouchBlockOff: ImageVector by lazy {
+        createThinIcon("ThinTouchBlockOff") {
+            addPath(
+                pathData = PathParser().parsePathString(TOUCH_BLOCK_OFF_PATH).toNodes(),
+                fill = SolidColor(Color.White),
+            )
+        }
+    }
+
+    private const val TOUCH_BLOCK_OFF_PATH =
+        "M20.5,17.68L19,16.18V5.25q0-0.32 0.22-0.53T19.75,4.5t0.53,0.22T20.5,5.25V17.68ZM9,6.18L7.5," +
+            "4.68V4.53q0-0.32 0.22-0.53T8.25,3.78T8.78,3.99T9,4.53V6.18Zm3.84,3.84l-1.5-1.5V2.53q0-0.32 " +
+            "0.22-0.53t0.53-0.22t0.53,0.22t0.22,0.53v7.49Zm3.84,1.84h-1.5V3.53q0-0.32 0.22-0.53t0.53-0.22t0.53," +
+            "0.22t0.22,0.53v8.33Zm1.43,8.37L9,11.12v5.32L4.94,13.6l4.5,6.59q0.16,0.26 0.44,0.41t0.6," +
+            "0.15h6.27q0.39,0 0.75-0.14t0.61-0.38Zm-7.62,2.02q-0.69,0-1.28-0.31T8.21,21.06L1.96," +
+            "11.9l0.41-0.39q0.4-0.4 0.94-0.45T4.3,11.33l3.2,2.23V9.62L1.28,3.4L2.35,2.33L21.86," +
+            "21.85l-1.07,1.07l-1.61-1.61q-0.49,0.43-1.1,0.69t-1.33,0.26H10.48Zm3.08-6.57Zm1.1-3.83Z"
+
     val Back: ImageVector by lazy {
         createThinIcon("ThinBack") {
             path(

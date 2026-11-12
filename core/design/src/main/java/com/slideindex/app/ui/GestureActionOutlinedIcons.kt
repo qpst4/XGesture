@@ -113,7 +113,7 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.OPEN_LINK -> MaterialSymbolThinIcons.Link
     GestureActionType.CURRENT_APP_INFO -> ThinActionIcons.Assistant
     GestureActionType.SCREEN_OFF_KEEP_AWAKE -> ThinActionIcons.ScreenOffKeepAwake
-    GestureActionType.TOUCH_BLOCK -> ThinActionIcons.TouchApp
+    GestureActionType.TOUCH_BLOCK -> ThinActionIcons.TouchBlockOff
     GestureActionType.PIN_TO_SCREEN -> ThinActionIcons.Pin
     GestureActionType.SIMULATE_KEY_EVENT -> ThinActionIcons.Keyboard
     GestureActionType.POINTER_GESTURE_RECORDER -> ThinActionIcons.Gesture
@@ -228,7 +228,7 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.OPEN_LINK -> MaterialSymbolThinIcons.Link
     GestureActionType.CURRENT_APP_INFO -> ThinActionIcons.Assistant
     GestureActionType.SCREEN_OFF_KEEP_AWAKE -> ThinActionIcons.ScreenOffKeepAwake
-    GestureActionType.TOUCH_BLOCK -> ThinActionIcons.TouchApp
+    GestureActionType.TOUCH_BLOCK -> ThinActionIcons.TouchBlockOff
     GestureActionType.PIN_TO_SCREEN -> ThinActionIcons.Pin
     GestureActionType.SIMULATE_KEY_EVENT -> ThinActionIcons.Keyboard
     GestureActionType.POINTER_GESTURE_RECORDER -> ThinActionIcons.Gesture
