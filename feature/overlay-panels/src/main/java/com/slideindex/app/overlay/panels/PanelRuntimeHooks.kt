@@ -535,9 +535,6 @@ object PanelRuntimeHooks {
     /** 托管快捷方式归属包名（用于取应用图标）。 */
     @Volatile
     var managedShortcutHostPackage: ((String) -> String?)? = null
-    /** 内置分享面板总开关（`:app` 从设置快照读）。 */
-    @Volatile
-    var isShareSheetEnabled: ((Context) -> Boolean)? = null
 
     /** 手势动作的显示名（`:app` 的 `gestureActionLabelText`）。 */
     @Volatile

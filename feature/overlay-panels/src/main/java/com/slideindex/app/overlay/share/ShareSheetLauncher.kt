@@ -15,8 +15,15 @@ object ShareSheetLauncher {
 
     private const val TAG = "ShareSheetLauncher"
 
+    /**
+     * 总开关从设置快照读（[com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot]，
+     * `:app` 启动时已绑定）。不再单开专用钩子：专用槽位一旦漏绑定，就会静默退化成"永远关"，
+     * 而这里没有任何兜底能看出来 —— v1.64.0 的内置分享面板正是这样失效的。
+     */
     fun isEnabled(context: Context): Boolean =
-        com.slideindex.app.overlay.panels.PanelRuntimeHooks.isShareSheetEnabled?.invoke(context) == true
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot
+            ?.invoke(context)
+            ?.shareSheetEnabled == true
 
     /**
      * 分享 [payload]。
@@ -30,8 +37,13 @@ object ShareSheetLauncher {
         payload: ShareSheetPayload,
         dismissSource: (() -> Unit)? = null,
     ): Boolean {
-        if (isEnabled(context) && ShareSheetOverlayWindow.show(context, payload, beforeSend = dismissSource)) {
+        val enabled = isEnabled(context)
+        if (enabled && ShareSheetOverlayWindow.show(context, payload, beforeSend = dismissSource)) {
             return true
+        }
+        if (!enabled) {
+            // 开关为关时不再一言不发：曾经因为"静默回退"完全看不出面板为什么没出现。
+            Log.d(TAG, "share sheet disabled in settings, falling back to system chooser")
         }
         // 没开开关 / 无障碍宿主不在：退回老路。系统面板必须由我们先把浮层收掉才能露出来。
         runCatching { dismissSource?.invoke() }
