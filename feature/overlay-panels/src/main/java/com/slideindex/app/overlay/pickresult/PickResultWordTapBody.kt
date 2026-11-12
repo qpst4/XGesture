@@ -28,6 +28,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -49,11 +50,13 @@ import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalViewConfiguration
 import android.view.HapticFeedbackConstants
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
@@ -104,6 +107,7 @@ private data class WordTapLine(
 private fun buildWordTapLines(
     chipBounds: Array<Rect?>,
     tokenCount: Int,
+    rtl: Boolean,
 ): List<WordTapLine> {
     val lines = mutableListOf<WordTapLine>()
     var lineStart = -1
@@ -124,7 +128,9 @@ private fun buildWordTapLines(
             lineRight = rect.right
         } else {
             val prevRect = chipBounds[lineEnd] ?: continue
-            val isNewLine = rect.left < prevRect.left || rect.top >= prevRect.bottom - 2f
+            // RTL 下词块从右往左排，回卷（换行）表现为 left 变大而不是变小。
+            val wrapped = if (rtl) rect.left > prevRect.left else rect.left < prevRect.left
+            val isNewLine = wrapped || rect.top >= prevRect.bottom - 2f
             if (isNewLine) {
                 lines.add(
                     WordTapLine(
@@ -228,6 +234,8 @@ fun PickResultWordTapBody(
             )
         }
     }
+    // 内容级 RTL：阿拉伯语/希伯来语要按右到左排词块，否则读者看到的是倒序（issue #54）。
+    val rtlText = remember(wordTokens) { PickResultTextDirection.isRtl(wordTokens) }
     val chipBounds = remember(wordTokens) { arrayOfNulls<Rect>(wordTokens.size) }
     var containerCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     var gestureCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
@@ -301,7 +309,7 @@ fun PickResultWordTapBody(
         }
         if (bestIndex != null || !allowLineProjection) return bestIndex
 
-        val lines = buildWordTapLines(chipBounds, wordTokens.size)
+        val lines = buildWordTapLines(chipBounds, wordTokens.size, rtlText)
         if (lines.isEmpty()) return null
 
         if (pointerInBox.y < lines.first().top) {
@@ -335,11 +343,12 @@ fun PickResultWordTapBody(
             } ?: lines.last()
         }
 
+        // RTL 下行的左右两侧与 token 顺序相反：右边是行首，左边是行尾。
         if (pointerInBox.x >= targetLine.right) {
-            return targetLine.endIndex
+            return if (rtlText) targetLine.startIndex else targetLine.endIndex
         }
         if (pointerInBox.x <= targetLine.left) {
-            return targetLine.startIndex
+            return if (rtlText) targetLine.endIndex else targetLine.startIndex
         }
 
         var closestIndex = targetLine.startIndex
@@ -553,28 +562,32 @@ fun PickResultWordTapBody(
                 },
             verticalArrangement = Arrangement.spacedBy(if (chipFree) 0.dp else 4.dp),
         ) {
-            chunks.forEach { chunk ->
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(0.dp),
-                    verticalArrangement = Arrangement.spacedBy(if (chipFree) 0.dp else 4.dp),
-                ) {
-                    chunk.tokens.forEachIndexed { localIndex, token ->
-                        val index = chunk.startIndex + localIndex
-                        val nextToken = chunk.tokens.getOrNull(localIndex + 1)
-                        val trailingGap = !chipFree && nextToken != null &&
-                            !PickResultWordTokenizer.isWhitespaceToken(token) &&
-                            !PickResultWordTokenizer.isWhitespaceToken(nextToken)
-                        WordTapTokenChip(
-                            token = token,
-                            selected = index in selectedWordIndices,
-                            bodyTextSize = bodyTextSize,
-                            delimiterTextSize = delimiterTextSize,
-                            bodyLineHeight = bodyLineHeight,
-                            trailingGap = trailingGap,
-                            chipFree = chipFree,
-                            onPositioned = { coordinates -> recordChipBounds(index, coordinates) },
-                        )
+            CompositionLocalProvider(
+                LocalLayoutDirection provides if (rtlText) LayoutDirection.Rtl else LayoutDirection.Ltr,
+            ) {
+                chunks.forEach { chunk ->
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(0.dp),
+                        verticalArrangement = Arrangement.spacedBy(if (chipFree) 0.dp else 4.dp),
+                    ) {
+                        chunk.tokens.forEachIndexed { localIndex, token ->
+                            val index = chunk.startIndex + localIndex
+                            val nextToken = chunk.tokens.getOrNull(localIndex + 1)
+                            val trailingGap = !chipFree && nextToken != null &&
+                                !PickResultWordTokenizer.isWhitespaceToken(token) &&
+                                !PickResultWordTokenizer.isWhitespaceToken(nextToken)
+                            WordTapTokenChip(
+                                token = token,
+                                selected = index in selectedWordIndices,
+                                bodyTextSize = bodyTextSize,
+                                delimiterTextSize = delimiterTextSize,
+                                bodyLineHeight = bodyLineHeight,
+                                trailingGap = trailingGap,
+                                chipFree = chipFree,
+                                onPositioned = { coordinates -> recordChipBounds(index, coordinates) },
+                            )
+                        }
                     }
                 }
             }
