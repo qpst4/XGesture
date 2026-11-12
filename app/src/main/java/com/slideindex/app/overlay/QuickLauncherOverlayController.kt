@@ -125,42 +125,19 @@ internal class QuickLauncherOverlayController(
                 onRemove: (QuickLauncherItem) -> Unit
             ) {
                 // 加条目走透明 Activity（列表滚动/搜索/返回栈都按普通窗口来，浮层里的
-                // ComposeView + LazyColumn 不可靠）；面板先收起，Activity 结束后按原样重开。
-                val panelId = activeQuickLauncherPanel().id
-                val side = host.side()
-                val pinned = host.gestureSession().quickLauncherPinned()
-                val pinCurrentApp = host.gestureSession().quickLauncherPinCurrentApp()
-                val anchorRawY = rememberRestoreAnchorRawY().takeIf { it > 0f }
-                    ?: (host.context.resources.displayMetrics.heightPixels / 2f)
+                // ComposeView + LazyColumn 不可靠）。面板**只挂起、不结束会话**：
+                // 回来时页索引/文件夹/编辑态/钉住落位都还在（与圆环/边角的让位同语义）。
                 val launched = QuickLauncherAddTrampoline.launch(
                     context = host.context,
-                    panelSide = side,
+                    panelSide = host.side(),
                     configuredAppPackages = configuredAppPackages,
                     configuredShortcutKeys = configuredShortcutKeys,
                     configuredActionKeys = configuredActionKeys,
-                    onPrepare = {
-                        dismissFromBack()
-                        host.notifyPresentationTouchRequirementChanged()
-                    },
-                    onDismiss = {
-                        host.notifyPresentationTouchRequirementChanged()
-                        host.invalidate()
-                        // 面板收起带退出动画：等它结束再重开，否则 prepareExternalGestureDispatch
-                        // 会被上一段 session 挡住。
-                        restoreHandler.postDelayed({
-                            reopenAfterAddFlow(
-                                panelId = panelId,
-                                pinned = pinned,
-                                pinCurrentApp = pinCurrentApp,
-                                anchorRawY = anchorRawY,
-                                side = side,
-                            )
-                        }, ADD_FLOW_REOPEN_DELAY_MS)
-                    },
+                    onPrepare = { suspendForAddFlow() },
+                    onDismiss = { resumeAfterAddFlow() },
                     onAdd = onAdd,
                     onRemove = onRemove,
                 )
-                host.notifyPresentationTouchRequirementChanged()
                 if (!launched) {
                     // OEM 拦后台启动 Activity：退回浮层 sheet（旧路径），别让「+」点了没反应。
                     showAddSheet(
@@ -240,6 +217,15 @@ internal class QuickLauncherOverlayController(
     internal var quickLauncherPageDragOffset = 0f
     internal var quickLauncherLaunchEndDeferMs = 0L
     internal var quickLauncherExiting = false
+    /**
+     * 「添加条目」Activity 期间：面板暂时不画、不接触摸，但**不结束会话**。
+     *
+     * 与圆环/边角的 `suspendForExternalActivity` 同语义；不结束会话才能保住
+     * 当前页索引、文件夹展开、编辑态与钉住落位。窗口触摸靠
+     * [com.slideindex.app.overlay.EdgeGestureLayoutCoordinator.needsPresentationDirectTouch]
+     * 里的同名判断放行给 Activity。
+     */
+    private var suspendedForAddFlow = false
     internal var quickLauncherOpeningGestureActive = false
     internal var quickLauncherToolbarTouchActive = false
     /** 「长按面板空白处进入编辑态」的按下时刻；<= 0 表示当前没有按住空白区。 */
@@ -419,9 +405,33 @@ internal class QuickLauncherOverlayController(
     internal val quickLauncherHeaderHeight get() = 0f
 
     fun handleTouch(event: MotionEvent, localX: Float, localY: Float): Boolean =
-        touchHandler.handleTouch(event, localX, localY)
+        if (suspendedForAddFlow) false else touchHandler.handleTouch(event, localX, localY)
+
+    /**
+     * 添加条目 Activity 打开：面板只“隐身”，会话/页索引/文件夹/钉住状态全部保留。
+     *
+     * 注意不能 `dismissFromBack()`：那会 `endSession()` → 页索引归零，回来就跳回第一页。
+     */
+    fun suspendForAddFlow() {
+        if (suspendedForAddFlow) return
+        suspendedForAddFlow = true
+        host.setPanelPresentationFocus(false)
+        host.notifyPresentationTouchRequirementChanged()
+        host.invalidate()
+    }
+
+    /** Activity 关闭：恢复绘制与窗口触摸（会话从未结束，页索引自然还在）。 */
+    fun resumeAfterAddFlow() {
+        if (!suspendedForAddFlow) return
+        suspendedForAddFlow = false
+        host.notifyPresentationTouchRequirementChanged()
+        host.invalidate()
+    }
+
+    fun isSuspendedForAddFlow(): Boolean = suspendedForAddFlow
 
     fun draw(canvas: Canvas, drawToolbar: Boolean = true) {
+        if (suspendedForAddFlow) return
         // 工具栏要跟着「钉住」状态多画一个「×」（钉住态返回键不再负责关闭，得给一个可见出口）。
         quickLauncherPanelController.pinned = host.gestureSession().quickLauncherPinned()
         renderer.draw(canvas, drawToolbar)
@@ -438,6 +448,8 @@ internal class QuickLauncherOverlayController(
      * 呼出动画 / 手势跟手 / 收起动画 / 面板内弹窗 / 编辑拖动分页都仍走全屏窗，避免坐标系跨界。
      */
     fun pinnedWindowRect(screenWidthPx: Float, screenHeightPx: Float): RectF? {
+        // 添加条目 Activity 期间不缩窗，也不保留「钉住触摸层」小窗。
+        if (suspendedForAddFlow) return null
         val session = host.gestureSession()
         if (!session.quickLauncherPinnedIdle()) return null
         if (quickLauncherExiting) return null
@@ -503,13 +515,6 @@ internal class QuickLauncherOverlayController(
 
         /** 判定「切走应用」需要的连续命中次数（键盘 / 系统窗口的瞬时前台会被过滤掉）。 */
         const val FOREGROUND_CONFIRM_HITS = 2
-
-        /** 添加条目 Activity 关闭后，等面板退出动画结束再自动重开的延迟。 */
-        const val ADD_FLOW_REOPEN_DELAY_MS = 220L
-
-        /** 自动重开失败后的重试次数与间隔（会话/宿主还没就绪时）。 */
-        const val ADD_FLOW_RETRY_COUNT = 2
-        const val ADD_FLOW_RETRY_DELAY_MS = 260L
     }
 
     // ── 钉住 +「仅在本应用」：切走自动隐藏、切回原样恢复 ─────────────────────────
@@ -729,37 +734,6 @@ internal class QuickLauncherOverlayController(
      * 与「点面板外」无关：钉住态下点面板外不关，只有这里和「再划一次同一手势」才关。
      */
     fun requestClosePinned() = dismissFromBack()
-
-    /**
-     * 添加流程结束后按原样重开面板。
-     *
-     * 失败（上一段 session 还没清、宿主刚重建）时重试两次；仍失败就交给用户再划一次手势。
-     */
-    private fun reopenAfterAddFlow(
-        panelId: String,
-        pinned: Boolean,
-        pinCurrentApp: Boolean,
-        anchorRawY: Float,
-        side: PanelSide,
-        attempt: Int = 0,
-    ) {
-        val opened = runCatching {
-            SlideIndexAccessibilityService.dispatchExternalGestureAction(
-                action = GestureAction.QuickLauncher(
-                    panelId = panelId,
-                    pinned = pinned,
-                    pinCurrentApp = pinCurrentApp,
-                ),
-                anchorRawY = anchorRawY,
-                panelSide = side,
-            )
-        }.getOrDefault(false)
-        if (!opened && attempt < ADD_FLOW_RETRY_COUNT) {
-            restoreHandler.postDelayed({
-                reopenAfterAddFlow(panelId, pinned, pinCurrentApp, anchorRawY, side, attempt + 1)
-            }, ADD_FLOW_RETRY_DELAY_MS)
-        }
-    }
 
     /**
      * 兜底：Activity 起不来时，仍在浮层里弹旧的添加 sheet。
