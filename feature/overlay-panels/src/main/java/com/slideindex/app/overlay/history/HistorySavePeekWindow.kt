@@ -68,6 +68,8 @@ class HistorySavePeekWindow(
     private val gravityEnd = mutableStateOf(true)
     private var measuredSize = IntSize.Zero
     private var anchorCenterY = 0
+    /** 把手触摸区宽度：随「显示贴边把手」的粗细设置变化，peek 要贴着它定位。 */
+    private var handleTouchWidthDp = HANDLE_TOUCH_WIDTH_DP.toFloat()
     private val mainHandler = Handler(Looper.getMainLooper())
     private val hideRunnable = Runnable { hide() }
 
@@ -75,6 +77,14 @@ class HistorySavePeekWindow(
     fun setGravityEnd(end: Boolean) {
         gravityEnd.value = end
         applyPosition()
+    }
+
+    /** 把手粗细变了：peek 的横向落点跟着更新（窗已存在时立刻重排）。 */
+    fun setHandleTouchWidthDp(value: Float) {
+        val width = value.coerceAtLeast(1f)
+        if (handleTouchWidthDp == width) return
+        handleTouchWidthDp = width
+        if (composeView != null) applyPosition()
     }
 
     /** [handleCenterY] = 把手在屏幕上的纵向中心（px）。 */
@@ -180,7 +190,7 @@ class HistorySavePeekWindow(
         val screenWidthPx = context.resources.displayMetrics.widthPixels
         val density = context.resources.displayMetrics.density
         // 把手的屏幕足迹 = 触摸区宽度 + 一点间距（触摸区已经收到"竖条真实宽度"）。
-        val handleFootprintPx = ((HANDLE_TOUCH_WIDTH_DP + PEEK_GAP_DP) * density).toInt()
+        val handleFootprintPx = ((handleTouchWidthDp + PEEK_GAP_DP) * density).toInt()
         params.x = if (gravityEnd.value) {
             (screenWidthPx - handleFootprintPx - measuredSize.width).coerceAtLeast(0)
         } else {

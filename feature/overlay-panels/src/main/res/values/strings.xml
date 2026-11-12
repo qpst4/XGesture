@@ -234,6 +234,7 @@
     <string name="float_ball_pick_smart_copy_code">Copy Code</string>
     <string name="float_ball_pick_smart_copied_toast">Copied to clipboard</string>
     <string name="pick_result_action_save_image">Save image</string>
+    <string name="pick_result_action_view_image">View image</string>
     <string name="pick_result_action_image_search">Search by image</string>
     <string name="pick_result_action_share_image">Share image</string>
     <string name="pick_result_image_share_to_app">Share to app</string>

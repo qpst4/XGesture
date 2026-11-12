@@ -42,6 +42,7 @@ import com.slideindex.app.settings.QuickWheel
 import com.slideindex.app.settings.QuickWheelLongPressTrigger
 import com.slideindex.app.settings.QuickWheelSlot
 import com.slideindex.app.settings.QuickWheelTapTrigger
+import com.slideindex.app.shell.ShellCommand
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
@@ -118,6 +119,8 @@ fun QuickWheelOverlayContent(
      * 画在轮盘**下层**：容器自身不透明，所以容器所在位置看不到屏幕底部的内容。
      */
     backdropDimAlpha: Float = 0f,
+    /** Shell 命令表：HUD 的动作名称按它回查用户自定义名。 */
+    shellCommands: List<ShellCommand> = emptyList(),
     onExternalHandlers: (move: (Float, Float) -> Unit, up: (Float, Float) -> Unit) -> Unit = { _, _ -> },
 ) {
     val densityFloat = LocalDensity.current.density
@@ -556,6 +559,7 @@ fun QuickWheelOverlayContent(
                 // 与长按计时同源：悬停目标一变就重启进度。
                 progressKey = hoverToken,
                 modifier = Modifier.align(Alignment.TopCenter),
+                shellCommands = shellCommands,
             )
         }
     }

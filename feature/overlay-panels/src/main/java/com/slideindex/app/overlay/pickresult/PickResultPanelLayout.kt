@@ -57,6 +57,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Rect as ComposeRect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
@@ -365,6 +366,8 @@ fun PickResultAuxiliaryImageBlock(
     onPinImageToScreen: () -> Unit,
     onStashImage: () -> Unit,
     onImageClick: () -> Unit,
+    /** 工具栏「查看图片」：打开面板内全屏查看器；null 时不显示按钮。 */
+    onViewImage: (() -> Unit)? = null,
     onCopyImage: (() -> Unit)? = null,
     onImageIndexChange: (Int) -> Unit,
     onSectionExpandedChange: (Boolean) -> Unit,
@@ -421,6 +424,7 @@ fun PickResultAuxiliaryImageBlock(
         onPinToScreen = onPinImageToScreen,
         onStash = onStashImage,
         onImageClick = onImageClick,
+        onViewImage = onViewImage,
         onCopyImage = onCopyImage,
         onImageIndexChange = onImageIndexChange,
         sectionExpanded = sectionExpanded,
@@ -477,6 +481,7 @@ fun PickResultAuxiliarySearchBlock(
     collapseDragActive: Boolean = false,
     auxiliaryDragEnabled: Boolean = false
 ) {
+    val density = LocalDensity.current
     if (searchDividerHeight > 0.dp) {
         Box(
             modifier = Modifier
@@ -517,6 +522,13 @@ fun PickResultAuxiliarySearchBlock(
                 }
             }
             .clipToBounds()
+            .onSizeChanged { size ->
+                com.slideindex.app.diagnostic.EdgeDiag.log(
+                    "pickSearchBlock",
+                    "h=${size.height}px ${with(density) { size.height.toDp() }} " +
+                        "requested=$searchGridHeight",
+                )
+            }
             .then(
                 if (auxiliaryDragEnabled) {
                     Modifier.pickResultLinkedVerticalDrag(
@@ -786,6 +798,8 @@ fun PickResultCollapsePanelColumn(
     onPinImageToScreen: () -> Unit,
     onStashImage: () -> Unit,
     onImageClick: () -> Unit,
+    /** 工具栏「查看图片」：打开面板内全屏查看器；null 时不显示按钮。 */
+    onViewImage: (() -> Unit)? = null,
     onCopyImage: (() -> Unit)? = null,
     onImageIndexChange: (Int) -> Unit,
     onImageSectionExpandedChange: (Boolean) -> Unit,
@@ -1033,6 +1047,18 @@ fun PickResultCollapsePanelColumn(
         showTabBar = showTabBar
     )
 
+    LaunchedEffect(panelContentHeight, expandedSearchGridContentHeight) {
+        com.slideindex.app.diagnostic.EdgeDiag.log(
+            "pickPanelLayout",
+            "panelContentH=$panelContentHeight effectiveH=$effectivePanelHeight " +
+                "fixedH=$fixedPanelHeight expandedGrid=$expandedSearchGridContentHeight " +
+                "gridH=${collapseHeights.searchGridHeight} " +
+                "searchExpansion=$searchExpansionFraction normalFactor=$normalLayoutFactor " +
+                "imageH=${collapseHeights.imageSectionHeight} textBodyH=${collapseHeights.textBodyHeight} " +
+                "actionBarInset=$actionBarBottomInset",
+        )
+    }
+
     val applyDragState = rememberUpdatedState(applyDrag)
     val applySearchDragState = rememberUpdatedState(applySearchDrag)
     val wrappedApplyDrag: (Float) -> Unit = remember {
@@ -1260,6 +1286,7 @@ fun PickResultCollapsePanelColumn(
             onPinImageToScreen = onPinImageToScreen,
             onStashImage = onStashImage,
             onImageClick = onImageClick,
+            onViewImage = onViewImage,
             onCopyImage = onCopyImage,
             onImageIndexChange = onImageIndexChange,
             onSectionExpandedChange = onImageSectionExpandedChange,
@@ -1324,7 +1351,15 @@ fun PickResultCollapsePanelColumn(
                     Modifier
                 }
             )
-            .padding(top = PANEL_VERTICAL_PADDING, bottom = PANEL_VERTICAL_PADDING),
+            .padding(top = PANEL_VERTICAL_PADDING, bottom = PANEL_VERTICAL_PADDING)
+            .onSizeChanged { size ->
+                com.slideindex.app.diagnostic.EdgeDiag.log(
+                    "pickPanelHeight",
+                    "h=${size.height}px ${with(density) { size.height.toDp() }} " +
+                        "w=${size.width}px panelContentH=$panelContentHeight " +
+                        "fixed=$fixedPanelHeight searchGridH=${collapseHeights.searchGridHeight}",
+                )
+            },
         verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
         if (landscapeDualColumn) {

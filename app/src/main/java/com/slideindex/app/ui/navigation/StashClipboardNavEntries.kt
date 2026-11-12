@@ -97,6 +97,9 @@ fun NavEntryBuilder.stashClipboardNavEntries(ctx: MainNavContext) {
             onClipboardHistoryFloatEnabledChange = viewModel::setClipboardHistoryFloatEnabled,
             onClipboardHistoryFloatEnabledLandscapeChange = viewModel::setClipboardHistoryFloatEnabledLandscape,
             onClipboardHistoryFloatLockPositionChange = viewModel::setClipboardHistoryFloatLockPosition,
+            onClipboardHistoryFloatHandleWidthChange = viewModel::setClipboardHistoryFloatHandleWidthDp,
+            onClipboardHistoryFloatHandleHeightChange = viewModel::setClipboardHistoryFloatHandleHeightDp,
+            onClipboardHistoryFloatHandleAlphaChange = viewModel::setClipboardHistoryFloatHandleAlpha,
             onStashPanelHandleOpenTabChange = viewModel::setStashPanelHandleOpenTab,
             onStashPanelWidthModeChange = viewModel::setStashPanelWidthMode,
             onOpenOverlayPermission = {

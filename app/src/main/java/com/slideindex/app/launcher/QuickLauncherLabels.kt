@@ -3,6 +3,9 @@ package com.slideindex.app.launcher
 import android.content.Context
 import com.slideindex.app.R
 import com.slideindex.app.data.AppInfo
+import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.shell.ShellCommandLabelResolver
 import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
 import com.slideindex.app.util.AppLocaleApplier
 
@@ -23,7 +26,12 @@ object QuickLauncherLabels {
     fun resolveLabel(
         context: Context,
         item: QuickLauncherItem,
-        appsByPackage: Map<String, AppInfo>
+        appsByPackage: Map<String, AppInfo>,
+        /**
+         * Shell 命令表：动作里只存命令文本，渲染时按文本回查用户自定义名称。
+         * 不传时退回通用文案（宏、打开链接等仍按动作本身解析）。
+         */
+        shellCommands: List<ShellCommand> = emptyList(),
     ): String {
         val localized = AppLocaleApplier.wrapOverlayContext(context)
         return when (item.type) {
@@ -46,7 +54,9 @@ object QuickLauncherLabels {
             QuickLauncherItemType.ACTION -> {
                 val action = QuickLauncherItemCodec.parseActionPayload(item.payload)
                 if (action != null) {
-                    gestureActionLabelText(localized, action)
+                    val customShellLabel = (action as? GestureAction.ExecuteShellCommand)
+                        ?.let { ShellCommandLabelResolver.customLabelFor(it.command, shellCommands) }
+                    customShellLabel ?: gestureActionLabelText(localized, action)
                 } else {
                     item.label.ifBlank { defaultTypeLabel(localized, item.type) }
                 }

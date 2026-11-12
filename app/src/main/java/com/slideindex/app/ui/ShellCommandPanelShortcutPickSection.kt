@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.shell.ShellCommandLabelResolver
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingsCardScope
@@ -55,9 +56,6 @@ fun displayLabelForExecuteShellCommand(
     shellCommands: List<ShellCommand>,
 ): String {
     val trimmed = commandLine.trim()
-    shellCommands.firstOrNull { it.command.trim() == trimmed }?.label
-        ?.trim()
-        ?.takeIf { it.isNotBlank() }
-        ?.let { return it }
-    return gestureExecuteShellCommandPreview(trimmed)
+    return ShellCommandLabelResolver.customLabelFor(trimmed, shellCommands)
+        ?: gestureExecuteShellCommandPreview(trimmed)
 }

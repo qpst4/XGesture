@@ -69,6 +69,7 @@ import com.slideindex.app.settings.opensSomething
 import com.slideindex.app.settings.toLaunchWindowMode
 import com.slideindex.app.settings.toQuickWheelLaunchMode
 import com.slideindex.app.settings.withoutLaunchWindowMode
+import com.slideindex.app.shell.ShellCommandLabelResolver
 import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
 import com.slideindex.app.ui.gesturepicker.launchShortcutDisplayLabel
 import com.slideindex.app.ui.miuix.MiuixSettingsScreenScaffold
@@ -157,6 +158,11 @@ fun QuickWheelSlotEditorScreen(
     // ⚠️ 资源文案必须走 stringResource：`LocalContext.current.getString(...)` 不是配置感知的，
     // 会被 Compose lint 判成 **Error**（LocalContextGetResourceValueCall）并让 lintDebug 直接失败。
     val launchShortcutFallbackLabel = stringResource(R.string.gesture_action_launch_shortcut)
+    // Shell 命令优先用命令面板里的自定义名；其余动作仍走通用文案。
+    fun labelFor(action: GestureAction): String =
+        (action as? GestureAction.ExecuteShellCommand)
+            ?.let { ShellCommandLabelResolver.customLabelFor(it.command, appSettings.shellCommands) }
+            ?: gestureActionLabelText(context, action)
     val scope = rememberCoroutineScope()
     val original = remember(wheel, path) { wheel.slotAt(path) ?: QuickWheelSlot() }
     val isExisting = original.isConfigured
@@ -184,7 +190,7 @@ fun QuickWheelSlotEditorScreen(
         } else {
             draft.tapAction
         }
-        val previousLabel = gestureActionLabelText(context, previousAction)
+        val previousLabel = labelFor(previousAction)
         // 「打开应用」类动作：名称用应用名（不带"启动应用："前缀），图标直接用应用图标。
         val appPackage = (action as? GestureAction.LaunchApp)?.payload
         val appLabel = appPackage?.let { pkg ->
@@ -197,12 +203,12 @@ fun QuickWheelSlotEditorScreen(
         // 「打开应用」→ 应用名；「快捷方式」→ 快捷方式自身名称（**都不带"启动X："前缀**，
         // 与动作选择器列表、HUD 文案保持一致）；其它动作沿用动作类型文案。
         val newLabel = when (action) {
-            is GestureAction.LaunchApp -> appLabel ?: gestureActionLabelText(context, action)
+            is GestureAction.LaunchApp -> appLabel ?: labelFor(action)
 
             is GestureAction.LaunchShortcut ->
                 launchShortcutDisplayLabel(action).ifBlank { launchShortcutFallbackLabel }
 
-            else -> gestureActionLabelText(context, action)
+            else -> labelFor(action)
         }
         val newIconSource = if (appPackage != null) {
             QuickWheelIconSource.APP_ICON

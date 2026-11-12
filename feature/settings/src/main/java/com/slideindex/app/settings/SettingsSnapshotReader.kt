@@ -656,6 +656,18 @@ internal object SettingsSnapshotReader {
             clipboardHistoryFloatHandleYLandscape =
                 prefs[SettingsPreferenceKeys.CLIPBOARD_HISTORY_FLOAT_HANDLE_Y_LANDSCAPE]
                     ?: HistoryFloatHandlePosition.UNSET_POSITION,
+            clipboardHistoryFloatHandleWidthDp = HistoryFloatHandleAppearance.coerceWidthDp(
+                prefs[SettingsPreferenceKeys.CLIPBOARD_HISTORY_FLOAT_HANDLE_WIDTH_DP]
+                    ?: HistoryFloatHandleAppearance.DEFAULT_WIDTH_DP,
+            ),
+            clipboardHistoryFloatHandleHeightDp = HistoryFloatHandleAppearance.coerceHeightDp(
+                prefs[SettingsPreferenceKeys.CLIPBOARD_HISTORY_FLOAT_HANDLE_HEIGHT_DP]
+                    ?: HistoryFloatHandleAppearance.DEFAULT_HEIGHT_DP,
+            ),
+            clipboardHistoryFloatHandleAlpha = HistoryFloatHandleAppearance.coerceAlpha(
+                prefs[SettingsPreferenceKeys.CLIPBOARD_HISTORY_FLOAT_HANDLE_ALPHA]
+                    ?: HistoryFloatHandleAppearance.DEFAULT_ALPHA,
+            ),
             clipboardFloatEnabled = prefs[SettingsPreferenceKeys.CLIPBOARD_FLOAT_ENABLED] ?: false,
             clipboardFloatShowChip = prefs[SettingsPreferenceKeys.CLIPBOARD_FLOAT_SHOW_CHIP] ?: true,
             clipboardFloatChipFollowIme =

@@ -164,7 +164,7 @@ internal fun QuickLauncherGridCell(
     showEnterAffordance: Boolean = false,
 ) {
     val context = LocalContext.current
-    val label = quickLauncherGridLabel(context, item, appsByPackage)
+    val label = quickLauncherGridLabel(context, item, appsByPackage, shellCommands)
     val actionIconTint = remember(actionIconTintArgb) { androidx.compose.ui.graphics.Color(actionIconTintArgb) }
     val action = remember(item.payload, item.type) {
         if (item.type == QuickLauncherItemType.ACTION) {
@@ -318,7 +318,8 @@ internal fun quickLauncherGridLabel(
     context: android.content.Context,
     item: QuickLauncherItem,
     appsByPackage: Map<String, AppInfo>,
-): String = QuickLauncherLabels.resolveLabel(context, item, appsByPackage)
+    shellCommands: List<ShellCommand> = emptyList(),
+): String = QuickLauncherLabels.resolveLabel(context, item, appsByPackage, shellCommands)
 
 internal fun quickLauncherIconClipShape(iconShape: Int): Shape =
     when (QuickLauncherDisplaySettings.coerceIconShape(iconShape)) {

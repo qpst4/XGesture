@@ -25,6 +25,7 @@ import com.slideindex.app.overlay.ShortcutBadgeRenderer
 import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.settings.CornerGestureSettings
 import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.shell.ShellCommandLabelResolver
 import com.slideindex.app.util.CloneBadge
 import kotlin.math.min
 
@@ -348,8 +349,7 @@ object CornerRadialMenuRenderer {
 
             val label = (com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchShortcutLabel
                 ?.invoke(shortcut).orEmpty()).ifBlank {
-                com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel
-                    ?.invoke(context, shortcut).orEmpty()
+                actionLabel(context, shortcut, shellCommands)
             }
             val textStart = drawRect.left + iconContentWidth
             val textMaxWidth = (drawRect.right - paddingRight - textStart).coerceAtLeast(0f)
@@ -382,7 +382,7 @@ object CornerRadialMenuRenderer {
         hintPipArmed: Boolean = false,
     ) {
         // 长按到时间 → 名字后面拼上目标形态（-小窗 / -全屏）
-        val label = com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel?.invoke(context, action).orEmpty() +
+        val label = actionLabel(context, action, shellCommands) +
             if (longPressRingProgress >= 1f) hintLabelSuffix else ""
         if (label.isBlank()) return
 
@@ -737,5 +737,22 @@ object CornerRadialMenuRenderer {
         }
         val textY = centerY - (iconPaint.descent() + iconPaint.ascent()) / 2f
         canvas.drawText("✎", centerX, textY, iconPaint)
+    }
+
+    /**
+     * 动作名称：Shell 命令优先用 Shell 命令面板里用户自定义的名字，
+     * 其余动作仍走 `:app` 注入的通用标签（宏、打开链接、快捷方式等）。
+     */
+    private fun actionLabel(
+        context: Context,
+        action: GestureAction,
+        shellCommands: List<ShellCommand>,
+    ): String {
+        val customShellLabel = (action as? GestureAction.ExecuteShellCommand)
+            ?.let { ShellCommandLabelResolver.customLabelFor(it.command, shellCommands) }
+        return customShellLabel
+            ?: com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel
+                ?.invoke(context, action)
+                .orEmpty()
     }
 }

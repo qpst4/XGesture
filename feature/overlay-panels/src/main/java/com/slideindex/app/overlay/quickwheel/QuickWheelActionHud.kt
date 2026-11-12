@@ -38,6 +38,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slideindex.app.overlay.panels.R
+import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.shell.ShellCommandLabelResolver
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.settings.QuickWheelIconSource
@@ -161,7 +163,11 @@ fun quickWheelHudContent(
  *
  * 其它动作沿用 [gestureActionLabelText]（它们本身就是裸名，如"返回 / 主屏幕 / 手电筒"）。
  */
-private fun hudActionLabel(context: Context, action: GestureAction): String = when (action) {
+private fun hudActionLabel(
+    context: Context,
+    action: GestureAction,
+    shellCommands: List<ShellCommand>,
+): String = when (action) {
     is GestureAction.LaunchApp -> {
         if (action.packageName.isBlank()) {
             context.getString(R.string.gesture_action_launch_app)
@@ -178,6 +184,12 @@ private fun hudActionLabel(context: Context, action: GestureAction): String = wh
             ?.invoke(action).orEmpty()).ifBlank {
             context.getString(R.string.gesture_action_launch_shortcut)
         }
+
+    is GestureAction.ExecuteShellCommand ->
+        ShellCommandLabelResolver.customLabelFor(action.command, shellCommands)
+            ?: com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel
+                ?.invoke(context, action)
+                .orEmpty()
 
     else -> com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel
         ?.invoke(context, action).orEmpty()
@@ -216,6 +228,8 @@ fun QuickWheelActionHud(
     hasSubSlots: Boolean,
     progressKey: Any?,
     modifier: Modifier = Modifier,
+    /** Shell 命令表：HUD 要按命令文本回查自定义名称。 */
+    shellCommands: List<ShellCommand> = emptyList(),
 ) {
     val hasTapAction = slot.tapAction.type != GestureActionType.NONE
     val hasLongPressAction = slot.longPressAction.type != GestureActionType.NONE
@@ -228,7 +242,7 @@ fun QuickWheelActionHud(
     val tapLine = if (hasTapAction) {
         stringResource(
             R.string.quick_wheel_hud_tap,
-            hudActionLabel(context, slot.tapAction),
+            hudActionLabel(context, slot.tapAction, shellCommands),
         )
     } else {
         noAction
@@ -236,7 +250,7 @@ fun QuickWheelActionHud(
     val longPressLine = if (hasLongPressAction) {
         stringResource(
             R.string.quick_wheel_hud_long_press,
-            hudActionLabel(context, slot.longPressAction),
+            hudActionLabel(context, slot.longPressAction, shellCommands),
         )
     } else {
         noAction

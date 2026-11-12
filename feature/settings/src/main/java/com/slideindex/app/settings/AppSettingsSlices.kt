@@ -514,6 +514,12 @@ data class ClipboardSettings(
     val clipboardHistoryFloatHandleYPortrait: Int = HistoryFloatHandlePosition.UNSET_POSITION,
     /** Saved handle top offset in px for landscape; [HistoryFloatHandlePosition.UNSET_POSITION] = default. */
     val clipboardHistoryFloatHandleYLandscape: Int = HistoryFloatHandlePosition.UNSET_POSITION,
+    /** 贴边把手视觉粗细（dp），见 [HistoryFloatHandleAppearance]。 */
+    val clipboardHistoryFloatHandleWidthDp: Float = HistoryFloatHandleAppearance.DEFAULT_WIDTH_DP,
+    /** 贴边把手视觉长度（dp）。 */
+    val clipboardHistoryFloatHandleHeightDp: Float = HistoryFloatHandleAppearance.DEFAULT_HEIGHT_DP,
+    /** 贴边把手静止态不透明度（0..1）。 */
+    val clipboardHistoryFloatHandleAlpha: Float = HistoryFloatHandleAppearance.DEFAULT_ALPHA,
     /** Floating clipboard window for input scenarios (grid, resize, paste on tap). */
     val clipboardFloatEnabled: Boolean = false,
     /** When true, show a chip above the keyboard before expanding the full window. */

@@ -212,7 +212,12 @@ internal object EdgeGestureOverlayAccessibilityCollector {
     ): List<OverlayVirtualNode> {
         val itemNodes = panelGridSession.cellBounds.mapNotNull { (payload, bounds) ->
             val item = payload as? QuickLauncherItem ?: return@mapNotNull null
-            val label = QuickLauncherLabels.resolveLabel(context, item, appsByPackage)
+            val label = QuickLauncherLabels.resolveLabel(
+                context,
+                item,
+                appsByPackage,
+                shellCommands = quickLauncherController.quickLauncherShellCommands(),
+            )
             OverlayVirtualNode(
                 description = context.getString(R.string.cd_overlay_quick_launcher_item, label),
                 boundsInParent = RectF(bounds)

@@ -254,7 +254,12 @@ internal class QuickLauncherRenderer(
             QuickLauncherItemType.ACTION,
             QuickLauncherItemType.WIDGET,
             QuickLauncherItemType.FOLDER,
-            -> QuickLauncherLabels.resolveLabel(localizedContext(), item, ctrl.quickLauncherAppsByPackage)
+            -> QuickLauncherLabels.resolveLabel(
+                localizedContext(),
+                item,
+                ctrl.quickLauncherAppsByPackage,
+                shellCommands = host.settings().shellCommands,
+            )
         }
         ctrl.quickLauncherLabelCache[cacheKey] = label
         return label

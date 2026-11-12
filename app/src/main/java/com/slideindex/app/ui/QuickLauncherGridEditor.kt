@@ -257,7 +257,12 @@ fun QuickLauncherGridEditor(
     Column(modifier = Modifier.fillMaxWidth()) {
             if (activeFolderIndex >= 0) {
                 QuickLauncherFolderHeader(
-                    title = quickLauncherGridLabel(context, items[activeFolderIndex], appsByPackage),
+                    title = quickLauncherGridLabel(
+                        context,
+                        items[activeFolderIndex],
+                        appsByPackage,
+                        settings.shellCommands,
+                    ),
                     onBack = { exitFolder() },
                     onRename = {
                         renameText = items[activeFolderIndex].label

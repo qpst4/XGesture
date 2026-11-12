@@ -296,6 +296,7 @@ object QuickWheelOverlayWindow {
                         // 容器以外区域的黑色遮罩浓度（容器本身不透明，不受影响）。
                         backdropDimAlpha = QuickWheelLayoutEngine
                             .clampBackdropDimPercent(wheel.backdropDimPercent) / 100f,
+                        shellCommands = settings.shellCommands,
                         onExternalHandlers = { move, up ->
                             externalMoveHandler = move
                             externalUpHandler = up

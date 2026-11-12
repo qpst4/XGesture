@@ -104,6 +104,13 @@ fun HistoryFloatContent(
      * 所以由这里往上报，Service 再决定那个窗的可见性。
      */
     onGlowActiveChange: (Boolean) -> Unit = {},
+    /** 条粗细 / 长度 / 静止不透明度：由「显示贴边把手」的设置下发；默认值保持旧常量。 */
+    barWidthDp: Float = HANDLE_BAR_WIDTH_DP.toFloat(),
+    barHeightDp: Float = HANDLE_BAR_HEIGHT_DP.toFloat(),
+    barAlphaResting: Float = HANDLE_BAR_ALPHA_RESTING,
+    /** 触摸窗尺寸：宽度要跟着条粗变化，否则条会画出窗外 / 命中带被压缩。 */
+    touchWidthDp: Float = HANDLE_TOUCH_WIDTH_DP.toFloat(),
+    boxSizeDp: Float = HANDLE_BOX_DP.toFloat(),
 ) {
     // 「刚存下」信号（面板存下一条 → 把手脉冲一下，设计稿 `.pip.pulse`）。
     // 读它 = 订阅：`HistorySaveSignal` 的属性是 Compose 状态。
@@ -139,6 +146,11 @@ fun HistoryFloatContent(
                 onRevealEnd = onRevealEnd,
                 onQuickNote = onQuickNote,
                 onSwitchSide = onSwitchSide,
+                barWidthDp = barWidthDp,
+                barHeightDp = barHeightDp,
+                barAlphaResting = barAlphaResting,
+                touchWidthDp = touchWidthDp,
+                boxSizeDp = boxSizeDp,
             )
         }
     }
@@ -160,6 +172,11 @@ private fun HistoryFloatHandleTouch(
     onRevealEnd: (Boolean) -> Unit = {},
     onQuickNote: () -> Unit,
     onSwitchSide: () -> Unit,
+    barWidthDp: Float,
+    barHeightDp: Float,
+    barAlphaResting: Float,
+    touchWidthDp: Float,
+    boxSizeDp: Float,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -169,12 +186,17 @@ private fun HistoryFloatHandleTouch(
     // §对比度修正：静止值从 0.72 提到 0.92。原来的 0.72 让条在"没被按住"（也就是绝大多数时间）
     // 只有约 20% 不透明度 —— 那正是用户看到的"深色背景下完全看不见"。
     // 现在两个值都在"看得见"的高位，按住只是更亮一点（按下反馈），不再承担可见性。
+    val activeWidthDp = barWidthDp + (HANDLE_BAR_ACTIVE_WIDTH_DP - HANDLE_BAR_WIDTH_DP)
     val barWidth = animateDpAsState(
-        targetValue = if (active) HANDLE_BAR_ACTIVE_WIDTH_DP.dp else HANDLE_BAR_WIDTH_DP.dp,
+        targetValue = if (active) activeWidthDp.dp else barWidthDp.dp,
         label = "handleBarWidth",
     )
     val barAlpha = animateFloatAsState(
-        targetValue = if (active) HANDLE_BAR_ALPHA_ACTIVE else HANDLE_BAR_ALPHA_RESTING,
+        targetValue = if (active) {
+            minOf(HANDLE_BAR_ALPHA_ACTIVE, barAlphaResting + 0.08f)
+        } else {
+            barAlphaResting
+        },
         label = "handleBarAlpha",
     )
     // 存下后的脉冲：设计稿 `.pip.pulse` = `pippulse 900ms`，35% 处 `translateX(-3px) scaleY(1.18)`。
@@ -237,8 +259,8 @@ private fun HistoryFloatHandleTouch(
     // 条在窗内**贴外缘**：右缘时靠右（gap 在右），左缘时靠左。
     Box(
         modifier = Modifier
-            .width(HANDLE_TOUCH_WIDTH_DP.dp)
-            .height(HANDLE_BOX_DP.dp)
+            .width(touchWidthDp.dp)
+            .height(boxSizeDp.dp)
             .historyHandlePaint(
                 barColor = barColor,
                 barFillAlpha = barFillAlpha,
@@ -248,6 +270,7 @@ private fun HistoryFloatHandleTouch(
                 accent = scheme.primary,
                 glowActive = glowActive,
                 barWidth = barWidth,
+                barHeight = barHeightDp.dp,
                 glowObserved = null,
                 drawBar = true,
                 drawGlow = false,
@@ -421,13 +444,15 @@ fun Modifier.historyHandlePaint(
     accent: Color,
     glowActive: Boolean,
     barWidth: State<Dp>,
+    /** 条长度（视觉高度）：默认沿用旧常量，设置项接进来后由调用方传入。 */
+    barHeight: Dp = HANDLE_BAR_HEIGHT_DP.dp,
     glowObserved: State<Float>?,
     drawBar: Boolean,
     drawGlow: Boolean,
     /** true = 贴右缘（条靠窗右缘、光往左漏）；false = 贴左缘（整体镜像）。 */
     gravityEnd: Boolean,
 ): Modifier = this.drawWithCache {
-    val barHeightPx = HANDLE_BAR_HEIGHT_DP.dp.toPx()
+    val barHeightPx = barHeight.toPx()
     val cornerPx = HANDLE_BAR_CORNER_DP.dp.toPx()
     val borderWidthPx = HANDLE_BAR_BORDER_DP.dp.toPx()
     val gapPx = HANDLE_EDGE_GAP_DP.dp.toPx()

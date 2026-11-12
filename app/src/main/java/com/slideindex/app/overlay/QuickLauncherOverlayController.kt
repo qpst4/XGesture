@@ -1018,7 +1018,13 @@ internal class QuickLauncherOverlayController(
     internal fun quickLauncherItemCacheKey(item: QuickLauncherItem): String =
         // 宏会影响「运行宏」条目的图标与名字（标签每次按宏表解析），代次必须进 key，
         // 否则改了宏之后面板还是旧的图标 / 名字。
-        "${item.type.id}\u0000${item.payload}\u0000${com.slideindex.app.macro.MacroStore.revision}"
+        // Shell 命令同理：标签按命令表回查自定义名，命令表变了必须让缓存失效。
+        "${item.type.id}\u0000${item.payload}\u0000${com.slideindex.app.macro.MacroStore.revision}" +
+            "\u0000${quickLauncherShellCommands().hashCode()}"
+
+    /** 当前 Shell 命令表（供标签解析 / 无障碍描述与缓存 key 使用）。 */
+    internal fun quickLauncherShellCommands(): List<com.slideindex.app.shell.ShellCommand> =
+        host.settings().shellCommands
 
     internal fun rebuildQuickLauncherAppsByPackage(apps: List<AppInfo> = host.apps()) {
         // 同一个包可能同时有主实例和分身（cloneUserId > 0），而快速启动器条目的 payload

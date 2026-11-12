@@ -278,6 +278,8 @@ fun PickResultImageSearchBar(
     onShare: () -> Unit,
     onImageSearch: () -> Unit,
     onSave: () -> Unit,
+    /** 独立「查看图片」按钮：打开面板内的全屏查看器；null 时不显示。 */
+    onViewImage: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     onSaveLongClick: (() -> Unit)? = null,
     /** 长按分享键 = 把当前这张图起成系统拖拽；null 时不挂。 */
@@ -305,6 +307,7 @@ fun PickResultImageSearchBar(
                 onImageSearch = onImageSearch,
                 onShare = onShare,
                 onSave = onSave,
+                onViewImage = onViewImage,
                 onSaveLongClick = onSaveLongClick,
                 onStartImageDrag = onStartImageDrag,
                 onPinToScreen = onPinToScreen,
@@ -336,6 +339,7 @@ fun PickResultImageSearchBar(
                     onShare = onShare,
                     onImageSearch = onImageSearch,
                     onSave = onSave,
+                    onViewImage = onViewImage,
                     onSaveLongClick = onSaveLongClick,
                     onStartImageDrag = onStartImageDrag,
                     onPinToScreen = onPinToScreen,
@@ -417,6 +421,7 @@ fun PickResultImageSearchBar(
                 onShare = onShare,
                 onImageSearch = onImageSearch,
                 onSave = onSave,
+                onViewImage = onViewImage,
                 onSaveLongClick = onSaveLongClick,
                 onStartImageDrag = onStartImageDrag,
                 onPinToScreen = onPinToScreen,
@@ -907,6 +912,8 @@ private fun PickResultImageIconBar(
     onImageSearch: () -> Unit,
     onShare: () -> Unit,
     onSave: () -> Unit,
+    /** 独立「查看图片」按钮：打开面板内的全屏查看器；null 时不显示。 */
+    onViewImage: (() -> Unit)? = null,
     onSaveLongClick: (() -> Unit)? = null,
     onStartImageDrag: (() -> Unit)? = null,
     onPinToScreen: (() -> Unit)? = null,
@@ -936,6 +943,15 @@ private fun PickResultImageIconBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
     ) {
+        // 「查看图片」不参与按钮排序/隐藏：它是图片区独立的查看入口，始终显示在最左侧。
+        if (onViewImage != null) {
+            PickResultActionIcon(
+                icon = PickResultViewImageIcon,
+                enabled = true,
+                onClick = onViewImage,
+                contentDescription = stringResource(R.string.pick_result_action_view_image),
+            )
+        }
         visible.forEach { button ->
             when (button) {
                 com.slideindex.app.settings.PickResultImageBarButton.IMAGE_SEARCH ->
@@ -1038,6 +1054,8 @@ private fun PickResultImageSearchActions(
     onShare: () -> Unit,
     onImageSearch: () -> Unit,
     onSave: () -> Unit,
+    /** 独立「查看图片」按钮：打开面板内的全屏查看器；null 时不显示。 */
+    onViewImage: (() -> Unit)? = null,
     onSaveLongClick: (() -> Unit)? = null,
     onStartImageDrag: (() -> Unit)? = null,
     onPinToScreen: (() -> Unit)? = null,
@@ -1052,6 +1070,18 @@ private fun PickResultImageSearchActions(
         horizontalArrangement = Arrangement.spacedBy(if (compact) 2.dp else 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // 0. 独立入口：全屏查看当前图片（不占「更多」菜单、也不参与图标栏排序）。
+        if (onViewImage != null) {
+            PickResultActionIcon(
+                icon = PickResultViewImageIcon,
+                enabled = true,
+                onClick = onViewImage,
+                contentDescription = stringResource(R.string.pick_result_action_view_image),
+                overlayMode = overlayMode,
+                compact = compact,
+            )
+        }
+
         // 1. Direct Action: Image Search (以图搜图)
         PickResultActionIcon(
             icon = Icons.Outlined.ImageSearch,

@@ -58,6 +58,11 @@ class HistoryHandleGlowWindow(
     /** true = 贴右缘（光往左漏）；false = 贴左缘（镜像）。 */
     private val gravityEnd = mutableStateOf(true)
 
+    /** 条宽 / 条长 / 方窗边长：跟着「显示贴边把手」的尺寸设置走，默认值与旧常量一致。 */
+    private val barWidth = mutableStateOf(HANDLE_BAR_WIDTH_DP.dp)
+    private val barHeight = mutableStateOf(HANDLE_BAR_HEIGHT_DP.dp)
+    private val boxSize = mutableStateOf(HANDLE_BOX_DP.dp)
+
     private var topPx = 0
     private var added = false
 
@@ -76,6 +81,29 @@ class HistoryHandleGlowWindow(
     /** 跟把手一起换边。**不做"值没变就返回"**：旋屏后屏宽变了，x 必须重算。 */
     fun setGravityEnd(end: Boolean) {
         gravityEnd.value = end
+        applyX()
+    }
+
+    /**
+     * 把手尺寸变了：同步条宽 / 条长 / 方窗边长。
+     *
+     * 方窗是固定尺寸的窗口（不是 WRAP_CONTENT），尺寸变化必须同时改 `layoutParams`，
+     * 否则变大后的条会被窗外裁掉、辉光也会缺一块。
+     */
+    fun setHandleMetrics(widthDp: Float, heightDp: Float, boxDp: Float) {
+        val width = widthDp.coerceAtLeast(1f).dp
+        val height = heightDp.coerceAtLeast(1f).dp
+        val box = boxDp.coerceAtLeast(1f).dp
+        if (barWidth.value == width && barHeight.value == height && boxSize.value == box) return
+        barWidth.value = width
+        barHeight.value = height
+        boxSize.value = box
+        if (!added) return
+        val params = layoutParams ?: return
+        val boxPx = boxPx()
+        if (params.width == boxPx && params.height == boxPx) return
+        params.width = boxPx
+        params.height = boxPx
         applyX()
     }
 
@@ -158,7 +186,7 @@ class HistoryHandleGlowWindow(
     }
 
     private fun boxPx(): Int =
-        (HANDLE_BOX_DP * context.resources.displayMetrics.density).toInt()
+        (boxSize.value.value * context.resources.displayMetrics.density).toInt()
 
     @Composable
     private fun GlowLayer() {
@@ -166,13 +194,12 @@ class HistoryHandleGlowWindow(
         val phase = if (glowActive.value) HistoryHandleGlowSweep() else null
         val observed = phase?.let { rememberGlowObservedPhase(it) }
         // 光只在"没被按住"时可见，而那时的条宽恒为静止值 —— 所以这里用固定宽度，
-        // 不必像触摸窗那样跟着 `active` 做 9→11dp 的动画。
-        val barWidth = remember { mutableStateOf(HANDLE_BAR_WIDTH_DP.dp) }
+        // 不必像触摸窗那样跟着 `active` 做粗细动画。
         OverlayAwareModuleTheme {
             val accent = MiuixTheme.colorScheme.primary
             Box(
                 modifier = Modifier
-                    .size(HANDLE_BOX_DP.dp)
+                    .size(boxSize.value)
                     .historyHandlePaint(
                         // 条本体不在这一层画（drawBar = false），这几个颜色只是为了满足签名。
                         barColor = accent,
@@ -184,6 +211,7 @@ class HistoryHandleGlowWindow(
                         // 掺白是条本体的事，本层不画条。
                         glowActive = false,
                         barWidth = barWidth,
+                        barHeight = barHeight.value,
                         glowObserved = observed,
                         drawBar = false,
                         drawGlow = true,

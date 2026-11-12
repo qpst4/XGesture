@@ -12,6 +12,7 @@ import com.slideindex.app.settings.ClipboardMonitoringMode
 import com.slideindex.app.settings.ClipboardMonitoringCapture
 import com.slideindex.app.settings.ClipboardMonitoringChannel
 import com.slideindex.app.settings.ClipboardOverlayScale
+import com.slideindex.app.settings.HistoryFloatHandleAppearance
 import com.slideindex.app.settings.SettingsRepository
 import com.slideindex.app.settings.StashPanelHandleOpenTab
 import com.slideindex.app.settings.StashPanelWidthMode
@@ -119,6 +120,39 @@ class StashClipboardSettingsViewModel @Inject constructor(
                     landscapeEnabled = settingsRepository.readSnapshot().clipboardHistoryFloatEnabledLandscape,
                 )
             }
+        }
+    }
+
+    fun setClipboardHistoryFloatHandleWidthDp(value: Float) {
+        val clamped = HistoryFloatHandleAppearance.coerceWidthDp(value)
+        launchOptimisticSettingsWrite(
+            optimisticUpdate = {
+                it.copy(clipboard = it.clipboard.copy(clipboardHistoryFloatHandleWidthDp = clamped))
+            },
+        ) {
+            settingsRepository.setClipboardHistoryFloatHandleWidthDp(clamped)
+        }
+    }
+
+    fun setClipboardHistoryFloatHandleHeightDp(value: Float) {
+        val clamped = HistoryFloatHandleAppearance.coerceHeightDp(value)
+        launchOptimisticSettingsWrite(
+            optimisticUpdate = {
+                it.copy(clipboard = it.clipboard.copy(clipboardHistoryFloatHandleHeightDp = clamped))
+            },
+        ) {
+            settingsRepository.setClipboardHistoryFloatHandleHeightDp(clamped)
+        }
+    }
+
+    fun setClipboardHistoryFloatHandleAlpha(value: Float) {
+        val clamped = HistoryFloatHandleAppearance.coerceAlpha(value)
+        launchOptimisticSettingsWrite(
+            optimisticUpdate = {
+                it.copy(clipboard = it.clipboard.copy(clipboardHistoryFloatHandleAlpha = clamped))
+            },
+        ) {
+            settingsRepository.setClipboardHistoryFloatHandleAlpha(clamped)
         }
     }
 

@@ -136,6 +136,8 @@ object FloatBallPickResultPanel {
     private var panelShowTokenState: androidx.compose.runtime.MutableIntState? = null
     private var settingsState: MutableState<AppSettings>? = null
     private var panelRevealedState: MutableState<Boolean>? = null
+    /** 图片全屏查看器是否展开：返回键要先关它，再关面板。 */
+    private var imageViewerVisibleState: MutableState<Boolean>? = null
     private var panelRevealGeneration = 0
 
     /**
@@ -367,6 +369,11 @@ object FloatBallPickResultPanel {
     }
 
     private fun handlePanelBack() {
+        // 全屏查看器在最上层：返回键先关它，不能直接把整个取词面板关掉。
+        if (imageViewerVisibleState?.value == true) {
+            imageViewerVisibleState?.value = false
+            return
+        }
         if (textModeState?.value == PickResultTextMode.EDIT) {
             if (isPanelImeVisible()) {
                 hidePanelKeyboard()
@@ -508,6 +515,7 @@ object FloatBallPickResultPanel {
         captureDetached = false
         panelDismissing = false
         dragSuspended = false
+        imageViewerVisibleState?.value = false
         clearDragImageCache()
         pickPanelVisible = true
         composeView?.visibility = View.VISIBLE
@@ -953,6 +961,8 @@ object FloatBallPickResultPanel {
         }
         panelDismissing = true
         pickPanelVisible = false
+        // 关面板时把图片查看器一起收掉，下次打开不残留全屏层。
+        imageViewerVisibleState?.value = false
         dragSuspended = false
         clearDragImageCache()
         // 「记住上次」：面板隐藏时记录当前模式，下次进入按它还原。
@@ -1177,6 +1187,8 @@ object FloatBallPickResultPanel {
         settingsState = settingsHolder
         val panelRevealedHolder = mutableStateOf(false)
         panelRevealedState = panelRevealedHolder
+        val imageViewerVisibleHolder = mutableStateOf(false)
+        imageViewerVisibleState = imageViewerVisibleHolder
 
         panelVisibilityState = androidx.compose.animation.core.MutableTransitionState(false)
         val panelShowTokenHolder = mutableIntStateOf(0)
@@ -1215,6 +1227,7 @@ object FloatBallPickResultPanel {
                 val showingTranslation by showingTranslationHolder
                 val translateLoading by translateLoadingHolder
                 val settings by settingsHolder
+                val imageViewerVisible by imageViewerVisibleHolder
                 LaunchedEffect(overlayContext) {
                     val flow = OverlayDependencyAccess.overlayDependencies(overlayContext)
                         ?.settingsRepository
@@ -1289,6 +1302,8 @@ object FloatBallPickResultPanel {
                     onImageIndexChange = { index ->
                         setCurrentImageIndex(overlayContext, index)
                     },
+                    imageViewerVisible = imageViewerVisible,
+                    onImageViewerVisibleChange = { imageViewerVisibleHolder.value = it },
                     onTextSourceChange = { source ->
                         if (source == PickResultTextSource.A11Y && !a11ySourceEnabledHolder.value) {
                             return@FloatBallPickResultContent

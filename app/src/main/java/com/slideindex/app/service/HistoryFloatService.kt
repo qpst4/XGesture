@@ -19,6 +19,7 @@ import android.view.View
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
@@ -32,6 +33,11 @@ import com.slideindex.app.overlay.OverlayComposeOwner
 import com.slideindex.app.overlay.OverlayWindowTypes
 import com.slideindex.app.overlay.PanelSide
 import com.slideindex.app.overlay.StashPanelInitialTab
+import com.slideindex.app.overlay.history.HANDLE_BAR_ACTIVE_WIDTH_DP
+import com.slideindex.app.overlay.history.HANDLE_BAR_WIDTH_DP
+import com.slideindex.app.overlay.history.HANDLE_BOX_DP
+import com.slideindex.app.overlay.history.HANDLE_EDGE_GAP_DP
+import com.slideindex.app.overlay.history.HANDLE_TOUCH_INNER_BAND_DP
 import com.slideindex.app.overlay.history.HistoryFloatContent
 import com.slideindex.app.overlay.history.HistoryHandleCaptureVisibility
 import com.slideindex.app.overlay.history.HistoryHandleGlowWindow
@@ -41,6 +47,7 @@ import com.slideindex.app.overlay.history.HistorySavePeekWindow
 import com.slideindex.app.overlay.history.HistorySaveSignal
 import com.slideindex.app.overlay.history.StashPanelTabMemory
 import com.slideindex.app.overlay.history.StashReminderPendingState
+import com.slideindex.app.settings.HistoryFloatHandleAppearance
 import com.slideindex.app.settings.HistoryFloatHandlePosition
 import com.slideindex.app.settings.HistoryFloatHandleSide
 import com.slideindex.app.settings.StashPanelHandleOpenTab
@@ -50,7 +57,11 @@ import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import kotlin.math.roundToInt
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -82,6 +93,14 @@ class HistoryFloatService : Service() {
     private var hiddenForScreenOff = false
     /** 有待办未完成 → 把手整条变色（不出数字、不加宽）。 */
     private var handleAlert by mutableStateOf(false)
+    /** 把手外观（设置项）：Compose 状态，改了下一次重组就生效。 */
+    private var handleBarWidthDp by mutableFloatStateOf(HistoryFloatHandleAppearance.DEFAULT_WIDTH_DP)
+    private var handleBarHeightDp by mutableFloatStateOf(HistoryFloatHandleAppearance.DEFAULT_HEIGHT_DP)
+    private var handleBarAlpha by mutableFloatStateOf(HistoryFloatHandleAppearance.DEFAULT_ALPHA)
+    /** 订阅设置 Flow：外观改了立刻下发，不依赖设置页额外发 Intent。 */
+    private val settingsScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    /** 上一次应用过的方窗边长：只在"条长导致的窗高变化"时重夹 Y，避免普通设置变更也挪把手。 */
+    private var appliedBoxSizeDp = 0f
     /** 存下后的内容预览（懒创建：没人存东西就不建窗）。 */
     private var peekWindow: HistorySavePeekWindow? = null
     /** 长按把手的**就地编辑窗**（懒创建）：内容与面板里的加号弹窗完全一致，§0.16.25。 */
@@ -145,6 +164,27 @@ class HistoryFloatService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        // 先把落盘的外观读进来，避免首帧闪一下默认粗细/透明度。
+        runCatching {
+            val snapshot = deps.settingsRepository.readSnapshot()
+            handleBarWidthDp =
+                HistoryFloatHandleAppearance.coerceWidthDp(snapshot.clipboardHistoryFloatHandleWidthDp)
+            handleBarHeightDp =
+                HistoryFloatHandleAppearance.coerceHeightDp(snapshot.clipboardHistoryFloatHandleHeightDp)
+            handleBarAlpha =
+                HistoryFloatHandleAppearance.coerceAlpha(snapshot.clipboardHistoryFloatHandleAlpha)
+        }
+        settingsScope.launch {
+            deps.settingsRepository.settings.collect { snapshot ->
+                handleBarWidthDp =
+                    HistoryFloatHandleAppearance.coerceWidthDp(snapshot.clipboardHistoryFloatHandleWidthDp)
+                handleBarHeightDp =
+                    HistoryFloatHandleAppearance.coerceHeightDp(snapshot.clipboardHistoryFloatHandleHeightDp)
+                handleBarAlpha =
+                    HistoryFloatHandleAppearance.coerceAlpha(snapshot.clipboardHistoryFloatHandleAlpha)
+                applyHandleMetricsToWindows()
+            }
+        }
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         mainParams = LayoutParams()
         val overlayContext = OverlayCompose.themedContext(this)
@@ -177,6 +217,11 @@ class HistoryFloatService : Service() {
                         glowShouldBeActive = active
                         applyGlowVisibility()
                     },
+                    barWidthDp = handleBarWidthDp,
+                    barHeightDp = handleBarHeightDp,
+                    barAlphaResting = handleBarAlpha,
+                    touchWidthDp = handleTouchWidthDp(),
+                    boxSizeDp = handleBoxSizeDp(),
                 )
             }
         }
@@ -226,6 +271,7 @@ class HistoryFloatService : Service() {
     }
 
     override fun onDestroy() {
+        settingsScope.cancel()
         mainHandler.removeCallbacks(fullscreenCheckRunnable)
         // 窗马上要摘了：清空截图钩子并复位状态，避免下次启动带着陈旧的隐藏态。
         HistoryHandleCaptureVisibility.detachApplier()
@@ -309,6 +355,38 @@ class HistoryFloatService : Service() {
 
     private fun screenHeightPx(): Int = resources.displayMetrics.heightPixels
 
+    /** 触摸窗宽 = 外缘间距 + 按住时最宽的条 + 固定的内侧命中带（命中带不随粗细放大）。 */
+    private fun handleTouchWidthDp(): Float =
+        HANDLE_EDGE_GAP_DP +
+            (handleBarWidthDp + (HANDLE_BAR_ACTIVE_WIDTH_DP - HANDLE_BAR_WIDTH_DP)) +
+            HANDLE_TOUCH_INNER_BAND_DP
+
+    /** 方窗边长：至少 48dp；条变长时给上下各留 10dp 余量，避免流光被裁。 */
+    private fun handleBoxSizeDp(): Float =
+        maxOf(HANDLE_BOX_DP.toFloat(), handleBarHeightDp + 20f)
+
+    /**
+     * 外观变化后同步两个"固定尺寸"的窗：
+     * 流光窗（方窗边长）与 peek（横向落点）；触摸窗是 WRAP_CONTENT，Compose 重排后会自己变。
+     */
+    private fun applyHandleMetricsToWindows() {
+        glowWindow?.setHandleMetrics(handleBarWidthDp, handleBarHeightDp, handleBoxSizeDp())
+        peekWindow?.setHandleTouchWidthDp(handleTouchWidthDp())
+        if (!viewAdded) return
+        val view = composeView ?: return
+        view.requestLayout()
+        mainHandler.post {
+            if (!viewAdded) return@post
+            runCatching { windowManager.updateViewLayout(view, mainParams) }
+        }
+        // 条变长会让窗向下长大：贴底的把手要重新夹一次 Y，避免下半截出屏。
+        val boxSize = handleBoxSizeDp()
+        if (appliedBoxSizeDp != boxSize) {
+            appliedBoxSizeDp = boxSize
+            mainHandler.post { applyHandlePosition() }
+        }
+    }
+
     private fun applyHandlePosition() {
         positionY = HistoryFloatHandlePosition.resolveY(
             storedY = storedHandleY(),
@@ -380,6 +458,7 @@ class HistoryFloatService : Service() {
         if (!active && glowWindow == null) return
         val window = glowWindow ?: if (active) {
             HistoryHandleGlowWindow(this, windowManager).also {
+                it.setHandleMetrics(handleBarWidthDp, handleBarHeightDp, handleBoxSizeDp())
                 it.setGravityEnd(handleSide == HistoryFloatHandleSide.RIGHT)
                 it.moveTo(positionY)
                 glowWindow = it
@@ -459,6 +538,7 @@ class HistoryFloatService : Service() {
 
     private fun ensurePeekWindow(): HistorySavePeekWindow =
         peekWindow ?: HistorySavePeekWindow(this, windowManager).also {
+            it.setHandleTouchWidthDp(handleTouchWidthDp())
             it.setGravityEnd(handleSide == HistoryFloatHandleSide.RIGHT)
             peekWindow = it
         }

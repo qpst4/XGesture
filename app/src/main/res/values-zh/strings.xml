@@ -2007,6 +2007,7 @@
     <string name="float_ball_pick_panel_tab_text">文本</string>
     <string name="float_ball_pick_panel_tab_image">截图</string>
     <string name="pick_result_action_save_image">保存图片</string>
+    <string name="pick_result_action_view_image">查看图片</string>
     <string name="pick_result_action_image_search">以图搜图</string>
     <string name="pick_result_action_share_image">分享图片</string>
     <string name="float_ball_pick_smart_open_url">打开网页</string>
@@ -4257,6 +4258,9 @@
     <string name="clipboard_history_float_enabled_landscape_desc">开启后横屏时仍显示贴边把手；默认关闭</string>
     <string name="clipboard_history_float_lock_position_title">锁定竖条位置</string>
     <string name="clipboard_history_float_lock_position_desc">开启后无法拖动竖条改变垂直位置，也无法拖到另一侧。</string>
+    <string name="clipboard_history_float_handle_width_title">竖条粗细</string>
+    <string name="clipboard_history_float_handle_height_title">竖条长度</string>
+    <string name="clipboard_history_float_handle_alpha_title">竖条透明度</string>
     <string name="stash_panel_handle_open_tab_title">把手打开时显示</string>
     <string name="stash_panel_handle_open_tab_remember">上次停留的页签</string>
     <string name="stash_panel_width_mode_title">面板宽度</string>

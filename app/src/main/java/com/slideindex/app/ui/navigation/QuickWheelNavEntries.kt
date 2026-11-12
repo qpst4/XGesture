@@ -11,6 +11,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.gesture.ActionExecutor
+import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.overlay.asGestureActionRunner
 import com.slideindex.app.overlay.layout.QuickWheelLayoutEngine
 import com.slideindex.app.overlay.quickwheel.QuickWheelOverlayWindow
@@ -21,6 +22,7 @@ import com.slideindex.app.settings.updateSlot
 import com.slideindex.app.ui.QuickWheelConfigScreen
 import com.slideindex.app.ui.QuickWheelListScreen
 import com.slideindex.app.ui.QuickWheelSlotEditorScreen
+import com.slideindex.app.shell.ShellCommandLabelResolver
 import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
 import com.slideindex.app.ui.quickWheelPreviewAnchor
 import com.slideindex.app.ui.viewmodel.ExtensionSettingsViewModel
@@ -63,7 +65,12 @@ fun NavEntryBuilder.quickWheelNavEntries(ctx: MainNavContext) {
                     id = UUID.randomUUID().toString(),
                     ordinal = wheels.size + 1,
                     order = wheels.size,
-                    slotLabel = { action -> gestureActionLabelText(context, action) },
+                    slotLabel = { action ->
+                        // Shell 命令优先用命令面板里的自定义名（其余动作仍走通用文案）。
+                        (action as? GestureAction.ExecuteShellCommand)
+                            ?.let { ShellCommandLabelResolver.customLabelFor(it.command, settings.shellCommands) }
+                            ?: gestureActionLabelText(context, action)
+                    },
                 )
                 // 先落盘（配置页 / 容器编辑页都按 id 取它），但记成"待保存"：
                 // 没保存就退出配置页时会被回收掉。

@@ -63,6 +63,8 @@ fun PickResultImageSection(
     onPinToScreen: () -> Unit,
     onStash: () -> Unit,
     onImageClick: () -> Unit,
+    /** 工具栏「查看图片」：打开面板内全屏查看器；null 时不显示按钮。 */
+    onViewImage: (() -> Unit)? = null,
     onCopyImage: (() -> Unit)? = null,
     onImageIndexChange: (Int) -> Unit,
     sectionExpanded: Boolean,
@@ -91,6 +93,7 @@ fun PickResultImageSection(
                 onPinToScreen = onPinToScreen,
                 onStash = onStash,
                 onImageClick = onImageClick,
+                onViewImage = onViewImage,
                 onCopyImage = onCopyImage,
                 onImageIndexChange = onImageIndexChange,
                 sectionExpanded = sectionExpanded,
@@ -123,6 +126,8 @@ fun PickResultImageSectionGallery(
     onPinToScreen: () -> Unit,
     onStash: () -> Unit,
     onImageClick: () -> Unit,
+    /** 工具栏「查看图片」：打开面板内全屏查看器；null 时不显示按钮。 */
+    onViewImage: (() -> Unit)? = null,
     onCopyImage: (() -> Unit)? = null,
     onImageIndexChange: (Int) -> Unit,
     sectionExpanded: Boolean,
@@ -282,6 +287,7 @@ fun PickResultImageSectionGallery(
                     onStartImageDrag = onStartDrag,
                     onImageSearch = onImageSearch,
                     onSave = onSave,
+                    onViewImage = onViewImage,
                     onSaveLongClick = onSaveLongClick,
                     onPinToScreen = onPinToScreen,
                     onStash = onStash,

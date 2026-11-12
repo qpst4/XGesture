@@ -1095,6 +1095,7 @@
     <string name="float_ball_pick_panel_tab_text">Text</string>
     <string name="float_ball_pick_panel_tab_image">Screenshot</string>
     <string name="pick_result_action_save_image">Save image</string>
+    <string name="pick_result_action_view_image">View image</string>
     <string name="pick_result_action_image_search">Search by image</string>
     <string name="pick_result_action_share_image">Share image</string>
     <string name="float_ball_pick_smart_open_url">Open Link</string>
@@ -4153,6 +4154,9 @@ Questions: open a GitHub Issue on the project repository.</string>
     <string name="clipboard_history_float_enabled_landscape_desc">When on, the edge handle stays visible in landscape; off by default</string>
     <string name="clipboard_history_float_lock_position_title">Lock handle position</string>
     <string name="clipboard_history_float_lock_position_desc">When on, the handle cannot be dragged vertically or across to the other edge.</string>
+    <string name="clipboard_history_float_handle_width_title">Handle thickness</string>
+    <string name="clipboard_history_float_handle_height_title">Handle length</string>
+    <string name="clipboard_history_float_handle_alpha_title">Handle opacity</string>
     <string name="stash_panel_handle_open_tab_title">Tab opened from handle</string>
     <string name="stash_panel_handle_open_tab_remember">Last used tab</string>
     <string name="stash_panel_width_mode_title">Panel width</string>
