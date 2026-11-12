@@ -90,6 +90,8 @@ class ClipboardHistoryRepository @Inject constructor(
         ) {
             return
         }
+        // 超长文本不落库：先在入口拦掉，避免先写图片文件、再被 store 丢弃留下孤儿文件。
+        if (ClipboardEntrySizeLimit.isTextTooLarge(payload)) return
         writeMutex.withLock {
             val contentKey = payload.contentKey()
             val fingerprint = ClipboardContentEquivalence.fingerprint(payload)

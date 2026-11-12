@@ -25,9 +25,9 @@ class ClipboardHistoryStore(
      * 与「已经加载了几页」无关（§0.16.4 待办 1）。
      */
     fun count(filter: ClipboardHistoryFilter = ClipboardHistoryFilter.All): Int {
-        val where = filter.sqlWhere()
+        val where = listOfNotNull(filter.sqlWhere(), JSON_SIZE_GUARD).joinToString(" AND ")
         val db = readableDatabase
-        val sql = if (where == null) {
+        val sql = if (where.isEmpty()) {
             "SELECT COUNT(*) FROM $TABLE"
         } else {
             "SELECT COUNT(*) FROM $TABLE WHERE $where"
@@ -49,7 +49,7 @@ class ClipboardHistoryStore(
         val filterSelection = filter.sqlWhere()
         // 游标条件与筛选条件是 AND：两者都不带用户输入（筛选条件是常量字面量，没有占位符），
         // 所以拼字符串不会有注入面，参数表也只需管游标那一个。
-        val selection = listOfNotNull(cursorSelection, filterSelection)
+        val selection = listOfNotNull(cursorSelection, filterSelection, JSON_SIZE_GUARD)
             .joinToString(" AND ")
             .takeIf { it.isNotEmpty() }
         val selectionArgs = if (createdBeforeMs == null) null else arrayOf(createdBeforeMs.toString())
@@ -81,7 +81,7 @@ class ClipboardHistoryStore(
         return db.query(
             TABLE,
             arrayOf(COL_JSON),
-            "$COL_ID = ?",
+            "$COL_ID = ? AND $JSON_SIZE_GUARD",
             arrayOf(id),
             null,
             null,
@@ -99,7 +99,7 @@ class ClipboardHistoryStore(
         val byId = db.query(
             TABLE,
             arrayOf(COL_ID, COL_JSON),
-            "$COL_ID IN ($placeholders)",
+            "$COL_ID IN ($placeholders) AND $JSON_SIZE_GUARD",
             ids.toTypedArray(),
             null,
             null,
@@ -148,10 +148,11 @@ class ClipboardHistoryStore(
     }
 
     fun insert(entry: ClipboardEntry) {
+        val safeEntry = ClipboardEntrySizeLimit.sanitize(entry, json) ?: return
         val db = writableDatabase
         db.transaction {
-            insertWithOnConflict(TABLE, null, entryToValues(entry), SQLiteDatabase.CONFLICT_REPLACE)
-            if (ftsEnabled) syncFts(this, entry)
+            insertWithOnConflict(TABLE, null, entryToValues(safeEntry), SQLiteDatabase.CONFLICT_REPLACE)
+            if (ftsEnabled) syncFts(this, safeEntry)
         }
     }
 
@@ -187,7 +188,7 @@ class ClipboardHistoryStore(
         return db.query(
             TABLE,
             arrayOf(COL_JSON),
-            null,
+            JSON_SIZE_GUARD,
             null,
             null,
             null,
@@ -208,11 +209,12 @@ class ClipboardHistoryStore(
      * 会读到半截数据；这里按条目重建，FTS 也会一起同步。
      */
     fun replaceAll(entries: List<ClipboardEntry>) {
+        val safeEntries = entries.mapNotNull { ClipboardEntrySizeLimit.sanitize(it, json) }
         val db = writableDatabase
         db.transaction {
             if (ftsEnabled) delete(FTS_TABLE, null, null)
             delete(TABLE, null, null)
-            entries.forEach { entry ->
+            safeEntries.forEach { entry ->
                 insertWithOnConflict(TABLE, null, entryToValues(entry), SQLiteDatabase.CONFLICT_REPLACE)
                 if (ftsEnabled) syncFts(this, entry)
             }
@@ -221,6 +223,7 @@ class ClipboardHistoryStore(
 
     fun trimToMax(max: Int): List<ClipboardEntry> {
         if (max < 0) return emptyList()
+        openHelper.purgeOversizedRows(writableDatabase)
         if (count() <= max) return emptyList()
         val db = readableDatabase
         val toRemove = db.rawQuery(
@@ -253,9 +256,11 @@ class ClipboardHistoryStore(
 
     fun migrateFromJsonIndex(jsonEntries: List<ClipboardEntry>) {
         if (jsonEntries.isEmpty()) return
+        val safeEntries = jsonEntries.mapNotNull { ClipboardEntrySizeLimit.sanitize(it, json) }
+        if (safeEntries.isEmpty()) return
         val db = writableDatabase
         db.transaction {
-            jsonEntries.forEach { entry ->
+            safeEntries.forEach { entry ->
                 insertWithOnConflict(TABLE, null, entryToValues(entry), SQLiteDatabase.CONFLICT_REPLACE)
                 if (ftsEnabled) syncFts(this, entry)
             }
@@ -284,7 +289,7 @@ class ClipboardHistoryStore(
         return db.query(
             TABLE,
             arrayOf(COL_JSON),
-            "$COL_SEARCH LIKE ?",
+            "$COL_SEARCH LIKE ? AND $JSON_SIZE_GUARD",
             arrayOf(pattern),
             null,
             null,
@@ -364,7 +369,7 @@ class ClipboardHistoryStore(
         return db.query(
             TABLE,
             arrayOf(COL_JSON),
-            where,
+            "($where) AND $JSON_SIZE_GUARD",
             args,
             null,
             null,
@@ -432,6 +437,8 @@ class ClipboardHistoryStore(
         override fun onOpen(db: SQLiteDatabase) {
             super.onOpen(db)
             ftsEnabled = readMetaFtsEnabled(db)
+            // 兜底：旧版本可能已经写入过超大行，读表之前先把它们清掉。
+            runCatching { purgeOversizedRows(db) }
         }
 
         override fun onCreate(db: SQLiteDatabase) {
@@ -444,6 +451,9 @@ class ClipboardHistoryStore(
         }
 
         override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+            // 先清坏行，再做任何会读 entry_json 的补列/建 FTS 迁移；
+            // 否则老库里一条超大行会让升级本身也崩在 moveToNext()。
+            runCatching { purgeOversizedRows(db) }
             if (oldVersion < 2) {
                 migrateToV2(db)
             }
@@ -546,6 +556,48 @@ class ClipboardHistoryStore(
             }.getOrDefault(false)
         }
 
+        /**
+         * 删除 `entry_json` 超过上限的行。只查 id + length，不读 JSON 本身。
+         *
+         * 公开给外层 [ClipboardHistoryStore.trimToMax] 复用：删旧条目前先把坏行清掉，
+         * 后面的 `SELECT entry_json` 才不会踩到窗口上限。
+         */
+        fun purgeOversizedRows(db: SQLiteDatabase) {
+            val ids = db.rawQuery(
+                "SELECT $COL_ID FROM $TABLE WHERE length(CAST($COL_JSON AS BLOB)) > ?",
+                arrayOf(ClipboardEntrySizeLimit.MAX_ENTRY_JSON_BYTES.toString())
+            ).use { cursor ->
+                buildList {
+                    while (cursor.moveToNext()) add(cursor.getString(0))
+                }
+            }
+            if (ids.isEmpty()) return
+            val hasFts = tableExists(db, FTS_TABLE)
+            // onUpgrade 本身已经在 SQLiteOpenHelper 的事务里，不能再嵌套 beginTransaction。
+            val ownsTransaction = !db.inTransaction()
+            if (ownsTransaction) db.beginTransaction()
+            try {
+                if (hasFts) {
+                    ids.forEach { entryId ->
+                        db.delete(FTS_TABLE, "$FTS_COL_ENTRY_ID = ?", arrayOf(entryId))
+                    }
+                }
+                ids.chunked(500).forEach { chunk ->
+                    val placeholders = chunk.joinToString(",") { "?" }
+                    db.delete(TABLE, "$COL_ID IN ($placeholders)", chunk.toTypedArray())
+                }
+                if (ownsTransaction) db.setTransactionSuccessful()
+            } finally {
+                if (ownsTransaction) db.endTransaction()
+            }
+        }
+
+        private fun tableExists(db: SQLiteDatabase, table: String): Boolean =
+            db.rawQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+                arrayOf(table)
+            ).use { it.moveToFirst() }
+
         private fun probeFts5(db: SQLiteDatabase): Boolean = runCatching {
             db.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS $FTS_PROBE_TABLE USING fts5(x)")
             db.execSQL("DROP TABLE IF EXISTS $FTS_PROBE_TABLE")
@@ -584,7 +636,15 @@ class ClipboardHistoryStore(
             ).use { it.moveToFirst() }
 
         private fun backfillDedupColumns(db: SQLiteDatabase) {
-            db.query(TABLE, arrayOf(COL_ID, COL_JSON), null, null, null, null, null).use { cursor ->
+            db.query(
+                TABLE,
+                arrayOf(COL_ID, COL_JSON),
+                JSON_SIZE_GUARD,
+                null,
+                null,
+                null,
+                null
+            ).use { cursor ->
                 while (cursor.moveToNext()) {
                     val id = cursor.getString(0)
                     val entry = decodeEntryStatic(json, cursor.getString(1)) ?: continue
@@ -598,7 +658,15 @@ class ClipboardHistoryStore(
         }
 
         private fun backfillLightweightColumns(db: SQLiteDatabase) {
-            db.query(TABLE, arrayOf(COL_ID, COL_JSON), null, null, null, null, null).use { cursor ->
+            db.query(
+                TABLE,
+                arrayOf(COL_ID, COL_JSON),
+                JSON_SIZE_GUARD,
+                null,
+                null,
+                null,
+                null
+            ).use { cursor ->
                 while (cursor.moveToNext()) {
                     val id = cursor.getString(0)
                     val entry = decodeEntryStatic(json, cursor.getString(1)) ?: continue
@@ -614,7 +682,15 @@ class ClipboardHistoryStore(
 
         private fun rebuildFts(db: SQLiteDatabase) {
             db.delete(FTS_TABLE, null, null)
-            db.query(TABLE, arrayOf(COL_ID, COL_JSON), null, null, null, null, null).use { cursor ->
+            db.query(
+                TABLE,
+                arrayOf(COL_ID, COL_JSON),
+                JSON_SIZE_GUARD,
+                null,
+                null,
+                null,
+                null
+            ).use { cursor ->
                 while (cursor.moveToNext()) {
                     val entry = decodeEntryStatic(json, cursor.getString(1)) ?: continue
                     val values = ContentValues().apply {
@@ -629,7 +705,7 @@ class ClipboardHistoryStore(
 
     companion object {
         private const val DB_NAME = "clipboard_history.db"
-        private const val DB_VERSION = 4
+        private const val DB_VERSION = 5
         private const val TABLE = "clipboard_entries"
         private const val META_TABLE = "clipboard_meta"
         private const val FTS_TABLE = "clipboard_fts"
@@ -643,6 +719,8 @@ class ClipboardHistoryStore(
         private const val COL_PREVIEW = "preview_text"
         private const val COL_HAS_IMAGE = "has_image"
         private const val COL_JSON = "entry_json"
+        private const val JSON_SIZE_GUARD =
+            "length(CAST($COL_JSON AS BLOB)) <= ${ClipboardEntrySizeLimit.MAX_ENTRY_JSON_BYTES}"
         private const val META_COL_KEY = "meta_key"
         private const val META_COL_VALUE = "meta_value"
         private const val META_KEY_FTS_ENABLED = "fts_enabled"
