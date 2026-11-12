@@ -637,6 +637,16 @@
     <string name="haptic_gesture_trigger_desc">达到短滑距离、转向、折返或唤出手势面板时的振动提示</string>
     <string name="haptic_long_threshold_title">长滑距离振动</string>
     <string name="haptic_long_threshold_desc">滑动越过长距阈值时额外响一次；关闭后长滑只响首声</string>
+    <string name="haptic_short_threshold_title">越过短距振动</string>
+    <string name="haptic_short_threshold_desc">滑动首次达到短滑距离时的提示</string>
+    <string name="haptic_compound_turn_title">组合转向振动</string>
+    <string name="haptic_compound_turn_desc">先内滑、再转向（角手势）成立时的提示</string>
+    <string name="haptic_return_swipe_title">折返振动</string>
+    <string name="haptic_return_swipe_desc">滑出后缩回起手位置附近时的提示</string>
+    <string name="haptic_hover_title">悬停振动</string>
+    <string name="haptic_hover_desc">越过短距后停住达到悬停时长时的提示</string>
+    <string name="haptic_long_press_title">长按振动</string>
+    <string name="haptic_long_press_desc">按住不动被判为长按时的提示</string>
     <string name="haptic_slot_selection_title">滑动选项目振动</string>
     <string name="haptic_slot_selection_desc">轮盘、圆环、应用切换等连续滑动划过图标或动作项时的刻度微振</string>
     <string name="haptic_confirm_launch_title">松手执行振动</string>

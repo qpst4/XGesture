@@ -491,6 +491,26 @@ class EdgeSettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.HAPTIC_LONG_THRESHOLD_ENABLED] = enabled
     }
 
+    suspend fun setHapticShortThresholdEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.HAPTIC_SHORT_THRESHOLD_ENABLED] = enabled
+    }
+
+    suspend fun setHapticCompoundTurnEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.HAPTIC_COMPOUND_TURN_ENABLED] = enabled
+    }
+
+    suspend fun setHapticReturnSwipeEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.HAPTIC_RETURN_SWIPE_ENABLED] = enabled
+    }
+
+    suspend fun setHapticHoverEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.HAPTIC_HOVER_ENABLED] = enabled
+    }
+
+    suspend fun setHapticLongPressEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.HAPTIC_LONG_PRESS_ENABLED] = enabled
+    }
+
     suspend fun setHapticSlotSelectionEnabled(enabled: Boolean) = editor.edit {
         it[SettingsPreferenceKeys.HAPTIC_SLOT_SELECTION_ENABLED] = enabled
     }

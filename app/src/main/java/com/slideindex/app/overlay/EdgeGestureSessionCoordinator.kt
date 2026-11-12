@@ -59,6 +59,10 @@ internal class GestureSessionCallbackBridge : GestureSession.Callbacks {
     override fun onRequestInvalidate() = delegate.onRequestInvalidate()
     override fun hapticGestureStart() = delegate.hapticGestureStart()
     override fun hapticLongThreshold() = delegate.hapticLongThreshold()
+    override fun hapticCompoundTurn() = delegate.hapticCompoundTurn()
+    override fun hapticReturnSwipe() = delegate.hapticReturnSwipe()
+    override fun hapticHover() = delegate.hapticHover()
+    override fun hapticLongPress() = delegate.hapticLongPress()
     override fun hapticConfirmLaunch() = delegate.hapticConfirmLaunch()
     override fun scheduleDelayed(runnable: Runnable, delayMs: Long) =
         delegate.scheduleDelayed(runnable, delayMs)
@@ -379,6 +383,26 @@ internal class EdgeGestureSessionCoordinator(
     override fun hapticLongThreshold() {
         logHapticPlay("longThreshold")
         HapticHelper.longThreshold(view, settingsProvider())
+    }
+
+    override fun hapticCompoundTurn() {
+        logHapticPlay("compoundTurn")
+        HapticHelper.compoundTurn(view, settingsProvider())
+    }
+
+    override fun hapticReturnSwipe() {
+        logHapticPlay("returnSwipe")
+        HapticHelper.returnSwipe(view, settingsProvider())
+    }
+
+    override fun hapticHover() {
+        logHapticPlay("hover")
+        HapticHelper.hover(view, settingsProvider())
+    }
+
+    override fun hapticLongPress() {
+        logHapticPlay("longPress")
+        HapticHelper.longPress(view, settingsProvider())
     }
 
     /** 临时诊断日志：看清"哪条会话实例播了一次震动"（仅 debug 生效）。 */

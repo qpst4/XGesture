@@ -2192,6 +2192,16 @@
     <string name="haptic_gesture_trigger_desc">Виброотклик при достижении дистанции срабатывания или вызове панелей жестов</string>
     <string name="haptic_long_threshold_title">Виброотклик длинного свайпа</string>
     <string name="haptic_long_threshold_desc">Дополнительный виброотклик при переходе порога длинного свайпа; при выключении остаётся только первый</string>
+    <string name="haptic_short_threshold_title">Виброотклик короткого свайпа</string>
+    <string name="haptic_short_threshold_desc">Отклик при первом достижении короткой дистанции</string>
+    <string name="haptic_compound_turn_title">Виброотклик поворота</string>
+    <string name="haptic_compound_turn_desc">Отклик при повороте внутреннего свайпа вверх или вниз</string>
+    <string name="haptic_return_swipe_title">Виброотклик возврата</string>
+    <string name="haptic_return_swipe_desc">Отклик при возврате пальца к точке старта</string>
+    <string name="haptic_hover_title">Виброотклик удержания</string>
+    <string name="haptic_hover_desc">Отклик при остановке пальца после короткой дистанции</string>
+    <string name="haptic_long_press_title">Виброотклик долгого нажатия</string>
+    <string name="haptic_long_press_desc">Отклик при распознавании долгого нажатия</string>
     <string name="haptic_slot_selection_title">Виброотклик выбора элемента</string>
     <string name="haptic_slot_selection_desc">Лёгкий щелчок при скольжении по значкам или действиям в колесе, кольце, переключателе приложений и т. д.</string>
     <string name="haptic_confirm_launch_title">Виброотклик подтверждения отпускания</string>

@@ -623,6 +623,16 @@
     <string name="haptic_gesture_trigger_desc">تلميح الاهتزاز عند الوصول لمسافة السحب القصير، أو الانعطاف، أو العودة، أو استدعاء لوحة الإيماءات</string>
     <string name="haptic_long_threshold_title">اهتزاز السحب الطويل</string>
     <string name="haptic_long_threshold_desc">اهتزاز إضافي عند تجاوز مسافة السحب الطويل؛ عند الإيقاف يبقى الاهتزاز الأول فقط</string>
+    <string name="haptic_short_threshold_title">اهتزاز مسافة السحب القصير</string>
+    <string name="haptic_short_threshold_desc">تلميح عند بلوغ مسافة السحب القصير لأول مرة</string>
+    <string name="haptic_compound_turn_title">اهتزاز الانعطاف</string>
+    <string name="haptic_compound_turn_desc">تلميح عند تحول السحب الداخلي إلى انعطاف لأعلى أو أسفل</string>
+    <string name="haptic_return_swipe_title">اهتزاز الرجوع</string>
+    <string name="haptic_return_swipe_desc">تلميح عند عودة الإصبع قرب نقطة البداية</string>
+    <string name="haptic_hover_title">اهتزاز التوقف</string>
+    <string name="haptic_hover_desc">تلميح عند إبقاء الإصبع ثابتًا بعد المسافة القصيرة</string>
+    <string name="haptic_long_press_title">اهتزاز الضغط الطويل</string>
+    <string name="haptic_long_press_desc">تلميح عند اعتبار الثبات ضغطًا طويلًا</string>
     <string name="haptic_slot_selection_title">اهتزاز تحديد عنصر السحب</string>
     <string name="haptic_slot_selection_desc">اهتزاز دقيق عند المرور فوق الأيقونات أو عناصر الإجراءات أثناء السحب المستمر في العجلة، الحلقة، مبدل التطبيقات، إلخ</string>
     <string name="haptic_confirm_launch_title">اهتزاز تنفيذ الإفلات</string>

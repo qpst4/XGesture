@@ -213,7 +213,19 @@ internal object SettingsSnapshotReader {
             hapticEnabled = prefs[SettingsPreferenceKeys.HAPTIC_ENABLED] ?: true,
             hapticStrengthLevel = prefs[SettingsPreferenceKeys.HAPTIC_STRENGTH] ?: HapticStrength.MEDIUM.level,
             hapticGestureTriggerEnabled = prefs[SettingsPreferenceKeys.HAPTIC_GESTURE_TRIGGER_ENABLED] ?: true,
-            hapticLongThresholdEnabled = prefs[SettingsPreferenceKeys.HAPTIC_LONG_THRESHOLD_ENABLED] ?: true,
+            hapticLongThresholdEnabled = prefs[SettingsPreferenceKeys.HAPTIC_LONG_THRESHOLD_ENABLED]
+                ?: prefs[SettingsPreferenceKeys.HAPTIC_GESTURE_TRIGGER_ENABLED] ?: true,
+            // 新开关缺键时回落到老的「手势唤起振动」：老用户把它关掉的，升级后这几类仍然不响。
+            hapticShortThresholdEnabled = prefs[SettingsPreferenceKeys.HAPTIC_SHORT_THRESHOLD_ENABLED]
+                ?: prefs[SettingsPreferenceKeys.HAPTIC_GESTURE_TRIGGER_ENABLED] ?: true,
+            hapticCompoundTurnEnabled = prefs[SettingsPreferenceKeys.HAPTIC_COMPOUND_TURN_ENABLED]
+                ?: prefs[SettingsPreferenceKeys.HAPTIC_GESTURE_TRIGGER_ENABLED] ?: true,
+            hapticReturnSwipeEnabled = prefs[SettingsPreferenceKeys.HAPTIC_RETURN_SWIPE_ENABLED]
+                ?: prefs[SettingsPreferenceKeys.HAPTIC_GESTURE_TRIGGER_ENABLED] ?: true,
+            hapticHoverEnabled = prefs[SettingsPreferenceKeys.HAPTIC_HOVER_ENABLED]
+                ?: prefs[SettingsPreferenceKeys.HAPTIC_GESTURE_TRIGGER_ENABLED] ?: true,
+            hapticLongPressEnabled = prefs[SettingsPreferenceKeys.HAPTIC_LONG_PRESS_ENABLED]
+                ?: prefs[SettingsPreferenceKeys.HAPTIC_GESTURE_TRIGGER_ENABLED] ?: true,
             hapticSlotSelectionEnabled = prefs[SettingsPreferenceKeys.HAPTIC_SLOT_SELECTION_ENABLED] ?: true,
             hapticConfirmLaunchEnabled = prefs[SettingsPreferenceKeys.HAPTIC_CONFIRM_LAUNCH_ENABLED] ?: true,
             hideFromRecents = prefs[SettingsPreferenceKeys.HIDE_FROM_RECENTS] ?: false,

@@ -618,6 +618,16 @@
     <string name="haptic_gesture_trigger_desc">トリガー距離に達した時やジェスチャーパネルを呼び出した時の触覚フィードバック</string>
     <string name="haptic_long_threshold_title">長距離スワイプの触覚</string>
     <string name="haptic_long_threshold_desc">長距離しきい値を超えた時の追加の触覚。オフにすると最初の 1 回だけになります</string>
+    <string name="haptic_short_threshold_title">短距離しきい値の触覚</string>
+    <string name="haptic_short_threshold_desc">スワイプが短距離に初めて達した時の触覚</string>
+    <string name="haptic_compound_turn_title">コーナー転向の触覚</string>
+    <string name="haptic_compound_turn_desc">内側スワイプから上下へ転向した時の触覚</string>
+    <string name="haptic_return_swipe_title">戻しスワイプの触覚</string>
+    <string name="haptic_return_swipe_desc">指を開始位置付近まで戻した時の触覚</string>
+    <string name="haptic_hover_title">ホバーの触覚</string>
+    <string name="haptic_hover_desc">短距離の後で指を止めた時の触覚</string>
+    <string name="haptic_long_press_title">長押しの触覚</string>
+    <string name="haptic_long_press_desc">長押しと判定された時の触覚</string>
     <string name="haptic_slot_selection_title">項目選択触覚</string>
     <string name="haptic_slot_selection_desc">ホイール、リング、アプリ切り替えなどでアイコンや項目を連続スライドした時の微小振動</string>
     <string name="haptic_confirm_launch_title">離して実行触覚</string>

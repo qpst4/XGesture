@@ -53,6 +53,18 @@ class GestureSession(
         fun hapticGestureStart()
         fun hapticLongThreshold()
         fun hapticConfirmLaunch()
+
+        /** 组合手势第二段转向成立（默认并入「手势唤起」，实现方可按事件细分）。 */
+        fun hapticCompoundTurn() = hapticGestureStart()
+
+        /** 折返手势成立（默认并入「手势唤起」）。 */
+        fun hapticReturnSwipe() = hapticGestureStart()
+
+        /** 短滑后悬停满足（默认并入「手势唤起」）。 */
+        fun hapticHover() = hapticGestureStart()
+
+        /** 长按成立（默认并入「长距阈值」那一声）。 */
+        fun hapticLongPress() = hapticLongThreshold()
         fun scheduleDelayed(runnable: Runnable, delayMs: Long)
         fun cancelDelayed(runnable: Runnable)
     }

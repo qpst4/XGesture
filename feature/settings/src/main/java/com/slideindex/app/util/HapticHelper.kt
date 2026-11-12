@@ -13,45 +13,78 @@ import com.slideindex.app.settings.resolvedHapticStrength
 object HapticHelper {
     private const val FLAGS = HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING
 
-    fun gestureStart(view: View, settings: AppSettings) {
-        if (!settings.hapticGestureTriggerEnabled) return
-        pulse(view, settings, PulseKind.GESTURE)
+    /**
+     * 一次手势里可能发声的震动事件。
+     *
+     * 每个事件对应设置页一个独立开关（[AppSettings] 里 `haptic*Enabled`）。
+     * 「长滑」与「长按」曾经共用一个入口，导致关掉长滑会连长按开场声一起掐掉（issue #57）。
+     */
+    enum class Event {
+        SHORT_THRESHOLD,
+        COMPOUND_TURN,
+        RETURN_SWIPE,
+        HOVER,
+        LONG_PRESS,
+        SWIPE_LONG,
+        SLOT_LETTER,
+        SLOT_APP,
+        CONFIRM,
     }
 
-    fun longThreshold(view: View, settings: AppSettings) {
-        if (!settings.hapticGestureTriggerEnabled) return
-        // 长距阈值那一响可单独关闭：长滑会先响「手势唤起」、到这里再响一次（issue #57）。
-        if (!settings.hapticLongThresholdEnabled) return
-        pulse(view, settings, PulseKind.LONG_THRESHOLD)
+    private fun AppSettings.isEventEnabled(event: Event): Boolean = when (event) {
+        Event.SHORT_THRESHOLD -> hapticShortThresholdEnabled
+        Event.COMPOUND_TURN -> hapticCompoundTurnEnabled
+        Event.RETURN_SWIPE -> hapticReturnSwipeEnabled
+        Event.HOVER -> hapticHoverEnabled
+        Event.LONG_PRESS -> hapticLongPressEnabled
+        Event.SWIPE_LONG -> hapticLongThresholdEnabled
+        Event.SLOT_LETTER, Event.SLOT_APP -> hapticSlotSelectionEnabled
+        Event.CONFIRM -> hapticConfirmLaunchEnabled
     }
 
-    fun letterTick(view: View, settings: AppSettings) {
-        if (!settings.hapticSlotSelectionEnabled) return
-        pulse(view, settings, PulseKind.LETTER)
+    private fun Event.toPulseKind(): PulseKind = when (this) {
+        Event.SLOT_LETTER -> PulseKind.LETTER
+        Event.SLOT_APP -> PulseKind.APP
+        Event.CONFIRM -> PulseKind.CONFIRM
+        Event.LONG_PRESS, Event.SWIPE_LONG -> PulseKind.LONG_THRESHOLD
+        Event.SHORT_THRESHOLD, Event.COMPOUND_TURN, Event.RETURN_SWIPE, Event.HOVER -> PulseKind.GESTURE
     }
 
-    fun appTick(view: View, settings: AppSettings) {
-        if (!settings.hapticSlotSelectionEnabled) return
-        pulse(view, settings, PulseKind.APP)
+    /** 唯一发声入口：先查总开关、再查该事件开关，最后按事件选脉冲形态。 */
+    fun play(view: View, settings: AppSettings, event: Event) {
+        if (!settings.hapticEnabled) return
+        if (!settings.isEventEnabled(event)) return
+        pulse(view, settings, event.toPulseKind())
     }
 
-    fun confirmLaunch(view: View, settings: AppSettings) {
-        if (!settings.hapticConfirmLaunchEnabled) return
-        pulse(view, settings, PulseKind.CONFIRM)
-    }
+    fun gestureStart(view: View, settings: AppSettings) = play(view, settings, Event.SHORT_THRESHOLD)
+
+    fun compoundTurn(view: View, settings: AppSettings) = play(view, settings, Event.COMPOUND_TURN)
+
+    fun returnSwipe(view: View, settings: AppSettings) = play(view, settings, Event.RETURN_SWIPE)
+
+    fun hover(view: View, settings: AppSettings) = play(view, settings, Event.HOVER)
+
+    fun longPress(view: View, settings: AppSettings) = play(view, settings, Event.LONG_PRESS)
+
+    fun longThreshold(view: View, settings: AppSettings) = play(view, settings, Event.SWIPE_LONG)
+
+    fun letterTick(view: View, settings: AppSettings) = play(view, settings, Event.SLOT_LETTER)
+
+    fun appTick(view: View, settings: AppSettings) = play(view, settings, Event.SLOT_APP)
+
+    fun confirmLaunch(view: View, settings: AppSettings) = play(view, settings, Event.CONFIRM)
 
     /** 悬浮球手势判定成立：额外受悬浮球专属开关 [AppSettings.floatBallGestureHapticEnabled] 约束。 */
     fun floatBallGestureStart(view: View, settings: AppSettings) {
         if (!settings.floatBallGestureHapticEnabled) return
-        if (!settings.hapticGestureTriggerEnabled) return
-        pulse(view, settings, PulseKind.GESTURE)
+        play(view, settings, Event.SHORT_THRESHOLD)
     }
 
     /** 悬浮球松手执行动作：额外受悬浮球专属开关 [AppSettings.floatBallGestureHapticEnabled] 约束。 */
     fun floatBallConfirmLaunch(view: View, settings: AppSettings) {
         if (!settings.floatBallGestureHapticEnabled) return
-        if (!settings.hapticConfirmLaunchEnabled) return
-        pulse(view, settings, PulseKind.CONFIRM)
+        play(view, settings, Event.CONFIRM)
     }
 
     /**

@@ -63,7 +63,11 @@ fun InteractionAppearanceSettingsScreen(
     iconPlateMode: com.slideindex.app.settings.IconPlateMode = com.slideindex.app.settings.IconPlateMode.SYSTEM_DARK,
     onHapticEnabledChange: (Boolean) -> Unit,
     onHapticStrengthChange: (Int) -> Unit,
-    onHapticGestureTriggerEnabledChange: (Boolean) -> Unit,
+    onHapticShortThresholdEnabledChange: (Boolean) -> Unit,
+    onHapticCompoundTurnEnabledChange: (Boolean) -> Unit,
+    onHapticReturnSwipeEnabledChange: (Boolean) -> Unit,
+    onHapticHoverEnabledChange: (Boolean) -> Unit,
+    onHapticLongPressEnabledChange: (Boolean) -> Unit,
     onHapticLongThresholdEnabledChange: (Boolean) -> Unit,
     onHapticSlotSelectionEnabledChange: (Boolean) -> Unit,
     onHapticConfirmLaunchEnabledChange: (Boolean) -> Unit,
@@ -247,11 +251,39 @@ fun InteractionAppearanceSettingsScreen(
                                 onValueChange = { onHapticStrengthChange(it.roundToInt()) },
                             )
                             SwitchPreference(
-                                title = stringResource(R.string.haptic_gesture_trigger_title),
-                                summary = stringResource(R.string.haptic_gesture_trigger_desc),
-                                checked = settings.hapticGestureTriggerEnabled,
+                                title = stringResource(R.string.haptic_short_threshold_title),
+                                summary = stringResource(R.string.haptic_short_threshold_desc),
+                                checked = settings.hapticShortThresholdEnabled,
                                 enabled = true,
-                                onCheckedChange = onHapticGestureTriggerEnabledChange,
+                                onCheckedChange = onHapticShortThresholdEnabledChange,
+                            )
+                            SwitchPreference(
+                                title = stringResource(R.string.haptic_compound_turn_title),
+                                summary = stringResource(R.string.haptic_compound_turn_desc),
+                                checked = settings.hapticCompoundTurnEnabled,
+                                enabled = true,
+                                onCheckedChange = onHapticCompoundTurnEnabledChange,
+                            )
+                            SwitchPreference(
+                                title = stringResource(R.string.haptic_return_swipe_title),
+                                summary = stringResource(R.string.haptic_return_swipe_desc),
+                                checked = settings.hapticReturnSwipeEnabled,
+                                enabled = true,
+                                onCheckedChange = onHapticReturnSwipeEnabledChange,
+                            )
+                            SwitchPreference(
+                                title = stringResource(R.string.haptic_hover_title),
+                                summary = stringResource(R.string.haptic_hover_desc),
+                                checked = settings.hapticHoverEnabled,
+                                enabled = true,
+                                onCheckedChange = onHapticHoverEnabledChange,
+                            )
+                            SwitchPreference(
+                                title = stringResource(R.string.haptic_long_press_title),
+                                summary = stringResource(R.string.haptic_long_press_desc),
+                                checked = settings.hapticLongPressEnabled,
+                                enabled = true,
+                                onCheckedChange = onHapticLongPressEnabledChange,
                             )
                             SwitchPreference(
                                 title = stringResource(R.string.haptic_long_threshold_title),

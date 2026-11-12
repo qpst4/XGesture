@@ -2214,6 +2214,16 @@
     <string name="haptic_gesture_trigger_desc">Haptic feedback when reaching trigger distance or invoking gesture panels</string>
     <string name="haptic_long_threshold_title">Long-swipe haptic</string>
     <string name="haptic_long_threshold_desc">Extra haptic when the swipe passes the long-distance threshold; off leaves only the initial pulse</string>
+    <string name="haptic_short_threshold_title">Swipe start haptic</string>
+    <string name="haptic_short_threshold_desc">Feedback when the swipe first reaches the short distance</string>
+    <string name="haptic_compound_turn_title">Corner turn haptic</string>
+    <string name="haptic_compound_turn_desc">Feedback when the inward swipe turns into an up/down corner gesture</string>
+    <string name="haptic_return_swipe_title">Return swipe haptic</string>
+    <string name="haptic_return_swipe_desc">Feedback when the finger returns near the start position</string>
+    <string name="haptic_hover_title">Hover haptic</string>
+    <string name="haptic_hover_desc">Feedback when the finger holds still after the short distance</string>
+    <string name="haptic_long_press_title">Long-press haptic</string>
+    <string name="haptic_long_press_desc">Feedback when holding still is recognized as a long press</string>
     <string name="haptic_slot_selection_title">Item selection haptic</string>
     <string name="haptic_slot_selection_desc">Subtle tick feedback when sliding across icons or actions in wheel, ring, app switcher, etc.</string>
     <string name="haptic_confirm_launch_title">Release confirm haptic</string>

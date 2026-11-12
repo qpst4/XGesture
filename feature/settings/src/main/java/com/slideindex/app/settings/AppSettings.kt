@@ -34,6 +34,16 @@ data class AppSettings(
     val hapticGestureTriggerEnabled: Boolean = true,
     /** 越过长距阈值时的额外一次震动；关掉后长滑只响首声（issue #57）。 */
     val hapticLongThresholdEnabled: Boolean = true,
+    /** 越过短距阈值那一声。 */
+    val hapticShortThresholdEnabled: Boolean = true,
+    /** 组合手势第二段转向成立那一声。 */
+    val hapticCompoundTurnEnabled: Boolean = true,
+    /** 折返（滑出又缩回）成立那一声。 */
+    val hapticReturnSwipeEnabled: Boolean = true,
+    /** 越过短距后悬停满足那一声。 */
+    val hapticHoverEnabled: Boolean = true,
+    /** 按住不动判定为长按那一声。 */
+    val hapticLongPressEnabled: Boolean = true,
     val hapticSlotSelectionEnabled: Boolean = true,
     val hapticConfirmLaunchEnabled: Boolean = true,
     val hideFromRecents: Boolean = false,

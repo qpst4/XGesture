@@ -71,7 +71,7 @@ internal class GestureSessionThresholdTracker(
         val aboveLong = peakCompoundDistance >= pathRecognizer.longThresholdPx()
         if (aboveShort && !wasAboveCompoundShortThreshold) {
             logHaptic("compound-short", distance, pathRecognizer.compoundSecondSegmentTurnThresholdPx(), rawX, rawY)
-            callbacks.hapticGestureStart()
+            callbacks.hapticCompoundTurn()
         }
         if (aboveLong && !wasAboveCompoundLongThreshold) {
             logHaptic("compound-long", distance, pathRecognizer.longThresholdPx(), rawX, rawY)
@@ -88,7 +88,7 @@ internal class GestureSessionThresholdTracker(
             if (!returnHapticFired) {
                 returnHapticFired = true
                 logHaptic("return", 0f, 0f, rawX, rawY)
-                callbacks.hapticGestureStart()
+                callbacks.hapticReturnSwipe()
             }
         } else {
             returnHapticFired = false
@@ -111,7 +111,7 @@ internal class GestureSessionThresholdTracker(
             if (hoverTrigger == null || isTriggerConfigured(hoverTrigger)) {
                 if (!hoverHapticFired) {
                     hoverHapticFired = true
-                    callbacks.hapticGestureStart()
+                    callbacks.hapticHover()
                 }
             }
         }
@@ -152,7 +152,7 @@ internal class GestureSessionThresholdTracker(
         pathRecognizer.refreshLongPress(rawX, rawY)
         if (pathRecognizer.isLongPressArmed()) {
             longPressHapticFired = true
-            callbacks.hapticLongThreshold()
+            callbacks.hapticLongPress()
         }
     }
 
