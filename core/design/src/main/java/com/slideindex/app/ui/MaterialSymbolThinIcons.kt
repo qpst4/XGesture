@@ -165,6 +165,16 @@ object MaterialSymbolThinIcons {
         "10.721 4.26Q9.846 3.385 8.596 3.385Q7.346 3.385 6.471 4.26Q5.596 5.135 5.596 6.385Q5.596 6.81 5.696 " +
         "7.172Q5.796 7.535 5.996 7.885ZM12.185 15.635Q12.185 15.635 12.185 15.635Q12.185 15.635 12.185 15.635Q12.185 " +
         "15.635 12.185 15.635Q12.185 15.635 12.185 15.635Q12.185 15.635 12.185 15.635Q12.185 15.635 12.185 15.635Z"
+
+    /**
+     * 「推子」：三行滑条（Material Symbols: tune）。
+     *
+     * 几何本身就是 1.5 厚的填充条，与 [ThinActionIcons.STROKE_WIDTH] 一致，混排不突兀。
+     * 用作「系统音量条」的图标：读作“滑条”，不会被误认成加/减号。
+     */
+    private const val TUNE_PATH =
+        "M11.25 20.75v-5.5h1.5v2h8v1.5h-8v2h-1.5Zm-8-2v-1.5h5.5v1.5H3.25Zm4-4v-2h-4v-1.5h4v-2h1.5v5.5H7.25Z" +
+            "m4-2v-1.5h9.5v1.5h-9.5Zm4-4V3.25h1.5v2h4v1.5h-4v2h-1.5Zm-12-2V5.25h9.5v1.5H3.25Z"
     val AcUnit: ImageVector by lazy { icon("SymbolThinAcUnit", ACUNIT_PATH) }
     val Bluetooth: ImageVector by lazy { icon("SymbolThinBluetooth", BLUETOOTH_PATH) }
     val BrightnessAuto: ImageVector by lazy { icon("SymbolThinBrightnessAuto", BRIGHTNESSAUTO_PATH) }
@@ -177,4 +187,5 @@ object MaterialSymbolThinIcons {
     val RemoteGen: ImageVector by lazy { icon("SymbolThinRemoteGen", REMOTEGEN_PATH) }
     val SwapVert: ImageVector by lazy { icon("SymbolThinSwapVert", SWAPVERT_PATH) }
     val TouchApp: ImageVector by lazy { icon("SymbolThinTouchApp", TOUCHAPP_PATH) }
+    val Tune: ImageVector by lazy { icon("SymbolThinTune", TUNE_PATH) }
 }
