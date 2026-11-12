@@ -1872,6 +1872,7 @@
     <string name="float_ball_pick_panel_tab_text">النص</string>
     <string name="float_ball_pick_panel_tab_image">لقطة الشاشة</string>
     <string name="pick_result_action_save_image">حفظ الصورة</string>
+    <string name="pick_result_action_view_image">عرض الصورة</string>
     <string name="pick_result_action_image_search">بحث بالصورة</string>
     <string name="pick_result_action_share_image">مشاركة الصورة</string>
     <string name="float_ball_pick_smart_open_url">فتح الرابط</string>
@@ -3905,6 +3906,9 @@
     <string name="clipboard_history_float_enabled_landscape_desc">عند التفعيل، سيظل المقبض الملصق بالحافة معروضاً في الوضع الأفقي؛ مغلق افتراضياً</string>
     <string name="clipboard_history_float_lock_position_title">قفل موضع الشريط العمودي</string>
     <string name="clipboard_history_float_lock_position_desc">عند التفعيل، لا يمكن سحب الشريط العمودي لتغيير موضعه العمودي ولا نقله إلى الحافة الأخرى.</string>
+    <string name="clipboard_history_float_handle_width_title">سُمك المقبض</string>
+    <string name="clipboard_history_float_handle_height_title">طول المقبض</string>
+    <string name="clipboard_history_float_handle_alpha_title">عتامة المقبض</string>
     <string name="stash_panel_handle_open_tab_title">التبويب عند الفتح من المقبض</string>
     <string name="stash_panel_handle_open_tab_remember">آخر تبويب مستخدم</string>
     <string name="stash_panel_width_mode_title">عرض اللوحة</string>

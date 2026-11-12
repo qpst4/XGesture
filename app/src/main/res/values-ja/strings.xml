@@ -1886,6 +1886,7 @@
     <string name="float_ball_pick_panel_tab_text">テキスト</string>
     <string name="float_ball_pick_panel_tab_image">スクショ</string>
     <string name="pick_result_action_save_image">画像を保存</string>
+    <string name="pick_result_action_view_image">画像を表示</string>
     <string name="pick_result_action_image_search">画像で検索</string>
     <string name="pick_result_action_share_image">画像を共有</string>
     <string name="float_ball_pick_smart_open_url">リンクを開く</string>
@@ -3922,6 +3923,9 @@
     <string name="clipboard_history_float_enabled_landscape_desc">オンにすると横向きでもエッジハンドルが表示されます。デフォルトはオフ</string>
     <string name="clipboard_history_float_lock_position_title">ハンドル位置を固定</string>
     <string name="clipboard_history_float_lock_position_desc">オンにするとハンドルを縦方向にも反対側の端へもドラッグできません。</string>
+    <string name="clipboard_history_float_handle_width_title">ハンドルの太さ</string>
+    <string name="clipboard_history_float_handle_height_title">ハンドルの長さ</string>
+    <string name="clipboard_history_float_handle_alpha_title">ハンドルの不透明度</string>
     <string name="stash_panel_handle_open_tab_title">ハンドルで開くタブ</string>
     <string name="stash_panel_handle_open_tab_remember">前回のタブ</string>
     <string name="stash_panel_width_mode_title">パネルの幅</string>
