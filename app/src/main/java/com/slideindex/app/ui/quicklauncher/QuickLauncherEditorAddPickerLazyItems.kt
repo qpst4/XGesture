@@ -116,6 +116,7 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
                     PickerGridCell(
                         label = cellLabel,
                         selected = if (isNone) noneSelected else added,
+                        singleSelect = singleSelect,
                         onClick = {
                             if (isNone) {
                                 onSelectNone()
@@ -178,6 +179,7 @@ fun LazyListScope.quickLauncherAddPickerAppItems(
     appPickerGridItems(
         apps = filtered,
         selectedKeys = configuredAppPackages,
+        singleSelect = singleSelect,
         onAppClick = { app ->
             val added = com.slideindex.app.launcher.AppTarget.encode(app.packageName, app.cloneUserId) in
                 configuredAppPackages
@@ -232,6 +234,7 @@ fun LazyListScope.quickLauncherAddPickerShortcutItems(
                 segmentIndex = segmentIndex,
                 segmentCount = segmentCount,
                 added = added,
+                singleSelect = singleSelect,
                 onToggle = { onToggle(group.app, shortcut, if (singleSelect) false else added) },
             )
         },
@@ -285,6 +288,8 @@ private fun PickerGridCell(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    /** 单选（槽位）用高亮，多选（加入面板）才用右上角勾选徽标。 */
+    singleSelect: Boolean = false,
     icon: @Composable () -> Unit,
 ) {
     Column(
@@ -299,12 +304,18 @@ private fun PickerGridCell(
                 modifier = Modifier
                     .size(58.dp)
                     .clip(RoundedCornerShape(17.dp))
-                    .background(MiuixTheme.colorScheme.surfaceContainerHigh),
+                    .background(
+                        if (selected && singleSelect) {
+                            MiuixTheme.colorScheme.primary.copy(alpha = 0.16f)
+                        } else {
+                            MiuixTheme.colorScheme.surfaceContainerHigh
+                        },
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
                 icon()
             }
-            if (selected) {
+            if (selected && !singleSelect) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -330,7 +341,11 @@ private fun PickerGridCell(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            color = if (selected && singleSelect) {
+                MiuixTheme.colorScheme.primary
+            } else {
+                MiuixTheme.colorScheme.onSurfaceVariantSummary
+            },
             modifier = Modifier.padding(top = 5.dp, start = 2.dp, end = 2.dp),
         )
     }

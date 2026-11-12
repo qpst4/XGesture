@@ -46,6 +46,8 @@ fun LazyListScope.appPickerGridItems(
     selectedKeys: Set<String>,
     onAppClick: (AppInfo) -> Unit,
     columns: Int = APP_PICKER_GRID_COLUMNS,
+    /** 单选（槽位）用底色高亮，多选（加入面板）才用右上角勾选徽标。 */
+    singleSelect: Boolean = false,
 ) {
     val rows = apps.chunked(columns)
     items(
@@ -64,6 +66,7 @@ fun LazyListScope.appPickerGridItems(
                     app = app,
                     selected = FreezerOperations.keyOf(app) in selectedKeys,
                     onClick = { onAppClick(app) },
+                    singleSelect = singleSelect,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -80,6 +83,7 @@ private fun AppPickerGridCell(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    singleSelect: Boolean = false,
 ) {
     Column(
         modifier = modifier
@@ -92,14 +96,23 @@ private fun AppPickerGridCell(
             // 58dp 只是图标与选中勾共用的占位，不画底色：真实图标直接展示，
             // 一屏几十个应用不会有满屏浅灰格子把内容压扁（与冰箱网格、搜索结果一致）。
             Box(
-                modifier = Modifier.size(58.dp),
+                modifier = Modifier
+                    .size(58.dp)
+                    .clip(RoundedCornerShape(17.dp))
+                    .background(
+                        if (selected && singleSelect) {
+                            MiuixTheme.colorScheme.primary.copy(alpha = 0.16f)
+                        } else {
+                            androidx.compose.ui.graphics.Color.Transparent
+                        },
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
                 // 图标铺满 58dp 格位：与「动作」tab 的 58dp 卡片、冰箱网格的 64dp 图标
                 // 保持同一视觉密度（约占列宽 75%），否则应用页会比动作页稀一截。
                 Md3PickerAppLeading(app, sizeDp = 58)
             }
-            if (selected) {
+            if (selected && !singleSelect) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -127,7 +140,11 @@ private fun AppPickerGridCell(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            color = if (selected && singleSelect) {
+                MiuixTheme.colorScheme.primary
+            } else {
+                MiuixTheme.colorScheme.onSurfaceVariantSummary
+            },
             modifier = Modifier.padding(top = 5.dp, start = 2.dp, end = 2.dp),
         )
     }

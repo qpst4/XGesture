@@ -537,7 +537,7 @@ fun QuickLauncherToggleRow(
         segmentCount = segmentCount,
         title = resolvedTitle,
         subtitle = resolvedSubtitle,
-        selected = if (singleSelect) false else added,
+        selected = added,
         onClick = if (showAction) onToggle else null,
         modifier = modifier,
         leadingContent = {
@@ -546,7 +546,7 @@ fun QuickLauncherToggleRow(
                 missingIcon = Icons.AutoMirrored.Outlined.Shortcut,
             )
         },
-        trailingMode = if (singleSelect) PickerTrailingMode.None else if (showAction) PickerTrailingMode.Toggle else PickerTrailingMode.None,
+        trailingMode = if (singleSelect) PickerTrailingMode.Radio else if (showAction) PickerTrailingMode.Toggle else PickerTrailingMode.None,
         onTrailingClick = if (singleSelect) null else if (showAction) onToggle else null,
     )
 }
@@ -592,14 +592,14 @@ fun QuickLauncherActionRow(
         segmentCount = segmentCount,
         title = label,
         subtitle = subtitle,
-        selected = if (singleSelect) false else added,
+        selected = added,
         onClick = onToggle,
         leadingContent = {
             Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
             com.slideindex.app.ui.ActionIconSlot(action = action, sizeDp = 24)
         }
         },
-        trailingMode = if (singleSelect) PickerTrailingMode.None else PickerTrailingMode.Toggle,
+        trailingMode = if (singleSelect) PickerTrailingMode.Radio else PickerTrailingMode.Toggle,
         onTrailingClick = if (singleSelect) null else onToggle,
     )
 }
@@ -827,10 +827,10 @@ private fun QuickLauncherShortcutToggleRow(
         segmentCount = segmentCount,
         title = shortcut.label,
         subtitle = shortcut.targetComponent?.takeIf { it.isNotBlank() },
-        selected = if (singleSelect) false else added,
+        selected = added,
         onClick = onToggle,
         leadingContent = { Md3PickerAppLeading(app) },
-        trailingMode = if (singleSelect) PickerTrailingMode.None else PickerTrailingMode.Toggle,
+        trailingMode = if (singleSelect) PickerTrailingMode.Radio else PickerTrailingMode.Toggle,
         onTrailingClick = if (singleSelect) null else onToggle,
         trailingChip = shortcutKindChip(shortcut.kind),
     )

@@ -19,6 +19,7 @@ internal fun ShortcutCatalogRow(
     segmentCount: Int,
     added: Boolean,
     onToggle: () -> Unit,
+    singleSelect: Boolean = false,
 ) {
     Md3PickerListRow(
         segmentIndex = segmentIndex,
@@ -33,8 +34,8 @@ internal fun ShortcutCatalogRow(
                 selected = added,
             )
         },
-        trailingMode = PickerTrailingMode.Toggle,
-        onTrailingClick = onToggle,
+        trailingMode = if (singleSelect) PickerTrailingMode.Radio else PickerTrailingMode.Toggle,
+        onTrailingClick = if (singleSelect) null else onToggle,
         trailingChip = shortcutKindChip(shortcut.kind),
     )
 }

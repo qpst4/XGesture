@@ -101,12 +101,12 @@ fun LazyListScope.activityShortcutPickerToggleSection(
             segmentCount = segmentCount,
             title = shortcut.label,
             subtitle = shortcut.subtitleDetail(),
-            selected = if (singleSelect) false else added,
+            selected = added,
             onClick = { onToggle(item, if (singleSelect) false else added) },
             leadingContent = {
-                Md3PickerManagedShortcutLeading(shortcut = shortcut, selected = if (singleSelect) false else added)
+                Md3PickerManagedShortcutLeading(shortcut = shortcut, selected = added)
             },
-            trailingMode = if (singleSelect) PickerTrailingMode.None else PickerTrailingMode.Toggle,
+            trailingMode = if (singleSelect) PickerTrailingMode.Radio else PickerTrailingMode.Toggle,
             onTrailingClick = if (singleSelect) null else { { onToggle(item, added) } },
         )
     }
