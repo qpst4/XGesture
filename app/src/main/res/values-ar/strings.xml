@@ -3155,6 +3155,13 @@
     <string name="adjust_volume_notification_label">إشعار</string>
     <string name="widget_panel_columns_title">عدد الأعمدة: %1$d</string>
     <string name="widget_panel_visible_rows_title">عدد الصفوف المعروضة: %1$d</string>
+    <string name="widget_panel_show_labels">إظهار أسماء الأيقونات</string>
+    <string name="widget_panel_show_labels_desc">عند الإيقاف تُعرض الأيقونات فقط؛ تظل أسماء التطبيقات مستخدمة للقارئ الصوتي</string>
+    <string name="widget_panel_pick_page_title">اختر الصفحة</string>
+    <string name="widget_panel_page_default_name">الصفحة %1$d</string>
+    <string name="gesture_action_widget_popup_overlay_named">لوحة الأدوات المصغرة · %1$s</string>
+    <string name="quick_launcher_panel_custom_icon">أيقونة مخصصة</string>
+    <string name="quick_launcher_panel_icon_hint">اختر من مكتبة الأيقونات أو نص أو أيقونة تطبيق أو المعرض</string>
     <string name="widget_panel_cell_width_title">عرض شبكة الخلية: %1$d dp</string>
     <string name="widget_panel_margin_top_title">الهامش العلوي للحاوية: %1$d dp</string>
     <string name="widget_panel_margin_left_title">الهامش الأيسر للحاوية: %1$d dp</string>

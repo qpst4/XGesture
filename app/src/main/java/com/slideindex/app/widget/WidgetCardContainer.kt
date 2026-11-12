@@ -57,6 +57,12 @@ class WidgetCardContainer(
   private var pendingHostLayoutCommit: Runnable? = null
   private var lastDebouncedCommitSpanX = -1
   private var lastDebouncedCommitSpanY = -1
+  /** 应用/快捷方式/动作格子里的「图标 + 名称」两层视图；小组件卡为 null。 */
+  private var appContentView: android.widget.LinearLayout? = null
+  private var appIconView: androidx.appcompat.widget.AppCompatImageView? = null
+  private var appLabelView: android.widget.TextView? = null
+  /** 是否显示名称（由 [WidgetCanvasLayout.appLabelsVisible] 下发）。 */
+  private var showAppLabels: Boolean = true
 
   private val density = resources.displayMetrics.density
   private val cardCornerRadiusPx = 16f * density
@@ -155,6 +161,9 @@ class WidgetCardContainer(
           topMargin = (4 * density).roundToInt()
         }
         addView(labelView, labelParams)
+        appContentView = this
+        appIconView = iconView
+        appLabelView = labelView
       }
       addView(appView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT).apply {
         gravity = Gravity.CENTER
@@ -296,6 +305,75 @@ class WidgetCardContainer(
     )
 
     setEditMode(false)
+  }
+
+  /** 全局「显示图标名称」开关变化时由画布下发；只改自己的排版，不动 span/网格。 */
+  fun setAppLabelsVisible(visible: Boolean) {
+    if (showAppLabels == visible) return
+    showAppLabels = visible
+    requestLayout()
+  }
+
+  override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    // 必须在测量子视图之前算好：格子是正方形，图标 + 4dp 间距 + 一行 11sp 名称
+    // 需要 63~64dp；格子更小时名称会被下一行图标裁掉（用户反馈的「名字被挡住」）。
+    // 这里按实测行高缩小图标；缩到下限仍放不下就只画图标。
+    applyAppCellSizing(
+      cardWidthPx = MeasureSpec.getSize(widthMeasureSpec),
+      cardHeightPx = MeasureSpec.getSize(heightMeasureSpec),
+    )
+    super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+  }
+
+  private fun applyAppCellSizing(cardWidthPx: Int, cardHeightPx: Int) {
+    val icon = appIconView ?: return
+    val label = appLabelView ?: return
+    val content = appContentView ?: return
+    if (cardWidthPx <= 0 || cardHeightPx <= 0) return
+
+    val spanX = item.spanX.coerceAtLeast(1)
+    val cellWidthPx = (cardWidthPx / spanX).coerceAtLeast(1)
+    val gapPx = (4 * density).roundToInt()
+    val maxIconPx = minOf(
+      (44 * density).roundToInt(),
+      (cellWidthPx - (2 * density).roundToInt()).coerceAtLeast(1),
+    )
+    val minIconPx = (20 * density).roundToInt().coerceAtMost(maxIconPx)
+
+    label.measure(
+      MeasureSpec.makeMeasureSpec(cellWidthPx, MeasureSpec.AT_MOST),
+      MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
+    )
+    val labelHeightPx = label.measuredHeight
+    var showLabel = showAppLabels && label.text.isNotEmpty() && labelHeightPx > 0
+    var iconSizePx = maxIconPx
+    if (showLabel) {
+      val fitPx = cardHeightPx - gapPx - labelHeightPx
+      if (fitPx >= minIconPx) {
+        iconSizePx = minOf(fitPx, maxIconPx)
+      } else {
+        // 显示开关开着但格子确实放不下：宁可只画图标，也不让文字被裁。
+        showLabel = false
+      }
+    }
+    if (!showLabel) {
+      iconSizePx = minOf(
+        maxIconPx,
+        (cardHeightPx - (4 * density).roundToInt()).coerceAtLeast(1),
+      ).coerceAtLeast(minIconPx)
+    }
+
+    val params = icon.layoutParams
+    if (params.width != iconSizePx || params.height != iconSizePx) {
+      params.width = iconSizePx
+      params.height = iconSizePx
+      icon.layoutParams = params
+    }
+    val labelVisibility = if (showLabel) View.VISIBLE else View.GONE
+    if (label.visibility != labelVisibility) label.visibility = labelVisibility
+    // 隐藏文字后，名称改由容器朗读（否则无障碍只剩一个无名图标）。
+    val description = if (showLabel) null else item.label.ifBlank { null }
+    if (content.contentDescription != description) content.contentDescription = description
   }
 
   fun syncItem(newItem: WidgetPanelItem) {

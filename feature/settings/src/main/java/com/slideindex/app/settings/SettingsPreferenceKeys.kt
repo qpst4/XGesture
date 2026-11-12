@@ -324,6 +324,7 @@ internal object SettingsPreferenceKeys {
     val WIDGET_PANEL_BLUR = booleanPreferencesKey("widget_panel_blur_enabled")
     val WIDGET_PANEL_BLUR_RADIUS_DP = intPreferencesKey("widget_panel_blur_radius_dp")
     val WIDGET_PANEL_CLOSE_ON_CLICK = intPreferencesKey("widget_panel_close_on_click_mode")
+    val WIDGET_PANEL_SHOW_LABELS = booleanPreferencesKey("widget_panel_show_labels")
     val FLOATING_POINTER_SENSITIVITY = floatPreferencesKey("floating_pointer_sensitivity_fraction")
     val FLOATING_POINTER_JOYSTICK_AREA_WIDTH = floatPreferencesKey("floating_pointer_joystick_area_width")
     val FLOATING_POINTER_JOYSTICK_AREA_HEIGHT = floatPreferencesKey("floating_pointer_joystick_area_height")

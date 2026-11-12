@@ -49,6 +49,21 @@ class WidgetCanvasLayout(context: Context) : ViewGroup(context) {
     internal set
   val gridStepPx: Int get() = currentGridStepPx
 
+  /**
+   * 应用/快捷方式/动作格子是否显示名称。
+   *
+   * 卡片是正方形：44dp 图标 + 4dp 间距 + 一行 11sp 名称要 63~64dp，格子更小时名称会被
+   * 下一行图标裁掉。关闭后只画图标（名称仍由 [WidgetCardContainer] 提供给无障碍朗读）。
+   */
+  var appLabelsVisible: Boolean = true
+    set(value) {
+      if (field == value) return
+      field = value
+      for (i in 0 until childCount) {
+        (getChildAt(i) as? WidgetCardContainer)?.setAppLabelsVisible(value)
+      }
+    }
+
   internal var canvasPage: WidgetPanelPage? = null
   internal var dragStartPage: WidgetPanelPage? = null
   internal var canvasHostContext: Context? = null
@@ -209,6 +224,7 @@ class WidgetCanvasLayout(context: Context) : ViewGroup(context) {
       setEditMode(editMode)
       layoutParams = LayoutParams(0, 0)
     }
+    container.setAppLabelsVisible(appLabelsVisible)
     addView(container)
     container.post { container.updateScalableTargetFromContainer() }
     return container

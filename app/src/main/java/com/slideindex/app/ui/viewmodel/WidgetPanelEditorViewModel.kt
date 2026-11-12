@@ -22,6 +22,8 @@ data class WidgetPanelUiState(
     val blurEnabled: Boolean = false,
     val blurRadiusDp: Int = 16,
     val closeOnClickMode: Int = 0,
+    /** 图标下方是否显示名称；关闭后只画图标（名称仍用于无障碍朗读）。 */
+    val showLabels: Boolean = true,
     val isGridInteractionActive: Boolean = false,
     val isLoading: Boolean = false,
 ) {
@@ -53,6 +55,7 @@ class WidgetPanelEditorViewModel @Inject constructor(
             blurEnabled = currentSettings.widgetPanelBlurEnabled,
             blurRadiusDp = currentSettings.widgetPanelBlurRadiusDp,
             closeOnClickMode = currentSettings.widgetPanelCloseOnClickMode,
+            showLabels = currentSettings.widgetPanelShowLabels,
             isGridInteractionActive = gridActive,
             isLoading = false,
         )
@@ -91,6 +94,12 @@ class WidgetPanelEditorViewModel @Inject constructor(
     fun setCloseOnClickMode(mode: Int) {
         launchSettingsWrite {
             settingsRepository.setWidgetPanelCloseOnClickMode(mode)
+        }
+    }
+
+    fun setShowLabels(show: Boolean) {
+        launchSettingsWrite {
+            settingsRepository.setWidgetPanelShowLabels(show)
         }
     }
 }

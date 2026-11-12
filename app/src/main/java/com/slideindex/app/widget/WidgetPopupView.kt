@@ -75,6 +75,8 @@ class WidgetPopupCardLayout(
 
     private var editMode = false
     private var currentPageIndex = 0
+    /** 应用/快捷方式/动作格子是否显示名称（全局设置，见 WidgetPanelSettings.widgetPanelShowLabels）。 */
+    private var showLabels = settings.widgetPanelShowLabels
 
     private val headerTextView: TextView
     private val recyclerContainer: FrameLayout
@@ -299,7 +301,20 @@ class WidgetPopupCardLayout(
 
     fun updateSettings(newSettings: AppSettings) {
         settings = newSettings
+        val nextShowLabels = newSettings.widgetPanelShowLabels
+        if (showLabels != nextShowLabels) {
+            showLabels = nextShowLabels
+            applyShowLabelsToCanvases()
+        }
         applyCardBackground()
+    }
+
+    /** 全局开关切换后同步已绑定的页（RecyclerView 只复用当前可见的几页）。 */
+    private fun applyShowLabelsToCanvases() {
+        for (i in 0 until recyclerView.childCount) {
+            val scroll = recyclerView.getChildAt(i) as? WidgetPanelNestedScrollView ?: continue
+            (scroll.getChildAt(0) as? WidgetCanvasLayout)?.appLabelsVisible = showLabels
+        }
     }
 
     private fun createFabButton(iconRes: Int, bgColor: Int, onClick: () -> Unit): ImageView {
@@ -548,6 +563,7 @@ class WidgetPopupCardLayout(
                 onDismiss()
             }
             canvas.onAddWidgetRequested = { launchWidgetPicker(position) }
+            canvas.appLabelsVisible = showLabels
             canvas.editMode = editMode
             canvas.bind(page, hostContext)
         }

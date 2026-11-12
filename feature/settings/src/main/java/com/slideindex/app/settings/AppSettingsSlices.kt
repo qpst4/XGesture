@@ -651,6 +651,14 @@ data class WidgetPanelSettings(
     val widgetPanelBlurRadiusDp: Int = AppSettings.WIDGET_PANEL_BLUR_RADIUS_DEFAULT_DP,
     /** 点击小组件后收起面板的策略：0=仅外部 Activity，1=总是，2=从不。 */
     val widgetPanelCloseOnClickMode: Int = 0,
+    /**
+     * 是否在应用/快捷方式/动作图标下方显示名称。
+     *
+     * 关掉后只显示图标、图标垂直居中；名称仍用于无障碍朗读与点击命中区域。
+     * 开着时如果格子小到放不下（图标压缩到下限仍然越界），也会自动只画图标，
+     * 避免文字被下一行图标裁掉。
+     */
+    val widgetPanelShowLabels: Boolean = true,
 )
 
 /** 验证码提取与自动填充规则。 */

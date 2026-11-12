@@ -3180,6 +3180,13 @@
     <string name="adjust_volume_notification_label">通知</string>
     <string name="widget_panel_columns_title">列数: %1$d</string>
     <string name="widget_panel_visible_rows_title">表示行数: %1$d</string>
+    <string name="widget_panel_show_labels">アイコン名を表示</string>
+    <string name="widget_panel_show_labels_desc">オフにするとアイコンのみ表示されます。アプリ名は読み上げには引き続き使われます</string>
+    <string name="widget_panel_pick_page_title">開くページを選択</string>
+    <string name="widget_panel_page_default_name">%1$d ページ</string>
+    <string name="gesture_action_widget_popup_overlay_named">ウィジェットパネル · %1$s</string>
+    <string name="quick_launcher_panel_custom_icon">カスタムアイコン</string>
+    <string name="quick_launcher_panel_icon_hint">アイコンライブラリ、文字、アプリアイコン、ギャラリーから選択</string>
     <string name="widget_panel_cell_width_title">グリッドセル幅: %1$d dp</string>
     <string name="widget_panel_margin_top_title">上マージン: %1$d dp</string>
     <string name="widget_panel_margin_left_title">コンテナ左マージン: %1$d dp</string>

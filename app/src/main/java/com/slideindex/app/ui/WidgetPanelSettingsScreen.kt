@@ -59,6 +59,7 @@ import com.slideindex.app.ui.settings.components.SettingsCardSegmentContent
 import com.slideindex.app.ui.settings.components.SettingsCardScope
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
 import com.slideindex.app.ui.settings.components.SettingExpandableSwitchRow
+import com.slideindex.app.ui.settings.components.SettingSwitchRow
 import com.slideindex.app.ui.widgetpanel.WidgetPanelPageManagementSection
 import com.slideindex.app.ui.settings.components.SettingsSliderRow
 import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_01
@@ -93,6 +94,7 @@ fun WidgetPanelSettingsScreen(
     onBlurEnabledChange = viewModel::setBlurEnabled,
     onBlurRadiusChange = viewModel::setBlurRadius,
     onCloseOnClickModeChange = viewModel::setCloseOnClickMode,
+    onShowLabelsChange = viewModel::setShowLabels,
     onGridInteractionActiveChange = viewModel::setGridInteractionActive,
     onPreviewWidget = onPreviewWidget,
   )
@@ -111,6 +113,7 @@ fun WidgetPanelSettingsScreen(
   onBlurEnabledChange: (Boolean) -> Unit,
   onBlurRadiusChange: (Int) -> Unit = {},
   onCloseOnClickModeChange: (Int) -> Unit = {},
+  onShowLabelsChange: (Boolean) -> Unit = {},
   onWidthFractionChange: (Float) -> Unit,
 ) {
   val pages = WidgetPanelDefaults.effectivePages(settings.widgetPanelPages)
@@ -132,6 +135,7 @@ fun WidgetPanelSettingsScreen(
     onBlurEnabledChange = onBlurEnabledChange,
     onBlurRadiusChange = onBlurRadiusChange,
     onCloseOnClickModeChange = onCloseOnClickModeChange,
+    onShowLabelsChange = onShowLabelsChange,
     onGridInteractionActiveChange = {},
   )
 }
@@ -151,6 +155,7 @@ fun WidgetPanelSettingsContent(
   onPreviewWidget: () -> Unit = {},
   onBlurRadiusChange: (Int) -> Unit = {},
   onCloseOnClickModeChange: (Int) -> Unit = {},
+  onShowLabelsChange: (Boolean) -> Unit = {},
   onGridInteractionActiveChange: (Boolean) -> Unit = {},
 ) {
   val settingsDesc = stringResource(R.string.widget_panel_settings_desc)
@@ -158,6 +163,8 @@ fun WidgetPanelSettingsContent(
   val blurDesc = stringResource(R.string.widget_panel_blur_desc)
   val closeOnClickTitle = stringResource(R.string.widget_panel_close_on_click)
   val closeOnClickDesc = stringResource(R.string.widget_panel_close_on_click_desc)
+  val showLabelsTitle = stringResource(R.string.widget_panel_show_labels)
+  val showLabelsDesc = stringResource(R.string.widget_panel_show_labels_desc)
   val closeOnClickItems = listOf(
     stringResource(R.string.widget_panel_close_on_click_activity),
     stringResource(R.string.widget_panel_close_on_click_always),
@@ -234,6 +241,20 @@ fun WidgetPanelSettingsContent(
         },
       ),
     )
+    groupedCardItems(
+      keyPrefix = "widget-panel-labels",
+      items = listOf(
+        settingsCardScopeItem("widget-panel-show-labels") {
+          SettingSwitchRow(
+            title = showLabelsTitle,
+            subtitle = showLabelsDesc,
+            checked = uiState.showLabels,
+            enabled = true,
+            onCheckedChange = onShowLabelsChange,
+          )
+        },
+      ),
+    )
     item(key = "widget-panel-pages") {
       Column(modifier = Modifier.fillMaxWidth()) {
         WidgetPanelPageManagementSection(
@@ -258,6 +279,7 @@ fun WidgetPanelSettingsContent(
                 pageIndex = uiState.selectedPageIndex,
                 allPages = uiState.pages,
                 widgetPanelBlurEnabled = uiState.blurEnabled,
+                showLabels = uiState.showLabels,
                 gridScrollEnabled = !uiState.isGridInteractionActive,
                 onPagesChange = onSavePages,
                 onGridInteractionActiveChange = onGridInteractionActiveChange,
@@ -277,6 +299,7 @@ private fun WidgetPanelGridEditor(
   pageIndex: Int,
   allPages: List<WidgetPanelPage>,
   widgetPanelBlurEnabled: Boolean,
+  showLabels: Boolean,
   gridScrollEnabled: Boolean,
   onPagesChange: (List<WidgetPanelPage>) -> Unit,
   onGridInteractionActiveChange: (Boolean) -> Unit,
@@ -518,6 +541,7 @@ private fun WidgetPanelGridEditor(
                 }
                 onAddWidgetRequested = { launchWidgetPicker() }
                 onInteractionActiveChange = onGridInteractionActiveChange
+                appLabelsVisible = showLabels
                 bindIfNeeded(page, ctx)
                 editMode = true
               }
@@ -537,6 +561,7 @@ private fun WidgetPanelGridEditor(
               }
               view.onAddWidgetRequested = { launchWidgetPicker() }
               view.onInteractionActiveChange = onGridInteractionActiveChange
+              view.appLabelsVisible = showLabels
               view.bindIfNeeded(page, view.context)
               view.editMode = true
             },

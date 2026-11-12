@@ -3394,6 +3394,13 @@
     <string name="adjust_volume_notification_label">通</string>
     <string name="widget_panel_columns_title">列数: %1$d</string>
     <string name="widget_panel_visible_rows_title">显示行数: %1$d</string>
+    <string name="widget_panel_show_labels">显示图标名称</string>
+    <string name="widget_panel_show_labels_desc">关闭后面板上只显示图标；应用名称仍用于无障碍朗读</string>
+    <string name="widget_panel_pick_page_title">选择打开页</string>
+    <string name="widget_panel_page_default_name">第 %1$d 页</string>
+    <string name="gesture_action_widget_popup_overlay_named">小组件面板 · %1$s</string>
+    <string name="quick_launcher_panel_custom_icon">自定义图标</string>
+    <string name="quick_launcher_panel_icon_hint">从图标库、文字、应用图标或相册中选择</string>
     <string name="widget_panel_cell_width_title">单元网格宽度: %1$d dp</string>
     <string name="widget_panel_margin_top_title">容器上边距: %1$d dp</string>
     <string name="widget_panel_margin_left_title">容器左边距: %1$d dp</string>

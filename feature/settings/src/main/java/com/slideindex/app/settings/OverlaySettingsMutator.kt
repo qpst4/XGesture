@@ -854,6 +854,10 @@ class OverlaySettingsMutator @Inject constructor(
         prefs[SettingsPreferenceKeys.WIDGET_PANEL_CLOSE_ON_CLICK] = mode.coerceIn(0, 2)
     }
 
+    suspend fun setWidgetPanelShowLabels(show: Boolean) = editor.edit { prefs ->
+        prefs[SettingsPreferenceKeys.WIDGET_PANEL_SHOW_LABELS] = show
+    }
+
     suspend fun setWidgetPanelWidthFraction(fraction: Float) = editor.edit { prefs ->
         prefs[SettingsPreferenceKeys.WIDGET_PANEL_WIDTH] = fraction.coerceIn(0.5f, 0.95f)
     }

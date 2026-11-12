@@ -3369,6 +3369,13 @@
     <string name="adjust_volume_notification_label">Notif</string>
     <string name="widget_panel_columns_title">Columns: %1$d</string>
     <string name="widget_panel_visible_rows_title">Visible rows: %1$d</string>
+    <string name="widget_panel_show_labels">Show icon labels</string>
+    <string name="widget_panel_show_labels_desc">When off, only icons are shown; app names are still read by screen readers</string>
+    <string name="widget_panel_pick_page_title">Choose page</string>
+    <string name="widget_panel_page_default_name">Page %1$d</string>
+    <string name="gesture_action_widget_popup_overlay_named">Widget panel · %1$s</string>
+    <string name="quick_launcher_panel_custom_icon">Custom icon</string>
+    <string name="quick_launcher_panel_icon_hint">Choose from the icon library, text, an app icon, or the gallery</string>
     <string name="widget_panel_cell_width_title">Grid cell width: %1$d dp</string>
     <string name="widget_panel_margin_top_title">Top margin: %1$d dp</string>
     <string name="widget_panel_margin_left_title">Container left margin: %1$d dp</string>

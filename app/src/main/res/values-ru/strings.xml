@@ -3348,6 +3348,13 @@
     <string name="adjust_volume_notification_label">Увед.</string>
     <string name="widget_panel_columns_title">Столбцы: %1$d</string>
     <string name="widget_panel_visible_rows_title">Видимых строк: %1$d</string>
+    <string name="widget_panel_show_labels">Показывать названия значков</string>
+    <string name="widget_panel_show_labels_desc">Если выключено, на панели отображаются только значки; названия приложений по-прежнему озвучиваются</string>
+    <string name="widget_panel_pick_page_title">Выберите страницу</string>
+    <string name="widget_panel_page_default_name">Страница %1$d</string>
+    <string name="gesture_action_widget_popup_overlay_named">Панель виджетов · %1$s</string>
+    <string name="quick_launcher_panel_custom_icon">Свой значок</string>
+    <string name="quick_launcher_panel_icon_hint">Выберите из библиотеки значков, текста, значка приложения или галереи</string>
     <string name="widget_panel_cell_width_title">Ширина ячейки сетки: %1$d dp</string>
     <string name="widget_panel_margin_top_title">Верхний отступ: %1$d dp</string>
     <string name="widget_panel_margin_left_title">Левый отступ контейнера: %1$d dp</string>

@@ -130,6 +130,7 @@ data class AppSettings(
     val widgetPanelBlurEnabled get() = widgetPanel.widgetPanelBlurEnabled
     val widgetPanelBlurRadiusDp get() = widgetPanel.widgetPanelBlurRadiusDp
     val widgetPanelCloseOnClickMode get() = widgetPanel.widgetPanelCloseOnClickMode
+    val widgetPanelShowLabels get() = widgetPanel.widgetPanelShowLabels
 
     val otpCopyToClipboard get() = otp.otpCopyToClipboard
     val otpKeywordsRegex get() = otp.otpKeywordsRegex

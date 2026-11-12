@@ -584,6 +584,7 @@ class SettingsRepository @Inject constructor(
     suspend fun setWidgetPanelBlurEnabled(enabled: Boolean) = overlay.setWidgetPanelBlurEnabled(enabled)
     suspend fun setWidgetPanelBlurRadiusDp(radiusDp: Int) = overlay.setWidgetPanelBlurRadiusDp(radiusDp)
     suspend fun setWidgetPanelCloseOnClickMode(mode: Int) = overlay.setWidgetPanelCloseOnClickMode(mode)
+    suspend fun setWidgetPanelShowLabels(show: Boolean) = overlay.setWidgetPanelShowLabels(show)
     suspend fun setWidgetPanelWidthFraction(fraction: Float) = overlay.setWidgetPanelWidthFraction(fraction)
     suspend fun setDebugPerformanceMonitorEnabled(enabled: Boolean) = overlay.setDebugPerformanceMonitorEnabled(enabled)
 
