@@ -23,11 +23,11 @@ enum class PickResultTextBarButton(val id: String) {
     /** 翻译当前选中。 */
     TRANSLATE("translate"),
 
-    /** 朗读当前文字；朗读中再点一次停止（issue #50）。 */
-    SPEAK("speak"),
-
     /** 分享当前选中（长按 = 起系统拖拽）。 */
     SHARE("share"),
+
+    /** 朗读当前文字；朗读中再点一次停止（issue #50）。 */
+    SPEAK("speak"),
 
     /** 钉在屏幕。 */
     PIN("pin"),
