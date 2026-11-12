@@ -55,7 +55,7 @@ class QuickLauncherAddTrampolineActivity : ComponentActivity() {
             var apps by remember {
                 mutableStateOf(deps.appRepository.getCachedApps())
             }
-            var appSettings by remember { mutableStateOf(AppSettings()) }
+            var appSettings by remember { mutableStateOf(deps.settingsRepository.readSnapshot()) }
             var dismissRequest by remember { mutableStateOf<(() -> Unit)?>(null) }
             LaunchedEffect(Unit) {
                 val snapshot = deps.settingsRepository.readFreshSnapshot()

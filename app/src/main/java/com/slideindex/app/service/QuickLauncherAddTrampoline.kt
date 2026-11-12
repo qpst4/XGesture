@@ -19,6 +19,12 @@ object QuickLauncherAddTrampoline {
 
     fun isActive(): Boolean = active
 
+    /**
+     * 打开透明 Activity 的添加入口。
+     *
+     * @return true = Activity 已在途；false = 启动失败（OEM 后台启动限制等），
+     *   调用方应回退到浮层 sheet。失败时也会走一次 [onDismiss]，让面板恢复。
+     */
     fun launch(
         context: Context,
         panelSide: PanelSide,
@@ -29,7 +35,7 @@ object QuickLauncherAddTrampoline {
         onDismiss: () -> Unit,
         onAdd: (QuickLauncherItem) -> Unit,
         onRemove: (QuickLauncherItem) -> Unit
-    ) {
+    ): Boolean {
         cancelPending()
         active = true
         this.onPrepare = onPrepare
@@ -37,7 +43,7 @@ object QuickLauncherAddTrampoline {
         this.onAdd = onAdd
         this.onRemove = onRemove
         onPrepare()
-        runCatching {
+        return runCatching {
             context.startActivity(
                 QuickLauncherAddTrampolineActivity.createIntent(
                     context = context,
@@ -47,9 +53,13 @@ object QuickLauncherAddTrampoline {
                     configuredActionKeys = configuredActionKeys
                 )
             )
-        }.onFailure {
-            deliverDismiss()
-        }
+        }.fold(
+            onSuccess = { true },
+            onFailure = {
+                deliverDismiss()
+                false
+            },
+        )
     }
 
     internal fun onItemAdd(item: QuickLauncherItem) {

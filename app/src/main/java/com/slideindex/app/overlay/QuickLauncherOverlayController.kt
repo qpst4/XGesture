@@ -124,53 +124,53 @@ internal class QuickLauncherOverlayController(
                 onAdd: (QuickLauncherItem) -> Unit,
                 onRemove: (QuickLauncherItem) -> Unit
             ) {
-                val appDeps = dagger.hilt.android.EntryPointAccessors.fromApplication(
-                    host.context.applicationContext,
-                    com.slideindex.app.di.AppGraphEntryPoint::class.java
-                ).dependencies()
-
-                quickLauncherOverlayDialogHost.show(
-                    onBackPressed = {
-                        quickLauncherOverlayDialogHost.dismiss()
-                        true
+                // 加条目走透明 Activity（列表滚动/搜索/返回栈都按普通窗口来，浮层里的
+                // ComposeView + LazyColumn 不可靠）；面板先收起，Activity 结束后按原样重开。
+                val panelId = activeQuickLauncherPanel().id
+                val side = host.side()
+                val pinned = host.gestureSession().quickLauncherPinned()
+                val pinCurrentApp = host.gestureSession().quickLauncherPinCurrentApp()
+                val anchorRawY = rememberRestoreAnchorRawY().takeIf { it > 0f }
+                    ?: (host.context.resources.displayMetrics.heightPixels / 2f)
+                val launched = QuickLauncherAddTrampoline.launch(
+                    context = host.context,
+                    panelSide = side,
+                    configuredAppPackages = configuredAppPackages,
+                    configuredShortcutKeys = configuredShortcutKeys,
+                    configuredActionKeys = configuredActionKeys,
+                    onPrepare = {
+                        dismissFromBack()
+                        host.notifyPresentationTouchRequirementChanged()
                     },
                     onDismiss = {
                         host.notifyPresentationTouchRequirementChanged()
                         host.invalidate()
-                    }
-                ) {
-                    androidx.compose.runtime.CompositionLocalProvider(
-                        com.slideindex.app.ui.compose.LocalAppDependencies provides appDeps
-                    ) {
-                        com.slideindex.app.ui.QuickLauncherAddOverlaySheet(
-                            panelSide = host.side(),
-                            apps = host.apps(),
-                            configuredAppPackages = configuredAppPackages,
-                            configuredShortcutKeys = configuredShortcutKeys,
-                            configuredActionKeys = configuredActionKeys,
-                            activityShortcuts = host.settings().activityShortcuts,
-                            shellCommands = host.settings().shellCommands,
-                            onDismiss = {
-                                quickLauncherOverlayDialogHost.dismiss()
-                                host.notifyPresentationTouchRequirementChanged()
-                            },
-                            onAdd = onAdd,
-                            onRemove = onRemove,
-                            launchCreateShortcut = { createHost, onResult ->
-                                CreateShortcutTrampoline.launch(
-                                    context = host.context,
-                                    host = createHost,
-                                    onPrepare = {
-                                        quickLauncherOverlayDialogHost.dismiss()
-                                        dismissFromBack()
-                                    },
-                                    onResult = onResult
-                                )
-                            }
-                        )
-                    }
-                }
+                        // 面板收起带退出动画：等它结束再重开，否则 prepareExternalGestureDispatch
+                        // 会被上一段 session 挡住。
+                        restoreHandler.postDelayed({
+                            reopenAfterAddFlow(
+                                panelId = panelId,
+                                pinned = pinned,
+                                pinCurrentApp = pinCurrentApp,
+                                anchorRawY = anchorRawY,
+                                side = side,
+                            )
+                        }, ADD_FLOW_REOPEN_DELAY_MS)
+                    },
+                    onAdd = onAdd,
+                    onRemove = onRemove,
+                )
                 host.notifyPresentationTouchRequirementChanged()
+                if (!launched) {
+                    // OEM 拦后台启动 Activity：退回浮层 sheet（旧路径），别让「+」点了没反应。
+                    showAddSheet(
+                        configuredAppPackages = configuredAppPackages,
+                        configuredShortcutKeys = configuredShortcutKeys,
+                        configuredActionKeys = configuredActionKeys,
+                        onAdd = onAdd,
+                        onRemove = onRemove,
+                    )
+                }
             }
             override fun onPersist(items: List<QuickLauncherItem>) {
                 invalidateQuickLauncherDerivedCaches()
@@ -503,6 +503,13 @@ internal class QuickLauncherOverlayController(
 
         /** 判定「切走应用」需要的连续命中次数（键盘 / 系统窗口的瞬时前台会被过滤掉）。 */
         const val FOREGROUND_CONFIRM_HITS = 2
+
+        /** 添加条目 Activity 关闭后，等面板退出动画结束再自动重开的延迟。 */
+        const val ADD_FLOW_REOPEN_DELAY_MS = 220L
+
+        /** 自动重开失败后的重试次数与间隔（会话/宿主还没就绪时）。 */
+        const val ADD_FLOW_RETRY_COUNT = 2
+        const val ADD_FLOW_RETRY_DELAY_MS = 260L
     }
 
     // ── 钉住 +「仅在本应用」：切走自动隐藏、切回原样恢复 ─────────────────────────
@@ -722,6 +729,97 @@ internal class QuickLauncherOverlayController(
      * 与「点面板外」无关：钉住态下点面板外不关，只有这里和「再划一次同一手势」才关。
      */
     fun requestClosePinned() = dismissFromBack()
+
+    /**
+     * 添加流程结束后按原样重开面板。
+     *
+     * 失败（上一段 session 还没清、宿主刚重建）时重试两次；仍失败就交给用户再划一次手势。
+     */
+    private fun reopenAfterAddFlow(
+        panelId: String,
+        pinned: Boolean,
+        pinCurrentApp: Boolean,
+        anchorRawY: Float,
+        side: PanelSide,
+        attempt: Int = 0,
+    ) {
+        val opened = runCatching {
+            SlideIndexAccessibilityService.dispatchExternalGestureAction(
+                action = GestureAction.QuickLauncher(
+                    panelId = panelId,
+                    pinned = pinned,
+                    pinCurrentApp = pinCurrentApp,
+                ),
+                anchorRawY = anchorRawY,
+                panelSide = side,
+            )
+        }.getOrDefault(false)
+        if (!opened && attempt < ADD_FLOW_RETRY_COUNT) {
+            restoreHandler.postDelayed({
+                reopenAfterAddFlow(panelId, pinned, pinCurrentApp, anchorRawY, side, attempt + 1)
+            }, ADD_FLOW_RETRY_DELAY_MS)
+        }
+    }
+
+    /**
+     * 兜底：Activity 起不来时，仍在浮层里弹旧的添加 sheet。
+     *
+     * 与 Activity 版共用 [com.slideindex.app.ui.QuickLauncherAddOverlaySheet]，
+     * 差异只在宿主（浮层 ComposeView vs 透明 Activity）。
+     */
+    private fun showAddSheet(
+        configuredAppPackages: Set<String>,
+        configuredShortcutKeys: Set<String>,
+        configuredActionKeys: Set<String>,
+        onAdd: (QuickLauncherItem) -> Unit,
+        onRemove: (QuickLauncherItem) -> Unit,
+    ) {
+        val appDeps = dagger.hilt.android.EntryPointAccessors.fromApplication(
+            host.context.applicationContext,
+            com.slideindex.app.di.AppGraphEntryPoint::class.java,
+        ).dependencies()
+        quickLauncherOverlayDialogHost.show(
+            onBackPressed = {
+                quickLauncherOverlayDialogHost.dismiss()
+                true
+            },
+            onDismiss = {
+                host.notifyPresentationTouchRequirementChanged()
+                host.invalidate()
+            },
+        ) {
+            androidx.compose.runtime.CompositionLocalProvider(
+                com.slideindex.app.ui.compose.LocalAppDependencies provides appDeps,
+            ) {
+                com.slideindex.app.ui.QuickLauncherAddOverlaySheet(
+                    panelSide = host.side(),
+                    apps = host.apps(),
+                    configuredAppPackages = configuredAppPackages,
+                    configuredShortcutKeys = configuredShortcutKeys,
+                    configuredActionKeys = configuredActionKeys,
+                    activityShortcuts = host.settings().activityShortcuts,
+                    shellCommands = host.settings().shellCommands,
+                    onDismiss = {
+                        quickLauncherOverlayDialogHost.dismiss()
+                        host.notifyPresentationTouchRequirementChanged()
+                    },
+                    onAdd = onAdd,
+                    onRemove = onRemove,
+                    launchCreateShortcut = { createHost, onResult ->
+                        CreateShortcutTrampoline.launch(
+                            context = host.context,
+                            host = createHost,
+                            onPrepare = {
+                                quickLauncherOverlayDialogHost.dismiss()
+                                dismissFromBack()
+                            },
+                            onResult = onResult,
+                        )
+                    },
+                )
+            }
+        }
+    }
 
     fun panelRect(): RectF = quickLauncherPanelRect()
 

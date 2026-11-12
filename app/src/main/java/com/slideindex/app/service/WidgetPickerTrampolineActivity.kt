@@ -26,6 +26,9 @@ class WidgetPickerTrampolineActivity : ComponentActivity() {
 
   @javax.inject.Inject lateinit var deps: AppDependencies
 
+  /** 是否已经把结果（成功/取消/去绑定）交给 [WidgetPickerTrampoline]，避免 onDestroy 再补一次取消。 */
+  private var delivered = false
+
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge(
       statusBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT),
@@ -42,15 +45,18 @@ class WidgetPickerTrampolineActivity : ComponentActivity() {
         ModuleTheme(settings = appSettings) {
           WidgetPickerScreen(
             onBack = {
+              delivered = true
               WidgetPickerTrampoline.deliverCancel()
               finish()
             },
             onWidgetSelected = { entry -> onWidgetPicked(entry) },
             onAppSelected = { app ->
+              delivered = true
               WidgetPickerTrampoline.deliverAppSuccess(app.packageName, app.className, app.appLabel, app.cloneUserId)
               finish()
             },
             onShortcutSelected = { sc ->
+              delivered = true
               WidgetPickerTrampoline.deliverShortcutSuccess(sc.packageName, sc.shortcutId, sc.label, sc.intentUri)
               finish()
             },
@@ -62,8 +68,21 @@ class WidgetPickerTrampolineActivity : ComponentActivity() {
   }
 
   private fun onWidgetPicked(entry: WidgetProviderEntry) {
+    // 小组件要先去绑定页（WidgetBindTrampolineActivity），成功/取消都在那边回传；
+    // 这里只标记“已交接”，别让 onDestroy 把整条添加流程取消掉。
+    delivered = true
     WidgetPickerTrampoline.startBindFlow(this, entry.provider.provider)
     finish()
+  }
+
+  override fun onDestroy() {
+    // 没有正常回传就被销毁（返回键被系统吞掉、任务被划掉等）：补一次取消，
+    // 否则面板会一直停在“添加流程中”的隐藏态。
+    if (isFinishing && !delivered) {
+      delivered = true
+      WidgetPickerTrampoline.deliverCancel()
+    }
+    super.onDestroy()
   }
 
   companion object {

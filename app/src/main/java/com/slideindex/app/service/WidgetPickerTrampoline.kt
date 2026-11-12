@@ -78,16 +78,21 @@ object WidgetPickerTrampoline {
 
     val runLaunch = {
       WidgetPopupOverlayWindow.setWidgetAddFlowActive(true)
-      val canUseOverlay = PermissionHelper.isAccessibilityServiceEnabledForOverlays(context) &&
-        SlideIndexAccessibilityService.overlayHostContext() != null
-      if (canUseOverlay) {
-        if (!WidgetPickerOverlayWindow.show(context)) {
-          Log.w(TAG, "overlay picker failed, falling back to activity")
-          launchActivityPicker(context)
+      // 优先透明 Activity：普通窗口的列表滚动/搜索/返回栈更可靠（与快速启动器、
+      // 边角/圆环的“外部编辑页”同一形态）。启动失败（OEM 后台启动限制）才退回 overlay。
+      if (!launchActivityPicker(context)) {
+        Log.w(TAG, "activity picker launch failed, falling back to overlay")
+        val canUseOverlay = PermissionHelper.isAccessibilityServiceEnabledForOverlays(context) &&
+          SlideIndexAccessibilityService.overlayHostContext() != null
+        if (canUseOverlay) {
+          if (!WidgetPickerOverlayWindow.show(context)) {
+            Log.w(TAG, "overlay picker also failed; cancel add flow")
+            WidgetPickerTrampoline.deliverCancel()
+          }
+        } else {
+          Log.w(TAG, "accessibility overlay host unavailable; cancel add flow")
+          WidgetPickerTrampoline.deliverCancel()
         }
-      } else {
-        Log.d(TAG, "accessibility overlay host unavailable, using activity picker")
-        launchActivityPicker(context)
       }
     }
 
@@ -273,15 +278,13 @@ object WidgetPickerTrampoline {
     callback?.invoke()
   }
 
-  private fun launchActivityPicker(context: Context) {
+  private fun launchActivityPicker(context: Context): Boolean {
     val intent = WidgetPickerTrampolineActivity.createIntent(context).apply {
       addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
-    runCatching { context.startActivity(intent) }
-      .onFailure {
-        Log.e(TAG, "activity picker launch failed", it)
-        deliverCancel()
-      }
+    return runCatching { context.startActivity(intent) }
+      .onFailure { Log.e(TAG, "activity picker launch failed", it) }
+      .isSuccess
   }
 
   private fun clear() {
