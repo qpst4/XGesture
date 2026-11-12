@@ -20,6 +20,8 @@ object HapticHelper {
 
     fun longThreshold(view: View, settings: AppSettings) {
         if (!settings.hapticGestureTriggerEnabled) return
+        // 长距阈值那一响可单独关闭：长滑会先响「手势唤起」、到这里再响一次（issue #57）。
+        if (!settings.hapticLongThresholdEnabled) return
         pulse(view, settings, PulseKind.LONG_THRESHOLD)
     }
 

@@ -32,6 +32,8 @@ data class AppSettings(
     val hapticEnabled: Boolean = true,
     val hapticStrengthLevel: Int = HapticStrength.MEDIUM.level,
     val hapticGestureTriggerEnabled: Boolean = true,
+    /** 越过长距阈值时的额外一次震动；关掉后长滑只响首声（issue #57）。 */
+    val hapticLongThresholdEnabled: Boolean = true,
     val hapticSlotSelectionEnabled: Boolean = true,
     val hapticConfirmLaunchEnabled: Boolean = true,
     val hideFromRecents: Boolean = false,

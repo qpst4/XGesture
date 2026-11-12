@@ -64,6 +64,10 @@ class HomeViewModel @AssistedInject constructor(
         settingsRepository.setHapticGestureTriggerEnabled(enabled)
     }
 
+    fun setHapticLongThresholdEnabled(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setHapticLongThresholdEnabled(enabled)
+    }
+
     fun setHapticSlotSelectionEnabled(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setHapticSlotSelectionEnabled(enabled)
     }

@@ -2212,6 +2212,8 @@
     <string name="haptic_strength">Vibration strength</string>
     <string name="haptic_gesture_trigger_title">Gesture trigger haptic</string>
     <string name="haptic_gesture_trigger_desc">Haptic feedback when reaching trigger distance or invoking gesture panels</string>
+    <string name="haptic_long_threshold_title">Long-swipe haptic</string>
+    <string name="haptic_long_threshold_desc">Extra haptic when the swipe passes the long-distance threshold; off leaves only the initial pulse</string>
     <string name="haptic_slot_selection_title">Item selection haptic</string>
     <string name="haptic_slot_selection_desc">Subtle tick feedback when sliding across icons or actions in wheel, ring, app switcher, etc.</string>
     <string name="haptic_confirm_launch_title">Release confirm haptic</string>

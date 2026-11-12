@@ -616,6 +616,8 @@
     <string name="haptic_strength">振動の強さ</string>
     <string name="haptic_gesture_trigger_title">ジェスチャー認識触覚</string>
     <string name="haptic_gesture_trigger_desc">トリガー距離に達した時やジェスチャーパネルを呼び出した時の触覚フィードバック</string>
+    <string name="haptic_long_threshold_title">長距離スワイプの触覚</string>
+    <string name="haptic_long_threshold_desc">長距離しきい値を超えた時の追加の触覚。オフにすると最初の 1 回だけになります</string>
     <string name="haptic_slot_selection_title">項目選択触覚</string>
     <string name="haptic_slot_selection_desc">ホイール、リング、アプリ切り替えなどでアイコンや項目を連続スライドした時の微小振動</string>
     <string name="haptic_confirm_launch_title">離して実行触覚</string>

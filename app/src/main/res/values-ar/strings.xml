@@ -620,7 +620,9 @@
     <string name="settings_section_interaction_feedback">ردود الفعل التفاعلية</string>
     <string name="haptic_strength">شدة الاهتزاز</string>
     <string name="haptic_gesture_trigger_title">اهتزاز استدعاء الإيماءة</string>
-    <string name="haptic_gesture_trigger_desc">تلميح الاهتزاز عند الوصول لمسافة السحب القصير/الطويل، أو استدعاء لوحة الإيماءات</string>
+    <string name="haptic_gesture_trigger_desc">تلميح الاهتزاز عند الوصول لمسافة السحب القصير، أو الانعطاف، أو العودة، أو استدعاء لوحة الإيماءات</string>
+    <string name="haptic_long_threshold_title">اهتزاز السحب الطويل</string>
+    <string name="haptic_long_threshold_desc">اهتزاز إضافي عند تجاوز مسافة السحب الطويل؛ عند الإيقاف يبقى الاهتزاز الأول فقط</string>
     <string name="haptic_slot_selection_title">اهتزاز تحديد عنصر السحب</string>
     <string name="haptic_slot_selection_desc">اهتزاز دقيق عند المرور فوق الأيقونات أو عناصر الإجراءات أثناء السحب المستمر في العجلة، الحلقة، مبدل التطبيقات، إلخ</string>
     <string name="haptic_confirm_launch_title">اهتزاز تنفيذ الإفلات</string>

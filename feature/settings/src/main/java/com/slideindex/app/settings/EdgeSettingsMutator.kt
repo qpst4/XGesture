@@ -487,6 +487,10 @@ class EdgeSettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.HAPTIC_GESTURE_TRIGGER_ENABLED] = enabled
     }
 
+    suspend fun setHapticLongThresholdEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.HAPTIC_LONG_THRESHOLD_ENABLED] = enabled
+    }
+
     suspend fun setHapticSlotSelectionEnabled(enabled: Boolean) = editor.edit {
         it[SettingsPreferenceKeys.HAPTIC_SLOT_SELECTION_ENABLED] = enabled
     }

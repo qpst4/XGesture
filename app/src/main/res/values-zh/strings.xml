@@ -634,7 +634,9 @@
     <string name="settings_section_interaction_feedback">交互反馈</string>
     <string name="haptic_strength">震动强度</string>
     <string name="haptic_gesture_trigger_title">手势唤起振动</string>
-    <string name="haptic_gesture_trigger_desc">达到短滑/长滑距离、或唤出手势面板时的振动提示</string>
+    <string name="haptic_gesture_trigger_desc">达到短滑距离、转向、折返或唤出手势面板时的振动提示</string>
+    <string name="haptic_long_threshold_title">长滑距离振动</string>
+    <string name="haptic_long_threshold_desc">滑动越过长距阈值时额外响一次；关闭后长滑只响首声</string>
     <string name="haptic_slot_selection_title">滑动选项目振动</string>
     <string name="haptic_slot_selection_desc">轮盘、圆环、应用切换等连续滑动划过图标或动作项时的刻度微振</string>
     <string name="haptic_confirm_launch_title">松手执行振动</string>

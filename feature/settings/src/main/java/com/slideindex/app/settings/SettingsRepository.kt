@@ -293,6 +293,7 @@ class SettingsRepository @Inject constructor(
     suspend fun setAccessibilityKeepAliveEnabled(enabled: Boolean) = edge.setAccessibilityKeepAliveEnabled(enabled)
     suspend fun setHapticStrengthLevel(level: Int) = edge.setHapticStrengthLevel(level)
     suspend fun setHapticGestureTriggerEnabled(enabled: Boolean) = edge.setHapticGestureTriggerEnabled(enabled)
+    suspend fun setHapticLongThresholdEnabled(enabled: Boolean) = edge.setHapticLongThresholdEnabled(enabled)
     suspend fun setHapticSlotSelectionEnabled(enabled: Boolean) = edge.setHapticSlotSelectionEnabled(enabled)
     suspend fun setHapticConfirmLaunchEnabled(enabled: Boolean) = edge.setHapticConfirmLaunchEnabled(enabled)
     suspend fun addHiddenApp(packageName: String) = edge.addHiddenApp(packageName)

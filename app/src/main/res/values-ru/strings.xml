@@ -2190,6 +2190,8 @@
     <string name="haptic_strength">Сила вибрации</string>
     <string name="haptic_gesture_trigger_title">Виброотклик срабатывания жеста</string>
     <string name="haptic_gesture_trigger_desc">Виброотклик при достижении дистанции срабатывания или вызове панелей жестов</string>
+    <string name="haptic_long_threshold_title">Виброотклик длинного свайпа</string>
+    <string name="haptic_long_threshold_desc">Дополнительный виброотклик при переходе порога длинного свайпа; при выключении остаётся только первый</string>
     <string name="haptic_slot_selection_title">Виброотклик выбора элемента</string>
     <string name="haptic_slot_selection_desc">Лёгкий щелчок при скольжении по значкам или действиям в колесе, кольце, переключателе приложений и т. д.</string>
     <string name="haptic_confirm_launch_title">Виброотклик подтверждения отпускания</string>

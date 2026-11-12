@@ -252,6 +252,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             onHapticEnabledChange = viewModel::setHapticEnabled,
             onHapticStrengthChange = viewModel::setHapticStrength,
             onHapticGestureTriggerEnabledChange = viewModel::setHapticGestureTriggerEnabled,
+            onHapticLongThresholdEnabledChange = viewModel::setHapticLongThresholdEnabled,
             onHapticSlotSelectionEnabledChange = viewModel::setHapticSlotSelectionEnabled,
             onHapticConfirmLaunchEnabledChange = viewModel::setHapticConfirmLaunchEnabled,
             onSwipeDismissEnabledChange = viewModel::setSwipeDismissEnabled,

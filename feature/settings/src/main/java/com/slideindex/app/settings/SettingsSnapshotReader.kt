@@ -213,6 +213,7 @@ internal object SettingsSnapshotReader {
             hapticEnabled = prefs[SettingsPreferenceKeys.HAPTIC_ENABLED] ?: true,
             hapticStrengthLevel = prefs[SettingsPreferenceKeys.HAPTIC_STRENGTH] ?: HapticStrength.MEDIUM.level,
             hapticGestureTriggerEnabled = prefs[SettingsPreferenceKeys.HAPTIC_GESTURE_TRIGGER_ENABLED] ?: true,
+            hapticLongThresholdEnabled = prefs[SettingsPreferenceKeys.HAPTIC_LONG_THRESHOLD_ENABLED] ?: true,
             hapticSlotSelectionEnabled = prefs[SettingsPreferenceKeys.HAPTIC_SLOT_SELECTION_ENABLED] ?: true,
             hapticConfirmLaunchEnabled = prefs[SettingsPreferenceKeys.HAPTIC_CONFIRM_LAUNCH_ENABLED] ?: true,
             hideFromRecents = prefs[SettingsPreferenceKeys.HIDE_FROM_RECENTS] ?: false,

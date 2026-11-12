@@ -91,6 +91,7 @@ internal object SettingsPreferenceKeys {
     val HAPTIC_ENABLED = booleanPreferencesKey("haptic_enabled")
     val HAPTIC_STRENGTH = intPreferencesKey("haptic_strength_level")
     val HAPTIC_GESTURE_TRIGGER_ENABLED = booleanPreferencesKey("haptic_gesture_trigger_enabled")
+    val HAPTIC_LONG_THRESHOLD_ENABLED = booleanPreferencesKey("haptic_long_threshold_enabled")
     val HAPTIC_SLOT_SELECTION_ENABLED = booleanPreferencesKey("haptic_slot_selection_enabled")
     val HAPTIC_CONFIRM_LAUNCH_ENABLED = booleanPreferencesKey("haptic_confirm_launch_enabled")
     val SELECTED_HINT_ICON_SIZE_DP = intPreferencesKey("selected_hint_icon_size_dp")

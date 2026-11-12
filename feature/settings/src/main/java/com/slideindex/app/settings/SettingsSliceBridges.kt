@@ -59,6 +59,7 @@ fun GestureSettings.toMinimalAppSettings(): AppSettings = AppSettings(
     hapticEnabled = hapticEnabled,
     hapticStrengthLevel = hapticStrengthLevel,
     hapticGestureTriggerEnabled = hapticGestureTriggerEnabled,
+    hapticLongThresholdEnabled = hapticLongThresholdEnabled,
     hapticSlotSelectionEnabled = hapticSlotSelectionEnabled,
     hapticConfirmLaunchEnabled = hapticConfirmLaunchEnabled,
     hideTriggerInLandscape = hideTriggerInLandscape,

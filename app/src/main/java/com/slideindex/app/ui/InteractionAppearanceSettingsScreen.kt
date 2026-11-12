@@ -64,6 +64,7 @@ fun InteractionAppearanceSettingsScreen(
     onHapticEnabledChange: (Boolean) -> Unit,
     onHapticStrengthChange: (Int) -> Unit,
     onHapticGestureTriggerEnabledChange: (Boolean) -> Unit,
+    onHapticLongThresholdEnabledChange: (Boolean) -> Unit,
     onHapticSlotSelectionEnabledChange: (Boolean) -> Unit,
     onHapticConfirmLaunchEnabledChange: (Boolean) -> Unit,
     onSwipeDismissEnabledChange: (Boolean) -> Unit,
@@ -251,6 +252,13 @@ fun InteractionAppearanceSettingsScreen(
                                 checked = settings.hapticGestureTriggerEnabled,
                                 enabled = true,
                                 onCheckedChange = onHapticGestureTriggerEnabledChange,
+                            )
+                            SwitchPreference(
+                                title = stringResource(R.string.haptic_long_threshold_title),
+                                summary = stringResource(R.string.haptic_long_threshold_desc),
+                                checked = settings.hapticLongThresholdEnabled,
+                                enabled = true,
+                                onCheckedChange = onHapticLongThresholdEnabledChange,
                             )
                             SwitchPreference(
                                 title = stringResource(R.string.haptic_slot_selection_title),
