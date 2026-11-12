@@ -116,6 +116,12 @@ object MessageReplyOverlayWindow {
                 onSend = { text ->
                     val sent = NotificationRemoteReply.sendReply(hostContext, data.key, data.postTime, text)
                     if (sent) {
+                        // 成功也要给一句：以前只有失败有 Toast，用户分不清“没发出去”和“发出去了但没提示”（issue #58）。
+                        android.widget.Toast.makeText(
+                            hostContext,
+                            hostContext.getString(R.string.message_action_quick_reply_sent),
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
                         completeSend()
                     } else {
                         Log.w(TAG, "quick reply failed for ${data.key}")

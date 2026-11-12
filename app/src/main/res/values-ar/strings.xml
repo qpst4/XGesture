@@ -320,6 +320,7 @@
     <string name="message_action_quick_reply_to">الرد على %1$s</string>
     <string name="message_action_quick_reply_unavailable">%1$s لا يدعم الرد السريع</string>
     <string name="message_action_quick_reply_failed">فشل إرسال الرد، يرجى المحاولة مرة أخرى</string>
+    <string name="message_action_quick_reply_sent">تم إرسال الرد</string>
     <string name="message_theme_weipop_round_black">أسود حبري بزوايا مستديرة</string>
     <string name="message_theme_weipop_round_white">أبيض سحابي بزوايا مستديرة</string>
     <string name="message_theme_weipop_tail3_black">ذيل مدبب أسود حبري</string>

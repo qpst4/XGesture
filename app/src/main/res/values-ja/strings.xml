@@ -320,6 +320,7 @@
     <string name="message_action_quick_reply_to">%1$s に返信</string>
     <string name="message_action_quick_reply_unavailable">%1$s ではクイック返信に対応していません</string>
     <string name="message_action_quick_reply_failed">返信の送信に失敗しました。もう一度お試しください。</string>
+    <string name="message_action_quick_reply_sent">返信を送信しました</string>
     <string name="message_theme_weipop_round_black">角丸ダーク</string>
     <string name="message_theme_weipop_round_white">角丸ライト</string>
     <string name="message_theme_weipop_tail3_black">尖ったしっぽ ダーク</string>

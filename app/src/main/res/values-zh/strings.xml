@@ -337,6 +337,7 @@
     <string name="message_action_quick_reply_to">回复 %1$s</string>
     <string name="message_action_quick_reply_unavailable">%1$s 不支持快速回复</string>
     <string name="message_action_quick_reply_failed">回复发送失败，请重试</string>
+    <string name="message_action_quick_reply_sent">已发送回复</string>
     <string name="message_theme_weipop_round_black">圆角墨黑</string>
     <string name="message_theme_weipop_round_white">圆角云白</string>
     <string name="message_theme_weipop_tail3_black">尖尾墨黑</string>

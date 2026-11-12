@@ -368,6 +368,7 @@
     <string name="message_action_quick_reply_to">Reply to %1$s</string>
     <string name="message_action_quick_reply_unavailable">Quick reply is not supported for %1$s</string>
     <string name="message_action_quick_reply_failed">Failed to send reply. Please try again.</string>
+    <string name="message_action_quick_reply_sent">Reply sent</string>
     <string name="message_theme_weipop_round_black">Rounded dark</string>
     <string name="message_theme_weipop_round_white">Rounded light</string>
     <string name="message_theme_weipop_tail3_black">Pointed tail dark</string>

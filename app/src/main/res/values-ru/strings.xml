@@ -351,6 +351,7 @@
     <string name="message_action_quick_reply_to">Ответ для %1$s</string>
     <string name="message_action_quick_reply_unavailable">Быстрый ответ не поддерживается для %1$s</string>
     <string name="message_action_quick_reply_failed">Не удалось отправить ответ. Попробуйте ещё раз.</string>
+    <string name="message_action_quick_reply_sent">Ответ отправлен</string>
     <string name="message_theme_weipop_round_black">Скруглённая тёмная</string>
     <string name="message_theme_weipop_round_white">Скруглённая светлая</string>
     <string name="message_theme_weipop_tail3_black">Острый хвост, тёмная</string>
