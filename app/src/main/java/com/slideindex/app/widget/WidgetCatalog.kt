@@ -325,8 +325,9 @@ object WidgetPreviewLoader {
     if (drawable is BitmapDrawable && drawable.bitmap != null) {
       return scaleBitmap(drawable.bitmap, maxPx)
     }
-    val width = drawable.intrinsicWidth.coerceAtLeast(1)
-    val height = drawable.intrinsicHeight.coerceAtLeast(1)
+    // 不信任第三方 drawable 的 intrinsic 尺寸：异常图标包可能声明 7K 画布。
+    val width = drawable.intrinsicWidth.coerceIn(1, 1024)
+    val height = drawable.intrinsicHeight.coerceIn(1, 1024)
     val bitmap = createBitmap(width, height)
     val canvas = Canvas(bitmap)
     drawable.setBounds(0, 0, width, height)

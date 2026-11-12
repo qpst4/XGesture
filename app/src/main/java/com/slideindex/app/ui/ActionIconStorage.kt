@@ -2,9 +2,9 @@ package com.slideindex.app.ui
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.util.ImageDecodeGuard
 import java.io.File
 import java.io.FileOutputStream
 
@@ -35,11 +35,11 @@ object ActionIconStorage {
      * @return 存好的本地文件路径（存进 [ActionDisplayNameStore.setIcon]）；失败返回 null。
      */
     fun saveFromUri(context: Context, action: GestureAction, uri: Uri): String? {
-        val bitmap = runCatching {
-            context.contentResolver.openInputStream(uri)?.use { input ->
-                BitmapFactory.decodeStream(input)
-            }
-        }.getOrNull() ?: return null
+        val bitmap = ImageDecodeGuard.decodeUri(
+            context = context,
+            uri = uri,
+            maxSidePx = MAX_SIZE_PX,
+        ) ?: return null
         val scaled = scaleDown(bitmap)
         val target = File(dir(context), fileNameOf(context, action))
         val ok = runCatching {
@@ -56,7 +56,7 @@ object ActionIconStorage {
     fun load(context: Context, action: GestureAction, iconKey: String?): Bitmap? {
         val path = iconKey?.takeIf { it.isNotBlank() } ?: return null
         if (!File(path).exists()) return null
-        return runCatching { BitmapFactory.decodeFile(path) }.getOrNull()
+        return ImageDecodeGuard.decodeFile(path, MAX_SIZE_PX)
     }
 
     /** 删掉这个动作的自定义图标文件（恢复默认时调用）。 */
@@ -78,11 +78,11 @@ object ActionIconStorage {
 
     /** 全局图标：按任意 key（如 `global:action:OPEN_INDEX`）存图片。 */
     fun saveFromUriForGlobalKey(context: Context, key: String, uri: android.net.Uri): String? {
-        val bitmap = runCatching {
-            context.contentResolver.openInputStream(uri)?.use { input ->
-                BitmapFactory.decodeStream(input)
-            }
-        }.getOrNull() ?: return null
+        val bitmap = ImageDecodeGuard.decodeUri(
+            context = context,
+            uri = uri,
+            maxSidePx = MAX_SIZE_PX,
+        ) ?: return null
         val scaled = scaleDown(bitmap)
         val target = File(dir(context), globalFileName(key))
         val ok = runCatching {

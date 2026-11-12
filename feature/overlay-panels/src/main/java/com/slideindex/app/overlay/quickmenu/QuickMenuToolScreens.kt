@@ -7,13 +7,13 @@ import android.content.Intent
 import com.slideindex.app.overlay.panels.PanelRuntimeHooks
 import com.slideindex.app.settings.FloatBallTranslateEngine
 import com.slideindex.app.translate.TranslateDependencyAccess
+import com.slideindex.app.util.ImageDecodeGuard
 import com.slideindex.app.translate.TranslateEngine
 import com.slideindex.app.translate.TranslateLanguageCatalog
 import com.slideindex.app.translate.TranslateResult
 import com.slideindex.app.translate.TranslateTargetResolver
 import com.slideindex.app.translate.translateTargetAutonym
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
 import android.text.format.DateUtils
@@ -1929,9 +1929,12 @@ private fun AesSection(
 // ---------------------------------------------------------------- 图像来源小工具
 
 /** 从选中的图片读成位图；解码失败返回 null（例如用户选了非图片或文件已失效）。 */
-private fun decodeBitmap(context: Context, uri: Uri): Bitmap? = runCatching {
-    context.contentResolver.openInputStream(uri)?.use { stream -> BitmapFactory.decodeStream(stream) }
-}.getOrNull()
+private fun decodeBitmap(context: Context, uri: Uri): Bitmap? =
+    ImageDecodeGuard.decodeUri(
+        context = context,
+        uri = uri,
+        maxSidePx = ImageDecodeGuard.MAX_DISPLAY_SIDE_PX,
+    )
 
 /**
  * 把被扫描的图和码的位置一起显示，点标记即选中（微信那种）。

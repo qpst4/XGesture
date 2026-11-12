@@ -96,6 +96,7 @@ import com.slideindex.app.clipboard.ClipboardBlockKind
 import com.slideindex.app.clipboard.ClipboardEntry
 import com.slideindex.app.clipboard.ClipboardImageStore
 import com.slideindex.app.clipboard.resolvedContentBlocks
+import com.slideindex.app.util.ImageDecodeGuard
 import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.ocr.OcrDependencyAccess
 import com.slideindex.app.ocr.OcrEngines
@@ -228,6 +229,24 @@ internal sealed class PinContent {
 internal sealed class PinDisplayBlock {
     data class Text(val body: String) : PinDisplayBlock()
     data class Image(val bitmap: Bitmap) : PinDisplayBlock()
+}
+
+/** 钉图内容进入窗口前的统一限幅；原图不回收，调用方可能还在别处持有。 */
+private fun PinContent.fitForDisplay(): PinContent = when (this) {
+    is PinContent.Text -> this
+    is PinContent.Image -> copy(
+        bitmap = ImageDecodeGuard.fitForDisplay(bitmap) ?: bitmap
+    )
+    is PinContent.Rich -> copy(
+        blocks = blocks.map { block ->
+            when (block) {
+                is PinDisplayBlock.Text -> block
+                is PinDisplayBlock.Image -> block.copy(
+                    bitmap = ImageDecodeGuard.fitForDisplay(block.bitmap) ?: block.bitmap
+                )
+            }
+        }
+    )
 }
 
 private class PinInstance(
@@ -579,6 +598,8 @@ object ScreenPinManager {
         placement: PinInitialPlacement? = null
     ): Boolean {
         val hostContext = overlayHostContext() ?: context.applicationContext
+        // 钉图内容可能来自图片编辑器/剪贴板原图，先压到显示预算内再挂窗口。
+        val displayContent = content.fitForDisplay()
         ensureScreenOffReceiver(hostContext)
         val wm = windowManager ?: (
             hostContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
@@ -588,9 +609,9 @@ object ScreenPinManager {
         val owner = OverlayComposeOwner()
         val composeView = OverlayCompose.createComposeView(hostContext, owner)
         val metrics = hostContext.resources.displayMetrics
-        val contentDisplaySize = when (content) {
+        val contentDisplaySize = when (displayContent) {
             is PinContent.Image -> {
-                content.bitmap.density = metrics.densityDpi
+                displayContent.bitmap.density = metrics.densityDpi
                 if (placement != null &&
                     placement.expandedWidthPx > 0 &&
                     placement.expandedHeightPx > 0
@@ -598,9 +619,9 @@ object ScreenPinManager {
                     placement.expandedWidthPx to placement.expandedHeightPx
                 } else {
                     resolvePinImageDisplaySizePx(
-                        bitmap = content.bitmap,
-                        screenRect = content.screenRect,
-                        layoutMeta = content.layoutMeta,
+                        bitmap = displayContent.bitmap,
+                        screenRect = displayContent.screenRect,
+                        layoutMeta = displayContent.layoutMeta,
                         screenWidthPx = metrics.widthPixels,
                         screenHeightPx = metrics.heightPixels
                     )
@@ -614,7 +635,7 @@ object ScreenPinManager {
                     explicitW to explicitH
                 } else {
                     measureTextPinSizePx(
-                        text = content.body,
+                        text = displayContent.body,
                         screenWidthPx = metrics.widthPixels,
                         screenHeightPx = metrics.heightPixels,
                         density = metrics.density,
@@ -657,7 +678,7 @@ object ScreenPinManager {
                 x = placement.x
                 y = placement.y
             } else {
-                val imageContent = content as? PinContent.Image
+                val imageContent = displayContent as? PinContent.Image
                 val placementRect = resolvePinPlacementRect(
                     imageContent?.screenRect,
                     imageContent?.layoutMeta
@@ -678,7 +699,7 @@ object ScreenPinManager {
 
         val instance = PinInstance(
             id = id,
-            content = content,
+            content = displayContent,
             composeView = composeView,
             owner = owner,
             params = params,
@@ -695,7 +716,7 @@ object ScreenPinManager {
             Toast.makeText(hostContext, R.string.stash_pin_add_failed, Toast.LENGTH_SHORT).show()
             return false
         }
-        if (content is PinContent.Text || content is PinContent.Rich) {
+        if (displayContent is PinContent.Text || displayContent is PinContent.Rich) {
             composeView.post {
                 val measuredH = composeView.height.coerceAtLeast(1)
                 val slotH = controlBarSlotHeightPx(metrics)

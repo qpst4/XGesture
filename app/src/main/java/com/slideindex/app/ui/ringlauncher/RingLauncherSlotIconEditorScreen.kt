@@ -36,6 +36,7 @@ import com.slideindex.app.R
 import com.slideindex.app.overlay.ringlauncher.FvRingLauncherSlotIconStorage
 import com.slideindex.app.settings.FvRingLauncherSlotIconOverride
 import com.slideindex.app.shell.ShellCommandIconResolver
+import com.slideindex.app.util.ImageDecodeGuard
 import com.slideindex.app.ui.SettingsScreenScaffold
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
@@ -218,11 +219,11 @@ private fun RingLauncherSlotIconEditorBody(
     LaunchedEffect(iconDraft.pendingIconUri) {
         pendingPreviewBitmap = iconDraft.pendingIconUri?.let { uri ->
             withContext(Dispatchers.IO) {
-                runCatching {
-                    context.contentResolver.openInputStream(uri)?.use { stream ->
-                        android.graphics.BitmapFactory.decodeStream(stream)
-                    }
-                }.getOrNull()
+                ImageDecodeGuard.decodeUri(
+                    context = context,
+                    uri = uri,
+                    maxSidePx = ImageDecodeGuard.MAX_ICON_SIDE_PX,
+                )
             }
         }
     }

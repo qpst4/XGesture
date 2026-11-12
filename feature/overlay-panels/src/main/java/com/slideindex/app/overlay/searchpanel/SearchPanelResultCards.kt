@@ -1,6 +1,5 @@
 package com.slideindex.app.overlay.searchpanel
 
-import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.core.net.toUri
 import android.util.Size
@@ -90,6 +89,7 @@ import android.icu.text.SimpleDateFormat
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.ui.platform.LocalConfiguration
 import com.slideindex.app.overlay.CloneBadgeOverlay
+import com.slideindex.app.util.ImageDecodeGuard
 import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.freezer.FreezerAppState
 import com.slideindex.app.clipboard.ClipboardEntry
@@ -926,11 +926,11 @@ private fun SearchPanelContactAvatar(
     LaunchedEffect(photoUri) {
         contactPhoto = photoUri?.let { uri ->
             withContext(Dispatchers.IO) {
-                runCatching {
-                    context.contentResolver.openInputStream(uri.toUri())?.use { stream ->
-                        BitmapFactory.decodeStream(stream)?.asImageBitmap()
-                    }
-                }.getOrNull()
+                ImageDecodeGuard.decodeUri(
+                    context = context,
+                    uri = uri.toUri(),
+                    maxSidePx = ImageDecodeGuard.MAX_ICON_SIDE_PX,
+                )?.asImageBitmap()
             }
         }
     }

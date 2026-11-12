@@ -8,6 +8,7 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import androidx.core.content.res.ResourcesCompat
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.util.ImageDecodeGuard
 
 /**
  * 把「动作图标」渲染成 Bitmap，供 **Canvas 绘制** 的场景使用（面板格子 / 圆环 / 蜂窝 / 轮盘）。
@@ -45,8 +46,7 @@ object ActionIconBitmap {
         // 1) 图片文件
         if (key.startsWith("file:")) {
             val path = key.removePrefix("file:")
-            val raw = runCatching { android.graphics.BitmapFactory.decodeFile(path) }.getOrNull()
-                ?: return null
+            val raw = ImageDecodeGuard.decodeFile(path, sizePx) ?: return null
             return Bitmap.createScaledBitmap(raw, sizePx, sizePx, true)
         }
         // 2) 文字图标

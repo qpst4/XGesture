@@ -22,7 +22,13 @@ object EditorExportEngine {
             max(1, (sourceBitmap.height * scale).roundToInt()),
             Bitmap.Config.ARGB_8888,
         )
-        val mosaicBitmap = EditorRenderUtils.generateMosaicBitmap(sourceBitmap)
+        // 只有真的用过马赛克才生成全尺寸 mosaic；否则大图导出会白白多一张
+        // 与源图等大的 ARGB_8888 位图（7K 图就是 +196MB）。
+        val mosaicBitmap = if (actions.any { it is EditAction.Mosaic }) {
+            EditorRenderUtils.generateMosaicBitmap(sourceBitmap)
+        } else {
+            null
+        }
         val canvas = Canvas(output)
         canvas.scale(scale, scale)
         canvas.drawBitmap(sourceBitmap, 0f, 0f, Paint(Paint.FILTER_BITMAP_FLAG))
@@ -31,7 +37,7 @@ object EditorExportEngine {
             EditorRenderUtils.drawAction(canvas, action, mosaicBitmap)
         }
         canvas.restoreToCount(layer)
-        if (!mosaicBitmap.isRecycled) mosaicBitmap.recycle()
+        if (mosaicBitmap != null && !mosaicBitmap.isRecycled) mosaicBitmap.recycle()
         return output
     }
 }

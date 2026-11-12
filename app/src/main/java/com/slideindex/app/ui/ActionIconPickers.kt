@@ -63,6 +63,7 @@ import top.yukonga.miuix.kmp.basic.DropdownEntry
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.util.ImageDecodeGuard
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixTabRowWithContourInCard
 import java.io.File
@@ -94,7 +95,7 @@ internal fun ActionIconView(
     val bitmap = remember(filePath) {
         filePath?.let { path ->
             if (File(path).exists()) {
-                runCatching { android.graphics.BitmapFactory.decodeFile(path) }.getOrNull()
+                ImageDecodeGuard.decodeFile(path, ImageDecodeGuard.MAX_ICON_SIDE_PX)
             } else {
                 null
             }
@@ -573,8 +574,8 @@ internal fun ActionAppIconPickerDialog(
 }
 
 private fun android.graphics.drawable.Drawable.toBitmapSafe(): Bitmap? {
-    val width = intrinsicWidth.takeIf { it > 0 } ?: 96
-    val height = intrinsicHeight.takeIf { it > 0 } ?: 96
+    val width = (intrinsicWidth.takeIf { it > 0 } ?: 96).coerceAtMost(1024)
+    val height = (intrinsicHeight.takeIf { it > 0 } ?: 96).coerceAtMost(1024)
     return runCatching {
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)

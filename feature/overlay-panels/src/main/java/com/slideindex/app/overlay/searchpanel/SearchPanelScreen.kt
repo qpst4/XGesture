@@ -1,6 +1,7 @@
 package com.slideindex.app.overlay.searchpanel
 
 import com.slideindex.app.overlay.overlayHostContext
+import com.slideindex.app.util.ImageDecodeGuard
 
 import android.accessibilityservice.AccessibilityService
 import android.content.ClipData
@@ -8,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import android.graphics.Bitmap
-import android.graphics.ImageDecoder
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -1931,9 +1931,11 @@ fun SearchPanelScreen(
 }
 
 private suspend fun loadBitmapFromUri(context: Context, uri: Uri): Bitmap? = withContext(Dispatchers.IO) {
-    runCatching {
-        ImageDecoder.decodeBitmap(ImageDecoder.createSource(context.contentResolver, uri))
-    }.getOrNull()
+    ImageDecodeGuard.decodeUri(
+        context = context,
+        uri = uri,
+        maxSidePx = ImageDecodeGuard.MAX_DISPLAY_SIDE_PX,
+    )
 }
 
 

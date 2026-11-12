@@ -1,6 +1,6 @@
 package com.slideindex.app.ui
 
-import android.graphics.BitmapFactory
+import com.slideindex.app.util.ImageDecodeGuard
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -892,11 +892,11 @@ private fun SearchEngineEditorIconPreview(
     LaunchedEffect(pendingIconUri) {
         pendingBitmap = pendingIconUri?.let { uri ->
             withContext(Dispatchers.IO) {
-                runCatching {
-                    context.contentResolver.openInputStream(uri)?.use { stream ->
-                        BitmapFactory.decodeStream(stream)
-                    }
-                }.getOrNull()
+                ImageDecodeGuard.decodeUri(
+                    context = context,
+                    uri = uri,
+                    maxSidePx = ImageDecodeGuard.MAX_ICON_SIDE_PX,
+                )
             }
         }
     }

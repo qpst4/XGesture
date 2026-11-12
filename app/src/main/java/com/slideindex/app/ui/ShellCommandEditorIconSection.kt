@@ -42,6 +42,7 @@ import com.slideindex.app.R
 import com.slideindex.app.shell.ShellCommand
 import com.slideindex.app.shell.ShellCommandIconStorage
 import com.slideindex.app.shell.ShellCommandIconType
+import com.slideindex.app.util.ImageDecodeGuard
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
@@ -203,11 +204,11 @@ internal fun ShellCommandEditorIconSection(
     LaunchedEffect(iconDraft.pendingIconUri) {
         pendingPreviewBitmap = iconDraft.pendingIconUri?.let { uri ->
             withContext(Dispatchers.IO) {
-                runCatching {
-                    context.contentResolver.openInputStream(uri)?.use { stream ->
-                        android.graphics.BitmapFactory.decodeStream(stream)
-                    }
-                }.getOrNull()
+                ImageDecodeGuard.decodeUri(
+                    context = context,
+                    uri = uri,
+                    maxSidePx = ImageDecodeGuard.MAX_ICON_SIDE_PX,
+                )
             }
         }
     }

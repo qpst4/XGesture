@@ -46,6 +46,7 @@ import com.slideindex.app.imageeditor.state.EditorSession
 import com.slideindex.app.imageeditor.state.EditorUiState
 import com.slideindex.app.imageeditor.ui.ImageEditorView
 import com.slideindex.app.inspire.ManagedBitmap
+import com.slideindex.app.util.ImageDecodeGuard
 import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.overlay.FloatBallPickResult
 import com.slideindex.app.overlay.FloatBallPickResultPanel
@@ -371,8 +372,13 @@ class SlideIndexImageEditorActivity : AppCompatActivity() {
             if (payload == null) {
                 val crossPath = intent.getStringExtra(EXTRA_IMAGE_CACHE_PATH)
                 val decoded = crossPath?.takeIf { it.isNotBlank() }?.let { path ->
-                    withContext(Dispatchers.Default) { android.graphics.BitmapFactory.decodeFile(path) }
-                        ?.also { runCatching { java.io.File(path).delete() } }
+                    withContext(Dispatchers.Default) {
+                        ImageDecodeGuard.decodeFile(
+                            path = path,
+                            maxSidePx = ImageDecodeGuard.MAX_EDITOR_SIDE_PX,
+                            mutable = true,
+                        )
+                    }?.also { runCatching { java.io.File(path).delete() } }
                 }
                 if (decoded == null) {
                     toast(R.string.inspire_image_edit_load_failed)

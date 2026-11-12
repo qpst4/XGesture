@@ -6,7 +6,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Build
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
@@ -14,6 +13,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.slideindex.app.R
 import com.slideindex.app.overlay.ScreenPinManager
 import com.slideindex.app.service.LaunchTrampolineActivity
+import com.slideindex.app.util.ImageDecodeGuard
 import java.io.File
 import java.io.FileOutputStream
 import kotlinx.serialization.json.Json
@@ -54,7 +54,7 @@ internal object StashPinNotificationHelper {
     fun updatePinNotificationTitle(context: Context, title: String) {
         if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return
         val image = pinImageFile(context)
-            ?.let { file -> runCatching { BitmapFactory.decodeFile(file.absolutePath) }.getOrNull() }
+            ?.let { file -> ImageDecodeGuard.decodeFile(file.absolutePath, 1024) }
             ?: return
         ensureChannel(context)
         NotificationManagerCompat.from(context).notify(
@@ -91,13 +91,13 @@ internal object StashPinNotificationHelper {
         val snapshot = loadSnapshot(context) ?: return
         val imageBitmap = when (snapshot.type) {
             PinNotificationSnapshot.TYPE_IMAGE -> {
-                pinImageFile(context)?.let { BitmapFactory.decodeFile(it.absolutePath) } ?: return
+                pinImageFile(context)?.let { ImageDecodeGuard.decodeFile(it.absolutePath, 1024) } ?: return
             }
             else -> null
         }
         val richImageLoader = when (snapshot.type) {
             PinNotificationSnapshot.TYPE_RICH -> { fileName: String ->
-                richImageFile(context, fileName)?.let { BitmapFactory.decodeFile(it.absolutePath) }
+                richImageFile(context, fileName)?.let { ImageDecodeGuard.decodeFile(it.absolutePath, 1024) }
             }
             else -> null
         }

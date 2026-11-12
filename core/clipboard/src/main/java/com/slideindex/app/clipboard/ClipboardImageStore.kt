@@ -119,12 +119,14 @@ object ClipboardImageStore {
     fun persistFromPayload(context: Context, entryId: String, payload: ClipboardPayload): String? =
         persistAllFromPayload(context, entryId, payload).firstOrNull()
 
-    fun loadBitmap(context: Context, fileName: String?): Bitmap? {
-        if (fileName.isNullOrBlank()) return null
-        val file = imageFile(context, fileName)
-        if (!file.exists()) return null
-        return BitmapFactory.decodeFile(file.absolutePath)
-    }
+    /**
+     * 按显示上限采样读取。
+     *
+     * 直接 `decodeFile` 对超大图片会先分配整张位图；钉图/预览只需要 2K 级别，
+     * 这里统一走 [loadBitmapScaled]，避免把 7K 图原样带进 Compose。
+     */
+    fun loadBitmap(context: Context, fileName: String?): Bitmap? =
+        loadBitmapScaled(context, fileName, DISPLAY_MAX_SIDE_PX)
 
     fun imageDimensions(context: Context, fileName: String?): Pair<Int, Int>? {
         if (fileName.isNullOrBlank()) return null
@@ -435,6 +437,9 @@ object ClipboardImageStore {
     }
 
     private const val PREVIEW_MAX_SIDE_PX = 384
+
+    /** 钉图/普通预览的源图上限；与 `ImageDecodeGuard.MAX_DISPLAY_SIDE_PX` 同一档。 */
+    private const val DISPLAY_MAX_SIDE_PX = 2048
 
     /**
      * 卡片缩略图解码的**源图像素上限**（§0.16.20）。

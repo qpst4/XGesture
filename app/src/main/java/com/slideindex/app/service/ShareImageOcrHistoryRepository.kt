@@ -2,7 +2,7 @@ package com.slideindex.app.service
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import com.slideindex.app.util.ImageDecodeGuard
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.FileOutputStream
@@ -102,7 +102,7 @@ class ShareImageOcrHistoryRepository @Inject constructor(
         val file = File(thumbnailDir, name)
         if (!file.exists()) return null
         return runCatching {
-            BitmapFactory.decodeFile(file.absolutePath)
+            ImageDecodeGuard.decodeFile(file.absolutePath, ImageDecodeGuard.MAX_DISPLAY_SIDE_PX)
         }.getOrNull()
     }
 

@@ -1,6 +1,7 @@
 package com.slideindex.app.overlay.dragdrop
 
 import com.slideindex.app.overlay.overlayHostContext
+import com.slideindex.app.util.ImageDecodeGuard
 
 import android.content.ClipData
 import android.content.ClipDescription
@@ -1059,11 +1060,11 @@ class DragDropFlowController(
     }
 
     private suspend fun decodeBitmapFromUri(uri: Uri): Bitmap? = withContext(Dispatchers.IO) {
-        runCatching {
-            context.contentResolver.openInputStream(uri)?.use { stream ->
-                BitmapFactory.decodeStream(stream)
-            }
-        }.getOrNull()
+        ImageDecodeGuard.decodeUri(
+            context = context,
+            uri = uri,
+            maxSidePx = ImageDecodeGuard.MAX_DISPLAY_SIDE_PX,
+        )
     }
 
     private fun destroyWindow() {
