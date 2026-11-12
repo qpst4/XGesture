@@ -6,6 +6,7 @@
 package com.slideindex.app.ui.miuix
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -59,9 +60,11 @@ private fun TipCard(
 fun MiuixSettingsTipCard(
     text: String,
     modifier: Modifier = Modifier,
+    /** 卡片相对父容器外边距；嵌入页父容器已有内边距时传 0 水平，避免二次缩进。 */
+    outerPadding: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
 ) {
     TipCard(
-        modifier = modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+        modifier = modifier.padding(outerPadding),
         tipContent = {
             Text(
                 text = text,

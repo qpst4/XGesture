@@ -14,7 +14,7 @@ object HistoryFloatHandleAppearance {
 
     /** 条长度（视觉高度），单位 dp。 */
     const val MIN_HEIGHT_DP = 16f
-    const val MAX_HEIGHT_DP = 40f
+    const val MAX_HEIGHT_DP = 100f
     const val DEFAULT_HEIGHT_DP = 28f
 
     /** 静止态不透明度（按下仍会提到接近 1.0，作为按下反馈）。 */

@@ -103,7 +103,7 @@ data class MessageSettings(
     /** 长消息滚动到底后自动收起（不受自动收起时长限制）。 */
     val edgeCardCollapseWhenScrollDone: Boolean = true,
     /**
-     * 阅读消息后，在屏幕左边缘显示「返回上一应用」胶囊。
+     * 阅读消息后，在屏幕边缘显示「返回上一应用」胶囊（位置可拖动并记忆）。
      *
      * 只在「从消息提醒打开了目标应用、目标应用全屏、来源应用不可见」时显示；
      * 解锁后自动打开、小窗阅读、锁屏等路径不会显示。
@@ -115,6 +115,9 @@ data class MessageSettings(
      * 0 时胶囊仍会在离开目标应用 / 熄屏 / 点击返回后收起，不是永久常驻。
      */
     val returnChipAutoDismissSeconds: Int = 8,
+    /** 返回胶囊贴哪一侧；纵向位置占可移动范围（屏幕高减胶囊高度）的比例。 */
+    val returnChipOnRightEdge: Boolean = false,
+    val returnChipYFraction: Float = 0.22f,
 ) {
     @Suppress("DEPRECATION")
     val style: MessageStyle get() = MessageStyle.fromId(styleId)

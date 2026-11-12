@@ -878,6 +878,8 @@ internal object SettingsSnapshotReader {
                 prefs[SettingsPreferenceKeys.SEARCH_PANEL_SECTION_ALIASES_JSON],
             ),
             aggregatedImageSearchEngines = readAggregatedImageSearchEngines(prefs),
+            searchPanelShowAggregatedImageEntry =
+                prefs[SettingsPreferenceKeys.SEARCH_PANEL_SHOW_AGGREGATED_IMAGE_ENTRY] ?: true,
             ),
         ).withResolvedHandleEdgeWidths()
     }
@@ -1327,6 +1329,13 @@ internal object SettingsSnapshotReader {
                 (prefs[SettingsPreferenceKeys.MESSAGE_RETURN_CHIP_AUTO_DISMISS_SECONDS]
                     ?: base.returnChipAutoDismissSeconds)
                     .coerceIn(0, 60),
+            returnChipOnRightEdge =
+                prefs[SettingsPreferenceKeys.MESSAGE_RETURN_CHIP_ON_RIGHT_EDGE]
+                    ?: base.returnChipOnRightEdge,
+            returnChipYFraction =
+                (prefs[SettingsPreferenceKeys.MESSAGE_RETURN_CHIP_Y_FRACTION]
+                    ?: base.returnChipYFraction)
+                    .coerceIn(0f, 1f),
         )
     }
 

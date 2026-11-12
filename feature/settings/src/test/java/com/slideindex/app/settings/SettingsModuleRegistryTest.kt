@@ -117,7 +117,7 @@ class SettingsModuleRegistryTest {
         //            + 1 个 int→float 迁移用的 legacy 键（只被 SettingsSchemaMigrations 读一次）。
         // 四个都落 CLIPBOARD（前缀 `clipboard_`）。
         // 684 = 683 + 1：小组件面板「显示图标名称」（`widget_panel_show_labels`，落 WIDGET_PANEL）。
-        const val EXPECTED_TOTAL_KEYS = 693
+        const val EXPECTED_TOTAL_KEYS = 696
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
             SettingsModule.EDGE_GESTURE to 84,
@@ -128,13 +128,13 @@ class SettingsModuleRegistryTest {
             SettingsModule.FINGERTIP_RING to 13,
             SettingsModule.QUICK_LAUNCHER to 93,
             SettingsModule.WIDGET_PANEL to 8,
-            SettingsModule.MESSAGE to 73,
+            SettingsModule.MESSAGE to 75,
             SettingsModule.OTP to 24,
             SettingsModule.SHAKE to 44,
             SettingsModule.CLIPBOARD to 63,
             SettingsModule.DRAG_DROP to 5,
             SettingsModule.STASH to 5,
-            SettingsModule.SEARCH to 40,
+            SettingsModule.SEARCH to 41,
             SettingsModule.FREE_WINDOW to 13,
             SettingsModule.FREEZER to 6,
             SettingsModule.SHELL to 1,

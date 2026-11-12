@@ -174,7 +174,7 @@
     <string name="message_reminder_auto_dismiss_off">不自动关闭</string>
     <string name="message_reminder_auto_dismiss_seconds">%1$d 秒</string>
     <string name="message_reminder_return_chip">阅读后显示返回键</string>
-    <string name="message_reminder_return_chip_desc">打开消息后，在屏幕左边缘浮出返回胶囊，一键回到原来的应用</string>
+    <string name="message_reminder_return_chip_desc">打开消息后浮出返回胶囊，一键回到原来的应用；长按可拖动位置，向任意方向滑动可收起</string>
     <string name="message_reminder_return_chip_dismiss">返回键停留时间</string>
     <string name="message_return_chip_label">返回</string>
     <string name="message_return_chip_content_description">返回到 %1$s</string>
@@ -1143,11 +1143,10 @@
     <string name="gesture_action_simulate_key_event_named">模拟按键：%1$s</string>
     <string name="gesture_action_simulate_key_event_desc">模拟发送系统按键（如菜单键、导航键等，需 Root 或 Shizuku）</string>
     <string name="key_event_config_title">模拟按键设置</string>
-    <string name="key_event_custom_config_title">自定义按键与参数</string>
+    <string name="key_event_custom_config_title">按键与参数</string>
     <string name="key_event_code_label">按键键值 (KeyCode)</string>
     <string name="key_event_name_label">按键名称 / 备注</string>
     <string name="key_event_long_press_title">模拟长按</string>
-    <string name="key_event_long_press_summary" tools:ignore="TypographyDashes">使用 input keyevent --longpress 发送按键事件</string>
     <string name="key_event_permission_hint">提示：模拟按键需要 Root 权限或已激活 Shizuku 服务以注入按键事件。</string>
     <string name="key_event_failed_hint">模拟按键失败：%1$s</string>
     <string name="current_app_info_not_found">未检测到当前前台应用</string>
@@ -2628,6 +2627,8 @@
     <string name="image_search_engine_aggregated_hint">长按可拖动调整 Tab 顺序。点击进入详情设置显示与并行搜索</string>
     <string name="image_search_engine_aggregated_empty">当前没有可见的聚合搜索引擎，请至少开启一个</string>
     <string name="image_search_engine_show_in_panel">在搜图面板显示</string>
+    <string name="image_search_engine_show_aggregated_entry">显示「聚合搜图」入口</string>
+    <string name="image_search_engine_show_aggregated_entry_desc">关闭后，搜图面板的图片引擎区不再显示聚合入口</string>
     <string name="image_search_engine_preload_on_open">打开时并行搜索</string>
     <string name="image_search_engine_preload_on_open_desc">关闭后仅在你切换到该 Tab 时才开始搜索</string>
     <string name="image_search_engine_status_hidden">已隐藏</string>

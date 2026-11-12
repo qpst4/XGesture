@@ -157,7 +157,7 @@
     <string name="message_reminder_auto_dismiss_off">しない</string>
     <string name="message_reminder_auto_dismiss_seconds">%1$d 秒</string>
     <string name="message_reminder_return_chip">既読後に戻るボタンを表示</string>
-    <string name="message_reminder_return_chip_desc">メッセージを開いた後、画面左端に戻るチップを表示し、元のアプリに戻れます</string>
+    <string name="message_reminder_return_chip_desc">メッセージを開いた後に戻るチップを表示し、元のアプリに戻れます。長押しで移動、スワイプで閉じます</string>
     <string name="message_reminder_return_chip_dismiss">戻るチップの表示時間</string>
     <string name="message_return_chip_label">戻る</string>
     <string name="message_return_chip_content_description">%1$s に戻る</string>
@@ -1122,11 +1122,10 @@
     <string name="gesture_action_simulate_key_event_named">キーをシミュレート: %1$s</string>
     <string name="gesture_action_simulate_key_event_desc">システムキーイベントをシミュレート（メニュー、ナビゲーションなど。Root または Shizuku が必要）</string>
     <string name="key_event_config_title">キーシミュレート設定</string>
-    <string name="key_event_custom_config_title">カスタムキーとパラメータ</string>
+    <string name="key_event_custom_config_title">キーとパラメータ</string>
     <string name="key_event_code_label">キーコード（KeyCode）</string>
     <string name="key_event_name_label">キー名 / メモ</string>
     <string name="key_event_long_press_title">長押しをシミュレート</string>
-    <string name="key_event_long_press_summary" tools:ignore="TypographyDashes">input keyevent --longpress でキーイベントを送信</string>
     <string name="key_event_permission_hint">注: キーイベントのシミュレートには Root 権限または Shizuku サービスの起動が必要です。</string>
     <string name="key_event_failed_hint">キーシミュレート失敗: %1$s</string>
     <string name="current_app_info_not_found">前面アプリが検出されませんでした</string>
@@ -2422,6 +2421,8 @@
     <string name="image_search_engine_aggregated_hint">長押しでタブを並べ替え。エンジンをタップして表示とプリロード設定。</string>
     <string name="image_search_engine_aggregated_empty">表示する集約エンジンがありません。下で少なくとも 1 つを有効にしてください。</string>
     <string name="image_search_engine_show_in_panel">画像検索パネルに表示</string>
+    <string name="image_search_engine_show_aggregated_entry">「一括画像検索」の入口を表示</string>
+    <string name="image_search_engine_show_aggregated_entry_desc">オフにすると画像エンジン欄に一括検索の入口を表示しません</string>
     <string name="image_search_engine_preload_on_open">開いたときにプリロード</string>
     <string name="image_search_engine_preload_on_open_desc">オフの場合、このタブに切り替えた後に検索を開始します。</string>
     <string name="image_search_engine_status_hidden">非表示</string>

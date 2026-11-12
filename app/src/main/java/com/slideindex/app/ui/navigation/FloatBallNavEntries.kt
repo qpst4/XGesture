@@ -580,6 +580,7 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
                     ),
                 )
             },
+            onSetShowAggregatedImageEntry = viewModel::setSearchPanelShowAggregatedImageEntry,
         )
     }
 

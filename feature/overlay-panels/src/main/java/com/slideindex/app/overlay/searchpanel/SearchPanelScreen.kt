@@ -1798,8 +1798,10 @@ fun SearchPanelScreen(
                                 }
                                 val activeEngines = if (mode == SearchMode.TEXT) {
                                     textEngines
-                                } else {
+                                } else if (settings.searchPanelShowAggregatedImageEntry) {
                                     listOf(aggregateSearchEngine) + imageEngines
+                                } else {
+                                    imageEngines
                                 }
                                 SearchPanelEngineDockCard(
                                     modifier = Modifier.fillMaxWidth(),

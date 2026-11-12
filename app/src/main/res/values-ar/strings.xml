@@ -157,7 +157,7 @@
     <string name="message_reminder_auto_dismiss_off">عدم الإغلاق التلقائي</string>
     <string name="message_reminder_auto_dismiss_seconds">%1$d ثانية</string>
     <string name="message_reminder_return_chip">إظهار زر الرجوع بعد القراءة</string>
-    <string name="message_reminder_return_chip_desc">بعد فتح الرسالة تظهر كبسولة رجوع على الحافة اليسرى للعودة إلى التطبيق السابق</string>
+    <string name="message_reminder_return_chip_desc">بعد فتح الرسالة تظهر كبسولة رجوع إلى التطبيق السابق؛ اضغط مطولًا لتحريكها أو اسحب لإخفائها</string>
     <string name="message_reminder_return_chip_dismiss">مدة بقاء زر الرجوع</string>
     <string name="message_return_chip_label">رجوع</string>
     <string name="message_return_chip_content_description">العودة إلى %1$s</string>
@@ -1106,11 +1106,10 @@
     <string name="gesture_action_simulate_key_event_named">محاكاة مفتاح: %1$s</string>
     <string name="gesture_action_simulate_key_event_desc">محاكاة إرسال مفاتيح النظام (مثل مفتاح القائمة، مفاتيح التنقل، إلخ، يتطلب Root أو Shizuku)</string>
     <string name="key_event_config_title">إعدادات محاكاة المفتاح</string>
-    <string name="key_event_custom_config_title">مفاتيح ومعلمات مخصصة</string>
+    <string name="key_event_custom_config_title">المفتاح والمعلمات</string>
     <string name="key_event_code_label">قيمة المفتاح (KeyCode)</string>
     <string name="key_event_name_label">اسم المفتاح / ملاحظة</string>
     <string name="key_event_long_press_title">محاكاة الضغط المطول</string>
-    <string name="key_event_long_press_summary">إرسال حدث المفتاح باستخدام input keyevent --longpress</string>
     <string name="key_event_permission_hint">تلميح: تتطلب محاكاة المفاتيح أذونات Root أو تفعيل خدمة Shizuku لحقن أحداث المفاتيح.</string>
     <string name="key_event_failed_hint">فشلت محاكاة المفتاح: %1$s</string>
     <string name="current_app_info_not_found">لم يتم اكتشاف التطبيق الأمامي الحالي</string>
@@ -2419,6 +2418,8 @@
     <string name="image_search_engine_aggregated_hint">اضغط مطولاً لسحب وضبط ترتيب علامات التبويب. انقر للدخول إلى إعدادات التفاصيل وعرض البحث المتوازي</string>
     <string name="image_search_engine_aggregated_empty">لا توجد محركات بحث مجمعة مرئية حالياً، يرجى تفعيل واحدة على الأقل</string>
     <string name="image_search_engine_show_in_panel">العرض في لوحة البحث عن الصور</string>
+    <string name="image_search_engine_show_aggregated_entry">إظهار مدخل «البحث المجمّع عن الصور»</string>
+    <string name="image_search_engine_show_aggregated_entry_desc">عند الإيقاف لن يظهر المدخل في منطقة محركات الصور</string>
     <string name="image_search_engine_preload_on_open">البحث المتوازي عند الفتح</string>
     <string name="image_search_engine_preload_on_open_desc">عند الإيقاف، يبدأ البحث فقط عند التبديل إلى علامة التبويب هذه</string>
     <string name="image_search_engine_status_hidden">مخفي</string>

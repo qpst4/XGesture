@@ -1107,6 +1107,9 @@ class SettingsRepository @Inject constructor(
     suspend fun setAggregatedImageSearchEngines(configs: List<AggregatedImageSearchEngineConfig>) =
         overlay.setAggregatedImageSearchEngines(configs)
 
+    suspend fun setSearchPanelShowAggregatedImageEntry(enabled: Boolean) =
+        overlay.setSearchPanelShowAggregatedImageEntry(enabled)
+
     suspend fun setOtpCopyToClipboard(enabled: Boolean) = otp.setOtpCopyToClipboard(enabled)
     suspend fun setOtpKeywordsRegex(value: String) = otp.setOtpKeywordsRegex(value)
     suspend fun setOtpUserMatchRules(rules: List<com.slideindex.app.otp.OtpMatchRule>) = otp.setOtpUserMatchRules(rules)
@@ -1316,6 +1319,9 @@ class SettingsRepository @Inject constructor(
         message.setMessageReturnChipEnabled(enabled)
     suspend fun setMessageReturnChipAutoDismissSeconds(seconds: Int) =
         message.setMessageReturnChipAutoDismissSeconds(seconds)
+
+    suspend fun setMessageReturnChipPosition(onRightEdge: Boolean, yFraction: Float) =
+        message.setMessageReturnChipPosition(onRightEdge, yFraction)
     suspend fun setMessageHideInLandscape(enabled: Boolean) = message.setMessageHideInLandscape(enabled)
     suspend fun setMessagePortraitDanmaku(enabled: Boolean) = message.setMessagePortraitDanmaku(enabled)
     suspend fun setMessageLandscapeDanmaku(enabled: Boolean) = message.setMessageLandscapeDanmaku(enabled)

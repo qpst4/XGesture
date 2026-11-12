@@ -1776,6 +1776,10 @@ class OverlaySettingsMutator @Inject constructor(
             SearchPanelSectionAliasSettings.toJson(aliases)
     }
 
+    suspend fun setSearchPanelShowAggregatedImageEntry(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.SEARCH_PANEL_SHOW_AGGREGATED_IMAGE_ENTRY] = enabled
+    }
+
     suspend fun setAggregatedImageSearchEngines(configs: List<AggregatedImageSearchEngineConfig>) = editor.edit {
         it[SettingsPreferenceKeys.AGGREGATED_IMAGE_SEARCH_ENGINES_JSON] =
             AggregatedImageSearchEnginePreferencesStore.encode(configs)

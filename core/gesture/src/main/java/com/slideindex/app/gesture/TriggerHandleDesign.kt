@@ -175,8 +175,15 @@ object TriggerHandleDesignCodec {
         if (raw.isNullOrBlank()) return TriggerHandleDesign()
         val parts = raw.split(FIELD_SEP)
         if (parts.size < 10) return TriggerHandleDesign()
+        val decodedKind = TriggerDesignKind.fromId(parts[0].toIntOrNull() ?: 0)
         return TriggerHandleDesign(
-            kind = TriggerDesignKind.fromId(parts[0].toIntOrNull() ?: 0),
+            // 历史数据可能已经存成 CUSTOM_IMAGE（当时下拉框可选，但没有选图/渲染实现）。
+            // 读回时归一成 HIDE，避免用户升级后条继续不可见且下拉框里找不到这个值。
+            kind = if (decodedKind == TriggerDesignKind.CUSTOM_IMAGE) {
+                TriggerDesignKind.HIDE
+            } else {
+                decodedKind
+            },
             sizeDp = parts[1].toFloatOrNull() ?: 0f,
             marginDp = parts[2].toFloatOrNull() ?: 0f,
             backgroundColor = parts[3].toIntOrNull() ?: TriggerHandleDesign.DEFAULT_BACKGROUND_COLOR,

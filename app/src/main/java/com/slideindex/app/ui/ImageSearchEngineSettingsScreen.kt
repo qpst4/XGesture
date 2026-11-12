@@ -31,6 +31,7 @@ import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.SettingsVerticalReorderList
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
+import com.slideindex.app.ui.settings.components.SettingSwitchRow
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Add
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
@@ -50,6 +51,7 @@ fun ImageSearchEngineSettingsScreen(
     onOpenAggregatedEngine: (String) -> Unit,
     onOpenEditor: (String?) -> Unit,
     onOpenBatchPicker: () -> Unit,
+    onSetShowAggregatedImageEntry: (Boolean) -> Unit,
 ) {
     val shareEngines = remember(settings.searchEngines) {
         SearchEngineStore.imageSharePanelEngines(settings.searchEngines)
@@ -130,6 +132,20 @@ fun ImageSearchEngineSettingsScreen(
         settingsLazySmallTitle(
             key = "image-search-aggregated-section",
             title = aggregatedSectionTitle,
+        )
+        groupedCardItems(
+            keyPrefix = "image-search-aggregated-entry",
+            items = listOf(
+                settingsCardScopeItem("show-aggregated-entry") {
+                    SettingSwitchRow(
+                        title = stringResource(R.string.image_search_engine_show_aggregated_entry),
+                        subtitle = stringResource(R.string.image_search_engine_show_aggregated_entry_desc),
+                        checked = settings.searchPanelShowAggregatedImageEntry,
+                        enabled = true,
+                        onCheckedChange = onSetShowAggregatedImageEntry,
+                    )
+                },
+            ),
         )
         settingsLazyTipCard(key = "image-search-aggregated-hint", text = aggregatedHint)
         LazySettingsItem(key = "image-search-aggregated-list") {

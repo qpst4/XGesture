@@ -354,6 +354,7 @@ fun OverlaySettings.toMinimalAppSettings(): AppSettings = AppSettings(
         searchPanelHistoryMaxEntries = searchPanelHistoryMaxEntries,
         searchPanelSectionAliases = searchPanelSectionAliases,
         aggregatedImageSearchEngines = aggregatedImageSearchEngines,
+        searchPanelShowAggregatedImageEntry = searchPanelShowAggregatedImageEntry,
     ),
     cornerGestureSettings = cornerGestureSettings,
 )

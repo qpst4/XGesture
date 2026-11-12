@@ -2,6 +2,7 @@ package com.slideindex.app.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -56,6 +57,7 @@ fun GestureExecuteShellCommandScreen(
     val canSave = command.isNotBlank()
 
     val handlePickPreset: (ShellCommand) -> Unit = { picked ->
+        // 快捷命令仍是"选中即保存并退出"：它是快捷入口，不是把命令填进编辑框。
         val chosen = picked.command.trim()
         if (chosen.isNotBlank()) {
             onConfirm(chosen)
@@ -93,17 +95,11 @@ fun GestureExecuteShellCommandScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            if (shellCommands.isNotEmpty()) {
-                SmallTitle(
-                    text = stringResource(R.string.quick_launcher_shell_shortcuts_section),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                shortcutPickCard.RenderRows()
-            }
-
             SmallTitle(
                 text = stringResource(R.string.shell_panel_command_field),
                 modifier = Modifier.fillMaxWidth(),
+                // 父容器已有 16dp，默认 28dp 会叠成 44dp；这里对齐卡片正文的 32dp。
+                insideMargin = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             )
             MiuixCard(modifier = Modifier.fillMaxWidth()) {
                 MiuixLabeledTextField(
@@ -116,10 +112,15 @@ fun GestureExecuteShellCommandScreen(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                 )
             }
-            MiuixHintText(
-                text = stringResource(R.string.gesture_shell_command_config_hint),
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-            )
+
+            if (shellCommands.isNotEmpty()) {
+                SmallTitle(
+                    text = stringResource(R.string.quick_launcher_shell_shortcuts_section),
+                    modifier = Modifier.fillMaxWidth(),
+                    insideMargin = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                )
+                shortcutPickCard.RenderRows()
+            }
         }
         ReportQuickLauncherEmbedParentConfirm(
             enabled = canSave,
@@ -134,7 +135,6 @@ fun GestureExecuteShellCommandScreen(
 
     SettingsScreenScaffold(
         title = stringResource(R.string.gesture_shell_command_config_title),
-        pageHint = stringResource(R.string.gesture_shell_command_config_hint),
         onBack = onBack,
         enableBackHandler = enableBackHandler,
         overlayMode = overlayMode,
@@ -150,6 +150,14 @@ fun GestureExecuteShellCommandScreen(
             }
         }
     ) {
+        settingsLazySmallTitle(
+            key = "custom_shell_command_title",
+            title = customSectionTitle
+        )
+        LazySettingsItem(key = "gesture-shell-command-config") {
+            customCommandCard.RenderRows()
+        }
+
         if (shellCommands.isNotEmpty()) {
             settingsLazySmallTitle(
                 key = "shell_shortcuts_title",
@@ -158,20 +166,6 @@ fun GestureExecuteShellCommandScreen(
             LazySettingsItem(key = "shell-panel-shortcuts") {
                 shortcutPickCard.RenderRows()
             }
-        }
-
-        settingsLazySmallTitle(
-            key = "custom_shell_command_title",
-            title = customSectionTitle
-        )
-        LazySettingsItem(key = "gesture-shell-command-config") {
-            customCommandCard.RenderRows()
-        }
-        LazySettingsItem(key = "gesture-shell-command-hint") {
-            MiuixHintText(
-                text = stringResource(R.string.gesture_shell_command_config_hint),
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-            )
         }
     }
 }

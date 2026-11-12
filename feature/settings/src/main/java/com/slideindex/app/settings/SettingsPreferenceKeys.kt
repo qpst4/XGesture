@@ -547,6 +547,9 @@ internal object SettingsPreferenceKeys {
     val MESSAGE_C_NOTICE_AUTO_DISMISS_SECONDS =
         intPreferencesKey("message_c_notice_auto_dismiss_seconds")
     val MESSAGE_RETURN_CHIP_ENABLED = booleanPreferencesKey("message_return_chip_enabled")
+    val MESSAGE_RETURN_CHIP_ON_RIGHT_EDGE =
+        booleanPreferencesKey("message_return_chip_on_right_edge")
+    val MESSAGE_RETURN_CHIP_Y_FRACTION = floatPreferencesKey("message_return_chip_y_fraction")
     val MESSAGE_RETURN_CHIP_AUTO_DISMISS_SECONDS =
         intPreferencesKey("message_return_chip_auto_dismiss_seconds")
     val MESSAGE_C_NOTICE_HORIZONTAL_EDGE = stringPreferencesKey("message_c_notice_horizontal_edge")
@@ -867,6 +870,8 @@ internal object SettingsPreferenceKeys {
     val SEARCH_PANEL_WEB_SUGGESTIONS_COUNT = intPreferencesKey("search_panel_web_suggestions_count")
     val SEARCH_PANEL_HISTORY_MAX_ENTRIES = intPreferencesKey("search_panel_history_max_entries")
     val SEARCH_PANEL_SECTION_ALIASES_JSON = stringPreferencesKey("search_panel_section_aliases_json")
+    val SEARCH_PANEL_SHOW_AGGREGATED_IMAGE_ENTRY =
+        booleanPreferencesKey("search_panel_show_aggregated_image_entry")
     val AGGREGATED_IMAGE_SEARCH_ENGINES_JSON = stringPreferencesKey("aggregated_image_search_engines_json")
     val AGGREGATED_IMAGE_SEARCH_ENGINES_INITIALIZED =
         booleanPreferencesKey("aggregated_image_search_engines_initialized")

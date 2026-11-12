@@ -468,6 +468,7 @@ data class AppSettings(
     val searchPanelHistoryMaxEntries get() = searchPanel.searchPanelHistoryMaxEntries
     val searchPanelSectionAliases get() = searchPanel.searchPanelSectionAliases
     val aggregatedImageSearchEngines get() = searchPanel.aggregatedImageSearchEngines
+    val searchPanelShowAggregatedImageEntry get() = searchPanel.searchPanelShowAggregatedImageEntry
 
     val overlayBlurEnabled get() = overlayBlur.overlayBlurEnabled
 

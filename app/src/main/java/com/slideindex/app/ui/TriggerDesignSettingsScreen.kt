@@ -124,7 +124,9 @@ fun TriggerDesignSettingsScreen(
 
     var colorTarget by remember { mutableStateOf<TriggerDesignColorTarget?>(null) }
     var pickerInitialColor by remember { mutableIntStateOf(0) }
-    val kindEntries = TriggerDesignKind.entries
+    // 「自定义图像」目前只有枚举与持久化字段、没有选图入口和渲染实现：
+    // 列出来只会让用户选中后把手直接消失（isVisible=false）。实现前先不暴露。
+    val kindEntries = TriggerDesignKind.entries.filterNot { it == TriggerDesignKind.CUSTOM_IMAGE }
     val presetEntries = TriggerDesignPreset.entries
     val cornerModeEntries = TriggerCornerMode.entries
     val activePreset = selectedHandle.rectanglePresetState.activePreset

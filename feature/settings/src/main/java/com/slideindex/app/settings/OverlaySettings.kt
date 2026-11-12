@@ -265,6 +265,7 @@ data class OverlaySettings(
     val searchPanelSectionAliases: SearchPanelSectionAliasSettings = SearchPanelSectionAliasSettings(),
     val aggregatedImageSearchEngines: List<AggregatedImageSearchEngineConfig> =
         AppSettings.defaultAggregatedImageSearchEngines(),
+    val searchPanelShowAggregatedImageEntry: Boolean = true,
     val cornerGestureSettings: CornerGestureSettings = CornerGestureSettings(),
     val fingertipRing: FingertipRingSettings = FingertipRingSettings(),
 ) {
@@ -513,6 +514,7 @@ data class OverlaySettings(
             searchPanelHistoryMaxEntries = settings.searchPanelHistoryMaxEntries,
             searchPanelSectionAliases = settings.searchPanelSectionAliases,
             aggregatedImageSearchEngines = settings.aggregatedImageSearchEngines,
+            searchPanelShowAggregatedImageEntry = settings.searchPanelShowAggregatedImageEntry,
             cornerGestureSettings = settings.cornerGestureSettings,
             fingertipRing = settings.fingertipRing,
         )

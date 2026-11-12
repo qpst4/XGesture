@@ -1,5 +1,8 @@
 package com.slideindex.app.message
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -11,9 +14,11 @@ import android.util.Log
 import android.view.Gravity
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityWindowInfo
+import android.view.animation.DecelerateInterpolator
 import android.view.inputmethod.InputMethodManager
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -25,16 +30,22 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
@@ -49,11 +60,16 @@ import com.slideindex.app.overlay.OverlayWindowTypes
 import com.slideindex.app.overlay.ScreenOffDismissReceiver
 import com.slideindex.app.service.OverlayService
 import com.slideindex.app.service.SlideIndexAccessibilityService
+import com.slideindex.app.settings.SettingsRepository
 import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
 import com.slideindex.app.util.AccessibilityForegroundResolver
 import com.slideindex.app.util.LockScreenState
 import com.slideindex.app.util.TaskExclusions
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -62,7 +78,8 @@ import javax.inject.Singleton
  * 阅读消息后的「返回上一应用」贴边胶囊。
  *
  * 触发链路：消息提醒里点「阅读」/「打开应用」→ [MessageActionExecutor] 记下打开前的
- * 前台应用 → 等目标应用真正到前台，就在屏幕左边缘浮出胶囊；点击胶囊回到打开消息前的应用。
+ * 前台应用 → 等目标应用真正到前台，就在屏幕边缘浮出胶囊；点击胶囊回到打开消息前的应用。
+ * 长按可拖动位置（持久化），长按前向任意方向滑动则收起。
  *
  * 判定原则（不做全屏检测）：
  * - 普通阅读（[MessageAction.Read]）本身就是全屏打开，目标到前台即可显示；
@@ -76,15 +93,30 @@ import javax.inject.Singleton
 @Singleton
 class AppMessageReturnChip @Inject constructor(
     @ApplicationContext private val appContext: Context,
+    private val settingsRepository: SettingsRepository,
 ) : MessageReturnPort {
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val chipState = mutableStateOf<ReturnChipState?>(null)
+    private val chipOnRightEdge = mutableStateOf(false)
+    private val persistScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private var windowManager: WindowManager? = null
     private var composeView: ComposeView? = null
     private var composeOwner: OverlayComposeOwner? = null
+    private var chipLayoutParams: WindowManager.LayoutParams? = null
     private var screenOffReceiver: ScreenOffDismissReceiver? = null
+
+    private var screenWidthPx = 0
+    private var screenHeightPx = 0
+    private var chipOnRightEdgeStored = false
+    private var chipYFraction = 0.22f
+    private var autoDismissSeconds = 8
+    private var isDragging = false
+    private var isSnapping = false
+    private var snapAnimator: ValueAnimator? = null
+    private var dragX = 0f
+    private var dragY = 0f
 
     private var pollRunnable: Runnable? = null
     private var autoDismissRunnable: Runnable? = null
@@ -127,6 +159,9 @@ class AppMessageReturnChip @Inject constructor(
         this.targetPackage = targetPackage
         this.smallWindowRead = smallWindowRead
         this.lastWaitingForeground = null
+        this.chipOnRightEdgeStored = settings.returnChipOnRightEdge
+        this.chipYFraction = settings.returnChipYFraction.coerceIn(0f, 1f)
+        this.autoDismissSeconds = settings.returnChipAutoDismissSeconds.coerceIn(0, 60)
         Log.i(TAG, "arm source=$sourcePackage target=$targetPackage smallWindow=$smallWindowRead")
         val startedAt = SystemClock.uptimeMillis()
         mainHandler.postDelayed(
@@ -199,6 +234,7 @@ class AppMessageReturnChip @Inject constructor(
 
     private fun showChip(armToken: Int, autoDismissSeconds: Int) {
         if (armToken != token) return
+        this.autoDismissSeconds = autoDismissSeconds
         val source = sourcePackage ?: return
         val label = resolveAppLabel(source)
         chipState.value = ReturnChipState(
@@ -227,16 +263,26 @@ class AppMessageReturnChip @Inject constructor(
             setContent {
                 OverlayAwareModuleTheme {
                     chipState.value?.let { state ->
-                        ReturnChipContent(state = state) { onChipTapped(state) }
+                        ReturnChipContent(
+                            state = state,
+                            onRightEdge = chipOnRightEdge.value,
+                            onTap = { onChipTapped(state) },
+                            onDragStart = ::onChipDragStart,
+                            onDragBy = ::onChipDragBy,
+                            onDragEnd = ::onChipDragEnd,
+                            onSwipeCancel = { dismissInternal(reason = "swipe") },
+                        )
                     }
                 }
             }
         }
         val params = buildLayoutParams(host)
+        chipLayoutParams = params
         val added = runCatching { wm.addView(view, params) }
             .onFailure { Log.w(TAG, "addView failed", it) }
             .isSuccess
         if (!added) {
+            chipLayoutParams = null
             OverlayCompose.disposeComposeView(view)
             owner.destroy()
             return false
@@ -247,11 +293,15 @@ class AppMessageReturnChip @Inject constructor(
         screenOffReceiver = ScreenOffDismissReceiver { dismissInternal(reason = "screen-off") }.also {
             it.register(host)
         }
+        // WRAP_CONTENT 的首帧尺寸要等布局完成；之后才能按胶囊真实宽高夹取位置。
+        view.post { applyChipPosition() }
         return true
     }
 
     private fun buildLayoutParams(host: Context): WindowManager.LayoutParams {
-        val (_, screenHeightPx) = OverlayScreenMetrics.sizePx(host)
+        val (widthPx, heightPx) = OverlayScreenMetrics.sizePx(host)
+        screenWidthPx = widthPx
+        screenHeightPx = heightPx
         return WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -263,13 +313,107 @@ class AppMessageReturnChip @Inject constructor(
             PixelFormat.TRANSLUCENT,
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = 0
-            y = (screenHeightPx * TOP_Y_FRACTION).roundToInt()
+            // 贴右边的首帧先放到屏幕外，等 WRAP_CONTENT 量出宽度后 applyChipPosition 再落到 x=maxX。
+            x = if (chipOnRightEdgeStored) screenWidthPx else 0
+            y = (screenHeightPx * chipYFraction).roundToInt()
+            chipOnRightEdge.value = chipOnRightEdgeStored
             layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             OverlayWindowTypes.ensureNoBrightnessOverride(this)
             alpha = 1f
         }
+    }
+
+    /** 按持久化的归一化位置重算窗口 x/y，并夹在屏幕内。 */
+    private fun applyChipPosition() {
+        if (isDragging || isSnapping) return
+        val view = composeView ?: return
+        val wm = windowManager ?: return
+        val params = chipLayoutParams ?: return
+        val maxX = (screenWidthPx - view.width).coerceAtLeast(0)
+        val maxY = (screenHeightPx - view.height).coerceAtLeast(0)
+        params.x = if (chipOnRightEdgeStored) maxX else 0
+        params.y = (maxY * chipYFraction).roundToInt().coerceIn(0, maxY)
+        runCatching { wm.updateViewLayout(view, params) }
+        chipOnRightEdge.value = chipOnRightEdgeStored
+    }
+
+    private fun onChipDragStart() {
+        if (isSnapping) return
+        isDragging = true
+        dragX = chipLayoutParams?.x?.toFloat() ?: 0f
+        dragY = chipLayoutParams?.y?.toFloat() ?: 0f
+        autoDismissRunnable?.let(mainHandler::removeCallbacks)
+        autoDismissRunnable = null
+    }
+
+    private fun onChipDragBy(dx: Float, dy: Float) {
+        if (isSnapping) return
+        val view = composeView ?: return
+        val wm = windowManager ?: return
+        val params = chipLayoutParams ?: return
+        val maxX = (screenWidthPx - view.width).coerceAtLeast(0)
+        val maxY = (screenHeightPx - view.height).coerceAtLeast(0)
+        // 用浮点累加，避免慢速拖动时每帧 <1px 的位移被逐个四舍五入掉。
+        dragX = (dragX + dx).coerceIn(0f, maxX.toFloat())
+        dragY = (dragY + dy).coerceIn(0f, maxY.toFloat())
+        params.x = dragX.roundToInt()
+        params.y = dragY.roundToInt()
+        runCatching { wm.updateViewLayout(view, params) }
+        updateChipEdge()
+    }
+
+    /**
+     * 松手后按胶囊中心落在左半/右半，吸附到最近一侧边缘；只保留纵向自由。
+     * 动画期间仍算“拖动中”，前台监听不会把胶囊收掉。
+     */
+    private fun onChipDragEnd() {
+        if (!isDragging || isSnapping) return
+        val view = composeView ?: return
+        val wm = windowManager ?: return
+        val params = chipLayoutParams ?: return
+        isSnapping = true
+        val maxX = (screenWidthPx - view.width).coerceAtLeast(0)
+        val maxY = (screenHeightPx - view.height).coerceAtLeast(0)
+        val onRight = params.x + view.width / 2f >= screenWidthPx / 2f
+        val targetX = if (onRight) maxX else 0
+        val targetY = params.y.coerceIn(0, maxY)
+        chipOnRightEdge.value = onRight
+        chipYFraction = if (maxY > 0) targetY.toFloat() / maxY else 0f
+        chipOnRightEdgeStored = onRight
+        snapAnimator?.cancel()
+        snapAnimator = ValueAnimator.ofInt(params.x, targetX).apply {
+            duration = SNAP_DURATION_MS
+            interpolator = DecelerateInterpolator()
+            addUpdateListener { animator ->
+                if (!isSnapping || composeView !== view || chipLayoutParams !== params) return@addUpdateListener
+                params.x = animator.animatedValue as Int
+                runCatching { wm.updateViewLayout(view, params) }
+            }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    if (!isSnapping || composeView !== view || chipLayoutParams !== params) return
+                    params.x = targetX
+                    params.y = targetY
+                    runCatching { wm.updateViewLayout(view, params) }
+                    isSnapping = false
+                    isDragging = false
+                    chipOnRightEdge.value = onRight
+                    val savedY = chipYFraction
+                    persistScope.launch {
+                        settingsRepository.setMessageReturnChipPosition(onRight, savedY)
+                    }
+                    scheduleAutoDismiss(token, autoDismissSeconds)
+                }
+            })
+            start()
+        }
+    }
+
+    private fun updateChipEdge() {
+        val view = composeView ?: return
+        val params = chipLayoutParams ?: return
+        chipOnRightEdge.value = params.x + view.width / 2 > screenWidthPx / 2
     }
 
     private fun scheduleAutoDismiss(armToken: Int, seconds: Int) {
@@ -299,6 +443,11 @@ class AppMessageReturnChip @Inject constructor(
         val runnable = object : Runnable {
             override fun run() {
                 if (armToken != token) return
+                // 拖动/吸附动画期间不要因为目标应用窗口的瞬时变化把胶囊收掉。
+                if (isDragging || isSnapping) {
+                    mainHandler.postDelayed(this, FOREGROUND_POLL_MS)
+                    return
+                }
                 if (LockScreenState.isActive(appContext)) {
                     dismissInternal(reason = "lock")
                     return
@@ -399,6 +548,13 @@ class AppMessageReturnChip @Inject constructor(
         composeView = null
         windowManager = null
         composeOwner = null
+        // 先清状态再 cancel：cancel 会同步回调 onAnimationEnd。
+        isSnapping = false
+        snapAnimator?.cancel()
+        snapAnimator = null
+        chipLayoutParams = null
+        isDragging = false
+        chipOnRightEdge.value = false
         if (view != null && wm != null) {
             runCatching { wm.removeView(view) }
                 .onFailure { Log.w(TAG, "removeView failed", it) }
@@ -506,8 +662,10 @@ class AppMessageReturnChip @Inject constructor(
         /** 显示后这段时间内的点击忽略，避免收窗瞬间的误触。 */
         const val TAP_GUARD_MS = 300L
 
-        /** 胶囊垂直位置：左边缘、屏幕高度 22% 处（参考悬浮菜单的贴边胶囊）。 */
-        const val TOP_Y_FRACTION = 0.22f
+        /** 松手吸附到左右边缘的动画时长。 */
+        const val SNAP_DURATION_MS = 160L
+
+        /** 自定义图标边长。 */
         const val ICON_PX = 96
     }
 }
@@ -521,24 +679,103 @@ private data class ReturnChipState(
 @Composable
 private fun ReturnChipContent(
     state: ReturnChipState,
-    onClick: () -> Unit,
+    onRightEdge: Boolean,
+    onTap: () -> Unit,
+    onDragStart: () -> Unit,
+    onDragBy: (Float, Float) -> Unit,
+    onDragEnd: () -> Unit,
+    onSwipeCancel: () -> Unit,
 ) {
     val description = stringResource(
         R.string.message_return_chip_content_description,
         state.label,
     )
+    val tapLabel = stringResource(R.string.message_return_chip_label)
+    val haptics = LocalHapticFeedback.current
+    val handler = remember { Handler(Looper.getMainLooper()) }
+    val shape = if (onRightEdge) {
+        RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp)
+    } else {
+        RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
+    }
     Surface(
         modifier = Modifier
-            .clip(RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp))
-            .semantics { contentDescription = description }
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp),
+            .clip(shape)
+            .semantics {
+                contentDescription = description
+                onClick(label = tapLabel) {
+                    onTap()
+                    true
+                }
+            }
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    val touchSlop = viewConfiguration.touchSlop
+                    val longPressTimeout = viewConfiguration.longPressTimeoutMillis
+                    var totalDistance = 0f
+                    var dragging = false
+                    // 长按计时不能放在 restricted pointer scope 里等超时；用主线程定时器。
+                    val longPressRunnable = Runnable {
+                        if (!dragging) {
+                            dragging = true
+                            // 长按成立先震一下，明确告诉用户已经进入拖拽态。
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onDragStart()
+                        }
+                    }
+                    handler.postDelayed(longPressRunnable, longPressTimeout)
+                    try {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            if (!change.pressed) {
+                                handler.removeCallbacks(longPressRunnable)
+                                if (dragging) {
+                                    onDragEnd()
+                                } else if (totalDistance >= touchSlop) {
+                                    onSwipeCancel()
+                                } else {
+                                    onTap()
+                                }
+                                break
+                            }
+                            // 与侧边把手一致：直接用本次事件的局部位移增量，
+                            // 窗口位置在 host 侧按累计值重算（不要在每次移动后反推屏幕坐标，
+                            // 否则窗口自身移动会反馈到坐标里，表现为胶囊乱闪）。
+                            val delta = change.position - change.previousPosition
+                            totalDistance += delta.getDistance()
+                            if (!dragging) {
+                                // 长按成立前先划走 = 任意方向滑动取消。
+                                if (totalDistance > touchSlop) {
+                                    handler.removeCallbacks(longPressRunnable)
+                                    onSwipeCancel()
+                                    break
+                                }
+                            } else {
+                                change.consume()
+                                if (delta != Offset.Zero) onDragBy(delta.x, delta.y)
+                            }
+                        }
+                    } finally {
+                        handler.removeCallbacks(longPressRunnable)
+                        // 长按后手势被系统取消（没有收到 UP）时也要恢复自动消失计时。
+                        if (dragging) onDragEnd()
+                    }
+                }
+            },
+        shape = shape,
         color = Color(0xE6252525),
         contentColor = Color.White,
         shadowElevation = 6.dp,
     ) {
         Row(
-            modifier = Modifier.padding(start = 10.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+            modifier = Modifier.padding(
+                start = if (onRightEdge) 12.dp else 10.dp,
+                end = if (onRightEdge) 10.dp else 12.dp,
+                top = 8.dp,
+                bottom = 8.dp,
+            ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {

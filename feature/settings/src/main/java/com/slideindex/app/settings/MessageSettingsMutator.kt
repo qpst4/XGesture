@@ -234,6 +234,13 @@ class MessageSettingsMutator @Inject constructor(
                 seconds.coerceIn(0, 60)
         }
 
+    suspend fun setMessageReturnChipPosition(onRightEdge: Boolean, yFraction: Float) =
+        editor.edit {
+            it[SettingsPreferenceKeys.MESSAGE_RETURN_CHIP_ON_RIGHT_EDGE] = onRightEdge
+            it[SettingsPreferenceKeys.MESSAGE_RETURN_CHIP_Y_FRACTION] =
+                yFraction.coerceIn(0f, 1f)
+        }
+
     suspend fun setMessageHideInLandscape(enabled: Boolean) =
         editor.edit { it[SettingsPreferenceKeys.MESSAGE_HIDE_IN_LANDSCAPE] = enabled }
 

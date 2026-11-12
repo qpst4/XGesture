@@ -618,6 +618,8 @@ data class SearchPanelSettings(
     val searchPanelSectionAliases: SearchPanelSectionAliasSettings = SearchPanelSectionAliasSettings(),
     val aggregatedImageSearchEngines: List<AggregatedImageSearchEngineConfig> =
         AppSettings.defaultAggregatedImageSearchEngines(),
+    /** 搜图面板的引擎区是否显示合成的「聚合搜图」入口。 */
+    val searchPanelShowAggregatedImageEntry: Boolean = true,
 )
 
 /** 自由小窗模式与尺寸。 */
