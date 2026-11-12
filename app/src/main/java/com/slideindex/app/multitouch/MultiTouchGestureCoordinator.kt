@@ -12,6 +12,7 @@ import com.slideindex.app.R
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.gesture.ActionExecutor
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.gesture.capturesScreen
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
 import com.slideindex.app.gesture.multitouch.PathGestureMatcher
 import com.slideindex.app.gesture.multitouch.PathGestureTemplate
@@ -463,14 +464,17 @@ class MultiTouchGestureCoordinator @Inject constructor(
         if (now - lastActionAtMs < ACTION_COOLDOWN_MS) return
         lastActionAtMs = now
         runCatching { ShakeVibrationHelper.vibrate(context) }
-        MultiTouchGestureFeedback.show(
-            context = SlideIndexAccessibilityService.overlayHostContext() ?: context,
-            text = context.getString(
-                R.string.multitouch_entry_label,
-                fingerCount,
-                context.getString(gestureKindLabelRes(kind)),
-            ),
-        )
+        // 抓屏类动作不弹提示胶囊：它是 ACCESSIBILITY_OVERLAY，会被自己的截图拍进去（issue #60）。
+        if (!action.capturesScreen) {
+            MultiTouchGestureFeedback.show(
+                context = SlideIndexAccessibilityService.overlayHostContext() ?: context,
+                text = context.getString(
+                    R.string.multitouch_entry_label,
+                    fingerCount,
+                    context.getString(gestureKindLabelRes(kind)),
+                ),
+            )
+        }
         // 手指落点 → 屏幕坐标 + 面板侧：快速启动器这类「只能贴边画」的浮层靠它决定从哪出来；
         // 没有锚点（旧服务进程）时保持历史行为（屏幕中心 + 谁的画布在用谁）。
         val trigger = anchor?.let { resolveTriggerAnchor(it) }

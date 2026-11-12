@@ -1411,6 +1411,25 @@ fun GestureAction.isCornerInnerZoneOnly(): Boolean =
 fun GestureAction.requiresContinuousTriggerOnly(): Boolean =
     this is GestureAction.RegionalScreenshotPick
 
+/**
+ * 触发瞬间会抓屏的动作。
+ *
+ * 这类动作执行前不能弹任何浮层：提示胶囊是 `TYPE_ACCESSIBILITY_OVERLAY`，
+ * 会被 `AccessibilityService.takeScreenshot` 一起拍进结果里（issue #60）。
+ */
+val GestureAction.capturesScreen: Boolean
+    get() = when (this) {
+        GestureAction.Screenshot,
+        GestureAction.SmartScreenshot,
+        GestureAction.FullscreenScreenshotPick,
+        GestureAction.RegionalScreenshotPick,
+        GestureAction.ScreenSearch,
+        GestureAction.ScreenTranslate,
+        GestureAction.UniversalCopy,
+        -> true
+        else -> false
+    }
+
 /** [GestureAction.continuousTrackingActions] membership by action kind (not payload). */
 fun GestureAction.isContinuousTrackingKind(): Boolean =
     GestureAction.continuousTrackingActions.any { ref ->
