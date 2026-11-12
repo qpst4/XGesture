@@ -647,6 +647,16 @@
     <string name="haptic_hover_desc">越过短距后停住达到悬停时长时的提示</string>
     <string name="haptic_long_press_title">长按振动</string>
     <string name="haptic_long_press_desc">按住不动被判为长按时的提示</string>
+    <string name="haptic_slot_letter_title">字母索引振动</string>
+    <string name="haptic_slot_letter_desc">在字母索引面板里划过条目时的提示</string>
+    <string name="haptic_slot_app_title">应用图标振动</string>
+    <string name="haptic_slot_app_desc">在应用面板里划过图标时的提示</string>
+    <string name="haptic_action_confirm_title">通用确认振动</string>
+    <string name="haptic_action_confirm_desc">保存、复制、删除、菜单点按这类操作的提示</string>
+    <string name="haptic_settings_title">震动</string>
+    <string name="haptic_settings_desc">手势、选择与确认的触感反馈</string>
+    <string name="haptic_group_gesture">手势进行中</string>
+    <string name="haptic_group_pick">选择与执行</string>
     <string name="haptic_slot_selection_title">滑动选项目振动</string>
     <string name="haptic_slot_selection_desc">轮盘、圆环、应用切换等连续滑动划过图标或动作项时的刻度微振</string>
     <string name="haptic_confirm_launch_title">松手执行振动</string>

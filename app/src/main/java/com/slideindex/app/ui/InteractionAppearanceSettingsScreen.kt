@@ -61,16 +61,7 @@ fun InteractionAppearanceSettingsScreen(
     onBack: () -> Unit,
     onIconPlateModeChange: (com.slideindex.app.settings.IconPlateMode) -> Unit = {},
     iconPlateMode: com.slideindex.app.settings.IconPlateMode = com.slideindex.app.settings.IconPlateMode.SYSTEM_DARK,
-    onHapticEnabledChange: (Boolean) -> Unit,
-    onHapticStrengthChange: (Int) -> Unit,
-    onHapticShortThresholdEnabledChange: (Boolean) -> Unit,
-    onHapticCompoundTurnEnabledChange: (Boolean) -> Unit,
-    onHapticReturnSwipeEnabledChange: (Boolean) -> Unit,
-    onHapticHoverEnabledChange: (Boolean) -> Unit,
-    onHapticLongPressEnabledChange: (Boolean) -> Unit,
-    onHapticLongThresholdEnabledChange: (Boolean) -> Unit,
-    onHapticSlotSelectionEnabledChange: (Boolean) -> Unit,
-    onHapticConfirmLaunchEnabledChange: (Boolean) -> Unit,
+    onOpenHapticSettings: () -> Unit,
     onSwipeDismissEnabledChange: (Boolean) -> Unit,
     onPredictiveBackEnabledChange: (Boolean) -> Unit,
     onDynamicColorChange: (Boolean) -> Unit,
@@ -103,19 +94,6 @@ fun InteractionAppearanceSettingsScreen(
     )
 
 
-    val view = LocalView.current
-    val hapticLightLabel = stringResource(R.string.haptic_strength_light)
-    val hapticMediumLabel = stringResource(R.string.haptic_strength_medium)
-    val hapticStrongLabel = stringResource(R.string.haptic_strength_strong)
-    val hapticFormatLabel = remember(hapticLightLabel, hapticMediumLabel, hapticStrongLabel) {
-        { level: Float ->
-            when (level.roundToInt()) {
-                0 -> hapticLightLabel
-                2 -> hapticStrongLabel
-                else -> hapticMediumLabel
-            }
-        }
-    }
     val themeAppearanceItems = themeAppearanceSettingsCardItems(
         outlinedPreferenceIcons = true,
         themeModeId = settings.themeModeId,
@@ -223,90 +201,12 @@ fun InteractionAppearanceSettingsScreen(
             items = buildList {
                 add(
                     settingsCardScopeItem("haptic") {
-                        SettingExpandableSwitchRow(
-                            title = stringResource(R.string.haptic_enabled),
-                            checked = settings.hapticEnabled,
-                            enabled = true,
-                            onCheckedChange = onHapticEnabledChange,
-                        ) {
-                            SettingsSliderRow(
-                                title = stringResource(R.string.haptic_strength),
-                                value = settings.hapticStrengthLevel.toFloat(),
-                                valueRange = 0f..2f,
-                                steps = 1,
-                                enabled = true,
-                                label = hapticFormatLabel(settings.hapticStrengthLevel.toFloat()),
-                                formatLabel = hapticFormatLabel,
-                                commitOnFinish = true,
-                                triggersLayoutPreview = true,
-                                onLayoutPreviewValueChange = { level ->
-                                    HapticHelper.preview(
-                                        view,
-                                        AppSettings(
-                                            hapticEnabled = true,
-                                            hapticStrengthLevel = level.roundToInt(),
-                                        ),
-                                    )
-                                },
-                                onValueChange = { onHapticStrengthChange(it.roundToInt()) },
-                            )
-                            SwitchPreference(
-                                title = stringResource(R.string.haptic_short_threshold_title),
-                                summary = stringResource(R.string.haptic_short_threshold_desc),
-                                checked = settings.hapticShortThresholdEnabled,
-                                enabled = true,
-                                onCheckedChange = onHapticShortThresholdEnabledChange,
-                            )
-                            SwitchPreference(
-                                title = stringResource(R.string.haptic_compound_turn_title),
-                                summary = stringResource(R.string.haptic_compound_turn_desc),
-                                checked = settings.hapticCompoundTurnEnabled,
-                                enabled = true,
-                                onCheckedChange = onHapticCompoundTurnEnabledChange,
-                            )
-                            SwitchPreference(
-                                title = stringResource(R.string.haptic_return_swipe_title),
-                                summary = stringResource(R.string.haptic_return_swipe_desc),
-                                checked = settings.hapticReturnSwipeEnabled,
-                                enabled = true,
-                                onCheckedChange = onHapticReturnSwipeEnabledChange,
-                            )
-                            SwitchPreference(
-                                title = stringResource(R.string.haptic_hover_title),
-                                summary = stringResource(R.string.haptic_hover_desc),
-                                checked = settings.hapticHoverEnabled,
-                                enabled = true,
-                                onCheckedChange = onHapticHoverEnabledChange,
-                            )
-                            SwitchPreference(
-                                title = stringResource(R.string.haptic_long_press_title),
-                                summary = stringResource(R.string.haptic_long_press_desc),
-                                checked = settings.hapticLongPressEnabled,
-                                enabled = true,
-                                onCheckedChange = onHapticLongPressEnabledChange,
-                            )
-                            SwitchPreference(
-                                title = stringResource(R.string.haptic_long_threshold_title),
-                                summary = stringResource(R.string.haptic_long_threshold_desc),
-                                checked = settings.hapticLongThresholdEnabled,
-                                enabled = true,
-                                onCheckedChange = onHapticLongThresholdEnabledChange,
-                            )
-                            SwitchPreference(
-                                title = stringResource(R.string.haptic_slot_selection_title),
-                                summary = stringResource(R.string.haptic_slot_selection_desc),
-                                checked = settings.hapticSlotSelectionEnabled,
-                                enabled = true,
-                                onCheckedChange = onHapticSlotSelectionEnabledChange,
-                            )
-                            SwitchPreference(
-                                title = stringResource(R.string.haptic_confirm_launch_title),
-                                summary = stringResource(R.string.haptic_confirm_launch_desc),
-                                checked = settings.hapticConfirmLaunchEnabled,
-                                enabled = true,
-                                onCheckedChange = onHapticConfirmLaunchEnabledChange,
-                            )
-                        }
+                        SettingNavigationRow(
+                            icon = { label -> Icon(HomeLeadingIcons.haptic(true), contentDescription = label) },
+                            title = stringResource(R.string.haptic_settings_title),
+                            subtitle = stringResource(R.string.haptic_settings_desc),
+                            onClick = onOpenHapticSettings,
+                        )
                     },
                 )
                 add(

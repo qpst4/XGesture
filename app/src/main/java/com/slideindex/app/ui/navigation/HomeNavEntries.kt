@@ -70,6 +70,7 @@ import com.slideindex.app.settings.withUpdatedTriggerHandle
 import com.slideindex.app.settings.withUpdatedTriggerHandleDistances
 import com.slideindex.app.settings.withUpdatedTriggerHandleEdgeWidth
 import com.slideindex.app.settings.withUpdatedTriggerHandleEnabled
+import com.slideindex.app.ui.HapticSettingsScreen
 import com.slideindex.app.ui.InteractionAppearanceSettingsScreen
 import com.slideindex.app.ui.AppKeepAliveSettingsScreen
 import com.slideindex.app.ui.PrivilegeModeSettingsScreen
@@ -249,16 +250,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             onBack = { ctx.navigateBackTo(AppNavKey.HomeMain) },
             onIconPlateModeChange = viewModel::setIconPlateMode,
             iconPlateMode = com.slideindex.app.settings.IconPlateMode.fromId(settings.iconPlateModeId),
-            onHapticEnabledChange = viewModel::setHapticEnabled,
-            onHapticStrengthChange = viewModel::setHapticStrength,
-            onHapticShortThresholdEnabledChange = viewModel::setHapticShortThresholdEnabled,
-            onHapticCompoundTurnEnabledChange = viewModel::setHapticCompoundTurnEnabled,
-            onHapticReturnSwipeEnabledChange = viewModel::setHapticReturnSwipeEnabled,
-            onHapticHoverEnabledChange = viewModel::setHapticHoverEnabled,
-            onHapticLongPressEnabledChange = viewModel::setHapticLongPressEnabled,
-            onHapticLongThresholdEnabledChange = viewModel::setHapticLongThresholdEnabled,
-            onHapticSlotSelectionEnabledChange = viewModel::setHapticSlotSelectionEnabled,
-            onHapticConfirmLaunchEnabledChange = viewModel::setHapticConfirmLaunchEnabled,
+            onOpenHapticSettings = { ctx.navigate(AppNavKey.HomeHapticSettings) },
             onSwipeDismissEnabledChange = viewModel::setSwipeDismissEnabled,
             onPredictiveBackEnabledChange = { enabled ->
                 viewModel.setPredictiveBackEnabled(enabled)
@@ -319,6 +311,30 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             onBack = { ctx.navigateBackTo(AppNavKey.HomeMain) },
             onPrivilegeModeChange = viewModel::setPrivilegeMode,
             onRequestShizuku = { ctx.requestShizuku() },
+        )
+    }
+
+    hiltEntry<AppNavKey.HomeHapticSettings> {
+        val homeEffects = remember(ctx) { MainNavHomeEffects(ctx) }
+        val viewModel: HomeViewModel = hiltViewModel<HomeViewModel, HomeViewModel.Factory> { factory ->
+            factory.create(homeEffects)
+        }
+        val settings by viewModel.homeMainSettings.collectAsStateWithLifecycle()
+        HapticSettingsScreen(
+            settings = settings,
+            onBack = { ctx.navigateBackTo(AppNavKey.HomeInteractionAppearance) },
+            onHapticEnabledChange = viewModel::setHapticEnabled,
+            onHapticStrengthChange = viewModel::setHapticStrength,
+            onHapticShortThresholdEnabledChange = viewModel::setHapticShortThresholdEnabled,
+            onHapticCompoundTurnEnabledChange = viewModel::setHapticCompoundTurnEnabled,
+            onHapticReturnSwipeEnabledChange = viewModel::setHapticReturnSwipeEnabled,
+            onHapticHoverEnabledChange = viewModel::setHapticHoverEnabled,
+            onHapticLongPressEnabledChange = viewModel::setHapticLongPressEnabled,
+            onHapticLongThresholdEnabledChange = viewModel::setHapticLongThresholdEnabled,
+            onHapticSlotLetterEnabledChange = viewModel::setHapticSlotLetterEnabled,
+            onHapticSlotAppEnabledChange = viewModel::setHapticSlotAppEnabled,
+            onHapticConfirmLaunchEnabledChange = viewModel::setHapticConfirmLaunchEnabled,
+            onHapticActionConfirmEnabledChange = viewModel::setHapticActionConfirmEnabled,
         )
     }
 

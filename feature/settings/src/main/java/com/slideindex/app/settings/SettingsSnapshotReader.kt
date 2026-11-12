@@ -226,6 +226,12 @@ internal object SettingsSnapshotReader {
                 ?: prefs[SettingsPreferenceKeys.HAPTIC_GESTURE_TRIGGER_ENABLED] ?: true,
             hapticLongPressEnabled = prefs[SettingsPreferenceKeys.HAPTIC_LONG_PRESS_ENABLED]
                 ?: prefs[SettingsPreferenceKeys.HAPTIC_GESTURE_TRIGGER_ENABLED] ?: true,
+            // 槽位选择拆成两类：缺键时回落到原来的「滑动选项目振动」总开关。
+            hapticSlotLetterEnabled = prefs[SettingsPreferenceKeys.HAPTIC_SLOT_LETTER_ENABLED]
+                ?: prefs[SettingsPreferenceKeys.HAPTIC_SLOT_SELECTION_ENABLED] ?: true,
+            hapticSlotAppEnabled = prefs[SettingsPreferenceKeys.HAPTIC_SLOT_APP_ENABLED]
+                ?: prefs[SettingsPreferenceKeys.HAPTIC_SLOT_SELECTION_ENABLED] ?: true,
+            hapticActionConfirmEnabled = prefs[SettingsPreferenceKeys.HAPTIC_ACTION_CONFIRM_ENABLED] ?: true,
             hapticSlotSelectionEnabled = prefs[SettingsPreferenceKeys.HAPTIC_SLOT_SELECTION_ENABLED] ?: true,
             hapticConfirmLaunchEnabled = prefs[SettingsPreferenceKeys.HAPTIC_CONFIRM_LAUNCH_ENABLED] ?: true,
             hideFromRecents = prefs[SettingsPreferenceKeys.HIDE_FROM_RECENTS] ?: false,

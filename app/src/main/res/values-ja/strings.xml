@@ -628,6 +628,16 @@
     <string name="haptic_hover_desc">短距離の後で指を止めた時の触覚</string>
     <string name="haptic_long_press_title">長押しの触覚</string>
     <string name="haptic_long_press_desc">長押しと判定された時の触覚</string>
+    <string name="haptic_slot_letter_title">文字インデックスの触覚</string>
+    <string name="haptic_slot_letter_desc">文字インデックスの項目をなぞった時の触覚</string>
+    <string name="haptic_slot_app_title">アプリアイコンの触覚</string>
+    <string name="haptic_slot_app_desc">アプリ一覧のアイコンをなぞった時の触覚</string>
+    <string name="haptic_action_confirm_title">一般確認の触覚</string>
+    <string name="haptic_action_confirm_desc">保存・コピー・削除・メニュー操作時の触覚</string>
+    <string name="haptic_settings_title">触覚</string>
+    <string name="haptic_settings_desc">ジェスチャー・選択・確認の触覚フィードバック</string>
+    <string name="haptic_group_gesture">ジェスチャー中</string>
+    <string name="haptic_group_pick">選択と実行</string>
     <string name="haptic_slot_selection_title">項目選択触覚</string>
     <string name="haptic_slot_selection_desc">ホイール、リング、アプリ切り替えなどでアイコンや項目を連続スライドした時の微小振動</string>
     <string name="haptic_confirm_launch_title">離して実行触覚</string>

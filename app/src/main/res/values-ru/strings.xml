@@ -2202,6 +2202,16 @@
     <string name="haptic_hover_desc">Отклик при остановке пальца после короткой дистанции</string>
     <string name="haptic_long_press_title">Виброотклик долгого нажатия</string>
     <string name="haptic_long_press_desc">Отклик при распознавании долгого нажатия</string>
+    <string name="haptic_slot_letter_title">Виброотклик буквенного указателя</string>
+    <string name="haptic_slot_letter_desc">Отклик при движении по элементам буквенного указателя</string>
+    <string name="haptic_slot_app_title">Виброотклик иконок приложений</string>
+    <string name="haptic_slot_app_desc">Отклик при движении по иконкам приложений</string>
+    <string name="haptic_action_confirm_title">Виброотклик общего подтверждения</string>
+    <string name="haptic_action_confirm_desc">Отклик при сохранении, копировании, удалении и нажатиях в меню</string>
+    <string name="haptic_settings_title">Вибрация</string>
+    <string name="haptic_settings_desc">Тактильная связь для жестов, выбора и подтверждения</string>
+    <string name="haptic_group_gesture">Во время жеста</string>
+    <string name="haptic_group_pick">Выбор и выполнение</string>
     <string name="haptic_slot_selection_title">Виброотклик выбора элемента</string>
     <string name="haptic_slot_selection_desc">Лёгкий щелчок при скольжении по значкам или действиям в колесе, кольце, переключателе приложений и т. д.</string>
     <string name="haptic_confirm_launch_title">Виброотклик подтверждения отпускания</string>

@@ -44,6 +44,12 @@ data class AppSettings(
     val hapticHoverEnabled: Boolean = true,
     /** 按住不动判定为长按那一声。 */
     val hapticLongPressEnabled: Boolean = true,
+    /** 面板/轮盘里划过「字母索引」条目那一声。 */
+    val hapticSlotLetterEnabled: Boolean = true,
+    /** 面板/轮盘里划过「应用图标」条目那一声。 */
+    val hapticSlotAppEnabled: Boolean = true,
+    /** 保存/复制/删除/菜单点按这类通用确认。 */
+    val hapticActionConfirmEnabled: Boolean = true,
     val hapticSlotSelectionEnabled: Boolean = true,
     val hapticConfirmLaunchEnabled: Boolean = true,
     val hideFromRecents: Boolean = false,

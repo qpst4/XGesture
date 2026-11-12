@@ -511,6 +511,18 @@ class EdgeSettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.HAPTIC_LONG_PRESS_ENABLED] = enabled
     }
 
+    suspend fun setHapticSlotLetterEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.HAPTIC_SLOT_LETTER_ENABLED] = enabled
+    }
+
+    suspend fun setHapticSlotAppEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.HAPTIC_SLOT_APP_ENABLED] = enabled
+    }
+
+    suspend fun setHapticActionConfirmEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.HAPTIC_ACTION_CONFIRM_ENABLED] = enabled
+    }
+
     suspend fun setHapticSlotSelectionEnabled(enabled: Boolean) = editor.edit {
         it[SettingsPreferenceKeys.HAPTIC_SLOT_SELECTION_ENABLED] = enabled
     }

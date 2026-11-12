@@ -29,6 +29,7 @@ object HapticHelper {
         SLOT_LETTER,
         SLOT_APP,
         CONFIRM,
+        ACTION_CONFIRM,
     }
 
     private fun AppSettings.isEventEnabled(event: Event): Boolean = when (event) {
@@ -38,23 +39,29 @@ object HapticHelper {
         Event.HOVER -> hapticHoverEnabled
         Event.LONG_PRESS -> hapticLongPressEnabled
         Event.SWIPE_LONG -> hapticLongThresholdEnabled
-        Event.SLOT_LETTER, Event.SLOT_APP -> hapticSlotSelectionEnabled
+        Event.SLOT_LETTER -> hapticSlotLetterEnabled
+        Event.SLOT_APP -> hapticSlotAppEnabled
         Event.CONFIRM -> hapticConfirmLaunchEnabled
+        Event.ACTION_CONFIRM -> hapticActionConfirmEnabled
     }
 
     private fun Event.toPulseKind(): PulseKind = when (this) {
         Event.SLOT_LETTER -> PulseKind.LETTER
         Event.SLOT_APP -> PulseKind.APP
-        Event.CONFIRM -> PulseKind.CONFIRM
+        Event.CONFIRM, Event.ACTION_CONFIRM -> PulseKind.CONFIRM
         Event.LONG_PRESS, Event.SWIPE_LONG -> PulseKind.LONG_THRESHOLD
         Event.SHORT_THRESHOLD, Event.COMPOUND_TURN, Event.RETURN_SWIPE, Event.HOVER -> PulseKind.GESTURE
     }
 
     /** 唯一发声入口：先查总开关、再查该事件开关，最后按事件选脉冲形态。 */
     fun play(view: View, settings: AppSettings, event: Event) {
+        playWithKind(view, settings, event, event.toPulseKind())
+    }
+
+    private fun playWithKind(view: View, settings: AppSettings, event: Event, kind: PulseKind) {
         if (!settings.hapticEnabled) return
         if (!settings.isEventEnabled(event)) return
-        pulse(view, settings, event.toPulseKind())
+        pulse(view, settings, kind)
     }
 
     fun gestureStart(view: View, settings: AppSettings) = play(view, settings, Event.SHORT_THRESHOLD)
@@ -92,16 +99,16 @@ object HapticHelper {
      * **只受总开关与强度控制** —— 不像 [confirmLaunch] 那样再叠一层"启动确认"开关。
      */
     fun actionConfirm(view: View, settings: AppSettings) {
-        pulse(view, settings, PulseKind.CONFIRM)
+        playWithKind(view, settings, Event.ACTION_CONFIRM, PulseKind.CONFIRM)
     }
 
-    /** 通用「轻点」反馈（菜单项 / 标签 chip）：同样只受总开关与强度控制。 */
+    /** 通用「轻点」反馈（菜单项 / 标签 chip）：归在「通用确认」开关下。 */
     fun actionTick(view: View, settings: AppSettings) {
-        pulse(view, settings, PulseKind.LETTER)
+        playWithKind(view, settings, Event.ACTION_CONFIRM, PulseKind.LETTER)
     }
 
     fun preview(view: View, settings: AppSettings) {
-        pulse(view, settings, PulseKind.CONFIRM)
+        playWithKind(view, settings, Event.ACTION_CONFIRM, PulseKind.CONFIRM)
     }
 
     fun pickPanelSaveLongClick(view: View, settings: AppSettings) {
