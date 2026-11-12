@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -110,6 +111,10 @@ import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.overlayIsLandscape
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.util.HapticHelper
+import com.slideindex.app.overlay.share.ShareDefaultBadgeSlot
+import com.slideindex.app.overlay.share.ShareDefaultTarget
+import com.slideindex.app.overlay.share.ShareSheetKind
+import com.slideindex.app.overlay.share.rememberShareDefaultTarget
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.filled.MoreVert
@@ -670,6 +675,12 @@ fun PickResultTextActionBar(
     onOpenLinkChoice: (String) -> Unit = {},
     onDismissOpenLinkChooser: () -> Unit = {},
     onShare: () -> Unit,
+    /**
+     * 点按分享键的直发入口（有默认目标时用）：返回 false 表示没发出去，回退到 [onShare]。
+     *
+     * 具体发什么（文字 / 图片）由调用方绑定；面板只在「有默认目标」时才走这里。
+     */
+    onShareToDefault: (() -> Boolean)? = null,
     /** 长按分享键 = 把当前这段文字起成系统拖拽；null 时保持普通分享键。 */
     onStartDrag: (() -> Unit)? = null,
     copyDismissEnabled: Boolean = false,
@@ -697,6 +708,18 @@ fun PickResultTextActionBar(
     iconBarOrder: List<String> = emptyList(),
     iconBarHidden: Set<String> = emptySet(),
 ) {
+    // 有默认目标才画角标、才把长按从"拖拽"改成"弹面板"；没设默认时交互保持原样。
+    // 调用方没提供直发回调（如翻译浮窗）时也保持原样：默认分享只属于取词面板。
+    val shareDefaultTarget = rememberShareDefaultTarget(ShareSheetKind.TEXT)
+        ?.takeIf { onShareToDefault != null }
+    // 点按：有默认目标 -> 直发（失败回退面板）；没有 -> 弹面板。长按：有默认 -> 弹面板；没有 -> 拖拽。
+    val handleShareClick: () -> Unit = {
+        if (shareDefaultTarget == null || onShareToDefault == null || !onShareToDefault()) {
+            onShare()
+        }
+    }
+    val handleShareLongClick: (() -> Unit)? =
+        if (shareDefaultTarget != null) onShare else onStartDrag
     var justCopied by remember { mutableStateOf(false) }
     var moreMenuExpanded by remember { mutableStateOf(false) }
     // 「用其他应用处理」的二级页：点进去才查一次 PROCESS_TEXT 列表（图标解码放在 IO）。
@@ -749,6 +772,7 @@ fun PickResultTextActionBar(
             actionEnabled: Boolean,
             onClick: () -> Unit,
             onLongClick: (() -> Unit)? = null,
+            badge: ShareDefaultTarget? = null,
         ) {
             Box(
                 modifier = Modifier
@@ -767,12 +791,15 @@ fun PickResultTextActionBar(
                     ),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = contentDescription,
-                    tint = tint,
-                    modifier = Modifier.size(22.dp),
-                )
+                Box(Modifier.size(22.dp)) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = contentDescription,
+                        tint = tint,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    ShareDefaultBadgeSlot(badge)
+                }
             }
         }
 
@@ -976,8 +1003,9 @@ fun PickResultTextActionBar(
                             contentDescription = stringResource(R.string.pick_result_share),
                             tint = iconBarTint,
                             actionEnabled = enabled,
-                            onClick = onShare,
-                            onLongClick = onStartDrag,
+                            onClick = handleShareClick,
+                            onLongClick = handleShareLongClick,
+                            badge = shareDefaultTarget,
                         )
 
                     com.slideindex.app.settings.PickResultTextBarButton.PIN ->
@@ -1268,17 +1296,20 @@ fun PickResultTextActionBar(
                         .clip(RoundedCornerShape(21.dp))
                         .combinedClickable(
                             enabled = enabled,
-                            onClick = onShare,
-                            onLongClick = onStartDrag,
+                            onClick = handleShareClick,
+                            onLongClick = handleShareLongClick,
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Share,
-                        contentDescription = stringResource(R.string.pick_result_share),
-                        tint = if (enabled) shareTint else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
-                        modifier = Modifier.size(22.dp)
-                    )
+                    Box(Modifier.size(22.dp)) {
+                        Icon(
+                            imageVector = Icons.Outlined.Share,
+                            contentDescription = stringResource(R.string.pick_result_share),
+                            tint = if (enabled) shareTint else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        ShareDefaultBadgeSlot(shareDefaultTarget)
+                    }
                 }
 
                 // 2.4 更多菜单（正对图片底栏的更多）

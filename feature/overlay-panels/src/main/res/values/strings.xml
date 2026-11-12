@@ -19,6 +19,11 @@
     <string name="share_sheet_toast_pinned">Pinned “%1$s”</string>
     <string name="share_sheet_toast_unpinned">Unpinned “%1$s”</string>
     <string name="share_sheet_use_system">System share sheet</string>
+    <string name="share_sheet_set_default">Set as default</string>
+    <string name="share_sheet_default_badge">Default target</string>
+    <string name="share_sheet_clear_default">Clear default target</string>
+    <string name="share_sheet_toast_default_set">Default set to “%1$s”</string>
+    <string name="share_sheet_toast_default_cleared">Default target cleared</string>
 
     <string name="gesture_action_volume_panel">Expansion panel</string>
     <string name="volume_panel_brightness">Brightness</string>

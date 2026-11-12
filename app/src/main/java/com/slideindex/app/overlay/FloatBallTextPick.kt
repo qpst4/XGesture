@@ -315,6 +315,21 @@ object FloatBallTextPick {
         )
     }
 
+    /**
+     * 直发到默认分享目标（取词面板文字分享键的"点一下就走"）。
+     *
+     * 返回 false 时调用方要退回 [shareText]（弹面板）：没设默认、目标被卸载都属于"没发出去"。
+     */
+    fun shareTextToDefault(
+        context: Context,
+        text: String,
+        dismissSource: (() -> Unit)? = null,
+    ): Boolean = ShareSheetLauncher.shareToDefault(
+        context = context,
+        payload = ShareSheetPayload.Text(text),
+        dismissSource = dismissSource,
+    )
+
     fun shareTextTo(context: Context, text: String, target: ComponentName): Boolean {
         return runCatching {
             val intent = Intent(Intent.ACTION_SEND).apply {
@@ -398,6 +413,27 @@ object FloatBallTextPick {
             payload = ShareSheetPayload.Image(uri = uri, mimeType = "image/*"),
             dismissSource = dismissSource,
         )
+    }
+
+    /**
+     * 直发到默认分享目标（取词面板图片分享键的"点一下就走"）。
+     *
+     * 返回 false 时调用方要退回 [shareScreenshot]（弹面板）；没发出去的临时图片当场删掉，
+     * 免得缓存目录里堆一堆永远发不出去的文件。
+     */
+    fun shareScreenshotToDefault(
+        context: Context,
+        bitmap: Bitmap,
+        dismissSource: (() -> Unit)? = null,
+    ): Boolean {
+        val uri = createShareImageUri(context, bitmap) ?: return false
+        val shared = ShareSheetLauncher.shareToDefault(
+            context = context,
+            payload = ShareSheetPayload.Image(uri = uri, mimeType = "image/*"),
+            dismissSource = dismissSource,
+        )
+        if (!shared) deleteShareImageUri(context, uri)
+        return shared
     }
 
     fun viewScreenshot(

@@ -1,5 +1,6 @@
 package com.slideindex.app.overlay.share
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.util.Log
@@ -60,5 +61,39 @@ object ShareSheetLauncher {
             Log.w(TAG, "system chooser failed", it)
             false
         }
+    }
+
+    /**
+     * 直发到默认目标（取词面板文字 / 图片分享键的"点一下就走"）。
+     *
+     * 没设默认、目标被卸载 / 禁用、或启动失败都返回 false —— 调用方据此退回 [share]
+     * （弹面板），所以这里**失败时不要先收起来源浮窗**。
+     */
+    fun shareToDefault(
+        context: Context,
+        payload: ShareSheetPayload,
+        dismissSource: (() -> Unit)? = null,
+    ): Boolean {
+        if (!ShareSheetDefaults.supports(payload.kind)) return false
+        val target = ShareSheetDefaults.resolve(context, payload.kind) ?: return false
+        return shareToTarget(context, payload, target, dismissSource)
+    }
+
+    /** 直发到指定目标：补 `component` 后 StartActivity；成功启动返回 true。 */
+    fun shareToTarget(
+        context: Context,
+        payload: ShareSheetPayload,
+        target: ShareDefaultTarget,
+        dismissSource: (() -> Unit)? = null,
+    ): Boolean {
+        val intent = payload.intent().apply {
+            component = ComponentName(target.packageName, target.activityClassName)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        // 目标 App 起来后必须压在浮层上面：先用调用方给的 lambda 收起来源浮窗。
+        runCatching { dismissSource?.invoke() }
+        return runCatching { context.startActivity(intent) }
+            .onFailure { Log.w(TAG, "default target launch failed: ${target.key}", it) }
+            .isSuccess
     }
 }

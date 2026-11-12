@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -79,6 +80,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.ScreenshotLayoutMeta
+import com.slideindex.app.overlay.share.ShareDefaultBadgeSlot
+import com.slideindex.app.overlay.share.ShareDefaultTarget
+import com.slideindex.app.overlay.share.ShareSheetKind
+import com.slideindex.app.overlay.share.rememberShareDefaultTarget
 import com.slideindex.app.overlay.overlayContainerHeightDp
 import com.slideindex.app.overlay.overlayIsLandscape
 import com.slideindex.app.overlay.resolvePinImageDisplaySizePx
@@ -276,6 +281,8 @@ fun PickResultImageSearchBar(
     engines: List<SearchEngineConfig>,
     onShareEngineClick: (SearchEngineConfig) -> Unit,
     onShare: () -> Unit,
+    /** 点按分享键的直发入口（有默认目标时用）：返回 false 回退到 [onShare]（弹面板）。 */
+    onShareToDefault: (() -> Boolean)? = null,
     onImageSearch: () -> Unit,
     onSave: () -> Unit,
     /** 独立「查看图片」按钮：打开面板内的全屏查看器；null 时不显示。 */
@@ -296,6 +303,17 @@ fun PickResultImageSearchBar(
 ) {
     val shareEngines = SearchEngineStore.imageSharePanelEngines(engines)
     val isDark = LocalAppDarkTheme.current
+    // 有默认目标才画角标、才把长按从"拖拽"改成"弹面板"；没设默认时交互保持原样。
+    // 调用方没提供直发回调时也保持原样：默认分享只属于取词面板。
+    val shareDefaultTarget = rememberShareDefaultTarget(ShareSheetKind.IMAGE)
+        ?.takeIf { onShareToDefault != null }
+    val handleShareClick: () -> Unit = {
+        if (shareDefaultTarget == null || onShareToDefault == null || !onShareToDefault()) {
+            onShare()
+        }
+    }
+    val handleShareLongClick: (() -> Unit)? =
+        if (shareDefaultTarget != null) onShare else onStartImageDrag
 
     if (compactEmbedded) {
         if (iconBarEnabled) {
@@ -306,6 +324,9 @@ fun PickResultImageSearchBar(
                 onShareEngineClick = onShareEngineClick,
                 onImageSearch = onImageSearch,
                 onShare = onShare,
+                onShareClick = handleShareClick,
+                onShareLongClick = handleShareLongClick,
+                shareDefault = shareDefaultTarget,
                 onSave = onSave,
                 onViewImage = onViewImage,
                 onSaveLongClick = onSaveLongClick,
@@ -337,6 +358,9 @@ fun PickResultImageSearchBar(
             ) {
                 PickResultImageSearchActions(
                     onShare = onShare,
+                    onShareClick = handleShareClick,
+                    onShareLongClick = handleShareLongClick,
+                    shareDefault = shareDefaultTarget,
                     onImageSearch = onImageSearch,
                     onSave = onSave,
                     onViewImage = onViewImage,
@@ -419,6 +443,9 @@ fun PickResultImageSearchBar(
 
             PickResultImageSearchActions(
                 onShare = onShare,
+                onShareClick = handleShareClick,
+                onShareLongClick = handleShareLongClick,
+                shareDefault = shareDefaultTarget,
                 onImageSearch = onImageSearch,
                 onSave = onSave,
                 onViewImage = onViewImage,
@@ -911,6 +938,9 @@ private fun PickResultImageIconBar(
     onShareEngineClick: (SearchEngineConfig) -> Unit,
     onImageSearch: () -> Unit,
     onShare: () -> Unit,
+    onShareClick: (() -> Unit)? = null,
+    onShareLongClick: (() -> Unit)? = null,
+    shareDefault: ShareDefaultTarget? = null,
     onSave: () -> Unit,
     /** 独立「查看图片」按钮：打开面板内的全屏查看器；null 时不显示。 */
     onViewImage: (() -> Unit)? = null,
@@ -974,9 +1004,10 @@ private fun PickResultImageIconBar(
                     PickResultActionIcon(
                         icon = Icons.Outlined.Share,
                         enabled = true,
-                        onClick = onShare,
-                        onLongClick = onStartImageDrag,
+                        onClick = onShareClick ?: onShare,
+                        onLongClick = onShareLongClick ?: onStartImageDrag,
                         contentDescription = stringResource(R.string.pick_result_action_share_image),
+                        badge = shareDefault,
                     )
 
                 com.slideindex.app.settings.PickResultImageBarButton.PIN ->
@@ -1052,6 +1083,9 @@ private fun ImageShareEngineQuickSwitchRow(
 @Composable
 private fun PickResultImageSearchActions(
     onShare: () -> Unit,
+    onShareClick: (() -> Unit)? = null,
+    onShareLongClick: (() -> Unit)? = null,
+    shareDefault: ShareDefaultTarget? = null,
     onImageSearch: () -> Unit,
     onSave: () -> Unit,
     /** 独立「查看图片」按钮：打开面板内的全屏查看器；null 时不显示。 */
@@ -1104,14 +1138,16 @@ private fun PickResultImageSearchActions(
         )
 
         // 3. Direct Action: Share (分享图片，直接外显)；长按 = 把这张图拖到别的 App。
+        //    设了默认目标时：点按直发、长按改为弹分享面板（与 FV 一致）。
         PickResultActionIcon(
             icon = Icons.Outlined.Share,
             enabled = true,
-            onClick = onShare,
-            onLongClick = onStartImageDrag,
+            onClick = onShareClick ?: onShare,
+            onLongClick = onShareLongClick ?: onStartImageDrag,
             contentDescription = stringResource(R.string.pick_result_action_share_image),
             overlayMode = overlayMode,
             compact = compact,
+            badge = shareDefault,
         )
 
         // 4. More Action: Dropdown Menu (钉选 / 暂存)
@@ -1168,6 +1204,7 @@ private fun PickResultActionIcon(
     contentDescription: String? = null,
     overlayMode: Boolean = false,
     compact: Boolean = false,
+    badge: ShareDefaultTarget? = null,
 ) {
     val isDark = LocalAppDarkTheme.current
     val iconTint = if (overlayMode) Color(0xFFF2F2F7) else if (isDark) Color(0xFFE0E0E6) else Color(0xFF333333)
@@ -1185,11 +1222,14 @@ private fun PickResultActionIcon(
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            modifier = Modifier.size(iconSize),
-            tint = if (enabled) iconTint else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
-        )
+        Box(Modifier.size(iconSize)) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                modifier = Modifier.fillMaxSize(),
+                tint = if (enabled) iconTint else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+            )
+            ShareDefaultBadgeSlot(badge)
+        }
     }
 }

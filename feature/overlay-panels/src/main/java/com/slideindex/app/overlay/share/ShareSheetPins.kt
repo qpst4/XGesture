@@ -10,7 +10,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-private val Context.shareSheetDataStore: DataStore<Preferences> by preferencesDataStore(
+/**
+ * 分享面板自己的 DataStore：钉住列表（[ShareSheetPins]）与默认目标（[ShareSheetDefaults]）共用，
+ * 备份也走同一个外部存储项（`SettingsBackupExternalStore.SHARE_SHEET` / `SHARE_DEFAULTS`）。
+ */
+internal val Context.shareSheetDataStore: DataStore<Preferences> by preferencesDataStore(
     name = "slide_index_share_sheet",
 )
 

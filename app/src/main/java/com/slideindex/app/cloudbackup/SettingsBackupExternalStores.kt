@@ -7,6 +7,7 @@ import com.slideindex.app.macro.MacroStore
 import com.slideindex.app.overlay.filebrowser.FileBrowserPreferences
 import com.slideindex.app.overlay.pickresult.PickResultImageSharePrefs
 import com.slideindex.app.overlay.quickmenu.QuickMenuPreferences
+import com.slideindex.app.overlay.share.ShareSheetDefaults
 import com.slideindex.app.overlay.share.ShareSheetPins
 import com.slideindex.app.pagescroll.PageScrollPrefs
 import com.slideindex.app.screencontrol.ScreenControlPrefs
@@ -67,6 +68,10 @@ class SettingsBackupExternalStores @Inject constructor(
             .takeIf { it.isNotBlank() }
             ?.let { stores[SettingsBackupExternalStore.SHARE_SHEET.id] = it }
 
+        ShareSheetDefaults.exportRawJson(context)
+            .takeIf { it.isNotBlank() }
+            ?.let { stores[SettingsBackupExternalStore.SHARE_DEFAULTS.id] = it }
+
         QuickMenuPreferences.exportRawJson(context)
             .takeIf { it.isNotBlank() }
             ?.let { stores[SettingsBackupExternalStore.QUICK_MENU.id] = it }
@@ -104,6 +109,9 @@ class SettingsBackupExternalStores @Inject constructor(
         }
         stores[SettingsBackupExternalStore.SHARE_SHEET.id]?.let {
             ShareSheetPins.importRawJson(context, it)
+        }
+        stores[SettingsBackupExternalStore.SHARE_DEFAULTS.id]?.let {
+            ShareSheetDefaults.importRawJson(context, it)
         }
         stores[SettingsBackupExternalStore.QUICK_MENU.id]?.let {
             QuickMenuPreferences.importRawJson(context, it)

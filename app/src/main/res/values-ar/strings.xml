@@ -4985,6 +4985,11 @@
     <string name="share_sheet_toast_pinned">تم تثبيت «%1$s»</string>
     <string name="share_sheet_toast_unpinned">تم إلغاء تثبيت «%1$s»</string>
     <string name="share_sheet_use_system">لوحة المشاركة في النظام</string>
+    <string name="share_sheet_set_default">تعيين كافتراضي</string>
+    <string name="share_sheet_default_badge">الهدف الافتراضي</string>
+    <string name="share_sheet_clear_default">مسح الهدف الافتراضي</string>
+    <string name="share_sheet_toast_default_set">تم التعيين افتراضيًا: «%1$s»</string>
+    <string name="share_sheet_toast_default_cleared">تم مسح الهدف الافتراضي</string>
     <string name="share_sheet_settings_title">لوحة المشاركة</string>
     <string name="share_sheet_settings_subtitle">شبكة مشاركة داخلية بدلًا من لوحة النظام</string>
     <string name="share_sheet_hub_subtitle">لوحة شبكية مع أهداف مثبّتة</string>

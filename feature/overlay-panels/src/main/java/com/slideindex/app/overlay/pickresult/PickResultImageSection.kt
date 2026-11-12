@@ -56,6 +56,8 @@ fun PickResultImageSection(
     onSave: () -> Unit,
     onSaveLongClick: (() -> Unit)? = null,
     onShare: () -> Unit,
+    /** 点按分享键：有默认目标时直发；返回 false 回退到 [onShare]（弹面板）。 */
+    onShareToDefault: (() -> Boolean)? = null,
     /** 长按分享键 = 把当前这张图起成系统拖拽；null 时不挂。 */
     onStartDrag: (() -> Unit)? = null,
     onImageSearch: () -> Unit,
@@ -87,6 +89,7 @@ fun PickResultImageSection(
                 onSave = onSave,
                 onSaveLongClick = onSaveLongClick,
                 onShare = onShare,
+                onShareToDefault = onShareToDefault,
                 onStartDrag = onStartDrag,
                 onImageSearch = onImageSearch,
                 onShareEngineClick = onShareEngineClick,
@@ -119,6 +122,8 @@ fun PickResultImageSectionGallery(
     onSave: () -> Unit,
     onSaveLongClick: (() -> Unit)? = null,
     onShare: () -> Unit,
+    /** 点按分享键：有默认目标时直发；返回 false 回退到 [onShare]（弹面板）。 */
+    onShareToDefault: (() -> Boolean)? = null,
     /** 长按分享键 = 把当前这张图起成系统拖拽；null 时不挂。 */
     onStartDrag: (() -> Unit)? = null,
     onImageSearch: () -> Unit,
@@ -284,6 +289,7 @@ fun PickResultImageSectionGallery(
                     engines = searchEngines,
                     onShareEngineClick = onShareEngineClick,
                     onShare = onShare,
+                    onShareToDefault = onShareToDefault,
                     onStartImageDrag = onStartDrag,
                     onImageSearch = onImageSearch,
                     onSave = onSave,

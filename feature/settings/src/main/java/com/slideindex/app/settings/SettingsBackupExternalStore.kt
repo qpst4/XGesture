@@ -43,6 +43,9 @@ enum class SettingsBackupExternalStore(
     /** 分享面板钉住的目标；`slide_index_share_sheet`。 */
     SHARE_SHEET("share_sheet", SettingsModule.GENERAL),
 
+    /** 分享面板的默认目标（文字 / 图片各一个）；同一个 `slide_index_share_sheet`。 */
+    SHARE_DEFAULTS("share_defaults", SettingsModule.GENERAL),
+
     /** 快捷菜单默认值/模块顺序；`slide_index_quick_menu_prefs`。 */
     QUICK_MENU("quick_menu", SettingsModule.GENERAL),
 

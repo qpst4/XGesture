@@ -143,6 +143,8 @@ fun PickResultInteractiveTextSection(
     onActiveTextChange: (String) -> Unit = {},
     onSearch: (String) -> Unit = {},
     onShare: (String) -> Unit,
+    /** 点按分享键：有默认目标时直发；返回 false 回退到 [onShare]（弹面板）。 */
+    onShareToDefault: ((String) -> Boolean)? = null,
     /** 长按分享键起系统拖拽（载荷与 [onShare] 一致）；null 时不挂这个长按。 */
     onStartDrag: ((String) -> Unit)? = null,
     /** 用其他应用处理；null 时动作条不显示这一项（翻译浮窗等不需要的宿主）。 */
@@ -352,6 +354,10 @@ fun PickResultInteractiveTextSection(
         activeText().takeIf { it.isNotBlank() }?.let(action)
     }
 
+    /** 同 [runOnActiveText]，但把"有没有真的执行"带回来（分享直发失败要回退面板）。 */
+    fun runOnActiveTextResult(action: (String) -> Boolean): Boolean =
+        activeText().takeIf { it.isNotBlank() }?.let(action) ?: false
+
     fun hasActiveSelection(): Boolean = when (textMode) {
         PickResultTextMode.WORD_TAP -> selectedWordIndices.isNotEmpty()
         PickResultTextMode.SELECT -> selectionEnd > selectionStart
@@ -494,6 +500,9 @@ fun PickResultInteractiveTextSection(
                     },
                     onDismissOpenLinkChooser = { openLinkChooserExpanded = false },
                     onShare = { runOnActiveText(onShare) },
+                    onShareToDefault = onShareToDefault?.let { direct ->
+                        { runOnActiveTextResult(direct) }
+                    },
                     onStartDrag = onStartDrag?.let { drag -> { runOnActiveText(drag) } },
                     onProcessText = onProcessText?.let { action ->
                         { target -> runOnActiveText { text -> action(text, target) } }

@@ -20,6 +20,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -38,11 +39,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -324,8 +329,14 @@ private fun ShareSheetRoot(
     }
     var pins by remember(payload) { mutableStateOf(ShareSheetPins.peek().orEmpty()) }
     var loading by remember(payload) { mutableStateOf(items.isEmpty()) }
+    // 「设为默认」只对取词面板的文字 / 图片分享有意义；文件分享没有角标入口，不显示这一行。
+    val supportsDefault = ShareSheetDefaults.supports(payload.kind)
+    var setAsDefault by remember(payload) { mutableStateOf(false) }
+    var defaultTarget by remember(payload) { mutableStateOf<ShareDefaultTarget?>(null) }
 
     LaunchedEffect(payload) {
+        ShareSheetDefaults.load(context)
+        defaultTarget = ShareSheetDefaults.resolve(context, payload.kind)
         pins = ShareSheetPins.read(context)
         // 缓存命中时 [loading] 已经是 false，这里只是后台把列表刷新到最新。
         val fresh = ShareSheetTargetCache.load(context, payload.kind)
@@ -442,7 +453,24 @@ private fun ShareSheetRoot(
                                 ShareSheetCell(
                                     target = target,
                                     pinned = target.shareKey in pins,
-                                    onClick = { onSend(target) },
+                                    onClick = {
+                                        if (setAsDefault && supportsDefault) {
+                                            val chosen = ShareDefaultTarget(
+                                                packageName = target.packageName,
+                                                activityClassName = target.activityClassName,
+                                            )
+                                            ShareSheetDefaults.set(context, payload.kind, chosen)
+                                            OverlayToastWindow.show(
+                                                context,
+                                                context.getString(
+                                                    R.string.share_sheet_toast_default_set,
+                                                    target.appLabel,
+                                                ),
+                                            )
+                                            setAsDefault = false
+                                        }
+                                        onSend(target)
+                                    },
                                     onLongClick = {
                                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                         scope.launch {
@@ -461,9 +489,37 @@ private fun ShareSheetRoot(
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        if (supportsDefault) {
+                            Checkbox(
+                                checked = setAsDefault,
+                                onCheckedChange = { setAsDefault = it },
+                            )
+                            Text(
+                                text = stringResource(R.string.share_sheet_set_default),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.clickable { setAsDefault = !setAsDefault },
+                            )
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
+                        defaultTarget?.let { currentDefault ->
+                            if (supportsDefault) {
+                                DefaultTargetChip(
+                                    target = currentDefault,
+                                    onClear = {
+                                        ShareSheetDefaults.clear(context, payload.kind)
+                                        defaultTarget = null
+                                        OverlayToastWindow.show(
+                                            context,
+                                            context.getString(R.string.share_sheet_toast_default_cleared),
+                                        )
+                                    },
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                            }
+                        }
                         TextButton(onClick = onOpenSystemPanel) {
                             Text(
                                 text = stringResource(R.string.share_sheet_use_system),
@@ -516,6 +572,40 @@ private fun ShareSheetCell(
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurface,
         )
+    }
+}
+
+/** 当前默认目标：图标 + 清除按钮（底栏右下角，对齐 FV 的样式）。 */
+@Composable
+private fun DefaultTargetChip(
+    target: ShareDefaultTarget,
+    onClear: () -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+            .padding(start = 6.dp, end = 2.dp),
+    ) {
+        ShareTargetIconImage(
+            packageName = target.packageName,
+            activityClassName = target.activityClassName,
+            modifier = Modifier
+                .size(20.dp)
+                .clip(RoundedCornerShape(6.dp)),
+        )
+        IconButton(
+            onClick = onClear,
+            modifier = Modifier.size(28.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Close,
+                contentDescription = stringResource(R.string.share_sheet_clear_default),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(15.dp),
+            )
+        }
     }
 }
 

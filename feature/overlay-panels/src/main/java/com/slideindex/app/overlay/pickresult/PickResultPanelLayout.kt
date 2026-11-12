@@ -372,6 +372,8 @@ fun PickResultAuxiliaryImageBlock(
     onSaveScreenshot: () -> Unit,
     onSaveScreenshotLongClick: (() -> Unit)? = null,
     onShareScreenshot: () -> Unit,
+    /** 点按分享键：有默认目标时直发；返回 false 回退到 [onShareScreenshot]（弹面板）。 */
+    onShareScreenshotToDefault: (() -> Boolean)? = null,
     /** 长按图片底栏的分享键 = 起系统拖拽；null 时不挂。 */
     onStartImageDrag: (() -> Unit)? = null,
     onImageSearch: () -> Unit,
@@ -431,6 +433,7 @@ fun PickResultAuxiliaryImageBlock(
         onSave = onSaveScreenshot,
         onSaveLongClick = onSaveScreenshotLongClick,
         onShare = onShareScreenshot,
+        onShareToDefault = onShareScreenshotToDefault,
         onStartDrag = onStartImageDrag,
         onImageSearch = onImageSearch,
         onShareEngineClick = onImageShareEngineClick,
@@ -590,6 +593,8 @@ fun PickResultPanelTextSlot(
     onTextSourceChange: (PickResultTextSource) -> Unit,
     onActiveTextChange: (String) -> Unit,
     onShareText: (String) -> Unit,
+    /** 点按分享键：有默认目标时直发；返回 false 回退到 [onShareText]（弹面板）。 */
+    onShareTextToDefault: ((String) -> Boolean)? = null,
     /** 长按文字底栏的分享键 = 起系统拖拽；null 时不挂。 */
     onStartTextDrag: ((String) -> Unit)? = null,
     onProcessText: (String, PickResultProcessTextTarget) -> Unit,
@@ -678,6 +683,7 @@ fun PickResultPanelTextSlot(
                 onSearch = { onToggleSearchGrid() },
                 onActiveTextChange = onActiveTextChange,
                 onShare = onShareText,
+                onShareToDefault = onShareTextToDefault,
                 onStartDrag = onStartTextDrag,
                 onProcessText = onProcessText,
                 onCopy = onCopy,
@@ -844,6 +850,8 @@ fun PickResultCollapsePanelColumn(
     onSaveScreenshot: () -> Unit,
     onSaveScreenshotLongClick: (() -> Unit)? = null,
     onShareScreenshot: () -> Unit,
+    /** 点按分享键：有默认目标时直发；返回 false 回退到 [onShareScreenshot]（弹面板）。 */
+    onShareScreenshotToDefault: (() -> Boolean)? = null,
     /** 长按图片底栏的分享键 = 起系统拖拽；null 时不挂。 */
     onStartImageDrag: (() -> Unit)? = null,
     onImageSearch: () -> Unit,
@@ -885,6 +893,8 @@ fun PickResultCollapsePanelColumn(
     onTextModeChange: (PickResultTextMode) -> Unit,
     onTextChange: (String) -> Unit,
     onShareText: (String) -> Unit,
+    /** 点按分享键：有默认目标时直发；返回 false 回退到 [onShareText]（弹面板）。 */
+    onShareTextToDefault: ((String) -> Boolean)? = null,
     /** 长按文字底栏的分享键 = 起系统拖拽；null 时不挂。 */
     onStartTextDrag: ((String) -> Unit)? = null,
     onProcessText: (String, PickResultProcessTextTarget) -> Unit,
@@ -1287,6 +1297,7 @@ fun PickResultCollapsePanelColumn(
             onTextSourceChange = onTextSourceChange,
             onActiveTextChange = onActiveTextChange,
             onShareText = onShareText,
+            onShareTextToDefault = onShareTextToDefault,
             onStartTextDrag = onStartTextDrag,
             onProcessText = onProcessText,
             onCopy = onCopy,
@@ -1333,6 +1344,7 @@ fun PickResultCollapsePanelColumn(
             onSaveScreenshot = onSaveScreenshot,
             onSaveScreenshotLongClick = onSaveScreenshotLongClick,
             onShareScreenshot = onShareScreenshot,
+            onShareScreenshotToDefault = onShareScreenshotToDefault,
             onStartImageDrag = onStartImageDrag,
             onImageSearch = onImageSearch,
             onImageShareEngineClick = onImageShareEngineClick,

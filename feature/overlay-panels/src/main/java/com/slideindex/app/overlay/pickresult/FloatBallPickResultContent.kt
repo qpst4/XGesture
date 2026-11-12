@@ -92,6 +92,8 @@ fun FloatBallPickResultContent(
     onTextChange: (String) -> Unit,
     onCopy: (String, keepPanelOpen: Boolean) -> Unit,
     onShareText: (String) -> Unit,
+    /** 点按分享键：有默认目标时直发；返回 false 回退到 [onShareText]（弹面板）。 */
+    onShareTextToDefault: ((String) -> Boolean)? = null,
     /** 长按文字底栏的分享键 = 把当前这段文字拖出去。 */
     onStartTextDrag: (String) -> Unit,
     onProcessText: (String, PickResultProcessTextTarget) -> Unit,
@@ -100,6 +102,8 @@ fun FloatBallPickResultContent(
     onSaveScreenshot: () -> Unit,
     onSaveScreenshotLongClick: (() -> Unit)? = null,
     onShareScreenshot: () -> Unit,
+    /** 点按分享键：有默认目标时直发；返回 false 回退到 [onShareScreenshot]（弹面板）。 */
+    onShareScreenshotToDefault: (() -> Boolean)? = null,
     /** 长按图片底栏的分享键 = 把当前这张图拖出去。 */
     onStartImageDrag: () -> Unit,
     onImageShareEngineClick: (com.slideindex.app.settings.SearchEngineConfig) -> Unit,
@@ -561,6 +565,7 @@ fun FloatBallPickResultContent(
                 onSaveScreenshot = onSaveScreenshot,
                 onSaveScreenshotLongClick = onSaveScreenshotLongClick,
                 onShareScreenshot = onShareScreenshot,
+                onShareScreenshotToDefault = onShareScreenshotToDefault,
                 onStartImageDrag = onStartImageDrag,
                 onImageSearch = onImageSearch,
                 onImageShareEngineClick = onImageShareEngineClick,
@@ -603,6 +608,7 @@ fun FloatBallPickResultContent(
                 onTextModeChange = onTextModeChange,
                 onTextChange = onTextChange,
                 onShareText = onShareText,
+                onShareTextToDefault = onShareTextToDefault,
                 onStartTextDrag = onStartTextDrag,
                 onProcessText = onProcessText,
                 onCopy = onCopy,

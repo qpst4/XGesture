@@ -1390,6 +1390,10 @@ object FloatBallPickResultPanel {
                         // 分享面板点中目标前会调这个 lambda 收起本面板，避免目标 App 被它盖住。
                         FloatBallTextPick.shareText(context, it) { dismiss() }
                     },
+                    onShareTextToDefault = { value ->
+                        // 设了默认目标：点一下直接发；没发出去（没设/已卸载）回退到弹面板。
+                        FloatBallTextPick.shareTextToDefault(context, value) { dismiss() }
+                    },
                     onStartTextDrag = { value ->
                         // 长按分享键：起系统拖拽，面板自己会藏起来（见 suspendForDrag），
                         // 「恢复 / 取消」交给流转栏，和其它拖拽源一致。
@@ -1491,6 +1495,15 @@ object FloatBallPickResultPanel {
                         val bitmap = screenshotHolder.value ?: return@FloatBallPickResultContent
                         FloatBallTextPick.shareScreenshot(context, bitmap)
                         dismiss()
+                    },
+                    onShareScreenshotToDefault = {
+                        // 设了默认目标：点一下直接发；没发出去（没设/已卸载）回退到弹面板。
+                        val bitmap = screenshotHolder.value
+                        if (bitmap == null || bitmap.isRecycled) {
+                            false
+                        } else {
+                            FloatBallTextPick.shareScreenshotToDefault(context, bitmap) { dismiss() }
+                        }
                     },
                     onImageShareEngineClick = { engine ->
                         val bitmap = screenshotHolder.value ?: return@FloatBallPickResultContent

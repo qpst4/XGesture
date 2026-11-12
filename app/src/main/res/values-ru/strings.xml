@@ -5012,6 +5012,11 @@
     <string name="share_sheet_toast_pinned">Закреплено: «%1$s»</string>
     <string name="share_sheet_toast_unpinned">Откреплено: «%1$s»</string>
     <string name="share_sheet_use_system">Системное меню отправки</string>
+    <string name="share_sheet_set_default">Сделать по умолчанию</string>
+    <string name="share_sheet_default_badge">Цель по умолчанию</string>
+    <string name="share_sheet_clear_default">Сбросить цель по умолчанию</string>
+    <string name="share_sheet_toast_default_set">По умолчанию выбрано «%1$s»</string>
+    <string name="share_sheet_toast_default_cleared">Цель по умолчанию сброшена</string>
     <string name="share_sheet_settings_title">Панель отправки</string>
     <string name="share_sheet_settings_subtitle">Встроенная сетка отправки вместо системного меню</string>
     <string name="share_sheet_hub_subtitle">Панель-сетка с закреплёнными целями</string>

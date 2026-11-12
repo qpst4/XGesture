@@ -4981,6 +4981,11 @@
     <string name="share_sheet_toast_pinned">「%1$s」をピン留めしました</string>
     <string name="share_sheet_toast_unpinned">「%1$s」のピン留めを解除しました</string>
     <string name="share_sheet_use_system">システムの共有画面</string>
+    <string name="share_sheet_set_default">デフォルトに設定</string>
+    <string name="share_sheet_default_badge">デフォルトの共有先</string>
+    <string name="share_sheet_clear_default">デフォルトの共有先を解除</string>
+    <string name="share_sheet_toast_default_set">デフォルトを「%1$s」に設定しました</string>
+    <string name="share_sheet_toast_default_cleared">デフォルトの共有先を解除しました</string>
     <string name="share_sheet_settings_title">共有パネル</string>
     <string name="share_sheet_settings_subtitle">システムの共有画面の代わりに内蔵グリッドを使う</string>
     <string name="share_sheet_hub_subtitle">ピン留め付きのグリッドパネル</string>
