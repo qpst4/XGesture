@@ -1,6 +1,10 @@
 package com.slideindex.app.overlay.screenshot
 
 import android.graphics.Bitmap
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -31,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -66,6 +72,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.slideindex.app.overlay.panels.R
+import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import top.yukonga.miuix.kmp.icon.extended.Copy
@@ -402,20 +409,39 @@ fun SmartScreenshotEditor(
             }
         }
 
-        if (state.shape == ScreenshotShape.Freeform &&
-            state.freeformPath == null &&
-            interaction == null
+        // 提示只是入口说明：贴在形状栏下方，2.2 秒自动淡出，手指一落下就消失。
+        // 容器刻意不用 Surface——它自带 pointerInput，会把起笔位置变成死区。
+        val hintEligible = state.shape == ScreenshotShape.Freeform && state.freeformPath == null
+        var freeformHintDismissed by remember { mutableStateOf(false) }
+        LaunchedEffect(hintEligible) {
+            if (hintEligible) {
+                freeformHintDismissed = false
+                delay(FREEFORM_HINT_DURATION_MS)
+                freeformHintDismissed = true
+            }
+        }
+        AnimatedVisibility(
+            visible = hintEligible && interaction == null && !freeformHintDismissed && topToolbarReady,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset {
+                    IntOffset(
+                        x = 0,
+                        y = (topToolbarOffset.y + topToolbarSize.height + toolbarGapPx).roundToInt()
+                    )
+                },
+            enter = fadeIn(tween(150)),
+            exit = fadeOut(tween(220))
         ) {
-            Surface(
+            Box(
                 modifier = Modifier
-                    .align(Alignment.Center)
-                    .zIndex(1f),
-                shape = RoundedCornerShape(20.dp),
-                color = surfaceColor.copy(alpha = 0.92f)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(surfaceColor.copy(alpha = 0.92f))
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
                 Text(
                     text = stringResource(R.string.smart_screenshot_freeform_hint),
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -802,3 +828,6 @@ private fun toolbarBounds(
 private fun Rect?.containsPoint(point: Offset): Boolean {
     return this?.contains(point) == true
 }
+
+/** 自由形状提示的停留时长：只做入口说明，不做常驻标签。 */
+private const val FREEFORM_HINT_DURATION_MS = 2_200L
