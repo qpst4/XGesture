@@ -1250,6 +1250,18 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                         },
                     )
                 }
+
+                override fun launchExternalEditor(
+                    context: android.content.Context,
+                    axis: com.slideindex.app.settings.FvRingLauncherAxis,
+                    slotIndex: Int,
+                ): Boolean = runCatching {
+                    context.startActivity(
+                        com.slideindex.app.service.RingLauncherSlotConfigActivity
+                            .createIntent(context, axis, slotIndex)
+                            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+                    )
+                }.isSuccess
             }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot = { ctx ->
             com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(ctx)

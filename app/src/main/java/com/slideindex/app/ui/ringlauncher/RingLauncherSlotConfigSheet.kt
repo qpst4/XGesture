@@ -96,6 +96,11 @@ fun RingLauncherSlotConfigSheet(
         AppShortcutLoader.CreateShortcutHost,
         (CreatedShortcut?) -> Unit,
     ) -> Unit = { _, _ -> },
+    /**
+     * 宿主是 Activity 时用：把内部「返回一步」（先退子页、再收起）交给宿主注册系统返回键。
+     * 浮层宿主走 `OverlayComposeDialogHost` 的 onBackPressed，不需要这个。
+     */
+    onBackHandlerReady: ((() -> Unit) -> Unit)? = null,
 ) {
     var visible by remember { mutableStateOf(false) }
     var subScreen by remember { mutableStateOf<QuickLauncherAddSubScreen>(QuickLauncherAddSubScreen.Main) }
@@ -145,6 +150,10 @@ fun RingLauncherSlotConfigSheet(
 
     LaunchedEffect(Unit) {
         visible = true
+    }
+
+    LaunchedEffect(onBackHandlerReady) {
+        onBackHandlerReady?.invoke(handleBack)
     }
 
     LaunchedEffect(visible) {

@@ -606,6 +606,17 @@ fun interface RingSlotConfigSheetContent {
         onOpenCustomIconEditor: () -> Unit,
         launchCreateShortcut: (Any, (Any?) -> Unit) -> Unit,
     )
+
+    /**
+     * 尝试用**独立 Activity** 打开整页槽位编辑器（`:app` 实现）。
+     *
+     * 返回 false = 不支持或启动失败，调用方回退到 [content] 的浮层 sheet。
+     */
+    fun launchExternalEditor(
+        context: android.content.Context,
+        axis: com.slideindex.app.settings.FvRingLauncherAxis,
+        slotIndex: Int,
+    ): Boolean = false
 }
 
 /** 见 [PanelRuntimeHooks.actionIconSlot]。 */

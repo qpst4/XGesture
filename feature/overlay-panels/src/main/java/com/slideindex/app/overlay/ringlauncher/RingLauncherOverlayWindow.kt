@@ -112,8 +112,24 @@ object RingLauncherOverlayWindow {
             return
         }
         val hostContext = overlayHostContext() ?: return
-        val settings = lastSettings
         val axis = currentAxis()
+        // 优先独立 Activity 的整页编辑器（与边角轮盘一致）；圆环先挂起，Activity 结束时
+        // `resumeAfterSlotIconEditor` 恢复。启动失败才退回浮层 sheet。
+        suspendForSlotIconEditor()
+        val launched = com.slideindex.app.overlay.panels.PanelRuntimeHooks.ringSlotConfigSheetContent
+            ?.launchExternalEditor(hostContext, axis, slotIndex) == true
+        if (launched) return
+        resumeAfterSlotIconEditor()
+        showSlotPickerOverlay(hostContext, axis, slotIndex)
+    }
+
+    /** 兜底：外置编辑页起不来时，仍在浮层里弹槽位 sheet。 */
+    private fun showSlotPickerOverlay(
+        hostContext: Context,
+        axis: FvRingLauncherAxis,
+        slotIndex: Int,
+    ) {
+        val settings = lastSettings
         val currentItem = settings.fvRingLauncherFor(axis).itemAt(slotIndex)
         val dialogHost = slotConfigDialogHost ?: OverlayComposeDialogHost(
             context = hostContext,
