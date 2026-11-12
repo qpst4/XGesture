@@ -5,7 +5,6 @@ import com.slideindex.app.gesture.GestureSession
 import com.slideindex.app.gesture.GestureZoneLayout
 import com.slideindex.app.gesture.CollapsedWindowBounds
 import com.slideindex.app.settings.AppSettings
-import com.slideindex.app.service.QuickLauncherAddTrampoline
 
 internal sealed class OverlayTouchLayout {
     data class TriggerCollapsed(val bounds: CollapsedWindowBounds) : OverlayTouchLayout()
@@ -134,14 +133,12 @@ internal class EdgeGestureLayoutCoordinator(
     }
 
     fun presentationShouldPassthroughTouches(): Boolean =
-        QuickLauncherAddTrampoline.isActive() ||
-            shellCoordinator.isAuxiliaryDialogShowing() ||
-            quickLauncherController.isOverlayDialogShowing()
+        shellCoordinator.isAuxiliaryDialogShowing() ||
+            quickLauncherController.isComposeOverlayDialogShowing()
 
     fun composeOverlayDialogShowing(): Boolean =
-        QuickLauncherAddTrampoline.isActive() ||
-            shellCoordinator.isAuxiliaryDialogShowing() ||
-            quickLauncherController.isOverlayDialogShowing()
+        shellCoordinator.isAuxiliaryDialogShowing() ||
+            quickLauncherController.isComposeOverlayDialogShowing()
 
     fun keepsOverlayExpanded(): Boolean =
         OverlayTrampolineGuard.blocksOverlayPresentationTouch() ||

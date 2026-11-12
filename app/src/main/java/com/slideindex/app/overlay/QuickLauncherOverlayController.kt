@@ -411,23 +411,22 @@ internal class QuickLauncherOverlayController(
      * 添加条目 Activity 打开：面板只“隐身”，会话/页索引/文件夹/钉住状态全部保留。
      *
      * 注意不能 `dismissFromBack()`：那会 `endSession()` → 页索引归零，回来就跳回第一页。
-     * 也不能只靠改触摸标志：trampoline 期间 `SideOverlayWindowManager.overlayLayoutSuspended()`
-     * 为 true，触摸同步会被跳过，看不见的全屏窗仍会盖在 Activity 上吃点击。
-     * 所以直接让整扇边缘浮层窗挂起（与圆环/边角的 `visibility=GONE` 同语义），退出时恢复。
+     * 也不能整扇边缘浮层下电：边缘触钮要保留可用（与圆环/边角一致）。
+     * 只让 presentation 窗切 passthrough（`needsPresentationDirectTouch` 里按本标志放行），
+     * 面板绘制由 [draw] 的早退负责。
      */
     fun suspendForAddFlow() {
         if (suspendedForAddFlow) return
         suspendedForAddFlow = true
         host.setPanelPresentationFocus(false)
-        host.onOverlayWindowSuspend()
+        host.notifyPresentationTouchRequirementChanged()
         host.invalidate()
     }
 
-    /** Activity 关闭：恢复窗口与绘制（会话从未结束，页索引自然还在）。 */
+    /** Activity 关闭：恢复绘制与窗口触摸（会话从未结束，页索引自然还在）。 */
     fun resumeAfterAddFlow() {
         if (!suspendedForAddFlow) return
         suspendedForAddFlow = false
-        host.onOverlayWindowResume()
         host.notifyPresentationTouchRequirementChanged()
         host.invalidate()
     }
