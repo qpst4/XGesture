@@ -129,14 +129,10 @@ internal class QuickLauncherOverlayController(
                 // 回来时页索引/文件夹/编辑态/钉住落位都还在（与圆环/边角的让位同语义）。
                 val launched = QuickLauncherAddTrampoline.launch(
                     context = host.context,
+                    panelId = activeQuickLauncherPanel().id,
                     panelSide = host.side(),
-                    configuredAppPackages = configuredAppPackages,
-                    configuredShortcutKeys = configuredShortcutKeys,
-                    configuredActionKeys = configuredActionKeys,
                     onPrepare = { suspendForAddFlow() },
                     onDismiss = { resumeAfterAddFlow() },
-                    onAdd = onAdd,
-                    onRemove = onRemove,
                 )
                 if (!launched) {
                     // OEM 拦后台启动 Activity：退回浮层 sheet（旧路径），别让「+」点了没反应。

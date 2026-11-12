@@ -1,8 +1,6 @@
 package com.slideindex.app.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -19,9 +17,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -46,7 +42,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -106,13 +101,8 @@ fun QuickLauncherAddOverlaySheet(
         AppShortcutLoader.CreateShortcutHost,
         (CreatedShortcut?) -> Unit,
     ) -> Unit,
-    /**
-     * true = 整页宿主（透明 Activity）用：去掉遮罩 / 82% 高度 / 底部圆角 / 点外部关闭，
-     * 直接铺满窗口并让出状态栏；浮层兜底仍用默认的 sheet 形态。
-     */
-    pageMode: Boolean = false,
 ) {
-    var visible by remember { mutableStateOf(pageMode) }
+    var visible by remember { mutableStateOf(false) }
     var subScreen by remember { mutableStateOf<QuickLauncherAddSubScreen>(QuickLauncherAddSubScreen.Main) }
     var embedParentConfirm by remember { mutableStateOf<QuickLauncherEmbedParentConfirm?>(null) }
     var folderName by remember { mutableStateOf("") }
@@ -122,12 +112,7 @@ fun QuickLauncherAddOverlaySheet(
     var selectedTab by remember { mutableIntStateOf(0) }
     var searchExpanded by remember { mutableStateOf(false) }
     val searchFocusRequester = remember { FocusRequester() }
-    // 整页模式不走「隐藏 → 等动画 → 回调」，直接交给宿主关闭（少一帧空白）。
-    val requestDismiss: () -> Unit = if (pageMode) {
-        { onDismissComplete() }
-    } else {
-        { visible = false }
-    }
+    val requestDismiss = remember { { visible = false } }
     val clearFolderDraft = {
         folderName = ""
         folderItems = emptyList()
@@ -194,7 +179,7 @@ fun QuickLauncherAddOverlaySheet(
 
     LaunchedEffect(visible) {
         if (!visible) {
-            if (!pageMode) delay(QUICK_LAUNCHER_SHEET_EXIT_MS.toLong())
+            delay(QUICK_LAUNCHER_SHEET_EXIT_MS.toLong())
             onDismissComplete()
         }
     }
@@ -202,104 +187,52 @@ fun QuickLauncherAddOverlaySheet(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .then(
-                if (pageMode) {
-                    Modifier
-                } else {
-                    Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = requestDismiss,
-                    )
-                },
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = requestDismiss,
             ),
-        contentAlignment = if (pageMode) Alignment.TopCenter else Alignment.BottomCenter,
+        contentAlignment = Alignment.BottomCenter,
     ) {
-        if (!pageMode) {
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn(tween(QUICK_LAUNCHER_SHEET_ENTER_MS)),
-                exit = fadeOut(tween(QUICK_LAUNCHER_SHEET_EXIT_MS)),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.45f)),
-                )
-            }
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(tween(QUICK_LAUNCHER_SHEET_ENTER_MS)),
+            exit = fadeOut(tween(QUICK_LAUNCHER_SHEET_EXIT_MS)),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.45f)),
+            )
         }
 
         AnimatedVisibility(
             visible = visible,
-            enter = if (pageMode) {
-                EnterTransition.None
-            } else {
-                slideInVertically(
-                    initialOffsetY = { fullHeight -> fullHeight / 2 },
-                    animationSpec = tween(QUICK_LAUNCHER_SHEET_ENTER_MS),
-                ) + fadeIn(tween(QUICK_LAUNCHER_SHEET_ENTER_MS))
-            },
-            exit = if (pageMode) {
-                ExitTransition.None
-            } else {
-                slideOutVertically(
-                    targetOffsetY = { fullHeight -> fullHeight / 2 },
-                    animationSpec = tween(QUICK_LAUNCHER_SHEET_EXIT_MS),
-                ) + fadeOut(tween(QUICK_LAUNCHER_SHEET_EXIT_MS))
-            },
+            enter = slideInVertically(
+                initialOffsetY = { fullHeight -> fullHeight / 2 },
+                animationSpec = tween(QUICK_LAUNCHER_SHEET_ENTER_MS),
+            ) + fadeIn(tween(QUICK_LAUNCHER_SHEET_ENTER_MS)),
+            exit = slideOutVertically(
+                targetOffsetY = { fullHeight -> fullHeight / 2 },
+                animationSpec = tween(QUICK_LAUNCHER_SHEET_EXIT_MS),
+            ) + fadeOut(tween(QUICK_LAUNCHER_SHEET_EXIT_MS)),
         ) {
             Surface(
                 modifier = Modifier
-                    .then(
-                        if (pageMode) {
-                            Modifier.fillMaxSize()
-                        } else {
-                            Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight(0.82f)
-                        },
-                    )
-                    .then(
-                        if (pageMode) {
-                            Modifier
-                        } else {
-                            Modifier.imePadding()
-                        },
-                    )
-                    .then(
-                        if (pageMode) {
-                            Modifier
-                        } else {
-                            Modifier.clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = {},
-                            )
-                        },
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.82f)
+                    .imePadding()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {},
                     ),
-                shape = if (pageMode) {
-                    RectangleShape
-                } else {
-                    RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-                },
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
                 color = MiuixTheme.colorScheme.surface,
-                tonalElevation = if (pageMode) 0.dp else 8.dp,
-                shadowElevation = if (pageMode) 0.dp else 16.dp,
+                tonalElevation = 8.dp,
+                shadowElevation = 16.dp,
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .then(
-                            if (pageMode) {
-                                Modifier
-                                    .statusBarsPadding()
-                                    .navigationBarsPadding()
-                                    .imePadding()
-                            } else {
-                                Modifier
-                            },
-                        ),
-                ) {
+                Column(modifier = Modifier.fillMaxSize()) {
                     val searchHintResId = when (selectedTab) {
                         0 -> R.string.search_actions_hint
                         else -> R.string.search_hint

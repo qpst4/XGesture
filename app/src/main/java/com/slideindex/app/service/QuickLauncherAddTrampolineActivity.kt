@@ -7,27 +7,33 @@ import android.graphics.Color as AndroidColor
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.overlay.PanelSide
-import com.slideindex.app.ui.QuickLauncherAddOverlaySheet
 import com.slideindex.app.ui.compose.LocalAppDependencies
 import com.slideindex.app.ui.miuix.theme.ModuleTheme
-import com.slideindex.app.util.AppShortcutLoader.toQuickLauncherItem
-import kotlinx.coroutines.launch
+import com.slideindex.app.ui.quicklauncher.QuickLauncherAddFlowScreen
+import com.slideindex.app.ui.viewmodel.ExtensionSettingsViewModel
 
+/**
+ * 「向快速启动器面板添加条目」的透明 Activity 壳。
+ *
+ * 页面本身与设置入口共用 `QuickLauncherAddFlowScreen`（Miuix 设置页 + 同一套子页），
+ * 这里只负责：读 panelId、提供主题、关闭时通知浮层恢复。
+ */
 @dagger.hilt.android.AndroidEntryPoint
 class QuickLauncherAddTrampolineActivity : ComponentActivity() {
 
     @javax.inject.Inject lateinit var deps: AppDependencies
+
+    private val viewModel: ExtensionSettingsViewModel by viewModels()
 
     private var dismissed = false
 
@@ -41,63 +47,23 @@ class QuickLauncherAddTrampolineActivity : ComponentActivity() {
             finish()
             return
         }
-        val panelSide = intent.getStringExtra(EXTRA_PANEL_SIDE)
-            ?.let { runCatching { PanelSide.valueOf(it) }.getOrNull() }
-            ?: PanelSide.LEFT
-        val configuredAppPackages =
-            intent.getStringArrayExtra(EXTRA_CONFIGURED_APPS)?.toSet().orEmpty()
-        val configuredShortcutKeys =
-            intent.getStringArrayExtra(EXTRA_CONFIGURED_SHORTCUT_KEYS)?.toSet().orEmpty()
-        val configuredActionKeys =
-            intent.getStringArrayExtra(EXTRA_CONFIGURED_ACTION_KEYS)?.toSet().orEmpty()
+        val panelId = intent.getStringExtra(EXTRA_PANEL_ID).orEmpty()
+        if (panelId.isBlank()) {
+            finishPicker()
+            return
+        }
 
         setContent {
-            var apps by remember {
-                mutableStateOf(deps.appRepository.getCachedApps())
-            }
             var appSettings by remember { mutableStateOf(deps.settingsRepository.readSnapshot()) }
-            var dismissRequest by remember { mutableStateOf<(() -> Unit)?>(null) }
             LaunchedEffect(Unit) {
-                val snapshot = deps.settingsRepository.readFreshSnapshot()
-                appSettings = snapshot
-                apps = com.slideindex.app.ui.picker.PickerApps.fromCached(
-                    this@QuickLauncherAddTrampolineActivity,
-                    deps.appRepository,
-                    snapshot.freezerAppPackages,
-                )
-                launch {
-                    deps.settingsRepository.settings.collect { settings ->
-                        appSettings = settings
-                    }
-                }
-            }
-            BackHandler(enabled = dismissRequest != null) {
-                dismissRequest?.invoke()
+                deps.settingsRepository.settings.collect { appSettings = it }
             }
             CompositionLocalProvider(LocalAppDependencies provides deps) {
                 ModuleTheme(settings = appSettings) {
-                    QuickLauncherAddOverlaySheet(
-                        panelSide = panelSide,
-                        apps = apps,
-                        configuredAppPackages = configuredAppPackages,
-                        configuredShortcutKeys = configuredShortcutKeys,
-                        configuredActionKeys = configuredActionKeys,
-                        activityShortcuts = appSettings.activityShortcuts,
-                        shellCommands = appSettings.shellCommands,
-                        onDismiss = {},
-                        onDismissComplete = { finishPicker() },
-                        registerBackHandler = { dismissRequest = it },
-                        onAdd = { QuickLauncherAddTrampoline.onItemAdd(it) },
-                        onRemove = { QuickLauncherAddTrampoline.onItemRemove(it) },
-                        launchCreateShortcut = { host, onResult ->
-                            CreateShortcutTrampoline.launch(
-                                context = this@QuickLauncherAddTrampolineActivity,
-                                host = host,
-                                onPrepare = { finishPicker() },
-                                onResult = onResult
-                            )
-                        },
-                        pageMode = true,
+                    QuickLauncherAddFlowScreen(
+                        panelId = panelId,
+                        viewModel = viewModel,
+                        onExit = { finishPicker() },
                     )
                 }
             }
@@ -126,25 +92,19 @@ class QuickLauncherAddTrampolineActivity : ComponentActivity() {
     }
 
     companion object {
+        private const val EXTRA_PANEL_ID = "panel_id"
         private const val EXTRA_PANEL_SIDE = "panel_side"
-        private const val EXTRA_CONFIGURED_APPS = "configured_apps"
-        private const val EXTRA_CONFIGURED_SHORTCUT_KEYS = "configured_shortcut_keys"
-        private const val EXTRA_CONFIGURED_ACTION_KEYS = "configured_action_keys"
         private const val STATE_DISMISSED = "dismissed"
 
         fun createIntent(
             context: Context,
+            panelId: String,
             panelSide: PanelSide,
-            configuredAppPackages: Set<String>,
-            configuredShortcutKeys: Set<String>,
-            configuredActionKeys: Set<String>
         ): Intent =
             Intent(context, QuickLauncherAddTrampolineActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                putExtra(EXTRA_PANEL_ID, panelId)
                 putExtra(EXTRA_PANEL_SIDE, panelSide.name)
-                putExtra(EXTRA_CONFIGURED_APPS, configuredAppPackages.toTypedArray())
-                putExtra(EXTRA_CONFIGURED_SHORTCUT_KEYS, configuredShortcutKeys.toTypedArray())
-                putExtra(EXTRA_CONFIGURED_ACTION_KEYS, configuredActionKeys.toTypedArray())
             }
     }
 }
