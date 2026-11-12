@@ -115,7 +115,7 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
                     }
                     PickerGridCell(
                         label = cellLabel,
-                        selected = if (isNone) noneSelected else (!singleSelect && added),
+                        selected = if (isNone) noneSelected else added,
                         onClick = {
                             if (isNone) {
                                 onSelectNone()
@@ -177,7 +177,7 @@ fun LazyListScope.quickLauncherAddPickerAppItems(
 ) {
     appPickerGridItems(
         apps = filtered,
-        selectedKeys = if (singleSelect) emptySet() else configuredAppPackages,
+        selectedKeys = configuredAppPackages,
         onAppClick = { app ->
             val added = com.slideindex.app.launcher.AppTarget.encode(app.packageName, app.cloneUserId) in
                 configuredAppPackages

@@ -122,6 +122,30 @@ fun RingLauncherSlotConfigSheet(
     val searchFocusRequester = remember { FocusRequester() }
     val slotBound = currentItem != null && currentItem.payload.isNotBlank()
     val slotEmpty = !slotBound
+    // 当前绑定项在三个 tab 里的 key：用于打开时定位 + 选中高亮（与边角轮盘行为一致）。
+    val focusActionKey = currentItem
+        ?.takeIf { it.type == QuickLauncherItemType.ACTION }
+        ?.let { QuickLauncherItemCodec.parseActionPayload(it.payload) }
+        ?.let(QuickLauncherItemCodec::actionKey)
+    val focusAppKey = currentItem
+        ?.takeIf { it.type == QuickLauncherItemType.APP }
+        ?.payload
+        ?.takeIf { it.isNotBlank() }
+    val focusShortcutKey = currentItem
+        ?.takeIf { it.type == QuickLauncherItemType.SHORTCUT }
+        ?.let { QuickLauncherItemCodec.shortcutItemKey(it) }
+    val focusItemKey = focusActionKey ?: focusAppKey ?: focusShortcutKey
+    var focusTabApplied by remember { mutableStateOf(false) }
+    LaunchedEffect(currentItem) {
+        if (!focusTabApplied && currentItem != null) {
+            selectedTab = when (currentItem.type) {
+                QuickLauncherItemType.APP -> 1
+                QuickLauncherItemType.SHORTCUT -> 2
+                else -> 0
+            }
+            focusTabApplied = true
+        }
+    }
     val customIconTitle = stringResource(R.string.animation_style_custom_icon)
     val quickLauncherActionLabel = stringResource(R.string.gesture_action_quick_launcher)
     val panels = remember(quickLauncherPanels) { QuickLauncherPanelDefaults.effectivePanels(quickLauncherPanels) }
@@ -313,9 +337,9 @@ fun RingLauncherSlotConfigSheet(
                         nestedScrollConnection = null,
                         searchQuery = searchQuery,
                         apps = apps,
-                        addedAppPackages = emptySet(),
-                        addedShortcutKeys = emptySet(),
-                        addedActionKeys = emptySet(),
+                        addedAppPackages = focusAppKey?.let { setOf(it) }.orEmpty(),
+                        addedShortcutKeys = focusShortcutKey?.let { setOf(it) }.orEmpty(),
+                        addedActionKeys = focusActionKey?.let { setOf(it) }.orEmpty(),
                         activityShortcuts = activityShortcuts,
                         shellCommands = shellCommands,
                         onToggle = { item, _ ->
@@ -332,6 +356,7 @@ fun RingLauncherSlotConfigSheet(
                         onSubScreenChange = { subScreen = it },
                         selectedTab = selectedTab,
                         singleSelect = true,
+                        focusItemKey = focusItemKey,
                         pinNoneAtTop = true,
                         slotEmpty = slotEmpty,
                         onClearSlot = {

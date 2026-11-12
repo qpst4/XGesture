@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Shortcut
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,6 +44,7 @@ import com.slideindex.app.data.AppInfo
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.gesture.KeyEventPresets
+import com.slideindex.app.launcher.AppTarget
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.launcher.QuickLauncherItemType
@@ -69,6 +71,7 @@ import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
 import com.slideindex.app.ui.picker.pickerHorizontalSlideTransitionByDepth
 import com.slideindex.app.ui.quicklauncher.quickLauncherAddPickerActionItems
 import com.slideindex.app.ui.quicklauncher.rememberQuickLauncherFilteredActions
+import com.slideindex.app.ui.picker.APP_PICKER_GRID_COLUMNS
 import com.slideindex.app.ui.picker.activityShortcutPickerToggleSection
 import com.slideindex.app.ui.picker.shortcutFolderCardsSection
 import com.slideindex.app.ui.picker.filterShortcutCatalog
@@ -154,6 +157,8 @@ internal fun QuickLauncherAddOverlaySheetBody(
     onSubScreenChange: (QuickLauncherAddSubScreen) -> Unit,
     selectedTab: Int,
     singleSelect: Boolean = false,
+    /** 打开时定位到的条目 key（动作/应用/快捷方式各自编码）；单选槽位传当前绑定值。 */
+    focusItemKey: String? = null,
     pinNoneAtTop: Boolean = false,
     slotEmpty: Boolean = false,
     onClearSlot: () -> Unit = {},
@@ -452,6 +457,7 @@ internal fun QuickLauncherAddOverlaySheetBody(
                         pinNoneAtTop = pinNoneAtTop,
                         noneSelected = slotEmpty,
                         onSelectNone = onClearSlot,
+                        focusKey = focusItemKey,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -470,6 +476,7 @@ internal fun QuickLauncherAddOverlaySheetBody(
                             onToggle(QuickLauncherItem.app(app.packageName, app.label, app.cloneUserId), added)
                         },
                         singleSelect = singleSelect,
+                        focusKey = focusItemKey,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -597,6 +604,28 @@ fun QuickLauncherActionRow(
     )
 }
 
+private const val ACTION_GRID_COLUMNS = 4
+
+/**
+ * 动作 tab 里某个动作对应第几个 LazyColumn item（含分区标题）。
+ * 用于打开时定位到当前绑定动作；找不到返回 -1。
+ */
+private fun actionGridItemIndex(actions: List<GestureAction>, key: String): Int {
+    val sections = com.slideindex.app.ui.picker.GestureActionCatalog.groupIntoSections(actions)
+    var itemIndex = 0
+    sections.forEach { section ->
+        itemIndex += 1 // 分区标题
+        val rows = section.actions.chunked(ACTION_GRID_COLUMNS)
+        rows.forEachIndexed { rowIndex, row ->
+            if (row.any { QuickLauncherItemCodec.actionKey(it) == key }) {
+                return itemIndex + rowIndex
+            }
+        }
+        itemIndex += rows.size
+    }
+    return -1
+}
+
 @Composable
 private fun QuickLauncherAddActionsTab(
     searchQuery: String,
@@ -612,6 +641,7 @@ private fun QuickLauncherAddActionsTab(
     pinNoneAtTop: Boolean = false,
     noneSelected: Boolean = false,
     onSelectNone: () -> Unit = {},
+    focusKey: String? = null,
 ) {
     val filtered = rememberQuickLauncherFilteredActions(searchQuery)
     // 「无」与边角轮盘一致：作为普通动作进目录，落在「导航与系统」第一格；
@@ -628,7 +658,16 @@ private fun QuickLauncherAddActionsTab(
             filtered
         }
     }
+    val listState = rememberLazyListState()
+    // 打开时定位到当前绑定的动作（与边角轮盘一致）。
+    LaunchedEffect(actions, focusKey) {
+        if (focusKey != null) {
+            val index = actionGridItemIndex(actions, focusKey)
+            if (index >= 0) listState.scrollToItem(index)
+        }
+    }
     LazyColumn(
+        state = listState,
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(bottom = 8.dp),
         verticalArrangement = Arrangement.spacedBy(pickerListSegmentedGap()),
@@ -657,6 +696,7 @@ private fun QuickLauncherAddAppsTab(
     onToggle: (AppInfo, Boolean) -> Unit,
     modifier: Modifier,
     singleSelect: Boolean = false,
+    focusKey: String? = null,
 ) {
     val query = searchQuery.trim().lowercase()
     val filtered = remember(apps, query) {
@@ -667,7 +707,17 @@ private fun QuickLauncherAddAppsTab(
                 app.pinyinKey.contains(query)
         }.sortedBy { it.pinyinKey }
     }
+    val listState = rememberLazyListState()
+    LaunchedEffect(filtered, focusKey) {
+        if (focusKey != null) {
+            val index = filtered.indexOfFirst {
+                AppTarget.encode(it.packageName, it.cloneUserId) == focusKey
+            }
+            if (index >= 0) listState.scrollToItem(index / APP_PICKER_GRID_COLUMNS)
+        }
+    }
     LazyColumn(
+        state = listState,
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(bottom = 8.dp),
         verticalArrangement = Arrangement.spacedBy(pickerListSegmentedGap()),
