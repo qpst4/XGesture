@@ -361,9 +361,6 @@ fun RingLauncherSlotConfigSheet(
         MiuixContentScaffold(
             title = title,
             onBack = handleBack,
-            pageHint = statusText.takeIf {
-                !panelPickVisible && subScreen == QuickLauncherAddSubScreen.Main
-            },
             actions = headerActions,
             bottomContent = headerBottom,
         ) {
