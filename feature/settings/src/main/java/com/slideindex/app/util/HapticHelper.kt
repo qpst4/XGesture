@@ -1,6 +1,10 @@
 package com.slideindex.app.util
 
 import android.content.Context
+import android.media.AudioAttributes
+import android.os.Build
+import android.os.SystemClock
+import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -12,6 +16,11 @@ import com.slideindex.app.settings.resolvedHapticStrength
 
 object HapticHelper {
     private const val FLAGS = HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING
+
+    /** 两次震动的最小间隔：马达来不及停，更密的两声会叠成一片“糊”感。 */
+    private const val MIN_PULSE_GAP_MS = 60L
+
+    private var lastPulseAtMs = 0L
 
     /**
      * 一次手势里可能发声的震动事件。
@@ -112,14 +121,7 @@ object HapticHelper {
     }
 
     fun pickPanelSaveLongClick(view: View, settings: AppSettings) {
-        val strength = settings.resolvedHapticStrength()
-        val constant = feedbackConstant(PulseKind.CONFIRM, strength)
-        val success = if (view.isAttachedToWindow) {
-            view.performHapticFeedback(constant, FLAGS)
-        } else false
-        if (!success) {
-            vibrateFallback(view.context, constant)
-        }
+        emit(view, feedbackConstant(PulseKind.CONFIRM, settings.resolvedHapticStrength()))
     }
 
     private enum class PulseKind {
@@ -132,7 +134,19 @@ object HapticHelper {
 
     private fun pulse(view: View, settings: AppSettings, kind: PulseKind) {
         if (!settings.hapticEnabled) return
-        val constant = feedbackConstant(kind, settings.resolvedHapticStrength())
+        emit(view, feedbackConstant(kind, settings.resolvedHapticStrength()))
+    }
+
+    /**
+     * 真正发声：系统语义常量优先；拿不到就用预定义波形兜底。
+     *
+     * [MIN_PULSE_GAP_MS] 内只发一次——马达来不及停，两声叠在一起听起来就是“糊”的
+     * （快速长滑时“开始 + 过长距”两声尤其明显）。
+     */
+    private fun emit(view: View, constant: Int) {
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastPulseAtMs < MIN_PULSE_GAP_MS) return
+        lastPulseAtMs = now
         val success = if (view.isAttachedToWindow) {
             view.performHapticFeedback(constant, FLAGS)
         } else false
@@ -144,14 +158,25 @@ object HapticHelper {
     private fun vibrateFallback(context: Context, feedbackConstant: Int) {
         val vibrator = vibrator(context) ?: return
         if (!vibrator.hasVibrator()) return
-        val durationMs = when (feedbackConstant) {
-            HapticFeedbackConstants.GESTURE_START,
-            HapticFeedbackConstants.CONFIRM,
-            -> 24L
-            HapticFeedbackConstants.CONTEXT_CLICK -> 16L
-            else -> 10L
+        // 预定义波形比自拼 createOneShot 更接近系统手感（小米/OPPO 上差异尤其明显）。
+        val effect = VibrationEffect.createPredefined(effectFor(feedbackConstant))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // 标成“触摸反馈”通道，别让系统按通知/铃声震动去处理。
+            vibrator.vibrate(
+                effect,
+                VibrationAttributes.createForUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION),
+            )
+        } else {
+            vibrator.vibrate(effect)
         }
-        vibrator.vibrate(VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE))
+    }
+
+    private fun effectFor(feedbackConstant: Int): Int = when (feedbackConstant) {
+        HapticFeedbackConstants.GESTURE_START,
+        HapticFeedbackConstants.CONFIRM,
+        HapticFeedbackConstants.CONTEXT_CLICK,
+        -> VibrationEffect.EFFECT_CLICK
+        else -> VibrationEffect.EFFECT_TICK
     }
 
     private fun vibrator(context: Context): Vibrator? {
