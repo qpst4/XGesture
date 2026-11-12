@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.gesture.KeyEventPresets
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemCodec
@@ -613,13 +614,27 @@ private fun QuickLauncherAddActionsTab(
     onSelectNone: () -> Unit = {},
 ) {
     val filtered = rememberQuickLauncherFilteredActions(searchQuery)
+    // 「无」与边角轮盘一致：作为普通动作进目录，落在「导航与系统」第一格；
+    // 不再单独在顶部插一条卡片行（那会占一整行、还是白卡片）。
+    val noneLabel = stringResource(R.string.gesture_action_none)
+    val actions = remember(filtered, pinNoneAtTop, searchQuery, noneLabel) {
+        if (
+            pinNoneAtTop &&
+            (searchQuery.isBlank() || noneLabel.contains(searchQuery, ignoreCase = true)) &&
+            filtered.none { it.type == GestureActionType.NONE }
+        ) {
+            listOf(GestureAction.None) + filtered
+        } else {
+            filtered
+        }
+    }
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(bottom = 8.dp),
         verticalArrangement = Arrangement.spacedBy(pickerListSegmentedGap()),
     ) {
         quickLauncherAddPickerActionItems(
-            filtered = filtered,
+            filtered = actions,
             configuredActionKeys = configuredActionKeys,
             onToggleItem = onToggleItem,
             onOpenExecuteShellCommand = onOpenExecuteShellCommand,
@@ -627,7 +642,6 @@ private fun QuickLauncherAddActionsTab(
             onOpenSimulateKeyEvent = onOpenSimulateKeyEvent,
             onRequestRunMacro = onRequestRunMacro,
             singleSelect = singleSelect,
-            pinNoneAtTop = pinNoneAtTop,
             noneSelected = noneSelected,
             onSelectNone = onSelectNone,
             searchQuery = searchQuery,

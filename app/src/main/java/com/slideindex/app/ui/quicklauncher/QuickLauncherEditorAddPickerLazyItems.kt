@@ -69,45 +69,18 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
      */
     onRequestRunMacro: ((GestureAction) -> Unit) -> Unit = {},
     singleSelect: Boolean = false,
-    pinNoneAtTop: Boolean = false,
     noneSelected: Boolean = false,
     onSelectNone: () -> Unit = {},
     searchQuery: String = "",
 ) {
-    if (pinNoneAtTop) {
-        item(key = "ql-action-none") {
-            val noneLabel = stringResource(R.string.gesture_action_none)
-            val showNone = searchQuery.isBlank() || noneLabel.contains(searchQuery, ignoreCase = true)
-            if (showNone) {
-                com.slideindex.app.ui.Md3PickerListRow(
-                    segmentIndex = 0,
-                    segmentCount = 1,
-                    title = noneLabel,
-                    subtitle = null,
-                    selected = noneSelected,
-                    onClick = onSelectNone,
-                    leadingContent = {
-                        com.slideindex.app.ui.Md3PickerIconLeading(
-                            icon = gestureActionIcon(GestureAction.None, outlined = true),
-                            selected = noneSelected,
-                        )
-                    },
-                    trailingMode = com.slideindex.app.ui.PickerTrailingMode.Radio,
-                )
-            }
-        }
-    }
-
     if (filtered.isEmpty()) {
-        if (!pinNoneAtTop || !searchQuery.isBlank()) {
-            item(key = "actions_empty") {
-                Text(
-                    text = stringResource(R.string.search_no_actions),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 24.dp),
-                )
-            }
+        item(key = "actions_empty") {
+            Text(
+                text = stringResource(R.string.search_no_actions),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 28.dp, vertical = 24.dp),
+            )
         }
         return
     }
@@ -128,18 +101,26 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
             ) {
                 rowActions.forEach { action ->
                     val context = LocalContext.current
+                    val isNone = action.type == GestureActionType.NONE
                     val added = QuickLauncherItemCodec.actionKey(action) in configuredActionKeys
-                    val cellLabel = if (action.type == GestureActionType.RUN_MACRO) {
-                        stringResource(R.string.macro_action_run_macro)
-                    } else {
-                        // 不能在这里用可组合版 gestureActionLabel()：这块添加区被浮层面板复用
-                        //（圆环槽位编辑），浮层合成里没有 LocalAppDependencies，调用会直接抛异常。
-                        gestureActionLabelText(context, action)
+                    val cellLabel = when {
+                        isNone -> stringResource(R.string.gesture_action_none)
+                        action.type == GestureActionType.RUN_MACRO ->
+                            stringResource(R.string.macro_action_run_macro)
+                        else -> {
+                            // 不能在这里用可组合版 gestureActionLabel()：这块添加区被浮层面板复用
+                            //（圆环槽位编辑），浮层合成里没有 LocalAppDependencies，调用会直接抛异常。
+                            gestureActionLabelText(context, action)
+                        }
                     }
                     PickerGridCell(
                         label = cellLabel,
-                        selected = !singleSelect && added,
+                        selected = if (isNone) noneSelected else (!singleSelect && added),
                         onClick = {
+                            if (isNone) {
+                                onSelectNone()
+                                return@PickerGridCell
+                            }
                             when (action.type) {
                                 GestureActionType.OPEN_LINK -> onOpenOpenLink()
                                 GestureActionType.EXECUTE_SHELL_COMMAND -> {
