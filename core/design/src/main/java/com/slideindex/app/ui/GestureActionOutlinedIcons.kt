@@ -83,7 +83,7 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.REGIONAL_SCREENSHOT_PICK -> ThinActionIcons.ScreenshotRegion
     GestureActionType.SEARCH_PANEL -> ThinActionIcons.Search
     GestureActionType.FILE_BROWSER -> MaterialSymbolThinIcons.Folder
-    GestureActionType.VOLUME_PANEL -> ThinActionIcons.VolumeUp
+    GestureActionType.VOLUME_PANEL -> MaterialSymbolThinIcons.Tune
     GestureActionType.SCREEN_TRANSLATE -> ThinActionIcons.TextFields
     GestureActionType.SCREEN_SEARCH -> ThinActionIcons.Search
     GestureActionType.REMIND,
@@ -108,7 +108,7 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.TOGGLE_BLUETOOTH -> MaterialSymbolThinIcons.Bluetooth
     GestureActionType.SWITCH_INPUT_METHOD -> ThinActionIcons.Keyboard
     GestureActionType.OPEN_INTERNET_PANEL -> ThinActionIcons.Wifi
-    GestureActionType.OPEN_VOLUME_PANEL -> ThinActionIcons.VolumeUp
+    GestureActionType.OPEN_VOLUME_PANEL -> MaterialSymbolThinIcons.Tune
     GestureActionType.OPEN_VOLUME_SLIDER -> MaterialSymbolThinIcons.Tune
     GestureActionType.OPEN_LINK -> MaterialSymbolThinIcons.Link
     GestureActionType.CURRENT_APP_INFO -> ThinActionIcons.Assistant
@@ -198,7 +198,7 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.REGIONAL_SCREENSHOT_PICK -> ThinActionIcons.ScreenshotRegion
     GestureActionType.SEARCH_PANEL -> ThinActionIcons.Search
     GestureActionType.FILE_BROWSER -> MaterialSymbolThinIcons.Folder
-    GestureActionType.VOLUME_PANEL -> ThinActionIcons.VolumeUp
+    GestureActionType.VOLUME_PANEL -> MaterialSymbolThinIcons.Tune
     GestureActionType.SCREEN_TRANSLATE -> ThinActionIcons.TextFields
     GestureActionType.SCREEN_SEARCH -> ThinActionIcons.Search
     GestureActionType.REMIND,
@@ -223,7 +223,7 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.TOGGLE_BLUETOOTH -> MaterialSymbolThinIcons.Bluetooth
     GestureActionType.SWITCH_INPUT_METHOD -> ThinActionIcons.Keyboard
     GestureActionType.OPEN_INTERNET_PANEL -> ThinActionIcons.Wifi
-    GestureActionType.OPEN_VOLUME_PANEL -> ThinActionIcons.VolumeUp
+    GestureActionType.OPEN_VOLUME_PANEL -> MaterialSymbolThinIcons.Tune
     GestureActionType.OPEN_VOLUME_SLIDER -> MaterialSymbolThinIcons.Tune
     GestureActionType.OPEN_LINK -> MaterialSymbolThinIcons.Link
     GestureActionType.CURRENT_APP_INFO -> ThinActionIcons.Assistant
