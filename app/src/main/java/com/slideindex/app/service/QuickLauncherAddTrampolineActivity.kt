@@ -33,8 +33,8 @@ class QuickLauncherAddTrampolineActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT)
+            statusBarStyle = SystemBarStyle.auto(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.auto(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT)
         )
         super.onCreate(savedInstanceState)
         if (savedInstanceState?.getBoolean(STATE_DISMISSED, false) == true) {
@@ -96,7 +96,8 @@ class QuickLauncherAddTrampolineActivity : ComponentActivity() {
                                 onPrepare = { finishPicker() },
                                 onResult = onResult
                             )
-                        }
+                        },
+                        pageMode = true,
                     )
                 }
             }

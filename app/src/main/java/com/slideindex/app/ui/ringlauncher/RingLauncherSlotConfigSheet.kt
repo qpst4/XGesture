@@ -1,6 +1,8 @@
 package com.slideindex.app.ui.ringlauncher
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -17,7 +19,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -101,8 +107,13 @@ fun RingLauncherSlotConfigSheet(
      * 浮层宿主走 `OverlayComposeDialogHost` 的 onBackPressed，不需要这个。
      */
     onBackHandlerReady: ((() -> Unit) -> Unit)? = null,
+    /**
+     * true = 整页宿主（透明 Activity）用：去掉遮罩 / 82% 高度 / 底部圆角 / 点外部关闭，
+     * 铺满窗口并让出状态栏；浮层兜底仍用默认的 sheet 形态。
+     */
+    pageMode: Boolean = false,
 ) {
-    var visible by remember { mutableStateOf(false) }
+    var visible by remember { mutableStateOf(pageMode) }
     var subScreen by remember { mutableStateOf<QuickLauncherAddSubScreen>(QuickLauncherAddSubScreen.Main) }
     var panelPickVisible by remember { mutableStateOf(false) }
     // 「手势宏」要先挑一条宏再落库（本面板是悬浮窗，选择层必须画在界面里，不能用平台 Dialog）。
@@ -120,7 +131,12 @@ fun RingLauncherSlotConfigSheet(
     val boundQuickLauncherPanelId = currentItem?.quickLauncherPanelId()
     val selectedPanelId = boundQuickLauncherPanelId?.let { QuickLauncherPanelDefaults.resolvePanelId(panels, it) }
 
-    val requestDismiss = remember { { visible = false } }
+    // 整页模式不走「隐藏 → 等动画 → 回调」，直接交给宿主关闭（少一帧空白）。
+    val requestDismiss: () -> Unit = if (pageMode) {
+        { onDismiss() }
+    } else {
+        { visible = false }
+    }
 
     val handleBack: () -> Unit = {
         when {
@@ -158,7 +174,7 @@ fun RingLauncherSlotConfigSheet(
 
     LaunchedEffect(visible) {
         if (!visible) {
-            delay(QUICK_LAUNCHER_SHEET_EXIT_MS.toLong())
+            if (!pageMode) delay(QUICK_LAUNCHER_SHEET_EXIT_MS.toLong())
             onDismiss()
         }
     }
@@ -171,51 +187,104 @@ fun RingLauncherSlotConfigSheet(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = requestDismiss,
+            .then(
+                if (pageMode) {
+                    Modifier
+                } else {
+                    Modifier.clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = requestDismiss,
+                    )
+                },
             ),
-        contentAlignment = Alignment.BottomCenter,
+        contentAlignment = if (pageMode) Alignment.TopCenter else Alignment.BottomCenter,
     ) {
-        AnimatedVisibility(
-            visible = visible,
-            enter = fadeIn(tween(QUICK_LAUNCHER_SHEET_ENTER_MS)),
-            exit = fadeOut(tween(QUICK_LAUNCHER_SHEET_EXIT_MS)),
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.45f)),
-            )
+        if (!pageMode) {
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn(tween(QUICK_LAUNCHER_SHEET_ENTER_MS)),
+                exit = fadeOut(tween(QUICK_LAUNCHER_SHEET_EXIT_MS)),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.45f)),
+                )
+            }
         }
 
         AnimatedVisibility(
             visible = visible,
-            enter = slideInVertically(
-                initialOffsetY = { fullHeight -> fullHeight / 2 },
-                animationSpec = tween(QUICK_LAUNCHER_SHEET_ENTER_MS),
-            ) + fadeIn(tween(QUICK_LAUNCHER_SHEET_ENTER_MS)),
-            exit = slideOutVertically(
-                targetOffsetY = { fullHeight -> fullHeight / 2 },
-                animationSpec = tween(QUICK_LAUNCHER_SHEET_EXIT_MS),
-            ) + fadeOut(tween(QUICK_LAUNCHER_SHEET_EXIT_MS)),
+            enter = if (pageMode) {
+                EnterTransition.None
+            } else {
+                slideInVertically(
+                    initialOffsetY = { fullHeight -> fullHeight / 2 },
+                    animationSpec = tween(QUICK_LAUNCHER_SHEET_ENTER_MS),
+                ) + fadeIn(tween(QUICK_LAUNCHER_SHEET_ENTER_MS))
+            },
+            exit = if (pageMode) {
+                ExitTransition.None
+            } else {
+                slideOutVertically(
+                    targetOffsetY = { fullHeight -> fullHeight / 2 },
+                    animationSpec = tween(QUICK_LAUNCHER_SHEET_EXIT_MS),
+                ) + fadeOut(tween(QUICK_LAUNCHER_SHEET_EXIT_MS))
+            },
         ) {
             Surface(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.82f)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {},
+                    .then(
+                        if (pageMode) {
+                            Modifier.fillMaxSize()
+                        } else {
+                            Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight(0.82f)
+                        },
+                    )
+                    .then(
+                        if (pageMode) {
+                            Modifier
+                        } else {
+                            Modifier.imePadding()
+                        },
+                    )
+                    .then(
+                        if (pageMode) {
+                            Modifier
+                        } else {
+                            Modifier.clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = {},
+                            )
+                        },
                     ),
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                shape = if (pageMode) {
+                    RectangleShape
+                } else {
+                    RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                },
                 color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp,
-                shadowElevation = 16.dp,
+                tonalElevation = if (pageMode) 0.dp else 8.dp,
+                shadowElevation = if (pageMode) 0.dp else 16.dp,
             ) {
-                Column(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(
+                            if (pageMode) {
+                                Modifier
+                                    .statusBarsPadding()
+                                    .navigationBarsPadding()
+                                    .imePadding()
+                            } else {
+                                Modifier
+                            },
+                        ),
+                ) {
                     val isFolderSubScreen =
                         subScreen is QuickLauncherAddSubScreen.MyShortcuts ||
                             subScreen is QuickLauncherAddSubScreen.PresetShortcuts
