@@ -2033,6 +2033,9 @@
     <string name="pick_result_action_view_image">查看图片</string>
     <string name="pick_result_action_image_search">以图搜图</string>
     <string name="pick_result_action_share_image">分享图片</string>
+    <string name="pick_result_tts_speak">朗读文字</string>
+    <string name="pick_result_tts_stop">停止朗读</string>
+    <string name="pick_result_tts_unavailable">系统缺少该语言的语音包</string>
     <string name="float_ball_pick_smart_open_url">打开网页</string>
     <string name="float_ball_pick_smart_open_ecommerce">打开电商</string>
     <string name="float_ball_pick_smart_call_phone">呼叫</string>

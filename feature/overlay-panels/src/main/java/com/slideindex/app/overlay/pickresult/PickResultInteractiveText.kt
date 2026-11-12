@@ -36,8 +36,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.SelectAll
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material.icons.outlined.UnfoldLess
 import androidx.compose.material.icons.outlined.ViewModule
+import androidx.compose.material.icons.outlined.VolumeUp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -170,6 +172,7 @@ fun PickResultInteractiveTextSection(
     onShareScreenshot: (() -> Unit)? = null,
     onTextScrollableChange: ((Boolean) -> Unit)? = null,
 ) {
+    val ttsContext = LocalContext.current
     // ?? remember(text)???? onTextChange ????text?key ??????????0??
     var textFieldValue by remember { mutableStateOf(TextFieldValue(text)) }
     var selectedWordIndices by remember { mutableStateOf(setOf<Int>()) }
@@ -589,6 +592,8 @@ fun PickResultInteractiveTextSection(
                         showEditingToolbar = showEditingToolbar,
                         sectionTitle = sectionTitle,
                         onSourceChange = onTextSourceChange,
+                        speaking = PickResultTts.isSpeaking,
+                        onSpeakToggle = { PickResultTts.toggle(ttsContext, text) },
                         onEditToggle = {
                             if (textMode == PickResultTextMode.EDIT) {
                                 exitEditMode()
@@ -662,6 +667,8 @@ fun PickResultInteractiveTextSection(
                         showEditingToolbar = showEditingToolbar,
                         sectionTitle = sectionTitle,
                         onSourceChange = onTextSourceChange,
+                        speaking = PickResultTts.isSpeaking,
+                        onSpeakToggle = { PickResultTts.toggle(ttsContext, text) },
                         onEditToggle = {
                             if (textMode == PickResultTextMode.EDIT) {
                                 exitEditMode()
@@ -881,6 +888,9 @@ fun PickResultTextToolbar(
     onTrimSpaces: () -> Unit,
     onRemoveAllSpaces: () -> Unit,
     onSelectAll: () -> Unit,
+    /** 是否正在朗读：图标在「朗读 / 停止」之间切换（issue #50）。 */
+    speaking: Boolean = false,
+    onSpeakToggle: () -> Unit = {},
 ) {
     val selectAllText = if (allSelected) {
         stringResource(R.string.float_ball_action_deselect_all)
@@ -970,6 +980,16 @@ fun PickResultTextToolbar(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
+                // 0. 朗读文字 / 停止朗读（issue #50）
+                PickResultTitleIcon(
+                    icon = if (speaking) Icons.Outlined.Stop else Icons.Outlined.VolumeUp,
+                    selected = speaking,
+                    contentDescription = stringResource(
+                        if (speaking) R.string.pick_result_tts_stop else R.string.pick_result_tts_speak
+                    ),
+                    onClick = onSpeakToggle,
+                )
+
                 // 1. Edit mode toggle icon (✏️)
                 PickResultTitleIcon(
                     icon = Icons.Outlined.Edit,

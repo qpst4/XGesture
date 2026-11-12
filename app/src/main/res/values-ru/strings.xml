@@ -1075,6 +1075,9 @@
     <string name="pick_result_action_view_image">Просмотреть изображение</string>
     <string name="pick_result_action_image_search">Поиск по изображению</string>
     <string name="pick_result_action_share_image">Поделиться изображением</string>
+    <string name="pick_result_tts_speak">Прочитать вслух</string>
+    <string name="pick_result_tts_stop">Остановить чтение</string>
+    <string name="pick_result_tts_unavailable">Нет речевого движка для этого языка</string>
     <string name="float_ball_pick_smart_open_url">Открыть ссылку</string>
     <string name="float_ball_pick_smart_open_ecommerce">Открыть магазин</string>
     <string name="float_ball_pick_smart_call_phone">Позвонить</string>

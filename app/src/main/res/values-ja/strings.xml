@@ -1912,6 +1912,9 @@
     <string name="pick_result_action_view_image">画像を表示</string>
     <string name="pick_result_action_image_search">画像で検索</string>
     <string name="pick_result_action_share_image">画像を共有</string>
+    <string name="pick_result_tts_speak">音声で読み上げ</string>
+    <string name="pick_result_tts_stop">読み上げを停止</string>
+    <string name="pick_result_tts_unavailable">この言語の音声エンジンがありません</string>
     <string name="float_ball_pick_smart_open_url">リンクを開く</string>
     <string name="float_ball_pick_smart_open_ecommerce">アプリを開く</string>
     <string name="float_ball_pick_smart_call_phone">発信</string>

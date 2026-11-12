@@ -1099,6 +1099,9 @@
     <string name="pick_result_action_view_image">View image</string>
     <string name="pick_result_action_image_search">Search by image</string>
     <string name="pick_result_action_share_image">Share image</string>
+    <string name="pick_result_tts_speak">Read aloud</string>
+    <string name="pick_result_tts_stop">Stop reading</string>
+    <string name="pick_result_tts_unavailable">No speech engine for this language</string>
     <string name="float_ball_pick_smart_open_url">Open Link</string>
     <string name="float_ball_pick_smart_open_ecommerce">Open Store</string>
     <string name="float_ball_pick_smart_call_phone">Call</string>
