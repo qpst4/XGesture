@@ -144,12 +144,14 @@ class OcrInferenceService @Inject constructor(
             ensureEngine(modelId, OcrEngines.PPOCR)
             val engine = paddleOcr ?: return@withSessionUse null
             val result = engine.recognize(bitmap)
-            result.results.map { item ->
-                OcrRecognizedLine(
-                    bounds = ocrBoxToRect(item.box),
-                    text = item.text,
-                )
-            }
+            OcrRtlText.orderedForReading(
+                result.results.map { item ->
+                    OcrRecognizedLine(
+                        bounds = ocrBoxToRect(item.box),
+                        text = item.text,
+                    )
+                },
+            )
         }
     }
 
@@ -299,9 +301,11 @@ class OcrInferenceService @Inject constructor(
             return OcrRecognizeResult.Failure(context.getString(R.string.ocr_error_paddle_not_initialized))
         }
         val result = engine.recognize(bitmap)
-        val text = result.results
-            .joinToString("\n") { item -> item.text }
-            .trim()
+        val text = OcrRtlText.orderedForReading(
+            result.results.map { item ->
+                OcrRecognizedLine(bounds = ocrBoxToRect(item.box), text = item.text)
+            },
+        ).joinToString("\n") { item -> item.text }.trim()
         if (text.isEmpty()) {
             Log.i(TAG, "recognize empty: modelId=$modelId boxes=${result.lineCount}")
         }
