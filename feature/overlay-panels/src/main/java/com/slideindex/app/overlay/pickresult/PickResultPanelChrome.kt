@@ -1365,6 +1365,18 @@ fun PickResultTextActionBar(
                                 },
                             )
                         } else {
+                            onSpeakToggle?.let { speakAction ->
+                                PickResultActionMenuItem(
+                                    label = stringResource(
+                                        if (speaking) R.string.pick_result_tts_stop else R.string.pick_result_tts_speak
+                                    ),
+                                    icon = if (speaking) Icons.Outlined.Stop else Icons.Outlined.VolumeUp,
+                                    onClick = {
+                                        moreMenuExpanded = false
+                                        speakAction()
+                                    },
+                                )
+                            }
                             onPinToScreen?.let { pinAction ->
                                 PickResultActionMenuItem(
                                     label = stringResource(R.string.pick_result_pin),
