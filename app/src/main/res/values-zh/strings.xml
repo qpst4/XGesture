@@ -1108,7 +1108,7 @@
     <string name="gesture_action_open_internet_panel_desc">弹出系统原生 Wi-Fi 与移动网络控制面板</string>
     <string name="gesture_action_open_volume_panel">原生声音调节面板</string>
     <string name="gesture_action_open_volume_panel_desc">调出系统原生音量调节条浮窗</string>
-    <string name="gesture_action_open_volume_slider">音量条（音量键同款）</string>
+    <string name="gesture_action_open_volume_slider">系统音量条</string>
     <string name="gesture_action_open_volume_slider_desc">弹出系统音量条，不改变音量</string>
     <string name="gesture_action_volume_up">音量增加</string>
     <string name="gesture_action_volume_up_desc">媒体音量增加一级，并弹出系统音量面板</string>

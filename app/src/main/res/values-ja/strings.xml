@@ -1087,7 +1087,7 @@
     <string name="gesture_action_open_internet_panel_desc">システムネイティブの Wi-Fi とモバイルネットワークパネルを表示</string>
     <string name="gesture_action_open_volume_panel">ネイティブ音量パネル</string>
     <string name="gesture_action_open_volume_panel_desc">システムネイティブの音量スライダーポップアップを表示</string>
-    <string name="gesture_action_open_volume_slider">音量スライダー（音量キーと同じ）</string>
+    <string name="gesture_action_open_volume_slider">システム音量スライダー</string>
     <string name="gesture_action_open_volume_slider_desc">システムの音量スライダーを表示（音量は変更しない）</string>
     <string name="gesture_action_volume_up">音量を上げる</string>
     <string name="gesture_action_volume_up_desc">メディア音量を1段階上げ、システム音量パネルを表示します</string>
