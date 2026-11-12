@@ -416,7 +416,9 @@ private fun LazyListScope.presetShortcutsListContent(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 6.dp),
+                    // 与 Miuix SmallTitle 一致：28dp 内边距正好对齐卡片正文
+                    // （卡片外 12dp + 内 16dp），不能再用 4dp，否则分组标题会明显偏左。
+                    .padding(start = 28.dp, end = 28.dp, top = 6.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
