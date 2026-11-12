@@ -3,6 +3,7 @@ package com.slideindex.app.overlay
 import android.graphics.RectF
 import android.view.MotionEvent
 import com.slideindex.app.diagnostic.EdgeDiag
+import com.slideindex.app.service.QuickLauncherAddTrampoline
 
 internal class QuickLauncherTouchHandler(
     internal val ctrl: QuickLauncherOverlayController
@@ -237,7 +238,10 @@ internal class QuickLauncherTouchHandler(
                     host.onInitiatingEdgeGestureReleased()
                     // 钉住态**不抢焦点**：抢焦点会把输入法从下面的 App（如 Obsidian）抢到浮层上，
                     // 用户就再也打不出字了 —— 代价是返回键不再负责关面板（改用手势 / 工具栏「×」）。
-                    if (!host.gestureSession().quickLauncherPinned()) {
+                    // 添加页在途时也不抢：浮层在 Activity 之上，抢焦点会让搜索框弹不出键盘。
+                    if (!host.gestureSession().quickLauncherPinned() &&
+                        !QuickLauncherAddTrampoline.isActive()
+                    ) {
                         host.setPanelPresentationFocus(true)
                     }
                     host.invalidate()
@@ -262,7 +266,11 @@ internal class QuickLauncherTouchHandler(
                         host.gestureSession().finishLeaveOpenFingerTracking()
                         host.notifyPresentationTouchRequirementChanged()
                         host.onInitiatingEdgeGestureReleased()
-                        if (!host.gestureSession().quickLauncherPinned()) {
+                        // 这一步可能刚把「添加条目」Activity 拉起来：不要再把焦点抢回浮层，
+                        // 否则 Activity 里的搜索框拿不到 IME（浮层窗口在 Activity 之上）。
+                        if (!host.gestureSession().quickLauncherPinned() &&
+                            !QuickLauncherAddTrampoline.isActive()
+                        ) {
                             host.setPanelPresentationFocus(true)
                         }
                         ctrl.quickLauncherPageSwipeLocked = false

@@ -113,9 +113,6 @@ internal class EdgeGestureLayoutCoordinator(
     }
 
     fun needsPresentationDirectTouch(): Boolean {
-        // 快速启动器「添加条目」Activity 期间：面板只是隐身，但会话还在（panelMode 仍非 NONE）。
-        // 必须在这里先放行触摸，否则那扇看不见的全屏 presentation 窗会把 Activity 的点击全吃掉。
-        if (quickLauncherController.isSuspendedForAddFlow()) return false
         if (gestureSession.panelMode() != OverlayPanelMode.NONE) return true
         // 退场动画期间不再需要直触：那 160ms 里任何落在屏上的触摸都会被这扇全屏窗吃掉，
         // 用户感受就是"条快消失时点哪都没反应"。

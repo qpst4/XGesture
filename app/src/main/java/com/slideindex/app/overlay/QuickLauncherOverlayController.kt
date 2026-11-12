@@ -125,14 +125,39 @@ internal class QuickLauncherOverlayController(
                 onRemove: (QuickLauncherItem) -> Unit
             ) {
                 // 加条目走透明 Activity（列表滚动/搜索/返回栈都按普通窗口来，浮层里的
-                // ComposeView + LazyColumn 不可靠）。面板**只挂起、不结束会话**：
-                // 回来时页索引/文件夹/编辑态/钉住落位都还在（与圆环/边角的让位同语义）。
+                // ComposeView + LazyColumn 不可靠）。面板先收起，Activity 结束后按原样重开；
+                // 重开时把当前页索引恢复回去（结束会话会把它清 0）。
+                val panelId = activeQuickLauncherPanel().id
+                val side = host.side()
+                val pinned = host.gestureSession().quickLauncherPinned()
+                val pinCurrentApp = host.gestureSession().quickLauncherPinCurrentApp()
+                val anchorRawY = rememberRestoreAnchorRawY().takeIf { it > 0f }
+                    ?: (host.context.resources.displayMetrics.heightPixels / 2f)
                 val launched = QuickLauncherAddTrampoline.launch(
                     context = host.context,
-                    panelId = activeQuickLauncherPanel().id,
-                    panelSide = host.side(),
-                    onPrepare = { suspendForAddFlow() },
-                    onDismiss = { resumeAfterAddFlow() },
+                    panelId = panelId,
+                    panelSide = side,
+                    onPrepare = {
+                        // onSessionEnd 会把页索引清 0，必须先记下来。
+                        pendingRestorePageIndex = quickLauncherPageIndex
+                        dismissFromBack()
+                        host.notifyPresentationTouchRequirementChanged()
+                    },
+                    onDismiss = {
+                        host.notifyPresentationTouchRequirementChanged()
+                        host.invalidate()
+                        // 面板收起带退出动画：等它结束再重开，否则 prepareExternalGestureDispatch
+                        // 会被上一段 session 挡住。
+                        restoreHandler.postDelayed({
+                            reopenAfterAddFlow(
+                                panelId = panelId,
+                                pinned = pinned,
+                                pinCurrentApp = pinCurrentApp,
+                                anchorRawY = anchorRawY,
+                                side = side,
+                            )
+                        }, ADD_FLOW_REOPEN_DELAY_MS)
+                    },
                 )
                 if (!launched) {
                     // OEM 拦后台启动 Activity：退回浮层 sheet（旧路径），别让「+」点了没反应。
@@ -214,14 +239,13 @@ internal class QuickLauncherOverlayController(
     internal var quickLauncherLaunchEndDeferMs = 0L
     internal var quickLauncherExiting = false
     /**
-     * 「添加条目」Activity 期间：面板暂时不画、不接触摸，但**不结束会话**。
-     *
-     * 与圆环/边角的 `suspendForExternalActivity` 同语义；不结束会话才能保住
-     * 当前页索引、文件夹展开、编辑态与钉住落位。窗口触摸靠
-     * [com.slideindex.app.overlay.EdgeGestureLayoutCoordinator.needsPresentationDirectTouch]
-     * 里的同名判断放行给 Activity。
+     * 添加流程结束后要恢复的页索引：进添加页前记下（结束后会话会把它清 0），
+     * 等 [reopenAfterAddFlow] 真正重开面板时由 [onSessionStart] 消费一次。
      */
-    private var suspendedForAddFlow = false
+    private var pendingRestorePageIndex: Int? = null
+
+    /** 下一次会话是不是「添加流程结束后的重开」；只有这种会话才消费页索引。 */
+    private var restorePageOnNextSession = false
     internal var quickLauncherOpeningGestureActive = false
     internal var quickLauncherToolbarTouchActive = false
     /** 「长按面板空白处进入编辑态」的按下时刻；<= 0 表示当前没有按住空白区。 */
@@ -401,36 +425,48 @@ internal class QuickLauncherOverlayController(
     internal val quickLauncherHeaderHeight get() = 0f
 
     fun handleTouch(event: MotionEvent, localX: Float, localY: Float): Boolean =
-        if (suspendedForAddFlow) false else touchHandler.handleTouch(event, localX, localY)
+        touchHandler.handleTouch(event, localX, localY)
 
     /**
-     * 添加条目 Activity 打开：面板只“隐身”，会话/页索引/文件夹/钉住状态全部保留。
+     * 添加流程结束后按原样重开面板：面板 id / 钉住态 / 锚点都沿用，
+     * 页索引由 [onSessionStart] 从 [pendingRestorePageIndex] 恢复。
      *
-     * 注意不能 `dismissFromBack()`：那会 `endSession()` → 页索引归零，回来就跳回第一页。
-     * 也不能整扇边缘浮层下电：边缘触钮要保留可用（与圆环/边角一致）。
-     * 只让 presentation 窗切 passthrough（`needsPresentationDirectTouch` 里按本标志放行），
-     * 面板绘制由 [draw] 的早退负责。
+     * 失败（上一段 session 还没清、宿主刚重建）时重试两次；仍失败就交给用户再划一次手势。
      */
-    fun suspendForAddFlow() {
-        if (suspendedForAddFlow) return
-        suspendedForAddFlow = true
-        host.setPanelPresentationFocus(false)
-        host.notifyPresentationTouchRequirementChanged()
-        host.invalidate()
+    private fun reopenAfterAddFlow(
+        panelId: String,
+        pinned: Boolean,
+        pinCurrentApp: Boolean,
+        anchorRawY: Float,
+        side: PanelSide,
+        attempt: Int = 0,
+    ) {
+        // 只有这一拍 dispatch 出来的会话才恢复页索引；用户在添加页期间自己划触钮开的会话不受影响。
+        restorePageOnNextSession = true
+        val opened = runCatching {
+            SlideIndexAccessibilityService.dispatchExternalGestureAction(
+                action = GestureAction.QuickLauncher(
+                    panelId = panelId,
+                    pinned = pinned,
+                    pinCurrentApp = pinCurrentApp,
+                ),
+                anchorRawY = anchorRawY,
+                panelSide = side,
+            )
+        }.getOrDefault(false)
+        if (opened) return
+        if (attempt < ADD_FLOW_RETRY_COUNT) {
+            restoreHandler.postDelayed({
+                reopenAfterAddFlow(panelId, pinned, pinCurrentApp, anchorRawY, side, attempt + 1)
+            }, ADD_FLOW_RETRY_DELAY_MS)
+        } else {
+            // 重开彻底失败：别把旧页索引留给下一次手势。
+            pendingRestorePageIndex = null
+            restorePageOnNextSession = false
+        }
     }
-
-    /** Activity 关闭：恢复绘制与窗口触摸（会话从未结束，页索引自然还在）。 */
-    fun resumeAfterAddFlow() {
-        if (!suspendedForAddFlow) return
-        suspendedForAddFlow = false
-        host.notifyPresentationTouchRequirementChanged()
-        host.invalidate()
-    }
-
-    fun isSuspendedForAddFlow(): Boolean = suspendedForAddFlow
 
     fun draw(canvas: Canvas, drawToolbar: Boolean = true) {
-        if (suspendedForAddFlow) return
         // 工具栏要跟着「钉住」状态多画一个「×」（钉住态返回键不再负责关闭，得给一个可见出口）。
         quickLauncherPanelController.pinned = host.gestureSession().quickLauncherPinned()
         renderer.draw(canvas, drawToolbar)
@@ -447,8 +483,6 @@ internal class QuickLauncherOverlayController(
      * 呼出动画 / 手势跟手 / 收起动画 / 面板内弹窗 / 编辑拖动分页都仍走全屏窗，避免坐标系跨界。
      */
     fun pinnedWindowRect(screenWidthPx: Float, screenHeightPx: Float): RectF? {
-        // 添加条目 Activity 期间不缩窗，也不保留「钉住触摸层」小窗。
-        if (suspendedForAddFlow) return null
         val session = host.gestureSession()
         if (!session.quickLauncherPinnedIdle()) return null
         if (quickLauncherExiting) return null
@@ -514,6 +548,13 @@ internal class QuickLauncherOverlayController(
 
         /** 判定「切走应用」需要的连续命中次数（键盘 / 系统窗口的瞬时前台会被过滤掉）。 */
         const val FOREGROUND_CONFIRM_HITS = 2
+
+        /** 添加条目 Activity 关闭后，等面板退出动画结束再自动重开的延迟。 */
+        const val ADD_FLOW_REOPEN_DELAY_MS = 220L
+
+        /** 自动重开失败后的重试次数与间隔（会话/宿主还没就绪时）。 */
+        const val ADD_FLOW_RETRY_COUNT = 2
+        const val ADD_FLOW_RETRY_DELAY_MS = 260L
     }
 
     // ── 钉住 +「仅在本应用」：切走自动隐藏、切回原样恢复 ─────────────────────────
@@ -875,7 +916,13 @@ internal class QuickLauncherOverlayController(
     }
 
     fun onSessionStart() {
-        quickLauncherPageIndex = 0
+        // 添加流程重开面板：恢复进页前那一页（只消费一次；普通手势仍从第 1 页开始）。
+        quickLauncherPageIndex = if (restorePageOnNextSession) {
+            restorePageOnNextSession = false
+            pendingRestorePageIndex.also { pendingRestorePageIndex = null } ?: 0
+        } else {
+            0
+        }
         quickLauncherPageCount = 1
         quickLauncherPageSwipeTracking = false
         quickLauncherPageSwipeLocked = false
