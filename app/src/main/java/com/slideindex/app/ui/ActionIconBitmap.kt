@@ -27,11 +27,8 @@ object ActionIconBitmap {
         withPlate: Boolean = false,
     ): Bitmap? {
         val darkPlate = IconPlateModeState.isDark(context)
-        val key = GlobalIconStore.actionIcon(context, action.type.name)
-            ?: (action as? GestureAction.LaunchApp)?.let {
-                GlobalIconStore.appIcon(context, it.packageName)
-            }
-            ?: return null
+        // 面板图标 → 动作类型图标 → 应用图标，统一在 ActionIconKeyResolver 里判。
+        val key = ActionIconKeyResolver.resolve(context, action) ?: return null
         return loadByKey(context, key, sizePx, tintArgb, withPlate, action, darkPlate)
     }
 

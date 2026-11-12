@@ -61,6 +61,7 @@ object GlobalIconStore {
     const val PREFS = "global_icon_overrides"
     private const val ACTION_PREFIX = "action:"
     private const val APP_PREFIX = "app:"
+    private const val PANEL_PREFIX = "panel:"
 
     private fun prefs(context: Context) =
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -84,6 +85,27 @@ object GlobalIconStore {
         val editor = prefs(context).edit()
         if (iconKey.isNullOrBlank()) editor.remove(APP_PREFIX + packageName)
         else editor.putString(APP_PREFIX + packageName, iconKey)
+        editor.apply()
+        revision++
+        notifyIconChanged()
+    }
+
+    /**
+     * 「启动面板」自己的图标（key = 面板 id）。
+     *
+     * 与动作类型/应用覆盖同一个 prefs：备份、`revision` 失效、各渲染器清缓存都走现成的链。
+     * 只在「打开快速启动器」这个动作上生效，优先级高于动作类型图标（见 [ActionIconKeyResolver]）。
+     */
+    fun panelIcon(context: Context, panelId: String): String? {
+        if (panelId.isBlank()) return null
+        return prefs(context).getString(PANEL_PREFIX + panelId, null)?.takeIf { it.isNotBlank() }
+    }
+
+    fun setPanelIcon(context: Context, panelId: String, iconKey: String?) {
+        if (panelId.isBlank()) return
+        val editor = prefs(context).edit()
+        if (iconKey.isNullOrBlank()) editor.remove(PANEL_PREFIX + panelId)
+        else editor.putString(PANEL_PREFIX + panelId, iconKey)
         editor.apply()
         revision++
         notifyIconChanged()

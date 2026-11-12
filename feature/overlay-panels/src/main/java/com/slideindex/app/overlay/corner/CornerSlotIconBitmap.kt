@@ -32,6 +32,20 @@ object CornerSlotIconBitmap {
         /** false = 普通动作不烘底板，只返回裸矢量图标（摇杆功能环等场景）。 */
         plateFallback: Boolean = true,
     ): Bitmap {
+        // 「打开快速启动器」：**面板图标优先于动作类型图标**（面板更具体）。
+        // 面板维度只有 `:app` 的 ActionIconKeyResolver 知道，这里借现成的 actionIconBitmapFull
+        // 让它先判；key 带 revision，换图标立即失效（角落轮盘是每帧重绘，必须缓存）。
+        if (action is GestureAction.QuickLauncher) {
+            val panelKey = "ql-panel:${action.payload}:$sizePx:$tintArgb:$plateFallback:${shape.name}:" +
+                com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconCacheRevision?.invoke().orEmpty()
+            appIconCache.get(panelKey)?.let { return it }
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconBitmapFull
+                ?.invoke(context, action, sizePx, tintArgb, true, plateFallback, shape.toPlateShapeOrdinal())
+                ?.let { bitmap ->
+                    appIconCache.put(panelKey, bitmap)
+                    return bitmap
+                }
+        }
         // 全局图标覆盖优先（扩展 → 图标库），且必须排在下面四个「真实图标」分支之前：
         // 图标库里按**动作类型**设图标，「打开应用 / 快捷方式 / 运行宏 / 执行命令」也是动作类型，
         // 只在末尾兜底里查会让这四类继续画默认图标。

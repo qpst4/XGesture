@@ -33,10 +33,7 @@ fun GestureSlotActionIcon(
     val context = androidx.compose.ui.platform.LocalContext.current
     val revision = GlobalIconStore.revision
     val overrideKey = remember(action, revision) {
-        GlobalIconStore.actionIcon(context, action.type.name)
-            ?: (action as? GestureAction.LaunchApp)?.let {
-                GlobalIconStore.appIcon(context, it.packageName)
-            }
+        ActionIconKeyResolver.resolve(context, action)
     }
     val badges = action.actionIconBadges(
         context = context,

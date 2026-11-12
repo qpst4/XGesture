@@ -42,10 +42,7 @@ fun ActionIconSlot(
     // 读 revision：图标设置后触发重组（否则 remember 会缓存旧值）
     val revision = GlobalIconStore.revision
     val override = remember(action, revision) {
-        GlobalIconStore.actionIcon(context, action.type.name)
-            ?: (action as? GestureAction.LaunchApp)?.let {
-                GlobalIconStore.appIcon(context, it.packageName)
-            }
+        ActionIconKeyResolver.resolve(context, action)
     }
     // 「运行宏」没有自己的图标，用宏目标 App 的图标（与宏列表那一行一致）。
     // 模板动作（macroId 为空）拿不到目标，保持通用播放键。

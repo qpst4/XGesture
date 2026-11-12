@@ -152,6 +152,13 @@ internal fun ActionIconPickerHost(
     iconKey: String?,
     sizeDp: Int,
     modifier: Modifier = Modifier,
+    /**
+     * 图片落盘用的存储键（如 `global:panel:<id>`）。
+     *
+     * 为 null 时按 [action] 身份算文件名（动作自己的图标）；非 null 时走
+     * 「全局图标」那套按任意 key 存图片的通道（面板图标、全局图标设置都用它）。
+     */
+    storageKey: String? = null,
     onIconChange: (String?) -> Unit,
     /** 恢复默认时的额外清理（全局图标用它删自己的文件）。为 null 时按动作身份删文件。 */
     onReset: (() -> Unit)? = null,
@@ -176,7 +183,11 @@ internal fun ActionIconPickerHost(
         androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia(),
     ) { uri ->
         if (uri != null) {
-            val savedPath = ActionIconStorage.saveFromUri(context, action, uri)
+            val savedPath = if (storageKey != null) {
+                ActionIconStorage.saveFromUriForGlobalKey(context, storageKey, uri)
+            } else {
+                ActionIconStorage.saveFromUri(context, action, uri)
+            }
             if (savedPath != null) onIconChange(ActionIconKeyCodec.file(savedPath))
         }
     }
@@ -223,8 +234,13 @@ internal fun ActionIconPickerHost(
                     DropdownItem(
                         text = stringResource(R.string.action_detail_icon_reset),
                         onClick = {
-                            ActionIconStorage.delete(context, action)
+                            if (storageKey != null) {
+                                ActionIconStorage.deleteForGlobalKey(context, storageKey)
+                            } else {
+                                ActionIconStorage.delete(context, action)
+                            }
                             onIconChange(null)
+                            onReset?.invoke()
                         },
                     ),
                 )
