@@ -60,16 +60,20 @@ object SystemGestureActions {
         return true
     }
 
-    /** 媒体音量增加一级；同时弹出系统音量面板。 */
+    /**
+     * 音量增加一级：跟随「最相关的流」，与按硬件音量键一致——通话中调通话、放歌时调媒体。
+     *
+     * 原实现写死 `STREAM_MUSIC`，通话中按音量手势只动媒体流（issue #44）。
+     */
     fun volumeUp(context: Context) {
         val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
+        audioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
     }
 
-    /** 媒体音量减小一级；同时弹出系统音量面板。 */
+    /** 音量减小一级；同样跟随「最相关的流」（issue #44）。 */
     fun volumeDown(context: Context) {
         val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
+        audioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
     }
 
     fun dispatchMediaKey(context: Context, keyCode: Int): Boolean {
