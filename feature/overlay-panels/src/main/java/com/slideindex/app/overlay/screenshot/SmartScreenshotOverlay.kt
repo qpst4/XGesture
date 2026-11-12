@@ -55,7 +55,7 @@ object SmartScreenshotOverlay {
                     state = state,
                     onCancel = { dismiss() },
                     onSave = {
-                        val cropped = ScreenshotCropper.crop(screenshot, state.selectionRect, state.shape)
+                        val cropped = ScreenshotCropper.crop(screenshot, state.selectionRect, state.shape, state.freeformPath)
                         val uri = ScreenshotStorage.saveToGallery(hostContext, cropped)
                         if (uri != null) {
                             Toast.makeText(hostContext, R.string.smart_screenshot_saved, Toast.LENGTH_SHORT).show()
@@ -63,7 +63,7 @@ object SmartScreenshotOverlay {
                         dismiss()
                     },
                     onCopy = {
-                        val cropped = ScreenshotCropper.crop(screenshot, state.selectionRect, state.shape)
+                        val cropped = ScreenshotCropper.crop(screenshot, state.selectionRect, state.shape, state.freeformPath)
                         val uri = ScreenshotStorage.createClipboardUri(hostContext, cropped)
                         if (uri != null) {
                             ScreenshotStorage.copyToClipboard(hostContext, uri)
@@ -72,7 +72,7 @@ object SmartScreenshotOverlay {
                         dismiss()
                     },
                     onShare = {
-                        val cropped = ScreenshotCropper.crop(screenshot, state.selectionRect, state.shape)
+                        val cropped = ScreenshotCropper.crop(screenshot, state.selectionRect, state.shape, state.freeformPath)
                         val uri = ScreenshotStorage.createShareUri(hostContext, cropped)
                         if (uri != null) {
                             ScreenshotStorage.share(hostContext, uri)
@@ -80,7 +80,7 @@ object SmartScreenshotOverlay {
                         dismiss()
                     },
                     onPin = {
-                        val cropped = ScreenshotCropper.crop(screenshot, state.selectionRect, state.shape)
+                        val cropped = ScreenshotCropper.crop(screenshot, state.selectionRect, state.shape, state.freeformPath)
                         val rect = android.graphics.Rect(
                             state.selectionRect.left.roundToInt(),
                             state.selectionRect.top.roundToInt(),
@@ -97,7 +97,7 @@ object SmartScreenshotOverlay {
                         dismiss()
                     },
                     onWordSegmentation = {
-                        val cropped = ScreenshotCropper.crop(screenshot, state.selectionRect, state.shape)
+                        val cropped = ScreenshotCropper.crop(screenshot, state.selectionRect, state.shape, state.freeformPath)
                         val rect = android.graphics.Rect(
                             state.selectionRect.left.roundToInt(),
                             state.selectionRect.top.roundToInt(),
@@ -113,7 +113,7 @@ object SmartScreenshotOverlay {
                         dismiss()
                     },
                     onEdit = {
-                        val cropped = ScreenshotCropper.crop(screenshot, state.selectionRect, state.shape)
+                        val cropped = ScreenshotCropper.crop(screenshot, state.selectionRect, state.shape, state.freeformPath)
                         val rect = android.graphics.Rect(
                             state.selectionRect.left.roundToInt(),
                             state.selectionRect.top.roundToInt(),

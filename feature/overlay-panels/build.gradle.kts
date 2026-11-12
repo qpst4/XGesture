@@ -82,4 +82,6 @@ dependencies {
     implementation(libs.miuix.blur)
     implementation(libs.miuix.shader)
     implementation(libs.materialkolor)
+
+    testImplementation(libs.junit)
 }

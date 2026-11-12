@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CropSquare
+import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.TextFields
@@ -41,12 +43,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
@@ -98,6 +102,8 @@ fun SmartScreenshotEditor(
         val cutoutInsets = WindowInsets.displayCutout
         val edgeMarginPx = with(density) { 12.dp.toPx() }
         val toolbarGapPx = with(density) { 14.dp.toPx() }
+        val minPointGapPx = with(density) { 2.dp.toPx() }
+        val closeButtonSlotPx = with(density) { 56.dp.toPx() }
         val containerSize = remember(maxWidth, maxHeight, density) {
             IntSize(
                 width = with(density) { maxWidth.roundToPx() },
@@ -128,7 +134,11 @@ fun SmartScreenshotEditor(
             rect = selectionRect,
             toolbarSize = topToolbarSize,
             containerSize = containerSize,
-            safeLeftPx = safeLeftPx,
+            safeLeftPx = if (state.shape == ScreenshotShape.Freeform) {
+                safeLeftPx + closeButtonSlotPx
+            } else {
+                safeLeftPx
+            },
             safeTopPx = safeTopPx,
             safeRightPx = safeRightPx,
             safeBottomPx = safeBottomPx,
@@ -158,16 +168,28 @@ fun SmartScreenshotEditor(
             val rect = state.selectionRect
             val frameStroke = 3.dp.toPx()
             val fullPath = Path().apply { addRect(Rect(Offset.Zero, size)) }
-            val selectedPath = Path().apply {
-                when (state.shape) {
-                    ScreenshotShape.Rectangle -> addRect(rect)
-                    ScreenshotShape.Oval -> addOval(rect)
-                }
+            val freeformPath = state.freeformPath
+            val selectedPath: Path? = when (state.shape) {
+                ScreenshotShape.Rectangle -> Path().apply { addRect(rect) }
+                ScreenshotShape.Oval -> Path().apply { addOval(rect) }
+                ScreenshotShape.Freeform -> freeformPath
             }
-            drawPath(
-                path = Path.combine(PathOperation.Difference, fullPath, selectedPath),
-                color = Color.Black.copy(alpha = 0.58f)
-            )
+            val dimColor = Color.Black.copy(alpha = 0.58f)
+            when {
+                // 自由形状还没起笔：整屏压暗，等用户画。
+                selectedPath == null -> drawRect(dimColor)
+                // 套索点数多，每帧做一次 Path.combine 太贵；clipPath 便宜，硬边由描边盖住。
+                state.shape == ScreenshotShape.Freeform -> {
+                    clipPath(selectedPath, ClipOp.Difference) {
+                        drawRect(dimColor)
+                    }
+                }
+
+                else -> drawPath(
+                    path = Path.combine(PathOperation.Difference, fullPath, selectedPath),
+                    color = dimColor
+                )
+            }
             val ovalFramePathEffect = PathEffect.dashPathEffect(
                 intervals = floatArrayOf(12.dp.toPx(), 8.dp.toPx())
             )
@@ -188,6 +210,13 @@ fun SmartScreenshotEditor(
                         pathEffect = ovalFramePathEffect
                     )
                 )
+                ScreenshotShape.Freeform -> if (freeformPath != null) {
+                    drawPath(
+                        path = freeformPath,
+                        color = primaryColor,
+                        style = Stroke(width = frameStroke)
+                    )
+                }
             }
 
             if (state.shape == ScreenshotShape.Oval) {
@@ -219,6 +248,11 @@ fun SmartScreenshotEditor(
                     end = topLeft,
                     strokeWidth = frameStroke
                 )
+            }
+
+            // 自由形状没有四角手柄（对角点没有意义），整体移动交给手势。
+            if (state.shape == ScreenshotShape.Freeform) {
+                return@Canvas
             }
 
             val handleRadius = 8.dp.toPx()
@@ -263,20 +297,27 @@ fun SmartScreenshotEditor(
                 .pointerInput(Unit) {
                     awaitEachGesture {
                         val down = awaitFirstDown(pass = PointerEventPass.Main)
-                        interaction = resolveInteraction(
+                        val shape = state.shape
+                        val resolved = resolveInteraction(
                             position = down.position,
                             rect = state.selectionRect,
                             handleRadius = 36.dp.toPx(),
-                            shape = state.shape
+                            shape = shape,
+                            freeformPoints = state.freeformPoints
                         )
-                        val isDimTapCandidate = interaction == null &&
-                                !containsSelection(state.selectionRect, state.shape, down.position) &&
+                        // 自由形状下，"点在形状外"就是要开画；形状内才整体移动。
+                        val beginDrawing = shape == ScreenshotShape.Freeform && resolved == null
+                        interaction = if (beginDrawing) SelectionInteraction.Draw else resolved
+                        val isDimTapCandidate = !beginDrawing &&
+                                interaction == null &&
+                                !containsSelection(state.selectionRect, shape, down.position) &&
                                 !latestTopToolbarBounds.value.containsPoint(down.position) &&
                                 !latestBottomToolbarBounds.value.containsPoint(down.position)
                         if (interaction != null || isDimTapCandidate) {
                             down.consume()
                         }
                         var last = down.position
+                        var strokeStarted = false
                         var moved = false
                         var pointerCountMax = 1
                         var event = awaitPointerEvent(pass = PointerEventPass.Main)
@@ -291,25 +332,49 @@ fun SmartScreenshotEditor(
                                 moved = true
                             }
                             last = current
-                            val currentRect = state.selectionRect
-                            val nextRect = when (val mode = interaction) {
-                                SelectionInteraction.Move -> currentRect.translate(delta.x, delta.y)
-                                is SelectionInteraction.Resize -> mode.resize(
-                                    rect = currentRect,
-                                    delta = delta,
-                                    forceSquareCrop = state.forceSquareCrop,
-                                    imageBounds = state.imageBounds,
-                                    minSelectionSize = state.minSelectionSize
+                            when (val mode = interaction) {
+                                SelectionInteraction.Draw -> {
+                                    // 真的移动了才起笔：避免一次误触就把屏幕闪成全暗。
+                                    if (!strokeStarted) {
+                                        state.beginFreeformStroke(down.position)
+                                        strokeStarted = true
+                                    }
+                                    // 按最小间距抽点：一屏套索上千个事件，全存下来只会拖慢路径与遮罩。
+                                    val anchor = state.freeformPoints.lastOrNull()
+                                    if (anchor == null || (current - anchor).getDistance() >= minPointGapPx) {
+                                        state.appendFreeformPoint(current)
+                                    }
+                                }
+
+                                SelectionInteraction.Move -> {
+                                    if (shape == ScreenshotShape.Freeform) {
+                                        state.translateFreeform(delta)
+                                    } else {
+                                        state.updateSelection(
+                                            state.selectionRect.translate(delta.x, delta.y)
+                                        )
+                                    }
+                                }
+
+                                is SelectionInteraction.Resize -> state.updateSelection(
+                                    mode.resize(
+                                        rect = state.selectionRect,
+                                        delta = delta,
+                                        forceSquareCrop = state.forceSquareCrop,
+                                        imageBounds = state.imageBounds,
+                                        minSelectionSize = state.minSelectionSize
+                                    )
                                 )
-                                null -> currentRect
+
+                                null -> Unit
                             }
-                            if (interaction != null) {
-                                state.updateSelection(nextRect)
-                                event.changes.forEach { if (it.pressed) it.consume() }
-                            } else if (isDimTapCandidate) {
+                            if (interaction != null || isDimTapCandidate) {
                                 event.changes.forEach { if (it.pressed) it.consume() }
                             }
                             event = awaitPointerEvent(pass = PointerEventPass.Main)
+                        }
+                        if (interaction == SelectionInteraction.Draw && strokeStarted) {
+                            state.commitFreeformStroke()
                         }
                         if (isDimTapCandidate && pointerCountMax == 1 && !moved) {
                             onCancel()
@@ -318,6 +383,42 @@ fun SmartScreenshotEditor(
                     }
                 }
         )
+
+        // 自由形状下"点空白"是起笔，不再是取消，必须给一个明确的退出入口。
+        if (state.shape == ScreenshotShape.Freeform) {
+            FilledTonalIconButton(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .offset {
+                        IntOffset(safeLeftPx.roundToInt(), safeTopPx.roundToInt())
+                    }
+                    .zIndex(1f),
+                onClick = onCancel
+            ) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = stringResource(R.string.panel_close)
+                )
+            }
+        }
+
+        if (state.shape == ScreenshotShape.Freeform &&
+            state.freeformPath == null &&
+            interaction == null
+        ) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .zIndex(1f),
+                shape = RoundedCornerShape(20.dp),
+                color = surfaceColor.copy(alpha = 0.92f)
+            ) {
+                Text(
+                    text = stringResource(R.string.smart_screenshot_freeform_hint),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                )
+            }
+        }
 
         ToolbarBubble(
             modifier = Modifier
@@ -352,23 +453,36 @@ fun SmartScreenshotEditor(
             ) {
                 Icon(Icons.Outlined.Circle, contentDescription = null)
             }
-            ToolbarDivider()
             ToolIconButton(
                 enabled = topToolbarEnabled,
-                selected = state.forceSquareCrop,
-                contentDescription = "1:1",
+                selected = state.shape == ScreenshotShape.Freeform,
+                contentDescription = stringResource(R.string.smart_screenshot_shape_freeform),
                 onClick = {
-                    state.updateForceSquareCrop(!state.forceSquareCrop)
+                    state.updateShape(ScreenshotShape.Freeform)
                 }
             ) {
-                Text(
-                    text = "1:1",
-                    fontWeight = FontWeight.Bold
-                )
+                Icon(Icons.Outlined.Draw, contentDescription = null)
+            }
+            // 自由形状下暂时收起 1:1：既没意义，也给窄屏上的顶部气泡省一格。
+            if (state.shape != ScreenshotShape.Freeform) {
+                ToolbarDivider()
+                ToolIconButton(
+                    enabled = topToolbarEnabled,
+                    selected = state.forceSquareCrop,
+                    contentDescription = "1:1",
+                    onClick = {
+                        state.updateForceSquareCrop(!state.forceSquareCrop)
+                    }
+                ) {
+                    Text(
+                        text = "1:1",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
             ToolbarDivider()
             ToolIconButton(
-                enabled = topToolbarEnabled,
+                enabled = topToolbarEnabled && state.canExport,
                 contentDescription = stringResource(R.string.float_ball_action_edit),
                 onClick = onEdit
             ) {
@@ -390,35 +504,35 @@ fun SmartScreenshotEditor(
             surfaceColor = surfaceColor
         ) {
             ToolIconButton(
-                enabled = bottomToolbarEnabled,
+                enabled = bottomToolbarEnabled && state.canExport,
                 contentDescription = "Save",
                 onClick = onSave
             ) {
                 Icon(Icons.Outlined.Save, contentDescription = null)
             }
             ToolIconButton(
-                enabled = bottomToolbarEnabled,
+                enabled = bottomToolbarEnabled && state.canExport,
                 contentDescription = "Copy",
                 onClick = onCopy
             ) {
                 Icon(MiuixIcons.Medium.Copy, contentDescription = null)
             }
             ToolIconButton(
-                enabled = bottomToolbarEnabled,
+                enabled = bottomToolbarEnabled && state.canExport,
                 contentDescription = "Share",
                 onClick = onShare
             ) {
                 Icon(MiuixIcons.Medium.Share, contentDescription = null)
             }
             ToolIconButton(
-                enabled = bottomToolbarEnabled,
+                enabled = bottomToolbarEnabled && state.canExport,
                 contentDescription = "Pin",
                 onClick = onPin
             ) {
                 Icon(MiuixIcons.Medium.Pin, contentDescription = null)
             }
             ToolIconButton(
-                enabled = bottomToolbarEnabled,
+                enabled = bottomToolbarEnabled && state.canExport,
                 contentDescription = stringResource(R.string.universal_copy_pick),
                 onClick = onWordSegmentation
             ) {
@@ -522,6 +636,9 @@ private fun calculateToolbarOffset(
 private sealed interface SelectionInteraction {
     data object Move : SelectionInteraction
 
+    /** 自由形状的手绘笔画：抬手时才真正提交。 */
+    data object Draw : SelectionInteraction
+
     class Resize(
         private val horizontal: HorizontalHandle,
         private val vertical: VerticalHandle
@@ -616,8 +733,17 @@ private fun resolveInteraction(
     position: Offset,
     rect: Rect,
     handleRadius: Float,
-    shape: ScreenshotShape
+    shape: ScreenshotShape,
+    freeformPoints: List<Offset>
 ): SelectionInteraction? {
+    // 自由形状没有角点手柄：点在形状内=整体移动，点在形状外=开一笔新的。
+    if (shape == ScreenshotShape.Freeform) {
+        return if (FreeformGeometry.isPointInside(freeformPoints, position)) {
+            SelectionInteraction.Move
+        } else {
+            null
+        }
+    }
     val handles = listOf(
         Triple(rect.topLeft, HorizontalHandle.Left, VerticalHandle.Top),
         Triple(Offset(rect.right, rect.top), HorizontalHandle.Right, VerticalHandle.Top),
@@ -644,6 +770,7 @@ private fun containsSelection(
     return when (shape) {
         ScreenshotShape.Rectangle -> rect.contains(position)
         ScreenshotShape.Oval -> rect.contains(position) && pointInsideOval(rect, position)
+        ScreenshotShape.Freeform -> false
     }
 }
 
