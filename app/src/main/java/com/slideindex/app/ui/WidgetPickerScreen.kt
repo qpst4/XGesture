@@ -400,7 +400,9 @@ fun WidgetPickerScreen(
     }
   }
 
-  val listHPadding = if (overlayMode) PickerListOverlayHorizontalPadding else PickerListHorizontalPadding
+  // 整页/浮层的列表内容都由本页自己画行，scaffold 只给系统 insets，
+  // 所以这里必须显式给 12dp，否则分组标题与卡片会贴边（选择小部件/我的直达）。
+  val listHPadding = PickerListOverlayHorizontalPadding
 
   SettingsLazyScreenScaffold(
     title = stringResource(R.string.widget_picker_title),
@@ -783,7 +785,9 @@ private fun WidgetAppDetailScreen(
   enableBackHandler: Boolean = true,
   overlayMode: Boolean = false,
 ) {
-  val listHPadding = if (overlayMode) PickerListOverlayHorizontalPadding else PickerListHorizontalPadding
+  // 整页/浮层的列表内容都由本页自己画行，scaffold 只给系统 insets，
+  // 所以这里必须显式给 12dp，否则分组标题与卡片会贴边（选择小部件/我的直达）。
+  val listHPadding = PickerListOverlayHorizontalPadding
 
   SettingsScreenScaffold(
     title = group.appLabel,
