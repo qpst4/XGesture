@@ -919,6 +919,9 @@ internal class QuickLauncherOverlayController(
         // 添加流程重开面板：恢复进页前那一页（只消费一次；普通手势仍从第 1 页开始）。
         quickLauncherPageIndex = if (restorePageOnNextSession) {
             restorePageOnNextSession = false
+            // onSessionEnd() 把 activePanelId 清空了；这里先同步，否则下面 prewarm 走
+            // activeQuickLauncherPanel() 时会把它当成“换面板”，再次把页索引置 0。
+            activePanelId = host.gestureSession().quickLauncherPanelId()
             pendingRestorePageIndex.also { pendingRestorePageIndex = null } ?: 0
         } else {
             0
