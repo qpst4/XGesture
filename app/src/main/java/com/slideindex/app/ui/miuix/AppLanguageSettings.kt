@@ -20,17 +20,19 @@ fun appLanguageSettingsCardItems(
     val followSystemLabel = stringResource(R.string.settings_app_language_system)
     val zhLabel = stringResource(R.string.settings_app_language_label_zh)
     val enLabel = stringResource(R.string.settings_app_language_label_en)
+    val esLabel = stringResource(R.string.settings_app_language_label_es)
     val jaLabel = stringResource(R.string.settings_app_language_label_ja)
     val arLabel = stringResource(R.string.settings_app_language_label_ar)
     val ruLabel = stringResource(R.string.settings_app_language_label_ru)
-    val languageOptions = remember(followSystemLabel, zhLabel, enLabel, jaLabel, arLabel, ruLabel) {
-        listOf(followSystemLabel, zhLabel, enLabel, jaLabel, arLabel, ruLabel)
+    val languageOptions = remember(followSystemLabel, zhLabel, enLabel, esLabel, jaLabel, arLabel, ruLabel) {
+        listOf(followSystemLabel, zhLabel, enLabel, esLabel, jaLabel, arLabel, ruLabel)
     }
     val languageEntries = remember {
         listOf(
             AppUiLanguage.SYSTEM,
             AppUiLanguage.ZH,
             AppUiLanguage.EN,
+            AppUiLanguage.ES,
             AppUiLanguage.JA,
             AppUiLanguage.AR,
             AppUiLanguage.RU,

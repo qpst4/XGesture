@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="search_engine_grid_columns_value">
+        <item quantity="one">%d columna</item>
+        <item quantity="other">%d columnas</item>
+    </plurals>
+    <plurals name="search_engine_grid_rows_value">
+        <item quantity="one">%d fila</item>
+        <item quantity="other">%d filas</item>
+    </plurals>
+    <plurals name="search_engine_settings_summary">
+        <item quantity="one">%d motor</item>
+        <item quantity="other">%d motores</item>
+    </plurals>
+    <plurals name="image_search_engine_settings_summary">
+        <item quantity="one">%1$d destino para compartir · %2$d motor agregado</item>
+        <item quantity="other">%1$d destinos para compartir · %2$d motores agregados</item>
+    </plurals>
+    <plurals name="search_engine_import_preview_count">
+        <item quantity="one">%1$d nuevo, %2$d duplicados omitidos</item>
+        <item quantity="other">%1$d nuevos, %2$d duplicados omitidos</item>
+    </plurals>
+    <plurals name="search_engine_import_success">
+        <item quantity="one">Se importó %1$d motor (%2$s)</item>
+        <item quantity="other">Se importaron %1$d motores (%2$s)</item>
+    </plurals>
+    <plurals name="share_target_batch_added">
+        <item quantity="one">Se añadió %d destino para compartir</item>
+        <item quantity="other">Se añadieron %d destinos para compartir</item>
+    </plurals>
+    <plurals name="float_ball_style_slideshow_hint">
+        <item quantity="one">%d imagen seleccionada, cambia cada 3 segundos</item>
+        <item quantity="other">%d imágenes seleccionadas, cambian cada 3 segundos</item>
+    </plurals>
+    <plurals name="share_image_ocr_history_entry_desc_count">
+        <item quantity="one">%d entrada — toca para abrir</item>
+        <item quantity="other">%d entradas — toca para abrir</item>
+    </plurals>
+    <plurals name="floating_pointer_edge_side_summary">
+        <item quantity="one">%1$d zona · %2$s</item>
+        <item quantity="other">%1$d zonas · %2$s</item>
+    </plurals>
+    <plurals name="apps_per_row_value_label">
+        <item quantity="one">%d columna</item>
+        <item quantity="other">%d columnas</item>
+    </plurals>
+    <plurals name="settings_backup_import_success">
+        <item quantity="one">Se importó %d ajuste</item>
+        <item quantity="other">Se importaron %d ajustes</item>
+    </plurals>
+    <plurals name="settings_backup_preview_count">
+        <item quantity="one">Se sobrescribirá %d ajuste.</item>
+        <item quantity="other">Se sobrescribirán %d ajustes.</item>
+    </plurals>
+    <plurals name="otp_autofill_stats_summary">
+        <item quantity="one">%1$d intento, %2$d%% de aciertos</item>
+        <item quantity="other">%1$d intentos, %2$d%% de aciertos</item>
+    </plurals>
+    <plurals name="shell_panel_history_entry_desc_count">
+        <item quantity="one">Ver %d ejecución reciente</item>
+        <item quantity="other">Ver %d ejecuciones recientes</item>
+    </plurals>
+    <plurals name="clipboard_history_count">
+        <item quantity="one">%d entrada</item>
+        <item quantity="other">%d entradas</item>
+    </plurals>
+    <plurals name="stash_entry_count">
+        <item quantity="one">%d elemento</item>
+        <item quantity="other">%d elementos</item>
+    </plurals>
+    <plurals name="stash_clipboard_entry_summary_stash">
+        <item quantity="one">%d elemento de Ideas</item>
+        <item quantity="other">%d elementos de Ideas</item>
+    </plurals>
+    <plurals name="image_search_engine_aggregated_section">
+        <item quantity="one">Motores de búsqueda agregados (%d visible)</item>
+        <item quantity="other">Motores de búsqueda agregados (%d visibles)</item>
+    </plurals>
+    <plurals name="missing_permissions_entry_desc_count">
+        <item quantity="one">A %1$d función le faltan permisos de Android</item>
+        <item quantity="other">A %1$d funciones les faltan permisos de Android</item>
+    </plurals>
+    <plurals name="search_panel_settings_index_count">
+        <item quantity="one">%d elemento cargado</item>
+        <item quantity="other">%d elementos cargados</item>
+    </plurals>
+    <plurals name="honeycomb_launcher_entry_summary">
+        <item quantity="one">%d configurado</item>
+        <item quantity="other">%d configurados</item>
+    </plurals>
+    <plurals name="fv_ring_launcher_entry_summary">
+        <item quantity="one">%d elemento configurado</item>
+        <item quantity="other">%d elementos configurados</item>
+    </plurals>
+    <plurals name="quick_launcher_entry_summary_panels">
+        <item quantity="one">%d panel de lanzador</item>
+        <item quantity="other">%d paneles de lanzador</item>
+    </plurals>
+    <plurals name="quick_launcher_panel_pick_summary">
+        <item quantity="one">%1$d × %2$d · %3$d elemento</item>
+        <item quantity="other">%1$d × %2$d · %3$d elementos</item>
+    </plurals>
+    <plurals name="search_panel_file_folder_count">
+        <item quantity="one">%d añadido</item>
+        <item quantity="other">%d añadidos</item>
+    </plurals>
+    <plurals name="clipboard_history_float_record_count">
+        <item quantity="one">%d entrada</item>
+        <item quantity="other">%d entradas</item>
+    </plurals>
+    <plurals name="clipboard_float_meta_chars">
+        <item quantity="one">%d carácter</item>
+        <item quantity="other">%d caracteres</item>
+    </plurals>
+    <plurals name="clipboard_float_meta_lines">
+        <item quantity="one">%d línea</item>
+        <item quantity="other">%d líneas</item>
+    </plurals>
+    <plurals name="clipboard_float_app_blacklist_desc">
+        <item quantity="one">%1$d app bloqueada · %2$d pegados correctos · %3$d fallos</item>
+        <item quantity="other">%1$d apps bloqueadas · %2$d pegados correctos · %3$d fallos</item>
+    </plurals>
+    <plurals name="notification_history_group_summary">
+        <item quantity="one">%d notificación</item>
+        <item quantity="other">%d notificaciones</item>
+    </plurals>
+    <plurals name="fingertip_ring_slot_count_value">
+        <item quantity="one">%d ranura</item>
+        <item quantity="other">%d ranuras</item>
+    </plurals>
+    <plurals name="universal_copy_selected">
+        <item quantity="one">%d seleccionado</item>
+        <item quantity="other">%d seleccionados</item>
+    </plurals>
+    <plurals name="universal_copy_copied">
+        <item quantity="one">Se copió %d elemento</item>
+        <item quantity="other">Se copiaron %d elementos</item>
+    </plurals>
+    <plurals name="freezer_restore_intents_done_count">
+        <item quantity="one">Listo — se actualizó %d app</item>
+        <item quantity="other">Listo — se actualizaron %d apps</item>
+    </plurals>
+    <plurals name="freezer_refreeze_done">
+        <item quantity="one">Se congeló %d app</item>
+        <item quantity="other">Se congelaron %d apps</item>
+    </plurals>
+    <plurals name="freezer_unfreeze_all_done">
+        <item quantity="one">Se descongeló %d app</item>
+        <item quantity="other">Se descongelaron %d apps</item>
+    </plurals>
+    <plurals name="freezer_pause_all_done">
+        <item quantity="one">Se pausó %d app</item>
+        <item quantity="other">Se pausaron %d apps</item>
+    </plurals>
+    <plurals name="freezer_unpause_all_done">
+        <item quantity="one">Se reanudó %d app</item>
+        <item quantity="other">Se reanudaron %d apps</item>
+    </plurals>
+    <plurals name="freezer_import_frozen_done">
+        <item quantity="one">Se importó %d app</item>
+        <item quantity="other">Se importaron %d apps</item>
+    </plurals>
+    <plurals name="freezer_batch_remove_done">
+        <item quantity="one">Se quitó %d app de la lista</item>
+        <item quantity="other">Se quitaron %d apps de la lista</item>
+    </plurals>
+    <plurals name="holographic_launcher_entry_summary_hidden">
+        <item quantity="one">%d app oculta</item>
+        <item quantity="other">%d apps ocultas</item>
+    </plurals>
+    <plurals name="holographic_apps_entry_count">
+        <item quantity="one">%d app añadida</item>
+        <item quantity="other">%d apps añadidas</item>
+    </plurals>
+    <plurals name="holographic_apps_section_added">
+        <item quantity="one">Añadidas (%d app)</item>
+        <item quantity="other">Añadidas (%d apps)</item>
+    </plurals>
+    <plurals name="quick_launcher_folder_items_count">
+        <item quantity="one">%d elemento</item>
+        <item quantity="other">%d elementos</item>
+    </plurals>
+    <plurals name="shortcut_custom_count_summary">
+        <item quantity="one">%d acceso directo personalizado</item>
+        <item quantity="other">%d accesos directos personalizados</item>
+    </plurals>
+    <plurals name="shortcut_item_count">
+        <item quantity="one">%d elemento</item>
+        <item quantity="other">%d elementos</item>
+    </plurals>
+    <plurals name="widget_group_count">
+        <item quantity="one">%d widget</item>
+        <item quantity="other">%d widgets</item>
+    </plurals>
+    <plurals name="clipboard_lsposed_whitelist_desc">
+        <item quantity="one">%1$d app añadida</item>
+        <item quantity="other">%1$d apps añadidas</item>
+    </plurals>
+    <plurals name="search_panel_shortcut_index_count">
+        <item quantity="one">%d acceso directo indexado</item>
+        <item quantity="other">%d accesos directos indexados</item>
+    </plurals>
+    <plurals name="search_panel_clipboard_index_count">
+        <item quantity="one">%d entrada del portapapeles</item>
+        <item quantity="other">%d entradas del portapapeles</item>
+    </plurals>
+</resources>

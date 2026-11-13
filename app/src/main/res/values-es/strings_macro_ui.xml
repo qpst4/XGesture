@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="macro_entry_title">Macros de gestos</string>
+    <string name="macro_entry_desc">Grabar una secuencia de grifos y swipes en otra aplicación, y luego reproducirlo con un gesto.</string>
+    <string name="macro_list_title">Macros de gestos</string>
+    <string name="macro_list_hint">Un macro es un script de grifos, swipes y esperas que corre dentro de su aplicación de destino. Pulsa una fila para editarla,mantener presionadopara eliminarla.</string>
+    <string name="macro_search_hint">Buscar macros...</string>
+    <string name="macro_list_empty">Todavía no hay macros</string>
+    <string name="macro_list_no_match">No hay macros esta búsqueda</string>
+    <string name="macro_create">Nueva macro</string>
+    <string name="macro_row_summary">%1$s-%2$d acciones</string>
+    <string name="macro_delete_title">Eliminar macro</string>
+    <string name="macro_delete_message">Eliminar "%1$s"? Esto no puede ser deshecho.</string>
+    <string name="macro_delete_confirm">Eliminar</string>
+    <string name="macro_editor_title">Editar macro</string>
+    <string name="macro_section_basic">Aspectos básicos</string>
+    <string name="macro_section_record">Grabación</string>
+    <string name="macro_name_label">Nombre de Macro</string>
+    <string name="macro_target_label">Aplicación de objetivos</string>
+    <string name="macro_target_none">No seleccionado</string>
+    <string name="macro_target_value">%1$s·%2$s</string>
+    <string name="macro_start_recording">Grabación inicial</string>
+    <string name="macro_recording">Grabación</string>
+    <string name="macro_start_recording_desc">Abre la aplicación de destino y registra lo que haces allí.</string>
+    <string name="macro_save">Guardar</string>
+    <string name="macro_help_idle">Iniciar una grabación abre la aplicación de destino. Usarlo normalmente; cuando hayas terminado, pulsar ahorre en la barra flotante.</string>
+    <string name="macro_help_recording">Grabación: utilizar la aplicación de destino, luego pulsar ahorre en la barra flotante para volver aquí.</string>
+    <string name="macro_error_name_required">Por favor, introduzca un nombre macro</string>
+    <string name="macro_target_pick_title">Aplicación de objetivos</string>
+    <string name="macro_target_pick_subtitle">Sólo se enumeran las aplicaciones que se pueden lanzar desde elpantalla de inicio.</string>
+    <string name="macro_target_empty">No se ha encontrado ninguna aplicación lanzable</string>
+    <string name="macro_target_selected">Seleccionado ·%1$s</string>
+    <string name="macro_recording_unavailable">La grabación no está disponible en esta compilación aún</string>
+    <string name="macro_recording_start_failed">No podía empezar a grabar</string>
+    <string name="macro_recording_saved">Grabación guardada: pasos %1$d</string>
+    <string name="macro_recording_empty">No se registró ninguna medida</string>
+</resources>

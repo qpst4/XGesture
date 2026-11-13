@@ -4630,6 +4630,7 @@
     <string name="settings_app_language_label_ja">日本語</string>
     <string name="settings_app_language_label_ar">العربية</string>
     <string name="settings_app_language_label_ru">Русский</string>
+    <string name="settings_app_language_label_es">Español</string>
     <string name="otp_autofill_reason_paste_fallback">キー注入に失敗したため、Ctrl+V 貼り付けにフォールバックしました</string>
     <string name="otp_autofill_reason_a11y_not_connected">アクセシビリティサービスが接続されておらず、システム注入でもコードを入力できませんでした</string>
     <string name="otp_autofill_reason_no_result">入力結果が返ってきませんでした（オーバーレイプロセスが起動していない、またはリクエストが失われた可能性があります）</string>

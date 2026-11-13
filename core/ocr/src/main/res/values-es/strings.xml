@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vlm_provider_dashscope_name">Alibaba Cloud DashScope</string>
+    <string name="vlm_provider_dashscope_desc">Qwen VL · Rápido y rentable para fórmulas y gráficos</string>
+    <string name="vlm_provider_dashscope_hint">Obtener una clave de API (sk-...) de la consola DashScope</string>
+    <string name="vlm_provider_zhipu_name">Zhipu GLM</string>
+    <string name="vlm_provider_zhipu_desc">GLM-4V · Fuerte comprensión china para docs largos y fórmulas complejas</string>
+    <string name="vlm_provider_zhipu_hint">Obtener una clave de API de la plataforma abierta Zhipu</string>
+    <string name="vlm_provider_siliconflow_name">SiliconFlow</string>
+    <string name="vlm_provider_siliconflow_desc">SiliconFlow · Relé de alta concurrencia para modelos de visión abierta</string>
+    <string name="vlm_provider_siliconflow_hint">Obtener una clave de API de la plataforma SiliconFlow</string>
+    <string name="vlm_provider_custom_name">Punto final personalizado</string>
+    <string name="vlm_provider_custom_desc">OneAPI, proxy inverso o punto final compatible con OpenAI</string>
+    <string name="vlm_provider_custom_hint">Cualquier punto final compatible con OpenAI /chat/compleciones</string>
+    <string name="vlm_provider_gemini_name">Gemini</string>
+    <string name="vlm_provider_gemini_desc">Google Gemini · Visión fuerte y un nivel libre, a través de la capa oficial de compatibilidad OpenAI</string>
+    <string name="vlm_provider_gemini_hint">Obtener una clave de API de Google AI Studio</string>
+    <string name="vlm_provider_openai_name">OpenAI</string>
+    <string name="vlm_provider_openai_desc">Serie GPT · Versátil para visión y traducción, ecosistema más maduro</string>
+    <string name="vlm_provider_openai_hint">Obtener una clave de API (sk-...) de la plataforma OpenAI</string>
+    <string name="vlm_provider_anthropic_name">Claude</string>
+    <string name="vlm_provider_anthropic_desc">Antrópico Claude · Reconocimiento de alto nivel para documentos largos y fórmulas complejas</string>
+    <string name="vlm_provider_anthropic_hint">Obtener una clave de API (sk-ant-...) de la consola antropópica</string>
+    <string name="vlm_provider_deepseek_name">DeepSeek</string>
+    <string name="vlm_provider_deepseek_desc">DeepSeek · Bajo costo; deepseek-flash lee texto directamente desdecaptura de pantallas</string>
+    <string name="vlm_provider_deepseek_hint">Obtener una clave de API de la plataforma DeepSeek</string>
+    <string name="vlm_provider_groq_name">Groq</string>
+    <string name="vlm_provider_groq_desc">Groq · Inferencia extremadamente rápida; qwen3.8-27b maneja OCR y reconocimiento de imagen (no la gruta de xAI)</string>
+    <string name="vlm_provider_groq_hint">Obtener una clave de API (gsk ...) de la consola GroqCloud</string>
+    <string name="vlm_provider_xai_name">Grok (xAI)</string>
+    <string name="vlm_provider_xai_desc">xAI Grok · Comprensión de imágenes con fuerte razonamiento (una empresa diferente de Groq)</string>
+    <string name="vlm_provider_xai_hint">Obtener una clave de API de la consola xAI</string>
+    <string name="ocr_error_unknown_model">Modelo OCR desconocido:%1$s</string>
+    <string name="ocr_error_model_not_installed">Modelo OCR no instalado</string>
+    <string name="ocr_error_native_engine_not_ready">OCR runtime not ready</string>
+    <string name="ocr_error_api_key_not_configured">Clave API no configurada. Establecerlo bajo modelos OCR → Cloud</string>
+    <string name="ocr_error_unsupported_engine">Motor OCR sin soporte</string>
+    <string name="ocr_error_no_text_recognized">No se reconoce ningún texto</string>
+    <string name="vlm_error_cloud_http">El reconocimiento de la nube falló (HTTP %1$d):%2$s</string>
+    <string name="vlm_error_cloud_empty">Respuesta a la nube inválida: sin resultado de reconocimiento</string>
+    <string name="vlm_error_network">Error de red o API:%1$s</string>
+    <string name="vlm_error_no_details">No hay detalles</string>
+    <string name="vlm_test_success">¡Conexión exitosa! Autenticación OK</string>
+    <string name="vlm_test_failed">La conexión falló (HTTP %1$d):%2$s</string>
+    <string name="vlm_test_network_error">Error de red o URL:%1$s</string>
+    <string name="vlm_error_api_key_empty">La clave de API no puede estar vacía</string>
+    <string name="vlm_error_unknown">Error desconocido</string>
+    <string name="vlm_user_recognition_prompt">Reconocer todos los textos y fórmulas en esta imagen siguiendo las reglas de formato del sistema:</string>
+    <string name="ocr_error_paddle_not_initialized">Motor PaddleOCR no inicializado</string>
+    <string name="vlm_default_system_prompt">Usted es un asistente profesional de OCR para texto y fórmulas. Extraer contenido exactamente como se muestra en la imagen, siguiendo estas reglas:\n\n1. Texto y párrafos sencillos:\n- Salida Chino, palabras ordinarias en inglés, puntuación y números diarios (indices, fechas, tiempos, cantidades, IDs, etc.) como texto plano. Nunca envolverlos en $.\n- Nunca envolver letras aisladas, etiquetas de opción (A, B, C o (1), (2)), o números simples en $.\n\n2. Fórmulas matemáticas y ciencias:\n- Use LaTeX sólo para expresiones matemáticas reales (operadores, fracciones, raíces, sumas, cálculo, letras griegas, o superscriptos claros).\n- Matemática en línea: solo $ (por ejemplo, $E = mc^2$).\n- Mostrar matemáticas: $$ (por ejemplo $$\\frac{a}{b}$$).\n- chino dentro de una fórmula (subscriptos, notas, etc.): envuelve con texto\\{...} en LaTeX.\n\n3. Producto:\n- Preservar las rupturas de línea originales, párrafos y orden de lectura.\n- Extracción de salida solamente. No hay preámbulo, comentario, o cercas de código de marcado exterior.</string>
+</resources>

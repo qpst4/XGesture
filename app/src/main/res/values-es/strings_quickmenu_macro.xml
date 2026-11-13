@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quick_menu_macro_desc">Escoge una macro registrada y ejecutela</string>
+    <string name="quick_menu_macro_empty">Todavía no hay macros. Crear uno en Extensiones → Gestures → Macros.</string>
+</resources>

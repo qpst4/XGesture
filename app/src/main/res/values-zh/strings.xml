@@ -632,6 +632,7 @@
     <string name="settings_app_language_label_ja" translatable="false">日本語</string>
     <string name="settings_app_language_label_ar" translatable="false">العربية</string>
     <string name="settings_app_language_label_ru" translatable="false">Русский</string>
+    <string name="settings_app_language_label_es" translatable="false">Español</string>
     <string name="settings_section_interaction_feedback">交互反馈</string>
     <string name="haptic_strength">震动强度</string>
     <string name="haptic_gesture_trigger_title">手势唤起振动</string>

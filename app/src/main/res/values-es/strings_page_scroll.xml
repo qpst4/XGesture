@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="page_scroll_action_name">Desplazamiento de página</string>
+    <string name="page_scroll_action_description">Abre una barra flotante que mantiene desplazando suavemente la página hasta que la pausa o cierre.</string>
+    <string name="page_scroll_reverse_direction">Dirección de desplazamiento inversa</string>
+    <string name="page_scroll_slower">Más lento</string>
+    <string name="page_scroll_faster">Más rápido</string>
+    <string name="page_scroll_pause">Pausa de desplazamiento</string>
+    <string name="page_scroll_resume">Resumen de desplazamiento</string>
+    <string name="page_scroll_close">Cerrar la barra de desplazamiento</string>
+    <string name="page_scroll_unavailable">Esta pantalla no expone contenido desplazable.</string>
+    <string name="page_scroll_service_unavailable">Servicio de accesibilidadno está funcionando.</string>
+    <string name="page_scroll_requires_android_n">Smooth desplazamiento requiere Android 7.0 o más reciente.</string>
+    <string name="page_scroll_prefs_title">Desplazamiento de página</string>
+    <string name="page_scroll_prefs_behavior">Comportamiento</string>
+    <string name="page_scroll_prefs_appearance">Apariencia</string>
+    <string name="page_scroll_behavior_hint">Modo de activación “Continuo”: sujeta el dedo hacia abajo y deslizarse hacia arriba o hacia abajo hacia la página de desplazamiento por página; paradas de liberación, y ninguna barra aparece.\nOtros modos de activación: una barra flotante aparece y mantiene el desplazamiento; utilice sus botones para pausar, cambiar la velocidad o cerrar.</string>
+    <string name="page_scroll_speed_title">Velocidad de desplazamiento predeterminada</string>
+    <string name="page_scroll_speed_value">Speed %1$d de %2$d</string>
+    <string name="page_scroll_bar_idle_alpha_title">Opacidad ociosa</string>
+    <string name="page_scroll_bar_idle_alpha_summary">Opacidad después de 4 segundos sin tocar la barra. Arrastre al mínimo para ocultarlo por completo; el mismo lugar todavía responde a los grifos.</string>
+</resources>

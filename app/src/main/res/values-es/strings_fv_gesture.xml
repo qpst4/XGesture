@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="fv_custom_gesture_title">Gestos personalizados</string>
+    <string name="fv_custom_gesture_summary">Dibujar un golpe en elbola flotantepara ejecutar una acción</string>
+    <string name="fv_custom_gesture_section">Gestos personalizados</string>
+    <string name="fv_custom_gesture_add">Añadir gesto</string>
+    <string name="fv_custom_gesture_empty">Aún no hay gestos personalizados — toque “+” para dibujar uno.</string>
+    <string name="fv_custom_gesture_edit">Editar</string>
+    <string name="fv_custom_gesture_delete">Eliminar</string>
+    <string name="fv_custom_gesture_delete_title">Eliminar el gesto?</string>
+    <string name="fv_custom_gesture_delete_message">El gesto y su contraparte reflejada serán eliminados.</string>
+    <string name="fv_custom_gesture_mirror_badge">Mirror gesto</string>
+    <string name="fv_custom_gesture_dialog_title">Gesto</string>
+    <string name="fv_custom_gesture_action_row">Acción</string>
+    <string name="fv_custom_gesture_action_none">Ninguno</string>
+    <string name="fv_custom_gesture_mirror_row">También añadir el gesto espejo</string>
+    <string name="fv_custom_gesture_conflict_message">Este gesto ya está asignado a %1$s. Dibujar una forma diferente, o cambiarla primero.</string>
+    <string name="fv_custom_gesture_failed_title">Error</string>
+    <string name="fv_custom_gesture_straight_line">Una línea recta conflictos con los gestos de cuerda integrada. Dibuja una esquina o una curva en su lugar.</string>
+    <string name="fv_custom_gesture_need_gesture">Dibuja un gesto primero.</string>
+    <string name="fv_custom_gesture_need_action">Elige una acción primero.</string>
+    <string name="fv_custom_gesture_save_failed">No pude salvar el gesto.</string>
+    <string name="fv_hint_suffix_free_window">- Ventana libre</string>
+    <string name="fv_hint_suffix_fullscreen">- Pantalla completa</string>
+</resources>

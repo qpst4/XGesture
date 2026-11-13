@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="activity_shortcut_coupons">Cupones</string>
+    <string name="activity_shortcut_favorites">Favoritos</string>
+    <string name="activity_shortcut_search">Buscar</string>
+    <string name="activity_shortcut_scan">Scan</string>
+</resources>
