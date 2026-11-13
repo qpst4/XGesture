@@ -25,7 +25,6 @@ import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import com.slideindex.app.ui.miuix.MiuixFormDialog
@@ -54,6 +53,7 @@ import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import com.slideindex.app.ui.miuix.MiuixInsetCardComponentMargin
 import com.slideindex.app.ui.miuix.MiuixTabSettingsCard
+import com.slideindex.app.ui.miuix.MiuixIconDropdownMenu
 import top.yukonga.miuix.kmp.icon.extended.Add
 import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -230,7 +230,7 @@ fun QuickLauncherPanelManagementSection(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                OverlayIconDropdownMenu(entry = panelMenuEntry) {
+                MiuixIconDropdownMenu(entry = panelMenuEntry) {
                     MiuixIcon(
                         MiuixIcons.Medium.More,
                         contentDescription = renameLabel,

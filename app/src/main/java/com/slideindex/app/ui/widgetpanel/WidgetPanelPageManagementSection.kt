@@ -31,6 +31,7 @@ import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixTabSettingsCard
+import com.slideindex.app.ui.miuix.MiuixIconDropdownMenu
 import com.slideindex.app.widget.WidgetPanelDefaults
 import com.slideindex.app.widget.WidgetPanelMutator
 import com.slideindex.app.widget.WidgetPanelPage
@@ -40,7 +41,6 @@ import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.icon.extended.Add
 import top.yukonga.miuix.kmp.icon.extended.More
@@ -158,7 +158,7 @@ fun WidgetPanelPageManagementSection(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                OverlayIconDropdownMenu(entry = panelMenuEntry) {
+                MiuixIconDropdownMenu(entry = panelMenuEntry) {
                     MiuixIcon(
                         MiuixIcons.Medium.More,
                         contentDescription = renameLabel,

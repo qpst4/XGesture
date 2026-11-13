@@ -55,8 +55,8 @@ import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.slideindex.app.ui.miuix.MiuixIconDropdownMenu
 
 /** 挑应用列表里如何处理应用分身条目。 */
 enum class AppClonePickMode {
@@ -639,7 +639,7 @@ private fun SystemAppsMenuAction(
             ),
         )
     }
-    OverlayIconDropdownMenu(entry = entry) {
+    MiuixIconDropdownMenu(entry = entry) {
         Icon(
             imageVector = Icons.Default.MoreVert,
             contentDescription = stringResource(R.string.app_picker_more_menu),

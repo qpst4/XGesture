@@ -80,6 +80,8 @@ import com.slideindex.app.ui.icon.AppIconTheme
 import com.slideindex.app.ui.miuix.MiuixBackNavigationIcon
 import com.slideindex.app.ui.miuix.MiuixBlurredTopBar
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
+import com.slideindex.app.ui.miuix.MiuixGlassBackButton
+import com.slideindex.app.ui.miuix.MiuixTopAppBar
 import com.slideindex.app.ui.miuix.effect.BgEffectBackground
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.miuix.rememberMiuixBlurBackdrop
@@ -96,7 +98,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurBlendMode
 import top.yukonga.miuix.kmp.blur.BlurColors
-import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
+import top.yukonga.miuix.kmp.material.isRuntimeShaderSupported
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
@@ -143,21 +145,17 @@ fun ExtensionAboutScreen(
 
     Scaffold(
         topBar = {
-            MiuixBlurredTopBar(
+            MiuixTopAppBar(
+                title = stringResource(R.string.about_section_title),
                 backdrop = backdrop,
-                enabled = blurActive,
-            ) {
-                SmallTopAppBar(
-                    title = stringResource(R.string.about_section_title),
-                    scrollBehavior = scrollBehavior,
-                    color = barColor,
-                    titleColor = MiuixTheme.colorScheme.onSurface.copy(alpha = titleAlpha),
-                    defaultWindowInsetsPadding = false,
-                    navigationIcon = {
-                        MiuixBackNavigationIcon(onBack)
-                    }
-                )
-            }
+                color = barColor,
+                scrollBehavior = scrollBehavior,
+                onBack = onBack,
+                largeTitle = "",
+                titleAlpha = { titleAlpha },
+                backgroundAlpha = { if (heroCollapsed) 1f else 0f },
+                defaultWindowInsetsPadding = false,
+            )
         },
         contentWindowInsets = WindowInsets.systemBars
             .add(WindowInsets.displayCutout)

@@ -105,6 +105,8 @@ fun SettingsLazyScreenScaffold(
     fabInset: androidx.compose.ui.unit.Dp = 0.dp,
     /** 外部持有的滚动状态（例如「打开时定位到当前已绑定的那一项」需要给出初始下标）。 */
     listState: LazyListState? = null,
+    /** 玻璃弹层槽，透传给 [MiuixListScaffold]。 */
+    overlay: @Composable androidx.compose.foundation.layout.BoxScope.() -> Unit = {},
     content: LazyListScope.() -> Unit,
 ) {
     MiuixListScaffold(
@@ -113,13 +115,14 @@ fun SettingsLazyScreenScaffold(
         pageHint = pageHint,
         subtitle = subtitle,
         showPageHintCard = true,
-        navigationIcon = onBack?.let { { MiuixBackNavigationIcon(it) } },
+        onBack = onBack,
         actions = actions,
         floatingActionButton = floatingActionButton,
         bottomContent = bottomContent,
         userScrollEnabled = userScrollEnabled,
         fabInset = fabInset,
         listState = listState,
+        overlay = overlay,
     ) {
         content()
     }

@@ -16,7 +16,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import com.slideindex.app.ui.settings.components.MiuixNavigationRow
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.InvertColors
@@ -39,6 +38,7 @@ import top.yukonga.miuix.kmp.preference.SwitchPreference
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.miuix.appLanguageSettingsCardItems
 import com.slideindex.app.ui.miuix.themeAppearanceSettingsCardItems
+import com.slideindex.app.ui.miuix.MiuixDropdownPreference
 import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_100
 import com.slideindex.app.ui.settings.components.SettingExpandableDropdownRow
 import com.slideindex.app.ui.settings.components.SettingExpandableSwitchRow
@@ -137,7 +137,7 @@ fun InteractionAppearanceSettingsScreen(
         title = stringResource(R.string.interaction_appearance_settings_title),
         pageHint = stringResource(R.string.interaction_appearance_settings_entry_desc),
         showPageHintCard = true,
-        navigationIcon = { MiuixBackNavigationIcon(onBack) },
+        onBack = onBack,
     ) {
         item(key = "theme_section") {
             SmallTitle(
@@ -173,7 +173,7 @@ fun InteractionAppearanceSettingsScreen(
                     )
                 },
                 settingsCardScopeItem("icon-plate") {
-                    OverlayDropdownPreference(
+                    MiuixDropdownPreference(
                         title = iconPlateSectionTitle,
                         items = iconPlateTabLabels,
                         selectedIndex = com.slideindex.app.settings.IconPlateMode

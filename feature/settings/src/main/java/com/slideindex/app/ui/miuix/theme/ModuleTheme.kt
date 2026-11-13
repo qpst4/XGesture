@@ -20,7 +20,9 @@ import com.slideindex.app.settings.OverlaySettings
 import com.slideindex.app.settings.ThemePaletteStyle
 import com.slideindex.app.settings.TopAppBarBlurStyle
 import com.slideindex.app.settings.UiDensityScaleLimits
+import com.slideindex.app.ui.miuix.LocalPageBackdropHolder
 import com.slideindex.app.ui.miuix.LocalTopAppBarBlurStyle
+import com.slideindex.app.ui.miuix.rememberPageBackdropHolder
 import com.slideindex.app.ui.theme.LocalAppDarkTheme
 import com.slideindex.app.ui.theme.LocalPlatformDensity
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
@@ -73,6 +75,7 @@ fun ModuleTheme(
 
     MiuixTheme(controller = controller) {
         CompositionLocalProvider(
+            LocalPageBackdropHolder provides rememberPageBackdropHolder(),
             LocalPlatformDensity provides currentDensity,
             LocalDensity provides appDensity,
             LocalContentColor provides MiuixTheme.colorScheme.onBackground,

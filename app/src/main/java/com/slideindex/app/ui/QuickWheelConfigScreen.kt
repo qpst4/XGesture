@@ -24,6 +24,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Ok
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
@@ -65,6 +67,7 @@ import com.slideindex.app.settings.QuickWheelCodec
 import com.slideindex.app.settings.withSectorToggled
 import com.slideindex.app.ui.miuix.MiuixSettingsScreenScaffold
 import com.slideindex.app.ui.miuix.MiuixSliderRow
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
@@ -410,17 +413,20 @@ fun QuickWheelConfigScreen(
                 ),
                 onBack = { handleBack() },
                 actions = {
-                    // 右上「保存」：文字按钮更醒目；有未保存改动时用强调色点亮，无改动时置灰。
-                    TextButton(
+                    // 右上「保存」：有未保存改动时用强调色点亮，无改动时置灰。
+                    MiuixTopBarIconButton(
                         onClick = { saveDraft() },
                         enabled = dirty,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = QuickWheelAccent,
-                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                .copy(alpha = 0.38f),
-                        ),
                     ) {
-                        Text(stringResource(R.string.quick_wheel_save))
+                        Icon(
+                            imageVector = MiuixIcons.Medium.Ok,
+                            contentDescription = stringResource(R.string.quick_wheel_save),
+                            tint = if (dirty) {
+                                QuickWheelAccent
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                            },
+                        )
                     }
                 },
             ) {

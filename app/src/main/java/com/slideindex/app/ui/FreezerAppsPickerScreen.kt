@@ -30,6 +30,7 @@ import com.slideindex.app.overlay.CloneAppsIndex
 import com.slideindex.app.settings.SettingsRepository
 import com.slideindex.app.ui.compose.rememberAppRepository
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.miuix.MiuixTabRowWithContour
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffoldWithExpandableSearch
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
@@ -171,7 +172,7 @@ fun FreezerAppsPickerScreen(
         onSearchQueryChange = { searchQuery = it },
         onBack = onBack,
         extraActions = {
-            IconButton(onClick = onOpenSettings) {
+            MiuixTopBarIconButton(onClick = onOpenSettings) {
                 MiuixIcon(
                     imageVector = MiuixIcons.Medium.Settings,
                     contentDescription = stringResource(R.string.freezer_settings_title),

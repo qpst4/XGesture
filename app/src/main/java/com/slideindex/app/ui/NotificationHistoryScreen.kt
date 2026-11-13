@@ -4,6 +4,18 @@ import com.slideindex.app.ui.viewmodel.NotificationHistoryViewModel
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.unit.dp
+import top.yukonga.miuix.kmp.glass.GlassIconDropdownMenu
+import top.yukonga.miuix.kmp.glass.GlassPopupDefaults
+import top.yukonga.miuix.kmp.glass.glassPopupAnchor
+import top.yukonga.miuix.kmp.glass.glassPopupAnchorContent
+import top.yukonga.miuix.kmp.glass.rememberGlassPopupAnchor
+import top.yukonga.miuix.kmp.material.GlassDefaults
+import com.slideindex.app.ui.miuix.LocalMiuixScreenBackdrop
+import com.slideindex.app.ui.theme.LocalAppDarkTheme
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.miuix.MiuixExpandableSearchIconAction
 import com.slideindex.app.ui.miuix.MiuixScaffoldSearchTabBottomContent
 import com.slideindex.app.ui.miuix.consumeExpandableSearchBack
@@ -162,6 +174,7 @@ fun NotificationHistoryScreen(
     val showSearchUi = selectedTab != NotificationFilterTab.ACTIVE.ordinal
     val clearAllLabel = stringResource(R.string.notification_history_clear_all)
     val filterSettingsLabel = stringResource(R.string.notification_filter_settings_title)
+    val filterRulesLabel = stringResource(R.string.notification_filter_rules_action)
     val moreMenuEntry = DropdownEntry(
         items = buildList {
             if (canClearHistory) {
@@ -172,6 +185,12 @@ fun NotificationHistoryScreen(
                     ),
                 )
             }
+            add(
+                DropdownItem(
+                    text = filterRulesLabel,
+                    onClick = onOpenRules,
+                ),
+            )
             add(
                 DropdownItem(
                     text = filterSettingsLabel,
@@ -208,6 +227,9 @@ fun NotificationHistoryScreen(
         viewModel.hideNotification(item, listenerEnabled)
     }
 
+    val moreMenuAnchor = rememberGlassPopupAnchor()
+    var moreMenuExpanded by remember { mutableStateOf(false) }
+
     SettingsLazyScreenScaffold(
         title = stringResource(R.string.notification_history_title),
         onBack = handleBack,
@@ -220,17 +242,17 @@ fun NotificationHistoryScreen(
                     onQueryChange = { searchQuery = it },
                 )
             }
-            IconButton(onClick = onOpenRules) {
-                Icon(
-                    MiuixIcons.Medium.Tune,
-                    contentDescription = stringResource(R.string.notification_filter_rules_action),
-                    tint = MiuixTheme.colorScheme.onBackground,
-                )
-            }
-            OverlayIconDropdownMenu(entry = moreMenuEntry) {
+            MiuixTopBarIconButton(
+                onClick = { moreMenuExpanded = true },
+                modifier = Modifier.glassPopupAnchor(
+                    anchor = moreMenuAnchor,
+                    cornerRadius = 22.dp,
+                ),
+            ) {
                 Icon(
                     MiuixIcons.Medium.More,
                     contentDescription = stringResource(R.string.notification_filter_more_menu),
+                    modifier = Modifier.glassPopupAnchorContent(moreMenuAnchor),
                     tint = MiuixTheme.colorScheme.onBackground,
                 )
             }
@@ -248,6 +270,26 @@ fun NotificationHistoryScreen(
                         onTabSelected = { selectedTab = it },
                     )
                 },
+            )
+        },
+        overlay = {
+            GlassIconDropdownMenu(
+                show = moreMenuExpanded,
+                onDismissRequest = { moreMenuExpanded = false },
+                anchor = moreMenuAnchor,
+                anchorContent = {
+                    Icon(
+                        MiuixIcons.Medium.More,
+                        contentDescription = stringResource(R.string.notification_filter_more_menu),
+                        tint = MiuixTheme.colorScheme.onBackground,
+                    )
+                },
+                entries = listOf(moreMenuEntry),
+                backdrop = LocalMiuixScreenBackdrop.current,
+                visuals = GlassPopupDefaults.visuals(
+                    style = GlassDefaults.style(LocalAppDarkTheme.current),
+                ),
+                collapseOnSelection = true,
             )
         },
     ) {
@@ -296,6 +338,7 @@ fun NotificationHistoryScreen(
             )
         }
     }
+
 
     val deleteItem = pendingDeleteItem
     MiuixConfirmDialog(

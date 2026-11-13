@@ -5,7 +5,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.materialkolor.PaletteStyle
-import com.materialkolor.dynamicColorScheme
+import com.materialkolor.material3.dynamicColorScheme
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.slideindex.app.design.AppThemeSpec
 import com.slideindex.app.settings.DarkBackgroundStyle

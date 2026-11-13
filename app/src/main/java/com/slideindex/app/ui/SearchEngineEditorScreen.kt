@@ -59,6 +59,7 @@ import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import com.slideindex.app.ui.miuix.MiuixSwitchRow
 import com.slideindex.app.ui.miuix.MiuixTabSettingsCard
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.viewmodel.SearchEngineDraft
@@ -235,7 +236,7 @@ fun SearchEngineEditorScreen(
         ),
         onBack = onBack,
         actions = {
-            top.yukonga.miuix.kmp.basic.IconButton(onClick = saveAction) {
+            MiuixTopBarIconButton(onClick = saveAction) {
                 top.yukonga.miuix.kmp.basic.Icon(
                     imageVector = MiuixIcons.Medium.Ok,
                     contentDescription = stringResource(R.string.search_engine_save),

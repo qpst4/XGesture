@@ -56,6 +56,7 @@ import com.slideindex.app.ui.miuix.MiuixSettingsFabInset
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.miuix.MiuixHintText
+import com.slideindex.app.ui.miuix.MiuixIconDropdownMenu
 import com.slideindex.app.ui.settings.components.SettingsCardScope
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
@@ -69,7 +70,6 @@ import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -520,7 +520,7 @@ private fun ActivityShortcutSavedRowContent(
                     tint = MiuixTheme.colorScheme.primary
                 )
             }
-            OverlayIconDropdownMenu(entry = menuEntry) {
+            MiuixIconDropdownMenu(entry = menuEntry) {
                 MiuixIcon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = moreMenuDesc,

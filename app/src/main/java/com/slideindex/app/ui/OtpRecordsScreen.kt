@@ -43,6 +43,7 @@ import com.slideindex.app.otp.OtpRecordFillStatus
 import com.slideindex.app.ui.miuix.CardItem
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
+import com.slideindex.app.ui.miuix.MiuixIconDropdownMenu
 import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
 import com.slideindex.app.ui.viewmodel.OtpRecordsViewModel
@@ -51,7 +52,6 @@ import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.text.DateFormat
@@ -286,14 +286,14 @@ private fun OtpRecordsFilterSortActions(
             ),
         )
     }
-    OverlayIconDropdownMenu(entry = filterEntry) {
+    MiuixIconDropdownMenu(entry = filterEntry) {
         Icon(
             Icons.Default.FilterList,
             contentDescription = stringResource(R.string.otp_records_filter),
             tint = MiuixTheme.colorScheme.onBackground,
         )
     }
-    OverlayIconDropdownMenu(entry = sortEntry) {
+    MiuixIconDropdownMenu(entry = sortEntry) {
         Icon(
             Icons.Default.SwapVert,
             contentDescription = stringResource(R.string.otp_records_sort),

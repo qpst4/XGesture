@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.slideindex.app.ui.LocalMainNavContentStartInset
@@ -34,6 +35,8 @@ fun MiuixContentScaffold(
 ) {
     val scrollBehavior = MiuixScrollBehavior()
     val barBackdrop = rememberMiuixBlurBackdrop()
+    val backdropHolder = LocalPageBackdropHolder.current
+    SideEffect { backdropHolder?.backdrop = barBackdrop }
     val contentStartInset = LocalMainNavContentStartInset.current
     Scaffold(
         modifier = modifier
@@ -41,21 +44,18 @@ fun MiuixContentScaffold(
             .imePadding(),
         topBar = {
             Box(Modifier.fillMaxWidth()) {
-                MiuixBlurredTopBar(backdrop = barBackdrop) {
-                    AdaptiveTopAppBar(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = contentStartInset),
-                        color = barBackdrop.miuixAppBarColor(),
-                        title = title,
-                        scrollBehavior = scrollBehavior,
-                        navigationIcon = {
-                            if (onBack != null) MiuixBackNavigationIcon(onBack)
-                        },
-                        actions = actions,
-                        bottomContent = bottomContent,
-                    )
-                }
+                MiuixTopAppBar(
+                    title = title,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = contentStartInset),
+                    backdrop = barBackdrop,
+                    color = barBackdrop.miuixAppBarColor(),
+                    scrollBehavior = scrollBehavior,
+                    onBack = onBack,
+                    actions = actions,
+                    bottomContent = bottomContent,
+                )
             }
         },
     ) { innerPadding ->

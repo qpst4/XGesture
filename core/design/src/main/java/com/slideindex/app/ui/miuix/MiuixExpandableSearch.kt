@@ -37,7 +37,7 @@ fun MiuixExpandableSearchIconAction(
     onQueryChange: (String) -> Unit,
 ) {
     val searchLabel = stringResource(R.string.search_hint)
-    IconButton(
+    MiuixTopBarIconButton(
         onClick = {
             if (expanded) {
                 if (query.isNotBlank()) {

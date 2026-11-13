@@ -58,6 +58,7 @@ import com.slideindex.app.gesture.withSide
 import com.slideindex.app.overlay.PanelSide
 import com.slideindex.app.ui.settings.components.SettingsCardScope
 import com.slideindex.app.ui.miuix.MiuixHintText
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import kotlinx.coroutines.launch
 import kotlin.math.atan
 import kotlin.math.pow
@@ -106,7 +107,7 @@ fun GestureAngleSettingsScreen(
         onBack = onBack,
         scrollContent = false,
         actions = {
-            IconButton(
+            MiuixTopBarIconButton(
                 onClick = {
                     draft = draft.withSide(
                         selectedSide,
@@ -122,7 +123,7 @@ fun GestureAngleSettingsScreen(
                 // 不是"历史"，所以用 Reset 而不是 Recent（Material 原来的 History 也是错的）。
                 Icon(MiuixIcons.Medium.Reset, contentDescription = stringResource(R.string.gesture_angle_reset))
             }
-            IconButton(
+            MiuixTopBarIconButton(
                 enabled = !saving,
                 onClick = {
                     saveScope.launch {

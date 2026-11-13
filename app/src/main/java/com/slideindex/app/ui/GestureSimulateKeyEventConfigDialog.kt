@@ -25,6 +25,7 @@ import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixSearchField
 import com.slideindex.app.ui.miuix.MiuixSettingsTipCard
 import com.slideindex.app.ui.miuix.groupedCardItems
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import com.slideindex.app.ui.quicklauncher.QuickLauncherEmbedParentConfirm
 import com.slideindex.app.ui.quicklauncher.ReportQuickLauncherEmbedParentConfirm
@@ -265,7 +266,7 @@ fun GestureSimulateKeyEventScreen(
             enableBackHandler = enableBackHandler,
             overlayMode = overlayMode,
             actions = {
-                top.yukonga.miuix.kmp.basic.IconButton(onClick = handleSave) {
+                MiuixTopBarIconButton(onClick = handleSave) {
                     top.yukonga.miuix.kmp.basic.Icon(
                         imageVector = MiuixIcons.Medium.Ok,
                         contentDescription = stringResource(R.string.shell_panel_save)

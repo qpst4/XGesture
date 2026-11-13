@@ -46,6 +46,7 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.icon.extended.Ok
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 
 /**
  * 「快捷轮盘」动作的参数配置页（在动作绑定处以 Dialog 形式弹出）。
@@ -126,7 +127,7 @@ fun GestureQuickWheelActionScreen(
         onBack = onBack,
         overlayMode = overlayMode,
         actions = {
-            IconButton(
+            MiuixTopBarIconButton(
                 // ⚠️ 没有轮盘可选时必须禁用确认：wheels 为空时 selectedWheelId 会是空串，
                 // 点确认会落库成 GestureAction.QuickWheel(wheelId = "")，
                 // 这个绑定运行时永远找不到轮盘、静默什么都不做（界面上看着像"设了没反应"）。

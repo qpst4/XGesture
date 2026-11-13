@@ -45,6 +45,7 @@ import com.slideindex.app.shell.ShellCommandIconType
 import com.slideindex.app.util.ImageDecodeGuard
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
+import com.slideindex.app.ui.miuix.MiuixIconDropdownMenu
 import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -60,8 +61,6 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.icon.extended.GridView
 import top.yukonga.miuix.kmp.icon.extended.Image
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
-import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 internal data class ShellCommandIconDraft(
@@ -307,7 +306,7 @@ internal fun ShellCommandEditorIconSection(
             }
 
             if (useWindowMenu) {
-                WindowIconDropdownMenu(
+                MiuixIconDropdownMenu(
                     entry = DropdownEntry(items = menuItems),
                     modifier = Modifier.size(56.dp),
                     minWidth = 56.dp,
@@ -320,16 +319,13 @@ internal fun ShellCommandEditorIconSection(
                     iconButtonContent()
                 }
             } else {
-                OverlayIconDropdownMenu(
+                MiuixIconDropdownMenu(
                     entry = DropdownEntry(items = menuItems),
                     modifier = Modifier.size(56.dp),
                     minWidth = 56.dp,
                     minHeight = 56.dp,
                     cornerRadius = 16.dp,
                     backgroundColor = MiuixTheme.colorScheme.surfaceContainerHigh,
-                    maxHeight = 320.dp,
-                    dropdownColors = DropdownDefaults.dropdownColors(),
-                    renderInRootScaffold = true,
                 ) {
                     iconButtonContent()
                 }

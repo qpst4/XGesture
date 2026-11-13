@@ -60,6 +60,7 @@ fun MiuixTabRow(
     contentHorizontalPadding: Dp = 0.dp,
     verticalPadding: Dp = 4.dp,
 ) {
+
     TabRow(
         tabs = tabs,
         selectedTabIndex = selectedTabIndex,
@@ -82,6 +83,7 @@ fun MiuixTabRowWithContour(
     contourHost: MiuixTabRowContourHost = MiuixTabRowContourHost.AppScaffold,
     colors: TabRowColors = miuixTabRowContourColors(contourHost),
 ) {
+
     TabRowWithContour(
         tabs = tabs,
         selectedTabIndex = selectedTabIndex,

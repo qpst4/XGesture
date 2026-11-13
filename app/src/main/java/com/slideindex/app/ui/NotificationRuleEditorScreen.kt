@@ -34,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.icon.extended.Ok
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 
 @Composable
 fun NotificationRuleEditorScreen(
@@ -111,7 +112,7 @@ fun NotificationRuleEditorScreen(
         title = title,
         onBack = onBack,
         actions = {
-            top.yukonga.miuix.kmp.basic.IconButton(onClick = saveRule) {
+            MiuixTopBarIconButton(onClick = saveRule) {
                 top.yukonga.miuix.kmp.basic.Icon(
                     imageVector = MiuixIcons.Medium.Ok,
                     contentDescription = stringResource(R.string.confirm),

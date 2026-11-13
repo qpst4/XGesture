@@ -446,6 +446,9 @@ fun MainScreen(
                                 selectedIndex = keyboardBehaviorIndex,
                                 expanded = keyboardTriggerBehavior == KeyboardTriggerBehavior.NARROW,
                                 enabled = gestureActive,
+                                // 首页在 pager 的外层 Scaffold 之内，弹层挂到最外层会与行坐标错位，
+                                // 这里渲染到当前（内层）Scaffold。
+                                popupInRootScaffold = false,
                                 onSelectedIndexChange = {
                                     onKeyboardTriggerBehaviorChange(keyboardBehaviorEntries[it])
                                 },

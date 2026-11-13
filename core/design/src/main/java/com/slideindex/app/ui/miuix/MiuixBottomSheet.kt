@@ -3,8 +3,8 @@ package com.slideindex.app.ui.miuix
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
+import top.yukonga.miuix.kmp.glass.GlassBottomSheet
 import top.yukonga.miuix.kmp.layout.BottomSheetDefaults
-import top.yukonga.miuix.kmp.window.WindowBottomSheet
 
 @Composable
 fun MiuixBottomSheet(
@@ -19,9 +19,10 @@ fun MiuixBottomSheet(
     insideMargin: DpSize? = null,
     content: @Composable () -> Unit,
 ) {
-    WindowBottomSheet(
+    GlassBottomSheet(
         show = show,
         modifier = modifier,
+        backdrop = currentPageBackdrop(),
         title = title,
         allowDismiss = allowDismiss,
         startAction = startAction,

@@ -27,6 +27,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.AddFolder
+import top.yukonga.miuix.kmp.icon.extended.Ok
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.TextButton
 import com.slideindex.app.R
@@ -45,6 +46,7 @@ import com.slideindex.app.ui.miuix.MiuixExpandableSearchIconAction
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixScaffoldSearchTabBottomContent
 import com.slideindex.app.ui.miuix.consumeExpandableSearchBack
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.picker.filterShortcutCatalog
 import com.slideindex.app.ui.picker.rememberLoadedShortcutCatalog
 import com.slideindex.app.ui.requestPermissionForAdjustAction
@@ -162,7 +164,7 @@ fun QuickLauncherAddPickerScreen(
         actions = {
             // 文件夹只有一层，已经在文件夹内时不再提供新建文件夹。
             if (!isInsideFolder) {
-                IconButton(onClick = onOpenCreateFolder) {
+                MiuixTopBarIconButton(onClick = onOpenCreateFolder) {
                     Icon(
                         MiuixIcons.AddFolder,
                         contentDescription = stringResource(R.string.quick_launcher_new_folder),
@@ -381,13 +383,17 @@ fun QuickLauncherCreateFolderScreen(
                 onExpandedChange = { searchExpanded = it },
                 onQueryChange = { searchQuery = it },
             )
-            TextButton(
-                text = stringResource(R.string.confirm),
+            MiuixTopBarIconButton(
                 onClick = {
                     val finalName = folderName.trim().ifBlank { defaultFolderName }
                     onConfirmCreateFolder(finalName, folderItems)
                 },
-            )
+            ) {
+                Icon(
+                    imageVector = MiuixIcons.Medium.Ok,
+                    contentDescription = stringResource(R.string.confirm),
+                )
+            }
         },
         bottomContent = {
             MiuixScaffoldSearchTabBottomContent(

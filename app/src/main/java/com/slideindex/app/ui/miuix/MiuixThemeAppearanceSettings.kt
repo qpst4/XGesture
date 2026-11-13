@@ -29,12 +29,12 @@ import com.slideindex.app.settings.TopAppBarBlurStyle
 import com.slideindex.app.settings.UiDensityScaleLimits
 import com.slideindex.app.ui.HomeLeadingIcons
 import com.slideindex.app.ui.miuix.theme.supportsMiuixSpec2025
+import com.slideindex.app.ui.miuix.MiuixDropdownPreference
 import com.slideindex.app.ui.settings.components.settingsCardItem
 import kotlin.math.roundToInt
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import top.yukonga.miuix.kmp.material.isRuntimeShaderSupported
 
 @Composable
 fun themeAppearanceSettingsCardItems(
@@ -91,7 +91,7 @@ fun themeAppearanceSettingsCardItems(
     return buildList {
         add(
             settingsCardItem("theme-mode") {
-                OverlayDropdownPreference(
+                MiuixDropdownPreference(
                     title = stringResource(R.string.theme_mode),
                     items = AppThemeMode.entries.map { stringResource(it.labelRes()) },
                     selectedIndex = AppThemeMode.entries.indexOf(themeMode).coerceAtLeast(0),
@@ -132,7 +132,7 @@ fun themeAppearanceSettingsCardItems(
                         )
                     }
                     val paletteEntries = ThemePaletteStyle.entries
-                    OverlayDropdownPreference(
+                    MiuixDropdownPreference(
                         title = stringResource(R.string.theme_palette_style),
                         summary = stringResource(R.string.theme_palette_style_desc),
                         items = paletteEntries.map { stringResource(it.labelRes()) },
@@ -147,7 +147,7 @@ fun themeAppearanceSettingsCardItems(
                     } else {
                         listOf(AppColorSpec.SPEC_2021)
                     }
-                    OverlayDropdownPreference(
+                    MiuixDropdownPreference(
                         title = stringResource(R.string.theme_color_spec),
                         summary = if (!spec2025Supported) {
                             stringResource(R.string.theme_color_spec_2025_unsupported)
@@ -166,7 +166,7 @@ fun themeAppearanceSettingsCardItems(
         val darkBackgroundEntries = DarkBackgroundStyle.entries
         add(
             settingsCardItem("theme-dark-background") {
-                OverlayDropdownPreference(
+                MiuixDropdownPreference(
                     title = stringResource(R.string.theme_dark_background),
                     summary = stringResource(darkBackgroundStyle.labelRes()),
                     items = darkBackgroundEntries.map { stringResource(it.labelRes()) },
@@ -182,7 +182,7 @@ fun themeAppearanceSettingsCardItems(
             val topAppBarBlurStyleEntries = TopAppBarBlurStyle.entries
             add(
                 settingsCardItem("top-app-bar-blur-style") {
-                    OverlayDropdownPreference(
+                    MiuixDropdownPreference(
                         title = stringResource(R.string.top_app_bar_blur_style),
                         summary = stringResource(R.string.top_app_bar_blur_style_desc),
                         items = topAppBarBlurStyleEntries.map { stringResource(it.labelRes()) },
@@ -197,7 +197,7 @@ fun themeAppearanceSettingsCardItems(
         val bottomNavStyleEntries = BottomNavStyle.entries
         add(
             settingsCardItem("bottom-nav-style") {
-                OverlayDropdownPreference(
+                MiuixDropdownPreference(
                     title = stringResource(R.string.bottom_nav_style),
                     items = bottomNavStyleEntries.map { stringResource(it.labelRes()) },
                     selectedIndex = bottomNavStyleEntries.indexOf(bottomNavStyle).coerceAtLeast(0),
@@ -208,7 +208,7 @@ fun themeAppearanceSettingsCardItems(
         val bottomNavModeEntries = BottomNavMode.entries
         add(
             settingsCardItem("bottom-nav-mode") {
-                OverlayDropdownPreference(
+                MiuixDropdownPreference(
                     title = stringResource(R.string.bottom_nav_mode),
                     items = bottomNavModeEntries.map { stringResource(it.labelRes()) },
                     selectedIndex = bottomNavModeEntries.indexOf(bottomNavMode).coerceAtLeast(0),

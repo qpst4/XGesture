@@ -61,6 +61,7 @@ import com.slideindex.app.settings.actionFor
 import com.slideindex.app.settings.allTriggerHandles
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.miuix.miuixGroupedCardItem
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import com.slideindex.app.settings.gestureConfigSide
 import com.slideindex.app.settings.triggerCollectionEntries
@@ -193,14 +194,14 @@ fun TriggerCollectionScreen(
         onBack = onBack,
         actions = {
             if (landscapeMode) {
-                IconButton(onClick = { showCopyPortraitConfirm = true }) {
+                MiuixTopBarIconButton(onClick = { showCopyPortraitConfirm = true }) {
                     Icon(
                         MiuixIcons.Medium.Copy,
                         contentDescription = stringResource(R.string.trigger_copy_portrait),
                     )
                 }
             }
-            IconButton(
+            MiuixTopBarIconButton(
                 onClick = {
                     val nextLandscape = !(manualLandscapeDisplay ?: systemLandscape)
                     manualLandscapeDisplay = nextLandscape

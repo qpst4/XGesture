@@ -40,6 +40,7 @@ import com.slideindex.app.util.ImageDecodeGuard
 import com.slideindex.app.ui.SettingsScreenScaffold
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import kotlinx.coroutines.Dispatchers
@@ -152,7 +153,7 @@ internal fun RingLauncherSlotIconEditorHost(
         subtitle = slotLabel.takeIf { it.isNotBlank() },
         onBack = onBack,
         actions = {
-            IconButton(onClick = saveAction) {
+            MiuixTopBarIconButton(onClick = saveAction) {
                 Icon(
                     imageVector = MiuixIcons.Medium.Ok,
                     contentDescription = stringResource(R.string.fv_ring_launcher_done),

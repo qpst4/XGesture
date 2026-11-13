@@ -42,6 +42,7 @@ import com.slideindex.app.ui.SettingIconContainer
 import com.slideindex.app.ui.miuix.MiuixArrowRow
 import com.slideindex.app.ui.miuix.MiuixGroupedCard
 import com.slideindex.app.ui.miuix.miuixGroupedCardItem
+import com.slideindex.app.ui.miuix.MiuixDropdownPreference
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
 import top.yukonga.miuix.kmp.basic.Switch
@@ -52,7 +53,6 @@ import top.yukonga.miuix.kmp.preference.CheckboxPreference
 import top.yukonga.miuix.kmp.preference.RadioButtonLocation
 import top.yukonga.miuix.kmp.preference.RadioButtonPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.OverlaySpinnerPreference
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -345,7 +345,7 @@ fun SettingsCardScope.SettingDropdownRow(
     onSelectedIndexChange: (Int) -> Unit,
 ) {
     SettingsCardRow(key = title) { position ->
-        OverlayDropdownPreference(
+        MiuixDropdownPreference(
             modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
             title = title,
             summary = subtitle,
@@ -369,11 +369,12 @@ fun SettingsCardScope.SettingExpandableDropdownRow(
     enabled: Boolean = true,
     icon: (@Composable (accessibilityLabel: String) -> Unit)? = null,
     onSelectedIndexChange: (Int) -> Unit,
+    popupInRootScaffold: Boolean = true,
     expandedContent: @Composable () -> Unit,
 ) {
     SettingsCardRow(key = "$title-expandable-dropdown") { position ->
         Column(modifier = Modifier.settingsGroupedRowBackground(position.index, position.count)) {
-            OverlayDropdownPreference(
+            MiuixDropdownPreference(
                 title = title,
                 summary = subtitle,
                 items = items,
@@ -381,6 +382,7 @@ fun SettingsCardScope.SettingExpandableDropdownRow(
                 enabled = enabled,
                 startAction = icon?.let { { SettingIconContainer { it(title) } } },
                 onSelectedIndexChange = onSelectedIndexChange,
+                popupInRootScaffold = popupInRootScaffold,
             )
             AnimatedVisibility(
                 visible = expanded && enabled,

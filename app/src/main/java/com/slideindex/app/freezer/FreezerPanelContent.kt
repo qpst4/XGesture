@@ -58,6 +58,8 @@ import com.slideindex.app.ui.miuix.MiuixNavigationBackHandler
 import com.slideindex.app.ui.miuix.MiuixSettingsFab
 import com.slideindex.app.ui.miuix.MiuixSettingsFabInset
 import com.slideindex.app.ui.miuix.consumeExpandableSearchBack
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
+import com.slideindex.app.ui.miuix.MiuixIconDropdownMenu
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
 import kotlinx.coroutines.Dispatchers
@@ -68,7 +70,6 @@ import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.icon.extended.Add
 import top.yukonga.miuix.kmp.icon.extended.Close
@@ -393,7 +394,7 @@ fun FreezerPanelContent(
             userScrollEnabled = false,
             actions = {
                 if (selectionMode) {
-                    IconButton(
+                    MiuixTopBarIconButton(
                         onClick = {
                             selectedTargets = if (allSelected) {
                                 emptySet()
@@ -408,7 +409,7 @@ fun FreezerPanelContent(
                             tint = MiuixTheme.colorScheme.onBackground
                         )
                     }
-                    IconButton(onClick = ::exitSelection) {
+                    MiuixTopBarIconButton(onClick = ::exitSelection) {
                         Icon(
                             imageVector = MiuixIcons.Medium.Close,
                             contentDescription = selectionDoneLabel,
@@ -425,7 +426,7 @@ fun FreezerPanelContent(
                     onQueryChange = { searchQuery = it }
                 )
                 if (onManageApps != null) {
-                    IconButton(onClick = onManageApps) {
+                    MiuixTopBarIconButton(onClick = onManageApps) {
                         Icon(
                             imageVector = MiuixIcons.Medium.Add,
                             contentDescription = stringResource(R.string.freezer_manage_apps),
@@ -433,7 +434,7 @@ fun FreezerPanelContent(
                         )
                     }
                 }
-                IconButton(
+                MiuixTopBarIconButton(
                     onClick = {
                         // 进多选前先收起搜索：展开态的搜索框会占满 actions 行，把"选择/全选/完成"
                         // 这些按钮整个盖掉 —— 那时候多选态是进得去出不来的。
@@ -451,7 +452,7 @@ fun FreezerPanelContent(
                 }
                 if (overlayMode) {
                     Box {
-                        IconButton(onClick = { overflowMenuExpanded = true }) {
+                        MiuixTopBarIconButton(onClick = { overflowMenuExpanded = true }) {
                             Icon(
                                 imageVector = MiuixIcons.Medium.More,
                                 contentDescription = stringResource(R.string.freezer_batch_menu),
@@ -523,7 +524,7 @@ fun FreezerPanelContent(
                         }
                     }
                 } else {
-                    OverlayIconDropdownMenu(entry = overflowMenuEntry) {
+                    MiuixIconDropdownMenu(entry = overflowMenuEntry) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = stringResource(R.string.freezer_batch_menu),

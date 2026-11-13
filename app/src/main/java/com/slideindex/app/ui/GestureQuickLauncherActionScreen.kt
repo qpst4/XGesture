@@ -30,6 +30,7 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Ok
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 
 /**
  * 「快速启动器」动作的参数配置页（在动作绑定处以 Dialog 形式弹出）。
@@ -73,7 +74,7 @@ fun GestureQuickLauncherActionScreen(
         onBack = onBack,
         overlayMode = overlayMode,
         actions = {
-            IconButton(
+            MiuixTopBarIconButton(
                 // 没有面板可选时禁止确认：否则会写入 panelId="" 的绑定（运行期等价于第一个面板，
                 // 面板顺序一变就漂移，用户看着像"设了没反应"）。
                 enabled = selectedPanelId.isNotBlank(),

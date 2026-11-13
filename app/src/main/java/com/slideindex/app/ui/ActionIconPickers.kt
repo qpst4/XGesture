@@ -57,7 +57,6 @@ import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
-import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -66,6 +65,7 @@ import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.util.ImageDecodeGuard
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixTabRowWithContourInCard
+import com.slideindex.app.ui.miuix.MiuixIconDropdownMenu
 import java.io.File
 import java.io.FileOutputStream
 import top.yukonga.miuix.kmp.basic.Icon
@@ -249,7 +249,7 @@ internal fun ActionIconPickerHost(
         },
     )
 
-    WindowIconDropdownMenu(
+    MiuixIconDropdownMenu(
         entry = menuEntry,
         minHeight = sizeDp.dp,
         minWidth = sizeDp.dp,

@@ -45,6 +45,7 @@ import com.slideindex.app.iconpack.IconPackTarget
 import com.slideindex.app.iconpack.IconThemeStore
 import com.slideindex.app.service.IconPackPickerTrampolineActivity
 import com.slideindex.app.ui.miuix.MiuixTabRowWithContourInCard
+import com.slideindex.app.ui.miuix.MiuixIconDropdownMenu
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.viewmodel.GlobalIconLibraryViewModel
 import kotlinx.coroutines.Dispatchers
@@ -375,7 +376,7 @@ private fun GlobalIconRow(
         },
     )
 
-    top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu(
+    MiuixIconDropdownMenu(
         entry = menuEntry,
         modifier = Modifier.fillMaxWidth(),
         minHeight = 64.dp,

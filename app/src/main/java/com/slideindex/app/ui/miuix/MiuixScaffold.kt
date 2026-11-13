@@ -6,6 +6,7 @@ package com.slideindex.app.ui.miuix
  */
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
@@ -40,6 +42,7 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import com.slideindex.app.ui.LocalMainNavContentStartInset
+import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
@@ -98,6 +101,7 @@ fun MiuixListScaffold(
     subtitle: String? = null,
     showPageHintCard: Boolean = false,
     navigationIcon: @Composable (() -> Unit)? = null,
+    onBack: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
     bottomContent: @Composable () -> Unit = {},
@@ -106,31 +110,36 @@ fun MiuixListScaffold(
     bottomContentPadding: Dp = 0.dp,
     /** 悬浮按钮需要预留的底部空间，见 [MiuixSettingsFabInset]；默认 0 = 不做任何预留。 */
     fabInset: Dp = 0.dp,
+    /** 页面自建 backdrop 时传入；null 表示由本层创建。 */
+    backdrop: LayerBackdrop? = null,
+    /** 玻璃弹层槽：渲染在 backdrop 作用域内、Scaffold 之外，既拿得到 backdrop 也不会被录制裁剪。 */
+    overlay: @Composable BoxScope.() -> Unit = {},
     content: LazyListScope.() -> Unit,
 ) {
     val resolvedListState = listState ?: rememberLazyListState()
     val scrollBehavior = MiuixScrollBehavior()
-    val barBackdrop = rememberMiuixBlurBackdrop()
+    val barBackdrop = backdrop ?: rememberMiuixBlurBackdrop()
+    val backdropHolder = LocalPageBackdropHolder.current
+    SideEffect { backdropHolder?.backdrop = barBackdrop }
     val contentStartInset = LocalMainNavContentStartInset.current
+    Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
         modifier = modifier.imePadding(),
         topBar = {
             Box(Modifier.fillMaxWidth()) {
-                MiuixBlurredTopBar(
+                MiuixTopAppBar(
+                    title = title,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = contentStartInset),
                     backdrop = barBackdrop,
-                ) {
-                    AdaptiveTopAppBar(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = contentStartInset),
-                        color = barBackdrop.miuixAppBarColor(),
-                        title = title,
-                        scrollBehavior = scrollBehavior,
-                        navigationIcon = { navigationIcon?.invoke() },
-                        actions = actions,
-                        bottomContent = bottomContent,
-                    )
-                }
+                    color = barBackdrop.miuixAppBarColor(),
+                    scrollBehavior = scrollBehavior,
+                    onBack = onBack,
+                    navigationIcon = navigationIcon,
+                    actions = actions,
+                    bottomContent = bottomContent,
+                )
             }
         },
         floatingActionButton = floatingActionButton,
@@ -173,6 +182,8 @@ fun MiuixListScaffold(
             }
         }
     }
+    overlay()
+    }
 }
 
 /** 子页设置：Miuix 顶栏 + LazyColumn（Mishka 严格虚拟化）。 */
@@ -196,6 +207,8 @@ fun MiuixSettingsScreenScaffold(
 ) {
     val scrollBehavior = MiuixScrollBehavior()
     val barBackdrop = rememberMiuixBlurBackdrop(enabled = !overlayMode)
+    val backdropHolder = LocalPageBackdropHolder.current
+    SideEffect { backdropHolder?.backdrop = barBackdrop }
     val contentStartInset = LocalMainNavContentStartInset.current
     CompositionLocalProvider(LocalMiuixScreenBackdrop provides barBackdrop) {
         Scaffold(
@@ -204,29 +217,21 @@ fun MiuixSettingsScreenScaffold(
                 .imePadding(),
             topBar = {
                 Box(Modifier.fillMaxWidth()) {
-                    MiuixBlurredTopBar(
+                    MiuixTopAppBar(
+                        title = title,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = contentStartInset),
                         backdrop = barBackdrop,
-                        enabled = !overlayMode,
-                    ) {
-                        AdaptiveTopAppBar(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = contentStartInset),
-                            color = if (overlayMode) {
-                                MiuixTheme.colorScheme.surface
-                            } else {
-                                barBackdrop.miuixAppBarColor()
-                            },
-                            title = title,
-                            scrollBehavior = scrollBehavior,
-                            navigationIcon = {
-                                if (onBack != null) {
-                                    MiuixBackNavigationIcon(onBack)
-                                }
-                            },
-                            actions = actions,
-                        )
-                    }
+                        color = if (overlayMode) {
+                            MiuixTheme.colorScheme.surface
+                        } else {
+                            barBackdrop.miuixAppBarColor()
+                        },
+                        scrollBehavior = scrollBehavior,
+                        onBack = onBack,
+                        actions = actions,
+                    )
                 }
             },
             floatingActionButton = floatingActionButton,

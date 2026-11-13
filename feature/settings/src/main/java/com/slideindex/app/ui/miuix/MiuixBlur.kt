@@ -14,7 +14,7 @@ import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurColors
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.ProgressiveBlur
-import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
+import top.yukonga.miuix.kmp.material.isRuntimeShaderSupported
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.progressiveTextureBlur
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
@@ -30,7 +30,6 @@ val LocalTopAppBarBlurStyle = staticCompositionLocalOf { TopAppBarBlurStyle.PROG
 val LocalMiuixBlurBackdropEnabled = compositionLocalOf { true }
 
 /** 与当前设置页顶栏 [rememberMiuixBlurBackdrop] 共用，供 `scrollContent = false` 时嵌套列表参与毛玻璃采样。 */
-val LocalMiuixScreenBackdrop = staticCompositionLocalOf<LayerBackdrop?> { null }
 
 @Composable
 fun Modifier.miuixScreenListBackdrop(): Modifier {

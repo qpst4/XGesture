@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -33,12 +31,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurColors
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
-import top.yukonga.miuix.kmp.blur.highlight.Highlight
 import top.yukonga.miuix.kmp.blur.textureBlur
+import top.yukonga.miuix.kmp.material.GlassEdgeStrokes
+import top.yukonga.miuix.kmp.material.edgeStroke
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /** Miuix 官方浮动底栏内容区留白（栏高 + 底部悬浮间距）。 */
@@ -73,19 +74,23 @@ fun MiuixOfficialFloatingBottomNavBar(
     val blurActive = blurEnabled && backdrop != null
 
     val blurModifier = if (blurActive) {
-        Modifier.textureBlur(
-            backdrop = backdrop,
-            shape = shape,
-            blurRadius = blurRadiusDp,
-            colors = BlurColors(
-                blendColors = listOf(
-                    BlendColorEntry(
-                        color = MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f),
+        Modifier
+            .textureBlur(
+                backdrop = backdrop,
+                shape = shape,
+                blurRadius = blurRadiusDp,
+                colors = BlurColors(
+                    blendColors = listOf(
+                        BlendColorEntry(
+                            color = MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f),
+                        ),
                     ),
                 ),
-            ),
-            highlight = if (isDark) Highlight.GlassStrokeMiddleDark else Highlight.GlassStrokeMiddleLight,
-        )
+            )
+            .edgeStroke(
+                shape = shape,
+                stroke = GlassEdgeStrokes.forTheme(isDark),
+            )
     } else {
         Modifier
     }

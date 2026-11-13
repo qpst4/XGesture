@@ -62,7 +62,7 @@ fun LayoutSettingsScreen(
         title = stringResource(R.string.layout_settings_title),
         pageHint = "$layoutDesc\n$previewHint",
         showPageHintCard = true,
-        navigationIcon = { MiuixBackNavigationIcon(onBack) },
+        onBack = onBack,
     ) {
         item(key = "panel_section") {
             SmallTitle(stringResource(R.string.settings_section_panel), modifier = Modifier.fillMaxWidth())

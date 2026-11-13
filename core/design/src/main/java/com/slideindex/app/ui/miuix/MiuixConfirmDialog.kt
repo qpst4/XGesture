@@ -1,5 +1,6 @@
 package com.slideindex.app.ui.miuix
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,8 +13,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -25,7 +25,10 @@ import androidx.compose.foundation.layout.ime
 import com.slideindex.app.design.R
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.window.WindowDialog
+import top.yukonga.miuix.kmp.glass.GlassDialog
+import top.yukonga.miuix.kmp.glass.GlassDialogButton
+import top.yukonga.miuix.kmp.glass.GlassDialogButtonRole
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun MiuixConfirmDialog(
@@ -44,8 +47,9 @@ fun MiuixConfirmDialog(
 ) {
     if (!show) return
 
-    WindowDialog(
+    GlassDialog(
         show = true,
+        backdrop = currentPageBackdrop(),
         title = title,
         onDismissRequest = onDismissRequest,
     ) {
@@ -55,8 +59,8 @@ fun MiuixConfirmDialog(
                 message != null -> {
                     Text(
                         text = message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     )
                 }
             }
@@ -115,8 +119,9 @@ fun MiuixFormDialog(
         availableHeight.toDp().coerceAtLeast(140.dp)
     }
 
-    WindowDialog(
+    GlassDialog(
         show = true,
+        backdrop = currentPageBackdrop(),
         title = title,
         onDismissRequest = onDismissRequest,
     ) {
@@ -156,21 +161,18 @@ fun MiuixFormDialog(
                     secondaryConfirmEnabled = secondaryConfirmEnabled,
                 )
             } else {
-                TextButton(
-                    text = confirmText,
+                GlassDialogButton(
                     onClick = {
                         onConfirm()
                         if (dismissOnConfirm) {
                             onDismissRequest()
                         }
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 44.dp),
-                    minHeight = 44.dp,
-                    insideMargin = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
-                    colors = ButtonDefaults.textButtonColorsPrimary(),
-                )
+                    role = GlassDialogButtonRole.Primary,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(text = confirmText, style = MiuixTheme.textStyles.button)
+                }
             }
         }
     }
@@ -218,41 +220,32 @@ private fun DialogActionsRow(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
     ) {
         if (secondaryConfirmText != null && onSecondaryConfirm != null) {
-            TextButton(
-                text = secondaryConfirmText,
+            GlassDialogButton(
                 onClick = onSecondaryConfirm,
                 enabled = secondaryConfirmEnabled,
-                modifier = Modifier
-                    .weight(1f)
-                    .defaultMinSize(minHeight = 44.dp),
-                minHeight = 44.dp,
-                insideMargin = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
-            )
-            Spacer(Modifier.width(12.dp))
+                role = GlassDialogButtonRole.Normal,
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(text = secondaryConfirmText, style = MiuixTheme.textStyles.button)
+            }
         }
-        TextButton(
-            text = dismissText,
+        GlassDialogButton(
             onClick = onDismissRequest,
-            modifier = Modifier
-                .weight(1f)
-                .defaultMinSize(minHeight = 44.dp),
-            minHeight = 44.dp,
-            insideMargin = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
-        )
-        Spacer(Modifier.width(12.dp))
-        TextButton(
-            text = confirmText,
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(text = dismissText, style = MiuixTheme.textStyles.button)
+        }
+        GlassDialogButton(
             onClick = onConfirm,
             enabled = confirmEnabled,
-            modifier = Modifier
-                .weight(1f)
-                .defaultMinSize(minHeight = 44.dp),
-            minHeight = 44.dp,
-            insideMargin = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
-            colors = ButtonDefaults.textButtonColorsPrimary(),
-        )
+            role = GlassDialogButtonRole.Primary,
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(text = confirmText, style = MiuixTheme.textStyles.button)
+        }
     }
 }

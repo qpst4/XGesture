@@ -28,6 +28,7 @@ import com.slideindex.app.settings.HolographicLauncherSettings
 import com.slideindex.app.launcher.AppTarget
 import com.slideindex.app.ui.compose.collectPickerAppsAsState
 import com.slideindex.app.ui.compose.rememberAppRepository
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.miuix.miuixGroupedCardItem
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffoldWithExpandableSearch
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
@@ -98,7 +99,7 @@ fun HolographicLauncherAppsScreen(
             // 一个按钮切换：全部选中 → 取消全选，否则 → 全选（作用范围是当前搜索结果）。
             if (mode != HolographicAppMode.ALL && visibleApps.isNotEmpty()) {
                 val allSelected = visibleApps.all { holoAppKey(it) in selectedSet }
-                IconButton(
+                MiuixTopBarIconButton(
                     onClick = {
                         if (allSelected) {
                             onSetSelection(selectedPackages.filterNot { key ->

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.ui.miuix.MiuixHintText
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingsCardRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
@@ -103,7 +104,7 @@ fun GestureOpenLinkScreen(
         enableBackHandler = enableBackHandler,
         overlayMode = overlayMode,
         actions = {
-            IconButton(
+            MiuixTopBarIconButton(
                 onClick = { onConfirm(url.trim(), label.trim()) },
                 enabled = canSave,
             ) {

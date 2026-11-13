@@ -28,6 +28,7 @@ import com.slideindex.app.ui.quicklauncher.QuickLauncherEmbedParentConfirm
 import com.slideindex.app.ui.quicklauncher.ReportQuickLauncherEmbedParentConfirm
 import com.slideindex.app.ui.miuix.MiuixHintText
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingsCardRow
@@ -139,7 +140,7 @@ fun GestureExecuteShellCommandScreen(
         enableBackHandler = enableBackHandler,
         overlayMode = overlayMode,
         actions = {
-            top.yukonga.miuix.kmp.basic.IconButton(
+            MiuixTopBarIconButton(
                 onClick = { onConfirm(command.trim()) },
                 enabled = canSave
             ) {

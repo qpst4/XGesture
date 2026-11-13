@@ -64,6 +64,7 @@ import com.slideindex.app.service.LaunchTrampolineActivity
 import com.slideindex.app.util.ShortcutKind
 import com.slideindex.app.util.ShortcutLaunchDispatcher
 import com.slideindex.app.ui.miuix.MiuixProgressCard
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffoldWithExpandableSearch
 import com.slideindex.app.ui.settings.components.settingsCardItem
@@ -251,7 +252,7 @@ fun ShortcutPortPage(onBack: () -> Unit) {
         onBack = onBack,
         hintResId = R.string.shortcut_test_search_hint,
         extraActions = {
-            IconButton(
+            MiuixTopBarIconButton(
                 onClick = { if (!isLoading) reloadKey++ },
                 enabled = !isLoading,
             ) {

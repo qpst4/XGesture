@@ -17,7 +17,7 @@ import com.slideindex.app.ui.theme.LocalAppDarkTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
-import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
+import top.yukonga.miuix.kmp.material.isRuntimeShaderSupported
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.floor
 

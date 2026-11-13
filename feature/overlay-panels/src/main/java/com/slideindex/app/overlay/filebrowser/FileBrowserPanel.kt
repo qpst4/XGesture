@@ -1535,8 +1535,6 @@ private fun FileBrowserBreadcrumb(
             BreadcrumbItem(path = crumb.path, text = label)
         }
     }
-    val scrollState = rememberScrollState()
-
     BreadcrumbBar(
         items = items,
         onItemClick = { index ->
@@ -1558,7 +1556,6 @@ private fun FileBrowserBreadcrumb(
             highlightBackgroundColor = MiuixTheme.colorScheme.primary.copy(alpha = 0.16f),
         ),
         itemMaxWidth = 120.dp,
-        scrollState = scrollState,
     )
 }
 

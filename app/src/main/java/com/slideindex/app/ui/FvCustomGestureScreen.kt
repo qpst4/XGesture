@@ -60,6 +60,7 @@ import com.slideindex.app.gesture.isEffective
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.picker.ActivityShortcutPickActivityScreen
 import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
 import com.slideindex.app.ui.picker.MyShortcutsFolderScreen
@@ -432,7 +433,7 @@ private fun FvCustomGestureList(
         pageHint = stringResource(R.string.fv_custom_gesture_summary),
         onBack = onBack,
         actions = {
-            IconButton(onClick = onAdd) {
+            MiuixTopBarIconButton(onClick = onAdd) {
                 Icon(Icons.Default.Add, contentDescription = addLabel)
             }
         },

@@ -36,6 +36,7 @@ import com.slideindex.app.ui.miuix.CardSegment
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.miuix.MiuixHintText
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -483,7 +484,7 @@ fun ShellResultScreen(
         onBack = onBack,
         scrollContent = false,
         actions = {
-            IconButton(onClick = onCopy) {
+            MiuixTopBarIconButton(onClick = onCopy) {
                 Material3Icon(
                     imageVector = MiuixIcons.Medium.Copy,
                     contentDescription = stringResource(R.string.shell_panel_copy),

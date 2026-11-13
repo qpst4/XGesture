@@ -27,11 +27,11 @@ import com.slideindex.app.notification.NotificationRuleChargeMask
 import com.slideindex.app.notification.ScreenMode
 import com.slideindex.app.notification.TextMatchMode
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
+import com.slideindex.app.ui.miuix.MiuixDropdownPreference
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.CheckboxPreference
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -103,7 +103,7 @@ internal fun NotificationRuleConditionEditor(
             // "所有应用" stored INCLUDE, "包含" stored EXCLUDE.
             val appModeEntries = NotificationRuleModeLabels.appModes
                 .map { (mode, labelRes) -> mode to stringResource(labelRes) }
-            OverlayDropdownPreference(
+            MiuixDropdownPreference(
                 title = stringResource(R.string.notification_rule_section_apps),
                 items = appModeEntries.map { it.second },
                 selectedIndex = appModeEntries.indexOfFirst { it.first == appMode }.coerceAtLeast(0),
@@ -124,7 +124,7 @@ internal fun NotificationRuleConditionEditor(
 
             val textModeEntries = NotificationRuleModeLabels.textModes
                 .map { (mode, labelRes) -> mode to stringResource(labelRes) }
-            OverlayDropdownPreference(
+            MiuixDropdownPreference(
                 title = stringResource(R.string.notification_rule_section_text),
                 items = textModeEntries.map { it.second },
                 selectedIndex = textModeEntries.indexOfFirst { it.first == textMode }.coerceAtLeast(0),
@@ -270,7 +270,7 @@ internal fun NotificationRuleConditionEditor(
             // 保存后无法区分，会把没勾的项回显成已勾选。
             val screenModeEntries = NotificationRuleModeLabels.screenModes
                 .map { (mode, labelRes) -> mode to stringResource(labelRes) }
-            OverlayDropdownPreference(
+            MiuixDropdownPreference(
                 title = stringResource(R.string.notification_rule_screen_state),
                 items = screenModeEntries.map { it.second },
                 selectedIndex = screenModeEntries.indexOfFirst { it.first == screenMode }.coerceAtLeast(0),

@@ -489,7 +489,7 @@ fun MainNavHost(
                                             .mainNavClassicOverlayContentInsets()
                                             .mainNavRailContentClip(),
                                     ) {
-                                        mainTabNavContent()
+                                         mainTabNavContent()
                                     }
                                 }
                                 ClassicFloatingSideNavRailOverlay(
@@ -520,7 +520,7 @@ fun MainNavHost(
                                     CompositionLocalProvider(
                                         LocalMainNavContentStartInset provides 0.dp,
                                     ) {
-                                        mainTabNavContent()
+                                         mainTabNavContent()
                                     }
                                 }
                             }
@@ -528,7 +528,7 @@ fun MainNavHost(
                     }
                 } else {
                     Box(modifier = navContentModifier) {
-                        mainTabNavContent()
+                         mainTabNavContent()
                     }
                     if (isRootDestination && !usePagerBottomNav) {
                         FloatingBottomNavBar(
