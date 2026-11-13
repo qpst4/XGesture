@@ -618,6 +618,7 @@
     <string name="settings_app_language_label_ja">日本語</string>
     <string name="settings_app_language_label_ar">العربية</string>
     <string name="settings_app_language_label_ru">Русский</string>
+    <string name="settings_app_language_label_es">Español</string>
     <string name="settings_section_interaction_feedback">ردود الفعل التفاعلية</string>
     <string name="haptic_strength">شدة الاهتزاز</string>
     <string name="haptic_gesture_trigger_title">اهتزاز استدعاء الإيماءة</string>

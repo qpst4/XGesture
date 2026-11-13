@@ -4691,6 +4691,7 @@
     <string name="settings_app_language_label_ja">日本語</string>
     <string name="settings_app_language_label_ar">العربية</string>
     <string name="settings_app_language_label_ru">Русский</string>
+    <string name="settings_app_language_label_es">Español</string>
     <string name="gesture_action_open_link">Открыть ссылку</string>
     <string name="gesture_action_open_link_desc">Открыть сохранённую внешнюю ссылку, deeplink или intent URI</string>
     <string name="gesture_open_link_url_field">Ссылка</string>

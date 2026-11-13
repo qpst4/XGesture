@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="macro_run_requires_android_n">Macros requieren Android 7.0 o posterior.</string>
+    <string name="macro_run_already_running">Una macro ya está funcionando.</string>
+    <string name="macro_run_service_unavailable">Servicio de accesibilidadno está conectado.</string>
+    <string name="macro_run_target_not_found">No puedo abrir la aplicación de destino.</string>
+    <string name="macro_run_app_timeout">La malla no llegó a tiempo.</string>
+    <string name="macro_run_foreground_changed">Macro se detuvo: la aplicación de primer plano cambió.</string>
+    <string name="macro_run_step_failed">Paso de Macro falló:%1$s</string>
+    <string name="macro_run_completed">Macro terminó:%1$s</string>
+    <string name="macro_record_touch_unavailable">Grabación parada: la repetición táctil no está disponible en este dispositivo.</string>
+    <string name="macro_record_stopped_screen_off">El registro se detuvo porque la pantalla se apagó.</string>
+    <string name="macro_record_stopped_timeout">El registro se detuvo automáticamente (se mantuvo abierto demasiado tiempo).</string>
+    <string name="macro_step_wait">Espera.</string>
+    <string name="macro_step_tap">grifo</string>
+    <string name="macro_step_swipe">Swipe</string>
+    <string name="macro_action_run_macro">Macro de gestos</string>
+    <string name="macro_action_run_macro_named">Gesture macro:%1$s</string>
+    <string name="macro_action_run_macro_missing">Gesture macro (suprimido)</string>
+    <string name="macro_pick_empty">Aún no hay macros de gesto. Crear uno en Extensiones → Gesture macros primero.</string>
+    <string name="macro_test_run">Pruebas</string>
+    <string name="macro_test_run_desc">Ejecuta esta macro una vez ahora mismo, sin vincularla a un gesto.</string>
+</resources>
