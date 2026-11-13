@@ -25,6 +25,7 @@ import com.slideindex.app.service.SlideIndexAccessibilityService
 import com.slideindex.app.service.AccessibilityTextExtractor
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -66,6 +67,15 @@ object InspireCoordinator {
     private val a11yScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val pickInFlight = AtomicBoolean(false)
 
+    /**
+     * 取词会话号：每接受一次取词自增。
+     *
+     * [scheduleDeferredPreviewScreenshot] 是独立协程，可能比发起它的那次取词活得久：
+     * 它落地前必须确认"这张图还是这一轮要的"，否则迟到的图会被塞进下一轮的面板
+     * （图里还带着上一轮的面板 —— 面板那边也会有 `panel_screenshot_dropped` 兜底）。
+     */
+    private val pickSessionSeq = AtomicInteger(0)
+
     fun pickInRect(
         service: AccessibilityService,
         context: Context,
@@ -79,7 +89,8 @@ object InspireCoordinator {
             PickPerf.mark("pick_rejected", "inFlight=true")
             return
         }
-        PickPerf.mark("pick_enqueued", "preview=$previewBoundsPick")
+        val pickSession = pickSessionSeq.incrementAndGet()
+        PickPerf.mark("pick_enqueued", "preview=$previewBoundsPick session=$pickSession")
         scope.launch(pickDispatcher) {
             try {
                 PickPerf.mark("pick_dispatch_start", "preview=$previewBoundsPick")
@@ -101,7 +112,8 @@ object InspireCoordinator {
                     previewBoundsPick = previewBoundsPick,
                     presentPickPanel = true,
                     deferOcr = deferOcr,
-                    ocrReady = ocrReady
+                    ocrReady = ocrReady,
+                    pickSession = pickSession
                 )
                 PickPerf.mark("pick_onResult_post")
                 // 取词面板一显示就记下这次展示的令牌：识码是异步的，回来时要确认面板还是这一次。
@@ -141,7 +153,8 @@ object InspireCoordinator {
             PickPerf.mark("pick_rejected", "inFlight=true")
             return
         }
-        PickPerf.mark("pick_enqueued", "regional=$regionalRect")
+        val pickSession = pickSessionSeq.incrementAndGet()
+        PickPerf.mark("pick_enqueued", "regional=$regionalRect session=$pickSession")
         scope.launch(pickDispatcher) {
             try {
                 PickPerf.mark("pick_dispatch_start", "regional=$regionalRect")
@@ -171,7 +184,8 @@ object InspireCoordinator {
                     presentPickPanel = true,
                     regionalRectPick = regionalRect,
                     deferOcr = deferOcr,
-                    ocrReady = ocrReady
+                    ocrReady = ocrReady,
+                    pickSession = pickSession
                 )
                 PickPerf.mark("pick_onResult_post")
                 // 取词面板一显示就记下这次展示的令牌：识码是异步的，回来时要确认面板还是这一次。
@@ -205,7 +219,9 @@ object InspireCoordinator {
         presentPickPanel: Boolean = false,
         regionalRectPick: Boolean = false,
         deferOcr: Boolean = false,
-        ocrReady: Boolean? = null
+        ocrReady: Boolean? = null,
+        // 发起本次取词的会话号；0 表示不追踪（无延后截图的入口）。
+        pickSession: Int = 0
     ): FloatBallPickResult {
         PickPerf.mark(
             "processScreenContent_start",
@@ -271,7 +287,8 @@ object InspireCoordinator {
                     deferOcr = deferOcr,
                     previewBoundsPick = previewBoundsPick,
                     regionalRectPick = regionalRectPick,
-                    ocrReady = ocrReady
+                    ocrReady = ocrReady,
+                    deferredScreenshot = true
                 )
                 PickPerf.mark("buildPickResult_end", "source=${fastResult.activeSource}")
                 scheduleDeferredPreviewScreenshot(
@@ -281,7 +298,8 @@ object InspireCoordinator {
                     ocrFallbackEnabled = ocrFallbackEnabled,
                     ocrModelId = ocrModelId,
                     deferOcr = deferOcr,
-                    ocrReady = ocrReady
+                    ocrReady = ocrReady,
+                    pickSession = pickSession
                 )
                 return fastResult
             }
@@ -472,7 +490,9 @@ object InspireCoordinator {
         deferOcr: Boolean = false,
         previewBoundsPick: Boolean = false,
         regionalRectPick: Boolean = false,
-        ocrReady: Boolean? = null
+        ocrReady: Boolean? = null,
+        /** 快路径：图还没拍，延后截图在路上（见 [scheduleDeferredPreviewScreenshot]）。 */
+        deferredScreenshot: Boolean = false
     ): FloatBallPickResult {
         val rawAccessibility = InspireDataHolder.accessibilityContent.orEmpty()
         val a11yText = rawAccessibility.joinToString(separator = "").trim().takeIf { it.isNotEmpty() }
@@ -544,10 +564,20 @@ object InspireCoordinator {
             ocrAvailable = resolvedOcrReady,
             ocrPending = deferOcr && resolvedOcrReady,
             ocrPreferSwitchOnComplete = preferOcrOnDeferredComplete,
-            barcodeResults = emptyList()
+            barcodeResults = emptyList(),
+            awaitingDeferredScreenshot = deferredScreenshot
         )
     }
 
+    /**
+     * 预览框命中的「先开面板、延后截图」分支：快门在这里才按。
+     *
+     * ⚠️ 两点约束（都靠面板侧配合，见 `FloatBallPickResultPanel`）：
+     * 1. 面板此时已经在屏幕上，所以它按「延后截图」分支把 reveal 挂起，等这张图落地才滑上来；
+     *    这里不能反过来假设面板是不可见的。
+     * 2. 本协程可能比发起它的那次取词活得久，落地前要用 [pickSession] 确认还是同一轮，
+     *    否则迟到的图会落到下一轮面板上（图里带着上一轮的面板）。
+     */
     private fun scheduleDeferredPreviewScreenshot(
         service: AccessibilityService,
         context: Context,
@@ -555,22 +585,32 @@ object InspireCoordinator {
         ocrFallbackEnabled: Boolean,
         ocrModelId: String,
         deferOcr: Boolean,
-        ocrReady: Boolean? = null
+        ocrReady: Boolean? = null,
+        pickSession: Int = 0
     ) {
         scope.launch(pickDispatcher) {
+            // 排到队尾时可能已经开了新一轮取词：这一枪打下去只会白耗一次系统截图配额
+            // （takeScreenshot 有最小间隔，白打一次会把新一轮那张图限流掉）。
+            if (isStalePickSession(pickSession)) {
+                PickPerf.mark("screenshot_deferred_dropped", "reason=stale_before_capture session=$pickSession")
+                return@launch
+            }
             val resolvedOcrReady = ocrReady ?: isOcrReady(context, ocrFallbackEnabled, ocrModelId)
             val crop = captureCroppedScreenshotCopy(service, dragSelectRect, deferred = true)
+            if (isStalePickSession(pickSession)) {
+                PickPerf.mark("screenshot_deferred_dropped", "reason=stale_after_capture session=$pickSession")
+                crop?.bitmap?.recycle()
+                return@launch
+            }
             if (crop == null) {
                 PickPerf.mark("screenshot_deferred_end", "bitmap=false")
-                if (deferOcr && resolvedOcrReady) {
-                    withContext(Dispatchers.Main.immediate) {
+                withContext(Dispatchers.Main.immediate) {
+                    if (deferOcr && resolvedOcrReady) {
                         FloatBallPickResultPanel.finishOcrPending()
-                        FloatBallOverlay.onPickPanelDeferredScreenshotSkipped()
                     }
-                } else {
-                    withContext(Dispatchers.Main.immediate) {
-                        FloatBallOverlay.onPickPanelDeferredScreenshotSkipped()
-                    }
+                    // 图没回来也得把面板放上来：它正按「延后截图」等着这张图，不能停在屏幕外。
+                    FloatBallPickResultPanel.finishDeferredScreenshot()
+                    FloatBallOverlay.onPickPanelDeferredScreenshotSkipped()
                 }
                 return@launch
             }
@@ -606,6 +646,10 @@ object InspireCoordinator {
             }
         }
     }
+
+    /** [pickSession] 为 0 表示该入口不追踪会话（没有延后截图，如 [InspireFloating]）。 */
+    private fun isStalePickSession(pickSession: Int): Boolean =
+        pickSession != 0 && pickSession != pickSessionSeq.get()
 
     private suspend fun captureScreenshotIntoHolder(
         service: AccessibilityService,

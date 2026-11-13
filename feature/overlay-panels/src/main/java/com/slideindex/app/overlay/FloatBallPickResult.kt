@@ -48,7 +48,15 @@ data class FloatBallPickResult(
     val images: List<Bitmap> = emptyList(),
     val initialImageIndex: Int = 0,
     /** Panel should recycle [images] on dismiss when true. */
-    val ownsImages: Boolean = false
+    val ownsImages: Boolean = false,
+    /**
+     * 预览框命中的快路径：图还没拍，延后截图正在路上（`InspireCoordinator.scheduleDeferredPreviewScreenshot`）。
+     *
+     * 面板据此把 reveal 挂起，等图落地才滑上来 —— 否则那张快门会把面板自己拍进结果图里
+     * （用户看到「取词面板里截到了取词面板」）。**不要**用"没有图"来推断这件事：
+     * 截图彻底失败时同样没有图，但那时候没有人在等，必须立刻显示面板。
+     */
+    val awaitingDeferredScreenshot: Boolean = false
 ) {
     val text: String?
         get() = textFor(activeSource)

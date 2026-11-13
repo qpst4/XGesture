@@ -70,6 +70,12 @@ import kotlinx.coroutines.withContext
 object FloatBallPickResultPanel {
     private const val TAG = "FloatBallPickPanel"
 
+    /**
+     * 「延后截图」等图的兜底上限：超过这个时间还没等到图（也没等到失败回调），
+     * 就当它不会回来了，把面板放上来（宁可没图，也不能让面板停在屏幕外）。
+     */
+    private const val DEFERRED_REVEAL_TIMEOUT_MS = 1_200L
+
     private val mainHandler = Handler(Looper.getMainLooper())
     private val historyOcrScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var historyOcrJob: Job? = null
@@ -139,6 +145,17 @@ object FloatBallPickResultPanel {
     /** 图片全屏查看器是否展开：返回键要先关它，再关面板。 */
     private var imageViewerVisibleState: MutableState<Boolean>? = null
     private var panelRevealGeneration = 0
+
+    /**
+     * 面板已经 `showResult`、但「延后截图」还没落地的这段：**先不 reveal**。
+     *
+     * 快门是在 `showResult` 之后才按的（`InspireCoordinator.scheduleDeferredPreviewScreenshot`），
+     * 此刻把面板滑上来，那张静帧里就会多出一块面板自己 —— 用户看到的就是
+     * 「取词面板里截到了取词面板」。图落地（[updatePickScreenshot]）或明确失败
+     * （[finishDeferredScreenshot]）时再 reveal；两头都没等到就由 [DEFERRED_REVEAL_TIMEOUT_MS] 兜底。
+     */
+    private var deferredRevealPending = false
+    private var deferredRevealFallback: Runnable? = null
 
     /**
      * 长按分享键起拖期间，面板会藏起来但**不销毁**。
@@ -213,6 +230,58 @@ object FloatBallPickResultPanel {
                 }
             }
         }
+    }
+
+    /**
+     * 延后截图期间先把面板留在屏幕外（见 [deferredRevealPending]）。
+     * 内容照常组合，只是整块被 `translationY` 推到屏幕下沿之外，所以静帧里不会出现它。
+     */
+    private fun armDeferredReveal(context: Context) {
+        cancelDeferredReveal()
+        deferredRevealPending = true
+        panelVisibilityState?.targetState = true
+        panelRevealedState?.value = false
+        val hostContext = appContext ?: context.applicationContext
+        val fallback = Runnable {
+            deferredRevealFallback = null
+            if (!deferredRevealPending || !pickPanelVisible) return@Runnable
+            deferredRevealPending = false
+            PickPerf.mark("panel_deferred_reveal_timeout")
+            revealPanelAnimated(hostContext)
+        }
+        deferredRevealFallback = fallback
+        mainHandler.postDelayed(fallback, DEFERRED_REVEAL_TIMEOUT_MS)
+    }
+
+    private fun cancelDeferredReveal() {
+        deferredRevealPending = false
+        deferredRevealFallback?.let { mainHandler.removeCallbacks(it) }
+        deferredRevealFallback = null
+    }
+
+    private fun revealDeferredNow() {
+        if (!deferredRevealPending) return
+        deferredRevealPending = false
+        deferredRevealFallback?.let { mainHandler.removeCallbacks(it) }
+        deferredRevealFallback = null
+        val hostContext = appContext
+        if (hostContext != null) {
+            revealPanelAnimated(hostContext)
+        } else {
+            panelRevealedState?.value = true
+        }
+    }
+
+    /**
+     * 延后截图没回来（截图失败 / 被系统限流 / 会话已过期）：立刻把面板放上来。
+     * 与 [updatePickScreenshot] 二选一，谁先到谁负责 reveal。
+     */
+    fun finishDeferredScreenshot() {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            mainHandler.post { finishDeferredScreenshot() }
+            return
+        }
+        revealDeferredNow()
     }
 
     fun warmUp(context: Context) {
@@ -520,7 +589,9 @@ object FloatBallPickResultPanel {
         pickPanelVisible = true
         composeView?.visibility = View.VISIBLE
         val resolvedImages = result.resolvedImages()
-        val awaitingDeferredScreenshot = resolvedImages.isEmpty() && result.screenshot == null
+        // ⚠️ 不要用"没有图"来推断延后截图：截图彻底失败时同样没有图，而那时候没有人在等，
+        // 面板必须立刻显示（否则每次取词都要白等 [DEFERRED_REVEAL_TIMEOUT_MS]）。
+        val awaitingDeferredScreenshot = result.awaitingDeferredScreenshot
         if (awaitingDeferredScreenshot) {
             FloatBallOverlay.scheduleChromeAbovePanelsAfterDeferredPickScreenshot()
         } else {
@@ -560,10 +631,18 @@ object FloatBallPickResultPanel {
         textModeState?.value = enterTextMode
         updateWindowFocusableForMode(enterTextMode)
         panelShowTokenState?.let { it.intValue++ }
-        if (panelRevealedState?.value == true) {
-            panelVisibilityState?.targetState = true
-        } else {
-            revealPanelAnimated(hostContext)
+        when {
+            // 「先开面板、延后截图」这一支：快门在 showResult 之后才按，现在就把面板滑上来，
+            // 那张静帧里会多一块面板自己。等图落地（updatePickScreenshot）再 reveal。
+            awaitingDeferredScreenshot -> armDeferredReveal(hostContext)
+            panelRevealedState?.value == true -> {
+                cancelDeferredReveal()
+                panelVisibilityState?.targetState = true
+            }
+            else -> {
+                cancelDeferredReveal()
+                revealPanelAnimated(hostContext)
+            }
         }
         if (result.text.isNullOrBlank() && resolvedImages.isEmpty()) {
             Toast.makeText(hostContext, R.string.float_ball_text_not_found, Toast.LENGTH_SHORT).show()
@@ -614,6 +693,14 @@ object FloatBallPickResultPanel {
             bitmap.recycle()
             return
         }
+        // 只有「正等着这张延后截图」的面板收图：
+        // - 兜底已经把面板放上来了（图迟到了）：丢掉，否则它盖上去又是一张带面板的图；
+        // - 已经换了新一轮取词：上一轮的图绝不能落到这一轮面板上。
+        if (!deferredRevealPending) {
+            PickPerf.mark("panel_screenshot_dropped", "reason=no_deferred_pick_pending")
+            bitmap.recycle()
+            return
+        }
         screenshotState?.value?.let { current ->
             val owned = panelImagesState?.value.orEmpty()
             if (current !in owned) {
@@ -629,6 +716,8 @@ object FloatBallPickResultPanel {
         screenRectState?.value = screenRect?.let { Rect(it) }
         layoutMetaState?.value = layoutMeta
         PickPerf.mark("panel_screenshot_updated")
+        // 图已就位：现在才把面板滑上来（此前一直留在屏幕外，避开自己的快门）。
+        revealDeferredNow()
         FloatBallOverlay.onPickPanelScreenshotApplied()
     }
 
@@ -648,6 +737,8 @@ object FloatBallPickResultPanel {
         captureDetached = false
         panelDismissing = false
         pickPanelVisible = true
+        // 新一轮的加载态：上一轮没等到的延后截图作废（showResult 会按需重新挂起）。
+        cancelDeferredReveal()
         composeView?.visibility = View.GONE
         a11yTextState?.value = null
         ocrTextState?.value = null
@@ -961,6 +1052,8 @@ object FloatBallPickResultPanel {
         }
         panelDismissing = true
         pickPanelVisible = false
+        // 正在等延后截图的面板被关掉：兜底定时器和 pending 标记一起清，图回来会被丢弃。
+        cancelDeferredReveal()
         // 关面板时把图片查看器一起收掉，下次打开不残留全屏层。
         imageViewerVisibleState?.value = false
         dragSuspended = false
@@ -1025,6 +1118,8 @@ object FloatBallPickResultPanel {
             return
         }
         Log.i(TAG, "destroy invoked pickPanelVisible=$pickPanelVisible")
+        // 窗口都要摘了：等的图不再有意义，兜底定时器必须一起清（Runnable 里还握着 Context）。
+        cancelDeferredReveal()
         hiddenBySearchPanel = false
         com.slideindex.app.overlay.searchpanel.SearchPanelSessionState.onPanelClosed = null
         val currentOwner = owner
