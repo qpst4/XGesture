@@ -1,10 +1,8 @@
 package com.slideindex.app.util
 
 import android.content.Context
-import android.media.AudioAttributes
 import android.os.Build
 import android.os.SystemClock
-import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -121,7 +119,7 @@ object HapticHelper {
     }
 
     fun pickPanelSaveLongClick(view: View, settings: AppSettings) {
-        emit(view, feedbackConstant(PulseKind.CONFIRM, settings.resolvedHapticStrength()))
+        emit(view, PulseKind.CONFIRM, settings.resolvedHapticStrength())
     }
 
     private enum class PulseKind {
@@ -134,54 +132,69 @@ object HapticHelper {
 
     private fun pulse(view: View, settings: AppSettings, kind: PulseKind) {
         if (!settings.hapticEnabled) return
-        emit(view, feedbackConstant(kind, settings.resolvedHapticStrength()))
+        emit(view, kind, settings.resolvedHapticStrength())
     }
 
     /**
-     * 真正发声：系统语义常量优先；拿不到就用预定义波形兜底。
+     * 真正发声：**始终直连 Vibrator**，不走 `View.performHapticFeedback`。
      *
-     * [MIN_PULSE_GAP_MS] 内只发一次——马达来不及停，两声叠在一起听起来就是“糊”的
-     * （快速长滑时“开始 + 过长距”两声尤其明显）。
+     * 原因：`performHapticFeedback` 受系统「触感反馈」总开关约束 ——
+     * `FLAG_IGNORE_VIEW_SETTING` 只忽略控件自己的设置，不忽略全局设置；而部分 ROM 在系统触感
+     * 关闭时该方法**仍返回 true**，于是原来的兜底永远进不来，表现为「应用里震动开关打开也没有震动」。
+     * 本应用自己有震动总开关与逐事件开关，因此这里与系统触感**彻底脱钩**。
+     *
+     * [MIN_PULSE_GAP_MS] 内只发一次——马达来不及停，两声叠在一起听起来就是"糊"的
+     * （快速长滑时"开始 + 过长距"两声尤其明显）。
      */
-    private fun emit(view: View, constant: Int) {
+    private fun emit(view: View, kind: PulseKind, strength: HapticStrength) {
         val now = SystemClock.elapsedRealtime()
         if (now - lastPulseAtMs < MIN_PULSE_GAP_MS) return
         lastPulseAtMs = now
-        val success = if (view.isAttachedToWindow) {
-            view.performHapticFeedback(constant, FLAGS)
-        } else false
-        if (!success) {
-            vibrateFallback(view.context, constant)
+        if (vibrateDirect(view.context, strength)) return
+        // 拿不到马达（极少数设备 / 服务未就绪）时退回系统反馈，至少不会完全没声。
+        if (view.isAttachedToWindow) {
+            view.performHapticFeedback(feedbackConstant(kind, strength), FLAGS)
         }
     }
 
-    private fun vibrateFallback(context: Context, feedbackConstant: Int) {
-        val vibrator = vibrator(context) ?: return
-        if (!vibrator.hasVibrator()) return
-        // 预定义波形比自拼 createOneShot 更接近系统手感（小米/OPPO 上差异尤其明显）。
-        val effect = VibrationEffect.createPredefined(effectFor(feedbackConstant))
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // 标成“触摸反馈”通道，别让系统按通知/铃声震动去处理。
-            vibrator.vibrate(
-                effect,
-                VibrationAttributes.createForUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION),
-            )
-        } else {
-            vibrator.vibrate(effect)
-        }
+    /**
+     * 直连马达发声。
+     *
+     * 刻意**不传 `VibrationAttributes`**：带 usage 的震动会被系统按场景归类并可能被静音，
+     * 默认通道（`USAGE_UNKNOWN`）不受「触感反馈」开关影响。
+     */
+    private fun vibrateDirect(context: Context, strength: HapticStrength): Boolean {
+        val vibrator = vibrator(context) ?: return false
+        if (!vibrator.hasVibrator()) return false
+        return runCatching {
+            // 先取消上一次：连续 tick 时马达来不及停，两声会叠在一起。
+            vibrator.cancel()
+            vibrator.vibrate(VibrationEffect.createPredefined(effectFor(strength)))
+        }.isSuccess
     }
 
-    private fun effectFor(feedbackConstant: Int): Int = when (feedbackConstant) {
-        HapticFeedbackConstants.GESTURE_START,
-        HapticFeedbackConstants.CONFIRM,
-        HapticFeedbackConstants.CONTEXT_CLICK,
-        -> VibrationEffect.EFFECT_CLICK
-        else -> VibrationEffect.EFFECT_TICK
+    /** 强度 → 系统预定义波形。预定义波形比自拼 `createOneShot` 更接近系统手感。 */
+    private fun effectFor(strength: HapticStrength): Int = when (strength) {
+        HapticStrength.LIGHT -> VibrationEffect.EFFECT_TICK
+        HapticStrength.MEDIUM -> VibrationEffect.EFFECT_CLICK
+        HapticStrength.STRONG -> VibrationEffect.EFFECT_HEAVY_CLICK
     }
+
+    @Volatile
+    private var cachedVibrator: Vibrator? = null
 
     private fun vibrator(context: Context): Vibrator? {
-        val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
-        return manager?.defaultVibrator ?: (context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator)
+        cachedVibrator?.let { return it }
+        val appContext = context.applicationContext
+        val resolved = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            (appContext.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)
+                ?.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            appContext.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+        }
+        cachedVibrator = resolved
+        return resolved
     }
 
     private fun feedbackConstant(kind: PulseKind, strength: HapticStrength): Int =
