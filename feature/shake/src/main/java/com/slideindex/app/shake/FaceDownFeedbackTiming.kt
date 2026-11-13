@@ -12,7 +12,7 @@ internal fun GestureAction.requiresFaceDownFeedbackBeforeExecution(context: Cont
         GestureAction.LockScreenAndSilenceRing,
         GestureAction.LockScreenAndMuteAll,
         -> true
-        GestureAction.ToggleMute -> {
+        is GestureAction.ToggleMute -> {
             val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
             audioManager?.ringerMode != AudioManager.RINGER_MODE_SILENT
         }
