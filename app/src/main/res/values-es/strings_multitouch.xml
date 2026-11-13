@@ -62,4 +62,22 @@
     <string name="multitouch_record_drawn_count">%1$d/5 trazos dibujados</string>
     <string name="multitouch_record_clear">Redraw</string>
     <string name="multitouch_back">Atrás</string>
+    <!-- Añadido después de 1.66.0 (machine-assisted) -->
+    <string name="multitouch_device_auto">Automático</string>
+    <string name="multitouch_device_empty">Aún no se han encontrado dispositivos candidatos</string>
+    <string name="multitouch_device_pick_title">Elegir dispositivo táctil</string>
+    <string name="multitouch_device_summary_auto">Automático (mejor coincidencia)</string>
+    <string name="multitouch_device_summary_auto_current">Automático · actual %1$s</string>
+    <string name="multitouch_device_title">Dispositivo táctil</string>
+    <string name="multitouch_diagnostics_close">Cerrar</string>
+    <string name="multitouch_diagnostics_current">estado actual</string>
+    <string name="multitouch_diagnostics_empty">Aún no hay diagnósticos: prueba a activar el toque global y a consumir un dedo</string>
+    <string name="multitouch_diagnostics_last_run">último estado conocido</string>
+    <string name="multitouch_diagnostics_retry">Reiniciar</string>
+    <string name="multitouch_diagnostics_title">Diagnóstico táctil</string>
+    <string name="multitouch_protocol_auto">Automático</string>
+    <string name="multitouch_protocol_summary">Automático detecta el flujo real de eventos; cambia manualmente solo si se detecta mal un controlador</string>
+    <string name="multitouch_protocol_title">Protocolo táctil</string>
+    <string name="multitouch_protocol_type_a">Tipo A</string>
+    <string name="multitouch_protocol_type_b">Tipo B</string>
 </resources>
