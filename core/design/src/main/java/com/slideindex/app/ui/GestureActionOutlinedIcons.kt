@@ -65,7 +65,7 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.TOGGLE_AUTO_ROTATE -> MaterialSymbolThinIcons.MobileRotate
     GestureActionType.FORCE_PORTRAIT -> ThinActionIcons.ForcePortrait
     GestureActionType.FORCE_LANDSCAPE -> ThinActionIcons.ForceLandscape
-    GestureActionType.TOGGLE_MUTE -> ThinActionIcons.VolumeOff
+    GestureActionType.TOGGLE_MUTE -> MaterialSymbolThinIcons.Notifications
     GestureActionType.MEDIA_PLAY_PAUSE -> ThinActionIcons.PlayPause
     GestureActionType.MEDIA_PREVIOUS -> ThinActionIcons.SkipPrevious
     GestureActionType.MEDIA_NEXT -> ThinActionIcons.SkipNext
@@ -104,6 +104,10 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.TOGGLE_SHAKE_GESTURE -> ThinActionIcons.Gesture
     GestureActionType.TOGGLE_FLOAT_BALL -> ThinActionIcons.FloatBall
     GestureActionType.TOGGLE_MOBILE_DATA -> ThinActionIcons.Cellular
+    GestureActionType.TOGGLE_AIRPLANE -> MaterialSymbolThinIcons.Flight
+    GestureActionType.TOGGLE_LOCATION -> MaterialSymbolThinIcons.LocationOn
+    GestureActionType.TOGGLE_SYNC -> MaterialSymbolThinIcons.Sync
+    GestureActionType.TOGGLE_DARK_MODE -> MaterialSymbolThinIcons.DarkMode
     GestureActionType.TOGGLE_NFC -> MaterialSymbolThinIcons.Nfc
     GestureActionType.TOGGLE_BLUETOOTH -> MaterialSymbolThinIcons.Bluetooth
     GestureActionType.SWITCH_INPUT_METHOD -> ThinActionIcons.Keyboard
@@ -180,7 +184,7 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.TOGGLE_AUTO_ROTATE -> MaterialSymbolThinIcons.MobileRotate
     GestureActionType.FORCE_PORTRAIT -> ThinActionIcons.ForcePortrait
     GestureActionType.FORCE_LANDSCAPE -> ThinActionIcons.ForceLandscape
-    GestureActionType.TOGGLE_MUTE -> ThinActionIcons.VolumeOff
+    GestureActionType.TOGGLE_MUTE -> MaterialSymbolThinIcons.Notifications
     GestureActionType.MEDIA_PLAY_PAUSE -> ThinActionIcons.PlayPause
     GestureActionType.MEDIA_PREVIOUS -> ThinActionIcons.SkipPrevious
     GestureActionType.MEDIA_NEXT -> ThinActionIcons.SkipNext
@@ -219,6 +223,10 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.TOGGLE_SHAKE_GESTURE -> ThinActionIcons.Gesture
     GestureActionType.TOGGLE_FLOAT_BALL -> ThinActionIcons.FloatBall
     GestureActionType.TOGGLE_MOBILE_DATA -> ThinActionIcons.Cellular
+    GestureActionType.TOGGLE_AIRPLANE -> MaterialSymbolThinIcons.Flight
+    GestureActionType.TOGGLE_LOCATION -> MaterialSymbolThinIcons.LocationOn
+    GestureActionType.TOGGLE_SYNC -> MaterialSymbolThinIcons.Sync
+    GestureActionType.TOGGLE_DARK_MODE -> MaterialSymbolThinIcons.DarkMode
     GestureActionType.TOGGLE_NFC -> MaterialSymbolThinIcons.Nfc
     GestureActionType.TOGGLE_BLUETOOTH -> MaterialSymbolThinIcons.Bluetooth
     GestureActionType.SWITCH_INPUT_METHOD -> ThinActionIcons.Keyboard

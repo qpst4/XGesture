@@ -45,7 +45,11 @@ import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
 import com.slideindex.app.ui.picker.FilteredShortcutCatalog
 import com.slideindex.app.ui.picker.GestureActionCatalog
 import com.slideindex.app.gesture.ActionPickerCatalogPolicy
+import com.slideindex.app.gesture.RingerMode
 import com.slideindex.app.gesture.SlotPickerKind
+import com.slideindex.app.ui.ActionModeMenu
+import com.slideindex.app.ui.actionModeOptions
+import com.slideindex.app.ui.toRingerMode
 import com.slideindex.app.ui.picker.GestureActionCatalogScope
 import com.slideindex.app.ui.picker.activityShortcutPickerToggleSection
 import com.slideindex.app.ui.picker.shortcutFolderCardsSection
@@ -72,6 +76,11 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
     noneSelected: Boolean = false,
     onSelectNone: () -> Unit = {},
     searchQuery: String = "",
+    /**
+     * 系统当前铃声模式（`AudioManager.RINGER_MODE_*`）；只影响「声音模式 · 切换」的图标。
+     * `null` = 调用方没接实时状态，退回静态铃铛。
+     */
+    liveRingerMode: Int? = null,
 ) {
     if (filtered.isEmpty()) {
         item(key = "actions_empty") {
@@ -86,6 +95,11 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
     }
 
     val sections = GestureActionCatalog.groupIntoSections(filtered)
+    // 带「操作方式」的动作按「动作族」记已添加：一个面板里同一个开关只留一个模式。
+    // 只从 configuredActionKeys 反解，避免再加一个平行参数。
+    val boundByType: Map<GestureActionType, GestureAction> = configuredActionKeys.mapNotNull { raw ->
+        QuickLauncherItemCodec.parseActionPayload(raw)?.let { parsed -> parsed.type to parsed }
+    }.toMap()
     sections.forEach { section ->
         item(key = "ql-action-cat-${section.category.name}") {
             com.slideindex.app.ui.Md3PickerSectionHeader(stringResource(section.category.titleRes))
@@ -102,38 +116,63 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
                 rowActions.forEach { action ->
                     val context = LocalContext.current
                     val isNone = action.type == GestureActionType.NONE
-                    val added = QuickLauncherItemCodec.actionKey(action) in configuredActionKeys
+                    val bound = boundByType[action.type]
+                    val modeOptions = actionModeOptions(action, bound)
+                    // 「声音模式 · 切换」：图标跟手机实际铃声状态走；显式档位仍画动作目标。
+                    val liveIconAction = if (
+                        action is GestureAction.ToggleMute &&
+                        action.ringerMode == RingerMode.TOGGLE &&
+                        liveRingerMode != null
+                    ) {
+                        GestureAction.ToggleMute(liveRingerMode.toRingerMode())
+                    } else {
+                        bound ?: action
+                    }
+                    val added = if (isNone) {
+                        noneSelected
+                    } else if (modeOptions != null) {
+                        bound != null
+                    } else {
+                        QuickLauncherItemCodec.actionKey(action) in configuredActionKeys
+                    }
                     val cellLabel = when {
                         isNone -> stringResource(R.string.gesture_action_none)
                         action.type == GestureActionType.RUN_MACRO ->
                             stringResource(R.string.macro_action_run_macro)
+                        modeOptions != null && bound != null ->
+                            gestureActionLabelText(context, bound)
                         else -> {
                             // 不能在这里用可组合版 gestureActionLabel()：这块添加区被浮层面板复用
                             //（圆环槽位编辑），浮层合成里没有 LocalAppDependencies，调用会直接抛异常。
                             gestureActionLabelText(context, action)
                         }
                     }
-                    PickerGridCell(
-                        label = cellLabel,
-                        selected = if (isNone) noneSelected else added,
-                        singleSelect = singleSelect,
-                        onClick = {
-                            if (isNone) {
-                                onSelectNone()
-                                return@PickerGridCell
+                    if (modeOptions != null) {
+                        if (!singleSelect && added && bound != null) {
+                            // 多选页：已选中的开关再点 = 取消（与其它格子一致）。
+                            PickerGridCell(
+                                label = cellLabel,
+                                selected = true,
+                                singleSelect = false,
+                                onClick = {
+                                    onToggleItem(
+                                        QuickLauncherItem.action(
+                                            bound,
+                                            gestureActionLabelText(context, bound),
+                                        ),
+                                        true,
+                                    )
+                                },
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                com.slideindex.app.ui.ActionIconSlot(action = liveIconAction, sizeDp = 27)
                             }
-                            when (action.type) {
-                                GestureActionType.OPEN_LINK -> onOpenOpenLink()
-                                GestureActionType.EXECUTE_SHELL_COMMAND -> {
-                                    requestPermissionForAdjustAction(context, action)
-                                    onOpenExecuteShellCommand()
-                                }
-                                GestureActionType.SIMULATE_KEY_EVENT -> {
-                                    requestPermissionForAdjustAction(context, action)
-                                    onOpenSimulateKeyEvent()
-                                }
-                                GestureActionType.RUN_MACRO -> onRequestRunMacro { picked ->
-                                    if (!added) requestPermissionForAdjustAction(context, picked)
+                        } else {
+                            // 未选中（或单选页）：点格子先弹「操作方式」菜单。
+                            ActionModeMenu(
+                                options = modeOptions,
+                                onPick = { picked ->
+                                    requestPermissionForAdjustAction(context, picked)
                                     onToggleItem(
                                         QuickLauncherItem.action(
                                             picked,
@@ -141,25 +180,66 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
                                         ),
                                         false,
                                     )
-                                }
-                                else -> {
-                                    if (!added) requestPermissionForAdjustAction(context, action)
-                                    onToggleItem(
-                                        QuickLauncherItem.action(
-                                            action,
-                                            gestureActionLabelText(context, action),
-                                        ),
-                                        if (singleSelect) false else added,
-                                    )
+                                },
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                PickerGridCell(
+                                    label = cellLabel,
+                                    selected = singleSelect && added,
+                                    singleSelect = singleSelect,
+                                    onClick = null,
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    com.slideindex.app.ui.ActionIconSlot(action = liveIconAction, sizeDp = 27)
                                 }
                             }
-                        },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        com.slideindex.app.ui.ActionIconSlot(
-                            action = action,
-                            sizeDp = 27,
-                        )
+                        }
+                    } else {
+                        PickerGridCell(
+                            label = cellLabel,
+                            selected = if (isNone) noneSelected else added,
+                            singleSelect = singleSelect,
+                            onClick = {
+                                if (isNone) {
+                                    onSelectNone()
+                                } else {
+                                    when (action.type) {
+                                        GestureActionType.OPEN_LINK -> onOpenOpenLink()
+                                        GestureActionType.EXECUTE_SHELL_COMMAND -> {
+                                            requestPermissionForAdjustAction(context, action)
+                                            onOpenExecuteShellCommand()
+                                        }
+                                        GestureActionType.SIMULATE_KEY_EVENT -> {
+                                            requestPermissionForAdjustAction(context, action)
+                                            onOpenSimulateKeyEvent()
+                                        }
+                                        GestureActionType.RUN_MACRO -> onRequestRunMacro { picked ->
+                                            if (!added) requestPermissionForAdjustAction(context, picked)
+                                            onToggleItem(
+                                                QuickLauncherItem.action(
+                                                    picked,
+                                                    gestureActionLabelText(context, picked),
+                                                ),
+                                                false,
+                                            )
+                                        }
+                                        else -> {
+                                            if (!added) requestPermissionForAdjustAction(context, action)
+                                            onToggleItem(
+                                                QuickLauncherItem.action(
+                                                    action,
+                                                    gestureActionLabelText(context, action),
+                                                ),
+                                                if (singleSelect) false else added,
+                                            )
+                                        }
+                                    }
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            com.slideindex.app.ui.ActionIconSlot(action = action, sizeDp = 27)
+                        }
                     }
                 }
                 repeat(PICKER_GRID_COLUMNS - rowActions.size) {
@@ -286,7 +366,7 @@ private const val PICKER_GRID_COLUMNS = 4
 private fun PickerGridCell(
     label: String,
     selected: Boolean,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     /** 单选（槽位）用高亮，多选（加入面板）才用右上角勾选徽标。 */
     singleSelect: Boolean = false,
@@ -295,7 +375,7 @@ private fun PickerGridCell(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

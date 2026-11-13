@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.core.net.toUri
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureTriggerMode
+import com.slideindex.app.gesture.isModeCapable
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.launcher.QuickLauncherItemType
@@ -208,13 +209,41 @@ class ExtensionSettingsViewModel @Inject constructor(
                         }
                         QuickLauncherItemType.ACTION -> {
                             val actionKey = QuickLauncherItemCodec.parseActionPayload(item.payload)?.let(QuickLauncherItemCodec::actionKey)
-                            targetItems.filterNot { it.type == QuickLauncherItemType.ACTION && QuickLauncherItemCodec.parseActionPayload(it.payload)?.let(QuickLauncherItemCodec::actionKey) == actionKey }
+                            val newAction = QuickLauncherItemCodec.parseActionPayload(item.payload)
+                            val modeFamilyType = newAction?.takeIf { it.isModeCapable() }?.type
+                            targetItems.filterNot { existing ->
+                                if (existing.type != QuickLauncherItemType.ACTION) {
+                                    false
+                                } else {
+                                    val oldAction = QuickLauncherItemCodec.parseActionPayload(existing.payload)
+                                        ?: return@filterNot false
+                                    // 带「操作方式」的动作按动作族去重：一个面板里同一个开关只留一个模式。
+                                    val sameModeFamily = modeFamilyType != null &&
+                                        oldAction.isModeCapable() &&
+                                        oldAction.type == modeFamilyType
+                                    QuickLauncherItemCodec.actionKey(oldAction) == actionKey ||
+                                        sameModeFamily
+                                }
+                            }
                         }
                         QuickLauncherItemType.WIDGET -> targetItems.filterNot { it.type == QuickLauncherItemType.WIDGET && it.payload == item.payload }
                         QuickLauncherItemType.FOLDER -> targetItems.filterNot { it.type == QuickLauncherItemType.FOLDER && it.payload == item.payload && it.label == item.label }
                     }
                 } else {
-                    targetItems + item
+                    // 新增也要按动作族去重：带模式的动作换模式时，先移除同族的旧条目，
+                    // 否则「打开 Wi-Fi」和「关闭 Wi-Fi」会同时挂在面板里，网格只有一个格子表达不了。
+                    val newAction = QuickLauncherItemCodec.parseActionPayload(item.payload)
+                    val modeFamilyType = newAction?.takeIf { it.isModeCapable() }?.type
+                    val base = if (item.type == QuickLauncherItemType.ACTION && modeFamilyType != null) {
+                        targetItems.filterNot { existing ->
+                            existing.type == QuickLauncherItemType.ACTION &&
+                                QuickLauncherItemCodec.parseActionPayload(existing.payload)
+                                    ?.let { it.isModeCapable() && it.type == modeFamilyType } == true
+                        }
+                    } else {
+                        targetItems
+                    }
+                    base + item
                 }
                 panel.copy(items = panel.items.withItemsAtFolder(folderIndex, nextItems))
             } else {
@@ -237,13 +266,37 @@ class ExtensionSettingsViewModel @Inject constructor(
                     current.filterNot { it.type == QuickLauncherItemType.SHORTCUT && QuickLauncherItemCodec.shortcutItemKey(it) == key }
                 }
                 QuickLauncherItemType.ACTION -> {
-                    val actionKey = QuickLauncherItemCodec.parseActionPayload(item.payload)?.let(QuickLauncherItemCodec::actionKey) ?: return@launchSettingsWrite Result.success(Unit)
-                    current.filterNot { it.type == QuickLauncherItemType.ACTION && QuickLauncherItemCodec.parseActionPayload(it.payload)?.let(QuickLauncherItemCodec::actionKey) == actionKey }
+                    val newAction = QuickLauncherItemCodec.parseActionPayload(item.payload)
+                        ?: return@launchSettingsWrite Result.success(Unit)
+                    val actionKey = QuickLauncherItemCodec.actionKey(newAction)
+                    val modeFamilyType = newAction.takeIf { it.isModeCapable() }?.type
+                    current.filterNot { existing ->
+                        if (existing.type != QuickLauncherItemType.ACTION) {
+                            false
+                        } else {
+                            val oldAction = QuickLauncherItemCodec.parseActionPayload(existing.payload)
+                                ?: return@filterNot false
+                            QuickLauncherItemCodec.actionKey(oldAction) == actionKey ||
+                                (modeFamilyType != null && oldAction.isModeCapable() &&
+                                    oldAction.type == modeFamilyType)
+                        }
+                    }
                 }
                 else -> return@launchSettingsWrite Result.success(Unit)
             }
         } else {
-            current + item
+            val newAction = QuickLauncherItemCodec.parseActionPayload(item.payload)
+            val modeFamilyType = newAction?.takeIf { it.isModeCapable() }?.type
+            val base = if (modeFamilyType != null) {
+                current.filterNot { existing ->
+                    existing.type == QuickLauncherItemType.ACTION &&
+                        QuickLauncherItemCodec.parseActionPayload(existing.payload)
+                            ?.let { it.isModeCapable() && it.type == modeFamilyType } == true
+                }
+            } else {
+                current
+            }
+            base + item
         }
         settingsRepository.setHoneycombLauncherItems(next.honeycombRuntimeItems())
     }

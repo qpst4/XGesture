@@ -64,10 +64,10 @@ class ShakeActionResolverTest {
     @Test
     fun resolveShakeAction_usesLockScreenActionWhenScreenOff() {
         val shake = ShakeGestureSettings(
-            lockScreenActions = mapOf(ShakeGestureType.LEFT_FLIP to GestureAction.Flashlight),
+            lockScreenActions = mapOf(ShakeGestureType.LEFT_FLIP to GestureAction.Flashlight()),
         )
         assertEquals(
-            GestureAction.Flashlight,
+            GestureAction.Flashlight(),
             resolveShakeAction(
                 shake,
                 ShakeGestureType.LEFT_FLIP,
@@ -81,7 +81,7 @@ class ShakeActionResolverTest {
     @Test
     fun resolveShakeAction_screenOffDoesNotFallBackToBasicAction() {
         val shake = ShakeGestureSettings(
-            basicActions = mapOf(ShakeGestureType.FORWARD_FLIP to GestureAction.Flashlight),
+            basicActions = mapOf(ShakeGestureType.FORWARD_FLIP to GestureAction.Flashlight()),
         )
         assertEquals(
             GestureAction.None,
@@ -98,7 +98,7 @@ class ShakeActionResolverTest {
     @Test
     fun resolveShakeAction_screenOffExplicitNoneStaysNone() {
         val shake = ShakeGestureSettings(
-            basicActions = mapOf(ShakeGestureType.FORWARD_FLIP to GestureAction.Flashlight),
+            basicActions = mapOf(ShakeGestureType.FORWARD_FLIP to GestureAction.Flashlight()),
             lockScreenActions = mapOf(ShakeGestureType.FORWARD_FLIP to GestureAction.None),
         )
         assertEquals(
@@ -201,10 +201,10 @@ class ShakeActionResolverTest {
             perAppActions = mapOf(
                 "com.example.app" to mapOf(ShakeGestureType.LEFT_FLIP to GestureAction.Home),
             ),
-            lockScreenActions = mapOf(ShakeGestureType.LEFT_FLIP to GestureAction.Flashlight),
+            lockScreenActions = mapOf(ShakeGestureType.LEFT_FLIP to GestureAction.Flashlight()),
         )
         assertEquals(
-            GestureAction.Flashlight,
+            GestureAction.Flashlight(),
             resolveShakeAction(
                 shake,
                 ShakeGestureType.LEFT_FLIP,

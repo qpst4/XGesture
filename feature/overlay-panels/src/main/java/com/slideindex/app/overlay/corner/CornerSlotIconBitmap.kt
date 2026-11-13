@@ -9,6 +9,7 @@ import androidx.core.graphics.createBitmap
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.overlay.RingerLiveIcons
 import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.shell.ShellCommand
 import com.slideindex.app.shell.ShellCommandIconResolver
@@ -131,7 +132,8 @@ object CornerSlotIconBitmap {
         }
         return com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconBitmapFull?.invoke(
             context,
-            action,
+            // 「声音模式 · 切换」跟随系统当前铃声状态；显式档位原样。
+            RingerLiveIcons.liveAction(context, action),
             sizePx,
             tintArgb,
             true,

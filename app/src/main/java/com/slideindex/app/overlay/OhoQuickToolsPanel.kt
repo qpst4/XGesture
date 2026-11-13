@@ -70,6 +70,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import com.slideindex.app.R
+import com.slideindex.app.ui.RingerPanelIcons
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -524,7 +525,11 @@ private fun OhoTileGlyph(
             modifier = Modifier.size(iconSize)
         )
         OhoTile.SOUND -> Icon(
-            painter = painterResource(RingerModeIconRenderer.iconResFor(ringerMode ?: AudioManager.RINGER_MODE_NORMAL)),
+            imageVector = when (ringerMode ?: AudioManager.RINGER_MODE_NORMAL) {
+                AudioManager.RINGER_MODE_VIBRATE -> RingerPanelIcons.Vibrate
+                AudioManager.RINGER_MODE_SILENT -> RingerPanelIcons.Silent
+                else -> RingerPanelIcons.Ringer
+            },
             contentDescription = ohoTileContentDescription(tile),
             tint = tint,
             modifier = Modifier.size(iconSize)

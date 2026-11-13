@@ -36,7 +36,7 @@ class GestureActionNormalizedTest {
         assertEquals(GestureAction.VoiceAssistant, GestureAction.from(GestureActionType.VOICE_ASSISTANT, ""))
         assertEquals(GestureActionType.VOICE_SEARCH, GestureActionType.fromId(71))
         assertEquals(GestureActionType.VOICE_ASSISTANT, GestureActionType.fromId(72))
-        assertEquals(GestureAction.ToggleAutoRotate, GestureAction.from(GestureActionType.TOGGLE_AUTO_ROTATE, ""))
+        assertEquals(GestureAction.ToggleAutoRotate(), GestureAction.from(GestureActionType.TOGGLE_AUTO_ROTATE, ""))
         assertEquals(GestureAction.ForcePortrait, GestureAction.from(GestureActionType.FORCE_PORTRAIT, ""))
         assertEquals(GestureAction.ForceLandscape, GestureAction.from(GestureActionType.FORCE_LANDSCAPE, ""))
         assertEquals(GestureActionType.TOGGLE_AUTO_ROTATE, GestureActionType.fromId(73))
@@ -89,7 +89,7 @@ class GestureActionNormalizedTest {
         // 108 = 「切换悬浮球」：id 是持久化 ABI，新动作只能往后追加（见上一条测试）。
         assertEquals(GestureActionType.TOGGLE_FLOAT_BALL, GestureActionType.fromId(108))
         assertEquals(
-            GestureAction.ToggleFloatBall,
+            GestureAction.ToggleFloatBall(),
             GestureAction.from(GestureActionType.TOGGLE_FLOAT_BALL, ""),
         )
     }

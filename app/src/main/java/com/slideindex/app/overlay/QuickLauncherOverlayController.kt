@@ -1,9 +1,14 @@
 package com.slideindex.app.overlay
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Canvas
 import android.graphics.RectF
+import android.media.AudioManager
 import android.view.MotionEvent
+import androidx.core.content.ContextCompat
 import com.slideindex.app.R
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.diagnostic.EdgeDiag
@@ -38,7 +43,27 @@ import com.slideindex.app.ui.miuix.theme.ModuleTheme
 internal class QuickLauncherOverlayController(
     internal val host: Host
 ) {
+    /**
+     * 系统铃声模式变化：面板上的「声音模式 · 切换」图标要跟着变。
+     * 面板是 Canvas 绘制，没有 Compose 重组，必须自己收广播再重绘。
+     */
+    private val ringerModeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == AudioManager.RINGER_MODE_CHANGED_ACTION) {
+                host.invalidate()
+            }
+        }
+    }
+
     init {
+        runCatching {
+            ContextCompat.registerReceiver(
+                host.context.applicationContext,
+                ringerModeReceiver,
+                IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION),
+                ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+        }
         com.slideindex.app.ui.IconPlateModeState.addPlateModeListener {
             invalidateQuickLauncherDerivedCaches()
             OverlayIconLoader.clear()

@@ -9,7 +9,9 @@ import androidx.core.graphics.createBitmap
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.launcher.QuickLauncherItem
+import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.launcher.QuickLauncherItemType
+import com.slideindex.app.overlay.RingerLiveIcons
 import com.slideindex.app.settings.FvRingLauncherSlotIconOverride
 import com.slideindex.app.shell.ShellCommand
 
@@ -32,7 +34,12 @@ object RingLauncherSlotIconBitmap {
         iconOverride: FvRingLauncherSlotIconOverride? = null,
     ): Bitmap {
         // 图标覆盖变更后必须换 key，否则一直是旧缓存
-        val cacheKey = "${item.type}:${item.payload}:${item.label}:$sizePx:${iconOverride?.iconPath}:${iconOverride?.textIcon}:${com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconCacheRevision?.invoke()}:${com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconPlateModeKey?.invoke()}"
+        // 「声音模式 · 切换」还要把系统铃声状态算进 key，否则响铃→振动后会命中旧图。
+        val ringerKeyPart = RingerLiveIcons.keyPart(
+            context,
+            QuickLauncherItemCodec.parseActionPayload(item.payload),
+        )
+        val cacheKey = "${item.type}:${item.payload}:${item.label}:$sizePx:${iconOverride?.iconPath}:${iconOverride?.textIcon}:${com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconCacheRevision?.invoke()}:${com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconPlateModeKey?.invoke()}:$ringerKeyPart"
         cache.get(cacheKey)?.let { return it }
         val bitmap = resolveBitmap(
             context = context,

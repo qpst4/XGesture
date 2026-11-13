@@ -62,9 +62,23 @@ object NfcToggleHelper {
     }
 
     fun toggle(context: Context): Outcome {
+        val current = isEnabled(context) ?: return if (hasHardware(context)) {
+            Outcome.NEEDS_SETTINGS
+        } else {
+            Outcome.UNSUPPORTED
+        }
+        return set(context, !current)
+    }
+
+    /**
+     * 把 NFC 设成 [enable]（幂等：已经是该状态时直接返回 [Outcome.TOGGLED]）。
+     *
+     * 与 [toggle] 共用同一条降级链；「打开 / 关闭」动作就是靠这里拿到确定性语义。
+     */
+    fun set(context: Context, enable: Boolean): Outcome {
         if (!hasHardware(context)) return Outcome.UNSUPPORTED
         val current = isEnabled(context) ?: return Outcome.NEEDS_SETTINGS
-        val enable = !current
+        if (current == enable) return Outcome.TOGGLED
 
         // 1/2. 进程内调用：没有 WRITE_SECURE_SETTINGS 时先借特权补授（反射被拦就别白跑一次 pm grant）。
         if (reflectionAvailable()) {

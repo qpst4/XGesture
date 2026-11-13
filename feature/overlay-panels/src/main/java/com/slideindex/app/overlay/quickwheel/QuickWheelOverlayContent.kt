@@ -1,5 +1,6 @@
 package com.slideindex.app.overlay.quickwheel
 
+import android.os.SystemClock
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -13,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -28,6 +30,7 @@ import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.IntOffset
 import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.overlay.layout.QuickWheelAdaptiveScreen
@@ -39,12 +42,17 @@ import com.slideindex.app.overlay.layout.QuickWheelOpenAnimation
 import com.slideindex.app.overlay.layout.QuickWheelPlacedSlot
 import com.slideindex.app.overlay.layout.QuickWheelStyleSpec
 import com.slideindex.app.settings.QuickWheel
+import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.QuickWheelLongPressTrigger
 import com.slideindex.app.settings.QuickWheelSlot
 import com.slideindex.app.settings.QuickWheelTapTrigger
 import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.util.HapticHelper
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
+
+/** 划过容器的震动最小间隔：压在两个容器交界处时命中会来回切，不限制会变成"蜂鸣"。 */
+private const val HAPTIC_TICK_MIN_INTERVAL_MS = 50L
 
 /**
  * 轮盘浮层内容（驻留式），供「手势触发」与配置页「轮盘预览」共用。
@@ -121,9 +129,19 @@ fun QuickWheelOverlayContent(
     backdropDimAlpha: Float = 0f,
     /** Shell 命令表：HUD 的动作名称按它回查用户自定义名。 */
     shellCommands: List<ShellCommand> = emptyList(),
+    /**
+     * 震动反馈用的设置快照；`null` = 不震（测试 / 不需要震动反馈的宿主）。
+     *
+     * 复用全局那套开关（总开关 + 轻/中/重 + 「槽位选择 / 手势触发 / 确认启动」三个子开关），
+     * 与圆环启动器、底角轮盘完全一致；轮盘不单独加设置项。
+     */
+    hapticSettings: AppSettings? = null,
     onExternalHandlers: (move: (Float, Float) -> Unit, up: (Float, Float) -> Unit) -> Unit = { _, _ -> },
 ) {
     val densityFloat = LocalDensity.current.density
+    val hapticView = LocalView.current
+    // 上一次"划过容器"震动的时刻（uptimeMillis），用于限制交界处的高频抖动。
+    var lastHapticTickAt by remember { mutableLongStateOf(0L) }
 
     var expandedPrimary by remember(wheel.id) { mutableIntStateOf(-1) }
     // 当前悬停（按下 / 移动到）的容器；变化即 [hoverToken] 自增，重启「长按时间」计时。
@@ -190,6 +208,24 @@ fun QuickWheelOverlayContent(
         QuickWheelHitKind.NONE -> null
     }
 
+    /** 「划过容器」的震动：只对配了动作的一/二级容器，中心与空位不震（中心真实呼出时不可见）。 */
+    fun hapticSlotEnter(hit: QuickWheelHit) {
+        val settings = hapticSettings ?: return
+        if (hit.kind != QuickWheelHitKind.PRIMARY && hit.kind != QuickWheelHitKind.SECONDARY) return
+        val slot = slotOf(hit) ?: return
+        if (!slot.isConfigured) return
+        val now = SystemClock.uptimeMillis()
+        if (now - lastHapticTickAt < HAPTIC_TICK_MIN_INTERVAL_MS) return
+        lastHapticTickAt = now
+        HapticHelper.appTick(hapticView, settings)
+    }
+
+    /** 「松手执行」的震动：与圆环启动器一致，确认音效之外再给一次触觉确认。 */
+    fun hapticConfirm() {
+        val settings = hapticSettings ?: return
+        HapticHelper.confirmLaunch(hapticView, settings)
+    }
+
     fun hitAt(x: Float, y: Float): QuickWheelHit = QuickWheelLayoutEngine.hitTestWhileExpanded(
         layout = layoutState.value,
         shape = wheel.primaryShape,
@@ -206,6 +242,7 @@ fun QuickWheelOverlayContent(
     fun plainRelease(upHit: QuickWheelHit) {
         val slot = slotOf(upHit)
         if (slot != null && slot.isConfigured) {
+            hapticConfirm()
             onExecuteTap(slot)
             onDismiss()
         } else {
@@ -226,6 +263,8 @@ fun QuickWheelOverlayContent(
             hoverHit = hit
             armedHit = QuickWheelHit.NONE
             hoverToken++
+            // 「划过容器」的触觉：只在命中目标真的变化时震，同一容器内微动不重复。
+            hapticSlotEnter(hit)
         }
         // 二级展开时是否收起，交给引擎的纯判定（便于单测）：
         // 命中父容器 / 任意二级容器 → 保持；其余命中 → 只有真正离开「父容器 + 全部二级容器」
@@ -260,6 +299,7 @@ fun QuickWheelOverlayContent(
         if (slot != null && slot.isConfigured &&
             slot.tapTrigger == QuickWheelTapTrigger.ON_TOUCH
         ) {
+            hapticConfirm()
             onExecuteTap(slot)
             onDismiss()
             return true
@@ -282,6 +322,19 @@ fun QuickWheelOverlayContent(
         // 容器没配长按动作时没有可执行的东西，仍按老规则展开二级。
         val timeoutLongPress = slot.longPressAction.type != GestureActionType.NONE &&
             slot.longPressTrigger == QuickWheelLongPressTrigger.ON_TIMEOUT
+        val willExpand = !timeoutLongPress &&
+            hit.kind == QuickWheelHitKind.PRIMARY &&
+            slot.subSlots.isNotEmpty() &&
+            expandedPrimary != hit.index
+        // 「按满」时只有真的会发生点什么才震：没配动作、也没有二级的容器按满了什么都不会发生，
+        // 给了震动就等于承诺了一个不存在的动作。
+        val willArm = !timeoutLongPress && !willExpand &&
+            slot.longPressAction.type != GestureActionType.NONE &&
+            slot.longPressTrigger == QuickWheelLongPressTrigger.ON_RELEASE
+        if (timeoutLongPress || willExpand || willArm) {
+            // 「长按振动」= 按住不动被判为长按：与设置页的语义一致（不是「长滑距离」那条）。
+            hapticSettings?.let { HapticHelper.longPress(hapticView, it) }
+        }
         when {
             timeoutLongPress -> {
                 onExecuteLongPress(slot)
@@ -309,6 +362,7 @@ fun QuickWheelOverlayContent(
                 up.kind == QuickWheelHitKind.PRIMARY && up.index == expandedIndex -> {
                     val slot = wheel.slots.getOrNull(expandedIndex)
                     if (slot != null && slot.longPressAction.type != GestureActionType.NONE) {
+                        hapticConfirm()
                         onExecuteLongPress(slot)
                     }
                     onDismiss()
@@ -323,8 +377,10 @@ fun QuickWheelOverlayContent(
                             slot.longPressTrigger == QuickWheelLongPressTrigger.ON_RELEASE &&
                             slot.longPressAction.type != GestureActionType.NONE
                         ) {
+                            hapticConfirm()
                             onExecuteLongPress(slot)
                         } else {
+                            hapticConfirm()
                             onExecuteTap(slot)
                         }
                         onDismiss()
@@ -346,6 +402,7 @@ fun QuickWheelOverlayContent(
             upSlot.longPressTrigger == QuickWheelLongPressTrigger.ON_RELEASE &&
             upSlot.longPressAction.type != GestureActionType.NONE
         ) {
+            hapticConfirm()
             onExecuteLongPress(upSlot)
             onDismiss()
             return

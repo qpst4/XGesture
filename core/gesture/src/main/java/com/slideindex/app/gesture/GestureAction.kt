@@ -232,6 +232,18 @@ enum class GestureActionType(val id: Int) {
 
     /** 音量条：弹出音量键那种系统音量条，但不改变音量值。 */
     OPEN_VOLUME_SLIDER(115),
+
+    /** 「自动同步」：系统账号的后台自动同步总开关（普通权限，无需 Shizuku）。 */
+    TOGGLE_SYNC(116),
+
+    /** 「夜间模式」：系统深色主题开关（需要 Shizuku 或修改系统设置 / 安全设置权限）。 */
+    TOGGLE_DARK_MODE(117),
+
+    /** 「飞行模式」：飞行模式开关（需要 Shizuku / root；否则执行器降级打开系统设置页）。 */
+    TOGGLE_AIRPLANE(118),
+
+    /** 「定位」：系统定位总开关（需要 Shizuku / root；否则降级打开系统定位设置页）。 */
+    TOGGLE_LOCATION(119),
     ;
 
     companion object {
@@ -490,9 +502,13 @@ sealed class GestureAction {
         override val payload = ""
     }
 
-    data object Flashlight : GestureAction() {
+    /** 「手电筒」：默认切换；也可指定打开 / 关闭（幂等目标态）。 */
+    data class Flashlight(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
         override val type = GestureActionType.FLASHLIGHT
-        override val payload = ""
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
     }
 
     data object AdjustVolume : GestureAction() {
@@ -520,9 +536,18 @@ sealed class GestureAction {
         override val payload = ""
     }
 
-    data object ToggleMute : GestureAction() {
+    /**
+     * 「声音模式」：默认切换（响铃 → 振动 → 静音 → 响铃），也可直接指定某一档。
+     *
+     * 与其它开关不同，它的模式是 [RingerMode]（四值）。旧绑定的空 payload = 切换，
+     * 兼容老数据；只是「切换」从旧的二态取反变成了三模式循环。
+     */
+    data class ToggleMute(
+        override val ringerMode: RingerMode = RingerMode.TOGGLE,
+    ) : GestureAction(), RingerCapable {
         override val type = GestureActionType.TOGGLE_MUTE
-        override val payload = ""
+        override val payload = ringerMode.encoded
+        override fun withRingerMode(mode: RingerMode) = copy(ringerMode = mode)
     }
 
     data object MediaPlayPause : GestureAction() {
@@ -806,9 +831,13 @@ sealed class GestureAction {
         override val payload = ""
     }
 
-    data object ToggleDnd : GestureAction() {
+    /** 「勿扰模式」：默认切换；也可指定打开 / 关闭（打开 = 仅优先，与历史行为一致）。 */
+    data class ToggleDnd(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
         override val type = GestureActionType.TOGGLE_DND
-        override val payload = ""
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
     }
 
     data object TimedDnd : GestureAction() {
@@ -900,39 +929,95 @@ sealed class GestureAction {
         override val payload = ""
     }
 
-    data object ToggleWifi : GestureAction() {
+    /** 「Wi-Fi 开关」：默认切换；也可指定打开 / 关闭（幂等目标态）。 */
+    data class ToggleWifi(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
         override val type = GestureActionType.TOGGLE_WIFI
-        override val payload = ""
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
     }
 
-    data object ToggleMobileData : GestureAction() {
+    /** 「移动数据开关」：默认切换；也可指定打开 / 关闭。 */
+    data class ToggleMobileData(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
         override val type = GestureActionType.TOGGLE_MOBILE_DATA
-        override val payload = ""
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
     }
 
     /** 「NFC 开关」：优先进程内反射（需 `WRITE_SECURE_SETTINGS`，可由 Shizuku/Root 代授），
-     *  其次 Shizuku binder，否则打开系统 NFC 设置页。 */
-    data object ToggleNfc : GestureAction() {
+     *  其次 Shizuku binder，否则打开系统 NFC 设置页。默认切换，也可指定打开 / 关闭。 */
+    data class ToggleNfc(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
         override val type = GestureActionType.TOGGLE_NFC
-        override val payload = ""
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
     }
 
     /** 「蓝牙开关」：需 Shizuku / Root（`cmd bluetooth_manager`）；无特权时执行器打开蓝牙设置页。 */
-    data object ToggleBluetooth : GestureAction() {
+    data class ToggleBluetooth(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
         override val type = GestureActionType.TOGGLE_BLUETOOTH
-        override val payload = ""
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
     }
 
-    /** 把「晃动」总开关取反（等价于晃动页顶部那个开关）。 */
-    data object ToggleShakeGesture : GestureAction() {
+    /** 「自动同步」：系统账号的后台自动同步总开关；普通权限，无降级路径。 */
+    data class ToggleSync(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
+        override val type = GestureActionType.TOGGLE_SYNC
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
+    }
+
+    /** 「夜间模式」：系统深色主题；需要 Shizuku / 修改系统设置 / `WRITE_SECURE_SETTINGS`。 */
+    data class ToggleDarkMode(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
+        override val type = GestureActionType.TOGGLE_DARK_MODE
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
+    }
+
+    /** 「飞行模式」：需要 Shizuku / root（`cmd connectivity airplane-mode`）；否则跳系统设置页。 */
+    data class ToggleAirplane(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
+        override val type = GestureActionType.TOGGLE_AIRPLANE
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
+    }
+
+    /** 「定位」：需要 Shizuku / root（`cmd location set-location-enabled`）；否则跳系统定位设置页。 */
+    data class ToggleLocation(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
+        override val type = GestureActionType.TOGGLE_LOCATION
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
+    }
+
+    /** 「晃动手势」：默认切换；也可指定打开 / 关闭。 */
+    data class ToggleShakeGesture(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
         override val type = GestureActionType.TOGGLE_SHAKE_GESTURE
-        override val payload = ""
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
     }
 
-    /** 把「悬浮球」总开关取反（等价于悬浮球页顶部那个开关，但不影响边缘手势）。 */
-    data object ToggleFloatBall : GestureAction() {
+    /** 「悬浮球显示」：默认切换；也可指定显示 / 隐藏。 */
+    data class ToggleFloatBall(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
         override val type = GestureActionType.TOGGLE_FLOAT_BALL
-        override val payload = ""
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
     }
 
     /**
@@ -1089,16 +1174,22 @@ sealed class GestureAction {
         override val payload = ""
     }
 
-    /** 打开或关闭系统自动亮度。 */
-    data object ToggleAutoBrightness : GestureAction() {
+    /** 自动亮度：默认切换；也可指定打开 / 关闭。 */
+    data class ToggleAutoBrightness(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
         override val type = GestureActionType.TOGGLE_AUTO_BRIGHTNESS
-        override val payload = ""
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
     }
 
-    /** 开启或关闭屏幕自动旋转开关。 */
-    data object ToggleAutoRotate : GestureAction() {
+    /** 屏幕自动旋转：默认切换；也可指定打开 / 关闭。 */
+    data class ToggleAutoRotate(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
         override val type = GestureActionType.TOGGLE_AUTO_ROTATE
-        override val payload = ""
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
     }
 
     /** 锁定屏幕为竖屏方向。 */
@@ -1263,16 +1354,16 @@ sealed class GestureAction {
                 GestureActionType.FORCE_STOP_CURRENT_APP -> ForceStopCurrentApp
                 GestureActionType.FREE_WINDOW_CURRENT_APP -> FreeWindowCurrentApp
                 GestureActionType.CLICK_PASSTHROUGH -> ClickPassthrough
-                GestureActionType.FLASHLIGHT -> Flashlight
+                GestureActionType.FLASHLIGHT -> Flashlight(ToggleMode.decode(payload))
                 GestureActionType.ADJUST_VOLUME -> AdjustVolume
                 GestureActionType.ADJUST_BRIGHTNESS -> AdjustBrightness
                 GestureActionType.LAUNCH_ASSISTANT -> LaunchAssistant
                 GestureActionType.VOICE_SEARCH -> VoiceSearch
                 GestureActionType.VOICE_ASSISTANT -> VoiceAssistant
-                GestureActionType.TOGGLE_AUTO_ROTATE -> ToggleAutoRotate
+                GestureActionType.TOGGLE_AUTO_ROTATE -> ToggleAutoRotate(ToggleMode.decode(payload))
                 GestureActionType.FORCE_PORTRAIT -> ForcePortrait
                 GestureActionType.FORCE_LANDSCAPE -> ForceLandscape
-                GestureActionType.TOGGLE_MUTE -> ToggleMute
+                GestureActionType.TOGGLE_MUTE -> ToggleMute(RingerMode.decode(payload))
                 GestureActionType.MEDIA_PLAY_PAUSE -> MediaPlayPause
                 GestureActionType.MEDIA_PREVIOUS -> MediaPrevious
                 GestureActionType.MEDIA_NEXT -> MediaNext
@@ -1313,18 +1404,22 @@ sealed class GestureAction {
                 GestureActionType.POINTER_GESTURE_RECORDER -> PointerGestureRecorder
                 GestureActionType.POINTER_REALTIME_GESTURE -> PointerRealtimeGesture
                 GestureActionType.OPEN_FLOATING_POINTER_RADIAL_MENU -> OpenFloatingPointerRadialMenu
-                GestureActionType.TOGGLE_DND -> ToggleDnd
+                GestureActionType.TOGGLE_DND -> ToggleDnd(ToggleMode.decode(payload))
                 GestureActionType.TIMED_DND -> TimedDnd
                 GestureActionType.SCREEN_SEARCH -> ScreenSearch
                 GestureActionType.SMART_SCREENSHOT -> SmartScreenshot
                 GestureActionType.QUICK_WHEEL -> QuickWheel.parse(payload)
                 GestureActionType.SCREEN_RECORD -> ScreenRecord
-                GestureActionType.TOGGLE_WIFI -> ToggleWifi
-                GestureActionType.TOGGLE_SHAKE_GESTURE -> ToggleShakeGesture
-                GestureActionType.TOGGLE_FLOAT_BALL -> ToggleFloatBall
-                GestureActionType.TOGGLE_MOBILE_DATA -> ToggleMobileData
-                GestureActionType.TOGGLE_NFC -> ToggleNfc
-                GestureActionType.TOGGLE_BLUETOOTH -> ToggleBluetooth
+                GestureActionType.TOGGLE_WIFI -> ToggleWifi(ToggleMode.decode(payload))
+                GestureActionType.TOGGLE_SHAKE_GESTURE -> ToggleShakeGesture(ToggleMode.decode(payload))
+                GestureActionType.TOGGLE_FLOAT_BALL -> ToggleFloatBall(ToggleMode.decode(payload))
+                GestureActionType.TOGGLE_MOBILE_DATA -> ToggleMobileData(ToggleMode.decode(payload))
+                GestureActionType.TOGGLE_NFC -> ToggleNfc(ToggleMode.decode(payload))
+                GestureActionType.TOGGLE_BLUETOOTH -> ToggleBluetooth(ToggleMode.decode(payload))
+                GestureActionType.TOGGLE_SYNC -> ToggleSync(ToggleMode.decode(payload))
+                GestureActionType.TOGGLE_DARK_MODE -> ToggleDarkMode(ToggleMode.decode(payload))
+                GestureActionType.TOGGLE_AIRPLANE -> ToggleAirplane(ToggleMode.decode(payload))
+                GestureActionType.TOGGLE_LOCATION -> ToggleLocation(ToggleMode.decode(payload))
                 GestureActionType.SWITCH_INPUT_METHOD -> SwitchInputMethod
                 GestureActionType.CORNER_INNER_CANCEL -> CornerInnerCancel
                 GestureActionType.CORNER_INNER_PIN_WHEEL -> CornerInnerPinWheel
@@ -1348,7 +1443,7 @@ sealed class GestureAction {
                 GestureActionType.UNIVERSAL_COPY -> UniversalCopy
                 GestureActionType.FREEZER_PANEL -> FreezerPanel
                 GestureActionType.REFREEZE -> Refreeze
-                GestureActionType.TOGGLE_AUTO_BRIGHTNESS -> ToggleAutoBrightness
+                GestureActionType.TOGGLE_AUTO_BRIGHTNESS -> ToggleAutoBrightness(ToggleMode.decode(payload))
                 GestureActionType.OPEN_INTERNET_PANEL -> OpenInternetPanel
                 GestureActionType.OPEN_VOLUME_PANEL -> OpenVolumePanel
                 GestureActionType.OPEN_VOLUME_SLIDER -> OpenVolumeSlider

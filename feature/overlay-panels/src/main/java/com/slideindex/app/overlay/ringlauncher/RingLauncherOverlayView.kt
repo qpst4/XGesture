@@ -4,9 +4,12 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Canvas
+import android.media.AudioManager
 import android.os.SystemClock
 import android.graphics.Color
 import android.graphics.Paint
@@ -183,9 +186,27 @@ class RingLauncherOverlayView(
     /** 图标库里改了应用图标：圆环是 Canvas 绘制，必须主动重绘。 */
     private val iconChangeListener: () -> Unit = { invalidate() }
 
+    /** 系统铃声状态变化：圆环上的「声音模式 · 切换」图标要跟着变。 */
+    private var ringerModeReceiver: BroadcastReceiver? = null
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.addIconChangeListener?.invoke(iconChangeListener)
+        val appContext = context.applicationContext
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(receiverContext: Context?, intent: Intent?) {
+                if (intent?.action == AudioManager.RINGER_MODE_CHANGED_ACTION) invalidate()
+            }
+        }
+        ringerModeReceiver = receiver
+        runCatching {
+            androidx.core.content.ContextCompat.registerReceiver(
+                appContext,
+                receiver,
+                IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION),
+                androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+        }
     }
 
     fun configure(
@@ -892,6 +913,10 @@ class RingLauncherOverlayView(
 
     override fun onDetachedFromWindow() {
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.removeIconChangeListener?.invoke(iconChangeListener)
+        ringerModeReceiver?.let { receiver ->
+            runCatching { context.applicationContext.unregisterReceiver(receiver) }
+        }
+        ringerModeReceiver = null
         super.onDetachedFromWindow()
         composeDialogHost.dismiss()
     }

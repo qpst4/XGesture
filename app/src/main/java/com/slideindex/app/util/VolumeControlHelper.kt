@@ -6,6 +6,9 @@ import android.media.AudioManager
 import android.os.Build
 import android.os.SystemClock
 import android.util.Log
+import com.slideindex.app.gesture.RingerMode
+import com.slideindex.app.gesture.ToggleMode
+import com.slideindex.app.gesture.resolve
 import com.slideindex.app.privilege.PrivilegeGateway
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -41,6 +44,56 @@ object VolumeControlHelper {
             Log.w(TAG, "cycle ringer mode failed", error)
             null
         }
+    }
+
+    /**
+     * 设置铃声模式。[RingerMode.TOGGLE] 走既有的三模式循环（与快捷工具磁贴一致），
+     * 其余三档是幂等目标态：已经是该档时直接成功。
+     */
+    fun applyRingerMode(context: Context, mode: RingerMode): Boolean {
+        if (!hasAccess(context)) {
+            // 与旧的 toggleMute 一致：没有通知策略权限时直接把用户送去授权，而不是静默失败。
+            PermissionHelper.requestNotificationPolicyAccess(context)
+            return false
+        }
+        val manager = audioManager(context) ?: return false
+        val current = manager.ringerMode
+        val target = when (mode) {
+            RingerMode.TOGGLE -> when (current) {
+                AudioManager.RINGER_MODE_NORMAL -> AudioManager.RINGER_MODE_VIBRATE
+                AudioManager.RINGER_MODE_VIBRATE -> AudioManager.RINGER_MODE_SILENT
+                else -> AudioManager.RINGER_MODE_NORMAL
+            }
+            RingerMode.RING -> AudioManager.RINGER_MODE_NORMAL
+            RingerMode.VIBRATE -> AudioManager.RINGER_MODE_VIBRATE
+            RingerMode.SILENT -> AudioManager.RINGER_MODE_SILENT
+        }
+        if (mode != RingerMode.TOGGLE && current == target) return true
+        return runCatching {
+            manager.ringerMode = target
+            true
+        }.getOrElse { error ->
+            Log.w(TAG, "apply ringer mode failed: $mode", error)
+            false
+        }
+    }
+
+    /**
+     * 把勿扰设成 [mode] 要求的状态：打开 = 仅优先（与 [toggleDnd] 一致），关闭 = 全部允许。
+     * 已经是目标状态时直接返回当前 filter（幂等）。
+     */
+    fun applyDnd(context: Context, mode: ToggleMode): Int? {
+        if (!hasAccess(context)) return null
+        val appContext = context.applicationContext
+        val beforeEnabled = isDndEnabled(appContext)
+        val targetEnabled = mode.resolve(beforeEnabled)
+        if (beforeEnabled == targetEnabled) return readInterruptionFilter(appContext)
+        val targetFilter = if (targetEnabled) {
+            NotificationManager.INTERRUPTION_FILTER_PRIORITY
+        } else {
+            NotificationManager.INTERRUPTION_FILTER_ALL
+        }
+        return setInterruptionFilter(appContext, targetFilter)
     }
 
     fun readInterruptionFilter(context: Context): Int {

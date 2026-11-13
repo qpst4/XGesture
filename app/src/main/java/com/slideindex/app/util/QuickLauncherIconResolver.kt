@@ -11,6 +11,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.media.AudioManager
 import android.util.LruCache
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.withClip
@@ -19,6 +20,7 @@ import com.slideindex.app.activity.ManagedShortcutIconResolver
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureShortcutPayload
+import com.slideindex.app.gesture.RingerMode
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.launcher.QuickLauncherItemType
@@ -64,6 +66,8 @@ object QuickLauncherIconResolver {
             append('\u0000').append(com.slideindex.app.ui.IconPlateModeState.lastResolvedDark)
             // 「运行宏」的图标按宏目标 App 解析：宏改了目标 App / 改名都要重取
             append('\u0000').append(com.slideindex.app.macro.MacroStore.revision)
+            // 「声音模式 · 切换」的图标跟系统铃声状态走：key 必须带状态，否则会一直命中旧图
+            append('\u0000').append(liveRingerKeyPart(item, context))
         }
         bitmapCache.get(cacheKey)?.let { return it }
         val bitmap = resolveIconBitmap(
@@ -127,7 +131,7 @@ object QuickLauncherIconResolver {
         ) {
             val action = QuickLauncherItemCodec.parseActionPayload(item.payload) ?: return null
             return GestureActionIconBitmap.get(
-                action = action,
+                action = liveRingerIconAction(action, context),
                 sizePx = size.coerceAtLeast(1),
                 tintArgb = Color.WHITE,
                 outlined = true,
@@ -220,7 +224,7 @@ object QuickLauncherIconResolver {
                         }
                         gestureActionDrawable(action, context)
                     }
-                    else -> gestureActionDrawable(action, context)
+                    else -> gestureActionDrawable(liveRingerIconAction(action, context), context)
                 }
             }
             QuickLauncherItemType.WIDGET -> null
@@ -249,6 +253,30 @@ object QuickLauncherIconResolver {
         com.slideindex.app.ui.AppIconOverride.drawable(ctx, packageName, 128)?.let { return it }
         return runCatching { ctx.packageManager.getApplicationIcon(packageName) }.getOrNull()
     }
+
+    /** 「声音模式 · 切换」按系统当前铃声状态合成动作；其它动作原样返回。 */
+    private fun liveRingerIconAction(action: GestureAction, context: Context?): GestureAction {
+        if (action !is GestureAction.ToggleMute || action.ringerMode != RingerMode.TOGGLE) return action
+        val raw = ringerRaw(context) ?: return action
+        return GestureAction.ToggleMute(
+            when (raw) {
+                AudioManager.RINGER_MODE_VIBRATE -> RingerMode.VIBRATE
+                AudioManager.RINGER_MODE_SILENT -> RingerMode.SILENT
+                else -> RingerMode.RING
+            },
+        )
+    }
+
+    /** 位图缓存 key 的状态维度；非「声音模式 · 切换」返回 "-"。 */
+    private fun liveRingerKeyPart(item: QuickLauncherItem, context: Context?): String {
+        if (item.type != QuickLauncherItemType.ACTION) return "-"
+        val action = QuickLauncherItemCodec.parseActionPayload(item.payload) ?: return "-"
+        if (action !is GestureAction.ToggleMute || action.ringerMode != RingerMode.TOGGLE) return "-"
+        return ringerRaw(context)?.toString() ?: "-"
+    }
+
+    private fun ringerRaw(context: Context?): Int? =
+        (context?.applicationContext?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager)?.ringerMode
 
     fun shouldUseGestureVectorIcon(
         item: QuickLauncherItem,

@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureActionType
+import com.slideindex.app.gesture.RingerMode
 import com.slideindex.app.overlay.PanelSide
 
 fun panelSideSwipeIcon(side: PanelSide, outlined: Boolean = false): ImageVector =
@@ -33,6 +34,13 @@ fun gestureActionImageVector(action: GestureAction, outlined: Boolean = false): 
         is GestureAction.ExecuteShellCommand -> ThinActionIcons.Code
         is GestureAction.OpenLink -> Icons.Outlined.Link
         is GestureAction.SimulateKeyEvent -> ThinActionIcons.Keyboard
+        // 声音模式按配置的目标档位换图标：响铃=铃铛、振动=铃铛+波、静音=铃铛+斜杠。
+        is GestureAction.ToggleMute -> when (action.ringerMode) {
+            RingerMode.RING -> MaterialSymbolThinIcons.Notifications
+            RingerMode.VIBRATE -> MaterialSymbolThinIcons.RingerVibrate
+            RingerMode.SILENT -> MaterialSymbolThinIcons.NotificationsOff
+            RingerMode.TOGGLE -> MaterialSymbolThinIcons.Notifications
+        }
         else ->
             if (outlined) {
                 gestureActionTypeOutlinedIcon(action.type)

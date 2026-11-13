@@ -99,6 +99,8 @@ fun GestureActionPickerScreen(
     val activityShortcuts = appSettings.activityShortcuts
     val appRepository = rememberAppRepository()
     val context = LocalContext.current
+    // 「声音模式 · 切换」的图标要跟着手机实际铃声状态走。
+    val liveRingerMode = rememberSystemRingerMode()
     var allApps by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
 
     val handleBack: () -> Unit = {
@@ -338,6 +340,7 @@ fun GestureActionPickerScreen(
                             }
                         },
                         highlightPulse = pickerHighlightPulse.value,
+                        liveRingerMode = liveRingerMode,
                     )
                 }
                 ActionPickerTab.APPS -> {

@@ -24,6 +24,7 @@ import com.slideindex.app.launcher.AppTarget
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.macro.MacroActionRunner
 import com.slideindex.app.pagescroll.PageScrollActionRunner
+import com.slideindex.app.privilege.PrivilegeGateway
 import com.slideindex.app.overlay.FloatBallStashPanel
 import com.slideindex.app.overlay.FloatBallVisibilityToggle
 import com.slideindex.app.overlay.PickResultFromHistoryCoordinator
@@ -399,8 +400,16 @@ class ActionExecutor(
                 launchHelper.freeWindowForegroundApp(settings)
                 true
             }
-            GestureAction.Flashlight -> FlashlightHelper.toggle(context)
-            GestureAction.ToggleDnd -> VolumeControlHelper.toggleDnd(context) != null
+            is GestureAction.Flashlight -> when (action.mode) {
+                ToggleMode.TOGGLE -> FlashlightHelper.toggle(context)
+                ToggleMode.ON -> FlashlightHelper.set(context, enabled = true)
+                ToggleMode.OFF -> FlashlightHelper.set(context, enabled = false)
+            }
+            is GestureAction.ToggleDnd -> if (PrivilegeGateway.isRootMode()) {
+                executeRootAsync { VolumeControlHelper.applyDnd(context, action.mode) }
+            } else {
+                VolumeControlHelper.applyDnd(context, action.mode) != null
+            }
             GestureAction.TimedDnd -> {
                 TimedDndDurationPickerOverlay.show(context)
                 true
@@ -409,31 +418,75 @@ class ActionExecutor(
                 ScreenRecordHelper.toggle(context)
                 true
             }
-            GestureAction.ToggleWifi -> QuickToolsHelper.toggleWifi(context) == true
-            GestureAction.ToggleMobileData -> QuickToolsHelper.toggleMobileData(context) == true
-            GestureAction.ToggleNfc -> {
+            is GestureAction.ToggleWifi -> if (PrivilegeGateway.isRootMode()) {
+                executeRootAsync { QuickToolsHelper.applyWifi(context, action.mode) }
+            } else {
+                QuickToolsHelper.applyWifi(context, action.mode) == true
+            }
+            is GestureAction.ToggleMobileData -> if (PrivilegeGateway.isRootMode()) {
+                executeRootAsync { QuickToolsHelper.applyMobileData(context, action.mode) }
+            } else {
+                QuickToolsHelper.applyMobileData(context, action.mode) == true
+            }
+            is GestureAction.ToggleNfc -> {
                 // NFC 的开关调用走反射 / binder，绝不放主线程（历史上 `svc nfc` 不退出，直接把主线程卡到 ANR）。
-                CoroutineScope(Dispatchers.IO).launch { performNfcToggle() }
+                val mode = action.mode
+                CoroutineScope(Dispatchers.IO).launch { performNfcToggle(mode) }
                 true
             }
-            GestureAction.ToggleBluetooth -> toggleBluetoothAction()
-            GestureAction.ToggleShakeGesture -> {
+            is GestureAction.ToggleBluetooth -> if (PrivilegeGateway.isRootMode()) {
+                executeRootAsync { toggleBluetoothAction(action.mode) }
+            } else {
+                toggleBluetoothAction(action.mode)
+            }
+            is GestureAction.ToggleSync -> QuickToolsHelper.applyAutoSync(context, action.mode) == true
+            is GestureAction.ToggleDarkMode -> if (PrivilegeGateway.isRootMode()) {
+                executeRootAsync {
+                    com.slideindex.app.util.BrightnessControlHelper.applyDarkMode(context, action.mode)
+                }
+            } else {
+                com.slideindex.app.util.BrightnessControlHelper.applyDarkMode(context, action.mode) != null
+            }
+            is GestureAction.ToggleAirplane -> if (PrivilegeGateway.isRootMode()) {
+                executeRootAsync { applyAirplaneAction(action.mode) }
+            } else {
+                applyAirplaneAction(action.mode)
+            }
+            is GestureAction.ToggleLocation -> if (PrivilegeGateway.isRootMode()) {
+                executeRootAsync { applyLocationAction(action.mode) }
+            } else {
+                applyLocationAction(action.mode)
+            }
+            is GestureAction.ToggleShakeGesture -> {
+                val mode = action.mode
                 CoroutineScope(Dispatchers.IO).launch {
                     val deps = com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(context)
                         ?: return@launch
                     val repository = deps.settingsRepository
                     val enabled = repository.settings.first().shakeGestureSettings.enabled
-                    repository.setShakeGesturesEnabled(!enabled)
+                    val target = mode.resolve(enabled)
+                    if (enabled != target) repository.setShakeGesturesEnabled(target)
                 }
                 true
             }
-            // 「切换悬浮球」：只翻悬浮球总开关，边缘手势与触钮不受影响；状态落盘、跨重启保持。
-            GestureAction.ToggleFloatBall -> {
-                FloatBallVisibilityToggle.toggle(context)
+            // 「悬浮球显示」：只翻悬浮球总开关，边缘手势与触钮不受影响；状态落盘、跨重启保持。
+            is GestureAction.ToggleFloatBall -> {
+                when (action.mode) {
+                    ToggleMode.TOGGLE -> FloatBallVisibilityToggle.toggle(context)
+                    ToggleMode.ON -> FloatBallVisibilityToggle.set(context, visible = true)
+                    ToggleMode.OFF -> FloatBallVisibilityToggle.set(context, visible = false)
+                }
                 true
             }
-            GestureAction.ToggleAutoBrightness ->
-                com.slideindex.app.util.BrightnessControlHelper.toggleAutoBrightness(context) != null
+            is GestureAction.ToggleAutoBrightness -> if (PrivilegeGateway.isRootMode()) {
+                executeRootAsync {
+                    com.slideindex.app.util.BrightnessControlHelper
+                        .applyAutoBrightness(context, action.mode)
+                }
+            } else {
+                com.slideindex.app.util.BrightnessControlHelper
+                    .applyAutoBrightness(context, action.mode) != null
+            }
             GestureAction.SwitchInputMethod -> InputMethodHelper.switchInputMethod(context)
             GestureAction.LaunchAssistant -> {
                 AssistantLauncher.launchDefault(context)
@@ -441,9 +494,13 @@ class ActionExecutor(
             }
             GestureAction.VoiceSearch -> VoiceActionHelper.launchVoiceSearch(context)
             GestureAction.VoiceAssistant -> VoiceActionHelper.launchVoiceCommand(context)
-            GestureAction.ToggleAutoRotate -> {
-                com.slideindex.app.diagnostic.EdgeDiag.log("ActionExecutor", "执行动作: 切换自动旋转")
-                QuickToolsHelper.toggleAutoRotate(context) != null
+            is GestureAction.ToggleAutoRotate -> {
+                com.slideindex.app.diagnostic.EdgeDiag.log("ActionExecutor", "执行动作: 自动旋转")
+                if (PrivilegeGateway.isRootMode()) {
+                    executeRootAsync { QuickToolsHelper.applyAutoRotate(context, action.mode) }
+                } else {
+                    QuickToolsHelper.applyAutoRotate(context, action.mode) != null
+                }
             }
             GestureAction.ForcePortrait -> {
                 com.slideindex.app.diagnostic.EdgeDiag.log("ActionExecutor", "执行动作: 强制竖屏")
@@ -453,7 +510,8 @@ class ActionExecutor(
                 com.slideindex.app.diagnostic.EdgeDiag.log("ActionExecutor", "执行动作: 强制横屏")
                 QuickToolsHelper.forceLandscape(context)
             }
-            GestureAction.ToggleMute -> SystemGestureActions.toggleMute(context)
+            is GestureAction.ToggleMute ->
+                VolumeControlHelper.applyRingerMode(context, action.ringerMode)
             GestureAction.LockScreenAndSilenceRing -> {
                 SystemGestureActions.silenceRinger(context)
                 SlideIndexAccessibilityService.perform(GestureAction.LockScreen)
@@ -652,20 +710,55 @@ class ActionExecutor(
     }
 
     /**
-     * NFC 开关（在 IO 线程执行）：优先进程内反射，其次 Shizuku binder，最后降级系统设置页。
-     * 没有 NFC 硬件的机型只给一句提示。
+     * NFC 开关（在 IO 线程执行）：优先按「操作方式」设成目标态；切换模式沿用旧的取反逻辑。
+     * 优先进程内反射，其次 Shizuku binder，最后降级系统设置页。
      */
-    private fun performNfcToggle() {
-        when (NfcToggleHelper.toggle(context)) {
+    private fun performNfcToggle(mode: ToggleMode) {
+        val outcome = when (mode) {
+            ToggleMode.TOGGLE -> NfcToggleHelper.toggle(context)
+            ToggleMode.ON -> NfcToggleHelper.set(context, enable = true)
+            ToggleMode.OFF -> NfcToggleHelper.set(context, enable = false)
+        }
+        when (outcome) {
             NfcToggleHelper.Outcome.TOGGLED -> Unit
             NfcToggleHelper.Outcome.UNSUPPORTED -> NfcToggleHelper.notifyUnsupported(context)
             NfcToggleHelper.Outcome.NEEDS_SETTINGS -> NfcToggleHelper.openSettings(context)
         }
     }
 
-    /** 蓝牙开关：无特权时降级打开蓝牙设置页。 */
-    private fun toggleBluetoothAction(): Boolean {
-        if (QuickToolsHelper.toggleBluetooth(context) == null) {
+    /** 蓝牙开关：无特权时降级打开蓝牙设置页（「打开 / 关闭」同样是设不成才降级）。 */
+    /**
+     * Root 模式下特权 shell 命令不能在主线程同步拿到结果：TaskManagerUtil 会把命令丢给特权线程并
+     * 立刻返回失败（见 `runPrivilegedOpsBlocking`）。这类动作在 root 模式下改到 IO 线程执行，
+     * 返回 true 表示"已派发"，与 NFC 的处理一致。
+     */
+    private inline fun executeRootAsync(crossinline block: () -> Unit): Boolean {
+        CoroutineScope(Dispatchers.IO).launch { block() }
+        return true
+    }
+
+    /** 飞行模式：没有特权通道 / 命令失败时降级打开系统设置页。 */
+    private fun applyAirplaneAction(mode: ToggleMode): Boolean {
+        val result = QuickToolsHelper.applyAirplaneMode(context, mode)
+        if (result == null) {
+            QuickToolsHelper.openAirplaneModeSettings(context)
+            return false
+        }
+        return result
+    }
+
+    /** 定位：没有特权通道 / 命令失败时降级打开系统定位设置页。 */
+    private fun applyLocationAction(mode: ToggleMode): Boolean {
+        val result = QuickToolsHelper.applyLocation(context, mode)
+        if (result == null) {
+            QuickToolsHelper.openLocationSettings(context)
+            return false
+        }
+        return result
+    }
+
+    private fun toggleBluetoothAction(mode: ToggleMode): Boolean {
+        if (QuickToolsHelper.applyBluetooth(context, mode) == null) {
             QuickToolsHelper.openBluetoothSettings(context)
             return false
         }

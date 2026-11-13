@@ -10,6 +10,10 @@ import com.slideindex.app.R
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.gesture.GestureShortcutPayload
+import com.slideindex.app.gesture.RingerCapable
+import com.slideindex.app.gesture.RingerMode
+import com.slideindex.app.gesture.ToggleCapable
+import com.slideindex.app.gesture.ToggleMode
 import com.slideindex.app.ui.gestureExecuteShellCommandPreview
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.ui.quickLauncherPanelLabel
@@ -244,10 +248,27 @@ fun gestureActionSearchAliases(context: Context, action: GestureAction): List<St
         context.getString(R.string.gesture_search_float_ball_hide),
         context.getString(R.string.gesture_search_float_ball_show),
         "float ball",
+        "悬浮球",
+        "开关",
+        "toggle",
     )
-    // 中文界面里搜「bluetooth」「near field」也能找到这两个开关（标签本身只有中/本地化文案）。
-    GestureActionType.TOGGLE_NFC -> listOf("near field", "nfc toggle")
-    GestureActionType.TOGGLE_BLUETOOTH -> listOf("bluetooth", "bt")
+    // 标签去掉了「开关」两个字，这里补回来：搜「开关」「toggle」「switch」仍能命中这些动作。
+    GestureActionType.TOGGLE_WIFI -> listOf("wifi", "wlan", "开关", "toggle", "switch")
+    GestureActionType.TOGGLE_MOBILE_DATA -> listOf("mobile data", "data", "移动网络", "开关", "toggle", "switch")
+    GestureActionType.TOGGLE_AIRPLANE -> listOf("airplane", "flight", "飞行", "开关", "toggle", "switch")
+    GestureActionType.TOGGLE_LOCATION -> listOf("location", "gps", "定位", "位置", "开关", "toggle", "switch")
+    GestureActionType.TOGGLE_SYNC -> listOf("sync", "同步", "开关", "toggle", "switch")
+    GestureActionType.TOGGLE_DARK_MODE -> listOf("dark mode", "night", "夜间", "深色", "开关", "toggle")
+    GestureActionType.TOGGLE_NFC -> listOf("near field", "nfc toggle", "开关", "toggle", "switch")
+    GestureActionType.TOGGLE_BLUETOOTH -> listOf("bluetooth", "bt", "开关", "toggle", "switch")
+    GestureActionType.TOGGLE_DND -> listOf("dnd", "do not disturb", "开关", "toggle", "switch")
+    GestureActionType.TOGGLE_MUTE -> listOf(
+        "silent", "ring", "vibrate", "静音", "响铃", "振动", "开关", "toggle", "switch",
+    )
+    GestureActionType.TOGGLE_AUTO_ROTATE -> listOf("auto rotate", "rotation", "开关", "toggle")
+    GestureActionType.TOGGLE_AUTO_BRIGHTNESS -> listOf("auto brightness", "开关", "toggle")
+    GestureActionType.FLASHLIGHT -> listOf("flashlight", "torch", "手电", "开关", "toggle")
+    GestureActionType.TOGGLE_SHAKE_GESTURE -> listOf("shake", "晃动", "开关", "toggle")
     else -> emptyList()
 }
 
@@ -271,6 +292,10 @@ fun gestureActionDescriptionText(context: Context, action: GestureAction): Strin
         GestureActionType.ADJUST_BRIGHTNESS -> context.getString(R.string.gesture_action_adjust_brightness_desc)
         GestureActionType.TOGGLE_AUTO_BRIGHTNESS -> context.getString(R.string.gesture_action_toggle_auto_brightness_desc)
         GestureActionType.TOGGLE_AUTO_ROTATE -> context.getString(R.string.gesture_action_toggle_auto_rotate_desc)
+        GestureActionType.TOGGLE_AIRPLANE -> context.getString(R.string.gesture_action_toggle_airplane_desc)
+        GestureActionType.TOGGLE_LOCATION -> context.getString(R.string.gesture_action_toggle_location_desc)
+        GestureActionType.TOGGLE_SYNC -> context.getString(R.string.gesture_action_toggle_sync_desc)
+        GestureActionType.TOGGLE_DARK_MODE -> context.getString(R.string.gesture_action_toggle_dark_mode_desc)
         GestureActionType.FORCE_PORTRAIT -> context.getString(R.string.gesture_action_force_portrait_desc)
         GestureActionType.FORCE_LANDSCAPE -> context.getString(R.string.gesture_action_force_landscape_desc)
         GestureActionType.VOICE_SEARCH -> context.getString(R.string.gesture_action_voice_search_desc)
@@ -294,7 +319,7 @@ fun gestureActionDescriptionText(context: Context, action: GestureAction): Strin
         GestureActionType.CLIPBOARD_PICK -> context.getString(R.string.gesture_action_clipboard_pick_desc)
         GestureActionType.CLIPBOARD_PASTE -> context.getString(R.string.gesture_action_clipboard_paste_desc)
         GestureActionType.POINTER_REALTIME_GESTURE -> context.getString(R.string.gesture_action_pointer_realtime_gesture_desc)
-        GestureActionType.TOGGLE_MUTE -> context.getString(R.string.gesture_action_toggle_mute_desc)
+        GestureActionType.TOGGLE_MUTE -> context.getString(R.string.gesture_action_sound_mode_desc)
         GestureActionType.TOGGLE_SHAKE_GESTURE -> context.getString(R.string.gesture_action_toggle_shake_desc)
         GestureActionType.TOGGLE_FLOAT_BALL -> context.getString(R.string.gesture_action_toggle_float_ball_desc)
         GestureActionType.LOCK_SCREEN_AND_SILENCE_RING -> context.getString(R.string.gesture_action_lock_screen_and_silence_ring_desc)
@@ -316,7 +341,7 @@ fun launchShortcutDisplayLabel(action: GestureAction.LaunchShortcut): String =
         GestureShortcutPayload.decode(action.payloadKey)?.label.orEmpty()
     }
 
-fun gestureActionLabelText(context: Context, action: GestureAction): String = when (action) {
+private fun gestureActionBaseLabelText(context: Context, action: GestureAction): String = when (action) {
     is GestureAction.LaunchApp -> launchAppActionLabel(context, action.packageName, action.cloneUserId)
     is GestureAction.LaunchShortcut -> {
         val shortcutLabel = launchShortcutDisplayLabel(action)
@@ -386,7 +411,7 @@ fun gestureActionLabelText(context: Context, action: GestureAction): String = wh
         GestureActionType.TOGGLE_AUTO_ROTATE -> context.getString(R.string.gesture_action_toggle_auto_rotate)
         GestureActionType.FORCE_PORTRAIT -> context.getString(R.string.gesture_action_force_portrait)
         GestureActionType.FORCE_LANDSCAPE -> context.getString(R.string.gesture_action_force_landscape)
-        GestureActionType.TOGGLE_MUTE -> context.getString(R.string.gesture_action_toggle_mute)
+        GestureActionType.TOGGLE_MUTE -> context.getString(R.string.gesture_action_sound_mode)
         GestureActionType.MEDIA_PLAY_PAUSE -> context.getString(R.string.gesture_action_media_play_pause)
         GestureActionType.MEDIA_PREVIOUS -> context.getString(R.string.gesture_action_media_previous)
         GestureActionType.MEDIA_NEXT -> context.getString(R.string.gesture_action_media_next)
@@ -449,6 +474,10 @@ fun gestureActionLabelText(context: Context, action: GestureAction): String = wh
         GestureActionType.TOGGLE_SHAKE_GESTURE -> context.getString(R.string.gesture_action_toggle_shake)
         GestureActionType.TOGGLE_FLOAT_BALL -> context.getString(R.string.gesture_action_toggle_float_ball)
         GestureActionType.TOGGLE_MOBILE_DATA -> context.getString(R.string.gesture_action_toggle_mobile_data)
+        GestureActionType.TOGGLE_AIRPLANE -> context.getString(R.string.gesture_action_toggle_airplane)
+        GestureActionType.TOGGLE_LOCATION -> context.getString(R.string.gesture_action_toggle_location)
+        GestureActionType.TOGGLE_SYNC -> context.getString(R.string.gesture_action_toggle_sync)
+        GestureActionType.TOGGLE_DARK_MODE -> context.getString(R.string.gesture_action_toggle_dark_mode)
         GestureActionType.TOGGLE_NFC -> context.getString(R.string.gesture_action_toggle_nfc)
         GestureActionType.TOGGLE_BLUETOOTH -> context.getString(R.string.gesture_action_toggle_bluetooth)
         GestureActionType.SWITCH_INPUT_METHOD -> context.getString(R.string.gesture_action_switch_input_method)
@@ -477,11 +506,47 @@ fun gestureActionLabelText(context: Context, action: GestureAction): String = wh
     }
 }
 
+/**
+ * 动作显示名：带「操作方式」的动作在非「切换」时补一个模式后缀
+ * （切换 = 历史行为，不加后缀，避免所有开关在其它界面都变成"Wi-Fi · 切换"）。
+ */
+fun gestureActionLabelText(context: Context, action: GestureAction): String {
+    val base = gestureActionBaseLabelText(context, action)
+    val suffix = gestureActionModeLabelText(context, action) ?: return base
+    return context.getString(R.string.toggle_mode_label, base, suffix)
+}
+
+/** 模式后缀文案；「切换」与不支持模式的动作为 null（显示本名）。 */
+fun gestureActionModeLabelText(context: Context, action: GestureAction): String? = when (action) {
+    is ToggleCapable -> action.mode
+        .takeIf { it != ToggleMode.TOGGLE }
+        ?.let { toggleModeLabel(context, it) }
+    is RingerCapable -> action.ringerMode
+        .takeIf { it != RingerMode.TOGGLE }
+        ?.let { ringerModeLabel(context, it) }
+    else -> null
+}
+
+/** 三态开关的模式文案。 */
+fun toggleModeLabel(context: Context, mode: ToggleMode): String = when (mode) {
+    ToggleMode.TOGGLE -> context.getString(R.string.toggle_mode_toggle)
+    ToggleMode.ON -> context.getString(R.string.toggle_mode_on)
+    ToggleMode.OFF -> context.getString(R.string.toggle_mode_off)
+}
+
+/** 声音模式的四档文案。 */
+fun ringerModeLabel(context: Context, mode: RingerMode): String = when (mode) {
+    RingerMode.TOGGLE -> context.getString(R.string.ringer_mode_toggle)
+    RingerMode.RING -> context.getString(R.string.ringer_mode_ring)
+    RingerMode.VIBRATE -> context.getString(R.string.ringer_mode_vibrate)
+    RingerMode.SILENT -> context.getString(R.string.ringer_mode_silent)
+}
+
 fun gestureActionSortKey(context: Context, action: GestureAction): String =
     PinyinHelper.sortKey(gestureActionLabelText(context, action))
 
 @Composable
-fun gestureActionLabel(action: GestureAction, settings: AppSettings? = null): String {
+private fun gestureActionBaseLabel(action: GestureAction, settings: AppSettings? = null): String {
     val context = LocalContext.current
     val appRepository = rememberAppRepository()
     return when (action) {
@@ -569,7 +634,7 @@ fun gestureActionLabel(action: GestureAction, settings: AppSettings? = null): St
         GestureActionType.TOGGLE_AUTO_ROTATE -> stringResource(R.string.gesture_action_toggle_auto_rotate)
         GestureActionType.FORCE_PORTRAIT -> stringResource(R.string.gesture_action_force_portrait)
         GestureActionType.FORCE_LANDSCAPE -> stringResource(R.string.gesture_action_force_landscape)
-        GestureActionType.TOGGLE_MUTE -> stringResource(R.string.gesture_action_toggle_mute)
+        GestureActionType.TOGGLE_MUTE -> stringResource(R.string.gesture_action_sound_mode)
         GestureActionType.MEDIA_PLAY_PAUSE -> stringResource(R.string.gesture_action_media_play_pause)
         GestureActionType.MEDIA_PREVIOUS -> stringResource(R.string.gesture_action_media_previous)
         GestureActionType.MEDIA_NEXT -> stringResource(R.string.gesture_action_media_next)
@@ -632,6 +697,10 @@ fun gestureActionLabel(action: GestureAction, settings: AppSettings? = null): St
         GestureActionType.TOGGLE_SHAKE_GESTURE -> stringResource(R.string.gesture_action_toggle_shake)
         GestureActionType.TOGGLE_FLOAT_BALL -> stringResource(R.string.gesture_action_toggle_float_ball)
         GestureActionType.TOGGLE_MOBILE_DATA -> stringResource(R.string.gesture_action_toggle_mobile_data)
+        GestureActionType.TOGGLE_AIRPLANE -> stringResource(R.string.gesture_action_toggle_airplane)
+        GestureActionType.TOGGLE_LOCATION -> stringResource(R.string.gesture_action_toggle_location)
+        GestureActionType.TOGGLE_SYNC -> stringResource(R.string.gesture_action_toggle_sync)
+        GestureActionType.TOGGLE_DARK_MODE -> stringResource(R.string.gesture_action_toggle_dark_mode)
         GestureActionType.TOGGLE_NFC -> stringResource(R.string.gesture_action_toggle_nfc)
         GestureActionType.TOGGLE_BLUETOOTH -> stringResource(R.string.gesture_action_toggle_bluetooth)
         GestureActionType.SWITCH_INPUT_METHOD -> stringResource(R.string.gesture_action_switch_input_method)
@@ -659,6 +728,14 @@ fun gestureActionLabel(action: GestureAction, settings: AppSettings? = null): St
         GestureActionType.SHAKE_MENU -> stringResource(R.string.shake_menu_title)
     }
     }
+}
+
+@Composable
+fun gestureActionLabel(action: GestureAction, settings: AppSettings? = null): String {
+    val base = gestureActionBaseLabel(action, settings)
+    val context = LocalContext.current
+    val suffix = gestureActionModeLabelText(context, action) ?: return base
+    return stringResource(R.string.toggle_mode_label, base, suffix)
 }
 
 @Composable
@@ -720,7 +797,11 @@ fun gestureActionDescription(action: GestureAction): String? = when (action.type
     GestureActionType.POINTER_GESTURE_RECORDER -> stringResource(R.string.gesture_action_pointer_gesture_recorder_desc)
     GestureActionType.POINTER_REALTIME_GESTURE -> stringResource(R.string.gesture_action_pointer_realtime_gesture_desc)
     GestureActionType.OPEN_FLOATING_POINTER_RADIAL_MENU -> stringResource(R.string.gesture_action_open_floating_pointer_radial_menu_desc)
-    GestureActionType.TOGGLE_MUTE -> stringResource(R.string.gesture_action_toggle_mute_desc)
+    GestureActionType.TOGGLE_MUTE -> stringResource(R.string.gesture_action_sound_mode_desc)
+    GestureActionType.TOGGLE_AIRPLANE -> stringResource(R.string.gesture_action_toggle_airplane_desc)
+    GestureActionType.TOGGLE_LOCATION -> stringResource(R.string.gesture_action_toggle_location_desc)
+    GestureActionType.TOGGLE_SYNC -> stringResource(R.string.gesture_action_toggle_sync_desc)
+    GestureActionType.TOGGLE_DARK_MODE -> stringResource(R.string.gesture_action_toggle_dark_mode_desc)
     GestureActionType.TOGGLE_SHAKE_GESTURE -> stringResource(R.string.gesture_action_toggle_shake_desc)
     GestureActionType.TOGGLE_FLOAT_BALL -> stringResource(R.string.gesture_action_toggle_float_ball_desc)
     GestureActionType.LOCK_SCREEN_AND_SILENCE_RING -> stringResource(R.string.gesture_action_lock_screen_and_silence_ring_desc)
@@ -816,11 +897,17 @@ fun gestureActionPermissionHintText(context: Context, action: GestureAction): St
             }
         }
         GestureActionType.TOGGLE_WIFI, GestureActionType.TOGGLE_MOBILE_DATA,
+        GestureActionType.TOGGLE_AIRPLANE,
+        GestureActionType.TOGGLE_LOCATION,
         GestureActionType.TOGGLE_NFC, GestureActionType.TOGGLE_BLUETOOTH,
         GestureActionType.EXECUTE_SHELL_COMMAND,
         GestureActionType.FORCE_STOP_CURRENT_APP,
         -> {
             if (TaskManagerUtil.hasPermission()) return null
+            context.getString(PrivilegeUiStrings.shellActionPermissionRes())
+        }
+        GestureActionType.TOGGLE_DARK_MODE -> {
+            if (com.slideindex.app.util.BrightnessControlHelper.hasDarkModeAccess(context)) return null
             context.getString(PrivilegeUiStrings.shellActionPermissionRes())
         }
         GestureActionType.FLASHLIGHT -> {
@@ -932,19 +1019,20 @@ fun requestPermissionForAdjustAction(context: Context, action: GestureAction) {
     when (action) {
         GestureAction.AppCarouselSwitcher ->
             PermissionHelper.requestUsageAccess(context)
-        GestureAction.AdjustVolume, GestureAction.ToggleMute, GestureAction.ToggleDnd,
+        GestureAction.AdjustVolume, is GestureAction.ToggleMute, is GestureAction.ToggleDnd,
         GestureAction.TimedDnd,
         GestureAction.LockScreenAndSilenceRing, GestureAction.LockScreenAndMuteAll,
         ->
             PermissionHelper.requestNotificationPolicyAccess(context)
         GestureAction.AdjustBrightness,
-        GestureAction.ToggleAutoBrightness,
-        GestureAction.ToggleAutoRotate,
+        is GestureAction.ToggleAutoBrightness,
+        is GestureAction.ToggleAutoRotate,
+        is GestureAction.ToggleDarkMode,
         GestureAction.ForcePortrait,
         GestureAction.ForceLandscape,
         ->
             PermissionHelper.requestWriteSettingsAccess(context)
-        GestureAction.Flashlight -> {
+        is GestureAction.Flashlight -> {
             // 已授权（含「仅在使用时允许」）时绝不跳转；仅缺失时请求，而不是把用户丢到应用信息页。
             com.slideindex.app.overlay.searchpanel.CameraPermissionTrampolineActivity.ensureGranted(context)
         }

@@ -76,7 +76,7 @@ class AppSettingsGestureExtensionsTest {
             .withSlotAction(
                 side = PanelSide.LEFT,
                 trigger = GestureTriggerType.SHORT_SWIPE_IN_AND_BACK,
-                action = GestureAction.Flashlight,
+                action = GestureAction.Flashlight(),
                 handleId = TriggerHandle.DEFAULT_ID,
             )
         val otherGroup = TriggerHandle(id = "other", topFraction = 0.50f, heightFraction = 0.20f)
@@ -96,7 +96,7 @@ class AppSettingsGestureExtensionsTest {
         )
         // default 组自己的配置不受影响
         assertEquals(
-            GestureAction.Flashlight,
+            GestureAction.Flashlight(),
             settings.slotAction(
                 PanelSide.LEFT,
                 GestureTriggerType.SHORT_SWIPE_IN_AND_BACK,

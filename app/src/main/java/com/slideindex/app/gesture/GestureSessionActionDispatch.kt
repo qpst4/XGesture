@@ -425,7 +425,7 @@ internal fun GestureSession.handleClassifiedGesture(
             endSession()
         }
 
-        GestureAction.Flashlight, GestureAction.LaunchAssistant,
+        is GestureAction.Flashlight, GestureAction.LaunchAssistant,
         GestureAction.VoiceSearch, GestureAction.VoiceAssistant,
         -> {
             sessionCallbacks.hapticConfirmLaunch()
@@ -433,15 +433,19 @@ internal fun GestureSession.handleClassifiedGesture(
             endSession()
         }
 
-        GestureAction.ToggleMute,
-        GestureAction.ToggleDnd,
+        is GestureAction.ToggleMute,
+        is GestureAction.ToggleDnd,
         GestureAction.ScreenRecord,
-        GestureAction.ToggleWifi,
-        GestureAction.ToggleMobileData,
-        GestureAction.ToggleNfc,
-        GestureAction.ToggleBluetooth,
-        GestureAction.ToggleAutoBrightness,
-        GestureAction.ToggleAutoRotate,
+        is GestureAction.ToggleWifi,
+        is GestureAction.ToggleMobileData,
+        is GestureAction.ToggleAirplane,
+        is GestureAction.ToggleLocation,
+        is GestureAction.ToggleSync,
+        is GestureAction.ToggleNfc,
+        is GestureAction.ToggleBluetooth,
+        is GestureAction.ToggleDarkMode,
+        is GestureAction.ToggleAutoBrightness,
+        is GestureAction.ToggleAutoRotate,
         GestureAction.ForcePortrait,
         GestureAction.ForceLandscape,
         GestureAction.SwitchInputMethod,
@@ -517,8 +521,8 @@ internal fun GestureSession.handleClassifiedGesture(
         GestureAction.PageScroll,
         is GestureAction.OpenLink,
         is GestureAction.QuickWheel,
-        GestureAction.ToggleShakeGesture,
-        GestureAction.ToggleFloatBall,
+        is GestureAction.ToggleShakeGesture,
+        is GestureAction.ToggleFloatBall,
         -> {
             sessionCallbacks.hapticConfirmLaunch()
             sessionActionExecutor.execute(

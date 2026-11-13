@@ -33,6 +33,7 @@ import com.slideindex.app.ui.miuix.consumeExpandableSearchBack
 import com.slideindex.app.ui.picker.filterShortcutCatalog
 import com.slideindex.app.ui.picker.rememberLoadedShortcutCatalog
 import com.slideindex.app.ui.requestPermissionForAdjustAction
+import com.slideindex.app.ui.rememberSystemRingerMode
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
 import com.slideindex.app.util.AppShortcutLoader
 import com.slideindex.app.util.AppShortcutLoader.toQuickLauncherItem
@@ -58,6 +59,8 @@ fun HoneycombLauncherAddPickerScreen(
     onOpenSimulateKeyEvent: () -> Unit = {},
 ) {
     val context = LocalContext.current
+    // 「声音模式 · 切换」的图标要跟着手机实际铃声状态走。
+    val liveRingerMode = rememberSystemRingerMode()
     val appRepository = rememberAppRepository()
     val allApps by collectLaunchableAppsWithClonesAsState()
     var searchQuery by remember { mutableStateOf("") }
@@ -184,6 +187,7 @@ fun HoneycombLauncherAddPickerScreen(
                     onOpenOpenLink = onOpenOpenLink,
                     onOpenSimulateKeyEvent = onOpenSimulateKeyEvent,
                     onRequestRunMacro = { onPicked -> pendingMacroPick = onPicked },
+                    liveRingerMode = liveRingerMode,
                 )
             }
             QuickLauncherEditorAddTab.APPS -> {

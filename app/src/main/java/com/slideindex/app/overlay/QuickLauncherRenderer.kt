@@ -7,11 +7,13 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.media.AudioManager
 import androidx.core.graphics.withClip
 import com.slideindex.app.R
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.gesture.RingerMode
 import com.slideindex.app.launcher.QuickLauncherGridLogic
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemCodec
@@ -225,7 +227,7 @@ internal class QuickLauncherRenderer(
         ) {
             val action = QuickLauncherItemCodec.parseActionPayload(item.payload) ?: return null
             return GestureActionIconBitmap.get(
-                action = action,
+                action = liveRingerIconAction(action),
                 sizePx = size,
                 tintArgb = Color.WHITE,
                 outlined = true,
@@ -240,6 +242,22 @@ internal class QuickLauncherRenderer(
             activityShortcuts = activityShortcuts,
             shellCommands = shellCommands
         )
+    }
+
+    /**
+     * 「声音模式 · 切换」的图标跟系统当前铃声状态走；显式档位保持动作目标。
+     *
+     * 合成一个带目标档位的动作再做位图缓存：缓存 key 本来含 `payload`，
+     * 这样响铃/振动/静音各有一份，切状态时不会命中旧图。
+     */
+    private fun liveRingerIconAction(action: GestureAction): GestureAction {
+        if (action !is GestureAction.ToggleMute || action.ringerMode != RingerMode.TOGGLE) return action
+        val mode = when (currentRingerRaw()) {
+            AudioManager.RINGER_MODE_VIBRATE -> RingerMode.VIBRATE
+            AudioManager.RINGER_MODE_SILENT -> RingerMode.SILENT
+            else -> RingerMode.RING
+        }
+        return GestureAction.ToggleMute(mode)
     }
 
     private fun quickLauncherItemLabel(item: QuickLauncherItem): String {
@@ -313,7 +331,22 @@ internal class QuickLauncherRenderer(
             "\u0000${com.slideindex.app.ui.GlobalIconStore.revision}" +
             "\u0000${com.slideindex.app.macro.MacroStore.revision}" +
             "\u0000${com.slideindex.app.ui.IconPlateModeState.mode}" +
-            "\u0000${com.slideindex.app.ui.IconPlateModeState.lastResolvedDark}"
+            "\u0000${com.slideindex.app.ui.IconPlateModeState.lastResolvedDark}" +
+            // 「声音模式 · 切换」的图标跟系统铃声状态走：key 里必须带状态，
+            // 否则响铃→振动后 peek 还是命中旧图，面板永远不更新。
+            "\u0000${liveRingerKeyPart(item)}"
+
+    private fun liveRingerKeyPart(item: QuickLauncherItem): String {
+        if (item.type != QuickLauncherItemType.ACTION) return "-"
+        val action = QuickLauncherItemCodec.parseActionPayload(item.payload) ?: return "-"
+        if (action !is GestureAction.ToggleMute || action.ringerMode != RingerMode.TOGGLE) return "-"
+        return currentRingerRaw().toString()
+    }
+
+    private fun currentRingerRaw(): Int =
+        (host.context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as? AudioManager)
+            ?.ringerMode
+            ?: AudioManager.RINGER_MODE_NORMAL
 
     private var cachedShortcutCatalog: List<ActivityShortcut>? = null
     private var cachedShellCatalog: List<ShellCommand>? = null

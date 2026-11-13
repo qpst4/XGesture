@@ -34,7 +34,11 @@ import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.gesture.ActionPickerCatalogPolicy
 import com.slideindex.app.gesture.GestureTriggerType
 import com.slideindex.app.gesture.LaunchWindowMode
+import com.slideindex.app.gesture.RingerMode
 import com.slideindex.app.gesture.SlotPickerKind
+import com.slideindex.app.ui.ActionModeMenu
+import com.slideindex.app.ui.actionModeOptions
+import com.slideindex.app.ui.toRingerMode
 import com.slideindex.app.ui.picker.FilteredShortcutCatalog
 import com.slideindex.app.ui.picker.GestureActionCatalog
 import com.slideindex.app.ui.picker.GestureActionCatalogScope
@@ -82,14 +86,18 @@ private fun ActionPickerGridCell(
     action: GestureAction,
     selected: Boolean,
     hasParams: Boolean,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    /** 覆盖显示名（切换类动作带模式后缀时用；null = 用动作本名）。 */
+    label: String? = null,
+    /** 覆盖图标用的动作实例（已绑定带模式的动作时，图标要跟着模式走）。 */
+    iconAction: GestureAction = action,
 ) {
     val accent = MaterialTheme.colorScheme.primary
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
-            .clickable { onClick() }
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
             .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -108,7 +116,7 @@ private fun ActionPickerGridCell(
                 contentAlignment = Alignment.Center,
             ) {
                 com.slideindex.app.ui.ActionIconSlot(
-                    action = action,
+                    action = iconAction,
                     sizeDp = 27,
                 )
             }
@@ -126,7 +134,7 @@ private fun ActionPickerGridCell(
         // 4 列时一格只有 ~74dp 文字宽（一行约 6 个汉字），一行必然打省略号。
         // minLines = 2 让短标签也占满两行高度，整行格子等高，行距不会参差不齐。
         Text(
-            text = gestureActionLabel(action),
+            text = label ?: gestureActionLabel(action),
             style = MaterialTheme.typography.labelSmall,
             color = if (selected) accent else MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
@@ -212,6 +220,13 @@ fun LazyListScope.actionPickerActionItems(
     onOpenWidgetPanel: (() -> Unit)? = null,
     /** 定位到"当前已绑定动作"之后闪一下的强度（0..1），只作用在当前那一行上。 */
     highlightPulse: Float = 0f,
+    /**
+     * 系统当前铃声模式（`AudioManager.RINGER_MODE_*`）。
+     *
+     * 只影响「声音模式 · 切换」的图标：显式档位仍画动作目标，切换档画手机当前状态。
+     * `null` = 调用方没接实时状态，退回静态铃铛。
+     */
+    liveRingerMode: Int? = null,
 ) {
     if (filtered.isEmpty()) {
         item(key = "actions-empty") {
@@ -250,29 +265,68 @@ fun LazyListScope.actionPickerActionItems(
                                 action.type == GestureActionType.LAUNCH_SHORTCUT -> false
                             else -> action.type == current.type
                         }
-                        ActionPickerGridCell(
-                            action = action,
-                            selected = selected,
-                            hasParams = actionHasDetailParams(action.type),
-                            onClick = {
-                                requestPermissionForAdjustAction(context, action)
-                                when {
-                                    action.type == GestureActionType.OPEN_LINK -> onOpenOpenLink()
-                                    action.type == GestureActionType.EXECUTE_SHELL_COMMAND ->
-                                        onOpenExecuteShellCommand()
-                                    action.type == GestureActionType.SIMULATE_KEY_EVENT &&
-                                        onOpenSimulateKeyEvent != null -> onOpenSimulateKeyEvent()
-                                    action.type == GestureActionType.QUICK_WHEEL &&
-                                        onOpenQuickWheel != null -> onOpenQuickWheel()
-                                    action.type == GestureActionType.QUICK_LAUNCHER &&
-                                        onOpenQuickLauncher != null -> onOpenQuickLauncher()
-                                    action.type == GestureActionType.WIDGET_POPUP_OVERLAY &&
-                                        onOpenWidgetPanel != null -> onOpenWidgetPanel()
-                                    else -> onSelect(action)
-                                }
-                            },
-                            modifier = Modifier.weight(1f),
-                        )
+                        val bound = current.takeIf { it.type == action.type }
+                        val modeOptions = actionModeOptions(action, bound)
+                        // 「声音模式 · 切换」：图标跟手机实际铃声状态走；显式档位仍画动作目标。
+                        val liveIconAction = if (
+                            action is GestureAction.ToggleMute &&
+                            action.ringerMode == RingerMode.TOGGLE &&
+                            liveRingerMode != null
+                        ) {
+                            GestureAction.ToggleMute(liveRingerMode.toRingerMode())
+                        } else {
+                            bound ?: action
+                        }
+                        val cellLabel = if (selected && bound != null) {
+                            gestureActionLabel(bound)
+                        } else {
+                            gestureActionLabel(action)
+                        }
+                        if (modeOptions != null) {
+                            // 带「操作方式」的动作：点格子先弹菜单，选完才真正选中。
+                            ActionModeMenu(
+                                options = modeOptions,
+                                onPick = { picked ->
+                                    requestPermissionForAdjustAction(context, picked)
+                                    onSelect(picked)
+                                },
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                ActionPickerGridCell(
+                                    action = action,
+                                    selected = selected,
+                                    hasParams = true,
+                                    onClick = null,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    label = cellLabel,
+                                    iconAction = liveIconAction,
+                                )
+                            }
+                        } else {
+                            ActionPickerGridCell(
+                                action = action,
+                                selected = selected,
+                                hasParams = actionHasDetailParams(action.type),
+                                onClick = {
+                                    requestPermissionForAdjustAction(context, action)
+                                    when {
+                                        action.type == GestureActionType.OPEN_LINK -> onOpenOpenLink()
+                                        action.type == GestureActionType.EXECUTE_SHELL_COMMAND ->
+                                            onOpenExecuteShellCommand()
+                                        action.type == GestureActionType.SIMULATE_KEY_EVENT &&
+                                            onOpenSimulateKeyEvent != null -> onOpenSimulateKeyEvent()
+                                        action.type == GestureActionType.QUICK_WHEEL &&
+                                            onOpenQuickWheel != null -> onOpenQuickWheel()
+                                        action.type == GestureActionType.QUICK_LAUNCHER &&
+                                            onOpenQuickLauncher != null -> onOpenQuickLauncher()
+                                        action.type == GestureActionType.WIDGET_POPUP_OVERLAY &&
+                                            onOpenWidgetPanel != null -> onOpenWidgetPanel()
+                                        else -> onSelect(action)
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                     }
                     // 最后一行不足 4 个时补空位，保证格子等宽。
                     repeat(ACTION_GRID_COLUMNS - rowActions.size) {

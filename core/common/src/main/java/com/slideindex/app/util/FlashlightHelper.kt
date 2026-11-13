@@ -78,6 +78,28 @@ object FlashlightHelper {
         }.getOrDefault(false)
     }
 
+    /**
+     * 把 torch 设成 [enabled]（幂等目标态）。
+     *
+     * 不依赖缓存里的 [torchOn]：外部（系统快捷开关 / 别的 App）可能已经改过手电，
+     * 显式打开 / 关闭必须真的下发一次。
+     */
+    fun set(context: Context, enabled: Boolean): Boolean {
+        val app = context.applicationContext
+        if (observeCount == 0) {
+            startObserving(app)
+        }
+        val manager = cameraManager
+            ?: app.getSystemService(CameraManager::class.java)?.also { cameraManager = it }
+            ?: return false
+        val cameraId = torchCameraId ?: findFlashCameraId(manager).also { torchCameraId = it } ?: return false
+        return runCatching {
+            manager.setTorchMode(cameraId, enabled)
+            setTorchState(enabled)
+            true
+        }.getOrDefault(false)
+    }
+
     private fun setTorchState(enabled: Boolean) {
         if (torchOn == enabled) return
         torchOn = enabled

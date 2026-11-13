@@ -46,6 +46,16 @@ object FloatBallVisibilityToggle {
         }
     }
 
+    /** 显式显示 / 隐藏（幂等目标态）。 */
+    fun set(context: Context, visible: Boolean) {
+        val appContext = context.applicationContext
+        scope.launch {
+            val repository = OverlayDependencyAccess.overlayDependencies(appContext)?.settingsRepository
+                ?: return@launch
+            apply(appContext, repository, visible)
+        }
+    }
+
     /** 已经拿到 [SettingsRepository] 的调用方（外部调用的 trampoline）用这个。 */
     suspend fun toggle(context: Context, repository: SettingsRepository) {
         val appContext = context.applicationContext
@@ -54,6 +64,21 @@ object FloatBallVisibilityToggle {
             val enabled = !current.floatBallEnabled
             repository.setFloatBallEnabled(enabled)
             resolveToast(appContext, current, enabled)
+        }
+        withContext(Dispatchers.Main) {
+            Toast.makeText(appContext, messageRes, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /** 写入目标态并给出「开/关之后看不看得见」的解释。 */
+    private suspend fun apply(context: Context, repository: SettingsRepository, visible: Boolean) {
+        val appContext = context.applicationContext
+        val messageRes = mutex.withLock {
+            val current = repository.settings.first()
+            if (current.floatBallEnabled != visible) {
+                repository.setFloatBallEnabled(visible)
+            }
+            resolveToast(appContext, current, visible)
         }
         withContext(Dispatchers.Main) {
             Toast.makeText(appContext, messageRes, Toast.LENGTH_SHORT).show()

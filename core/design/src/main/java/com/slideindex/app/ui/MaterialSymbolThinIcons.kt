@@ -2,6 +2,8 @@ package com.slideindex.app.ui
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.unit.dp
@@ -188,4 +190,110 @@ object MaterialSymbolThinIcons {
     val SwapVert: ImageVector by lazy { icon("SymbolThinSwapVert", SWAPVERT_PATH) }
     val TouchApp: ImageVector by lazy { icon("SymbolThinTouchApp", TOUCHAPP_PATH) }
     val Tune: ImageVector by lazy { icon("SymbolThinTune", TUNE_PATH) }
+
+    // ── 开关类动作（与 ThinActionIcons 同一套 1.5 线宽）────────────────────
+
+    private const val FLIGHT_PATH =
+        "M7.36 21.5V19.48L10.28 17.43V13.46L2.5 16.59V14.11L10.28 8.64V4.22Q10.28 3.51 10.78 3.01Q11.29 2.5 " +
+            "12 2.5Q12.71 2.5 13.22 3.01Q13.72 3.51 13.72 4.22V8.64L21.5 14.11V16.59L13.72 13.46V17.43L16.63 " +
+            "19.48V21.5L12 20.1Z"
+
+    private const val LOCATION_ON_PATH =
+        "M12 11.87Q12.75 11.87 13.28 11.34Q13.81 10.81 13.81 10.06Q13.81 9.31 13.28 8.78Q12.75 8.25 12 " +
+            "8.25Q11.25 8.25 10.72 8.78Q10.19 9.31 10.19 10.06Q10.19 10.81 10.72 11.34Q11.25 11.87 12 11.87ZM12 " +
+            "19.51Q14.93 16.89 16.49 14.47Q18.05 12.06 18.05 10.25Q18.05 7.51 16.31 5.75Q14.57 3.99 12 3.99Q9.43 " +
+            "3.99 7.69 5.75Q5.95 7.51 5.95 10.25Q5.95 12.06 7.51 14.47Q9.07 16.89 12 19.51ZM12 21.51Q8.23 18.24 " +
+            "6.34 15.42Q4.45 12.6 4.45 10.25Q4.45 6.79 6.69 4.64Q8.93 2.5 12 2.5Q15.07 2.5 17.31 4.64Q19.55 6.79 " +
+            "19.55 10.25Q19.55 12.6 17.66 15.42Q15.77 18.24 12 21.51Z"
+
+    private const val SYNC_PATH =
+        "M4.33 19.67V18.17H7.25L6.52 17.48Q5.29 16.34 4.77 14.92Q4.25 13.51 4.25 12.07Q4.25 9.48 5.77 " +
+            "7.42Q7.29 5.36 9.75 4.6V6.18Q7.94 6.88 6.85 8.5Q5.75 10.11 5.75 12.07Q5.75 13.24 6.19 14.35Q6.64 " +
+            "15.45 7.58 16.39L8.21 17.03V14.29H9.71V19.67ZM14.25 19.4V17.82Q16.06 17.12 17.15 15.5Q18.25 13.89 " +
+            "18.25 11.93Q18.25 10.76 17.81 9.65Q17.36 8.55 16.42 7.61L15.79 " +
+            "6.97V9.71H14.29V4.33H19.67V5.83H16.75L17.48 6.52Q18.66 7.71 19.21 9.1Q19.75 10.49 19.75 11.93Q19.75 " +
+            "14.52 18.23 16.58Q16.71 18.64 14.25 19.4Z"
+
+    private const val DARK_MODE_PATH =
+        "M12.03 20.5Q8.49 20.5 6.01 18.02Q3.53 15.54 3.53 12Q3.53 8.61 5.83 6.18Q8.13 3.75 11.47 3.55Q11.69 " +
+            "3.55 11.89 3.56Q12.1 3.58 12.3 3.61Q11.54 4.33 11.08 5.34Q10.63 6.35 10.63 7.5Q10.63 9.96 12.35 " +
+            "11.68Q14.07 13.4 16.53 13.4Q17.69 13.4 18.7 12.95Q19.7 12.49 20.41 11.73Q20.44 11.93 20.46 " +
+            "12.13Q20.47 12.34 20.47 12.56Q20.28 15.89 17.85 18.2Q15.42 20.5 12.03 20.5ZM12.03 19Q14.23 19 15.98 " +
+            "17.79Q17.73 16.57 18.53 14.62Q18.03 14.75 17.53 14.82Q17.03 14.9 16.53 14.9Q13.45 14.9 11.29 " +
+            "12.74Q9.13 10.57 9.13 7.5Q9.13 7 9.2 6.5Q9.28 6 9.4 5.5Q7.45 6.3 6.24 8.05Q5.03 9.8 5.03 12Q5.03 " +
+            "14.9 7.08 16.95Q9.13 19 12.03 19Z"
+
+    private const val NOTIFICATIONS_PATH =
+        "M4.5 18.88V17.38H6.31V9.92Q6.31 7.91 7.55 6.36Q8.8 4.81 10.75 4.37V3.75Q10.75 3.23 11.11 2.86Q11.48 " +
+            "2.5 12 2.5Q12.52 2.5 12.88 2.86Q13.25 3.23 13.25 3.75V4.37Q15.2 4.81 16.45 6.36Q17.69 7.91 17.69 " +
+            "9.92V17.38H19.5V18.88ZM12 21.69Q11.25 21.69 10.72 21.16Q10.19 20.63 10.19 19.88H13.81Q13.81 20.63 " +
+            "13.28 21.16Q12.74 21.69 12 21.69ZM7.81 17.38H16.19V9.92Q16.19 8.19 14.96 6.96Q13.74 5.73 12 " +
+            "5.73Q10.26 5.73 9.04 6.96Q7.81 8.19 7.81 9.92Z"
+
+    private const val NOTIFICATIONS_OFF_PATH =
+        "M4.5 18.88V17.38H6.31V9.92Q6.31 9.22 6.48 8.53Q6.65 7.84 6.98 7.22L8.12 8.35Q7.96 8.73 7.89 " +
+            "9.12Q7.81 9.52 7.81 9.92V17.38H15.08L2.03 4.37L3.09 3.32L20.93 21.16L19.88 22.22L16.52 18.88ZM17.69 " +
+            "15.05 16.19 13.55V9.92Q16.19 8.19 14.96 6.96Q13.74 5.73 12 5.73Q11.26 5.73 10.57 5.97Q9.89 6.22 " +
+            "9.34 6.7L8.26 5.62Q8.79 5.16 9.41 4.84Q10.04 4.51 10.75 4.37V3.75Q10.75 3.23 11.11 2.86Q11.48 2.5 " +
+            "12 2.5Q12.52 2.5 12.88 2.86Q13.25 3.23 13.25 3.75V4.37Q15.21 4.79 16.45 6.34Q17.69 7.9 17.69 " +
+            "9.92ZM12 21.69Q11.25 21.69 10.72 21.16Q10.19 20.63 10.19 19.88H13.81Q13.81 20.63 13.28 " +
+            "21.16Q12.74 21.69 12 21.69Z"
+
+    private const val VIBRATE_WAVE_LEFT_PATH =
+        "M3.0 7.5L2.2 9.5L3.0 11.5L2.2 13.5L3.0 15.5L2.2 17.5"
+
+    private const val VIBRATE_WAVE_RIGHT_PATH =
+        "M21.0 7.5L21.8 9.5L21.0 11.5L21.8 13.5L21.0 15.5L21.8 17.5"
+
+    /** `notifications_off` 缩到 0.86 并居中后的同一字形（给两侧振动波让位）。 */
+    private const val NOTIFICATIONS_OFF_SCALED_PATH =
+        "M5.98 18.14V16.85H7.53V10.43Q7.53 9.83 7.68 9.24Q7.83 8.64 8.12 8.11L9.09 9.08Q8.96 9.41 8.89 " +
+            "9.75Q8.82 10.09 8.82 10.43V16.85H15.08L3.86 5.66L4.77 4.75L20.11 20.1L19.2 21.01L16.31 18.14ZM17.33 " +
+            "14.85 16.04 13.56V10.43Q16.04 8.94 14.98 7.88Q13.92 6.83 12.43 6.83Q11.79 6.83 11.2 7.04Q10.62 7.25 " +
+            "10.14 7.67L9.21 6.73Q9.67 6.34 10.21 6.06Q10.75 5.78 11.36 5.66V5.13Q11.36 4.68 11.67 4.36Q11.98 " +
+            "4.05 12.43 4.05Q12.88 4.05 13.19 4.36Q13.5 4.68 13.5 5.13V5.66Q15.19 6.02 16.26 7.35Q17.33 8.69 " +
+            "17.33 10.43ZM12.43 20.56Q11.79 20.56 11.33 20.1Q10.88 19.64 10.88 19H13.98Q13.98 19.64 " +
+            "13.53 20.1Q13.07 20.56 12.43 20.56Z"
+
+    val Flight: ImageVector by lazy { icon("SymbolThinFlight", FLIGHT_PATH) }
+    val LocationOn: ImageVector by lazy { icon("SymbolThinLocationOn", LOCATION_ON_PATH) }
+    val Sync: ImageVector by lazy { icon("SymbolThinSync", SYNC_PATH) }
+    val DarkMode: ImageVector by lazy { icon("SymbolThinDarkMode", DARK_MODE_PATH) }
+    val Notifications: ImageVector by lazy { icon("SymbolThinNotifications", NOTIFICATIONS_PATH) }
+    val NotificationsOff: ImageVector by lazy { icon("SymbolThinNotificationsOff", NOTIFICATIONS_OFF_PATH) }
+
+    /**
+     * 振动模式：细铃铛 + 斜杠（Material Symbols `notifications_off`，wght 300）再补两侧 1.5 描边振动波。
+     *
+     * Material Symbols 没有「铃铛+斜杠+振动波」这个现成字形；这里把铃铛缩到 0.86 留出边距，
+     * 两侧波与 [ThinActionIcons.STROKE_WIDTH] 同宽，视觉上是同一套细线。
+     */
+    val RingerVibrate: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "SymbolThinRingerVibrate",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f,
+        ).apply {
+            addPath(
+                pathData = PathParser().parsePathString(NOTIFICATIONS_OFF_SCALED_PATH).toNodes(),
+                fill = SolidColor(Color.White),
+            )
+            addPath(
+                pathData = PathParser().parsePathString(VIBRATE_WAVE_LEFT_PATH).toNodes(),
+                stroke = SolidColor(Color.White),
+                strokeLineWidth = 1.5f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            )
+            addPath(
+                pathData = PathParser().parsePathString(VIBRATE_WAVE_RIGHT_PATH).toNodes(),
+                stroke = SolidColor(Color.White),
+                strokeLineWidth = 1.5f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            )
+        }.build()
+    }
 }

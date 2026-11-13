@@ -297,6 +297,8 @@ object QuickWheelOverlayWindow {
                         backdropDimAlpha = QuickWheelLayoutEngine
                             .clampBackdropDimPercent(wheel.backdropDimPercent) / 100f,
                         shellCommands = settings.shellCommands,
+                        // 与圆环启动器同一套触觉：划过容器 / 按满长按时间 / 松手执行。
+                        hapticSettings = settings,
                         onExternalHandlers = { move, up ->
                             externalMoveHandler = move
                             externalUpHandler = up

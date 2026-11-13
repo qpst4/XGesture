@@ -4,7 +4,11 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.media.AudioManager
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -85,6 +89,36 @@ class CornerGestureOverlayView(
         setBackgroundColor(Color.TRANSPARENT)
         isClickable = true
         isFocusable = true
+    }
+
+    /** 系统铃声状态变化：轮盘上的「声音模式 · 切换」图标要跟着变，Canvas 需要主动重绘。 */
+    private var ringerModeReceiver: BroadcastReceiver? = null
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        val appContext = context.applicationContext
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(receiverContext: Context?, intent: Intent?) {
+                if (intent?.action == AudioManager.RINGER_MODE_CHANGED_ACTION) invalidate()
+            }
+        }
+        ringerModeReceiver = receiver
+        runCatching {
+            androidx.core.content.ContextCompat.registerReceiver(
+                appContext,
+                receiver,
+                IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION),
+                androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        ringerModeReceiver?.let { receiver ->
+            runCatching { context.applicationContext.unregisterReceiver(receiver) }
+        }
+        ringerModeReceiver = null
+        super.onDetachedFromWindow()
     }
 
     fun applySettings(settings: AppSettings, density: Float) {

@@ -41,7 +41,7 @@ class FlashlightCameraPermissionTest {
     fun permissionHintHiddenWhileCameraGranted() {
         grantCamera()
 
-        assertNull(gestureActionPermissionHintText(context, GestureAction.Flashlight))
+        assertNull(gestureActionPermissionHintText(context, GestureAction.Flashlight()))
     }
 
     @Test

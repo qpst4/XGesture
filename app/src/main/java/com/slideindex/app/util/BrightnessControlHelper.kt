@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.res.Configuration
 import android.provider.Settings
 import android.util.Log
+import com.slideindex.app.gesture.ToggleMode
+import com.slideindex.app.gesture.resolve
 import com.slideindex.app.privilege.PrivilegeGateway
 import kotlin.math.roundToInt
 
@@ -335,6 +337,33 @@ object BrightnessControlHelper {
 
 
 
+    /** 把自动亮度设成 [mode] 要求的状态（幂等）；null = 没权限 / 写入未生效。 */
+    fun applyAutoBrightness(context: Context, mode: ToggleMode): Boolean? {
+
+        if (!hasAccess(context)) return null
+
+        val appContext = context.applicationContext
+
+        val current = readAutoBrightnessEnabled(appContext)
+
+        val target = mode.resolve(current)
+
+        if (current == target) return true
+
+        val modeValue = if (target) {
+
+            Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC
+
+        } else {
+
+            Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL
+
+        }
+
+        return if (setAutoBrightnessMode(appContext, modeValue)) target else null
+
+    }
+
     fun readDarkModeEnabled(context: Context): Boolean {
 
         val appContext = context.applicationContext
@@ -380,6 +409,23 @@ object BrightnessControlHelper {
         val enable = !readDarkModeEnabled(appContext)
 
         return if (setUiNightMode(appContext, enable)) enable else null
+
+    }
+
+    /** 把夜间模式设成 [mode] 要求的状态（幂等）；null = 没通道 / 写入失败。 */
+    fun applyDarkMode(context: Context, mode: ToggleMode): Boolean? {
+
+        if (!hasDarkModeAccess(context)) return null
+
+        val appContext = context.applicationContext
+
+        val current = readDarkModeEnabled(appContext)
+
+        val target = mode.resolve(current)
+
+        if (current == target) return true
+
+        return if (setUiNightMode(appContext, target)) target else null
 
     }
 
