@@ -45,8 +45,8 @@ webkit = "1.17.0"
 material = "1.14.0"
 hiddenapibypass = "6.1"
 libsuperuser = "1.1.1"
-miuix = "0.9.4"
-materialkolor = "5.0.1"
+miuix = "0.9.4-9d4b9c85-SNAPSHOT"
+materialkolor = "6.0.0"
 # noinspection GradleDependency
 compose-material3 = "1.5.0-alpha28"
 
@@ -133,6 +133,8 @@ miuix-ui = { module = "top.yukonga.miuix.kmp:miuix-ui-android", version.ref = "m
 miuix-preference = { module = "top.yukonga.miuix.kmp:miuix-preference-android", version.ref = "miuix" }
 miuix-icons = { module = "top.yukonga.miuix.kmp:miuix-icons-android", version.ref = "miuix" }
 miuix-blur = { module = "top.yukonga.miuix.kmp:miuix-blur-android", version.ref = "miuix" }
-miuix-shader = { module = "top.yukonga.miuix.kmp:miuix-shader-android", version.ref = "miuix" }
-materialkolor = { module = "com.materialkolor:material-kolor", version.ref = "materialkolor" }
+miuix-material = { module = "top.yukonga.miuix.kmp:miuix-material-android", version.ref = "miuix" }
+miuix-glass = { module = "top.yukonga.miuix.kmp:miuix-glass-android", version.ref = "miuix" }
+miuix-glass-icons = { module = "top.yukonga.miuix.kmp:miuix-glass-icons-android", version.ref = "miuix" }
+materialkolor = { module = "com.materialkolor:material-kolor-material3", version.ref = "materialkolor" }
 compose-material3-pinned = { module = "androidx.compose.material3:material3", version.ref = "compose-material3" }
