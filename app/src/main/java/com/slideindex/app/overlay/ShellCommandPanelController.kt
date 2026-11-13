@@ -17,7 +17,10 @@ import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.shell.ShellCommand
 import com.slideindex.app.shell.ShellCommandIconResolver
 import com.slideindex.app.shell.ShellCommandIconStorage
+import com.slideindex.app.shell.ShellResultFeedback
+import com.slideindex.app.shell.ShellResultFeedbackPolicy
 import com.slideindex.app.util.ShellCommandRunner
+import com.slideindex.app.util.ShellResultFormatter
 import com.slideindex.app.util.TaskManagerUtil
 import kotlin.math.ceil
 
@@ -203,13 +206,22 @@ class ShellCommandPanelController(
             val outcome = ShellCommandRunner.execute(host.context, command)
             host.post {
                 executing = false
-                host.showResultDialog(
-                    label = command.label,
-                    command = outcome.expandedCommand,
-                    exitCode = outcome.exitCode,
-                    output = outcome.output,
-                    onDismissComplete = { host.invalidate() }
-                )
+                // 这条面板是挂在无障碍层的全屏浮窗，系统 Toast 会被它自己盖住，
+                // 所以 TOAST 模式走 OverlayToastWindow（拿不到悬浮窗时它内部会退回系统 Toast）。
+                when (ShellResultFeedbackPolicy.forResult(command.resultDisplay, outcome.exitCode)) {
+                    ShellResultFeedback.DIALOG -> host.showResultDialog(
+                        label = command.label,
+                        command = outcome.expandedCommand,
+                        exitCode = outcome.exitCode,
+                        output = outcome.output,
+                        onDismissComplete = { host.invalidate() }
+                    )
+                    ShellResultFeedback.TOAST -> OverlayToastWindow.show(
+                        host.context,
+                        ShellResultFormatter.toast(host.context, outcome.exitCode, outcome.output)
+                    )
+                    ShellResultFeedback.SILENT -> Unit
+                }
             }
         }.start()
     }

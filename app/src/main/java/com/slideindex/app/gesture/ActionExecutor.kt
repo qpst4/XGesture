@@ -4,7 +4,6 @@ import com.slideindex.app.overlay.asGestureActionRunner
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import android.widget.Toast
 import android.view.KeyEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -54,9 +53,11 @@ import com.slideindex.app.service.SlideIndexAccessibilityService
 import com.slideindex.app.translate.overlay.ScreenTranslationController
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.shell.ShellCommandDisplayResolver
 import com.slideindex.app.shell.ShellCommandModeResolver
+import com.slideindex.app.shell.ShellCommandResultDelivery
+import com.slideindex.app.shell.ShellResultDisplay
 import com.slideindex.app.util.ShellCommandRunner
-import com.slideindex.app.util.ShellResultFormatter
 import com.slideindex.app.util.AssistantLauncher
 import com.slideindex.app.util.VoiceActionHelper
 import com.slideindex.app.util.ContinuousAdjustController
@@ -187,7 +188,7 @@ class ActionExecutor(
             is GestureAction.QuickLauncher ->
                 overlayPanels.showEdgeHostedPanel(action, overlayAnchorY, resolvedSide)
             GestureAction.ShellCommandPanel -> overlayPanels.openShellCommandPanelStandalone()
-            is GestureAction.ExecuteShellCommand -> executeShellCommand(action)
+            is GestureAction.ExecuteShellCommand -> executeShellCommand(action, settings)
             // 「运行宏」：宏的执行是"拉目标 App → 逐步骤注入手势"，整条流程在宏自己的工作线程上跑，
             // 这里只负责受理（返回 true 表示已接手，避免上层再走别的兜底分支）。
             is GestureAction.RunMacro -> MacroActionRunner.run(context, action)
@@ -765,28 +766,46 @@ class ActionExecutor(
         return true
     }
 
-    private fun executeShellCommand(action: GestureAction.ExecuteShellCommand): Boolean {
+    /**
+     * 手势 / 快速启动器触发的「执行 Shell 命令」。
+     *
+     * 动作 payload 只有命令文本，所以先按文本回查命令面板里的条目，取用户给它设的「结果显示」；
+     * 查不到（手填文本、原命令被改名或删除）就沿用旧行为：成功静默、失败 Toast。
+     * 执行方式仍跟随全局权限模式，不跟命令条目走 —— 见 [ShellCommandModeResolver.currentDefault]。
+     */
+    private fun executeShellCommand(
+        action: GestureAction.ExecuteShellCommand,
+        settings: AppSettings,
+    ): Boolean {
         val commandLine = action.command.trim()
         if (commandLine.isEmpty()) return false
+        val saved = ShellCommandDisplayResolver.resolve(
+            commandLine = commandLine,
+            savedCommands = settings.shellCommands,
+        )
+        val label = ShellCommandResultDelivery.labelFor(
+            saved = saved,
+            fallback = ShellCommandResultDelivery.defaultLabel(commandLine),
+        )
+        val display = saved?.resultDisplay ?: ShellResultDisplay.NONE
         Thread {
             val outcome = ShellCommandRunner.execute(
                 context = context,
                 command = ShellCommand(
-                    label = "Gesture",
+                    label = label,
                     command = commandLine,
                     // 动作没有单独的执行方式：跟随全局权限模式，
                     // 避免 1.62 之后被固定成默认的 Shizuku。
                     executionMode = ShellCommandModeResolver.currentDefault(),
                 )
             )
-            if (outcome.exitCode != 0) {
-                Handler(Looper.getMainLooper()).post {
-                    Toast.makeText(
-                        context,
-                        ShellResultFormatter.toast(context, outcome.exitCode, outcome.output),
-                        Toast.LENGTH_LONG,
-                    ).show()
-                }
+            mainHandler.post {
+                ShellCommandResultDelivery.deliver(
+                    context = context,
+                    label = label,
+                    display = display,
+                    outcome = outcome,
+                )
             }
         }.start()
         return true

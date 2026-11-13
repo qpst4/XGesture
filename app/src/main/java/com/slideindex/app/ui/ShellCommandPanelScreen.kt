@@ -92,7 +92,8 @@ import com.slideindex.app.settings.AppSettings
 
 import com.slideindex.app.service.ShellCommandResultTrampoline
 import com.slideindex.app.shell.ShellCommand
-import com.slideindex.app.shell.ShellResultDisplay
+import com.slideindex.app.shell.ShellResultFeedback
+import com.slideindex.app.shell.ShellResultFeedbackPolicy
 
 import com.slideindex.app.shell.ShellTemplateContextFactory
 
@@ -170,8 +171,8 @@ fun ShellCommandPanelScreen(
         exitCode: Int,
         output: String,
     ) {
-        when (item.resultDisplay) {
-            ShellResultDisplay.DIALOG -> {
+        when (ShellResultFeedbackPolicy.forResult(item.resultDisplay, exitCode)) {
+            ShellResultFeedback.DIALOG -> {
                 shellViewModel.setPendingResult(
                     ShellCommandResultState(
                         label = item.label,
@@ -192,22 +193,14 @@ fun ShellCommandPanelScreen(
                     onDismiss = { shellViewModel.clearPendingResult() },
                 )
             }
-            ShellResultDisplay.TOAST -> {
+            ShellResultFeedback.TOAST -> {
                 android.widget.Toast.makeText(
                     context,
                     ShellResultFormatter.toast(context, exitCode, output),
                     android.widget.Toast.LENGTH_LONG,
                 ).show()
             }
-            ShellResultDisplay.NONE -> {
-                if (exitCode != 0) {
-                    android.widget.Toast.makeText(
-                        context,
-                        ShellResultFormatter.toast(context, exitCode, output),
-                        android.widget.Toast.LENGTH_LONG,
-                    ).show()
-                }
-            }
+            ShellResultFeedback.SILENT -> Unit
         }
     }
 

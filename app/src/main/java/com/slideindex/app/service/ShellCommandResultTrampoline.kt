@@ -24,23 +24,31 @@ object ShellCommandResultTrampoline {
 
     fun isActive(): Boolean = active
 
+    /**
+     * 打开结果页。
+     *
+     * @return true 表示已交给系统启动；false 表示 `startActivity` 直接失败（后台启动被拦等），
+     *   调用方应自己兜底提示，否则用户会以为命令没跑。
+     */
     fun launch(
         context: Context,
         result: Payload,
         onPrepare: () -> Unit,
         onDismiss: () -> Unit
-    ) {
+    ): Boolean {
         cancelPending()
         active = true
         payload = result
         this.onPrepare = onPrepare
         this.onDismiss = onDismiss
-        runCatching {
+        return runCatching {
             context.startActivity(
                 ShellCommandResultTrampolineActivity.createIntent(context)
             )
-        }.onFailure {
+            true
+        }.getOrElse {
             deliverDismiss()
+            false
         }
     }
 

@@ -78,6 +78,21 @@ class ShellCommandResultTrampolineActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * 临时浮窗语义：离开前台即关闭。
+     *
+     * [ShellCommandResultTrampoline.active] 会挡住边缘浮层恢复（`OverlayTrampolineGuard`），
+     * 而它只在 `onDestroy` 复位。以前只有面板 Activity 里打开结果页，面板转 stopped 时会被
+     * `ShellCommandPanelTrampolineActivity.onStop` 收掉；现在手势 / 快速启动器 / 应用内直达也会
+     * 拉起结果页，从别的 App 触发后按 Home 时本 Activity 只会 stopped、不会 destroy，
+     * 边缘触钮就永远恢复不了。这里补同一条兜底。
+     */
+    override fun onStop() {
+        super.onStop()
+        // 配置变更（如旋转）会重建 Activity，不能在这里收掉。
+        if (!isChangingConfigurations) finishPicker()
+    }
+
     override fun onDestroy() {
         ShellCommandResultTrampoline.unregisterActivityFinisher()
         ShellCommandResultTrampoline.deliverDismiss()

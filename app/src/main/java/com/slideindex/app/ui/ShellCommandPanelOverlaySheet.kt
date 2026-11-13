@@ -1,5 +1,6 @@
 package com.slideindex.app.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,6 +44,8 @@ import com.slideindex.app.privilege.PrivilegeGateway
 import com.slideindex.app.shell.ShellCommand
 import com.slideindex.app.shell.ShellCommandModeResolver
 import com.slideindex.app.shell.ShellExecutionMode
+import com.slideindex.app.shell.ShellResultFeedback
+import com.slideindex.app.shell.ShellResultFeedbackPolicy
 import com.slideindex.app.ui.miuix.MiuixSettingsFab
 import com.slideindex.app.util.ShellCommandRunner
 import com.slideindex.app.util.ShellResultFormatter
@@ -115,6 +118,24 @@ fun ShellCommandPanelOverlaySheet(
             ShellExecutionMode.ROOT -> rootAvailable == true
             ShellExecutionMode.SHIZUKU -> shizukuGranted
         }
+
+    /** 命令真跑完之后，按这条命令自己的「结果显示」投递（三档语义与设置页一致）。 */
+    fun deliverOutcome(item: ShellCommand, exitCode: Int, expandedCommand: String, output: String) {
+        when (ShellResultFeedbackPolicy.forResult(item.resultDisplay, exitCode)) {
+            ShellResultFeedback.DIALOG -> resultDialog = ShellPanelResultState(
+                label = item.label,
+                command = expandedCommand,
+                exitCode = exitCode,
+                output = output,
+            )
+            ShellResultFeedback.TOAST -> Toast.makeText(
+                context,
+                ShellResultFormatter.toast(context, exitCode, output),
+                Toast.LENGTH_LONG,
+            ).show()
+            ShellResultFeedback.SILENT -> Unit
+        }
+    }
 
     SideEffect {
         registerContinuousDismissHandler?.invoke {
@@ -243,6 +264,8 @@ fun ShellCommandPanelOverlaySheet(
                                 },
                                 onRun = {
                                     if (!canRunItem) {
+                                        // 这条不是"命令结果"，而是"为什么跑不了 + 去哪儿授权"，
+                                        // 所以不跟「结果显示」走，始终弹窗（否则设成不显示就彻底没反馈）。
                                         resultDialog = ShellPanelResultState(
                                             label = item.label,
                                             command = item.command,
@@ -265,17 +288,17 @@ fun ShellCommandPanelOverlaySheet(
                                                     ShellCommandRunner.execute(context, item)
                                                 }
                                             }
-                                            resultDialog = ShellPanelResultState(
-                                                label = item.label,
-                                                command = outcome.expandedCommand,
+                                            deliverOutcome(
+                                                item = item,
                                                 exitCode = outcome.exitCode,
+                                                expandedCommand = outcome.expandedCommand,
                                                 output = outcome.output,
                                             )
                                         } catch (_: Exception) {
-                                            resultDialog = ShellPanelResultState(
-                                                label = item.label,
-                                                command = item.command,
+                                            deliverOutcome(
+                                                item = item,
                                                 exitCode = -1,
+                                                expandedCommand = item.command,
                                                 output = shellTimeoutMessage,
                                             )
                                         } finally {

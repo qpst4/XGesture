@@ -11,11 +11,13 @@ import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.shouldLaunchFullscreen
 import com.slideindex.app.shell.ShellCommand
+import com.slideindex.app.shell.ShellCommandDisplayResolver
 import com.slideindex.app.shell.ShellCommandModeResolver
+import com.slideindex.app.shell.ShellCommandResultDelivery
+import com.slideindex.app.shell.ShellResultDisplay
 import com.slideindex.app.util.AppShortcutLoader
 import com.slideindex.app.util.FreeWindowLauncher
 import com.slideindex.app.util.ShellCommandRunner
-import com.slideindex.app.util.ShellResultFormatter
 import com.slideindex.app.util.ShortcutLaunchDispatcher
 import com.slideindex.app.util.TaskManagerUtil
 
@@ -124,24 +126,37 @@ object ActivityShortcutLauncher {
                         savedCommands = settings.shellCommands,
                         defaultMode = ShellCommandModeResolver.currentDefault(),
                     )
+                    // 应用内直达也只存了命令文本：按 id + 文本回查命令面板里的条目，
+                    // 取它的「结果显示」；查不到保持旧行为（成功静默、失败提示）。
+                    val saved = ShellCommandDisplayResolver.resolve(
+                        commandLine = command,
+                        savedCommands = settings.shellCommands,
+                        preferredId = shortcut.shortcutId,
+                    )
+                    val label = ShellCommandResultDelivery.labelFor(
+                        saved = saved,
+                        fallback = shortcut.label.ifBlank {
+                            ShellCommandResultDelivery.defaultLabel(command)
+                        },
+                    )
+                    val display = saved?.resultDisplay ?: ShellResultDisplay.NONE
                     // 执行可能耗时数秒，不能占着拉起快捷方式的主线程。
                     Thread {
                         val outcome = ShellCommandRunner.execute(
                             context = context,
                             command = ShellCommand(
-                                label = shortcut.label,
+                                label = label,
                                 command = command,
                                 executionMode = mode,
                             ),
                         )
-                        if (outcome.exitCode != 0) {
-                            Handler(Looper.getMainLooper()).post {
-                                Toast.makeText(
-                                    context,
-                                    ShellResultFormatter.toast(context, outcome.exitCode, outcome.output),
-                                    Toast.LENGTH_LONG,
-                                ).show()
-                            }
+                        Handler(Looper.getMainLooper()).post {
+                            ShellCommandResultDelivery.deliver(
+                                context = context,
+                                label = label,
+                                display = display,
+                                outcome = outcome,
+                            )
                         }
                     }.start()
                     return true
