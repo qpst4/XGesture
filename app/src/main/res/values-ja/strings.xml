@@ -1942,6 +1942,8 @@
     <string name="float_ball_pick_text_first_panel_desc">同画面スタイルのみ：既定でテキストと検索を優先。テキスト上のツールバーを下にスワイプするか、本文先頭で下に引いて画像を展開。</string>
     <string name="float_ball_pick_auto_select_all">テキストを自動で全選択</string>
     <string name="float_ball_pick_auto_select_all_desc">選択パネルが開いたときにすべてのテキストを自動選択します</string>
+    <string name="float_ball_pick_merge_links">単語分割時にリンクを結合</string>
+    <string name="float_ball_pick_merge_links_desc">URL やリンクを 1 つの単語ブロックとして扱い、タップ 1 回で全体を選択します。オフにするとコロン・スラッシュ・ピリオドなどで分割します。長押しすれば 1 文字ずつに分解できます。</string>
     <string name="float_ball_pick_copy_dismiss_panel">コピー後にパネルを閉じる</string>
     <string name="float_ball_pick_copy_dismiss_panel_desc">オンにすると「選択をコピー」タップで選択パネルを閉じます。長押しコピーはパネルを残します</string>
     <string name="float_ball_pick_panel_enter_animation">選択パネル表示アニメーション</string>

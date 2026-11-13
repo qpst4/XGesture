@@ -868,6 +868,10 @@ class ExtensionSettingsViewModel @Inject constructor(
         settingsRepository.setFloatBallPickHapticEnabled(enabled)
     }
 
+    fun setFloatBallPickMergeLinks(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setFloatBallPickMergeLinks(enabled)
+    }
+
     fun setFloatBallDragPickEnabled(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setFloatBallDragPickEnabled(enabled)
     }

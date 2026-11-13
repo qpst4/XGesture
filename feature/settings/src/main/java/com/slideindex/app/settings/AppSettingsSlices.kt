@@ -330,6 +330,13 @@ data class FloatBallSettings(
     /** 点词粒度：分词（可见 chip）或不分词（按字符选、无 chip）。 */
     val floatBallPickWordTapGranularity: PickResultWordTapGranularity =
         PickResultWordTapGranularity.WORD,
+    /**
+     * 分词时把网址/链接收成一个词块（默认开）。
+     *
+     * 关掉后链接会按 `:` `/` `.` 等标点拆成小词块，适合只想取链接里某一段的场景；
+     * 开着时长按词块仍可拆成单字。只作用于「分词」，「按字」本来就是逐字选。
+     */
+    val floatBallPickMergeLinks: Boolean = true,
     /** Pick panel: engine used by search-button long-press quick search (null = long press idle). */
     val floatBallPickDefaultSearchEngineId: String? = null,
     /** Pick panel: auto-select all text when the panel opens after word pick or screenshot. */

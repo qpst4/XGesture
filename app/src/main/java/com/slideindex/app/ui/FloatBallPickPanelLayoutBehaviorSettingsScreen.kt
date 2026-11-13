@@ -50,6 +50,7 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     onPickSearchGridDefaultStateChange: (com.slideindex.app.settings.PickResultSearchGridDefaultState) -> Unit,
     onPickTextModeDefaultChange: (com.slideindex.app.settings.PickResultTextModeDefault) -> Unit,
     onPickWordTapGranularityChange: (com.slideindex.app.settings.PickResultWordTapGranularity) -> Unit,
+    onPickMergeLinksChange: (Boolean) -> Unit,
     onPickTextFirstPanelChange: (Boolean) -> Unit,
     onPickAutoSelectAllChange: (Boolean) -> Unit,
     onPickCopyDismissPanelChange: (Boolean) -> Unit,
@@ -401,6 +402,19 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                                 localGranularity = granularity
                                 onPickWordTapGranularityChange(granularity)
                             },
+                        )
+                    },
+                )
+                add(
+                    settingsCardScopeItem("merge-links") {
+                        SettingSwitchRow(
+                            title = stringResource(R.string.float_ball_pick_merge_links),
+                            subtitle = stringResource(R.string.float_ball_pick_merge_links_desc),
+                            checked = settings.floatBallPickMergeLinks,
+                            // 只有「分词」会生成词块；按字模式不画 chip，这一项不生效。
+                            enabled = localGranularity !=
+                                com.slideindex.app.settings.PickResultWordTapGranularity.CHARACTER,
+                            onCheckedChange = onPickMergeLinksChange,
                         )
                     },
                 )

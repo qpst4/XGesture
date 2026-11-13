@@ -1090,6 +1090,8 @@
     <string name="float_ball_pick_text_first_panel_desc">Только для сдвоенной компоновки: сначала текст и поиск; свайп вниз по панели инструментов над текстом или вытягивание вниз в верхней части текста разворачивает изображение.</string>
     <string name="float_ball_pick_auto_select_all">Автовыделение всего текста</string>
     <string name="float_ball_pick_auto_select_all_desc">Автоматически выделять весь текст при открытии панели выделения</string>
+    <string name="float_ball_pick_merge_links">Объединять ссылки при разбивке на слова</string>
+    <string name="float_ball_pick_merge_links_desc">URL или ссылка считается одним блоком: одно нажатие выделяет адрес целиком. Если выключить, ссылка делится по двоеточию, косой черте и точке. Долгое нажатие разбивает блок на символы.</string>
     <string name="float_ball_pick_copy_dismiss_panel">Закрывать панель после копирования</string>
     <string name="float_ball_pick_copy_dismiss_panel_desc">Если включено, нажатие «Копировать выделенное» закрывает панель выделения; копирование долгим нажатием оставляет панель открытой</string>
     <string name="float_ball_pick_copy_button_position">Положение кнопки копирования</string>

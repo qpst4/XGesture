@@ -1089,6 +1089,8 @@
     <string name="float_ball_pick_word_tap_granularity_title">Word tap granularity</string>
     <string name="float_ball_pick_word_tap_granularity_word">Words</string>
     <string name="float_ball_pick_word_tap_granularity_character">Characters</string>
+    <string name="float_ball_pick_merge_links">Merge links when picking words</string>
+    <string name="float_ball_pick_merge_links_desc">A URL or link stays one chip, so one tap selects the whole address. Turn off to split it at : / . and other punctuation. Long-press any chip to split it into characters.</string>
     <string name="float_ball_pick_text_mode_state_remember">Remember</string>
     <string name="float_ball_pick_text_mode_state_always_on">On</string>
     <string name="float_ball_pick_text_mode_state_always_off">Off</string>

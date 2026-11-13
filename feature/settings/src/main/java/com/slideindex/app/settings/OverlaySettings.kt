@@ -140,6 +140,8 @@ data class OverlaySettings(
     /** 点词粒度；CHARACTER = 不分词、无 chip 外观。 */
     val floatBallPickWordTapGranularity: PickResultWordTapGranularity =
         PickResultWordTapGranularity.WORD,
+    /** 分词时把网址/链接收成一个词块（关 = 按 : / . 等标点拆开；按字模式不生效）。 */
+    val floatBallPickMergeLinks: Boolean = true,
     val floatBallPickDefaultSearchEngineId: String? = null,
     val floatBallPickAutoSelectAll: Boolean = false,
     val floatBallPickCopyDismissPanel: Boolean = false,
@@ -397,6 +399,7 @@ data class OverlaySettings(
             floatBallPickTextModeDefault = settings.floatBallPickTextModeDefault,
             floatBallPickTextModeLastMode = settings.floatBallPickTextModeLastMode,
             floatBallPickWordTapGranularity = settings.floatBallPickWordTapGranularity,
+            floatBallPickMergeLinks = settings.floatBallPickMergeLinks,
             floatBallPickDefaultSearchEngineId = settings.floatBallPickDefaultSearchEngineId,
             floatBallPickAutoSelectAll = settings.floatBallPickAutoSelectAll,
             floatBallPickCopyDismissPanel = settings.floatBallPickCopyDismissPanel,

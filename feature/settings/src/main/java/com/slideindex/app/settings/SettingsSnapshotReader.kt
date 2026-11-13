@@ -546,6 +546,8 @@ internal object SettingsSnapshotReader {
                 PickResultWordTapGranularity.fromStorageKey(
                     prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_WORD_TAP_GRANULARITY],
                 ),
+            floatBallPickMergeLinks =
+                prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_MERGE_LINKS] ?: true,
             floatBallPickDefaultSearchEngineId =
                 prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_DEFAULT_SEARCH_ENGINE_ID],
             floatBallPickAutoSelectAll =

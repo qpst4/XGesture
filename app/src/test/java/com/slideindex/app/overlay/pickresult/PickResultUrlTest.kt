@@ -296,4 +296,36 @@ class PickResultUrlTest {
         assertTrue(action is PickResultOpenLinkAction.Open)
         assertEquals(uri, (action as PickResultOpenLinkAction.Open).url)
     }
+
+    @Test
+    fun ranges_returnRawSubstring_notNormalizedUrl() {
+        val text = "地址：www.b.com/x，还有别的"
+        val ranges = PickResultUrl.findOpenableUrlRanges(text)
+        assertEquals(1, ranges.size)
+        assertEquals("www.b.com/x", text.substring(ranges[0].first, ranges[0].last + 1))
+    }
+
+    @Test
+    fun ranges_doNotDuplicateHttpLinks() {
+        // `https://` 同时满足「自定义协议」正则：只应留下最外层一段。
+        val text = "see https://a.com and https://b.com/y"
+        assertEquals(2, PickResultUrl.findOpenableUrlRanges(text).size)
+    }
+
+    @Test
+    fun ranges_leaveTrailingPunctuationOutside() {
+        val text = "打开 https://a.com/x. 吧"
+        val ranges = PickResultUrl.findOpenableUrlRanges(text)
+        assertEquals(1, ranges.size)
+        val link = text.substring(ranges[0].first, ranges[0].last + 1)
+        assertEquals("https://a.com/x", link)
+    }
+
+    @Test
+    fun ranges_skipIntentInnerLink() {
+        val uri = "intent://example.com/path#Intent;scheme=https;package=com.example;end"
+        val ranges = PickResultUrl.findOpenableUrlRanges("打开 $uri 试试")
+        assertEquals(1, ranges.size)
+        assertEquals(uri, "打开 $uri 试试".substring(ranges[0].first, ranges[0].last + 1))
+    }
 }

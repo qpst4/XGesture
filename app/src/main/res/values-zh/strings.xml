@@ -2041,6 +2041,8 @@
     <string name="float_ball_pick_word_tap_granularity_title">点词粒度</string>
     <string name="float_ball_pick_word_tap_granularity_word">分词</string>
     <string name="float_ball_pick_word_tap_granularity_character">按字</string>
+    <string name="float_ball_pick_merge_links">分词时合并链接</string>
+    <string name="float_ball_pick_merge_links_desc">网址或链接算一个词块，点一下就能整条选中；关闭后按冒号、斜杠、点号等符号拆开。长按词块仍可拆成单字。</string>
     <string name="float_ball_pick_text_mode_state_remember">记住</string>
     <string name="float_ball_pick_text_mode_state_always_on">开启</string>
     <string name="float_ball_pick_text_mode_state_always_off">关闭</string>

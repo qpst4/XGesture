@@ -738,6 +738,9 @@ class SettingsRepository @Inject constructor(
     suspend fun setFloatBallPickHapticEnabled(enabled: Boolean) =
         overlay.setFloatBallPickHapticEnabled(enabled)
 
+    suspend fun setFloatBallPickMergeLinks(enabled: Boolean) =
+        overlay.setFloatBallPickMergeLinks(enabled)
+
     suspend fun setFloatBallDragPickEnabled(enabled: Boolean) =
         overlay.setFloatBallDragPickEnabled(enabled)
 

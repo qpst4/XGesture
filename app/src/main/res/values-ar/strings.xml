@@ -1928,6 +1928,8 @@
     <string name="float_ball_pick_text_first_panel_desc">نمط الشاشة الواحدة فقط: النص والبحث أولاً؛ اسحب لأسفل على شريط الأدوات فوق النص أو اسحب لأسفل من أعلى النص لإظهار الصورة.</string>
     <string name="float_ball_pick_auto_select_all">تحديد النص تلقائياً</string>
     <string name="float_ball_pick_auto_select_all_desc">في اللوحة المنبثقة بعد التقاط النص أو لقطة الشاشة، يتم تحديد النص تلقائياً بالكامل</string>
+    <string name="float_ball_pick_merge_links">دمج الروابط عند تقسيم الكلمات</string>
+    <string name="float_ball_pick_merge_links_desc">يُعامل عنوان URL أو الرابط ككتلة واحدة، فتحدده نقرة واحدة بالكامل. عند الإيقاف يُقسَّم عند النقطتين الرأسيتين والشرطة المائلة والنقطة وغيرها. الضغط المطوّل يفكّ الكتلة إلى أحرف.</string>
     <string name="float_ball_pick_copy_dismiss_panel">إغلاق اللوحة تلقائياً بعد النسخ</string>
     <string name="float_ball_pick_copy_dismiss_panel_desc">عند التفعيل، سيؤدي النقر على «نسخ المحدد» إلى إغلاق لوحة التقاط النص تلقائياً؛ الضغط المطول للنسخ يحتفظ باللوحة</string>
     <string name="float_ball_pick_haptic_enabled">اهتزاز اللوحة</string>

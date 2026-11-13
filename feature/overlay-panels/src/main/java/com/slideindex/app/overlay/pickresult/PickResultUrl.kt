@@ -101,6 +101,70 @@ object PickResultUrl {
         return found.toList()
     }
 
+    /**
+     * 分词用：链接在原文里的下标区间（原样返回，不做规范化）。
+     *
+     * 与 [extractOpenableUrls] 同一套识别规则，但保留原始位置 —— 取词面板要把整条链接收成
+     * 一个词块，必须知道它从哪到哪；[extractOpenableUrls] 返回的是规范化后的网址（`www.x.com`
+     * 会被补成 `https://www.x.com`），拿它去原文里反查是找不到的。
+     */
+    fun findOpenableUrlRanges(text: String): List<IntRange> {
+        if (text.isBlank()) return emptyList()
+        val found = ArrayList<IntRange>(4)
+        val intentMatches = intentUriRegex.findAll(text).toList()
+        intentMatches.forEach { match ->
+            addUrlRange(text, match.groups[1]?.range, found)
+        }
+        val masked = if (intentMatches.isEmpty()) {
+            text
+        } else {
+            val chars = text.toCharArray()
+            intentMatches.forEach { match ->
+                for (index in match.range) chars[index] = ' '
+            }
+            String(chars)
+        }
+        httpUrlRegex.findAll(masked).forEach { match ->
+            addUrlRange(text, match.range, found)
+        }
+        wwwUrlRegex.findAll(masked).forEach { match ->
+            addUrlRange(text, match.groups[1]?.range, found)
+        }
+        schemeUrlRegex.findAll(masked).forEach { match ->
+            addUrlRange(text, match.groups[1]?.range, found)
+        }
+        systemUriRegex.findAll(masked).forEach { match ->
+            addUrlRange(text, match.groups[1]?.range, found)
+        }
+        return withoutOverlappingRanges(found)
+    }
+
+    private fun addUrlRange(text: String, range: IntRange?, out: MutableList<IntRange>) {
+        if (range == null || range.isEmpty()) return
+        val raw = text.substring(range.first, range.last + 1)
+        // 正则会把句尾的 . , ) 一起吞进来；分词要按「链接本体」收口，标点留给后面的词块。
+        val trimmed = trimTrailingPunctuation(raw)
+        if (trimmed.isEmpty()) return
+        if (normalizeOpenableUrl(trimmed) == null) return
+        out += range.first..(range.first + trimmed.length - 1)
+    }
+
+    /**
+     * 同一条链接会被多条正则同时命中（`https://` 也满足自定义协议），
+     * 还会出现 `www.` 落在 `https://` 里面的情况：只留最外层那一段。
+     */
+    private fun withoutOverlappingRanges(ranges: List<IntRange>): List<IntRange> {
+        if (ranges.size <= 1) return ranges
+        val kept = ArrayList<IntRange>(ranges.size)
+        ranges.distinct()
+            .sortedWith(compareBy({ it.first }, { -it.last }))
+            .forEach { range ->
+                val overlaps = kept.any { it.first <= range.last && it.last >= range.first }
+                if (!overlaps) kept += range
+            }
+        return kept
+    }
+
     fun linkDisplayLabel(uri: String): String {
         val normalized = normalizeOpenableUrl(uri) ?: uri.trim()
         return when {

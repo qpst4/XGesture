@@ -663,6 +663,8 @@ internal object SettingsPreferenceKeys {
     /** 点词粒度：word / character（character = 不分词，按字符选且不画 chip）。 */
     val FLOAT_BALL_PICK_WORD_TAP_GRANULARITY =
         stringPreferencesKey("float_ball_pick_word_tap_granularity")
+    /** 分词时把网址/链接收成一个词块（关 = 按 : / . 等标点拆开；按字模式不生效）。 */
+    val FLOAT_BALL_PICK_MERGE_LINKS = booleanPreferencesKey("float_ball_pick_merge_links")
     val FLOAT_BALL_PICK_DEFAULT_SEARCH_ENGINE_ID = stringPreferencesKey("float_ball_pick_default_search_engine_id")
     val FLOAT_BALL_PICK_AUTO_SELECT_ALL = booleanPreferencesKey("float_ball_pick_auto_select_all")
     val FLOAT_BALL_PICK_COPY_DISMISS_PANEL = booleanPreferencesKey("float_ball_pick_copy_dismiss_panel")

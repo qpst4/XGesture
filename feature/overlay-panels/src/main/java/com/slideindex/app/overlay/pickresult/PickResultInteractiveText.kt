@@ -108,6 +108,7 @@ private data class PickResultAutoSelectKey(
     val text: String,
     val mode: PickResultTextMode,
     val granularity: com.slideindex.app.settings.PickResultWordTapGranularity,
+    val mergeLinks: Boolean,
 )
 
 @Composable
@@ -191,6 +192,8 @@ fun PickResultInteractiveTextSection(
     }
     val effectiveAutoSelectAll = autoSelectAll ?: appSettings.floatBallPickAutoSelectAll
     val wordTapGranularity = appSettings.floatBallPickWordTapGranularity
+    /** 分词时把网址收成一个词块（设置里可关）；关掉后仍按标点拆开。 */
+    val wordTapMergeLinks = appSettings.floatBallPickMergeLinks
     var wordTokens by remember(text) {
         mutableStateOf<List<String>>(emptyList())
     }
@@ -206,7 +209,7 @@ fun PickResultInteractiveTextSection(
 
     fun currentWordTokens(): List<String> = wordTokenOverride ?: wordTokens
 
-    LaunchedEffect(text, wordTapGranularity) {
+    LaunchedEffect(text, wordTapGranularity, wordTapMergeLinks) {
         wordTokenOverride = null
         tokensReadyKey = null
         if (text.isBlank()) {
@@ -214,7 +217,7 @@ fun PickResultInteractiveTextSection(
             tokensReadyKey = text to wordTapGranularity
             return@LaunchedEffect
         }
-        val cacheKey = "${wordTapGranularity.storageKey}:$text"
+        val cacheKey = "${wordTapGranularity.storageKey}:$wordTapMergeLinks:$text"
         val cached = pickResultTokenCache.get(cacheKey)
         if (cached != null) {
             wordTokens = cached
@@ -227,7 +230,10 @@ fun PickResultInteractiveTextSection(
             ) {
                 PickResultWordTokenizer.tokenizeSelectableChars(text)
             } else {
-                PickResultWordTokenizer.tokenizeSelectableWords(text)
+                PickResultWordTokenizer.tokenizeSelectableWords(
+                    text = text,
+                    mergeLinks = wordTapMergeLinks,
+                )
             }
         }
         pickResultTokenCache.put(cacheKey, newTokens)
@@ -235,8 +241,8 @@ fun PickResultInteractiveTextSection(
         tokensReadyKey = text to wordTapGranularity
     }
 
-    LaunchedEffect(wordTapGranularity) {
-        // 分词/不分词切换后 token 下标完全不同：清掉旧选中集，也清掉“已自动全选”的锁存。
+    LaunchedEffect(wordTapGranularity, wordTapMergeLinks) {
+        // 分词/不分词、合并链接开/关之后 token 下标完全不同：清掉旧选中集，也清掉“已自动全选”的锁存。
         selectedWordIndices = emptySet()
         autoSelectedKey = null
     }
@@ -272,7 +278,12 @@ fun PickResultInteractiveTextSection(
         val readyForWordTap = textMode != PickResultTextMode.WORD_TAP ||
             tokensReadyKey == (text to wordTapGranularity)
         if (effectiveAutoSelectAll && text.isNotBlank() && readyForWordTap) {
-            val currentKey = PickResultAutoSelectKey(text, textMode, wordTapGranularity)
+            val currentKey = PickResultAutoSelectKey(
+                text = text,
+                mode = textMode,
+                granularity = wordTapGranularity,
+                mergeLinks = wordTapMergeLinks,
+            )
             if (autoSelectedKey != currentKey) {
                 when (textMode) {
                     PickResultTextMode.WORD_TAP -> {

@@ -229,6 +229,7 @@ fun OverlaySettings.toMinimalAppSettings(): AppSettings = AppSettings(
         floatBallPickTextModeDefault = floatBallPickTextModeDefault,
         floatBallPickTextModeLastMode = floatBallPickTextModeLastMode,
         floatBallPickWordTapGranularity = floatBallPickWordTapGranularity,
+        floatBallPickMergeLinks = floatBallPickMergeLinks,
         floatBallPickDefaultSearchEngineId = floatBallPickDefaultSearchEngineId,
         floatBallPickAutoSelectAll = floatBallPickAutoSelectAll,
         floatBallPickCopyDismissPanel = floatBallPickCopyDismissPanel,

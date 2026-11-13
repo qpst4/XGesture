@@ -45,11 +45,22 @@ object PickResultWordTokenizer {
     /**
      * Tap-select tokens: CJK uses locale word boundaries; Latin accumulates into words;
      * whitespace is preserved one character per token for blank-chip rendering.
+     *
+     * [mergeLinks] 为 true 时，[PickResultUrl.findOpenableUrlRanges] 命中的网址整条算一个词块
+     * （面板里的「分词时合并链接」开关）：点一下就能选中/复制整条链接，长按仍可拆成单字。
      */
-    fun tokenizeSelectableWords(text: String): List<String> {
+    fun tokenizeSelectableWords(
+        text: String,
+        mergeLinks: Boolean = false,
+    ): List<String> {
         if (text.isEmpty()) return emptyList()
         val tokens = mutableListOf<String>()
         val latinBuffer = StringBuilder()
+        val linkEndByStart = if (mergeLinks) {
+            PickResultUrl.findOpenableUrlRanges(text).associate { it.first to it.last }
+        } else {
+            emptyMap()
+        }
         var index = 0
 
         fun flushLatin() {
@@ -59,6 +70,13 @@ object PickResultWordTokenizer {
         }
 
         while (index < text.length) {
+            val linkEnd = linkEndByStart[index]
+            if (linkEnd != null) {
+                flushLatin()
+                tokens += text.substring(index, linkEnd + 1)
+                index = linkEnd + 1
+                continue
+            }
             val char = text[index]
             when {
                 char.isWhitespace() || char == '\u3000' -> {
@@ -92,6 +110,8 @@ object PickResultWordTokenizer {
     /**
      * 不分词模式：每个 code point 一个 token（代理对不拆），空白/换行也各占一个 token。
      * 选择逻辑沿用现有的 token 下标，因此点按、拖选、自动全选都不用重写。
+     *
+     * 链接合并只作用于分词模式（按字本来就是逐字选，没有「炸词」这回事）。
      */
     fun tokenizeSelectableChars(text: String): List<String> {
         if (text.isEmpty()) return emptyList()

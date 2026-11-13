@@ -114,4 +114,37 @@ class PickResultWordTokenizerTest {
         requireNotNull(second)
         assertEquals(listOf("北", "大", "清", "华"), second.tokens)
     }
+
+    @Test
+    fun `tokenizeSelectableWords keeps a link as one token when merging`() {
+        val text = "看这个 https://a.com/x?q=1 吧"
+        val tokens = PickResultWordTokenizer.tokenizeSelectableWords(text, mergeLinks = true)
+        assertEquals(1, tokens.count { it == "https://a.com/x?q=1" })
+        assertEquals(text, tokens.joinToString(""))
+    }
+
+    @Test
+    fun `tokenizeSelectableWords splits a link at punctuation when merging is off`() {
+        val text = "https://a.com"
+        val tokens = PickResultWordTokenizer.tokenizeSelectableWords(text, mergeLinks = false)
+        assertEquals(listOf("https", ":", "/", "/", "a", ".", "com"), tokens)
+    }
+
+    @Test
+    fun `tokenizeSelectableWords keeps sentence punctuation outside the merged link`() {
+        val text = "官网https://a.com/x。"
+        val tokens = PickResultWordTokenizer.tokenizeSelectableWords(text, mergeLinks = true)
+        assertTrue(tokens.contains("https://a.com/x"))
+        assertTrue(tokens.contains("。"))
+        assertEquals(text, tokens.joinToString(""))
+    }
+
+    @Test
+    fun `tokenizeSelectableWords merges tel and www links too`() {
+        val text = "tel:13800138000 和 www.b.com/y"
+        val tokens = PickResultWordTokenizer.tokenizeSelectableWords(text, mergeLinks = true)
+        assertTrue(tokens.contains("tel:13800138000"))
+        assertTrue(tokens.contains("www.b.com/y"))
+        assertEquals(text, tokens.joinToString(""))
+    }
 }
