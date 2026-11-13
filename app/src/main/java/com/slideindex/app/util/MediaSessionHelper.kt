@@ -4,50 +4,22 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.media.AudioManager
-import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import com.slideindex.app.service.MediaNotificationListener
 
 /**
- * Resolves the foreground media session (package + play/pause) for the quick-tools media strip.
+ * 媒体会话相关的纯判定工具：监听权限、包过滤、播放状态评分。
  *
- * **Reliable path:** enable notification listener access for [MediaNotificationListener]
- * (Settings → Notification access). [MediaSessionTracker] then receives live callbacks.
- *
- * **Fallback:** Shizuku `dumpsys media_session` / `audio` / `notification` when shell is available.
+ * 「当前媒体是谁」的唯一权威来源是 [MediaSessionTracker]（系统 MediaSession 栈的实时快照）。
+ * 这里不提供 `dumpsys` 兜底查询：文本 dump 随 ROM / Android 版本漂移，而且在部分 ROM 上
+ * `dumpsys audio` 的 players 段只列 uid/pid 不带包名，最终只能匹配到音频事件日志里
+ * 「最近谁开过播放器」，答不出「现在是谁」。那条兜底曾以同样的 500ms 节奏和 tracker
+ * 抢写悬浮面板的媒体字段，表现就是音量图标 ↔ App 图标闪烁
+ * （见 `OhoQuickToolsPanelState` 的媒体状态写入口）。
  */
 object MediaSessionHelper {
-    data class Info(
-        val packageName: String,
-        val isPlaying: Boolean,
-    )
-
-    fun query(context: Context): Info? {
-        MediaSessionTracker.currentSnapshot().packageName?.let { pkg ->
-            val snap = MediaSessionTracker.currentSnapshot()
-            return Info(pkg, snap.isPlaying)
-        }
-        queryViaMediaControllers(context)?.let { return it }
-        if (TaskManagerUtil.hasPermission()) {
-            parseMediaSessionDump(
-                output = TaskManagerUtil.runShellCommandOutput("dumpsys", "media_session").output,
-                selfPackage = context.packageName,
-            )?.let { return it }
-            parseNotificationDump(
-                output = TaskManagerUtil.runShellCommandOutput("dumpsys", "notification", "--noredact").output,
-                selfPackage = context.packageName,
-            )?.let { return it }
-            parseAudioDump(
-                output = TaskManagerUtil.runShellCommandOutput("dumpsys", "audio").output,
-                selfPackage = context.packageName,
-            )?.let { return it }
-        }
-        return null
-    }
-
     fun isNotificationListenerEnabled(context: Context): Boolean {
         val enabled = Settings.Secure.getString(
             context.contentResolver,
@@ -132,108 +104,4 @@ object MediaSessionHelper {
 
     fun isPlayingState(state: Int): Boolean =
         state == PlaybackState.STATE_PLAYING || state == PlaybackState.STATE_BUFFERING
-
-    private fun queryViaMediaControllers(context: Context): Info? {
-        if (!isNotificationListenerEnabled(context)) return null
-        val manager = context.getSystemService(MediaSessionManager::class.java) ?: return null
-        val component = ComponentName(context, MediaNotificationListener::class.java)
-        val controllers = runCatching { manager.getActiveSessions(component) }.getOrNull()
-            ?: return null
-        var best: Info? = null
-        var bestScore = Int.MIN_VALUE
-        for (controller in controllers) {
-            val pkg = controller.packageName ?: continue
-            if (isIgnoredMediaPackage(pkg, context.packageName)) continue
-            val state = controller.playbackState?.state ?: PlaybackState.STATE_NONE
-            val score = playbackScore(state)
-            if (score > bestScore) {
-                bestScore = score
-                best = Info(packageName = pkg, isPlaying = isPlayingState(state))
-            }
-        }
-        return best?.takeIf { bestScore > 0 }
-    }
-
-    private fun parseMediaSessionDump(output: String, selfPackage: String): Info? {
-        val sessionStates = linkedMapOf<String, Int>()
-        var currentPackage: String? = null
-        output.lineSequence().forEach { rawLine ->
-            val line = rawLine.trim()
-            PACKAGE_PATTERN.find(line)?.let { currentPackage = it.groupValues[1] }
-            OWNER_PACKAGE_PATTERN.find(line)?.let { currentPackage = it.groupValues[1] }
-            val pkg = currentPackage ?: return@forEach
-            if (isIgnoredMediaPackage(pkg, selfPackage)) return@forEach
-            val state = extractPlaybackState(line) ?: return@forEach
-            val prev = sessionStates[pkg]
-            if (prev == null || playbackScore(state) > playbackScore(prev)) {
-                sessionStates[pkg] = state
-            }
-        }
-        val best = sessionStates.maxByOrNull { playbackScore(it.value) } ?: return null
-        if (playbackScore(best.value) <= 0) return null
-        return Info(best.key, isPlayingState(best.value))
-    }
-
-    private fun parseAudioDump(output: String, selfPackage: String): Info? {
-        var best: Info? = null
-        var bestScore = Int.MIN_VALUE
-        output.lineSequence().forEach { line ->
-            val pkg = AUDIO_PACKAGE_PATTERN.find(line)?.groupValues?.getOrNull(1) ?: return@forEach
-            if (isIgnoredMediaPackage(pkg, selfPackage)) return@forEach
-            val playing = line.contains("state:started", ignoreCase = true)
-            val score = if (playing) 260 else 120
-            if (score > bestScore) {
-                bestScore = score
-                best = Info(packageName = pkg, isPlaying = playing)
-            }
-        }
-        return best?.takeIf { bestScore > 0 }
-    }
-
-    private fun parseNotificationDump(output: String, selfPackage: String): Info? {
-        var currentPackage: String? = null
-        var inMediaNotification = false
-        var best: Info? = null
-        var bestScore = Int.MIN_VALUE
-        output.lineSequence().forEach { rawLine ->
-            val line = rawLine.trim()
-            if (line.contains("MediaStyle", ignoreCase = true) ||
-                line.contains("android.mediaSession", ignoreCase = true) ||
-                line.contains("template=media", ignoreCase = true)
-            ) {
-                inMediaNotification = true
-            }
-            NOTIFICATION_PKG_PATTERN.find(line)?.let { match ->
-                currentPackage = match.groupValues[1]
-            }
-            if (line.startsWith("NotificationRecord(")) {
-                inMediaNotification = false
-            }
-            val pkg = currentPackage
-            if (inMediaNotification && pkg != null && !isIgnoredMediaPackage(pkg, selfPackage)) {
-                val playing = !line.contains("isPlaying=false", ignoreCase = true)
-                val score = if (playing) 260 else 180
-                if (score > bestScore) {
-                    bestScore = score
-                    best = Info(packageName = pkg, isPlaying = playing)
-                }
-            }
-        }
-        return best?.takeIf { bestScore > 0 }
-    }
-
-    private fun extractPlaybackState(line: String): Int? {
-        PLAYBACK_STATE_PATTERN.find(line)?.groupValues?.getOrNull(1)?.toIntOrNull()?.let { return it }
-        STATE_FIELD_PATTERN.find(line)?.groupValues?.getOrNull(1)?.toIntOrNull()?.let { return it }
-        if (line.contains("playing=true", ignoreCase = true)) return PlaybackState.STATE_PLAYING
-        if (line.contains("playing=false", ignoreCase = true)) return PlaybackState.STATE_PAUSED
-        return null
-    }
-
-    private val PACKAGE_PATTERN = Regex("""package(?:Name)?=([a-zA-Z][\w.]*)""")
-    private val OWNER_PACKAGE_PATTERN = Regex("""ownerPackage=([a-zA-Z][\w.]*)""")
-    private val STATE_FIELD_PATTERN = Regex("""\bstate=(\d+)\b""")
-    private val PLAYBACK_STATE_PATTERN = Regex("""PlaybackState\s*\{[^}]*state=(\d+)""")
-    private val AUDIO_PACKAGE_PATTERN = Regex("""\bpackage:([a-zA-Z][\w.]+)""")
-    private val NOTIFICATION_PKG_PATTERN = Regex("""pkg=([a-zA-Z][\w.]+)""")
 }

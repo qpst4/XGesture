@@ -94,12 +94,7 @@ class OhoQuickToolsPanelState(
 
     private val activeStates = mutableStateMapOf<OhoTile, Boolean>()
     private val mediaTrackerListener: (MediaSessionTracker.Snapshot) -> Unit = { snap ->
-        mainHandler.post {
-            mediaAppPackage = snap.packageName
-            mediaIsPlaying = snap.isPlaying
-            mediaListenerEnabled = MediaSessionHelper.isNotificationListenerEnabled(appContext)
-            activeStates[OhoTile.SCREEN_RECORD] = ScreenRecordHelper.isRecording
-        }
+        mainHandler.post { applyMediaSnapshot(snap) }
     }
     private var volumeChangeReceiver: BroadcastReceiver? = null
     private var defaultDataSubReceiver: BroadcastReceiver? = null
@@ -112,6 +107,9 @@ class OhoQuickToolsPanelState(
     private var brightnessAutoToggleSuppressObserverUntilMs = 0L
     private var mediaPollRunnable: Runnable? = null
     private var brightnessPollRunnable: Runnable? = null
+
+    /** 连续观测到「无媒体快照」的起点（uptimeMillis）；0 表示当前没有在倒计时。 */
+    private var mediaEmptySinceMs = 0L
     private val stateScope = CoroutineScope(Dispatchers.IO)
     private var slowSyncJob: Job? = null
     private var mobileDataSyncJob: Job? = null
@@ -162,6 +160,7 @@ class OhoQuickToolsPanelState(
         unregisterMobileDataObserver()
         stopMediaPolling()
         stopBrightnessPolling()
+        mediaEmptySinceMs = 0L
         brightnessUserAdjusting = false
         endBrightnessAdjustRunnable?.let { mainHandler.removeCallbacks(it) }
         endBrightnessAdjustRunnable = null
@@ -235,23 +234,48 @@ class OhoQuickToolsPanelState(
 
     fun refreshMediaFromSystem() {
         MediaSessionTracker.refreshIfPossible(appContext, listenerPort)
-        val live = MediaSessionTracker.currentSnapshot()
-        if (!live.packageName.isNullOrBlank()) {
-            mediaAppPackage = live.packageName
-            mediaIsPlaying = live.isPlaying
-            mediaListenerEnabled = MediaSessionHelper.isNotificationListenerEnabled(appContext)
+        applyMediaSnapshot(MediaSessionTracker.currentSnapshot())
+    }
+
+    /**
+     * 媒体状态的**唯一写入口**：通知监听器回调与 500ms 轮询都走这里。
+     *
+     * 只有 [MediaSessionTracker] 是权威来源（系统 MediaSession 栈的实时快照）。
+     * 空快照时不再另起线程跑 `dumpsys` 兜底——那条路径会用同样的 500ms 节奏把
+     * 「最近开过播放器的 App」写回同一个字段，和 tracker 的 null 互相覆盖，
+     * 表现就是音量图标 ↔ App 图标闪烁。
+     *
+     * 空快照也不立刻清空：单次 null 可能只是控制器状态还没同步过来，持续为空
+     * 超过 [MEDIA_EMPTY_GRACE_MS] 才切回「无媒体」（音量图标）。
+     */
+    private fun applyMediaSnapshot(snapshot: MediaSessionTracker.Snapshot) {
+        val packageName = snapshot.packageName
+        if (!packageName.isNullOrBlank()) {
+            mediaEmptySinceMs = 0L
+            mediaAppPackage = packageName
+            mediaIsPlaying = snapshot.isPlaying
+        } else {
+            scheduleMediaEmpty()
+        }
+        mediaListenerEnabled = MediaSessionHelper.isNotificationListenerEnabled(appContext)
+        activeStates[OhoTile.SCREEN_RECORD] = ScreenRecordHelper.isRecording
+    }
+
+    private fun scheduleMediaEmpty() {
+        if (mediaAppPackage.isNullOrBlank()) {
+            mediaEmptySinceMs = 0L
+            mediaIsPlaying = false
             return
         }
-        Thread {
-            val info = MediaSessionHelper.query(appContext)
-            if (Thread.currentThread().isInterrupted) return@Thread
-            mainHandler.post {
-                mediaAppPackage = info?.packageName
-                mediaIsPlaying = info?.isPlaying == true
-                mediaListenerEnabled = MediaSessionHelper.isNotificationListenerEnabled(appContext)
-                activeStates[OhoTile.SCREEN_RECORD] = ScreenRecordHelper.isRecording
-            }
-        }.start()
+        val now = SystemClock.uptimeMillis()
+        if (mediaEmptySinceMs == 0L) {
+            mediaEmptySinceMs = now
+            return
+        }
+        if (now - mediaEmptySinceMs < MEDIA_EMPTY_GRACE_MS) return
+        mediaEmptySinceMs = 0L
+        mediaAppPackage = null
+        mediaIsPlaying = false
     }
 
     fun toggleAutoBrightness(): Boolean? {
@@ -540,6 +564,9 @@ class OhoQuickToolsPanelState(
         const val VOLUME_CHANGED_ACTION = "android.media.VOLUME_CHANGED_ACTION"
         const val EXTRA_VOLUME_STREAM_TYPE = "android.media.EXTRA_VOLUME_STREAM_TYPE"
         const val MEDIA_POLL_MS = 500L
+
+        /** 空快照去抖：500ms 轮询下约 3 个 tick，吃掉控制器状态同步的瞬时 null。 */
+        const val MEDIA_EMPTY_GRACE_MS = 1_500L
         const val BRIGHTNESS_POLL_MS = 400L
         const val BRIGHTNESS_ADJUST_SYNC_DELAY_MS = 350L
         const val BRIGHTNESS_AUTO_TOGGLE_SYNC_SUPPRESS_MS = 450L
