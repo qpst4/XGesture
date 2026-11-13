@@ -13,7 +13,8 @@ Where the two files differ, `CHANGELOG.md` is authoritative.
 This release rolls up the changes since 1.64.1 and fixes the brightness slider jumping back after a change.
 
 ### Added
-- Toggle actions offer On / Off / Ringer mode, plus four new toggles
+- Toggle actions offer three modes: Toggle / Turn on / Turn off; Sound mode offers Cycle / Ring / Vibrate / Silent
+- Added four toggles: Airplane mode, Location, Auto-sync and Dark mode
 - Added a Volume bar (same as volume keys) action that shows the bar without changing volume
 - The pick panel adds a Read Aloud button that speaks the text with the system voice
 - Pick panel sharing can set a default app and send directly
