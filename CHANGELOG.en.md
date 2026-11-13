@@ -8,6 +8,66 @@ identical to the Chinese file so that the release pipeline can line up both lang
 
 Where the two files differ, `CHANGELOG.md` is authoritative.
 
+## [1.66.0] - 2026-11-13
+
+This release rolls up the changes since 1.64.1 and fixes the brightness slider jumping back after a change.
+
+### Added
+- Toggle actions offer On / Off / Ringer mode, plus four new toggles
+- Added a Volume bar (same as volume keys) action that shows the bar without changing volume
+- The pick panel adds a Read Aloud button that speaks the text with the system voice
+- Pick panel sharing can set a default app and send directly
+- The pick panel adds a merge-links switch that keeps a whole link as one word
+- Haptics are split into eight independent switches, including a long-swipe threshold, on a dedicated page
+- Smart screenshot adds a free-form lasso selection
+- The widget panel adds a show-icon-labels switch
+- The open-widget-panel action can target a specific page
+- Quick launcher and widget panel entry icons can be picked from the icon library
+- The back capsule can be dragged to the screen edge
+- Handles support custom appearance and images open full screen
+- Shell command actions show their action name in the action catalog
+
+### Changed
+- The notification box becomes a timeline list, with channel IDs moved into a menu
+- Add entry is now a full page shared by quick launcher, ring launcher and widget panel
+- Ring launcher slot editing uses the same full page as the corner wheel
+- The none ring slot is now the first entry in the action catalog
+- Long swipe distance rises from 240dp to 320dp and is decoupled from the short swipe limit
+- Pointer speed can reach 100% and shares one card with the travel range preview
+- The shake settings page is regrouped
+- Volume actions are renamed and share one icon set
+- Home gesture, in-app shortcut and keep-alive entries use standard icons
+- Liquid glass bottom bar and wide-screen nav bar icons are unified
+
+### Fixed
+- Fixed the brightness slider jumping back to the previous brightness right after a change
+- Fixed alarm and media volume being swapped in the expanded panel
+- Fixed volume up/down hitting an unrelated audio stream
+- Fixed a crash from oversized clipboard entries
+- Fixed a crash on first launch after upgrading from an older version
+- Fixed restoring an old backup replaying every data migration
+- Fixed memory spikes when decoding and drawing very large images
+- Fixed the pick panel capturing itself into the result image
+- Fixed a crash from duplicate entries in the Activity picker
+- Fixed the media button flickering between volume and app icons in quick tools
+- Fixed a crash on long-pressing page 2 of the widget panel
+- Fixed quick reply giving no feedback after a successful send
+- Fixed haptic feedback feeling muddy
+- Fixed reversed Arabic text in picked words and OCR results
+- Fixed the image share panel closing right after it opens
+- Fixed the built-in share panel switch having no effect
+- Fixed page index corruption after returning from quick launcher
+- Fixed ring launcher radio rows not showing selection
+- Fixed custom action icons not applying on the corner wheel
+- Fixed triggers not coming back after rotating from landscape to portrait
+- Fixed the ring shrinking when the float ball is not ready
+- Fixed the free-form hint swallowing the first touch
+- Fixed the centered pick panel being too short and clipping the search grid
+- Fixed the file browser window staying open after handing off to another app
+- Fixed some actions always running through Shizuku
+- Fixed side notification cards never appearing again after an over-install
+- Fixed screen-capture actions showing a toast capsule and including overlays in the screenshot
+
 ## [1.64.1] - 2026-11-11
 
 This release fixes the 1.64.0 crash and summarizes that release's main changes.
