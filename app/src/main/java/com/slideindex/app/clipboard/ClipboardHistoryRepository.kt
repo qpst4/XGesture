@@ -331,10 +331,14 @@ class ClipboardHistoryRepository @Inject constructor(
     }
 
     fun ingestScreenshot(uri: Uri, displayName: String?, mimeType: String? = "image/png") {
-        lastScreenshotIngestAtMs = System.currentTimeMillis()
         val label = displayName?.takeIf { it.isNotBlank() }
             ?: uri.lastPathSegment?.takeIf { it.isNotBlank() }
             ?: "screenshot"
+        // 同一次截图会被两条链路各送一次（保存图片显式入库 / 截图监听），两者的 uri 只是同一个
+        // 媒体项的聚合卷与主卷别名，内容指纹对不上 —— 会存成两条。见 ScreenshotIngestDedup。
+        val now = System.currentTimeMillis()
+        if (ScreenshotIngestDedup.isDuplicate(store.queryLatest(), label, now)) return
+        lastScreenshotIngestAtMs = now
         ingestPayload(
             ClipboardPayload(
                 type = ClipboardEntryType.URI,
