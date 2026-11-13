@@ -70,6 +70,12 @@ enum class AppClonePickMode {
     SELECTABLE,
 }
 
+/**
+ * 列表 key：只写类名会在「同一个 Activity 被枚举两次」时撞 key，LazyColumn 直接抛
+ * 「Key ... was already used」。带上包名与其他选择器（分享目标、小组件）口径一致。
+ */
+private fun ExportedActivityInfo.componentKey(): String = "$packageName/$className"
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ActivityShortcutPickAppScreen(
@@ -317,7 +323,7 @@ private fun LazyListScope.activityPickerActivityListBody(
             val segmentCount = filtered.size
             itemsIndexed(
                 items = filtered,
-                key = { _, activity -> activity.className },
+                key = { _, activity -> activity.componentKey() },
             ) { index, activity ->
                 val selected = selectedClassName != null && activity.className == selectedClassName
                 Md3PickerListRow(
@@ -547,7 +553,7 @@ private fun EmbeddedActivityPickActivityList(
             else -> {
                 EmbeddedActivityPickerLazyList(
                     itemCount = filtered.size,
-                    itemKey = { filtered[it].className },
+                    itemKey = { filtered[it].componentKey() },
                 ) { index ->
                     val activity = filtered[index]
                     val selected = selectedClassName != null &&
