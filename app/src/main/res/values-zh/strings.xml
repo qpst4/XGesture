@@ -3501,7 +3501,7 @@
     <string name="settings_backup_selected_summary">已选 %1$d/%2$d 个模块</string>
     <string name="settings_backup_select_all">全选</string>
     <string name="settings_backup_select_none">全不选</string>
-    <string name="settings_backup_restore_selected">恢复所选（%1$d）</string>
+    <string name="settings_backup_restore_selected">恢复（%1$d）</string>
     <string name="settings_backup_privacy_badge">隐私</string>
     <string name="settings_backup_has_history">含历史</string>
     <string name="settings_backup_has_files">含文件</string>
