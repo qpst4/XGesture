@@ -170,6 +170,24 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: python scripts/check-hardcoded-strings.py --diff "${BASE_SHA:-HEAD}"
 
+  miuix-purity:
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]') }}
+    name: Miuix Purity Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14.7"
+
+      # ui/miuix/** 是 Miuix 体系组件：内部混用 M3 的 Text / 颜色会在半透明玻璃表面上
+      # 出现"miuix 底色 + M3 前景色"的错配（蓝底黑字）。
+      - name: Check no Material3 imports in Miuix components
+        run: python scripts/check-miuix-purity.py
+
   lint:
     if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]') }}
     name: Lint Check
