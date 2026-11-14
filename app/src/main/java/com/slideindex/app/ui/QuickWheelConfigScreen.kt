@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -102,7 +103,8 @@ private val QuickWheelDraftSaver: Saver<QuickWheel, String> = Saver(
 /**
  * 页面 2：轮盘配置页。
  *
- * - 不预留常驻预览区；**只有开始调整外观参数时才浮出实时预览**，在预览圆之外按下即关闭
+ * - 不预留常驻预览区；**只有开始调整外观参数时才浮出实时预览**，点轮盘外的空白区即收起
+ *   （预览层吞掉触摸，不会穿透到底下的设置项）
  *   （该次按下仍照常操作下方控件，不会被打断）；
  * - 「轮盘预览」以真实浮层呼出（可执行动作试玩）；
  * - 「轮盘功能设置」以悬浮编辑层叠加在本页之上；
@@ -376,25 +378,7 @@ fun QuickWheelConfigScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .onGloballyPositioned { hostOrigin = it.positionInWindow() }
-                // 点空白（没有任何控件消费这次按下）即关闭实时预览。
-                // 用 Main 阶段 + requireUnconsumed：拖动滑条 / 开关会被子控件消费，因此不会误关。
-                .pointerInput(previewVisible, previewLayout) {
-                    if (!previewVisible) return@pointerInput
-                    awaitPointerEventScope {
-                        while (true) {
-                            val down = awaitFirstDown(
-                                requireUnconsumed = true,
-                                pass = PointerEventPass.Main,
-                            )
-                            val deltaX = down.position.x - previewLayout.centerX
-                            val deltaY = down.position.y - previewLayout.centerY
-                            if (hypot(deltaX, deltaY) > previewLayout.outerRadiusPx + 24f) {
-                                previewVisible = false
-                            }
-                        }
-                    }
-                },
+                .onGloballyPositioned { hostOrigin = it.positionInWindow() },
         ) {
             MiuixSettingsScreenScaffold(
                 title = stringResource(R.string.quick_wheel_config_title),
@@ -859,7 +843,27 @@ fun QuickWheelConfigScreen(
                     onClose = { editMode = false },
                 )
             } else if (previewVisible) {
-                // 调参实时预览：只在调整外观参数时出现，触摸透传（不影响拖动滑条）。
+                // 调参实时预览：只在调整外观参数时出现。
+                //
+                // ⚠️ 预览可见时**整层吞掉触摸**：它只是"呼出效果的示意"，不是真的轮盘，
+                // 点它不能穿透到下面的设置项，也不执行任何动作。
+                // 点轮盘之外的空白区 = 收起预览（与「轮盘预览」浮层点空白的表现一致）。
+                // 正在进行中的拖动不受影响：Compose 的指针路径在按下时就已确定。
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(previewVisible, previewLayout) {
+                            detectTapGestures { position ->
+                                // 只有点在轮盘之外（空白区）才收起；点在轮盘上只是"看"，
+                                // 两种情况下都由这一层消费，不会穿透到底下的设置项。
+                                val dx = position.x - previewLayout.centerX
+                                val dy = position.y - previewLayout.centerY
+                                if (hypot(dx, dy) > previewLayout.outerRadiusPx + 24f) {
+                                    previewVisible = false
+                                }
+                            }
+                        },
+                )
                 // 预览里把用户留出的空位显示为"空白阴影"（真实呼出时是全透明的）。
                 // 背景遮罩按参数同步铺一层（页内做不了跨窗口模糊，模糊效果请看「轮盘预览」）。
                 if (previewWheel.backdropDimPercent > 0) {

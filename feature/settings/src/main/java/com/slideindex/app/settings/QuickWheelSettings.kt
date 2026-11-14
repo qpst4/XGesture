@@ -354,7 +354,8 @@ data class QuickWheel(
         )
         return copy(
             name = name.trim(),
-            sectorMask = QuickWheelLayoutEngine.normalizeSectorMask(sectorMask),
+            // 只裁位，不归一化：草稿里保留用户真实点选，扇区环 / 预览各按各的口径（见方法注释）。
+            sectorMask = QuickWheelLayoutEngine.clampSectorMask(sectorMask),
             // 两套形态参数都保存下来……
             primaryCircleStyle = primaryCircle,
             primaryRectStyle = primaryRect,
@@ -537,7 +538,8 @@ object QuickWheelCodec {
         append(FIELD_SEP)
         append(wheel.order)
         append(FIELD_SEP)
-        append(QuickWheelLayoutEngine.normalizeSectorMask(wheel.sectorMask))
+        // 存储用"原样掩码"：归一化只用于渲染，写进编码里会把用户选的三扇区 / 对角两扇区吃掉。
+        append(QuickWheelLayoutEngine.clampSectorMask(wheel.sectorMask))
         append(FIELD_SEP)
         append(QuickWheelLayoutEngine.clampLongPressMs(wheel.longPressMs))
         append(FIELD_SEP)
@@ -607,7 +609,8 @@ object QuickWheelCodec {
             },
             order = parts[5].toIntOrNull() ?: 0,
             sectorMask = if (hasSector) {
-                QuickWheelLayoutEngine.normalizeSectorMask(
+                // 读回来也原样保留（只裁位），形态归一化交给渲染路径。
+                QuickWheelLayoutEngine.clampSectorMask(
                     parts[6].toIntOrNull() ?: QuickWheelLayoutEngine.SECTOR_ALL,
                 )
             } else {

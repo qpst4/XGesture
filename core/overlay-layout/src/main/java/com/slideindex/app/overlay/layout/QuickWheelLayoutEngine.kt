@@ -387,9 +387,14 @@ object QuickWheelLayoutEngine {
     fun isSectorSelected(sectorMask: Int, index: Int): Boolean =
         index in 0 until SECTOR_COUNT && (sectorMask shr index) and 1 == 1
 
-    /** 已选扇区个数（至少 1，避免全不选时轮盘塌缩）。 */
+    /**
+     * 已选扇区个数（至少 1，避免全不选时轮盘塌缩）。
+     *
+     * 走 [normalizeSectorMask]：对角两扇区 / 三扇区这些无意义的组合已被并成整圆，
+     * 这里要是还数原始位数，"可用角度"文案就会写 270°，而轮盘实际画的是整圆。
+     */
     fun selectedSectorCount(sectorMask: Int): Int =
-        (0 until SECTOR_COUNT).count { isSectorSelected(sectorMask, it) }.coerceAtLeast(1)
+        Integer.bitCount(normalizeSectorMask(sectorMask)).coerceAtLeast(1)
 
     /** 可用角度总跨度（度）。 */
     fun sectorSpanDeg(sectorMask: Int): Int = selectedSectorCount(sectorMask) * SECTOR_ANGLE_DEG.toInt()
@@ -404,9 +409,44 @@ object QuickWheelLayoutEngine {
         return if (next and SECTOR_ALL == 0) sectorMask else next and SECTOR_ALL
     }
 
-    /** 归一到合法的扇区掩码（空 ⇒ 全选）。 */
-    fun normalizeSectorMask(sectorMask: Int): Int =
+    /**
+     * **只做位域裁剪**（空 ⇒ 全选），保留用户点选的原样，**不做形态归一化**。
+     *
+     * 设置 / 编解码等**存储路径**用它：用户点了几段就存几段，扇区环才能照原样高亮，
+     * 也才退得回半圆。渲染路径（布局 / 预览锚点 / 角度）才用 [normalizeSectorMask]。
+     */
+    fun clampSectorMask(sectorMask: Int): Int =
         if (sectorMask and SECTOR_ALL == 0) SECTOR_ALL else sectorMask and SECTOR_ALL
+
+    /**
+     * 归一到**有意义的**扇区掩码。
+     *
+     * 只有三种形态成立：**单扇区 90°**、**相邻两扇区 180°（半圆）**、**整圆 360°**。
+     * 因此：
+     * - 空 ⇒ 整圆（全选，与旧行为一致）；
+     * - **对角两扇区**（如 `0b0101`）⇒ 整圆：两段相反的弧拼不出连续可用区，
+     *   合方向还会互相抵消，画出来既不是半圆也不是整圆；
+     * - **三扇区**（如 `0b0111`）⇒ 整圆：用户点满三个，实际想要的就是整圆；
+     * - 其余按位裁到 4 位后原样返回。
+     *
+     * ⚠️ 这里只影响"怎么画 / 怎么算角度 / 预览锚点"，**不改用户点的原始掩码**（设置 / 编解码
+     * 走 [clampSectorMask]，照旧存原始位）。否则整圆状态下取消一个扇区 → 剩三个 → 又被归一成
+     * 整圆，就永远退不回半圆；扇区环也会点不出三扇区、照不亮对角两扇区。
+     * 扇区环的高亮按原始掩码画（见 `QuickWheelSectorRing`）。
+     */
+    fun normalizeSectorMask(sectorMask: Int): Int {
+        val mask = sectorMask and SECTOR_ALL
+        return when (Integer.bitCount(mask)) {
+            0 -> SECTOR_ALL
+            1 -> mask
+            2 -> {
+                val indices = (0 until SECTOR_COUNT).filter { isSectorSelected(mask, it) }
+                if (areSectorsAdjacent(indices[0], indices[1])) mask else SECTOR_ALL
+            }
+            // 3 个 / 4 个：整圆。
+            else -> SECTOR_ALL
+        }
+    }
 
     /**
      * 新轮盘的默认扇区：**左半圆**（扇区 2+3）。
@@ -545,7 +585,10 @@ object QuickWheelLayoutEngine {
         var fallbackOverflow = Float.MAX_VALUE
         for (count in SECTOR_COUNT downTo 1) {
             val candidates = orderMasksByOpenDirection(
-                masks = sectorMasksOfSize(count),
+                // 只评测**有意义**的掩码（整圆 / 相邻半圆 / 90°）。三扇区和对角两扇区会被
+                // normalizeSectorMask 并成整圆，跟 count = 4 的那一轮完全等价，评测它们只是重复；
+                // 更重要的是别让求解结果落回这种"画不出对应形态"的掩码。
+                masks = sectorMasksOfSize(count).filter { normalizeSectorMask(it) == it },
                 anchorX = anchorX,
                 anchorY = anchorY,
                 screenWidthPx = screenWidthPx,
