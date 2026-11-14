@@ -482,18 +482,31 @@ object QuickWheelLayoutEngine {
      *
      * 虚拟轴 = 把所有选中扇区首尾相接连成的一条连续轴，长度 = 已选扇区总跨度；
      * 因此同一段角度在不同扇区组合下都能均匀容纳容器，且全选时映射为恒等。
+     *
+     * ⚠️ 起点必须沿**弧段本身**的走向取：`{3,0}`（上半圆）在角度轴上是跨 0° 的，
+     * 按索引升序会从扇区 0 起算，导致同一环的容器被劈成"右上 + 左上"两段、顺序跳变。
+     * 这里先求连续弧的起点（见 [sectorArc]），再沿弧累加。
      */
     fun mapVirtualAngleDeg(sectorMask: Int, virtualDeg: Float): Float {
+        val (start, sweep) = sectorArc(sectorMask)
+        return start + virtualDeg.coerceIn(0f, sweep)
+    }
+
+    /**
+     * 选中弧段的**起点角度**与**跨度**（度）。
+     *
+     * 连续弧段 = 若干相邻扇区（含 3 ↔ 0 环绕）；起点取"前一个扇区未被选中"的那个索引，
+     * 因此 `{3,0}` 从扇区 3 起算（180°），而不是从扇区 0 起算。整圆固定从 [SECTOR_START_DEG] 起。
+     */
+    private fun sectorArc(sectorMask: Int): Pair<Float, Float> {
         val mask = normalizeSectorMask(sectorMask)
-        var remaining = virtualDeg.coerceAtLeast(0f)
-        for (index in 0 until SECTOR_COUNT) {
-            if (!isSectorSelected(mask, index)) continue
-            if (remaining < SECTOR_ANGLE_DEG) {
-                return SECTOR_START_DEG + SECTOR_ANGLE_DEG * index + remaining
-            }
-            remaining -= SECTOR_ANGLE_DEG
-        }
-        return SECTOR_START_DEG + SECTOR_ANGLE_DEG * SECTOR_COUNT
+        val sweep = SECTOR_ANGLE_DEG * Integer.bitCount(mask)
+        if (mask == SECTOR_ALL) return SECTOR_START_DEG to sweep
+        val startIndex = (0 until SECTOR_COUNT).firstOrNull {
+            isSectorSelected(mask, it) &&
+                !isSectorSelected(mask, (it + SECTOR_COUNT - 1) % SECTOR_COUNT)
+        } ?: 0
+        return (SECTOR_START_DEG + SECTOR_ANGLE_DEG * startIndex) to sweep
     }
 
     /** 掩码里恰好 [count] 个选中扇区的全部组合（掩码升序；count 为 0 时返回空）。 */
@@ -564,6 +577,23 @@ object QuickWheelLayoutEngine {
         value > 1e-3f -> 1f
         value < -1e-3f -> -1f
         else -> 1f
+    }
+
+    /**
+     * 圆形排布是否要**反向遍历**扇区（把顺序镜像过来）。
+     *
+     * 扇区索引固定顺时针，直接按索引走会得到"旋转 180°"而不是镜像：同一个轮盘从左边缘
+     * 与右边缘呼出时，第 i 个容器会一个在上、一个在下。镜像后两侧 / 上下的顺序完全对称。
+     *
+     * 规则：弧段朝左（含左上 / 左下）→ 反向；正朝上（|dx| ≈ 0 且 dy < 0）→ 反向
+     *（让上半圆成为下半圆的纵向镜像）。朝右 / 朝下 / 整圆（方向退化）不反向，保持原行为。
+     *
+     * ⚠️ 90° 只能满足"左右镜像"或"上下镜像"其中之一（同一遍历顺序无法同时满足），
+     * 这里统一以**左右**为准：这是边缘呼出最常见的对照关系。
+     */
+    private fun shouldReverseTraversal(sectorMask: Int): Boolean {
+        val (dirX, dirY) = sectorCentroidDir(sectorMask)
+        return dirX < -1e-3f || (abs(dirX) <= 1e-3f && dirY < -1e-3f)
     }
 
     /** 容器外沿是否都落在屏幕内（含 [marginPx] 边距）。 */
@@ -935,6 +965,9 @@ object QuickWheelLayoutEngine {
         val offsetYPx = normalized.offsetYDp * safeDensity
         // 偏移的正值语义是"沿扩散方向向屏内推入"，扩散方向由扇区 / 贴角决定 → 先定符号再加。
         val (offsetMirrorX, offsetMirrorY) = offsetMirror(shape, sectorMask, rectCorner)
+        // 圆形：弧段朝左 / 朝上时把扇区遍历方向倒过来（= 镜像排布），见 shouldReverseTraversal。
+        val reverseTraversal = shape == QuickWheelShape.CIRCLE && shouldReverseTraversal(sectorMask)
+        val traversalSpanDeg = Math.toDegrees(sectorAngleRad(sectorMask)).toFloat()
 
         // 矩形：网格整体按"贴住锚点的那个角"平移（圆形不用）。
         // ⚠️ CENTER_TOP（编辑层 / 配置页预览）完全沿用历史布局：行宽按列数、首行水平居中、逐行向下。
@@ -980,9 +1013,13 @@ object QuickWheelLayoutEngine {
             val baseY: Float
             when (shape) {
                 QuickWheelShape.CIRCLE -> {
+                    // 扇区索引是固定顺时针：直接按索引走，右半圆是"上→下"、左半圆却是"下→上"，
+                    // 两者互为 180° 旋转而不是镜像（上半圆同理）。朝左 / 朝上的弧段反向遍历虚拟
+                    // 角度轴，保证同一个轮盘在屏幕两侧（或上下两边）呼出时，第 i 个容器落在镜像位置。
+                    val virtualDeg = Math.toDegrees((indexInRing + 0.5) * stepRad).toFloat()
                     centerDeg = mapVirtualAngleDeg(
                         sectorMask,
-                        Math.toDegrees((indexInRing + 0.5) * stepRad).toFloat(),
+                        if (reverseTraversal) traversalSpanDeg - virtualDeg else virtualDeg,
                     )
                     halfStepDeg = Math.toDegrees(stepRad / 2.0).toFloat()
                     val centerRad = Math.toRadians(centerDeg.toDouble())

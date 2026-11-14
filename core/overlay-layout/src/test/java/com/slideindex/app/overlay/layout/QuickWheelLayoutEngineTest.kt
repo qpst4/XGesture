@@ -191,6 +191,15 @@ class QuickWheelLayoutEngineTest {
         assertEquals(100f, QuickWheelLayoutEngine.mapVirtualAngleDeg(0b0100, 10f), 0.01f)
     }
 
+    @Test
+    fun mapVirtualAngleDeg_wrappedTopHalfStartsAtWest() {
+        // {3,0}（上半圆）跨 0°：必须从扇区 3 起算（180° = 正西），沿弧经过正上方到正东，
+        // 不能按索引升序从扇区 0 起算（那会把同环容器劈成"右上 + 左上"两段）。
+        assertEquals(180f, QuickWheelLayoutEngine.mapVirtualAngleDeg(0b1001, 0f), 0.01f)
+        assertEquals(270f, QuickWheelLayoutEngine.mapVirtualAngleDeg(0b1001, 90f), 0.01f)
+        assertEquals(360f, QuickWheelLayoutEngine.mapVirtualAngleDeg(0b1001, 180f), 0.01f)
+    }
+
     // ── 自适应求解（真实调用按触发位置选扇区 / 矩形基准角）──────
 
     /** 用"逻辑像素"模拟一台 400×800 的手机：density = 1，默认样式即照抄真实手感。 */
@@ -1309,6 +1318,62 @@ class QuickWheelLayoutEngineTest {
                 "掩码 $mask 正偏移后应更靠近屏幕中心：$distanceBefore → $distanceAfter",
                 distanceAfter < distanceBefore - 1.0,
             )
+        }
+    }
+
+    // ── 左右 / 上下镜像（同一轮盘换一侧呼出，顺序必须镜像）──
+
+    private fun ringOf(mask: Int, anchorX: Float, anchorY: Float): List<QuickWheelPlacedSlot> =
+        QuickWheelLayoutEngine.layoutRing(
+            slotCount = 5,
+            shape = QuickWheelShape.CIRCLE,
+            style = defaultStyle,
+            anchorX = anchorX,
+            anchorY = anchorY,
+            density = 1f,
+            availableWidthPx = 1080f,
+            sectorMask = mask,
+        )
+
+    @Test
+    fun circle_leftAndRightHalvesAreMirrored() {
+        // 右半圆（左边缘呼出）vs 左半圆（右边缘呼出）：X 关于屏幕中线镜像，Y 一致。
+        val right = ringOf(0b0011, anchorX = 0f, anchorY = 960f)
+        val left = ringOf(0b1100, anchorX = 1080f, anchorY = 960f)
+        right.zip(left).forEachIndexed { i, (a, b) ->
+            assertEquals("slot $i X 应关于屏幕中线镜像", 1080f - a.centerX, b.centerX, 0.01f)
+            assertEquals("slot $i Y 应一致", a.centerY, b.centerY, 0.01f)
+        }
+    }
+
+    @Test
+    fun circle_topAndBottomHalvesAreMirrored() {
+        // 下半圆（上边缘呼出）vs 上半圆（下边缘呼出）：Y 关于屏幕中线镜像，X 一致。
+        val bottom = ringOf(0b0110, anchorX = 540f, anchorY = 0f)
+        val top = ringOf(0b1001, anchorX = 540f, anchorY = 1920f)
+        bottom.zip(top).forEachIndexed { i, (a, b) ->
+            assertEquals("slot $i X 应一致", a.centerX, b.centerX, 0.01f)
+            assertEquals("slot $i Y 应关于屏幕中线镜像", 1920f - a.centerY, b.centerY, 0.01f)
+        }
+    }
+
+    @Test
+    fun circle_leftAndRightQuartersAreMirrored() {
+        // 右下 90°（左上角呼出）vs 左下 90°（右上角呼出）。
+        val right = ringOf(0b0010, anchorX = 0f, anchorY = 0f)
+        val left = ringOf(0b0100, anchorX = 1080f, anchorY = 0f)
+        right.zip(left).forEachIndexed { i, (a, b) ->
+            assertEquals("slot $i X 应镜像", 1080f - a.centerX, b.centerX, 0.01f)
+            assertEquals("slot $i Y 应一致", a.centerY, b.centerY, 0.01f)
+        }
+    }
+
+    @Test
+    fun circle_halfCircleStartsFromTopOnBothSides() {
+        // 用户可感知的结果：两侧都是"第 0 个在上、往后往下"，而不是一侧从上往下、另一侧从下往上。
+        listOf(0b0011 to 0f, 0b1100 to 1080f).forEach { (mask, anchorX) ->
+            val slots = ringOf(mask, anchorX = anchorX, anchorY = 960f)
+            assertTrue("mask=$mask 的顺序应从上方开始", slots[0].centerY < slots[1].centerY)
         }
     }
 
