@@ -372,7 +372,8 @@ object FloatBallTextPick {
             values.put(MediaStore.Images.Media.IS_PENDING, 0)
             resolver.update(uri, values, null, null)
             if (ingestToHistory) {
-                ClipboardAccess.repository?.ingestScreenshot(uri, fileName)
+                // 用户手动保存：给一次「已复制」浮窗反馈；系统截图监听那条路径不传，避免每张都弹。
+                ClipboardAccess.repository?.ingestScreenshot(uri, fileName, showOverlay = true)
             }
             uri
         }.onFailure {

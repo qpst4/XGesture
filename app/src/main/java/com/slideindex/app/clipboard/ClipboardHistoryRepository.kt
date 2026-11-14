@@ -22,6 +22,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -75,6 +77,24 @@ class ClipboardHistoryRepository @Inject constructor(
         refreshEntryCount()
         clipboardMonitorController.onPayloadCaptured = { payload ->
             ingestPayload(payload, showOverlay = true)
+        }
+        // 截图监听跟随设置流，而不是在进程刚起来时读一次快照：
+        // 覆盖安装后 DataStore 往往还没加载完，一次性读取会拿到默认 false，
+        // 于是监听永远不启动（表现：设置里开着截图监听，系统截图却一直不进历史）。
+        scope.launch {
+            settingsRepository.settings
+                .map { it.clipboardScreenshotMonitoring }
+                .distinctUntilChanged()
+                .collect { enabled ->
+                    // 这里直接用流里拿到的 enabled，不再回读 cachedSettings：
+                    // 覆盖安装后的启动初期快照可能还是默认值，回读会被它挡住。
+                    if (enabled && ClipboardPermissionHelper.hasMediaReadPermission(context)) {
+                        stopScreenshotMonitoring()
+                        startScreenshotMonitor()
+                    } else {
+                        stopScreenshotMonitoring()
+                    }
+                }
         }
     }
 
@@ -330,24 +350,37 @@ class ClipboardHistoryRepository @Inject constructor(
         )
     }
 
-    fun ingestScreenshot(uri: Uri, displayName: String?, mimeType: String? = "image/png") {
+    /**
+     * @param showOverlay 是否弹「已复制」浮窗。默认不弹：系统截图监听如果每张都弹会很吵；
+     * 用户手动「保存图片」时由调用方传 true，给一次明确反馈。
+     */
+    fun ingestScreenshot(
+        uri: Uri,
+        displayName: String?,
+        mimeType: String? = "image/png",
+        showOverlay: Boolean = false,
+    ) {
         val label = displayName?.takeIf { it.isNotBlank() }
             ?: uri.lastPathSegment?.takeIf { it.isNotBlank() }
             ?: "screenshot"
+        val payload = ClipboardPayload(
+            type = ClipboardEntryType.URI,
+            text = label,
+            uri = uri.toString(),
+            mimeType = mimeType?.takeIf { it.isNotBlank() } ?: "image/*",
+            imageUris = listOf(uri.toString())
+        )
         // 同一次截图会被两条链路各送一次（保存图片显式入库 / 截图监听），两者的 uri 只是同一个
         // 媒体项的聚合卷与主卷别名，内容指纹对不上 —— 会存成两条。见 ScreenshotIngestDedup。
         val now = System.currentTimeMillis()
-        if (ScreenshotIngestDedup.isDuplicate(store.queryLatest(), label, now)) return
+        if (ScreenshotIngestDedup.isDuplicate(store.queryLatest(), label, now)) {
+            // 监听链路可能先入库（它不弹窗），手动保存这次被判重 —— 但用户点的是「保存」，
+            // 仍然要给他一次浮窗反馈，否则表现就是"保存成功却没有任何提示"。
+            if (showOverlay) maybeShowClipboardOverlay(payload, fromPassiveRefresh = false, showOverlay = true)
+            return
+        }
         lastScreenshotIngestAtMs = now
-        ingestPayload(
-            ClipboardPayload(
-                type = ClipboardEntryType.URI,
-                text = label,
-                uri = uri.toString(),
-                mimeType = mimeType?.takeIf { it.isNotBlank() } ?: "image/*",
-                imageUris = listOf(uri.toString())
-            )
-        )
+        ingestPayload(payload, showOverlay = showOverlay)
     }
 
     fun syncClipboardMonitoringFromSettings() {
@@ -600,7 +633,9 @@ class ClipboardHistoryRepository @Inject constructor(
     private fun startScreenshotMonitor() {
         if (!ClipboardPermissionHelper.hasMediaReadPermission(context)) return
         screenshotMonitor = ScreenshotMonitor(context) { uri, displayName, mimeType ->
-            ingestScreenshot(uri, displayName, mimeType)
+            // 系统/第三方截图也弹一次「已复制」，否则用户截完图完全不知道进了历史；
+            // 是否真的弹由 clipboardOverlayEnabled 决定，和普通复制共用同一个开关。
+            ingestScreenshot(uri, displayName, mimeType, showOverlay = true)
         }.also { it.start() }
     }
 

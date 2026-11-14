@@ -14,23 +14,26 @@ object ClipboardPermissionHelper {
             Manifest.permission.READ_EXTERNAL_STORAGE
         }
 
+    /**
+     * 是否拥有**完整**照片访问权限。
+     *
+     * Android 14+ 的「选中的照片」只会授 `READ_MEDIA_VISUAL_USER_SELECTED`：能读用户挑中的那几张，
+     * **看不到新截图**。截图监听依赖新图入库，所以这里必须按完整权限判断，否则会启动监听却永远收不到事件。
+     */
     fun hasMediaReadPermission(context: Context): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (context.checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) ==
+            return context.checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) ==
                 PackageManager.PERMISSION_GRANTED
-            ) {
-                return true
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
-                context.checkSelfPermission(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) ==
-                PackageManager.PERMISSION_GRANTED
-            ) {
-                return true
-            }
-            return false
         }
         return true
     }
+
+    /** 仅「选中的照片」部分访问：截图监听不可用，但设置页要能区分出来提示用户改成完整访问。 */
+    fun hasPartialMediaReadPermission(context: Context): Boolean =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+            context.checkSelfPermission(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) ==
+            PackageManager.PERMISSION_GRANTED &&
+            !hasMediaReadPermission(context)
 
     fun hasReadLogsPermission(context: Context): Boolean =
         context.checkSelfPermission(Manifest.permission.READ_LOGS) == PackageManager.PERMISSION_GRANTED
