@@ -44,12 +44,23 @@ class SmartScreenshotState {
     var freeformPath: Path? by mutableStateOf(null)
         private set
 
-    /** 是否已经到了可以保存/复制/分享的状态：自由形状必须真的画出一块面。 */
+    /**
+     * 是否处于「拖拽框选」阶段：true 时界面不显示任何预设框，由用户按下并拖动来定义选区；
+     * 抬手且选区有效后自动切回 false，进入原有的编辑 / 导出流程。
+     */
+    var isFreeSelecting: Boolean by mutableStateOf(false)
+        private set
+
+    /** 是否已经到了可以保存/复制/分享的状态：框选未完成、自由形状不成面时都不能导出。 */
     val canExport: Boolean
-        get() = shape != ScreenshotShape.Freeform ||
-            freeformPoints.size >= FreeformGeometry.MIN_POINT_COUNT
+        get() = !isFreeSelecting &&
+            (shape != ScreenshotShape.Freeform ||
+                freeformPoints.size >= FreeformGeometry.MIN_POINT_COUNT)
 
     private var freeformRollback: List<Offset>? = null
+
+    /** 当前框选手势的起点（位图坐标）；null 表示没有进行中的笔画。 */
+    private var freeSelectionAnchor: Offset? = null
 
     private var minSelectionSizePx by mutableIntStateOf(0)
     val imageBounds: Rect
@@ -66,6 +77,8 @@ class SmartScreenshotState {
         selectionRect = Rect.Zero
         resetFreeform()
         forceSquareCrop = false
+        freeSelectionAnchor = null
+        isFreeSelecting = false
         isCapturing = true
     }
 
@@ -73,16 +86,27 @@ class SmartScreenshotState {
         isCapturing = false
     }
 
+    /**
+     * @param freeSelection true（默认）：进入后不显示任何预设框，由用户拖动框选；
+     *                      false：保留旧行为，显示居中的 60% x 35% 默认框。
+     */
     fun show(
         screenshot: Bitmap,
-        minSelectionSizePx: Int
+        minSelectionSizePx: Int,
+        freeSelection: Boolean = true
     ) {
         this.screenshot = screenshot
         this.minSelectionSizePx = minSelectionSizePx
         shape = ScreenshotShape.Rectangle
         resetFreeform()
-        selectionRect = defaultSelectionRect(screenshot.width.toFloat(), screenshot.height.toFloat())
+        freeSelectionAnchor = null
         forceSquareCrop = false
+        isFreeSelecting = freeSelection
+        selectionRect = if (freeSelection) {
+            Rect.Zero
+        } else {
+            defaultSelectionRect(screenshot.width.toFloat(), screenshot.height.toFloat())
+        }
         visible = true
         isCapturing = false
     }
@@ -93,12 +117,57 @@ class SmartScreenshotState {
         selectionRect = Rect.Zero
         shape = ScreenshotShape.Rectangle
         resetFreeform()
+        freeSelectionAnchor = null
+        isFreeSelecting = false
         forceSquareCrop = false
         isCapturing = false
     }
 
+    /** 起笔：记录框选起点，清空旧预览。只在框选阶段有效。 */
+    fun beginFreeSelection(point: Offset) {
+        if (!isFreeSelecting) return
+        val anchor = clampPoint(point)
+        freeSelectionAnchor = anchor
+        selectionRect = Rect(anchor.x, anchor.y, anchor.x, anchor.y)
+    }
+
+    /** 拖动中：用起点与当前点生成归一化矩形，支持从右下往左上反向拖。 */
+    fun updateFreeSelection(point: Offset) {
+        if (!isFreeSelecting) return
+        val anchor = freeSelectionAnchor ?: return
+        selectionRect = FreeSelectionGeometry.rectFromDrag(anchor, point, imageBounds)
+    }
+
+    /**
+     * 抬手：宽高都达到最小尺寸才提交并进入编辑态；太小则清空预览、留在框选阶段。
+     * @return 是否成功进入编辑态；false 时 UI 应提示重新拖动。
+     */
+    fun commitFreeSelection(): Boolean {
+        if (!isFreeSelecting) return false
+        val rect = selectionRect
+        if (!FreeSelectionGeometry.isUsable(rect, minSelectionSizePx.toFloat())) {
+            freeSelectionAnchor = null
+            selectionRect = Rect.Zero
+            return false
+        }
+        selectionRect = clampRect(rect)
+        freeSelectionAnchor = null
+        isFreeSelecting = false
+        return true
+    }
+
+    /** 编辑态点「重新框选」：丢弃当前选区，回到空白框选阶段。 */
+    fun restartFreeSelection() {
+        freeSelectionAnchor = null
+        selectionRect = Rect.Zero
+        shape = ScreenshotShape.Rectangle
+        resetFreeform()
+        forceSquareCrop = false
+        isFreeSelecting = true
+    }
+
     fun updateShape(shape: ScreenshotShape) {
-        if (this.shape == shape) {
+        if (isFreeSelecting || this.shape == shape) {
             return
         }
         val previousShape = this.shape
@@ -124,14 +193,14 @@ class SmartScreenshotState {
     }
 
     fun updateSelection(rect: Rect) {
-        if (shape == ScreenshotShape.Freeform) {
+        if (shape == ScreenshotShape.Freeform || isFreeSelecting) {
             return
         }
         selectionRect = clampRect(rect)
     }
 
     fun updateForceSquareCrop(enabled: Boolean) {
-        if (shape == ScreenshotShape.Freeform) {
+        if (shape == ScreenshotShape.Freeform || isFreeSelecting) {
             return
         }
         if (forceSquareCrop == enabled) {
