@@ -12,15 +12,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -52,13 +51,17 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
+import com.slideindex.app.overlay.layout.QuickWheelEditorChromePlacement
 import com.slideindex.app.overlay.layout.QuickWheelLayout
 import com.slideindex.app.overlay.layout.QuickWheelLayoutEngine
 import com.slideindex.app.overlay.quickwheel.QuickWheelAddContainer
@@ -102,6 +105,23 @@ private const val DISPLACE_ANIM_MS = 160
  */
 private const val EDITOR_TOP_INSET_DP = 56f
 private const val EDITOR_BOTTOM_INSET_DP = 88f
+
+/**
+ * 编辑层挂件（提示条 / 药丸组）的动态定位参数。
+ *
+ * 挂件横向仍居中，纵向按「当前层级容器」的实际占用计算（见 QuickWheelEditorChromePlacement），
+ * 保证轮盘靠边 / 靠顶呼出时不会被盖住。
+ */
+private const val CHROME_GAP_DP = 12f
+private const val CHROME_EDGE_MARGIN_DP = 8f
+
+/** 提示条找不到空档、只能压在容器上时的不透明度（提示文字，不影响操作）。 */
+private const val CHROME_HINT_OVERLAP_ALPHA = 0.5f
+
+/** 首帧还没测量到实际尺寸时的兜底值（dp）。 */
+private const val CHROME_PILL_FALLBACK_WIDTH_DP = 180f
+private const val CHROME_PILL_FALLBACK_HEIGHT_DP = 48f
+private const val CHROME_HINT_FALLBACK_HEIGHT_DP = 44f
 
 private enum class WheelLevel { PRIMARY, SECONDARY }
 
@@ -158,11 +178,24 @@ fun QuickWheelEditorOverlay(
     val density = if (metrics.density > 0f) metrics.density else 1f
     val screenWidthPx = metrics.widthPixels.toFloat()
     val screenHeightPx = metrics.heightPixels.toFloat()
-    // 编辑层贴在页面最上层、不经过设置 Scaffold，得自己避开状态栏 / 挖孔
-    // （否则顶部提示条会压进状态栏）。
-    val editorTopInset = WindowInsets.systemBars
+    // 编辑层贴在页面最上层、不经过设置 Scaffold，挂件的安全区要自己避开状态栏 / 挖孔 / 导航栏。
+    val composeDensity = LocalDensity.current
+    val chromeTopPadding = WindowInsets.systemBars
         .union(WindowInsets.displayCutout)
         .only(WindowInsetsSides.Top)
+        .asPaddingValues()
+    val chromeBottomPadding = WindowInsets.systemBars
+        .only(WindowInsetsSides.Bottom)
+        .asPaddingValues()
+    val systemTopInsetPx = with(composeDensity) {
+        chromeTopPadding.calculateTopPadding().toPx()
+    }
+    val systemBottomInsetPx = with(composeDensity) {
+        chromeBottomPadding.calculateBottomPadding().toPx()
+    }
+    // 挂件的实测尺寸：首帧还没测量到，用常量兜底，测量后自动重算位置。
+    var pillsSize by remember { mutableStateOf(IntSize.Zero) }
+    var hintSize by remember { mutableStateOf(IntSize.Zero) }
     // 拖动多远算"真的在拖"（超过它就从二级显示里退出）。
     val dragExitSecondaryPx = DRAG_EXIT_SECONDARY_THRESHOLD_DP * density
     // 顶部提示条 / 底部药丸条占的高度：矩形网格的「+」必须留在它们之间（见常量注释）。
@@ -663,6 +696,43 @@ fun QuickWheelEditorOverlay(
 
         }
 
+        // 挂件只按**一级容器**避让：展开二级时位置保持不变（二级容器较小，
+        // 一级的空档通常仍然适用；保持不动可以避免进出二级时药丸跳来跳去）。
+        val chromeSlots = layout.primarySlots
+        val chromeVisibleWidthPx = (screenWidthPx - overlayOrigin.x).coerceAtLeast(1f)
+        val chromeVisibleHeightPx = (screenHeightPx - overlayOrigin.y).coerceAtLeast(1f)
+        val pillsHeightPx = pillsSize.height.toFloat().takeIf { it > 0f }
+            ?: (CHROME_PILL_FALLBACK_HEIGHT_DP * density)
+        val pillsWidthPx = pillsSize.width.toFloat().takeIf { it > 0f }
+            ?: (CHROME_PILL_FALLBACK_WIDTH_DP * density)
+        val hintHeightPx = hintSize.height.toFloat().takeIf { it > 0f }
+            ?: (CHROME_HINT_FALLBACK_HEIGHT_DP * density)
+        val chromePlacement = remember(
+            chromeSlots,
+            chromeVisibleWidthPx,
+            chromeVisibleHeightPx,
+            pillsWidthPx,
+            pillsHeightPx,
+            hintHeightPx,
+            systemTopInsetPx,
+            systemBottomInsetPx,
+        ) {
+            QuickWheelEditorChromePlacement.place(
+                slots = chromeSlots,
+                horizontalCenterPx = chromeVisibleWidthPx / 2f,
+                pillsWidthPx = pillsWidthPx,
+                pillsHeightPx = pillsHeightPx,
+                hintWidthPx = chromeVisibleWidthPx,
+                hintHeightPx = hintHeightPx,
+                safeTopPx = systemTopInsetPx + CHROME_EDGE_MARGIN_DP * density,
+                safeBottomPx = (chromeVisibleHeightPx - systemBottomInsetPx -
+                    CHROME_EDGE_MARGIN_DP * density)
+                    .coerceAtLeast(systemTopInsetPx + pillsHeightPx),
+                gapPx = CHROME_GAP_DP * density,
+                wheelCenterY = layout.centerY,
+            )
+        }
+
         QuickWheelHintPill(
             text = stringResource(
                 if (editingSecondary) {
@@ -673,15 +743,17 @@ fun QuickWheelEditorOverlay(
             ),
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .windowInsetsPadding(editorTopInset)
-                .padding(top = 4.dp),
+                .offset { IntOffset(0, chromePlacement.hintTop.roundToInt()) }
+                .onSizeChanged { hintSize = it }
+                // 找不到空档时允许压在容器上：半透明表示"这是提示、不挡操作"。
+                .alpha(if (chromePlacement.hintOverlapping) CHROME_HINT_OVERLAP_ALPHA else 1f),
         )
 
         Row(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 20.dp),
+                .align(Alignment.TopCenter)
+                .offset { IntOffset(0, chromePlacement.pillsTop.roundToInt()) }
+                .onSizeChanged { pillsSize = it },
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {

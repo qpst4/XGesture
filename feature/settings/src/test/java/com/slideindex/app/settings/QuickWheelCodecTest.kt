@@ -122,6 +122,40 @@ class QuickWheelCodecTest {
     }
 
     @Test
+    fun roundTrip_preservesTransparentContainerSwitch() {
+        // 开启「容器底色全透明」后必须原样读回：漏存的话重启就弹回"铺底板"，拟物图标又露白。
+        val wheel = sampleWheel().copy(
+            primaryCircleStyle = primaryCircleStyle.copy(transparentUserIcons = true),
+            primaryRectStyle = primaryRectStyle.copy(transparentUserIcons = true),
+        )
+        val decoded = roundTrip(listOf(wheel)).single()
+        assertTrue(decoded.primaryCircleStyle.transparentUserIcons)
+        assertTrue(decoded.primaryRectStyle.transparentUserIcons)
+        // 没动过的二级两套仍是默认值（不透明 = 有底板）。
+        assertEquals(false, decoded.secondaryCircleStyle.transparentUserIcons)
+        assertEquals(false, decoded.secondaryRectStyle.transparentUserIcons)
+    }
+
+    @Test
+    fun roundTrip_preservesFontIconSlot() {
+        // 图标库（Lucide / Remix / Tabler）字体图标：枚举按 name 存，key 原样往返。
+        val wheel = sampleWheel().copy(
+            slots = listOf(
+                QuickWheelSlot(
+                    iconSource = QuickWheelIconSource.FONT_ICON,
+                    iconValue = "l:cat",
+                    name = "猫咪",
+                    tapAction = GestureAction.Back,
+                ),
+            ),
+        )
+        val decoded = roundTrip(listOf(wheel)).single()
+        val slot = decoded.slots.single()
+        assertEquals(QuickWheelIconSource.FONT_ICON, slot.iconSource)
+        assertEquals("l:cat", slot.iconValue)
+    }
+
+    @Test
     fun roundTrip_preservesLongPressMs() {
         val decoded = roundTrip(listOf(sampleWheel().copy(longPressMs = 900))).single()
         assertEquals(900, decoded.longPressMs)

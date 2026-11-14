@@ -4785,6 +4785,8 @@
     <string name="quick_wheel_section_slots">コンテナ</string>
     <string name="quick_wheel_show_labels">テキストラベルを表示</string>
     <string name="quick_wheel_show_labels_desc">アイコンの下に名前を表示します。アイコンとテキストは一緒に中央揃えされます</string>
+    <string name="quick_wheel_transparent_container">コンテナ背景を完全透明に</string>
+    <string name="quick_wheel_transparent_container_desc">オンにするとアプリ・画像アイコンのプレートと切り抜きがなくなります。内蔵アクションとテキストアイコンには常にプレートが付きます</string>
     <string name="quick_wheel_initial_radius">初期半径</string>
     <string name="quick_wheel_initial_radius_desc">呼び出し位置から最初のリングまでの距離</string>
     <string name="quick_wheel_container_gap">コンテナ間隔</string>

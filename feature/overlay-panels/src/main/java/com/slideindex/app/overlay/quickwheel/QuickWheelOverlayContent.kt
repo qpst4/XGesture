@@ -598,7 +598,9 @@ fun QuickWheelOverlayContent(
         // 动作提示条：手指会遮住容器，这里固定显示"此刻松手会发生什么"（方案 C）。
         // 位置**固定贴屏幕上部**（不再跟随手指半屏互换）。
         val hudHit = if (armedHit.kind != QuickWheelHitKind.NONE) armedHit else hoverHit
-        val hudSlot = slotOf(hudHit)
+        // 空白占位（用户主动留出的空位）不是"可执行动作"：滑到它上面不弹提示条 ——
+        // 否则只会显示一句「未设置动作」，纯属噪音（松手也确实什么都不做）。
+        val hudSlot = slotOf(hudHit)?.takeUnless { it.placeholder && !it.isConfigured }
         if (hudSlot != null) {
             // 二级展开时命中父容器 → 松手执行的是父容器长按（与 handleRelease 一致）。
             val isParentWhileExpanded = expandedPrimary >= 0 &&

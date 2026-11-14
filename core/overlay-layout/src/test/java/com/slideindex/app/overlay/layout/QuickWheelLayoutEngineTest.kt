@@ -111,7 +111,39 @@ class QuickWheelLayoutEngineTest {
 
     @Test
     fun normalizeSectorMask_masksToFourBits() {
-        assertEquals(0b0101, QuickWheelLayoutEngine.normalizeSectorMask(0b1_0101))
+        assertEquals(0b0001, QuickWheelLayoutEngine.normalizeSectorMask(0b1_0001))
+    }
+
+    @Test
+    fun normalizeSectorMask_keepsSingleSectorAndAdjacentPair() {
+        // 只有「90°」和「半圆」两种非整圆形态，相邻判定要含 3 ↔ 0 的环绕。
+        assertEquals(0b0001, QuickWheelLayoutEngine.normalizeSectorMask(0b0001))
+        assertEquals(0b1000, QuickWheelLayoutEngine.normalizeSectorMask(0b1000))
+        assertEquals(0b0011, QuickWheelLayoutEngine.normalizeSectorMask(0b0011))
+        assertEquals(0b0110, QuickWheelLayoutEngine.normalizeSectorMask(0b0110))
+        assertEquals(0b1001, QuickWheelLayoutEngine.normalizeSectorMask(0b1001))
+        assertEquals(0b1100, QuickWheelLayoutEngine.normalizeSectorMask(0b1100))
+    }
+
+    @Test
+    fun normalizeSectorMask_diagonalPairBecomesFullCircle() {
+        // 对角两扇区拼不出连续可用区，一律当整圆。
+        assertEquals(QuickWheelLayoutEngine.SECTOR_ALL, QuickWheelLayoutEngine.normalizeSectorMask(0b0101))
+        assertEquals(QuickWheelLayoutEngine.SECTOR_ALL, QuickWheelLayoutEngine.normalizeSectorMask(0b1010))
+    }
+
+    @Test
+    fun normalizeSectorMask_threeSectorsBecomeFullCircle() {
+        // 点满三个 = 想要整圆（只是还没点第四个）。
+        for (mask in 0..QuickWheelLayoutEngine.SECTOR_ALL) {
+            if (Integer.bitCount(mask) == 3) {
+                assertEquals(
+                    "掩码 $mask 应归并为整圆",
+                    QuickWheelLayoutEngine.SECTOR_ALL,
+                    QuickWheelLayoutEngine.normalizeSectorMask(mask),
+                )
+            }
+        }
     }
 
     @Test
@@ -119,11 +151,19 @@ class QuickWheelLayoutEngineTest {
         assertEquals(360, QuickWheelLayoutEngine.sectorSpanDeg(QuickWheelLayoutEngine.SECTOR_ALL))
         assertEquals(90, QuickWheelLayoutEngine.sectorSpanDeg(0b0001))
         assertEquals(180, QuickWheelLayoutEngine.sectorSpanDeg(0b0011))
+        assertEquals(180, QuickWheelLayoutEngine.sectorSpanDeg(0b1001))
+        // 对角两扇区 / 三扇区按整圆算：文案不能写 180°/270°，那是画不出来的形态。
+        assertEquals(360, QuickWheelLayoutEngine.sectorSpanDeg(0b0101))
+        assertEquals(360, QuickWheelLayoutEngine.sectorSpanDeg(0b0111))
     }
 
     @Test
-    fun selectedSectorCount_neverDropsBelowOne() {
-        assertEquals(1, QuickWheelLayoutEngine.selectedSectorCount(0))
+    fun selectedSectorCount_usesMeaningfulMask() {
+        // 空掩码 = 自动，按整圆处理（与 normalizeSectorMask 一致）。
+        assertEquals(4, QuickWheelLayoutEngine.selectedSectorCount(0))
+        assertEquals(1, QuickWheelLayoutEngine.selectedSectorCount(0b0001))
+        assertEquals(2, QuickWheelLayoutEngine.selectedSectorCount(0b0011))
+        assertEquals(4, QuickWheelLayoutEngine.selectedSectorCount(0b0111))
         assertEquals(4, QuickWheelLayoutEngine.selectedSectorCount(QuickWheelLayoutEngine.SECTOR_ALL))
     }
 
