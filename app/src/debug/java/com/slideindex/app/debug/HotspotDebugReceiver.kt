@@ -32,6 +32,26 @@ class HotspotDebugReceiver : BroadcastReceiver() {
         val appContext = context.applicationContext
         val pending = goAsync()
 
+        if (intent.getStringExtra("mode") == "icons") {
+            thread(name = "HotspotDebug") {
+                try {
+                    val icons = listOf(
+                        "wifi" to com.slideindex.app.ui.FilledActionIcons.Wifi,
+                        "hotspot" to com.slideindex.app.ui.FilledActionIcons.WifiTethering,
+                        "mobile" to com.slideindex.app.ui.FilledActionIcons.MobileData,
+                        "internet" to com.slideindex.app.ui.FilledActionIcons.InternetPanel,
+                    )
+                    icons.forEach { (name, icon) ->
+                        Log.i(TAG, "icon $name w=${icon.defaultWidth} h=${icon.defaultHeight} nodes=${icon.root.size}")
+                    }
+                } catch (t: Throwable) {
+                    Log.e(TAG, "icons failed", t)
+                } finally {
+                    pending.finish()
+                }
+            }
+            return
+        }
         if (intent.getStringExtra("mode") == "save") {
             thread(name = "HotspotDebug") {
                 try {

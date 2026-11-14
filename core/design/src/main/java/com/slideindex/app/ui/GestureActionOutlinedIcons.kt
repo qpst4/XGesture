@@ -100,20 +100,19 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.TOGGLE_DND -> ThinActionIcons.DoNotDisturb
     GestureActionType.TIMED_DND -> ThinActionIcons.DoNotDisturb
     GestureActionType.SCREEN_RECORD -> ThinActionIcons.ScreenRecord
-    GestureActionType.TOGGLE_WIFI -> ThinActionIcons.Wifi
+    GestureActionType.TOGGLE_WIFI -> FilledActionIcons.Wifi
     GestureActionType.TOGGLE_SHAKE_GESTURE -> ThinActionIcons.Gesture
     GestureActionType.TOGGLE_FLOAT_BALL -> ThinActionIcons.FloatBall
-    GestureActionType.TOGGLE_MOBILE_DATA -> ThinActionIcons.Cellular
+    GestureActionType.TOGGLE_MOBILE_DATA -> FilledActionIcons.MobileData
     GestureActionType.TOGGLE_AIRPLANE -> MaterialSymbolThinIcons.Flight
     GestureActionType.TOGGLE_LOCATION -> MaterialSymbolThinIcons.LocationOn
-    // 仓库内暂时没有热点图标，先用 Wi-Fi 图标占位（换图标时只改这两处）。
-    GestureActionType.TOGGLE_HOTSPOT -> ThinActionIcons.Wifi
+    GestureActionType.TOGGLE_HOTSPOT -> FilledActionIcons.WifiTethering
     GestureActionType.TOGGLE_SYNC -> MaterialSymbolThinIcons.Sync
     GestureActionType.TOGGLE_DARK_MODE -> MaterialSymbolThinIcons.DarkMode
     GestureActionType.TOGGLE_NFC -> MaterialSymbolThinIcons.Nfc
     GestureActionType.TOGGLE_BLUETOOTH -> MaterialSymbolThinIcons.Bluetooth
     GestureActionType.SWITCH_INPUT_METHOD -> ThinActionIcons.Keyboard
-    GestureActionType.OPEN_INTERNET_PANEL -> ThinActionIcons.Wifi
+    GestureActionType.OPEN_INTERNET_PANEL -> FilledActionIcons.InternetPanel
     GestureActionType.OPEN_VOLUME_PANEL -> MaterialSymbolThinIcons.Tune
     GestureActionType.OPEN_VOLUME_SLIDER -> MaterialSymbolThinIcons.Tune
     GestureActionType.OPEN_LINK -> MaterialSymbolThinIcons.Link
@@ -221,20 +220,19 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.TOGGLE_DND -> ThinActionIcons.DoNotDisturb
     GestureActionType.TIMED_DND -> ThinActionIcons.DoNotDisturb
     GestureActionType.SCREEN_RECORD -> ThinActionIcons.ScreenRecord
-    GestureActionType.TOGGLE_WIFI -> ThinActionIcons.Wifi
+    GestureActionType.TOGGLE_WIFI -> FilledActionIcons.Wifi
     GestureActionType.TOGGLE_SHAKE_GESTURE -> ThinActionIcons.Gesture
     GestureActionType.TOGGLE_FLOAT_BALL -> ThinActionIcons.FloatBall
-    GestureActionType.TOGGLE_MOBILE_DATA -> ThinActionIcons.Cellular
+    GestureActionType.TOGGLE_MOBILE_DATA -> FilledActionIcons.MobileData
     GestureActionType.TOGGLE_AIRPLANE -> MaterialSymbolThinIcons.Flight
     GestureActionType.TOGGLE_LOCATION -> MaterialSymbolThinIcons.LocationOn
-    // 仓库内暂时没有热点图标，先用 Wi-Fi 图标占位（换图标时只改这两处）。
-    GestureActionType.TOGGLE_HOTSPOT -> ThinActionIcons.Wifi
+    GestureActionType.TOGGLE_HOTSPOT -> FilledActionIcons.WifiTethering
     GestureActionType.TOGGLE_SYNC -> MaterialSymbolThinIcons.Sync
     GestureActionType.TOGGLE_DARK_MODE -> MaterialSymbolThinIcons.DarkMode
     GestureActionType.TOGGLE_NFC -> MaterialSymbolThinIcons.Nfc
     GestureActionType.TOGGLE_BLUETOOTH -> MaterialSymbolThinIcons.Bluetooth
     GestureActionType.SWITCH_INPUT_METHOD -> ThinActionIcons.Keyboard
-    GestureActionType.OPEN_INTERNET_PANEL -> ThinActionIcons.Wifi
+    GestureActionType.OPEN_INTERNET_PANEL -> FilledActionIcons.InternetPanel
     GestureActionType.OPEN_VOLUME_PANEL -> MaterialSymbolThinIcons.Tune
     GestureActionType.OPEN_VOLUME_SLIDER -> MaterialSymbolThinIcons.Tune
     GestureActionType.OPEN_LINK -> MaterialSymbolThinIcons.Link
