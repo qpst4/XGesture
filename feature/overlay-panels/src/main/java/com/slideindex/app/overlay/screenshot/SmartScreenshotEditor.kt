@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CropSquare
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.Circle
@@ -83,6 +84,45 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 
 @Composable
 fun SmartScreenshotEditor(
+    bitmap: Bitmap,
+    state: SmartScreenshotState,
+    onCancel: () -> Unit,
+    onSave: () -> Unit,
+    onCopy: () -> Unit,
+    onShare: () -> Unit,
+    onPin: () -> Unit,
+    onWordSegmentation: () -> Unit,
+    onEdit: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // 框选阶段与编辑阶段拆成两套独立 UI：编辑阶段的手势与工具栏完全保持原样，
+    // 框选阶段独占全屏拖动手势，避免按下时误命中手柄或工具栏形成死区。
+    if (state.isFreeSelecting) {
+        FreeSelectionStage(
+            bitmap = bitmap,
+            state = state,
+            onCancel = onCancel,
+            modifier = modifier
+        )
+    } else {
+        SmartScreenshotEditorEditing(
+            bitmap = bitmap,
+            state = state,
+            onCancel = onCancel,
+            onSave = onSave,
+            onCopy = onCopy,
+            onShare = onShare,
+            onPin = onPin,
+            onWordSegmentation = onWordSegmentation,
+            onEdit = onEdit,
+            modifier = modifier
+        )
+    }
+}
+
+/** 原有的编辑阶段实现：选区已确立，四角手柄、形状工具栏与导出动作都在这里。 */
+@Composable
+private fun SmartScreenshotEditorEditing(
     bitmap: Bitmap,
     state: SmartScreenshotState,
     onCancel: () -> Unit,
@@ -461,6 +501,15 @@ fun SmartScreenshotEditor(
         ) {
             ToolIconButton(
                 enabled = topToolbarEnabled,
+                selected = false,
+                contentDescription = stringResource(R.string.smart_screenshot_reselect),
+                onClick = { state.restartFreeSelection() }
+            ) {
+                Icon(Icons.Default.Refresh, contentDescription = null)
+            }
+            ToolbarDivider()
+            ToolIconButton(
+                enabled = topToolbarEnabled,
                 selected = state.shape == ScreenshotShape.Rectangle,
                 contentDescription = "Rectangle",
                 onClick = {
@@ -831,3 +880,171 @@ private fun Rect?.containsPoint(point: Offset): Boolean {
 
 /** 自由形状提示的停留时长：只做入口说明，不做常驻标签。 */
 private const val FREEFORM_HINT_DURATION_MS = 2_200L
+
+/** 框选过小提示的停留时长。 */
+private const val FREE_SELECTION_HINT_DURATION_MS = 1_800L
+
+/**
+ * 自由框选阶段：整屏压暗、不画任何预设框，用户按下并拖动来定义矩形选区。
+ *
+ * 抬手且宽高都达到 [SmartScreenshotState.minSelectionSize] 后，
+ * [SmartScreenshotState.commitFreeSelection] 会把状态切回常规编辑 UI；
+ * 之后原有的四角手柄、整体拖动、形状切换、保存/复制/分享/贴图/取词全部照常可用。
+ */
+@Composable
+private fun FreeSelectionStage(
+    bitmap: Bitmap,
+    state: SmartScreenshotState,
+    onCancel: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val imageBitmap = remember(bitmap) { bitmap.asImageBitmap() }
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    var dragging by remember { mutableStateOf(false) }
+    var tooSmallTick by remember { mutableStateOf(0) }
+    var showTooSmallHint by remember { mutableStateOf(false) }
+
+    LaunchedEffect(tooSmallTick) {
+        if (tooSmallTick > 0) {
+            delay(FREE_SELECTION_HINT_DURATION_MS)
+            showTooSmallHint = false
+        }
+    }
+
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        val density = LocalDensity.current
+        val layoutDirection = LocalLayoutDirection.current
+        val cutoutInsets = WindowInsets.displayCutout
+        val edgeMarginPx = with(density) { 12.dp.toPx() }
+        val safeLeftPx = with(density) {
+            cutoutInsets.getLeft(density, layoutDirection).toFloat() + edgeMarginPx
+        }
+        val safeTopPx = with(density) {
+            cutoutInsets.getTop(density).toFloat() + edgeMarginPx
+        }
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            drawImage(imageBitmap)
+            val rect = state.selectionRect
+            val dimColor = Color.Black.copy(alpha = 0.45f)
+            if (rect.width <= 0f || rect.height <= 0f) {
+                drawRect(dimColor)
+            } else {
+                val fullPath = Path().apply { addRect(Rect(Offset.Zero, size)) }
+                val selectedPath = Path().apply { addRect(rect) }
+                drawPath(
+                    path = Path.combine(PathOperation.Difference, fullPath, selectedPath),
+                    color = dimColor
+                )
+                drawRect(
+                    color = primaryColor,
+                    topLeft = rect.topLeft,
+                    size = rect.size,
+                    style = Stroke(width = 3.dp.toPx())
+                )
+            }
+        }
+
+        // 与编辑阶段互不相干的手势层：任意位置按下即起框，拖动中实时更新，抬手提交。
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown(pass = PointerEventPass.Main)
+                        down.consume()
+                        dragging = true
+                        state.beginFreeSelection(down.position)
+                        var event = awaitPointerEvent(pass = PointerEventPass.Main)
+                        while (event.changes.any { it.pressed && !it.changedToUpIgnoreConsumed() }) {
+                            val change = event.changes.firstOrNull { it.id == down.id }
+                                ?: event.changes.first()
+                            state.updateFreeSelection(change.position)
+                            event.changes.forEach { if (it.pressed) it.consume() }
+                            event = awaitPointerEvent(pass = PointerEventPass.Main)
+                        }
+                        // while 在抬手那一帧退出，补一次最终位置，避免松手点被丢掉。
+                        val upChange = event.changes.firstOrNull { it.id == down.id }
+                            ?: event.changes.firstOrNull()
+                        if (upChange != null) {
+                            state.updateFreeSelection(upChange.position)
+                        }
+                        dragging = false
+                        if (!state.commitFreeSelection()) {
+                            tooSmallTick++
+                            showTooSmallHint = true
+                        }
+                    }
+                }
+        )
+
+        // 框选阶段不接管「点暗区取消」，改用明确的关闭按钮，避免误触直接关掉截图。
+        FilledTonalIconButton(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset {
+                    IntOffset(safeLeftPx.roundToInt(), safeTopPx.roundToInt())
+                }
+                .zIndex(1f),
+            onClick = onCancel
+        ) {
+            Icon(
+                Icons.Default.Close,
+                contentDescription = stringResource(R.string.panel_close)
+            )
+        }
+
+        val rect = state.selectionRect
+        if (!dragging && !showTooSmallHint) {
+            FreeSelectionHintCard(
+                text = stringResource(R.string.smart_screenshot_drag_hint),
+                surfaceColor = surfaceColor,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+        if (showTooSmallHint) {
+            FreeSelectionHintCard(
+                text = stringResource(R.string.smart_screenshot_selection_too_small),
+                surfaceColor = surfaceColor,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .zIndex(2f)
+            )
+        }
+        if (dragging && rect.width > 0f && rect.height > 0f) {
+            FreeSelectionHintCard(
+                text = "${rect.width.roundToInt()} × ${rect.height.roundToInt()}",
+                surfaceColor = surfaceColor,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = 72.dp)
+                    .zIndex(2f)
+            )
+        }
+    }
+}
+
+/** 刻意不用 Surface：它自带 pointerInput，会把框选起笔位置变成死区。 */
+@Composable
+private fun FreeSelectionHintCard(
+    text: String,
+    surfaceColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(surfaceColor.copy(alpha = 0.92f))
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = text,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}

@@ -201,6 +201,9 @@
     <string name="smart_screenshot_copied">Screenshot copied to clipboard</string>
     <string name="smart_screenshot_shape_freeform">Freeform</string>
     <string name="smart_screenshot_freeform_hint">Draw a closed shape with one finger</string>
+    <string name="smart_screenshot_drag_hint">Drag to select a region</string>
+    <string name="smart_screenshot_selection_too_small">Selection is too small, please drag again</string>
+    <string name="smart_screenshot_reselect">Reselect region</string>
     <string name="float_ball_text_copied">Text copied to clipboard</string>
     <string name="stash_saved">Saved to Ideas</string>
     <string name="stash_panel_tab">Ideas</string>
