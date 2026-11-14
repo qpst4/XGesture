@@ -599,8 +599,9 @@ fun SideGestureTriggerModePickerScreen(
 
 ) {
 
-    // 单击/双击/点按槽位没有按住拖动的持续阶段，不提供「持续触发」模式。
-    val continuousUsable = trigger !in GestureTriggerType.pressTapEntries()
+    // 只有单击/双击没有按住拖动的持续阶段；长按有按住阶段（阈值处先派发，之后继续跟手），
+    // 不能跟着 pressTapEntries 一起排除。
+    val continuousUsable = !trigger.isSingleTap && !trigger.isDoubleTap
 
     val modes = if (includeDefaultOption) {
 
