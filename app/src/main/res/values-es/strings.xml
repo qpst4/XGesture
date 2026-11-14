@@ -4921,6 +4921,9 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="quick_wheel_slot_save">Guardar</string>
     <string name="smart_screenshot_saved">Captura de pantallaguardado en la galería</string>
     <string name="smart_screenshot_copied">Captura de pantallacopiado a portapapeles</string>
+    <string name="smart_screenshot_drag_hint">Arrastra para seleccionar una región</string>
+    <string name="smart_screenshot_selection_too_small">La selección es demasiado pequeña, arrastra de nuevo</string>
+    <string name="smart_screenshot_reselect">Volver a seleccionar la región</string>
     <string name="share_sheet_title">Compartir a</string>
     <string name="share_sheet_hint">Mantener presionadopara pin</string>
     <string name="share_sheet_empty">No se ha encontradodestino para compartir</string>

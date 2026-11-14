@@ -5042,6 +5042,9 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="quick_wheel_slot_save">Save</string>
     <string name="smart_screenshot_saved">Screenshot saved to gallery</string>
     <string name="smart_screenshot_copied">Screenshot copied to clipboard</string>
+    <string name="smart_screenshot_drag_hint">Drag to select a region</string>
+    <string name="smart_screenshot_selection_too_small">Selection is too small, please drag again</string>
+    <string name="smart_screenshot_reselect">Reselect region</string>
     <string name="shell_panel_execution_mode">Execution mode</string>
     <string name="shell_panel_mode_root">Root</string>
     <string name="shell_panel_mode_shizuku">Shizuku</string>

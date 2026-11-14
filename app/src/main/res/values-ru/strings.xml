@@ -5040,6 +5040,9 @@
     <string name="quick_wheel_slot_save">Сохранить</string>
     <string name="smart_screenshot_saved">Скриншот сохранён в галерею</string>
     <string name="smart_screenshot_copied">Скриншот скопирован в буфер обмена</string>
+    <string name="smart_screenshot_drag_hint">Перетащите, чтобы выбрать область</string>
+    <string name="smart_screenshot_selection_too_small">Выделение слишком маленькое, перетащите ещё раз</string>
+    <string name="smart_screenshot_reselect">Выбрать область заново</string>
     <string name="share_sheet_title">Поделиться с</string>
     <string name="share_sheet_hint">Долгое нажатие — закрепить</string>
     <string name="share_sheet_empty">Цели отправки не найдены</string>

@@ -4523,6 +4523,9 @@
     <string name="gesture_action_smart_screenshot_desc">قص وتحرير لقطة شاشة لمنطقة أو ملء الشاشة، مع تثبيتها على الشاشة (11+)</string>
     <string name="smart_screenshot_saved">تم حفظ لقطة الشاشة في الألبوم</string>
     <string name="smart_screenshot_copied">تم نسخ لقطة الشاشة إلى الحافظة</string>
+    <string name="smart_screenshot_drag_hint">اسحب لتحديد منطقة</string>
+    <string name="smart_screenshot_selection_too_small">التحديد صغير جدًا، يرجى السحب مرة أخرى</string>
+    <string name="smart_screenshot_reselect">إعادة تحديد المنطقة</string>
     <string name="otp_hub_tab_settings">الإعدادات</string>
     <string name="otp_extraction_entry_title">استخراج الرمز</string>
     <string name="otp_extraction_entry_desc">ما يحدث بعد العثور على الرمز: إشعار، Toast، نسخ تلقائي؛ إضافة إلى حجب الرسائل والأمان</string>

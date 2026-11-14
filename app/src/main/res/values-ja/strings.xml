@@ -4627,6 +4627,9 @@
     <string name="gesture_action_smart_screenshot_desc">範囲/全画面のスクリーンショット編集と画面上へのピン留め（11+）</string>
     <string name="smart_screenshot_saved">スクリーンショットをアルバムに保存しました</string>
     <string name="smart_screenshot_copied">スクリーンショットをクリップボードにコピーしました</string>
+    <string name="smart_screenshot_drag_hint">ドラッグして範囲を選択</string>
+    <string name="smart_screenshot_selection_too_small">選択範囲が小さすぎます。もう一度ドラッグしてください</string>
+    <string name="smart_screenshot_reselect">範囲を再選択</string>
     <string name="settings_app_language_label_zh">简体中文</string>
     <string name="settings_app_language_label_en">English</string>
     <string name="settings_app_language_label_ja">日本語</string>
