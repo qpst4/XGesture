@@ -3350,7 +3350,7 @@
     <string name="settings_backup_selected_summary">%1$d de los módulos %2$d seleccionados</string>
     <string name="settings_backup_select_all">Seleccionar todo</string>
     <string name="settings_backup_select_none">Borrar</string>
-    <string name="settings_backup_restore_selected">Restaurar seleccionado (%1$d)</string>
+    <string name="settings_backup_restore_selected">Restaurar (%1$d)</string>
     <string name="settings_backup_privacy_badge">Privado</string>
     <string name="settings_backup_has_history">Incluye historia</string>
     <string name="settings_backup_has_files">Incluye archivos</string>
