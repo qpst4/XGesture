@@ -3260,7 +3260,7 @@
     <string name="settings_backup_selected_summary">تم تحديد %1$d من %2$d وحدة</string>
     <string name="settings_backup_select_all">تحديد الكل</string>
     <string name="settings_backup_select_none">إلغاء التحديد</string>
-    <string name="settings_backup_restore_selected">استعادة المحدد (%1$d)</string>
+    <string name="settings_backup_restore_selected">استعادة (%1$d)</string>
     <string name="settings_backup_privacy_badge">خاص</string>
     <string name="settings_backup_has_history">يتضمن سجلاً</string>
     <string name="settings_backup_has_files">يتضمن ملفات</string>

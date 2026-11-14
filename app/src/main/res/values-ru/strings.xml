@@ -3453,7 +3453,7 @@
     <string name="settings_backup_selected_summary">Выбрано модулей: %1$d из %2$d</string>
     <string name="settings_backup_select_all">Выбрать все</string>
     <string name="settings_backup_select_none">Очистить</string>
-    <string name="settings_backup_restore_selected">Восстановить выбранные (%1$d)</string>
+    <string name="settings_backup_restore_selected">Восстановить (%1$d)</string>
     <string name="settings_backup_privacy_badge">Конфиденциально</string>
     <string name="settings_backup_has_history">Включает историю</string>
     <string name="settings_backup_has_files">Включает файлы</string>

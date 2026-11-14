@@ -3475,7 +3475,7 @@
     <string name="settings_backup_selected_summary">%1$d of %2$d modules selected</string>
     <string name="settings_backup_select_all">Select all</string>
     <string name="settings_backup_select_none">Clear</string>
-    <string name="settings_backup_restore_selected">Restore selected (%1$d)</string>
+    <string name="settings_backup_restore_selected">Restore (%1$d)</string>
     <string name="settings_backup_privacy_badge">Private</string>
     <string name="settings_backup_has_history">Includes history</string>
     <string name="settings_backup_has_files">Includes files</string>

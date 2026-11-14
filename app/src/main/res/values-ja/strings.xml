@@ -3283,7 +3283,7 @@
     <string name="settings_backup_selected_summary">%1$d/%2$d モジュールを選択中</string>
     <string name="settings_backup_select_all">すべて選択</string>
     <string name="settings_backup_select_none">すべて解除</string>
-    <string name="settings_backup_restore_selected">選択を復元（%1$d）</string>
+    <string name="settings_backup_restore_selected">復元（%1$d）</string>
     <string name="settings_backup_privacy_badge">プライベート</string>
     <string name="settings_backup_has_history">履歴を含む</string>
     <string name="settings_backup_has_files">ファイルを含む</string>
