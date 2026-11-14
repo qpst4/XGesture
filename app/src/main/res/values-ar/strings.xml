@@ -4915,10 +4915,10 @@
     <string name="quick_wheel_action_sector_desc">اترك كل القطاعات دون تحديد ليختار التطبيق القطاع تلقائياً حسب موضع التشغيل (وتبقى كل الحاويات على الشاشة). وحدّد قطاعات لتثبيت الدائرة الأساسية على هذا النطاق — وقد تخرج عن الشاشة؛ وتبقى الحلقة الفرعية والتخطيط المستطيل تلقائيين.</string>
     <string name="quick_wheel_action_anchor_section">موضع الظهور</string>
     <string name="quick_wheel_action_anchor_row">مركز العجلة</string>
-    <string name="quick_wheel_action_anchor_follow">متابعة الإصبع (نقطة التشغيل)</string>
-    <string name="quick_wheel_action_anchor_follow_desc">يكون المركز عند موضع إصبعك لحظة تنفيذ الإجراء؛ فتظهر العجلة قرب إصبعك ويُحسب القطاع تلقائياً.</string>
-    <string name="quick_wheel_action_anchor_edge">الالتصاق بحافة الشاشة</string>
-    <string name="quick_wheel_action_anchor_edge_desc">يُثبّت المركز على أقرب حافة للشاشة (مع الحفاظ على موضعه على تلك الحافة)، فتتوسّع العجلة من الحافة؛ وتُضيّق الدائرة الكاملة تلقائياً إلى نصف أو ربع.</string>
+    <string name="quick_wheel_action_anchor_follow">الموضع عند التشغيل</string>
+    <string name="quick_wheel_action_anchor_follow_desc">يكون المركز عند موضع إصبعك لحظة تنفيذ الإجراء؛ وكلما ابتعدت أكثر اقترب المركز من الداخل فتتّسع الدائرة.</string>
+    <string name="quick_wheel_action_anchor_edge">موضع الضغط (موصى به)</string>
+    <string name="quick_wheel_action_anchor_edge_desc">يكون المركز عند موضع لمس إصبعك أول مرة. موضع ثابت ويمكن توقّعه؛ قرب الحافة يتوفّر نصف دائرة فقط فتُضيَّق القطاعات تلقائياً.</string>
     <string name="quick_wheel_secondary_hint">تحرير الحلقة الفرعية للحاوية %1$d</string>
     <string name="quick_wheel_slot_save">حفظ</string>
     <string name="gesture_action_screen_control">لوحة اللمس</string>

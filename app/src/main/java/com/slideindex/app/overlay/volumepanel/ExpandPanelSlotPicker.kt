@@ -203,7 +203,7 @@ fun ExpandPanelSlotPicker(
                     initialWheelId = wheelAction?.wheelId.orEmpty(),
                     initialShape = wheelAction?.shape ?: QuickWheelLaunchShape.DEFAULT,
                     initialSectorMask = wheelAction?.manualSectorMask,
-                    initialAnchorMode = wheelAction?.anchorMode ?: QuickWheelAnchorMode.FOLLOW_FINGER,
+                    initialAnchorMode = wheelAction?.anchorMode ?: QuickWheelAnchorMode.TOUCH_DOWN,
                     onBack = { subScreen = ExpandPanelPickerSubScreen.LIST },
                     onConfirm = { wheelId, shape, manualSectorMask, anchorMode ->
                         subScreen = ExpandPanelPickerSubScreen.LIST

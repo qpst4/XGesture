@@ -101,48 +101,60 @@ class QuickWheelActionShapeTest {
     }
 
     @Test
-    fun edgeAnchor_encodesFourthSegmentAndRoundTrips() {
+    fun followFingerAnchor_encodesFourthSegmentAndRoundTrips() {
         val action = GestureAction.QuickWheel(
             wheelId = "wheel-uuid",
             shape = QuickWheelLaunchShape.CIRCLE_CIRCLE,
             manualSectorMask = 0b0110,
-            anchorMode = QuickWheelAnchorMode.EDGE,
+            anchorMode = QuickWheelAnchorMode.FOLLOW_FINGER,
         )
-        assertEquals("wheel-uuid\u0001CIRCLE_CIRCLE\u00016\u0001EDGE", action.payload)
+        assertEquals("wheel-uuid\u0001CIRCLE_CIRCLE\u00016\u0001FOLLOW_FINGER", action.payload)
         assertEquals(action, roundTrip(action))
     }
 
     @Test
-    fun edgeAnchorWithAutoSector_usesPlaceholderZero() {
+    fun followFingerAnchorWithAutoSector_usesPlaceholderZero() {
         // 锚点非默认时必须写第 4 段 → 扇区段用 0 占位（0 解析回"自动"），否则段位有歧义。
         val action = GestureAction.QuickWheel(
             wheelId = "wheel-uuid",
             shape = QuickWheelLaunchShape.CIRCLE,
-            anchorMode = QuickWheelAnchorMode.EDGE,
+            anchorMode = QuickWheelAnchorMode.FOLLOW_FINGER,
         )
-        assertEquals("wheel-uuid\u0001CIRCLE\u00010\u0001EDGE", action.payload)
+        assertEquals("wheel-uuid\u0001CIRCLE\u00010\u0001FOLLOW_FINGER", action.payload)
         val decoded = roundTrip(action) as GestureAction.QuickWheel
         assertEquals(null, decoded.manualSectorMask)
-        assertEquals(QuickWheelAnchorMode.EDGE, decoded.anchorMode)
+        assertEquals(QuickWheelAnchorMode.FOLLOW_FINGER, decoded.anchorMode)
     }
 
     @Test
-    fun followFingerAnchor_omitsFourthSegment_andUnknownTokenFallsBack() {
-        // 跟手（默认）不写第 4 段，载荷与之前逐字节一致。
+    fun touchDownAnchor_omitsFourthSegment_andUnknownTokenFallsBack() {
+        // 按下点（默认）不写第 4 段，载荷与旧版"未设置锚点"逐字节一致。
         val action = GestureAction.QuickWheel(
             wheelId = "wheel-uuid",
             shape = QuickWheelLaunchShape.CIRCLE,
             manualSectorMask = 0b0110,
         )
         assertEquals("wheel-uuid\u0001CIRCLE\u00016", action.payload)
-        // 锚点段缺失 / 未知 → 回退跟手。
+        // 锚点段缺失 / 未知 → 回退按下点。
         listOf(
             "wheel-uuid\u0001CIRCLE\u00010",
             "wheel-uuid\u0001CIRCLE\u00010\u0001NOPE",
         ).forEach { raw ->
             val decoded = GestureAction.from(GestureActionType.QUICK_WHEEL, raw) as GestureAction.QuickWheel
-            assertEquals("raw=$raw", QuickWheelAnchorMode.FOLLOW_FINGER, decoded.anchorMode)
+            assertEquals("raw=$raw", QuickWheelAnchorMode.TOUCH_DOWN, decoded.anchorMode)
         }
+    }
+
+    @Test
+    fun legacyEdgeToken_mapsToTouchDown() {
+        // 旧记录「贴边」= 按下点（边缘触钮本身贴边）→ 读回后不再有 EDGE，写回也换成 TOUCH_DOWN。
+        val decoded = GestureAction.from(
+            GestureActionType.QUICK_WHEEL,
+            "wheel-uuid\u0001CIRCLE\u00010\u0001EDGE",
+        ) as GestureAction.QuickWheel
+        assertEquals(QuickWheelAnchorMode.TOUCH_DOWN, decoded.anchorMode)
+        // 读回即默认值 → 编码时第 4 段被省略。
+        assertEquals("wheel-uuid\u0001CIRCLE", decoded.payload)
     }
 
     // ── 一级 + 二级四组合 ───────────────────────────────────

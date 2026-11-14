@@ -86,8 +86,11 @@ object QuickWheelOverlayWindow {
         shape: QuickWheelLaunchShape = QuickWheelLaunchShape.DEFAULT,
         /** 动作绑定处手动固定的**一级圆形**扇区；`null`（默认）= 按触发位置自适应求解。 */
         manualSectorMask: Int? = null,
-        /** 圆心锚定方式：跟手（默认）/ 贴边。 */
-        anchorMode: QuickWheelAnchorMode = QuickWheelAnchorMode.FOLLOW_FINGER,
+        /** 圆心锚点：按下的位置（默认）/ 触发时的位置。 */
+        anchorMode: QuickWheelAnchorMode = QuickWheelAnchorMode.TOUCH_DOWN,
+        /** 手指**按下点**（raw 坐标）；`null` = 取不到（外部调用 / 快捷方式），退回 [anchorRawX]。 */
+        touchDownRawX: Float? = null,
+        touchDownRawY: Float? = null,
     ): Boolean {
         // 始终以「最新设置快照」为准：调用方（手势会话）传入的 settings 可能是旧快照，
         // 会出现"预览已改、调用仍是旧配置"，甚至取不到轮盘而不显示。
@@ -124,8 +127,10 @@ object QuickWheelOverlayWindow {
             adaptivePlacement = true,
             // 动作绑定处手动固定的一级圆形扇区（null = 自动）。
             primarySectorMaskOverride = manualSectorMask,
-            // 圆心锚定方式（跟手 / 贴边）。
+            // 圆心锚点（按下的位置 / 触发时的位置）。
             anchorMode = anchorMode,
+            touchDownRawX = touchDownRawX,
+            touchDownRawY = touchDownRawY,
         )
     }
 
@@ -182,8 +187,11 @@ object QuickWheelOverlayWindow {
         adaptivePlacement: Boolean,
         /** 手动固定的一级圆形扇区（`null` = 自适应求解；动作页"空环"即 null）。 */
         primarySectorMaskOverride: Int? = null,
-        /** 圆心锚定方式：跟手（默认）/ 贴边。 */
-        anchorMode: QuickWheelAnchorMode = QuickWheelAnchorMode.FOLLOW_FINGER,
+        /** 圆心锚点：按下的位置（默认）/ 触发时的位置。 */
+        anchorMode: QuickWheelAnchorMode = QuickWheelAnchorMode.TOUCH_DOWN,
+        /** 手指按下点（raw）；`null` = 取不到，退回 [anchorRawX] / [anchorRawY]。 */
+        touchDownRawX: Float? = null,
+        touchDownRawY: Float? = null,
     ): Boolean {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             // ⚠️ 等待期间主线程可能已经 dismiss()（手势会话结束 / dismissAllPanels）。
@@ -209,6 +217,8 @@ object QuickWheelOverlayWindow {
                         adaptivePlacement = adaptivePlacement,
                         primarySectorMaskOverride = primarySectorMaskOverride,
                         anchorMode = anchorMode,
+                        touchDownRawX = touchDownRawX,
+                        touchDownRawY = touchDownRawY,
                     )
                 }
                 latch.countDown()
@@ -236,20 +246,16 @@ object QuickWheelOverlayWindow {
 
         // ⚠️ 锚点 = 调用方给的触发点（真实呼出 = 触发动作那一帧的手指位置；配置页预览 = 该扇区的"理论位置"）。
         // 以前这里会把轮盘强行摆到屏幕正中，导致"轮盘出现的位置和触发动作对不上、还容易缺容器"。
-        val rawAnchorX = anchorRawX.coerceIn(0f, screenWidthPx)
-        val rawAnchorY = anchorRawY.coerceIn(0f, screenHeightPx)
-        // 「贴边」模式：圆心投影到最近的屏幕边线（沿边坐标不变）→ 整圆必然越界，
-        // 运行时的自适应求解会自动收窄成半圆 / 90°，所以这里只需换锚点，不必动求解器。
-        val (anchorX, anchorY) = if (anchorMode == QuickWheelAnchorMode.EDGE) {
-            QuickWheelLayoutEngine.projectAnchorToEdge(
-                anchorX = rawAnchorX,
-                anchorY = rawAnchorY,
-                screenWidthPx = screenWidthPx,
-                screenHeightPx = screenHeightPx,
-            )
-        } else {
-            rawAnchorX to rawAnchorY
-        }
+        // 圆心锚点：
+        // - TOUCH_DOWN（默认）：手指**按下**的位置 —— 边缘触钮本来就在屏边，等于"从触钮长出来"；
+        //   位置稳定，不随滑动距离 / 触发模式（即时、松手）漂移；
+        // - FOLLOW_FINGER：动作**触发那一帧**的手指位置 —— 滑得越远圆心越靠内，圆盘更完整。
+        // 取不到按下点时（外部调用 / 快捷方式 / 语音）自动退回当前触发点。
+        val prefersTouchDown = anchorMode == QuickWheelAnchorMode.TOUCH_DOWN
+        val baseAnchorX = if (prefersTouchDown) touchDownRawX ?: anchorRawX else anchorRawX
+        val baseAnchorY = if (prefersTouchDown) touchDownRawY ?: anchorRawY else anchorRawY
+        val anchorX = baseAnchorX.coerceIn(0f, screenWidthPx)
+        val anchorY = baseAnchorY.coerceIn(0f, screenHeightPx)
         // 真实呼出：扇区（圆形）/ 网格基准角（矩形）按"锚点 + 所有容器都在屏内"自适应求解。
         val adaptive = if (adaptivePlacement) {
             QuickWheelAdaptiveScreen(

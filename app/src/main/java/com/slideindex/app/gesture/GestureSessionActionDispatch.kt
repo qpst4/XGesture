@@ -148,7 +148,10 @@ internal fun GestureSession.trackContinuousGesture(
                     externalTracking = true,
                     shape = action.shape,
                     manualSectorMask = action.manualSectorMask,
-                    anchorMode = action.anchorMode
+                    anchorMode = action.anchorMode,
+                    // 「按下的位置」锚点：用本次手势的 DOWN 点，而不是处理动作时的当前位置。
+                    touchDownRawX = sessionTouchDownRawX,
+                    touchDownRawY = sessionTouchDownRawY,
                 )
                 if (shown) {
                     sessionContinuousPick.quickWheel = true

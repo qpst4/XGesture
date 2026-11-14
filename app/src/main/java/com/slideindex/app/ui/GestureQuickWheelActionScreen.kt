@@ -61,8 +61,9 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
  *    [com.slideindex.app.gesture.GestureAction.QuickWheel.manualSectorMask]）：
  *    扇区环**一个都不选 = 自动**（运行时按触发位置求解），与开关默认态一样表示"不想操心，
  *    程序自动"；选了扇区才手动固定该跨度（可能出屏，属用户显式选择）。二级与矩形基准角始终自动。
- * 4. 圆心**锚定方式**（[QuickWheelAnchorMode]）：跟手（默认，圆心 = 触发那一帧的手指位置）/
- *    贴边（圆心投影到最近的屏幕边缘）。**不受第 2 点的开关管辖** —— 锚点与形态是两条正交的轴。
+ * 4. 圆心**锚点**（[QuickWheelAnchorMode]）：按下的位置（默认，圆心 = 手指按下的位置，位置稳定）/
+ *    触发时的位置（圆心 = 动作触发那一帧的手指位置，滑得越远越靠内）。
+ *    **不受第 2 点的开关管辖** —— 锚点与形态是两条正交的轴。
  *
  * 确认后由调用方构造 `GestureAction.QuickWheel` 并写回。
  */
@@ -72,7 +73,7 @@ fun GestureQuickWheelActionScreen(
     initialWheelId: String,
     initialShape: QuickWheelLaunchShape,
     initialSectorMask: Int? = null,
-    initialAnchorMode: QuickWheelAnchorMode = QuickWheelAnchorMode.FOLLOW_FINGER,
+    initialAnchorMode: QuickWheelAnchorMode = QuickWheelAnchorMode.TOUCH_DOWN,
     onBack: () -> Unit,
     onConfirm: (
         wheelId: String,
@@ -109,7 +110,7 @@ fun GestureQuickWheelActionScreen(
     // 形态"一样表示"我不想操心，程序自动"；选了扇区才手动固定。
     // ⚠️ 与轮盘配置页不同：这里允许取消到空，否则回不到"自动"。
     var sectorMask by remember(initialSectorMask) { mutableStateOf(initialSectorMask ?: 0) }
-    // 圆心锚定方式：跟手（默认）/ 贴边。与形态开关无关，始终可选。
+    // 圆心锚点：按下的位置（默认）/ 触发时的位置。与形态开关无关，始终可选。
     var anchorMode by remember(initialAnchorMode) { mutableStateOf(initialAnchorMode) }
     // 正在弹"二选一"的那一级；null = 没有弹框。
     var pickingLevel by remember { mutableStateOf<QuickWheelLevelTarget?>(null) }
@@ -504,12 +505,12 @@ private fun QuickWheelShapeChoiceRow(
     }
 }
 
-/** 锚点方式展示名（如「跟手（触发点）」）。 */
+/** 锚点方式展示名（按下的位置 / 触发时的位置）。 */
 @Composable
 private fun quickWheelAnchorModeLabel(mode: QuickWheelAnchorMode): String = stringResource(
     when (mode) {
+        QuickWheelAnchorMode.TOUCH_DOWN -> R.string.quick_wheel_action_anchor_edge
         QuickWheelAnchorMode.FOLLOW_FINGER -> R.string.quick_wheel_action_anchor_follow
-        QuickWheelAnchorMode.EDGE -> R.string.quick_wheel_action_anchor_edge
     },
 )
 
@@ -551,17 +552,18 @@ private fun QuickWheelAnchorModePickerDialog(
                             bottom = 4.dp,
                         ),
                     )
+                    // 推荐项放前面：「按下的位置」是默认值，也更稳定。
+                    QuickWheelActionChoiceRow(
+                        title = stringResource(R.string.quick_wheel_action_anchor_edge),
+                        subtitle = stringResource(R.string.quick_wheel_action_anchor_edge_desc),
+                        selected = current == QuickWheelAnchorMode.TOUCH_DOWN,
+                        onClick = { onPick(QuickWheelAnchorMode.TOUCH_DOWN) },
+                    )
                     QuickWheelActionChoiceRow(
                         title = stringResource(R.string.quick_wheel_action_anchor_follow),
                         subtitle = stringResource(R.string.quick_wheel_action_anchor_follow_desc),
                         selected = current == QuickWheelAnchorMode.FOLLOW_FINGER,
                         onClick = { onPick(QuickWheelAnchorMode.FOLLOW_FINGER) },
-                    )
-                    QuickWheelActionChoiceRow(
-                        title = stringResource(R.string.quick_wheel_action_anchor_edge),
-                        subtitle = stringResource(R.string.quick_wheel_action_anchor_edge_desc),
-                        selected = current == QuickWheelAnchorMode.EDGE,
-                        onClick = { onPick(QuickWheelAnchorMode.EDGE) },
                     )
                 }
             }

@@ -144,7 +144,7 @@ fun GestureActionPickerScreen(
     }
     var widgetPanelPickVisible by remember { mutableStateOf(false) }
     val quickWheelInitialAnchorMode = remember(current) {
-        (current as? GestureAction.QuickWheel)?.anchorMode ?: QuickWheelAnchorMode.FOLLOW_FINGER
+        (current as? GestureAction.QuickWheel)?.anchorMode ?: QuickWheelAnchorMode.TOUCH_DOWN
     }
     var pendingLaunchApp by remember { mutableStateOf<AppInfo?>(null) }
 

@@ -338,26 +338,31 @@ enum class QuickWheelLaunchShape {
 }
 
 /**
- * 轮盘呼出时**圆心的锚定方式**（动作绑定处可选，默认 [FOLLOW_FINGER]）。
+ * 轮盘呼出时**圆心的锚点**（动作绑定处可选，默认 [TOUCH_DOWN]）。
  *
- * - [FOLLOW_FINGER]：圆心 = 动作被触发那一帧的手指位置（出现后不再跟随手指，只是高亮跟随）；
- * - [EDGE]：圆心 = 呼出点投影到**最近的一条屏幕边**（保留沿边坐标），轮盘像"从边缘长出来"。
- *   注意：这样整圆必然越界 → 运行时的自适应求解会自动把扇区收窄成半圆 / 90°。
+ * - [TOUCH_DOWN]（默认）：圆心 = **手指按下的位置**。边缘触钮本来就在屏边，所以等于"从触钮长出来"；
+ *   位置稳定、可预测（同一个触钮每次都在同一处）。代价：贴边时整圆必然越界，
+ *   运行时的自适应求解会自动把扇区收窄成半圆 / 90°。
+ * - [FOLLOW_FINGER]：圆心 = **动作被触发那一帧的手指位置**（出现后不再跟随手指，只有高亮跟随）。
+ *   滑得越远圆心越靠内，能容纳更完整的圆；代价是位置随滑动距离 / 触发模式（即时 / 松手）漂移。
  *
- * 之所以放在动作级而不是轮盘级：滑动距离阈值（短滑 60dp / 长滑 120dp）决定了两种方式的差别大小，
- * 同一个轮盘在不同手势下的最优解不同（短滑 + 贴边时手指正好落在中心大圆内）。
+ * 旧值 `EDGE`（投影到最近的一条边）已废弃：边缘触钮的按下点本来就在边上，再投影属于重复计算；
+ * 读取旧记录时等价映射为 [TOUCH_DOWN]。
  */
 enum class QuickWheelAnchorMode {
-    /** 跟手（默认）：圆心落在触发点。 */
+    /** 触发时的位置（旧称"跟手"）。 */
     FOLLOW_FINGER,
 
-    /** 贴边：圆心落在最近的屏幕边线上。 */
-    EDGE,
+    /** 手指按下的位置（默认；旧值 `EDGE` 也映射到这里）。 */
+    TOUCH_DOWN,
     ;
 
     companion object {
-        fun fromName(value: String?): QuickWheelAnchorMode =
-            entries.firstOrNull { it.name == value } ?: FOLLOW_FINGER
+        fun fromName(value: String?): QuickWheelAnchorMode = when (value) {
+            // 旧记录「贴边」：边缘触钮的按下点本身贴边，映射到按下点即可。
+            "EDGE" -> TOUCH_DOWN
+            else -> entries.firstOrNull { it.name == value } ?: TOUCH_DOWN
+        }
     }
 }
 
@@ -875,13 +880,14 @@ sealed class GestureAction {
      * @param manualSectorMask 一级**圆形**轮盘的手动扇区掩码（1..15）；`null`（默认）= 不指定，
      *   由运行时按触发位置自适应求解（= "我什么都不想配，程序自动"）。动作页只在绑定了非默认
      *   [shape] 时提供该选择；跟随轮盘自身配置时一律为 `null`。二级与矩形基准角始终自适应。
-     * @param anchorMode 圆心锚定方式（[QuickWheelAnchorMode]）；默认 [QuickWheelAnchorMode.FOLLOW_FINGER]。
+     * @param anchorMode 圆心锚点（[QuickWheelAnchorMode]）；默认 [QuickWheelAnchorMode.TOUCH_DOWN]
+     *   （手指按下的位置；旧值 `EDGE` 也读成它）。
      */
     data class QuickWheel(
         val wheelId: String = "",
         val shape: QuickWheelLaunchShape = QuickWheelLaunchShape.DEFAULT,
         val manualSectorMask: Int? = null,
-        val anchorMode: QuickWheelAnchorMode = QuickWheelAnchorMode.FOLLOW_FINGER,
+        val anchorMode: QuickWheelAnchorMode = QuickWheelAnchorMode.TOUCH_DOWN,
     ) : GestureAction() {
         override val type = GestureActionType.QUICK_WHEEL
 
@@ -891,11 +897,11 @@ sealed class GestureAction {
             append(wheelId)
             val isAllDefault = shape == QuickWheelLaunchShape.DEFAULT &&
                 manualSectorMask == null &&
-                anchorMode == QuickWheelAnchorMode.FOLLOW_FINGER
+                anchorMode == QuickWheelAnchorMode.TOUCH_DOWN
             if (isAllDefault) return@buildString
             append(SHAPE_SEP)
             append(shape.name)
-            if (anchorMode == QuickWheelAnchorMode.FOLLOW_FINGER) {
+            if (anchorMode == QuickWheelAnchorMode.TOUCH_DOWN) {
                 manualSectorMask?.let {
                     append(SHAPE_SEP)
                     append(it)
