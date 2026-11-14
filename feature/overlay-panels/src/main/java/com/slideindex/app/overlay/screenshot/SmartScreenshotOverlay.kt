@@ -23,9 +23,17 @@ object SmartScreenshotOverlay {
 
     val isShowing: Boolean get() = dialogHost != null && state.visible
 
-    fun show(context: Context, screenshot: Bitmap) {
+    /**
+     * @param freeSelection 默认 true：不显示预设框，由用户拖动框选；
+     *                      传 false 可恢复旧的「居中固定框」行为。
+     */
+    fun show(
+        context: Context,
+        screenshot: Bitmap,
+        freeSelection: Boolean = true
+    ) {
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { show(context, screenshot) }
+            mainHandler.post { show(context, screenshot, freeSelection) }
             return
         }
 
@@ -36,7 +44,7 @@ object SmartScreenshotOverlay {
 
         val hostContext = overlayHostContext() ?: context.applicationContext
         val minSelectionPx = (48 * hostContext.resources.displayMetrics.density).toInt()
-        state.show(screenshot, minSelectionPx)
+        state.show(screenshot, minSelectionPx, freeSelection)
 
         val host = dialogHost ?: OverlayComposeDialogHost(
             context = hostContext,
