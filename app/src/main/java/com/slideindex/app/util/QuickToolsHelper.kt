@@ -17,6 +17,8 @@ import com.slideindex.app.gesture.resolve
 import com.slideindex.app.privilege.PrivilegeGateway
 
 object QuickToolsHelper {
+    private const val TAG = "QuickTools"
+
     fun readWifiEnabled(context: Context): Boolean? {
         val appContext = context.applicationContext
         if (TaskManagerUtil.hasPermission()) {
@@ -34,6 +36,52 @@ object QuickToolsHelper {
     }
 
     fun toggleWifi(context: Context): Boolean? = applyWifi(context, ToggleMode.TOGGLE)
+
+    /** 热点当前状态；读不到（无特权 / 服务太旧 / 系统不支持）时返回 null。 */
+    fun readHotspotEnabled(): Boolean? =
+        when (TaskManagerUtil.getTetheringState()) {
+            1 -> true
+            0 -> false
+            else -> null
+        }
+
+    /**
+     * 把 Wi-Fi 热点设成 [mode] 要求的状态。
+     *
+     * 热点没有公开 API，也没有 `svc` / `cmd` 等价命令，只能由特权进程（root / Shizuku）
+     * 调系统 `tethering` 服务；两者都不可用时返回 null，由调用方降级打开无线设置页。
+     *
+     * 状态读不到时：打开 / 关闭是幂等的，仍然直接下发；切换没有依据，返回 null。
+     */
+    fun applyHotspot(context: Context, mode: ToggleMode): Boolean? {
+        if (!TaskManagerUtil.hasPermission()) {
+            Log.i(TAG, "hotspot $mode: no privileged access")
+            return null
+        }
+
+        // 切换必须先知道当前状态：读不到就不猜（交给调用方降级）。
+        if (mode == ToggleMode.TOGGLE) {
+            val current = readHotspotEnabled()
+            if (current == null) {
+                Log.i(TAG, "hotspot toggle: state unknown")
+                return null
+            }
+            val target = !current
+            val ok = TaskManagerUtil.setTetheringEnabled(target)
+            Log.i(TAG, "hotspot toggle from=$current target=$target ok=$ok")
+            return if (ok) target else null
+        }
+
+        // 打开 / 关闭是幂等的：不查状态，直接下发，省掉最多 2.5s 的等待。
+        val target = mode == ToggleMode.ON
+        val ok = TaskManagerUtil.setTetheringEnabled(target)
+        Log.i(TAG, "hotspot $mode target=$target ok=$ok")
+        return if (ok) target else null
+    }
+
+    /** 热点无特权时的降级：打开系统「无线和网络」设置页（没有公开的热点专用 Intent）。 */
+    fun openHotspotSettings(context: Context): Boolean =
+        openSystemSettings(context, Settings.ACTION_WIRELESS_SETTINGS)
 
     /**
      * 把 Wi-Fi 设成 [mode] 要求的状态（打开 / 关闭是幂等的：已经是该状态时直接返回成功）。

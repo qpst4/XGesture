@@ -276,6 +276,10 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
     override fun probeRootAvailable(): Boolean =
         shell.probeRootAvailable()
 
+    override fun getTetheringState(): Int = TetheringOps.getState()
+
+    override fun setTetheringEnabled(enable: Boolean): Boolean = TetheringOps.setEnabled(enable)
+
     override fun forceStopPackage(packageName: String?): Boolean =
         tasks.forceStopPackage(packageName)
 

@@ -1578,6 +1578,8 @@
     <string name="gesture_action_toggle_airplane_desc">تشغيل وضع الطيران أو إيقافه؛ يتطلب Shizuku / root، وإلا فستُفتح إعدادات النظام</string>
     <string name="gesture_action_toggle_location">الموقع</string>
     <string name="gesture_action_toggle_location_desc">تشغيل الموقع أو إيقافه؛ يتطلب Shizuku / root، وإلا فستُفتح إعدادات النظام</string>
+<string name="gesture_action_toggle_hotspot">نقطة اتصال</string>
+<string name="gesture_action_toggle_hotspot_desc">تشغيل نقطة اتصال Wi-Fi أو إيقافها؛ يتطلب Shizuku / root، وإلا فستُفتح إعدادات النظام</string>
     <string name="gesture_action_toggle_sync">المزامنة التلقائية</string>
     <string name="gesture_action_toggle_sync_desc">المفتاح الرئيسي للمزامنة التلقائية في الخلفية لجميع الحسابات</string>
     <string name="gesture_action_toggle_dark_mode">الوضع الداكن</string>

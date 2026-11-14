@@ -269,5 +269,10 @@ class TaskManagerTaskOperationsTest {
         override fun getMultiTouchDiagnostics(): String = ""
 
         override fun getTouchDevices(): Array<String> = emptyArray()
+
+        // 热点：本测试只覆盖任务操作，桩里一律当"不支持"处理。
+        override fun getTetheringState(): Int = -1
+
+        override fun setTetheringEnabled(enable: Boolean): Boolean = false
     }
 }

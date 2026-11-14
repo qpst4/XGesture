@@ -163,6 +163,10 @@ internal object TaskManagerDaemonRpc {
 
             106 -> RpcValue.StrArr(service.getTouchDevices())
 
+            30 -> RpcValue.I32(service.getTetheringState())
+
+            31 -> RpcValue.Bool(service.setTetheringEnabled(args.boolean(0)))
+
             else -> throw IOException("unknown op=$op")
 
         }

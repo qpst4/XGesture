@@ -2859,6 +2859,8 @@
     <string name="gesture_action_toggle_dark_mode">Dark mode</string>
     <string name="gesture_action_toggle_airplane_desc">Turn airplane mode on or off; needs Shizuku / root, otherwise opens system settings</string>
     <string name="gesture_action_toggle_location_desc">Turn location on or off; needs Shizuku / root, otherwise opens system settings</string>
+<string name="gesture_action_toggle_hotspot">Hotspot</string>
+<string name="gesture_action_toggle_hotspot_desc">Turn the Wi-Fi hotspot on or off; needs Shizuku / root, otherwise opens system settings</string>
     <string name="gesture_action_toggle_sync_desc">Master switch for background account auto-sync</string>
     <string name="gesture_action_toggle_dark_mode_desc">Switch the system dark theme; needs Shizuku or write-settings permission</string>
     <string name="gesture_action_nfc_unsupported">This device has no NFC</string>

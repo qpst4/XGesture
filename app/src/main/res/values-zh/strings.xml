@@ -1634,6 +1634,8 @@
     <string name="gesture_action_toggle_dark_mode">夜间模式</string>
     <string name="gesture_action_toggle_airplane_desc">打开或关闭飞行模式；需要 Shizuku / root，否则跳系统设置页</string>
     <string name="gesture_action_toggle_location_desc">打开或关闭定位；需要 Shizuku / root，否则跳系统设置页</string>
+<string name="gesture_action_toggle_hotspot">热点</string>
+<string name="gesture_action_toggle_hotspot_desc">打开或关闭 Wi-Fi 热点；需要 Shizuku / root，否则跳系统设置页</string>
     <string name="gesture_action_toggle_sync_desc">所有账号的后台自动同步总开关</string>
     <string name="gesture_action_toggle_dark_mode_desc">切换系统深色主题；需要 Shizuku 或修改系统设置权限</string>
     <string name="gesture_action_nfc_unsupported">本机不支持 NFC</string>

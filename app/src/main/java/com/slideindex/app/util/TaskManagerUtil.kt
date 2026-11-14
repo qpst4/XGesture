@@ -34,6 +34,9 @@ object TaskManagerUtil {
     private const val MIN_FORCE_STOP_API = 8
     /** 最近任务行带 userId（第 5 列）的 UserService 构建号；分身识别依赖它。 */
     private const val MIN_RECENTS_USER_API = 37
+
+    /** 支持热点开关（30/31 号命令）的 UserService / root 守护进程构建号。 */
+    private const val MIN_TETHERING_API = 72
     private const val SYSTEM_UI_PACKAGE = "com.android.systemui"
     private const val MIN_SHORTCUTS_API = 9
     const val ROOT_PROBE_BINDER_TIMEOUT_MS = 45_000L
@@ -184,8 +187,9 @@ object TaskManagerUtil {
             PrivilegeGateway.isShizukuMode() && hasShizukuPermission() ->
                 bindFreshService(minApi)
             PrivilegeGateway.isRootMode() ->
-                RootTaskManagerServiceHost.peek()
-                    ?: RootTaskManagerServiceHost.ensure(appContext(), minApi)
+                // 必须走 ensure(minApi)：peek() 不校验版本，会拿到升级前遗留的旧守护进程，
+                // 新加的特权方法在旧进程里不存在，表现就是"调用成功但没效果"。
+                RootTaskManagerServiceHost.ensure(appContext(), minApi)
             else -> null
         }
     }
@@ -853,6 +857,46 @@ object TaskManagerUtil {
                 useRoot = false,
                 timeoutMs = timeoutMs,
             )
+    }
+
+    /**
+     * 热点当前状态：1 = 开，0 = 关，-1 = 无特权 / 服务太旧 / 读不到。
+     *
+     * root 与 Shizuku 共用 [ITaskManagerService]：前者走 root 守护进程的 RPC，
+     * 后者走 Shizuku 用户服务；两边都是 uid 0/2000 的 app_process 进程，
+     * 只有它们能调系统 `tethering` 服务的 `startTethering` / `stopTethering`。
+     */
+    fun getTetheringState(): Int = runOnTaskWorker {
+        val service = privilegedTaskService(MIN_TETHERING_API)
+        if (service == null) {
+            Log.i(TAG, "tethering state: no privileged service")
+            return@runOnTaskWorker -1
+        }
+        val api = runCatching { readServiceApi(service) }.getOrDefault(0)
+        if (api < MIN_TETHERING_API) {
+            Log.i(TAG, "tethering state: service api=$api < $MIN_TETHERING_API")
+            return@runOnTaskWorker -1
+        }
+        val result = runCatching { service.getTetheringState() }
+        Log.i(TAG, "tethering state: api=$api result=$result")
+        result.getOrDefault(-1)
+    }
+
+    /** 打开 / 关闭热点；false = 没有特权通道或服务版本太旧。 */
+    fun setTetheringEnabled(enable: Boolean): Boolean = runOnTaskWorker {
+        val service = privilegedTaskService(MIN_TETHERING_API)
+        if (service == null) {
+            Log.i(TAG, "tethering set=$enable: no privileged service")
+            return@runOnTaskWorker false
+        }
+        val api = runCatching { readServiceApi(service) }.getOrDefault(0)
+        if (api < MIN_TETHERING_API) {
+            Log.i(TAG, "tethering set=$enable: service api=$api < $MIN_TETHERING_API")
+            return@runOnTaskWorker false
+        }
+        val result = runCatching { service.setTetheringEnabled(enable) }
+        Log.i(TAG, "tethering set=$enable: api=$api result=$result")
+        result.getOrDefault(false)
     }
 
     internal inline fun <reified T> runOnTaskWorker(noinline block: () -> T): T {

@@ -78,4 +78,14 @@ interface ITaskManagerService {
      * 设置页「触摸设备」选择用；空数组表示还没枚举到。
      */
     String[] getTouchDevices() = 29;
+
+    /**
+     * Wi-Fi 热点状态：1 = 开，0 = 关，-1 = 读不到 / 不支持。
+     *
+     * 热点没有公开 API，只能在特权进程里问 `tethering` 服务。
+     */
+    int getTetheringState() = 30;
+
+    /** 打开 / 关闭 Wi-Fi 热点；oneway，返回 true 只代表请求已发出。 */
+    boolean setTetheringEnabled(boolean enable) = 31;
 }

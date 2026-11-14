@@ -2835,6 +2835,8 @@
     <string name="gesture_action_toggle_airplane_desc">Включение или выключение авиарежима; нужен Shizuku / root, иначе откроются настройки системы</string>
     <string name="gesture_action_toggle_location">Геолокация</string>
     <string name="gesture_action_toggle_location_desc">Включение или выключение геолокации; нужен Shizuku / root, иначе откроются настройки системы</string>
+<string name="gesture_action_toggle_hotspot">Точка доступа</string>
+<string name="gesture_action_toggle_hotspot_desc">Включение или выключение точки доступа Wi-Fi; нужен Shizuku / root, иначе откроются настройки системы</string>
     <string name="gesture_action_toggle_sync">Автосинхронизация</string>
     <string name="gesture_action_toggle_sync_desc">Общий переключатель фоновой автосинхронизации всех аккаунтов</string>
     <string name="gesture_action_toggle_dark_mode">Тёмная тема</string>

@@ -244,6 +244,15 @@ enum class GestureActionType(val id: Int) {
 
     /** 「定位」：系统定位总开关（需要 Shizuku / root；否则降级打开系统定位设置页）。 */
     TOGGLE_LOCATION(119),
+
+    /**
+     * 「热点」：Wi-Fi 热点（网络共享）总开关。
+     *
+     * 系统没有公开 API 能开热点（`TetheringManager.startTethering` 要 signature 级权限），
+     * 所以必须借特权进程（root / Shizuku）里直接调 `tethering` 服务；
+     * 无特权时执行器降级打开系统无线设置页。
+     */
+    TOGGLE_HOTSPOT(120),
     ;
 
     companion object {
@@ -1002,6 +1011,21 @@ sealed class GestureAction {
         override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
     }
 
+    /**
+     * 「热点」：Wi-Fi 热点开关。
+     *
+     * 没有 shell 命令等价物（`svc` / `cmd connectivity` 都没有 tether 子命令），
+     * 只能由特权进程（root 守护进程 / Shizuku 用户服务）调 `tethering` 服务；
+     * 无特权时执行器降级打开系统无线设置页。
+     */
+    data class ToggleHotspot(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
+        override val type = GestureActionType.TOGGLE_HOTSPOT
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
+    }
+
     /** 「晃动手势」：默认切换；也可指定打开 / 关闭。 */
     data class ToggleShakeGesture(
         override val mode: ToggleMode = ToggleMode.TOGGLE,
@@ -1420,6 +1444,7 @@ sealed class GestureAction {
                 GestureActionType.TOGGLE_DARK_MODE -> ToggleDarkMode(ToggleMode.decode(payload))
                 GestureActionType.TOGGLE_AIRPLANE -> ToggleAirplane(ToggleMode.decode(payload))
                 GestureActionType.TOGGLE_LOCATION -> ToggleLocation(ToggleMode.decode(payload))
+                GestureActionType.TOGGLE_HOTSPOT -> ToggleHotspot(ToggleMode.decode(payload))
                 GestureActionType.SWITCH_INPUT_METHOD -> SwitchInputMethod
                 GestureActionType.CORNER_INNER_CANCEL -> CornerInnerCancel
                 GestureActionType.CORNER_INNER_PIN_WHEEL -> CornerInnerPinWheel

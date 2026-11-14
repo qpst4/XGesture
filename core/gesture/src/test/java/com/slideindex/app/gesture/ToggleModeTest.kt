@@ -65,6 +65,21 @@ class ToggleModeTest {
             GestureAction.ToggleLocation(ToggleMode.OFF),
             GestureAction.from(GestureActionType.TOGGLE_LOCATION, "0"),
         )
+        assertEquals(
+            GestureAction.ToggleHotspot(ToggleMode.ON),
+            GestureAction.from(GestureActionType.TOGGLE_HOTSPOT, "1"),
+        )
+        assertEquals(
+            GestureAction.ToggleHotspot(),
+            GestureAction.from(GestureActionType.TOGGLE_HOTSPOT, ""),
+        )
+    }
+
+    @Test
+    fun payload_hotspotUsesSameEncoding() {
+        assertEquals("", GestureAction.ToggleHotspot().payload)
+        assertEquals("1", GestureAction.ToggleHotspot(ToggleMode.ON).payload)
+        assertEquals("0", GestureAction.ToggleHotspot(ToggleMode.OFF).payload)
     }
 
     @Test

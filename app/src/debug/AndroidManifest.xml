@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- 仅 debug 构建：adb 直接触发动作，方便在真机上定位特权链路。 -->
+        <receiver
+            android:name=".debug.HotspotDebugReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.slideindex.app.DEBUG_HOTSPOT" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

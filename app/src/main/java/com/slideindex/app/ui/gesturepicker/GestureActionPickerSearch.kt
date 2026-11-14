@@ -257,6 +257,7 @@ fun gestureActionSearchAliases(context: Context, action: GestureAction): List<St
     GestureActionType.TOGGLE_MOBILE_DATA -> listOf("mobile data", "data", "移动网络", "开关", "toggle", "switch")
     GestureActionType.TOGGLE_AIRPLANE -> listOf("airplane", "flight", "飞行", "开关", "toggle", "switch")
     GestureActionType.TOGGLE_LOCATION -> listOf("location", "gps", "定位", "位置", "开关", "toggle", "switch")
+    GestureActionType.TOGGLE_HOTSPOT -> listOf("hotspot", "tether", "热点", "共享", "开关", "toggle", "switch")
     GestureActionType.TOGGLE_SYNC -> listOf("sync", "同步", "开关", "toggle", "switch")
     GestureActionType.TOGGLE_DARK_MODE -> listOf("dark mode", "night", "夜间", "深色", "开关", "toggle")
     GestureActionType.TOGGLE_NFC -> listOf("near field", "nfc toggle", "开关", "toggle", "switch")
@@ -294,6 +295,7 @@ fun gestureActionDescriptionText(context: Context, action: GestureAction): Strin
         GestureActionType.TOGGLE_AUTO_ROTATE -> context.getString(R.string.gesture_action_toggle_auto_rotate_desc)
         GestureActionType.TOGGLE_AIRPLANE -> context.getString(R.string.gesture_action_toggle_airplane_desc)
         GestureActionType.TOGGLE_LOCATION -> context.getString(R.string.gesture_action_toggle_location_desc)
+        GestureActionType.TOGGLE_HOTSPOT -> context.getString(R.string.gesture_action_toggle_hotspot_desc)
         GestureActionType.TOGGLE_SYNC -> context.getString(R.string.gesture_action_toggle_sync_desc)
         GestureActionType.TOGGLE_DARK_MODE -> context.getString(R.string.gesture_action_toggle_dark_mode_desc)
         GestureActionType.FORCE_PORTRAIT -> context.getString(R.string.gesture_action_force_portrait_desc)
@@ -476,6 +478,7 @@ private fun gestureActionBaseLabelText(context: Context, action: GestureAction):
         GestureActionType.TOGGLE_MOBILE_DATA -> context.getString(R.string.gesture_action_toggle_mobile_data)
         GestureActionType.TOGGLE_AIRPLANE -> context.getString(R.string.gesture_action_toggle_airplane)
         GestureActionType.TOGGLE_LOCATION -> context.getString(R.string.gesture_action_toggle_location)
+        GestureActionType.TOGGLE_HOTSPOT -> context.getString(R.string.gesture_action_toggle_hotspot)
         GestureActionType.TOGGLE_SYNC -> context.getString(R.string.gesture_action_toggle_sync)
         GestureActionType.TOGGLE_DARK_MODE -> context.getString(R.string.gesture_action_toggle_dark_mode)
         GestureActionType.TOGGLE_NFC -> context.getString(R.string.gesture_action_toggle_nfc)
@@ -699,6 +702,7 @@ private fun gestureActionBaseLabel(action: GestureAction, settings: AppSettings?
         GestureActionType.TOGGLE_MOBILE_DATA -> stringResource(R.string.gesture_action_toggle_mobile_data)
         GestureActionType.TOGGLE_AIRPLANE -> stringResource(R.string.gesture_action_toggle_airplane)
         GestureActionType.TOGGLE_LOCATION -> stringResource(R.string.gesture_action_toggle_location)
+        GestureActionType.TOGGLE_HOTSPOT -> stringResource(R.string.gesture_action_toggle_hotspot)
         GestureActionType.TOGGLE_SYNC -> stringResource(R.string.gesture_action_toggle_sync)
         GestureActionType.TOGGLE_DARK_MODE -> stringResource(R.string.gesture_action_toggle_dark_mode)
         GestureActionType.TOGGLE_NFC -> stringResource(R.string.gesture_action_toggle_nfc)
@@ -800,6 +804,7 @@ fun gestureActionDescription(action: GestureAction): String? = when (action.type
     GestureActionType.TOGGLE_MUTE -> stringResource(R.string.gesture_action_sound_mode_desc)
     GestureActionType.TOGGLE_AIRPLANE -> stringResource(R.string.gesture_action_toggle_airplane_desc)
     GestureActionType.TOGGLE_LOCATION -> stringResource(R.string.gesture_action_toggle_location_desc)
+    GestureActionType.TOGGLE_HOTSPOT -> stringResource(R.string.gesture_action_toggle_hotspot_desc)
     GestureActionType.TOGGLE_SYNC -> stringResource(R.string.gesture_action_toggle_sync_desc)
     GestureActionType.TOGGLE_DARK_MODE -> stringResource(R.string.gesture_action_toggle_dark_mode_desc)
     GestureActionType.TOGGLE_SHAKE_GESTURE -> stringResource(R.string.gesture_action_toggle_shake_desc)
@@ -899,6 +904,7 @@ fun gestureActionPermissionHintText(context: Context, action: GestureAction): St
         GestureActionType.TOGGLE_WIFI, GestureActionType.TOGGLE_MOBILE_DATA,
         GestureActionType.TOGGLE_AIRPLANE,
         GestureActionType.TOGGLE_LOCATION,
+        GestureActionType.TOGGLE_HOTSPOT,
         GestureActionType.TOGGLE_NFC, GestureActionType.TOGGLE_BLUETOOTH,
         GestureActionType.EXECUTE_SHELL_COMMAND,
         GestureActionType.FORCE_STOP_CURRENT_APP,

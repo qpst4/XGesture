@@ -440,6 +440,7 @@ internal fun GestureSession.handleClassifiedGesture(
         is GestureAction.ToggleMobileData,
         is GestureAction.ToggleAirplane,
         is GestureAction.ToggleLocation,
+        is GestureAction.ToggleHotspot,
         is GestureAction.ToggleSync,
         is GestureAction.ToggleNfc,
         is GestureAction.ToggleBluetooth,

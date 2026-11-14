@@ -155,6 +155,15 @@ internal class TaskManagerRpcClient(
 
         rpcBool(17, emptyList())
 
+    /** 热点状态：旧守护进程没有 30 号命令，返回 -1 让上层降级。 */
+    override fun getTetheringState(): Int =
+        (runCatching { TaskManagerDaemonRpc.execute(port, 30, emptyList()) }.getOrNull()
+            as? RpcValue.I32)?.value ?: -1
+
+    override fun setTetheringEnabled(enable: Boolean): Boolean =
+        (runCatching { TaskManagerDaemonRpc.execute(port, 31, listOf(enable.toString())) }
+            .getOrNull() as? RpcValue.Bool)?.value ?: false
+
 
 
     override fun getAllPublishedShortcuts(): Array<String> =

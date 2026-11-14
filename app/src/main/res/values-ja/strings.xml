@@ -1589,6 +1589,8 @@
     <string name="gesture_action_toggle_airplane_desc">機内モードをオン／オフします。Shizuku / root が必要で、ない場合はシステム設定を開きます</string>
     <string name="gesture_action_toggle_location">位置情報</string>
     <string name="gesture_action_toggle_location_desc">位置情報をオン／オフします。Shizuku / root が必要で、ない場合はシステム設定を開きます</string>
+<string name="gesture_action_toggle_hotspot">テザリング</string>
+<string name="gesture_action_toggle_hotspot_desc">Wi-Fi テザリングをオン／オフします。Shizuku / root が必要で、ない場合はシステム設定を開きます</string>
     <string name="gesture_action_toggle_sync">自動同期</string>
     <string name="gesture_action_toggle_sync_desc">すべてのアカウントのバックグラウンド自動同期のマスタースイッチ</string>
     <string name="gesture_action_toggle_dark_mode">ダークモード</string>

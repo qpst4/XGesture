@@ -5039,6 +5039,8 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="gesture_action_toggle_dark_mode_desc">Cambia el tema oscuro del sistema; requiere Shizuku o el permiso de escritura de ajustes</string>
     <string name="gesture_action_toggle_location">Ubicación</string>
     <string name="gesture_action_toggle_location_desc">Activa o desactiva la ubicación; requiere Shizuku o root, de lo contrario abre los ajustes del sistema</string>
+<string name="gesture_action_toggle_hotspot">Punto de acceso</string>
+<string name="gesture_action_toggle_hotspot_desc">Activa o desactiva el punto de acceso Wi-Fi; requiere Shizuku o root, de lo contrario abre los ajustes del sistema</string>
     <string name="gesture_action_toggle_nfc">NFC</string>
     <string name="gesture_action_toggle_sync">Sincronización automática</string>
     <string name="gesture_action_toggle_sync_desc">Interruptor principal de la sincronización automática de cuentas en segundo plano</string>

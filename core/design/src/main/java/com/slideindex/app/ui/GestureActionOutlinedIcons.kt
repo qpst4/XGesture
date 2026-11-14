@@ -106,6 +106,8 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.TOGGLE_MOBILE_DATA -> ThinActionIcons.Cellular
     GestureActionType.TOGGLE_AIRPLANE -> MaterialSymbolThinIcons.Flight
     GestureActionType.TOGGLE_LOCATION -> MaterialSymbolThinIcons.LocationOn
+    // 仓库内暂时没有热点图标，先用 Wi-Fi 图标占位（换图标时只改这两处）。
+    GestureActionType.TOGGLE_HOTSPOT -> ThinActionIcons.Wifi
     GestureActionType.TOGGLE_SYNC -> MaterialSymbolThinIcons.Sync
     GestureActionType.TOGGLE_DARK_MODE -> MaterialSymbolThinIcons.DarkMode
     GestureActionType.TOGGLE_NFC -> MaterialSymbolThinIcons.Nfc
@@ -225,6 +227,8 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.TOGGLE_MOBILE_DATA -> ThinActionIcons.Cellular
     GestureActionType.TOGGLE_AIRPLANE -> MaterialSymbolThinIcons.Flight
     GestureActionType.TOGGLE_LOCATION -> MaterialSymbolThinIcons.LocationOn
+    // 仓库内暂时没有热点图标，先用 Wi-Fi 图标占位（换图标时只改这两处）。
+    GestureActionType.TOGGLE_HOTSPOT -> ThinActionIcons.Wifi
     GestureActionType.TOGGLE_SYNC -> MaterialSymbolThinIcons.Sync
     GestureActionType.TOGGLE_DARK_MODE -> MaterialSymbolThinIcons.DarkMode
     GestureActionType.TOGGLE_NFC -> MaterialSymbolThinIcons.Nfc

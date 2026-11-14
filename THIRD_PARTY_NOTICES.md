@@ -200,6 +200,16 @@ XGesture（`com.slideindex.app`）在 [GNU Affero General Public License v3.0](L
 
 ---
 
+## AOSP tethering AIDL（Wi-Fi 热点）
+
+- **Copyright:** The Android Open Source Project
+- **License:** [Apache License 2.0](app/src/main/assets/licenses/Apache-2.0.txt)
+- **Source:** https://android.googlesource.com/platform/frameworks/base/
+- **Used in:** `app/src/main/aidl/android/net/*.aidl`（`ITetheringConnector`、`ITetheringEventCallback`、`TetheringRequestParcel`、`TetherStatesParcel` 等 9 个**编译期垫片**），供 `TetheringOps` 在 root / Shizuku 特权进程里读写 Wi-Fi 热点状态
+- **Modifications:** 只保留本项目实际调用的方法与字段；运行时由系统里的同名类接管（boot classpath 优先），垫片不参与运行
+
+---
+
 ## 许可证全文
 
 - [Apache License 2.0](app/src/main/assets/licenses/Apache-2.0.txt)

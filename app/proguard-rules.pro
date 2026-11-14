@@ -156,3 +156,19 @@
 -keep interface com.slideindex.app.shortcut.port.IUserService { *; }
 -keep class com.slideindex.app.shortcut.port.IUserService$Stub { *; }
 -keep class com.slideindex.app.shortcut.port.IUserService$Stub$Proxy { *; }
+
+# ---------------------------------------------------------------------------
+# Wi-Fi 热点：android.net 下的 tethering AIDL 垫片（编译期用，运行期由系统同名类接管）
+#
+# 运行期解析到的是 boot classpath 里的系统类，所以这些垫片类名不能被 R8 重命名，
+# 否则 TetheringOps 里的引用会指向一个运行时并不存在的重命名类。
+# ---------------------------------------------------------------------------
+-keep class android.net.ITetheringConnector { *; }
+-keep class android.net.ITetheringEventCallback { *; }
+-keep class android.net.IIntResultListener { *; }
+-keep class android.net.TetheringRequestParcel { *; }
+-keep class android.net.TetherStatesParcel { *; }
+-keep class android.net.TetheringCallbackStartedParcel { *; }
+-keep class android.net.TetheringInterface { *; }
+-keep class android.net.TetheredClient { *; }
+-keep class android.net.TetheringConfigurationParcel { *; }

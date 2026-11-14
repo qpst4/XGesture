@@ -458,6 +458,9 @@ class ActionExecutor(
             } else {
                 applyLocationAction(action.mode)
             }
+            is GestureAction.ToggleHotspot ->
+                // 状态查询最坏要等 2.5s（等系统回调），和打开设置页一样不能压在主线程。
+                executeRootAsync { applyHotspotAction(action.mode) }
             is GestureAction.ToggleShakeGesture -> {
                 val mode = action.mode
                 CoroutineScope(Dispatchers.IO).launch {
@@ -736,6 +739,16 @@ class ActionExecutor(
     private inline fun executeRootAsync(crossinline block: () -> Unit): Boolean {
         CoroutineScope(Dispatchers.IO).launch { block() }
         return true
+    }
+
+    /** 热点：没有特权通道 / 服务版本太旧时降级打开无线设置页。 */
+    private fun applyHotspotAction(mode: ToggleMode): Boolean {
+        val result = QuickToolsHelper.applyHotspot(context, mode)
+        if (result == null) {
+            QuickToolsHelper.openHotspotSettings(context)
+            return false
+        }
+        return result
     }
 
     /** 飞行模式：没有特权通道 / 命令失败时降级打开系统设置页。 */

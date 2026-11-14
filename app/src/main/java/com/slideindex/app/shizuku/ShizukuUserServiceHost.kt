@@ -78,7 +78,7 @@ object ShizukuUserServiceHost {
      *     16 次候选调用）。查询逻辑在用户服务进程里，必须换进程名才能让新包生效。
      * 升号后进程名变成 `task_manager_v65`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
      */
-    const val SERVICE_BUILD = 70
+    const val SERVICE_BUILD = 72
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bindLock = Any()
