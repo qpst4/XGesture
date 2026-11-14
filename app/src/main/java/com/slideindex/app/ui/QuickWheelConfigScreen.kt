@@ -617,6 +617,33 @@ fun QuickWheelConfigScreen(
                                 )
                             }
                         )
+                        add(
+                            settingsCardScopeItem("transparent-user-icons") {
+                                QuickWheelSwitchRow(
+                                    title = stringResource(R.string.quick_wheel_transparent_container),
+                                    description = stringResource(
+                                        R.string.quick_wheel_transparent_container_desc,
+                                    ),
+                                    checked = levelStyle.transparentUserIcons,
+                                    // 一个开关管全轮盘：一级 / 二级、圆形 / 矩形四套样式一起写，
+                                    // 避免"一级透明、二级还铺着底"这种半吊子状态。
+                                    onCheckedChange = { value ->
+                                        patchDraft { current ->
+                                            current.copy(
+                                                primaryCircleStyle = current.primaryCircleStyle
+                                                    .copy(transparentUserIcons = value),
+                                                primaryRectStyle = current.primaryRectStyle
+                                                    .copy(transparentUserIcons = value),
+                                                secondaryCircleStyle = current.secondaryCircleStyle
+                                                    .copy(transparentUserIcons = value),
+                                                secondaryRectStyle = current.secondaryRectStyle
+                                                    .copy(transparentUserIcons = value),
+                                            )
+                                        }
+                                    },
+                                )
+                            }
+                        )
                         // 矩形形态专属：每行容器列数（2–10），超出自动换行。
                         if (levelShape == QuickWheelShape.RECT) {
                             add(

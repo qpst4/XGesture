@@ -119,7 +119,18 @@ data class QuickWheelStyleSpec(
      *   行 / 列间距都用 [containerGapDp]。
      */
     val columnCount: Int = QuickWheelLayoutEngine.DEFAULT_COLUMN_COUNT,
-)
+    /**
+     * **应用图标 / 图库图片**这类"用户提供的位图"的容器是否全透明（不铺底色、不裁切）。
+     *
+     * - `false`（默认）：所有容器都有底板，观感统一（原行为）；
+     * - `true`：这些容器不铺任何底色，图标保持原样 —— 拟物风格图标包是异形 + 透明边角，
+     *   铺方形底板会从轮廓外露出底色。
+     *
+     * 内置矢量图标（图标库 / 内置动作 / **文字图标** / 名称首字母）**不受本开关影响，始终铺底板**：
+     * 细线图标与文字没有底板，在壁纸上会读不清。
+     */
+    val transparentUserIcons: Boolean = false,
+    )
 
 /** 单个容器的几何位置（屏幕坐标，px）。 */
 data class QuickWheelPlacedSlot(

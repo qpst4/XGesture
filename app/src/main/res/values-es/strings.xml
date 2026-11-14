@@ -4787,6 +4787,8 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="quick_wheel_section_slots">Containers</string>
     <string name="quick_wheel_show_labels">Mostrar etiquetas de texto</string>
     <string name="quick_wheel_show_labels_desc">Mostrar el nombre bajo cada icono; icono y texto permanecer centrados juntos</string>
+    <string name="quick_wheel_transparent_container">Fondo de contenedor transparente</string>
+    <string name="quick_wheel_transparent_container_desc">Al activarlo se quita el fondo y el recorte tras los iconos de apps e imágenes; los iconos de acción y texto siempre llevan fondo</string>
     <string name="quick_wheel_initial_radius">Radius inicial</string>
     <string name="quick_wheel_initial_radius_desc">Distancia del punto de convocatoria al primer anillo</string>
     <string name="quick_wheel_container_gap">Saldo de contenedores</string>

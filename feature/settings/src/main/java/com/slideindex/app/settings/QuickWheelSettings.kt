@@ -503,6 +503,8 @@ object QuickWheelCodec {
             // 第 12 段（索引 11）为矩形列数；旧记录没有这段 → 用默认列数（向后兼容）。
             columnCount = parts.getOrNull(11)?.toIntOrNull()
                 ?: QuickWheelLayoutEngine.DEFAULT_COLUMN_COUNT,
+            // 第 13 段（索引 12）= 容器底色是否全透明；旧记录没有这段 → 默认不透明（原观感）。
+            transparentUserIcons = parts.getOrNull(12) == "1",
         )
     }
 
@@ -753,9 +755,10 @@ object QuickWheelCodec {
     /** 一级/二级的"另一形态"样式分隔符（与 [STYLE_SEP] 不同，避免解析冲突）。 */
     private const val STYLE_ALT_SEP = "\u001C"
 
-    /** 编码一套样式，并在末尾追加矩形列数。 */
+    /** 编码一套样式，并在末尾追加矩形列数与「容器底色是否全透明」。 */
     private fun encodeStyleWithColumn(style: QuickWheelStyleSpec): String =
-        encodeStyle(style) + STYLE_SEP + style.columnCount
+        encodeStyle(style) + STYLE_SEP + style.columnCount + STYLE_SEP +
+            (if (style.transparentUserIcons) "1" else "0")
 
     /**
      * 解码"当前形态样式 + 另一形态样式"。
