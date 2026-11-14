@@ -23,10 +23,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,17 +45,31 @@ import com.slideindex.app.overlay.layout.QuickWheelStyleSpec
 import com.slideindex.app.settings.QuickWheelIconSource
 import com.slideindex.app.settings.QuickWheelSlot
 import com.slideindex.app.ui.gestureActionIcon
+import com.slideindex.app.ui.theme.LocalAppDarkTheme
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+/** 「新增容器」的白底（编辑层的加号格，不属于图标底板）。 */
 private val ContainerSurface = Color(0xFFFFFFFF)
+/** 内置矢量图标的默认线条色（浅色底板上用）。 */
 private val ContainerIconTint = Color(0xDE000000)
-private val ContainerLabel = Color(0xCC000000)
 private val ContainerHighlight = Color(0xFF3478F6)
+
+// ── 图标底板（只给**内置矢量图标**铺）────────────────────────────────────────
+// 色值与圆环启动器的底板一致：深色 #303034、浅色 #F1F3F7。
+// 深浅取应用主题（`LocalAppDarkTheme`），与全项目的界面配色同源，不再单独判断。
+private val PlateDark = Color(0xFF303034)
+private val PlateLight = Color(0xFFF1F3F7)
+private val IconOnPlateDark = Color(0xFFFFFFFF)
+private val IconOnPlateLight = Color(0xDE000000)
+private val LabelOnPlateDark = Color(0xCCFFFFFF)
+private val LabelOnPlateLight = Color(0xCC000000)
+/** 不铺底板时（应用图标 / 图库 / 文字图标）标签的投影，避免贴在壁纸上读不清。 */
+private val LabelShadow = Shadow(color = Color(0x73000000), blurRadius = 4f)
 /**
  * 用户主动留出的空位（「空白占位」）在**预览 / 配置**里的"空白阴影"外观。
  * 运行时浮层不会绘制这类位置（完全透明），只有预览与配置页看得到这层提示。
  */
 private val ContainerPlaceholderSurface = Color(0x14000000)
-private val ContainerPlaceholderBorder = Color(0x1F000000)
 private val ContainerAddBorder = Color(0x1F000000)
 private val ContainerEmptyIcon = Color(0x99000000)
 private const val PLUS_STROKE_DP = 1.8f
@@ -89,25 +105,38 @@ fun QuickWheelContainer(
     val shape = RoundedCornerShape(cornerDp)
 
     // placeholder：用户主动留出的空位（预览 / 配置显示"空白阴影"，运行时由 PlacedContainer 跳过）。
-    // 其余容器一律是真实容器——哪怕点击 / 长按都没设动作，也渲染成"全白空图标"。
+    // 其余容器一律是真实容器——哪怕点击 / 长按都没设动作，也渲染成"空图标"。
     val isEmptyGap = !slot.isConfigured && slot.placeholder
+    // 内置矢量图标（图标库 / 内置动作 / 文字图标 / 名称首字母）**始终**铺底板；应用图标 /
+    // 图库图片这类用户提供的位图由 [QuickWheelStyleSpec.transparentUserIcons] 决定：
+    // 开启后不铺底色、不裁切，拟物类异形图标才能保持原样。
+    // 底板的深浅跟着应用主题走，与全项目的界面配色同源。
+    val plated = !isEmptyGap && (slot.usesBuiltinVectorPlate() || !style.transparentUserIcons)
+    val darkPlate = LocalAppDarkTheme.current
+    val plateColor = if (darkPlate) PlateDark else PlateLight
+    val iconTint = if (darkPlate) IconOnPlateDark else IconOnPlateLight
+    val labelColor = if (darkPlate) LabelOnPlateDark else LabelOnPlateLight
     Box(
         modifier = modifier
             .size(sizeDp * scale)
             .then(
-                if (isEmptyGap) {
+                when {
                     // 「空白占位」的"空白阴影"外观：只在预览 / 配置里可见；
                     // 真实呼出时由 PlacedContainer 直接跳过绘制，此处只是一个全透明占位。
-                    Modifier
-                        .shadow(elevation = 2.dp, shape = shape)
+                    // 只保留底色与阴影，**不描边**：那圈 1dp 边框会勾出一个空心方框，
+                    // 看起来像"中间有个没画完的图形"。占位配色与动作底板是两套，不要混用。
+                    // 只有一块纯色半透明底：不描边、**也不加阴影**。
+                    // 之前这里有 `shadow(2.dp)`，而底色只有 8% 不透明 —— 投影会从底色下面
+                    // 透出来，看起来像"容器中间还有一个浅色形状"；且 Android 的阴影轮廓对
+                    // 圆角矩形按多边形近似，圆角调大时那个影子会变成"正多边形"。
+                    isEmptyGap -> Modifier
                         .clip(shape)
                         .background(ContainerPlaceholderSurface)
-                        .border(width = 1.dp, color = ContainerPlaceholderBorder, shape = shape)
-                } else {
-                    Modifier
+
+                    plated -> Modifier
                         .shadow(elevation = if (highlighted) 10.dp else 4.dp, shape = shape)
                         .clip(shape)
-                        .background(ContainerSurface)
+                        .background(plateColor)
                         // 普通态不再描边：图标贴满时那 1dp 会压在图标边缘上，看着像图标自带一圈边框。
                         // 只保留"高亮"（拖动 / 悬停）时的 2dp 蓝框作为选中提示。
                         .then(
@@ -117,6 +146,14 @@ fun QuickWheelContainer(
                                 Modifier
                             },
                         )
+
+                    // 无底板：不铺任何底色、也不裁切图标（拟物图标包的透明边角要原样保留），
+                    // 只在选中时画一圈描边。阴影也不加——透明方块投出的圆角阴影很脏。
+                    else -> if (highlighted) {
+                        Modifier.border(2.dp, ContainerHighlight, shape)
+                    } else {
+                        Modifier
+                    }
                 },
             ),
         contentAlignment = Alignment.Center,
@@ -137,7 +174,8 @@ fun QuickWheelContainer(
             // 由几何解出"角标完整落在圆角内"的图标上限，超了就等比缩小图标：
             //   角标最外缘 = 0.6158 × 图标 + 1.5dp 白边
             //   圆角边界（沿 45°）= √2 × (半容器 − 圆角) + 圆角
-            val badgeShrink = if (slot.tapAction is GestureAction.LaunchShortcut) {
+            // 只有铺底板（带圆角裁剪）时才需要让位；无底板的容器不裁切，角标不会被切。
+            val badgeShrink = if (plated && slot.tapAction is GestureAction.LaunchShortcut) {
                 val boundaryPx = (sizePx / 2f - cornerPx) * 1.4142135f + cornerPx
                 val maxIconPx = (boundaryPx - 1.5f * density.density) / 0.6158f
                 (maxIconPx / sizePx).coerceIn(0.6f, 1f)
@@ -148,21 +186,54 @@ fun QuickWheelContainer(
                 slot = slot,
                 builtinDp = builtinIconDp * badgeShrink,
                 rasterDp = rasterIconDp * badgeShrink,
+                // 矢量 / 文字图标跟底板反色（深底白线、浅底黑线）；位图图标不受 tint 影响。
+                tint = iconTint,
             )
             if (style.showLabels && slot.name.isNotBlank()) {
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = slot.name,
-                    color = ContainerLabel,
+                    // 有底板时跟底板反色；无底板时贴在壁纸上，用白色 + 投影保证可读。
+                    color = if (plated) labelColor else Color.White,
                     fontSize = labelSize,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center,
+                    style = if (plated) TextStyle.Default else TextStyle(shadow = LabelShadow),
                     modifier = Modifier.padding(horizontal = 2.dp),
                 )
             }
         }
+    }
+}
+
+/**
+ * 该容器的图标是不是**内置绘制**（矢量 / 文字）—— 这类容器**始终铺底板**，不受"底色全透明"开关影响。
+ *
+ * - 铺（不受开关影响）：内置图标库的矢量、内置动作的矢量图标（返回 / 主页 / 截图……）、
+ *   文字图标、名称首字母 —— 都是我们自己画的细线 / 字符，没有底板在壁纸上会读不清；
+ * - 受开关控制：应用图标、图库图片 —— 用户提供的位图，拟物类图标包是异形 + 透明边角，
+ *   铺方形底板会从轮廓外露出底色。
+ *
+ * ⚠️ 只看「图标来源 + 动作类型」，**不去解析位图**（解析要读磁盘、也可能失败退回矢量）。
+ * 因此「打开应用 / 快捷方式 / 宏」即使位图没取到、退回矢量，也按"用户选的是应用图标"处理。
+ */
+internal fun QuickWheelSlot.usesBuiltinVectorPlate(): Boolean = when (iconSource) {
+    QuickWheelIconSource.ICON_LIBRARY,
+    QuickWheelIconSource.FONT_ICON,
+    QuickWheelIconSource.TEXT,
+    -> true
+    QuickWheelIconSource.APP_ICON,
+    QuickWheelIconSource.GALLERY,
+    -> false
+    QuickWheelIconSource.NONE -> when (tapAction) {
+        is GestureAction.LaunchApp,
+        is GestureAction.LaunchShortcut,
+        is GestureAction.RunMacro,
+        -> false
+        // 其余内置动作 → 矢量图标；没有动作时由名称首字母兜底（同样是内置绘制）。
+        else -> tapAction.type != GestureActionType.NONE || name.isNotBlank()
     }
 }
 
@@ -264,6 +335,20 @@ fun QuickWheelSlotIcon(
 
     Box(contentAlignment = Alignment.Center) {
         when {
+            // 全局图标库（Lucide / Remix / Tabler）的字体图标：交给 `:app` 的 ActionIconView 渲染，
+            // 与「设置 → 图标」里给动作选图标完全同源。
+            // 把子树主题的 onSurface 钉成本容器的图标色：深底白线 / 浅底黑线，暗色下不会白底白线。
+            slot.iconSource == QuickWheelIconSource.FONT_ICON && slot.iconValue.isNotBlank() ->
+                MiuixTheme(colors = MiuixTheme.colorScheme.copy(onSurface = tint)) {
+                    com.slideindex.app.overlay.panels.PanelRuntimeHooks.actionIconView?.content(
+                        action = GestureAction.None,
+                        iconKey = slot.iconValue,
+                        sizeDp = builtinDp.value.toInt(),
+                        // 容器自己已经铺了底板，这里只要字形。
+                        showBackground = false,
+                    )
+                }
+
             // 文字图标：把用户输入的文字直接当图标绘制（内置类，走 builtin 尺寸）。
             slot.iconSource == QuickWheelIconSource.TEXT && slot.iconValue.isNotBlank() -> Text(
                 text = slot.iconValue,

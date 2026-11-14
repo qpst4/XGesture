@@ -92,6 +92,14 @@ enum class QuickWheelIconSource {
     /** 内置图标库（复用项目自绘 ThinActionIcons）。 */
     ICON_LIBRARY,
 
+    /**
+     * **全局图标库**（Lucide / Remix / Tabler 字体图标）。
+     *
+     * 值 = 字体库 key（`l:` / `r:` / `tb:` 开头，与动作图标覆盖同一套编码），
+     * 渲染交给 `:app` 的 `ActionIconView`，与设置页里给动作选图标完全同源。
+     */
+    FONT_ICON,
+
     /** 已安装应用图标（值 = 包名）。 */
     APP_ICON,
 
@@ -354,7 +362,8 @@ data class QuickWheel(
         )
         return copy(
             name = name.trim(),
-            sectorMask = QuickWheelLayoutEngine.normalizeSectorMask(sectorMask),
+            // 只裁位，不归一化：草稿里保留用户真实点选，扇区环 / 预览各按各的口径（见方法注释）。
+            sectorMask = QuickWheelLayoutEngine.clampSectorMask(sectorMask),
             // 两套形态参数都保存下来……
             primaryCircleStyle = primaryCircle,
             primaryRectStyle = primaryRect,
@@ -502,6 +511,8 @@ object QuickWheelCodec {
             // 第 12 段（索引 11）为矩形列数；旧记录没有这段 → 用默认列数（向后兼容）。
             columnCount = parts.getOrNull(11)?.toIntOrNull()
                 ?: QuickWheelLayoutEngine.DEFAULT_COLUMN_COUNT,
+            // 第 13 段（索引 12）= 容器底色是否全透明；旧记录没有这段 → 默认不透明（原观感）。
+            transparentUserIcons = parts.getOrNull(12) == "1",
         )
     }
 
@@ -537,7 +548,8 @@ object QuickWheelCodec {
         append(FIELD_SEP)
         append(wheel.order)
         append(FIELD_SEP)
-        append(QuickWheelLayoutEngine.normalizeSectorMask(wheel.sectorMask))
+        // 存储用"原样掩码"：归一化只用于渲染，写进编码里会把用户选的三扇区 / 对角两扇区吃掉。
+        append(QuickWheelLayoutEngine.clampSectorMask(wheel.sectorMask))
         append(FIELD_SEP)
         append(QuickWheelLayoutEngine.clampLongPressMs(wheel.longPressMs))
         append(FIELD_SEP)
@@ -607,7 +619,8 @@ object QuickWheelCodec {
             },
             order = parts[5].toIntOrNull() ?: 0,
             sectorMask = if (hasSector) {
-                QuickWheelLayoutEngine.normalizeSectorMask(
+                // 读回来也原样保留（只裁位），形态归一化交给渲染路径。
+                QuickWheelLayoutEngine.clampSectorMask(
                     parts[6].toIntOrNull() ?: QuickWheelLayoutEngine.SECTOR_ALL,
                 )
             } else {
@@ -750,9 +763,10 @@ object QuickWheelCodec {
     /** 一级/二级的"另一形态"样式分隔符（与 [STYLE_SEP] 不同，避免解析冲突）。 */
     private const val STYLE_ALT_SEP = "\u001C"
 
-    /** 编码一套样式，并在末尾追加矩形列数。 */
+    /** 编码一套样式，并在末尾追加矩形列数与「容器底色是否全透明」。 */
     private fun encodeStyleWithColumn(style: QuickWheelStyleSpec): String =
-        encodeStyle(style) + STYLE_SEP + style.columnCount
+        encodeStyle(style) + STYLE_SEP + style.columnCount + STYLE_SEP +
+            (if (style.transparentUserIcons) "1" else "0")
 
     /**
      * 解码"当前形态样式 + 另一形态样式"。

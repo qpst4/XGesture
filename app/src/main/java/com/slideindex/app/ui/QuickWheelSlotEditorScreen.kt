@@ -261,6 +261,26 @@ fun QuickWheelSlotEditorScreen(
         }
     }
 
+    // 全局图标库（Lucide / Remix / Tabler）：独立页选图标，key 直接存进 iconValue。
+    val fontLibraryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        if (result.resultCode != android.app.Activity.RESULT_OK) {
+            return@rememberLauncherForActivityResult
+        }
+        val picked = result.data?.getStringExtra(
+            com.slideindex.app.service.IconLibraryPickerTrampolineActivity.EXTRA_PICKED_KEY,
+        )
+        if (!picked.isNullOrBlank()) {
+            patch {
+                it.copy(
+                    iconSource = QuickWheelIconSource.FONT_ICON,
+                    iconValue = picked,
+                )
+            }
+        }
+    }
+
     BackHandler {
         when (page) {
             QuickWheelSlotEditorPage.SlotSettings -> onExit()
@@ -308,6 +328,18 @@ fun QuickWheelSlotEditorScreen(
                     iconMenuExpanded = iconMenuExpanded,
                     onIconMenuExpandedChange = { iconMenuExpanded = it },
                     onOpenIconLibrary = { showIconLibrary = true },
+                    // 从全局图标库选（Lucide / Remix / Tabler）：独立页，返回后草稿不丢。
+                    onOpenFontLibrary = {
+                        fontLibraryLauncher.launch(
+                            com.slideindex.app.service.IconLibraryPickerTrampolineActivity
+                                .createIntent(
+                                    context,
+                                    draft.iconValue.takeIf {
+                                        draft.iconSource == QuickWheelIconSource.FONT_ICON
+                                    },
+                                ),
+                        )
+                    },
                     // 选应用图标：直接用软件现成的应用列表（页内子页，带搜索）。
                     onOpenAppPicker = { page = QuickWheelSlotEditorPage.IconPickApp },
                     onOpenGallery = {
@@ -520,6 +552,8 @@ private fun QuickWheelSlotSettingsPage(
     iconMenuExpanded: Boolean,
     onIconMenuExpandedChange: (Boolean) -> Unit,
     onOpenIconLibrary: () -> Unit,
+    /** 从**全局图标库**（Lucide / Remix / Tabler）选图标。 */
+    onOpenFontLibrary: () -> Unit,
     onOpenAppPicker: () -> Unit,
     onOpenGallery: () -> Unit,
 ) {
@@ -580,6 +614,17 @@ private fun QuickWheelSlotSettingsPage(
                                     expanded = iconMenuExpanded,
                                     onDismissRequest = { onIconMenuExpandedChange(false) },
                                 ) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                stringResource(R.string.quick_wheel_icon_pick_library),
+                                            )
+                                        },
+                                        onClick = {
+                                            onIconMenuExpandedChange(false)
+                                            onOpenFontLibrary()
+                                        },
+                                    )
                                     DropdownMenuItem(
                                         // 「图标库」改为「文字图标」：容器以文字形式展示图标，文字由用户输入。
                                         text = {
@@ -897,6 +942,15 @@ private fun QuickWheelIconNameRow(
                 else -> null
             }
             when {
+                // 全局图标库：与设置页同一套渲染（字体图标，不额外套底色）。
+                preview.iconSource == QuickWheelIconSource.FONT_ICON &&
+                    preview.iconValue.isNotBlank() -> ActionIconView(
+                    action = GestureAction.None,
+                    iconKey = preview.iconValue,
+                    sizeDp = 40,
+                    showBackground = false,
+                )
+
                 // 文字图标：预览框里直接显示文字。
                 preview.iconSource == QuickWheelIconSource.TEXT && preview.iconValue.isNotBlank() ->
                     Text(
