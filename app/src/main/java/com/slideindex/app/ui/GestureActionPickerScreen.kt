@@ -236,8 +236,8 @@ fun GestureActionPickerScreen(
         // 同步就绪的 tab 首帧已经在这个位置了，再滚一次是幂等的（不会抖）。
         pickerListState.scrollToItem((target - 1).coerceAtLeast(0))
         // 先滚到位再闪（瞬时滚 + 闪），时序确定：不会出现"还在滚动时已经闪完了"。
-        // 动画时长遵循系统的"动画时长缩放"，关掉动画时自动跳过。
-        repeat(3) {
+        // 动画时长遵循系统的"动画时长缩放"，关掉动画时自动跳过；闪 2 次节奏干脆，不拖沓。
+        repeat(2) {
             pickerHighlightPulse.animateTo(1f, tween(HighlightPulseOnMs))
             pickerHighlightPulse.animateTo(0f, tween(HighlightPulseOffMs))
         }

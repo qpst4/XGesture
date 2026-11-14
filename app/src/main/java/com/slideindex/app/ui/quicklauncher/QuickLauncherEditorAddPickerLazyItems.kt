@@ -1,23 +1,28 @@
 package com.slideindex.app.ui.quicklauncher
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import com.slideindex.app.ui.Md3PickerAppEntryLeading
@@ -26,10 +31,8 @@ import androidx.compose.material.icons.automirrored.outlined.Shortcut
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.data.AppInfo
@@ -76,6 +79,8 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
     noneSelected: Boolean = false,
     onSelectNone: () -> Unit = {},
     searchQuery: String = "",
+    /** 定位到已选动作时的闪烁脉冲（0..1）。 */
+    highlightPulse: Float = 0f,
     /**
      * 系统当前铃声模式（`AudioManager.RINGER_MODE_*`）；只影响「声音模式 · 切换」的图标。
      * `null` = 调用方没接实时状态，退回静态铃铛。
@@ -183,10 +188,13 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
                                 },
                                 modifier = Modifier.weight(1f),
                             ) {
+                                val modeSelected = singleSelect && added
+                                val modeCellPulse = if (modeSelected) highlightPulse else 0f
                                 PickerGridCell(
                                     label = cellLabel,
-                                    selected = singleSelect && added,
+                                    selected = modeSelected,
                                     singleSelect = singleSelect,
+                                    highlightPulse = modeCellPulse,
                                     onClick = null,
                                     modifier = Modifier.fillMaxWidth(),
                                 ) {
@@ -195,10 +203,13 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
                             }
                         }
                     } else {
+                        val actionSelected = if (isNone) noneSelected else added
+                        val actionCellPulse = if (singleSelect && actionSelected) highlightPulse else 0f
                         PickerGridCell(
                             label = cellLabel,
-                            selected = if (isNone) noneSelected else added,
+                            selected = actionSelected,
                             singleSelect = singleSelect,
+                            highlightPulse = actionCellPulse,
                             onClick = {
                                 if (isNone) {
                                     onSelectNone()
@@ -370,8 +381,28 @@ private fun PickerGridCell(
     modifier: Modifier = Modifier,
     /** 单选（槽位）用高亮，多选（加入面板）才用右上角勾选徽标。 */
     singleSelect: Boolean = false,
+    /** 定位到已选动作时的闪烁脉冲（0..1）。 */
+    highlightPulse: Float = 0f,
     icon: @Composable () -> Unit,
 ) {
+    val accent = MiuixTheme.colorScheme.primary
+    val isSingleSelected = selected && singleSelect
+    val effectiveSelected = isSingleSelected || highlightPulse > 0.05f
+    val baseBackground = if (isSingleSelected) {
+        accent.copy(alpha = 0.16f)
+    } else {
+        MiuixTheme.colorScheme.surfaceContainerHigh
+    }
+    val cellBackground = if (highlightPulse > 0.05f) {
+        lerp(
+            baseBackground,
+            accent.copy(alpha = 0.32f),
+            highlightPulse,
+        )
+    } else {
+        baseBackground
+    }
+
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
@@ -384,11 +415,16 @@ private fun PickerGridCell(
                 modifier = Modifier
                     .size(58.dp)
                     .clip(RoundedCornerShape(17.dp))
-                    .background(
-                        if (selected && singleSelect) {
-                            MiuixTheme.colorScheme.primary.copy(alpha = 0.16f)
+                    .background(cellBackground)
+                    .then(
+                        if (effectiveSelected) {
+                            Modifier.border(
+                                width = 1.5.dp,
+                                color = accent.copy(alpha = if (isSingleSelected) 0.55f else highlightPulse * 0.7f),
+                                shape = RoundedCornerShape(17.dp),
+                            )
                         } else {
-                            MiuixTheme.colorScheme.surfaceContainerHigh
+                            Modifier
                         },
                     ),
                 contentAlignment = Alignment.Center,
@@ -401,7 +437,7 @@ private fun PickerGridCell(
                         .align(Alignment.TopEnd)
                         .size(16.dp)
                         .clip(androidx.compose.foundation.shape.CircleShape)
-                        .background(MiuixTheme.colorScheme.primary),
+                        .background(accent),
                     contentAlignment = Alignment.Center,
                 ) {
                     androidx.compose.material3.Icon(
@@ -421,8 +457,9 @@ private fun PickerGridCell(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            color = if (selected && singleSelect) {
-                MiuixTheme.colorScheme.primary
+            fontWeight = if (isSingleSelected) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (isSingleSelected) {
+                accent
             } else {
                 MiuixTheme.colorScheme.onSurfaceVariantSummary
             },

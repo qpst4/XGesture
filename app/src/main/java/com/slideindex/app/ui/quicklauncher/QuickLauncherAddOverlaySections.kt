@@ -3,6 +3,8 @@ package com.slideindex.app.ui.quicklauncher
 import android.os.Handler
 import android.os.Looper
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -659,11 +661,23 @@ private fun QuickLauncherAddActionsTab(
         }
     }
     val listState = rememberLazyListState()
-    // 打开时定位到当前绑定的动作（与边角轮盘一致）。
+    val highlightPulse = remember { Animatable(0f) }
+    var revealApplied by remember { mutableStateOf(false) }
+    // 打开时定位到当前绑定的动作（与边角轮盘一致），单选定位时闪烁 2 次。
     LaunchedEffect(actions, focusKey) {
-        if (focusKey != null) {
+        if (focusKey != null && !revealApplied) {
             val index = actionGridItemIndex(actions, focusKey)
-            if (index >= 0) listState.scrollToItem(index)
+            if (index >= 0) {
+                revealApplied = true
+                listState.scrollToItem((index - 1).coerceAtLeast(0))
+                if (singleSelect) {
+                    repeat(2) {
+                        highlightPulse.animateTo(1f, tween(130))
+                        highlightPulse.animateTo(0f, tween(110))
+                    }
+                    highlightPulse.snapTo(0f)
+                }
+            }
         }
     }
     LazyColumn(
@@ -684,6 +698,7 @@ private fun QuickLauncherAddActionsTab(
             noneSelected = noneSelected,
             onSelectNone = onSelectNone,
             searchQuery = searchQuery,
+            highlightPulse = highlightPulse.value,
         )
     }
 }

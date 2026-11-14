@@ -1,6 +1,7 @@
 package com.slideindex.app.ui.gesturepicker
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,12 +21,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import com.slideindex.app.R
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.data.AppInfo
@@ -92,11 +96,29 @@ private fun ActionPickerGridCell(
     label: String? = null,
     /** 覆盖图标用的动作实例（已绑定带模式的动作时，图标要跟着模式走）。 */
     iconAction: GestureAction = action,
+    /** 定位到已选动作时的闪烁脉冲（0..1）。 */
+    highlightPulse: Float = 0f,
 ) {
-    val accent = MaterialTheme.colorScheme.primary
+    val accent = MiuixTheme.colorScheme.primary
+    val effectiveSelected = selected || highlightPulse > 0.05f
+    val baseBackground = if (selected) {
+        accent.copy(alpha = 0.16f)
+    } else {
+        MiuixTheme.colorScheme.surfaceContainerHigh
+    }
+    val cellBackground = if (highlightPulse > 0.05f) {
+        lerp(
+            baseBackground,
+            accent.copy(alpha = 0.32f),
+            highlightPulse,
+        )
+    } else {
+        baseBackground
+    }
+
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(12.dp))
             .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
             .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -106,11 +128,16 @@ private fun ActionPickerGridCell(
                 modifier = Modifier
                     .size(58.dp)
                     .clip(RoundedCornerShape(17.dp))
-                    .background(
-                        if (selected) {
-                            accent.copy(alpha = 0.16f)
+                    .background(cellBackground)
+                    .then(
+                        if (effectiveSelected) {
+                            Modifier.border(
+                                width = 1.5.dp,
+                                color = accent.copy(alpha = if (selected) 0.55f else highlightPulse * 0.7f),
+                                shape = RoundedCornerShape(17.dp),
+                            )
                         } else {
-                            MaterialTheme.colorScheme.surfaceVariant
+                            Modifier
                         },
                     ),
                 contentAlignment = Alignment.Center,
@@ -124,8 +151,9 @@ private fun ActionPickerGridCell(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .size(9.dp)
-                        .clip(RoundedCornerShape(5.dp))
+                        .padding(4.dp)
+                        .size(8.dp)
+                        .clip(RoundedCornerShape(4.dp))
                         .background(accent),
                 )
             }
@@ -135,14 +163,18 @@ private fun ActionPickerGridCell(
         // minLines = 2 让短标签也占满两行高度，整行格子等高，行距不会参差不齐。
         Text(
             text = label ?: gestureActionLabel(action),
-            style = MaterialTheme.typography.labelSmall,
-            color = if (selected) accent else MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
             minLines = 2,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
+            textAlign = TextAlign.Center,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (selected) {
+                accent
+            } else {
+                MiuixTheme.colorScheme.onSurfaceVariantSummary
+            },
             modifier = Modifier.padding(top = 5.dp, start = 2.dp, end = 2.dp),
         )
     }
@@ -245,18 +277,15 @@ fun LazyListScope.actionPickerActionItems(
         item(key = "action-cat-${section.category.name}") {
             com.slideindex.app.ui.Md3PickerSectionHeader(stringResource(section.category.titleRes))
         }
-        // 网格：每行 4 个。动作类型有近百个，纵向列表要滚很久；网格一屏能看 12~16 个。
-        //
-        // 格子里只留「图标 + 标题 + 状态角标」—— 原来行内的副标题（描述 / 当前配置摘要）
-        // 全部交给动作详情页承载，否则网格一定会挤成两行文字参差不齐。
-        // 点格子 = 进详情页（有参数的动作）或直接选中（返回/桌面/截屏这类无参数动作）。
+
+        // 网格：每行 4 个。与快速启动器「添加快捷项」页保持统一的边距与间距（12.dp / 8.dp）。
         section.actions.chunked(ACTION_GRID_COLUMNS).forEachIndexed { rowIndex, rowActions ->
             item(key = "action-row-${section.category.name}-$rowIndex") {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        .padding(horizontal = 12.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     rowActions.forEach { action ->
                         val context = LocalContext.current
@@ -265,6 +294,7 @@ fun LazyListScope.actionPickerActionItems(
                                 action.type == GestureActionType.LAUNCH_SHORTCUT -> false
                             else -> action.type == current.type
                         }
+                        val cellPulse = if (selected) highlightPulse else 0f
                         val bound = current.takeIf { it.type == action.type }
                         val modeOptions = actionModeOptions(action, bound)
                         // 「声音模式 · 切换」：图标跟手机实际铃声状态走；显式档位仍画动作目标。
@@ -300,6 +330,7 @@ fun LazyListScope.actionPickerActionItems(
                                     modifier = Modifier.fillMaxWidth(),
                                     label = cellLabel,
                                     iconAction = liveIconAction,
+                                    highlightPulse = cellPulse,
                                 )
                             }
                         } else {
@@ -325,6 +356,7 @@ fun LazyListScope.actionPickerActionItems(
                                     }
                                 },
                                 modifier = Modifier.weight(1f),
+                                highlightPulse = cellPulse,
                             )
                         }
                     }
