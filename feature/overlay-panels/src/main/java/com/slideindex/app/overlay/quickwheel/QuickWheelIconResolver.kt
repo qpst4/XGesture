@@ -118,8 +118,11 @@ object QuickWheelIconResolver {
         val bitmap = when (slot.iconSource) {
             QuickWheelIconSource.APP_ICON -> loadAppIcon(context, slot.iconValue, targetSizePx)
             QuickWheelIconSource.GALLERY -> loadGalleryIcon(slot.iconValue)
-            // TEXT（文字图标）由容器直接绘制文字，这里不产出位图。
+            // TEXT（文字图标）由容器直接绘制文字，这里不产出位图；
+            // FONT_ICON（Lucide / Remix / Tabler）由 `:app` 的 ActionIconView 直接画字体字形，
+            // 面板侧拿不到字体表，所以这里同样返回 null。
             QuickWheelIconSource.ICON_LIBRARY,
+            QuickWheelIconSource.FONT_ICON,
             QuickWheelIconSource.NONE,
             QuickWheelIconSource.TEXT,
             -> null

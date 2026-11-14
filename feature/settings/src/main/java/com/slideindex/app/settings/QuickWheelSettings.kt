@@ -92,6 +92,14 @@ enum class QuickWheelIconSource {
     /** 内置图标库（复用项目自绘 ThinActionIcons）。 */
     ICON_LIBRARY,
 
+    /**
+     * **全局图标库**（Lucide / Remix / Tabler 字体图标）。
+     *
+     * 值 = 字体库 key（`l:` / `r:` / `tb:` 开头，与动作图标覆盖同一套编码），
+     * 渲染交给 `:app` 的 `ActionIconView`，与设置页里给动作选图标完全同源。
+     */
+    FONT_ICON,
+
     /** 已安装应用图标（值 = 包名）。 */
     APP_ICON,
 

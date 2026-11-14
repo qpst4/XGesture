@@ -308,46 +308,69 @@ fun QuickWheelConfigScreen(
     val sectionAnimationTitle = stringResource(R.string.quick_wheel_animation)
     val sectionStyleTitle = stringResource(R.string.quick_wheel_section_appearance)
 
-    fun updateStyle(transform: (QuickWheelStyleSpec) -> QuickWheelStyleSpec) {
-        // 当前形态对应的那套要同步写入"形态专属字段"，两套参数才能同时保存下来。
-        patchDraft { current ->
-            when (styleLevel) {
-                QuickWheelStyleLevel.PRIMARY -> {
-                    val updated = transform(current.primaryStyle)
-                    current.copy(
-                        primaryStyle = updated,
-                        primaryCircleStyle = if (current.primaryShape == QuickWheelShape.CIRCLE) {
-                            updated
-                        } else {
-                            current.primaryCircleStyle
-                        },
-                        primaryRectStyle = if (current.primaryShape == QuickWheelShape.RECT) {
-                            updated
-                        } else {
-                            current.primaryRectStyle
-                        },
-                    )
-                }
+    /** 把样式改动应用到**指定 level** 的两套样式上（"当前形态"那套 + 形态专属字段）。 */
+    fun QuickWheel.withStyleAt(
+        transform: (QuickWheelStyleSpec) -> QuickWheelStyleSpec,
+    ): QuickWheel = when (styleLevel) {
+        QuickWheelStyleLevel.PRIMARY -> {
+            val updated = transform(primaryStyle)
+            copy(
+                primaryStyle = updated,
+                primaryCircleStyle = if (primaryShape == QuickWheelShape.CIRCLE) {
+                    updated
+                } else {
+                    primaryCircleStyle
+                },
+                primaryRectStyle = if (primaryShape == QuickWheelShape.RECT) {
+                    updated
+                } else {
+                    primaryRectStyle
+                },
+            )
+        }
 
-                QuickWheelStyleLevel.SECONDARY -> {
-                    val updated = transform(current.secondaryStyle)
-                    current.copy(
-                        secondaryStyle = updated,
-                        secondaryCircleStyle = if (current.secondaryShape == QuickWheelShape.CIRCLE) {
-                            updated
-                        } else {
-                            current.secondaryCircleStyle
-                        },
-                        secondaryRectStyle = if (current.secondaryShape == QuickWheelShape.RECT) {
-                            updated
-                        } else {
-                            current.secondaryRectStyle
-                        },
-                    )
-                }
-            }
+        QuickWheelStyleLevel.SECONDARY -> {
+            val updated = transform(secondaryStyle)
+            copy(
+                secondaryStyle = updated,
+                secondaryCircleStyle = if (secondaryShape == QuickWheelShape.CIRCLE) {
+                    updated
+                } else {
+                    secondaryCircleStyle
+                },
+                secondaryRectStyle = if (secondaryShape == QuickWheelShape.RECT) {
+                    updated
+                } else {
+                    secondaryRectStyle
+                },
+            )
         }
     }
+
+    fun updateStyle(transform: (QuickWheelStyleSpec) -> QuickWheelStyleSpec) {
+        patchDraft { current -> current.withStyleAt(transform) }
+    }
+
+    /**
+     * 「开关类」样式的**立即保存**：写草稿的同时把这一处改动直接写回设置。
+     *
+     * 只把改动套用到"设置里的最新值"再写回，**不**连带保存草稿里其它未提交的调整
+     * （滑条拖到一半时点开关，不应该顺手把半截的尺寸 / 圆角也落盘）。
+     */
+    fun updateStyleAndPersist(transform: (QuickWheelStyleSpec) -> QuickWheelStyleSpec) {
+        draft = draft.withStyleAt(transform)
+        onPatch(settingsWheel.withStyleAt(transform))
+    }
+
+    /** 「容器底色全透明」对一级/二级、圆形/矩形四套样式同时生效（一个开关管全轮盘）。 */
+    fun QuickWheel.withTransparentUserIcons(value: Boolean): QuickWheel = copy(
+        primaryStyle = primaryStyle.copy(transparentUserIcons = value),
+        primaryCircleStyle = primaryCircleStyle.copy(transparentUserIcons = value),
+        primaryRectStyle = primaryRectStyle.copy(transparentUserIcons = value),
+        secondaryStyle = secondaryStyle.copy(transparentUserIcons = value),
+        secondaryCircleStyle = secondaryCircleStyle.copy(transparentUserIcons = value),
+        secondaryRectStyle = secondaryRectStyle.copy(transparentUserIcons = value),
+    )
 
     // 预览只由「形态 / 外观参数真的被改动」驱动：触摸、点击、滚动都不会再触发。
     // 用样式快照对比实现——拖滑条、切下拉、拨开关、点扇区都会改变它。
@@ -611,8 +634,9 @@ fun QuickWheelConfigScreen(
                                     title = stringResource(R.string.quick_wheel_show_labels),
                                     description = stringResource(R.string.quick_wheel_show_labels_desc),
                                     checked = levelStyle.showLabels,
+                                    // 开关类改了立即保存，不需要再按「保存」。
                                     onCheckedChange = { value ->
-                                        updateStyle { it.copy(showLabels = value) }
+                                        updateStyleAndPersist { it.copy(showLabels = value) }
                                     },
                                 )
                             }
@@ -625,21 +649,10 @@ fun QuickWheelConfigScreen(
                                         R.string.quick_wheel_transparent_container_desc,
                                     ),
                                     checked = levelStyle.transparentUserIcons,
-                                    // 一个开关管全轮盘：一级 / 二级、圆形 / 矩形四套样式一起写，
-                                    // 避免"一级透明、二级还铺着底"这种半吊子状态。
+                                    // 一个开关管全轮盘（四套样式一起写），并**立即保存**，不等「保存」按钮。
                                     onCheckedChange = { value ->
-                                        patchDraft { current ->
-                                            current.copy(
-                                                primaryCircleStyle = current.primaryCircleStyle
-                                                    .copy(transparentUserIcons = value),
-                                                primaryRectStyle = current.primaryRectStyle
-                                                    .copy(transparentUserIcons = value),
-                                                secondaryCircleStyle = current.secondaryCircleStyle
-                                                    .copy(transparentUserIcons = value),
-                                                secondaryRectStyle = current.secondaryRectStyle
-                                                    .copy(transparentUserIcons = value),
-                                            )
-                                        }
+                                        draft = draft.withTransparentUserIcons(value)
+                                        onPatch(settingsWheel.withTransparentUserIcons(value))
                                     },
                                 )
                             }
