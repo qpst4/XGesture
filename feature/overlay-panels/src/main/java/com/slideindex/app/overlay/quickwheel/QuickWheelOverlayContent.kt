@@ -644,8 +644,11 @@ fun PlacedContainer(
     showPlaceholders: Boolean = false,
 ) {
     if (placed == null) return
-    // 只有「用户主动留出的空位」在真实呼出时完全透明；其余容器（含未设动作的）照常绘制。
-    if (slot.placeholder && !showPlaceholders) return
+    // 只有「**还没配置内容**的空白占位」在真实呼出时完全透明；其余容器（含未设动作的）照常绘制。
+    // ⚠️ 必须叠加 `!isConfigured`：`placeholder` 标记生成后不会清除，用户随后给这个空位
+    // 赋予动作 / 名称 / 图标时它仍然为 true —— 只看标记就会把"已配置的占位"整格跳过，
+    // 表现为"设置页里能看见图标、轮盘预览与真机呼出却什么都不显示"（位置仍能命中动作）。
+    if (slot.placeholder && !slot.isConfigured && !showPlaceholders) return
     val originX = appearOriginX ?: placed.centerX
     val originY = appearOriginY ?: placed.centerY
     // ⚠️ 顺序很重要：基础摆位必须在调用方手势修饰符**之前**（外层）。
