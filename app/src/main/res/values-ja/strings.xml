@@ -5111,4 +5111,18 @@
     <string name="search_engine_action_edit_summary">検索 URL、アイコン、名前を変更します</string>
     <string name="search_engine_action_delete">検索エンジンを削除</string>
     <string name="search_engine_action_delete_summary">この項目をローカルリストから完全に削除します</string>
+
+    <!-- 2026-11-15 反馈整改新增：锁屏气泡 / 通知记录 / 悬浮球边缘距离 / 任务切换器宽度 / 侧键长按时长。 -->
+    <string name="message_side_bubble_lock_screen_title">ロック画面に表示</string>
+    <string name="message_side_bubble_lock_screen_desc">ロック中もバブルを表示し、ロック解除まで自動消去を一時停止します</string>
+    <string name="float_ball_edge_inset">端からの距離</string>
+    <string name="notification_history_enabled_title">通知を記録</string>
+    <string name="notification_history_enabled_desc">オフ：履歴の記録のみ停止します。フィルタールールと確認コードの取得は引き続き動作します</string>
+    <string name="task_switcher_panel_width">タスクスイッチャーの幅</string>
+    <string name="task_switcher_panel_width_desc">既定の 226dp は従来の固定幅と同じです</string>
+    <string name="task_switcher_panel_width_value">%1$d dp</string>
+    <string name="side_gestures_long_press_duration">長押しの成立時間</string>
+    <string name="side_gestures_long_press_duration_summary">エッジのトリガーを押したまま動かさずに長押しと判定されるまでの時間（フローティングボールとは独立）</string>
+    <string name="side_gestures_long_press_duration_value">%1$d ms</string>
+
 </resources>

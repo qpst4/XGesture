@@ -5143,4 +5143,18 @@
     <string name="search_engine_action_edit_summary">Изменить адрес поиска, значок или название</string>
     <string name="search_engine_action_delete">Удалить поисковую систему</string>
     <string name="search_engine_action_delete_summary">Удалить этот пункт из локального списка</string>
+
+    <!-- 2026-11-15 反馈整改新增：锁屏气泡 / 通知记录 / 悬浮球边缘距离 / 任务切换器宽度 / 侧键长按时长。 -->
+    <string name="message_side_bubble_lock_screen_title">Показывать на экране блокировки</string>
+    <string name="message_side_bubble_lock_screen_desc">Пузыри остаются видимыми при блокировке; автоскрытие приостанавливается до разблокировки</string>
+    <string name="float_ball_edge_inset">Расстояние от края</string>
+    <string name="notification_history_enabled_title">Записывать уведомления</string>
+    <string name="notification_history_enabled_desc">Выкл.: останавливается только запись истории. Правила фильтрации и перехват кодов подтверждения продолжают работать</string>
+    <string name="task_switcher_panel_width">Ширина переключателя задач</string>
+    <string name="task_switcher_panel_width_desc">Значение по умолчанию 226dp совпадает с прежней фиксированной шириной</string>
+    <string name="task_switcher_panel_width_value">%1$d dp</string>
+    <string name="side_gestures_long_press_duration">Длительность длительного нажатия</string>
+    <string name="side_gestures_long_press_duration_summary">Сколько нужно удерживать краевой триггер, чтобы сработало длительное нажатие (независимо от плавающего шарика)</string>
+    <string name="side_gestures_long_press_duration_value">%1$d ms</string>
+
 </resources>

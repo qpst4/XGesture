@@ -5120,4 +5120,18 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="widget_panel_pick_page_title">Elegir página</string>
     <string name="widget_panel_show_labels">Mostrar nombres de iconos</string>
     <string name="widget_panel_show_labels_desc">Si está desactivado, solo se muestran los iconos; los nombres de las apps siguen leyéndose con el lector de pantalla</string>
+
+    <!-- 2026-11-15 反馈整改新增：锁屏气泡 / 通知记录 / 悬浮球边缘距离 / 任务切换器宽度 / 侧键长按时长。 -->
+    <string name="message_side_bubble_lock_screen_title">Mostrar en pantalla de bloqueo</string>
+    <string name="message_side_bubble_lock_screen_desc">Mantiene las burbujas visibles con el teléfono bloqueado; el cierre automático se pausa hasta que desbloquees</string>
+    <string name="float_ball_edge_inset">Distancia al borde</string>
+    <string name="notification_history_enabled_title">Registrar notificaciones</string>
+    <string name="notification_history_enabled_desc">Desactivado: solo deja de guardar el historial. Las reglas de filtro y la captura de códigos de verificación siguen funcionando</string>
+    <string name="task_switcher_panel_width">Ancho del conmutador de tareas</string>
+    <string name="task_switcher_panel_width_desc">El valor predeterminado 226dp coincide con el ancho fijo anterior</string>
+    <string name="task_switcher_panel_width_value">%1$d dp</string>
+    <string name="side_gestures_long_press_duration">Duración de la pulsación larga</string>
+    <string name="side_gestures_long_press_duration_summary">Cuánto tiempo hay que mantener pulsado el borde sin mover el dedo para que cuente como pulsación larga (independiente de la bola flotante)</string>
+    <string name="side_gestures_long_press_duration_value">%1$d ms</string>
+
 </resources>

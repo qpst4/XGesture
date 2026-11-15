@@ -5115,4 +5115,18 @@
     <string name="search_engine_action_edit_summary">تغيير عنوان URL للبحث أو الأيقونة أو الاسم</string>
     <string name="search_engine_action_delete">حذف محرك البحث</string>
     <string name="search_engine_action_delete_summary">إزالة هذا العنصر نهائيًا من القائمة المحلية</string>
+
+    <!-- 2026-11-15 反馈整改新增：锁屏气泡 / 通知记录 / 悬浮球边缘距离 / 任务切换器宽度 / 侧键长按时长。 -->
+    <string name="message_side_bubble_lock_screen_title">العرض على شاشة القفل</string>
+    <string name="message_side_bubble_lock_screen_desc">إبقاء الفقاعات ظاهرة أثناء القفل؛ يتوقف الإخفاء التلقائي حتى تفتح القفل</string>
+    <string name="float_ball_edge_inset">المسافة من الحافة</string>
+    <string name="notification_history_enabled_title">تسجيل الإشعارات</string>
+    <string name="notification_history_enabled_desc">إيقاف: إيقاف تسجيل السجل فقط. تبقى قواعد التصفية والتقاط رموز التحقق تعمل</string>
+    <string name="task_switcher_panel_width">عرض مبدّل المهام</string>
+    <string name="task_switcher_panel_width_desc">القيمة الافتراضية 226dp تطابق العرض الثابت السابق</string>
+    <string name="task_switcher_panel_width_value">%1$d dp</string>
+    <string name="side_gestures_long_press_duration">مدة الضغط المطوّل للتفعيل</string>
+    <string name="side_gestures_long_press_duration_summary">مدة بقاء مقبض الحافة ثابتًا حتى يُحتسب ضغطًا مطوّلًا (مستقل عن الكرة العائمة)</string>
+    <string name="side_gestures_long_press_duration_value">%1$d ms</string>
+
 </resources>
