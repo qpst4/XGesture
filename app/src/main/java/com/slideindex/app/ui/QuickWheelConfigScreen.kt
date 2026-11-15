@@ -372,6 +372,26 @@ fun QuickWheelConfigScreen(
         secondaryRectStyle = secondaryRectStyle.copy(transparentUserIcons = value),
     )
 
+    /** 「内置图标也透明」子开关：与总开关同口径，四套样式一起写。 */
+    fun QuickWheel.withTransparentBuiltinIcons(value: Boolean): QuickWheel = copy(
+        primaryStyle = primaryStyle.copy(transparentBuiltinIcons = value),
+        primaryCircleStyle = primaryCircleStyle.copy(transparentBuiltinIcons = value),
+        primaryRectStyle = primaryRectStyle.copy(transparentBuiltinIcons = value),
+        secondaryStyle = secondaryStyle.copy(transparentBuiltinIcons = value),
+        secondaryCircleStyle = secondaryCircleStyle.copy(transparentBuiltinIcons = value),
+        secondaryRectStyle = secondaryRectStyle.copy(transparentBuiltinIcons = value),
+    )
+
+    /** 「文字图标也透明」子开关：与总开关同口径，四套样式一起写。 */
+    fun QuickWheel.withTransparentTextIcons(value: Boolean): QuickWheel = copy(
+        primaryStyle = primaryStyle.copy(transparentTextIcons = value),
+        primaryCircleStyle = primaryCircleStyle.copy(transparentTextIcons = value),
+        primaryRectStyle = primaryRectStyle.copy(transparentTextIcons = value),
+        secondaryStyle = secondaryStyle.copy(transparentTextIcons = value),
+        secondaryCircleStyle = secondaryCircleStyle.copy(transparentTextIcons = value),
+        secondaryRectStyle = secondaryRectStyle.copy(transparentTextIcons = value),
+    )
+
     // 预览只由「形态 / 外观参数真的被改动」驱动：触摸、点击、滚动都不会再触发。
     // 用样式快照对比实现——拖滑条、切下拉、拨开关、点扇区都会改变它。
     val styleSnapshot = listOf(
@@ -657,6 +677,39 @@ fun QuickWheelConfigScreen(
                                 )
                             }
                         )
+                        // 两个子开关只在总开关打开时出现：默认关闭 = 内置图标照旧铺底板（历史观感）。
+                        if (levelStyle.transparentUserIcons) {
+                            add(
+                                settingsCardScopeItem("transparent-builtin-icons") {
+                                    QuickWheelSwitchRow(
+                                        title = stringResource(R.string.quick_wheel_transparent_builtin),
+                                        description = stringResource(
+                                            R.string.quick_wheel_transparent_builtin_desc,
+                                        ),
+                                        checked = levelStyle.transparentBuiltinIcons,
+                                        onCheckedChange = { value ->
+                                            draft = draft.withTransparentBuiltinIcons(value)
+                                            onPatch(settingsWheel.withTransparentBuiltinIcons(value))
+                                        },
+                                    )
+                                },
+                            )
+                            add(
+                                settingsCardScopeItem("transparent-text-icons") {
+                                    QuickWheelSwitchRow(
+                                        title = stringResource(R.string.quick_wheel_transparent_text),
+                                        description = stringResource(
+                                            R.string.quick_wheel_transparent_text_desc,
+                                        ),
+                                        checked = levelStyle.transparentTextIcons,
+                                        onCheckedChange = { value ->
+                                            draft = draft.withTransparentTextIcons(value)
+                                            onPatch(settingsWheel.withTransparentTextIcons(value))
+                                        },
+                                    )
+                                },
+                            )
+                        }
                         // 矩形形态专属：每行容器列数（2–10），超出自动换行。
                         if (levelShape == QuickWheelShape.RECT) {
                             add(

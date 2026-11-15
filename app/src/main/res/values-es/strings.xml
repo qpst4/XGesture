@@ -4765,40 +4765,44 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="quick_wheel_delete_message">¿Supir esta rueda?</string>
     <string name="quick_wheel_name_hint">Nombre de la rueda</string>
     <string name="quick_wheel_long_press_time">TiempoMantener presionado</string>
-    <string name="quick_wheel_long_press_time_desc">Tener duración para acciones de nivel-2mantener presionadoy para ampliar una rueda de nivel-2</string>
+    <string name="quick_wheel_long_press_time_desc">Tiempo que hay que mantener un contenedor para su acción larga y abrir el segundo nivel</string>
     <string name="quick_wheel_backdrop_blur">Borde de fondo</string>
-    <string name="quick_wheel_backdrop_blur_desc">Borrar el área fuera de los contenedores; los contenedores siempre permanecen totalmente opacos. Requiere el sistema de borrón de ventana cruzada, de lo contrario no tiene efecto</string>
+    <string name="quick_wheel_backdrop_blur_desc">Solo desenfoca la zona fuera de los contenedores; requiere soporte del sistema</string>
     <string name="quick_wheel_backdrop_dim">Antecedentes</string>
-    <string name="quick_wheel_backdrop_dim_desc">Oscurece el área fuera de los contenedores (0% mantiene la pantalla completamente visible); contenedores siempre permanecen completamente opacos</string>
+    <string name="quick_wheel_backdrop_dim_desc">Solo oscurece la zona fuera de los contenedores; 0% = totalmente visible</string>
     <string name="quick_wheel_animation">Animación abierta</string>
     <string name="quick_wheel_open_animation">Efecto de animación</string>
     <string name="quick_wheel_open_animation_desc">Sólo afecta cómo aparece la rueda — las pruebas de golpe y el tiempomantener presionadono son afectados</string>
     <string name="quick_wheel_open_animation_none">Ninguno</string>
     <string name="quick_wheel_open_animation_expand">Ampliar desde el centro</string>
     <string name="quick_wheel_animation_speed">Velocidad de animación</string>
-    <string name="quick_wheel_animation_speed_desc">Sólo acelera / ralentiza la animación abierta;mantener presionadotiempo se mantiene como configurado</string>
+    <string name="quick_wheel_animation_speed_desc">Solo cambia la velocidad de la expansión; el tiempo de pulsación no cambia</string>
     <string name="quick_wheel_summary">Anillos %1$s·%2$d·%3$d acciones +%4$d vacío</string>
     <string name="quick_wheel_shape_circle">Círculo</string>
     <string name="quick_wheel_shape_rect">Rect</string>
-    <string name="quick_wheel_shape_circle_desc">Anillos concentrados ampliados en pasos</string>
-    <string name="quick_wheel_shape_rect_desc">Una fila por anillo, apilada hacia abajo</string>
+    <string name="quick_wheel_shape_circle_desc">Anillos concéntricos, de dentro hacia fuera</string>
+    <string name="quick_wheel_shape_rect_desc">En filas con un número fijo de columnas</string>
     <string name="quick_wheel_section_appearance">Apariencia</string>
     <string name="quick_wheel_section_shape">Forma de la rueda</string>
     <string name="quick_wheel_section_slots">Containers</string>
     <string name="quick_wheel_show_labels">Mostrar etiquetas de texto</string>
-    <string name="quick_wheel_show_labels_desc">Mostrar el nombre bajo cada icono; icono y texto permanecer centrados juntos</string>
+    <string name="quick_wheel_show_labels_desc">Muestra el nombre bajo el icono</string>
     <string name="quick_wheel_transparent_container">Fondo de contenedor transparente</string>
-    <string name="quick_wheel_transparent_container_desc">Al activarlo se quita el fondo y el recorte tras los iconos de apps e imágenes; los iconos de acción y texto siempre llevan fondo</string>
+    <string name="quick_wheel_transparent_container_desc">Sin fondo ni recorte para los iconos de apps y las imágenes de la galería</string>
+    <string name="quick_wheel_transparent_builtin">Iconos integrados transparentes</string>
+    <string name="quick_wheel_transparent_builtin_desc">Los iconos vectoriales (acciones integradas, biblioteca) tampoco llevan fondo</string>
+    <string name="quick_wheel_transparent_text">Iconos de texto transparentes</string>
+    <string name="quick_wheel_transparent_text_desc">Los iconos de texto se dibujan sin fondo; el texto claro sobre un fondo claro no se lee bien, ajústalo con «Color del texto»</string>
     <string name="quick_wheel_initial_radius">Radius inicial</string>
-    <string name="quick_wheel_initial_radius_desc">Distancia del punto de convocatoria al primer anillo</string>
+    <string name="quick_wheel_initial_radius_desc">Distancia del centro al primer anillo</string>
     <string name="quick_wheel_container_gap">Saldo de contenedores</string>
-    <string name="quick_wheel_container_gap_desc">brecha real entre los contenedores adyacentes; 0 = tocar</string>
+    <string name="quick_wheel_container_gap_desc">Hueco entre contenedores del mismo anillo; 0 = pegados</string>
     <string name="quick_wheel_ring_gap">brecha de interés</string>
-    <string name="quick_wheel_ring_gap_desc">Gap entre capas de anillo cuando un anillo se desborda</string>
+    <string name="quick_wheel_ring_gap_desc">Distancia entre dos anillos contiguos</string>
     <string name="quick_wheel_column_count">Cuenta de columna</string>
-    <string name="quick_wheel_column_count_desc">Contenedores por fila; extras envuelven a la siguiente fila (sólo forma de árido)</string>
+    <string name="quick_wheel_column_count_desc">Contenedores por fila (solo rectangular)</string>
     <string name="quick_wheel_container_size">Tamaño del contenedor</string>
-    <string name="quick_wheel_container_size_desc">Longitud de borde de un solo contenedor; más pequeño empaqueta la rueda más ajustada</string>
+    <string name="quick_wheel_container_size_desc">Tamaño del contenedor; más pequeño hace la rueda más compacta</string>
     <string name="quick_wheel_add_slot">+ ranura vacía</string>
     <string name="quick_wheel_remove_slot">Quitar la última ranura</string>
     <string name="quick_wheel_slot_number">Contenedor %1$d</string>
@@ -4845,9 +4849,9 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="quick_wheel_exit_without_save">Exit sin ahorrar</string>
     <string name="quick_wheel_section_basic">Básico</string>
     <string name="quick_wheel_preview">Rueda previa</string>
-    <string name="quick_wheel_preview_desc">Mostrar la rueda real en su lugar para probar el grifo ymantener presionado</string>
+    <string name="quick_wheel_preview_desc">Se abre en el sitio para probar las acciones de la rueda</string>
     <string name="quick_wheel_function">Diseño de ruedas</string>
-    <string name="quick_wheel_function_desc">Colocar la rueda en su lugar: arrastrar a reordenar, añadir o eliminar contenedores y acciones de unión</string>
+    <string name="quick_wheel_function_desc">Arrastra para ordenar, añade o quita contenedores y configura acciones</string>
     <string name="quick_wheel_hint_preview">Previsualización en vivo · espacio en blanco para descartar</string>
     <string name="quick_wheel_hint_canvas">Pulsa un contenedor para editar ·mantener presionadopara el nivel 2 · arrastrar a reorden · gota en la basura para eliminar</string>
     <string name="quick_wheel_level_primary">Nivel 1</string>
@@ -4858,17 +4862,17 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="quick_wheel_secondary_shape">Nivel 2 de forma</string>
     <string name="quick_wheel_sector_preview">Nivel 1 vista previa del sector (sólo vista previa; el diseño real se adapta al gesto)</string>
     <string name="quick_wheel_container_corner">Esquina del contenedor</string>
-    <string name="quick_wheel_container_corner_desc">Radio de esquina de cada contenedor</string>
+    <string name="quick_wheel_container_corner_desc">Radio de las esquinas del contenedor</string>
     <string name="quick_wheel_icon_size">Tamaño del icono</string>
-    <string name="quick_wheel_icon_size_desc">Tamaño base para iconos incorporados y etiquetas de texto, como una relación del contenedor; iconos de aplicación instalada e imágenes de galería siempre utilizan el tamaño del contenedor e ignoran este valor</string>
+    <string name="quick_wheel_icon_size_desc">Tamaño base de los iconos integrados y las etiquetas (proporción del contenedor); los iconos de apps e imágenes no se ven afectados</string>
     <string name="quick_wheel_label_size_factor">Factor por tamaño de la etiqueta</string>
     <string name="quick_wheel_label_size_factor_desc">Tamaño fuente = factor base ×</string>
     <string name="quick_wheel_builtin_icon_size">Factor de tamaño de icono</string>
-    <string name="quick_wheel_builtin_icon_size_desc">Tamaño del icono real = tamaño del icono × factor de tamaño del icono (instalados-app iconos e imágenes de galería utilizan el tamaño del contenedor como base)</string>
+    <string name="quick_wheel_builtin_icon_size_desc">Tamaño real del icono = base × factor</string>
     <string name="quick_wheel_offset_x">offset horizontal</string>
-    <string name="quick_wheel_offset_x_desc">Fino sintonizado horizontalmente (los empujes positivos hacia adentro, los contras negativos hacia el borde)</string>
+    <string name="quick_wheel_offset_x_desc">Ajuste horizontal; con dirección de expansión, positivo va hacia dentro; si no, hacia la derecha</string>
     <string name="quick_wheel_offset_y">offset vertical</string>
-    <string name="quick_wheel_offset_y_desc">Fino-tune verticalmente (los empujes positivos hacia adentro, se reduce negativamente al borde)</string>
+    <string name="quick_wheel_offset_y_desc">Ajuste vertical; con dirección de expansión, positivo va hacia dentro; si no, hacia arriba</string>
     <string name="quick_wheel_add_placeholder">+ ranura vacía</string>
     <string name="quick_wheel_delete_container">Eliminar</string>
     <string name="quick_wheel_new_container">Nuevo contenedor de ruedas</string>
@@ -4882,7 +4886,7 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="quick_wheel_launch_fullscreen">Pantalla completa</string>
     <string name="quick_wheel_launch_free_window">Pequeña ventana</string>
     <string name="quick_wheel_launch_gate_off">La ventana libre está bajo “Aplicaciones” lanzamiento; siempre pantalla completa por ahora</string>
-    <string name="quick_wheel_launch_unsupported">Esta acción no abre nada, por lo que el modo abierto no tiene efecto</string>
+    <string name="quick_wheel_launch_unsupported">No tiene efecto: esta acción no abre ninguna aplicación</string>
     <string name="quick_wheel_icon_pick_library">Elija de la biblioteca del icono</string>
     <string name="quick_wheel_icon_pick_app">Elija un icono de aplicación</string>
     <string name="quick_wheel_icon_pick_gallery">Elija una imagen de la galería</string>
@@ -4895,11 +4899,14 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="quick_wheel_icon_pick_text">icono de texto</string>
     <string name="quick_wheel_text_icon_title">icono de texto</string>
     <string name="quick_wheel_text_icon_hint">Introduzca el texto para mostrar</string>
+    <string name="quick_wheel_text_icon_color">Color del texto</string>
+    <string name="quick_wheel_text_icon_color_auto">Automático</string>
+    <string name="quick_wheel_text_icon_color_custom">Personalizado…</string>
     <string name="quick_wheel_pick_app">Elija la aplicación</string>
     <string name="quick_wheel_hint_secondary">Mantener presionadoun contenedor para arrastrarlo a “Delete”. Pulsa un contenedor sub-ring para editarlo, pulsa en cualquier otro lugar para volver.</string>
     <string name="quick_wheel_collapse_secondary">Contraer el subanillo</string>
     <string name="quick_wheel_sector_title">Sector (editar &amp;quot; vista previa)</string>
-    <string name="quick_wheel_sector_desc">Toque el anillo para habilitar o desactivar los sectores 90° — el editor, cada vista previa y el resumen de la lista muestran exactamente lo que usted elige. Los lanzamientos reales se rigen por la unión de acción: sin ningún ajuste el sector se resuelve automáticamente desde la posición del disparador para que cada contenedor permanezca en pantalla, y también se puede fijar un sector manualmente allí.</string>
+    <string name="quick_wheel_sector_desc">Elige sectores de 90° para la vista previa; en el gesto real el sector se elige según la posición del disparo o se fija en la acción</string>
     <string name="quick_wheel_sector_span">%1$d°</string>
     <string name="quick_wheel_sector_dir_top_right">Sector derecho superior</string>
     <string name="quick_wheel_sector_dir_bottom_right">Sector derecho inferior</string>
@@ -4910,13 +4917,13 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="quick_wheel_hud_long_press">Mantener presionado:%1$s</string>
     <string name="quick_wheel_hud_no_action">Ninguna acción</string>
     <string name="quick_wheel_action_sector_auto">Auto (desde la posición del disparador)</string>
-    <string name="quick_wheel_action_sector_desc">Deje cada sector sin elección para permitir que la aplicación seleccione el sector automáticamente desde donde se activa (todos los contenedores permanecen en pantalla). Elija sectores para forzar el círculo primario a ese lapso — puede salir de la pantalla; el sub-ring y el diseño del rectángulo se mantienen automáticos.</string>
+    <string name="quick_wheel_action_sector_desc">Sin selección = automático según el disparo; si eliges uno queda fijo y puede salir de la pantalla</string>
     <string name="quick_wheel_action_anchor_section">Posición de lanzamiento</string>
     <string name="quick_wheel_action_anchor_row">Centro de ruedas</string>
     <string name="quick_wheel_action_anchor_follow">Posición al activarse</string>
-    <string name="quick_wheel_action_anchor_follow_desc">El centro queda donde estaba el dedo cuando se activó la acción; cuanto más deslices, más hacia dentro y más completo el círculo.</string>
+    <string name="quick_wheel_action_anchor_follow_desc">Centro = posición del dedo al dispararse; cuanto más deslices, más al interior</string>
     <string name="quick_wheel_action_anchor_edge">Posición del toque inicial (recomendado)</string>
-    <string name="quick_wheel_action_anchor_edge_desc">El centro queda donde tocaste por primera vez. Estable y predecible; junto al borde solo cabe medio círculo, así que los sectores se estrechan automáticamente.</string>
+    <string name="quick_wheel_action_anchor_edge_desc">Centro = punto de pulsación, estable; cerca del borde el sector se estrecha solo</string>
     <string name="quick_wheel_secondary_hint">Edición de sub-ring de contenedor %1$d</string>
     <string name="quick_wheel_slot_save">Guardar</string>
     <string name="smart_screenshot_saved">Captura de pantallaguardado en la galería</string>

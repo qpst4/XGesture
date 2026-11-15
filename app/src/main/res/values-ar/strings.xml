@@ -4770,40 +4770,44 @@
     <string name="quick_wheel_delete_message">هل تريد حذف هذه العجلة؟</string>
     <string name="quick_wheel_name_hint">اسم العجلة</string>
     <string name="quick_wheel_long_press_time">مدة الضغط المطوّل</string>
-    <string name="quick_wheel_long_press_time_desc">مدة الاستمرار لإجراءات الضغط المطوّل من المستوى الثاني ولتوسيع عجلة المستوى الثاني</string>
+    <string name="quick_wheel_long_press_time_desc">مدة الضغط على الحاوية لتنفيذ الضغطة الطويلة وفتح المستوى الثاني</string>
     <string name="quick_wheel_backdrop_blur">تمويه الخلفية</string>
-    <string name="quick_wheel_backdrop_blur_desc">يموّه المنطقة خارج الحاويات؛ وتبقى الحاويات معتمة تماماً دائماً. يتطلب تمويه النظام العابر للنوافذ، وإلا فلن يكون له تأثير</string>
+    <string name="quick_wheel_backdrop_blur_desc">يضبّب المنطقة خارج الحاويات فقط، ويتطلب دعم النظام</string>
     <string name="quick_wheel_backdrop_dim">تعتيم الخلفية</string>
-    <string name="quick_wheel_backdrop_dim_desc">يعتّم المنطقة خارج الحاويات (0% تُبقي الشاشة كما هي)؛ وتبقى الحاويات معتمة تماماً دائماً</string>
+    <string name="quick_wheel_backdrop_dim_desc">يعتّم المنطقة خارج الحاويات فقط، و0% = مرئي بالكامل</string>
     <string name="quick_wheel_animation">حركة الفتح</string>
     <string name="quick_wheel_open_animation">تأثير الحركة</string>
     <string name="quick_wheel_open_animation_desc">يؤثر فقط في طريقة ظهور العجلة؛ فلا يتأثر اكتشاف اللمس ولا توقيت الضغط المطوّل</string>
     <string name="quick_wheel_open_animation_none">بلا</string>
     <string name="quick_wheel_open_animation_expand">توسّع من المركز</string>
     <string name="quick_wheel_animation_speed">سرعة الحركة</string>
-    <string name="quick_wheel_animation_speed_desc">يغيّر سرعة حركة الفتح فقط؛ ويبقى توقيت الضغط المطوّل كما هو مُعدّ</string>
+    <string name="quick_wheel_animation_speed_desc">يغيّر سرعة التوسّع فقط، ولا يؤثر في زمن الضغط الطويل</string>
     <string name="quick_wheel_summary">%1$s · %2$d حلقات · %3$d إجراءات + %4$d فارغة</string>
     <string name="quick_wheel_shape_circle">دائري</string>
     <string name="quick_wheel_shape_rect">مستطيل</string>
-    <string name="quick_wheel_shape_circle_desc">حلقات متحدة المركز تتوسّع على مراحل</string>
-    <string name="quick_wheel_shape_rect_desc">صف واحد لكل حلقة، مكدّسة نحو الأسفل</string>
+    <string name="quick_wheel_shape_circle_desc">حلقات متحدة المركز تتوسّع من الداخل إلى الخارج</string>
+    <string name="quick_wheel_shape_rect_desc">صفوف بعدد أعمدة ثابت</string>
     <string name="quick_wheel_section_appearance">المظهر</string>
     <string name="quick_wheel_section_shape">شكل العجلة</string>
     <string name="quick_wheel_section_slots">الحاويات</string>
     <string name="quick_wheel_show_labels">إظهار التسميات النصية</string>
-    <string name="quick_wheel_show_labels_desc">إظهار الاسم أسفل كل أيقونة؛ وتبقى الأيقونة والنص متوسّطين معاً</string>
+    <string name="quick_wheel_show_labels_desc">إظهار الاسم أسفل الأيقونة</string>
     <string name="quick_wheel_transparent_container">خلفية شفافة للحاويات</string>
-    <string name="quick_wheel_transparent_container_desc">عند التشغيل تُزال الخلفية والقص حول أيقونات التطبيقات والصور؛ تحتفظ أيقونات الإجراءات والنصوص بالخلفية دائماً</string>
+    <string name="quick_wheel_transparent_container_desc">أيقونات التطبيقات وصور المعرض دون خلفية ودون قص</string>
+    <string name="quick_wheel_transparent_builtin">أيقونات مدمجة شفافة</string>
+    <string name="quick_wheel_transparent_builtin_desc">الإجراءات المدمجة ومكتبة الأيقونات وغيرها من الأيقونات المتجهة دون خلفية أيضاً</string>
+    <string name="quick_wheel_transparent_text">أيقونات نصية شفافة</string>
+    <string name="quick_wheel_transparent_text_desc">تُرسم الأيقونات النصية دون خلفية؛ النص الفاتح على خلفية فاتحة يصعب قراءته، اضبط «لون النص»</string>
     <string name="quick_wheel_initial_radius">نصف القطر الأولي</string>
-    <string name="quick_wheel_initial_radius_desc">المسافة من نقطة الاستدعاء إلى الحلقة الأولى</string>
+    <string name="quick_wheel_initial_radius_desc">المسافة من المركز إلى الحلقة الأولى</string>
     <string name="quick_wheel_container_gap">الفاصل بين الحاويات</string>
-    <string name="quick_wheel_container_gap_desc">الفاصل الفعلي بين الحاويات المتجاورة؛ والقيمة 0 تعني التلاصق</string>
+    <string name="quick_wheel_container_gap_desc">الفجوة بين الحاويات المتجاورة في الحلقة نفسها؛ 0 = متلاصقة</string>
     <string name="quick_wheel_ring_gap">الفاصل بين الحلقات</string>
-    <string name="quick_wheel_ring_gap_desc">الفاصل بين طبقات الحلقات عند امتلاء إحدى الحلقات</string>
+    <string name="quick_wheel_ring_gap_desc">المسافة بين حلقتين متجاورتين</string>
     <string name="quick_wheel_column_count">عدد الأعمدة</string>
-    <string name="quick_wheel_column_count_desc">عدد الحاويات في الصف؛ والزائد ينتقل إلى الصف التالي (للشكل المستطيل فقط)</string>
+    <string name="quick_wheel_column_count_desc">عدد الحاويات في الصف (الشكل المستطيل فقط)</string>
     <string name="quick_wheel_container_size">حجم الحاوية</string>
-    <string name="quick_wheel_container_size_desc">طول ضلع الحاوية الواحدة؛ والأصغر يجعل العجلة أكثر إحكاماً</string>
+    <string name="quick_wheel_container_size_desc">طول ضلع الحاوية؛ تصغيره يجعل العجلة أكثر إحكاماً</string>
     <string name="quick_wheel_add_slot">+ فتحة فارغة</string>
     <string name="quick_wheel_remove_slot">حذف آخر فتحة</string>
     <string name="quick_wheel_slot_number">الحاوية %1$d</string>
@@ -4850,9 +4854,9 @@
     <string name="quick_wheel_exit_without_save">الخروج دون حفظ</string>
     <string name="quick_wheel_section_basic">أساسي</string>
     <string name="quick_wheel_preview">معاينة العجلة</string>
-    <string name="quick_wheel_preview_desc">إظهار العجلة الحقيقية في مكانها لتجربة النقر والضغط المطوّل</string>
+    <string name="quick_wheel_preview_desc">يفتح العجلة في مكانها لتجربة إجراءاتها</string>
     <string name="quick_wheel_function">تخطيط العجلة</string>
-    <string name="quick_wheel_function_desc">رتّب العجلة في مكانها: اسحب لإعادة الترتيب، وأضف الحاويات أو احذفها واربط الإجراءات</string>
+    <string name="quick_wheel_function_desc">اسحب للترتيب، وأضف الحاويات أو احذفها، واضبط الإجراءات</string>
     <string name="quick_wheel_hint_preview">معاينة مباشرة · انقر على مساحة فارغة للإغلاق</string>
     <string name="quick_wheel_hint_canvas">انقر على حاوية للتحرير · اضغط مطولاً للمستوى الثاني · اسحب لإعادة الترتيب · أفلتها على سلة المهملات للحذف</string>
     <string name="quick_wheel_level_primary">المستوى الأول</string>
@@ -4863,17 +4867,17 @@
     <string name="quick_wheel_secondary_shape">شكل المستوى الثاني</string>
     <string name="quick_wheel_sector_preview">معاينة قطاع المستوى الأول (للمعاينة فقط؛ والتخطيط الحقيقي يتكيّف مع الإيماءة)</string>
     <string name="quick_wheel_container_corner">استدارة الحاوية</string>
-    <string name="quick_wheel_container_corner_desc">نصف قطر استدارة كل حاوية</string>
+    <string name="quick_wheel_container_corner_desc">نصف قطر زوايا الحاوية</string>
     <string name="quick_wheel_icon_size">حجم الأيقونة</string>
-    <string name="quick_wheel_icon_size_desc">الحجم الأساسي للأيقونات المدمجة والتسميات النصية، كنسبة من الحاوية؛ أما أيقونات التطبيقات المثبّتة وصور المعرض فتستخدم حجم الحاوية دائماً وتتجاهل هذه القيمة</string>
+    <string name="quick_wheel_icon_size_desc">الحجم الأساسي للأيقونات المدمجة والأسماء (نسبة من الحاوية)؛ أيقونات التطبيقات وصور المعرض غير متأثرة</string>
     <string name="quick_wheel_label_size_factor">معامل حجم التسمية</string>
     <string name="quick_wheel_label_size_factor_desc">حجم الخط = الأساس × المعامل</string>
     <string name="quick_wheel_builtin_icon_size">معامل حجم الأيقونة</string>
-    <string name="quick_wheel_builtin_icon_size_desc">حجم الأيقونة الفعلي = حجم الأيقونة × معامل حجم الأيقونة (وأيقونات التطبيقات المثبّتة وصور المعرض تعتمد حجم الحاوية)</string>
+    <string name="quick_wheel_builtin_icon_size_desc">حجم الأيقونة الفعلي = الأساس × المعامل</string>
     <string name="quick_wheel_offset_x">إزاحة أفقية</string>
-    <string name="quick_wheel_offset_x_desc">ضبط أفقي دقيق (القيمة الموجبة تدفع للداخل، والسلبية تُلصق بالحافة)</string>
+    <string name="quick_wheel_offset_x_desc">ضبط أفقي؛ عند وجود اتجاه انتشار تدفع القيمة الموجبة للداخل، وإلا فالموجبة لليمين</string>
     <string name="quick_wheel_offset_y">إزاحة رأسية</string>
-    <string name="quick_wheel_offset_y_desc">ضبط رأسي دقيق (القيمة الموجبة تدفع للداخل، والسلبية تُلصق بالحافة)</string>
+    <string name="quick_wheel_offset_y_desc">ضبط رأسي؛ عند وجود اتجاه انتشار تدفع القيمة الموجبة للداخل، وإلا فالموجبة للأعلى</string>
     <string name="quick_wheel_add_placeholder">+ فتحة فارغة</string>
     <string name="quick_wheel_delete_container">حذف</string>
     <string name="quick_wheel_new_container">حاوية عجلة جديدة</string>
@@ -4887,7 +4891,7 @@
     <string name="quick_wheel_launch_fullscreen">ملء الشاشة</string>
     <string name="quick_wheel_launch_free_window">نافذة حرة</string>
     <string name="quick_wheel_launch_gate_off">النافذة الحرة غير مفعّلة في «التطبيقات والتشغيل»؛ وسيُستخدم ملء الشاشة حالياً</string>
-    <string name="quick_wheel_launch_unsupported">هذا الإجراء لا يفتح شيئاً، لذا لا تأثير لوضع التشغيل</string>
+    <string name="quick_wheel_launch_unsupported">لا تأثير: هذا الإجراء لا يفتح تطبيقاً</string>
     <string name="quick_wheel_icon_pick_library">اختيار من مكتبة الأيقونات</string>
     <string name="quick_wheel_icon_pick_app">اختيار أيقونة تطبيق</string>
     <string name="quick_wheel_icon_pick_gallery">اختيار صورة من المعرض</string>
@@ -4900,11 +4904,14 @@
     <string name="quick_wheel_icon_pick_text">أيقونة نصية</string>
     <string name="quick_wheel_text_icon_title">أيقونة نصية</string>
     <string name="quick_wheel_text_icon_hint">أدخل النص المراد عرضه</string>
+    <string name="quick_wheel_text_icon_color">لون النص</string>
+    <string name="quick_wheel_text_icon_color_auto">تلقائي</string>
+    <string name="quick_wheel_text_icon_color_custom">مخصص…</string>
     <string name="quick_wheel_pick_app">اختيار تطبيق</string>
     <string name="quick_wheel_hint_secondary">اضغط مطولاً على حاوية واسحبها إلى «حذف». وانقر على حاوية الحلقة الفرعية لتحريرها، أو انقر في أي مكان آخر للرجوع.</string>
     <string name="quick_wheel_collapse_secondary">طيّ الحلقة الفرعية</string>
     <string name="quick_wheel_sector_title">القطاع (التحرير والمعاينة)</string>
-    <string name="quick_wheel_sector_desc">انقر على الحلقة لتفعيل قطاعات 90° أو تعطيلها — ويعرض المحرر وكل معاينة وملخص القائمة ما اخترته بالضبط. ويخضع التشغيل الفعلي لإعداد ربط الإجراء: فإن لم تحدّد شيئاً يُحسب القطاع تلقائياً من موضع التشغيل لتبقى كل الحاويات على الشاشة، ويمكنك أيضاً تثبيت قطاع يدوياً هناك.</string>
+    <string name="quick_wheel_sector_desc">اختر قطاعات 90° لمعاينة الشكل؛ وعند الاستدعاء الفعلي يُختار القطاع تلقائياً حسب موضع التشغيل أو يُثبّت في ربط الإجراء</string>
     <string name="quick_wheel_sector_span">%1$d°</string>
     <string name="quick_wheel_sector_dir_top_right">القطاع العلوي الأيمن</string>
     <string name="quick_wheel_sector_dir_bottom_right">القطاع السفلي الأيمن</string>
@@ -4915,13 +4922,13 @@
     <string name="quick_wheel_hud_long_press">ضغط مطوّل: %1$s</string>
     <string name="quick_wheel_hud_no_action">بلا إجراء</string>
     <string name="quick_wheel_action_sector_auto">تلقائي (من موضع التشغيل)</string>
-    <string name="quick_wheel_action_sector_desc">اترك كل القطاعات دون تحديد ليختار التطبيق القطاع تلقائياً حسب موضع التشغيل (وتبقى كل الحاويات على الشاشة). وحدّد قطاعات لتثبيت الدائرة الأساسية على هذا النطاق — وقد تخرج عن الشاشة؛ وتبقى الحلقة الفرعية والتخطيط المستطيل تلقائيين.</string>
+    <string name="quick_wheel_action_sector_desc">بدون اختيار = تلقائي حسب موضع التشغيل؛ وعند اختيار قطاع يُثبّت وقد يخرج عن الشاشة</string>
     <string name="quick_wheel_action_anchor_section">موضع الظهور</string>
     <string name="quick_wheel_action_anchor_row">مركز العجلة</string>
     <string name="quick_wheel_action_anchor_follow">الموضع عند التشغيل</string>
-    <string name="quick_wheel_action_anchor_follow_desc">يكون المركز عند موضع إصبعك لحظة تنفيذ الإجراء؛ وكلما ابتعدت أكثر اقترب المركز من الداخل فتتّسع الدائرة.</string>
+    <string name="quick_wheel_action_anchor_follow_desc">المركز = موضع الإصبع لحظة التشغيل؛ وكلما ابتعدت بالسحب اقترب من الداخل</string>
     <string name="quick_wheel_action_anchor_edge">موضع الضغط (موصى به)</string>
-    <string name="quick_wheel_action_anchor_edge_desc">يكون المركز عند موضع لمس إصبعك أول مرة. موضع ثابت ويمكن توقّعه؛ قرب الحافة يتوفّر نصف دائرة فقط فتُضيَّق القطاعات تلقائياً.</string>
+    <string name="quick_wheel_action_anchor_edge_desc">المركز = نقطة الضغط، ثابت ويمكن توقعه؛ وعند الحافة يضيق القطاع تلقائياً</string>
     <string name="quick_wheel_secondary_hint">تحرير الحلقة الفرعية للحاوية %1$d</string>
     <string name="quick_wheel_slot_save">حفظ</string>
     <string name="gesture_action_screen_control">لوحة اللمس</string>

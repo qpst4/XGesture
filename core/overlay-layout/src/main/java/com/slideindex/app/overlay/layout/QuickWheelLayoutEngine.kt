@@ -108,14 +108,16 @@ data class QuickWheelStyleSpec(
      */
     val builtinIconSizePercent: Int = QuickWheelLayoutEngine.DEFAULT_BUILTIN_ICON_SIZE_PERCENT,
     /**
-     * 横向偏移（dp）：沿**轮盘扩散方向**水平微调，正值向屏内推入、负值贴边收缩。
+     * 横向偏移（dp）。
      *
-     * ⚠️ 符号随形态翻转（见 `offsetMirror`）：左边缘呼出的半圆（弧朝右）正值向右，
-     * 右边缘呼出的半圆（弧朝左）正值向左 —— 同一个正值永远表示"更远离呼出边"。
-     * 整圆无扩散方向，退回"正值向右"。
+     * - **有扩散方向时**（左右半圆、90°、矩形贴角）：正值沿扩散方向向屏内推入；
+     * - **没有扩散方向时**（上下半圆、整行居中的矩形、整圆）：固定 **正值向右、负值向左**。
+     *
+     * 这是"轮盘离屏幕边缘多远"的**唯一**开关（引擎没有隐藏安全边距）：出厂 0 = 紧贴触点。
+     * ⚠️ 负值可能把容器推出屏幕（最多 [MIN_OFFSET_DP]），引擎不做兜底。
      */
     val offsetXDp: Float = 0f,
-    /** 纵向偏移（dp）：沿轮盘扩散方向垂直微调，正值向屏内推入、负值贴边收缩（方向翻转规则同 [offsetXDp]）。 */
+    /** 纵向偏移（dp）：有扩散方向时正值向屏内推入；没有时固定 **正值向上、负值向下**（规则见 [offsetXDp]）。 */
     val offsetYDp: Float = 0f,
     /**
      * 矩形形态专用：容器**列数**。
@@ -126,16 +128,30 @@ data class QuickWheelStyleSpec(
      */
     val columnCount: Int = QuickWheelLayoutEngine.DEFAULT_COLUMN_COUNT,
     /**
-     * **应用图标 / 图库图片**这类"用户提供的位图"的容器是否全透明（不铺底色、不裁切）。
+     * 「容器底色全透明」**总开关**：应用图标 / 图库图片这类"用户提供的位图"的容器是否全透明。
      *
      * - `false`（默认）：所有容器都有底板，观感统一（原行为）；
      * - `true`：这些容器不铺任何底色，图标保持原样 —— 拟物风格图标包是异形 + 透明边角，
      *   铺方形底板会从轮廓外露出底色。
      *
-     * 内置矢量图标（图标库 / 内置动作 / **文字图标** / 名称首字母）**不受本开关影响，始终铺底板**：
-     * 细线图标与文字没有底板，在壁纸上会读不清。
+     * 总开关只管位图图标。内置图标是否跟着透明，由下面两个子开关**各自**决定
+     *（默认都关闭 = 与历史行为一致：内置图标始终铺底板）。
      */
     val transparentUserIcons: Boolean = false,
+    /**
+     * 内置**矢量**图标（内置动作 / 图标库 / 字体图标）是否跟着透明。
+     *
+     * ⚠️ 只有在 [transparentUserIcons] 为 `true` 时才生效；`false`（默认）= 始终铺底板
+     *（细线图标贴在花壁纸上会读不清，所以默认不开）。
+     */
+    val transparentBuiltinIcons: Boolean = false,
+    /**
+     * **文字图标**是否跟着透明。
+     *
+     * ⚠️ 只有在 [transparentUserIcons] 为 `true` 时才生效；`false`（默认）= 始终铺底板。
+     * 文字透明后建议配 [QuickWheelSlot.textColorArgb] 自定义颜色，否则浅色壁纸上会读不清。
+     */
+    val transparentTextIcons: Boolean = false,
     )
 
 /** 单个容器的几何位置（屏幕坐标，px）。 */
@@ -262,11 +278,18 @@ object QuickWheelLayoutEngine {
     const val MAX_RECT_ROWS = 64
 
     /**
-     * 自适应求解时容器离屏幕边缘预留的边距（dp）。
+     * 自适应求解时容器离屏幕边缘预留的边距（dp）。**0 = 以物理屏幕为准**。
      *
-     * 运行时浮层与配置页预览 / 编辑层共用同一数值，避免"预览里刚好贴边、真机却出屏"。
+     * 这里不再预留"安全边距"，留白交给用户可见的 [QuickWheelStyleSpec.offsetXDp] /
+     * [QuickWheelStyleSpec.offsetYDp]（出厂 10dp）。原因：
+     * - 圆心固定在触点，而边缘触钮的按下点本来就离边只有 8dp 左右 —— 再要求容器距边
+     *   ≥ 10dp，圆心自己就违反了约束，半圆里最靠圆心竖线的容器只要探出 1–2px 就会被
+     *   判"放不下"而退化成 90°（几像素的触点差异就会翻转形态）；
+     * - 边距做成参数后，用户想贴边就调到 0，想留白就调大，无需隐藏常量。
+     *
+     * 仍保留该常量（而不是删掉）：矩形 / 二级 / 预览共用这条口径，改成 0 即全局一致。
      */
-    const val ADAPTIVE_MARGIN_DP = 10f
+    const val ADAPTIVE_MARGIN_DP = 0f
 
     // 中心大圆**没有**"相对容器尺寸的放大倍数"这种常量：它的尺寸由 [layoutCenter] 按
     // 「初始半径 − 容器半宽 − 环间距」推导（下限 0.75 × 容器尺寸、上界 = 第一环容器内缘），
@@ -538,16 +561,22 @@ object QuickWheelLayoutEngine {
     }
 
     /**
-     * 偏移坐标的镜像符号（x, y）。
+     * 偏移坐标的镜像系数（x, y），每个分量只取 `±1`。**每个轴独立判定**：
      *
-     * [QuickWheelStyleSpec.offsetXDp] / [QuickWheelStyleSpec.offsetYDp] 的正值语义是
-     * 「沿轮盘扩散方向推入屏内」，而扩散方向由**当前扇区**（圆形）或**贴角**（矩形）决定。
-     * 直接按屏幕坐标相加的话，同一个正值会一边向屏内、一边向屏外：
-     * 左边缘呼出的半圆（弧朝右）加正值向右 = 入屏，右边缘呼出的半圆（弧朝左）加正值向右
-     * = 出屏，而且越调越糟。预览与真机是同一条路径（预览锚点也按扇区反推），所以两边一起错。
+     * | 该轴有扩散方向？ | 正值含义 |
+     * |---|---|
+     * | 有（半圆的主轴、90° 的两轴、矩形贴角的两轴） | 沿扩散方向**向屏内**（取该方向符号） |
+     * | 没有（左右半圆的 Y、上下半圆的 X、整圆、居中矩形的横向） | **X 向右、Y 向上**（固定屏幕方向） |
      *
-     * 规则：取扩散方向对应分量的符号；分量为 0（整圆 / 方向退化 / 上下半圆无需水平镜像）
-     * 时退回 `+1`，即旧行为（正值向右 / 向下）。
+     * 为什么主轴必须镜像：不镜像的话同一个正值在左边缘呼出时是入屏、右边缘呼出时是出屏
+     *（越调越糟），预览与真机还会一起错（预览锚点也按扇区反推）。
+     *
+     * 为什么自由轴不用"向内"：该轴根本没有"向内"这个概念（半圆在垂直 / 水平方向对称）。
+     * 与其按形态猜方向，不如固定成"不随形态翻转"的一条规则 —— 用户想把轮盘整体挪一挪时，
+     * 两个滑条的含义稳定、可预期（代价是语义上略"不贴着形态"）。
+     *
+     * 于是：左右半圆 → X 向内、Y 正上；上下半圆 → Y 向内、X 正右；
+     * 90° → 两轴都向内；整圆 / 矩形 CENTER_TOP → X 正右、Y 正上。
      */
     private fun offsetMirror(
         shape: QuickWheelShape,
@@ -556,12 +585,16 @@ object QuickWheelLayoutEngine {
     ): Pair<Float, Float> = when (shape) {
         QuickWheelShape.CIRCLE -> {
             val (dirX, dirY) = sectorCentroidDir(sectorMask)
-            signOrOne(dirX) to signOrOne(dirY)
+            val spreadX = signOrZero(dirX)
+            val spreadY = signOrZero(dirY)
+            // 有扩散方向 → 取该方向符号（正值向内）；X 退化 → 正右（Android 直觉），Y 退化 → 正上。
+            (if (spreadX == 0f) 1f else spreadX) to (if (spreadY == 0f) -1f else spreadY)
         }
 
         // 矩形没有扇区：贴角的展开方向就是扩散方向（左角向右铺、下角向上铺……）。
         QuickWheelShape.RECT -> when (rectCorner) {
-            // 历史布局（编辑层 / 配置页预览）：整行居中、逐行向下 → 与旧行为一致。
+            // 历史布局（编辑层 / 配置页预览）：整行水平居中 → 横向没有扩散方向，按固定规则取正右；
+            // 纵向逐行向下铺开 → 正值向内（+1）。与 TOP_LEFT 恰好同号。
             QuickWheelRectCorner.CENTER_TOP,
             QuickWheelRectCorner.TOP_LEFT,
             -> 1f to 1f
@@ -572,11 +605,11 @@ object QuickWheelLayoutEngine {
         }
     }
 
-    /** 符号：正 / 负原样，接近 0（方向退化）时取 `+1`（= 旧行为）。 */
-    private fun signOrOne(value: Float): Float = when {
+    /** 符号：正 / 负原样；接近 0（该轴没有扩散方向）→ `0`。 */
+    private fun signOrZero(value: Float): Float = when {
         value > 1e-3f -> 1f
         value < -1e-3f -> -1f
-        else -> 1f
+        else -> 0f
     }
 
     /**
@@ -1264,6 +1297,11 @@ object QuickWheelLayoutEngine {
         appendSecondaryAddSlot: Boolean = false,
     ): QuickWheelLayout {
         val availableWidthPx = (screenWidthPx - 32f * density).coerceAtLeast(0f)
+        // 形态判定**不看偏移**：偏移只决定"最终摆在哪"，不参与"放不放得下"。
+        // 否则往屏外调一点偏移就会把半圆挤成 90°，往屏内调又可能凭空让更大的形态成立
+        // —— 外观参数不该改变形态。留白效果由偏移本身在布局阶段完成。
+        val solveStyle = primaryStyle.copy(offsetXDp = 0f, offsetYDp = 0f)
+        val solveSecondaryStyle = secondaryStyle.copy(offsetXDp = 0f, offsetYDp = 0f)
         // 一级：自适应时按"锚点 + 全部容器在屏内"求解扇区（圆形）或网格基准角（矩形）。
         val autoPrimaryMask = if (adaptive != null && primaryShape == QuickWheelShape.CIRCLE) {
             solveSectorMaskForAnchor(
@@ -1272,7 +1310,7 @@ object QuickWheelLayoutEngine {
                 screenWidthPx = adaptive.widthPx,
                 screenHeightPx = adaptive.heightPx,
                 marginPx = adaptive.marginPx,
-                style = primaryStyle,
+                style = solveStyle,
                 slotCount = primaryCount,
                 density = density,
             )
@@ -1291,7 +1329,7 @@ object QuickWheelLayoutEngine {
                 screenWidthPx = adaptive.widthPx,
                 screenHeightPx = adaptive.heightPx,
                 marginPx = adaptive.marginPx,
-                style = primaryStyle,
+                style = solveStyle,
                 slotCount = primaryCount,
                 density = density,
             )
@@ -1340,7 +1378,7 @@ object QuickWheelLayoutEngine {
                         screenWidthPx = secondaryScreen.widthPx,
                         screenHeightPx = secondaryScreen.heightPx,
                         marginPx = secondaryScreen.marginPx,
-                        style = secondaryStyle,
+                        style = solveSecondaryStyle,
                         slotCount = slotCountForSolve,
                         density = density,
                     )
@@ -1354,7 +1392,7 @@ object QuickWheelLayoutEngine {
                         screenWidthPx = secondaryScreen.widthPx,
                         screenHeightPx = secondaryScreen.heightPx,
                         marginPx = secondaryScreen.marginPx,
-                        style = secondaryStyle,
+                        style = solveSecondaryStyle,
                         slotCount = slotCountForSolve,
                         density = density,
                     )

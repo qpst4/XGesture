@@ -4881,40 +4881,44 @@
     <string name="quick_wheel_delete_message">Удалить это колесо?</string>
     <string name="quick_wheel_name_hint">Имя колеса</string>
     <string name="quick_wheel_long_press_time">Время долгого нажатия</string>
-    <string name="quick_wheel_long_press_time_desc">Длительность удержания для действий долгого нажатия второго уровня и раскрытия колеса второго уровня</string>
+    <string name="quick_wheel_long_press_time_desc">Сколько удерживать контейнер, чтобы сработало длинное действие и раскрылся второй уровень</string>
     <string name="quick_wheel_backdrop_blur">Размытие фона</string>
-    <string name="quick_wheel_backdrop_blur_desc">Размывает область за контейнерами; контейнеры всегда остаются полностью непрозрачными. Требуется системное межоконное размытие, иначе эффекта нет</string>
+    <string name="quick_wheel_backdrop_blur_desc">Размывает только область вне контейнеров; нужна поддержка системы</string>
     <string name="quick_wheel_backdrop_dim">Затемнение фона</string>
-    <string name="quick_wheel_backdrop_dim_desc">Затемняет область за контейнерами (0% — экран остаётся полностью видимым); контейнеры всегда остаются полностью непрозрачными</string>
+    <string name="quick_wheel_backdrop_dim_desc">Затемняет только область вне контейнеров; 0% = полностью видно</string>
     <string name="quick_wheel_animation">Анимация открытия</string>
     <string name="quick_wheel_open_animation">Эффект анимации</string>
     <string name="quick_wheel_open_animation_desc">Влияет только на то, как появляется колесо — определение нажатий и тайминг долгого нажатия не затрагиваются</string>
     <string name="quick_wheel_open_animation_none">Нет</string>
     <string name="quick_wheel_open_animation_expand">Раскрытие из центра</string>
     <string name="quick_wheel_animation_speed">Скорость анимации</string>
-    <string name="quick_wheel_animation_speed_desc">Только ускоряет/замедляет анимацию открытия; тайминг долгого нажатия остаётся как настроено</string>
+    <string name="quick_wheel_animation_speed_desc">Меняет только скорость раскрытия; таймер удержания не меняется</string>
     <string name="quick_wheel_summary">%1$s · колец: %2$d · действий: %3$d + пустых: %4$d</string>
     <string name="quick_wheel_shape_circle">Круг</string>
     <string name="quick_wheel_shape_rect">Прямоугольник</string>
-    <string name="quick_wheel_shape_circle_desc">Концентрические кольца раскрываются ступенчато</string>
-    <string name="quick_wheel_shape_rect_desc">Одна строка на кольцо, укладывается вниз</string>
+    <string name="quick_wheel_shape_circle_desc">Концентрические кольца, раскрываются изнутри наружу</string>
+    <string name="quick_wheel_shape_rect_desc">Раскладка по строкам с фиксированным числом столбцов</string>
     <string name="quick_wheel_section_appearance">Внешний вид</string>
     <string name="quick_wheel_section_shape">Форма колеса</string>
     <string name="quick_wheel_section_slots">Контейнеры</string>
     <string name="quick_wheel_show_labels">Показывать текстовые подписи</string>
-    <string name="quick_wheel_show_labels_desc">Показывать имя под каждым значком; значок и текст остаются отцентрованными вместе</string>
+    <string name="quick_wheel_show_labels_desc">Показывать название под значком</string>
     <string name="quick_wheel_transparent_container">Прозрачный фон контейнера</string>
-    <string name="quick_wheel_transparent_container_desc">Включите, чтобы убрать подложку и обрезку у значков приложений и изображений; у встроенных действий и текстовых значков подложка остаётся всегда</string>
+    <string name="quick_wheel_transparent_container_desc">Значки приложений и картинки из галереи без подложки и без обрезки</string>
+    <string name="quick_wheel_transparent_builtin">Прозрачные встроенные значки</string>
+    <string name="quick_wheel_transparent_builtin_desc">Встроенные действия, библиотека значков и другие векторные значки тоже без подложки</string>
+    <string name="quick_wheel_transparent_text">Прозрачные текстовые значки</string>
+    <string name="quick_wheel_transparent_text_desc">Текстовые значки рисуются без подложки; светлый текст на светлых обоях плохо виден — настройте «Цвет текста»</string>
     <string name="quick_wheel_initial_radius">Начальный радиус</string>
-    <string name="quick_wheel_initial_radius_desc">Расстояние от точки вызова до первого кольца</string>
+    <string name="quick_wheel_initial_radius_desc">Расстояние от центра до первого кольца</string>
     <string name="quick_wheel_container_gap">Зазор контейнеров</string>
-    <string name="quick_wheel_container_gap_desc">Фактический зазор между соседними контейнерами; 0 = соприкасаются</string>
+    <string name="quick_wheel_container_gap_desc">Зазор между соседними контейнерами в кольце; 0 = вплотную</string>
     <string name="quick_wheel_ring_gap">Зазор колец</string>
-    <string name="quick_wheel_ring_gap_desc">Зазор между слоями колец, когда кольцо переполняется</string>
+    <string name="quick_wheel_ring_gap_desc">Расстояние между соседними кольцами</string>
     <string name="quick_wheel_column_count">Количество столбцов</string>
-    <string name="quick_wheel_column_count_desc">Контейнеров в строке; излишки переносятся на следующую строку (только форма «Прямоугольник»)</string>
+    <string name="quick_wheel_column_count_desc">Контейнеров в строке (только сетка)</string>
     <string name="quick_wheel_container_size">Размер контейнера</string>
-    <string name="quick_wheel_container_size_desc">Длина стороны одного контейнера; меньше — колесо компактнее</string>
+    <string name="quick_wheel_container_size_desc">Размер контейнера; меньше — компактнее колесо</string>
     <string name="quick_wheel_add_slot">+ Пустой слот</string>
     <string name="quick_wheel_remove_slot">Удалить последний слот</string>
     <string name="quick_wheel_slot_number">Контейнер %1$d</string>
@@ -4961,9 +4965,9 @@
     <string name="quick_wheel_exit_without_save">Выйти без сохранения</string>
     <string name="quick_wheel_section_basic">Основное</string>
     <string name="quick_wheel_preview">Предпросмотр колеса</string>
-    <string name="quick_wheel_preview_desc">Показать настоящее колесо на месте, чтобы проверить нажатие и долгое нажатие</string>
+    <string name="quick_wheel_preview_desc">Вызывает колесо на месте, чтобы попробовать действия</string>
     <string name="quick_wheel_function">Расположение колеса</string>
-    <string name="quick_wheel_function_desc">Расставьте колесо на месте: перетаскивайте для изменения порядка, добавляйте или удаляйте контейнеры и привязывайте действия</string>
+    <string name="quick_wheel_function_desc">Перетаскивайте для сортировки, добавляйте и удаляйте контейнеры, настраивайте действия</string>
     <string name="quick_wheel_hint_preview">Живой предпросмотр · нажмите на пустое место, чтобы закрыть</string>
     <string name="quick_wheel_hint_canvas">Нажмите на контейнер для редактирования · долгое нажатие — уровень 2 · перетаскивание — порядок · перетащите на корзину для удаления</string>
     <string name="quick_wheel_level_primary">Уровень 1</string>
@@ -4974,17 +4978,17 @@
     <string name="quick_wheel_secondary_shape">Форма уровня 2</string>
     <string name="quick_wheel_sector_preview">Предпросмотр сектора уровня 1 (только предпросмотр; настоящее расположение адаптируется к жесту)</string>
     <string name="quick_wheel_container_corner">Скругление контейнера</string>
-    <string name="quick_wheel_container_corner_desc">Радиус скругления каждого контейнера</string>
+    <string name="quick_wheel_container_corner_desc">Радиус скругления контейнера</string>
     <string name="quick_wheel_icon_size">Размер значка</string>
-    <string name="quick_wheel_icon_size_desc">Базовый размер для встроенных значков и текстовых подписей как доля контейнера; значки установленных приложений и изображения из галереи всегда используют размер контейнера и игнорируют это значение</string>
+    <string name="quick_wheel_icon_size_desc">Базовый размер встроенных значков и подписи (доля контейнера); значки приложений и картинки не затрагиваются</string>
     <string name="quick_wheel_label_size_factor">Множитель размера подписи</string>
     <string name="quick_wheel_label_size_factor_desc">Размер шрифта = базовый × множитель</string>
     <string name="quick_wheel_builtin_icon_size">Множитель размера значка</string>
-    <string name="quick_wheel_builtin_icon_size_desc">Фактический размер значка = размер значка × множитель размера значка (значки установленных приложений и изображения из галереи используют размер контейнера как базовый)</string>
+    <string name="quick_wheel_builtin_icon_size_desc">Фактический размер значка = базовый × коэффициент</string>
     <string name="quick_wheel_offset_x">Горизонтальное смещение</string>
-    <string name="quick_wheel_offset_x_desc">Тонкая настройка по горизонтали (положительное сдвигает внутрь, отрицательное прижимает к краю)</string>
+    <string name="quick_wheel_offset_x_desc">Горизонтальная поправка; при направлении раскрытия плюс — внутрь, иначе плюс — вправо</string>
     <string name="quick_wheel_offset_y">Вертикальное смещение</string>
-    <string name="quick_wheel_offset_y_desc">Тонкая настройка по вертикали (положительное сдвигает внутрь, отрицательное прижимает к краю)</string>
+    <string name="quick_wheel_offset_y_desc">Вертикальная поправка; при направлении раскрытия плюс — внутрь, иначе плюс — вверх</string>
     <string name="quick_wheel_add_placeholder">+ Пустой слот</string>
     <string name="quick_wheel_delete_container">Удалить</string>
     <string name="quick_wheel_new_container">Новый контейнер колеса</string>
@@ -4998,7 +5002,7 @@
     <string name="quick_wheel_launch_fullscreen">Полный экран</string>
     <string name="quick_wheel_launch_free_window">Маленькое окно</string>
     <string name="quick_wheel_launch_gate_off">Свободное окно выключено в разделе «Приложения и запуск»; пока всегда полный экран</string>
-    <string name="quick_wheel_launch_unsupported">Это действие ничего не открывает, поэтому режим открытия не действует</string>
+    <string name="quick_wheel_launch_unsupported">Не действует: это действие не открывает приложение</string>
     <string name="quick_wheel_icon_pick_library">Выбрать из библиотеки значков</string>
     <string name="quick_wheel_icon_pick_app">Выбрать значок приложения</string>
     <string name="quick_wheel_icon_pick_gallery">Выбрать изображение из галереи</string>
@@ -5011,11 +5015,14 @@
     <string name="quick_wheel_icon_pick_text">Текстовый значок</string>
     <string name="quick_wheel_text_icon_title">Текстовый значок</string>
     <string name="quick_wheel_text_icon_hint">Введите отображаемый текст</string>
+    <string name="quick_wheel_text_icon_color">Цвет текста</string>
+    <string name="quick_wheel_text_icon_color_auto">Авто</string>
+    <string name="quick_wheel_text_icon_color_custom">Другой…</string>
     <string name="quick_wheel_pick_app">Выбрать приложение</string>
     <string name="quick_wheel_hint_secondary">Долгое нажатие на контейнер — перетащить его на «Удалить». Нажмите на контейнер подкольца для редактирования, нажмите в другом месте для возврата.</string>
     <string name="quick_wheel_collapse_secondary">Свернуть подкольцо</string>
     <string name="quick_wheel_sector_title">Сектор (редактирование и предпросмотр)</string>
-    <string name="quick_wheel_sector_desc">Нажмите на кольцо, чтобы включить или выключить секторы 90° — редактор, каждый предпросмотр и сводка списка показывают ровно то, что вы выберете. Реальные запуски управляются привязкой действия: если ничего не задано, сектор определяется автоматически из положения срабатывания, чтобы все контейнеры остались на экране; сектор также можно зафиксировать вручную там.</string>
+    <string name="quick_wheel_sector_desc">Выберите секторы 90° для предпросмотра; при реальном вызове сектор выбирается по точке срабатывания или фиксируется в привязке действия</string>
     <string name="quick_wheel_sector_span">%1$d°</string>
     <string name="quick_wheel_sector_dir_top_right">Верхний правый сектор</string>
     <string name="quick_wheel_sector_dir_bottom_right">Нижний правый сектор</string>
@@ -5028,14 +5035,14 @@
     <string name="quick_wheel_hud_long_press">Долгое нажатие: %1$s</string>
     <string name="quick_wheel_hud_no_action">Без действия</string>
     <string name="quick_wheel_action_sector_auto">Авто (из положения срабатывания)</string>
-    <string name="quick_wheel_action_sector_desc">Оставьте все секторы невыбранными, чтобы приложение выбирало сектор автоматически из точки срабатывания (все контейнеры остаются на экране). Выберите секторы, чтобы принудительно задать основному кругу этот охват — он может выйти за экран; подкольцо и прямоугольное расположение остаются автоматическими.</string>
+    <string name="quick_wheel_action_sector_desc">Ничего не выбрано = автоматически по точке срабатывания; выбранный фиксируется и может выйти за экран</string>
     <!-- 动作绑定页：呼出位置（圆心锚定方式）。 -->
     <string name="quick_wheel_action_anchor_section">Положение запуска</string>
     <string name="quick_wheel_action_anchor_row">Центр колеса</string>
     <string name="quick_wheel_action_anchor_follow">Позиция при срабатывании</string>
-    <string name="quick_wheel_action_anchor_follow_desc">Центр там, где был палец в момент срабатывания действия; чем дальше сдвиг, тем ближе центр к экрану и тем полнее круг.</string>
+    <string name="quick_wheel_action_anchor_follow_desc">Центр = положение пальца в момент срабатывания; чем дальше сдвиг, тем ближе к центру</string>
     <string name="quick_wheel_action_anchor_edge">Место нажатия (рекомендуется)</string>
-    <string name="quick_wheel_action_anchor_edge_desc">Центр там, где вы впервые коснулись экрана. Положение стабильно и предсказуемо; у края помещается только половина круга, поэтому секторы сужаются автоматически.</string>
+    <string name="quick_wheel_action_anchor_edge_desc">Центр = точка нажатия, стабильно; у края сектор сужается автоматически</string>
     <string name="quick_wheel_secondary_hint">Редактирование подкольца контейнера %1$d</string>
     <string name="quick_wheel_slot_save">Сохранить</string>
     <string name="smart_screenshot_saved">Скриншот сохранён в галерею</string>

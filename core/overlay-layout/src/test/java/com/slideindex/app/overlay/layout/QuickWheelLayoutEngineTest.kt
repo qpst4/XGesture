@@ -1074,7 +1074,8 @@ class QuickWheelLayoutEngineTest {
             primaryShape = QuickWheelShape.CIRCLE,
         )
         assertEquals(570f, center.centerX, 0.01f)
-        assertEquals(940f, center.centerY, 0.01f)
+        // 整圆两轴都没有扩散方向 → 自由轴取固定屏幕方向：X 正右、Y 正上（-20 → 向下 20）。
+        assertEquals(980f, center.centerY, 0.01f)
     }
 
     @Test
@@ -1153,7 +1154,8 @@ class QuickWheelLayoutEngineTest {
             screenWidthPx = 1080f,
         )
         assertEquals(580f, layout.centerX, 0.01f)
-        assertEquals(985f, layout.centerY, 0.01f)
+        // 整圆：X 正右、Y 正上 → +25dp 纵向上移。
+        assertEquals(935f, layout.centerY, 0.01f)
     }
 
     // ── 偏移的镜像（正值 = 沿扩散方向向屏内）──────────────────
@@ -1220,8 +1222,8 @@ class QuickWheelLayoutEngineTest {
     }
 
     @Test
-    fun offset_fullCircleKeepsScreenAxes() {
-        // 整圆没有扩散方向 → 保持旧行为：+X 向右、+Y 向下。
+    fun offset_fullCircleUsesFixedScreenAxes() {
+        // 整圆两轴都没有扩散方向 → 走自由轴规则：+X 向右、+Y 向上。
         val base = meanCenter(QuickWheelLayoutEngine.SECTOR_ALL, anchorX = 540f, anchorY = 960f)
         val shift = meanCenter(
             QuickWheelLayoutEngine.SECTOR_ALL,
@@ -1231,7 +1233,7 @@ class QuickWheelLayoutEngineTest {
             offsetYDp = 20f,
         )
         assertEquals(20f, shift.first - base.first, 0.01f)
-        assertEquals(20f, shift.second - base.second, 0.01f)
+        assertEquals(-20f, shift.second - base.second, 0.01f)
     }
 
     @Test
@@ -1290,7 +1292,8 @@ class QuickWheelLayoutEngineTest {
             sectorMask = 0b1100,
         )
         assertEquals(1050f, center.centerX, 0.01f)
-        assertEquals(980f, center.centerY, 0.01f)
+        // 左半圆只有水平法向：纵向偏移走自由轴规则（正上），中心与外围容器一起上移。
+        assertEquals(940f, center.centerY, 0.01f)
     }
 
     @Test
@@ -1375,6 +1378,136 @@ class QuickWheelLayoutEngineTest {
             val slots = ringOf(mask, anchorX = anchorX, anchorY = 960f)
             assertTrue("mask=$mask 的顺序应从上方开始", slots[0].centerY < slots[1].centerY)
         }
+    }
+
+    // ── 边距归零 + 形态与偏移解耦（留白交给偏移参数）────────────
+
+    /** 真机样式：density 2.9625、10 个一级容器、10dp 出厂留白。 */
+    private val deviceStyle = QuickWheelStyleSpec(
+        containerSizeDp = 42.18182f,
+        containerGapDp = 0f,
+        ringGapDp = 5f,
+        initialRadiusDp = 80f,
+        offsetXDp = 10f,
+        offsetYDp = 10f,
+    )
+
+    private fun solveOnDevice(
+        style: QuickWheelStyleSpec,
+        anchorX: Float,
+        anchorY: Float,
+        slotCount: Int = 10,
+    ): Int = QuickWheelLayoutEngine.solveSectorMaskForAnchor(
+        anchorX = anchorX,
+        anchorY = anchorY,
+        screenWidthPx = 1080f,
+        screenHeightPx = 2354f,
+        marginPx = QuickWheelLayoutEngine.ADAPTIVE_MARGIN_DP * 2.9625f,
+        style = style,
+        slotCount = slotCount,
+        density = 2.9625f,
+    )
+
+    private fun buildOnDevice(style: QuickWheelStyleSpec): QuickWheelLayout =
+        QuickWheelLayoutEngine.buildLayout(
+            primaryCount = 10,
+            secondaryCount = 0,
+            expandedPrimaryIndex = -1,
+            primaryShape = QuickWheelShape.CIRCLE,
+            secondaryShape = QuickWheelShape.CIRCLE,
+            primaryStyle = style,
+            secondaryStyle = style,
+            anchorX = 1055f,
+            anchorY = 1375f,
+            density = 2.9625f,
+            screenWidthPx = 1080f,
+            adaptive = QuickWheelAdaptiveScreen(
+                widthPx = 1080f,
+                heightPx = 2354f,
+                marginPx = QuickWheelLayoutEngine.ADAPTIVE_MARGIN_DP * 2.9625f,
+            ),
+        )
+
+    @Test
+    fun adaptiveMargin_isZero() {
+        // 不再隐藏"安全边距"：0 = 以物理屏幕为准，留白由用户可见的偏移参数提供。
+        assertEquals(0f, QuickWheelLayoutEngine.ADAPTIVE_MARGIN_DP, 0.001f)
+    }
+
+    @Test
+    fun solveSectorMask_edgeTouchKeepsHalfCircle() {
+        // 触点离右边 25px、甚至真贴边：物理屏幕内放得下就必须给半圆，不能退成 90°。
+        val noOffset = deviceStyle.copy(offsetXDp = 0f, offsetYDp = 0f)
+        assertEquals(0b1100, solveOnDevice(noOffset, anchorX = 1055f, anchorY = 1375f))
+        assertEquals(0b1100, solveOnDevice(noOffset, anchorX = 1080f, anchorY = 1375f))
+    }
+
+    @Test
+    fun buildLayout_shapeIgnoresOffsets() {
+        // 偏移只决定"摆在哪"，不参与"放不放得下"：±100dp 都不该改变形态。
+        val masks = listOf(-100f, 0f, 100f).map { offset ->
+            buildOnDevice(deviceStyle.copy(offsetXDp = offset, offsetYDp = offset)).sectorMask
+        }
+        assertEquals("偏移不应改变形态：$masks", 1, masks.toSet().size)
+        assertEquals(0b1100, masks.first())
+    }
+
+    @Test
+    fun solveSectorMask_stillFallsBackWhenVerticalSpaceIsShort() {
+        // 纵向真的不够（y=60，半圆要 ±439px）→ 仍应退到 90°，不能被顺手放宽。
+        val noOffset = deviceStyle.copy(offsetXDp = 0f, offsetYDp = 0f)
+        val mask = solveOnDevice(noOffset, anchorX = 1050f, anchorY = 60f)
+        assertEquals(1, Integer.bitCount(mask))
+    }
+
+    @Test
+    fun offset_freeAxisUsesFixedScreenDirection() {
+        // 左右半圆只有水平法向：纵向偏移不跟形态走，固定「正上 / 负下」。
+        val rightHalfBase = meanCenter(0b0011, anchorX = 0f, anchorY = 960f)
+        val rightHalfShift = meanCenter(0b0011, anchorX = 0f, anchorY = 960f, offsetXDp = 20f, offsetYDp = 20f)
+        assertEquals(20f, rightHalfShift.first - rightHalfBase.first, 0.01f)   // X 向内（向右）
+        assertEquals(-20f, rightHalfShift.second - rightHalfBase.second, 0.01f) // Y 向上
+
+        // 左半圆（从右边呼出）：自由轴 Y 与右半圆**同向**（都向上）—— 不随形态翻转。
+        val leftHalfBase = meanCenter(0b1100, anchorX = 1080f, anchorY = 960f)
+        val leftHalfShift = meanCenter(0b1100, anchorX = 1080f, anchorY = 960f, offsetXDp = 20f, offsetYDp = 20f)
+        assertEquals(-20f, leftHalfShift.first - leftHalfBase.first, 0.01f)    // X 向内（向左）
+        assertEquals(-20f, leftHalfShift.second - leftHalfBase.second, 0.01f)  // Y 向上
+
+        // 上下半圆只有垂直法向：横向偏移不跟形态走，固定「正右 / 负左」。
+        val lowerHalfBase = meanCenter(0b0110, anchorX = 540f, anchorY = 0f)
+        val lowerHalfShift = meanCenter(0b0110, anchorX = 540f, anchorY = 0f, offsetXDp = 20f, offsetYDp = 20f)
+        assertEquals(20f, lowerHalfShift.first - lowerHalfBase.first, 0.01f)   // X 向右
+        assertEquals(20f, lowerHalfShift.second - lowerHalfBase.second, 0.01f) // Y 向内（向下）
+
+        // 上半圆（从下边呼出）：X 与下半圆**同向**（都向右），Y 向内（向上）。
+        val upperHalfBase = meanCenter(0b1001, anchorX = 540f, anchorY = 1920f)
+        val upperHalfShift = meanCenter(0b1001, anchorX = 540f, anchorY = 1920f, offsetXDp = 20f, offsetYDp = 20f)
+        assertEquals(20f, upperHalfShift.first - upperHalfBase.first, 0.01f)    // X 向右
+        assertEquals(-20f, upperHalfShift.second - upperHalfBase.second, 0.01f) // Y 向内（向上）
+    }
+
+    @Test
+    fun offset_rectCenterTopShiftsRightAndDown() {
+        // 整行水平居中：横向没有扩散方向 → 走自由轴规则，X 正右；纵向铺开方向 → 正值向下。
+        val base = meanCenter(
+            mask = QuickWheelLayoutEngine.SECTOR_ALL,
+            anchorX = 540f,
+            anchorY = 0f,
+            shape = QuickWheelShape.RECT,
+            rectCorner = QuickWheelRectCorner.CENTER_TOP,
+        )
+        val shifted = meanCenter(
+            mask = QuickWheelLayoutEngine.SECTOR_ALL,
+            anchorX = 540f,
+            anchorY = 0f,
+            offsetXDp = 20f,
+            offsetYDp = 20f,
+            shape = QuickWheelShape.RECT,
+            rectCorner = QuickWheelRectCorner.CENTER_TOP,
+        )
+        assertEquals(20f, shifted.first - base.first, 0.01f)
+        assertEquals(20f, shifted.second - base.second, 0.01f)
     }
 
     @Test
