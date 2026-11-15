@@ -118,18 +118,21 @@ class SettingsModuleRegistryTest {
         // 四个都落 CLIPBOARD（前缀 `clipboard_`）。
         // 684 = 683 + 1：小组件面板「显示图标名称」（`widget_panel_show_labels`，落 WIDGET_PANEL）。
         // 697 = 696 + 1：取词「分词时合并链接」（`float_ball_pick_merge_links`，落 FLOAT_BALL）。
-        const val EXPECTED_TOTAL_KEYS = 697
+        // 701 = 697 + 4：反馈整改新增 4 个键 —— `edge_long_press_ms`（EDGE_GESTURE）、
+        //            `float_ball_edge_inset_dp`（FLOAT_BALL）、`message_side_bubble_lock_screen`（MESSAGE）、
+        //            `task_switcher_panel_width_dp`（无匹配前缀，落 GENERAL）。
+        const val EXPECTED_TOTAL_KEYS = 701
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
-            SettingsModule.EDGE_GESTURE to 84,
+            SettingsModule.EDGE_GESTURE to 85,
             SettingsModule.CORNER_WHEEL to 35,
             SettingsModule.QUICK_WHEEL to 2,
-            SettingsModule.FLOAT_BALL to 78,
+            SettingsModule.FLOAT_BALL to 79,
             SettingsModule.FLOATING_POINTER to 52,
             SettingsModule.FINGERTIP_RING to 13,
             SettingsModule.QUICK_LAUNCHER to 93,
             SettingsModule.WIDGET_PANEL to 8,
-            SettingsModule.MESSAGE to 75,
+            SettingsModule.MESSAGE to 76,
             SettingsModule.OTP to 24,
             SettingsModule.SHAKE to 44,
             SettingsModule.CLIPBOARD to 63,
@@ -141,7 +144,7 @@ class SettingsModuleRegistryTest {
             SettingsModule.SHELL to 1,
             SettingsModule.ACTIVITY_SHORTCUTS to 3,
             SettingsModule.THEME_UI to 19,
-            SettingsModule.GENERAL to 33,
+            SettingsModule.GENERAL to 34,
         )
     }
 }
