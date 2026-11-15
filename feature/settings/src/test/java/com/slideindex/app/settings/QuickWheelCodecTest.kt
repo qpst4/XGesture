@@ -135,6 +135,28 @@ class QuickWheelCodecTest {
         // 没动过的二级两套仍是默认值（不透明 = 有底板）。
         assertEquals(false, decoded.secondaryCircleStyle.transparentUserIcons)
         assertEquals(false, decoded.secondaryRectStyle.transparentUserIcons)
+        // 只开总开关时，两个子开关必须保持 false —— 内置图标照旧铺底板（历史观感）。
+        assertEquals(false, decoded.secondaryCircleStyle.transparentBuiltinIcons)
+        assertEquals(false, decoded.secondaryCircleStyle.transparentTextIcons)
+    }
+
+    @Test
+    fun roundTrip_preservesTransparentBuiltinAndTextSwitches() {
+        // 总开关打开后，两个子开关各自独立：只开"文字图标也透明"不能把内置矢量一起透明。
+        val wheel = sampleWheel().copy(
+            primaryCircleStyle = primaryCircleStyle.copy(
+                transparentUserIcons = true,
+                transparentTextIcons = true,
+            ),
+        )
+        val decoded = roundTrip(listOf(wheel)).single()
+        assertTrue(decoded.primaryCircleStyle.transparentUserIcons)
+        assertTrue(decoded.primaryCircleStyle.transparentTextIcons)
+        assertEquals(false, decoded.primaryCircleStyle.transparentBuiltinIcons)
+        // 没动过的矩形一套三个开关全是 false。
+        assertEquals(false, decoded.primaryRectStyle.transparentUserIcons)
+        assertEquals(false, decoded.primaryRectStyle.transparentBuiltinIcons)
+        assertEquals(false, decoded.primaryRectStyle.transparentTextIcons)
     }
 
     @Test

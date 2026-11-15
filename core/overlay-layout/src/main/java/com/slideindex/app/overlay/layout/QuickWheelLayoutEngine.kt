@@ -128,16 +128,30 @@ data class QuickWheelStyleSpec(
      */
     val columnCount: Int = QuickWheelLayoutEngine.DEFAULT_COLUMN_COUNT,
     /**
-     * **应用图标 / 图库图片**这类"用户提供的位图"的容器是否全透明（不铺底色、不裁切）。
+     * 「容器底色全透明」**总开关**：应用图标 / 图库图片这类"用户提供的位图"的容器是否全透明。
      *
      * - `false`（默认）：所有容器都有底板，观感统一（原行为）；
      * - `true`：这些容器不铺任何底色，图标保持原样 —— 拟物风格图标包是异形 + 透明边角，
      *   铺方形底板会从轮廓外露出底色。
      *
-     * 内置矢量图标（图标库 / 内置动作 / **文字图标** / 名称首字母）**不受本开关影响，始终铺底板**：
-     * 细线图标与文字没有底板，在壁纸上会读不清。
+     * 总开关只管位图图标。内置图标是否跟着透明，由下面两个子开关**各自**决定
+     *（默认都关闭 = 与历史行为一致：内置图标始终铺底板）。
      */
     val transparentUserIcons: Boolean = false,
+    /**
+     * 内置**矢量**图标（内置动作 / 图标库 / 字体图标）是否跟着透明。
+     *
+     * ⚠️ 只有在 [transparentUserIcons] 为 `true` 时才生效；`false`（默认）= 始终铺底板
+     *（细线图标贴在花壁纸上会读不清，所以默认不开）。
+     */
+    val transparentBuiltinIcons: Boolean = false,
+    /**
+     * **文字图标**是否跟着透明。
+     *
+     * ⚠️ 只有在 [transparentUserIcons] 为 `true` 时才生效；`false`（默认）= 始终铺底板。
+     * 文字透明后建议配 [QuickWheelSlot.textColorArgb] 自定义颜色，否则浅色壁纸上会读不清。
+     */
+    val transparentTextIcons: Boolean = false,
     )
 
 /** 单个容器的几何位置（屏幕坐标，px）。 */

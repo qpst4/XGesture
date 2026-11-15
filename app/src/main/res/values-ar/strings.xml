@@ -4793,7 +4793,11 @@
     <string name="quick_wheel_show_labels">إظهار التسميات النصية</string>
     <string name="quick_wheel_show_labels_desc">إظهار الاسم أسفل كل أيقونة؛ وتبقى الأيقونة والنص متوسّطين معاً</string>
     <string name="quick_wheel_transparent_container">خلفية شفافة للحاويات</string>
-    <string name="quick_wheel_transparent_container_desc">عند التشغيل تُزال الخلفية والقص حول أيقونات التطبيقات والصور؛ تحتفظ أيقونات الإجراءات والنصوص بالخلفية دائماً</string>
+    <string name="quick_wheel_transparent_container_desc">عند التشغيل تُزال الخلفية والقص حول أيقونات التطبيقات والصور؛ أما الأيقونات المدمجة فتتبع المفتاحين أدناه</string>
+    <string name="quick_wheel_transparent_builtin">أيقونات مدمجة شفافة</string>
+    <string name="quick_wheel_transparent_builtin_desc">تُرسم الأيقونات المتجهة (الإجراءات ومكتبة الأيقونات) دون خلفية مباشرة على الخلفية</string>
+    <string name="quick_wheel_transparent_text">أيقونات نصية شفافة</string>
+    <string name="quick_wheel_transparent_text_desc">تُرسم الأيقونات النصية دون خلفية؛ النص الفاتح على خلفية فاتحة يصعب قراءته، اضبط «لون النص»</string>
     <string name="quick_wheel_initial_radius">نصف القطر الأولي</string>
     <string name="quick_wheel_initial_radius_desc">المسافة من نقطة الاستدعاء إلى الحلقة الأولى</string>
     <string name="quick_wheel_container_gap">الفاصل بين الحاويات</string>

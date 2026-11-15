@@ -4904,7 +4904,11 @@
     <string name="quick_wheel_show_labels">Показывать текстовые подписи</string>
     <string name="quick_wheel_show_labels_desc">Показывать имя под каждым значком; значок и текст остаются отцентрованными вместе</string>
     <string name="quick_wheel_transparent_container">Прозрачный фон контейнера</string>
-    <string name="quick_wheel_transparent_container_desc">Включите, чтобы убрать подложку и обрезку у значков приложений и изображений; у встроенных действий и текстовых значков подложка остаётся всегда</string>
+    <string name="quick_wheel_transparent_container_desc">Включите, чтобы убрать подложку и обрезку у значков приложений и изображений; встроенные значки подчиняются двум переключателям ниже</string>
+    <string name="quick_wheel_transparent_builtin">Прозрачные встроенные значки</string>
+    <string name="quick_wheel_transparent_builtin_desc">Векторные значки (действия, библиотека значков) рисуются без подложки прямо на обоях</string>
+    <string name="quick_wheel_transparent_text">Прозрачные текстовые значки</string>
+    <string name="quick_wheel_transparent_text_desc">Текстовые значки рисуются без подложки; светлый текст на светлых обоях плохо виден — настройте «Цвет текста»</string>
     <string name="quick_wheel_initial_radius">Начальный радиус</string>
     <string name="quick_wheel_initial_radius_desc">Расстояние от точки вызова до первого кольца</string>
     <string name="quick_wheel_container_gap">Зазор контейнеров</string>

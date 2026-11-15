@@ -523,6 +523,10 @@ object QuickWheelCodec {
                 ?: QuickWheelLayoutEngine.DEFAULT_COLUMN_COUNT,
             // 第 13 段（索引 12）= 容器底色是否全透明；旧记录没有这段 → 默认不透明（原观感）。
             transparentUserIcons = parts.getOrNull(12) == "1",
+            // 第 14 / 15 段（索引 13 / 14）= 内置图标 / 文字图标是否跟着透明；
+            // 旧记录缺段 → false（内置图标始终铺底板，与历史行为一致）。
+            transparentBuiltinIcons = parts.getOrNull(13) == "1",
+            transparentTextIcons = parts.getOrNull(14) == "1",
         )
     }
 
@@ -789,10 +793,18 @@ object QuickWheelCodec {
     /** 一级/二级的"另一形态"样式分隔符（与 [STYLE_SEP] 不同，避免解析冲突）。 */
     private const val STYLE_ALT_SEP = "\u001C"
 
-    /** 编码一套样式，并在末尾追加矩形列数与「容器底色是否全透明」。 */
+    /**
+     * 编码一套样式，并在末尾追加四个字段：
+     * 矩形列数（索引 11）、容器底色全透明（12）、内置图标透明（13）、文字图标透明（14）。
+     *
+     * 后两段是后来新增的：旧记录缺段 → 默认 `false`，即"内置图标始终铺底板"的历史观感。
+     */
     private fun encodeStyleWithColumn(style: QuickWheelStyleSpec): String =
-        encodeStyle(style) + STYLE_SEP + style.columnCount + STYLE_SEP +
-            (if (style.transparentUserIcons) "1" else "0")
+        encodeStyle(style) +
+            STYLE_SEP + style.columnCount +
+            STYLE_SEP + (if (style.transparentUserIcons) "1" else "0") +
+            STYLE_SEP + (if (style.transparentBuiltinIcons) "1" else "0") +
+            STYLE_SEP + (if (style.transparentTextIcons) "1" else "0")
 
     /**
      * 解码"当前形态样式 + 另一形态样式"。
