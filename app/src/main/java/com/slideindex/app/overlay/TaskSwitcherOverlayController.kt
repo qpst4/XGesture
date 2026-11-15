@@ -38,6 +38,8 @@ internal class TaskSwitcherOverlayController(
     interface Host : TaskSwitcherLayoutHost {
         val context: Context
         fun settings(): AppSettings
+        /** 面板宽度跟着设置走（默认 226dp，与旧版一致）。 */
+        override fun panelWidthDp(): Float = settings().taskSwitcherPanelWidthDp.toFloat()
         override fun side(): PanelSide
         fun appRepository(): AppRepository
         fun gestureSession(): GestureSession

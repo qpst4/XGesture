@@ -739,6 +739,11 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
                     global = { viewModel.setSwipeHoverDurationMs(value) },
                 ) { it.withSwipeHoverDurationMs(value) }
             },
+            onEdgeLongPressChange = { value ->
+                triggerScope.mutate(
+                    global = { viewModel.setEdgeLongPressMs(value) },
+                ) { it.copy(edgeTrigger = it.edgeTrigger.copy(edgeLongPressMs = value)) }
+            },
         )
     }
 
@@ -1824,6 +1829,7 @@ fun NavEntryBuilder.layoutSettingsNavEntries(ctx: MainNavContext) {
             onIndexVerticalPositionChange = viewModel::setIndexVerticalPositionFraction,
             onAppsPerRowChange = viewModel::setAppsPerRow,
             onPanelOpacityChange = viewModel::setPanelOpacity,
+            onTaskSwitcherPanelWidthChange = viewModel::setTaskSwitcherPanelWidthDp,
             onHideEmptyIndexLettersChange = viewModel::setHideEmptyIndexLetters,
             onOpenHiddenAppsSettings = { ctx.navigate(AppNavKey.HomeHiddenApps) },
             onLayoutPreviewStart = {

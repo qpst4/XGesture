@@ -49,6 +49,7 @@ internal object SettingsPreferenceKeys {
     val TOP_DEFAULT_TRIGGER_MODE = intPreferencesKey("top_default_trigger_mode")
     val SHORT_SWIPE_DISTANCE_DP = floatPreferencesKey("short_swipe_distance_dp")
     val LONG_SWIPE_DISTANCE_DP = floatPreferencesKey("long_swipe_distance_dp")
+    val EDGE_LONG_PRESS_MS = intPreferencesKey("edge_long_press_ms")
     val GESTURE_HINT_ENABLED = booleanPreferencesKey("gesture_hint_enabled")
     val GESTURE_HINT_STYLE = intPreferencesKey("gesture_hint_style")
     val GESTURE_HINT_FINGER_OFFSET_DP = floatPreferencesKey("gesture_hint_finger_offset_dp")
@@ -88,6 +89,8 @@ internal object SettingsPreferenceKeys {
     val QUICK_LAUNCHER_COLUMNS_PER_PAGE = intPreferencesKey("quick_launcher_columns_per_page")
     val QUICK_LAUNCHER_ROWS_PER_PAGE = intPreferencesKey("quick_launcher_rows_per_page")
     val PANEL_OPACITY = floatPreferencesKey("panel_opacity")
+    val TASK_SWITCHER_PANEL_WIDTH_DP = intPreferencesKey("task_switcher_panel_width_dp")
+    val FLOAT_BALL_EDGE_INSET_DP = intPreferencesKey("float_ball_edge_inset_dp")
     val HAPTIC_ENABLED = booleanPreferencesKey("haptic_enabled")
     val HAPTIC_STRENGTH = intPreferencesKey("haptic_strength_level")
     val HAPTIC_GESTURE_TRIGGER_ENABLED = booleanPreferencesKey("haptic_gesture_trigger_enabled")
@@ -546,6 +549,7 @@ internal object SettingsPreferenceKeys {
         intPreferencesKey("message_side_bubble_auto_dismiss_seconds")
     val MESSAGE_C_NOTICE_AUTO_DISMISS_SECONDS =
         intPreferencesKey("message_c_notice_auto_dismiss_seconds")
+    val MESSAGE_SIDE_BUBBLE_LOCK_SCREEN = booleanPreferencesKey("message_side_bubble_lock_screen")
     val MESSAGE_RETURN_CHIP_ENABLED = booleanPreferencesKey("message_return_chip_enabled")
     val MESSAGE_RETURN_CHIP_ON_RIGHT_EDGE =
         booleanPreferencesKey("message_return_chip_on_right_edge")

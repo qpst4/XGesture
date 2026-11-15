@@ -392,6 +392,43 @@ class MacroRecorderTest {
         assertNotNull(MacroStore.byId(context, first.id))
     }
 
+    // ── 控制条点击剔除（#6 的兜底）────────────────────────────────────────
+
+    @Test
+    fun `dropTap removes every tap that lands on the bar and its preceding wait`() {
+        val kept = stepsForSave(
+            steps = listOf(
+                MacroStep.Tap(x = 0.2f, y = 0.3f),
+                MacroStep.Wait(1_500L),
+                MacroStep.Tap(x = 0.9f, y = 0.1f), // 控制条上的"保存"
+            ),
+            dropTap = { tap -> tap.x > 0.8f },
+        )
+        assertEquals(listOf(MacroStep.Tap(x = 0.2f, y = 0.3f)), kept)
+    }
+
+    @Test
+    fun `dropTap removes bar taps in the middle too, not just the last one`() {
+        val kept = stepsForSave(
+            steps = listOf(
+                MacroStep.Tap(x = 0.2f, y = 0.3f),
+                MacroStep.Wait(900L),
+                MacroStep.Tap(x = 0.9f, y = 0.1f), // 暂停
+                MacroStep.Wait(2_000L),
+                MacroStep.Tap(x = 0.2f, y = 0.3f),
+            ),
+            dropTap = { tap -> tap.x > 0.8f },
+        )
+        assertEquals(
+            listOf(
+                MacroStep.Tap(x = 0.2f, y = 0.3f),
+                MacroStep.Wait(2_000L),
+                MacroStep.Tap(x = 0.2f, y = 0.3f),
+            ),
+            kept,
+        )
+    }
+
     private companion object {
         const val TARGET_PACKAGE = "com.example.target"
         const val MACRO_NAME = "测试宏"

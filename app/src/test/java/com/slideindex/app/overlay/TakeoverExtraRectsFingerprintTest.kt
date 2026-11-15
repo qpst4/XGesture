@@ -78,7 +78,8 @@ class TakeoverExtraRectsFingerprintTest {
     @Test
     fun hidingBallDeeperIntoEdge_changesFingerprint() {
         val base = bothEdges()
-        val shallower = base.withBall { copy(floatBallVisibleFraction = 0.5f) }
+        // 「往里/往外挪」现在由距离控制：负值 = 往屏幕外挪（旧版 50% 露出）。
+        val shallower = base.copy(floatBallEdgeInsetDp = -24)
         assertNotEquals(fingerprint(base), fingerprint(shallower))
     }
 

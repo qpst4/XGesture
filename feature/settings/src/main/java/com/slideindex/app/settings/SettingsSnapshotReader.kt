@@ -55,6 +55,30 @@ import com.slideindex.app.widget.WidgetPanelCodec
 internal object SettingsSnapshotReader {
     private const val LEGACY_MESSAGE_AUTO_DISMISS_SECONDS_KEY = "message_auto_dismiss_seconds"
 
+    /**
+     * 悬浮球"距边缘距离"（dp，带正负），按当前屏幕宽度夹取。
+     *
+     * 老数据只有"显示百分比"（0.5–1.0，球露出多少）。没有新键时按
+     * `-(1 - 露出比例) × 球宽dp` 换算成负的距离，保证升级后外观不变。
+     */
+    private fun resolveFloatBallEdgeInsetDp(prefs: Preferences, context: Context): Int {
+        val ballSizeDp = prefs[SettingsPreferenceKeys.FLOAT_BALL_SIZE_DP] ?: 48f
+        val metrics = context.resources.displayMetrics
+        val screenWidthDp = if (metrics.density > 0f) {
+            metrics.widthPixels / metrics.density
+        } else {
+            360f
+        }
+        val min = FloatBallPositionFractions.minInsetDp(ballSizeDp)
+        val max = FloatBallPositionFractions.maxInsetDp(screenWidthDp, ballSizeDp)
+        val raw = prefs[SettingsPreferenceKeys.FLOAT_BALL_EDGE_INSET_DP] ?: run {
+            val fraction = (prefs[SettingsPreferenceKeys.FLOAT_BALL_VISIBLE_FRACTION] ?: 1f)
+                .coerceIn(FloatBallPositionFractions.MIN_VISIBLE, FloatBallPositionFractions.MAX_VISIBLE)
+            (-(1f - fraction) * ballSizeDp).toInt()
+        }
+        return raw.coerceIn(min, max)
+    }
+
     fun read(prefs: Preferences, context: Context): AppSettings {
         val legacyWidth = prefs[SettingsPreferenceKeys.EDGE_TRIGGER_WIDTH] ?: 20f
         val legacyTop = prefs[SettingsPreferenceKeys.TRIGGER_TOP] ?: 0.30f
@@ -174,6 +198,8 @@ internal object SettingsSnapshotReader {
             ),
             shortSwipeDistanceDp = prefs[SettingsPreferenceKeys.SHORT_SWIPE_DISTANCE_DP] ?: 60f,
             longSwipeDistanceDp = prefs[SettingsPreferenceKeys.LONG_SWIPE_DISTANCE_DP] ?: 120f,
+            edgeLongPressMs = prefs[SettingsPreferenceKeys.EDGE_LONG_PRESS_MS]
+                ?.coerceIn(200, 1200) ?: 450,
             gestureHintEnabled = prefs[SettingsPreferenceKeys.GESTURE_HINT_ENABLED] ?: true,
             gestureHintStyleId = prefs[SettingsPreferenceKeys.GESTURE_HINT_STYLE] ?: GestureHintStyle.BUBBLE.id,
             gestureHintFingerOffsetDp = prefs[SettingsPreferenceKeys.GESTURE_HINT_FINGER_OFFSET_DP] ?: 0f,
@@ -210,6 +236,9 @@ internal object SettingsSnapshotReader {
                 ?: 3,
             quickLauncherRowsPerPage = prefs[SettingsPreferenceKeys.QUICK_LAUNCHER_ROWS_PER_PAGE] ?: 4,
             panelOpacity = prefs[SettingsPreferenceKeys.PANEL_OPACITY] ?: 0.95f,
+            taskSwitcherPanelWidthDp = prefs[SettingsPreferenceKeys.TASK_SWITCHER_PANEL_WIDTH_DP]
+                ?.coerceIn(180, 340) ?: 226,
+            floatBallEdgeInsetDp = resolveFloatBallEdgeInsetDp(prefs, context),
             hapticEnabled = prefs[SettingsPreferenceKeys.HAPTIC_ENABLED] ?: true,
             hapticStrengthLevel = prefs[SettingsPreferenceKeys.HAPTIC_STRENGTH] ?: HapticStrength.MEDIUM.level,
             hapticGestureTriggerEnabled = prefs[SettingsPreferenceKeys.HAPTIC_GESTURE_TRIGGER_ENABLED] ?: true,
@@ -1244,6 +1273,8 @@ internal object SettingsSnapshotReader {
                 styleKey = SettingsPreferenceKeys.MESSAGE_C_NOTICE_AUTO_DISMISS_SECONDS,
                 fallback = base.cNoticeAutoDismissSeconds,
             ),
+            sideBubbleShowOnLockScreen =
+                prefs[SettingsPreferenceKeys.MESSAGE_SIDE_BUBBLE_LOCK_SCREEN] ?: false,
             hideInLandscape = prefs[SettingsPreferenceKeys.MESSAGE_HIDE_IN_LANDSCAPE] ?: false,
             portraitDanmaku = prefs[SettingsPreferenceKeys.MESSAGE_PORTRAIT_DANMAKU] ?: true,
             landscapeDanmaku = prefs[SettingsPreferenceKeys.MESSAGE_LANDSCAPE_DANMAKU] ?: true,

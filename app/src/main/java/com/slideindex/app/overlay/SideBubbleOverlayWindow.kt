@@ -76,11 +76,17 @@ object SideBubbleOverlayWindow {
     private var composeView: ComposeView? = null
     private var rootLayoutParams: WindowManager.LayoutParams? = null
     private var owner: OverlayComposeOwner? = null
-    private val screenOffDismissReceiver = ScreenOffDismissReceiver { dismiss() }
+    private val screenOffDismissReceiver = ScreenOffDismissReceiver { onScreenOff() }
     private var appContext: Context? = null
     private var nextEntryId = 0L
     private var horizontalEdgeState = mutableStateOf(SideBubbleHorizontalEdge.Right)
     private var sideBubbleYFraction = 0.5f
+
+    /** 最近一次展示用的设置：锁屏开关 / 自动关闭都要读它。 */
+    private var currentSettings: com.slideindex.app.message.MessageSettings? = null
+    /** 锁屏中且开启了"锁屏显示"：自动关闭暂停，解锁后重新计时。 */
+    private var keyguardLocked = false
+    private var userPresentReceiver: BroadcastReceiver? = null
 
     val isShowing: Boolean get() = composeView != null
 
@@ -104,6 +110,8 @@ object SideBubbleOverlayWindow {
                 return
             }
 
+        currentSettings = plan.settings
+        keyguardLocked = isKeyguardLocked(hostContext)
         ensureWindow(hostContext, plan.settings)
         applyWindowPlacement(hostContext, plan.settings)
 
@@ -263,6 +271,77 @@ object SideBubbleOverlayWindow {
         owner = dialogOwner
         appContext = hostContext
         screenOffDismissReceiver.register(hostContext)
+        registerUserPresentReceiver(hostContext)
+    }
+
+    /** 熄屏：开了"锁屏显示"就留在屏幕上并暂停倒计时，否则按旧行为直接消失。 */
+    private fun onScreenOff() {
+        if (currentSettings?.sideBubbleShowOnLockScreen == true) {
+            keyguardLocked = true
+            items.toList().forEach { cancelAutoDismiss(it) }
+        } else {
+            dismiss()
+        }
+    }
+
+    /**
+     * 锁屏 / 熄屏边界（由 [GlobalOverlayDismissHelper] 统一调用）。
+     *
+     * 之前这里是**无条件** `dismiss()`，所以"锁屏显示"开关在窗口层做得再对，也会被这一下清掉。
+     * 现在与悬浮球提醒 / 贴边卡同款：开了锁屏显示就保留并暂停倒计时，没开才清。
+     */
+    fun handleLockScreenBoundary() {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            mainHandler.post { handleLockScreenBoundary() }
+            return
+        }
+        if (currentSettings?.sideBubbleShowOnLockScreen == true) {
+            keyguardLocked = true
+            items.toList().forEach { cancelAutoDismiss(it) }
+        } else {
+            dismiss()
+        }
+    }
+
+    /** 解锁：恢复倒计时并重新套一遍位置（锁屏期间的坐标系可能不同）。 */
+    private fun registerUserPresentReceiver(hostContext: Context) {
+        if (userPresentReceiver != null) return
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(ctx: Context?, intent: Intent?) {
+                if (intent?.action != Intent.ACTION_USER_PRESENT) return
+                keyguardLocked = false
+                val settings = currentSettings
+                val host = appContext
+                if (settings != null && host != null) {
+                    // 部分 ROM 会在锁屏期间把浮层窗口摘掉：解锁时补挂一次。
+                    if (composeView == null && items.isNotEmpty()) {
+                        ensureWindow(host, settings)
+                    }
+                    applyWindowPlacement(host, settings)
+                }
+                items.toList().forEach { scheduleAutoDismiss(it) }
+            }
+        }
+        val filter = IntentFilter(Intent.ACTION_USER_PRESENT)
+        runCatching {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                hostContext.applicationContext.registerReceiver(
+                    receiver,
+                    filter,
+                    Context.RECEIVER_NOT_EXPORTED,
+                )
+            } else {
+                @Suppress("UnspecifiedRegisterReceiverFlag")
+                hostContext.applicationContext.registerReceiver(receiver, filter)
+            }
+            userPresentReceiver = receiver
+        }.onFailure { Log.w(TAG, "register user-present receiver failed", it) }
+    }
+
+    private fun isKeyguardLocked(context: Context): Boolean {
+        val keyguard = context.getSystemService(Context.KEYGUARD_SERVICE)
+            as? android.app.KeyguardManager ?: return false
+        return keyguard.isKeyguardLocked
     }
 
     private fun applyWindowPlacement(
@@ -287,6 +366,8 @@ object SideBubbleOverlayWindow {
 
     private fun scheduleAutoDismiss(entry: SideBubbleEntry) {
         entry.dismissRunnable?.let { mainHandler.removeCallbacks(it) }
+        // 锁屏期间暂停倒计时：否则锁屏收到、还没解锁就已经自己关掉了。
+        if (keyguardLocked && currentSettings?.sideBubbleShowOnLockScreen == true) return
         val autoDismissMs = entry.plan.settings.sideBubbleAutoDismissSeconds.coerceIn(0, 60) * 1000L
         if (autoDismissMs <= 0L) return
         val runnable = Runnable { removeEntry(entry, animate = true) }
@@ -369,6 +450,12 @@ object SideBubbleOverlayWindow {
         val dialogOwner = owner
         view?.let { v -> wm?.let { runCatching { it.removeView(v) } } }
         screenOffDismissReceiver.unregister()
+        userPresentReceiver?.let { receiver ->
+            runCatching { appContext?.applicationContext?.unregisterReceiver(receiver) }
+            userPresentReceiver = null
+        }
+        currentSettings = null
+        keyguardLocked = false
         OverlayCompose.teardownOverlayCompose(view, dialogOwner)
         owner = null
         composeView = null

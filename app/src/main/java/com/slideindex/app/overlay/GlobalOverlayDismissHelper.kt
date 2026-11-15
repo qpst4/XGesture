@@ -45,7 +45,14 @@ object GlobalOverlayDismissHelper {
         runCatching { FileBrowserOverlayWindow.dismiss() }
         runCatching { WidgetPickerOverlayWindow.dismiss() }
         runCatching { WidgetPopupOverlayWindow.dismiss() }
-        runCatching { SideBubbleOverlayWindow.dismiss() }
+        runCatching {
+            // 侧边气泡也支持"锁屏保留"：和悬浮球提醒 / 贴边卡同一套分支，不能再无条件 dismiss。
+            if (lockScreenBoundary) {
+                SideBubbleOverlayWindow.handleLockScreenBoundary()
+            } else {
+                SideBubbleOverlayWindow.dismiss()
+            }
+        }
         runCatching { FloatBallPickResultPanel.dismiss() }
         runCatching { RegionalPickOverlay.dismiss() }
         runCatching { OhoQuickToolsOverlayWindow.dismiss() }

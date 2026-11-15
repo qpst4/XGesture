@@ -74,8 +74,39 @@ data class ScreenSize(val widthPx: Int, val heightPx: Int) {
 }
 
 /** 保存前清洗：丢掉所有 ≤ [MacroRecordThresholds.DROPPED_WAIT_MAX_MS] 的等待。 */
-internal fun stepsForSave(steps: List<MacroStep>): List<MacroStep> = steps.filterNot { step ->
-    step is MacroStep.Wait && step.durationMs <= MacroRecordThresholds.DROPPED_WAIT_MAX_MS
+internal fun stepsForSave(steps: List<MacroStep>): List<MacroStep> =
+    stepsForSave(steps, dropTap = null)
+
+/**
+ * 保存前清洗（带"丢弃指定点击"）。
+ *
+ * [dropTap] 用来剔除落在**录制控制条**上的点击：捕获层一旦被重新装回、压到控制条上面，
+ * 用户点"暂停/停止/保存"就都会被录成一步（真正的修法见 `MacroRecordOverlay.bringToFront`，
+ * 这里只是兜底）。丢点击时把它**前面那条等待**一起丢：那是"从上一个动作挪到按钮"的时间，
+ * 留着会让宏尾巴白等几秒。
+ */
+internal fun stepsForSave(
+    steps: List<MacroStep>,
+    dropTap: ((MacroStep.Tap) -> Boolean)?,
+): List<MacroStep> {
+    val kept = if (dropTap == null) {
+        steps
+    } else {
+        val result = ArrayList<MacroStep>(steps.size)
+        for (step in steps) {
+            if (step is MacroStep.Tap && dropTap(step)) {
+                if (result.isNotEmpty() && result.last() is MacroStep.Wait) {
+                    result.removeAt(result.lastIndex)
+                }
+                continue
+            }
+            result += step
+        }
+        result
+    }
+    return kept.filterNot { step ->
+        step is MacroStep.Wait && step.durationMs <= MacroRecordThresholds.DROPPED_WAIT_MAX_MS
+    }
 }
 
 /**
@@ -253,10 +284,11 @@ class MacroRecorder(
     /**
      * 保存：丢弃所有 ≤ [MacroRecordThresholds.DROPPED_WAIT_MAX_MS] 的等待。
      *
+     * @param dropTap 可选：返回 true 的点击会被丢弃（用于剔除落在录制控制条上的点击）。
      * @return 落盘后的宏；过滤后一步不剩时返回 null（调用方提示"还没录到步骤"）。
      */
-    fun finish(): Macro? {
-        val steps = stepsForSave(recorded)
+    fun finish(dropTap: ((MacroStep.Tap) -> Boolean)? = null): Macro? {
+        val steps = stepsForSave(recorded, dropTap)
         if (steps.isEmpty()) return null
         val now = System.currentTimeMillis()
         val id = macroId ?: MacroStore.newId()

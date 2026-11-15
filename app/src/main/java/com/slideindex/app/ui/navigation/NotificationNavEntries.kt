@@ -267,6 +267,7 @@ fun NavEntryBuilder.notificationNavEntries(ctx: MainNavContext) {
             onFloatIconAutoDismissSecondsChange = viewModel::setMessageFloatIconAutoDismissSeconds,
             onFloatIconKeepAfterUnlockChange = viewModel::setMessageKeepFloatIconAfterUnlock,
             onSideBubbleAutoDismissSecondsChange = viewModel::setMessageSideBubbleAutoDismissSeconds,
+            onSideBubbleShowOnLockScreenChange = viewModel::setMessageSideBubbleShowOnLockScreen,
             onSideHorizontalEdgeChange = { edge ->
                 viewModel.setMessageSideHorizontalEdge(edge.id)
             },

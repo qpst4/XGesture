@@ -3,6 +3,7 @@ package com.slideindex.app.macro.record
 import android.content.Context
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Handler
@@ -21,6 +22,7 @@ import android.widget.TextView
 import android.widget.Toast
 import com.slideindex.app.R
 import com.slideindex.app.macro.Macro
+import com.slideindex.app.macro.MacroStep
 import com.slideindex.app.overlay.OverlayWindowTypes
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -65,6 +67,8 @@ class MacroRecordOverlay(
     private val accentColor: Int = DEFAULT_ACCENT_COLOR,
     private val onSaved: (Macro) -> Unit = {},
     private val onDiscarded: () -> Unit = {},
+    /** 控制条被拖到新位置后回调（捕获层要跟着重算"洞"）。 */
+    private val onMoved: (() -> Unit)? = null,
 ) {
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -116,8 +120,57 @@ class MacroRecordOverlay(
         }
 
         recorder.onStepsChanged = { actions, waits -> onStepsChanged(actions, waits) }
-        active = this
+        // 条的高度会因为"已录 N 步"计数文本而变化：一变就通知捕获层重算洞，
+        // 否则新增的那一截会露在捕获窗底下，从那里起手拖动就会被录成手势。
+        content.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            onMoved?.invoke()
+        }
         refresh()
+    }
+
+    /**
+     * 控制条当前在屏幕上的矩形（捕获层据此"挖洞"）。
+     *
+     * 用窗口参数 `x/y + 视图宽高` 和 `getLocationOnScreen` **取并集**：
+     * - 参数是即时的，拖动过程中不会慢一帧；
+     * - 屏幕坐标含系统 inset，避免状态栏/挖孔导致整体偏移。
+     * 并集只会让洞略大（少录一条边），但绝不会把控制条露在捕获窗底下。
+     */
+    internal fun barRectOnScreen(): Rect? {
+        val view = rootView ?: return null
+        if (!view.isAttachedToWindow) return null
+        if (view.width <= 0 || view.height <= 0) return null
+        val location = IntArray(2)
+        view.getLocationOnScreen(location)
+        val params = layoutParams
+        val left = minOf(location[0], params?.x ?: location[0])
+        val top = minOf(location[1], params?.y ?: location[1])
+        val right = maxOf(location[0] + view.width, (params?.x ?: location[0]) + view.width)
+        val bottom = maxOf(location[1] + view.height, (params?.y ?: location[1]) + view.height)
+        return Rect(left, top, right, bottom)
+    }
+
+    /** 控制条完成布局后执行（捕获层必须等它有了真实尺寸再"挖洞"）。 */
+    internal fun runAfterLayout(block: () -> Unit) {
+        val view = rootView
+        if (view == null) {
+            mainHandler.post(block)
+            return
+        }
+        if (view.isLaidOut) {
+            block()
+        } else {
+            view.post { if (rootView != null) block() }
+        }
+    }
+
+    /** 这一步点击是否落在控制条上（兜底：即使层级又乱了，也别把按钮点击存进宏）。 */
+    private fun isTapOnBar(tap: MacroStep.Tap): Boolean {
+        val rect = barRectOnScreen() ?: return false
+        val screen = ScreenSize.real(hostContext)
+        val x = (tap.x * screen.widthPx).roundToInt()
+        val y = (tap.y * screen.heightPx).roundToInt()
+        return rect.contains(x, y)
     }
 
     /** 收起浮动条（不落盘）。 */
@@ -137,7 +190,6 @@ class MacroRecordOverlay(
         leftButton = null
         middleButton = null
         rightButton = null
-        if (active === this) active = null
     }
 
     // ── 布局 ──────────────────────────────────────────────────────────────
@@ -364,7 +416,7 @@ class MacroRecordOverlay(
 
     private fun onRightButton() {
         if (confirming) return
-        val macro = recorder.finish()
+        val macro = recorder.finish(dropTap = ::isTapOnBar)
         if (macro == null) {
             // 一步都没录到：留在原地，让用户继续录
             Toast.makeText(hostContext, R.string.macro_record_nothing, Toast.LENGTH_SHORT).show()
@@ -413,6 +465,8 @@ class MacroRecordOverlay(
                     touchX = event.rawX
                     touchY = event.rawY
                     dragging = false
+                    // 按下时先让捕获层按当前几何重算一次洞，避免"洞慢一帧"把这次拖动录进去。
+                    onMoved?.invoke()
                     // 必须吃掉 DOWN：ViewGroup 在"没有任何子 View 消费按下"时，后续 MOVE 不再派发给子 View，
                     // 拖动手柄就永远收不到 MOVE。
                     true
@@ -431,11 +485,14 @@ class MacroRecordOverlay(
                     params.x = (startX + dx).roundToInt().coerceIn(0, maxX)
                     params.y = (startY + dy).roundToInt().coerceIn(0, maxY)
                     runCatching { manager.updateViewLayout(root, params) }
+                        .onSuccess { onMoved?.invoke() }
                     true
                 }
 
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     dragging = false
+                    // 松手后再同步一次，防止下一次按下时洞还停在拖动中的旧位置。
+                    onMoved?.invoke()
                     true
                 }
 
@@ -475,17 +532,5 @@ class MacroRecordOverlay(
 
         /** 调用方没给强调色时的兜底（与仓库默认强调色一致的深蓝）。 */
         val DEFAULT_ACCENT_COLOR: Int = 0xFF4A57D8.toInt()
-
-        /**
-         * 当前正在录制的浮动条（由 [show] / [dismiss] 维护，外部只读）。
-         *
-         * 无障碍捕获层拿不到这个对象，所以留一个进程级入口：投喂触摸事件时用
-         * `MacroRecordOverlay.activeRecorder?.onDown(x, y, eventTime)`。
-         */
-        @Volatile
-        var active: MacroRecordOverlay? = null
-
-        /** 当前正在录制的录制器；没有录制时为 null。 */
-        val activeRecorder: MacroRecorder? get() = active?.recorder
     }
 }

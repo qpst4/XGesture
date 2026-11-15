@@ -225,6 +225,10 @@ class MessageSettingsMutator @Inject constructor(
                 seconds.coerceIn(0, 60)
         }
 
+    /** 锁屏时也显示侧边气泡（开启后锁屏期间暂停自动关闭）。 */
+    suspend fun setMessageSideBubbleShowOnLockScreen(enabled: Boolean) =
+        editor.edit { it[SettingsPreferenceKeys.MESSAGE_SIDE_BUBBLE_LOCK_SCREEN] = enabled }
+
     suspend fun setMessageReturnChipEnabled(enabled: Boolean) =
         editor.edit { it[SettingsPreferenceKeys.MESSAGE_RETURN_CHIP_ENABLED] = enabled }
 

@@ -251,6 +251,10 @@ class MessageSettingsViewModel @Inject constructor(
         settingsRepository.setMessageSideBubbleAutoDismissSeconds(seconds)
     }
 
+    fun setMessageSideBubbleShowOnLockScreen(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setMessageSideBubbleShowOnLockScreen(enabled)
+    }
+
     fun setMessageReturnChipEnabled(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setMessageReturnChipEnabled(enabled)
     }

@@ -1,10 +1,11 @@
 package com.slideindex.app.overlay
 
 import android.os.Looper
+import com.slideindex.app.settings.FloatBallPositionFractions
 import com.slideindex.app.settings.FloatBallSettings
 
 /**
- * 悬浮球"外观预览"（设置页调大小/透明度/线条）行为（从 `FloatBallOverlay` 拆出的第 3 类）。
+ * 悬浮球"外观预览"（设置页调大小/透明度/线条/距边缘距离）行为（从 `FloatBallOverlay` 拆出的第 3 类）。
  *
  * 状态仍由 [FloatBallOverlay] 持有（`internal` 可见）。
  */
@@ -13,7 +14,8 @@ internal object FloatBallAppearancePreview {
     data class Snapshot(
         val sizeDp: Float,
         val opacity: Float,
-        val visibleFraction: Float,
+        /** 距边缘距离（dp，负值 = 往屏幕外挪）。 */
+        val edgeInsetDp: Int,
         val lineHeightFraction: Float,
         val lineWidthDp: Float,
         val lineOpacity: Float,
@@ -22,7 +24,7 @@ internal object FloatBallAppearancePreview {
     fun previewAppearance(
         sizeDp: Float? = null,
         opacity: Float? = null,
-        visibleFraction: Float? = null,
+        edgeInsetDp: Float? = null,
         lineHeightFraction: Float? = null,
         lineWidthDp: Float? = null,
         lineOpacity: Float? = null,
@@ -32,7 +34,7 @@ internal object FloatBallAppearancePreview {
                 previewAppearance(
                     sizeDp,
                     opacity,
-                    visibleFraction,
+                    edgeInsetDp,
                     lineHeightFraction,
                     lineWidthDp,
                     lineOpacity,
@@ -46,7 +48,7 @@ internal object FloatBallAppearancePreview {
             FloatBallOverlay.appearancePreviewRestore = Snapshot(
                 sizeDp = current.floatBallSizeDp,
                 opacity = current.floatBallOpacity,
-                visibleFraction = current.floatBallVisibleFraction,
+                edgeInsetDp = current.floatBallEdgeInsetDp,
                 lineHeightFraction = current.floatBallLineHeightFraction,
                 lineWidthDp = current.floatBallLineWidthDp,
                 lineOpacity = current.floatBallLineOpacity,
@@ -54,11 +56,12 @@ internal object FloatBallAppearancePreview {
         }
         val current = state.value
         val updated = current.copy(
+            floatBallEdgeInsetDp = edgeInsetDp
+                ?.let { FloatBallPositionFractions.coerceEdgeInsetDp(it.toInt()) }
+                ?: current.floatBallEdgeInsetDp,
             floatBall = current.floatBall.copy(
                 floatBallSizeDp = sizeDp?.coerceIn(36f, 96f) ?: current.floatBallSizeDp,
                 floatBallOpacity = opacity?.coerceIn(0f, 1f) ?: current.floatBallOpacity,
-                floatBallVisibleFraction = visibleFraction?.let(FloatBallLayout::coerceVisibleFraction)
-                    ?: current.floatBallVisibleFraction,
                 floatBallLineHeightFraction = lineHeightFraction?.coerceIn(0.04f, 0.4f)
                     ?: current.floatBallLineHeightFraction,
                 floatBallLineWidthDp = lineWidthDp?.coerceIn(
@@ -72,7 +75,7 @@ internal object FloatBallAppearancePreview {
         // 调外观时必须看得见球，否则改了大小/位置/不透明度也不知道结果。
         FloatBallOverlay.setBallForceRevealed(true)
         FloatBallOverlay.invalidateChrome()
-        val layoutChanged = sizeDp != null || visibleFraction != null ||
+        val layoutChanged = sizeDp != null || edgeInsetDp != null ||
             lineHeightFraction != null || lineWidthDp != null
         if (layoutChanged) {
             FloatBallOverlay.applyAllLayouts(updated)
@@ -92,10 +95,10 @@ internal object FloatBallAppearancePreview {
         val state = FloatBallOverlay.settingsState ?: return
         val restored = state.value.let { current ->
             current.copy(
+                floatBallEdgeInsetDp = baseline.edgeInsetDp,
                 floatBall = current.floatBall.copy(
                     floatBallSizeDp = baseline.sizeDp,
                     floatBallOpacity = baseline.opacity,
-                    floatBallVisibleFraction = baseline.visibleFraction,
                     floatBallLineHeightFraction = baseline.lineHeightFraction,
                     floatBallLineWidthDp = baseline.lineWidthDp,
                     floatBallLineOpacity = baseline.lineOpacity,

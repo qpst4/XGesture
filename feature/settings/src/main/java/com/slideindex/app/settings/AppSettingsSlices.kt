@@ -66,6 +66,8 @@ data class EdgeTriggerSettings(
     val topDefaultTriggerMode: GestureTriggerMode = GestureTriggerMode.ON_RELEASE,
     val shortSwipeDistanceDp: Float = 60f,
     val longSwipeDistanceDp: Float = 120f,
+    /** 触钮「按住不动」判定为长按时长（毫秒）。独立于悬浮球的长按时长。 */
+    val edgeLongPressMs: Int = 450,
     val gestureHintEnabled: Boolean = true,
     val gestureHintStyleId: Int = GestureHintStyle.BUBBLE.id,
     /** 手势动画相对手指的垂直偏移（dp）；0 为贴在手指高度，增大则远离指腹（侧/底向上，顶向下）。 */

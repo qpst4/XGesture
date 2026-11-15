@@ -43,6 +43,8 @@ data class GestureSettings(
     val topDefaultTriggerMode: GestureTriggerMode = GestureTriggerMode.ON_RELEASE,
     val shortSwipeDistanceDp: Float = 60f,
     val longSwipeDistanceDp: Float = 120f,
+    /** 触钮长按判定时长（毫秒）。 */
+    val edgeLongPressMs: Int = 450,
     val gestureHintEnabled: Boolean = true,
     val swipeHoverDurationMs: Int = SwipeHoverDurationLimits.DEFAULT_MS,
     val triggerDoubleTapIntervalMs: Int = 300,
@@ -62,6 +64,8 @@ data class GestureSettings(
     val quickLauncherColumnsPerPage: Int = 3,
     val quickLauncherRowsPerPage: Int = 4,
     val panelOpacity: Float = 0.95f,
+    /** 任务切换器面板宽度（dp）。 */
+    val taskSwitcherPanelWidthDp: Int = 226,
     val hapticEnabled: Boolean = true,
     val hapticStrengthLevel: Int = HapticStrength.MEDIUM.level,
     val hapticGestureTriggerEnabled: Boolean = true,
@@ -146,6 +150,7 @@ data class GestureSettings(
             topDefaultTriggerMode = settings.topDefaultTriggerMode,
             shortSwipeDistanceDp = settings.shortSwipeDistanceDp,
             longSwipeDistanceDp = settings.longSwipeDistanceDp,
+            edgeLongPressMs = settings.edgeLongPressMs,
             gestureHintEnabled = settings.gestureHintEnabled,
             swipeHoverDurationMs = settings.swipeHoverDurationMs,
             triggerDoubleTapIntervalMs = settings.triggerDoubleTapIntervalMs,
@@ -165,6 +170,7 @@ data class GestureSettings(
             quickLauncherColumnsPerPage = settings.quickLauncherColumnsPerPage,
             quickLauncherRowsPerPage = settings.quickLauncherRowsPerPage,
             panelOpacity = settings.panelOpacity,
+            taskSwitcherPanelWidthDp = settings.taskSwitcherPanelWidthDp,
             hapticEnabled = settings.hapticEnabled,
             hapticStrengthLevel = settings.hapticStrengthLevel,
             hapticGestureTriggerEnabled = settings.hapticGestureTriggerEnabled,

@@ -193,6 +193,7 @@ class GestureSession(
         pathRecognizer.applyHoverSettings(
             durationMs = newSettings.swipeHoverDurationMs.toLong(),
         )
+        pathRecognizer.applyLongPressMs(newSettings.edgeLongPressMs.toLong())
         applyActiveHandleDistances()
     }
 
@@ -375,7 +376,7 @@ class GestureSession(
         val stripBounds = zoneLayout.screenTriggerStripBounds(sessionActiveHandleId)
         pathRecognizer.onTouchDown(rawX, rawY, stripBounds)
         pathRecognizer.applyCompoundGestureGate(classifyOptions())
-        callbacks.scheduleDelayed(longPressCheckRunnable, SwipePathRecognizer.LONG_PRESS_MS)
+        callbacks.scheduleDelayed(longPressCheckRunnable, pathRecognizer.longPressMs())
         return true
     }
 

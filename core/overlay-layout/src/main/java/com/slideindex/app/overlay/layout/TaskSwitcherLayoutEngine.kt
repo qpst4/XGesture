@@ -41,11 +41,11 @@ object TaskSwitcherLayoutEngine {
         val horizontalMargin = host.dp(16f)
         // 面板宽度不得超过「整屏 - 左右边距」：窄屏 / 分屏下宁可变窄，也不能画到屏幕外。
         val panelWidth = if (viewWidth > 0f) {
-            host.dp(226f).coerceAtMost(
+            host.dp(host.panelWidthDp()).coerceAtMost(
                 (viewWidth - horizontalMargin * 2f).coerceAtLeast(1f)
             )
         } else {
-            host.dp(226f)
+            host.dp(host.panelWidthDp())
         }
         val isEmpty = rows.isEmpty()
         val contentHeight = if (isEmpty) {

@@ -41,8 +41,29 @@ object ClipboardDragClipHelper {
         if (hostPackage.isNullOrBlank() || hostPackage == context.packageName) {
             return DragClipPreparation(clipData, emptySession(context))
         }
+        if (!needsMirrorForHost(hostPackage)) {
+            // 大多数宿主本来就能读 FileProvider URI（系统按 DRAG_FLAG_GLOBAL_URI_READ 授权）。
+            // 镜像要落盘 + 整份拷贝，放在起拖前会卡住主线程、甚至让拖拽起不来；
+            // 所以只对"只认系统相册"的宿主镜像。
+            Log.i(TAG, "skip mirror host=$hostPackage")
+            return DragClipPreparation(clipData, emptySession(context))
+        }
         return remapUrisForHost(context, clipData, hostPackage)
     }
+
+    /**
+     * 需要先镜像到 MediaStore 的宿主（微信 / QQ / TIM 只认系统相册 URI）。
+     *
+     * 名单外的宿主直接用原 URI：镜像失败会静默不起拖，而白名单外的宿主通常并不需要它。
+     */
+    fun needsMirrorForHost(hostPackage: String): Boolean =
+        hostPackage in MIRROR_HOSTS
+
+    private val MIRROR_HOSTS = setOf(
+        "com.tencent.mm",
+        "com.tencent.mobileqq",
+        "com.tencent.tim",
+    )
 
     /**
      * 只有 `content://media/...` 这类系统媒体库 URI 宿主本来就能读，可以直接用原件；

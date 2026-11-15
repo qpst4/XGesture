@@ -26,10 +26,13 @@ class FloatBallLayoutTest {
   private fun testSettings(
     floatBall: FloatBallSettings,
     edgeTrigger: EdgeTriggerSettings = EdgeTriggerSettings(),
+    /** 距边缘距离（dp，负值 = 往屏幕外挪）。 */
+    edgeInsetDp: Int = 0,
   ) = AppSettings(
     freeWindow = FreeWindowSettings(freeWindowModeId = FreeWindowMode.STANDARD.id),
     floatBall = floatBall,
     edgeTrigger = edgeTrigger,
+    floatBallEdgeInsetDp = edgeInsetDp,
   )
 
   @Test
@@ -150,8 +153,8 @@ class FloatBallLayoutTest {
       FloatBallSettings(
         floatBallPositionMode = FloatBallPositionMode.RIGHT,
         floatBallSizeDp = 48f,
-        floatBallVisibleFraction = 1f,
       ),
+      edgeInsetDp = 0,
     )
     val ballSizePx = FloatBallLayout.ballSize(settings, metrics.density).heightPx
     val (left, _) = FloatBallLayout.ballTopLeft(settings, metrics, FloatBallSide.RIGHT)
@@ -165,8 +168,9 @@ class FloatBallLayoutTest {
       FloatBallSettings(
         floatBallPositionMode = FloatBallPositionMode.RIGHT,
         floatBallSizeDp = 64f,
-        floatBallVisibleFraction = 0.5f,
       ),
+      // 64dp 的球往外挪 32dp = 旧版"露出一半"。
+      edgeInsetDp = -32,
     )
     val ballSizePx = FloatBallLayout.ballSize(settings, metrics.density).heightPx
     val (left, _) = FloatBallLayout.ballTopLeft(settings, metrics, FloatBallSide.RIGHT)
@@ -177,18 +181,25 @@ class FloatBallLayoutTest {
   }
 
   @Test
-  fun keyboardNarrow_onePercent_doesNotClampToHalfVisible() {
+  fun keyboardNarrow_pushesBallOutwardByNarrowedWidth() {
     KeyboardTriggerImeState.update(visible = true, top = 1800)
     try {
       val settings = testSettings(
-        floatBall = FloatBallSettings(floatBallVisibleFraction = 1f),
+        floatBall = FloatBallSettings(floatBallSizeDp = 48f),
         edgeTrigger = EdgeTriggerSettings(
           keyboardTriggerBehaviorPortrait = KeyboardTriggerBehavior.NARROW,
           keyboardTriggerNarrowPercentPortrait = 1,
         ),
       )
-      val fraction = FloatBallLayout.keyboardAdjustedVisibleFraction(settings, isLandscape = false)
-      assertEquals(0.01f, fraction, 0.0001f)
+      val ballWidthPx = FloatBallLayout.ballSize(settings, metrics.density).widthPx
+      val offsetPx = FloatBallLayout.keyboardAdjustedEdgeOffsetPx(
+        settings = settings,
+        isLandscape = false,
+        ballWidthPx = ballWidthPx,
+        density = metrics.density,
+      )
+      // 99% 收窄 = 往外挪 99% 的球宽（旧版"露出 1%"）。
+      assertEquals(-(ballWidthPx * 0.99f).roundToInt(), offsetPx)
     } finally {
       KeyboardTriggerImeState.update(visible = false, top = null)
     }
@@ -200,8 +211,8 @@ class FloatBallLayoutTest {
       FloatBallSettings(
         floatBallPositionMode = FloatBallPositionMode.LEFT,
         floatBallSizeDp = 64f,
-        floatBallVisibleFraction = 0.5f,
       ),
+      edgeInsetDp = -32,
     )
     val ballSizePx = FloatBallLayout.ballSize(settings, metrics.density).heightPx
     val (left, _) = FloatBallLayout.ballTopLeft(settings, metrics, FloatBallSide.LEFT)
@@ -216,7 +227,6 @@ class FloatBallLayoutTest {
   private fun noCropSettings(aspect: Float, sizeDp: Float = 48f) = testSettings(
     FloatBallSettings(
       floatBallPositionMode = FloatBallPositionMode.RIGHT,
-      floatBallVisibleFraction = 1f,
       floatBallStyleType = FloatBallStyleType.CUSTOM_IMAGE,
       floatBallCustomImageUri = "file:///float_ball_custom.png",
       floatBallCustomImageNoCrop = true,

@@ -7,6 +7,7 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
 import com.slideindex.app.settings.AppSettings
@@ -28,8 +29,6 @@ private val floatBallIdleDelayRange = 0f..10f
 private val floatBallLineHeightRange = 0.04f..0.4f
 private val floatBallLineWidthRange =
     FloatBallSettings.MIN_LINE_WIDTH_DP..FloatBallSettings.MAX_LINE_WIDTH_DP
-private val floatBallVisibleFractionRange =
-    FloatBallPositionFractions.MIN_VISIBLE..FloatBallPositionFractions.MAX_VISIBLE
 
 private fun fractionPercentSnap(
     range: ClosedFloatingPointRange<Float>
@@ -38,6 +37,12 @@ private fun fractionPercentSnap(
 }
 
 private fun fractionPercentLabel(value: Float): String = "${(value * 100f).roundToInt()}%"
+
+/** 「距边缘距离」数值文案：带正负，整数 dp。 */
+private fun edgeInsetLabel(value: Float): String {
+    val rounded = value.roundToInt()
+    return if (rounded > 0) "+$rounded dp" else "$rounded dp"
+}
 
 /** 闲置判定时长的显示值：整秒不带小数，其余保留一位（0.5 秒粒度）。 */
 private fun idleDelaySecondsLabel(seconds: Float): String {
@@ -65,7 +70,7 @@ fun FloatBallAppearanceSettingsScreen(
     onIdleOpacityChange: (Float) -> Unit,
     onIdleDelayChange: (Int) -> Unit,
     onPositionModeChange: (FloatBallPositionMode) -> Unit,
-    onVisibleFractionChange: (Float) -> Unit,
+    onEdgeInsetChange: (Int) -> Unit = {},
     onPositionYChange: (Float) -> Unit,
     onLineHeightChange: (Float) -> Unit,
     onLineWidthChange: (Float) -> Unit,
@@ -79,7 +84,8 @@ fun FloatBallAppearanceSettingsScreen(
     onPreviewAppearance: (
         sizeDp: Float?,
         opacity: Float?,
-        visibleFraction: Float?,
+        /** 距边缘距离（dp，负值 = 往屏幕外挪）。 */
+        edgeInsetDp: Float?,
         lineHeightFraction: Float?,
         lineWidthDp: Float?,
         lineOpacity: Float?
@@ -100,8 +106,13 @@ fun FloatBallAppearanceSettingsScreen(
     val positionModeIndex = positionModeEntries.indexOf(positionMode).coerceAtLeast(0)
     val showEdgeLineSettings = positionMode == FloatBallPositionMode.BOTH_EDGES ||
         positionMode == FloatBallPositionMode.BOTH_LINES
-    // 「两侧都是线」没有常驻球，球的显示比例滑条无意义。
-    val showVisibleFractionSetting = positionMode != FloatBallPositionMode.BOTH_LINES
+    // 「距边缘距离」上下限随屏幕宽度与球大小变化：最多挪到屏幕中央 / 最多露出半个球。
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp.toFloat()
+    val maxEdgeInsetDp = FloatBallPositionFractions.maxInsetDp(
+        screenWidthDp = screenWidthDp,
+        ballSizeDp = settings.floatBallSizeDp,
+    )
+    val minEdgeInsetDp = FloatBallPositionFractions.minInsetDp(settings.floatBallSizeDp)
 
     SettingsScreenScaffold(
         title = stringResource(R.string.float_ball_appearance_settings_title),
@@ -244,24 +255,28 @@ fun FloatBallAppearanceSettingsScreen(
                         )
                     }
                 )
-                if (showVisibleFractionSetting) {
+                if (positionMode != FloatBallPositionMode.BOTH_LINES) {
                     add(
-                        settingsCardScopeItem("visible-fraction") {
+                        settingsCardScopeItem("edge-inset") {
+                            // 一个滑条同时管"露出多少"和"离边多远"：
+                            // 负值往屏幕外挪（等价旧版 50%–99% 半隐藏），0 = 贴边，正值最多挪到屏幕中央。
                             SettingsSliderRow(
-                                title = stringResource(R.string.float_ball_visible_fraction),
-                                value = settings.floatBallVisibleFraction,
-                                valueRange = floatBallVisibleFractionRange,
+                                title = stringResource(R.string.float_ball_edge_inset),
+                                value = settings.floatBallEdgeInsetDp.toFloat(),
+                                valueRange = minEdgeInsetDp.toFloat()..maxEdgeInsetDp.toFloat(),
+                                // 约 4dp 一格；范围随屏幕宽度变化，格数也要跟着算。
+                                steps = (((maxEdgeInsetDp - minEdgeInsetDp) / 4) - 1).coerceAtLeast(1),
                                 enabled = true,
-                                label = fractionPercentLabel(settings.floatBallVisibleFraction),
-                                formatLabel = ::fractionPercentLabel,
-                                snapValue = fractionPercentSnap(floatBallVisibleFractionRange),
+                                label = edgeInsetLabel(settings.floatBallEdgeInsetDp.toFloat()),
+                                formatLabel = ::edgeInsetLabel,
                                 triggersLayoutPreview = true,
                                 onLayoutPreviewValueChange = { value ->
                                     onPreviewAppearance(null, null, value, null, null, null)
                                 },
+                                // 拖动期间只走预览；松手才结束预览会话并落盘，避免每个 tick 都清恢复点。
+                                onLayoutPreviewStop = { onAppearancePreviewCommit() },
                                 onValueChange = { value ->
-                                    onAppearancePreviewCommit()
-                                    onVisibleFractionChange(value)
+                                    onEdgeInsetChange(value.roundToInt())
                                 }
                             )
                         }

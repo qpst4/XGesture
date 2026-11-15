@@ -80,6 +80,7 @@ interface OverlayPreviewPort {
 
     fun clearFloatBallPositionYPreviewRestore()
 
+    /** 悬浮球外观预览。第三个参数是「距边缘距离（dp）」，负值 = 往屏幕外挪（保留旧参数名以减小改动面）。 */
     fun previewFloatBallAppearance(
         sizeDp: Float? = null,
         opacity: Float? = null,

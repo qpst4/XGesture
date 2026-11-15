@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,11 +21,18 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -34,11 +42,11 @@ import androidx.compose.ui.unit.dp
  * 取词面板的图片全屏查看（面板内浮层，不新开窗）。
  *
  * 规则：
- * - **大图 / 竖长图**：宽度铺满，高度按原图宽高比；超出屏幕时从顶部开始、纵向滚动。
+ * - **大图 / 竖长图**：宽度铺满，高度按原图宽高比；未放大时超出屏幕可纵向滚动。
  * - **普通图 / 小图**：按原始尺寸居中显示，不强行拉满宽度，也不贴顶。
- *
- * 不做缩放 / 旋转 / 1:1 —— 看竖图只需上下滑。
- * 关闭：右上角按钮、点空白、系统返回（由面板的 back handler 先关这一层）。
+ * - **双指缩放 / 旋转 / 拖动**：缩放范围 1×–6×，双击回正；放大后拖动只平移图片，
+ *   不再滚动页面也不会误关面板。
+ * - 关闭：右上角按钮、未放大时点空白、系统返回（由面板的 back handler 先关这一层）。
  */
 @Composable
 fun PickResultFullscreenImage(
@@ -46,12 +54,37 @@ fun PickResultFullscreenImage(
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var scale by remember { mutableFloatStateOf(1f) }
+    var rotation by remember { mutableFloatStateOf(0f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+
+    fun resetTransform() {
+        scale = 1f
+        rotation = 0f
+        offset = Offset.Zero
+    }
+
+    val zoomed = scale > 1.001f || rotation % 360f != 0f
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.96f))
-            // 点空白关闭；纵向滚动会把手势消费掉，不会误触发。
-            .pointerInput(Unit) { detectTapGestures { onClose() } },
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, rotate ->
+                    val nextScale = (scale * zoom).coerceIn(1f, 6f)
+                    scale = nextScale
+                    rotation = if (rotate == 0f) rotation else (rotation + rotate) % 360f
+                    offset = if (nextScale <= 1.001f) Offset.Zero else offset + pan
+                }
+            }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onDoubleTap = { resetTransform() },
+                    // 放大/旋转后点一下不该关面板（那时用户是在看图）。
+                    onTap = { if (!zoomed) onClose() },
+                )
+            },
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val density = LocalDensity.current
@@ -62,6 +95,13 @@ fun PickResultFullscreenImage(
             val fitsAtNaturalSize = naturalWidth <= maxWidth && naturalHeight <= maxHeight
             val displayWidth = if (fitsAtNaturalSize) naturalWidth else maxWidth
             val displayHeight = displayWidth * ratio
+            val transform = Modifier.graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                rotationZ = rotation
+                translationX = offset.x
+                translationY = offset.y
+            }
 
             if (displayHeight <= maxHeight) {
                 Image(
@@ -72,7 +112,21 @@ fun PickResultFullscreenImage(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .width(displayWidth)
-                        .height(displayHeight),
+                        .height(displayHeight)
+                        .then(transform),
+                )
+            } else if (zoomed) {
+                // 放大状态：整块画布承载图片，不再套纵向滚动（滚动会和拖动打架）。
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = null,
+                    contentScale = ContentScale.FillWidth,
+                    filterQuality = FilterQuality.Medium,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .fillMaxWidth()
+                        .height(displayHeight)
+                        .then(transform),
                 )
             } else {
                 Box(

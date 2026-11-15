@@ -124,6 +124,10 @@ class HomeDetailSettingsViewModel @Inject constructor(
         settingsRepository.setPanelOpacity(value)
     }
 
+    fun setTaskSwitcherPanelWidthDp(value: Int) = launchSettingsWrite {
+        settingsRepository.setTaskSwitcherPanelWidthDp(value.coerceIn(180, 340))
+    }
+
     fun setHideEmptyIndexLetters(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setHideEmptyIndexLetters(enabled)
     }
@@ -312,6 +316,10 @@ class HomeDetailSettingsViewModel @Inject constructor(
 
     fun setSwipeHoverDurationMs(value: Int) = launchSettingsWrite {
         settingsRepository.setSwipeHoverDurationMs(value)
+    }
+
+    fun setEdgeLongPressMs(value: Int) = launchSettingsWrite {
+        settingsRepository.setEdgeLongPressMs(value.coerceIn(200, 1200))
     }
 
     fun setTriggerDoubleTapIntervalMs(value: Int) = launchSettingsWrite {

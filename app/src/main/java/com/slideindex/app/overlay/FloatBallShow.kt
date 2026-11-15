@@ -94,6 +94,8 @@ internal object FloatBallShow {
             val current = FloatBallOverlay.settingsState?.value
             val merged = when {
                 FloatBallOverlay.appearancePreviewRestore != null && current != null -> incoming.copy(
+                    // 预览期间：平铺字段也要顶住，否则任何设置回流都会把它打回磁盘旧值。
+                    floatBallEdgeInsetDp = current.floatBallEdgeInsetDp,
                     floatBall = incoming.floatBall.copy(
                         floatBallSizeDp = current.floatBallSizeDp,
                         floatBallOpacity = current.floatBallOpacity,
@@ -144,6 +146,9 @@ internal object FloatBallShow {
             if (!FloatBallOverlay.isDraggingNow()) {
                 FloatBallOverlay.recoverIdleTouchCaptureLayouts(merged)
                 FloatBallOverlay.restorePassiveOverlayLayout(merged)
+                // 位置类字段（距边缘距离）变化时，触摸窗也要跟着挪；否则球看起来停在原地，
+                // 要等下一次触摸触发 relayoutNow 才归位。
+                FloatBallOverlay.syncTouchWindowLayout(merged)
             }
         }
     }

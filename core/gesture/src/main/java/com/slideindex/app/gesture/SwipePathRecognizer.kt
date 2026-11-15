@@ -69,6 +69,8 @@ class SwipePathRecognizer(
     /** 本段清零信号（撤销/回到起手位置时置位），供上层重置提示用的峰值与去重状态。 */
     private var segmentResetPending = false
     private var hoverDurationMs = DEFAULT_HOVER_DURATION_MS
+    /** 触钮「按住不动」判定为长按的时长；由上层从设置注入，默认沿用旧常量。 */
+    private var longPressMs = LONG_PRESS_MS
     private var lCornerHoverGateRequired = false
     private var returnSwipeHoverGateRequired = false
     private var alongCornerGateRequired = false
@@ -93,6 +95,13 @@ class SwipePathRecognizer(
     fun applyHoverSettings(durationMs: Long) {
         hoverDurationMs = durationMs.coerceIn(HOVER_DURATION_MIN_MS, HOVER_DURATION_MAX_MS)
     }
+
+    /** 长按判定时长（毫秒）：识别器与调用方的定时器必须用同一个值。 */
+    fun applyLongPressMs(durationMs: Long) {
+        longPressMs = durationMs.coerceIn(MIN_LONG_PRESS_MS, MAX_LONG_PRESS_MS)
+    }
+
+    fun longPressMs(): Long = longPressMs
 
     fun applyCompoundGestureGate(options: ClassifyOptions) {
         lCornerHoverGateRequired = isLCornerConfigured(options)
@@ -251,7 +260,7 @@ class SwipePathRecognizer(
     fun refreshLongPress(rawX: Float, rawY: Float) {
         if (!tracking || longPressTriggered || movedBeyondLongPressSlop) return
         val elapsed = System.currentTimeMillis() - startTime
-        if (elapsed >= LONG_PRESS_MS) {
+        if (elapsed >= longPressMs) {
             val dist = hypot(rawX - startRawX, rawY - startRawY)
             if (dist < TAP_SLOP_DP * density) {
                 longPressTriggered = true
@@ -990,6 +999,10 @@ class SwipePathRecognizer(
         const val LONG_DISTANCE_MIN_DP = MIN_DISTANCE_GAP_DP
         const val LONG_DISTANCE_MAX_DP = MAX_LONG_DISTANCE_DP
         const val LONG_PRESS_MS = 450L
+
+        /** 触钮长按可调区间：与"手势调校"页的长按滑条一致。 */
+        const val MIN_LONG_PRESS_MS = 200L
+        const val MAX_LONG_PRESS_MS = 2000L
         private const val TAP_SLOP_DP = 12f
         private const val TAP_LENIENT_SLOP_DP = 36f
         /** 手势提示动画的启动门槛（dp）：只影响"动画何时出现"，不参与任何手势判定。 */

@@ -31,6 +31,8 @@ data class MessageSettings(
     val floatIconAutoDismissSeconds: Int = 5,
     /** 侧边气泡样式自动关闭时间，0 表示不自动关闭。 */
     val sideBubbleAutoDismissSeconds: Int = 5,
+    /** 锁屏时也显示侧边气泡；开启后锁屏期间暂停自动关闭，解锁后重新计时。 */
+    val sideBubbleShowOnLockScreen: Boolean = false,
     /** C Notice 样式自动关闭时间，0 表示不自动关闭。 */
     val cNoticeAutoDismissSeconds: Int = 0,
     val cNoticeHorizontalEdge: SideBubbleHorizontalEdge = SideBubbleHorizontalEdge.Right,

@@ -77,6 +77,7 @@ fun SideGestureSettingsScreen(
     onOpenSlotConfig: (GestureTriggerType) -> Unit,
     onAlignOppositeGesturesChange: (enabled: Boolean, mirrorSourceSide: PanelSide?) -> Unit = { _, _ -> },
     onSwipeHoverDurationChange: (Int) -> Unit = {},
+    onEdgeLongPressChange: (Int) -> Unit = {},
     onPreviewStart: () -> Unit = {},
     onPreviewStop: () -> Unit = {},
 ) {
@@ -271,7 +272,33 @@ fun SideGestureSettingsScreen(
             key = "section-press-tap",
             title = pressTapSectionTitle,
         )
-        groupedCardItems("side-gesture-press-tap", pressTapItems)
+        groupedCardItems(
+            keyPrefix = "side-gesture-press-tap",
+            items = pressTapItems + listOf(
+                // 触钮「按住不动」多久算长按：和点击/长按槽位放在同一张卡片里。
+                // 注意 insideMargin 用 BasicComponentDefaults.InsideMargin（横向有 16dp）；
+                // MiuixInsetCardComponentMargin 只有纵向间距，横向是 0，会把文字顶到卡片边缘。
+                CardItem("edge-long-press-ms") {
+                    MiuixSliderRow(
+                        title = stringResource(R.string.side_gestures_long_press_duration),
+                        summary = stringResource(R.string.side_gestures_long_press_duration_summary),
+                        value = settings.edgeLongPressMs.toFloat(),
+                        valueRange = 200f..1200f,
+                        steps = 9,
+                        enabled = serviceEnabled,
+                        insideMargin = BasicComponentDefaults.InsideMargin,
+                        commitOnFinish = true,
+                        formatLabel = { ms ->
+                            resources.getString(
+                                R.string.side_gestures_long_press_duration_value,
+                                ms.roundToInt(),
+                            )
+                        },
+                        onValueChange = { onEdgeLongPressChange(it.roundToInt()) },
+                    )
+                },
+            ),
+        )
 
         // 触发模式与「布局与行为」都不属于槽位本身：前者是设一次就不动的全局缺省，
         // 后者全是跳转子页的入口，一并放在槽位之后，让首屏直接给出槽位动作列表。

@@ -37,6 +37,7 @@ class NotificationFilterPreferences @Inject constructor(
 
     val settings: Flow<NotificationFilterSettings> = appContext.notificationFilterDataStore.data.map { prefs ->
         NotificationFilterSettings(
+            notificationHistoryEnabled = prefs[NOTIFICATION_HISTORY_ENABLED] ?: true,
             notificationHistoryMaxCount = (prefs[NOTIFICATION_HISTORY_MAX_COUNT]
                 ?: NotificationFilterSettings.DEFAULT_NOTIFICATION_HISTORY_MAX_COUNT)
                 .coerceIn(
@@ -61,6 +62,14 @@ class NotificationFilterPreferences @Inject constructor(
         }
     }
 
+    suspend fun setNotificationHistoryEnabled(enabled: Boolean): Result<Unit> {
+        return repositoryRunCatching {
+            appContext.notificationFilterDataStore.edit { prefs ->
+                prefs[NOTIFICATION_HISTORY_ENABLED] = enabled
+            }
+        }
+    }
+
     suspend fun setNotificationHistoryMaxCount(count: Int): Result<Unit> {
         val clamped = count.coerceIn(
             NotificationFilterSettings.MIN_NOTIFICATION_HISTORY_MAX_COUNT,
@@ -79,6 +88,7 @@ class NotificationFilterPreferences @Inject constructor(
         val snapshot = readSnapshot()
         return backupJson.encodeToString(
             NotificationFilterPreferencesBackup(
+                notificationHistoryEnabled = snapshot.notificationHistoryEnabled,
                 notificationHistoryMaxCount = snapshot.notificationHistoryMaxCount,
                 groupHistoryByApp = snapshot.groupHistoryByApp,
             ),
@@ -87,6 +97,7 @@ class NotificationFilterPreferences @Inject constructor(
 
     suspend fun importRawJson(raw: String): Result<Unit> = repositoryRunCatching {
         val backup = backupJson.decodeFromString<NotificationFilterPreferencesBackup>(raw)
+        setNotificationHistoryEnabled(backup.notificationHistoryEnabled).getOrThrow()
         setNotificationHistoryMaxCount(backup.notificationHistoryMaxCount).getOrThrow()
         setGroupHistoryByApp(backup.groupHistoryByApp).getOrThrow()
     }
@@ -101,6 +112,7 @@ class NotificationFilterPreferences @Inject constructor(
         const val NOTIFICATION_HISTORY_MAX_COUNT_STEP = 50
 
         private val NOTIFICATION_HISTORY_MAX_COUNT = intPreferencesKey("notification_history_max_count")
+        private val NOTIFICATION_HISTORY_ENABLED = booleanPreferencesKey("notification_history_enabled")
         private val GROUP_HISTORY_BY_APP = booleanPreferencesKey("group_history_by_app")
 
         private val backupJson = Json {
@@ -112,6 +124,7 @@ class NotificationFilterPreferences @Inject constructor(
 
 @Serializable
 private data class NotificationFilterPreferencesBackup(
+    val notificationHistoryEnabled: Boolean = true,
     val notificationHistoryMaxCount: Int,
     val groupHistoryByApp: Boolean = true,
 )

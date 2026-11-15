@@ -305,7 +305,7 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
             onIdleOpacityChange = viewModel::setFloatBallIdleOpacity,
             onIdleDelayChange = viewModel::setFloatBallIdleDelayMs,
             onPositionModeChange = viewModel::setFloatBallPositionMode,
-            onVisibleFractionChange = viewModel::setFloatBallVisibleFraction,
+            onEdgeInsetChange = viewModel::setFloatBallEdgeInsetDp,
             onPositionYChange = viewModel::setFloatBallPositionYFraction,
             onLineHeightChange = viewModel::setFloatBallLineHeightFraction,
             onLineWidthChange = viewModel::setFloatBallLineWidthDp,
@@ -316,11 +316,12 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
             onPositionYPreviewStart = { /* preview starts on first drag tick */ },
             onPositionYPreviewChange = { ctx.previewFloatBallPositionY(it) },
             onPositionYPreviewStop = { restore -> ctx.endFloatBallPositionYPreview(restore) },
-            onPreviewAppearance = { size, opacity, visible, lineHeight, lineWidthDp, lineOpacity ->
+            onPreviewAppearance = { size, opacity, edgeInset, lineHeight, lineWidthDp, lineOpacity ->
                 ctx.previewFloatBallAppearance(
                     sizeDp = size,
                     opacity = opacity,
-                    visibleFraction = visible,
+                    // 传输层的第三个 Float 槽现在承载"距边缘距离（dp）"。
+                    visibleFraction = edgeInset,
                     lineHeightFraction = lineHeight,
                     lineWidthDp = lineWidthDp,
                     lineOpacity = lineOpacity,

@@ -637,14 +637,14 @@ object FloatBallOverlay {
     fun previewAppearance(
         sizeDp: Float? = null,
         opacity: Float? = null,
-        visibleFraction: Float? = null,
+        edgeInsetDp: Float? = null,
         lineHeightFraction: Float? = null,
         lineWidthDp: Float? = null,
         lineOpacity: Float? = null
     ) = FloatBallAppearancePreview.previewAppearance(
         sizeDp,
         opacity,
-        visibleFraction,
+        edgeInsetDp,
         lineHeightFraction,
         lineWidthDp,
         lineOpacity

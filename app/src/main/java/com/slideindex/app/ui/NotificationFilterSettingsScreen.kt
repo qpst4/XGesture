@@ -22,6 +22,7 @@ fun NotificationFilterSettingsScreen(
         filterSettings = filterSettings,
         listenerEnabled = listenerEnabled,
         onRequestListenerAccess = onRequestListenerAccess,
+        onSetNotificationHistoryEnabled = viewModel::setNotificationHistoryEnabled,
         onSetNotificationHistoryMaxCount = viewModel::setNotificationHistoryMaxCount,
         onSetGroupHistoryByApp = viewModel::setGroupHistoryByApp,
         onRestoreAllSnoozed = viewModel::restoreAllSnoozed,

@@ -87,14 +87,20 @@ object MessageOverlayLayout {
         val yOffsetPx = (MessagePlacementFractions.coerceY(settings.sideBubbleYFraction) * metrics.heightPixels)
             .roundToInt()
             .coerceIn(edgeMarginPx, metrics.heightPixels - edgeMarginPx)
+        var flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+            WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
+        if (settings.sideBubbleShowOnLockScreen) {
+            // 锁屏可见：部分 ROM 会按这个标志把浮层画在钥匙锁之上。
+            @Suppress("DEPRECATION")
+            flags = flags or WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+        }
         return WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             OverlayWindowTypes.overlayWindowType(context),
-            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+            flags,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or horizontalGravity

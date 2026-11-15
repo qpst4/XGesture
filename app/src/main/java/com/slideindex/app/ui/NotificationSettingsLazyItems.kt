@@ -33,6 +33,7 @@ fun rememberNotificationSettingsLazyGroups(
     filterSettings: NotificationFilterSettings,
     listenerEnabled: Boolean,
     onRequestListenerAccess: () -> Unit,
+    onSetNotificationHistoryEnabled: (Boolean) -> Unit,
     onSetNotificationHistoryMaxCount: (Int) -> Unit,
     onSetGroupHistoryByApp: (Boolean) -> Unit,
     onRestoreAllSnoozed: (Boolean) -> Int,
@@ -119,12 +120,21 @@ fun rememberNotificationSettingsLazyGroups(
 
     val historyMaxCount = remember(filterSettings, formatMaxCountLabel, maxCountRange, maxCountSteps) {
         listOf(
+            settingsCardScopeItem("history-enabled") {
+                SettingSwitchRow(
+                    title = stringResource(R.string.notification_history_enabled_title),
+                    subtitle = stringResource(R.string.notification_history_enabled_desc),
+                    checked = filterSettings.notificationHistoryEnabled,
+                    enabled = true,
+                    onCheckedChange = onSetNotificationHistoryEnabled,
+                )
+            },
             settingsCardScopeItem("group-by-app") {
                 SettingSwitchRow(
                     title = stringResource(R.string.notification_history_group_by_app_title),
                     subtitle = stringResource(R.string.notification_history_group_by_app_desc),
                     checked = filterSettings.groupHistoryByApp,
-                    enabled = true,
+                    enabled = filterSettings.notificationHistoryEnabled,
                     onCheckedChange = onSetGroupHistoryByApp,
                 )
             },
@@ -134,7 +144,7 @@ fun rememberNotificationSettingsLazyGroups(
                     value = filterSettings.notificationHistoryMaxCount.toFloat(),
                     valueRange = maxCountRange,
                     steps = maxCountSteps,
-                    enabled = true,
+                    enabled = filterSettings.notificationHistoryEnabled,
                     label = formatMaxCountLabel(filterSettings.notificationHistoryMaxCount.toFloat()),
                     formatLabel = formatMaxCountLabel,
                     snapValue = snapMaxCount,

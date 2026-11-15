@@ -462,6 +462,25 @@ class EdgeSettingsMutator @Inject constructor(
         editor.edit { it[SettingsPreferenceKeys.QUICK_LAUNCHER_ROWS_PER_PAGE] = value.coerceIn(2, 9) }
 
     suspend fun setPanelOpacity(value: Float) = editor.edit { it[SettingsPreferenceKeys.PANEL_OPACITY] = value }
+
+    /** 任务切换器面板宽度（dp）。 */
+    suspend fun setTaskSwitcherPanelWidthDp(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.TASK_SWITCHER_PANEL_WIDTH_DP] = value.coerceIn(180, 340)
+    }
+
+    /** 触钮长按判定时长（毫秒）。 */
+    suspend fun setEdgeLongPressMs(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.EDGE_LONG_PRESS_MS] = value.coerceIn(200, 1200)
+    }
+
+    /** 悬浮球距边缘距离（dp，负值 = 往屏幕外挪）。真实上下限由读取时按屏幕宽度夹取。 */
+    suspend fun setFloatBallEdgeInsetDp(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.FLOAT_BALL_EDGE_INSET_DP] =
+            value.coerceIn(
+                FloatBallPositionFractions.MIN_EDGE_INSET_DP,
+                FloatBallPositionFractions.MAX_EDGE_INSET_DP,
+            )
+    }
     suspend fun setHapticEnabled(enabled: Boolean) = editor.edit { it[SettingsPreferenceKeys.HAPTIC_ENABLED] = enabled }
     suspend fun setHideFromRecents(enabled: Boolean) = editor.edit { it[SettingsPreferenceKeys.HIDE_FROM_RECENTS] = enabled }
     suspend fun setPredictiveBackEnabled(enabled: Boolean) =

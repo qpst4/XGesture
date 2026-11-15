@@ -93,6 +93,14 @@ object BrightnessControlHelper {
      * 或同步器写一半的中间态；拿它当读数会让面板停在错误的位置。
      */
     private fun readManualBrightnessFraction(appContext: Context): Float {
+        // 自动亮度下我们只写 adj，所以读数也必须读 adj：否则面板会停在系统自动算出的
+        // 那个 int 上，看起来像"滑条自己弹回去"。
+        if (readAutoBrightnessEnabled(appContext)) {
+            val adj = runCatching {
+                Settings.System.getFloat(appContext.contentResolver, SCREEN_AUTO_BRIGHTNESS_ADJ)
+            }.getOrNull()
+            if (adj != null && adj in -1f..1f) return adjToFraction(adj)
+        }
         val level = Settings.System.getInt(
             appContext.contentResolver,
             Settings.System.SCREEN_BRIGHTNESS,
@@ -244,23 +252,19 @@ object BrightnessControlHelper {
         val canWriteSettings = PermissionHelper.canWriteSettings(appContext) ||
             SecureSettingsHelper.hasWriteSecureSettings(appContext)
 
+        // 自动亮度开着时不要碰 int/float：系统自动亮度控制器会在我们写完之后再算一次，
+        // 把值推回它自己的结果（用户看到的就是"调上去又退回来"）。自动模式唯一受支持的
+        // 用户覆盖通道是 screen_auto_brightness_adj。
+        val autoMode = adj != null
+
         // ① 快路：Settings。每次调用都写（1~3ms），Settings 有效的 ROM 靠它跟手。
         //
-        // **int 与 float 一起写，顺序固定 int → float**：
-        // - `screen_brightness`(int)：系统设置页、部分 ROM 的自动亮度只认它；
-        // - `screen_brightness_float`(0–1)：Android 12+ DisplayManager 直接吃的那个值。
-        //   只写 int 时屏幕亮不亮，取决于 ROM 让不让 BrightnessSynchronizer 换算 ——
-        //   ColorOS / HyperOS 上经常不让，表现就是「调一下、闪一下、立刻弹回原亮度」。
-        // 两个 key 的量纲必须一致（float = (int - min) / (max - min)）：量程取对之后，
-        // 同步器换算出来的和我们写的是同一个值，不会自己覆盖自己。
+        // 手动亮度：**先 float 后 int**（1.50.5 的写入顺序，真机验证过不回弹）：
+        // - `screen_brightness_float`(0–1)：Android 12+ DisplayManager 直接吃这个值；
+        // - `screen_brightness`(int)：系统设置页、部分 ROM 的自动亮度只认它，
+        //   同时供 BrightnessSynchronizer 反算，两者量纲一致（float = (int-min)/(max-min)）。
+        // 自动亮度：只写 adj（+ float 兜底），绝不写 int —— 写了 int 等于和自动控制器抢。
         if (canWriteSettings) {
-            intOk = runCatching {
-                Settings.System.putInt(
-                    appContext.contentResolver,
-                    Settings.System.SCREEN_BRIGHTNESS,
-                    targetIntLevel,
-                )
-            }.getOrDefault(false)
             floatOk = runCatching {
                 Settings.System.putFloat(
                     appContext.contentResolver,
@@ -268,29 +272,38 @@ object BrightnessControlHelper {
                     targetFloat,
                 )
             }.getOrDefault(false)
-            if (targetAdj != null) {
+            if (autoMode) {
                 runCatching {
                     Settings.System.putFloat(
                         appContext.contentResolver,
                         SCREEN_AUTO_BRIGHTNESS_ADJ,
-                        targetAdj,
+                        targetAdj!!,
                     )
                 }
+            } else {
+                intOk = runCatching {
+                    Settings.System.putInt(
+                        appContext.contentResolver,
+                        Settings.System.SCREEN_BRIGHTNESS,
+                        targetIntLevel,
+                    )
+                }.getOrDefault(false)
             }
         }
         val settingsOk = intOk || floatOk
 
         // ② 兼容路：shell（身份不同，ColorOS 只认它）。按调用方节流下发，或用 Settings 写不动时兜底。
-        //    写同一组 key：少写一个就少一条能进屏幕的路。
+        //    写同一组 key：少写一个就少一条能进屏幕的路。auto 模式下同样不写 int。
         if (includeShell || !settingsOk) {
             if (TaskManagerUtil.hasPermission()) {
                 val command = buildString {
-                    append("settings put system screen_brightness ").append(targetIntLevel)
-                    append(" && settings put system ").append(SCREEN_BRIGHTNESS_FLOAT)
+                    append("settings put system ").append(SCREEN_BRIGHTNESS_FLOAT)
                         .append(' ').append(targetFloat)
-                    if (targetAdj != null) {
+                    if (autoMode) {
                         append(" && settings put system ")
                         append(SCREEN_AUTO_BRIGHTNESS_ADJ).append(' ').append(targetAdj)
+                    } else {
+                        append(" && settings put system screen_brightness ").append(targetIntLevel)
                     }
                 }
                 shellOk = TaskManagerUtil.runShellCommandLine(

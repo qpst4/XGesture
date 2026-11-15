@@ -1505,6 +1505,12 @@ object FloatBallPickResultPanel {
                         if (view == null || bitmap == null || bitmap.isRecycled ||
                             !PickResultDrag.image(view, dragContext, bitmap, dragImageUriFor(dragContext, bitmap))
                         ) {
+                            // 起拖失败必须可见：这个提示以前只在面板里，面板一藏用户就以为"什么都没发生"。
+                            Toast.makeText(
+                                dragContext,
+                                R.string.float_ball_action_failed,
+                                Toast.LENGTH_SHORT,
+                            ).show()
                             showInPanelMessage(overlayContext.getString(R.string.float_ball_action_failed), false)
                         }
                     },

@@ -106,8 +106,9 @@ object MacroRecordingInstaller {
                             }
 
                             override fun onUp(x: Float, y: Float, eventTimeMs: Long) {
-                                // 圆点自己会消失（拖尾），这里只记步骤。
+                                // 圆点是我们唯一的那一个窗口，不会自己消失：抬手后延迟淡出。
                                 recorder.onUp(x, y, eventTimeMs)
+                                indicator.hideAfter(200)
                             }
 
                             override fun onCancel() {
@@ -127,6 +128,8 @@ object MacroRecordingInstaller {
                                 listener.onRecordingFinished(0)
                             }
                         },
+                        // 捕获层给控制条"挖洞"：落在条上的触摸直接归控制条，不记录也不注入。
+                        barRectProvider = { overlay?.barRectOnScreen() },
                     )
                     val recordOverlay = MacroRecordOverlay(
                         hostContext = host,
@@ -139,12 +142,20 @@ object MacroRecordingInstaller {
                             stopInternal()
                             listener.onRecordingFinished(0)
                         },
+                        // 拖动控制条时让捕获层跟着挪"洞"，否则条会被捕获窗盖住、拖不动。
+                        onMoved = { capture?.updateHole() },
                     )
 
                     capture = captureLayer
                     overlay = recordOverlay
-                    captureLayer.show()
+                    // 先让控制条挂上并完成布局，再建捕获层：否则首帧拿不到条的真实矩形，
+                    // 捕获窗会暂时退化成"全屏"，把整条盖住（第一次拖条就被录进宏）。
                     recordOverlay.show()
+                    recordOverlay.runAfterLayout {
+                        if (overlay !== recordOverlay) return@runAfterLayout
+                        captureLayer.show()
+                        captureLayer.updateHole()
+                    }
                     // 关键安全网：录制期间全屏层会吞掉所有触摸，所以必须有"用户一定能退出"的出口。
                     // 灭屏 → 自动结束；硬超时 → 自动结束。
                     installSafetyNets(host, listener)

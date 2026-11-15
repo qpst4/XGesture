@@ -88,3 +88,17 @@ overlay 迁移已完成到"可维护"的程度，**不再启动项目级重构**
 1. **数量只许减不许增**：`PanelRuntimeHooks` 的 `@Volatile` 槽位数（当前 121）不得增加；新增即违规。
    零引用的槽位发现即删（例：2026-11-09 删掉 `showPickResultPanel`）。
 2. **季度盘点**：每季度扫一次"零引用钩子"并删除，同时在本次改动涉及的钩子上标注目标接口。
+
+---
+
+## 五、UI 卡片内容的内边距（硬规则）
+
+> 起因：2026-11-15 在"点击与长按"卡片里加长按滑条，复用了 `MiuixInsetCardComponentMargin`
+> （它只有**纵向** 16dp，横向是 0），文字直接贴到卡片边缘。这类错误不能靠"下次注意"。
+
+1. **新增卡片行（滑条 / 开关 / 导航行）必须复用同页容器**：放进 `MiuixTabSettingsCard` /
+   `MiuixListSettingsCard`，或给 `groupedCardItems` 显式 `insidePadding`；
+   行自身的 `insideMargin` 用 `BasicComponentDefaults.InsideMargin`。
+2. **禁止**把 `MiuixInsetCardComponentMargin` 当"通用边距"用（横向 0）。
+3. **交付前必须截图自检**：`adb shell screencap` 拉图，确认左右 ≥16dp、与相邻行对齐、
+   卡片圆角/背景与同页一致。截图随交付一起给用户，不截图不算完成。

@@ -665,6 +665,10 @@ class ExtensionSettingsViewModel @Inject constructor(
         settingsRepository.setFloatBallVisibleFraction(fraction)
     }
 
+    fun setFloatBallEdgeInsetDp(value: Int) = launchSettingsWrite {
+        settingsRepository.setFloatBallEdgeInsetDp(value)
+    }
+
     fun setFloatBallLineHeightFraction(value: Float) = launchSettingsWrite {
         settingsRepository.setFloatBallLineHeightFraction(value)
     }

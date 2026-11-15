@@ -33,9 +33,6 @@ internal object FloatBallLayout {
     private const val MIN_POSITION_Y_FRACTION = FloatBallPositionFractions.MIN_Y
     private const val MAX_POSITION_Y_FRACTION = FloatBallPositionFractions.MAX_Y
 
-    fun coerceVisibleFraction(fraction: Float): Float =
-        FloatBallPositionFractions.coerceVisible(fraction)
-
     fun coerceCustomCenterXFraction(fraction: Float): Float =
         FloatBallPositionFractions.coerceCustomCenterX(fraction)
 
@@ -150,7 +147,7 @@ internal object FloatBallLayout {
                 activeSide = activeSide,
                 ballWidthPx = ballSize.widthPx,
                 screenWidth = screenWidthPx,
-                visibleFraction = coerceVisibleFraction(settings.floatBallVisibleFraction)
+                edgeOffsetPx = edgeInsetPx(settings, density),
             )
         }
         val top = (centerY - ballSize.heightPx / 2f).roundToInt()
@@ -222,31 +219,46 @@ internal object FloatBallLayout {
     }
 
     /**
-     * Docked ball window X for [side].
-     * [visibleFraction] is how much of the ball **width** stays on screen (1 = fully visible, flush to edge).
+     * 贴边时球窗口的 X。
+     *
+     * [edgeOffsetPx] 是"距边缘距离"：0 = 贴边；正数往屏幕内挪；负数往屏幕外挪
+     * （球被屏幕边缘裁掉一部分，看起来变小，实际尺寸不变）。
      */
     fun dockedBallLeftPx(
         activeSide: FloatBallSide,
         ballWidthPx: Int,
         screenWidth: Int,
-        visibleFraction: Float
+        edgeOffsetPx: Int,
     ): Int = when (activeSide) {
-        FloatBallSide.LEFT -> (-ballWidthPx * (1f - visibleFraction)).roundToInt()
-        FloatBallSide.RIGHT -> (screenWidth - ballWidthPx * visibleFraction).roundToInt()
+        FloatBallSide.LEFT -> edgeOffsetPx
+        FloatBallSide.RIGHT -> screenWidth - ballWidthPx - edgeOffsetPx
     }
 
-    fun keyboardAdjustedVisibleFraction(
+    /** 设置里的"距边缘距离"换算成 px（已夹取 −48…48dp）。 */
+    fun edgeInsetPx(settings: AppSettings, density: Float): Int =
+        (FloatBallPositionFractions.coerceEdgeInsetDp(settings.floatBallEdgeInsetDp) * density)
+            .roundToInt()
+
+    /**
+     * 键盘「收窄」时把球往外再挪一段：等价旧版"露出比例 × 收窄系数"。
+     *
+     * 旧模型是露出比例变小；新模型是距离往外偏 `(1 - 收窄系数) × 球宽`。
+     */
+    fun keyboardAdjustedEdgeOffsetPx(
         settings: AppSettings,
         isLandscape: Boolean,
-    ): Float {
-        val base = coerceVisibleFraction(settings.floatBallVisibleFraction)
+        ballWidthPx: Int,
+        density: Float,
+    ): Int {
+        val base = edgeInsetPx(settings, density)
         val behavior = settings.keyboardTriggerBehavior(isLandscape)
         val imeTop = KeyboardTriggerImeState.imeTopOrNull()
         if (imeTop == null || behavior != KeyboardTriggerBehavior.NARROW) {
             return base
         }
-        val narrowed = base * settings.keyboardTriggerNarrowScale(isLandscape)
-        return FloatBallPositionFractions.coerceKeyboardNarrowVisible(narrowed)
+        val narrowedPx = ((1f - settings.keyboardTriggerNarrowScale(isLandscape)) * ballWidthPx)
+            .roundToInt()
+        return base - narrowedPx
     }
 
     fun keyboardAdjustedLineStripBounds(
@@ -280,9 +292,11 @@ internal object FloatBallLayout {
         val ballSize = ballSize(settings, density)
         val marginPx = marginPx(density)
         val centerY = dockCenterY(settings, screenHeightPx)
-        val visibleFraction = keyboardAdjustedVisibleFraction(
+        val edgeOffsetPx = keyboardAdjustedEdgeOffsetPx(
             settings = settings,
             isLandscape = isLandscape,
+            ballWidthPx = ballSize.widthPx,
+            density = density,
         )
         val left = when (settings.floatBallPositionMode) {
             FloatBallPositionMode.CUSTOM -> {
@@ -293,7 +307,7 @@ internal object FloatBallLayout {
                 activeSide = activeSide,
                 ballWidthPx = ballSize.widthPx,
                 screenWidth = screenWidthPx,
-                visibleFraction = visibleFraction,
+                edgeOffsetPx = edgeOffsetPx,
             )
         }
         var top = (centerY - ballSize.heightPx / 2f).roundToInt()

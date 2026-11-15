@@ -145,7 +145,9 @@ class MacroEngine(private val context: Context) {
                     val (x, y) = MacroPlanner.toPixels(step.x, step.y, screenWidth, screenHeight)
                     val path = Path().apply { moveTo(x, y) }
                     indicator.pulseAt(x, y)
-                    dispatchPath(service, path, MacroLimits.clampTap(step.durationMs))
+                    val dispatched = dispatchPath(service, path, MacroLimits.clampTap(step.durationMs))
+                    indicator.hideAfter(INDICATOR_LINGER_MS)
+                    dispatched
                 }
 
                 is MacroStep.Swipe -> {
@@ -161,8 +163,11 @@ class MacroEngine(private val context: Context) {
                     // 只在手势开始前落一次提示，**绝不在手势进行中改动窗口**（会打断注入的手势）。
                     points.firstOrNull()?.let { indicator.pulseAt(it.first, it.second) }
                     val dispatched = dispatchPath(service, path, durationMs)
-                    // 手势结束后再标出终点。
-                    points.lastOrNull()?.let { indicator.pulseAt(it.first, it.second) }
+                    // 手势结束后再标出终点，短暂停留后淡出（不能一直停在终点）。
+                    points.lastOrNull()?.let {
+                        indicator.pulseAt(it.first, it.second)
+                        indicator.hideAfter(INDICATOR_LINGER_MS)
+                    }
                     dispatched
                 }
             }

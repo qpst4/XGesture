@@ -22,6 +22,7 @@ import kotlinx.coroutines.runBlocking
 @Singleton
 class NotificationHistoryRecorder @Inject constructor(
     private val filterRepository: NotificationFilterRepository,
+    private val filterPreferences: NotificationFilterPreferences,
     private val historyRepository: NotificationHistoryRepository,
     private val settingsRepository: SettingsRepository,
     private val otpOfficialRulesLoader: OtpOfficialRulesLoader,
@@ -159,7 +160,11 @@ class NotificationHistoryRecorder @Inject constructor(
             extractedCode = extractedCode,
             extractionAttempted = extraction.attempted,
         )
-        historyRepository.record(item)
+        // 「停止记录」只关这一处：过滤规则与验证码提取必须继续工作，
+        // 否则用户会以为"关了滤盒，连拦截和提码都坏了"。
+        if (filterPreferences.readSnapshot().notificationHistoryEnabled) {
+            historyRepository.record(item)
+        }
 
         if (matchingRules.isNotEmpty()) {
             shadeActions.executeRules(context, listener, sbn, matchingRules)
@@ -173,6 +178,7 @@ class NotificationHistoryRecorder @Inject constructor(
     fun onRemoved(context: Context, sbn: StatusBarNotification, reason: Int) {
         ongoingFingerprints.remove(sbn.key)
         NotificationSbnCache.onRemoved(sbn, reason)
+        if (!filterPreferences.readSnapshot().notificationHistoryEnabled) return
 
         val captured = NotificationHistoryIntentCapture.capture(sbn, context)
         val hasCapture = !captured.pendingIntentBase64.isNullOrBlank() ||

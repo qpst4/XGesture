@@ -103,15 +103,19 @@ class MacroTouchIndicator(private val hostContext: Context) {
         hideRunnable = null
     }
 
+    /**
+     * 淡出："隐藏"只把窗口调到全透明，**不摘窗**。
+     *
+     * 以前是淡出后 `removeWindow()`，下一次按下再 `createWindow()` —— 每段手势都销毁/新建一次窗口，
+     * 真机上会看到圆点在抬手后闪一下。窗口常驻后就没有创建/销毁的闪动了。
+     */
     private fun fadeOutAndHide() {
         val view = rootView ?: return
         view.animate().cancel()
         view.animate()
             .alpha(0f)
             .setDuration(FADE_OUT_MS)
-            .withEndAction { removeWindow() }
             .start()
-        mainHandler.postDelayed({ removeWindow() }, FADE_OUT_MS + 200L)
     }
 
     private fun removeWindow() {

@@ -721,6 +721,9 @@
     <string name="float_ball_position_both_lines">Lines on both edges</string>
     <string name="float_ball_free_move_hint">Move mode: drag the floating ball where you want it, then release - it snaps to the nearest edge and the position is saved</string>
     <string name="float_ball_position_y">Vertical position</string>
+    <string name="message_side_bubble_lock_screen_title">Show on lock screen</string>
+    <string name="message_side_bubble_lock_screen_desc">Keep bubbles visible while locked; auto-dismiss pauses until you unlock</string>
+    <string name="float_ball_edge_inset">Distance from edge</string>
     <string name="float_ball_visible_fraction">Visible amount</string>
     <string name="float_ball_position_xy_hint">The percentage shows how much of the ball stays on screen when docked</string>
     <string name="float_ball_line_height">Line height</string>
@@ -1648,6 +1651,8 @@
     <string name="notification_restore_success_rule_only">Hide rule removed; future matching notifications will show normally</string>
     <string name="notification_restore_unsnooze_failed">Could not restore to shade; the notification may have been dismissed</string>
     <string name="notification_filter_active_empty">No notifications in shade</string>
+    <string name="notification_history_enabled_title">Record notifications</string>
+    <string name="notification_history_enabled_desc">Off: stop recording history only. Filter rules and verification-code capture keep working</string>
     <string name="notification_history_max_count_title">History save limit</string>
     <string name="notification_history_group_by_app_title">Group by app</string>
     <string name="notification_history_group_by_app_desc">Collapse when an app has multiple notifications; tap to expand</string>
@@ -2206,6 +2211,9 @@
     <string name="quick_launcher_grid_columns_label">Columns: %1$d</string>
     <string name="quick_launcher_grid_rows_label">Rows: %1$d</string>
     <string name="panel_opacity">Panel opacity</string>
+    <string name="task_switcher_panel_width">Task switcher width</string>
+    <string name="task_switcher_panel_width_desc">Default 226dp matches the previous fixed width</string>
+    <string name="task_switcher_panel_width_value">%1$d dp</string>
     <string name="haptic_enabled">Vibration</string>
     <string name="settings_predictive_back">Predictive back gesture</string>
     <string name="settings_predictive_back_summary">Enable predictive back animation</string>
@@ -2400,6 +2408,9 @@
     <string name="side_gestures_compound_group_inward">Swipe in first</string>
     <string name="side_gestures_compound_group_along">Swipe along the edge first</string>
     <string name="side_gestures_press_tap">Tap &amp; long-press</string>
+    <string name="side_gestures_long_press_duration">Trigger long-press duration</string>
+    <string name="side_gestures_long_press_duration_summary">How long the edge trigger must be held still to count as a long press (independent of the floating ball)</string>
+    <string name="side_gestures_long_press_duration_value">%1$d ms</string>
     <string name="side_gestures_hover_duration">Hover duration after short swipe</string>
     <string name="side_gestures_hover_duration_desc">Hover slots only: hold still this long after a short swipe to count as hover; 0 ms counts as hover right after passing the short distance</string>
     <string name="side_gestures_hover_duration_value">%1$d ms</string>

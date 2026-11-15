@@ -31,6 +31,7 @@ import com.slideindex.app.message.MessageThemeCatalog
 import com.slideindex.app.message.MessageThemeSpec
 import com.slideindex.app.message.messageThemeBackground
 import com.slideindex.app.ui.SettingLinkRow
+import com.slideindex.app.ui.SettingSwitchRow
 import com.slideindex.app.ui.SettingsSliderRow
 import com.slideindex.app.ui.miuix.CardItem
 import com.slideindex.app.ui.miuix.groupedCardItems
@@ -79,6 +80,9 @@ fun primaryDisplayCardItems(
     onMaxLinesChange: (Int) -> Unit,
     autoDismissSeconds: Int,
     onAutoDismissSecondsChange: (Int) -> Unit,
+    /** 非 null 时显示"锁屏也显示"开关（侧边气泡用）。 */
+    lockScreenEnabled: Boolean? = null,
+    onLockScreenChange: ((Boolean) -> Unit)? = null,
     onPickSideCount: (() -> Unit)? = null,
     sideMaxCount: Int = 3,
     opacitySteps: Int = 7,
@@ -129,6 +133,19 @@ fun primaryDisplayCardItems(
                         subtitle = stringResource(R.string.message_style_side_count_option, sideMaxCount),
                         enabled = enabled,
                         onClick = { if (enabled) onPickSideCount() },
+                    )
+                },
+            )
+        }
+        if (lockScreenEnabled != null && onLockScreenChange != null) {
+            add(
+                settingsCardScopeItem("lock-screen") {
+                    SettingSwitchRow(
+                        title = stringResource(R.string.message_side_bubble_lock_screen_title),
+                        subtitle = stringResource(R.string.message_side_bubble_lock_screen_desc),
+                        checked = lockScreenEnabled,
+                        enabled = enabled,
+                        onCheckedChange = onLockScreenChange,
                     )
                 },
             )

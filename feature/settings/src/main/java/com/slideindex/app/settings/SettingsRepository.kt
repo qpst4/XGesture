@@ -280,6 +280,9 @@ class SettingsRepository @Inject constructor(
     suspend fun setQuickLauncherColumnsPerPage(value: Int) = edge.setQuickLauncherColumnsPerPage(value)
     suspend fun setQuickLauncherRowsPerPage(value: Int) = edge.setQuickLauncherRowsPerPage(value)
     suspend fun setPanelOpacity(value: Float) = edge.setPanelOpacity(value)
+    suspend fun setTaskSwitcherPanelWidthDp(value: Int) = edge.setTaskSwitcherPanelWidthDp(value)
+    suspend fun setFloatBallEdgeInsetDp(value: Int) = edge.setFloatBallEdgeInsetDp(value)
+    suspend fun setEdgeLongPressMs(value: Int) = edge.setEdgeLongPressMs(value)
     suspend fun setHapticEnabled(enabled: Boolean) = edge.setHapticEnabled(enabled)
     suspend fun setHideFromRecents(enabled: Boolean) = edge.setHideFromRecents(enabled)
 
@@ -1318,6 +1321,8 @@ class SettingsRepository @Inject constructor(
 
     suspend fun setMessageSideBubbleAutoDismissSeconds(seconds: Int) =
         message.setMessageSideBubbleAutoDismissSeconds(seconds)
+    suspend fun setMessageSideBubbleShowOnLockScreen(enabled: Boolean) =
+        message.setMessageSideBubbleShowOnLockScreen(enabled)
     suspend fun setMessageReturnChipEnabled(enabled: Boolean) =
         message.setMessageReturnChipEnabled(enabled)
     suspend fun setMessageReturnChipAutoDismissSeconds(seconds: Int) =

@@ -614,6 +614,9 @@
     <string name="quick_launcher_grid_columns_label">%1$d 列</string>
     <string name="quick_launcher_grid_rows_label">%1$d 行</string>
     <string name="panel_opacity">面板不透明度</string>
+    <string name="task_switcher_panel_width">任务切换器宽度</string>
+    <string name="task_switcher_panel_width_desc">默认 226dp 与旧版固定宽度一致</string>
+    <string name="task_switcher_panel_width_value">%1$d dp</string>
     <string name="haptic_enabled">震动</string>
     <string name="settings_predictive_back">预测性返回手势</string>
     <string name="settings_predictive_back_summary">启用预测性返回动画效果</string>
@@ -893,6 +896,9 @@
     <string name="side_gestures_compound_group_inward">先向内侧滑</string>
     <string name="side_gestures_compound_group_along">先沿边滑</string>
     <string name="side_gestures_press_tap">点击与长按</string>
+    <string name="side_gestures_long_press_duration">触钮长按判定时长</string>
+    <string name="side_gestures_long_press_duration_summary">按住边缘触钮不动多久算长按（与悬浮球的长按时长相互独立）</string>
+    <string name="side_gestures_long_press_duration_value">%1$d 毫秒</string>
     <string name="side_gestures_hover_duration">短滑后悬停时长</string>
     <string name="side_gestures_hover_duration_desc">仅用于短滑后悬停槽位：静止达到此时长即计入悬停；0 毫秒表示滑过短滑距离即算悬停</string>
     <string name="side_gestures_hover_duration_value">%1$d 毫秒</string>
@@ -2001,6 +2007,9 @@
     <string name="float_ball_position_both_lines">两侧都是线</string>
     <string name="float_ball_free_move_hint">移动模式：把悬浮球拖到目标位置，松手会自动贴边并保存位置</string>
     <string name="float_ball_position_y">垂直位置</string>
+    <string name="message_side_bubble_lock_screen_title">锁屏时显示</string>
+    <string name="message_side_bubble_lock_screen_desc">锁屏期间气泡保留、自动关闭暂停；解锁后重新计时</string>
+    <string name="float_ball_edge_inset">距边缘距离</string>
     <string name="float_ball_visible_fraction">显示百分比</string>
     <string name="float_ball_position_xy_hint">显示百分比表示贴边时球体留在屏幕内的比例</string>
     <string name="float_ball_line_height">线高度</string>
@@ -2981,6 +2990,8 @@
     <string name="notification_restore_success_rule_only">已取消隐藏规则，未来同类通知将正常显示</string>
     <string name="notification_restore_unsnooze_failed">无法恢复至通知栏，该通知可能已被清除</string>
     <string name="notification_filter_active_empty">通知栏暂无通知</string>
+    <string name="notification_history_enabled_title">记录通知</string>
+    <string name="notification_history_enabled_desc">关闭后只停止记录历史；过滤规则与验证码提取仍然生效</string>
     <string name="notification_history_max_count_title">历史记录保存条数</string>
     <string name="notification_history_group_by_app_title">按应用折叠</string>
     <string name="notification_history_group_by_app_desc">同一应用有多条通知时默认折叠显示，点击展开</string>

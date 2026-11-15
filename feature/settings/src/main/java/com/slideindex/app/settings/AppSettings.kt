@@ -29,6 +29,18 @@ data class AppSettings(
     /** Fixed grid rows per quick-launcher page (panel height). */
     val quickLauncherRowsPerPage: Int = 4,
     val panelOpacity: Float = 0.95f,
+    /** 任务切换器面板宽度（dp）。默认 226 与旧版固定值一致。 */
+    val taskSwitcherPanelWidthDp: Int = 226,
+    /**
+     * 悬浮球距屏幕边缘的距离（dp）。
+     *
+     * - 0 = 贴边（旧版 100% 显示）；
+     * - 正数 = 往屏幕内挪（离边）；
+     * - 负数 = 往屏幕外挪（露出一部分，等价旧版 50%–99% 的"半隐藏"）。
+     *
+     * 球本身的大小不变，"变小"只是被屏幕边缘裁掉的视觉。
+     */
+    val floatBallEdgeInsetDp: Int = 0,
     val hapticEnabled: Boolean = true,
     val hapticStrengthLevel: Int = HapticStrength.MEDIUM.level,
     val hapticGestureTriggerEnabled: Boolean = true,
@@ -210,6 +222,8 @@ data class AppSettings(
     val topDefaultTriggerMode get() = edgeTrigger.topDefaultTriggerMode
     val shortSwipeDistanceDp get() = edgeTrigger.shortSwipeDistanceDp
     val longSwipeDistanceDp get() = edgeTrigger.longSwipeDistanceDp
+    /** 触钮长按判定时长（毫秒），与悬浮球的长按时长相互独立。 */
+    val edgeLongPressMs get() = edgeTrigger.edgeLongPressMs
     val gestureHintEnabled get() = edgeTrigger.gestureHintEnabled
     val gestureHintStyleId get() = edgeTrigger.gestureHintStyleId
     val gestureHintFingerOffsetDp get() = edgeTrigger.gestureHintFingerOffsetDp

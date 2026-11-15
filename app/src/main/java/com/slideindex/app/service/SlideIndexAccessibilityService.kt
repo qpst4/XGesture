@@ -686,7 +686,8 @@ class SlideIndexAccessibilityService : AccessibilityService() {
             com.slideindex.app.overlay.FloatBallOverlay.previewAppearance(
                 sizeDp = sizeDp,
                 opacity = opacity,
-                visibleFraction = visibleFraction,
+                // 该槽承载「距边缘距离（dp）」（负值 = 往屏幕外挪）。
+                edgeInsetDp = visibleFraction,
                 lineHeightFraction = lineHeightFraction,
                 lineWidthDp = lineWidthDp,
                 lineOpacity = lineOpacity
