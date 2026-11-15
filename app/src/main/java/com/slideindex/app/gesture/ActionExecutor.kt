@@ -314,6 +314,10 @@ class ActionExecutor(
                         shape = action.shape,
                         manualSectorMask = action.manualSectorMask,
                         anchorMode = action.anchorMode,
+                        // 「按下的位置」锚点：悬浮球手势派发时已带上按下点，这里透传给轮盘；
+                        // 其它入口没有按下点，窗口会退回触发点。
+                        touchDownRawX = gestureTouchDownRawX,
+                        touchDownRawY = gestureTouchDownRawY,
                     )
                 }
             is GestureAction.WidgetPopupOverlay ->
