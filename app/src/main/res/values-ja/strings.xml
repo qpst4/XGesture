@@ -4766,44 +4766,44 @@
     <string name="quick_wheel_delete_message">このホイールを削除しますか？</string>
     <string name="quick_wheel_name_hint">ホイール名</string>
     <string name="quick_wheel_long_press_time">長押し時間</string>
-    <string name="quick_wheel_long_press_time_desc">レベル2の長押し動作と、レベル2ホイールの展開までの保持時間</string>
+    <string name="quick_wheel_long_press_time_desc">コンテナを長押しして長押しアクションと二級の展開を起こすまでの時間</string>
     <string name="quick_wheel_backdrop_blur">背景のぼかし</string>
-    <string name="quick_wheel_backdrop_blur_desc">コンテナ以外の領域をぼかします。コンテナは常に完全に不透明です。システムのクロスウィンドウぼかしが必要で、対応していない場合は効果がありません</string>
+    <string name="quick_wheel_backdrop_blur_desc">コンテナ以外の領域だけをぼかします（システムの対応が必要）</string>
     <string name="quick_wheel_backdrop_dim">背景の暗さ</string>
-    <string name="quick_wheel_backdrop_dim_desc">コンテナ以外の領域を暗くします（0% なら画面はそのまま）。コンテナは常に完全に不透明です</string>
+    <string name="quick_wheel_backdrop_dim_desc">コンテナ以外の領域だけを暗くします。0% = 完全に透ける</string>
     <string name="quick_wheel_animation">表示アニメーション</string>
     <string name="quick_wheel_open_animation">アニメーション効果</string>
     <string name="quick_wheel_open_animation_desc">ホイールの表示方法だけに影響します。ヒット判定と長押しの時間には影響しません</string>
     <string name="quick_wheel_open_animation_none">なし</string>
     <string name="quick_wheel_open_animation_expand">中心から拡大</string>
     <string name="quick_wheel_animation_speed">アニメーション速度</string>
-    <string name="quick_wheel_animation_speed_desc">表示アニメーションの速度だけを変更します。長押しの時間は設定どおりです</string>
+    <string name="quick_wheel_animation_speed_desc">展開の速さだけを変えます。長押しの計時には影響しません</string>
     <string name="quick_wheel_summary">%1$s · %2$d リング · %3$d 動作 + %4$d 空き</string>
     <string name="quick_wheel_shape_circle">円形</string>
     <string name="quick_wheel_shape_rect">矩形</string>
-    <string name="quick_wheel_shape_circle_desc">同心リングを段階的に広げます</string>
-    <string name="quick_wheel_shape_rect_desc">リングごとに1行、下方向に積み重ねます</string>
+    <string name="quick_wheel_shape_circle_desc">同心円リングで内側から外へ展開</string>
+    <string name="quick_wheel_shape_rect_desc">行ごとに並べ、各行の列数は固定</string>
     <string name="quick_wheel_section_appearance">外観</string>
     <string name="quick_wheel_section_shape">ホイール形状</string>
     <string name="quick_wheel_section_slots">コンテナ</string>
     <string name="quick_wheel_show_labels">テキストラベルを表示</string>
-    <string name="quick_wheel_show_labels_desc">アイコンの下に名前を表示します。アイコンとテキストは一緒に中央揃えされます</string>
+    <string name="quick_wheel_show_labels_desc">アイコンの下に名前を表示</string>
     <string name="quick_wheel_transparent_container">コンテナ背景を完全透明に</string>
-    <string name="quick_wheel_transparent_container_desc">オンにするとアプリ・画像アイコンのプレートと切り抜きがなくなります。内蔵アイコンの扱いは下の 2 つのスイッチで決まります</string>
-    <string name="quick_wheel_transparent_builtin">内蔵アイコンも透明</string>
-    <string name="quick_wheel_transparent_builtin_desc">内蔵アクションやアイコンライブラリのベクターアイコンは背景を敷かず、壁紙に直接表示します</string>
-    <string name="quick_wheel_transparent_text">テキストアイコンも透明</string>
+    <string name="quick_wheel_transparent_container_desc">アプリのアイコンとギャラリー画像は背景なし・切り抜きなし</string>
+    <string name="quick_wheel_transparent_builtin">内蔵アイコン透明</string>
+    <string name="quick_wheel_transparent_builtin_desc">内蔵アクションやアイコンライブラリなどのベクターアイコンも背景なし</string>
+    <string name="quick_wheel_transparent_text">テキストアイコン透明</string>
     <string name="quick_wheel_transparent_text_desc">テキストアイコンは背景を敷きません。明るい壁紙では明るい文字が見えにくいため、「文字の色」で調整してください</string>
     <string name="quick_wheel_initial_radius">初期半径</string>
-    <string name="quick_wheel_initial_radius_desc">呼び出し位置から最初のリングまでの距離</string>
+    <string name="quick_wheel_initial_radius_desc">中心から第 1 環までの距離</string>
     <string name="quick_wheel_container_gap">コンテナ間隔</string>
-    <string name="quick_wheel_container_gap_desc">隣り合うコンテナの実際の間隔。0 で接触します</string>
+    <string name="quick_wheel_container_gap_desc">同じ環内で隣り合うコンテナの隙間。0 = 密着</string>
     <string name="quick_wheel_ring_gap">リング間隔</string>
-    <string name="quick_wheel_ring_gap_desc">1つのリングがあふれたときのリング層の間隔</string>
+    <string name="quick_wheel_ring_gap_desc">隣り合う環の間隔</string>
     <string name="quick_wheel_column_count">列数</string>
-    <string name="quick_wheel_column_count_desc">1行あたりのコンテナ数。あふれた分は次の行に折り返します（矩形のみ）</string>
+    <string name="quick_wheel_column_count_desc">1 行あたりのコンテナ数（矩形のみ）</string>
     <string name="quick_wheel_container_size">コンテナサイズ</string>
-    <string name="quick_wheel_container_size_desc">1つのコンテナの辺の長さ。小さいほど密に並びます</string>
+    <string name="quick_wheel_container_size_desc">コンテナの辺の長さ。小さくすると全体がコンパクトに</string>
     <string name="quick_wheel_add_slot">+ 空きスロット</string>
     <string name="quick_wheel_remove_slot">最後のスロットを削除</string>
     <string name="quick_wheel_slot_number">コンテナ %1$d</string>
@@ -4850,9 +4850,9 @@
     <string name="quick_wheel_exit_without_save">保存せずに終了</string>
     <string name="quick_wheel_section_basic">基本</string>
     <string name="quick_wheel_preview">ホイール プレビュー</string>
-    <string name="quick_wheel_preview_desc">実際のホイールをその場に表示して、タップと長押しを試せます</string>
+    <string name="quick_wheel_preview_desc">その場で呼び出して輪盤の動作を試す</string>
     <string name="quick_wheel_function">ホイール配置</string>
-    <string name="quick_wheel_function_desc">その場でホイールを配置します。ドラッグで並べ替え、コンテナの追加・削除、動作の割り当てができます</string>
+    <string name="quick_wheel_function_desc">ドラッグで並べ替え、コンテナの追加・削除、アクションの設定</string>
     <string name="quick_wheel_hint_preview">ライブプレビュー · 空白をタップして閉じます</string>
     <string name="quick_wheel_hint_canvas">コンテナをタップして編集 · 長押しでレベル2 · ドラッグで並べ替え · ゴミ箱にドロップして削除</string>
     <string name="quick_wheel_level_primary">レベル1</string>
@@ -4863,17 +4863,17 @@
     <string name="quick_wheel_secondary_shape">レベル2の形状</string>
     <string name="quick_wheel_sector_preview">レベル1のセクター プレビュー（プレビューのみ。実際の配置はジェスチャーに合わせて調整されます）</string>
     <string name="quick_wheel_container_corner">コンテナの角</string>
-    <string name="quick_wheel_container_corner_desc">各コンテナの角の丸み</string>
+    <string name="quick_wheel_container_corner_desc">コンテナ四隅の角丸</string>
     <string name="quick_wheel_icon_size">アイコンサイズ</string>
-    <string name="quick_wheel_icon_size_desc">内蔵アイコンとテキストラベルの基準サイズ（コンテナに対する比率）。インストール済みアプリのアイコンとギャラリー画像は常にコンテナサイズを使い、この値は無視されます</string>
+    <string name="quick_wheel_icon_size_desc">内蔵アイコンと名前の基準サイズ（コンテナに対する割合）。アプリのアイコンとギャラリー画像には影響しません</string>
     <string name="quick_wheel_label_size_factor">ラベルサイズ係数</string>
     <string name="quick_wheel_label_size_factor_desc">文字サイズ = 基準 × 係数</string>
     <string name="quick_wheel_builtin_icon_size">アイコンサイズ係数</string>
-    <string name="quick_wheel_builtin_icon_size_desc">実際のアイコンサイズ = アイコンサイズ × アイコンサイズ係数（インストール済みアプリのアイコンとギャラリー画像はコンテナサイズが基準）</string>
+    <string name="quick_wheel_builtin_icon_size_desc">アイコンの実サイズ = 基準 × 係数</string>
     <string name="quick_wheel_offset_x">横方向のオフセット</string>
-    <string name="quick_wheel_offset_x_desc">横方向の微調整（正の値で内側へ、負の値で端へ寄ります）</string>
+    <string name="quick_wheel_offset_x_desc">横方向の微調整。広がる向きがある場合は正で内側、ない場合は正で右</string>
     <string name="quick_wheel_offset_y">縦方向のオフセット</string>
-    <string name="quick_wheel_offset_y_desc">縦方向の微調整（正の値で内側へ、負の値で端へ寄ります）</string>
+    <string name="quick_wheel_offset_y_desc">縦方向の微調整。広がる向きがある場合は正で内側、ない場合は正で上</string>
     <string name="quick_wheel_add_placeholder">+ 空きスロット</string>
     <string name="quick_wheel_delete_container">削除</string>
     <string name="quick_wheel_new_container">新しいホイールコンテナ</string>
@@ -4887,7 +4887,7 @@
     <string name="quick_wheel_launch_fullscreen">全画面</string>
     <string name="quick_wheel_launch_free_window">フリーフォーム</string>
     <string name="quick_wheel_launch_gate_off">「アプリと起動」でフリーウィンドウが無効のため、現在は常に全画面です</string>
-    <string name="quick_wheel_launch_unsupported">この動作は何も開かないため、起動モードは効果がありません</string>
+    <string name="quick_wheel_launch_unsupported">このアクションはアプリを開かないため、効果がありません</string>
     <string name="quick_wheel_icon_pick_library">アイコンライブラリから選択</string>
     <string name="quick_wheel_icon_pick_app">アプリのアイコンを選択</string>
     <string name="quick_wheel_icon_pick_gallery">ギャラリーから画像を選択</string>
@@ -4907,7 +4907,7 @@
     <string name="quick_wheel_hint_secondary">コンテナを長押しして「削除」へドラッグします。サブリングのコンテナをタップすると編集、それ以外をタップすると戻ります。</string>
     <string name="quick_wheel_collapse_secondary">サブリングを閉じる</string>
     <string name="quick_wheel_sector_title">セクター（編集とプレビュー）</string>
-    <string name="quick_wheel_sector_desc">リングをタップして 90° セクターを有効／無効にします。エディタ、各プレビュー、一覧の概要は選択どおりに表示されます。実際の起動は動作バインディング側の設定に従い、未設定ならトリガー位置からセクターを自動計算してすべてのコンテナが画面内に収まるようにします。そこでは手動でセクターを固定することもできます。</string>
+    <string name="quick_wheel_sector_desc">90° セクターを選ぶとプレビューの形が決まります。実際の呼び出しではトリガー位置から自動で選ばれ、アクション割り当てで固定もできます</string>
     <string name="quick_wheel_sector_span">%1$d°</string>
     <string name="quick_wheel_sector_dir_top_right">右上のセクター</string>
     <string name="quick_wheel_sector_dir_bottom_right">右下のセクター</string>
@@ -4918,13 +4918,13 @@
     <string name="quick_wheel_hud_long_press">長押し: %1$s</string>
     <string name="quick_wheel_hud_no_action">動作なし</string>
     <string name="quick_wheel_action_sector_auto">自動（トリガー位置から）</string>
-    <string name="quick_wheel_action_sector_desc">すべてのセクターを未選択にすると、トリガーした位置からアプリが自動でセクターを選びます（すべてのコンテナが画面内に収まります）。セクターを選ぶとプライマリ円形をその範囲に固定しますが、画面外に出ることがあります。サブリングと矩形の配置は自動のままです。</string>
+    <string name="quick_wheel_action_sector_desc">未選択 = トリガー位置から自動。選ぶと固定され、画面外に出ることがあります</string>
     <string name="quick_wheel_action_anchor_section">表示位置</string>
     <string name="quick_wheel_action_anchor_row">ホイールの中心</string>
     <string name="quick_wheel_action_anchor_follow">成立時の指の位置</string>
-    <string name="quick_wheel_action_anchor_follow_desc">動作が成立した瞬間の指の位置を中心にします。遠くへスライドするほど中心が内側になり、円を広く取れます。</string>
+    <string name="quick_wheel_action_anchor_follow_desc">円心 = 発動した瞬間の指の位置。遠くへスライドするほど内側になります</string>
     <string name="quick_wheel_action_anchor_edge">押し始めた位置（推奨）</string>
-    <string name="quick_wheel_action_anchor_edge_desc">指を最初に置いた位置を中心にします。位置が安定して予測しやすい一方、画面端では半円しか入らないためセクターは自動的に絞られます。</string>
+    <string name="quick_wheel_action_anchor_edge_desc">円心 = 押した位置。位置は安定。端ではセクターが自動的に狭くなります</string>
     <string name="quick_wheel_secondary_hint">コンテナ %1$d のサブリングを編集しています</string>
     <string name="quick_wheel_slot_save">保存</string>
     <string name="gesture_action_screen_control">タッチパッド</string>

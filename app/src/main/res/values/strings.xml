@@ -4894,44 +4894,44 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="quick_wheel_delete_message">Delete this wheel?</string>
     <string name="quick_wheel_name_hint">Wheel name</string>
     <string name="quick_wheel_long_press_time">Long-press time</string>
-    <string name="quick_wheel_long_press_time_desc">Hold duration for level-2 long-press actions and for expanding a level-2 wheel</string>
+    <string name="quick_wheel_long_press_time_desc">How long to press a container to trigger its long-press action and open the second level</string>
     <string name="quick_wheel_backdrop_blur">Background blur</string>
-    <string name="quick_wheel_backdrop_blur_desc">Blurs the area outside the containers; containers always stay fully opaque. Requires system cross-window blur, otherwise it has no effect</string>
+    <string name="quick_wheel_backdrop_blur_desc">Blurs only the area outside the containers; requires system support</string>
     <string name="quick_wheel_backdrop_dim">Background dim</string>
-    <string name="quick_wheel_backdrop_dim_desc">Darkens the area outside the containers (0% keeps the screen fully visible); containers always stay fully opaque</string>
+    <string name="quick_wheel_backdrop_dim_desc">Dims only the area outside the containers; 0% = fully visible</string>
     <string name="quick_wheel_animation">Open animation</string>
     <string name="quick_wheel_open_animation">Animation effect</string>
     <string name="quick_wheel_open_animation_desc">Only affects how the wheel appears — hit testing and long-press timing are unaffected</string>
     <string name="quick_wheel_open_animation_none">None</string>
     <string name="quick_wheel_open_animation_expand">Expand from center</string>
     <string name="quick_wheel_animation_speed">Animation speed</string>
-    <string name="quick_wheel_animation_speed_desc">Only speeds up / slows down the open animation; long-press timing stays as configured</string>
+    <string name="quick_wheel_animation_speed_desc">Only changes how fast it expands; long-press timing is unaffected</string>
     <string name="quick_wheel_summary">%1$s · %2$d rings · %3$d actions + %4$d empty</string>
     <string name="quick_wheel_shape_circle">Circle</string>
     <string name="quick_wheel_shape_rect">Rect</string>
-    <string name="quick_wheel_shape_circle_desc">Concentric rings expanded in steps</string>
-    <string name="quick_wheel_shape_rect_desc">One row per ring, stacked downwards</string>
+    <string name="quick_wheel_shape_circle_desc">Concentric rings, expanding from the inside out</string>
+    <string name="quick_wheel_shape_rect_desc">Laid out in rows with a fixed number of columns</string>
     <string name="quick_wheel_section_appearance">Appearance</string>
     <string name="quick_wheel_section_shape">Wheel shape</string>
     <string name="quick_wheel_section_slots">Containers</string>
     <string name="quick_wheel_show_labels">Show text labels</string>
-    <string name="quick_wheel_show_labels_desc">Show the name under each icon; icon and text stay centered together</string>
+    <string name="quick_wheel_show_labels_desc">Show the name below the icon</string>
     <string name="quick_wheel_transparent_container">Transparent container background</string>
-    <string name="quick_wheel_transparent_container_desc">Turn on to remove the plate and clipping behind app icons and images; built-in icons follow the two switches below</string>
+    <string name="quick_wheel_transparent_container_desc">No background and no clipping for app icons and gallery images</string>
     <string name="quick_wheel_transparent_builtin">Built-in icons transparent</string>
-    <string name="quick_wheel_transparent_builtin_desc">Vector icons (actions, icon library) get no plate and sit directly on the wallpaper</string>
+    <string name="quick_wheel_transparent_builtin_desc">Built-in actions, icon library and other vector icons lose the background too</string>
     <string name="quick_wheel_transparent_text">Text icons transparent</string>
     <string name="quick_wheel_transparent_text_desc">Text icons get no plate; light text on a light wallpaper is hard to read, so adjust it with Text color</string>
     <string name="quick_wheel_initial_radius">Initial radius</string>
-    <string name="quick_wheel_initial_radius_desc">Distance from the summon point to the first ring</string>
+    <string name="quick_wheel_initial_radius_desc">Distance from the center to the first ring</string>
     <string name="quick_wheel_container_gap">Container gap</string>
-    <string name="quick_wheel_container_gap_desc">Actual gap between adjacent containers; 0 = touching</string>
+    <string name="quick_wheel_container_gap_desc">Gap between adjacent containers in the same ring; 0 = touching</string>
     <string name="quick_wheel_ring_gap">Ring gap</string>
-    <string name="quick_wheel_ring_gap_desc">Gap between ring layers when one ring overflows</string>
+    <string name="quick_wheel_ring_gap_desc">Distance between two adjacent rings</string>
     <string name="quick_wheel_column_count">Column count</string>
-    <string name="quick_wheel_column_count_desc">Containers per row; extras wrap to the next row (rect shape only)</string>
+    <string name="quick_wheel_column_count_desc">Containers per row (rect only)</string>
     <string name="quick_wheel_container_size">Container size</string>
-    <string name="quick_wheel_container_size_desc">Edge length of a single container; smaller packs the wheel tighter</string>
+    <string name="quick_wheel_container_size_desc">Container size; smaller makes the wheel more compact</string>
     <string name="quick_wheel_add_slot">+ Empty slot</string>
     <string name="quick_wheel_remove_slot">Remove last slot</string>
     <string name="quick_wheel_slot_number">Container %1$d</string>
@@ -4978,9 +4978,9 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="quick_wheel_exit_without_save">Exit without saving</string>
     <string name="quick_wheel_section_basic">Basic</string>
     <string name="quick_wheel_preview">Wheel preview</string>
-    <string name="quick_wheel_preview_desc">Show the real wheel in place to test tap and long-press</string>
+    <string name="quick_wheel_preview_desc">Opens the wheel in place so you can try its actions</string>
     <string name="quick_wheel_function">Wheel layout</string>
-    <string name="quick_wheel_function_desc">Lay the wheel out in place: drag to reorder, add or remove containers and bind actions</string>
+    <string name="quick_wheel_function_desc">Drag to reorder, add or remove containers, set actions</string>
     <string name="quick_wheel_hint_preview">Live preview · tap blank space to dismiss</string>
     <string name="quick_wheel_hint_canvas">Tap a container to edit · long-press for level 2 · drag to reorder · drop on the trash to delete</string>
     <string name="quick_wheel_level_primary">Level 1</string>
@@ -4991,17 +4991,17 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="quick_wheel_secondary_shape">Level 2 shape</string>
     <string name="quick_wheel_sector_preview">Level 1 sector preview (preview only; the real layout adapts to the gesture)</string>
     <string name="quick_wheel_container_corner">Container corner</string>
-    <string name="quick_wheel_container_corner_desc">Corner radius of each container</string>
+    <string name="quick_wheel_container_corner_desc">Corner radius of the containers</string>
     <string name="quick_wheel_icon_size">Icon size</string>
-    <string name="quick_wheel_icon_size_desc">Base size for built-in icons and text labels, as a ratio of the container; installed-app icons and gallery images always use the container size and ignore this value</string>
+    <string name="quick_wheel_icon_size_desc">Base size of built-in icons and names (share of the container); app icons and gallery images are unaffected</string>
     <string name="quick_wheel_label_size_factor">Label size factor</string>
     <string name="quick_wheel_label_size_factor_desc">Font size = base × factor</string>
     <string name="quick_wheel_builtin_icon_size">Icon size factor</string>
-    <string name="quick_wheel_builtin_icon_size_desc">Actual icon size = icon size × icon size factor (installed-app icons and gallery images use the container size as the base)</string>
+    <string name="quick_wheel_builtin_icon_size_desc">Actual icon size = base × factor</string>
     <string name="quick_wheel_offset_x">Horizontal offset</string>
-    <string name="quick_wheel_offset_x_desc">Fine-tune horizontally (positive pushes inward, negative shrinks to the edge)</string>
+    <string name="quick_wheel_offset_x_desc">Horizontal nudge; with a spread direction positive goes inward, otherwise positive goes right</string>
     <string name="quick_wheel_offset_y">Vertical offset</string>
-    <string name="quick_wheel_offset_y_desc">Fine-tune vertically (positive pushes inward, negative shrinks to the edge)</string>
+    <string name="quick_wheel_offset_y_desc">Vertical nudge; with a spread direction positive goes inward, otherwise positive goes up</string>
     <string name="quick_wheel_add_placeholder">+ Empty slot</string>
     <string name="quick_wheel_delete_container">Delete</string>
     <string name="quick_wheel_new_container">New wheel container</string>
@@ -5015,7 +5015,7 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="quick_wheel_launch_fullscreen">Full screen</string>
     <string name="quick_wheel_launch_free_window">Small window</string>
     <string name="quick_wheel_launch_gate_off">Free window is off under “Apps &amp; launching”; always full screen for now</string>
-    <string name="quick_wheel_launch_unsupported">This action does not open anything, so the open mode has no effect</string>
+    <string name="quick_wheel_launch_unsupported">No effect: this action does not open an app</string>
     <string name="quick_wheel_icon_pick_library">Pick from icon library</string>
     <string name="quick_wheel_icon_pick_app">Pick an app icon</string>
     <string name="quick_wheel_icon_pick_gallery">Pick an image from gallery</string>
@@ -5035,7 +5035,7 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="quick_wheel_hint_secondary">Long-press a container to drag it onto “Delete”. Tap a sub-ring container to edit it, tap anywhere else to go back.</string>
     <string name="quick_wheel_collapse_secondary">Collapse sub-ring</string>
     <string name="quick_wheel_sector_title">Sector (editing &amp; preview)</string>
-    <string name="quick_wheel_sector_desc">Tap the ring to enable or disable 90° sectors — the editor, every preview and the list summary show exactly what you pick. Real launches are governed by the action binding: with nothing set the sector is solved automatically from the trigger position so every container stays on screen, and you can also fix a sector manually there.</string>
+    <string name="quick_wheel_sector_desc">Pick 90° sectors to preview the shape; the real gesture picks the sector from the trigger position, or you can fix one in the action binding</string>
     <string name="quick_wheel_sector_span">%1$d°</string>
     <string name="quick_wheel_sector_dir_top_right">Upper right sector</string>
     <string name="quick_wheel_sector_dir_bottom_right">Lower right sector</string>
@@ -5048,14 +5048,14 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="quick_wheel_hud_long_press">Long press: %1$s</string>
     <string name="quick_wheel_hud_no_action">No action</string>
     <string name="quick_wheel_action_sector_auto">Auto (from trigger position)</string>
-    <string name="quick_wheel_action_sector_desc">Leave every sector unselected to let the app pick the sector automatically from where you trigger (all containers stay on screen). Pick sectors to force the primary circle to that span — it may go off screen; the sub-ring and rectangle layout stay automatic.</string>
+    <string name="quick_wheel_action_sector_desc">None selected = automatic from the trigger position; a fixed one may go off screen</string>
     <!-- 动作绑定页：呼出位置（圆心锚定方式）。 -->
     <string name="quick_wheel_action_anchor_section">Launch position</string>
     <string name="quick_wheel_action_anchor_row">Wheel centre</string>
     <string name="quick_wheel_action_anchor_follow">Position when triggered</string>
-    <string name="quick_wheel_action_anchor_follow_desc">The centre sits where your finger was when the action fired; sliding farther moves it inward, so a fuller circle fits.</string>
+    <string name="quick_wheel_action_anchor_follow_desc">Center = the finger position at trigger time; the farther you swipe, the more inward it sits</string>
     <string name="quick_wheel_action_anchor_edge">Where you pressed (recommended)</string>
-    <string name="quick_wheel_action_anchor_edge_desc">The centre sits where your finger first touched down. Stable and predictable; near the edge only half a circle fits, so the sectors shrink automatically.</string>
+    <string name="quick_wheel_action_anchor_edge_desc">Center = where you pressed, stable and predictable; near the edge the sector narrows automatically</string>
     <string name="quick_wheel_secondary_hint">Editing sub-ring of container %1$d</string>
     <string name="quick_wheel_slot_save">Save</string>
     <string name="smart_screenshot_saved">Screenshot saved to gallery</string>
