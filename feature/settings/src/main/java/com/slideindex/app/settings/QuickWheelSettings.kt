@@ -121,6 +121,13 @@ data class QuickWheelSlot(
     val iconSource: QuickWheelIconSource = QuickWheelIconSource.NONE,
     /** 图标库 key / 应用包名 / 图片路径。 */
     val iconValue: String = "",
+    /**
+     * 文字图标的**文字颜色**（ARGB）。`null` = 自动（跟随底板反色，与历史版本一致）。
+     *
+     * 只在 [iconSource] == [QuickWheelIconSource.TEXT] 时生效；其它来源保留该值但不使用，
+     * 方便用户切回来时颜色还在。
+     */
+    val textColorArgb: Int? = null,
     val name: String = "",
     val tapAction: GestureAction = GestureAction.None,
     val longPressAction: GestureAction = GestureAction.None,
@@ -683,13 +690,20 @@ object QuickWheelCodec {
             // 容器「打开方式」（单击 / 长按各一份）：**只要有一项不是默认**就写这两段，保证列位置固定；
             // 两项都是"跟随"时不写 —— 默认容器 / 旧记录因此不会多出字段，
             // 旧版本读到的名字仍是干净的名字（新版按段数判有无，与 decodeEntry 同一套约定）。
-            // 名称仍必须是 header 最后一段。
+            // ⚠️ 有文字颜色时这两段**必须写**（哪怕都是默认）：解码端靠段数（8/9/10/11）
+            // 判断后面有没有颜色段，缺了它们就会和"9 段旧记录（整容器一份打开方式）"撞车。
             if (slot.tapLaunchMode != QuickWheelLaunchMode.INHERIT ||
-                slot.longPressLaunchMode != QuickWheelLaunchMode.INHERIT
+                slot.longPressLaunchMode != QuickWheelLaunchMode.INHERIT ||
+                slot.textColorArgb != null
             ) {
                 append(slot.tapLaunchMode.name)
                 append(FIELD_SEP)
                 append(slot.longPressLaunchMode.name)
+                append(FIELD_SEP)
+            }
+            // 文字颜色（8 位十六进制 ARGB）：只在设置过时写，名称仍必须是 header 最后一段。
+            slot.textColorArgb?.let { argb ->
+                append(Integer.toHexString(argb).uppercase().padStart(8, '0'))
                 append(FIELD_SEP)
             }
             // 名称放 header 最后
@@ -711,7 +725,8 @@ object QuickWheelCodec {
         val firstSep = raw.indexOf(ACTION_SEP)
         val lastSep = raw.lastIndexOf(ACTION_SEP)
         if (firstSep <= 0 || lastSep <= firstSep) return null
-        val header = raw.substring(0, firstSep).split(FIELD_SEP, limit = 10)
+        // limit = 11：最多 11 段（颜色段会把名称顶到第 11 段）；多出来的分隔符并进名称，和旧写法一致。
+        val header = raw.substring(0, firstSep).split(FIELD_SEP, limit = 11)
         if (header.size < 8) return null
         val wheelId = header[0].takeIf { it.isNotBlank() } ?: return null
         val path = header[1].takeIf { it.isNotBlank() } ?: return null
@@ -719,6 +734,7 @@ object QuickWheelCodec {
         val longRaw = raw.substring(lastSep + 1)
         // 第 3 列（header[2]）：2 = 用户主动留出的空位（placeholder）；1 = 历史遗留空容器（按普通空位处理，会被 normalized 清掉）。
         // 第 8 段起（header[7..]）只有"容器自定义了打开方式"时才有：
+        // 11 段 = 两段打开方式 + 文字颜色（header[9]）+ 名称（第 11 段）；
         // 10 段 = 单击 / 长按各一份打开方式，名称顺延到第 10 段；
         //  9 段 = 早期"整容器一份打开方式"的记录（两项同值，名称在第 9 段）；
         //  8 段 = 旧记录（两项均为"跟随"）。
@@ -751,7 +767,14 @@ object QuickWheelCodec {
             longPressTrigger = QuickWheelLongPressTrigger.fromName(header[6]),
             tapLaunchMode = tapLaunchMode,
             longPressLaunchMode = longPressLaunchMode,
+            // 第 10 段（header[9]）只在 11 段记录里存在 = 文字颜色；旧记录一律 null（= 自动）。
+            textColorArgb = if (header.size >= 11) {
+                header[9].toLongOrNull(16)?.toInt()
+            } else {
+                null
+            },
             name = when {
+                header.size >= 11 -> header[10]
                 header.size >= 10 -> header[9]
                 hasLaunchMode -> header[8]
                 else -> header[7]

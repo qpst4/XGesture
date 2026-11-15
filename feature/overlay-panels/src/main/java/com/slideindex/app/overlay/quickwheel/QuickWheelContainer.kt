@@ -350,9 +350,10 @@ fun QuickWheelSlotIcon(
                 }
 
             // 文字图标：把用户输入的文字直接当图标绘制（内置类，走 builtin 尺寸）。
+            // 用户给文字选了颜色就用它（不再按底板反色）；null = 自动，沿用容器 tint。
             slot.iconSource == QuickWheelIconSource.TEXT && slot.iconValue.isNotBlank() -> Text(
                 text = slot.iconValue,
-                color = tint,
+                color = slot.textColorArgb?.let { Color(it) } ?: tint,
                 fontSize = (builtinDp.value * 0.62f).sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,

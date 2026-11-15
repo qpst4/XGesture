@@ -4900,6 +4900,9 @@
     <string name="quick_wheel_icon_pick_text">أيقونة نصية</string>
     <string name="quick_wheel_text_icon_title">أيقونة نصية</string>
     <string name="quick_wheel_text_icon_hint">أدخل النص المراد عرضه</string>
+    <string name="quick_wheel_text_icon_color">لون النص</string>
+    <string name="quick_wheel_text_icon_color_auto">تلقائي</string>
+    <string name="quick_wheel_text_icon_color_custom">مخصص…</string>
     <string name="quick_wheel_pick_app">اختيار تطبيق</string>
     <string name="quick_wheel_hint_secondary">اضغط مطولاً على حاوية واسحبها إلى «حذف». وانقر على حاوية الحلقة الفرعية لتحريرها، أو انقر في أي مكان آخر للرجوع.</string>
     <string name="quick_wheel_collapse_secondary">طيّ الحلقة الفرعية</string>

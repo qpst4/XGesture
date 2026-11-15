@@ -4895,6 +4895,9 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="quick_wheel_icon_pick_text">icono de texto</string>
     <string name="quick_wheel_text_icon_title">icono de texto</string>
     <string name="quick_wheel_text_icon_hint">Introduzca el texto para mostrar</string>
+    <string name="quick_wheel_text_icon_color">Color del texto</string>
+    <string name="quick_wheel_text_icon_color_auto">Automático</string>
+    <string name="quick_wheel_text_icon_color_custom">Personalizado…</string>
     <string name="quick_wheel_pick_app">Elija la aplicación</string>
     <string name="quick_wheel_hint_secondary">Mantener presionadoun contenedor para arrastrarlo a “Delete”. Pulsa un contenedor sub-ring para editarlo, pulsa en cualquier otro lugar para volver.</string>
     <string name="quick_wheel_collapse_secondary">Contraer el subanillo</string>

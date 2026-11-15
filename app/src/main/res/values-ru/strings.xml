@@ -5011,6 +5011,9 @@
     <string name="quick_wheel_icon_pick_text">Текстовый значок</string>
     <string name="quick_wheel_text_icon_title">Текстовый значок</string>
     <string name="quick_wheel_text_icon_hint">Введите отображаемый текст</string>
+    <string name="quick_wheel_text_icon_color">Цвет текста</string>
+    <string name="quick_wheel_text_icon_color_auto">Авто</string>
+    <string name="quick_wheel_text_icon_color_custom">Другой…</string>
     <string name="quick_wheel_pick_app">Выбрать приложение</string>
     <string name="quick_wheel_hint_secondary">Долгое нажатие на контейнер — перетащить его на «Удалить». Нажмите на контейнер подкольца для редактирования, нажмите в другом месте для возврата.</string>
     <string name="quick_wheel_collapse_secondary">Свернуть подкольцо</string>

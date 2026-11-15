@@ -5024,6 +5024,9 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="quick_wheel_icon_pick_text">Text icon</string>
     <string name="quick_wheel_text_icon_title">Text icon</string>
     <string name="quick_wheel_text_icon_hint">Enter the text to show</string>
+    <string name="quick_wheel_text_icon_color">Text color</string>
+    <string name="quick_wheel_text_icon_color_auto">Auto</string>
+    <string name="quick_wheel_text_icon_color_custom">Custom…</string>
     <string name="quick_wheel_pick_app">Choose app</string>
     <string name="quick_wheel_hint_secondary">Long-press a container to drag it onto “Delete”. Tap a sub-ring container to edit it, tap anywhere else to go back.</string>
     <string name="quick_wheel_collapse_secondary">Collapse sub-ring</string>

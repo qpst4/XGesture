@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -45,6 +46,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -72,6 +75,7 @@ import com.slideindex.app.settings.withoutLaunchWindowMode
 import com.slideindex.app.shell.ShellCommandLabelResolver
 import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
 import com.slideindex.app.ui.gesturepicker.launchShortcutDisplayLabel
+import com.slideindex.app.ui.miuix.MiuixColorPickerDialog
 import com.slideindex.app.ui.miuix.MiuixSettingsScreenScaffold
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.picker.ActivityShortcutPickActivityScreen
@@ -89,6 +93,21 @@ import kotlinx.coroutines.withContext
 
 /** 容器编辑页里正在配置的动作槽位。 */
 enum class QuickWheelSlotActionTarget { TAP, LONG }
+
+/**
+ * 文字图标的预设色（白 / 黑 / 红 / 橙 / 绿 / 蓝）。
+ *
+ * 只是快捷入口：任意色走「自定义…」（Miuix 色轮）。用固定 ARGB 而不是主题色，
+ * 换主题时用户挑的颜色不会被悄悄改掉。
+ */
+private val QuickWheelTextColorPresets = listOf(
+    0xFFFFFFFF.toInt(),
+    0xFF000000.toInt(),
+    0xFFE53935.toInt(),
+    0xFFFB8C00.toInt(),
+    0xFF43A047.toInt(),
+    0xFF1E88E5.toInt(),
+)
 
 /** 容器编辑页的页内子页（动作选择复用现成页面，结果写进本地草稿）。 */
 internal sealed interface QuickWheelSlotEditorPage {
@@ -493,17 +512,70 @@ fun QuickWheelSlotEditorScreen(
         var textInput by remember {
             mutableStateOf(if (draft.iconSource == QuickWheelIconSource.TEXT) draft.iconValue else "")
         }
+        // 文字颜色：null = 自动（跟底板反色）。同样只在"当前是文字图标"时回填。
+        var textColor by remember {
+            mutableStateOf(draft.textColorArgb.takeIf { draft.iconSource == QuickWheelIconSource.TEXT })
+        }
+        var colorPickerOpen by remember { mutableStateOf(false) }
         AlertDialog(
             onDismissRequest = { showIconLibrary = false },
             title = { Text(stringResource(R.string.quick_wheel_text_icon_title)) },
             text = {
-                OutlinedTextField(
-                    value = textInput,
-                    onValueChange = { textInput = it },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.quick_wheel_text_icon_hint)) },
-                )
+                Column {
+                    OutlinedTextField(
+                        value = textInput,
+                        onValueChange = { textInput = it },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.quick_wheel_text_icon_hint)) },
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.quick_wheel_text_icon_color),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        FilterChip(
+                            selected = textColor == null,
+                            onClick = { textColor = null },
+                            label = { Text(stringResource(R.string.quick_wheel_text_icon_color_auto)) },
+                        )
+                        Spacer(Modifier.weight(1f))
+                        TextButton(onClick = { colorPickerOpen = true }) {
+                            Text(stringResource(R.string.quick_wheel_text_icon_color_custom))
+                        }
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        QuickWheelTextColorPresets.forEach { preset ->
+                            val selected = textColor == preset
+                            Box(
+                                modifier = Modifier
+                                    .size(26.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(preset))
+                                    .border(
+                                        width = if (selected) 3.dp else 1.dp,
+                                        color = if (selected) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.outlineVariant
+                                        },
+                                        shape = CircleShape,
+                                    )
+                                    .clickable { textColor = preset },
+                            )
+                        }
+                    }
+                }
             },
             confirmButton = {
                 TextButton(
@@ -512,6 +584,7 @@ fun QuickWheelSlotEditorScreen(
                             it.copy(
                                 iconSource = QuickWheelIconSource.TEXT,
                                 iconValue = textInput.trim(),
+                                textColorArgb = textColor,
                             )
                         }
                         showIconLibrary = false
@@ -528,6 +601,18 @@ fun QuickWheelSlotEditorScreen(
                 }
             },
         )
+        if (colorPickerOpen) {
+            MiuixColorPickerDialog(
+                title = stringResource(R.string.quick_wheel_text_icon_color),
+                // 初始色：已选的色；"自动"时给个可见的起点（当前主题的正文色）。
+                initialColorArgb = textColor ?: MaterialTheme.colorScheme.onSurface.toArgb(),
+                onDismiss = { colorPickerOpen = false },
+                onConfirm = { picked ->
+                    textColor = picked
+                    colorPickerOpen = false
+                },
+            )
+        }
     }
 
     if (showAppPicker) {
@@ -674,6 +759,8 @@ private fun QuickWheelSlotSettingsPage(
                                                 it.copy(
                                                     iconSource = QuickWheelIconSource.NONE,
                                                     iconValue = "",
+                                                    // 清图标时一并清掉文字颜色，免得下次设文字图标时带出旧颜色。
+                                                    textColorArgb = null,
                                                 )
                                             }
                                         },
@@ -958,12 +1045,13 @@ private fun QuickWheelIconNameRow(
                     showBackground = false,
                 )
 
-                // 文字图标：预览框里直接显示文字。
+                // 文字图标：预览框里直接显示文字（有自定义色就照它显示，与真机一致）。
                 preview.iconSource == QuickWheelIconSource.TEXT && preview.iconValue.isNotBlank() ->
                     Text(
                         text = preview.iconValue,
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = preview.textColorArgb?.let { Color(it) }
+                            ?: MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                     )
 

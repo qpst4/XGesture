@@ -4896,6 +4896,9 @@
     <string name="quick_wheel_icon_pick_text">テキストアイコン</string>
     <string name="quick_wheel_text_icon_title">テキストアイコン</string>
     <string name="quick_wheel_text_icon_hint">表示するテキストを入力</string>
+    <string name="quick_wheel_text_icon_color">文字の色</string>
+    <string name="quick_wheel_text_icon_color_auto">自動</string>
+    <string name="quick_wheel_text_icon_color_custom">カスタム…</string>
     <string name="quick_wheel_pick_app">アプリを選択</string>
     <string name="quick_wheel_hint_secondary">コンテナを長押しして「削除」へドラッグします。サブリングのコンテナをタップすると編集、それ以外をタップすると戻ります。</string>
     <string name="quick_wheel_collapse_secondary">サブリングを閉じる</string>

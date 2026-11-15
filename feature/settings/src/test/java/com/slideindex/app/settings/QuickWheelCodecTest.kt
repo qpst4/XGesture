@@ -3,6 +3,7 @@ package com.slideindex.app.settings
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.LaunchWindowMode
+import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.overlay.layout.QuickWheelOpenAnimation
 import com.slideindex.app.overlay.layout.QuickWheelLayoutEngine
 import com.slideindex.app.overlay.layout.QuickWheelShape
@@ -219,6 +220,72 @@ class QuickWheelCodecTest {
         val decoded = roundTrip(listOf(sampleWheel())).single()
         assertTrue(decoded.slots[1].placeholder)
         assertTrue(decoded.slots[0].subSlots[1].placeholder)
+    }
+
+    // ── 文字图标颜色（第 11 段，旧记录没有）────────────────
+
+    @Test
+    fun roundTrip_preservesTextIconColor() {
+        val wheel = QuickWheel(
+            id = "w",
+            slots = listOf(
+                QuickWheelSlot(
+                    iconSource = QuickWheelIconSource.TEXT,
+                    iconValue = "回",
+                    name = "返回",
+                    textColorArgb = 0xFF43A047.toInt(),
+                ),
+            ),
+        )
+        val decoded = roundTrip(listOf(wheel)).single().slots.single()
+        assertEquals(0xFF43A047.toInt(), decoded.textColorArgb)
+        assertEquals("回", decoded.iconValue)
+        assertEquals("返回", decoded.name)
+    }
+
+    @Test
+    fun encodeSlot_withColorWritesLaunchModesAndKeepsNameLast() {
+        // 有颜色时必须补写两段打开方式（哪怕都是默认），否则 9 段 / 10 段的旧记录判定会错位。
+        val slot = QuickWheelSlot(
+            iconSource = QuickWheelIconSource.TEXT,
+            iconValue = "回",
+            name = "返回",
+            textColorArgb = 0xFFE53935.toInt(),
+        )
+        val raw = QuickWheelCodec.encodeSlot("w", "0", slot)
+        val header = raw.substringBefore('\u001E')
+        assertEquals(11, header.split('\u001D').size)
+        assertEquals("返回", header.substringAfterLast('\u001D'))
+
+        val decoded = QuickWheelCodec.decodeSlot(raw)!!.third
+        assertEquals("返回", decoded.name)
+        assertEquals(0xFFE53935.toInt(), decoded.textColorArgb)
+        assertEquals(QuickWheelLaunchMode.INHERIT, decoded.tapLaunchMode)
+    }
+
+    @Test
+    fun decodeSlot_legacyNineFieldRecordStaysUncolored() {
+        // 9 段旧记录（整容器一份打开方式 + 名称）读回：名称不能错位，颜色必须是 null（= 自动）。
+        val legacy = listOf("w", "0", "0", "TEXT", "回", "ON_RELEASE", "ON_RELEASE", "ON_TOUCH", "返回")
+            .joinToString("\u001D") +
+            "\u001E" + QuickLauncherItemCodec.encodeActionPayload(GestureAction.None) +
+            "\u001E" + QuickLauncherItemCodec.encodeActionPayload(GestureAction.None)
+        val decoded = QuickWheelCodec.decodeSlot(legacy)!!.third
+        assertEquals("返回", decoded.name)
+        assertEquals("回", decoded.iconValue)
+        assertNull(decoded.textColorArgb)
+    }
+
+    @Test
+    fun decodeSlot_uncoloredRoundTripHasNullColor() {
+        val slot = QuickWheelSlot(
+            iconSource = QuickWheelIconSource.TEXT,
+            iconValue = "回",
+            name = "返回",
+        )
+        val decoded = QuickWheelCodec.decodeSlot(QuickWheelCodec.encodeSlot("w", "0", slot))!!.third
+        assertNull(decoded.textColorArgb)
+        assertEquals("返回", decoded.name)
     }
 
     @Test
