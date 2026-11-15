@@ -229,6 +229,8 @@ data class QuickWheel(
         iconSizePercent = 50,
         labelSizeFactorPercent = 38,
         builtinIconSizePercent = 100,
+        // 出厂 0：轮盘紧贴触点，与屏幕边缘的距离完全由用户调偏移量决定
+        // （引擎没有隐藏的安全边距，容器的物理边界就是屏幕）。
         offsetXDp = 0f,
         offsetYDp = 0f,
         columnCount = 5,
@@ -250,6 +252,7 @@ data class QuickWheel(
         iconSizePercent = 50,
         labelSizeFactorPercent = 38,
         builtinIconSizePercent = 100,
+        // 与圆形同一口径：出厂 0，留白完全由用户的偏移参数决定。
         offsetXDp = 0f,
         offsetYDp = 0f,
         columnCount = 5,

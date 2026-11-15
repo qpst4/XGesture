@@ -222,6 +222,17 @@ class QuickWheelCodecTest {
     }
 
     @Test
+    fun defaultStyles_haveNoOffsetOnEitherLevel() {
+        // 出厂偏移全部 0：轮盘紧贴触点，与屏幕边缘的距离完全交给用户调。
+        // 引擎也没有隐藏的安全边距（ADAPTIVE_MARGIN_DP = 0），默认值就是"所见即所得"。
+        val wheel = QuickWheel(id = "w").normalized()
+        assertEquals(0f, wheel.primaryStyle.offsetXDp, 0.01f)
+        assertEquals(0f, wheel.primaryStyle.offsetYDp, 0.01f)
+        assertEquals(0f, wheel.secondaryStyle.offsetXDp, 0.01f)
+        assertEquals(0f, wheel.secondaryStyle.offsetYDp, 0.01f)
+    }
+
+    @Test
     fun roundTrip_preservesActionPayloadContainingSeparators() {
         // 载荷故意混入结构分隔符，验证它们不会破坏记录切分。
         // ⚠️ 不含 `\u001D`：它已被动作正文层用作「启动应用」的启动形态分隔符
