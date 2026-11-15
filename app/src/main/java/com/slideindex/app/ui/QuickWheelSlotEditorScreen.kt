@@ -487,7 +487,12 @@ fun QuickWheelSlotEditorScreen(
 
     if (showIconLibrary) {
         // 「文字图标」：用户输入的文字直接作为容器图标（存放在 iconValue）。
-        var textInput by remember { mutableStateOf(draft.iconValue) }
+        // ⚠️ 初值只在"当前本来就是文字图标"时回填自己的文字：
+        // 应用包名（APP_ICON）/ 图库路径（GALLERY）/ 字体库 key（ICON_LIBRARY）都不是用户想显示的文字，
+        // 带进来只会让人先删一段无关内容。
+        var textInput by remember {
+            mutableStateOf(if (draft.iconSource == QuickWheelIconSource.TEXT) draft.iconValue else "")
+        }
         AlertDialog(
             onDismissRequest = { showIconLibrary = false },
             title = { Text(stringResource(R.string.quick_wheel_text_icon_title)) },
@@ -511,6 +516,8 @@ fun QuickWheelSlotEditorScreen(
                         }
                         showIconLibrary = false
                     },
+                    // 空白文字存下去等于"图标消失"，直接禁用更直白（想清空就取消）。
+                    enabled = textInput.isNotBlank(),
                 ) {
                     Text(stringResource(R.string.quick_wheel_slot_save))
                 }
