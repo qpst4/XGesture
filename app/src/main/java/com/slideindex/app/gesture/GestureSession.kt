@@ -125,6 +125,16 @@ class GestureSession(
 
     private var lastRawX = 0f
     private var lastRawY = 0f
+
+    /**
+     * 本次手势的**按下点**（raw 坐标）。
+     *
+     * 轮盘「按下的位置」锚点用：它稳定、不随滑动距离 / 触发模式漂移。
+     */
+    internal var sessionTouchDownRawX = 0f
+        private set
+    internal var sessionTouchDownRawY = 0f
+        private set
     private var lastLocalX = 0f
     private var lastLocalY = 0f
 
@@ -370,6 +380,8 @@ class GestureSession(
         sessionContinuousPick.reset()
         lastRawX = rawX
         lastRawY = rawY
+        sessionTouchDownRawX = rawX
+        sessionTouchDownRawY = rawY
         lastLocalX = localX
         lastLocalY = localY
         OverlayService.captureGestureForegroundPackage()
@@ -706,7 +718,10 @@ class GestureSession(
                     externalTracking = false,
                     shape = action.shape,
                     manualSectorMask = action.manualSectorMask,
-                    anchorMode = action.anchorMode
+                    anchorMode = action.anchorMode,
+                    // 「按下的位置」锚点：用本次手势的 DOWN 点，而不是处理动作时的当前位置。
+                    touchDownRawX = sessionTouchDownRawX,
+                    touchDownRawY = sessionTouchDownRawY,
                 )
             }
             GestureAction.HolographicLauncher -> {

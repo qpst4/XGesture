@@ -4914,10 +4914,10 @@
     <string name="quick_wheel_action_sector_desc">すべてのセクターを未選択にすると、トリガーした位置からアプリが自動でセクターを選びます（すべてのコンテナが画面内に収まります）。セクターを選ぶとプライマリ円形をその範囲に固定しますが、画面外に出ることがあります。サブリングと矩形の配置は自動のままです。</string>
     <string name="quick_wheel_action_anchor_section">表示位置</string>
     <string name="quick_wheel_action_anchor_row">ホイールの中心</string>
-    <string name="quick_wheel_action_anchor_follow">指に追従（トリガー位置）</string>
-    <string name="quick_wheel_action_anchor_follow_desc">動作を起こしたときの指の位置を中心にします。ホイールは指の近くに表示され、セクターは自動で計算されます。</string>
-    <string name="quick_wheel_action_anchor_edge">画面端に固定</string>
-    <string name="quick_wheel_action_anchor_edge_desc">中心を最も近い画面端に固定し（その端に沿った位置は維持）、ホイールが端から広がるようにします。全周は自動的に半円や四分円に絞られます。</string>
+    <string name="quick_wheel_action_anchor_follow">成立時の指の位置</string>
+    <string name="quick_wheel_action_anchor_follow_desc">動作が成立した瞬間の指の位置を中心にします。遠くへスライドするほど中心が内側になり、円を広く取れます。</string>
+    <string name="quick_wheel_action_anchor_edge">押し始めた位置（推奨）</string>
+    <string name="quick_wheel_action_anchor_edge_desc">指を最初に置いた位置を中心にします。位置が安定して予測しやすい一方、画面端では半円しか入らないためセクターは自動的に絞られます。</string>
     <string name="quick_wheel_secondary_hint">コンテナ %1$d のサブリングを編集しています</string>
     <string name="quick_wheel_slot_save">保存</string>
     <string name="gesture_action_screen_control">タッチパッド</string>

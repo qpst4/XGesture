@@ -191,6 +191,15 @@ class QuickWheelLayoutEngineTest {
         assertEquals(100f, QuickWheelLayoutEngine.mapVirtualAngleDeg(0b0100, 10f), 0.01f)
     }
 
+    @Test
+    fun mapVirtualAngleDeg_wrappedTopHalfStartsAtWest() {
+        // {3,0}（上半圆）跨 0°：必须从扇区 3 起算（180° = 正西），沿弧经过正上方到正东，
+        // 不能按索引升序从扇区 0 起算（那会把同环容器劈成"右上 + 左上"两段）。
+        assertEquals(180f, QuickWheelLayoutEngine.mapVirtualAngleDeg(0b1001, 0f), 0.01f)
+        assertEquals(270f, QuickWheelLayoutEngine.mapVirtualAngleDeg(0b1001, 90f), 0.01f)
+        assertEquals(360f, QuickWheelLayoutEngine.mapVirtualAngleDeg(0b1001, 180f), 0.01f)
+    }
+
     // ── 自适应求解（真实调用按触发位置选扇区 / 矩形基准角）──────
 
     /** 用"逻辑像素"模拟一台 400×800 的手机：density = 1，默认样式即照抄真实手感。 */
@@ -1145,6 +1154,227 @@ class QuickWheelLayoutEngineTest {
         )
         assertEquals(580f, layout.centerX, 0.01f)
         assertEquals(985f, layout.centerY, 0.01f)
+    }
+
+    // ── 偏移的镜像（正值 = 沿扩散方向向屏内）──────────────────
+
+    /** 一组容器中心点的均值：用来观察"整体被偏移推了多少"。 */
+    private fun meanCenter(
+        mask: Int,
+        anchorX: Float,
+        anchorY: Float,
+        offsetXDp: Float = 0f,
+        offsetYDp: Float = 0f,
+        shape: QuickWheelShape = QuickWheelShape.CIRCLE,
+        rectCorner: QuickWheelRectCorner = QuickWheelRectCorner.CENTER_TOP,
+    ): Pair<Float, Float> {
+        val slots = QuickWheelLayoutEngine.layoutRing(
+            slotCount = 4,
+            shape = shape,
+            style = defaultStyle.copy(offsetXDp = offsetXDp, offsetYDp = offsetYDp),
+            anchorX = anchorX,
+            anchorY = anchorY,
+            density = 1f,
+            availableWidthPx = 1080f,
+            sectorMask = mask,
+            rectCorner = rectCorner,
+        )
+        assertTrue("应有容器", slots.isNotEmpty())
+        return slots.map { it.centerX }.average().toFloat() to
+            slots.map { it.centerY }.average().toFloat()
+    }
+
+    @Test
+    fun offsetX_pushesInwardFromBothEdges() {
+        // 右半圆 → 从左边呼出：正值向右（入屏）。
+        val leftBase = meanCenter(0b0011, anchorX = 0f, anchorY = 960f)
+        val leftShift = meanCenter(0b0011, anchorX = 0f, anchorY = 960f, offsetXDp = 20f)
+        assertEquals(20f, leftShift.first - leftBase.first, 0.01f)
+
+        // 左半圆 → 从右边呼出：同一个正值必须向左（同样是入屏），不能推出屏外。
+        val rightBase = meanCenter(0b1100, anchorX = 1080f, anchorY = 960f)
+        val rightShift = meanCenter(0b1100, anchorX = 1080f, anchorY = 960f, offsetXDp = 20f)
+        assertEquals(-20f, rightShift.first - rightBase.first, 0.01f)
+    }
+
+    @Test
+    fun offsetY_pushesInwardFromBothEdges() {
+        // 下半圆（弧朝下）→ 从上方呼出：正值向下。
+        val topBase = meanCenter(0b0110, anchorX = 540f, anchorY = 0f)
+        val topShift = meanCenter(0b0110, anchorX = 540f, anchorY = 0f, offsetYDp = 20f)
+        assertEquals(20f, topShift.second - topBase.second, 0.01f)
+
+        // 上半圆（弧朝上）→ 从下方呼出：同一个正值必须向上。
+        val bottomBase = meanCenter(0b1001, anchorX = 540f, anchorY = 1920f)
+        val bottomShift = meanCenter(0b1001, anchorX = 540f, anchorY = 1920f, offsetYDp = 20f)
+        assertEquals(-20f, bottomShift.second - bottomBase.second, 0.01f)
+    }
+
+    @Test
+    fun offset_quarterMirrorsBothAxes() {
+        // 左下 90°（0b0100）→ 锚点在右上角：正值应向左、向下（都朝屏内）。
+        val base = meanCenter(0b0100, anchorX = 1080f, anchorY = 0f)
+        val shift = meanCenter(0b0100, anchorX = 1080f, anchorY = 0f, offsetXDp = 20f, offsetYDp = 20f)
+        assertEquals(-20f, shift.first - base.first, 0.01f)
+        assertEquals(20f, shift.second - base.second, 0.01f)
+    }
+
+    @Test
+    fun offset_fullCircleKeepsScreenAxes() {
+        // 整圆没有扩散方向 → 保持旧行为：+X 向右、+Y 向下。
+        val base = meanCenter(QuickWheelLayoutEngine.SECTOR_ALL, anchorX = 540f, anchorY = 960f)
+        val shift = meanCenter(
+            QuickWheelLayoutEngine.SECTOR_ALL,
+            anchorX = 540f,
+            anchorY = 960f,
+            offsetXDp = 20f,
+            offsetYDp = 20f,
+        )
+        assertEquals(20f, shift.first - base.first, 0.01f)
+        assertEquals(20f, shift.second - base.second, 0.01f)
+    }
+
+    @Test
+    fun offset_rectCornersMirrorBySpreadDirection() {
+        // 右下角贴点（向左上铺开）：正值应向左、向上。
+        val base = meanCenter(
+            mask = QuickWheelLayoutEngine.SECTOR_ALL,
+            anchorX = 1080f,
+            anchorY = 1920f,
+            shape = QuickWheelShape.RECT,
+            rectCorner = QuickWheelRectCorner.BOTTOM_RIGHT,
+        )
+        val shift = meanCenter(
+            mask = QuickWheelLayoutEngine.SECTOR_ALL,
+            anchorX = 1080f,
+            anchorY = 1920f,
+            offsetXDp = 20f,
+            offsetYDp = 20f,
+            shape = QuickWheelShape.RECT,
+            rectCorner = QuickWheelRectCorner.BOTTOM_RIGHT,
+        )
+        assertEquals(-20f, shift.first - base.first, 0.01f)
+        assertEquals(-20f, shift.second - base.second, 0.01f)
+
+        // 左上角贴点（向右下铺开）与历史布局一致：+X 向右、+Y 向下。
+        val topLeftBase = meanCenter(
+            mask = QuickWheelLayoutEngine.SECTOR_ALL,
+            anchorX = 0f,
+            anchorY = 0f,
+            shape = QuickWheelShape.RECT,
+            rectCorner = QuickWheelRectCorner.TOP_LEFT,
+        )
+        val topLeftShift = meanCenter(
+            mask = QuickWheelLayoutEngine.SECTOR_ALL,
+            anchorX = 0f,
+            anchorY = 0f,
+            offsetXDp = 20f,
+            offsetYDp = 20f,
+            shape = QuickWheelShape.RECT,
+            rectCorner = QuickWheelRectCorner.TOP_LEFT,
+        )
+        assertEquals(20f, topLeftShift.first - topLeftBase.first, 0.01f)
+        assertEquals(20f, topLeftShift.second - topLeftBase.second, 0.01f)
+    }
+
+    @Test
+    fun layoutCenter_usesSameOffsetMirrorAsRing() {
+        // 左半圆 → 从右边呼出：中心大圆必须跟外围容器一起向**左**推，否则会脱队。
+        val style = defaultStyle.copy(offsetXDp = 30f, offsetYDp = 20f)
+        val center = QuickWheelLayoutEngine.layoutCenter(
+            anchorX = 1080f,
+            anchorY = 960f,
+            density = 1f,
+            primaryStyle = style,
+            primaryShape = QuickWheelShape.CIRCLE,
+            sectorMask = 0b1100,
+        )
+        assertEquals(1050f, center.centerX, 0.01f)
+        assertEquals(980f, center.centerY, 0.01f)
+    }
+
+    @Test
+    fun positiveOffset_movesWheelCloserToScreenCenterForEveryHalfAndQuarter() {
+        // 预览与真机都走同一条路径：任何半圆 / 90°，正偏移都应让整体更靠近屏幕中心。
+        val screenWidth = 1080f
+        val screenHeight = 1920f
+        listOf(0b0001, 0b0010, 0b0100, 0b1000, 0b0011, 0b0110, 0b1100, 0b1001).forEach { mask ->
+            val (anchorX, anchorY) = QuickWheelLayoutEngine.theoreticalAnchorForMask(
+                sectorMask = mask,
+                screenWidthPx = screenWidth,
+                screenHeightPx = screenHeight,
+            )
+            val base = meanCenter(mask, anchorX, anchorY)
+            val shifted = meanCenter(mask, anchorX, anchorY, offsetXDp = 40f, offsetYDp = 40f)
+            val distanceBefore = hypot(
+                (base.first - screenWidth / 2f).toDouble(),
+                (base.second - screenHeight / 2f).toDouble(),
+            )
+            val distanceAfter = hypot(
+                (shifted.first - screenWidth / 2f).toDouble(),
+                (shifted.second - screenHeight / 2f).toDouble(),
+            )
+            assertTrue(
+                "掩码 $mask 正偏移后应更靠近屏幕中心：$distanceBefore → $distanceAfter",
+                distanceAfter < distanceBefore - 1.0,
+            )
+        }
+    }
+
+    // ── 左右 / 上下镜像（同一轮盘换一侧呼出，顺序必须镜像）──
+
+    private fun ringOf(mask: Int, anchorX: Float, anchorY: Float): List<QuickWheelPlacedSlot> =
+        QuickWheelLayoutEngine.layoutRing(
+            slotCount = 5,
+            shape = QuickWheelShape.CIRCLE,
+            style = defaultStyle,
+            anchorX = anchorX,
+            anchorY = anchorY,
+            density = 1f,
+            availableWidthPx = 1080f,
+            sectorMask = mask,
+        )
+
+    @Test
+    fun circle_leftAndRightHalvesAreMirrored() {
+        // 右半圆（左边缘呼出）vs 左半圆（右边缘呼出）：X 关于屏幕中线镜像，Y 一致。
+        val right = ringOf(0b0011, anchorX = 0f, anchorY = 960f)
+        val left = ringOf(0b1100, anchorX = 1080f, anchorY = 960f)
+        right.zip(left).forEachIndexed { i, (a, b) ->
+            assertEquals("slot $i X 应关于屏幕中线镜像", 1080f - a.centerX, b.centerX, 0.01f)
+            assertEquals("slot $i Y 应一致", a.centerY, b.centerY, 0.01f)
+        }
+    }
+
+    @Test
+    fun circle_topAndBottomHalvesAreMirrored() {
+        // 下半圆（上边缘呼出）vs 上半圆（下边缘呼出）：Y 关于屏幕中线镜像，X 一致。
+        val bottom = ringOf(0b0110, anchorX = 540f, anchorY = 0f)
+        val top = ringOf(0b1001, anchorX = 540f, anchorY = 1920f)
+        bottom.zip(top).forEachIndexed { i, (a, b) ->
+            assertEquals("slot $i X 应一致", a.centerX, b.centerX, 0.01f)
+            assertEquals("slot $i Y 应关于屏幕中线镜像", 1920f - a.centerY, b.centerY, 0.01f)
+        }
+    }
+
+    @Test
+    fun circle_leftAndRightQuartersAreMirrored() {
+        // 右下 90°（左上角呼出）vs 左下 90°（右上角呼出）。
+        val right = ringOf(0b0010, anchorX = 0f, anchorY = 0f)
+        val left = ringOf(0b0100, anchorX = 1080f, anchorY = 0f)
+        right.zip(left).forEachIndexed { i, (a, b) ->
+            assertEquals("slot $i X 应镜像", 1080f - a.centerX, b.centerX, 0.01f)
+            assertEquals("slot $i Y 应一致", a.centerY, b.centerY, 0.01f)
+        }
+    }
+
+    @Test
+    fun circle_halfCircleStartsFromTopOnBothSides() {
+        // 用户可感知的结果：两侧都是"第 0 个在上、往后往下"，而不是一侧从上往下、另一侧从下往上。
+        listOf(0b0011 to 0f, 0b1100 to 1080f).forEach { (mask, anchorX) ->
+            val slots = ringOf(mask, anchorX = anchorX, anchorY = 960f)
+            assertTrue("mask=$mask 的顺序应从上方开始", slots[0].centerY < slots[1].centerY)
+        }
     }
 
     @Test

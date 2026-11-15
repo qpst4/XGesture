@@ -5045,10 +5045,10 @@ or revoke permanent Root for Shell in APatch.</string>
     <!-- 动作绑定页：呼出位置（圆心锚定方式）。 -->
     <string name="quick_wheel_action_anchor_section">Launch position</string>
     <string name="quick_wheel_action_anchor_row">Wheel centre</string>
-    <string name="quick_wheel_action_anchor_follow">Follow finger (trigger point)</string>
-    <string name="quick_wheel_action_anchor_follow_desc">The centre sits where your finger was when the action fired; the wheel appears next to your finger and the sector is solved automatically.</string>
-    <string name="quick_wheel_action_anchor_edge">Snap to screen edge</string>
-    <string name="quick_wheel_action_anchor_edge_desc">The centre is pinned to the nearest screen edge (keeping its position along that edge), so the wheel grows out of the edge; a full circle is narrowed automatically to a half or a quarter.</string>
+    <string name="quick_wheel_action_anchor_follow">Position when triggered</string>
+    <string name="quick_wheel_action_anchor_follow_desc">The centre sits where your finger was when the action fired; sliding farther moves it inward, so a fuller circle fits.</string>
+    <string name="quick_wheel_action_anchor_edge">Where you pressed (recommended)</string>
+    <string name="quick_wheel_action_anchor_edge_desc">The centre sits where your finger first touched down. Stable and predictable; near the edge only half a circle fits, so the sectors shrink automatically.</string>
     <string name="quick_wheel_secondary_hint">Editing sub-ring of container %1$d</string>
     <string name="quick_wheel_slot_save">Save</string>
     <string name="smart_screenshot_saved">Screenshot saved to gallery</string>

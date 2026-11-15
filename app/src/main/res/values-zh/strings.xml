@@ -5064,10 +5064,10 @@ adb 模式应返回 uid=2000。
     <!-- 动作绑定页：呼出位置（圆心锚定方式）。 -->
     <string name="quick_wheel_action_anchor_section">呼出位置</string>
     <string name="quick_wheel_action_anchor_row">圆心位置</string>
-    <string name="quick_wheel_action_anchor_follow">跟手（触发点）</string>
-    <string name="quick_wheel_action_anchor_follow_desc">圆心落在你触发动作那一刻的手指位置；轮盘出现在手边，扇区按触发位置自动求解。</string>
-    <string name="quick_wheel_action_anchor_edge">贴边（屏幕边缘）</string>
-    <string name="quick_wheel_action_anchor_edge_desc">圆心固定在最近的屏幕边缘（沿边位置不变），轮盘像从边缘长出来；整圆会被自动收窄成半圆或 90°。</string>
+    <string name="quick_wheel_action_anchor_follow">触发时的位置</string>
+    <string name="quick_wheel_action_anchor_follow_desc">圆心落在触发动作那一刻的手指位置；滑得越远圆心越靠内，圆盘能铺得更完整。</string>
+    <string name="quick_wheel_action_anchor_edge">按下的位置（推荐）</string>
+    <string name="quick_wheel_action_anchor_edge_desc">圆心落在手指按下的位置（触钮处），位置稳定、可预测；贴边时只有半边可用，扇区会自动收窄。</string>
     <string name="quick_wheel_secondary_hint">正在编辑一级容器 %1$d 的二级轮盘</string>
     <string name="quick_wheel_slot_save">保存</string>
     <string name="smart_screenshot_saved">截图已保存到相册</string>

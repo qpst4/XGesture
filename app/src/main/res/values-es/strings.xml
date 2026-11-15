@@ -4913,10 +4913,10 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="quick_wheel_action_sector_desc">Deje cada sector sin elección para permitir que la aplicación seleccione el sector automáticamente desde donde se activa (todos los contenedores permanecen en pantalla). Elija sectores para forzar el círculo primario a ese lapso — puede salir de la pantalla; el sub-ring y el diseño del rectángulo se mantienen automáticos.</string>
     <string name="quick_wheel_action_anchor_section">Posición de lanzamiento</string>
     <string name="quick_wheel_action_anchor_row">Centro de ruedas</string>
-    <string name="quick_wheel_action_anchor_follow">Siga el dedo (punto de desencadenante)</string>
-    <string name="quick_wheel_action_anchor_follow_desc">El centro se sienta donde estaba tu dedo cuando la acción disparó; la rueda aparece junto a tu dedo y el sector se resuelve automáticamente.</string>
-    <string name="quick_wheel_action_anchor_edge">Pulse en el borde de la pantalla</string>
-    <string name="quick_wheel_action_anchor_edge_desc">El centro está conectado al borde de la pantalla más cercano (conservando su posición a lo largo de ese borde), por lo que la rueda crece fuera del borde; un círculo completo se estrecha automáticamente a media o cuarta parte.</string>
+    <string name="quick_wheel_action_anchor_follow">Posición al activarse</string>
+    <string name="quick_wheel_action_anchor_follow_desc">El centro queda donde estaba el dedo cuando se activó la acción; cuanto más deslices, más hacia dentro y más completo el círculo.</string>
+    <string name="quick_wheel_action_anchor_edge">Posición del toque inicial (recomendado)</string>
+    <string name="quick_wheel_action_anchor_edge_desc">El centro queda donde tocaste por primera vez. Estable y predecible; junto al borde solo cabe medio círculo, así que los sectores se estrechan automáticamente.</string>
     <string name="quick_wheel_secondary_hint">Edición de sub-ring de contenedor %1$d</string>
     <string name="quick_wheel_slot_save">Guardar</string>
     <string name="smart_screenshot_saved">Captura de pantallaguardado en la galería</string>
