@@ -21,6 +21,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import com.slideindex.app.R
+import com.slideindex.app.diagnostic.MacroTrace
 import com.slideindex.app.macro.Macro
 import com.slideindex.app.macro.MacroStep
 import com.slideindex.app.overlay.OverlayWindowTypes
@@ -124,6 +125,7 @@ class MacroRecordOverlay(
         // 否则新增的那一截会露在捕获窗底下，从那里起手拖动就会被录成手势。
         content.addOnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
             Log.i(TAG, "bar layout ${view.width}x${view.height}")
+            MacroTrace.record(hostContext, "bar layout ${view.width}x${view.height}")
             onMoved?.invoke()
         }
         refresh()
@@ -493,6 +495,7 @@ class MacroRecordOverlay(
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     dragging = false
                     // 松手后再同步一次，防止下一次按下时洞还停在拖动中的旧位置。
+                    MacroTrace.record(hostContext, "bar drag end x=${params.x} y=${params.y}")
                     onMoved?.invoke()
                     true
                 }

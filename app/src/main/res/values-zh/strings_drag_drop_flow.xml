@@ -65,6 +65,7 @@
     <string name="drag_drop_flow_toast_cancelled">已取消拖拽</string>
     <string name="drag_drop_flow_toast_restored">已恢复</string>
     <string name="drag_drop_flow_toast_image_unreadable">无法读取拖放的图片</string>
+    <string name="drag_drop_flow_need_media_permission">需要「相册访问」权限才能读取拖入的图片，授权后会自动重试</string>
     <string name="drag_drop_flow_toast_file_unreadable">无法读取拖放的文件</string>
     <string name="drag_drop_flow_toast_launch_failed">无法唤起目标应用</string>
     <string name="drag_drop_flow_toast_target_missing">这个目标已不在流转栏里</string>
