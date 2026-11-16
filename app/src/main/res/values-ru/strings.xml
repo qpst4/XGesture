@@ -4883,9 +4883,20 @@
     <string name="quick_wheel_long_press_time">Время долгого нажатия</string>
     <string name="quick_wheel_long_press_time_desc">Сколько удерживать контейнер, чтобы сработало длинное действие и раскрылся второй уровень</string>
     <string name="quick_wheel_backdrop_blur">Размытие фона</string>
-    <string name="quick_wheel_backdrop_blur_desc">Размывает только область вне контейнеров; нужна поддержка системы</string>
-    <string name="quick_wheel_backdrop_dim">Затемнение фона</string>
-    <string name="quick_wheel_backdrop_dim_desc">Затемняет только область вне контейнеров; 0% = полностью видно</string>
+    <string name="quick_wheel_backdrop_blur_desc">Сила размытия; при отключённом межоконном размытии остаётся только оттенок</string>
+    <string name="quick_wheel_backdrop_tint">Тон фона</string>
+    <string name="quick_wheel_backdrop_tint_desc">Цвет поверх размытия; при интенсивности 0 не действует</string>
+    <string name="quick_wheel_backdrop_blur_scope">Область размытия</string>
+    <string name="quick_wheel_backdrop_blur_scope_desc">Весь экран — без границы; «только колесо» даёт стык чёткого и размытого</string>
+    <string name="quick_wheel_backdrop_scope_full">Весь экран</string>
+    <string name="quick_wheel_backdrop_scope_wheel">Только колесо</string>
+    <string name="quick_wheel_backdrop_dim_scope">Область оттенка</string>
+    <string name="quick_wheel_backdrop_dim_scope_desc">Где действует оттенок, независимо от размытия</string>
+    <string name="quick_wheel_backdrop_feather">Сглаживание края</string>
+    <string name="quick_wheel_backdrop_feather_desc">Смягчает край в режиме «только колесо»; на некоторых устройствах граница размытия не меняется</string>
+    <string name="quick_wheel_backdrop_tint_custom">Другой…</string>
+    <string name="quick_wheel_backdrop_dim">Интенсивность тона</string>
+    <string name="quick_wheel_backdrop_dim_desc">Непрозрачность тона; 0 = без тона</string>
     <string name="quick_wheel_animation">Анимация открытия</string>
     <string name="quick_wheel_open_animation">Эффект анимации</string>
     <string name="quick_wheel_open_animation_desc">Влияет только на то, как появляется колесо — определение нажатий и тайминг долгого нажатия не затрагиваются</string>

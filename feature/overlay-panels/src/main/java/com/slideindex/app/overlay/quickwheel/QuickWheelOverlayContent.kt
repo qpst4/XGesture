@@ -2,7 +2,6 @@ package com.slideindex.app.overlay.quickwheel
 
 import android.os.SystemClock
 import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerInputChange
@@ -43,6 +44,7 @@ import com.slideindex.app.overlay.layout.QuickWheelPlacedSlot
 import com.slideindex.app.overlay.layout.QuickWheelStyleSpec
 import com.slideindex.app.settings.QuickWheel
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.settings.QuickWheelBackdropScope
 import com.slideindex.app.settings.QuickWheelLongPressTrigger
 import com.slideindex.app.settings.QuickWheelSlot
 import com.slideindex.app.settings.QuickWheelTapTrigger
@@ -127,6 +129,25 @@ fun QuickWheelOverlayContent(
      * 画在轮盘**下层**：容器自身不透明，所以容器所在位置看不到屏幕底部的内容。
      */
     backdropDimAlpha: Float = 0f,
+    /**
+     * 背景**色调**（叠在跨窗口模糊之上的颜色）；实际透明度由 [backdropDimAlpha] 控制。
+     *
+     * 默认黑色 = 历史「黑纱」；改成白色 / 主题色可做浅色纱。
+     */
+    backdropDimColorArgb: Int = QuickWheelLayoutEngine.DEFAULT_BACKDROP_DIM_COLOR_ARGB,
+    /**
+     * 背景模糊半径（px，0 = 不糊）。
+     *
+     * 走 `BackgroundBlurDrawable`（与快速启动器等面板同一套），只作用于
+     * [backdropBlurScope] 指定的区域；窗口本身**不带** `FLAG_BLUR_BEHIND`。
+     */
+    backdropBlurRadiusPx: Int = 0,
+    /** 背景**模糊**的作用范围：整屏（默认，无边界）或仅轮盘区域。 */
+    backdropBlurScope: QuickWheelBackdropScope = QuickWheelBackdropScope.FULL_SCREEN,
+    /** 背景**色调**的作用范围（与模糊互相独立）。 */
+    backdropDimScope: QuickWheelBackdropScope = QuickWheelBackdropScope.WHEEL_ONLY,
+    /** 「仅轮盘区域」时色调边缘的羽化宽度（px，0 = 硬边），用来柔化模糊的硬边界。 */
+    backdropFeatherPx: Float = 0f,
     /** Shell 命令表：HUD 的动作名称按它回查用户自定义名。 */
     shellCommands: List<ShellCommand> = emptyList(),
     /**
@@ -519,13 +540,23 @@ fun QuickWheelOverlayContent(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // 容器以外区域的黑纱（浓度可调）。画在轮盘下层，且容器自身不透明，
-        // 所以"容器所在位置看不到屏幕底部内容"始终成立。
-        if (backdropDimAlpha > 0f) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = backdropDimAlpha.coerceIn(0f, 1f))),
+        // 背景（模糊 + 色调）：画在轮盘下层，容器自身不透明，所以"容器位置看不到底部内容"始终成立。
+        // 「仅轮盘区域」用的外接区域由布局算出（展开二级会自动变大），整屏模式忽略。
+        if (backdropDimAlpha > 0f || backdropBlurRadiusPx > 0) {
+            val region = remember(layout, wheel.primaryShape, densityFloat) {
+                layout.backdropRegion(
+                    shape = wheel.primaryShape,
+                    paddingPx = QUICK_WHEEL_BACKDROP_PADDING_DP * densityFloat,
+                )
+            }
+            QuickWheelBackdropDim(
+                alpha = backdropDimAlpha,
+                colorArgb = backdropDimColorArgb,
+                blurRadiusPx = backdropBlurRadiusPx,
+                blurScope = backdropBlurScope,
+                dimScope = backdropDimScope,
+                featherPx = backdropFeatherPx,
+                region = region,
             )
         }
         val touchModifier = if (externalTracking) {
@@ -600,7 +631,11 @@ fun QuickWheelOverlayContent(
         val hudHit = if (armedHit.kind != QuickWheelHitKind.NONE) armedHit else hoverHit
         // 空白占位（用户主动留出的空位）不是"可执行动作"：滑到它上面不弹提示条 ——
         // 否则只会显示一句「未设置动作」，纯属噪音（松手也确实什么都不做）。
-        val hudSlot = slotOf(hudHit)?.takeUnless { it.placeholder && !it.isConfigured }
+        // 中心大圆出厂同样没有动作：按在它上面也不该弹「未设置动作」（要配置时照常显示）。
+        val hudSlot = slotOf(hudHit)?.takeUnless { slot ->
+            !slot.isConfigured &&
+                (slot.placeholder || hudHit.kind == QuickWheelHitKind.CENTER)
+        }
         if (hudSlot != null) {
             // 二级展开时命中父容器 → 松手执行的是父容器长按（与 handleRelease 一致）。
             val isParentWhileExpanded = expandedPrimary >= 0 &&

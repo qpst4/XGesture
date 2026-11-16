@@ -4768,9 +4768,20 @@
     <string name="quick_wheel_long_press_time">長押し時間</string>
     <string name="quick_wheel_long_press_time_desc">コンテナを長押しして長押しアクションと二級の展開を起こすまでの時間</string>
     <string name="quick_wheel_backdrop_blur">背景のぼかし</string>
-    <string name="quick_wheel_backdrop_blur_desc">コンテナ以外の領域だけをぼかします（システムの対応が必要）</string>
-    <string name="quick_wheel_backdrop_dim">背景の暗さ</string>
-    <string name="quick_wheel_backdrop_dim_desc">コンテナ以外の領域だけを暗くします。0% = 完全に透ける</string>
+    <string name="quick_wheel_backdrop_blur_desc">ぼかしの強さ。システムでウィンドウ間のぼかしが無効なら色のみになります</string>
+    <string name="quick_wheel_backdrop_tint">背景の色味</string>
+    <string name="quick_wheel_backdrop_tint_desc">ぼかしの上に重ねる色。濃度 0 では効果がありません</string>
+    <string name="quick_wheel_backdrop_blur_scope">ぼかしの範囲</string>
+    <string name="quick_wheel_backdrop_blur_scope_desc">画面全体なら境界なし。輪盤エリアのみだと輪盤の周囲に境目が出ます</string>
+    <string name="quick_wheel_backdrop_scope_full">画面全体</string>
+    <string name="quick_wheel_backdrop_scope_wheel">輪盤エリアのみ</string>
+    <string name="quick_wheel_backdrop_dim_scope">色の範囲</string>
+    <string name="quick_wheel_backdrop_dim_scope_desc">色をかける範囲。ぼかしとは独立しています</string>
+    <string name="quick_wheel_backdrop_feather">境界のぼかし</string>
+    <string name="quick_wheel_backdrop_feather_desc">輪盤エリアのみのとき境界をなじませます。端末によってはぼかしの境界に効果が出ません</string>
+    <string name="quick_wheel_backdrop_tint_custom">カスタム…</string>
+    <string name="quick_wheel_backdrop_dim">色味の濃さ</string>
+    <string name="quick_wheel_backdrop_dim_desc">色味の不透明度。0 = 色を重ねない</string>
     <string name="quick_wheel_animation">表示アニメーション</string>
     <string name="quick_wheel_open_animation">アニメーション効果</string>
     <string name="quick_wheel_open_animation_desc">ホイールの表示方法だけに影響します。ヒット判定と長押しの時間には影響しません</string>

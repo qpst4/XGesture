@@ -116,6 +116,26 @@ enum class QuickWheelIconSource {
     }
 }
 
+/**
+ * 背景（色调 / 模糊）的**作用范围**。
+ *
+ * 模糊与色调**各自独立**：模糊走 `BackgroundBlurDrawable`（可以把绘制范围限制在轮盘区域），
+ * 色调是我们自己画的，两者都不再受窗口边界约束，所以四种组合都成立。
+ */
+enum class QuickWheelBackdropScope {
+    /** 整个屏幕。 */
+    FULL_SCREEN,
+
+    /** 只覆盖轮盘所在的区域（圆形 = 外接圆，矩形 = 包围盒，均已外扩）。 */
+    WHEEL_ONLY,
+    ;
+
+    companion object {
+        fun fromName(value: String?): QuickWheelBackdropScope =
+            entries.firstOrNull { it.name == value } ?: FULL_SCREEN
+    }
+}
+
 /** 一个轮盘容器（格子）。 */
 data class QuickWheelSlot(
     val iconSource: QuickWheelIconSource = QuickWheelIconSource.NONE,
@@ -309,18 +329,45 @@ data class QuickWheel(
      */
     val sectorMask: Int = QuickWheelLayoutEngine.DEFAULT_SECTOR_MASK,
     /**
-     * 呼出时**容器以外区域**的背景模糊强度（dp，0 = 不模糊）。
+     * 呼出时背景的模糊强度（dp，0 = 不模糊）。
      *
-     * 走系统跨窗口模糊（`FLAG_BLUR_BEHIND`）；系统关闭"跨窗口模糊"时该项无效。
+     * 走 `BackgroundBlurDrawable`（与快速启动器等面板同一套），只糊 [backdropBlurScope]
+     * 指定的区域；系统关闭"跨窗口模糊"时该项无效（自动退回纯色调）。
      * 容器本身始终不透明，不受该参数影响。
      */
     val backdropBlurDp: Int = 10,
     /**
-     * 呼出时**容器以外区域**的黑色遮罩浓度（%，0 = 完全透出原屏幕内容）。
+     * 背景**色调**浓度（%，0 = 不叠色、60 = 最重）。
      *
+     * 色调是叠在模糊之上的那层半透明色；颜色见 [backdropDimColorArgb]。
      * 容器本身始终不透明，不受该参数影响。
      */
     val backdropDimPercent: Int = 25,
+    /**
+     * 背景**色调**的 ARGB（默认黑色 = 历史「黑纱」）。
+     *
+     * 恒为不透明色，实际透明度由 [backdropDimPercent] 决定 —— 所以"纯模糊"= 浓度 0、
+     * "纯色调"= 模糊 0、两者都开 = 磨砂玻璃 + 色调。
+     */
+    val backdropDimColorArgb: Int = QuickWheelLayoutEngine.DEFAULT_BACKDROP_DIM_COLOR_ARGB,
+    /**
+     * 背景**模糊**的作用范围：整个屏幕（默认）或仅轮盘区域。
+     *
+     * 整屏时没有"模糊边界"；仅轮盘时会有一条清晰→模糊的硬边（系统 API 限制），
+     * 用 [backdropFeatherDp] 在色调层做渐变把这条边包住。
+     */
+    val backdropBlurScope: QuickWheelBackdropScope = QuickWheelBackdropScope.FULL_SCREEN,
+    /**
+     * 背景**色调**的作用范围：整个屏幕或仅轮盘区域（新轮盘默认仅轮盘 —— 模糊整屏、
+     * 色调收在轮盘周围，是"聚焦"观感里边界最柔的一组）。
+     */
+    val backdropDimScope: QuickWheelBackdropScope = QuickWheelBackdropScope.WHEEL_ONLY,
+    /**
+     * 「仅轮盘区域」时色调边缘的羽化宽度（dp，0 = 硬边）。
+     *
+     * 只作用在色调层：纯色形状整体糊一下，边缘变成浓度渐变，把模糊的硬边包住。
+     */
+    val backdropFeatherDp: Int = QuickWheelLayoutEngine.DEFAULT_BACKDROP_FEATHER_DP,
     /**
      * 呼出时的展开动画效果。
      *
@@ -388,6 +435,9 @@ data class QuickWheel(
             backdropBlurDp = QuickWheelLayoutEngine.clampBackdropBlurDp(backdropBlurDp),
             backdropDimPercent =
                 QuickWheelLayoutEngine.clampBackdropDimPercent(backdropDimPercent),
+            // 色调恒为不透明色：透明度只由浓度决定，避免两处叠加导致"越调越浅/深"。
+            backdropDimColorArgb = backdropDimColorArgb or 0xFF000000.toInt(),
+            backdropFeatherDp = QuickWheelLayoutEngine.clampBackdropFeatherDp(backdropFeatherDp),
             animationSpeedPercent =
                 QuickWheelLayoutEngine.clampAnimationSpeedPercent(animationSpeedPercent),
             slots = slots.take(MAX_SLOTS).map { it.normalized() },
@@ -577,22 +627,41 @@ object QuickWheelCodec {
         append(FIELD_SEP)
         append(QuickWheelLayoutEngine.clampAnimationSpeedPercent(wheel.animationSpeedPercent))
         append(FIELD_SEP)
+        // 背景色调（ARGB，8 位十六进制）：与浓度配合，浓度 0 时不起作用。
+        append(Integer.toHexString(wheel.backdropDimColorArgb).uppercase().padStart(8, '0'))
+        append(FIELD_SEP)
+        // 背景作用范围：模糊范围、色调范围（两者独立）。
+        append(wheel.backdropBlurScope.name)
+        append(FIELD_SEP)
+        append(wheel.backdropDimScope.name)
+        append(FIELD_SEP)
+        // 色调边缘羽化宽度（dp，0 = 硬边）。
+        append(QuickWheelLayoutEngine.clampBackdropFeatherDp(wheel.backdropFeatherDp))
+        append(FIELD_SEP)
         // 名称放最后：允许用户名称里出现分隔符
         append(wheel.name)
     }
 
     fun decodeEntry(raw: String): QuickWheel? {
-        val parts = raw.split(FIELD_SEP, limit = 13)
+        val parts = raw.split(FIELD_SEP, limit = 17)
         if (parts.size < 7) return null
         val id = parts[0].takeIf { it.isNotBlank() } ?: return null
         // 兼容旧记录（按段数判有无；名称恒为最后一段）：
-        // 13 段 = 含 openAnimation / animationSpeedPercent（当前）；
+        // 17 段 = 含 backdropFeatherDp（当前）；
+        // 16 段 = 含 backdropDimScope（模糊 / 色调两个范围分开）；
+        // 15 段 = 含单一 backdropScope（旧的"整屏 / 仅轮盘"，读作两者同值）；
+        // 14 段 = 含 backdropDimColorArgb；
+        // 13 段 = 含 openAnimation / animationSpeedPercent；
         // 11 段 = 含 backdropBlurDp / backdropDimPercent；
         // 9 段 = 含 longPressMs；8 段 = 含 sectorMask；7 段 = 无（视为整圆全选 + 默认长按时间）。
         val hasLongPress = parts.size >= 9
         val hasSector = parts.size >= 8
         val hasBackdrop = parts.size >= 11
         val hasAnimation = parts.size >= 13
+        val hasDimColor = parts.size >= 14
+        val hasScope = parts.size >= 15
+        val hasDimScope = parts.size >= 16
+        val hasFeather = parts.size >= 17
         val primaryShape = QuickWheelShape.fromName(parts[1])
         val secondaryShape = QuickWheelShape.fromName(parts[2])
         val (primaryStyle, primaryAltStyle) = decodeStylePair(parts[3])
@@ -600,6 +669,10 @@ object QuickWheelCodec {
         return QuickWheel(
             id = id,
             name = when {
+                hasFeather -> parts[16]
+                hasDimScope -> parts[15]
+                hasScope -> parts[14]
+                hasDimColor -> parts[13]
                 hasAnimation -> parts[12]
                 hasBackdrop -> parts[10]
                 hasLongPress -> parts[8]
@@ -654,6 +727,33 @@ object QuickWheelCodec {
                 QuickWheelLayoutEngine.clampBackdropDimPercent(parts[9].toIntOrNull() ?: 0)
             } else {
                 QuickWheelLayoutEngine.DEFAULT_BACKDROP_DIM_PERCENT
+            },
+            // 旧记录没有这段 → 默认黑色（= 历史「黑纱」）。
+            backdropDimColorArgb = if (hasDimColor) {
+                parts[12].toLongOrNull(16)?.toInt()
+                    ?: QuickWheelLayoutEngine.DEFAULT_BACKDROP_DIM_COLOR_ARGB
+            } else {
+                QuickWheelLayoutEngine.DEFAULT_BACKDROP_DIM_COLOR_ARGB
+            },
+            // 旧记录只有一段 scope：模糊 / 色调都读成它，升级后观感不变。
+            backdropBlurScope = if (hasScope) {
+                QuickWheelBackdropScope.fromName(parts[13])
+            } else {
+                QuickWheelBackdropScope.FULL_SCREEN
+            },
+            backdropDimScope = if (hasDimScope) {
+                QuickWheelBackdropScope.fromName(parts[14])
+            } else if (hasScope) {
+                QuickWheelBackdropScope.fromName(parts[13])
+            } else {
+                QuickWheelBackdropScope.WHEEL_ONLY
+            },
+            backdropFeatherDp = if (hasFeather) {
+                QuickWheelLayoutEngine.clampBackdropFeatherDp(
+                    parts[15].toIntOrNull() ?: QuickWheelLayoutEngine.DEFAULT_BACKDROP_FEATHER_DP,
+                )
+            } else {
+                QuickWheelLayoutEngine.DEFAULT_BACKDROP_FEATHER_DP
             },
             openAnimation = if (hasAnimation) {
                 QuickWheelOpenAnimation.fromName(parts[10])

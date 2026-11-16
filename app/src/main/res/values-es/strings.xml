@@ -4767,9 +4767,20 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="quick_wheel_long_press_time">TiempoMantener presionado</string>
     <string name="quick_wheel_long_press_time_desc">Tiempo que hay que mantener un contenedor para su acción larga y abrir el segundo nivel</string>
     <string name="quick_wheel_backdrop_blur">Borde de fondo</string>
-    <string name="quick_wheel_backdrop_blur_desc">Solo desenfoca la zona fuera de los contenedores; requiere soporte del sistema</string>
-    <string name="quick_wheel_backdrop_dim">Antecedentes</string>
-    <string name="quick_wheel_backdrop_dim_desc">Solo oscurece la zona fuera de los contenedores; 0% = totalmente visible</string>
+    <string name="quick_wheel_backdrop_blur_desc">Intensidad del desenfoque; si el sistema lo desactiva queda solo el tinte</string>
+    <string name="quick_wheel_backdrop_tint">Tono de fondo</string>
+    <string name="quick_wheel_backdrop_tint_desc">Color sobre el desenfoque; sin efecto con intensidad 0</string>
+    <string name="quick_wheel_backdrop_blur_scope">Alcance del desenfoque</string>
+    <string name="quick_wheel_backdrop_blur_scope_desc">Toda la pantalla no deja borde; solo la rueda muestra un corte nítido/difuso</string>
+    <string name="quick_wheel_backdrop_scope_full">Toda la pantalla</string>
+    <string name="quick_wheel_backdrop_scope_wheel">Solo la rueda</string>
+    <string name="quick_wheel_backdrop_dim_scope">Alcance del tinte</string>
+    <string name="quick_wheel_backdrop_dim_scope_desc">Zona que cubre el tinte, independiente del desenfoque</string>
+    <string name="quick_wheel_backdrop_feather">Difuminado del borde</string>
+    <string name="quick_wheel_backdrop_feather_desc">Suaviza el borde en modo solo rueda; en algunos dispositivos el borde del desenfoque no cambia</string>
+    <string name="quick_wheel_backdrop_tint_custom">Personalizado…</string>
+    <string name="quick_wheel_backdrop_dim">Intensidad del tono</string>
+    <string name="quick_wheel_backdrop_dim_desc">Opacidad del tono; 0 = sin tono</string>
     <string name="quick_wheel_animation">Animación abierta</string>
     <string name="quick_wheel_open_animation">Efecto de animación</string>
     <string name="quick_wheel_open_animation_desc">Sólo afecta cómo aparece la rueda — las pruebas de golpe y el tiempomantener presionadono son afectados</string>

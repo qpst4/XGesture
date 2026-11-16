@@ -321,16 +321,41 @@ object QuickWheelLayoutEngine {
     const val MAX_BACKDROP_BLUR_DP = 72
     const val DEFAULT_BACKDROP_BLUR_DP = 0
 
-    /** 轮盘呼出时**容器以外区域**的黑色遮罩浓度（%，0 = 完全透出原屏幕、60 = 最重）。 */
+    /** 轮盘呼出时**容器以外区域**的色调浓度（%，0 = 完全透出原屏幕、100 = 完全不透明）。 */
     const val MIN_BACKDROP_DIM_PERCENT = 0
-    const val MAX_BACKDROP_DIM_PERCENT = 60
+    const val MAX_BACKDROP_DIM_PERCENT = 100
     const val DEFAULT_BACKDROP_DIM_PERCENT = 0
+
+    /**
+     * 背景**色调**的出厂色：黑色（= 历史「黑纱」）。
+     *
+     * 色调是叠在跨窗口模糊之上的一层半透明色，透明度由 [MIN_BACKDROP_DIM_PERCENT]
+     * 那组参数（浓度）决定，颜色本身恒为不透明。
+     */
+    const val DEFAULT_BACKDROP_DIM_COLOR_ARGB = 0xFF000000.toInt()
 
     fun clampBackdropBlurDp(value: Int): Int =
         value.coerceIn(MIN_BACKDROP_BLUR_DP, MAX_BACKDROP_BLUR_DP)
 
     fun clampBackdropDimPercent(value: Int): Int =
         value.coerceIn(MIN_BACKDROP_DIM_PERCENT, MAX_BACKDROP_DIM_PERCENT)
+
+    /**
+     * 背景色调在「仅轮盘区域」时的**边缘羽化宽度**（dp，0 = 硬边）。
+     *
+     * 系统的 `BackgroundBlurDrawable` 只能画硬边圆角矩形（没有遮罩接口），模糊的
+     * "清晰→模糊"跳变一定发生在边界上。羽化**只作用在色调层**（色调是我们自己画的，
+     * 可以把纯色形状整体糊掉做出渐变收边），用一圈浓度衰减把模糊的硬边包住，
+     * 观感从"切一刀"变成"渐隐"。
+     *
+     * 想彻底没有边界就把「模糊范围」改成整屏 —— 那时羽化没有意义（可用 0）。
+     */
+    const val MIN_BACKDROP_FEATHER_DP = 0
+    const val MAX_BACKDROP_FEATHER_DP = 100
+    const val DEFAULT_BACKDROP_FEATHER_DP = 24
+
+    fun clampBackdropFeatherDp(value: Int): Int =
+        value.coerceIn(MIN_BACKDROP_FEATHER_DP, MAX_BACKDROP_FEATHER_DP)
 
     // ── 呼出动画 ────────────────────────────────────────
     /** 呼出动画默认效果：新轮盘默认「从中心向外展开」。 */

@@ -194,33 +194,102 @@ class QuickWheelCodecTest {
     }
 
     @Test
+    fun roundTrip_preservesBackdropTintColor() {
+        // 「模糊 + 色调」：颜色与浓度各自独立存；默认色是黑。
+        val decoded = roundTrip(
+            listOf(sampleWheel().copy(backdropDimPercent = 20, backdropDimColorArgb = 0xFFFFFFFF.toInt())),
+        ).single()
+        assertEquals(0xFFFFFFFF.toInt(), decoded.backdropDimColorArgb)
+        assertEquals(20, decoded.backdropDimPercent)
+        // 没动过的轮盘仍是黑色。
+        assertEquals(
+            QuickWheelLayoutEngine.DEFAULT_BACKDROP_DIM_COLOR_ARGB,
+            roundTrip(listOf(sampleWheel())).single().backdropDimColorArgb,
+        )
+    }
+
+    @Test
+    fun normalized_forcesOpaqueTint() {
+        // 色调恒为不透明色：透明度只由浓度控制，避免两处叠加。
+        val wheel = sampleWheel().copy(backdropDimColorArgb = 0x00FF0000).normalized()
+        assertEquals(0xFFFF0000.toInt(), wheel.backdropDimColorArgb)
+    }
+
+    @Test
     fun decode_recordWithoutBackdropFallsBackToZero() {
         // 9 段老记录（有 longPressMs、没有背景 / 动画参数）。
-        // 当前 13 段 = 0..5 元数据 + 6 sector + 7 longPress + 8/9 背景 + 10/11 动画 + 12 名称
-        // → 去掉 8..11 即得 9 段（名称仍留在最后）。
+        // 当前 15 段 = 0..5 元数据 + 6 sector + 7 longPress + 8/9 背景 + 10/11 动画
+        //            + 12 背景色调 + 13 作用范围 + 14 名称
+        // → 去掉 8..13 即得 9 段（名称仍留在最后）。
         val prefs = mutablePreferencesOf()
         QuickWheelCodec.writeToPreferences(listOf(sampleWheel().copy(backdropBlurDp = 30)), prefs)
         val entry = prefs[SettingsPreferenceKeys.QUICK_WHEEL_ENTRIES]!!.first()
         val fieldSep = "\u001D"
         val parts = entry.split(fieldSep)
-        val legacy = (parts.take(8) + parts.drop(12)).joinToString(fieldSep)
+        val legacy = (parts.take(8) + parts.drop(16)).joinToString(fieldSep)
         val decoded = QuickWheelCodec.decodeEntry(legacy)!!
         assertEquals(0, decoded.backdropBlurDp)
         assertEquals(0, decoded.backdropDimPercent)
         // 名称仍然是最后一段，不能被错位读成背景参数。
         assertEquals("主力轮盘", decoded.name)
+        // 没有色调段 → 默认黑色（= 历史「黑纱」）；没有范围段 → 模糊整屏 + 色调仅轮盘。
+        assertEquals(QuickWheelLayoutEngine.DEFAULT_BACKDROP_DIM_COLOR_ARGB, decoded.backdropDimColorArgb)
+        assertEquals(QuickWheelBackdropScope.FULL_SCREEN, decoded.backdropBlurScope)
+        assertEquals(QuickWheelBackdropScope.WHEEL_ONLY, decoded.backdropDimScope)
+        assertEquals(QuickWheelLayoutEngine.DEFAULT_BACKDROP_FEATHER_DP, decoded.backdropFeatherDp)
+    }
+
+    @Test
+    fun roundTrip_preservesBackdropScopesAndFeather() {
+        val decoded = roundTrip(
+            listOf(
+                sampleWheel().copy(
+                    backdropBlurScope = QuickWheelBackdropScope.WHEEL_ONLY,
+                    backdropDimScope = QuickWheelBackdropScope.FULL_SCREEN,
+                    backdropFeatherDp = 12,
+                ),
+            ),
+        ).single()
+        assertEquals(QuickWheelBackdropScope.WHEEL_ONLY, decoded.backdropBlurScope)
+        assertEquals(QuickWheelBackdropScope.FULL_SCREEN, decoded.backdropDimScope)
+        assertEquals(12, decoded.backdropFeatherDp)
+        // 没动过的轮盘：模糊整屏、色调仅轮盘、羽化默认 24。
+        val fresh = roundTrip(listOf(sampleWheel())).single()
+        assertEquals(QuickWheelBackdropScope.FULL_SCREEN, fresh.backdropBlurScope)
+        assertEquals(QuickWheelBackdropScope.WHEEL_ONLY, fresh.backdropDimScope)
+        assertEquals(QuickWheelLayoutEngine.DEFAULT_BACKDROP_FEATHER_DP, fresh.backdropFeatherDp)
+    }
+
+    @Test
+    fun decode_legacySingleScopeAppliesToBoth() {
+        // 15 段旧记录只有一份 scope：模糊 / 色调都读成它，升级后观感不变。
+        val prefs = mutablePreferencesOf()
+        QuickWheelCodec.writeToPreferences(
+            listOf(sampleWheel().copy(backdropBlurScope = QuickWheelBackdropScope.WHEEL_ONLY)),
+            prefs,
+        )
+        val entry = prefs[SettingsPreferenceKeys.QUICK_WHEEL_ENTRIES]!!.first()
+        val fieldSep = "\u001D"
+        val parts = entry.split(fieldSep)
+        // 去掉 dimScope / feather 两段，保留第 15 段的单一 scope。
+        val legacy = (parts.take(15) + parts.drop(16)).joinToString(fieldSep)
+        val decoded = QuickWheelCodec.decodeEntry(legacy)!!
+        assertEquals(QuickWheelBackdropScope.WHEEL_ONLY, decoded.backdropBlurScope)
+        assertEquals(QuickWheelBackdropScope.WHEEL_ONLY, decoded.backdropDimScope)
+        assertEquals(QuickWheelLayoutEngine.DEFAULT_BACKDROP_FEATHER_DP, decoded.backdropFeatherDp)
     }
 
     @Test
     fun decode_legacyRecordWithoutLongPressMsFallsBackToDefault() {
         // 模拟"含 sectorMask、没有 longPressMs 也没有背景 / 动画参数"的旧记录：
-        // 当前 13 段 → 去掉 7..11（longPress + 背景 + 动画）得到旧的 8 段（元数据 + sector + 名称）。
+        // 当前 17 段 → 去掉 7..15（longPress + 背景 + 动画 + 色调 + 两个范围 + 羽化）
+        // 得到旧的 8 段（元数据 + sector + 名称）。
         val prefs = mutablePreferencesOf()
         QuickWheelCodec.writeToPreferences(listOf(sampleWheel()), prefs)
         val entry = prefs[SettingsPreferenceKeys.QUICK_WHEEL_ENTRIES]!!.first()
         val fieldSep = "\u001D"
         val parts = entry.split(fieldSep)
-        val legacy = (parts.take(7) + parts.drop(12)).joinToString(fieldSep)
+        val legacy = (parts.take(7) + parts.drop(16)).joinToString(fieldSep)
         val decoded = QuickWheelCodec.decodeEntry(legacy)!!
         assertEquals(QuickWheelLayoutEngine.DEFAULT_LONG_PRESS_MS, decoded.longPressMs)
         assertEquals(QuickWheelLayoutEngine.DEFAULT_BACKDROP_BLUR_DP, decoded.backdropBlurDp)
