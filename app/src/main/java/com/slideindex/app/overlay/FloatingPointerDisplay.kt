@@ -374,6 +374,52 @@ internal fun FloatingPointerDisplay(
                         rippleSizePx = rippleSizePx
                     )
                 }
+                // 实时缩放 / 滚动：用"光标自身的颜色"画动作提示。
+                // 光标有环/填充/点三种取色，这里取饱和度最高的那个（用户把缩成点的颜色设成红时就是红）。
+                val realtimeKind = session.realtimeGestureKind.value
+                if (realtimeKind != null) {
+                    val center = Offset(pointerX, pointerY)
+                    val cursorColors = listOf(
+                        settings.floatingPointerDotColorArgb,
+                        settings.floatingPointerRingColorArgb,
+                        settings.floatingPointerFillColorArgb,
+                    ).map { Color(it) }.filter { it.alpha > 0.4f }
+                    val indicator = cursorColors.maxByOrNull { color ->
+                        maxOf(color.red, color.green, color.blue) - minOf(color.red, color.green, color.blue)
+                    } ?: Color(settings.floatingPointerRingColorArgb)
+                    if (realtimeKind == "zoom") {
+                        drawCircle(
+                            color = indicator,
+                            radius = 28f * density,
+                            center = center,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f * density),
+                        )
+                        drawCircle(
+                            color = indicator.copy(alpha = 0.55f),
+                            radius = 42f * density,
+                            center = center,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5f * density),
+                        )
+                    } else {
+                        val halfWidth = 7f * density
+                        val height = 10f * density
+                        val gap = 32f * density
+                        val up = androidx.compose.ui.graphics.Path().apply {
+                            moveTo(center.x, center.y - gap - height)
+                            lineTo(center.x - halfWidth, center.y - gap)
+                            lineTo(center.x + halfWidth, center.y - gap)
+                            close()
+                        }
+                        val down = androidx.compose.ui.graphics.Path().apply {
+                            moveTo(center.x, center.y + gap + height)
+                            lineTo(center.x - halfWidth, center.y + gap)
+                            lineTo(center.x + halfWidth, center.y + gap)
+                            close()
+                        }
+                        drawPath(up, indicator)
+                        drawPath(down, indicator)
+                    }
+                }
                 val recorderProgress = gestureRecorderProgress.value
                 when {
                     hoverSelectAsPlus -> {

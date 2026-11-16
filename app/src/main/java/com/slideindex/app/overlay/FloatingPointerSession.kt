@@ -122,6 +122,9 @@ internal class FloatingPointerSession(
     /** Real-time gesture capture: same pointer shrink as recording, without recorder state. */
     val realtimeGestureActive = mutableStateOf(false)
 
+    /** 实时手势类型："zoom" / "scroll"；仅用于指针动作提示。 */
+    val realtimeGestureKind = mutableStateOf<String?>(null)
+
     /** After finger-up: trail retreats on a wall-clock timeline until consumed. */
     val gestureTrailRetreatActive = mutableStateOf(false)
 
@@ -339,6 +342,7 @@ internal class FloatingPointerSession(
         pinchGesture = null
         scrollGesture = null
         realtimeGestureActive.value = false
+        realtimeGestureKind.value = null
     }
 
     /** 指针长按/功能环触发的实时双指缩放。 */
@@ -351,6 +355,7 @@ internal class FloatingPointerSession(
     ) {
         clearPendingGestureCapture()
         realtimeGestureActive.value = true
+        realtimeGestureKind.value = "zoom"
         pinchGesture = FloatingPointerPinchGesture(
             service = service,
             startX = pointerX,
@@ -376,6 +381,7 @@ internal class FloatingPointerSession(
     ) {
         clearPendingGestureCapture()
         realtimeGestureActive.value = true
+        realtimeGestureKind.value = "scroll"
         scrollGesture = FloatingPointerScrollGesture(
             service = service,
             startX = pointerX,
