@@ -2063,6 +2063,7 @@
     <string name="float_ball_pick_panel_tab_image">截图</string>
     <string name="pick_result_action_save_image">保存图片</string>
     <string name="pick_result_action_view_image">查看图片</string>
+    <string name="pick_result_translate_target_switched">翻译目标：%1$s</string>
     <string name="pick_result_action_image_search">以图搜图</string>
     <string name="pick_result_action_share_image">分享图片</string>
     <string name="pick_result_tts_speak">朗读文字</string>
@@ -5157,4 +5158,13 @@ adb 模式应返回 uid=2000。
     <string name="search_engine_action_edit_summary">修改搜索 URL、图标或标题</string>
     <string name="search_engine_action_delete">删除搜索引擎</string>
     <string name="search_engine_action_delete_summary">永久从本地列表中移除此项</string>
+    <string name="gesture_action_magnifier">放大镜</string>
+    <string name="gesture_action_magnifier_desc">把触发点（或手指）周围的屏幕实时放大</string>
+    <string name="gesture_action_pointer_pinch">实时双指缩放</string>
+    <string name="gesture_action_pointer_pinch_desc">按住指针并移动，实时双指缩放</string>
+    <string name="gesture_action_pointer_scroll">实时滚动</string>
+    <string name="gesture_action_pointer_scroll_desc">按住指针并移动即可滚动，推得越远滚得越快</string>
+    <string name="gesture_action_require_min_sdk_33">需要 Android 13</string>
+    <string name="magnifier_chip_text">放大镜 %1$s× · 点我关闭</string>
+    <string name="magnifier_opened_toast">放大镜已开启：点右下角小圆点关闭，长按切换倍率</string>
 </resources>

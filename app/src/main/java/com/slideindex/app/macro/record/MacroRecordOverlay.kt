@@ -122,7 +122,8 @@ class MacroRecordOverlay(
         recorder.onStepsChanged = { actions, waits -> onStepsChanged(actions, waits) }
         // 条的高度会因为"已录 N 步"计数文本而变化：一变就通知捕获层重算洞，
         // 否则新增的那一截会露在捕获窗底下，从那里起手拖动就会被录成手势。
-        content.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+        content.addOnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
+            Log.i(TAG, "bar layout ${view.width}x${view.height}")
             onMoved?.invoke()
         }
         refresh()

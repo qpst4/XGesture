@@ -98,6 +98,8 @@ fun FloatBallPickResultContent(
     onStartTextDrag: (String) -> Unit,
     onProcessText: (String, PickResultProcessTextTarget) -> Unit,
     onTranslate: (String) -> Unit,
+    /** 长按翻译键：切换目标语言；null 时不挂长按。 */
+    onTranslateLongClick: (() -> Unit)? = null,
     onRemoveSpaces: (String, removeAll: Boolean) -> Unit,
     onSaveScreenshot: () -> Unit,
     onSaveScreenshotLongClick: (() -> Unit)? = null,
@@ -613,6 +615,7 @@ fun FloatBallPickResultContent(
                 onProcessText = onProcessText,
                 onCopy = onCopy,
                 onTranslate = onTranslate,
+                onTranslateLongClick = onTranslateLongClick,
                 onRemoveSpaces = onRemoveSpaces,
                 onZoomText = { expanded ->
                     val visible = !expanded

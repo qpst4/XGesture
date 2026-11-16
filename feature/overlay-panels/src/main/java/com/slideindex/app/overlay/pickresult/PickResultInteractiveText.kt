@@ -154,6 +154,8 @@ fun PickResultInteractiveTextSection(
     onProcessText: ((String, PickResultProcessTextTarget) -> Unit)? = null,
     onCopy: (String, keepPanelOpen: Boolean) -> Unit,
     onTranslate: (String) -> Unit,
+    /** 长按翻译键：切换目标语言；null 时不挂长按。 */
+    onTranslateLongClick: (() -> Unit)? = null,
     onRemoveSpaces: (String, removeAll: Boolean) -> Unit,
     onZoomText: ((Boolean) -> Unit)? = null,
     onToolbarDragDelta: (dragAmount: Float) -> Unit = {},
@@ -531,6 +533,7 @@ fun PickResultInteractiveTextSection(
                     onCopy = { runOnActiveText { onCopy(it, false) } },
                     onCopyKeepOpen = { runOnActiveText { onCopy(it, true) } },
                     onTranslate = { runOnActiveText(onTranslate) },
+                    onTranslateLongClick = onTranslateLongClick,
                     onPinToScreen = onPinToScreen,
                     onStash = onStash,
                     onGenerateQr = if (text.isNotBlank()) {

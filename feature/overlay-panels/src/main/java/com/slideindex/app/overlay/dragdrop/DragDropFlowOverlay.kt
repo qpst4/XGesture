@@ -341,6 +341,12 @@ class DragDropFlowController(
                     DIAG_TAG,
                     "started mimes=$mimes items=${dockItems.joinToString(",") { it.id }}",
                 )
+                // 诊断包：拖拽源、标签、判定结果一次打全（logcat -s DragDropFlow 可见）。
+                Log.i(
+                    DIAG_TAG,
+                    "started label=${desc.label} mimes=$mimes " +
+                        "image=$hasImage text=$hasText file=$hasFile items=${dockItems.size}",
+                )
 
                 // 本应用注册过拖拽源就认领这次拖拽：之后源只负责藏好自己，
                 // "结束后恢复还是关掉"由下面 DROP / DRAG_ENDED 统一决定。
@@ -381,6 +387,12 @@ class DragDropFlowController(
                     DIAG_TAG,
                     "drop hovered=$targetId clipItems=${clipData?.itemCount ?: -1} " +
                         "textLen=$droppedTextLength",
+                )
+                // 诊断包：松手时把每一项的真实内容打出来（uri / text / html / intent）。
+                Log.i(
+                    DIAG_TAG,
+                    "drop hovered=$targetId desc=${clipData?.description?.label} " +
+                        describeClip(clipData),
                 )
 
                 // 只松在「操作」枢纽上（还没展开到动作项）不算选中任何目标：
@@ -669,9 +681,15 @@ class DragDropFlowController(
     }
 
     private fun processDrop(targetId: String, clipData: ClipData) {
+        Log.i(DIAG_TAG, "processDrop target=$targetId ${describeClip(clipData)}")
         scope.launch(Dispatchers.IO) {
             val item = clipData.getItemAt(0) ?: return@launch
             val uri = item.uri
+            Log.i(
+                DIAG_TAG,
+                "processDrop item0 uri=$uri textLen=${item.text?.length ?: -1} " +
+                    "html=${item.htmlText != null} intent=${item.intent != null}",
+            )
             // 纯文本优先，其次 HTML（网页 / 部分编辑器只给 htmlText）。两者都没有时 text 为 null，
             // 下面引擎分支会明确提示，而不是静默什么都不做。
             val text = item.text?.toString()?.takeIf { it.isNotBlank() }
@@ -843,6 +861,13 @@ class DragDropFlowController(
                             context = context,
                             payload = ShareSheetPayload.Text(text),
                             dismissSource = { collapseToAnchor() },
+                        )
+                    }
+                    else -> {
+                        // 诊断包：命中了项目但没有任何分支能处理（例如分享图片但 uri 为空/读不出）。
+                        Log.w(
+                            DIAG_TAG,
+                            "drop unhandled target=$targetId uri=$uri textLen=${text?.length ?: -1}",
                         )
                     }
                 }
@@ -1060,11 +1085,40 @@ class DragDropFlowController(
     }
 
     private suspend fun decodeBitmapFromUri(uri: Uri): Bitmap? = withContext(Dispatchers.IO) {
-        ImageDecodeGuard.decodeUri(
+        val type = runCatching { context.contentResolver.getType(uri) }.getOrNull()
+        val startedAt = android.os.SystemClock.uptimeMillis()
+        val bitmap = ImageDecodeGuard.decodeUri(
             context = context,
             uri = uri,
             maxSidePx = ImageDecodeGuard.MAX_DISPLAY_SIDE_PX,
         )
+        // 诊断包：解码结果 + 耗时，用来区分"没地址 / 地址读不出 / 解码失败"。
+        Log.i(
+            DIAG_TAG,
+            "decode uri=$uri authority=${uri.authority} type=$type ok=${bitmap != null} " +
+                "size=${bitmap?.width}x${bitmap?.height} cost=${android.os.SystemClock.uptimeMillis() - startedAt}ms",
+        )
+        bitmap
+    }
+
+    /** 诊断包：把 ClipData 每一项的真实内容压成一行，便于现场定位。 */
+    private fun describeClip(clipData: ClipData?): String {
+        if (clipData == null) return "clip=null"
+        val builder = StringBuilder("items=${clipData.itemCount}")
+        for (index in 0 until clipData.itemCount) {
+            val item = clipData.getItemAt(index)
+            val uri = item.uri
+            val type = uri?.let { runCatching { context.contentResolver.getType(it) }.getOrNull() }
+            builder
+                .append(" [#").append(index)
+                .append(" uri=").append(uri?.toString() ?: "-")
+                .append(" type=").append(type ?: "-")
+                .append(" textLen=").append(item.text?.length ?: -1)
+                .append(" html=").append(item.htmlText != null)
+                .append(" intent=").append(item.intent != null)
+                .append(']')
+        }
+        return builder.toString()
     }
 
     private fun destroyWindow() {

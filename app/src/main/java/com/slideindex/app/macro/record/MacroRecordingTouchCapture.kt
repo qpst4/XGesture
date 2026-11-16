@@ -158,7 +158,7 @@ class MacroRecordingTouchCapture(
                     .onFailure { Log.w(TAG, "更新捕获窗失败", it) }
             }
         }
-        Log.i(TAG, "洞已更新 bar=${barRectProvider()}")
+        Log.i(TAG, "洞已更新 bar=${barRectProvider()} panes=${rects.joinToString("|")}")
     }
 
     fun dismiss() {
@@ -273,6 +273,11 @@ class MacroRecordingTouchCapture(
                     Log.w(TAG, "上一次触摸没有 UP/CANCEL 就收到新的 DOWN，丢弃上一次")
                     listener.onCancel()
                 }
+                // 诊断包：DOWN 落到捕获层时，把当时的"洞"打出来。
+                // 正常情况 DOWN 永远不该落在控制条矩形内；一旦出现，就是洞过期了。
+                val bar = barRectProvider()
+                val insideBar = bar?.contains(x.toInt(), y.toInt()) == true
+                Log.i(TAG, "DOWN (${x.toInt()},${y.toInt()}) bar=$bar insideBar=$insideBar")
                 capturing = true
                 downX = x
                 downY = y
@@ -293,6 +298,11 @@ class MacroRecordingTouchCapture(
                 if (!capturing) return
                 capturing = false
                 sample(x, y, force = true)
+                Log.i(
+                    TAG,
+                    "UP (${x.toInt()},${y.toInt()}) start=(${downX.toInt()},${downY.toInt()}) " +
+                        "bar=${barRectProvider()}",
+                )
                 listener.onUp(x, y, time)
                 requestForward { performForward(x, y, time) }
             }

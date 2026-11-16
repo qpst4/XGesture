@@ -689,6 +689,8 @@ fun PickResultTextActionBar(
     onCopy: () -> Unit,
     onCopyKeepOpen: () -> Unit = onCopy,
     onTranslate: () -> Unit,
+    /** 长按翻译键：切换目标语言（null 时不挂长按）。 */
+    onTranslateLongClick: (() -> Unit)? = null,
     onPinToScreen: (() -> Unit)? = null,
     onStash: (() -> Unit)? = null,
     /** 生成二维码；null 时菜单里不显示这一项。 */
@@ -1000,6 +1002,7 @@ fun PickResultTextActionBar(
                             tint = translateTint,
                             actionEnabled = enabled && translateEnabled,
                             onClick = onTranslate,
+                            onLongClick = onTranslateLongClick,
                         )
                     }
 
@@ -1283,12 +1286,16 @@ fun PickResultTextActionBar(
                     translateSelected -> MaterialTheme.colorScheme.primary
                     else -> if (isDark) androidx.compose.ui.graphics.Color(0xFFE0E0E6) else androidx.compose.ui.graphics.Color(0xFF333333)
                 }
-                IconButton(
-                    onClick = onTranslate,
-                    enabled = enabled && translateEnabled,
+                Box(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(RoundedCornerShape(21.dp))
+                        .combinedClickable(
+                            enabled = enabled && translateEnabled,
+                            onClick = onTranslate,
+                            onLongClick = onTranslateLongClick,
+                        ),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Translate,
@@ -1617,13 +1624,17 @@ fun PickResultTextActionBar(
                 translateSelected -> MaterialTheme.colorScheme.primary
                 else -> if (isDark) androidx.compose.ui.graphics.Color(0xFFE0E0E6) else androidx.compose.ui.graphics.Color(0xFF333333)
             }
-            IconButton(
-                onClick = onTranslate,
-                enabled = enabled && translateEnabled,
+            Box(
                 modifier = Modifier
                     .size(38.dp)
                     .clip(RoundedCornerShape(19.dp))
                     .background(translateBg)
+                    .combinedClickable(
+                        enabled = enabled && translateEnabled,
+                        onClick = onTranslate,
+                        onLongClick = onTranslateLongClick,
+                    ),
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Translate,

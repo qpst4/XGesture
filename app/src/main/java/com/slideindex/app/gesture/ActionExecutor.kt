@@ -28,6 +28,7 @@ import com.slideindex.app.overlay.FloatBallStashPanel
 import com.slideindex.app.overlay.FloatBallVisibilityToggle
 import com.slideindex.app.overlay.PickResultFromHistoryCoordinator
 import com.slideindex.app.overlay.StashPanelInitialTab
+import com.slideindex.app.overlay.SystemMagnifierController
 import com.slideindex.app.overlay.FloatingPointerOverlayWindow
 import com.slideindex.app.clipboard.ClipboardFocusReader
 import com.slideindex.app.overlay.HoneycombAppPickerOverlayWindow
@@ -102,6 +103,12 @@ class ActionExecutor(
     fun updatePageScrollHoldDrag(rawY: Float) = PageScrollActionRunner.updateHoldDrag(rawY)
 
     fun endPageScrollHoldDrag() = PageScrollActionRunner.endHoldDrag()
+
+    fun beginMagnifierHold(rawX: Float, rawY: Float) = SystemMagnifierController.start(rawX, rawY)
+
+    fun updateMagnifierHold(rawX: Float, rawY: Float) = SystemMagnifierController.update(rawX, rawY)
+
+    fun endMagnifierHold() = SystemMagnifierController.stop()
 
     fun updateContinuousAdjust(mode: ContinuousAdjustController.Mode, rawY: Float) {
         mediaSystem.updateContinuousAdjust(mode, rawY)
@@ -201,6 +208,15 @@ class ActionExecutor(
                 side = resolvedSide ?: PanelSide.RIGHT,
                 anchorRawY = overlayAnchorY ?: (context.resources.displayMetrics.heightPixels / 2f),
             )
+            // 「放大镜」：普通触发是开关式（再触发/60 秒后关）；持续触发由会话另走 hold 路径。
+            GestureAction.Magnifier -> {
+                val metrics = context.resources.displayMetrics
+                SystemMagnifierController.toggle(
+                    x = overlayAnchorX ?: (metrics.widthPixels / 2f),
+                    y = overlayAnchorY ?: (metrics.heightPixels / 2f),
+                )
+                true
+            }
             is GestureAction.OpenLink -> {
                 if (action.url.isBlank()) return false
                 SearchEngineLauncher.launchOpenableUri(context, action.url, settings, longPressArmed)
@@ -222,6 +238,8 @@ class ActionExecutor(
             }
             GestureAction.PointerGestureRecorder,
             GestureAction.PointerRealtimeGesture,
+            GestureAction.PointerPinchZoom,
+            GestureAction.PointerRealtimeScroll,
             GestureAction.OpenFloatingPointerRadialMenu,
             GestureAction.FingertipRing,
             -> false

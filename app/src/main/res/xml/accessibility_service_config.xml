@@ -5,6 +5,7 @@
     android:accessibilityFlags="flagDefault|flagIncludeNotImportantViews|flagReportViewIds|flagRetrieveInteractiveWindows"
     android:canPerformGestures="true"
     android:canTakeScreenshot="true"
+    android:canControlMagnification="true"
     android:canRetrieveWindowContent="true"
     android:description="@string/accessibility_service_desc"
     android:label="@string/accessibility_service_name"

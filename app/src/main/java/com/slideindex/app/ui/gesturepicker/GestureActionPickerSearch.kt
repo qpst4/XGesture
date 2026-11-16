@@ -321,6 +321,9 @@ fun gestureActionDescriptionText(context: Context, action: GestureAction): Strin
         GestureActionType.CLIPBOARD_PICK -> context.getString(R.string.gesture_action_clipboard_pick_desc)
         GestureActionType.CLIPBOARD_PASTE -> context.getString(R.string.gesture_action_clipboard_paste_desc)
         GestureActionType.POINTER_REALTIME_GESTURE -> context.getString(R.string.gesture_action_pointer_realtime_gesture_desc)
+        GestureActionType.REALTIME_PINCH -> context.getString(R.string.gesture_action_pointer_pinch_desc)
+        GestureActionType.REALTIME_SCROLL -> context.getString(R.string.gesture_action_pointer_scroll_desc)
+        GestureActionType.MAGNIFIER -> context.getString(R.string.gesture_action_magnifier_desc)
         GestureActionType.TOGGLE_MUTE -> context.getString(R.string.gesture_action_sound_mode_desc)
         GestureActionType.TOGGLE_SHAKE_GESTURE -> context.getString(R.string.gesture_action_toggle_shake_desc)
         GestureActionType.TOGGLE_FLOAT_BALL -> context.getString(R.string.gesture_action_toggle_float_ball_desc)
@@ -468,6 +471,9 @@ private fun gestureActionBaseLabelText(context: Context, action: GestureAction):
         GestureActionType.SIMULATE_POINTER_SWIPE -> context.getString(R.string.gesture_action_pointer_swipe)
         GestureActionType.POINTER_GESTURE_RECORDER -> context.getString(R.string.gesture_action_pointer_gesture_recorder)
         GestureActionType.POINTER_REALTIME_GESTURE -> context.getString(R.string.gesture_action_pointer_realtime_gesture)
+        GestureActionType.REALTIME_PINCH -> context.getString(R.string.gesture_action_pointer_pinch)
+        GestureActionType.REALTIME_SCROLL -> context.getString(R.string.gesture_action_pointer_scroll)
+        GestureActionType.MAGNIFIER -> context.getString(R.string.gesture_action_magnifier)
         GestureActionType.OPEN_FLOATING_POINTER_RADIAL_MENU -> context.getString(R.string.gesture_action_open_floating_pointer_radial_menu)
         GestureActionType.TOGGLE_DND -> context.getString(R.string.gesture_action_toggle_dnd)
         GestureActionType.TIMED_DND -> context.getString(R.string.gesture_action_timed_dnd)
@@ -692,6 +698,9 @@ private fun gestureActionBaseLabel(action: GestureAction, settings: AppSettings?
         GestureActionType.SIMULATE_POINTER_SWIPE -> stringResource(R.string.gesture_action_pointer_swipe)
         GestureActionType.POINTER_GESTURE_RECORDER -> stringResource(R.string.gesture_action_pointer_gesture_recorder)
         GestureActionType.POINTER_REALTIME_GESTURE -> stringResource(R.string.gesture_action_pointer_realtime_gesture)
+    GestureActionType.REALTIME_PINCH -> stringResource(R.string.gesture_action_pointer_pinch)
+    GestureActionType.REALTIME_SCROLL -> stringResource(R.string.gesture_action_pointer_scroll)
+    GestureActionType.MAGNIFIER -> stringResource(R.string.gesture_action_magnifier)
         GestureActionType.OPEN_FLOATING_POINTER_RADIAL_MENU -> stringResource(R.string.gesture_action_open_floating_pointer_radial_menu)
         GestureActionType.TOGGLE_DND -> stringResource(R.string.gesture_action_toggle_dnd)
         GestureActionType.TIMED_DND -> stringResource(R.string.gesture_action_timed_dnd)
@@ -800,6 +809,9 @@ fun gestureActionDescription(action: GestureAction): String? = when (action.type
     GestureActionType.SIMULATE_POINTER_SWIPE -> stringResource(R.string.gesture_action_pointer_swipe_desc)
     GestureActionType.POINTER_GESTURE_RECORDER -> stringResource(R.string.gesture_action_pointer_gesture_recorder_desc)
     GestureActionType.POINTER_REALTIME_GESTURE -> stringResource(R.string.gesture_action_pointer_realtime_gesture_desc)
+    GestureActionType.REALTIME_PINCH -> stringResource(R.string.gesture_action_pointer_pinch_desc)
+    GestureActionType.REALTIME_SCROLL -> stringResource(R.string.gesture_action_pointer_scroll_desc)
+    GestureActionType.MAGNIFIER -> stringResource(R.string.gesture_action_magnifier_desc)
     GestureActionType.OPEN_FLOATING_POINTER_RADIAL_MENU -> stringResource(R.string.gesture_action_open_floating_pointer_radial_menu_desc)
     GestureActionType.TOGGLE_MUTE -> stringResource(R.string.gesture_action_sound_mode_desc)
     GestureActionType.TOGGLE_AIRPLANE -> stringResource(R.string.gesture_action_toggle_airplane_desc)
@@ -841,6 +853,9 @@ fun gestureActionDescription(action: GestureAction): String? = when (action.type
 
 fun gestureActionMinSdk(action: GestureAction): Int? = when (action.type) {
     GestureActionType.POINTER_REALTIME_GESTURE -> 36
+    GestureActionType.REALTIME_PINCH -> 36
+    GestureActionType.REALTIME_SCROLL -> 36
+    GestureActionType.MAGNIFIER -> 33
     else -> null
 }
 
@@ -852,6 +867,9 @@ fun isGestureActionEnabledOnDevice(action: GestureAction): Boolean {
 @Composable
 fun gestureActionRequirementHint(action: GestureAction): String? = when (action.type) {
     GestureActionType.POINTER_REALTIME_GESTURE -> stringResource(R.string.gesture_action_require_min_sdk_36)
+    GestureActionType.REALTIME_PINCH -> stringResource(R.string.gesture_action_require_min_sdk_36)
+    GestureActionType.REALTIME_SCROLL -> stringResource(R.string.gesture_action_require_min_sdk_36)
+    GestureActionType.MAGNIFIER -> stringResource(R.string.gesture_action_require_min_sdk_33)
     else -> null
 }
 
@@ -984,6 +1002,9 @@ fun gestureActionPermissionHintText(context: Context, action: GestureAction): St
         }
         GestureActionType.POINTER_GESTURE_RECORDER,
         GestureActionType.POINTER_REALTIME_GESTURE,
+        GestureActionType.REALTIME_PINCH,
+        GestureActionType.REALTIME_SCROLL,
+        GestureActionType.MAGNIFIER,
         -> {
             if (PermissionHelper.isAccessibilityServiceEnabledForOverlays(context)) return null
             context.getString(R.string.gesture_action_pointer_gesture_record_permission)

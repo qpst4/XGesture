@@ -1104,6 +1104,7 @@
     <string name="float_ball_pick_panel_tab_image">Screenshot</string>
     <string name="pick_result_action_save_image">Save image</string>
     <string name="pick_result_action_view_image">View image</string>
+    <string name="pick_result_translate_target_switched">Translate target: %1$s</string>
     <string name="pick_result_action_image_search">Search by image</string>
     <string name="pick_result_action_share_image">Share image</string>
     <string name="pick_result_tts_speak">Read aloud</string>
@@ -5140,4 +5141,13 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="search_engine_action_edit_summary">Change the search URL, icon, or title</string>
     <string name="search_engine_action_delete">Delete search engine</string>
     <string name="search_engine_action_delete_summary">Permanently remove this item from the local list</string>
+    <string name="gesture_action_magnifier">Magnifier</string>
+    <string name="gesture_action_magnifier_desc">Magnify the screen around the trigger point (or your finger)</string>
+    <string name="gesture_action_pointer_pinch">Real-time pinch zoom</string>
+    <string name="gesture_action_pointer_pinch_desc">Hold the pointer and move to pinch/zoom in real time</string>
+    <string name="gesture_action_pointer_scroll">Real-time scroll</string>
+    <string name="gesture_action_pointer_scroll_desc">Hold the pointer and move to scroll; farther = faster</string>
+    <string name="gesture_action_require_min_sdk_33">Requires Android 13</string>
+    <string name="magnifier_chip_text">Magnifier %1$s× · tap to close</string>
+    <string name="magnifier_opened_toast">Magnifier on: tap the bottom-right dot to close, long-press it to change zoom</string>
 </resources>

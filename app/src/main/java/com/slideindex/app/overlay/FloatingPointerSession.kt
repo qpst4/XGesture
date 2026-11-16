@@ -137,6 +137,14 @@ internal class FloatingPointerSession(
     internal var realtimeGesture: FloatingPointerRealtimeGesture? = null
         private set
 
+    /** 实时双指缩放（指针专属）。 */
+    internal var pinchGesture: FloatingPointerPinchGesture? = null
+        private set
+
+    /** 实时滚动（指针专属）。 */
+    internal var scrollGesture: FloatingPointerScrollGesture? = null
+        private set
+
     /**
      * Set when a radial-menu slot with a gesture-capture action is confirmed on finger lift.
      * The next touch down starts capture immediately.
@@ -231,7 +239,8 @@ internal class FloatingPointerSession(
 
     /** True while gesture capture is sampling, replaying, or armed for the next touch. */
     val gestureCaptureActive: Boolean
-        get() = gestureRecorder != null || realtimeGesture != null || pendingGestureCaptureAction != null
+        get() = gestureRecorder != null || realtimeGesture != null || pinchGesture != null ||
+            scrollGesture != null || pendingGestureCaptureAction != null
 
     fun armPendingGestureCapture(action: GestureAction) {
         pendingGestureCaptureAction = action
@@ -327,7 +336,59 @@ internal class FloatingPointerSession(
 
     fun releaseRealtimeGesture() {
         realtimeGesture = null
+        pinchGesture = null
+        scrollGesture = null
         realtimeGestureActive.value = false
+    }
+
+    /** 指针长按/功能环触发的实时双指缩放。 */
+    fun startPinchGesture(
+        service: android.accessibilityservice.AccessibilityService,
+        pointerX: Float,
+        pointerY: Float,
+        onError: () -> Unit,
+        onFinished: () -> Unit,
+    ) {
+        clearPendingGestureCapture()
+        realtimeGestureActive.value = true
+        pinchGesture = FloatingPointerPinchGesture(
+            service = service,
+            startX = pointerX,
+            startY = pointerY,
+            onError = {
+                releaseRealtimeGesture()
+                onError()
+            },
+            onFinished = {
+                releaseRealtimeGesture()
+                onFinished()
+            },
+        )
+    }
+
+    /** 指针长按/功能环触发的实时滚动。 */
+    fun startScrollGesture(
+        service: android.accessibilityservice.AccessibilityService,
+        pointerX: Float,
+        pointerY: Float,
+        onError: () -> Unit,
+        onFinished: () -> Unit
+    ) {
+        clearPendingGestureCapture()
+        realtimeGestureActive.value = true
+        scrollGesture = FloatingPointerScrollGesture(
+            service = service,
+            startX = pointerX,
+            startY = pointerY,
+            onError = {
+                releaseRealtimeGesture()
+                onError()
+            },
+            onFinished = {
+                releaseRealtimeGesture()
+                onFinished()
+            }
+        )
     }
 
     fun openRadialMenu(centerX: Float, centerY: Float) {
@@ -479,14 +540,22 @@ internal class FloatingPointerSession(
         )
     }
 
+    /** 实时缩放由手指位移驱动（指针冻结），见 [updatePinchByFinger]。 */
+    fun updatePinchByFinger(dx: Float, dy: Float) {
+        pinchGesture?.updateFingerDelta(dx, dy)
+    }
+
     /** Updates the active real-time gesture with the current pointer position. */
     fun updateRealtimeGesture() {
         realtimeGesture?.updatePosition(pointerX.floatValue, pointerY.floatValue)
+        scrollGesture?.updatePosition(pointerX.floatValue, pointerY.floatValue)
     }
 
     /** Ends the active real-time gesture. */
     fun finishRealtimeGesture() {
         realtimeGesture?.finish()
+        pinchGesture?.finish()
+        scrollGesture?.finish()
     }
 
     fun triggerRipple(x: Float, y: Float) {

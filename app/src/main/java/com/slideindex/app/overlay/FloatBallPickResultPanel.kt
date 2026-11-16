@@ -1524,6 +1524,28 @@ object FloatBallPickResultPanel {
                         ) { dismiss() }
                     },
                     onTranslate = { FloatBallTranslateCoordinator.translate(context, it) },
+                    onTranslateLongClick = {
+                        // 长按翻译键：在中/英之间切换目标语言（无需进设置）。
+                        val current = settingsHolder.value.floatBallTranslateTargetLang
+                        val next = nextTranslateTargetLanguage(current)
+                        // 这里不在 @Composable 上下文，不能调 translateTargetAutonym（它是 @Composable）。
+                        val languageName = if (next == "en") "English" else "中文"
+                        Toast.makeText(
+                            overlayContext.applicationContext,
+                            overlayContext.getString(
+                                R.string.pick_result_translate_target_switched,
+                                languageName,
+                            ),
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                        val repository = OverlayDependencyAccess.overlayDependencies(overlayContext)
+                            ?.settingsRepository
+                        if (repository != null) {
+                            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                                repository.setFloatBallTranslateTargetLang(next)
+                            }
+                        }
+                    },
                     onRemoveSpaces = { value, removeAll ->
                         textHolder.value = if (removeAll) {
                             value.replace(Regex("\\s+"), "")
@@ -1855,4 +1877,10 @@ object FloatBallPickResultPanel {
                 .onFailure { Log.w(TAG, "persist pick text mode failed", it) }
         }
     }
+}
+
+/** 长按翻译键时的目标语言轮换：中文 ⇄ 英文（其它/跟随应用都先落到中文）。 */
+private fun nextTranslateTargetLanguage(current: String): String {
+    val normalized = current.lowercase().substringBefore('-')
+    return if (normalized == "zh") "en" else "zh"
 }

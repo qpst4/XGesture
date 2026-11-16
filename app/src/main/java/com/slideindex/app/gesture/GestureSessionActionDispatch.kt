@@ -53,6 +53,12 @@ internal fun GestureSession.trackContinuousGesture(
         return
     }
 
+    // 「放大镜」在持续触发下 = 按住放大、跟随手指、松手恢复。
+    if (action is GestureAction.Magnifier) {
+        enterMagnifierHold(rawX, rawY)
+        return
+    }
+
     if (!action.supportsContinuousTracking(classification.trigger)) return
 
     when (action) {
@@ -250,6 +256,23 @@ internal fun GestureSession.handleClassifiedGesture(
 
     when (action) {
         is GestureAction.OpenIndex -> enterIndexMode(localX, localY)
+
+        // 「放大镜」：持续触发 = 按住跟手；松手/即时 = 开关式。
+        GestureAction.Magnifier -> {
+            val triggerMode = sessionSettings.resolvedTriggerMode(
+                sessionSide,
+                classification.trigger,
+                sessionActiveHandleId,
+            )
+            if (triggerMode == GestureTriggerMode.CONTINUOUS) {
+                enterMagnifierHold(rawX, rawY)
+            } else {
+                sessionActionExecutor.execute(action, sessionSettings, anchorRawX = rawX, anchorRawY = rawY)
+            }
+        }
+
+        // 指针专属动作：只有悬浮指针能执行；从边缘手势走到这里直接忽略。
+        GestureAction.PointerPinchZoom, GestureAction.PointerRealtimeScroll -> Unit
 
         // 「晃动菜单」只在晃动方向上有意义，边缘手势分发到这里直接忽略。
         is GestureAction.OpenShakeMenu -> Unit

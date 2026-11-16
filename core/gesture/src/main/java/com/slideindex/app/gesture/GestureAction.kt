@@ -253,6 +253,15 @@ enum class GestureActionType(val id: Int) {
      * 无特权时执行器降级打开系统无线设置页。
      */
     TOGGLE_HOTSPOT(120),
+
+    /** 「放大镜」：系统无障碍放大，围绕触发点/手指实时放大，可重复触发关闭。 */
+    MAGNIFIER(121),
+
+    /** 指针专属：实时双指缩放（按住指针并移动 = 双指张合）。 */
+    REALTIME_PINCH(122),
+
+    /** 指针专属：实时滚动（按住指针并移动 = 连续短滑，推得越远滚得越快）。 */
+    REALTIME_SCROLL(123),
     ;
 
     companion object {
@@ -758,6 +767,28 @@ sealed class GestureAction {
      */
     data object PageScroll : GestureAction() {
         override val type = GestureActionType.PAGE_SCROLL
+        override val payload = ""
+    }
+
+    /**
+     * 「放大镜」：调用系统无障碍放大（`MagnificationController`），把触发点周围实时放大。
+     *
+     * 不抓屏、不弹录屏授权。普通触发（松手/即时）= 开关式；持续触发 = 按住放大、松手恢复。
+     */
+    data object Magnifier : GestureAction() {
+        override val type = GestureActionType.MAGNIFIER
+        override val payload = ""
+    }
+
+    /** 指针专属：实时双指缩放。 */
+    data object PointerPinchZoom : GestureAction() {
+        override val type = GestureActionType.REALTIME_PINCH
+        override val payload = ""
+    }
+
+    /** 指针专属：实时滚动。 */
+    data object PointerRealtimeScroll : GestureAction() {
+        override val type = GestureActionType.REALTIME_SCROLL
         override val payload = ""
     }
 
@@ -1364,6 +1395,8 @@ sealed class GestureAction {
             QuickWheel(),
             // 「页面滚动」在持续触发下 = 按住并拖动（逐页滚动），所以它也算支持持续跟踪的动作。
             PageScroll,
+            // 「放大镜」持续触发 = 按住放大、手指移动跟随、松手恢复。
+            Magnifier,
         )
 
         fun from(type: GestureActionType, payload: String): GestureAction =
@@ -1419,6 +1452,9 @@ sealed class GestureAction {
                 GestureActionType.EXECUTE_SHELL_COMMAND -> ExecuteShellCommand(payload)
                 GestureActionType.RUN_MACRO -> RunMacro(payload)
                 GestureActionType.PAGE_SCROLL -> PageScroll
+                GestureActionType.MAGNIFIER -> Magnifier
+                GestureActionType.REALTIME_PINCH -> PointerPinchZoom
+                GestureActionType.REALTIME_SCROLL -> PointerRealtimeScroll
                 GestureActionType.OPEN_LINK -> OpenLink.fromPayload(payload)
                 GestureActionType.QUICK_TOOLS_OVERLAY -> QuickToolsOverlay
                 GestureActionType.QUICK_MENU -> QuickMenu
@@ -1568,6 +1604,7 @@ fun GestureAction.isContinuousTrackingKind(): Boolean =
 
 fun GestureAction.supportsContinuousTracking(trigger: GestureTriggerType): Boolean {
     if (!isContinuousTrackingKind()) return false
+    if (this is GestureAction.Magnifier) return true
     return when (this) {
         // 索引与面板类动作同语义：长按阈值处先打开，后续滑动继续跟手，松手按落点确认。
         // 不加这一条时长按槽位只能「松手开面板」或「即时开面板」，选不到持续触发。

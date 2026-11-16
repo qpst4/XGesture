@@ -125,6 +125,7 @@ object GestureActionCatalog {
         GestureActionType.SCROLL_TO_TOP,
         GestureActionType.SCROLL_TO_BOTTOM,
         GestureActionType.PAGE_SCROLL,
+        GestureActionType.MAGNIFIER,
         GestureActionType.CURRENT_APP_INFO,
         GestureActionType.SCREEN_OFF_KEEP_AWAKE,
         GestureActionType.TOUCH_BLOCK,
@@ -216,6 +217,8 @@ object GestureActionCatalog {
         GestureActionType.OPEN_FLOATING_POINTER_RADIAL_MENU,
         GestureActionType.POINTER_GESTURE_RECORDER,
         GestureActionType.POINTER_REALTIME_GESTURE,
+        GestureActionType.REALTIME_PINCH,
+        GestureActionType.REALTIME_SCROLL,
         GestureActionType.SIMULATE_POINTER_SWIPE,
         GestureActionType.SHELL_COMMAND_PANEL,
         GestureActionType.EXECUTE_SHELL_COMMAND,
@@ -261,6 +264,8 @@ object GestureActionCatalog {
             add(GestureAction.OpenFloatingPointerRadialMenu)
             add(GestureAction.PointerGestureRecorder)
             add(GestureAction.PointerRealtimeGesture)
+            add(GestureAction.PointerPinchZoom)
+            add(GestureAction.PointerRealtimeScroll)
             add(GestureAction.SimulatePointerSwipe())
         }
         add(GestureAction.SnoozeOverlays)
@@ -309,6 +314,8 @@ object GestureActionCatalog {
         GestureAction.ScrollToTop,
         GestureAction.ScrollToBottom,
         GestureAction.PageScroll,
+        // 「放大镜」对所有动作列表可见：触钮/指针/轮盘都能绑。
+        GestureAction.Magnifier,
 
         // 2. 开关与调节 (Controls & Media)
         GestureAction.ToggleWifi(),

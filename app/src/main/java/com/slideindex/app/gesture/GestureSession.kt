@@ -86,6 +86,9 @@ class GestureSession(
 
     /** 「页面滚动」（按住拖动方式）本次手势内是否已激活。 */
     internal var sessionPageScrollHoldActive = false
+
+    /** 「放大镜」持续触发：按住跟手指放大，松手恢复。 */
+    internal var sessionMagnifierHoldActive = false
     internal var sessionMoveTimeActionFired = false
     internal var sessionActiveHandleId = TriggerHandle.DEFAULT_ID
     internal var sessionQuickLauncherPanelId: String = ""
@@ -413,6 +416,12 @@ class GestureSession(
             return
         }
 
+        // 「放大镜」按住：中心跟随手指，松手在 UP 分支恢复。
+        if (sessionMagnifierHoldActive) {
+            actionExecutor.updateMagnifierHold(rawX, rawY)
+            return
+        }
+
         if (sessionContinuousPick.honeycombActive()) {
             callbacks.onHoneycombLauncherPointerMove(rawX, rawY)
             return
@@ -538,6 +547,12 @@ class GestureSession(
 
                 if (sessionPageScrollHoldActive) {
                     stopPageScrollHoldDrag()
+                    endSession()
+                    return
+                }
+
+                if (sessionMagnifierHoldActive) {
+                    stopMagnifierHold()
                     endSession()
                     return
                 }
@@ -796,6 +811,7 @@ class GestureSession(
         callbacks.cancelDelayed(hoverHapticCheckRunnable)
         actionExecutor.endContinuousAdjust()
         stopPageScrollHoldDrag()
+        stopMagnifierHold()
         pathRecognizer.reset()
         indexSession.endSession()
 
@@ -927,6 +943,21 @@ class GestureSession(
         if (!sessionPageScrollHoldActive) return
         sessionPageScrollHoldActive = false
         actionExecutor.endPageScrollHoldDrag()
+    }
+
+    /** 进入「放大镜」持续触发：按住放大、移动跟随、松手恢复。 */
+    internal fun enterMagnifierHold(rawX: Float, rawY: Float) {
+        if (!sessionMagnifierHoldActive) {
+            sessionMagnifierHoldActive = true
+            callbacks.onSessionStart(OverlayPanelMode.NONE)
+        }
+        actionExecutor.beginMagnifierHold(rawX, rawY)
+    }
+
+    internal fun stopMagnifierHold() {
+        if (!sessionMagnifierHoldActive) return
+        sessionMagnifierHoldActive = false
+        actionExecutor.endMagnifierHold()
     }
 
     internal fun enterIndexMode(localX: Float, localY: Float) {

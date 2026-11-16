@@ -33,7 +33,11 @@ internal class FloatingPointerSettingsSync(
         ) {
             window.session?.pointerVisible?.value = false
         }
-        if (window.session?.joystickActive?.value == true || window.session?.radialMenuActive?.value == true) {
+        if (window.session?.joystickActive?.value == true ||
+            window.session?.radialMenuActive?.value == true ||
+            window.session?.gestureCaptureActive == true ||
+            window.session?.realtimeGestureActive?.value == true
+        ) {
             resetIdleTimer()
             return
         }
@@ -54,14 +58,18 @@ internal class FloatingPointerSettingsSync(
         if (!settings.floatingPointerHideWhenIdle) return
         if (window.session?.joystickActive?.value == true ||
             window.session?.radialMenuActive?.value == true ||
-            window.session?.gestureReplayActive?.value == true
+            window.session?.gestureReplayActive?.value == true ||
+            window.session?.gestureCaptureActive == true ||
+            window.session?.realtimeGestureActive?.value == true
         ) {
             return
         }
         val runnable = Runnable {
             if (window.session?.joystickActive?.value == true ||
                 window.session?.radialMenuActive?.value == true ||
-                window.session?.gestureReplayActive?.value == true
+                window.session?.gestureReplayActive?.value == true ||
+                window.session?.gestureCaptureActive == true ||
+                window.session?.realtimeGestureActive?.value == true
             ) {
                 resetIdleTimer()
                 return@Runnable

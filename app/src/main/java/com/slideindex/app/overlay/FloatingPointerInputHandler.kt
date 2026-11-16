@@ -148,6 +148,14 @@ internal class FloatingPointerInputHandler(
     }
 
     fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        // 无障碍注入的事件会带回显（deviceId < 0）：绝不能当成用户手指，否则会重新锚定摇杆，
+        // 表现为"一选功能环上的滚动/缩放，摇杆就跑到别处"。
+        if (event.deviceId < 0) {
+            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                android.util.Log.i("PinchEcho", "injected DOWN at (,)")
+            }
+            return true
+        }
         if (event.actionMasked == MotionEvent.ACTION_OUTSIDE) {
             if (host.shouldSwallowInjectEcho(event)) {
                 return true
@@ -178,6 +186,11 @@ internal class FloatingPointerInputHandler(
             }
             else -> {
                 if (!capturing) return false
+                // 实时缩放期间：指针冻结，手指位移直接驱动缩放（QC 的 frozen-cursor 语义）。
+                if (event.actionMasked == MotionEvent.ACTION_MOVE && session.pinchGesture != null) {
+                    session.updatePinchByFinger(event.rawX - downRawX, event.rawY - downRawY)
+                    return true
+                }
                 return handleTouch(event)
             }
         }
@@ -678,7 +691,9 @@ internal class FloatingPointerInputHandler(
 
     private fun isGestureCaptureLongPressAction(action: GestureAction): Boolean =
         action is GestureAction.PointerGestureRecorder ||
-            action is GestureAction.PointerRealtimeGesture
+            action is GestureAction.PointerRealtimeGesture ||
+            action is GestureAction.PointerPinchZoom ||
+            action is GestureAction.PointerRealtimeScroll
 
     companion object {
         private const val LONG_PRESS_DISMISS_MS = 900L

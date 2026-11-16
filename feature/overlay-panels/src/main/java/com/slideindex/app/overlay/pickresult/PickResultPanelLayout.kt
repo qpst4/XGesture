@@ -600,6 +600,8 @@ fun PickResultPanelTextSlot(
     onProcessText: (String, PickResultProcessTextTarget) -> Unit,
     onCopy: (String, keepPanelOpen: Boolean) -> Unit,
     onTranslate: (String) -> Unit,
+    /** 长按翻译键：切换目标语言；null 时不挂长按。 */
+    onTranslateLongClick: (() -> Unit)? = null,
     onRemoveSpaces: (String, Boolean) -> Unit,
     onZoomText: (Boolean) -> Unit,
     onToolbarDragDelta: (Float) -> Unit,
@@ -688,6 +690,7 @@ fun PickResultPanelTextSlot(
                 onProcessText = onProcessText,
                 onCopy = onCopy,
                 onTranslate = onTranslate,
+                onTranslateLongClick = onTranslateLongClick,
                 onRemoveSpaces = onRemoveSpaces,
                 onZoomText = onZoomText,
                 onToolbarDragDelta = onToolbarDragDelta,
@@ -900,6 +903,8 @@ fun PickResultCollapsePanelColumn(
     onProcessText: (String, PickResultProcessTextTarget) -> Unit,
     onCopy: (String, keepPanelOpen: Boolean) -> Unit,
     onTranslate: (String) -> Unit,
+    /** 长按翻译键：切换目标语言；null 时不挂长按。 */
+    onTranslateLongClick: (() -> Unit)? = null,
     onRemoveSpaces: (String, Boolean) -> Unit,
     onZoomText: (Boolean) -> Unit,
     onPinTextToScreen: (String) -> Unit,
@@ -1302,6 +1307,7 @@ fun PickResultCollapsePanelColumn(
             onProcessText = onProcessText,
             onCopy = onCopy,
             onTranslate = onTranslate,
+            onTranslateLongClick = onTranslateLongClick,
             onRemoveSpaces = onRemoveSpaces,
             onZoomText = onZoomText,
             onToolbarDragDelta = onToolbarDragDelta,
