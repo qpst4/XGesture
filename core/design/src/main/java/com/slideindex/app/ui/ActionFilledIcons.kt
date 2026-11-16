@@ -3,9 +3,11 @@ package com.slideindex.app.ui
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathParser
-import androidx.compose.ui.graphics.vector.group
+import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
 /**
@@ -27,10 +29,6 @@ object ActionFilledIcons {
     /** 放大镜 + 加号。 */
     private const val MAGNIFIER_ZOOM_IN = "$MAX_MAGNIFIER" +
         "M8.77,12.19V10.25H6.83V8.75H8.77V6.81h1.5V8.75h1.94v1.5H10.27v1.94H8.77Z"
-
-    /** 实心、铺满 24×24 的"两段折角箭头"（展开/捏合缩放手势）。 */
-    private const val EXPAND_TWO_ARROWS = "M3.5,20.5V13H5v4.96L17.96,5H13V3.5h7.5V11H19V6.04" +
-        "L6.04,19H11v1.5H3.5Z"
 
     /** 放大镜 + 四向箭头（任意方向滚动）。 */
     private const val SCROLL_ANY_DIRECTION = "M12,21.65l-3.9-3.9l1.07-1.07l2.08,2.08V12.75h-6" +
@@ -70,17 +68,27 @@ object ActionFilledIcons {
                 pathFillType = PathFillType.EvenOdd,
                 fill = fillBrush,
             )
-            // 把铺满 24×24 的双折角箭头缩到镜片里（中心 9.5,9.5，约 7 单位宽）。
-            group(
-                scaleX = 0.42f,
-                scaleY = 0.42f,
-                translationX = 4.48f,
-                translationY = 4.46f,
+            // 镜片里手画一对小折角箭头 + 短连线：不缩放整张原图，否则箭头和中间的线会一起变长。
+            // 描边 1.2：比镜片细一档，避免小尺寸下糊成一团。
+            path(
+                stroke = fillBrush,
+                strokeLineWidth = 1.2f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
             ) {
-                addPath(
-                    pathData = PathParser().parsePathString(EXPAND_TWO_ARROWS).toNodes(),
-                    fill = fillBrush,
-                )
+                // 左下折角箭头
+                moveTo(7.2f, 11.8f)
+                lineTo(9.2f, 11.8f)
+                moveTo(7.2f, 11.8f)
+                lineTo(7.2f, 9.8f)
+                // 右上折角箭头
+                moveTo(11.8f, 7.2f)
+                lineTo(9.8f, 7.2f)
+                moveTo(11.8f, 7.2f)
+                lineTo(11.8f, 9.2f)
+                // 两个箭头之间的短连线（不到角落）
+                moveTo(8.5f, 10.5f)
+                lineTo(10.5f, 8.5f)
             }
         }.build()
     }
