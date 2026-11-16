@@ -44,7 +44,6 @@ import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.FloatBallPickResult
 import com.slideindex.app.ocr.OcrRecognizeResult
 import com.slideindex.app.diagnostic.EdgeDiag
-import com.slideindex.app.diagnostic.DragTrace
 import com.slideindex.app.overlay.filebrowser.FileBrowserMediaPermissionActivity
 import com.slideindex.app.overlay.OverlayCompose
 import com.slideindex.app.overlay.OverlayComposeOwner
@@ -347,17 +346,6 @@ class DragDropFlowController(
                     DIAG_TAG,
                     "started mimes=$mimes items=${dockItems.joinToString(",") { it.id }}",
                 )
-                // 诊断包：拖拽源、标签、判定结果一次打全（logcat -s DragDropFlow 可见）。
-                Log.i(
-                    DIAG_TAG,
-                    "started label=${desc.label} mimes=$mimes " +
-                        "image=$hasImage text=$hasText file=$hasFile items=${dockItems.size}",
-                )
-                DragTrace.record(
-                    context,
-                    "started label=${desc.label} mimes=$mimes " +
-                        "image=$hasImage text=$hasText file=$hasFile items=${dockItems.size}",
-                )
 
                 // 本应用注册过拖拽源就认领这次拖拽：之后源只负责藏好自己，
                 // "结束后恢复还是关掉"由下面 DROP / DRAG_ENDED 统一决定。
@@ -398,16 +386,6 @@ class DragDropFlowController(
                     DIAG_TAG,
                     "drop hovered=$targetId clipItems=${clipData?.itemCount ?: -1} " +
                         "textLen=$droppedTextLength",
-                )
-                // 诊断包：松手时把每一项的真实内容打出来（uri / text / html / intent）。
-                val clipSummary = describeClip(clipData)
-                Log.i(
-                    DIAG_TAG,
-                    "drop hovered=$targetId desc=${clipData?.description?.label} $clipSummary",
-                )
-                DragTrace.record(
-                    context,
-                    "drop hovered=$targetId desc=${clipData?.description?.label} $clipSummary",
                 )
 
                 // 只松在「操作」枢纽上（还没展开到动作项）不算选中任何目标：
@@ -696,16 +674,9 @@ class DragDropFlowController(
     }
 
     private fun processDrop(targetId: String, clipData: ClipData) {
-        val summary = describeClip(clipData)
-        Log.i(DIAG_TAG, "processDrop target=$targetId $summary")
-        DragTrace.record(context, "processDrop target=$targetId $summary")
         scope.launch(Dispatchers.IO) {
             val item = clipData.getItemAt(0) ?: return@launch
             val uri = item.uri
-            val itemDetail = "item0 uri=$uri textLen=${item.text?.length ?: -1} " +
-                "html=${item.htmlText != null} intent=${item.intent != null}"
-            Log.i(DIAG_TAG, "processDrop $itemDetail")
-            DragTrace.record(context, "processDrop $itemDetail")
             // 纯文本优先，其次 HTML（网页 / 部分编辑器只给 htmlText）。两者都没有时 text 为 null，
             // 下面引擎分支会明确提示，而不是静默什么都不做。
             val text = item.text?.toString()?.takeIf { it.isNotBlank() }
@@ -787,7 +758,6 @@ class DragDropFlowController(
                         val bitmap = decodeBitmapFromUri(uri)
                         if (bitmap != null) {
                             val shareUri = com.slideindex.app.overlay.panels.PanelRuntimeHooks.createShareImageUri?.invoke(context, bitmap)
-                            DragTrace.record(context, "share map uri=$shareUri ok=${shareUri != null}")
                             if (shareUri != null) {
                                 ShareSheetLauncher.share(
                                     context = context,
@@ -798,7 +768,6 @@ class DragDropFlowController(
                             }
                         } else {
                             // 以前这里完全静默：图片解不出来时用户只看到"没反应"。
-                            DragTrace.record(context, "share decode failed uri=$uri")
                             handleImageDecodeFailure { processDrop(targetId, clipData) }
                         }
                     }
@@ -887,13 +856,6 @@ class DragDropFlowController(
                             payload = ShareSheetPayload.Text(text),
                             dismissSource = { collapseToAnchor() },
                         )
-                    }
-                    else -> {
-                        // 诊断包：命中了项目但没有任何分支能处理（例如分享图片但 uri 为空/读不出）。
-                        val message = "drop unhandled target=$targetId uri=$uri " +
-                            "textLen=${text?.length ?: -1}"
-                        Log.w(DIAG_TAG, message)
-                        DragTrace.record(context, message)
                     }
                 }
             }
@@ -1112,16 +1074,12 @@ class DragDropFlowController(
     /** 拖入图片读不出来时：缺权限就引导授权（授权成功自动重试），否则明确报"无法读取"。 */
     private fun handleImageDecodeFailure(retry: () -> Unit) {
         if (hasMediaReadPermission()) {
-            DragTrace.record(context, "decode failed (media permission ok)")
             Toast.makeText(context, context.getString(R.string.drag_drop_flow_toast_image_unreadable), Toast.LENGTH_SHORT).show()
             return
         }
-        DragTrace.record(context, "decode failed, media permission missing -> prompt")
         Toast.makeText(context, context.getString(R.string.drag_drop_flow_need_media_permission), Toast.LENGTH_LONG).show()
         FileBrowserMediaPermissionActivity.launch(context, mediaPermissionsToRequest()) {
-            val granted = hasMediaReadPermission()
-            DragTrace.record(context, "media permission result granted=$granted")
-            if (granted) retry()
+            if (hasMediaReadPermission()) retry()
         }
     }
 
@@ -1160,50 +1118,11 @@ class DragDropFlowController(
     }
 
     private suspend fun decodeBitmapFromUri(uri: Uri): Bitmap? = withContext(Dispatchers.IO) {
-        val type = runCatching { context.contentResolver.getType(uri) }.getOrNull()
-        val startedAt = android.os.SystemClock.uptimeMillis()
-        val outcome = runCatching {
-            ImageDecodeGuard.decodeUri(
-                context = context,
-                uri = uri,
-                maxSidePx = ImageDecodeGuard.MAX_DISPLAY_SIDE_PX,
-            )
-        }
-        val bitmap = outcome.getOrNull()
-        val cost = android.os.SystemClock.uptimeMillis() - startedAt
-        // 诊断包：解码结果 + 失败原因（SecurityException / 不可 seek 都能区分）。
-        Log.i(
-            DIAG_TAG,
-            "decode uri=$uri authority=${uri.authority} type=$type ok=${bitmap != null} " +
-                "size=${bitmap?.width}x${bitmap?.height} cost=${cost}ms",
+        ImageDecodeGuard.decodeUri(
+            context = context,
+            uri = uri,
+            maxSidePx = ImageDecodeGuard.MAX_DISPLAY_SIDE_PX,
         )
-        DragTrace.record(
-            context,
-            "decode uri=$uri authority=${uri.authority} type=$type ok=${bitmap != null} " +
-                "size=${bitmap?.width}x${bitmap?.height} cost=${cost}ms" +
-                (outcome.exceptionOrNull()?.let { " err=${it.javaClass.simpleName}: ${it.message}" } ?: ""),
-        )
-        bitmap
-    }
-
-    /** 诊断包：把 ClipData 每一项的真实内容压成一行，便于现场定位。 */
-    private fun describeClip(clipData: ClipData?): String {
-        if (clipData == null) return "clip=null"
-        val builder = StringBuilder("items=${clipData.itemCount}")
-        for (index in 0 until clipData.itemCount) {
-            val item = clipData.getItemAt(index)
-            val uri = item.uri
-            val type = uri?.let { runCatching { context.contentResolver.getType(it) }.getOrNull() }
-            builder
-                .append(" [#").append(index)
-                .append(" uri=").append(uri?.toString() ?: "-")
-                .append(" type=").append(type ?: "-")
-                .append(" textLen=").append(item.text?.length ?: -1)
-                .append(" html=").append(item.htmlText != null)
-                .append(" intent=").append(item.intent != null)
-                .append(']')
-        }
-        return builder.toString()
     }
 
     private fun destroyWindow() {

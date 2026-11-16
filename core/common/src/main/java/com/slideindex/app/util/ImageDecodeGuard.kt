@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
-import android.util.Log
 import java.io.File
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -48,12 +47,7 @@ object ImageDecodeGuard {
     ): Bitmap? = runCatching {
         val source = ImageDecoder.createSource(context.contentResolver, uri)
         decodeSource(source, maxSidePx, mutable)
-    }.getOrElse { error ->
-        // 诊断包需要真实失败原因：SecurityException（没授权）和不可 seek 的 provider
-        // 表现都是"解不出来"，只有把异常打出来才能区分。
-        Log.w("ImageDecodeGuard", "decodeUri failed uri=$uri", error)
-        null
-    }
+    }.getOrNull()
 
     fun decodeFile(
         path: String,

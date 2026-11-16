@@ -12,7 +12,6 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.WindowManager
 import android.widget.FrameLayout
-import com.slideindex.app.diagnostic.MacroTrace
 import com.slideindex.app.overlay.OverlayWindowTypes
 import com.slideindex.app.service.SlideIndexAccessibilityService
 import kotlin.math.hypot
@@ -137,10 +136,6 @@ class MacroRecordingTouchCapture(
         }
         attached = true
         Log.i(TAG, "捕获层已添加 panes=$added type=$type hole=${barRectProvider()}")
-        MacroTrace.record(
-            hostContext,
-            "capture show panes=$added type=$type rects=${rects.joinToString("|")} bar=${barRectProvider()}",
-        )
     }
 
     /** 控制条移动/显示后调用：重新算四块窗的位置，保证中间那个洞一直对着控制条。 */
@@ -163,8 +158,6 @@ class MacroRecordingTouchCapture(
                     .onFailure { Log.w(TAG, "更新捕获窗失败", it) }
             }
         }
-        Log.i(TAG, "洞已更新 bar=${barRectProvider()} panes=${rects.joinToString("|")}")
-        MacroTrace.record(hostContext, "hole bar=${barRectProvider()} panes=${rects.joinToString("|")}")
     }
 
     fun dismiss() {
@@ -279,12 +272,6 @@ class MacroRecordingTouchCapture(
                     Log.w(TAG, "上一次触摸没有 UP/CANCEL 就收到新的 DOWN，丢弃上一次")
                     listener.onCancel()
                 }
-                // 诊断包：DOWN 落到捕获层时，把当时的"洞"打出来。
-                // 正常情况 DOWN 永远不该落在控制条矩形内；一旦出现，就是洞过期了。
-                val bar = barRectProvider()
-                val insideBar = bar?.contains(x.toInt(), y.toInt()) == true
-                Log.i(TAG, "DOWN (${x.toInt()},${y.toInt()}) bar=$bar insideBar=$insideBar")
-                MacroTrace.record(hostContext, "DOWN (${x.toInt()},${y.toInt()}) bar=$bar insideBar=$insideBar")
                 capturing = true
                 downX = x
                 downY = y
@@ -305,16 +292,6 @@ class MacroRecordingTouchCapture(
                 if (!capturing) return
                 capturing = false
                 sample(x, y, force = true)
-                Log.i(
-                    TAG,
-                    "UP (${x.toInt()},${y.toInt()}) start=(${downX.toInt()},${downY.toInt()}) " +
-                        "bar=${barRectProvider()}",
-                )
-                MacroTrace.record(
-                    hostContext,
-                    "UP (${x.toInt()},${y.toInt()}) start=(${downX.toInt()},${downY.toInt()}) " +
-                        "bar=${barRectProvider()}",
-                )
                 listener.onUp(x, y, time)
                 requestForward { performForward(x, y, time) }
             }

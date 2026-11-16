@@ -59,8 +59,6 @@ object DiagnosticReportExporter {
         val report = buildString {
             append(LocalCrashHandler.generateDiagnosticReport(appContext))
             append(com.slideindex.app.diagnostic.EdgeDiag.exportText(appContext))
-            append(buildTraceSection(appContext, "拖拽诊断", com.slideindex.app.diagnostic.DragTrace.readTail(appContext)))
-            append(buildTraceSection(appContext, "宏录制诊断", com.slideindex.app.diagnostic.MacroTrace.readTail(appContext)))
             append(buildBrightnessSection(appContext))
         }
         val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
@@ -78,20 +76,6 @@ object DiagnosticReportExporter {
      * 后半段是复现期间落盘的追踪（我们每次写、系统每次改键、写完 2.5 秒内的屏幕亮度采样）。
      * 用户只需"拉一次亮度 → 这个分享按钮"，不用做任何额外操作。
      */
-    /**
-     * 拖拽 / 宏录制的专用 trace 段。
-     *
-     * 这两块原来只有 logcat，用户点「分享诊断报告」带不走；现在各自落一个 512KB 的滚动文件，
-     * 导出时整段附上，避免被 EdgeDiag 的共享缓冲噪声挤掉。
-     */
-    private fun buildTraceSection(appContext: Context, title: String, body: String): String =
-        buildString {
-            append("\n==== $title ====\n")
-            append("trace bytes=${body.length}\n")
-            append(body.ifBlank { "(empty)\n" })
-            append("\n==== ${title}结束 ====\n")
-        }
-
     private fun buildBrightnessSection(appContext: Context): String {
         val state = runCatching {
             val resolver = appContext.contentResolver
@@ -109,14 +93,7 @@ object DiagnosticReportExporter {
             )
             val display = com.slideindex.app.diagnostic.BrightnessTrace
                 .readDisplayBrightness(appContext)
-            // adj 的真实量纲：AOSP 是 -1..1，部分 OEM（ColorOS）实测 0..255。
-            // 量纲错了我们按 -1..1 写的值会被系统忽略/钳掉，必须在报告里直接标出来。
-            val adjScale = when {
-                adj == null -> "unknown"
-                kotlin.math.abs(adj) > 1.5f -> "0..255(non-standard)"
-                else -> "-1..1"
-            }
-            "state int=$int float=$float adj=$adj adjScale=$adjScale mode=$mode display=$display\n" +
+            "state int=$int float=$float adj=$adj mode=$mode display=$display\n" +
                 "scale ${BrightnessControlHelper.describeScale(appContext)}\n" +
                 "lastWritePath=${BrightnessControlHelper.lastWritePath}\n"
         }.getOrDefault("state unavailable\n")
