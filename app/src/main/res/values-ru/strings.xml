@@ -4910,6 +4910,7 @@
     <string name="quick_wheel_shape_circle_desc">Концентрические кольца, раскрываются изнутри наружу</string>
     <string name="quick_wheel_shape_rect_desc">Раскладка по строкам с фиксированным числом столбцов</string>
     <string name="quick_wheel_section_appearance">Внешний вид</string>
+    <string name="quick_wheel_section_backdrop">Размытие и оттенок</string>
     <string name="quick_wheel_section_shape">Форма колеса</string>
     <string name="quick_wheel_section_slots">Контейнеры</string>
     <string name="quick_wheel_show_labels">Показывать текстовые подписи</string>

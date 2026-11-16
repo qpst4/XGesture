@@ -328,6 +328,8 @@ fun QuickWheelConfigScreen(
     val sectionShapeTitle = stringResource(R.string.quick_wheel_section_shape)
     val sectionAnimationTitle = stringResource(R.string.quick_wheel_animation)
     val sectionStyleTitle = stringResource(R.string.quick_wheel_section_appearance)
+    // 背景参数是轮盘级（一、二级共用），与「按级各一套」的外观设置分开成章。
+    val sectionBackdropTitle = stringResource(R.string.quick_wheel_section_backdrop)
 
     /** 把样式改动应用到**指定 level** 的两套样式上（"当前形态"那套 + 形态专属字段）。 */
     fun QuickWheel.withStyleAt(
@@ -538,18 +540,12 @@ fun QuickWheelConfigScreen(
                     items = buildList {
                         add(
                             settingsCardScopeItem("primary-shape") {
-                                QuickWheelDropdownRow(
+                                QuickWheelSegmentedRow(
+                                    rowKey = "primary-shape",
                                     title = stringResource(R.string.quick_wheel_primary_shape),
-                                    description = stringResource(
-                                        if (wheel.primaryShape == QuickWheelShape.CIRCLE) {
-                                            R.string.quick_wheel_shape_circle_desc
-                                        } else {
-                                            R.string.quick_wheel_shape_rect_desc
-                                        },
-                                    ),
-                                    value = wheel.primaryShape,
-                                    options = QuickWheelShape.entries.toList(),
-                                    labelOf = { quickWheelShapeLabel(it) },
+                                    items = QuickWheelShape.entries.toList(),
+                                    selected = wheel.primaryShape,
+                                    labels = QuickWheelShape.entries.map { quickWheelShapeLabel(it) },
                                     onSelect = { shape -> patchDraft { it.copy(primaryShape = shape) } },
                                 )
                             }
@@ -568,18 +564,12 @@ fun QuickWheelConfigScreen(
                         }
                         add(
                             settingsCardScopeItem("secondary-shape") {
-                                QuickWheelDropdownRow(
+                                QuickWheelSegmentedRow(
+                                    rowKey = "secondary-shape",
                                     title = stringResource(R.string.quick_wheel_secondary_shape),
-                                    description = stringResource(
-                                        if (wheel.secondaryShape == QuickWheelShape.CIRCLE) {
-                                            R.string.quick_wheel_shape_circle_desc
-                                        } else {
-                                            R.string.quick_wheel_shape_rect_desc
-                                        },
-                                    ),
-                                    value = wheel.secondaryShape,
-                                    options = QuickWheelShape.entries.toList(),
-                                    labelOf = { quickWheelShapeLabel(it) },
+                                    items = QuickWheelShape.entries.toList(),
+                                    selected = wheel.secondaryShape,
+                                    labels = QuickWheelShape.entries.map { quickWheelShapeLabel(it) },
                                     onSelect = { shape -> patchDraft { it.copy(secondaryShape = shape) } },
                                 )
                             }
@@ -650,25 +640,12 @@ fun QuickWheelConfigScreen(
                     items = buildList {
                         add(
                             settingsCardScopeItem("style-level") {
-                                QuickWheelDropdownRow(
+                                QuickWheelSegmentedRow(
+                                    rowKey = "style-level",
                                     title = stringResource(R.string.quick_wheel_style_level),
-                                    description = stringResource(
-                                        R.string.quick_wheel_style_level_desc,
-                                        if (styleLevel == QuickWheelStyleLevel.PRIMARY) {
-                                            primaryLabel
-                                        } else {
-                                            secondaryLabel
-                                        },
-                                    ),
-                                    value = styleLevel,
-                                    options = QuickWheelStyleLevel.entries.toList(),
-                                    labelOf = {
-                                        if (it == QuickWheelStyleLevel.PRIMARY) {
-                                            primaryLabel
-                                        } else {
-                                            secondaryLabel
-                                        }
-                                    },
+                                    items = QuickWheelStyleLevel.entries.toList(),
+                                    selected = styleLevel,
+                                    labels = listOf(primaryLabel, secondaryLabel),
                                     onSelect = { styleLevel = it },
                                 )
                             }
@@ -904,8 +881,15 @@ fun QuickWheelConfigScreen(
                                 )
                             }
                         )
-                        // 背景模糊 / 遮罩也属于外观：放在外观设置最底下，拖动同样会浮出实时预览
-                        // （遮罩页内可见；模糊是跨窗口效果，请看「轮盘预览」）。
+                    },
+                )
+
+                // 「模糊与色调」：这些参数作用于**整个轮盘**（一级 / 二级共用同一套背景），
+                // 不随「样式层级」变化，所以从按级各一套的「外观设置」里拆出来单独成章。
+                settingsLazySmallTitle(key = "quick_wheel_backdrop", title = sectionBackdropTitle)
+                groupedCardItems(
+                    keyPrefix = "quick_wheel_backdrop",
+                    items = buildList {
                         add(
                             settingsCardScopeItem("backdrop-blur") {
                                 // 非线性刻度：滑条位置平方映射到 dp，低段（0–30）更细，高段更粗
@@ -1403,6 +1387,40 @@ private fun QuickWheelPercentRow(
 /** 1 个单位一档（精度优先）：档位数 = 区间长度 − 1。 */
 private fun quickWheelSliderSteps(range: ClosedFloatingPointRange<Float>): Int =
     ((range.endInclusive - range.start).roundToInt() - 1).coerceAtLeast(0)
+
+/**
+ * 二选一的「分段标签」行（与「取词 / 布局与行为」页同一套 [SegmentedControl] 外观）。
+ *
+ * 标签由调用方直接给字符串，所以形状名、层级名这类动态/非资源标签也能用。
+ */
+@Composable
+private fun <T> SettingsCardScope.QuickWheelSegmentedRow(
+    rowKey: String,
+    title: String,
+    description: String? = null,
+    items: List<T>,
+    selected: T,
+    labels: List<String>,
+    onSelect: (T) -> Unit,
+) {
+    SettingsCardRow(key = rowKey) { position ->
+        BasicComponent(
+            modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
+            title = title,
+            summary = description,
+            bottomAction = {
+                Box(modifier = Modifier.padding(top = 6.dp)) {
+                    SegmentedControl(
+                        items = items,
+                        selected = selected,
+                        labels = labels,
+                        onSelect = onSelect,
+                    )
+                }
+            },
+        )
+    }
+}
 
 /** 背景「作用范围」的两个选项：顺序即标签顺序。 */
 private val BACKDROP_SCOPE_ITEMS = listOf(

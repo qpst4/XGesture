@@ -609,6 +609,11 @@ fun QuickWheelOverlayContent(
             appearProgress = { appear.value },
             // 二级展开动画：长按一级容器展开它时，二级从该容器中心向外铺开。
             appearSecondaryProgress = { appearSecondary.value },
+            // 二级展开时把其它一级容器（含中心大圆）压暗，让二级成为焦点。
+            // ⚠️ 不能直接用 appearSecondary.value：它**没展开时就是 1f**（表示"二级直接就位"），
+            // 直接当进度会让一级在平时也常驻压暗。只有真的在展开二级时才取它的值。
+            primaryDimProgress = { if (expandedPrimary >= 0) appearSecondary.value else 0f },
+            expandedPrimaryIndex = expandedPrimary,
             highlightCenter = hoverHit.kind == QuickWheelHitKind.CENTER,
             highlightPrimaryIndex = if (hoverHit.kind == QuickWheelHitKind.PRIMARY) {
                 hoverHit.index
