@@ -1007,11 +1007,32 @@ fun QuickWheelConfigScreen(
                             detectTapGestures { position ->
                                 // 只有点在轮盘之外（空白区）才收起；点在轮盘上只是"看"，
                                 // 两种情况下都由这一层消费，不会穿透到底下的设置项。
-                                val dx = position.x - previewLayout.centerX
-                                val dy = position.y - previewLayout.centerY
-                                if (hypot(dx, dy) > previewLayout.outerRadiusPx + 24f) {
-                                    previewVisible = false
+                                //
+                                // ⚠️ 矩形形态不能再用「到圆心的距离 > outerRadiusPx」：
+                                // outerRadiusPx 是圆心到**最远角落容器**的距离，宽矩形能把大半个屏幕
+                                // 都算成轮盘内部，于是点很远也收不起来（横向 / 纵向偏移后更糟）。
+                                // 矩形改用「全部容器的外接矩形 + 余量」：行 / 列缝隙自然算内部，
+                                // 外围空白立刻算外部。圆形保持原判定，行为完全不变。
+                                val tolerantPx = 24f * density
+                                val outside = if (previewWheel.primaryShape == QuickWheelShape.RECT) {
+                                    val slots = previewLayout.primarySlots + previewLayout.secondarySlots
+                                    if (slots.isEmpty()) {
+                                        true
+                                    } else {
+                                        val left = slots.minOf { it.centerX - it.sizePx / 2f } - tolerantPx
+                                        val right = slots.maxOf { it.centerX + it.sizePx / 2f } + tolerantPx
+                                        val top = slots.minOf { it.centerY - it.sizePx / 2f } - tolerantPx
+                                        val bottom = slots.maxOf { it.centerY + it.sizePx / 2f } + tolerantPx
+                                        position.x < left || position.x > right ||
+                                            position.y < top || position.y > bottom
+                                    }
+                                } else {
+                                    hypot(
+                                        position.x - previewLayout.centerX,
+                                        position.y - previewLayout.centerY,
+                                    ) > previewLayout.outerRadiusPx + tolerantPx
                                 }
+                                if (outside) previewVisible = false
                             }
                         },
                 )

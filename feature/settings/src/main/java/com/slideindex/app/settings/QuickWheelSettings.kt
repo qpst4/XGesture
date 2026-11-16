@@ -342,7 +342,7 @@ data class QuickWheel(
      * 色调是叠在模糊之上的那层半透明色；颜色见 [backdropDimColorArgb]。
      * 容器本身始终不透明，不受该参数影响。
      */
-    val backdropDimPercent: Int = 25,
+    val backdropDimPercent: Int = 0,
     /**
      * 背景**色调**的 ARGB（默认黑色 = 历史「黑纱」）。
      *
