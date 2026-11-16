@@ -4772,9 +4772,20 @@
     <string name="quick_wheel_long_press_time">مدة الضغط المطوّل</string>
     <string name="quick_wheel_long_press_time_desc">مدة الضغط على الحاوية لتنفيذ الضغطة الطويلة وفتح المستوى الثاني</string>
     <string name="quick_wheel_backdrop_blur">تمويه الخلفية</string>
-    <string name="quick_wheel_backdrop_blur_desc">يضبّب المنطقة خارج الحاويات فقط، ويتطلب دعم النظام</string>
-    <string name="quick_wheel_backdrop_dim">تعتيم الخلفية</string>
-    <string name="quick_wheel_backdrop_dim_desc">يعتّم المنطقة خارج الحاويات فقط، و0% = مرئي بالكامل</string>
+    <string name="quick_wheel_backdrop_blur_desc">شدة التضبيب؛ يُستبدل بالتلوين فقط عند تعطيل تضبيب النوافذ من النظام</string>
+    <string name="quick_wheel_backdrop_tint">لون الخلفية</string>
+    <string name="quick_wheel_backdrop_tint_desc">لون يُرسم فوق التضبيب؛ لا تأثير عند 0%</string>
+    <string name="quick_wheel_backdrop_blur_scope">نطاق التضبيب</string>
+    <string name="quick_wheel_backdrop_blur_scope_desc">الشاشة كاملة بلا حدود؛ العجلة فقط تُظهر حدًّا بين الوضوح والتضبيب</string>
+    <string name="quick_wheel_backdrop_scope_full">الشاشة كاملة</string>
+    <string name="quick_wheel_backdrop_scope_wheel">العجلة فقط</string>
+    <string name="quick_wheel_backdrop_dim_scope">نطاق التلوين</string>
+    <string name="quick_wheel_backdrop_dim_scope_desc">نطاق تغطية اللون، مستقل عن التضبيب</string>
+    <string name="quick_wheel_backdrop_feather">تلاشي الحواف</string>
+    <string name="quick_wheel_backdrop_feather_desc">يُلطّف الحدود في وضع العجلة فقط؛ قد لا يظهر أثر على حدّ التضبيب في بعض الأجهزة</string>
+    <string name="quick_wheel_backdrop_tint_custom">مخصص…</string>
+    <string name="quick_wheel_backdrop_dim">شدة اللون</string>
+    <string name="quick_wheel_backdrop_dim_desc">عتامة اللون؛ 0 = بدون لون</string>
     <string name="quick_wheel_animation">حركة الفتح</string>
     <string name="quick_wheel_open_animation">تأثير الحركة</string>
     <string name="quick_wheel_open_animation_desc">يؤثر فقط في طريقة ظهور العجلة؛ فلا يتأثر اكتشاف اللمس ولا توقيت الضغط المطوّل</string>
@@ -4788,6 +4799,7 @@
     <string name="quick_wheel_shape_circle_desc">حلقات متحدة المركز تتوسّع من الداخل إلى الخارج</string>
     <string name="quick_wheel_shape_rect_desc">صفوف بعدد أعمدة ثابت</string>
     <string name="quick_wheel_section_appearance">المظهر</string>
+    <string name="quick_wheel_section_backdrop">التضبيب والتلوين</string>
     <string name="quick_wheel_section_shape">شكل العجلة</string>
     <string name="quick_wheel_section_slots">الحاويات</string>
     <string name="quick_wheel_show_labels">إظهار التسميات النصية</string>

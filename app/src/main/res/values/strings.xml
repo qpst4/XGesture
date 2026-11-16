@@ -4913,9 +4913,20 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="quick_wheel_long_press_time">Long-press time</string>
     <string name="quick_wheel_long_press_time_desc">How long to press a container to trigger its long-press action and open the second level</string>
     <string name="quick_wheel_backdrop_blur">Background blur</string>
-    <string name="quick_wheel_backdrop_blur_desc">Blurs only the area outside the containers; requires system support</string>
-    <string name="quick_wheel_backdrop_dim">Background dim</string>
-    <string name="quick_wheel_backdrop_dim_desc">Dims only the area outside the containers; 0% = fully visible</string>
+    <string name="quick_wheel_backdrop_blur_desc">Blur strength; falls back to tint only when the system blocks cross-window blur</string>
+    <string name="quick_wheel_backdrop_tint">Background tint</string>
+    <string name="quick_wheel_backdrop_tint_desc">Color laid over the blur; no effect at 0% strength</string>
+    <string name="quick_wheel_backdrop_blur_scope">Blur scope</string>
+    <string name="quick_wheel_backdrop_blur_scope_desc">Full screen leaves no edge; wheel area only adds a sharp/blurred seam</string>
+    <string name="quick_wheel_backdrop_scope_full">Whole screen</string>
+    <string name="quick_wheel_backdrop_scope_wheel">Wheel area only</string>
+    <string name="quick_wheel_backdrop_dim_scope">Tint scope</string>
+    <string name="quick_wheel_backdrop_dim_scope_desc">Where the tint covers, independent of blur</string>
+    <string name="quick_wheel_backdrop_feather">Edge feather</string>
+    <string name="quick_wheel_backdrop_feather_desc">Softens the edge in wheel-area mode; blur edges may show no effect on some devices</string>
+    <string name="quick_wheel_backdrop_tint_custom">Custom…</string>
+    <string name="quick_wheel_backdrop_dim">Tint strength</string>
+    <string name="quick_wheel_backdrop_dim_desc">Opacity of the tint; 0 = no tint</string>
     <string name="quick_wheel_animation">Open animation</string>
     <string name="quick_wheel_open_animation">Animation effect</string>
     <string name="quick_wheel_open_animation_desc">Only affects how the wheel appears — hit testing and long-press timing are unaffected</string>
@@ -4929,6 +4940,7 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="quick_wheel_shape_circle_desc">Concentric rings, expanding from the inside out</string>
     <string name="quick_wheel_shape_rect_desc">Laid out in rows with a fixed number of columns</string>
     <string name="quick_wheel_section_appearance">Appearance</string>
+    <string name="quick_wheel_section_backdrop">Blur &amp; tint</string>
     <string name="quick_wheel_section_shape">Wheel shape</string>
     <string name="quick_wheel_section_slots">Containers</string>
     <string name="quick_wheel_show_labels">Show text labels</string>

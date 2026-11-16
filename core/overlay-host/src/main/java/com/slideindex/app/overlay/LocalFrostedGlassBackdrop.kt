@@ -195,6 +195,18 @@ class LocalFrostedGlassDrawable(private val viewProvider: () -> View?) {
         lastViewRootImpl = null
     }
 
+    /**
+     * 让这张 drawable 立刻从合成里退出（alpha = 0 → 系统下次事务会移除它的模糊区域）。
+     *
+     * 为什么需要：模糊不是应用画出来的，而是把 RenderNode 交给 SurfaceFlinger，由它在该
+     * drawable 的**矩形**上合成。一张 drawable 只有一个 RenderNode / 一个矩形，所以想在同一帧
+     * 画多个"不同范围 + 不同透明度"的模糊，必须**每层各一张**；本帧用不到的层要主动清掉，
+     * 否则会保留上一帧的区域继续参与合成。
+     */
+    fun clear() {
+        runCatching { blurDrawable?.alpha = 0 }
+    }
+
     // 反射取 ViewRootImpl：拿系统私有字段做模糊背景，失败已用 runCatching 兜住。
     @android.annotation.SuppressLint("PrivateApi")
     private fun ensureDrawable(): Drawable? {

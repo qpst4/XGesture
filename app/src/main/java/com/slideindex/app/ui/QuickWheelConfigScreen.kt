@@ -5,8 +5,11 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,9 +27,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -44,8 +49,11 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -60,17 +68,26 @@ import com.slideindex.app.overlay.layout.QuickWheelLayoutEngine
 import com.slideindex.app.overlay.layout.QuickWheelOpenAnimation
 import com.slideindex.app.overlay.layout.QuickWheelShape
 import com.slideindex.app.overlay.layout.QuickWheelStyleSpec
+import com.slideindex.app.overlay.quickwheel.QuickWheelBackdropDim
 import com.slideindex.app.overlay.quickwheel.QuickWheelOverlayWindow
+import com.slideindex.app.overlay.quickwheel.QUICK_WHEEL_BACKDROP_PADDING_DP
+import com.slideindex.app.overlay.quickwheel.backdropRegion
 import com.slideindex.app.settings.QuickWheel
+import com.slideindex.app.settings.QuickWheelBackdropScope
 import com.slideindex.app.settings.QuickWheelCodec
 import com.slideindex.app.settings.withSectorToggled
+import com.slideindex.app.ui.miuix.MiuixColorPickerDialog
 import com.slideindex.app.ui.miuix.MiuixSettingsScreenScaffold
 import com.slideindex.app.ui.miuix.MiuixSliderRow
 import com.slideindex.app.ui.miuix.groupedCardItems
+import com.slideindex.app.ui.settings.components.SettingsCardRow
+import com.slideindex.app.ui.settings.components.SettingsCardScope
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
+import com.slideindex.app.ui.settings.components.settingsGroupedRowBackground
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import kotlin.math.hypot
 import kotlin.math.roundToInt
+import top.yukonga.miuix.kmp.basic.BasicComponent
 
 private enum class QuickWheelStyleLevel { PRIMARY, SECONDARY }
 
@@ -141,11 +158,15 @@ fun QuickWheelConfigScreen(
         settingsWheel.copy(
             name = draft.name,
             longPressMs = draft.longPressMs,
-            // ⚠️ 背景模糊 / 遮罩同样属于本页草稿：不并进来的话这两个滑条会"拖不动"
-            // （Slider 无状态，value 一直读设置里的旧值，拖动时被逐帧弹回），
+            // ⚠️ 背景模糊 / 色调 / 浓度同样属于本页草稿：不并进来的话滑条会"拖不动"、
+            // 颜色点了没反应（UI 读的都是 effective，value 一直是设置里的旧值），
             // 并且 dirty 检测不到、保存时也会被静默丢掉。
             backdropBlurDp = draft.backdropBlurDp,
             backdropDimPercent = draft.backdropDimPercent,
+            backdropDimColorArgb = draft.backdropDimColorArgb,
+            backdropBlurScope = draft.backdropBlurScope,
+            backdropDimScope = draft.backdropDimScope,
+            backdropFeatherDp = draft.backdropFeatherDp,
             // ⚠️ 动画效果 / 速度同理：不并进 effective 的话下拉与滑条都会"点了没反应、拖动被弹回"，
             // dirty 检测不到 → 保存时被静默丢掉。
             openAnimation = draft.openAnimation,
@@ -307,6 +328,8 @@ fun QuickWheelConfigScreen(
     val sectionShapeTitle = stringResource(R.string.quick_wheel_section_shape)
     val sectionAnimationTitle = stringResource(R.string.quick_wheel_animation)
     val sectionStyleTitle = stringResource(R.string.quick_wheel_section_appearance)
+    // 背景参数是轮盘级（一、二级共用），与「按级各一套」的外观设置分开成章。
+    val sectionBackdropTitle = stringResource(R.string.quick_wheel_section_backdrop)
 
     /** 把样式改动应用到**指定 level** 的两套样式上（"当前形态"那套 + 形态专属字段）。 */
     fun QuickWheel.withStyleAt(
@@ -400,9 +423,13 @@ fun QuickWheelConfigScreen(
         wheel.sectorMask,
         // 「正在调哪一级」也算：切到二级立刻浮出带"样本二级"的预览，不必先拖一下滑条。
         styleLevel,
-        // 背景模糊 / 遮罩也算"外观参数"：拖它们同样要浮出实时预览（遮罩页内可见）。
+        // 背景模糊 / 色调 / 羽化也算"外观参数"：拖它们同样要浮出实时预览（遮罩页内可见）。
         wheel.backdropBlurDp,
         wheel.backdropDimPercent,
+        wheel.backdropDimColorArgb,
+        wheel.backdropFeatherDp,
+        wheel.backdropBlurScope,
+        wheel.backdropDimScope,
         wheel.primaryStyle.toString(),
         wheel.secondaryStyle.toString(),
     ).toString()
@@ -513,18 +540,12 @@ fun QuickWheelConfigScreen(
                     items = buildList {
                         add(
                             settingsCardScopeItem("primary-shape") {
-                                QuickWheelDropdownRow(
+                                QuickWheelSegmentedRow(
+                                    rowKey = "primary-shape",
                                     title = stringResource(R.string.quick_wheel_primary_shape),
-                                    description = stringResource(
-                                        if (wheel.primaryShape == QuickWheelShape.CIRCLE) {
-                                            R.string.quick_wheel_shape_circle_desc
-                                        } else {
-                                            R.string.quick_wheel_shape_rect_desc
-                                        },
-                                    ),
-                                    value = wheel.primaryShape,
-                                    options = QuickWheelShape.entries.toList(),
-                                    labelOf = { quickWheelShapeLabel(it) },
+                                    items = QuickWheelShape.entries.toList(),
+                                    selected = wheel.primaryShape,
+                                    labels = QuickWheelShape.entries.map { quickWheelShapeLabel(it) },
                                     onSelect = { shape -> patchDraft { it.copy(primaryShape = shape) } },
                                 )
                             }
@@ -543,18 +564,12 @@ fun QuickWheelConfigScreen(
                         }
                         add(
                             settingsCardScopeItem("secondary-shape") {
-                                QuickWheelDropdownRow(
+                                QuickWheelSegmentedRow(
+                                    rowKey = "secondary-shape",
                                     title = stringResource(R.string.quick_wheel_secondary_shape),
-                                    description = stringResource(
-                                        if (wheel.secondaryShape == QuickWheelShape.CIRCLE) {
-                                            R.string.quick_wheel_shape_circle_desc
-                                        } else {
-                                            R.string.quick_wheel_shape_rect_desc
-                                        },
-                                    ),
-                                    value = wheel.secondaryShape,
-                                    options = QuickWheelShape.entries.toList(),
-                                    labelOf = { quickWheelShapeLabel(it) },
+                                    items = QuickWheelShape.entries.toList(),
+                                    selected = wheel.secondaryShape,
+                                    labels = QuickWheelShape.entries.map { quickWheelShapeLabel(it) },
                                     onSelect = { shape -> patchDraft { it.copy(secondaryShape = shape) } },
                                 )
                             }
@@ -625,25 +640,12 @@ fun QuickWheelConfigScreen(
                     items = buildList {
                         add(
                             settingsCardScopeItem("style-level") {
-                                QuickWheelDropdownRow(
+                                QuickWheelSegmentedRow(
+                                    rowKey = "style-level",
                                     title = stringResource(R.string.quick_wheel_style_level),
-                                    description = stringResource(
-                                        R.string.quick_wheel_style_level_desc,
-                                        if (styleLevel == QuickWheelStyleLevel.PRIMARY) {
-                                            primaryLabel
-                                        } else {
-                                            secondaryLabel
-                                        },
-                                    ),
-                                    value = styleLevel,
-                                    options = QuickWheelStyleLevel.entries.toList(),
-                                    labelOf = {
-                                        if (it == QuickWheelStyleLevel.PRIMARY) {
-                                            primaryLabel
-                                        } else {
-                                            secondaryLabel
-                                        }
-                                    },
+                                    items = QuickWheelStyleLevel.entries.toList(),
+                                    selected = styleLevel,
+                                    labels = listOf(primaryLabel, secondaryLabel),
                                     onSelect = { styleLevel = it },
                                 )
                             }
@@ -879,19 +881,49 @@ fun QuickWheelConfigScreen(
                                 )
                             }
                         )
-                        // 背景模糊 / 遮罩也属于外观：放在外观设置最底下，拖动同样会浮出实时预览
-                        // （遮罩页内可见；模糊是跨窗口效果，请看「轮盘预览」）。
+                    },
+                )
+
+                // 「模糊与色调」：这些参数作用于**整个轮盘**（一级 / 二级共用同一套背景），
+                // 不随「样式层级」变化，所以从按级各一套的「外观设置」里拆出来单独成章。
+                settingsLazySmallTitle(key = "quick_wheel_backdrop", title = sectionBackdropTitle)
+                groupedCardItems(
+                    keyPrefix = "quick_wheel_backdrop",
+                    items = buildList {
                         add(
                             settingsCardScopeItem("backdrop-blur") {
-                                QuickWheelSliderRow(
+                                // 非线性刻度：滑条位置平方映射到 dp，低段（0–30）更细，高段更粗
+                                // —— 观感上 30dp 以后几乎没差别，没必要给它一半以上的行程。
+                                MiuixSliderRow(
                                     title = stringResource(R.string.quick_wheel_backdrop_blur),
-                                    description = stringResource(R.string.quick_wheel_backdrop_blur_desc),
-                                    value = wheel.backdropBlurDp.toFloat(),
-                                    range = QuickWheelLayoutEngine.MIN_BACKDROP_BLUR_DP.toFloat()..
-                                        QuickWheelLayoutEngine.MAX_BACKDROP_BLUR_DP.toFloat(),
-                                    unit = "dp",
-                                    onValueChange = { value ->
-                                        patchDraft { it.copy(backdropBlurDp = value.toInt()) }
+                                    value = blurSliderPos(wheel.backdropBlurDp.toFloat()),
+                                    valueRange = 0f..BLUR_SLIDER_MAX_DP,
+                                    steps = 0,
+                                    formatLabel = { pos -> "${blurSliderDp(pos).roundToInt()} dp" },
+                                    onValueChange = { pos ->
+                                        patchDraft { it.copy(backdropBlurDp = blurSliderDp(pos).roundToInt()) }
+                                    },
+                                )
+                            }
+                        )
+                        add(
+                            settingsCardScopeItem("backdrop-blur-scope") {
+                                QuickWheelBackdropScopeRow(
+                                    rowKey = "backdrop-blur-scope",
+                                    title = stringResource(R.string.quick_wheel_backdrop_blur_scope),
+                                    scope = wheel.backdropBlurScope,
+                                    onSelect = { scope ->
+                                        patchDraft { it.copy(backdropBlurScope = scope) }
+                                    },
+                                )
+                            }
+                        )
+                        add(
+                            settingsCardScopeItem("backdrop-tint") {
+                                QuickWheelBackdropTintRow(
+                                    currentArgb = wheel.backdropDimColorArgb,
+                                    onPick = { color ->
+                                        patchDraft { it.copy(backdropDimColorArgb = color) }
                                     },
                                 )
                             }
@@ -900,13 +932,39 @@ fun QuickWheelConfigScreen(
                             settingsCardScopeItem("backdrop-dim") {
                                 QuickWheelSliderRow(
                                     title = stringResource(R.string.quick_wheel_backdrop_dim),
-                                    description = stringResource(R.string.quick_wheel_backdrop_dim_desc),
                                     value = wheel.backdropDimPercent.toFloat(),
                                     range = QuickWheelLayoutEngine.MIN_BACKDROP_DIM_PERCENT.toFloat()..
                                         QuickWheelLayoutEngine.MAX_BACKDROP_DIM_PERCENT.toFloat(),
                                     unit = "%",
                                     onValueChange = { value ->
                                         patchDraft { it.copy(backdropDimPercent = value.toInt()) }
+                                    },
+                                )
+                            }
+                        )
+                        add(
+                            settingsCardScopeItem("backdrop-dim-scope") {
+                                QuickWheelBackdropScopeRow(
+                                    rowKey = "backdrop-dim-scope",
+                                    title = stringResource(R.string.quick_wheel_backdrop_dim_scope),
+                                    scope = wheel.backdropDimScope,
+                                    onSelect = { scope ->
+                                        patchDraft { it.copy(backdropDimScope = scope) }
+                                    },
+                                )
+                            }
+                        )
+                        add(
+                            settingsCardScopeItem("backdrop-feather") {
+                                QuickWheelSliderRow(
+                                    title = stringResource(R.string.quick_wheel_backdrop_feather),
+                                    description = stringResource(R.string.quick_wheel_backdrop_feather_desc),
+                                    value = wheel.backdropFeatherDp.toFloat(),
+                                    range = QuickWheelLayoutEngine.MIN_BACKDROP_FEATHER_DP.toFloat()..
+                                        QuickWheelLayoutEngine.MAX_BACKDROP_FEATHER_DP.toFloat(),
+                                    unit = "dp",
+                                    onValueChange = { value ->
+                                        patchDraft { it.copy(backdropFeatherDp = value.toInt()) }
                                     },
                                 )
                             }
@@ -949,25 +1007,59 @@ fun QuickWheelConfigScreen(
                             detectTapGestures { position ->
                                 // 只有点在轮盘之外（空白区）才收起；点在轮盘上只是"看"，
                                 // 两种情况下都由这一层消费，不会穿透到底下的设置项。
-                                val dx = position.x - previewLayout.centerX
-                                val dy = position.y - previewLayout.centerY
-                                if (hypot(dx, dy) > previewLayout.outerRadiusPx + 24f) {
-                                    previewVisible = false
+                                //
+                                // ⚠️ 矩形形态不能再用「到圆心的距离 > outerRadiusPx」：
+                                // outerRadiusPx 是圆心到**最远角落容器**的距离，宽矩形能把大半个屏幕
+                                // 都算成轮盘内部，于是点很远也收不起来（横向 / 纵向偏移后更糟）。
+                                // 矩形改用「全部容器的外接矩形 + 余量」：行 / 列缝隙自然算内部，
+                                // 外围空白立刻算外部。圆形保持原判定，行为完全不变。
+                                val tolerantPx = 24f * density
+                                val outside = if (previewWheel.primaryShape == QuickWheelShape.RECT) {
+                                    val slots = previewLayout.primarySlots + previewLayout.secondarySlots
+                                    if (slots.isEmpty()) {
+                                        true
+                                    } else {
+                                        val left = slots.minOf { it.centerX - it.sizePx / 2f } - tolerantPx
+                                        val right = slots.maxOf { it.centerX + it.sizePx / 2f } + tolerantPx
+                                        val top = slots.minOf { it.centerY - it.sizePx / 2f } - tolerantPx
+                                        val bottom = slots.maxOf { it.centerY + it.sizePx / 2f } + tolerantPx
+                                        position.x < left || position.x > right ||
+                                            position.y < top || position.y > bottom
+                                    }
+                                } else {
+                                    hypot(
+                                        position.x - previewLayout.centerX,
+                                        position.y - previewLayout.centerY,
+                                    ) > previewLayout.outerRadiusPx + tolerantPx
                                 }
+                                if (outside) previewVisible = false
                             }
                         },
                 )
                 // 预览里把用户留出的空位显示为"空白阴影"（真实呼出时是全透明的）。
                 // 背景遮罩按参数同步铺一层（页内做不了跨窗口模糊，模糊效果请看「轮盘预览」）。
                 if (previewWheel.backdropDimPercent > 0) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Color.Black.copy(
-                                    alpha = previewWheel.backdropDimPercent / 100f,
-                                ),
-                            ),
+                    // 与真机同一套区域计算：选「仅轮盘区域」时预览也只铺在轮盘外接区域上。
+                    val previewDensity = LocalDensity.current.density
+                    val previewRegion = remember(
+                        previewLayout,
+                        previewWheel.primaryShape,
+                        previewDensity,
+                    ) {
+                        previewLayout.backdropRegion(
+                            shape = previewWheel.primaryShape,
+                            paddingPx = QUICK_WHEEL_BACKDROP_PADDING_DP * previewDensity,
+                        )
+                    }
+                    QuickWheelBackdropDim(
+                        alpha = previewWheel.backdropDimPercent / 100f,
+                        colorArgb = previewWheel.backdropDimColorArgb,
+                        // 页内预览不做真模糊：设置页整体那一层 Compose blur 已经在模拟它了。
+                        blurRadiusPx = 0,
+                        blurScope = previewWheel.backdropBlurScope,
+                        dimScope = previewWheel.backdropDimScope,
+                        featherPx = previewWheel.backdropFeatherDp * previewDensity,
+                        region = previewRegion,
                     )
                 }
                 QuickWheelWheelRenderer(
@@ -1241,16 +1333,18 @@ internal fun QuickWheelSwitchRow(
 @Composable
 private fun QuickWheelSliderRow(
     title: String,
-    description: String,
+    description: String? = null,
     value: Float,
     range: ClosedFloatingPointRange<Float>,
     unit: String,
+    enabled: Boolean = true,
     onValueChange: (Float) -> Unit,
 ) {
     MiuixSliderRow(
         title = title,
         summary = description,
         value = value,
+        enabled = enabled,
         valueRange = range,
         steps = quickWheelSliderSteps(range),
         formatLabel = { "${it.roundToInt()} $unit" },
@@ -1259,6 +1353,17 @@ private fun QuickWheelSliderRow(
         onValueChange = { onValueChange(it.roundToInt().toFloat()) },
     )
 }
+
+/** 模糊强度滑条的行程上限（dp）；真实可设范围仍是引擎那套 0–72。 */
+private const val BLUR_SLIDER_MAX_DP = 72f
+
+/** 滑条位置（0..72）→ dp：平方映射，低段更细、高段更粗。 */
+private fun blurSliderDp(pos: Float): Float =
+    (pos * pos / BLUR_SLIDER_MAX_DP).coerceIn(0f, BLUR_SLIDER_MAX_DP)
+
+/** dp → 滑条位置：上面那个映射的逆运算。 */
+private fun blurSliderPos(dp: Float): Float =
+    kotlin.math.sqrt(dp.coerceIn(0f, BLUR_SLIDER_MAX_DP) * BLUR_SLIDER_MAX_DP)
 
 /** 整数滑条（步进离散），用于「矩形列数」这类小范围整数参数。 */
 @Composable
@@ -1303,6 +1408,184 @@ private fun QuickWheelPercentRow(
 /** 1 个单位一档（精度优先）：档位数 = 区间长度 − 1。 */
 private fun quickWheelSliderSteps(range: ClosedFloatingPointRange<Float>): Int =
     ((range.endInclusive - range.start).roundToInt() - 1).coerceAtLeast(0)
+
+/**
+ * 二选一的「分段标签」行（与「取词 / 布局与行为」页同一套 [SegmentedControl] 外观）。
+ *
+ * 标签由调用方直接给字符串，所以形状名、层级名这类动态/非资源标签也能用。
+ */
+@Composable
+private fun <T> SettingsCardScope.QuickWheelSegmentedRow(
+    rowKey: String,
+    title: String,
+    description: String? = null,
+    items: List<T>,
+    selected: T,
+    labels: List<String>,
+    onSelect: (T) -> Unit,
+) {
+    SettingsCardRow(key = rowKey) { position ->
+        BasicComponent(
+            modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
+            title = title,
+            summary = description,
+            bottomAction = {
+                Box(modifier = Modifier.padding(top = 6.dp)) {
+                    SegmentedControl(
+                        items = items,
+                        selected = selected,
+                        labels = labels,
+                        onSelect = onSelect,
+                    )
+                }
+            },
+        )
+    }
+}
+
+/** 背景「作用范围」的两个选项：顺序即标签顺序。 */
+private val BACKDROP_SCOPE_ITEMS = listOf(
+    QuickWheelBackdropScope.FULL_SCREEN,
+    QuickWheelBackdropScope.WHEEL_ONLY,
+)
+
+/**
+ * 「作用范围」行：整个屏幕 / 仅轮盘区域。**模糊与色调各一份**，两者互不影响。
+ *
+ * 整屏 = 没有边界；仅轮盘 = 只在轮盘周围生效，边界靠「边缘羽化」柔化。
+ */
+@Composable
+private fun SettingsCardScope.QuickWheelBackdropScopeRow(
+    rowKey: String,
+    title: String,
+    scope: QuickWheelBackdropScope,
+    onSelect: (QuickWheelBackdropScope) -> Unit,
+) {
+    SettingsCardRow(key = rowKey) { position ->
+        BasicComponent(
+            modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
+            title = title,
+            bottomAction = {
+                // 与「取词 / 布局与行为 / 取词面板样式」页一致的分段标签样式。
+                Box(modifier = Modifier.padding(top = 6.dp)) {
+                    SegmentedControl(
+                        items = BACKDROP_SCOPE_ITEMS,
+                        selected = scope,
+                        labelRes = { item ->
+                            if (item == QuickWheelBackdropScope.FULL_SCREEN) {
+                                R.string.quick_wheel_backdrop_scope_full
+                            } else {
+                                R.string.quick_wheel_backdrop_scope_wheel
+                            }
+                        },
+                        onSelect = onSelect,
+                    )
+                }
+            },
+        )
+    }
+}
+
+/**
+ * 「背景色调」行：黑 / 白 / 深灰 / 主题色 四个常用色 + 自定义色轮。
+ *
+ * 色调是**叠在跨窗口模糊之上**的那层半透明色，透明度由「色调浓度」控制：
+ * 浓度 0 = 不叠色（纯模糊）、模糊 0 + 有色 = 纯色调、两者都开 = 磨砂玻璃 + 色调。
+ * 颜色恒按不透明处理（`or 0xFF000000`），避免和浓度两处同时控透明度。
+ */
+@Composable
+private fun SettingsCardScope.QuickWheelBackdropTintRow(
+    currentArgb: Int,
+    onPick: (Int) -> Unit,
+) {
+    var customOpen by remember { mutableStateOf(false) }
+    val themeColor = MaterialTheme.colorScheme.primary.toArgb()
+    val presets = remember(themeColor) {
+        listOf(
+            0xFF000000.toInt(), // 黑（历史默认，压暗）
+            0xFFFFFFFF.toInt(), // 白（浅色纱，提亮）
+            0xFF6E6E73.toInt(), // 中灰（蒙一层雾）
+            themeColor, // 跟随主题色（通常就是蓝色系，所以不再单列蓝）
+            // 常用彩色调：配合浓度可做有色磨砂
+            0xFF43A047.toInt(), // 绿
+            0xFFE53935.toInt(), // 红
+            0xFF8E24AA.toInt(), // 紫
+        )
+    }
+    SettingsCardRow(key = "backdrop-tint") { position ->
+        BasicComponent(
+            modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
+            title = stringResource(R.string.quick_wheel_backdrop_tint),
+            bottomAction = {
+                Row(
+                    modifier = Modifier.padding(top = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    presets.forEach { color ->
+                        val selected = color == currentArgb
+                        Surface(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .then(
+                                    if (selected) {
+                                        // 纯红选中环：主题色是绿色，选到绿色预设时绿框会消失。
+                                        Modifier.border(2.dp, Color.Red, CircleShape)
+                                    } else {
+                                        Modifier
+                                    },
+                                )
+                                .clickable { onPick(color) },
+                            shape = CircleShape,
+                            color = Color(color),
+                        ) {}
+                    }
+                    // 自定义：彩虹圆（本身就是"取色器"的通用符号，不需要文字）。
+                    // 当前色不在预设里时套红环，表示"当前用的是自定义色"。
+                    val customSelected = currentArgb !in presets
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .then(
+                                if (customSelected) {
+                                    Modifier.border(2.dp, Color.Red, CircleShape)
+                                } else {
+                                    Modifier
+                                },
+                            )
+                            .clickable { customOpen = true }
+                            .background(
+                                Brush.sweepGradient(
+                                    listOf(
+                                        Color(0xFFE53935),
+                                        Color(0xFFFFB300),
+                                        Color(0xFF43A047),
+                                        Color(0xFF00ACC1),
+                                        Color(0xFF3949AB),
+                                        Color(0xFF8E24AA),
+                                        Color(0xFFE53935),
+                                    ),
+                                ),
+                            ),
+                    )
+                }
+            },
+        )
+    }
+    if (customOpen) {
+        MiuixColorPickerDialog(
+            title = stringResource(R.string.quick_wheel_backdrop_tint),
+            initialColorArgb = currentArgb,
+            onDismiss = { customOpen = false },
+            onConfirm = { picked ->
+                customOpen = false
+                onPick(picked or 0xFF000000.toInt())
+            },
+        )
+    }
+}
 
 /** 浮层跨窗口模糊半径（px）上限，与 QuickWheelOverlayWindow 的 coerceIn(1, 80) 保持一致。 */
 private const val OVERLAY_BLUR_MAX_RADIUS_PX = 80f

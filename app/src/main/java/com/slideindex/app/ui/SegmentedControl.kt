@@ -57,7 +57,30 @@ internal fun <T> SegmentedControl(
     /** 选中 pill 底色；null 用默认的 surface。 */
     indicatorColor: Color? = null,
 ) {
-    val labels = items.map { item -> stringResource(labelRes(item)) }
+    SegmentedControl(
+        items = items,
+        selected = selected,
+        labels = items.map { item -> stringResource(labelRes(item)) },
+        onSelect = onSelect,
+        containerColor = containerColor,
+        indicatorColor = indicatorColor,
+    )
+}
+
+/**
+ * 同 [SegmentedControl]，但标签直接给字符串。
+ *
+ * 用于标签不是字符串资源、或者需要动态拼接的场景（如「一级 / 二级」这种带名称的层级）。
+ */
+@Composable
+internal fun <T> SegmentedControl(
+    items: List<T>,
+    selected: T,
+    labels: List<String>,
+    onSelect: (T) -> Unit,
+    containerColor: Color? = null,
+    indicatorColor: Color? = null,
+) {
     val selectedIndex = items.indexOf(selected).coerceAtLeast(0)
 
     BoxWithConstraints(

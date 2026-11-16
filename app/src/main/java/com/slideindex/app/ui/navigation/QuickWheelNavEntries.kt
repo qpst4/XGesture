@@ -95,7 +95,12 @@ fun NavEntryBuilder.quickWheelNavEntries(ctx: MainNavContext) {
         val wheels = settings.launcher.quickWheels
         val wheel = wheels.firstOrNull { it.id == key.wheelId }
         if (wheel == null) {
-            LaunchedEffect(key.wheelId) { ctx.navigateBackTo(AppNavKey.QuickWheelList) }
+            // 刚点「新增」时设置是异步落盘的：这一帧还读不到新轮盘。此时**不能**弹回列表，
+            // 否则用户会停在列表页、得再点一次才进得去（新增后看起来"没反应"）。
+            // 只有真正失效的 id（不存在、且不是待保存的新轮盘）才退回列表。
+            if (provisionalNewWheelId != key.wheelId) {
+                LaunchedEffect(key.wheelId) { ctx.navigateBackTo(AppNavKey.QuickWheelList) }
+            }
         } else {
             QuickWheelConfigScreen(
                 settingsWheel = wheel,

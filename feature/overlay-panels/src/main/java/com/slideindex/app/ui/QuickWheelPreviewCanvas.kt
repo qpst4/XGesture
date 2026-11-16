@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -269,6 +270,22 @@ fun QuickWheelWheelRenderer(
      */
     appearSecondaryProgress: () -> Float = { 1f },
     /**
+     * 二级展开时一级容器的**压暗进度**（0 = 不变、1 = 最暗）。
+     *
+     * 由 `appearSecondary` 驱动：长按展开的那一刻开始压暗、收回时自动恢复，
+     * 目的是让二级成为视觉焦点（否则一级不动，二级只是"多了一圈"）。
+     *
+     * 压暗方式用图层 alpha（一级淡出到背景），不是叠黑纱 —— 叠加的半透明纯色会把
+     * 容器的底板压成脏色，和背景模糊 / 色调叠在一起时更难控。
+     */
+    primaryDimProgress: () -> Float = { 0f },
+    /**
+     * 当前展开的一级容器下标（没有展开 = -1）。
+     *
+     * **它自己不变暗**：它是二级铺开的原点，跟着一起暗会让人失去方向感。
+     */
+    expandedPrimaryIndex: Int = -1,
+    /**
      * 是否绘制中心大圆容器。
      *
      * 中心容器**只在圆形形态存在**（矩形形态恒不绘制）；
@@ -277,6 +294,11 @@ fun QuickWheelWheelRenderer(
      */
     showCenter: Boolean = true,
 ) {
+    // 一级 / 中心的压暗系数：随二级展开进度线性降到 0.55（= 压暗 45%）。
+    // 在 graphicsLayer 里读取，属于绘制阶段，不会触发重组（与 appearProgress 同一套约定）。
+    val dimmedAlpha = {
+        1f - 0.45f * primaryDimProgress().coerceIn(0f, 1f)
+    }
     Box(modifier = modifier) {
         // 中心大圆：仅圆形形态 + 需要显示时绘制。
         if (showCenter && wheel.primaryShape == QuickWheelShape.CIRCLE) {
@@ -299,7 +321,10 @@ fun QuickWheelWheelRenderer(
                 highlighted = highlightCenter,
                 // 中心大圆的锚点就是它自己 → 不传 origin，表现为"原地弹出"。
                 appearProgress = appearProgress,
-                modifier = centerModifier,
+                // 二级展开时中心大圆一起压暗（它不属于二级，留着会抢焦点）。
+                modifier = centerModifier.then(
+                    Modifier.graphicsLayer { alpha = dimmedAlpha() },
+                ),
                 showPlaceholders = showPlaceholders,
             )
         }
@@ -315,7 +340,14 @@ fun QuickWheelWheelRenderer(
                 // 一级：从轮盘锚点（= 呼出点）向外铺开。
                 appearOriginX = layout.centerX,
                 appearOriginY = layout.centerY,
-                modifier = primaryModifier(placed, slot),
+                // 二级展开时其它一级容器压暗；被展开的那个保持全亮（它是二级的原点）。
+                modifier = primaryModifier(placed, slot).then(
+                    if (placed.index == expandedPrimaryIndex) {
+                        Modifier
+                    } else {
+                        Modifier.graphicsLayer { alpha = dimmedAlpha() }
+                    },
+                ),
                 showPlaceholders = showPlaceholders,
             )
         }
