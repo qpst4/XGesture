@@ -59,6 +59,7 @@ object DiagnosticReportExporter {
         val report = buildString {
             append(LocalCrashHandler.generateDiagnosticReport(appContext))
             append(com.slideindex.app.diagnostic.EdgeDiag.exportText(appContext))
+            append(buildBrightnessSection(appContext))
         }
         val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
         val fileName = "xgesture_diagnostic_$stamp.log"
@@ -66,6 +67,45 @@ object DiagnosticReportExporter {
             fullReport = report,
             fileName = fileName,
         )
+    }
+
+    /**
+     * 亮度诊断段。
+     *
+     * 前半段是导出瞬间的现状（量程 / 四个键 / 实际亮度 / 权限），
+     * 后半段是复现期间落盘的追踪（我们每次写、系统每次改键、写完 2.5 秒内的屏幕亮度采样）。
+     * 用户只需"拉一次亮度 → 这个分享按钮"，不用做任何额外操作。
+     */
+    private fun buildBrightnessSection(appContext: Context): String {
+        val state = runCatching {
+            val resolver = appContext.contentResolver
+            val int = android.provider.Settings.System.getInt(
+                resolver, android.provider.Settings.System.SCREEN_BRIGHTNESS, -1,
+            )
+            val float = runCatching {
+                android.provider.Settings.System.getFloat(resolver, "screen_brightness_float")
+            }.getOrNull()
+            val adj = runCatching {
+                android.provider.Settings.System.getFloat(resolver, "screen_auto_brightness_adj")
+            }.getOrNull()
+            val mode = android.provider.Settings.System.getInt(
+                resolver, android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE, -1,
+            )
+            val display = com.slideindex.app.diagnostic.BrightnessTrace
+                .readDisplayBrightness(appContext)
+            "state int=$int float=$float adj=$adj mode=$mode display=$display\n" +
+                "scale ${BrightnessControlHelper.describeScale(appContext)}\n" +
+                "lastWritePath=${BrightnessControlHelper.lastWritePath}\n"
+        }.getOrDefault("state unavailable\n")
+        val tail = com.slideindex.app.diagnostic.BrightnessTrace.readTail(appContext)
+        return buildString {
+            append("\n==== 亮度诊断 ====\n")
+            append(state)
+            append("trace bytes=${tail.length}\n")
+            append("---- trace tail ----\n")
+            append(tail)
+            append("\n==== 亮度诊断结束 ====\n")
+        }
     }
 
     private fun presentOutcome(
