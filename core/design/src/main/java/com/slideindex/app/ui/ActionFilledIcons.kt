@@ -3,11 +3,9 @@ package com.slideindex.app.ui
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathParser
-import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.graphics.vector.group
 import androidx.compose.ui.unit.dp
 
 /**
@@ -29,6 +27,10 @@ object ActionFilledIcons {
     /** 放大镜 + 加号。 */
     private const val MAGNIFIER_ZOOM_IN = "$MAX_MAGNIFIER" +
         "M8.77,12.19V10.25H6.83V8.75H8.77V6.81h1.5V8.75h1.94v1.5H10.27v1.94H8.77Z"
+
+    /** 实心、铺满 24×24 的"两段折角箭头"（展开/捏合缩放手势）。 */
+    private const val EXPAND_TWO_ARROWS = "M3.5,20.5V13H5v4.96L17.96,5H13V3.5h7.5V11H19V6.04" +
+        "L6.04,19H11v1.5H3.5Z"
 
     /** 放大镜 + 四向箭头（任意方向滚动）。 */
     private const val SCROLL_ANY_DIRECTION = "M12,21.65l-3.9-3.9l1.07-1.07l2.08,2.08V12.75h-6" +
@@ -54,7 +56,7 @@ object ActionFilledIcons {
 
     val ZoomIn: ImageVector by lazy { filledIcon("ActionZoomIn", MAGNIFIER_ZOOM_IN) }
 
-    /** 放大镜 + 斜箭头：与 [ZoomIn] 区分开，表示"捏合缩放"而不是"看大图"。 */
+    /** 放大镜 + 两段折角箭头：与 [ZoomIn] 区分开，表示"捏合缩放"而不是"看大图"。 */
     val ZoomPinch: ImageVector by lazy {
         ImageVector.Builder(
             name = "ActionZoomPinch",
@@ -68,18 +70,17 @@ object ActionFilledIcons {
                 pathFillType = PathFillType.EvenOdd,
                 fill = fillBrush,
             )
-            // 镜片内部的小斜箭头（描边，避免和实心镜片糊在一起）。
-            path(
-                stroke = fillBrush,
-                strokeLineWidth = 1.4f,
-                strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round,
+            // 把铺满 24×24 的双折角箭头缩到镜片里（中心 9.5,9.5，约 7 单位宽）。
+            group(
+                scaleX = 0.42f,
+                scaleY = 0.42f,
+                translationX = 4.48f,
+                translationY = 4.46f,
             ) {
-                moveTo(7.2f, 11.8f)
-                lineTo(11.8f, 7.2f)
-                moveTo(8.9f, 7.2f)
-                lineTo(11.8f, 7.2f)
-                lineTo(11.8f, 10.1f)
+                addPath(
+                    pathData = PathParser().parsePathString(EXPAND_TWO_ARROWS).toNodes(),
+                    fill = fillBrush,
+                )
             }
         }.build()
     }
