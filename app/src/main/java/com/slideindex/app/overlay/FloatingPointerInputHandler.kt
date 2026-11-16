@@ -209,10 +209,18 @@ internal class FloatingPointerInputHandler(
             }
             else -> {
                 if (!capturing) return false
-                // 实时缩放期间：指针冻结，手指位移直接驱动缩放（QC 的 frozen-cursor 语义）。
-                if (event.actionMasked == MotionEvent.ACTION_MOVE && session.pinchGesture != null) {
-                    session.updatePinchByFinger(event.rawX - downRawX, event.rawY - downRawY)
-                    return true
+                // 实时缩放 / 滚动期间：指针与摇杆都冻结，手指位移只驱动手势本身。
+                if (event.actionMasked == MotionEvent.ACTION_MOVE) {
+                    val fingerDx = event.rawX - downRawX
+                    val fingerDy = event.rawY - downRawY
+                    if (session.pinchGesture != null) {
+                        session.updatePinchByFinger(fingerDx, fingerDy)
+                        return true
+                    }
+                    if (session.scrollGesture != null) {
+                        session.updateScrollByFinger(fingerDx, fingerDy)
+                        return true
+                    }
                 }
                 return handleTouch(event)
             }

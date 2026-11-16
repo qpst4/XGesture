@@ -26,7 +26,9 @@ class FloatingPointerScrollGesture(
     startX: Float,
     startY: Float,
     private val onError: () -> Unit = {},
-    private val onFinished: () -> Unit = {}
+    private val onFinished: () -> Unit = {},
+    /** 滚动状态（轴: 1 垂直 / 2 水平, 方向 ±1, 推力 px），给指针画"多次轨迹线"用。 */
+    private val onState: (axis: Int, dir: Int, pushPx: Float) -> Unit = { _, _, _ -> }
 ) {
 
     private val density = service.resources.displayMetrics.density.coerceAtLeast(0.1f)
@@ -47,6 +49,14 @@ class FloatingPointerScrollGesture(
     private var dirY = 0
     private var pushPx = 0f
 
+    /**
+     * 轴锁：0 未锁 / 1 垂直 / 2 水平。
+     *
+     * Quick Cursor 只有上下左右四个方向，它的做法是**锁定主导轴**；我们原来每次更新都按
+     * `abs(dy) >= abs(dx)` 重判，手指偏一点点就会从上下翻成左右。
+     */
+    private var lockedAxis = 0
+
     private val nextSwipe = Runnable { dispatchSwipe() }
 
     init {
@@ -59,20 +69,33 @@ class FloatingPointerScrollGesture(
     /** 指针移动：更新方向/力度；还停在死区里就暂停滚动。 */
     fun updatePosition(x: Float, y: Float) {
         if (!active) return
-        val dx = x - anchor.x
-        val dy = y - anchor.y
+        applyPush(x - anchor.x, y - anchor.y)
+    }
+
+    /** 手指相对按下的位移（指针冻结时用这个，不再依赖光标位置）。 */
+    fun updateFingerDelta(dx: Float, dy: Float) {
+        if (!active) return
+        applyPush(dx, dy)
+    }
+
+    private fun applyPush(dx: Float, dy: Float) {
         pushPx = max(abs(dx), abs(dy))
         if (pushPx < deadzonePx) {
             mainHandler.removeCallbacks(nextSwipe)
+            onState(lockedAxis, 0, pushPx)
             return
         }
-        if (abs(dy) >= abs(dx)) {
+        if (lockedAxis == 0) {
+            lockedAxis = if (abs(dy) >= abs(dx)) AXIS_VERTICAL else AXIS_HORIZONTAL
+        }
+        if (lockedAxis == AXIS_VERTICAL) {
             dirX = 0
             dirY = if (dy > 0) 1 else -1
         } else {
             dirX = if (dx > 0) 1 else -1
             dirY = 0
         }
+        onState(lockedAxis, if (lockedAxis == AXIS_VERTICAL) dirY else dirX, pushPx)
         if (!dispatchInFlight) {
             mainHandler.removeCallbacks(nextSwipe)
             mainHandler.post(nextSwipe)
@@ -133,6 +156,8 @@ class FloatingPointerScrollGesture(
 
     private companion object {
         private const val TAG = "FpScroll"
+        private const val AXIS_VERTICAL = 1
+        private const val AXIS_HORIZONTAL = 2
         private const val SWIPE_DURATION_MS = 150L
         private const val SWIPE_DELAY_MS = 400L
     }

@@ -125,6 +125,11 @@ internal class FloatingPointerSession(
     /** 实时手势类型："zoom" / "scroll"；仅用于指针动作提示。 */
     val realtimeGestureKind = mutableStateOf<String?>(null)
 
+    /** 滚动提示状态：轴 1 垂直 / 2 水平；方向 ±1；推力 px。 */
+    val realtimeScrollAxis = mutableStateOf(0)
+    val realtimeScrollDir = mutableStateOf(0)
+    val realtimeScrollPush = mutableStateOf(0f)
+
     /** After finger-up: trail retreats on a wall-clock timeline until consumed. */
     val gestureTrailRetreatActive = mutableStateOf(false)
 
@@ -343,6 +348,9 @@ internal class FloatingPointerSession(
         scrollGesture = null
         realtimeGestureActive.value = false
         realtimeGestureKind.value = null
+        realtimeScrollAxis.value = 0
+        realtimeScrollDir.value = 0
+        realtimeScrollPush.value = 0f
     }
 
     /** 指针长按/功能环触发的实时双指缩放。 */
@@ -393,6 +401,11 @@ internal class FloatingPointerSession(
             onFinished = {
                 releaseRealtimeGesture()
                 onFinished()
+            },
+            onState = { axis, dir, push ->
+                realtimeScrollAxis.value = axis
+                realtimeScrollDir.value = dir
+                realtimeScrollPush.value = push
             }
         )
     }
@@ -549,6 +562,11 @@ internal class FloatingPointerSession(
     /** 实时缩放由手指位移驱动（指针冻结），见 [updatePinchByFinger]。 */
     fun updatePinchByFinger(dx: Float, dy: Float) {
         pinchGesture?.updateFingerDelta(dx, dy)
+    }
+
+    /** 实时滚动由手指位移驱动（光标冻结），轴锁在滚动控制器里。 */
+    fun updateScrollByFinger(dx: Float, dy: Float) {
+        scrollGesture?.updateFingerDelta(dx, dy)
     }
 
     /** Updates the active real-time gesture with the current pointer position. */
