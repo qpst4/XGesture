@@ -24,10 +24,6 @@ object SystemMagnifierController {
 
     private const val TAG = "SystemMagnifier"
 
-    /** `MagnificationConfig` 的模式值：1 = 全屏，2 = 窗口。 */
-    private const val MODE_FULLSCREEN = 1
-    private const val MODE_WINDOW = 2
-
     /** 普通触发（开关式）没有"松手"事件，靠这个兜底，防止用户忘了关。 */
     private const val AUTO_STOP_MS = 60_000L
 
@@ -107,8 +103,9 @@ object SystemMagnifierController {
         if (active) return
         this.fullscreen = fullscreen
         this.modeApplied = false
-        // setScale/setCenter 从 Android 11（API 30）起可用，13 及以上都能工作。
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+        // setMagnificationConfig / MagnificationConfig 需要 API 33，setActivated 需要 API 34；
+        // 本功能按 Android 14（API 34）起支持。低版本在这里拦截，避免 NoSuchMethodError。
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             Log.i(TAG, "ignored: requires Android 14+")
             SlideIndexAccessibilityService.overlayHostContext()?.let { context ->
                 Toast.makeText(
@@ -235,6 +232,8 @@ object SystemMagnifierController {
      */
     private fun apply(x: Float, y: Float): Boolean {
         val c = controller ?: return false
+        // 正常路径已在 start() 拦掉 <34；这里再兜一道，既防反射调用，也让 lint 识别版本边界。
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return false
         val (width, height) = screenSize()
         var cx = x
         var cy = y
@@ -247,7 +246,7 @@ object SystemMagnifierController {
                 .getOrDefault(false)
             if (!modeApplied) {
                 val config = MagnificationConfig.Builder()
-                    .setMode(MODE_FULLSCREEN)
+                    .setMode(MagnificationConfig.MAGNIFICATION_MODE_FULLSCREEN)
                     .setActivated(true)
                     .setScale(scale)
                     .setCenterX(cx)
@@ -276,7 +275,7 @@ object SystemMagnifierController {
             }
             cy = cy.coerceIn(height * 0.1f, height * 0.9f)
             val config = MagnificationConfig.Builder()
-                .setMode(MODE_WINDOW)
+                .setMode(MagnificationConfig.MAGNIFICATION_MODE_WINDOW)
                 .setActivated(true)
                 .setScale(scale)
                 .setCenterX(cx)
