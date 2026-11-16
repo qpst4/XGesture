@@ -380,9 +380,11 @@ fun DrawScope.drawQcJoystickDisc(
     innerColor: Color,
     outerColor: Color,
     gradientRadiusFraction: Float,
-    pressed: Boolean
+    pressed: Boolean,
+    alphaMultiplier: Float = 1f
 ) {
-    val alphaScale = if (pressed) 1f else 0.94f
+    val alphaScale = (if (pressed) 1f else 0.94f) * alphaMultiplier.coerceIn(0f, 1f)
+    if (alphaScale <= 0.001f) return
     val gradientStop = gradientRadiusFraction.coerceIn(0.5f, 1f)
     drawCircle(
         brush = Brush.radialGradient(

@@ -93,10 +93,17 @@ internal class FloatingPointerInputHandler(
     private var longPressRunnable: Runnable? = null
     /** Prevents re-firing gesture capture when the finger leaves and re-enters the same slot. */
     private var radialGestureCaptureTriggered = false
+    private var magnifierStartFingerX = 0f
+    private var magnifierStartFingerY = 0f
+    private var magnifierMoved = false
 
     private fun resetTouchPhase() {
         touchPhase = FloatingPointerTouchPhase.PendingTapOrDrag
         session.activeTouchPhase = touchPhase
+        magnifierStartFingerX = 0f
+        magnifierStartFingerY = 0f
+        magnifierMoved = false
+        session.magnifierJoystickSuppressed.value = false
     }
 
     private fun setTouchPhase(phase: FloatingPointerTouchPhase) {
@@ -412,11 +419,17 @@ internal class FloatingPointerInputHandler(
                         val action = settings.floatingPointerRadialSlotActions.getOrNull(slot)
                         if (action != null && isGestureCaptureLongPressAction(action)) {
                             radialGestureCaptureTriggered = true
-                    setTouchPhase(FloatingPointerTouchPhase.Dragging)
+                            setTouchPhase(FloatingPointerTouchPhase.Dragging)
                             session.closeRadialMenu()
                             host.onRadialMenuClosed()
                             session.syncPointerForGestureCapture(event.rawX, event.rawY)
                             session.armGestureCaptureJoystickOffset(event.rawX, event.rawY)
+                            if (action is GestureAction.Magnifier) {
+                                magnifierStartFingerX = event.rawX
+                                magnifierStartFingerY = event.rawY
+                                magnifierMoved = false
+                                session.magnifierJoystickSuppressed.value = false
+                            }
                             host.onRadialMenuAction(slot, fingerStillDown = true)
                         }
                     }
@@ -443,6 +456,22 @@ internal class FloatingPointerInputHandler(
                 }
                 session.joystickCenterX.floatValue = joystickX
                 session.joystickCenterY.floatValue = joystickY
+                if (SystemMagnifierController.isFollowingCursor()) {
+                    if (magnifierStartFingerX == 0f && magnifierStartFingerY == 0f) {
+                        magnifierStartFingerX = event.rawX
+                        magnifierStartFingerY = event.rawY
+                    }
+                    if (!magnifierMoved) {
+                        val moveDist = hypot(
+                            (event.rawX - magnifierStartFingerX).toDouble(),
+                            (event.rawY - magnifierStartFingerY).toDouble()
+                        ).toFloat()
+                        if (moveDist > 4f * session.density) {
+                            magnifierMoved = true
+                            session.magnifierJoystickSuppressed.value = true
+                        }
+                    }
+                }
                 host.onFingerTrackingMove(event.rawX, event.rawY, downLocalX, downLocalY)
                 session.applyPointerFromTouch(event.rawX, event.rawY, settings)
                 host.onPointerPositionChanged(session.pointerX.floatValue, session.pointerY.floatValue)
@@ -475,6 +504,7 @@ internal class FloatingPointerInputHandler(
                     return true
                 }
                 if (session.gestureCaptureActive) {
+                    val wasMagnifier = SystemMagnifierController.isFollowingCursor()
                     fromContinuedEdge = false
                     session.continuedEdgeSessionActive.value = false
                     hoverSelectController.cancel()
@@ -482,11 +512,16 @@ internal class FloatingPointerInputHandler(
                     session.joystickActive.value = false
                     session.finishGestureRecorder()
                     session.finishRealtimeGesture()
-                    if (SystemMagnifierController.isFollowingCursor()) {
+                    if (wasMagnifier) {
                         SystemMagnifierController.stop()
+                        session.magnifierJoystickSuppressed.value = false
+                        magnifierMoved = false
                     }
                     radialGestureCaptureTriggered = false
+                    val endX = session.joystickCenterX.floatValue
+                    val endY = session.joystickCenterY.floatValue
                     resetTouchPhase()
+                    host.onGestureEnd(endX, endY, false)
                     host.onTouchCycleComplete()
                     return true
                 }

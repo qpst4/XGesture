@@ -113,6 +113,13 @@ internal fun FloatingPointerDisplay(
             ),
             label = "edgePreviewAlpha"
         )
+        val magnifierJoystickSuppressed by session.magnifierJoystickSuppressed
+        val joystickTargetAlpha = if (magnifierJoystickSuppressed) 0f else 1f
+        val joystickAlpha by animateFloatAsState(
+            targetValue = joystickTargetAlpha,
+            animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
+            label = "joystickAlpha"
+        )
         val suppressPointerForGestureAftermath =
             gestureRecordingActive ||
                 gestureReplayActive ||
@@ -333,7 +340,7 @@ internal fun FloatingPointerDisplay(
                     )
                     scaleX = presenceScale
                     scaleY = presenceScale
-                    alpha = presence
+                    alpha = presence * joystickAlpha
                 }
         ) {
             animationTick
@@ -353,6 +360,7 @@ internal fun FloatingPointerDisplay(
                     !gestureRecordingActive &&
                     !gestureTrailRetreatActive &&
                     !gestureReplayActive &&
+                    !session.magnifierJoystickSuppressed.value &&
                     !session.shouldDrawGestureRecorderTrail(now)
                 ) {
                     val lifespanMs = session.trailLifespanOverrideMs

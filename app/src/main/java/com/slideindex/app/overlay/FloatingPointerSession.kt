@@ -83,6 +83,8 @@ internal class FloatingPointerSession(
     val joystickCenterX = mutableFloatStateOf(0f)
     val joystickCenterY = mutableFloatStateOf(0f)
     val joystickActive = mutableStateOf(false)
+    /** 放大镜跟手推视野时，手指移动后临时隐去摇杆与连线，给放大画面让路。 */
+    val magnifierJoystickSuppressed = mutableStateOf(false)
     /** QC `m81.s` mirror for lifecycle passthrough (`c/d`) decisions. */
     var activeTouchPhase = FloatingPointerTouchPhase.PendingTapOrDrag
     /** When hide-on-release is enabled, stays true after tap; false only after drag release. */
@@ -652,6 +654,7 @@ internal class FloatingPointerSession(
 
     /** Arms a new drag without moving the pointer or re-anchoring the joystick area. */
     fun beginGesture(rawX: Float, rawY: Float, settings: AppSettings) {
+        magnifierJoystickSuppressed.value = false
         if (awaitingPlacement || !hasEstablishedPointerTravel()) {
             placeAtTouch(rawX, rawY, settings)
         } else {

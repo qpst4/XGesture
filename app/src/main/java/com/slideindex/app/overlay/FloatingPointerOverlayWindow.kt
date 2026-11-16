@@ -354,6 +354,7 @@ object FloatingPointerOverlayWindow {
                     SystemMagnifierController.startFollow(pointerX, pointerY)
                 } else {
                     SystemMagnifierController.toggle(pointerX, pointerY)
+                    dismiss()
                 }
             }
             else -> executePointerAction(action, settings, pointerX, pointerY)
