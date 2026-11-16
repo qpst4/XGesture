@@ -97,9 +97,9 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.SCROLL_TO_TOP -> ThinActionIcons.ScrollToTop
     GestureActionType.SCROLL_TO_BOTTOM -> ThinActionIcons.ScrollToBottom
     GestureActionType.PAGE_SCROLL -> MaterialSymbolThinIcons.SwapVert
-            GestureActionType.MAGNIFIER -> ThinActionIcons.Search
-            GestureActionType.REALTIME_PINCH -> ThinActionIcons.Gesture
-            GestureActionType.REALTIME_SCROLL -> MaterialSymbolThinIcons.SwapVert
+            GestureActionType.MAGNIFIER -> ActionFilledIcons.ZoomIn
+            GestureActionType.REALTIME_PINCH -> ActionFilledIcons.ZoomPinch
+            GestureActionType.REALTIME_SCROLL -> ActionFilledIcons.ScrollAnyDirection
     GestureActionType.TOGGLE_DND -> ThinActionIcons.DoNotDisturb
     GestureActionType.TIMED_DND -> ThinActionIcons.DoNotDisturb
     GestureActionType.SCREEN_RECORD -> ThinActionIcons.ScreenRecord
@@ -126,9 +126,9 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.SIMULATE_KEY_EVENT -> ThinActionIcons.Keyboard
     GestureActionType.POINTER_GESTURE_RECORDER -> ThinActionIcons.Gesture
     GestureActionType.POINTER_REALTIME_GESTURE -> ThinActionIcons.Gesture
-            GestureActionType.REALTIME_PINCH -> ThinActionIcons.Gesture
-            GestureActionType.REALTIME_SCROLL -> MaterialSymbolThinIcons.SwapVert
-            GestureActionType.MAGNIFIER -> ThinActionIcons.Search
+            GestureActionType.REALTIME_PINCH -> ActionFilledIcons.ZoomPinch
+            GestureActionType.REALTIME_SCROLL -> ActionFilledIcons.ScrollAnyDirection
+            GestureActionType.MAGNIFIER -> ActionFilledIcons.ZoomIn
     GestureActionType.OPEN_FLOATING_POINTER_RADIAL_MENU -> ThinActionIcons.MenuOpen
     GestureActionType.LAUNCH_APP -> ThinActionIcons.Apps
     GestureActionType.LAUNCH_SHORTCUT -> ThinActionIcons.Shortcut
@@ -223,9 +223,9 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.SCROLL_TO_TOP -> ThinActionIcons.ScrollToTop
     GestureActionType.SCROLL_TO_BOTTOM -> ThinActionIcons.ScrollToBottom
     GestureActionType.PAGE_SCROLL -> MaterialSymbolThinIcons.SwapVert
-            GestureActionType.MAGNIFIER -> ThinActionIcons.Search
-            GestureActionType.REALTIME_PINCH -> ThinActionIcons.Gesture
-            GestureActionType.REALTIME_SCROLL -> MaterialSymbolThinIcons.SwapVert
+            GestureActionType.MAGNIFIER -> ActionFilledIcons.ZoomIn
+            GestureActionType.REALTIME_PINCH -> ActionFilledIcons.ZoomPinch
+            GestureActionType.REALTIME_SCROLL -> ActionFilledIcons.ScrollAnyDirection
     GestureActionType.TOGGLE_DND -> ThinActionIcons.DoNotDisturb
     GestureActionType.TIMED_DND -> ThinActionIcons.DoNotDisturb
     GestureActionType.SCREEN_RECORD -> ThinActionIcons.ScreenRecord
@@ -252,9 +252,9 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.SIMULATE_KEY_EVENT -> ThinActionIcons.Keyboard
     GestureActionType.POINTER_GESTURE_RECORDER -> ThinActionIcons.Gesture
     GestureActionType.POINTER_REALTIME_GESTURE -> ThinActionIcons.Gesture
-            GestureActionType.REALTIME_PINCH -> ThinActionIcons.Gesture
-            GestureActionType.REALTIME_SCROLL -> MaterialSymbolThinIcons.SwapVert
-            GestureActionType.MAGNIFIER -> ThinActionIcons.Search
+            GestureActionType.REALTIME_PINCH -> ActionFilledIcons.ZoomPinch
+            GestureActionType.REALTIME_SCROLL -> ActionFilledIcons.ScrollAnyDirection
+            GestureActionType.MAGNIFIER -> ActionFilledIcons.ZoomIn
     GestureActionType.OPEN_FLOATING_POINTER_RADIAL_MENU -> ThinActionIcons.MenuOpen
     GestureActionType.LAUNCH_APP -> ThinActionIcons.Apps
     GestureActionType.LAUNCH_SHORTCUT -> ThinActionIcons.Shortcut
