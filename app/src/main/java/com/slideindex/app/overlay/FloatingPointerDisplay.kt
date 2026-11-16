@@ -374,9 +374,6 @@ internal fun FloatingPointerDisplay(
                         rippleSizePx = rippleSizePx
                     )
                 }
-                // 实时缩放 / 滚动：在指针周围画出动作提示（对齐 Quick Cursor 的"看得见在干什么"）。
-                // 实时缩放/滚动不再额外画图形：Quick Cursor 靠光标自身表达，
-                // 额外箭头/圆环既对不上它的观感，也会在浅色页面上变成一个白块。宁可不画。
                 val recorderProgress = gestureRecorderProgress.value
                 when {
                     hoverSelectAsPlus -> {
