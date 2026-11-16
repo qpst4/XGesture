@@ -571,11 +571,6 @@ internal class FloatingPointerSession(
         pinchGesture?.updateFingerDelta(dx, dy)
     }
 
-    /** 实时滚动由手指位移驱动（光标冻结），轴锁在滚动控制器里。 */
-    fun updateScrollByFinger(dx: Float, dy: Float) {
-        scrollGesture?.updateFingerDelta(dx, dy)
-    }
-
     /** Updates the active real-time gesture with the current pointer position. */
     fun updateRealtimeGesture() {
         realtimeGesture?.updatePosition(pointerX.floatValue, pointerY.floatValue)

@@ -222,11 +222,8 @@ internal class FloatingPointerInputHandler(
                         session.updatePinchByFinger(fingerDx, fingerDy)
                         return true
                     }
-                    if (session.scrollGesture != null) {
-                        realtimeGestureMoved = true
-                        session.updateScrollByFinger(fingerDx, fingerDy)
-                        return true
-                    }
+                    // 滚动仍然由光标移动驱动（applyPointerFromTouch → updateRealtimeGesture），
+                    // 冻结光标等于把滚动唯一的驱动源掐掉——这是之前"滚动断了"的真因。
                 }
                 return handleTouch(event)
             }
@@ -443,9 +440,9 @@ internal class FloatingPointerInputHandler(
                 host.onActivity()
                 cancelLongPressJob()
                 host.releaseAllPointers()
-                if (session.pinchGesture != null || session.scrollGesture != null) {
+                if (session.pinchGesture != null) {
                     if (!realtimeGestureMoved) {
-                        // 只是"选中动作"的那次抬手：不能把刚建好的手势结束掉，否则滚动/缩放会立刻断。
+                        // 只是"选中动作"的那次抬手：不能把刚建好的缩放手势结束掉。
                         resetTouchPhase()
                         host.onTouchCycleComplete()
                         return true

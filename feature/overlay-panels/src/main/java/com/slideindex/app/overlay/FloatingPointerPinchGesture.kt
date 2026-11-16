@@ -82,6 +82,18 @@ class FloatingPointerPinchGesture(
             ratioX = minX / h
             ratioY = minY / h
         }
+        // 按下就先把两根虚拟手指画出来：不等 12dp 位移，也不要任何"圆环"过渡。
+        computeTargetPoints()
+        publishVisual()
+    }
+
+    private fun publishVisual() {
+        onVisualize(
+            points[0].x.toFloat(),
+            points[0].y.toFloat(),
+            points[1].x.toFloat(),
+            points[1].y.toFloat(),
+        )
     }
 
     /**
@@ -93,24 +105,23 @@ class FloatingPointerPinchGesture(
         if (finishing || finished) return
         mainHandler.removeCallbacks(keepAliveRunnable)
         fingerDy = dy
+        // 每一帧都先刷新视觉，位移不够也照样显示两指（只是不注入）。
+        computeTargetPoints()
+        publishVisual()
 
         if (!started) {
             if (hypot(dx, dy) < startThresholdPx) return
             started = true
 
-            computeTargetPoints()
             previousPoints[0].set(points[0].x, points[0].y)
             previousPoints[1].set(points[1].x, points[1].y)
             strokes[0] = newStroke(points[0], points[0], continueStroke = true)
             strokes[1] = newStroke(points[1], points[1], continueStroke = true)
             Log.i(TAG, "pinch started dx=$dx dy=$dy p0=${points[0]} p1=${points[1]}")
-            onVisualize(points[0].x.toFloat(), points[0].y.toFloat(), points[1].x.toFloat(), points[1].y.toFloat())
             dispatch()
             return
         }
 
-        computeTargetPoints()
-        onVisualize(points[0].x.toFloat(), points[0].y.toFloat(), points[1].x.toFloat(), points[1].y.toFloat())
         // 坐标无实质位移时跳过下发，等后续位移或心跳
         if (points[0].x == previousPoints[0].x && points[0].y == previousPoints[0].y &&
             points[1].x == previousPoints[1].x && points[1].y == previousPoints[1].y

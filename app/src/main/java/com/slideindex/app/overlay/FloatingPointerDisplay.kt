@@ -418,19 +418,6 @@ internal fun FloatingPointerDisplay(
                             drawCircle(pink.copy(alpha = 0.9f), radius = 3.5f * density, center = center)
                             drawCircle(pink, radius = 11f * density, center = p1)
                             drawCircle(pink, radius = 11f * density, center = p2)
-                        } else {
-                            drawCircle(
-                                color = accent,
-                                radius = 28f * density,
-                                center = center,
-                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f * density),
-                            )
-                            drawCircle(
-                                color = accent.copy(alpha = 0.55f),
-                                radius = 42f * density,
-                                center = center,
-                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5f * density),
-                            )
                         }
                     } else {
                         // 滚动：光标处出现多次轨迹线（QC 观感），方向/推力来自滚动控制器。
