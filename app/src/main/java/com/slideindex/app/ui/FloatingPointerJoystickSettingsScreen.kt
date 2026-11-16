@@ -48,6 +48,7 @@ fun FloatingPointerJoystickSettingsScreen(
     onHideWhenIdleChange: (Boolean) -> Unit,
     onIdleDelayChange: (Int) -> Unit,
     onReleaseClickAndDismissChange: (Boolean) -> Unit,
+    onReleaseClickKeepJoystickChange: (Boolean) -> Unit,
     onHoverEnterSelectChange: (Boolean) -> Unit,
     onClickDistanceThresholdChange: (Float) -> Unit,
     onResetVisualDefaults: () -> Unit,
@@ -254,6 +255,17 @@ fun FloatingPointerJoystickSettingsScreen(
                             checked = settings.floatingPointerReleaseClickAndDismiss,
                             enabled = true,
                             onCheckedChange = onReleaseClickAndDismissChange
+                        )
+                    }
+                )
+                add(
+                    settingsCardScopeItem("release-click-keep") {
+                        SettingSwitchRow(
+                            title = stringResource(R.string.floating_pointer_release_click_keep_joystick),
+                            subtitle = stringResource(R.string.floating_pointer_release_click_keep_joystick_desc),
+                            checked = settings.floatingPointerReleaseClickKeepJoystick,
+                            enabled = true,
+                            onCheckedChange = onReleaseClickKeepJoystickChange
                         )
                     }
                 )

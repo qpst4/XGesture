@@ -1399,6 +1399,24 @@ object FloatBallPickResultPanel {
                     },
                     imageViewerVisible = imageViewerVisible,
                     onImageViewerVisibleChange = { imageViewerVisibleHolder.value = it },
+                    onEditImage = {
+                        val bmp = screenshot
+                        if (bmp != null && !bmp.isRecycled) {
+                            val ctx = appContext ?: overlayContext
+                            val meta = layoutMeta ?: buildScreenshotLayoutMeta(
+                                bitmap = bmp,
+                                screenWidthPx = overlayContext.resources.displayMetrics.widthPixels,
+                                screenHeightPx = overlayContext.resources.displayMetrics.heightPixels,
+                            )
+                            FloatBallTextPick.openBuiltinImageEditor(
+                                context = ctx,
+                                bitmap = bmp,
+                                screenRect = screenRect,
+                                layoutMeta = meta,
+                                pickReturnContext = capturePickReturnContextForEditor(),
+                            )
+                        }
+                    },
                     onTextSourceChange = { source ->
                         if (source == PickResultTextSource.A11Y && !a11ySourceEnabledHolder.value) {
                             return@FloatBallPickResultContent

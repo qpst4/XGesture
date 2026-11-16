@@ -371,6 +371,8 @@ internal object SettingsPreferenceKeys {
     val FLOATING_POINTER_IDLE_DELAY = intPreferencesKey("floating_pointer_idle_delay_ms")
     val FLOATING_POINTER_RELEASE_CLICK_AND_DISMISS =
         booleanPreferencesKey("floating_pointer_release_click_and_dismiss")
+    val FLOATING_POINTER_RELEASE_CLICK_KEEP_JOYSTICK =
+        booleanPreferencesKey("floating_pointer_release_click_keep_joystick")
     val FLOATING_POINTER_HOVER_ENTER_SELECT =
         booleanPreferencesKey("floating_pointer_hover_enter_select")
     val FLOATING_POINTER_JOYSTICK_LONG_PRESS_ACTION = stringPreferencesKey("floating_pointer_joystick_long_press_action")

@@ -74,6 +74,7 @@ class PickResultBarButtonsTest {
                 PickResultImageBarButton.SHARE,
                 PickResultImageBarButton.SAVE,
                 PickResultImageBarButton.IMAGE_SEARCH,
+                PickResultImageBarButton.EDIT,
                 PickResultImageBarButton.PIN,
                 PickResultImageBarButton.STASH,
             ),

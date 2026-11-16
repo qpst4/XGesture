@@ -51,6 +51,27 @@ internal class FloatingPointerInputHandler(
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val hoverSelectController = FloatingPointerHoverSelectController(session, mainHandler)
+
+    /** 「松手即点、摇杆保留」模式下的空闲收起定时器。 */
+    private var keepJoystickIdleRunnable: Runnable? = null
+
+    private fun cancelKeepJoystickIdleDismiss() {
+        keepJoystickIdleRunnable?.let { mainHandler.removeCallbacks(it) }
+        keepJoystickIdleRunnable = null
+    }
+
+    private fun scheduleKeepJoystickIdleDismiss() {
+        cancelKeepJoystickIdleDismiss()
+        val runnable = Runnable {
+            keepJoystickIdleRunnable = null
+            session.joystickActive.value = false
+            session.pointerVisible.value = false
+            session.clearTrail()
+            host.onDismiss()
+        }
+        keepJoystickIdleRunnable = runnable
+        mainHandler.postDelayed(runnable, KEEP_JOYSTICK_IDLE_DISMISS_MS)
+    }
     internal var capturing = false
     /** QC `m81.s` — drives tap vs drag vs ring-slot routing for the current finger. */
     private var touchPhase = FloatingPointerTouchPhase.PendingTapOrDrag
@@ -107,7 +128,9 @@ internal class FloatingPointerInputHandler(
         session.pointerVisible.value = true
         session.continuedEdgeSessionActive.value = true
         val settings = settingsProvider()
-        if (settings.floatingPointerReleaseClickAndDismiss) {
+        if (settings.floatingPointerReleaseClickAndDismiss ||
+            settings.floatingPointerReleaseClickKeepJoystick
+        ) {
             session.closeRadialMenu()
         }
         session.prepareContinuedEdgeGesture(rawX, rawY, settings)
@@ -228,6 +251,7 @@ internal class FloatingPointerInputHandler(
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 host.onActivity()
+                cancelKeepJoystickIdleDismiss()
                 val settings = settingsProvider()
                 val pendingCapture = session.pendingGestureCaptureAction
                 if (pendingCapture != null) {
@@ -450,6 +474,17 @@ internal class FloatingPointerInputHandler(
                     return true
                 }
                 val isTap = touchPhase.allowsCenterTapOnUp() && !longPressTriggered
+                if (settings.floatingPointerReleaseClickKeepJoystick) {
+                    // 「松手即点、摇杆保留」：在指针处点一下，摇杆与指针留在原地；
+                    // 下次按下可以继续拖，松手再点，循环。空闲一段时间后自动收起。
+                    performPointerClick()
+                    session.joystickActive.value = true
+                    session.pointerVisible.value = true
+                    resetTouchPhase()
+                    scheduleKeepJoystickIdleDismiss()
+                    host.onTouchCycleComplete()
+                    return true
+                }
                 if (settings.floatingPointerHideWhenJoystickReleased) {
                     session.pointerVisible.value = false
                     if (!session.gestureCaptureActive && movedBeyondTap()) {
@@ -577,6 +612,17 @@ internal class FloatingPointerInputHandler(
         }
         hoverSelectController.cancel()
 
+        if (settings.floatingPointerReleaseClickKeepJoystick) {
+            // 边缘交接路径同样：点一下、保留摇杆，下一次按下继续拖。
+            performPointerClick()
+            session.continuedEdgeSessionActive.value = true
+            session.joystickActive.value = true
+            session.pointerVisible.value = true
+            host.onTouchCycleComplete()
+            scheduleKeepJoystickIdleDismiss()
+            return
+        }
+
         if (settings.floatingPointerReleaseClickAndDismiss) {
             // Keep continuedEdgeSessionActive until dismissImmediate clears it — prevents
             // always-visible radial from animating back in while the tap is in flight.
@@ -699,5 +745,8 @@ internal class FloatingPointerInputHandler(
         private const val LONG_PRESS_DISMISS_MS = 900L
         private const val QUICK_SWIPE_MIN_DISTANCE_PX = 180f
         private const val QUICK_SWIPE_MAX_DURATION_MS = 450L
+
+        /** 「松手即点、摇杆保留」模式：这么久没再按下就自动收起，避免摇杆一直挂着。 */
+        private const val KEEP_JOYSTICK_IDLE_DISMISS_MS = 8_000L
     }
 }

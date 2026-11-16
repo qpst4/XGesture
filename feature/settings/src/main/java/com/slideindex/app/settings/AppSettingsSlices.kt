@@ -177,6 +177,8 @@ data class FloatingPointerSettings(
      * 看起来就像"什么都没发生"，反而让人以为功能没生效。需要这个手势的人在设置里自己开。
      */
     val floatingPointerReleaseClickAndDismiss: Boolean = false,
+    /** 松手在指针处点一下后**保留摇杆**，可继续拖动并循环点击。 */
+    val floatingPointerReleaseClickKeepJoystick: Boolean = false,
     /**
      * Continued edge handoff: dwell ~280ms on the pointer to enter element/region pick mode.
      */

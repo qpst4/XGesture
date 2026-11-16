@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -123,6 +124,8 @@ fun FloatBallPickResultContent(
     /** 面板内全屏查看当前图片（工具栏「查看图片」按钮 / 返回键共用这一份状态）。 */
     imageViewerVisible: Boolean = false,
     onImageViewerVisibleChange: (Boolean) -> Unit = {},
+    /** 图片区「编辑」动作（打开内置编辑器）；null 时不显示编辑按钮。 */
+    onEditImage: (() -> Unit)? = null,
     screenRect: Rect?,
     layoutMeta: ScreenshotLayoutMeta?
 ) {
@@ -507,6 +510,7 @@ fun FloatBallPickResultContent(
     var panelBoundsInRoot by remember { mutableStateOf(ComposeRect.Zero) }
     val panelBoundsState = rememberUpdatedState(panelBoundsInRoot)
 
+    CompositionLocalProvider(LocalPickImageEditAction provides onEditImage) {
     OverlayAwareModuleTheme {
         Box(
             modifier = Modifier
@@ -693,5 +697,6 @@ fun FloatBallPickResultContent(
                 }
             }
         }
+    }
     }
 }

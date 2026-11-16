@@ -433,6 +433,8 @@ class SettingsRepository @Inject constructor(
     suspend fun setFloatingPointerIdleHideDelayMs(value: Int) = overlay.setFloatingPointerIdleHideDelayMs(value)
     suspend fun setFloatingPointerReleaseClickAndDismiss(enabled: Boolean) =
         overlay.setFloatingPointerReleaseClickAndDismiss(enabled)
+    suspend fun setFloatingPointerReleaseClickKeepJoystick(enabled: Boolean) =
+        overlay.setFloatingPointerReleaseClickKeepJoystick(enabled)
     suspend fun setFloatingPointerHoverEnterSelect(enabled: Boolean) =
         overlay.setFloatingPointerHoverEnterSelect(enabled)
     suspend fun setFloatingPointerJoystickLongPressAction(action: GestureAction) = overlay.setFloatingPointerJoystickLongPressAction(action)

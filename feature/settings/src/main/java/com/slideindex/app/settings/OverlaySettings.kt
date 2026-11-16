@@ -74,6 +74,8 @@ data class OverlaySettings(
     val floatingPointerHideWhenIdle: Boolean = true,
     val floatingPointerIdleHideDelayMs: Int = 3000,
     val floatingPointerReleaseClickAndDismiss: Boolean = false,
+    /** 松手在指针处点一下后保留摇杆，可继续拖动。 */
+    val floatingPointerReleaseClickKeepJoystick: Boolean = false,
     val floatingPointerHoverEnterSelect: Boolean = false,
     val floatingPointerJoystickLongPressAction: GestureAction = GestureAction.OpenFloatingPointerRadialMenu,
     val floatingPointerRadialAlwaysVisible: Boolean = false,
@@ -337,6 +339,7 @@ data class OverlaySettings(
             floatingPointerHideWhenIdle = settings.floatingPointerHideWhenIdle,
             floatingPointerIdleHideDelayMs = settings.floatingPointerIdleHideDelayMs,
             floatingPointerReleaseClickAndDismiss = settings.floatingPointerReleaseClickAndDismiss,
+            floatingPointerReleaseClickKeepJoystick = settings.floatingPointerReleaseClickKeepJoystick,
             floatingPointerHoverEnterSelect = settings.floatingPointerHoverEnterSelect,
             floatingPointerJoystickLongPressAction = settings.floatingPointerJoystickLongPressAction,
             floatingPointerRadialAlwaysVisible = settings.floatingPointerRadialAlwaysVisible,

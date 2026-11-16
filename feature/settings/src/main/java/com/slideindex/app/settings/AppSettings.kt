@@ -296,6 +296,7 @@ data class AppSettings(
     val floatingPointerHideWhenIdle get() = floatingPointer.floatingPointerHideWhenIdle
     val floatingPointerIdleHideDelayMs get() = floatingPointer.floatingPointerIdleHideDelayMs
     val floatingPointerReleaseClickAndDismiss get() = floatingPointer.floatingPointerReleaseClickAndDismiss
+    val floatingPointerReleaseClickKeepJoystick get() = floatingPointer.floatingPointerReleaseClickKeepJoystick
     val floatingPointerHoverEnterSelect get() = floatingPointer.floatingPointerHoverEnterSelect
     val floatingPointerJoystickLongPressAction get() = floatingPointer.floatingPointerJoystickLongPressAction
     val floatingPointerRadialAlwaysVisible get() = floatingPointer.floatingPointerRadialAlwaysVisible

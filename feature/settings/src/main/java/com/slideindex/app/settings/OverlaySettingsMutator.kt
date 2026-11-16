@@ -221,6 +221,10 @@ class OverlaySettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.FLOATING_POINTER_RELEASE_CLICK_AND_DISMISS] = enabled
     }
 
+    suspend fun setFloatingPointerReleaseClickKeepJoystick(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.FLOATING_POINTER_RELEASE_CLICK_KEEP_JOYSTICK] = enabled
+    }
+
     suspend fun setFloatingPointerHoverEnterSelect(enabled: Boolean) = editor.edit {
         it[SettingsPreferenceKeys.FLOATING_POINTER_HOVER_ENTER_SELECT] = enabled
     }

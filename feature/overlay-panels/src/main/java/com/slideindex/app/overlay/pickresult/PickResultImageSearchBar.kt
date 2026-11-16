@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.PushPin
@@ -40,6 +41,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -275,6 +277,14 @@ fun pickResultImageSectionReservedHeight(
     val searchBar = if (includeSearchBar) ImageSectionItemSpacing + ImageSearchBarHeight else 0.dp
     return header + gaps + imageMaxHeight + searchBar
 }
+
+/**
+ * 图片「编辑」动作：由取词面板注入（打开内置编辑器）；为 null 时不显示编辑按钮。
+ *
+ * 用 CompositionLocal 而不是逐层加参数：图片底栏要穿过 Section/Gallery/Layout 四层，
+ * 每层都加一个只读回调不划算。
+ */
+val LocalPickImageEditAction = compositionLocalOf<(() -> Unit)?> { null }
 
 @Composable
 fun PickResultImageSearchBar(
@@ -955,11 +965,13 @@ private fun PickResultImageIconBar(
     val hiddenIds = remember(hidden) {
         com.slideindex.app.settings.PickResultBarButtons.sanitizeHiddenImage(hidden)
     }
+    val editAction = LocalPickImageEditAction.current
 
     val visible = buttons.filter { button ->
         button.id !in hiddenIds && when (button) {
             com.slideindex.app.settings.PickResultImageBarButton.IMAGE_SEARCH -> true
             com.slideindex.app.settings.PickResultImageBarButton.SAVE -> true
+            com.slideindex.app.settings.PickResultImageBarButton.EDIT -> editAction != null
             com.slideindex.app.settings.PickResultImageBarButton.SHARE -> true
             com.slideindex.app.settings.PickResultImageBarButton.PIN -> onPinToScreen != null
             com.slideindex.app.settings.PickResultImageBarButton.STASH -> onStash != null
@@ -999,6 +1011,16 @@ private fun PickResultImageIconBar(
                         onLongClick = onSaveLongClick,
                         contentDescription = stringResource(R.string.pick_result_action_save_image),
                     )
+
+                com.slideindex.app.settings.PickResultImageBarButton.EDIT ->
+                    if (editAction != null) {
+                        PickResultActionIcon(
+                            icon = Icons.Outlined.Edit,
+                            enabled = true,
+                            onClick = editAction,
+                            contentDescription = stringResource(R.string.pick_result_action_edit_image),
+                        )
+                    }
 
                 com.slideindex.app.settings.PickResultImageBarButton.SHARE ->
                     PickResultActionIcon(
@@ -1111,6 +1133,19 @@ private fun PickResultImageSearchActions(
                 enabled = true,
                 onClick = onViewImage,
                 contentDescription = stringResource(R.string.pick_result_action_view_image),
+                overlayMode = overlayMode,
+                compact = compact,
+            )
+        }
+
+        // 「编辑」与「查看」同级：只在取词面板注入了编辑动作时出现。
+        val editAction = LocalPickImageEditAction.current
+        if (editAction != null) {
+            PickResultActionIcon(
+                icon = Icons.Outlined.Edit,
+                enabled = true,
+                onClick = editAction,
+                contentDescription = stringResource(R.string.pick_result_action_edit_image),
                 overlayMode = overlayMode,
                 compact = compact,
             )

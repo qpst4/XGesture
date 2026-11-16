@@ -1103,6 +1103,9 @@
     <string name="float_ball_pick_panel_tab_text">Text</string>
     <string name="float_ball_pick_panel_tab_image">Screenshot</string>
     <string name="pick_result_action_save_image">Save image</string>
+    <string name="pick_result_action_edit_image">Edit image</string>
+    <string name="float_ball_pick_bar_edit">Edit</string>
+    <string name="float_ball_pick_bar_edit_desc">Open the built-in editor</string>
     <string name="pick_result_action_view_image">View image</string>
     <string name="pick_result_translate_target_switched">Translate target: %1$s</string>
     <string name="pick_result_action_image_search">Search by image</string>
@@ -1424,6 +1427,8 @@
     <string name="floating_pointer_click_distance_threshold_desc">Maximum distance the joystick can move between press and release to count as a click or long-press. Increase in shaky environments.</string>
     <string name="floating_pointer_release_click_and_dismiss">Click and dismiss on release</string>
     <string name="floating_pointer_release_click_and_dismiss_desc">When dragging out the floating pointer with a continuous edge gesture: release clicks at the pointer and closes it; the action ring is hidden during the drag (resident joystick taps unchanged)</string>
+    <string name="floating_pointer_release_click_keep_joystick">Tap on release, keep joystick</string>
+    <string name="floating_pointer_release_click_keep_joystick_desc">Each time you lift your finger after moving, tap at the pointer but keep the joystick so you can drag again (auto-hides after 8s idle)</string>
     <string name="floating_pointer_hover_enter_select">Hover to enter selection</string>
     <string name="floating_pointer_hover_enter_select_desc">During continuous edge drag-out, pause on the pointer to enter selection: release picks the element; drag further for a region screenshot</string>
     <string name="floating_pointer_hide_outside_click">Hide on outside tap</string>

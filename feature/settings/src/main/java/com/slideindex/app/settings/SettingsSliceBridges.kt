@@ -167,6 +167,7 @@ fun OverlaySettings.toMinimalAppSettings(): AppSettings = AppSettings(
         floatingPointerHideWhenIdle = floatingPointerHideWhenIdle,
         floatingPointerIdleHideDelayMs = floatingPointerIdleHideDelayMs,
         floatingPointerReleaseClickAndDismiss = floatingPointerReleaseClickAndDismiss,
+        floatingPointerReleaseClickKeepJoystick = floatingPointerReleaseClickKeepJoystick,
         floatingPointerHoverEnterSelect = floatingPointerHoverEnterSelect,
         floatingPointerJoystickLongPressAction = floatingPointerJoystickLongPressAction,
         floatingPointerRadialAlwaysVisible = floatingPointerRadialAlwaysVisible,

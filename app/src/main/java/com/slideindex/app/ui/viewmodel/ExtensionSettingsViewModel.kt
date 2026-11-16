@@ -463,6 +463,10 @@ class ExtensionSettingsViewModel @Inject constructor(
         settingsRepository.setFloatingPointerReleaseClickAndDismiss(enabled)
     }
 
+    fun setFloatingPointerReleaseClickKeepJoystick(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setFloatingPointerReleaseClickKeepJoystick(enabled)
+    }
+
     fun setFloatingPointerHoverEnterSelect(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setFloatingPointerHoverEnterSelect(enabled)
     }

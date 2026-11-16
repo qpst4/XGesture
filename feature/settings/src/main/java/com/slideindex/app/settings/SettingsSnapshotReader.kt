@@ -404,6 +404,8 @@ internal object SettingsSnapshotReader {
             floatingPointerIdleHideDelayMs = prefs[SettingsPreferenceKeys.FLOATING_POINTER_IDLE_DELAY] ?: 3000,
             floatingPointerReleaseClickAndDismiss =
                 prefs[SettingsPreferenceKeys.FLOATING_POINTER_RELEASE_CLICK_AND_DISMISS] ?: false,
+            floatingPointerReleaseClickKeepJoystick =
+                prefs[SettingsPreferenceKeys.FLOATING_POINTER_RELEASE_CLICK_KEEP_JOYSTICK] ?: false,
             floatingPointerHoverEnterSelect =
                 prefs[SettingsPreferenceKeys.FLOATING_POINTER_HOVER_ENTER_SELECT] ?: false,
             floatingPointerJoystickLongPressAction = readFloatingPointerJoystickLongPressAction(prefs),
