@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -591,6 +592,7 @@ fun FloatBallPickResultContent(
                         com.slideindex.app.settings.PickImageTapAction.EDIT -> onEditImage?.invoke()
                         com.slideindex.app.settings.PickImageTapAction.SAVE -> onSaveScreenshot()
                         com.slideindex.app.settings.PickImageTapAction.SHARE -> onShareScreenshot()
+                        com.slideindex.app.settings.PickImageTapAction.OPEN -> onImageClick()
                         // 查看大图 = 面板内全屏查看器，不再走"用哪个 App 打开"的系统选择。
                         com.slideindex.app.settings.PickImageTapAction.VIEW ->
                             onImageViewerVisibleChange(true)
@@ -727,34 +729,62 @@ fun FloatBallPickResultContent(
                     ) {
                         Column(
                             modifier = Modifier
-                                .fillMaxWidth(0.86f)
-                                .heightIn(max = 420.dp)
-                                .padding(12.dp)
-                                .verticalScroll(rememberScrollState()),
+                                .fillMaxWidth(0.88f)
+                                .heightIn(max = 460.dp),
                         ) {
                             Text(
                                 text = stringResource(R.string.pick_result_translate_target_title),
                                 style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                modifier = Modifier.padding(
+                                    start = 20.dp,
+                                    end = 20.dp,
+                                    top = 16.dp,
+                                    bottom = 6.dp,
+                                ),
                             )
-                            com.slideindex.app.translate.TranslateLanguageCatalog.options.forEach { option ->
-                                androidx.compose.material3.TextButton(
-                                    onClick = {
-                                        translateTargetMenuVisible = false
-                                        onTranslateTargetSelect?.invoke(option.code)
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                ) {
-                                    Text(
-                                        text = com.slideindex.app.translate.translateTargetAutonym(option.code) +
-                                            if (option.code == currentTarget) "  ✓" else "",
-                                        modifier = Modifier.fillMaxWidth(),
-                                    )
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f, fill = false)
+                                    .verticalScroll(rememberScrollState()),
+                            ) {
+                                com.slideindex.app.translate.TranslateLanguageCatalog.options.forEach { option ->
+                                    val selected = option.code == currentTarget
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                translateTargetMenuVisible = false
+                                                onTranslateTargetSelect?.invoke(option.code)
+                                            }
+                                            .padding(horizontal = 20.dp, vertical = 13.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            text = com.slideindex.app.translate.translateTargetAutonym(option.code),
+                                            modifier = Modifier.weight(1f),
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = if (selected) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurface
+                                            },
+                                        )
+                                        if (selected) {
+                                            Text(
+                                                text = "✓",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = MaterialTheme.colorScheme.primary,
+                                            )
+                                        }
+                                    }
                                 }
                             }
+                            androidx.compose.material3.HorizontalDivider()
                             androidx.compose.material3.TextButton(
                                 onClick = { translateTargetMenuVisible = false },
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp, vertical = 4.dp),
                             ) {
                                 Text(stringResource(android.R.string.cancel))
                             }

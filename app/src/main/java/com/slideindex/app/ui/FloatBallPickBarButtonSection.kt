@@ -25,6 +25,8 @@ import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Fullscreen
 import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.QrCode
@@ -144,6 +146,12 @@ private val textBarSpecs: List<BarButtonSpec> = listOf(
 
 private val imageBarSpecs: List<BarButtonSpec> = listOf(
     BarButtonSpec(
+        PickResultImageBarButton.VIEW.id,
+        R.string.float_ball_pick_bar_view,
+        R.string.float_ball_pick_bar_view_desc,
+        Icons.Outlined.Fullscreen,
+    ),
+    BarButtonSpec(
         PickResultImageBarButton.IMAGE_SEARCH.id,
         R.string.float_ball_pick_bar_image_search,
         R.string.float_ball_pick_bar_image_search_desc,
@@ -154,6 +162,12 @@ private val imageBarSpecs: List<BarButtonSpec> = listOf(
         R.string.float_ball_pick_bar_save,
         R.string.float_ball_pick_bar_save_desc,
         Icons.Outlined.Save,
+    ),
+    BarButtonSpec(
+        PickResultImageBarButton.EDIT.id,
+        R.string.float_ball_pick_bar_edit,
+        R.string.float_ball_pick_bar_edit_desc,
+        Icons.Outlined.Edit,
     ),
     BarButtonSpec(
         PickResultImageBarButton.SHARE.id,

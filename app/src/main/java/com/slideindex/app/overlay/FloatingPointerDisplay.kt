@@ -375,48 +375,8 @@ internal fun FloatingPointerDisplay(
                     )
                 }
                 // 实时缩放 / 滚动：在指针周围画出动作提示（对齐 Quick Cursor 的"看得见在干什么"）。
-                val realtimeKind = session.realtimeGestureKind.value
-                if (realtimeKind != null) {
-                    val center = Offset(pointerX, pointerY)
-                    // 用光标圆点的颜色（不是环色）：浅色页面上环色是白的，根本看不见。
-                    val indicator = Color(settings.floatingPointerDotColorArgb).copy(alpha = 0.95f)
-                    if (realtimeKind == "zoom") {
-                        // 缩放：双环，提示"双指张合"。
-                        drawCircle(
-                            color = indicator,
-                            radius = 28f * density,
-                            center = center,
-                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f * density),
-                        )
-                        drawCircle(
-                            color = indicator.copy(alpha = 0.55f),
-                            radius = 42f * density,
-                            center = center,
-                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5f * density),
-                        )
-                    } else {
-                        // 滚动：上下两个"V"形箭头（描边，不填实心块）。
-                        val halfWidth = 8f * density
-                        val height = 7f * density
-                        val gap = 30f * density
-                        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
-                            width = 3f * density,
-                            cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                        )
-                        val up = androidx.compose.ui.graphics.Path().apply {
-                            moveTo(center.x - halfWidth, center.y - gap + height)
-                            lineTo(center.x, center.y - gap - height)
-                            lineTo(center.x + halfWidth, center.y - gap + height)
-                        }
-                        val down = androidx.compose.ui.graphics.Path().apply {
-                            moveTo(center.x - halfWidth, center.y + gap - height)
-                            lineTo(center.x, center.y + gap + height)
-                            lineTo(center.x + halfWidth, center.y + gap - height)
-                        }
-                        drawPath(up, indicator, style = stroke)
-                        drawPath(down, indicator, style = stroke)
-                    }
-                }
+                // 实时缩放/滚动不再额外画图形：Quick Cursor 靠光标自身表达，
+                // 额外箭头/圆环既对不上它的观感，也会在浅色页面上变成一个白块。宁可不画。
                 val recorderProgress = gestureRecorderProgress.value
                 when {
                     hoverSelectAsPlus -> {

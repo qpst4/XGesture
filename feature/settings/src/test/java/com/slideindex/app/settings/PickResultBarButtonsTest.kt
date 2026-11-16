@@ -73,7 +73,9 @@ class PickResultBarButtonsTest {
             listOf(
                 PickResultImageBarButton.SHARE,
                 PickResultImageBarButton.SAVE,
+                PickResultImageBarButton.VIEW,
                 PickResultImageBarButton.IMAGE_SEARCH,
+                PickResultImageBarButton.EDIT,
                 PickResultImageBarButton.PIN,
                 PickResultImageBarButton.STASH,
             ),

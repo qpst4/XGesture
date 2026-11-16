@@ -117,6 +117,7 @@ fun FloatBallPickSettingsScreen(
         stringResource(
             when (action) {
                 com.slideindex.app.settings.PickImageTapAction.VIEW -> R.string.pick_image_tap_view
+                com.slideindex.app.settings.PickImageTapAction.OPEN -> R.string.pick_image_tap_open
                 com.slideindex.app.settings.PickImageTapAction.EDIT -> R.string.pick_image_tap_edit
                 com.slideindex.app.settings.PickImageTapAction.SAVE -> R.string.pick_image_tap_save
                 com.slideindex.app.settings.PickImageTapAction.SHARE -> R.string.pick_image_tap_share

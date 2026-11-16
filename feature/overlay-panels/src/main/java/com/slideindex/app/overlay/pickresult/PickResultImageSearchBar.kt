@@ -969,8 +969,10 @@ private fun PickResultImageIconBar(
 
     val visible = buttons.filter { button ->
         button.id !in hiddenIds && when (button) {
+            com.slideindex.app.settings.PickResultImageBarButton.VIEW -> onViewImage != null
             com.slideindex.app.settings.PickResultImageBarButton.IMAGE_SEARCH -> true
             com.slideindex.app.settings.PickResultImageBarButton.SAVE -> true
+            com.slideindex.app.settings.PickResultImageBarButton.EDIT -> editAction != null
             com.slideindex.app.settings.PickResultImageBarButton.SHARE -> true
             com.slideindex.app.settings.PickResultImageBarButton.PIN -> onPinToScreen != null
             com.slideindex.app.settings.PickResultImageBarButton.STASH -> onStash != null
@@ -995,6 +997,26 @@ private fun PickResultImageIconBar(
         }
         visible.forEach { button ->
             when (button) {
+                com.slideindex.app.settings.PickResultImageBarButton.VIEW ->
+                    if (onViewImage != null) {
+                        PickResultActionIcon(
+                            icon = PickResultViewImageIcon,
+                            enabled = true,
+                            onClick = onViewImage,
+                            contentDescription = stringResource(R.string.pick_result_action_view_image),
+                        )
+                    }
+
+                com.slideindex.app.settings.PickResultImageBarButton.EDIT ->
+                    if (editAction != null) {
+                        PickResultActionIcon(
+                            icon = Icons.Outlined.Edit,
+                            enabled = true,
+                            onClick = editAction,
+                            contentDescription = stringResource(R.string.pick_result_action_edit_image),
+                        )
+                    }
+
                 com.slideindex.app.settings.PickResultImageBarButton.IMAGE_SEARCH ->
                     ImageSearchIconButton(
                         engines = engines,

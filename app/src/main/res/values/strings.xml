@@ -1426,7 +1426,7 @@
     <string name="floating_pointer_click_distance_threshold">Click distance threshold</string>
     <string name="floating_pointer_click_distance_threshold_desc">Maximum distance the joystick can move between press and release to count as a click or long-press. Increase in shaky environments.</string>
     <string name="floating_pointer_release_click_and_dismiss">Click and dismiss on release</string>
-    <string name="floating_pointer_release_click_mode">On release</string>
+    <string name="floating_pointer_release_click_mode">Release mode</string>
     <string name="floating_pointer_release_click_off">Do nothing</string>
     <string name="floating_pointer_release_click_mode_desc">Choose what happens when you lift your finger: nothing, tap and close the joystick, or tap and keep it for another drag.</string>
     <string name="floating_pointer_release_click_and_dismiss_desc">When dragging out the floating pointer with a continuous edge gesture: release clicks at the pointer and closes it; the action ring is hidden during the drag (resident joystick taps unchanged)</string>
@@ -4620,6 +4620,9 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="image_viewer_default_title">Default image viewer</string>
     <string name="pick_image_tap_title">Tap image action</string>
     <string name="pick_image_tap_view">View image</string>
+    <string name="pick_image_tap_open">Open with viewer app</string>
+    <string name="float_ball_pick_bar_view">Fullscreen view</string>
+    <string name="float_ball_pick_bar_view_desc">View the current image fullscreen inside the panel</string>
     <string name="pick_image_tap_edit">Edit</string>
     <string name="pick_image_tap_save">Save</string>
     <string name="pick_image_tap_share">Share</string>

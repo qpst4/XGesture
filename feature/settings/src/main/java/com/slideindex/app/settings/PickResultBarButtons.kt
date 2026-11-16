@@ -49,11 +49,17 @@ enum class PickResultTextBarButton(val id: String) {
 
 /** 取词面板图片区底栏「纯图标模式」下可用的按钮。规则同 [PickResultTextBarButton]。 */
 enum class PickResultImageBarButton(val id: String) {
+    /** 面板内全屏查看当前图片。 */
+    VIEW("view"),
+
     /** 以图搜图：单击把当前图片送进搜索面板的图片模式；长按滑选分享引擎。 */
     IMAGE_SEARCH("image_search"),
 
     /** 保存当前图片。 */
     SAVE("save"),
+
+    /** 用内置编辑器编辑当前图片。 */
+    EDIT("edit"),
 
     /** 分享当前图片（长按 = 起系统拖拽）。 */
     SHARE("share"),
@@ -93,8 +99,10 @@ object PickResultBarButtons {
     )
 
     val defaultImageOrder: List<String> = listOf(
+        PickResultImageBarButton.VIEW.id,
         PickResultImageBarButton.IMAGE_SEARCH.id,
         PickResultImageBarButton.SAVE.id,
+        PickResultImageBarButton.EDIT.id,
         PickResultImageBarButton.SHARE.id,
         PickResultImageBarButton.PIN.id,
         PickResultImageBarButton.STASH.id,

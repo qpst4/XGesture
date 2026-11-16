@@ -5,6 +5,9 @@ enum class PickImageTapAction(val id: String) {
     /** 查看大图（按"默认看图应用"打开）。 */
     VIEW("view"),
 
+    /** 用系统"默认看图应用"打开（会弹选择器/外部 App）。 */
+    OPEN("open"),
+
     /** 打开内置编辑器。 */
     EDIT("edit"),
 

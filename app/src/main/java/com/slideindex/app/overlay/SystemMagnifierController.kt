@@ -93,13 +93,11 @@ object SystemMagnifierController {
         lastX = x
         lastY = y
         val c = controller ?: return
+        // 每次更新都带 activated=true 重建 config：MODE_WINDOW 下系统只认"已激活"的 config，
+        // 否则中心点不跟随（表现就是放大画面停在原地）。
+        if (apply(x, y)) return
         val (cx, cy) = centerFor(x, y)
-        // 先用 setCenter 移动放大区域：MODE_WINDOW 下这是系统认可的"跟手"路径；
-        // 部分 ROM 只接受激活时的 config，后续 config 会被忽略，所以不能只靠 apply()。
-        val moved = runCatching { c.setCenter(cx, cy, true) }.getOrDefault(false)
-        if (!moved) {
-            apply(x, y)
-        }
+        runCatching { c.setCenter(cx, cy, true) }
     }
 
     fun stop() {
@@ -170,11 +168,12 @@ object SystemMagnifierController {
         val (cx, cy) = centerFor(x, y)
         val config = MagnificationConfig.Builder()
             .setMode(MODE_WINDOW)
+            .setActivated(true)
             .setScale(scale)
             .setCenterX(cx)
             .setCenterY(cy)
             .build()
-        val ok = runCatching { c.setMagnificationConfig(config, false) }
+        val ok = runCatching { c.setMagnificationConfig(config, true) }
             .onFailure { Log.w(TAG, "setMagnificationConfig failed", it) }
             .getOrDefault(false)
         if (!ok) {
