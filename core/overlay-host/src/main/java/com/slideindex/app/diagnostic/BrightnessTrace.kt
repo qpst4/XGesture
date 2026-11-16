@@ -9,6 +9,7 @@ import android.os.SystemClock
 import android.provider.Settings
 import android.view.Display
 import java.io.File
+import com.slideindex.app.perf.PerfBuildFlags
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -65,6 +66,8 @@ object BrightnessTrace {
         File(context.filesDir, "diagnostics/brightness-trace.log").apply { parentFile?.mkdirs() }
 
     fun record(context: Context, event: String) {
+        // 只是排错埋点：正式包零开销（debugBuild=false 时直接返回，不写文件、不采样）。
+        if (!PerfBuildFlags.debugBuild) return
         val line = "${clock.format(Date())} ${event}\n"
         io.execute {
             runCatching {
@@ -89,6 +92,7 @@ object BrightnessTrace {
         intOk: Boolean,
         shellOk: Boolean,
     ) {
+        if (!PerfBuildFlags.debugBuild) return
         markSelf(Settings.System.SCREEN_BRIGHTNESS, targetInt.toString())
         record(
             context,
@@ -118,6 +122,7 @@ object BrightnessTrace {
     }
 
     fun ensureObserving(context: Context) {
+        if (!PerfBuildFlags.debugBuild) return
         if (observing) return
         if (Looper.myLooper() != Looper.getMainLooper()) {
             mainHandler.post { ensureObserving(context) }
