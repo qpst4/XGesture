@@ -986,15 +986,8 @@ private fun PickResultImageIconBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
     ) {
-        // 「查看图片」不参与按钮排序/隐藏：它是图片区独立的查看入口，始终显示在最左侧。
-        if (onViewImage != null) {
-            PickResultActionIcon(
-                icon = PickResultViewImageIcon,
-                enabled = true,
-                onClick = onViewImage,
-                contentDescription = stringResource(R.string.pick_result_action_view_image),
-            )
-        }
+        // 「查看图片」现在是可排序按钮（VIEW），由 visible 统一渲染；
+        // 这里不再额外画一个固定入口，否则纯图标模式下会出现两个全屏查看。
         visible.forEach { button ->
             when (button) {
                 com.slideindex.app.settings.PickResultImageBarButton.VIEW ->

@@ -149,7 +149,7 @@ private val imageBarSpecs: List<BarButtonSpec> = listOf(
         PickResultImageBarButton.VIEW.id,
         R.string.float_ball_pick_bar_view,
         R.string.float_ball_pick_bar_view_desc,
-        Icons.Outlined.Fullscreen,
+        com.slideindex.app.overlay.pickresult.PickResultViewImageIcon,
     ),
     BarButtonSpec(
         PickResultImageBarButton.IMAGE_SEARCH.id,
