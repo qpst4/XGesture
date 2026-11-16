@@ -92,7 +92,14 @@ object SystemMagnifierController {
         if (!active) return
         lastX = x
         lastY = y
-        apply(x, y)
+        val c = controller ?: return
+        val (cx, cy) = centerFor(x, y)
+        // 先用 setCenter 移动放大区域：MODE_WINDOW 下这是系统认可的"跟手"路径；
+        // 部分 ROM 只接受激活时的 config，后续 config 会被忽略，所以不能只靠 apply()。
+        val moved = runCatching { c.setCenter(cx, cy, true) }.getOrDefault(false)
+        if (!moved) {
+            apply(x, y)
+        }
     }
 
     fun stop() {
@@ -143,8 +150,7 @@ object SystemMagnifierController {
         }
     }
 
-    private fun apply(x: Float, y: Float): Boolean {
-        val c = controller ?: return false
+    private fun centerFor(x: Float, y: Float): Pair<Float, Float> {
         val metrics = SlideIndexAccessibilityService.overlayHostContext()?.resources?.displayMetrics
         val width = metrics?.widthPixels ?: 1080
         val height = metrics?.heightPixels ?: 2400
@@ -156,6 +162,12 @@ object SystemMagnifierController {
             else -> x
         }
         val cy = y.coerceIn(height * 0.1f, height * 0.9f)
+        return cx to cy
+    }
+
+    private fun apply(x: Float, y: Float): Boolean {
+        val c = controller ?: return false
+        val (cx, cy) = centerFor(x, y)
         val config = MagnificationConfig.Builder()
             .setMode(MODE_WINDOW)
             .setScale(scale)

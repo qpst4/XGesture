@@ -1109,51 +1109,13 @@ private fun PickResultImageSearchActions(
     compact: Boolean = false,
 ) {
     var moreMenuExpanded by remember { mutableStateOf(false) }
+    val editAction = LocalPickImageEditAction.current
 
     Row(
         modifier = Modifier.height(if (compact) 32.dp else 38.dp),
         horizontalArrangement = Arrangement.spacedBy(if (compact) 2.dp else 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // 0. 「查看图片 / 编辑图片」收进三点菜单：底栏只保留高频动作。
-        val editAction = LocalPickImageEditAction.current
-        var overflowExpanded by remember { mutableStateOf(false) }
-        if (onViewImage != null || editAction != null) {
-            Box {
-                PickResultActionIcon(
-                    icon = Icons.Filled.MoreVert,
-                    enabled = true,
-                    onClick = { overflowExpanded = true },
-                    contentDescription = stringResource(R.string.pick_result_more_actions),
-                    overlayMode = overlayMode,
-                    compact = compact,
-                )
-                DropdownMenu(
-                    expanded = overflowExpanded,
-                    onDismissRequest = { overflowExpanded = false },
-                ) {
-                    if (onViewImage != null) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.pick_result_action_view_image)) },
-                            onClick = {
-                                overflowExpanded = false
-                                onViewImage()
-                            },
-                        )
-                    }
-                    if (editAction != null) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.pick_result_action_edit_image)) },
-                            onClick = {
-                                overflowExpanded = false
-                                editAction()
-                            },
-                        )
-                    }
-                }
-            }
-        }
-
         // 1. Direct Action: Image Search (以图搜图)
         PickResultActionIcon(
             icon = Icons.Outlined.ImageSearch,
@@ -1188,8 +1150,9 @@ private fun PickResultImageSearchActions(
             badge = shareDefault,
         )
 
-        // 4. More Action: Dropdown Menu (钉选 / 暂存)
-        val hasMoreActions = onPinToScreen != null || onStash != null
+        // 4. More Action: Dropdown Menu (查看 / 编辑 / 钉选 / 暂存)
+        val hasMoreActions = onViewImage != null || editAction != null ||
+            onPinToScreen != null || onStash != null
         if (hasMoreActions) {
             Box {
                 PickResultActionIcon(
@@ -1205,6 +1168,26 @@ private fun PickResultImageSearchActions(
                     expanded = moreMenuExpanded,
                     onDismissRequest = { moreMenuExpanded = false }
                 ) {
+                    onViewImage?.let { viewAction ->
+                        PickResultActionMenuItem(
+                            label = stringResource(R.string.pick_result_action_view_image),
+                            icon = PickResultViewImageIcon,
+                            onClick = {
+                                moreMenuExpanded = false
+                                viewAction()
+                            },
+                        )
+                    }
+                    editAction?.let { edit ->
+                        PickResultActionMenuItem(
+                            label = stringResource(R.string.pick_result_action_edit_image),
+                            icon = Icons.Outlined.Edit,
+                            onClick = {
+                                moreMenuExpanded = false
+                                edit()
+                            },
+                        )
+                    }
                     onPinToScreen?.let { pinAction ->
                         PickResultActionMenuItem(
                             label = stringResource(R.string.pick_result_pin),

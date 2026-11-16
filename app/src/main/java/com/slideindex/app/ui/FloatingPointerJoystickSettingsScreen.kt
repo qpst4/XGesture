@@ -27,6 +27,7 @@ import com.slideindex.app.ui.animationstyle.AnimationStyleColorPickerDialog
 import com.slideindex.app.ui.animationstyle.AnimationStyleColorRow
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingExpandableSwitchRow
+import com.slideindex.app.ui.settings.components.SettingSpinnerRow
 import com.slideindex.app.ui.settings.components.SettingsCardRow
 import com.slideindex.app.ui.settings.components.SettingsHintText
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
@@ -254,41 +255,36 @@ fun FloatingPointerJoystickSettingsScreen(
                 )
                 add(
                     settingsCardScopeItem("release-click") {
-                        SettingsCardRow(key = "release-click-mode-row") { position ->
-                            Column(
-                                modifier = Modifier
-                                    .settingsGroupedRowBackground(position.index, position.count)
-                                    .padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(10.dp),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.floating_pointer_release_click_mode),
-                                    style = MaterialTheme.typography.titleMedium,
-                                )
-                                SegmentedControl(
-                                    items = com.slideindex.app.settings.FloatingPointerReleaseClickMode.entries,
-                                    selected = settings.floatingPointerReleaseClickMode,
-                                    labelRes = { mode ->
-                                        when (mode) {
-                                            com.slideindex.app.settings.FloatingPointerReleaseClickMode.OFF ->
-                                                R.string.floating_pointer_release_click_off
+                        val modes =
+                            com.slideindex.app.settings.FloatingPointerReleaseClickMode.entries
+                        val labels = modes.map { mode ->
+                            stringResource(
+                                when (mode) {
+                                    com.slideindex.app.settings.FloatingPointerReleaseClickMode.OFF ->
+                                        R.string.floating_pointer_release_click_off
 
-                                            com.slideindex.app.settings.FloatingPointerReleaseClickMode.CLICK_AND_DISMISS ->
-                                                R.string.floating_pointer_release_click_and_dismiss
+                                    com.slideindex.app.settings.FloatingPointerReleaseClickMode.CLICK_AND_DISMISS ->
+                                        R.string.floating_pointer_release_click_and_dismiss
 
-                                            com.slideindex.app.settings.FloatingPointerReleaseClickMode.CLICK_KEEP ->
-                                                R.string.floating_pointer_release_click_keep_joystick
-                                        }
-                                    },
-                                    onSelect = onReleaseClickModeChange,
-                                    containerColor = MiuixTheme.colorScheme.surface,
-                                    indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
-                                )
-                                SettingsHintText(
-                                    text = stringResource(R.string.floating_pointer_release_click_mode_desc),
-                                )
-                            }
+                                    com.slideindex.app.settings.FloatingPointerReleaseClickMode.CLICK_KEEP ->
+                                        R.string.floating_pointer_release_click_keep_joystick
+                                },
+                            )
                         }
+                        val selectedIndex = modes
+                            .indexOf(settings.floatingPointerReleaseClickMode)
+                            .coerceAtLeast(0)
+                        SettingSpinnerRow(
+                            title = stringResource(R.string.floating_pointer_release_click_mode),
+                            subtitle = labels[selectedIndex],
+                            dialogButtonText = stringResource(android.R.string.cancel),
+                            items = labels.map { top.yukonga.miuix.kmp.basic.DropdownItem(text = it) },
+                            selectedIndex = selectedIndex,
+                            enabled = true,
+                            onSelectedIndexChange = { index ->
+                                modes.getOrNull(index)?.let(onReleaseClickModeChange)
+                            },
+                        )
                     }
                 )
                 add(

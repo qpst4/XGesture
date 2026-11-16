@@ -429,6 +429,14 @@ internal class FloatingPointerInputHandler(
                 host.onActivity()
                 cancelLongPressJob()
                 host.releaseAllPointers()
+                if (session.pinchGesture != null || session.scrollGesture != null) {
+                    // 实时缩放/滚动：松手只结束手势，不 dock 摇杆、不移动光标（QC 语义：位置不变）。
+                    fromContinuedEdge = false
+                    session.finishRealtimeGesture()
+                    resetTouchPhase()
+                    host.onTouchCycleComplete()
+                    return true
+                }
                 if (session.gestureCaptureActive) {
                     fromContinuedEdge = false
                     session.continuedEdgeSessionActive.value = false

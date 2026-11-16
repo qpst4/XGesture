@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -590,7 +591,9 @@ fun FloatBallPickResultContent(
                         com.slideindex.app.settings.PickImageTapAction.EDIT -> onEditImage?.invoke()
                         com.slideindex.app.settings.PickImageTapAction.SAVE -> onSaveScreenshot()
                         com.slideindex.app.settings.PickImageTapAction.SHARE -> onShareScreenshot()
-                        com.slideindex.app.settings.PickImageTapAction.VIEW -> onImageClick()
+                        // 查看大图 = 面板内全屏查看器，不再走"用哪个 App 打开"的系统选择。
+                        com.slideindex.app.settings.PickImageTapAction.VIEW ->
+                            onImageViewerVisibleChange(true)
                     }
                 },
                 onViewImage = { onImageViewerVisibleChange(true) },
@@ -707,17 +710,33 @@ fun FloatBallPickResultContent(
                 }
             }
             if (translateTargetMenuVisible && onTranslateTargetSelect != null) {
-                // 长按翻译键：列出全部目标语言（不是只有中/英），当前项打勾。
+                // 长按翻译键：面板内直接列出全部目标语言。
+                // 注意：这里不能用 AlertDialog / Dialog —— 浮层是 window type 2038 的 WindowContext，
+                // Dialog 默认申请 type 2，系统会直接抛 "Window type mismatch" 崩掉。
                 val currentTarget = appSettings.floatBallTranslateTargetLang
-                androidx.compose.material3.AlertDialog(
-                    onDismissRequest = { translateTargetMenuVisible = false },
-                    title = { Text(stringResource(R.string.pick_result_translate_target_title)) },
-                    text = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(androidx.compose.ui.graphics.Color(0x66000000)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    androidx.compose.material3.Surface(
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        tonalElevation = 6.dp,
+                    ) {
                         Column(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(0.86f)
+                                .heightIn(max = 420.dp)
+                                .padding(12.dp)
                                 .verticalScroll(rememberScrollState()),
                         ) {
+                            Text(
+                                text = stringResource(R.string.pick_result_translate_target_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            )
                             com.slideindex.app.translate.TranslateLanguageCatalog.options.forEach { option ->
                                 androidx.compose.material3.TextButton(
                                     onClick = {
@@ -733,10 +752,15 @@ fun FloatBallPickResultContent(
                                     )
                                 }
                             }
+                            androidx.compose.material3.TextButton(
+                                onClick = { translateTargetMenuVisible = false },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(stringResource(android.R.string.cancel))
+                            }
                         }
-                    },
-                    confirmButton = {},
-                )
+                    }
+                }
             }
             if (imageViewerVisible) {
                 // 盖在面板之上的全屏查看器：满宽 + 纵向滚动，关闭后回到原面板状态。
