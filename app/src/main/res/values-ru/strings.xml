@@ -4885,7 +4885,6 @@
     <string name="quick_wheel_backdrop_blur">Размытие фона</string>
     <string name="quick_wheel_backdrop_blur_desc">Сила размытия; при отключённом межоконном размытии остаётся только оттенок</string>
     <string name="quick_wheel_backdrop_tint">Тон фона</string>
-    <string name="quick_wheel_backdrop_tint_desc">Цвет поверх размытия; при интенсивности 0 не действует</string>
     <string name="quick_wheel_backdrop_blur_scope">Область размытия</string>
     <string name="quick_wheel_backdrop_blur_scope_desc">Весь экран — без границы; «только колесо» даёт стык чёткого и размытого</string>
     <string name="quick_wheel_backdrop_scope_full">Весь экран</string>

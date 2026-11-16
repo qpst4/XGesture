@@ -4936,7 +4936,6 @@ adb 模式应返回 uid=2000。
     <string name="quick_wheel_backdrop_blur">背景模糊</string>
     <string name="quick_wheel_backdrop_blur_desc">模糊强度；系统未开启跨窗模糊时自动退回纯色调</string>
     <string name="quick_wheel_backdrop_tint">背景色调</string>
-    <string name="quick_wheel_backdrop_tint_desc">叠在模糊之上的颜色，浓度为 0 时不生效</string>
     <string name="quick_wheel_backdrop_blur_scope">模糊范围</string>
     <string name="quick_wheel_backdrop_blur_scope_desc">整屏没有边界；仅轮盘会在周围出现一条清晰 / 模糊的分界</string>
     <string name="quick_wheel_backdrop_scope_full">整个屏幕</string>

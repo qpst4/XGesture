@@ -4770,7 +4770,6 @@
     <string name="quick_wheel_backdrop_blur">背景のぼかし</string>
     <string name="quick_wheel_backdrop_blur_desc">ぼかしの強さ。システムでウィンドウ間のぼかしが無効なら色のみになります</string>
     <string name="quick_wheel_backdrop_tint">背景の色味</string>
-    <string name="quick_wheel_backdrop_tint_desc">ぼかしの上に重ねる色。濃度 0 では効果がありません</string>
     <string name="quick_wheel_backdrop_blur_scope">ぼかしの範囲</string>
     <string name="quick_wheel_backdrop_blur_scope_desc">画面全体なら境界なし。輪盤エリアのみだと輪盤の周囲に境目が出ます</string>
     <string name="quick_wheel_backdrop_scope_full">画面全体</string>

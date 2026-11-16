@@ -4915,7 +4915,6 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="quick_wheel_backdrop_blur">Background blur</string>
     <string name="quick_wheel_backdrop_blur_desc">Blur strength; falls back to tint only when the system blocks cross-window blur</string>
     <string name="quick_wheel_backdrop_tint">Background tint</string>
-    <string name="quick_wheel_backdrop_tint_desc">Color laid over the blur; no effect at 0% strength</string>
     <string name="quick_wheel_backdrop_blur_scope">Blur scope</string>
     <string name="quick_wheel_backdrop_blur_scope_desc">Full screen leaves no edge; wheel area only adds a sharp/blurred seam</string>
     <string name="quick_wheel_backdrop_scope_full">Whole screen</string>

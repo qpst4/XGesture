@@ -4769,7 +4769,6 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="quick_wheel_backdrop_blur">Borde de fondo</string>
     <string name="quick_wheel_backdrop_blur_desc">Intensidad del desenfoque; si el sistema lo desactiva queda solo el tinte</string>
     <string name="quick_wheel_backdrop_tint">Tono de fondo</string>
-    <string name="quick_wheel_backdrop_tint_desc">Color sobre el desenfoque; sin efecto con intensidad 0</string>
     <string name="quick_wheel_backdrop_blur_scope">Alcance del desenfoque</string>
     <string name="quick_wheel_backdrop_blur_scope_desc">Toda la pantalla no deja borde; solo la rueda muestra un corte nítido/difuso</string>
     <string name="quick_wheel_backdrop_scope_full">Toda la pantalla</string>
