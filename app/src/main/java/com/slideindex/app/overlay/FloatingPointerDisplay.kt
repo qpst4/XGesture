@@ -416,8 +416,20 @@ internal fun FloatingPointerDisplay(
                                 strokeWidth = 2f * density,
                             )
                             drawCircle(pink.copy(alpha = 0.9f), radius = 3.5f * density, center = center)
-                            drawCircle(pink, radius = 11f * density, center = p1)
-                            drawCircle(pink, radius = 11f * density, center = p2)
+                            drawCircle(pink.copy(alpha = 0.16f), radius = 13f * density, center = p1)
+                            drawCircle(
+                                color = pink,
+                                radius = 13f * density,
+                                center = p1,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f * density),
+                            )
+                            drawCircle(pink.copy(alpha = 0.16f), radius = 13f * density, center = p2)
+                            drawCircle(
+                                color = pink,
+                                radius = 13f * density,
+                                center = p2,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f * density),
+                            )
                         }
                     } else {
                         // 滚动：光标处出现多次轨迹线（QC 观感），方向/推力来自滚动控制器。
@@ -425,12 +437,17 @@ internal fun FloatingPointerDisplay(
                         val dir = session.realtimeScrollDir.value
                         val push = session.realtimeScrollPush.value
                         if (axis != 0 && dir != 0) {
+                            // 轨迹线要"一直在动"：按一次注入滑动的节奏循环，模拟上下滑的行程。
                             val strength = (push / (120f * density)).coerceIn(0.3f, 1f)
-                            val spacing = 9f * density
-                            repeat(3) { index ->
-                                val offset = spacing * (index + 1) * dir
-                                val alpha = (strength * (1f - index * 0.28f)).coerceIn(0f, 1f)
-                                val half = 7f * density
+                            val travel = 90f * density * strength
+                            val cycleMs = 550f
+                            val nowMs = animationTick / 1_000_000L
+                            val phaseBase = (nowMs % cycleMs.toLong()).toFloat() / cycleMs
+                            val half = 7f * density
+                            repeat(4) { index ->
+                                val phase = ((index / 4f) + phaseBase) % 1f
+                                val offset = dir * (6f * density + phase * travel)
+                                val alpha = ((1f - phase) * strength * 0.9f).coerceIn(0f, 1f)
                                 if (axis == 1) {
                                     drawLine(
                                         color = accent.copy(alpha = alpha),

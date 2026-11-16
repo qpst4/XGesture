@@ -61,13 +61,33 @@ class FloatingPointerPinchGesture(
     private var pendingUpdate = false
     private var dispatchSeq = 0
     private var completeCount = 0
+    private var lastDispatchAtMs = 0L
+    private var dispatchRetries = 0
+    private var rebuildCount = 0
     private val startedAtMs = android.os.SystemClock.uptimeMillis()
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val callback = PinchCallback()
-    private val keepAliveRunnable = Runnable {
-        if (!finished && !finishing && started && !dispatchInFlight) {
-            dispatchContinuation(continueStroke = true)
+    /**
+     * 独立心跳：**不再依赖 `dispatchInFlight`**。
+     *
+     * 以前的写法是"回调回来才续 100ms 心跳"，一旦某次回调丢失，`dispatchInFlight` 永远为 true，
+     * 心跳再也不会发，系统 2s 后取消手势 —— 表现就是"偶尔断一下"。
+     */
+    private val keepAliveRunnable = object : Runnable {
+        override fun run() {
+            if (finished || finishing) return
+            val now = android.os.SystemClock.uptimeMillis()
+            if (dispatchInFlight && now - lastDispatchAtMs > DISPATCH_TIMEOUT_MS) {
+                Log.w(TAG, "dispatch callback timeout; recover")
+                dispatchInFlight = false
+            }
+            if (!started) return
+            if (dispatchInFlight) {
+                mainHandler.postDelayed(this, KEEP_ALIVE_INTERVAL_MS)
+            } else {
+                dispatchContinuation(continueStroke = true)
+            }
         }
     }
 
@@ -201,13 +221,21 @@ class FloatingPointerPinchGesture(
             second.continueStroke(path1, 0L, SEGMENT_MS, continueStroke)
         }.getOrNull()
         if (next0 == null || next1 == null) {
-            Log.e(TAG, "continueStroke failed")
-            finishNow()
-            onError()
+            // 系统拒绝了某一段续写（常见于别的注入刚结束）：重建一对新 stroke，不要整段手势结束。
+            Log.w(TAG, "continueStroke failed; rebuild pair")
+            rebuildStrokes()
             return
         }
         strokes[0] = next0
         strokes[1] = next1
+        dispatch()
+    }
+
+    private fun rebuildStrokes() {
+        strokes[0] = newStroke(points[0], points[0], continueStroke = true)
+        strokes[1] = newStroke(points[1], points[1], continueStroke = true)
+        previousPoints[0].set(points[0].x, points[0].y)
+        previousPoints[1].set(points[1].x, points[1].y)
         dispatch()
     }
 
@@ -217,6 +245,7 @@ class FloatingPointerPinchGesture(
         previousPoints[0].set(points[0].x, points[0].y)
         previousPoints[1].set(points[1].x, points[1].y)
         dispatchInFlight = true
+        lastDispatchAtMs = android.os.SystemClock.uptimeMillis()
         dispatchSeq++
         val gesture = GestureDescription.Builder()
             .addStroke(first)
@@ -226,10 +255,17 @@ class FloatingPointerPinchGesture(
             .getOrDefault(false)
         if (!accepted) {
             dispatchInFlight = false
-            Log.e(TAG, "dispatchGesture rejected")
-            finishNow()
-            onError()
+            dispatchRetries++
+            Log.w(TAG, "dispatchGesture rejected; retry=$dispatchRetries")
+            if (dispatchRetries >= MAX_DISPATCH_RETRIES) {
+                finishNow()
+                onError()
+            } else {
+                mainHandler.postDelayed({ if (!finished && !finishing) dispatch() }, RETRY_DELAY_MS)
+            }
+            return
         }
+        dispatchRetries = 0
     }
 
     private fun finishNow() {
@@ -261,12 +297,22 @@ class FloatingPointerPinchGesture(
         override fun onCancelled(gestureDescription: GestureDescription?) {
             dispatchInFlight = false
             mainHandler.removeCallbacks(keepAliveRunnable)
-            Log.w(TAG, "gesture cancelled: seq=$dispatchSeq completed=$completeCount elapsed=${android.os.SystemClock.uptimeMillis() - startedAtMs}ms")
+            Log.w(TAG, "gesture cancelled: seq=$dispatchSeq completed=$completeCount rebuild=$rebuildCount")
             if (finishing) {
                 finishNow()
-            } else {
-                onError()
+                return
             }
+            if (!started) {
+                finishNow()
+                return
+            }
+            // 被系统取消（别的注入抢占/目标 App 吃掉第一个触点）时重建，而不是整段结束。
+            rebuildCount++
+            if (rebuildCount > MAX_REBUILDS) {
+                onError()
+                return
+            }
+            mainHandler.postDelayed({ if (!finished && !finishing) rebuildStrokes() }, RETRY_DELAY_MS)
         }
 
         override fun onCompleted(gestureDescription: GestureDescription?) {
@@ -279,5 +325,9 @@ class FloatingPointerPinchGesture(
         private const val SEGMENT_MS = 1L
         private const val FINISH_RETRY_MS = 1L
         private const val KEEP_ALIVE_INTERVAL_MS = 100L
+        private const val DISPATCH_TIMEOUT_MS = 1_500L
+        private const val RETRY_DELAY_MS = 80L
+        private const val MAX_DISPATCH_RETRIES = 3
+        private const val MAX_REBUILDS = 4
     }
 }
