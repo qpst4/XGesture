@@ -380,18 +380,58 @@ internal fun FloatingPointerDisplay(
                     val center = Offset(pointerX, pointerY)
                     val accent = Color(settings.floatingPointerTrailColorArgb)
                     if (realtimeKind == "zoom") {
-                        drawCircle(
-                            color = accent,
-                            radius = 28f * density,
-                            center = center,
-                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f * density),
-                        )
-                        drawCircle(
-                            color = accent.copy(alpha = 0.55f),
-                            radius = 42f * density,
-                            center = center,
-                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5f * density),
-                        )
+                        val fingers = session.pinchFingers.value
+                        val pink = Color(settings.floatingPointerRippleColorArgb)
+                        if (fingers != null && fingers.size == 4) {
+                            // QC 同款：两根虚拟手指 + 虚线圆 + 连线。
+                            val p1 = Offset(fingers[0], fingers[1])
+                            val p2 = Offset(fingers[2], fingers[3])
+                            val radius = (
+                                kotlin.math.hypot(
+                                    (p2.x - p1.x).toDouble(),
+                                    (p2.y - p1.y).toDouble(),
+                                ) / 2.0
+                                ).toFloat()
+                            drawCircle(
+                                color = pink.copy(alpha = 0.5f),
+                                radius = radius,
+                                center = center,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                    width = 1.6f * density,
+                                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                                        floatArrayOf(10f * density, 8f * density),
+                                    ),
+                                ),
+                            )
+                            drawLine(
+                                color = pink.copy(alpha = 0.55f),
+                                start = p1,
+                                end = center,
+                                strokeWidth = 2f * density,
+                            )
+                            drawLine(
+                                color = pink.copy(alpha = 0.55f),
+                                start = p2,
+                                end = center,
+                                strokeWidth = 2f * density,
+                            )
+                            drawCircle(pink.copy(alpha = 0.9f), radius = 3.5f * density, center = center)
+                            drawCircle(pink, radius = 11f * density, center = p1)
+                            drawCircle(pink, radius = 11f * density, center = p2)
+                        } else {
+                            drawCircle(
+                                color = accent,
+                                radius = 28f * density,
+                                center = center,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f * density),
+                            )
+                            drawCircle(
+                                color = accent.copy(alpha = 0.55f),
+                                radius = 42f * density,
+                                center = center,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5f * density),
+                            )
+                        }
                     } else {
                         // 滚动：光标处出现多次轨迹线（QC 观感），方向/推力来自滚动控制器。
                         val axis = session.realtimeScrollAxis.value

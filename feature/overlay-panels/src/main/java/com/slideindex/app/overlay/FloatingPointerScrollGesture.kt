@@ -50,10 +50,11 @@ class FloatingPointerScrollGesture(
     private var pushPx = 0f
 
     /**
-     * 轴锁：0 未锁 / 1 垂直 / 2 水平。
+     * 当前轴：0 未定 / 1 垂直 / 2 水平。
      *
-     * Quick Cursor 只有上下左右四个方向，它的做法是**锁定主导轴**；我们原来每次更新都按
-     * `abs(dy) >= abs(dx)` 重判，手指偏一点点就会从上下翻成左右。
+     * 不用"一锤定音"的硬锁：Quick Cursor 只有上下左右，但用户起手会带一点斜向，硬锁很容易锁错，
+     * 锁错后垂直拖动就完全不滚（看起来像"滚动断了"）。这里用回差：
+     * 先按主导轴定一次，之后只有另一轴明显超过当前轴（1.6 倍）才改轴。
      */
     private var lockedAxis = 0
 
@@ -87,6 +88,12 @@ class FloatingPointerScrollGesture(
         }
         if (lockedAxis == 0) {
             lockedAxis = if (abs(dy) >= abs(dx)) AXIS_VERTICAL else AXIS_HORIZONTAL
+        } else {
+            val primary = if (lockedAxis == AXIS_VERTICAL) abs(dy) else abs(dx)
+            val cross = if (lockedAxis == AXIS_VERTICAL) abs(dx) else abs(dy)
+            if (cross > primary * 1.6f) {
+                lockedAxis = if (lockedAxis == AXIS_VERTICAL) AXIS_HORIZONTAL else AXIS_VERTICAL
+            }
         }
         if (lockedAxis == AXIS_VERTICAL) {
             dirX = 0

@@ -55,6 +55,9 @@ internal class FloatingPointerInputHandler(
     /** 「松手即点、摇杆保留」模式下的空闲收起定时器。 */
     private var keepJoystickIdleRunnable: Runnable? = null
 
+    /** 本次触摸是否真的驱动过实时缩放/滚动（用于区分"选中动作的抬手"和"拖完的抬手"）。 */
+    private var realtimeGestureMoved = false
+
     private fun cancelKeepJoystickIdleDismiss() {
         keepJoystickIdleRunnable?.let { mainHandler.removeCallbacks(it) }
         keepJoystickIdleRunnable = null
@@ -193,6 +196,7 @@ internal class FloatingPointerInputHandler(
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 host.ensureTouchOverlayInteractive()
+                realtimeGestureMoved = false
                 val handled = handleTouch(event)
                 capturing = handled
                 return handled
@@ -214,10 +218,12 @@ internal class FloatingPointerInputHandler(
                     val fingerDx = event.rawX - downRawX
                     val fingerDy = event.rawY - downRawY
                     if (session.pinchGesture != null) {
+                        realtimeGestureMoved = true
                         session.updatePinchByFinger(fingerDx, fingerDy)
                         return true
                     }
                     if (session.scrollGesture != null) {
+                        realtimeGestureMoved = true
                         session.updateScrollByFinger(fingerDx, fingerDy)
                         return true
                     }
@@ -438,7 +444,13 @@ internal class FloatingPointerInputHandler(
                 cancelLongPressJob()
                 host.releaseAllPointers()
                 if (session.pinchGesture != null || session.scrollGesture != null) {
-                    // 实时缩放/滚动：松手只结束手势，不 dock 摇杆、不移动光标（QC 语义：位置不变）。
+                    if (!realtimeGestureMoved) {
+                        // 只是"选中动作"的那次抬手：不能把刚建好的手势结束掉，否则滚动/缩放会立刻断。
+                        resetTouchPhase()
+                        host.onTouchCycleComplete()
+                        return true
+                    }
+                    // 真正拖动过：抬手结束手势，不 dock 摇杆、不移动光标（QC 语义：位置不变）。
                     fromContinuedEdge = false
                     session.finishRealtimeGesture()
                     resetTouchPhase()

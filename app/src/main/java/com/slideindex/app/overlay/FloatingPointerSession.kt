@@ -130,6 +130,9 @@ internal class FloatingPointerSession(
     val realtimeScrollDir = mutableStateOf(0)
     val realtimeScrollPush = mutableStateOf(0f)
 
+    /** 实时缩放的两根虚拟手指位置（x1,y1,x2,y2），QC 同款视觉用。 */
+    val pinchFingers = mutableStateOf<FloatArray?>(null)
+
     /** After finger-up: trail retreats on a wall-clock timeline until consumed. */
     val gestureTrailRetreatActive = mutableStateOf(false)
 
@@ -351,6 +354,7 @@ internal class FloatingPointerSession(
         realtimeScrollAxis.value = 0
         realtimeScrollDir.value = 0
         realtimeScrollPush.value = 0f
+        pinchFingers.value = null
     }
 
     /** 指针长按/功能环触发的实时双指缩放。 */
@@ -375,6 +379,9 @@ internal class FloatingPointerSession(
             onFinished = {
                 releaseRealtimeGesture()
                 onFinished()
+            },
+            onVisualize = { x1, y1, x2, y2 ->
+                pinchFingers.value = floatArrayOf(x1, y1, x2, y2)
             },
         )
     }

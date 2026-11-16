@@ -28,7 +28,9 @@ class FloatingPointerPinchGesture(
     startX: Float,
     startY: Float,
     private val onError: () -> Unit = {},
-    private val onFinished: () -> Unit = {}
+    private val onFinished: () -> Unit = {},
+    /** 两根虚拟手指的实时位置（x1,y1,x2,y2），用于画 QC 同款的缩放视觉。 */
+    private val onVisualize: (Float, Float, Float, Float) -> Unit = { _, _, _, _ -> }
 ) {
 
     private val density = service.resources.displayMetrics.density.coerceAtLeast(0.1f)
@@ -102,11 +104,13 @@ class FloatingPointerPinchGesture(
             strokes[0] = newStroke(points[0], points[0], continueStroke = true)
             strokes[1] = newStroke(points[1], points[1], continueStroke = true)
             Log.i(TAG, "pinch started dx=$dx dy=$dy p0=${points[0]} p1=${points[1]}")
+            onVisualize(points[0].x.toFloat(), points[0].y.toFloat(), points[1].x.toFloat(), points[1].y.toFloat())
             dispatch()
             return
         }
 
         computeTargetPoints()
+        onVisualize(points[0].x.toFloat(), points[0].y.toFloat(), points[1].x.toFloat(), points[1].y.toFloat())
         // 坐标无实质位移时跳过下发，等后续位移或心跳
         if (points[0].x == previousPoints[0].x && points[0].y == previousPoints[0].y &&
             points[1].x == previousPoints[1].x && points[1].y == previousPoints[1].y
