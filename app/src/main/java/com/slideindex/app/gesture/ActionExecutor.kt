@@ -104,7 +104,8 @@ class ActionExecutor(
 
     fun endPageScrollHoldDrag() = PageScrollActionRunner.endHoldDrag()
 
-    fun beginMagnifierHold(rawX: Float, rawY: Float) = SystemMagnifierController.start(rawX, rawY)
+    fun beginMagnifierHold(rawX: Float, rawY: Float) =
+        SystemMagnifierController.start(rawX, rawY, fullscreen = true)
 
     fun updateMagnifierHold(rawX: Float, rawY: Float) = SystemMagnifierController.update(rawX, rawY)
 

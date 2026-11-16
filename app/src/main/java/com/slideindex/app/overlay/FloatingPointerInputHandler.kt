@@ -330,17 +330,37 @@ internal class FloatingPointerInputHandler(
                     val slot = slotIndexAt(event.rawX, event.rawY)
                     if (slot >= 0) {
                         val action = settingsProvider().floatingPointerRadialSlotActions.getOrNull(slot)
+                        val isCapture = action != null && isGestureCaptureLongPressAction(action)
                         session.closeRadialMenu()
                         host.onRadialMenuClosed()
-                        session.joystickActive.value = false
-                        host.onGestureEnd(restJoystickX, restJoystickY, false)
-                        if (action != null && action !is GestureAction.None) {
-                            if (isGestureCaptureLongPressAction(action)) {
-                                session.armGestureCaptureJoystickOffset(event.rawX, event.rawY)
-                            }
+                        if (isCapture) {
+                            setTouchPhase(FloatingPointerTouchPhase.Dragging)
+                            longPressTriggered = false
+                            downRawX = event.rawX
+                            downRawY = event.rawY
+                            downLocalX = event.x
+                            downLocalY = event.y
+                            downTimeMs = System.currentTimeMillis()
+                            lastRawX = event.rawX
+                            lastRawY = event.rawY
+                            session.joystickActive.value = true
+                            session.pointerVisible.value = true
+                            session.syncPointerForGestureCapture(event.rawX, event.rawY)
+                            session.armGestureCaptureJoystickOffset(event.rawX, event.rawY)
+                            host.onFingerTrackingMove(event.rawX, event.rawY, downLocalX, downLocalY)
+                            host.captureAllPointers()
+                            host.onHaptic()
                             host.onRadialMenuAction(slot, fingerStillDown = true)
+                            return true
+                        } else {
+                            session.joystickActive.value = false
+                            host.onGestureEnd(restJoystickX, restJoystickY, false)
+                            if (action != null && action !is GestureAction.None) {
+                                host.onRadialMenuAction(slot, fingerStillDown = false)
+                            }
+                            host.onTouchCycleComplete()
+                            return true
                         }
-                        host.onTouchCycleComplete()
                     } else {
                         setTouchPhase(FloatingPointerTouchPhase.RadialDismissOnly)
                         session.closeRadialMenu()
@@ -348,8 +368,8 @@ internal class FloatingPointerInputHandler(
                         session.joystickActive.value = false
                         host.onGestureEnd(restJoystickX, restJoystickY, false)
                         host.onTouchCycleComplete()
+                        return true
                     }
-                    return true
                 }
 
                 radialGestureCaptureTriggered = false
@@ -462,6 +482,9 @@ internal class FloatingPointerInputHandler(
                     session.joystickActive.value = false
                     session.finishGestureRecorder()
                     session.finishRealtimeGesture()
+                    if (SystemMagnifierController.isFollowingCursor()) {
+                        SystemMagnifierController.stop()
+                    }
                     radialGestureCaptureTriggered = false
                     resetTouchPhase()
                     host.onTouchCycleComplete()
@@ -515,6 +538,9 @@ internal class FloatingPointerInputHandler(
                     if (!session.gestureCaptureActive && movedBeyondTap()) {
                         session.clearTrail()
                     }
+                }
+                if (SystemMagnifierController.isFollowingCursor()) {
+                    SystemMagnifierController.stop()
                 }
                 session.joystickActive.value = false
                 val endX = if (movedBeyondTap()) {
@@ -595,6 +621,9 @@ internal class FloatingPointerInputHandler(
                     session.joystickCenterY.floatValue = restJoystickY
                     session.finishGestureRecorder()
                     session.finishRealtimeGesture()
+                    if (SystemMagnifierController.isFollowingCursor()) {
+                        SystemMagnifierController.stop()
+                    }
                     resetTouchPhase()
                     host.onTouchCycleComplete()
                     return true
@@ -608,6 +637,9 @@ internal class FloatingPointerInputHandler(
                     if (movedBeyondTap()) {
                         session.clearTrail()
                     }
+                }
+                if (SystemMagnifierController.isFollowingCursor()) {
+                    SystemMagnifierController.stop()
                 }
                 session.joystickActive.value = false
                 session.joystickCenterX.floatValue = restJoystickX
@@ -764,7 +796,8 @@ internal class FloatingPointerInputHandler(
         action is GestureAction.PointerGestureRecorder ||
             action is GestureAction.PointerRealtimeGesture ||
             action is GestureAction.PointerPinchZoom ||
-            action is GestureAction.PointerRealtimeScroll
+            action is GestureAction.PointerRealtimeScroll ||
+            action is GestureAction.Magnifier
 
     companion object {
         private const val LONG_PRESS_DISMISS_MS = 900L

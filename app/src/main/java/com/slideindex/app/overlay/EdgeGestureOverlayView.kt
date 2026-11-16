@@ -264,8 +264,23 @@ class EdgeGestureOverlayView(
     private val interactionWatchdog: StuckGestureWatchdog by lazy(LazyThreadSafetyMode.NONE) {
         StuckGestureWatchdog(
             timeoutMs = INTERACTION_IDLE_TIMEOUT_MS,
-            isHolding = { edgeCaptureTouchActive || gestureSession.isActive() },
-            onStall = { forceRecoverInteractionState() }
+            // 代次由定时器下发时快照：上一轮会话遗留的定时器代次对不上，直接忽略，
+            // 绝不能把当前正在进行的会话（比如按住放大镜）复位掉。
+            isHolding = { token ->
+                (edgeCaptureTouchActive || gestureSession.isActive()) &&
+                    gestureSession.currentSessionToken() == token
+            },
+            onStall = {
+                // 计时器是按"本视图最后一次输入"算的，但触摸可能早已转到另一条触钮/另一个视图。
+                // 只要整个会话最近还有输入，这一枚就是过期定时器，不能复位当前会话。
+                val idleMs = gestureSession.millisSinceLastInput()
+                if (idleMs >= INTERACTION_IDLE_TIMEOUT_MS) {
+                    forceRecoverInteractionState()
+                } else {
+                    EdgeDiag.log("watchdog", "skip stale stall idle=${idleMs}ms")
+                }
+            },
+            tokenProvider = { gestureSession.currentSessionToken() },
         )
     }
 

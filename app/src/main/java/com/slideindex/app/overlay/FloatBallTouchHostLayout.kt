@@ -43,11 +43,13 @@ internal class FloatBallTouchHostLayout(
 
     private val captureWatchdog = StuckGestureWatchdog(
         timeoutMs = CAPTURE_IDLE_TIMEOUT_MS,
-        isHolding = { gestureCaptureActive || ballDetector.isLauncherCaptureMode() },
+        isHolding = { _ -> gestureCaptureActive || ballDetector.isLauncherCaptureMode() },
         onStall = {
             forceEndGestureCapture()
             onCaptureStalled?.invoke()
-        }
+        },
+        // 悬浮球捕获没有"共享会话代次"的概念，固定一个 token 即可。
+        tokenProvider = { 0L },
     )
 
     private var onBallDragStart: ((touchDownX: Float, touchDownY: Float, fingerX: Float, fingerY: Float) -> Unit)? = null

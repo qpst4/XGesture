@@ -251,7 +251,8 @@ internal class FloatingPointerSession(
     /** True while gesture capture is sampling, replaying, or armed for the next touch. */
     val gestureCaptureActive: Boolean
         get() = gestureRecorder != null || realtimeGesture != null || pinchGesture != null ||
-            scrollGesture != null || pendingGestureCaptureAction != null
+            scrollGesture != null || pendingGestureCaptureAction != null ||
+            SystemMagnifierController.isFollowingCursor()
 
     fun armPendingGestureCapture(action: GestureAction) {
         pendingGestureCaptureAction = action
@@ -848,6 +849,8 @@ internal class FloatingPointerSession(
         )
         pointerX.floatValue = next.x
         pointerY.floatValue = next.y
+        // 若放大镜是摇杆功能环触发的：光标在哪，放大中心就在哪。
+        SystemMagnifierController.updateFollow(next.x, next.y)
         if (!gestureRecordingActive.value) {
             recordTrail(next.x, next.y)
         }

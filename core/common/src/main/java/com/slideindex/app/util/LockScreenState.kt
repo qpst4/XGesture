@@ -17,11 +17,9 @@ object LockScreenState {
         } else if (keyguard.isDeviceLocked) {
             true
         } else {
-            windows?.any { it.type == WINDOW_TYPE_KEYGUARD } == true
+            false
         }
     }
-
-    private const val WINDOW_TYPE_KEYGUARD = 6
 
     fun isActive(context: Context): Boolean {
         if (TriggerEnvironmentState.lockScreenActive) return true

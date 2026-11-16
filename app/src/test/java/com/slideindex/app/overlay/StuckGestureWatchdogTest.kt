@@ -19,8 +19,9 @@ class StuckGestureWatchdogTest {
         var stalls = 0
         val watchdog = StuckGestureWatchdog(
             timeoutMs = 10_000L,
-            isHolding = { holding },
+            isHolding = { _ -> holding },
             onStall = { stalls++ },
+            tokenProvider = { 0L },
         )
 
         watchdog.onInput()
@@ -37,8 +38,9 @@ class StuckGestureWatchdogTest {
         var stalls = 0
         val watchdog = StuckGestureWatchdog(
             timeoutMs = 10_000L,
-            isHolding = { holding },
+            isHolding = { _ -> holding },
             onStall = { stalls++ },
+            tokenProvider = { 0L },
         )
 
         repeat(6) {
@@ -55,8 +57,9 @@ class StuckGestureWatchdogTest {
         var stalls = 0
         val watchdog = StuckGestureWatchdog(
             timeoutMs = 10_000L,
-            isHolding = { holding },
+            isHolding = { _ -> holding },
             onStall = { stalls++ },
+            tokenProvider = { 0L },
         )
 
         watchdog.onInput()
@@ -65,6 +68,25 @@ class StuckGestureWatchdogTest {
         idleFor(30_000L)
 
         assertEquals(0, stalls)
+    }
+
+    @Test
+    fun `stale timer from previous session is ignored`() {
+        var stalls = 0
+        var sessionToken = 1L
+        val watchdog = StuckGestureWatchdog(
+            timeoutMs = 10_000L,
+            isHolding = { token -> token == sessionToken },
+            onStall = { stalls++ },
+            tokenProvider = { sessionToken },
+        )
+
+        watchdog.onInput()
+        // 上一轮会话结束、新会话开始：代次变了，旧定时器不能再复位当前会话。
+        sessionToken = 2L
+        idleFor(12_000L)
+
+        assertEquals("上一轮会话遗留的定时器不能复位新会话", 0, stalls)
     }
 
     private fun idleFor(millis: Long) {

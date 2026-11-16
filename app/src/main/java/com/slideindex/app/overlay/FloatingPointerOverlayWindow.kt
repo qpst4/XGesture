@@ -349,6 +349,13 @@ object FloatingPointerOverlayWindow {
                     windowLifecycle.expandTouchCapture()
                 }
             }
+            is GestureAction.Magnifier -> {
+                if (fingerStillDown) {
+                    SystemMagnifierController.startFollow(pointerX, pointerY)
+                } else {
+                    SystemMagnifierController.toggle(pointerX, pointerY)
+                }
+            }
             else -> executePointerAction(action, settings, pointerX, pointerY)
         }
     }
@@ -363,6 +370,7 @@ object FloatingPointerOverlayWindow {
             is GestureAction.PointerRealtimeGesture -> startRealtimeGesture(pointerX, pointerY)
             is GestureAction.PointerPinchZoom -> startPinchGestureAt(pointerX, pointerY)
             is GestureAction.PointerRealtimeScroll -> startScrollGestureAt(pointerX, pointerY)
+            is GestureAction.Magnifier -> SystemMagnifierController.startFollow(pointerX, pointerY)
             is GestureAction.OpenFloatingPointerRadialMenu -> {
                 // Already handled by the caller; this branch is defensive.
             }
@@ -498,6 +506,11 @@ object FloatingPointerOverlayWindow {
         onHaptic(settings)
         if (action is GestureAction.SimulatePointerSwipe) {
             schedulePointerSwipe(startX = anchorRawX, startY = anchorRawY, config = action.config)
+            return
+        }
+        // 「放大镜」普通调用（非拖拽抓取）走开关模式
+        if (action is GestureAction.Magnifier) {
+            SystemMagnifierController.toggle(anchorRawX, anchorRawY)
             return
         }
         val executor = actionExecutor ?: return

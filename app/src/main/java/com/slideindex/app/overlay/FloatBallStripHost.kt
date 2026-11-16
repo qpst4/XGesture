@@ -35,11 +35,13 @@ internal class FloatBallStripHost(
 
     private val captureWatchdog = StuckGestureWatchdog(
         timeoutMs = STRIP_CAPTURE_IDLE_TIMEOUT_MS,
-        isHolding = { gestureActive || gestureDetector.isLauncherCaptureMode() },
+        isHolding = { _ -> gestureActive || gestureDetector.isLauncherCaptureMode() },
         onStall = {
             cancelGesture()
             onCaptureStalled?.invoke()
-        }
+        },
+        // 贴边线条捕获同样没有共享会话代次，固定 token。
+        tokenProvider = { 0L },
     )
     private var idleChromeView: View? = null
 

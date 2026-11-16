@@ -5166,4 +5166,5 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="gesture_action_require_min_sdk_33">Requires Android 13</string>
     <string name="magnifier_chip_text">Magnifier %1$s× · tap to close</string>
     <string name="magnifier_opened_toast">Magnifier on: tap the bottom-right dot to close, long-press it to change zoom</string>
+    <string name="magnifier_requires_android14">Full-screen magnifier needs Android 11 or newer</string>
 </resources>

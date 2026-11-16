@@ -24,13 +24,24 @@ object SystemMagnifierController {
 
     private const val TAG = "SystemMagnifier"
 
+    /** `MagnificationConfig` 的模式值：1 = 全屏，2 = 窗口。 */
+    private const val MODE_FULLSCREEN = 1
+    private const val MODE_WINDOW = 2
+
     /** 普通触发（开关式）没有"松手"事件，靠这个兜底，防止用户忘了关。 */
     private const val AUTO_STOP_MS = 60_000L
 
-    /** `MagnificationConfig.MODE_WINDOW` 的系统值。 */
-    private const val MODE_WINDOW = 2
+    /**
+     * 全屏与窗口放大模式区分：
+     *
+     * 窗口模式只放大局部视窗；全屏模式是整屏内容随指针平移。
+     * 具体用哪个由触发方式决定（见 [toggle] / [toggleFollow] / [start] 的 fullscreen 参数）。
+     */
 
-    private val SCALES = floatArrayOf(1.25f, 1.5f, 1.75f, 2f, 2.5f, 3f, 4f, 5f, 6f, 8f)
+    /** 放大镜常用缩放倍率阶梯档位。 */
+    private val SCALES = floatArrayOf(
+        1.25f, 1.5f, 1.75f, 2f, 2.25f, 2.5f, 2.75f, 3f, 3.5f, 4f, 5f, 6f, 8f,
+    )
 
     private val handler = Handler(Looper.getMainLooper())
     private val autoStop = Runnable { stop() }
@@ -41,24 +52,71 @@ object SystemMagnifierController {
     private var scale = 2.5f
     private var lastX = 0f
     private var lastY = 0f
+    /** 本次会话是否用全屏放大（持续触发 = 全屏跟手；开关式 = 窗口小放大镜）。 */
+    private var fullscreen = false
+    /** 是否由悬浮指针的光标驱动（摇杆功能环触发）。 */
+    private var followCursor = false
+    /** 本次会话是否已经用 config 设过"全屏/窗口"模式（之后只靠 setCenter 平移）。 */
+    private var modeApplied = false
 
     fun isActive(): Boolean = active
+    fun isFollowingCursor(): Boolean = active && followCursor
 
-    /** 开关式：开着就关，关着就在 (x,y) 打开。 */
+    /** 开关式（松手 / 即时触发）：窗口小放大镜。开着就关，关着就在 (x,y) 打开。 */
     fun toggle(x: Float, y: Float) {
         if (active) {
             stop()
         } else {
-            start(x, y)
+            start(x, y, fullscreen = false)
             handler.removeCallbacks(autoStop)
             handler.postDelayed(autoStop, AUTO_STOP_MS)
         }
     }
 
-    fun start(x: Float, y: Float) {
+    /**
+     * 指针 / 摇杆功能环触发：全屏放大，并由光标位置持续驱动中心。
+     * 抬手（UP/CANCEL）时由指针会话调用 [stop] 退出。
+     */
+    fun startFollow(x: Float, y: Float) {
+        followCursor = true
+        if (active) {
+            fullscreen = true
+            update(x, y)
+        } else {
+            start(x, y, fullscreen = true)
+        }
+        if (!active) followCursor = false
+    }
+
+    /** 指针 / 摇杆触发开关：开着就关，关着就进入跟手全屏。 */
+    fun toggleFollow(x: Float, y: Float) {
+        if (active) {
+            stop()
+            return
+        }
+        startFollow(x, y)
+    }
+
+    /** 光标移动时调用；只有指针触发的放大镜才跟随。 */
+    fun updateFollow(x: Float, y: Float) {
+        if (!active || !followCursor) return
+        update(x, y)
+    }
+
+    fun start(x: Float, y: Float, fullscreen: Boolean = false) {
         if (active) return
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            Log.i(TAG, "ignored: requires Android 13+")
+        this.fullscreen = fullscreen
+        this.modeApplied = false
+        // setScale/setCenter 从 Android 11（API 30）起可用，13 及以上都能工作。
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            Log.i(TAG, "ignored: requires Android 14+")
+            SlideIndexAccessibilityService.overlayHostContext()?.let { context ->
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.magnifier_requires_android14),
+                    Toast.LENGTH_SHORT,
+                ).show()
+            }
             return
         }
         val service = SlideIndexAccessibilityService.accessibilityInstance() ?: run {
@@ -80,36 +138,50 @@ object SystemMagnifierController {
         }
         active = true
         handler.removeCallbacks(autoStop)
-        showChrome(context)
-        Toast.makeText(
-            context,
-            context.getString(R.string.magnifier_opened_toast),
-            Toast.LENGTH_SHORT,
-        ).show()
+        Log.i(
+            TAG,
+            "start mode=${if (fullscreen) "fullscreen" else "window"} follow=$followCursor " +
+                "x=$x y=$y scale=$scale",
+        )
+        // 指针跟手模式下不显示胶囊与 Toast：胶囊是个可触摸浮窗，会压住摇杆区域把摇杆拖动吃掉；
+        // 且跟手模式是持续手势，松手即退出，无需小圆点关闭提示。
+        if (!followCursor) {
+            showChrome(context)
+            Toast.makeText(
+                context,
+                context.getString(R.string.magnifier_opened_toast),
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
     }
 
     fun update(x: Float, y: Float) {
         if (!active) return
+        // 位置没变就不重复下发：每帧重建 config 也是 binder 调用，没必要。
+        if (x == lastX && y == lastY) return
         lastX = x
         lastY = y
-        val c = controller ?: return
-        // 每次更新都带 activated=true 重建 config：MODE_WINDOW 下系统只认"已激活"的 config，
-        // 否则中心点不跟随（表现就是放大画面停在原地）。
-        if (apply(x, y)) return
-        val (cx, cy) = centerFor(x, y)
-        runCatching { c.setCenter(cx, cy, true) }
+        apply(x, y)
     }
 
     fun stop() {
         handler.removeCallbacks(autoStop)
+        followCursor = false
+        modeApplied = false
         if (!active) return
         active = false
         chip?.dismiss()
         chip = null
         val c = controller ?: return
         controller = null
-        runCatching { c.resetCurrentMagnification(false) }
-            .onFailure { Log.w(TAG, "reset failed", it) }
+        runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                c.resetCurrentMagnification(false)
+            } else {
+                @Suppress("DEPRECATION")
+                c.reset(false)
+            }
+        }.onFailure { Log.w(TAG, "reset failed", it) }
     }
 
     private fun showChrome(context: Context) {
@@ -148,41 +220,72 @@ object SystemMagnifierController {
         }
     }
 
-    private fun centerFor(x: Float, y: Float): Pair<Float, Float> {
+    private fun screenSize(): Pair<Float, Float> {
         val metrics = SlideIndexAccessibilityService.overlayHostContext()?.resources?.displayMetrics
-        val width = metrics?.widthPixels ?: 1080
-        val height = metrics?.heightPixels ?: 2400
-        // 边缘触钮的触发点贴着屏幕边：放大中心往屏内挪 20%，否则看到的是屏幕边。
-        val insetX = width * 0.2f
-        val cx = when {
-            x < insetX -> x + insetX
-            x > width - insetX -> x - insetX
-            else -> x
-        }
-        val cy = y.coerceIn(height * 0.1f, height * 0.9f)
-        return cx to cy
+        return (metrics?.widthPixels?.toFloat() ?: 1080f) to
+            (metrics?.heightPixels?.toFloat() ?: 2400f)
     }
 
+    /**
+     * 下发一次放大配置。
+     *
+     * 用系统的 `setScale` + `setCenter`（都 animated=false）：
+     * 全屏模式下将手指坐标换算为视窗中心平移偏移：
+     * center -= (center - screenSize / 2) / scale。
+     */
     private fun apply(x: Float, y: Float): Boolean {
         val c = controller ?: return false
-        val (cx, cy) = centerFor(x, y)
-        val config = MagnificationConfig.Builder()
-            .setMode(MODE_WINDOW)
-            .setActivated(true)
-            .setScale(scale)
-            .setCenterX(cx)
-            .setCenterY(cy)
-            .build()
-        val ok = runCatching { c.setMagnificationConfig(config, true) }
-            .onFailure { Log.w(TAG, "setMagnificationConfig failed", it) }
-            .getOrDefault(false)
-        if (!ok) {
-            // 部分 ROM（Flyme）放大过程中会偶发拒绝一次 config；这里**绝不能 stop()**，
-            // 否则控制器被清空、画面冻结在最后位置，看起来就是"滑一点就不跟手了"。
-            // 保持 active，下一次 MOVE 继续尝试。
-            Log.w(TAG, "setMagnificationConfig rejected; keep active and retry on next move")
+        val (width, height) = screenSize()
+        var cx = x
+        var cy = y
+
+        if (fullscreen) {
+            cx -= (cx - width / 2f) / scale
+            cy -= (cy - height / 2f) / scale
+            val scaleOk = runCatching { c.setScale(scale, false) }
+                .onFailure { Log.w(TAG, "setScale failed", it) }
+                .getOrDefault(false)
+            if (!modeApplied) {
+                val config = MagnificationConfig.Builder()
+                    .setMode(MODE_FULLSCREEN)
+                    .setActivated(true)
+                    .setScale(scale)
+                    .setCenterX(cx)
+                    .setCenterY(cy)
+                    .build()
+                modeApplied = runCatching { c.setMagnificationConfig(config, false) }
+                    .onFailure { Log.w(TAG, "setMagnificationConfig failed", it) }
+                    .getOrDefault(false)
+            }
+            val centerOk = runCatching { c.setCenter(cx, cy, false) }
+                .onFailure { Log.w(TAG, "setCenter failed", it) }
+                .getOrDefault(false)
+            val ok = scaleOk || centerOk
+            if (!ok) {
+                Log.w(TAG, "setScale/setCenter rejected; keep active and retry on next move")
+            }
+            return ok
+        } else {
+            // 开关式（松手触发 / 直接点击）：局部窗口小放大镜（MODE_WINDOW）。
+            // 绝不能调用 setScale/setCenter（它们是系统全局全屏放大老 API，会把窗口模式冲掉）。
+            val insetX = width * 0.2f
+            cx = when {
+                x < insetX -> x + insetX
+                x > width - insetX -> x - insetX
+                else -> x
+            }
+            cy = cy.coerceIn(height * 0.1f, height * 0.9f)
+            val config = MagnificationConfig.Builder()
+                .setMode(MODE_WINDOW)
+                .setActivated(true)
+                .setScale(scale)
+                .setCenterX(cx)
+                .setCenterY(cy)
+                .build()
+            return runCatching { c.setMagnificationConfig(config, false) }
+                .onFailure { Log.w(TAG, "setMagnificationConfig MODE_WINDOW failed", it) }
+                .getOrDefault(false)
         }
-        return ok
     }
 
     private const val PREFS = "magnifier"
