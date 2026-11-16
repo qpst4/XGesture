@@ -435,6 +435,8 @@ class SettingsRepository @Inject constructor(
         overlay.setFloatingPointerReleaseClickAndDismiss(enabled)
     suspend fun setFloatingPointerReleaseClickKeepJoystick(enabled: Boolean) =
         overlay.setFloatingPointerReleaseClickKeepJoystick(enabled)
+    suspend fun setFloatingPointerReleaseClickMode(mode: FloatingPointerReleaseClickMode) =
+        overlay.setFloatingPointerReleaseClickMode(mode)
     suspend fun setFloatingPointerHoverEnterSelect(enabled: Boolean) =
         overlay.setFloatingPointerHoverEnterSelect(enabled)
     suspend fun setFloatingPointerJoystickLongPressAction(action: GestureAction) = overlay.setFloatingPointerJoystickLongPressAction(action)
@@ -959,6 +961,7 @@ class SettingsRepository @Inject constructor(
         overlay.setOverlayBlurEnabled(enabled)
 
     suspend fun setDefaultImageViewerPackage(packageName: String?) = overlay.setDefaultImageViewerPackage(packageName)
+    suspend fun setPickImageTapAction(action: PickImageTapAction) = overlay.setPickImageTapAction(action)
     suspend fun setImageEditorDelayDeleteEnabled(enabled: Boolean) = overlay.setImageEditorDelayDeleteEnabled(enabled)
 
     suspend fun setSearchEngines(engines: List<SearchEngineConfig>) =

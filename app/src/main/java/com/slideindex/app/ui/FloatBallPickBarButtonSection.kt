@@ -25,7 +25,6 @@ import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.QrCode
@@ -155,12 +154,6 @@ private val imageBarSpecs: List<BarButtonSpec> = listOf(
         R.string.float_ball_pick_bar_save,
         R.string.float_ball_pick_bar_save_desc,
         Icons.Outlined.Save,
-    ),
-    BarButtonSpec(
-        PickResultImageBarButton.EDIT.id,
-        R.string.float_ball_pick_bar_edit,
-        R.string.float_ball_pick_bar_edit_desc,
-        Icons.Outlined.Edit,
     ),
     BarButtonSpec(
         PickResultImageBarButton.SHARE.id,

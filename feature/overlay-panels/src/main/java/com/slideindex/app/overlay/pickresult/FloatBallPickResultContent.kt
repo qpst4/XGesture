@@ -6,6 +6,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -101,6 +105,8 @@ fun FloatBallPickResultContent(
     onTranslate: (String) -> Unit,
     /** 长按翻译键：切换目标语言；null 时不挂长按。 */
     onTranslateLongClick: (() -> Unit)? = null,
+    /** 长按翻译键选择目标语言（语言码）；null 时退回 [onTranslateLongClick]。 */
+    onTranslateTargetSelect: ((String) -> Unit)? = null,
     onRemoveSpaces: (String, removeAll: Boolean) -> Unit,
     onSaveScreenshot: () -> Unit,
     onSaveScreenshotLongClick: (() -> Unit)? = null,
@@ -508,6 +514,7 @@ fun FloatBallPickResultContent(
     }
 
     var panelBoundsInRoot by remember { mutableStateOf(ComposeRect.Zero) }
+    var translateTargetMenuVisible by remember { mutableStateOf(false) }
     val panelBoundsState = rememberUpdatedState(panelBoundsInRoot)
 
     CompositionLocalProvider(LocalPickImageEditAction provides onEditImage) {
@@ -577,7 +584,15 @@ fun FloatBallPickResultContent(
                 onImageShareEngineClick = onImageShareEngineClick,
                 onPinImageToScreen = onPinImageToScreen,
                 onStashImage = onStashImage,
-                onImageClick = onImageClick,
+                onImageClick = {
+                    // 单击图片的动作由设置决定：查看大图 / 编辑 / 保存 / 分享。
+                    when (appSettings.pickImageTapAction) {
+                        com.slideindex.app.settings.PickImageTapAction.EDIT -> onEditImage?.invoke()
+                        com.slideindex.app.settings.PickImageTapAction.SAVE -> onSaveScreenshot()
+                        com.slideindex.app.settings.PickImageTapAction.SHARE -> onShareScreenshot()
+                        com.slideindex.app.settings.PickImageTapAction.VIEW -> onImageClick()
+                    }
+                },
                 onViewImage = { onImageViewerVisibleChange(true) },
                 onCopyImage = onCopyImage,
                 onImageIndexChange = onImageIndexChange,
@@ -619,7 +634,11 @@ fun FloatBallPickResultContent(
                 onProcessText = onProcessText,
                 onCopy = onCopy,
                 onTranslate = onTranslate,
-                onTranslateLongClick = onTranslateLongClick,
+                onTranslateLongClick = if (onTranslateTargetSelect != null) {
+                    { translateTargetMenuVisible = true }
+                } else {
+                    onTranslateLongClick
+                },
                 onRemoveSpaces = onRemoveSpaces,
                 onZoomText = { expanded ->
                     val visible = !expanded
@@ -686,6 +705,38 @@ fun FloatBallPickResultContent(
                         )
                     }
                 }
+            }
+            if (translateTargetMenuVisible && onTranslateTargetSelect != null) {
+                // 长按翻译键：列出全部目标语言（不是只有中/英），当前项打勾。
+                val currentTarget = appSettings.floatBallTranslateTargetLang
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { translateTargetMenuVisible = false },
+                    title = { Text(stringResource(R.string.pick_result_translate_target_title)) },
+                    text = {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .verticalScroll(rememberScrollState()),
+                        ) {
+                            com.slideindex.app.translate.TranslateLanguageCatalog.options.forEach { option ->
+                                androidx.compose.material3.TextButton(
+                                    onClick = {
+                                        translateTargetMenuVisible = false
+                                        onTranslateTargetSelect?.invoke(option.code)
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    Text(
+                                        text = com.slideindex.app.translate.translateTargetAutonym(option.code) +
+                                            if (option.code == currentTarget) "  ✓" else "",
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {},
+                )
             }
             if (imageViewerVisible) {
                 // 盖在面板之上的全屏查看器：满宽 + 纵向滚动，关闭后回到原面板状态。

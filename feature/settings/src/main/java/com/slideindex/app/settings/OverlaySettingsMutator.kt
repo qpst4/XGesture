@@ -225,6 +225,15 @@ class OverlaySettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.FLOATING_POINTER_RELEASE_CLICK_KEEP_JOYSTICK] = enabled
     }
 
+    /** 三选一模式：同时回写两个旧布尔键，保证旧读取路径也一致。 */
+    suspend fun setFloatingPointerReleaseClickMode(mode: FloatingPointerReleaseClickMode) = editor.edit {
+        it[SettingsPreferenceKeys.FLOATING_POINTER_RELEASE_CLICK_MODE] = mode.id
+        it[SettingsPreferenceKeys.FLOATING_POINTER_RELEASE_CLICK_AND_DISMISS] =
+            mode == FloatingPointerReleaseClickMode.CLICK_AND_DISMISS
+        it[SettingsPreferenceKeys.FLOATING_POINTER_RELEASE_CLICK_KEEP_JOYSTICK] =
+            mode == FloatingPointerReleaseClickMode.CLICK_KEEP
+    }
+
     suspend fun setFloatingPointerHoverEnterSelect(enabled: Boolean) = editor.edit {
         it[SettingsPreferenceKeys.FLOATING_POINTER_HOVER_ENTER_SELECT] = enabled
     }
@@ -1624,6 +1633,10 @@ class OverlaySettingsMutator @Inject constructor(
         } else {
             it[SettingsPreferenceKeys.DEFAULT_IMAGE_VIEWER_PACKAGE] = packageName
         }
+    }
+
+    suspend fun setPickImageTapAction(action: PickImageTapAction) = editor.edit {
+        it[SettingsPreferenceKeys.PICK_IMAGE_TAP_ACTION] = action.id
     }
 
     suspend fun setImageEditorDelayDeleteEnabled(enabled: Boolean) = editor.edit {

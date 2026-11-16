@@ -55,9 +55,6 @@ enum class PickResultImageBarButton(val id: String) {
     /** 保存当前图片。 */
     SAVE("save"),
 
-    /** 用内置编辑器编辑当前图片。 */
-    EDIT("edit"),
-
     /** 分享当前图片（长按 = 起系统拖拽）。 */
     SHARE("share"),
 
@@ -98,7 +95,6 @@ object PickResultBarButtons {
     val defaultImageOrder: List<String> = listOf(
         PickResultImageBarButton.IMAGE_SEARCH.id,
         PickResultImageBarButton.SAVE.id,
-        PickResultImageBarButton.EDIT.id,
         PickResultImageBarButton.SHARE.id,
         PickResultImageBarButton.PIN.id,
         PickResultImageBarButton.STASH.id,

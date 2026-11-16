@@ -246,6 +246,8 @@
     <string name="pick_result_action_save_image">Save image</string>
     <string name="pick_result_action_view_image">View image</string>
     <string name="pick_result_action_edit_image">Edit image</string>
+    <string name="pick_result_translate_target_title">Translate to…</string>
+    <string name="pick_result_more_actions">More actions</string>
     <string name="pick_result_action_image_search">Search by image</string>
     <string name="pick_result_action_share_image">Share image</string>
     <string name="pick_result_tts_speak">Read aloud</string>
@@ -328,6 +330,7 @@
     <string name="drag_drop_flow_toast_cancelled">Drag cancelled</string>
     <string name="drag_drop_flow_toast_restored">Restored</string>
     <string name="drag_drop_flow_toast_image_unreadable">Can\'t read the dragged image</string>
+    <string name="drag_drop_flow_need_media_permission">Photo library access is needed to read the dropped image. Grant it and the action will retry automatically.</string>
     <string name="drag_drop_flow_toast_file_unreadable">Can\'t read the dragged file</string>
     <string name="drag_drop_flow_toast_launch_failed">Can\'t open the target app</string>
     <string name="drag_drop_flow_toast_target_missing">That target is no longer in the flow bar</string>

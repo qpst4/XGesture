@@ -86,6 +86,7 @@ fun FloatBallPickSettingsScreen(
     onShareImageOcrHistoryEnabledChange: (Boolean) -> Unit,
 
     onDefaultImageViewerPackageChange: (String?) -> Unit,
+    onPickImageTapActionChange: (com.slideindex.app.settings.PickImageTapAction) -> Unit,
 
     onImageEditorDelayDeleteChange: (Boolean) -> Unit = {},
 
@@ -110,6 +111,21 @@ fun FloatBallPickSettingsScreen(
 ) {
 
     val askEveryTimeLabel = stringResource(R.string.image_viewer_ask_every_time)
+
+    val pickTapActions = com.slideindex.app.settings.PickImageTapAction.entries
+    val pickTapLabels = pickTapActions.map { action ->
+        stringResource(
+            when (action) {
+                com.slideindex.app.settings.PickImageTapAction.VIEW -> R.string.pick_image_tap_view
+                com.slideindex.app.settings.PickImageTapAction.EDIT -> R.string.pick_image_tap_edit
+                com.slideindex.app.settings.PickImageTapAction.SAVE -> R.string.pick_image_tap_save
+                com.slideindex.app.settings.PickImageTapAction.SHARE -> R.string.pick_image_tap_share
+            },
+        )
+    }
+    val pickTapSelectedIndex = pickTapActions.indexOf(
+        com.slideindex.app.settings.PickImageTapAction.fromId(settings.pickImageTapActionId),
+    ).coerceAtLeast(0)
 
     val readyOptions = (imageViewerOptions as? ImageViewerOptionsState.Ready)?.options
 
@@ -446,6 +462,36 @@ fun FloatBallPickSettingsScreen(
             keyPrefix = "fb-pick-image-open-edit",
 
             items = buildList {
+
+                add(
+
+                    settingsCardScopeItem("image-tap-action") {
+
+                        SettingSpinnerRow(
+
+                            title = stringResource(R.string.pick_image_tap_title),
+
+                            subtitle = pickTapLabels[pickTapSelectedIndex],
+
+                            dialogButtonText = stringResource(R.string.cancel),
+
+                            items = pickTapLabels.map { DropdownItem(text = it) },
+
+                            selectedIndex = pickTapSelectedIndex,
+
+                            enabled = true,
+
+                            onSelectedIndexChange = { index ->
+
+                                pickTapActions.getOrNull(index)?.let(onPickImageTapActionChange)
+
+                            }
+
+                        )
+
+                    }
+
+                )
 
                 add(
 

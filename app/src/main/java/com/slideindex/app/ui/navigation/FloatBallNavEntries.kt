@@ -679,6 +679,7 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
             onOcrFallbackChange = viewModel::setFloatBallOcrFallbackEnabled,
             onShareImageOcrHistoryEnabledChange = viewModel::setShareImageOcrHistoryEnabled,
             onDefaultImageViewerPackageChange = viewModel::setDefaultImageViewerPackage,
+            onPickImageTapActionChange = viewModel::setPickImageTapAction,
             onImageEditorDelayDeleteChange = viewModel::setImageEditorDelayDeleteEnabled,
             onOpenOcrModels = { ctx.navigate(AppNavKey.OcrModels) },
             onOpenShareImageOcrHistory = { ctx.navigate(AppNavKey.ShareImageOcrHistory) },

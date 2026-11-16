@@ -61,8 +61,18 @@ internal object SettingsSnapshotReader {
      * 老数据只有"显示百分比"（0.5–1.0，球露出多少）。没有新键时按
      * `-(1 - 露出比例) × 球宽dp` 换算成负的距离，保证升级后外观不变。
      */
-    private fun resolveFloatBallEdgeInsetDp(prefs: Preferences, context: Context): Int {
-        val ballSizeDp = prefs[SettingsPreferenceKeys.FLOAT_BALL_SIZE_DP] ?: 48f
+    /** 摇杆松手模式：先读新键，没有就按两个旧布尔迁移。 */
+    private fun resolveReleaseClickMode(prefs: Preferences): FloatingPointerReleaseClickMode {
+        FloatingPointerReleaseClickMode
+            .fromId(prefs[SettingsPreferenceKeys.FLOATING_POINTER_RELEASE_CLICK_MODE])
+            ?.let { return it }
+        return FloatingPointerReleaseClickMode.fromLegacyBooleans(
+            dismiss = prefs[SettingsPreferenceKeys.FLOATING_POINTER_RELEASE_CLICK_AND_DISMISS] ?: false,
+            keep = prefs[SettingsPreferenceKeys.FLOATING_POINTER_RELEASE_CLICK_KEEP_JOYSTICK] ?: false,
+        )
+    }
+
+    private fun resolveFloatBallEdgeInsetDp(prefs: Preferences, context: Context): Int {        val ballSizeDp = prefs[SettingsPreferenceKeys.FLOAT_BALL_SIZE_DP] ?: 48f
         val metrics = context.resources.displayMetrics
         val screenWidthDp = if (metrics.density > 0f) {
             metrics.widthPixels / metrics.density
@@ -403,9 +413,9 @@ internal object SettingsSnapshotReader {
             floatingPointerHideWhenIdle = prefs[SettingsPreferenceKeys.FLOATING_POINTER_HIDE_IDLE] ?: true,
             floatingPointerIdleHideDelayMs = prefs[SettingsPreferenceKeys.FLOATING_POINTER_IDLE_DELAY] ?: 3000,
             floatingPointerReleaseClickAndDismiss =
-                prefs[SettingsPreferenceKeys.FLOATING_POINTER_RELEASE_CLICK_AND_DISMISS] ?: false,
+                resolveReleaseClickMode(prefs) == FloatingPointerReleaseClickMode.CLICK_AND_DISMISS,
             floatingPointerReleaseClickKeepJoystick =
-                prefs[SettingsPreferenceKeys.FLOATING_POINTER_RELEASE_CLICK_KEEP_JOYSTICK] ?: false,
+                resolveReleaseClickMode(prefs) == FloatingPointerReleaseClickMode.CLICK_KEEP,
             floatingPointerHoverEnterSelect =
                 prefs[SettingsPreferenceKeys.FLOATING_POINTER_HOVER_ENTER_SELECT] ?: false,
             floatingPointerJoystickLongPressAction = readFloatingPointerJoystickLongPressAction(prefs),
@@ -832,6 +842,8 @@ internal object SettingsSnapshotReader {
                 prefs[SettingsPreferenceKeys.INDEPENDENT_APP_GESTURE_ENABLED] ?: false,
             gestureProfiles = readGestureProfiles(prefs),
             defaultImageViewerPackage = prefs[SettingsPreferenceKeys.DEFAULT_IMAGE_VIEWER_PACKAGE],
+            pickImageTapActionId = prefs[SettingsPreferenceKeys.PICK_IMAGE_TAP_ACTION]
+                ?: PickImageTapAction.VIEW.id,
             imageEditorDelayDeleteEnabled = prefs[SettingsPreferenceKeys.IMAGE_EDITOR_DELAY_DELETE_ENABLED] ?: false,
             searchPanel = SearchPanelSettings(
             searchEngines = readSearchEngines(prefs, context),

@@ -166,8 +166,10 @@ object SystemMagnifierController {
             .onFailure { Log.w(TAG, "setMagnificationConfig failed", it) }
             .getOrDefault(false)
         if (!ok) {
-            Log.w(TAG, "system rejected magnification config (unsupported on this ROM?)")
-            stop()
+            // 部分 ROM（Flyme）放大过程中会偶发拒绝一次 config；这里**绝不能 stop()**，
+            // 否则控制器被清空、画面冻结在最后位置，看起来就是"滑一点就不跟手了"。
+            // 保持 active，下一次 MOVE 继续尝试。
+            Log.w(TAG, "setMagnificationConfig rejected; keep active and retry on next move")
         }
         return ok
     }

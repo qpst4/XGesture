@@ -1,10 +1,13 @@
 package com.slideindex.app.ui
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,9 +27,12 @@ import com.slideindex.app.ui.animationstyle.AnimationStyleColorPickerDialog
 import com.slideindex.app.ui.animationstyle.AnimationStyleColorRow
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingExpandableSwitchRow
+import com.slideindex.app.ui.settings.components.SettingsCardRow
 import com.slideindex.app.ui.settings.components.SettingsHintText
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
+import com.slideindex.app.ui.settings.components.settingsGroupedRowBackground
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.roundToInt
 
 private enum class JoystickColorTarget {
@@ -47,8 +53,7 @@ fun FloatingPointerJoystickSettingsScreen(
     onHideOnQuickSwipeChange: (Boolean) -> Unit,
     onHideWhenIdleChange: (Boolean) -> Unit,
     onIdleDelayChange: (Int) -> Unit,
-    onReleaseClickAndDismissChange: (Boolean) -> Unit,
-    onReleaseClickKeepJoystickChange: (Boolean) -> Unit,
+    onReleaseClickModeChange: (com.slideindex.app.settings.FloatingPointerReleaseClickMode) -> Unit,
     onHoverEnterSelectChange: (Boolean) -> Unit,
     onClickDistanceThresholdChange: (Float) -> Unit,
     onResetVisualDefaults: () -> Unit,
@@ -249,24 +254,41 @@ fun FloatingPointerJoystickSettingsScreen(
                 )
                 add(
                     settingsCardScopeItem("release-click") {
-                        SettingSwitchRow(
-                            title = stringResource(R.string.floating_pointer_release_click_and_dismiss),
-                            subtitle = stringResource(R.string.floating_pointer_release_click_and_dismiss_desc),
-                            checked = settings.floatingPointerReleaseClickAndDismiss,
-                            enabled = true,
-                            onCheckedChange = onReleaseClickAndDismissChange
-                        )
-                    }
-                )
-                add(
-                    settingsCardScopeItem("release-click-keep") {
-                        SettingSwitchRow(
-                            title = stringResource(R.string.floating_pointer_release_click_keep_joystick),
-                            subtitle = stringResource(R.string.floating_pointer_release_click_keep_joystick_desc),
-                            checked = settings.floatingPointerReleaseClickKeepJoystick,
-                            enabled = true,
-                            onCheckedChange = onReleaseClickKeepJoystickChange
-                        )
+                        SettingsCardRow(key = "release-click-mode-row") { position ->
+                            Column(
+                                modifier = Modifier
+                                    .settingsGroupedRowBackground(position.index, position.count)
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.floating_pointer_release_click_mode),
+                                    style = MaterialTheme.typography.titleMedium,
+                                )
+                                SegmentedControl(
+                                    items = com.slideindex.app.settings.FloatingPointerReleaseClickMode.entries,
+                                    selected = settings.floatingPointerReleaseClickMode,
+                                    labelRes = { mode ->
+                                        when (mode) {
+                                            com.slideindex.app.settings.FloatingPointerReleaseClickMode.OFF ->
+                                                R.string.floating_pointer_release_click_off
+
+                                            com.slideindex.app.settings.FloatingPointerReleaseClickMode.CLICK_AND_DISMISS ->
+                                                R.string.floating_pointer_release_click_and_dismiss
+
+                                            com.slideindex.app.settings.FloatingPointerReleaseClickMode.CLICK_KEEP ->
+                                                R.string.floating_pointer_release_click_keep_joystick
+                                        }
+                                    },
+                                    onSelect = onReleaseClickModeChange,
+                                    containerColor = MiuixTheme.colorScheme.surface,
+                                    indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
+                                )
+                                SettingsHintText(
+                                    text = stringResource(R.string.floating_pointer_release_click_mode_desc),
+                                )
+                            }
+                        }
                     }
                 )
                 add(

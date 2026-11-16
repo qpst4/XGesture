@@ -113,6 +113,8 @@ data class AppSettings(
     val floatBall: FloatBallSettings = FloatBallSettings(),
     val clipboard: ClipboardSettings = ClipboardSettings(),
     val defaultImageViewerPackage: String? = null,
+    /** 单击图片执行的动作（[PickImageTapAction.id]）。 */
+    val pickImageTapActionId: String = PickImageTapAction.VIEW.id,
     val imageEditorDelayDeleteEnabled: Boolean = false,
     val searchPanel: SearchPanelSettings = SearchPanelSettings(),
     val overlayBlur: OverlayBlurSettings = OverlayBlurSettings(),
@@ -131,6 +133,10 @@ data class AppSettings(
      */
     val gestureProfiles: List<GestureProfile> = emptyList(),
 ) {
+    /** 单击图片执行的动作（派生字段）。 */
+    val pickImageTapAction: PickImageTapAction
+        get() = PickImageTapAction.fromId(pickImageTapActionId)
+
     /** 当前底栏样式的生效模糊半径（派生，不落盘）。 */
     val bottomNavBlurRadiusDp: Float
         get() = when (BottomNavStyle.fromId(bottomNavStyleId)) {
@@ -297,6 +303,16 @@ data class AppSettings(
     val floatingPointerIdleHideDelayMs get() = floatingPointer.floatingPointerIdleHideDelayMs
     val floatingPointerReleaseClickAndDismiss get() = floatingPointer.floatingPointerReleaseClickAndDismiss
     val floatingPointerReleaseClickKeepJoystick get() = floatingPointer.floatingPointerReleaseClickKeepJoystick
+    val floatingPointerReleaseClickMode: FloatingPointerReleaseClickMode
+        get() = when {
+            floatingPointer.floatingPointerReleaseClickKeepJoystick ->
+                FloatingPointerReleaseClickMode.CLICK_KEEP
+
+            floatingPointer.floatingPointerReleaseClickAndDismiss ->
+                FloatingPointerReleaseClickMode.CLICK_AND_DISMISS
+
+            else -> FloatingPointerReleaseClickMode.OFF
+        }
     val floatingPointerHoverEnterSelect get() = floatingPointer.floatingPointerHoverEnterSelect
     val floatingPointerJoystickLongPressAction get() = floatingPointer.floatingPointerJoystickLongPressAction
     val floatingPointerRadialAlwaysVisible get() = floatingPointer.floatingPointerRadialAlwaysVisible

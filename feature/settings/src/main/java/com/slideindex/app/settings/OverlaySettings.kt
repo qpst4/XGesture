@@ -233,6 +233,8 @@ data class OverlaySettings(
     val stashPanelWidthMode: StashPanelWidthMode = StashPanelWidthMode.STANDARD,
     val stashPanelCustomWidthFraction: Float? = null,
     val defaultImageViewerPackage: String? = null,
+    /** 单击图片执行的动作，见 [PickImageTapAction]。 */
+    val pickImageTapActionId: String = PickImageTapAction.VIEW.id,
     val imageEditorDelayDeleteEnabled: Boolean = false,
     val searchEngines: List<SearchEngineConfig> = emptyList(),
     /** 拖拽流转栏里的文字目标（从搜索引擎卡片拖进去的独立副本）。 */
@@ -486,6 +488,7 @@ data class OverlaySettings(
             stashPanelWidthMode = settings.stashPanelWidthMode,
             stashPanelCustomWidthFraction = settings.stashPanelCustomWidthFraction,
             defaultImageViewerPackage = settings.defaultImageViewerPackage,
+            pickImageTapActionId = settings.pickImageTapActionId,
             imageEditorDelayDeleteEnabled = settings.imageEditorDelayDeleteEnabled,
             searchEngines = settings.searchEngines,
             dragFlowTextEngines = settings.dragFlowTextEngines,

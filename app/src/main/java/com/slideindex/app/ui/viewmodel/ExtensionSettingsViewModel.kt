@@ -467,6 +467,11 @@ class ExtensionSettingsViewModel @Inject constructor(
         settingsRepository.setFloatingPointerReleaseClickKeepJoystick(enabled)
     }
 
+    fun setFloatingPointerReleaseClickMode(mode: com.slideindex.app.settings.FloatingPointerReleaseClickMode) =
+        launchSettingsWrite {
+            settingsRepository.setFloatingPointerReleaseClickMode(mode)
+        }
+
     fun setFloatingPointerHoverEnterSelect(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setFloatingPointerHoverEnterSelect(enabled)
     }
@@ -636,6 +641,11 @@ class ExtensionSettingsViewModel @Inject constructor(
     fun setDefaultImageViewerPackage(packageName: String?) = launchSettingsWrite {
         settingsRepository.setDefaultImageViewerPackage(packageName)
     }
+
+    fun setPickImageTapAction(action: com.slideindex.app.settings.PickImageTapAction) =
+        launchSettingsWrite {
+            settingsRepository.setPickImageTapAction(action)
+        }
 
     fun setImageEditorDelayDeleteEnabled(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setImageEditorDelayDeleteEnabled(enabled)

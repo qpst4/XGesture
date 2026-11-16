@@ -374,6 +374,46 @@ internal fun FloatingPointerDisplay(
                         rippleSizePx = rippleSizePx
                     )
                 }
+                // 实时缩放 / 滚动：在指针周围画出动作提示（对齐 Quick Cursor 的"看得见在干什么"）。
+                val realtimeKind = session.realtimeGestureKind.value
+                if (realtimeKind != null) {
+                    val center = Offset(pointerX, pointerY)
+                    val indicator = Color(settings.floatingPointerRingColorArgb).copy(alpha = 0.85f)
+                    if (realtimeKind == "zoom") {
+                        // 缩放：双环，提示"双指张合"。
+                        drawCircle(
+                            color = indicator,
+                            radius = 28f * density,
+                            center = center,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f * density),
+                        )
+                        drawCircle(
+                            color = indicator.copy(alpha = 0.45f),
+                            radius = 42f * density,
+                            center = center,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5f * density),
+                        )
+                    } else {
+                        // 滚动：上下箭头。
+                        val arrowHalfWidth = 7f * density
+                        val arrowHeight = 10f * density
+                        val gap = 32f * density
+                        val up = androidx.compose.ui.graphics.Path().apply {
+                            moveTo(center.x, center.y - gap - arrowHeight)
+                            lineTo(center.x - arrowHalfWidth, center.y - gap)
+                            lineTo(center.x + arrowHalfWidth, center.y - gap)
+                            close()
+                        }
+                        val down = androidx.compose.ui.graphics.Path().apply {
+                            moveTo(center.x, center.y + gap + arrowHeight)
+                            lineTo(center.x - arrowHalfWidth, center.y + gap)
+                            lineTo(center.x + arrowHalfWidth, center.y + gap)
+                            close()
+                        }
+                        drawPath(up, indicator)
+                        drawPath(down, indicator)
+                    }
+                }
                 val recorderProgress = gestureRecorderProgress.value
                 when {
                     hoverSelectAsPlus -> {

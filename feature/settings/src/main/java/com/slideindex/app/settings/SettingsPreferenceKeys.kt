@@ -373,6 +373,8 @@ internal object SettingsPreferenceKeys {
         booleanPreferencesKey("floating_pointer_release_click_and_dismiss")
     val FLOATING_POINTER_RELEASE_CLICK_KEEP_JOYSTICK =
         booleanPreferencesKey("floating_pointer_release_click_keep_joystick")
+    val FLOATING_POINTER_RELEASE_CLICK_MODE =
+        stringPreferencesKey("floating_pointer_release_click_mode")
     val FLOATING_POINTER_HOVER_ENTER_SELECT =
         booleanPreferencesKey("floating_pointer_hover_enter_select")
     val FLOATING_POINTER_JOYSTICK_LONG_PRESS_ACTION = stringPreferencesKey("floating_pointer_joystick_long_press_action")
@@ -836,6 +838,7 @@ internal object SettingsPreferenceKeys {
     val STASH_PANEL_CUSTOM_WIDTH_FRACTION = floatPreferencesKey("stash_panel_custom_width_fraction")
     val OVERLAY_BLUR_ENABLED = booleanPreferencesKey("overlay_blur_enabled")
     val DEFAULT_IMAGE_VIEWER_PACKAGE = stringPreferencesKey("default_image_viewer_package")
+    val PICK_IMAGE_TAP_ACTION = stringPreferencesKey("pick_image_tap_action")
     val IMAGE_EDITOR_DELAY_DELETE_ENABLED = booleanPreferencesKey("image_editor_delay_delete_enabled")
     val OCR_ENGINE_ID = stringPreferencesKey("ocr_engine_id")
     val SEARCH_ENGINES_JSON = stringPreferencesKey("search_engines_json")

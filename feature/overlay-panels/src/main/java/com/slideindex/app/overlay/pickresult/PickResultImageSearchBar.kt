@@ -971,7 +971,6 @@ private fun PickResultImageIconBar(
         button.id !in hiddenIds && when (button) {
             com.slideindex.app.settings.PickResultImageBarButton.IMAGE_SEARCH -> true
             com.slideindex.app.settings.PickResultImageBarButton.SAVE -> true
-            com.slideindex.app.settings.PickResultImageBarButton.EDIT -> editAction != null
             com.slideindex.app.settings.PickResultImageBarButton.SHARE -> true
             com.slideindex.app.settings.PickResultImageBarButton.PIN -> onPinToScreen != null
             com.slideindex.app.settings.PickResultImageBarButton.STASH -> onStash != null
@@ -1011,16 +1010,6 @@ private fun PickResultImageIconBar(
                         onLongClick = onSaveLongClick,
                         contentDescription = stringResource(R.string.pick_result_action_save_image),
                     )
-
-                com.slideindex.app.settings.PickResultImageBarButton.EDIT ->
-                    if (editAction != null) {
-                        PickResultActionIcon(
-                            icon = Icons.Outlined.Edit,
-                            enabled = true,
-                            onClick = editAction,
-                            contentDescription = stringResource(R.string.pick_result_action_edit_image),
-                        )
-                    }
 
                 com.slideindex.app.settings.PickResultImageBarButton.SHARE ->
                     PickResultActionIcon(
@@ -1126,29 +1115,43 @@ private fun PickResultImageSearchActions(
         horizontalArrangement = Arrangement.spacedBy(if (compact) 2.dp else 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // 0. 独立入口：全屏查看当前图片（不占「更多」菜单、也不参与图标栏排序）。
-        if (onViewImage != null) {
-            PickResultActionIcon(
-                icon = PickResultViewImageIcon,
-                enabled = true,
-                onClick = onViewImage,
-                contentDescription = stringResource(R.string.pick_result_action_view_image),
-                overlayMode = overlayMode,
-                compact = compact,
-            )
-        }
-
-        // 「编辑」与「查看」同级：只在取词面板注入了编辑动作时出现。
+        // 0. 「查看图片 / 编辑图片」收进三点菜单：底栏只保留高频动作。
         val editAction = LocalPickImageEditAction.current
-        if (editAction != null) {
-            PickResultActionIcon(
-                icon = Icons.Outlined.Edit,
-                enabled = true,
-                onClick = editAction,
-                contentDescription = stringResource(R.string.pick_result_action_edit_image),
-                overlayMode = overlayMode,
-                compact = compact,
-            )
+        var overflowExpanded by remember { mutableStateOf(false) }
+        if (onViewImage != null || editAction != null) {
+            Box {
+                PickResultActionIcon(
+                    icon = Icons.Filled.MoreVert,
+                    enabled = true,
+                    onClick = { overflowExpanded = true },
+                    contentDescription = stringResource(R.string.pick_result_more_actions),
+                    overlayMode = overlayMode,
+                    compact = compact,
+                )
+                DropdownMenu(
+                    expanded = overflowExpanded,
+                    onDismissRequest = { overflowExpanded = false },
+                ) {
+                    if (onViewImage != null) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.pick_result_action_view_image)) },
+                            onClick = {
+                                overflowExpanded = false
+                                onViewImage()
+                            },
+                        )
+                    }
+                    if (editAction != null) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.pick_result_action_edit_image)) },
+                            onClick = {
+                                overflowExpanded = false
+                                editAction()
+                            },
+                        )
+                    }
+                }
+            }
         }
 
         // 1. Direct Action: Image Search (以图搜图)

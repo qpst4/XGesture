@@ -1542,26 +1542,24 @@ object FloatBallPickResultPanel {
                         ) { dismiss() }
                     },
                     onTranslate = { FloatBallTranslateCoordinator.translate(context, it) },
-                    onTranslateLongClick = {
-                        // 长按翻译键：在中/英之间切换目标语言（无需进设置）。
-                        val current = settingsHolder.value.floatBallTranslateTargetLang
-                        val next = nextTranslateTargetLanguage(current)
-                        // 这里不在 @Composable 上下文，不能调 translateTargetAutonym（它是 @Composable）。
-                        val languageName = if (next == "en") "English" else "中文"
-                        Toast.makeText(
-                            overlayContext.applicationContext,
-                            overlayContext.getString(
-                                R.string.pick_result_translate_target_switched,
-                                languageName,
-                            ),
-                            Toast.LENGTH_SHORT,
-                        ).show()
+                    onTranslateTargetSelect = { code ->
+                        // 长按翻译键弹出的目标语言菜单里选一项：写设置 + Toast 确认。
                         val repository = OverlayDependencyAccess.overlayDependencies(overlayContext)
                             ?.settingsRepository
                         if (repository != null) {
                             kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-                                repository.setFloatBallTranslateTargetLang(next)
+                                repository.setFloatBallTranslateTargetLang(code)
                             }
+                            val languageName = com.slideindex.app.translate.TranslateLanguageCatalog
+                                .find(code)?.displayName ?: code
+                            Toast.makeText(
+                                overlayContext.applicationContext,
+                                overlayContext.getString(
+                                    R.string.pick_result_translate_target_switched,
+                                    languageName,
+                                ),
+                                Toast.LENGTH_SHORT,
+                            ).show()
                         }
                     },
                     onRemoveSpaces = { value, removeAll ->
