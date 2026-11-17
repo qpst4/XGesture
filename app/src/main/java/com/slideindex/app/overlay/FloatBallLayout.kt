@@ -142,6 +142,7 @@ internal object FloatBallLayout {
             FloatBallPositionMode.CUSTOM -> {
                 val centerX = coerceCustomCenterXFraction(settings.floatBallCustomCenterXFraction) * screenWidthPx
                 (centerX - ballSize.widthPx / 2f).roundToInt()
+                    .coerceIn(marginPx, (screenWidthPx - ballSize.widthPx - marginPx).coerceAtLeast(marginPx))
             }
             else -> dockedBallLeftPx(
                 activeSide = activeSide,
@@ -302,6 +303,7 @@ internal object FloatBallLayout {
             FloatBallPositionMode.CUSTOM -> {
                 val centerX = coerceCustomCenterXFraction(settings.floatBallCustomCenterXFraction) * screenWidthPx
                 (centerX - ballSize.widthPx / 2f).roundToInt()
+                    .coerceIn(marginPx, (screenWidthPx - ballSize.widthPx - marginPx).coerceAtLeast(marginPx))
             }
             else -> dockedBallLeftPx(
                 activeSide = activeSide,

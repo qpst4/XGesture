@@ -428,7 +428,7 @@ fun ActionDetailScreen(
                                     summary = stringResource(R.string.task_switcher_panel_width_desc),
                                     value = taskWidth.toFloat(),
                                     valueRange = 180f..340f,
-                                    steps = 15,
+                                    steps = 0,
                                     enabled = onTaskSwitcherWidthChange != null,
                                     label = stringResource(
                                         R.string.task_switcher_panel_width_value,

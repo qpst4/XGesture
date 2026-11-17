@@ -172,7 +172,6 @@ object EdgeCardOverlayWindow {
             } else {
                 existing.state.unreadCount
             }
-            val wasExpanded = existing.state.isExpanded
             existing.plan = plan
             existing.actionCallback = onAction
             existing.dismissCallback = onDismiss
@@ -182,14 +181,10 @@ object EdgeCardOverlayWindow {
                 existing.state.withUnread(unread)
             }
             if (changed) moveToTop(existing)
-            // 原先已展开的卡片原地更新内容，避免连续消息重复播放入场动画导致抖动
-            if (rebuilt || !wasExpanded) {
-                applyEntry(existing, animated = false)
-                existing.view?.playEntrance(1f)
-            } else {
-                bindView(existing)
-            }
+            // 同会话来新消息：窗口直接瞬移到展开位，再播一次“从屏外滑入”的入场动画。
+            applyEntry(existing, animated = false)
             if (changed || rebuilt) {
+                existing.view?.playEntrance(1f)
                 scheduleAutoCollapse(existing)
             }
             return
