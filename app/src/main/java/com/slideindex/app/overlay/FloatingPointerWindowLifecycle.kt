@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.ComposeView
 import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.gesture.ActionExecutor
 import com.slideindex.app.monitoring.OverlayPerformanceMonitorBinding
+import com.slideindex.app.service.SlideIndexAccessibilityService
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.util.HapticHelper
 import com.slideindex.app.util.PermissionHelper
@@ -75,13 +76,11 @@ internal class FloatingPointerWindowLifecycle(
             return
         }
 
+        // 无障碍图标开着不代表实例仍然可用（系统可能摘掉连接但留下旧实例）。
+        // 实例不可用时退回 Activity 上下文，用 APPLICATION_OVERLAY 先把指针显示出来。
         val hostContext = overlayHostContext()
-            ?: run {
-                Log.w(TAG, "show: accessibility service not connected")
-                window.continuedGestureActive = false
-                EdgeContinuedOverlayLaunchCoordinator.clearAfterHandoffEnd()
-                return
-            }
+            ?.takeIf { SlideIndexAccessibilityService.isConnected() }
+            ?: context
 
         // Coordinator already posts off the edge touch stack; only defer once for direct callers.
         if (shouldContinueTouch && !attachDeferred) {
