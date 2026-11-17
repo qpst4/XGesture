@@ -5021,7 +5021,7 @@
     <string name="icon_theme_empty">لا توجد حزم أيقونات مثبتة</string>
     <string name="extension_icon_library_title">مكتبة الأيقونات</string>
     <string name="extension_icon_library_subtitle">تعيين أيقونات أنواع الإجراءات والتطبيقات عالميًا</string>
-    <string name="icon_plate_mode_section">لوحة الأيقونة</string>
+    <string name="icon_plate_mode_section">لوحة أيقونة اللوحة</string>
     <string name="icon_plate_mode_dark">داكن</string>
     <string name="icon_plate_mode_light">فاتح</string>
     <string name="icon_plate_mode_system">اتباع النظام</string>

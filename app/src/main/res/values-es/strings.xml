@@ -3002,7 +3002,7 @@
     <string name="icon_theme_empty">No hay paquetes de iconos instalados</string>
     <string name="extension_icon_library_title">Biblioteca Icon</string>
     <string name="extension_icon_library_subtitle">Establecer iconos para tipos de acción y aplicaciones a nivel mundial</string>
-    <string name="icon_plate_mode_section">Placa del icono</string>
+    <string name="icon_plate_mode_section">Placa del icono del panel</string>
     <string name="icon_plate_mode_dark">Oscuro</string>
     <string name="icon_plate_mode_light">Claro</string>
     <string name="icon_plate_mode_system">Igual que el sistema</string>

@@ -3097,7 +3097,7 @@
     <string name="icon_theme_empty">Пакеты значков не установлены</string>
     <string name="extension_icon_library_title">Библиотека значков</string>
     <string name="extension_icon_library_subtitle">Глобально задайте значки для типов действий и приложений</string>
-    <string name="icon_plate_mode_section">Подложка значка</string>
+    <string name="icon_plate_mode_section">Подложка значка панели</string>
     <string name="icon_plate_mode_dark">Тёмная</string>
     <string name="icon_plate_mode_light">Светлая</string>
     <string name="icon_plate_mode_system">Как в системе</string>

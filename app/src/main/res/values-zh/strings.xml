@@ -1908,13 +1908,13 @@
     <string name="icon_theme_empty">没有已安装的图标包</string>
     <string name="extension_icon_library_title">图标库</string>
     <string name="extension_icon_library_subtitle">全局设置动作类型与应用的图标</string>
-    <string name="icon_plate_mode_section">图标底板</string>
+    <string name="icon_plate_mode_section">面板图标底板</string>
     <string name="icon_plate_mode_dark">深色</string>
     <string name="icon_plate_mode_light">浅色</string>
     <string name="icon_plate_mode_system">跟随系统</string>
     <string name="icon_plate_mode_desc">悬浮窗面板里动作图标的底板配色</string>
-    <string name="setting_icon_plate_enabled">显示图标底板</string>
-    <string name="setting_icon_plate_enabled_desc">关闭后全 app 的行首图标直接显示，不再带底板</string>
+    <string name="setting_icon_plate_enabled">页面行首图标底板</string>
+    <string name="setting_icon_plate_enabled_desc">关闭后设置、导航等列表的行首图标直接显示，不再带底板</string>
     <string name="action_icon_library_title">选择图标</string>
     <string name="action_icon_all">全部</string>
     <string name="action_icon_count">%1$d 个图标</string>

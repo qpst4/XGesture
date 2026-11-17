@@ -5017,7 +5017,7 @@
     <string name="icon_theme_empty">インストール済みのアイコンパックがありません</string>
     <string name="extension_icon_library_title">アイコンライブラリ</string>
     <string name="extension_icon_library_subtitle">アクションの種類とアプリのアイコンを一括設定</string>
-    <string name="icon_plate_mode_section">アイコンプレート</string>
+    <string name="icon_plate_mode_section">パネルアイコンプレート</string>
     <string name="icon_plate_mode_dark">ダーク</string>
     <string name="icon_plate_mode_light">ライト</string>
     <string name="icon_plate_mode_system">システムに従う</string>
