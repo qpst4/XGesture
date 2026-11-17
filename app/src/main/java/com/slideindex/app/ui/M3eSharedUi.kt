@@ -35,6 +35,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.toShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,6 +53,9 @@ import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import top.yukonga.miuix.kmp.icon.extended.Settings
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 
+/** 为 true 时行首图标只保留 40dp 布局槽位，不画底板。 */
+val LocalBareSettingIcons = staticCompositionLocalOf { false }
+
 data class PendingPermissionItem(
     val title: String,
     val description: String,
@@ -66,21 +70,28 @@ fun SettingIconContainer(
     contentDescription: String? = null,
     content: @Composable () -> Unit,
 ) {
+    val slotModifier = modifier
+        .size(40.dp)
+        .then(
+            if (contentDescription != null) {
+                Modifier.semantics { this.contentDescription = contentDescription }
+            } else {
+                Modifier
+            },
+        )
+    if (LocalBareSettingIcons.current) {
+        Box(modifier = slotModifier, contentAlignment = Alignment.Center) {
+            content()
+        }
+        return
+    }
     val shape = if (emphasized) {
         MaterialShapes.Cookie9Sided.toShape()
     } else {
         MaterialTheme.shapes.small
     }
     Surface(
-        modifier = modifier
-            .size(40.dp)
-            .then(
-                if (contentDescription != null) {
-                    Modifier.semantics { this.contentDescription = contentDescription }
-                } else {
-                    Modifier
-                },
-            ),
+        modifier = slotModifier,
         shape = shape,
         color = if (emphasized) {
             MaterialTheme.colorScheme.primaryContainer

@@ -6,6 +6,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
@@ -168,6 +169,7 @@ fun MainScreen(
         onHideOnLauncherChange = onHideTriggerOnLauncherChange,
     )
 
+    CompositionLocalProvider(LocalBareSettingIcons provides true) {
     MiuixHubScaffold(
         title = stringResource(R.string.app_name),
         modifier = Modifier.fillMaxSize(),
@@ -486,6 +488,7 @@ fun MainScreen(
                 },
             ),
         )
+    }
     }
 }
 
