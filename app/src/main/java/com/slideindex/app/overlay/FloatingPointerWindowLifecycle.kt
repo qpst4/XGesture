@@ -76,11 +76,16 @@ internal class FloatingPointerWindowLifecycle(
             return
         }
 
-        // 无障碍图标开着不代表实例仍然可用（系统可能摘掉连接但留下旧实例）。
-        // 实例不可用时退回 Activity 上下文，用 APPLICATION_OVERLAY 先把指针显示出来。
-        val hostContext = overlayHostContext()
+        // 无障碍开关开着也可能只剩一个失效实例（系统摘掉连接但保留 instance）。
+        // 此时退回应用上下文，用 APPLICATION_OVERLAY 仍可显示指针；同时保留警告日志。
+        val connectedHost = overlayHostContext()
             ?.takeIf { SlideIndexAccessibilityService.isConnected() }
-            ?: context.applicationContext
+        if (connectedHost == null) {
+            Log.w(TAG, "show: accessibility service not connected; fallback to app overlay")
+            window.continuedGestureActive = false
+            EdgeContinuedOverlayLaunchCoordinator.clearAfterHandoffEnd()
+        }
+        val hostContext = connectedHost ?: context.applicationContext
 
         // Coordinator already posts off the edge touch stack; only defer once for direct callers.
         if (shouldContinueTouch && !attachDeferred) {
