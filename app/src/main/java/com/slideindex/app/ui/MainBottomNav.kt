@@ -39,6 +39,10 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -425,7 +429,7 @@ fun FloatingBottomNavBar(
                     },
                     icon = { isSelected ->
                         Icon(
-                            imageVector = classicNavSymbol("Home"),
+                            imageVector = if (isSelected) Icons.Default.Home else classicNavSymbol("Home"),
                             contentDescription = cdBottomNavHome(),
                             modifier = Modifier.size(MainBottomNavIconSize),
                         )
@@ -473,7 +477,7 @@ fun FloatingBottomNavBar(
                     },
                     icon = { isSelected ->
                         Icon(
-                            imageVector = classicNavSymbol("Notifications"),
+                            imageVector = if (isSelected) Icons.Default.Notifications else classicNavSymbol("Notifications"),
                             contentDescription = cdBottomNavNotification(),
                             modifier = Modifier.size(MainBottomNavIconSize),
                         )
@@ -496,7 +500,7 @@ fun FloatingBottomNavBar(
                     },
                     icon = { isSelected ->
                         Icon(
-                            imageVector = classicNavSymbol("Widgets"),
+                            imageVector = if (isSelected) Icons.Default.Widgets else classicNavSymbol("Widgets"),
                             contentDescription = cdBottomNavExtension(),
                             modifier = Modifier.size(MainBottomNavIconSize),
                         )
@@ -605,7 +609,7 @@ fun FloatingSideNavRail(
                 },
                 icon = { isSelected ->
                     Icon(
-                        imageVector = classicNavSymbol("Home"),
+                        imageVector = if (isSelected) Icons.Default.Home else classicNavSymbol("Home"),
                         contentDescription = cdBottomNavHome(),
                         modifier = Modifier.size(MainBottomNavIconSize),
                     )
@@ -653,7 +657,7 @@ fun FloatingSideNavRail(
                 },
                 icon = { isSelected ->
                     Icon(
-                        imageVector = classicNavSymbol("Notifications"),
+                        imageVector = if (isSelected) Icons.Default.Notifications else classicNavSymbol("Notifications"),
                         contentDescription = cdBottomNavNotification(),
                         modifier = Modifier.size(MainBottomNavIconSize),
                     )
@@ -676,7 +680,7 @@ fun FloatingSideNavRail(
                 },
                 icon = { isSelected ->
                     Icon(
-                        imageVector = classicNavSymbol("Widgets"),
+                        imageVector = if (isSelected) Icons.Default.Widgets else classicNavSymbol("Widgets"),
                         contentDescription = cdBottomNavExtension(),
                         modifier = Modifier.size(MainBottomNavIconSize),
                     )
