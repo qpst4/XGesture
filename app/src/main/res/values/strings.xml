@@ -5178,4 +5178,6 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="magnifier_chip_text">Magnifier %1$s× · tap to close</string>
     <string name="magnifier_opened_toast">Magnifier on: tap the bottom-right dot to close, long-press it to change zoom</string>
     <string name="magnifier_requires_android13">Full-screen magnifier needs Android 13 or newer</string>
+    <string name="shake_menu_show_action_names">Show action names</string>
+    <string name="shake_menu_show_action_names_desc">Show the action bound to each direction in the shake menu</string>
 </resources>

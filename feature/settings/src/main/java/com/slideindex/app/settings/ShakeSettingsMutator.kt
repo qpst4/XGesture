@@ -110,6 +110,10 @@ class ShakeSettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.SHAKE_MENU_ENABLED] = enabled
     }
 
+    suspend fun setShowShakeMenuActionNames(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.SHAKE_MENU_SHOW_ACTION_NAMES] = enabled
+    }
+
     suspend fun setLockScreenShakeAction(type: ShakeGestureType, action: GestureAction) = editor.edit { prefs ->        // 用户一旦编辑锁屏动作，就切到新模型：未设置的项按“无”处理，不再回退。
         if (prefs[SettingsPreferenceKeys.SHAKE_WORK_MODES] == null &&
             prefs[SettingsPreferenceKeys.SHAKE_WORK_MODE] == null

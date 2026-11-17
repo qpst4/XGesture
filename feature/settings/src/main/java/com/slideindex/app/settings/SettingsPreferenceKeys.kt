@@ -471,6 +471,7 @@ internal object SettingsPreferenceKeys {
 
     /** 「显示菜单状态」：是否绘制晃动菜单浮层；关闭后菜单仍然生效（盲操作）。 */
     val SHAKE_MENU_ENABLED = booleanPreferencesKey("shake_menu_enabled")
+    val SHAKE_MENU_SHOW_ACTION_NAMES = booleanPreferencesKey("shake_menu_show_action_names")
     val HOLD_SHAKE_ENABLED = booleanPreferencesKey("hold_shake_enabled")
 
     /** 旧版“锁屏晃动”总开关，仅用于迁移到 [SHAKE_WORK_MODE] + 锁屏动作“无=关闭”的新模型。 */

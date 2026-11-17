@@ -1164,6 +1164,8 @@ class SettingsRepository @Inject constructor(
     suspend fun setShakeMenuGuardMs(valueMs: Long) = shake.setShakeMenuGuardMs(valueMs)
     suspend fun setShakeMenuDisplayDelayMs(valueMs: Long) = shake.setShakeMenuDisplayDelayMs(valueMs)
     suspend fun setShowShakeMenuOverlay(enabled: Boolean) = shake.setShowShakeMenuOverlay(enabled)
+    suspend fun setShowShakeMenuActionNames(enabled: Boolean) =
+        shake.setShowShakeMenuActionNames(enabled)
     suspend fun setLockScreenShakeAction(type: ShakeGestureType, action: GestureAction) = shake.setLockScreenShakeAction(type, action)
     suspend fun setPerAppShakeAction(packageName: String, type: ShakeGestureType, action: GestureAction) =
         shake.setPerAppShakeAction(packageName, type, action)

@@ -263,6 +263,10 @@ class ShakeHubViewModel @Inject constructor(
         settingsRepository.setShowShakeMenuOverlay(enabled)
     }
 
+    fun setShowShakeMenuActionNames(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setShowShakeMenuActionNames(enabled)
+    }
+
     fun setFaceDownEnabled(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setFaceDownGestureEnabled(enabled)
     }

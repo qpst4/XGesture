@@ -363,7 +363,9 @@ class ShakeGestureHost @Inject constructor(
             return
         }
         if (!screenOn) return
-        val show = { feedbackPort.showMenuOverlay(appContext, menu) }
+        val show = {
+            feedbackPort.showMenuOverlay(appContext, menu, shake.showMenuActionNames)
+        }
         val delayMs = shake.menuDisplayDelayMs
         if (delayMs > 0L) {
             // 延迟显示期间用户可能已经完成操作（或会话已被替换），只给仍然有效的会话弹层。

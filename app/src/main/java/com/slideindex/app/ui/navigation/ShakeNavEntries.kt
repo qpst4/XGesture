@@ -519,6 +519,9 @@ fun NavEntryBuilder.shakeNavEntries(ctx: MainNavContext) {
             onGuardMsChange = { valueMs -> viewModel.setShakeMenuGuardMs(valueMs) },
             onDisplayDelayMsChange = { valueMs -> viewModel.setShakeMenuDisplayDelayMs(valueMs) },
             onShowOverlayChange = { enabled -> viewModel.setShowShakeMenuOverlay(enabled) },
+            onShowActionNamesChange = { enabled ->
+                viewModel.setShowShakeMenuActionNames(enabled)
+            },
         )
     }
 
