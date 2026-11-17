@@ -358,9 +358,16 @@ object PanelRuntimeHooks {
         ) -> android.graphics.Bitmap?
     )? = null
 
-    /** 已缓存的最近任务（每项含 `app: AppInfo`）。 */
+    /**
+     * 已缓存的最近任务（每项含 `app: AppInfo`）。
+     *
+     * 必须用 [com.slideindex.app.util.RecentAppEntry] 强类型：早先是 `List<Any>`，消费方只能靠
+     * 反射 `getMethod("getApp")` 取值；release 的 R8 会把 getter 改名/内联，反射恒抛
+     * `NoSuchMethodException` 又被静默吞掉，最近应用于是恒为空、自动填充退化成「全量应用按拼音排」
+     * （1.64.0 起的真机反馈）。跨模块传数据就用同一个类，不要再退回复射。
+     */
     @Volatile
-    var cachedRecentTasks: (() -> List<Any>)? = null
+    var cachedRecentTasks: (() -> List<com.slideindex.app.util.RecentAppEntry>)? = null
     /** 图标底板是否处于深色模式。 */
     @Volatile
     var iconPlateCurrentDark: (() -> Boolean)? = null

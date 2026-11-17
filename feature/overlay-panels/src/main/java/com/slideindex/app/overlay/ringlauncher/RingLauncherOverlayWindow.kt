@@ -714,12 +714,11 @@ object RingLauncherOverlayWindow {
 
         val autoFillQueue = ArrayDeque<AppInfo>()
         if (appRepository != null) {
+            // 强类型直取。历史上这里用 `getMethod("getApp")` 反射读：release 的 R8 会改名/内联
+            // getter，反射恒失败且被 runCatching 吞掉，于是最近应用恒为空、空白位退化成全量应用。
             val cachedRecents = (com.slideindex.app.overlay.panels.PanelRuntimeHooks.cachedRecentTasks
-                ?.invoke().orEmpty()).mapNotNull { entry ->
-                    runCatching {
-                        entry.javaClass.getMethod("getApp").invoke(entry) as? com.slideindex.app.data.AppInfo
-                    }.getOrNull()
-                }
+                ?.invoke().orEmpty())
+                .map { it.app }
                 // 任务切换器现在会显示本应用；圆环的「最近应用」自动填充仍然不要把自己塞进去。
                 .filter { it.packageName != context.packageName }
             for (app in cachedRecents) {
