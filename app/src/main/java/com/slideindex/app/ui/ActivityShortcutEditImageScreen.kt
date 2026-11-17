@@ -318,12 +318,15 @@ fun ActivityShortcutEditImageScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp),
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable { showSourceTypePicker = true },
                     cornerRadius = 16.dp,
-                    onClick = { showSourceTypePicker = true },
                 ) {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clickable { showSourceTypePicker = true },
                         contentAlignment = Alignment.Center,
                     ) {
                         if (previewBitmap != null) {

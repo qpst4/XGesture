@@ -300,9 +300,11 @@ fun ActivityShortcutEditFileScreen(
 
                 // 选择应用卡片（图五、图六）
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable { onPickApp(mimeType, isShareMode) },
                     cornerRadius = 16.dp,
-                    onClick = { onPickApp(mimeType, isShareMode) },
                 ) {
                     Row(
                         modifier = Modifier
