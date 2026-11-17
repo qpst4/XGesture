@@ -1,5 +1,7 @@
 package com.slideindex.app.ui.navigation
 
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,7 +15,17 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
+import com.slideindex.app.R
+import com.slideindex.app.di.OverlayDependencyAccess
+import com.slideindex.app.gesture.ActionExecutor
+import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureActionPermissionAuditor
+import com.slideindex.app.gesture.GestureActionType
+import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.ui.ActionCenterCatalog
+import com.slideindex.app.ui.ActionCenterScreen
+import com.slideindex.app.ui.ActionDetailScreen
+import com.slideindex.app.ui.AppCarouselSwitcherSettingsScreen
 import com.slideindex.app.ui.CloudBackupScreen
 import com.slideindex.app.ui.CloudStorageConfigEditorScreen
 import com.slideindex.app.ui.CloudStorageSettingsScreen
@@ -38,7 +50,6 @@ import com.slideindex.app.ui.picker.MyShortcutsFolderScreen
 import com.slideindex.app.ui.picker.PresetShortcutsFolderScreen
 import com.slideindex.app.gesture.ActionPickerCatalogPolicy
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
-import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureTriggerType
 import com.slideindex.app.gesture.multitouch.MultiPointerBinding
 import com.slideindex.app.multitouch.decodePathStrokes
@@ -72,6 +83,7 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             stashEntryCount = stashEntryCount,
             bottomContentPadding = ctx.rootBottomContentPadding,
             bottomNavReselectCount = ctx.bottomNavReselectCount,
+            onOpenActionCenter = { ctx.navigate(AppNavKey.ActionCenter) },
             onOpenLayoutSettings = { ctx.navigate(AppNavKey.HomeLayout) },
             onOpenQuickLauncher = { ctx.navigate(AppNavKey.QuickLauncher) },
             onOpenQuickWheel = { ctx.navigate(AppNavKey.QuickWheelList) },
@@ -95,6 +107,48 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             onOpenIconLibrary = { ctx.navigate(AppNavKey.GlobalIconLibrary) },
             onOpenIconTheme = { ctx.navigate(AppNavKey.IconThemeSettings) },
             onOpenAbout = { ctx.navigate(AppNavKey.ExtensionAbout) },
+        )
+    }
+
+    hiltEntry<AppNavKey.ActionCenter> {
+        ActionCenterScreen(
+            onBack = { ctx.navigateBack() },
+            onOpenActionDetail = { action ->
+                ctx.navigate(AppNavKey.ActionDetail(action.type.name))
+            },
+        )
+    }
+
+    hiltEntry<AppNavKey.ActionDetail> { key ->
+        val context = LocalContext.current
+        val actionType = remember(key.actionType) {
+            runCatching { GestureActionType.valueOf(key.actionType) }.getOrNull()
+        }
+        val entry = remember(actionType) {
+            actionType?.let(ActionCenterCatalog::entryOf)
+        }
+        if (entry != null) {
+            val viewModel: ExtensionSettingsViewModel = hiltViewModel()
+            val settings by viewModel.settings.collectAsStateWithLifecycle()
+            ActionDetailScreen(
+                action = entry.sample,
+                entry = entry,
+                onBack = { ctx.navigateBack() },
+                onOpenSettings = actionSettingsRoute(entry.type)?.let { route ->
+                    { ctx.navigate(route) }
+                },
+                onTest = { action -> runActionTest(context, action, settings) },
+            )
+        }
+    }
+
+    hiltEntry<AppNavKey.AppCarouselSwitcherSettings> {
+        val viewModel: ExtensionSettingsViewModel = hiltViewModel()
+        val settings by viewModel.settings.collectAsStateWithLifecycle()
+        AppCarouselSwitcherSettingsScreen(
+            settings = settings.appCarouselSwitcher,
+            onBack = { ctx.navigateBack() },
+            onSettingsChange = viewModel::setAppCarouselSwitcherSettings,
         )
     }
 
@@ -390,4 +444,63 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             onBack = { ctx.navigateBackTo(AppNavKey.ExtensionBackup) },
         )
     }
+}
+
+/** 动作中心详情页的“测试”：用当前参数拼一个动作直接执行，返回 Boolean 给 UI 提示。 */
+private fun runActionTest(
+    context: Context,
+    action: GestureAction,
+    settings: AppSettings,
+) {
+    val dependencies = OverlayDependencyAccess.overlayDependencies(context)
+    if (dependencies == null) {
+        Toast.makeText(context, R.string.action_center_test_unavailable, Toast.LENGTH_SHORT).show()
+        return
+    }
+    val executionContext = OverlayDependencyAccess.overlayHostContext() ?: context
+    val executor = ActionExecutor(
+        context = executionContext,
+        appRepository = dependencies.appRepository,
+    )
+    val executed = runCatching { executor.execute(action, settings) }.getOrDefault(false)
+    Toast.makeText(
+        context,
+        if (executed) R.string.action_center_test_success else R.string.action_center_test_failed,
+        Toast.LENGTH_SHORT,
+    ).show()
+}
+
+/** 动作详情页“相关设置”的跳转；没有独立设置页的动作返回 null。 */
+private fun actionSettingsRoute(type: GestureActionType): AppNavKey? = when (type) {
+    GestureActionType.OPEN_INDEX -> AppNavKey.HomeLayout
+    GestureActionType.PAGE_SCROLL -> AppNavKey.PageScrollSettings
+    GestureActionType.SHELL_COMMAND_PANEL -> AppNavKey.ShellCommands
+    GestureActionType.QUICK_LAUNCHER -> AppNavKey.QuickLauncher
+    GestureActionType.HONEYCOMB_LAUNCHER -> AppNavKey.HoneycombLauncher
+    GestureActionType.APP_RING_LAUNCHER -> AppNavKey.RingLauncherSettings
+    GestureActionType.HOLOGRAPHIC_LAUNCHER -> AppNavKey.HolographicLauncherSettings
+    GestureActionType.WIDGET_POPUP_OVERLAY -> AppNavKey.WidgetPanel
+    GestureActionType.QUICK_WHEEL -> AppNavKey.QuickWheelList
+    GestureActionType.RUN_MACRO -> AppNavKey.MacroList
+    GestureActionType.SHAKE_MENU -> AppNavKey.ShakeMenuSettings
+    GestureActionType.SEARCH_PANEL -> AppNavKey.SearchPanel
+    GestureActionType.FREEZER_PANEL -> AppNavKey.ExtensionFreezerSettings
+    GestureActionType.OPEN_STASH_PANEL -> AppNavKey.StashPanelSettings
+    GestureActionType.OPEN_CLIPBOARD_PANEL,
+    GestureActionType.CLIPBOARD_PICK,
+    GestureActionType.CLIPBOARD_PASTE,
+    -> AppNavKey.ClipboardHistorySettings
+    GestureActionType.OPEN_CLIPBOARD_FLOAT -> AppNavKey.ClipboardFloatSettings
+    GestureActionType.APP_CAROUSEL_SWITCHER -> AppNavKey.AppCarouselSwitcherSettings
+    GestureActionType.CORNER_INNER_CANCEL,
+    GestureActionType.CORNER_INNER_PIN_WHEEL,
+    -> AppNavKey.HomeCornerGestureSlots
+    GestureActionType.SIMULATE_POINTER_SWIPE,
+    GestureActionType.POINTER_GESTURE_RECORDER,
+    GestureActionType.POINTER_REALTIME_GESTURE,
+    GestureActionType.OPEN_FLOATING_POINTER_RADIAL_MENU,
+    GestureActionType.REALTIME_PINCH,
+    GestureActionType.REALTIME_SCROLL,
+    -> AppNavKey.FloatingPointer
+    else -> null
 }

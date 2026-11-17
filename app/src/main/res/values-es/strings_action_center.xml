@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Centro de acciones integradas (archivo de recursos independiente). -->
+<resources>
+    <string name="extension_section_actions">Acciones</string>
+    <string name="extension_action_center_title">Acciones integradas</string>
+    <string name="extension_action_center_subtitle">Explora, prueba y abre los ajustes de cada acción</string>
+
+    <string name="action_center_filter_all">Todo</string>
+    <string name="action_center_filter_common">Comunes</string>
+    <string name="action_center_filter_special">Entrada especial</string>
+    <string name="action_center_section_special">Entrada especial</string>
+
+    <string name="action_center_badge_pointer">P</string>
+    <string name="action_center_badge_corner">E</string>
+    <string name="action_center_badge_single_tap">T</string>
+    <string name="action_center_badge_shake">A</string>
+
+    <string name="action_center_info">Acerca de</string>
+    <string name="action_center_test">Probar</string>
+    <string name="action_center_test_success">Ejecutado</string>
+    <string name="action_center_test_failed">Error al ejecutar</string>
+    <string name="action_center_test_unavailable">No disponible ahora</string>
+    <string name="action_center_test_note">Solo para probar. No se guarda; lo rellenarás al vincular.</string>
+    <string name="action_center_test_pointer_reason">Solo funciona en el puntero flotante</string>
+    <string name="action_center_test_corner_reason">Solo funciona en la rueda de esquina</string>
+    <string name="action_center_test_single_tap_reason">Solo funciona con toque único</string>
+    <string name="action_center_test_shake_reason">Solo funciona al agitar</string>
+    <string name="action_center_test_context_reason">Solo funciona desde un gesto</string>
+    <string name="action_center_test_macro_reason">Primero crea y selecciona una macro</string>
+
+    <string name="action_center_settings">Ajustes relacionados</string>
+    <string name="action_center_settings_desc">Abrir la página de ajustes relacionados</string>
+
+    <string name="action_center_command">Comando</string>
+    <string name="action_center_remind_duration">Duración</string>
+    <string name="action_center_remind_minutes">%1$d min</string>
+    <string name="action_center_remind_custom">Personalizado</string>
+
+    <string name="action_center_special_pointer">Disponible en: puntero flotante</string>
+    <string name="action_center_special_corner">Disponible en: rueda de esquina</string>
+    <string name="action_center_special_single_tap">Disponible en: toque único</string>
+    <string name="action_center_special_shake">Disponible en: agitar</string>
+</resources>

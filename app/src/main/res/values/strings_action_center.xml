@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Built-in action center (independent resource file to avoid touching strings.xml). -->
+<resources>
+    <string name="extension_section_actions">Actions</string>
+    <string name="extension_action_center_title">Built-in actions</string>
+    <string name="extension_action_center_subtitle">Browse, test and open settings for every action</string>
+
+    <string name="action_center_filter_all">All</string>
+    <string name="action_center_filter_common">Common</string>
+    <string name="action_center_filter_special">Special entry</string>
+    <string name="action_center_section_special">Special entry</string>
+
+    <string name="action_center_badge_pointer">P</string>
+    <string name="action_center_badge_corner">C</string>
+    <string name="action_center_badge_single_tap">T</string>
+    <string name="action_center_badge_shake">S</string>
+
+    <string name="action_center_info">About</string>
+    <string name="action_center_test">Test</string>
+    <string name="action_center_test_success">Executed</string>
+    <string name="action_center_test_failed">Failed to execute</string>
+    <string name="action_center_test_unavailable">Not available right now</string>
+    <string name="action_center_test_note">For testing only. Nothing is saved; you will fill this again when binding.</string>
+    <string name="action_center_test_pointer_reason">Only works inside the floating pointer</string>
+    <string name="action_center_test_corner_reason">Only works in the corner wheel</string>
+    <string name="action_center_test_single_tap_reason">Only works on single tap</string>
+    <string name="action_center_test_shake_reason">Only works with shake</string>
+    <string name="action_center_test_context_reason">Only works from a gesture</string>
+    <string name="action_center_test_macro_reason">Create and select a macro first</string>
+
+    <string name="action_center_settings">Related settings</string>
+    <string name="action_center_settings_desc">Open the related settings page</string>
+
+    <string name="action_center_command">Command</string>
+    <string name="action_center_remind_duration">Duration</string>
+    <string name="action_center_remind_minutes">%1$d min</string>
+    <string name="action_center_remind_custom">Custom</string>
+
+    <string name="action_center_special_pointer">Available in: floating pointer</string>
+    <string name="action_center_special_corner">Available in: corner wheel</string>
+    <string name="action_center_special_single_tap">Available in: single tap</string>
+    <string name="action_center_special_shake">Available in: shake</string>
+</resources>

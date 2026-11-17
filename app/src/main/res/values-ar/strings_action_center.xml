@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- مركز الإجراءات المضمنة (ملف موارد مستقل). -->
+<resources>
+    <string name="extension_section_actions">إجراءات</string>
+    <string name="extension_action_center_title">الإجراءات المضمنة</string>
+    <string name="extension_action_center_subtitle">تصفح واختبر وافتح إعدادات كل إجراء</string>
+
+    <string name="action_center_filter_all">الكل</string>
+    <string name="action_center_filter_common">عامة</string>
+    <string name="action_center_filter_special">إدخال خاص</string>
+    <string name="action_center_section_special">إدخال خاص</string>
+
+    <string name="action_center_badge_pointer">م</string>
+    <string name="action_center_badge_corner">ز</string>
+    <string name="action_center_badge_single_tap">ن</string>
+    <string name="action_center_badge_shake">ه</string>
+
+    <string name="action_center_info">حول</string>
+    <string name="action_center_test">اختبار</string>
+    <string name="action_center_test_success">تم التنفيذ</string>
+    <string name="action_center_test_failed">فشل التنفيذ</string>
+    <string name="action_center_test_unavailable">غير متاح الآن</string>
+    <string name="action_center_test_note">للاختبار فقط. لن يتم حفظ أي شيء؛ ستُدخل القيم مرة أخرى عند الربط.</string>
+    <string name="action_center_test_pointer_reason">يعمل فقط داخل المؤشر العائم</string>
+    <string name="action_center_test_corner_reason">يعمل فقط داخل العجلة الركنية</string>
+    <string name="action_center_test_single_tap_reason">يعمل فقط عند النقر المفرد</string>
+    <string name="action_center_test_shake_reason">يعمل فقط مع الهز</string>
+    <string name="action_center_test_context_reason">يعمل فقط من إيماءة</string>
+    <string name="action_center_test_macro_reason">أنشئ وحدد ماكرو أولاً</string>
+
+    <string name="action_center_settings">إعدادات ذات صلة</string>
+    <string name="action_center_settings_desc">فتح صفحة الإعدادات ذات الصلة</string>
+
+    <string name="action_center_command">الأمر</string>
+    <string name="action_center_remind_duration">المدة</string>
+    <string name="action_center_remind_minutes">%1$d دقيقة</string>
+    <string name="action_center_remind_custom">مخصص</string>
+
+    <string name="action_center_special_pointer">متاح في: المؤشر العائم</string>
+    <string name="action_center_special_corner">متاح في: العجلة الركنية</string>
+    <string name="action_center_special_single_tap">متاح في: النقر المفرد</string>
+    <string name="action_center_special_shake">متاح في: الهز</string>
+</resources>

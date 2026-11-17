@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 組み込みアクションセンター（独立したリソースファイル）。 -->
+<resources>
+    <string name="extension_section_actions">アクション</string>
+    <string name="extension_action_center_title">組み込みアクション</string>
+    <string name="extension_action_center_subtitle">各アクションの閲覧・テスト・設定を開く</string>
+
+    <string name="action_center_filter_all">すべて</string>
+    <string name="action_center_filter_common">一般</string>
+    <string name="action_center_filter_special">特定の入口のみ</string>
+    <string name="action_center_section_special">特定の入口のみ</string>
+
+    <string name="action_center_badge_pointer">指</string>
+    <string name="action_center_badge_corner">角</string>
+    <string name="action_center_badge_single_tap">単</string>
+    <string name="action_center_badge_shake">振</string>
+
+    <string name="action_center_info">説明</string>
+    <string name="action_center_test">テスト</string>
+    <string name="action_center_test_success">実行しました</string>
+    <string name="action_center_test_failed">実行に失敗しました</string>
+    <string name="action_center_test_unavailable">現在利用できません</string>
+    <string name="action_center_test_note">テスト専用です。保存されません。バインド時にもう一度入力します。</string>
+    <string name="action_center_test_pointer_reason">フローティングポインタ内でのみ動作します</string>
+    <string name="action_center_test_corner_reason">コーナーホイール内でのみ動作します</string>
+    <string name="action_center_test_single_tap_reason">シングルタップ時のみ動作します</string>
+    <string name="action_center_test_shake_reason">シェイク時のみ動作します</string>
+    <string name="action_center_test_context_reason">ジェスチャからのみ動作します</string>
+    <string name="action_center_test_macro_reason">先にマクロを作成して選択してください</string>
+
+    <string name="action_center_settings">関連設定</string>
+    <string name="action_center_settings_desc">関連設定ページを開く</string>
+
+    <string name="action_center_command">コマンド</string>
+    <string name="action_center_remind_duration">時間</string>
+    <string name="action_center_remind_minutes">%1$d 分</string>
+    <string name="action_center_remind_custom">カスタム</string>
+
+    <string name="action_center_special_pointer">利用可能: フローティングポインタ</string>
+    <string name="action_center_special_corner">利用可能: コーナーホイール</string>
+    <string name="action_center_special_single_tap">利用可能: シングルタップ</string>
+    <string name="action_center_special_shake">利用可能: シェイク</string>
+</resources>

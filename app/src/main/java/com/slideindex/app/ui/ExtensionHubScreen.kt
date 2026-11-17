@@ -37,6 +37,7 @@ fun ExtensionHubScreen(
     stashEntryCount: Int,
     bottomContentPadding: Dp = 0.dp,
     bottomNavReselectCount: Int = 0,
+    onOpenActionCenter: () -> Unit,
     onOpenLayoutSettings: () -> Unit,
     onOpenQuickLauncher: () -> Unit,
     onOpenQuickWheel: () -> Unit,
@@ -67,6 +68,7 @@ fun ExtensionHubScreen(
         listState = listState
     )
 
+    val actionsTitle = stringResource(R.string.extension_section_actions)
     val launchPanelTitle = stringResource(R.string.extension_section_launch_panel)
     val toolsTitle = stringResource(R.string.extension_section_tools)
     val shortcutsTitle = stringResource(R.string.extension_section_shortcuts)
@@ -78,6 +80,28 @@ fun ExtensionHubScreen(
         listState = listState,
         bottomContentPadding = bottomContentPadding
     ) {
+        settingsLazySmallTitle(
+            key = "actions_section",
+            title = actionsTitle
+        )
+        groupedCardItems(
+            keyPrefix = "extension_actions",
+            items = buildList {
+                add(
+                    settingsCardScopeItem("action-center") {
+                        SettingNavigationRow(
+                            icon = { label ->
+                                Icon(ThinActionIcons.Gesture, contentDescription = label)
+                            },
+                            title = stringResource(R.string.extension_action_center_title),
+                            subtitle = stringResource(R.string.extension_action_center_subtitle),
+                            onClick = onOpenActionCenter,
+                        )
+                    }
+                )
+            }
+        )
+
         settingsLazySmallTitle(
             key = "launch_panel_section",
             title = launchPanelTitle

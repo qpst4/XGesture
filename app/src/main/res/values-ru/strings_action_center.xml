@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Центр встроенных действий (отдельный файл ресурсов). -->
+<resources>
+    <string name="extension_section_actions">Действия</string>
+    <string name="extension_action_center_title">Встроенные действия</string>
+    <string name="extension_action_center_subtitle">Просматривайте, тестируйте и открывайте настройки действий</string>
+
+    <string name="action_center_filter_all">Все</string>
+    <string name="action_center_filter_common">Общие</string>
+    <string name="action_center_filter_special">Особый вход</string>
+    <string name="action_center_section_special">Особый вход</string>
+
+    <string name="action_center_badge_pointer">У</string>
+    <string name="action_center_badge_corner">К</string>
+    <string name="action_center_badge_single_tap">О</string>
+    <string name="action_center_badge_shake">Т</string>
+
+    <string name="action_center_info">Описание</string>
+    <string name="action_center_test">Тест</string>
+    <string name="action_center_test_success">Выполнено</string>
+    <string name="action_center_test_failed">Ошибка выполнения</string>
+    <string name="action_center_test_unavailable">Сейчас недоступно</string>
+    <string name="action_center_test_note">Только для теста. Ничего не сохраняется; значения нужно будет ввести при привязке.</string>
+    <string name="action_center_test_pointer_reason">Работает только в плавающем указателе</string>
+    <string name="action_center_test_corner_reason">Работает только во внутреннем кольце угловой сферы</string>
+    <string name="action_center_test_single_tap_reason">Работает только при одиночном нажатии</string>
+    <string name="action_center_test_shake_reason">Работает только при встряхивании</string>
+    <string name="action_center_test_context_reason">Работает только из жеста</string>
+    <string name="action_center_test_macro_reason">Сначала создайте и выберите макрос</string>
+
+    <string name="action_center_settings">Связанные настройки</string>
+    <string name="action_center_settings_desc">Открыть страницу связанных настроек</string>
+
+    <string name="action_center_command">Команда</string>
+    <string name="action_center_remind_duration">Длительность</string>
+    <string name="action_center_remind_minutes">%1$d мин</string>
+    <string name="action_center_remind_custom">Другое</string>
+
+    <string name="action_center_special_pointer">Доступно в: плавающий указатель</string>
+    <string name="action_center_special_corner">Доступно в: угловая сфера</string>
+    <string name="action_center_special_single_tap">Доступно в: одиночное нажатие</string>
+    <string name="action_center_special_shake">Доступно в: встряхивание</string>
+</resources>
