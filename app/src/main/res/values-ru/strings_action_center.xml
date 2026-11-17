@@ -6,8 +6,8 @@
     <string name="extension_action_center_subtitle">Просматривайте, настраивайте и тестируйте действия</string>
 
     <string name="action_center_filter_all">Все</string>
-    <string name="action_center_filter_common">Общие</string>
-    <string name="action_center_filter_special">Особый вход</string>
+    <string name="action_center_filter_panel">Панели</string>
+    <string name="action_center_filter_configurable">Настраиваемые</string>
     <string name="action_center_section_special">Особый вход</string>
 
     <string name="action_center_badge_pointer">У</string>

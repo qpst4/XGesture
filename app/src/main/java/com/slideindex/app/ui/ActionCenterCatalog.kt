@@ -28,8 +28,8 @@ enum class ActionTestKind {
 /** 动作中心顶部的筛选。 */
 enum class ActionCenterFilter {
     ALL,
-    COMMON,
-    SPECIAL,
+    PANEL,
+    CONFIGURABLE,
 }
 
 /** 动作中心的分段；分类沿用选择器，只有“仅特定入口”是动作中心自己的。 */
@@ -90,6 +90,42 @@ object ActionCenterCatalog {
         addAll(GestureAction.legacyRemindTypes)
     }
 
+    /** 「可配置」筛选：详情页「打开配置」有独立设置页的动作（与导航入口保持一致）。 */
+    private val configurableTypes: Set<GestureActionType> = setOf(
+        GestureActionType.OPEN_INDEX,
+        GestureActionType.FLOATING_POINTER,
+        GestureActionType.FREE_WINDOW_CURRENT_APP,
+        GestureActionType.SHELL_COMMAND_PANEL,
+        GestureActionType.QUICK_LAUNCHER,
+        GestureActionType.HONEYCOMB_LAUNCHER,
+        GestureActionType.APP_RING_LAUNCHER,
+        GestureActionType.HOLOGRAPHIC_LAUNCHER,
+        GestureActionType.WIDGET_POPUP_OVERLAY,
+        GestureActionType.QUICK_WHEEL,
+        GestureActionType.RUN_MACRO,
+        GestureActionType.SHAKE_MENU,
+        GestureActionType.SEARCH_PANEL,
+        GestureActionType.FREEZER_PANEL,
+        GestureActionType.OPEN_STASH_PANEL,
+        GestureActionType.OPEN_CLIPBOARD_PANEL,
+        GestureActionType.CLIPBOARD_PICK,
+        GestureActionType.CLIPBOARD_PASTE,
+        GestureActionType.OPEN_CLIPBOARD_FLOAT,
+        GestureActionType.CORNER_INNER_CANCEL,
+        GestureActionType.CORNER_INNER_PIN_WHEEL,
+        GestureActionType.SIMULATE_POINTER_SWIPE,
+        GestureActionType.POINTER_GESTURE_RECORDER,
+        GestureActionType.POINTER_REALTIME_GESTURE,
+        GestureActionType.OPEN_FLOATING_POINTER_RADIAL_MENU,
+        GestureActionType.REALTIME_PINCH,
+        GestureActionType.REALTIME_SCROLL,
+        // 详情页内联配置、没有独立导航入口的动作。
+        GestureActionType.APP_CAROUSEL_SWITCHER,
+        GestureActionType.TASK_SWITCHER,
+        GestureActionType.PAGE_SCROLL,
+        GestureActionType.REMIND,
+    )
+
     /** 只在特定入口里有意义的动作。 */
     private val specialMarks: Map<GestureActionType, ActionSpecialMark> = mapOf(
         GestureActionType.SIMULATE_POINTER_SWIPE to ActionSpecialMark.POINTER,
@@ -134,8 +170,10 @@ object ActionCenterCatalog {
 
     fun matches(entry: BuiltInActionEntry, filter: ActionCenterFilter): Boolean = when (filter) {
         ActionCenterFilter.ALL -> true
-        ActionCenterFilter.COMMON -> entry.special == null
-        ActionCenterFilter.SPECIAL -> entry.special != null
+        ActionCenterFilter.PANEL -> entry.section == ActionCenterSection.PANEL ||
+            entry.section == ActionCenterSection.POINTER ||
+            entry.section == ActionCenterSection.SPECIAL
+        ActionCenterFilter.CONFIGURABLE -> entry.needsParams || entry.type in configurableTypes
     }
 
     private fun buildEntry(type: GestureActionType): BuiltInActionEntry {

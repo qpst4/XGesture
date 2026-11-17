@@ -268,6 +268,6 @@ private fun ActionGridCell(
 private val ActionCenterFilter.labelRes: Int
     get() = when (this) {
         ActionCenterFilter.ALL -> R.string.action_center_filter_all
-        ActionCenterFilter.COMMON -> R.string.action_center_filter_common
-        ActionCenterFilter.SPECIAL -> R.string.action_center_filter_special
+        ActionCenterFilter.PANEL -> R.string.action_center_filter_panel
+        ActionCenterFilter.CONFIGURABLE -> R.string.action_center_filter_configurable
     }

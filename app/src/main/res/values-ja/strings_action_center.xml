@@ -6,8 +6,8 @@
     <string name="extension_action_center_subtitle">各アクションの閲覧・設定・試行</string>
 
     <string name="action_center_filter_all">すべて</string>
-    <string name="action_center_filter_common">一般</string>
-    <string name="action_center_filter_special">特定の入口のみ</string>
+    <string name="action_center_filter_panel">パネル起動</string>
+    <string name="action_center_filter_configurable">設定可能</string>
     <string name="action_center_section_special">特定の入口のみ</string>
 
     <string name="action_center_badge_pointer">指</string>

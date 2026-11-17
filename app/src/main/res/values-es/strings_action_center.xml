@@ -6,8 +6,8 @@
     <string name="extension_action_center_subtitle">Explora, configura y prueba cada acción</string>
 
     <string name="action_center_filter_all">Todo</string>
-    <string name="action_center_filter_common">Comunes</string>
-    <string name="action_center_filter_special">Entrada especial</string>
+    <string name="action_center_filter_panel">Paneles</string>
+    <string name="action_center_filter_configurable">Configurable</string>
     <string name="action_center_section_special">Entrada especial</string>
 
     <string name="action_center_badge_pointer">P</string>

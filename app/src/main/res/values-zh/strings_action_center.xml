@@ -6,8 +6,8 @@
     <string name="extension_action_center_subtitle">查看、配置并试运行每个动作</string>
 
     <string name="action_center_filter_all">全部</string>
-    <string name="action_center_filter_common">通用</string>
-    <string name="action_center_filter_special">仅特定入口</string>
+    <string name="action_center_filter_panel">启动面板</string>
+    <string name="action_center_filter_configurable">可配置</string>
     <string name="action_center_section_special">仅特定入口</string>
 
     <string name="action_center_badge_pointer">指</string>

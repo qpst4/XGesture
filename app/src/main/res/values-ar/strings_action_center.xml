@@ -6,8 +6,8 @@
     <string name="extension_action_center_subtitle">تصفح وتهيئ واختبر كل إجراء</string>
 
     <string name="action_center_filter_all">الكل</string>
-    <string name="action_center_filter_common">عامة</string>
-    <string name="action_center_filter_special">إدخال خاص</string>
+    <string name="action_center_filter_panel">لوحات</string>
+    <string name="action_center_filter_configurable">قابل للتكوين</string>
     <string name="action_center_section_special">إدخال خاص</string>
 
     <string name="action_center_badge_pointer">م</string>

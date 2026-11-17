@@ -6,8 +6,8 @@
     <string name="extension_action_center_subtitle">Browse, configure and test each action</string>
 
     <string name="action_center_filter_all">All</string>
-    <string name="action_center_filter_common">Common</string>
-    <string name="action_center_filter_special">Special entry</string>
+    <string name="action_center_filter_panel">Panels</string>
+    <string name="action_center_filter_configurable">Configurable</string>
     <string name="action_center_section_special">Special entry</string>
 
     <string name="action_center_badge_pointer">P</string>
