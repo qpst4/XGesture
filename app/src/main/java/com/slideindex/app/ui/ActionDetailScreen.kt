@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -35,6 +37,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
@@ -159,26 +162,29 @@ fun ActionDetailScreen(
                 settingsCardScopeItem("info") {
                     Column(
                         modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         if (!description.isNullOrBlank()) {
                             Text(
                                 text = introTitle,
                                 style = MiuixTheme.textStyles.title4,
+                                fontWeight = FontWeight.SemiBold,
                                 color = MiuixTheme.colorScheme.onSurfaceContainer,
                             )
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = description,
-                                style = MiuixTheme.textStyles.body1,
+                                style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
+                            Spacer(modifier = Modifier.height(20.dp))
                         }
                         if (specialHint != null) {
                             Text(
                                 text = specialHint,
-                                style = MiuixTheme.textStyles.body1,
+                                style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.primary,
                             )
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
                         if (permissionHint != null) {
                             Text(
@@ -186,13 +192,16 @@ fun ActionDetailScreen(
                                 style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
 
                         Text(
                             text = deeplinkTitle,
                             style = MiuixTheme.textStyles.title4,
+                            fontWeight = FontWeight.SemiBold,
                             color = MiuixTheme.colorScheme.onSurfaceContainer,
                         )
+                        Spacer(modifier = Modifier.height(6.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -200,7 +209,7 @@ fun ActionDetailScreen(
                             Text(
                                 text = deeplink,
                                 style = MiuixTheme.textStyles.body2,
-                                color = MiuixTheme.colorScheme.onSurfaceContainer,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f),
@@ -218,10 +227,12 @@ fun ActionDetailScreen(
                                 Icon(
                                     imageVector = Icons.Default.ContentCopy,
                                     contentDescription = deeplinkTitle,
+                                    tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                     modifier = Modifier.size(18.dp),
                                 )
                             }
                         }
+                        Spacer(modifier = Modifier.height(20.dp))
 
                         when (entry.testKind) {
                             ActionTestKind.OPEN_LINK -> {
@@ -234,6 +245,7 @@ fun ActionDetailScreen(
                                     maxLines = 4,
                                     modifier = Modifier.fillMaxWidth(),
                                 )
+                                Spacer(modifier = Modifier.height(10.dp))
                                 MiuixLabeledTextField(
                                     value = linkLabel,
                                     onValueChange = { linkLabel = it },
@@ -263,6 +275,7 @@ fun ActionDetailScreen(
                                     singleLine = true,
                                     modifier = Modifier.fillMaxWidth(),
                                 )
+                                Spacer(modifier = Modifier.height(10.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,
@@ -285,6 +298,7 @@ fun ActionDetailScreen(
                                     style = MiuixTheme.textStyles.body1,
                                     color = MiuixTheme.colorScheme.onSurfaceContainer,
                                 )
+                                Spacer(modifier = Modifier.height(8.dp))
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -312,6 +326,7 @@ fun ActionDetailScreen(
                         }
 
                         if (showFormNote) {
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = formNote,
                                 style = MiuixTheme.textStyles.body2,
@@ -319,11 +334,15 @@ fun ActionDetailScreen(
                             )
                         }
                         if (disabledReason != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = disabledReason,
                                 style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
+                        }
+                        if (showFormNote || disabledReason != null) {
+                            Spacer(modifier = Modifier.height(20.dp))
                         }
 
                         Button(
@@ -444,7 +463,7 @@ fun ActionDetailScreen(
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
                                     text = settingsHint,
-                                    style = MiuixTheme.textStyles.body1,
+                                    style = MiuixTheme.textStyles.body2,
                                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                 )
                             }
