@@ -120,7 +120,7 @@ data class QuickLauncherItem(
             QuickLauncherItem(
                 QuickLauncherItemType.ACTION,
                 QuickLauncherItemCodec.encodeActionPayload(
-                    action.sanitizeForSlotPicker(SlotPickerKind.OverlayTap),
+                    action.sanitizeForSlotPicker(SlotPickerKind.QuickLauncher),
                 ),
                 label,
             )
@@ -247,6 +247,22 @@ object QuickLauncherItemCodec {
 
     fun sanitizeOverlayTapItems(items: List<QuickLauncherItem>): List<QuickLauncherItem> =
         items.map { sanitizeOverlayTapItem(it) }
+
+    fun sanitizeQuickLauncherItem(item: QuickLauncherItem): QuickLauncherItem = when (item.type) {
+        QuickLauncherItemType.ACTION -> {
+            val action = parseActionPayload(item.payload)
+                ?.sanitizeForSlotPicker(SlotPickerKind.QuickLauncher)
+                ?: return item
+            item.copy(payload = encodeActionPayload(action))
+        }
+        QuickLauncherItemType.FOLDER -> item.withFolderItems(
+            item.folderItems().map { sanitizeQuickLauncherItem(it) },
+        )
+        else -> item
+    }
+
+    fun sanitizeQuickLauncherItems(items: List<QuickLauncherItem>): List<QuickLauncherItem> =
+        items.map { sanitizeQuickLauncherItem(it) }
 
     fun actionKey(action: GestureAction): String = encodeActionPayload(action)
 

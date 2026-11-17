@@ -63,7 +63,7 @@ object QuickLauncherPanelCodec {
     private const val FIELD_SEP = "\u001E"
 
     fun encodePanel(panel: QuickLauncherPanel): String {
-        val sanitized = panel.copy(items = QuickLauncherItemCodec.sanitizeOverlayTapItems(panel.items))
+        val sanitized = panel.copy(items = QuickLauncherItemCodec.sanitizeQuickLauncherItems(panel.items))
         val header = listOf(
             sanitized.id,
             sanitized.name,
@@ -91,7 +91,7 @@ object QuickLauncherPanelCodec {
         val columns = nextField()?.toIntOrNull()?.coerceIn(2, 6) ?: return null
         val rows = nextField()?.toIntOrNull()?.coerceIn(2, 9) ?: return null
         val itemsRaw = if (cursor < raw.length) raw.substring(cursor) else ""
-        val items = QuickLauncherItemCodec.sanitizeOverlayTapItems(
+        val items = QuickLauncherItemCodec.sanitizeQuickLauncherItems(
             QuickLauncherItemCodec.decodeAll(
                 if (itemsRaw.isBlank()) emptySet() else setOf(itemsRaw),
             ),
