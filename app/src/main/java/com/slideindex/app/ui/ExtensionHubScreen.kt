@@ -27,6 +27,8 @@ import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingGrid2Row
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingsCardScope
+import com.slideindex.app.ui.settings.components.settingsCardItem
+import com.slideindex.app.ui.settings.components.settingsCardItems
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 
@@ -55,7 +57,6 @@ fun ExtensionHubScreen(
     onOpenIconTheme: () -> Unit = {},
     onOpenFreezer: () -> Unit = {},
     onOpenMacro: () -> Unit = {},
-    onOpenPageScroll: () -> Unit = {},
     onOpenSettingsBackup: () -> Unit,
     onOpenNativeEnginePacks: () -> Unit,
     onOpenDiagnosticLogs: () -> Unit,
@@ -88,15 +89,23 @@ fun ExtensionHubScreen(
             keyPrefix = "extension_actions",
             items = buildList {
                 add(
-                    settingsCardScopeItem("action-center") {
-                        SettingNavigationRow(
-                            icon = { label ->
-                                Icon(ThinActionIcons.ActionCenter, contentDescription = label)
-                            },
-                            title = stringResource(R.string.extension_action_center_title),
-                            subtitle = stringResource(R.string.extension_action_center_subtitle),
-                            onClick = onOpenActionCenter,
-                        )
+                    settingsCardItem("action-center-and-shortcuts") {
+                        val card = settingsCardItems(settings.activityShortcutCount) {
+                            SettingNavigationRow(
+                                icon = { label ->
+                                    Icon(ThinActionIcons.ActionCenter, contentDescription = label)
+                                },
+                                title = stringResource(R.string.extension_action_center_title),
+                                subtitle = stringResource(R.string.extension_action_center_subtitle),
+                                onClick = onOpenActionCenter,
+                            )
+                            ActivityShortcutEntryCard(
+                                shortcutCount = settings.activityShortcutCount,
+                                outlinedLeadingIcons = true,
+                                onClick = onOpenActivityShortcuts,
+                            )
+                        }
+                        card.RenderRows()
                     }
                 )
             }
@@ -227,11 +236,6 @@ fun ExtensionHubScreen(
                         MacroEntryCard(onClick = onOpenMacro)
                     }
                 )
-                add(
-                    settingsCardScopeItem("page-scroll") {
-                        PageScrollEntryCard(onClick = onOpenPageScroll)
-                    }
-                )
             }
         )
 
@@ -242,15 +246,6 @@ fun ExtensionHubScreen(
         groupedCardItems(
             keyPrefix = "extension_shortcuts",
             items = buildList {
-                add(
-                    settingsCardScopeItem("activity-shortcut") {
-                        ActivityShortcutEntryCard(
-                            shortcutCount = settings.activityShortcutCount,
-                            outlinedLeadingIcons = true,
-                            onClick = onOpenActivityShortcuts
-                        )
-                    }
-                )
                 add(
                     settingsCardScopeItem("external-invocation") {
                         ExternalInvocationEntryCard(
@@ -446,23 +441,6 @@ fun SettingsCardScope.QuickWheelEntryCard(
         },
         title = stringResource(R.string.extension_quick_wheel_entry_title),
         subtitle = stringResource(R.string.extension_quick_wheel_entry_desc),
-        onClick = onClick
-    )
-}
-
-@Composable
-fun SettingsCardScope.PageScrollEntryCard(
-    onClick: () -> Unit
-) {
-    SettingNavigationRow(
-        icon = { label ->
-            Icon(
-                gestureActionTypeOutlinedIcon(GestureActionType.PAGE_SCROLL),
-                contentDescription = label,
-            )
-        },
-        title = stringResource(R.string.page_scroll_prefs_title),
-        subtitle = stringResource(R.string.page_scroll_action_description),
         onClick = onClick
     )
 }
