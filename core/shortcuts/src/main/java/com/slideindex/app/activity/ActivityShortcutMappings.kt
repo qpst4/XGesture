@@ -51,6 +51,21 @@ fun ActivityShortcut.toQuickLauncherItem(): QuickLauncherItem = when (kind) {
 }
 
 fun ActivityShortcut.subtitleDetail(): String = when {
+    ActivityShortcutImageSupport.isImageShortcut(this) -> {
+        ActivityShortcutImageSupport.configFrom(this)?.uri.orEmpty()
+    }
+    ActivityShortcutFileSupport.isFileShortcut(this) -> {
+        val config = ActivityShortcutFileSupport.configFrom(this)
+        if (config != null) {
+            if (config.targetPackage.isNotBlank()) {
+                "${config.targetPackage} · ${config.fileUri}"
+            } else {
+                config.fileUri
+            }
+        } else {
+            intentUris.firstOrNull().orEmpty()
+        }
+    }
     isAppShortcut -> shortcutId
     kind == ActivityShortcutKind.COMPONENT -> activityClassName
     kind == ActivityShortcutKind.DYNAMIC -> shortcutId

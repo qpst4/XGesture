@@ -83,6 +83,19 @@ object ManagedShortcutIconResolver {
                 return bitmap.toDrawable(context.resources)
             }
         }
+        if (ActivityShortcutImageSupport.isImageShortcut(shortcut)) {
+            ActivityShortcutImageSupport.configFrom(shortcut)?.let { config ->
+                if (config.sourceType != ImageSourceType.URL && config.uri.startsWith("content://")) {
+                    runCatching {
+                        com.slideindex.app.util.ImageDecodeGuard.decodeUri(
+                            context = context,
+                            uri = android.net.Uri.parse(config.uri),
+                            maxSidePx = 128,
+                        )?.toDrawable(context.resources)
+                    }.getOrNull()?.let { return it }
+                }
+            }
+        }
         // 全局图标覆盖优先（扩展 → 图标库 → 应用图标）：
         // 快捷方式自己配过图标（上面两步）就不动；否则宿主应用换成自定义图标后，
         // 它的快捷方式也要跟着换，不能停在 activity / 系统快捷方式继承来的原始图标上。

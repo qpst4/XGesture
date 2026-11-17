@@ -12,6 +12,7 @@ data class ActivityShortcutPickerResult(
     val packageName: String? = null,
     val activityClassName: String? = null,
     val iconPackageName: String? = null,
+    val appLabel: String? = null,
 )
 
 @HiltViewModel
@@ -27,6 +28,14 @@ class ActivityShortcutPickerViewModel @Inject constructor() : ViewModel() {
         _result.value = ActivityShortcutPickerResult(
             packageName = packageName,
             activityClassName = activityClassName,
+        )
+    }
+
+    fun pickTargetApp(packageName: String, activityClassName: String, appLabel: String? = null) {
+        _result.value = ActivityShortcutPickerResult(
+            packageName = packageName,
+            activityClassName = activityClassName,
+            appLabel = appLabel,
         )
     }
 

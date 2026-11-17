@@ -1,8 +1,10 @@
 package com.slideindex.app.activity
 
+import android.content.ClipData
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
@@ -39,13 +41,19 @@ object ActivityShortcutLauncher {
             context, shortcut, settings, longPressTriggered, showFailureToast = true,
         )
         ActivityShortcutKind.INTENT -> {
-            // 应用快捷方式优先按 ID 解析；失败再退回 intent URI（老数据兜底）。
-            val launchedByShortcutId = shortcut.isAppShortcut &&
-                launchDynamic(context, shortcut, settings, longPressTriggered, showFailureToast = false)
-            if (launchedByShortcutId) {
-                true
+            if (ActivityShortcutImageSupport.isImageShortcut(shortcut)) {
+                launchImage(context, shortcut)
+            } else if (ActivityShortcutFileSupport.isFileShortcut(shortcut)) {
+                launchFile(context, shortcut, settings, longPressTriggered)
             } else {
-                launchIntents(context, shortcut, settings, longPressTriggered)
+                // 应用快捷方式优先按 ID 解析；失败再退回 intent URI（老数据兜底）。
+                val launchedByShortcutId = shortcut.isAppShortcut &&
+                    launchDynamic(context, shortcut, settings, longPressTriggered, showFailureToast = false)
+                if (launchedByShortcutId) {
+                    true
+                } else {
+                    launchIntents(context, shortcut, settings, longPressTriggered)
+                }
             }
         }
     }
@@ -179,6 +187,68 @@ object ActivityShortcutLauncher {
         }
         Toast.makeText(context, R.string.float_ball_action_failed, Toast.LENGTH_SHORT).show()
         return false
+    }
+
+    private fun launchImage(context: Context, shortcut: ActivityShortcut): Boolean {
+        val config = ActivityShortcutImageSupport.configFrom(shortcut) ?: return false
+        return runCatching {
+            ShortcutImagePreviewActivity.start(context, config)
+            true
+        }.getOrElse {
+            Toast.makeText(context, R.string.float_ball_action_failed, Toast.LENGTH_SHORT).show()
+            false
+        }
+    }
+
+    private fun launchFile(
+        context: Context,
+        shortcut: ActivityShortcut,
+        settings: AppSettings,
+        longPressTriggered: Boolean
+    ): Boolean {
+        val config = ActivityShortcutFileSupport.configFrom(shortcut) ?: return false
+        val uri = runCatching { Uri.parse(config.fileUri) }.getOrNull() ?: return false
+        val intent = if (config.isShareMode) {
+            Intent(Intent.ACTION_SEND).apply {
+                type = config.mimeType.ifBlank { "*/*" }
+                putExtra(Intent.EXTRA_STREAM, uri)
+                clipData = ClipData.newUri(context.contentResolver, "file", uri)
+                if (config.isTextMode) {
+                    putExtra(Intent.EXTRA_TEXT, config.fileUri)
+                }
+            }
+        } else {
+            Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, config.mimeType.ifBlank { "*/*" })
+            }
+        }
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (config.targetPackage.isNotBlank() && config.targetActivity.isNotBlank()) {
+            intent.component = ComponentName(config.targetPackage, config.targetActivity)
+        } else if (config.targetPackage.isNotBlank()) {
+            intent.setPackage(config.targetPackage)
+        }
+
+        return runCatching {
+            if (config.targetPackage.isNotBlank()) {
+                ShortcutLaunchDispatcher.launch(
+                    context = context,
+                    packageName = config.targetPackage,
+                    intent = intent,
+                    exportedLaunch = { target ->
+                        startActivity(context, target, settings, longPressTriggered)
+                    },
+                    onFailure = { failure ->
+                        ShortcutLaunchDispatcher.showFailure(context, failure)
+                    }
+                )
+            } else {
+                startActivity(context, intent, settings, longPressTriggered)
+            }
+        }.getOrElse {
+            Toast.makeText(context, R.string.float_ball_action_failed, Toast.LENGTH_SHORT).show()
+            false
+        }
     }
 
     private fun startActivity(

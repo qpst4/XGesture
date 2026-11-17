@@ -303,6 +303,13 @@
             android:theme="@style/Theme.SlideIndex.Transparent" />
 
         <activity
+            android:name=".activity.ShortcutImagePreviewActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@style/Theme.SlideIndex.Transparent" />
+
+        <activity
             android:name=".service.CornerGestureSlotPickTrampolineActivity"
             android:excludeFromRecents="true"
             android:exported="false"

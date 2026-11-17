@@ -535,6 +535,16 @@ sealed interface AppNavKey : NavKey {
     @Serializable data object ActivityShortcutPickAppShortcut : AppNavKey
     @Serializable data object ActivityShortcutPickAppShortcutPresets : AppNavKey
     @Serializable data object ActivityShortcutPickShell : AppNavKey
+    @Serializable data object ActivityShortcutAddImage : AppNavKey
+    @Serializable data class ActivityShortcutEditImage(val shortcutId: String) : AppNavKey
+    @Serializable data object ActivityShortcutAddFile : AppNavKey
+    @Serializable data class ActivityShortcutEditFile(val shortcutId: String) : AppNavKey
+    @Serializable data class ActivityShortcutPickFileApp(
+        val mimeType: String = "*/*",
+        val isShareMode: Boolean = false,
+        val currentPackage: String = "",
+        val currentActivity: String = "",
+    ) : AppNavKey
     @Serializable data object ShellCommandHistory : AppNavKey
     @Serializable data class ShellCommandEditor(val commandId: String = "") : AppNavKey
     @Serializable data object ShellCommandResult : AppNavKey

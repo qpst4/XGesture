@@ -82,6 +82,8 @@ fun ActivityShortcutScreen(
     onAdd: () -> Unit,
     onAddAppShortcut: () -> Unit,
     onAddShellCommand: () -> Unit,
+    onAddImage: () -> Unit = {},
+    onAddFile: () -> Unit = {},
     onOpenPresets: () -> Unit,
     onEdit: (ActivityShortcut) -> Unit
 ) {
@@ -184,6 +186,14 @@ fun ActivityShortcutScreen(
         onAddShellCommand = {
             showAddSheet = false
             onAddShellCommand()
+        },
+        onAddImage = {
+            showAddSheet = false
+            onAddImage()
+        },
+        onAddFile = {
+            showAddSheet = false
+            onAddFile()
         }
     )
 
@@ -538,7 +548,9 @@ private fun ActivityShortcutAddBottomSheet(
     onOpenPresets: () -> Unit,
     onBrowseActivity: () -> Unit,
     onAddAppShortcut: () -> Unit,
-    onAddShellCommand: () -> Unit
+    onAddShellCommand: () -> Unit,
+    onAddImage: () -> Unit = {},
+    onAddFile: () -> Unit = {},
 ) {
     MiuixBottomSheet(
         show = show,
@@ -565,6 +577,16 @@ private fun ActivityShortcutAddBottomSheet(
                 title = stringResource(R.string.activity_shortcut_add_from_shell),
                 summary = stringResource(R.string.activity_shortcut_add_from_shell_sub),
                 onClick = onAddShellCommand
+            )
+            ArrowPreference(
+                title = stringResource(R.string.activity_shortcut_add_image),
+                summary = stringResource(R.string.activity_shortcut_add_image_sub),
+                onClick = onAddImage
+            )
+            ArrowPreference(
+                title = stringResource(R.string.activity_shortcut_add_file),
+                summary = stringResource(R.string.activity_shortcut_add_file_sub),
+                onClick = onAddFile
             )
         }
     }
