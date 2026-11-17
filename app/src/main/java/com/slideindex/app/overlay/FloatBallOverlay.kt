@@ -808,41 +808,25 @@ object FloatBallOverlay {
         moveModeExitRunnable = null
         sceneState?.ballCenterPx?.value = null
 
-        val usesEdgeLines = FloatBallLayout.usesEdgeLines(settings)
-        if (usesEdgeLines) {
-            // 双边/双线模式：落点决定"当前活动侧"（仓库里已有机制，applyActiveSide 会立刻吸附并落盘）。
-            val side = if (center.x < screenWidthPx / 2f) FloatBallSide.LEFT else FloatBallSide.RIGHT
-            applyActiveSide(side)
-            val updated = settings.copy(
-                floatBall = settings.floatBall.copy(floatBallPositionYFraction = yFraction)
-            )
-            settingsState?.value = updated
-            applyBallLayout(updated)
+        touchLayoutParams?.let { fullscreenTouchBackup.remove(it) }
+        lineTouchLayoutParams?.let { fullscreenTouchBackup.remove(it) }
 
-            val hostContext = appContext ?: return
-            val deps = OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
-            overlayScope.launch {
-                deps.settingsRepository.setFloatBallPositionYFraction(yFraction)
-                deps.settingsRepository.setFloatBallActiveSide(side)
-            }
-        } else {
-            // 自由移动模式：保留在屏幕任意位置（不贴边），保存横竖比例与 CUSTOM 模式
-            val updated = settings.copy(
-                floatBall = settings.floatBall.copy(
-                    floatBallPositionMode = FloatBallPositionMode.CUSTOM,
-                    floatBallCustomCenterXFraction = xFraction,
-                    floatBallPositionYFraction = yFraction
-                )
+        // 自由移动模式：保留在屏幕任意位置（不贴边），保存横竖比例与 CUSTOM 模式
+        val updated = settings.copy(
+            floatBall = settings.floatBall.copy(
+                floatBallPositionMode = FloatBallPositionMode.CUSTOM,
+                floatBallCustomCenterXFraction = xFraction,
+                floatBallPositionYFraction = yFraction
             )
-            settingsState?.value = updated
-            applyBallLayout(updated)
+        )
+        settingsState?.value = updated
+        applyBallLayout(updated)
 
-            val hostContext = appContext ?: return
-            val deps = OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
-            overlayScope.launch {
-                deps.settingsRepository.setFloatBallPosition(xFraction, yFraction)
-                deps.settingsRepository.setFloatBallPositionMode(FloatBallPositionMode.CUSTOM)
-            }
+        val hostContext = appContext ?: return
+        val deps = OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
+        overlayScope.launch {
+            deps.settingsRepository.setFloatBallPosition(xFraction, yFraction)
+            deps.settingsRepository.setFloatBallPositionMode(FloatBallPositionMode.CUSTOM)
         }
     }
 
