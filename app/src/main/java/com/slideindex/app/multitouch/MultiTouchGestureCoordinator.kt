@@ -1,9 +1,13 @@
 package com.slideindex.app.multitouch
 
 import android.app.Application
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.hardware.display.DisplayManager
 import android.os.Handler
+import android.os.IBinder
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
@@ -113,6 +117,50 @@ class MultiTouchGestureCoordinator @Inject constructor(
     @Volatile
     private var lastActionAtMs = 0L
 
+    private var reconnectJob: Job? = null
+
+    private val serviceDeathRecipient = IBinder.DeathRecipient {
+        Log.w(TAG, "observingService binder died, scheduling reconnect")
+        observingService = null
+        _status.value = _status.value.copy(running = false, detail = "binder-died")
+        scheduleAutoReconnect(1000L)
+    }
+
+    private val screenReceiver = object : BroadcastReceiver() {
+        override fun onReceive(c: Context?, intent: Intent?) {
+            val action = intent?.action ?: return
+            if (action == Intent.ACTION_SCREEN_ON || action == Intent.ACTION_USER_PRESENT) {
+                checkChannelHealthAndRecover()
+            }
+        }
+    }
+
+    private fun checkChannelHealthAndRecover() {
+        if (!settingsStore.state.value.enabled) return
+        val globalSettings = runCatching { settingsRepository.readSnapshot() }.getOrNull()
+        if (globalSettings?.serviceEnabled == false) return
+
+        val s = observingService
+        val r = rootService
+        val isAlive = (s != null && runCatching { s.asBinder().pingBinder() }.getOrDefault(false)) ||
+            (r != null && runCatching { r.apiVersion }.getOrNull() != null)
+        if (!isAlive) {
+            Log.i(TAG, "screen wakeup check: multi-touch channel is inactive, auto recovering...")
+            scheduleAutoReconnect(300L)
+        }
+    }
+
+    private fun scheduleAutoReconnect(delayMs: Long) {
+        reconnectJob?.cancel()
+        reconnectJob = applicationScope.launch(Dispatchers.IO) {
+            delay(delayMs)
+            if (settingsStore.state.value.enabled) {
+                Log.i(TAG, "auto reconnecting multi-touch observation...")
+                syncNow()
+            }
+        }
+    }
+
     private val callback = object : IOnMultiTouchGesture.Stub() {
         override fun onGesture(gesture: Int, fingerCount: Int, eventTimeMs: Long) {
             // 旧接口（服务端已改用 onGestureBatch，这里保留兼容）：没有锚点，按历史行为落屏幕中心。
@@ -220,6 +268,24 @@ class MultiTouchGestureCoordinator @Inject constructor(
         runCatching { registerDisplayListener() }
         runCatching {
             Shizuku.addBinderReceivedListenerSticky(binderReceivedListener)
+        }
+        runCatching {
+            val filter = IntentFilter().apply {
+                addAction(Intent.ACTION_SCREEN_ON)
+                addAction(Intent.ACTION_USER_PRESENT)
+            }
+            androidx.core.content.ContextCompat.registerReceiver(
+                context,
+                screenReceiver,
+                filter,
+                androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+        }
+        ShizukuUserServiceHost.onDisconnectedListener = {
+            Log.w(TAG, "ShizukuUserServiceHost disconnected, scheduling reconnect")
+            observingService = null
+            _status.value = _status.value.copy(running = false, detail = "service-disconnected")
+            scheduleAutoReconnect(1000L)
         }
         applicationScope.launch(Dispatchers.IO) {
             // 开关、协议或设备变化都需要重启观察器；改手势条目不用重启。
@@ -341,6 +407,7 @@ class MultiTouchGestureCoordinator @Inject constructor(
             if (service == null) {
                 _status.value = _status.value.copy(running = false, detail = "service-unavailable")
                 Log.i(TAG, "sync: user service unavailable")
+                scheduleAutoReconnect(3000L)
                 return
             }
             // 先把当前协议/设备/显示状态推给 service：观察器从第一帧起就按用户配置工作。
@@ -350,10 +417,12 @@ class MultiTouchGestureCoordinator @Inject constructor(
             }.getOrDefault(false)
             Log.i(TAG, "sync: start observation=$startedObservation")
             if (startedObservation) {
+                runCatching { service.asBinder().linkToDeath(serviceDeathRecipient, 0) }
                 observingService = service
                 _status.value = _status.value.copy(running = true, detail = "watching")
             } else {
                 _status.value = _status.value.copy(running = false, detail = "device-unavailable")
+                scheduleAutoReconnect(3000L)
             }
         }
     }
@@ -362,6 +431,7 @@ class MultiTouchGestureCoordinator @Inject constructor(
         val service = observingService
         observingService = null
         if (service != null) {
+            runCatching { service.asBinder().unlinkToDeath(serviceDeathRecipient, 0) }
             runCatching { service.stopMultiTouchObservation() }
         }
         rootPollJob?.cancel()
@@ -422,10 +492,22 @@ class MultiTouchGestureCoordinator @Inject constructor(
             channel = "root",
         )
         rootPollJob = applicationScope.launch(Dispatchers.IO) {
+            var consecutiveErrors = 0
             while (isActive) {
-                val events = runCatching { root.pollMultiTouchEvents() }.getOrDefault(emptyArray())
-                for (event in events) {
-                    handleRootEvent(event)
+                val result = runCatching { root.pollMultiTouchEvents() }
+                if (result.isFailure) {
+                    consecutiveErrors++
+                    if (consecutiveErrors >= 5) {
+                        Log.w(TAG, "root polling consecutive failures, scheduling reconnect")
+                        scheduleAutoReconnect(2000L)
+                        break
+                    }
+                } else {
+                    consecutiveErrors = 0
+                    val events = result.getOrNull() ?: emptyArray()
+                    for (event in events) {
+                        handleRootEvent(event)
+                    }
                 }
                 delay(ROOT_POLL_INTERVAL_MS)
             }

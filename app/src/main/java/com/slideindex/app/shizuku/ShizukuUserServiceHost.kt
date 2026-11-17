@@ -95,6 +95,9 @@ object ShizukuUserServiceHost {
     @Volatile
     private var ensureLatch: CountDownLatch? = null
 
+    @Volatile
+    var onDisconnectedListener: (() -> Unit)? = null
+
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
             service = if (binder != null && binder.pingBinder()) {
@@ -114,6 +117,7 @@ object ShizukuUserServiceHost {
             Log.w(TAG, "disconnected")
             service = null
             finishBindAttempt()
+            onDisconnectedListener?.invoke()
         }
     }
 
