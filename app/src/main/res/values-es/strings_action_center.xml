@@ -3,7 +3,7 @@
 <resources>
     <string name="extension_section_actions">Acciones</string>
     <string name="extension_action_center_title">Acciones integradas</string>
-    <string name="extension_action_center_subtitle">Explora, prueba y abre los ajustes de cada acción</string>
+    <string name="extension_action_center_subtitle">Explora, configura y prueba cada acción</string>
 
     <string name="action_center_filter_all">Todo</string>
     <string name="action_center_filter_common">Comunes</string>
@@ -15,14 +15,14 @@
     <string name="action_center_badge_single_tap">T</string>
     <string name="action_center_badge_shake">A</string>
 
-    <string name="action_center_info">Acerca de</string>
+    <string name="action_center_info">Información básica</string>
     <string name="action_center_deeplink">Enlace directo</string>
     <string name="action_center_deeplink_copied">Enlace directo copiado</string>
-    <string name="action_center_test">Probar</string>
+    <string name="action_center_test">Ejecutar ahora</string>
     <string name="action_center_test_success">Ejecutado</string>
     <string name="action_center_test_failed">Error al ejecutar</string>
     <string name="action_center_test_unavailable">No disponible ahora</string>
-    <string name="action_center_test_note">Solo para probar. No se guarda; lo rellenarás al vincular.</string>
+    <string name="action_center_test_note">Solo para esta ejecución; no se guarda. Lo rellenarás al vincular.</string>
     <string name="action_center_test_pointer_reason">Solo funciona en el puntero flotante</string>
     <string name="action_center_test_corner_reason">Solo funciona en la rueda de esquina</string>
     <string name="action_center_test_single_tap_reason">Solo funciona con toque único</string>
@@ -30,9 +30,11 @@
     <string name="action_center_test_context_reason">Solo funciona desde un gesto</string>
     <string name="action_center_test_macro_reason">Primero crea y selecciona una macro</string>
 
-    <string name="action_center_settings">Ajustes relacionados</string>
-    <string name="action_center_settings_desc">Abrir la página de ajustes relacionados</string>
-    <string name="action_center_open_settings">Abrir ajustes</string>
+    <string name="action_center_settings">Ajustes</string>
+    <string name="action_center_settings_desc">Esta acción necesita configuración</string>
+    <string name="action_center_open_settings">Abrir configuración</string>
+    <string name="action_center_config_on_bind">Configura esta acción al vincular</string>
+    <string name="action_center_no_config">Esta acción no necesita configuración y puede ejecutarse directamente</string>
 
     <string name="action_center_command">Comando</string>
     <string name="action_center_remind_duration">Duración</string>

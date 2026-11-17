@@ -3,7 +3,7 @@
 <resources>
     <string name="extension_section_actions">Действия</string>
     <string name="extension_action_center_title">Встроенные действия</string>
-    <string name="extension_action_center_subtitle">Просматривайте, тестируйте и открывайте настройки действий</string>
+    <string name="extension_action_center_subtitle">Просматривайте, настраивайте и тестируйте действия</string>
 
     <string name="action_center_filter_all">Все</string>
     <string name="action_center_filter_common">Общие</string>
@@ -15,14 +15,14 @@
     <string name="action_center_badge_single_tap">О</string>
     <string name="action_center_badge_shake">Т</string>
 
-    <string name="action_center_info">Описание</string>
+    <string name="action_center_info">Основная информация</string>
     <string name="action_center_deeplink">Прямая ссылка</string>
     <string name="action_center_deeplink_copied">Прямая ссылка скопирована</string>
-    <string name="action_center_test">Тест</string>
+    <string name="action_center_test">Выполнить сейчас</string>
     <string name="action_center_test_success">Выполнено</string>
     <string name="action_center_test_failed">Ошибка выполнения</string>
     <string name="action_center_test_unavailable">Сейчас недоступно</string>
-    <string name="action_center_test_note">Только для теста. Ничего не сохраняется; значения нужно будет ввести при привязке.</string>
+    <string name="action_center_test_note">Только для этого запуска; ничего не сохраняется. Значения нужно будет ввести при привязке.</string>
     <string name="action_center_test_pointer_reason">Работает только в плавающем указателе</string>
     <string name="action_center_test_corner_reason">Работает только во внутреннем кольце угловой сферы</string>
     <string name="action_center_test_single_tap_reason">Работает только при одиночном нажатии</string>
@@ -30,9 +30,11 @@
     <string name="action_center_test_context_reason">Работает только из жеста</string>
     <string name="action_center_test_macro_reason">Сначала создайте и выберите макрос</string>
 
-    <string name="action_center_settings">Связанные настройки</string>
-    <string name="action_center_settings_desc">Открыть страницу связанных настроек</string>
+    <string name="action_center_settings">Настройки</string>
+    <string name="action_center_settings_desc">Этому действию нужна настройка</string>
     <string name="action_center_open_settings">Открыть настройки</string>
+    <string name="action_center_config_on_bind">Настройте это действие при привязке</string>
+    <string name="action_center_no_config">Это действие не требует настройки и может выполняться сразу</string>
 
     <string name="action_center_command">Команда</string>
     <string name="action_center_remind_duration">Длительность</string>

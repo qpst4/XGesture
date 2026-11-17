@@ -3,7 +3,7 @@
 <resources>
     <string name="extension_section_actions">Actions</string>
     <string name="extension_action_center_title">Built-in actions</string>
-    <string name="extension_action_center_subtitle">Browse, test and open settings for every action</string>
+    <string name="extension_action_center_subtitle">Browse, configure and test each action</string>
 
     <string name="action_center_filter_all">All</string>
     <string name="action_center_filter_common">Common</string>
@@ -15,14 +15,14 @@
     <string name="action_center_badge_single_tap">T</string>
     <string name="action_center_badge_shake">S</string>
 
-    <string name="action_center_info">About</string>
+    <string name="action_center_info">Basic info</string>
     <string name="action_center_deeplink">Deep link</string>
     <string name="action_center_deeplink_copied">Deep link copied</string>
-    <string name="action_center_test">Test</string>
+    <string name="action_center_test">Run now</string>
     <string name="action_center_test_success">Executed</string>
     <string name="action_center_test_failed">Failed to execute</string>
     <string name="action_center_test_unavailable">Not available right now</string>
-    <string name="action_center_test_note">For testing only. Nothing is saved; you will fill this again when binding.</string>
+    <string name="action_center_test_note">Only for this run; nothing is saved. You will fill it again when binding.</string>
     <string name="action_center_test_pointer_reason">Only works inside the floating pointer</string>
     <string name="action_center_test_corner_reason">Only works in the corner wheel</string>
     <string name="action_center_test_single_tap_reason">Only works on single tap</string>
@@ -30,9 +30,11 @@
     <string name="action_center_test_context_reason">Only works from a gesture</string>
     <string name="action_center_test_macro_reason">Create and select a macro first</string>
 
-    <string name="action_center_settings">Related settings</string>
-    <string name="action_center_settings_desc">Open the related settings page</string>
-    <string name="action_center_open_settings">Open settings</string>
+    <string name="action_center_settings">Settings</string>
+    <string name="action_center_settings_desc">This action needs configuration</string>
+    <string name="action_center_open_settings">Open configuration</string>
+    <string name="action_center_config_on_bind">Configure this action when binding</string>
+    <string name="action_center_no_config">This action needs no configuration and can run directly</string>
 
     <string name="action_center_command">Command</string>
     <string name="action_center_remind_duration">Duration</string>

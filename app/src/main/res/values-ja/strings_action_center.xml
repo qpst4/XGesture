@@ -3,7 +3,7 @@
 <resources>
     <string name="extension_section_actions">アクション</string>
     <string name="extension_action_center_title">組み込みアクション</string>
-    <string name="extension_action_center_subtitle">各アクションの閲覧・テスト・設定を開く</string>
+    <string name="extension_action_center_subtitle">各アクションの閲覧・設定・試行</string>
 
     <string name="action_center_filter_all">すべて</string>
     <string name="action_center_filter_common">一般</string>
@@ -15,14 +15,14 @@
     <string name="action_center_badge_single_tap">単</string>
     <string name="action_center_badge_shake">振</string>
 
-    <string name="action_center_info">説明</string>
+    <string name="action_center_info">基本情報</string>
     <string name="action_center_deeplink">ディープリンク</string>
     <string name="action_center_deeplink_copied">ディープリンクをコピーしました</string>
-    <string name="action_center_test">テスト</string>
+    <string name="action_center_test">今すぐ実行</string>
     <string name="action_center_test_success">実行しました</string>
     <string name="action_center_test_failed">実行に失敗しました</string>
     <string name="action_center_test_unavailable">現在利用できません</string>
-    <string name="action_center_test_note">テスト専用です。保存されません。バインド時にもう一度入力します。</string>
+    <string name="action_center_test_note">今回の実行のみです。保存されません。バインド時にもう一度入力します。</string>
     <string name="action_center_test_pointer_reason">フローティングポインタ内でのみ動作します</string>
     <string name="action_center_test_corner_reason">コーナーホイール内でのみ動作します</string>
     <string name="action_center_test_single_tap_reason">シングルタップ時のみ動作します</string>
@@ -30,9 +30,11 @@
     <string name="action_center_test_context_reason">ジェスチャからのみ動作します</string>
     <string name="action_center_test_macro_reason">先にマクロを作成して選択してください</string>
 
-    <string name="action_center_settings">関連設定</string>
-    <string name="action_center_settings_desc">関連設定ページを開く</string>
+    <string name="action_center_settings">設定</string>
+    <string name="action_center_settings_desc">このアクションには設定が必要です</string>
     <string name="action_center_open_settings">設定を開く</string>
+    <string name="action_center_config_on_bind">バインド時にこのアクションを設定します</string>
+    <string name="action_center_no_config">このアクションは設定不要で、直接実行できます</string>
 
     <string name="action_center_command">コマンド</string>
     <string name="action_center_remind_duration">時間</string>

@@ -3,7 +3,7 @@
 <resources>
     <string name="extension_section_actions">动作</string>
     <string name="extension_action_center_title">内置动作</string>
-    <string name="extension_action_center_subtitle">浏览、试运行并打开每个动作的设置</string>
+    <string name="extension_action_center_subtitle">查看、配置并试运行每个动作</string>
 
     <string name="action_center_filter_all">全部</string>
     <string name="action_center_filter_common">通用</string>
@@ -15,14 +15,14 @@
     <string name="action_center_badge_single_tap">单</string>
     <string name="action_center_badge_shake">晃</string>
 
-    <string name="action_center_info">说明</string>
+    <string name="action_center_info">基本信息</string>
     <string name="action_center_deeplink">深链</string>
     <string name="action_center_deeplink_copied">已复制深链</string>
-    <string name="action_center_test">测试</string>
+    <string name="action_center_test">立即执行</string>
     <string name="action_center_test_success">已执行</string>
     <string name="action_center_test_failed">执行失败</string>
     <string name="action_center_test_unavailable">当前不可用</string>
-    <string name="action_center_test_note">这里只用于测试，不会保存；绑定时会再填一次。</string>
+    <string name="action_center_test_note">这里只用于本次执行，不会保存；绑定时会再填一次。</string>
     <string name="action_center_test_pointer_reason">只能在悬浮指针中触发</string>
     <string name="action_center_test_corner_reason">只在角轮内环生效</string>
     <string name="action_center_test_single_tap_reason">只在单击触发时生效</string>
@@ -30,9 +30,11 @@
     <string name="action_center_test_context_reason">只能由手势触发</string>
     <string name="action_center_test_macro_reason">请先在宏列表创建并选择宏</string>
 
-    <string name="action_center_settings">相关设置</string>
-    <string name="action_center_settings_desc">打开相关设置页</string>
-    <string name="action_center_open_settings">打开设置</string>
+    <string name="action_center_settings">设置</string>
+    <string name="action_center_settings_desc">该动作需要配置</string>
+    <string name="action_center_open_settings">打开配置</string>
+    <string name="action_center_config_on_bind">该动作在绑定时配置</string>
+    <string name="action_center_no_config">该动作无需配置，可直接执行</string>
 
     <string name="action_center_command">命令</string>
     <string name="action_center_remind_duration">时长</string>

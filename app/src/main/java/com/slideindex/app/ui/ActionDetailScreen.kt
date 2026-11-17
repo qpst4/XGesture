@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,16 +45,15 @@ import com.slideindex.app.gesture.KeyEventPresets
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
-import com.slideindex.app.ui.settings.components.SettingSwitchRow
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
- * 动作详情页：说明 + 测试（内容型动作填参数）+ 相关设置。
+ * 动作详情页：基本信息（描述 / 深链 / 参数 / 立即执行）+ 设置（打开配置或提示）。
  *
- * 测试参数只存在本地，不写 settings、不写绑定；特殊入口动作（指针/角轮/单击/晃动）
- * 由动作中心禁用测试并给入口设置链接。
+ * 与旧分支保持同一张「基本信息」卡；区别是深链换成真实格式，内容型动作的参数放在
+ * 同一张卡里，「立即执行」用表单值而不是空动作。
  */
 @Composable
 fun ActionDetailScreen(
@@ -69,10 +70,14 @@ fun ActionDetailScreen(
     val permissionHint = gestureActionPermissionHint(action, context)
     val specialHint = entry.special?.let { stringResource(it.hintRes) }
     val infoTitle = stringResource(R.string.action_center_info)
-    val testTitle = stringResource(R.string.action_center_test)
     val settingsTitle = stringResource(R.string.action_center_settings)
+    val openSettingsTitle = stringResource(R.string.action_center_open_settings)
+    val settingsDesc = stringResource(R.string.action_center_settings_desc)
     val deeplinkTitle = stringResource(R.string.action_center_deeplink)
+    val runLabel = stringResource(R.string.action_center_test)
+    val formNote = stringResource(R.string.action_center_test_note)
     val deeplink = AppLinks.actionUriString(action.type.name)
+    val openSettings = onOpenSettings
 
     var url by rememberSaveable(action.type) { mutableStateOf("") }
     var linkLabel by rememberSaveable(action.type) { mutableStateOf("") }
@@ -110,7 +115,7 @@ fun ActionDetailScreen(
         ActionTestKind.DIRECT -> entry.sample
         ActionTestKind.DISABLED -> null
     }
-    val testEnabled = onTest != null &&
+    val runEnabled = onTest != null &&
         entry.testKind != ActionTestKind.DISABLED &&
         builtAction != null
     val disabledReason = when {
@@ -119,17 +124,27 @@ fun ActionDetailScreen(
         onTest == null -> stringResource(R.string.action_center_test_unavailable)
         else -> null
     }
+    val settingsHint = when {
+        entry.testKind == ActionTestKind.DISABLED ->
+            stringResource(entry.testDisabledReasonRes ?: R.string.action_center_no_config)
+        entry.needsParams -> stringResource(R.string.action_center_config_on_bind)
+        else -> stringResource(R.string.action_center_no_config)
+    }
+    val showFormNote = entry.testKind == ActionTestKind.OPEN_LINK ||
+        entry.testKind == ActionTestKind.SHELL ||
+        entry.testKind == ActionTestKind.KEY ||
+        entry.testKind == ActionTestKind.REMIND
 
     SettingsLazyScreenScaffold(
         title = label,
         onBack = onBack,
     ) {
         settingsLazySmallTitle(
-            key = "action-detail-info",
+            key = "action-detail-basic",
             title = infoTitle,
         )
         groupedCardItems(
-            keyPrefix = "action-detail-info",
+            keyPrefix = "action-detail-basic",
             items = listOf(
                 settingsCardScopeItem("info") {
                     Column(
@@ -157,66 +172,44 @@ fun ActionDetailScreen(
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
                         }
-                    }
-                },
-            ),
-        )
 
-        settingsLazySmallTitle(
-            key = "action-detail-deeplink",
-            title = deeplinkTitle,
-        )
-        groupedCardItems(
-            keyPrefix = "action-detail-deeplink",
-            items = listOf(
-                settingsCardScopeItem("deeplink") {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
                         Text(
-                            text = deeplink,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MiuixTheme.colorScheme.onSurfaceContainer,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f),
+                            text = deeplinkTitle,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         )
-                        IconButton(
-                            onClick = {
-                                clipboard.setText(AnnotatedString(deeplink))
-                                Toast.makeText(
-                                    context,
-                                    R.string.action_center_deeplink_copied,
-                                    Toast.LENGTH_SHORT,
-                                ).show()
-                            },
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.ContentCopy,
-                                contentDescription = deeplinkTitle,
+                            Text(
+                                text = deeplink,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MiuixTheme.colorScheme.onSurfaceContainer,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f),
                             )
-                        }
-                    }
-                },
-            ),
-        )
-
-        settingsLazySmallTitle(
-            key = "action-detail-test",
-            title = testTitle,
-        )
-        groupedCardItems(
-            keyPrefix = "action-detail-test",
-            items = buildList {
-                when (entry.testKind) {
-                    ActionTestKind.OPEN_LINK -> add(
-                        settingsCardScopeItem("open-link-form") {
-                            ActionFormCard(
-                                note = stringResource(R.string.action_center_test_note),
+                            IconButton(
+                                onClick = {
+                                    clipboard.setText(AnnotatedString(deeplink))
+                                    Toast.makeText(
+                                        context,
+                                        R.string.action_center_deeplink_copied,
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                },
                             ) {
+                                Icon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = deeplinkTitle,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
+
+                        when (entry.testKind) {
+                            ActionTestKind.OPEN_LINK -> {
                                 MiuixLabeledTextField(
                                     value = url,
                                     onValueChange = { url = it },
@@ -234,13 +227,7 @@ fun ActionDetailScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                 )
                             }
-                        },
-                    )
-                    ActionTestKind.SHELL -> add(
-                        settingsCardScopeItem("shell-form") {
-                            ActionFormCard(
-                                note = stringResource(R.string.action_center_test_note),
-                            ) {
+                            ActionTestKind.SHELL -> {
                                 MiuixLabeledTextField(
                                     value = command,
                                     onValueChange = { command = it },
@@ -251,13 +238,7 @@ fun ActionDetailScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                 )
                             }
-                        },
-                    )
-                    ActionTestKind.KEY -> add(
-                        settingsCardScopeItem("key-form") {
-                            ActionFormCard(
-                                note = stringResource(R.string.action_center_test_note),
-                            ) {
+                            ActionTestKind.KEY -> {
                                 MiuixLabeledTextField(
                                     value = keyCodeText,
                                     onValueChange = { input ->
@@ -267,14 +248,23 @@ fun ActionDetailScreen(
                                     singleLine = true,
                                     modifier = Modifier.fillMaxWidth(),
                                 )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.key_event_long_press_title),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MiuixTheme.colorScheme.onSurfaceContainer,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                    Switch(
+                                        checked = isLongPress,
+                                        onCheckedChange = { isLongPress = it },
+                                    )
+                                }
                             }
-                        },
-                    )
-                    ActionTestKind.REMIND -> add(
-                        settingsCardScopeItem("remind-form") {
-                            ActionFormCard(
-                                note = stringResource(R.string.action_center_test_note),
-                            ) {
+                            ActionTestKind.REMIND -> {
                                 Text(
                                     text = stringResource(R.string.action_center_remind_duration),
                                     style = MaterialTheme.typography.labelLarge,
@@ -303,59 +293,45 @@ fun ActionDetailScreen(
                                     )
                                 }
                             }
-                        },
-                    )
-                    else -> Unit
-                }
-
-                if (entry.testKind == ActionTestKind.KEY) {
-                    add(
-                        settingsCardScopeItem("key-long-press") {
-                            SettingSwitchRow(
-                                title = stringResource(R.string.key_event_long_press_title),
-                                checked = isLongPress,
-                                enabled = true,
-                                onCheckedChange = { isLongPress = it },
-                            )
-                        },
-                    )
-                }
-
-                add(
-                    settingsCardScopeItem("test-action") {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp),
-                        ) {
-                            if (disabledReason != null) {
-                                Text(
-                                    text = disabledReason,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                )
-                            }
-                            Button(
-                                onClick = { builtAction?.let { onTest?.invoke(it) } },
-                                enabled = testEnabled,
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Text(stringResource(R.string.action_center_test))
-                            }
+                            else -> Unit
                         }
-                    },
-                )
-            },
+
+                        if (showFormNote) {
+                            Text(
+                                text = formNote,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                        }
+                        if (disabledReason != null) {
+                            Text(
+                                text = disabledReason,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                        }
+
+                        Button(
+                            onClick = { builtAction?.let { onTest?.invoke(it) } },
+                            enabled = runEnabled,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(runLabel)
+                        }
+                    }
+                },
+            ),
         )
 
-        onOpenSettings?.let { openSettings ->
-            settingsLazySmallTitle(
-                key = "action-detail-settings",
-                title = settingsTitle,
-            )
-            groupedCardItems(
-                keyPrefix = "action-detail-settings",
-                items = listOf(
-                    settingsCardScopeItem("settings") {
+        settingsLazySmallTitle(
+            key = "action-detail-settings",
+            title = settingsTitle,
+        )
+        groupedCardItems(
+            keyPrefix = "action-detail-settings",
+            items = listOf(
+                settingsCardScopeItem("settings") {
+                    if (openSettings != null) {
                         SettingNavigationRow(
                             icon = { contentDescription ->
                                 Icon(
@@ -363,31 +339,21 @@ fun ActionDetailScreen(
                                     contentDescription = contentDescription,
                                 )
                             },
-                            title = stringResource(R.string.action_center_open_settings),
-                            subtitle = stringResource(R.string.action_center_settings_desc),
+                            title = openSettingsTitle,
+                            subtitle = settingsDesc,
                             onClick = openSettings,
                         )
-                    },
-                ),
-            )
-        }
-    }
-}
-
-@Composable
-private fun ActionFormCard(
-    note: String,
-    content: @Composable () -> Unit,
-) {
-    Column(
-        modifier = Modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        content()
-        Text(
-            text = note,
-            style = MaterialTheme.typography.bodySmall,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    } else {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = settingsHint,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                        }
+                    }
+                },
+            ),
         )
     }
 }
