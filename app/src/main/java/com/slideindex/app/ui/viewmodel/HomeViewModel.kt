@@ -206,6 +206,10 @@ class HomeViewModel @AssistedInject constructor(
         settingsRepository.setSwipeDismissEnabled(enabled)
     }
 
+    fun setSettingIconPlateEnabled(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setSettingIconPlateEnabled(enabled)
+    }
+
     fun setUiDensityScale(scale: Float) = launchOptimisticSettingsWrite(
         optimisticUpdate = { settings ->
             settings.copy(uiDensityScale = UiDensityScaleLimits.normalize(scale))

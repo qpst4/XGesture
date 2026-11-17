@@ -111,6 +111,7 @@ internal object SettingsPreferenceKeys {
     val PREDICTIVE_BACK_ENABLED = booleanPreferencesKey("predictive_back_enabled")
     val APP_UI_LANGUAGE_TAG = stringPreferencesKey("app_ui_language_tag")
     val SWIPE_DISMISS_ENABLED = booleanPreferencesKey("swipe_dismiss_enabled")
+    val SETTING_ICON_PLATE_ENABLED = booleanPreferencesKey("setting_icon_plate_enabled")
     val ACCESSIBILITY_KEEP_ALIVE = booleanPreferencesKey("accessibility_keep_alive")
     val FREE_WINDOW_ENABLED = booleanPreferencesKey("free_window_enabled")
     val FREE_WINDOW_MODE = intPreferencesKey("free_window_mode_id")

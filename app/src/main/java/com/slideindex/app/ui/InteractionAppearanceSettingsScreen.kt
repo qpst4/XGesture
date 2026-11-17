@@ -82,6 +82,8 @@ fun InteractionAppearanceSettingsScreen(
     onBottomNavBlurPreviewStop: () -> Unit = {},
     overlayBlurEnabled: Boolean = true,
     onOverlayBlurEnabledChange: (Boolean) -> Unit = {},
+    settingIconPlateEnabled: Boolean = false,
+    onSettingIconPlateEnabledChange: (Boolean) -> Unit = {},
 ) {
 
     // LazyListScope 里不能调用 stringResource，先在这里取好
@@ -170,6 +172,15 @@ fun InteractionAppearanceSettingsScreen(
                         checked = overlayBlurEnabled,
                         enabled = true,
                         onCheckedChange = onOverlayBlurEnabledChange,
+                    )
+                },
+                settingsCardScopeItem("setting-icon-plate") {
+                    SettingSwitchRow(
+                        title = stringResource(R.string.setting_icon_plate_enabled),
+                        subtitle = stringResource(R.string.setting_icon_plate_enabled_desc),
+                        checked = settingIconPlateEnabled,
+                        enabled = true,
+                        onCheckedChange = onSettingIconPlateEnabledChange,
                     )
                 },
                 settingsCardScopeItem("icon-plate") {

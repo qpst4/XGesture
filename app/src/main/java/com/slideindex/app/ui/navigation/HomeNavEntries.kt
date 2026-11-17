@@ -252,6 +252,8 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             iconPlateMode = com.slideindex.app.settings.IconPlateMode.fromId(settings.iconPlateModeId),
             onOpenHapticSettings = { ctx.navigate(AppNavKey.HomeHapticSettings) },
             onSwipeDismissEnabledChange = viewModel::setSwipeDismissEnabled,
+            settingIconPlateEnabled = settings.settingIconPlateEnabled,
+            onSettingIconPlateEnabledChange = viewModel::setSettingIconPlateEnabled,
             onPredictiveBackEnabledChange = { enabled ->
                 viewModel.setPredictiveBackEnabled(enabled)
                 // ⚠️ 这里**只写 true、绝不写 false**：flag 写成 false 会让系统退回"兼容注入 KEYCODE_BACK"，

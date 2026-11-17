@@ -72,6 +72,8 @@ data class AppSettings(
     val appUiLanguageTag: String = "",
     /** 页内横移返回上一页（miuix-nav swipeDismiss）。 */
     val swipeDismissEnabled: Boolean = true,
+    /** 设置项行首图标是否显示底板；false 表示全 app 使用裸图标。 */
+    val settingIconPlateEnabled: Boolean = false,
     val accessibilityKeepAliveEnabled: Boolean = false,
     val hideTriggerInLandscape: Boolean = false,
     val hideTriggerOnLockScreen: Boolean = false,

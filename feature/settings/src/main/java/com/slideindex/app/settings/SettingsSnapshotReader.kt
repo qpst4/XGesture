@@ -278,6 +278,8 @@ internal object SettingsSnapshotReader {
             predictiveBackEnabled = prefs[SettingsPreferenceKeys.PREDICTIVE_BACK_ENABLED] ?: false,
             appUiLanguageTag = prefs[SettingsPreferenceKeys.APP_UI_LANGUAGE_TAG] ?: "",
             swipeDismissEnabled = prefs[SettingsPreferenceKeys.SWIPE_DISMISS_ENABLED] ?: true,
+            settingIconPlateEnabled =
+                prefs[SettingsPreferenceKeys.SETTING_ICON_PLATE_ENABLED] ?: false,
             accessibilityKeepAliveEnabled = prefs[SettingsPreferenceKeys.ACCESSIBILITY_KEEP_ALIVE] ?: false,
             hideTriggerInLandscape = prefs[SettingsPreferenceKeys.HIDE_TRIGGER_LANDSCAPE] ?: false,
             hideTriggerOnLockScreen = prefs[SettingsPreferenceKeys.HIDE_TRIGGER_LOCK_SCREEN] ?: false,

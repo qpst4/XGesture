@@ -20,6 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -29,7 +30,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.slideindex.app.settings.FreeWindowLayoutFractions
+import com.slideindex.app.settings.HomeMainSettings
 import com.slideindex.app.settings.OverlaySettings
+import com.slideindex.app.ui.LocalBareSettingIcons
 import com.slideindex.app.ui.FreeWindowLayoutEditorOverlay
 import com.slideindex.app.ui.FreeWindowLayoutEditorSession
 import kotlinx.coroutines.launch
@@ -166,18 +169,25 @@ class MainActivity : ComponentActivity() {
             val freeWindowSettings by deps.settingsRepository.overlaySettings.collectAsStateWithLifecycle(
                 initialValue = OverlaySettings.from(deps.settingsRepository.readSnapshot()),
             )
+            val homeMainSettings by deps.settingsRepository.homeMainSettings.collectAsStateWithLifecycle(
+                initialValue = HomeMainSettings.from(deps.settingsRepository.readSnapshot()),
+            )
             val editorScope = rememberCoroutineScope()
             Box(modifier = Modifier.fillMaxSize()) {
-                MainNavHost(
-                    activity = this@MainActivity,
-                    deps = deps,
-                    permissionStates = permissionStates,
-                    initialIntentAction = initialIntentAction,
-                    initialNavRoute = initialNavRoute,
-                    showUpdateFromIntent = showUpdate,
-                    onNavRouteConsumed = { pendingNavRoute.value = null },
-                    onShowUpdateConsumed = { pendingShowUpdate.value = false }
-                )
+                CompositionLocalProvider(
+                    LocalBareSettingIcons provides !homeMainSettings.settingIconPlateEnabled,
+                ) {
+                    MainNavHost(
+                        activity = this@MainActivity,
+                        deps = deps,
+                        permissionStates = permissionStates,
+                        initialIntentAction = initialIntentAction,
+                        initialNavRoute = initialNavRoute,
+                        showUpdateFromIntent = showUpdate,
+                        onNavRouteConsumed = { pendingNavRoute.value = null },
+                        onShowUpdateConsumed = { pendingShowUpdate.value = false }
+                    )
+                }
                 if (FreeWindowLayoutEditorSession.isOpen) {
                     FreeWindowLayoutEditorOverlay(
                         portrait = FreeWindowLayoutFractions(

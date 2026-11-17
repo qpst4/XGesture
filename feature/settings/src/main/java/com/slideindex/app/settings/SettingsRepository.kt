@@ -293,6 +293,9 @@ class SettingsRepository @Inject constructor(
     suspend fun setPredictiveBackEnabled(enabled: Boolean) = edge.setPredictiveBackEnabled(enabled)
     suspend fun setAppUiLanguage(language: AppUiLanguage) = edge.setAppUiLanguage(language)
     suspend fun setSwipeDismissEnabled(enabled: Boolean) = edge.setSwipeDismissEnabled(enabled)
+    suspend fun setSettingIconPlateEnabled(enabled: Boolean) = editor.edit { prefs ->
+        prefs[SettingsPreferenceKeys.SETTING_ICON_PLATE_ENABLED] = enabled
+    }
     suspend fun setAccessibilityKeepAliveEnabled(enabled: Boolean) = edge.setAccessibilityKeepAliveEnabled(enabled)
     suspend fun setHapticStrengthLevel(level: Int) = edge.setHapticStrengthLevel(level)
     suspend fun setHapticGestureTriggerEnabled(enabled: Boolean) = edge.setHapticGestureTriggerEnabled(enabled)

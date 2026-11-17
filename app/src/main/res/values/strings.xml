@@ -3144,6 +3144,8 @@
     <string name="icon_plate_mode_light">Light</string>
     <string name="icon_plate_mode_system">Follow system</string>
     <string name="icon_plate_mode_desc">Background style for action icons inside overlay panels</string>
+    <string name="setting_icon_plate_enabled">Show icon plates</string>
+    <string name="setting_icon_plate_enabled_desc">Turn off to show bare row-leading icons across the app</string>
     <string name="action_icon_library_title">Choose icon</string>
     <string name="action_icon_all">All</string>
     <string name="action_icon_count">%1$d icons</string>

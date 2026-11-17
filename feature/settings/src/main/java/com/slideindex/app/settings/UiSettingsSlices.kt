@@ -56,6 +56,7 @@ data class HomeMainSettings(
     val predictiveBackEnabled: Boolean = false,
     val appUiLanguageTag: String = "",
     val swipeDismissEnabled: Boolean = true,
+    val settingIconPlateEnabled: Boolean = false,
     /** 悬浮窗模糊总开关：关闭后所有浮层窗口/面板降级为实色底。 */
     val overlayBlurEnabled: Boolean = true,
 ) {
@@ -114,6 +115,7 @@ data class HomeMainSettings(
             predictiveBackEnabled = settings.predictiveBackEnabled,
             appUiLanguageTag = settings.appUiLanguageTag,
             swipeDismissEnabled = settings.swipeDismissEnabled,
+            settingIconPlateEnabled = settings.settingIconPlateEnabled,
             overlayBlurEnabled = settings.overlayBlurEnabled,
         )
     }

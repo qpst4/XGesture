@@ -53,8 +53,8 @@ import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import top.yukonga.miuix.kmp.icon.extended.Settings
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 
-/** 为 true 时行首图标只保留 40dp 布局槽位，不画底板。 */
-val LocalBareSettingIcons = staticCompositionLocalOf { false }
+/** 为 true 时行首图标只保留 40dp 布局槽位，不画底板。默认全 app 裸图标。 */
+val LocalBareSettingIcons = staticCompositionLocalOf { true }
 
 data class PendingPermissionItem(
     val title: String,
