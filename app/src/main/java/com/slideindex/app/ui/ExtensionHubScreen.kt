@@ -91,7 +91,7 @@ fun ExtensionHubScreen(
                     settingsCardScopeItem("action-center") {
                         SettingNavigationRow(
                             icon = { label ->
-                                Icon(ThinActionIcons.Gesture, contentDescription = label)
+                                Icon(ThinActionIcons.ActionCenter, contentDescription = label)
                             },
                             title = stringResource(R.string.extension_action_center_title),
                             subtitle = stringResource(R.string.extension_action_center_subtitle),
