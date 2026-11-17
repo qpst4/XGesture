@@ -121,14 +121,16 @@ class SettingsModuleRegistryTest {
         // 701 = 697 + 4：反馈整改新增 4 个键 —— `edge_long_press_ms`（EDGE_GESTURE）、
         //            `float_ball_edge_inset_dp`（FLOAT_BALL）、`message_side_bubble_lock_screen`（MESSAGE）、
         //            `task_switcher_panel_width_dp`（无匹配前缀，落 GENERAL）。
-        const val EXPECTED_TOTAL_KEYS = 701
+        // 704 = 701 + 3：悬浮指针「松手点击」模式 / 保持摇杆两个键（FLOATING_POINTER）
+        //            + 取图点击动作 `pick_image_tap_action`（无匹配前缀，落 GENERAL）。
+        const val EXPECTED_TOTAL_KEYS = 704
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
             SettingsModule.EDGE_GESTURE to 85,
             SettingsModule.CORNER_WHEEL to 35,
             SettingsModule.QUICK_WHEEL to 2,
             SettingsModule.FLOAT_BALL to 79,
-            SettingsModule.FLOATING_POINTER to 52,
+            SettingsModule.FLOATING_POINTER to 54,
             SettingsModule.FINGERTIP_RING to 13,
             SettingsModule.QUICK_LAUNCHER to 93,
             SettingsModule.WIDGET_PANEL to 8,
@@ -144,7 +146,7 @@ class SettingsModuleRegistryTest {
             SettingsModule.SHELL to 1,
             SettingsModule.ACTIVITY_SHORTCUTS to 3,
             SettingsModule.THEME_UI to 19,
-            SettingsModule.GENERAL to 34,
+            SettingsModule.GENERAL to 35,
         )
     }
 }
