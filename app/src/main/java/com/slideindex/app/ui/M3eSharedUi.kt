@@ -35,14 +35,16 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.toShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.activity.ActivityShortcut
@@ -81,12 +83,15 @@ fun SettingIconContainer(
             },
         )
     if (LocalBareSettingIcons.current) {
-        // 裸图标没有底板承托，光学尺寸会显得偏小；轻微放大到约 26dp，
-        // 让 1.5dp 细线与带底板时的视觉重量接近。
+        // 裸图标没有底板承托，光学尺寸会显得偏小；把内容按 26/24 的真实密度绘制，
+        // 让 Icon 的 24dp 在无底板时真正变成 26dp，而不是先画 24dp 再放大图层。
+        val density = LocalDensity.current
         Box(modifier = slotModifier, contentAlignment = Alignment.Center) {
-            Box(
-                modifier = Modifier.scale(1.08f),
-                contentAlignment = Alignment.Center,
+            CompositionLocalProvider(
+                LocalDensity provides Density(
+                    density = density.density * (26f / 24f),
+                    fontScale = density.fontScale,
+                ),
             ) {
                 content()
             }
