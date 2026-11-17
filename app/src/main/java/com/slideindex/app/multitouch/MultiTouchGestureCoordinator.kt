@@ -50,6 +50,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
@@ -288,25 +289,19 @@ class MultiTouchGestureCoordinator @Inject constructor(
             scheduleAutoReconnect(1000L)
         }
         applicationScope.launch(Dispatchers.IO) {
-            // 开关、协议或设备变化都需要重启观察器；改手势条目不用重启。
-            settingsStore.state
-                .map { Triple(it.enabled, it.protocol, it.devicePath) }
+            // 组合手势配置与全局特权/服务设置。
+            // 使用 combine 必须等待 settingsRepository.settings 的 DataStore 异步完成初次发射，
+            // 彻底杜绝冷启动首帧因 readSnapshot() 内存默认值 (SHIZUKU) 抢跑导致的分支误走与进程错配。
+            combine(
+                settingsStore.state.map { Triple(it.enabled, it.protocol, it.devicePath) },
+                settingsRepository.settings.map { Pair(it.privilegeMode, it.serviceEnabled) },
+            ) { gestureSettings, globalSettings ->
+                Pair(gestureSettings, globalSettings)
+            }
                 .distinctUntilChanged()
-                .collect { syncNow() }
-        }
-        // 切换「特权执行方式」（root / Shizuku）后要重新选择通道。
-        applicationScope.launch(Dispatchers.IO) {
-            settingsRepository.settings
-                .map { it.privilegeMode }
-                .distinctUntilChanged()
-                .collect { syncNow() }
-        }
-        // 磁贴总开关（serviceEnabled）关闭时，停止后台手势监听
-        applicationScope.launch(Dispatchers.IO) {
-            settingsRepository.settings
-                .map { it.serviceEnabled }
-                .distinctUntilChanged()
-                .collect { syncNow() }
+                .collect {
+                    syncNow()
+                }
         }
     }
 
@@ -447,14 +442,18 @@ class MultiTouchGestureCoordinator @Inject constructor(
 
     /** root 模式：root 守护进程里的观察器入队事件，这里定时取走并分发。 */
     private fun startRootObservation(pathPriority: Boolean) {
-        // ⚠️ 不能用 `ensure(minApi = SERVICE_BUILD)` 强制换新守护进程：ensure 会先 `drop()`
-        // 把旧守护进程 destroy 掉，而它留下的 port 文件还被判为「活着」，maybeSpawnDaemon 于是
-        // 拒绝重启 —— 结果是 root 通道直接不可用（比没有锚点更糟）。
-        // 旧守护进程发的是 `g:kind:fingers`（无锚点），parseAnchor 会退回「无锚点」，面板落屏幕中间；
-        // root 守护进程下次重启（重启特权服务 / 开机）后自动带上锚点。
-        val root = runCatching {
+        var root = runCatching {
             RootTaskManagerServiceHost.ensure(context) as? TaskManagerRpcClient
         }.getOrNull()
+        // API 64 引入了多指手势轮询（startMultiTouchPolling/pollMultiTouchEvents）；
+        // 若当前常驻的守护进程 api < 64（例如系统里留下的远古僵尸进程），必须强制 restart 淘汰并拉起新 Daemon。
+        if (root == null || runCatching { root.apiVersion }.getOrDefault(0) < 64) {
+            Log.i(TAG, "root daemon is missing or outdated (< 64), restarting root service...")
+            RootTaskManagerServiceHost.restart(context)
+            root = runCatching {
+                RootTaskManagerServiceHost.ensure(context) as? TaskManagerRpcClient
+            }.getOrNull()
+        }
         if (root != null) {
             val api = runCatching { root.apiVersion }.getOrNull() ?: 0
             if (api < ShizukuUserServiceHost.SERVICE_BUILD) {
@@ -472,17 +471,27 @@ class MultiTouchGestureCoordinator @Inject constructor(
                 channel = "",
             )
             Log.i(TAG, "sync: root daemon unavailable")
+            scheduleAutoReconnect(3000L)
             return
         }
         pushMultiTouchConfig(root)
-        val started = runCatching { root.startMultiTouchPolling(pathPriority) }.getOrDefault(false)
-        Log.i(TAG, "sync: root start polling=$started")
+        var started = runCatching { root.startMultiTouchPolling(pathPriority) }.getOrDefault(false)
         if (!started) {
+            Log.w(TAG, "root start polling failed on api=${root.apiVersion}, attempting restart once...")
+            RootTaskManagerServiceHost.restart(context)
+            root = runCatching {
+                RootTaskManagerServiceHost.ensure(context) as? TaskManagerRpcClient
+            }.getOrNull()
+            started = root != null && runCatching { root.startMultiTouchPolling(pathPriority) }.getOrDefault(false)
+        }
+        Log.i(TAG, "sync: root start polling=$started")
+        if (!started || root == null) {
             _status.value = _status.value.copy(
                 running = false,
                 detail = "root-start-failed",
                 channel = "",
             )
+            scheduleAutoReconnect(3000L)
             return
         }
         rootService = root
@@ -499,6 +508,12 @@ class MultiTouchGestureCoordinator @Inject constructor(
                     consecutiveErrors++
                     if (consecutiveErrors >= 5) {
                         Log.w(TAG, "root polling consecutive failures, scheduling reconnect")
+                        rootService = null
+                        _status.value = _status.value.copy(
+                            running = false,
+                            detail = "root-poll-failed",
+                            channel = "",
+                        )
                         scheduleAutoReconnect(2000L)
                         break
                     }
