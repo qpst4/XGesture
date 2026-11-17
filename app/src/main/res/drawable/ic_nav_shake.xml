@@ -25,12 +25,7 @@
         android:rotation="18">
         <path
             android:fillColor="#FF000000"
-            android:pathData="M9.25,5.25h5.5c0.69,0 1.25,0.56 1.25,1.25v11.5c0,0.69 -0.56,1.25 -1.25,1.25h-5.5c-0.69,0 -1.25,-0.56 -1.25,-1.25v-11.5c0,-0.69 0.56,-1.25 1.25,-1.25z" />
-        <path
-            android:fillColor="#00000000"
-            android:pathData="M11,16.25h2.5"
-            android:strokeWidth="1.25"
-            android:strokeColor="#FFFFFFFF"
-            android:strokeLineCap="round" />
+            android:fillType="evenOdd"
+            android:pathData="M9.25,5.25h5.5c0.69,0 1.25,0.56 1.25,1.25v11.5c0,0.69 -0.56,1.25 -1.25,1.25h-5.5c-0.69,0 -1.25,-0.56 -1.25,-1.25v-11.5c0,-0.69 0.56,-1.25 1.25,-1.25z M11,15.625h2.5a0.625,0.625 0 0 1 0,1.25h-2.5a0.625,0.625 0 0 1 0,-1.25z" />
     </group>
 </vector>
