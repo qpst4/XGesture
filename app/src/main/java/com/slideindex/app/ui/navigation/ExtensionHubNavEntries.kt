@@ -474,7 +474,21 @@ private fun runActionTest(
             }
         },
     )
-    val executed = runCatching { executor.execute(action, settings) }.getOrDefault(false)
+    // 动作中心的「立即执行」没有手势起点；悬浮指针需要锚点才能落位，这里给屏幕中心。
+    val pointerAnchor = if (action is GestureAction.FloatingPointer) {
+        val metrics = context.resources.displayMetrics
+        metrics.widthPixels / 2f to metrics.heightPixels / 2f
+    } else {
+        null
+    }
+    val executed = runCatching {
+        executor.execute(
+            action,
+            settings,
+            anchorRawX = pointerAnchor?.first,
+            anchorRawY = pointerAnchor?.second,
+        )
+    }.getOrDefault(false)
     Toast.makeText(
         context,
         if (executed) R.string.action_center_test_success else R.string.action_center_test_failed,
