@@ -19,7 +19,6 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,7 +37,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
 import com.slideindex.app.external.AppLinks
 import com.slideindex.app.gesture.GestureAction
@@ -166,33 +164,33 @@ fun ActionDetailScreen(
                         if (!description.isNullOrBlank()) {
                             Text(
                                 text = introTitle,
-                                style = MaterialTheme.typography.titleSmall,
+                                style = MiuixTheme.textStyles.title4,
                                 color = MiuixTheme.colorScheme.onSurfaceContainer,
                             )
                             Text(
                                 text = description,
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MiuixTheme.textStyles.body1,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
                         }
                         if (specialHint != null) {
                             Text(
                                 text = specialHint,
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MiuixTheme.textStyles.body1,
                                 color = MiuixTheme.colorScheme.primary,
                             )
                         }
                         if (permissionHint != null) {
                             Text(
                                 text = permissionHint,
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
                         }
 
                         Text(
                             text = deeplinkTitle,
-                            style = MaterialTheme.typography.titleSmall,
+                            style = MiuixTheme.textStyles.title4,
                             color = MiuixTheme.colorScheme.onSurfaceContainer,
                         )
                         Row(
@@ -201,7 +199,7 @@ fun ActionDetailScreen(
                         ) {
                             Text(
                                 text = deeplink,
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.onSurfaceContainer,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
@@ -271,7 +269,7 @@ fun ActionDetailScreen(
                                 ) {
                                     Text(
                                         text = stringResource(R.string.key_event_long_press_title),
-                                        style = MaterialTheme.typography.bodyMedium,
+                                        style = MiuixTheme.textStyles.body1,
                                         color = MiuixTheme.colorScheme.onSurfaceContainer,
                                         modifier = Modifier.weight(1f),
                                     )
@@ -284,7 +282,7 @@ fun ActionDetailScreen(
                             ActionTestKind.REMIND -> {
                                 Text(
                                     text = stringResource(R.string.action_center_remind_duration),
-                                    style = MaterialTheme.typography.labelLarge,
+                                    style = MiuixTheme.textStyles.body1,
                                     color = MiuixTheme.colorScheme.onSurfaceContainer,
                                 )
                                 Row(
@@ -316,14 +314,14 @@ fun ActionDetailScreen(
                         if (showFormNote) {
                             Text(
                                 text = formNote,
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
                         }
                         if (disabledReason != null) {
                             Text(
                                 text = disabledReason,
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
                         }
@@ -333,7 +331,10 @@ fun ActionDetailScreen(
                             enabled = runEnabled,
                             modifier = Modifier.fillMaxWidth(),
                         ) {
-                            Text(runLabel)
+                            Text(
+                                text = runLabel,
+                                style = MiuixTheme.textStyles.button,
+                            )
                         }
                     }
                 },
@@ -443,7 +444,7 @@ fun ActionDetailScreen(
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
                                     text = settingsHint,
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = MiuixTheme.textStyles.body1,
                                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                 )
                             }
@@ -481,7 +482,7 @@ private fun RemindChip(
             } else {
                 MiuixTheme.colorScheme.onSurfaceContainer
             },
-            fontSize = 13.sp,
+            style = MiuixTheme.textStyles.footnote1,
             maxLines = 1,
         )
     }
