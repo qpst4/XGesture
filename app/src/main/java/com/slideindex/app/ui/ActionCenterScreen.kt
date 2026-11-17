@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,7 +41,12 @@ import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.ui.gesturepicker.ACTION_GRID_COLUMNS
+import com.slideindex.app.ui.gesturepicker.gestureActionDescriptionText
+import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
+import com.slideindex.app.ui.gesturepicker.gestureActionSearchAliases
+import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffoldWithExpandableSearch
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
+import com.slideindex.app.util.PinyinHelper
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /** 内置动作浏览页：按动作类型全量列出，分类分段 + 特殊入口角标 + 筛选。 */
@@ -49,10 +55,26 @@ fun ActionCenterScreen(
     onBack: () -> Unit,
     onOpenActionDetail: (GestureAction) -> Unit,
 ) {
+    val context = LocalContext.current
     var filter by rememberSaveable { mutableStateOf(ActionCenterFilter.ALL) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
     val entries = ActionCenterCatalog.entries
-    val filtered = remember(entries, filter) {
-        entries.filter { ActionCenterCatalog.matches(it, filter) }
+    val filtered = remember(entries, filter, searchQuery, context) {
+        val byFilter = entries.filter { ActionCenterCatalog.matches(it, filter) }
+        val q = searchQuery.trim().lowercase()
+        if (q.isEmpty()) {
+            byFilter
+        } else {
+            byFilter.filter { entry ->
+                val label = gestureActionLabelText(context, entry.sample)
+                val aliases = gestureActionSearchAliases(context, entry.sample)
+                val desc = gestureActionDescriptionText(context, entry.sample)
+                label.lowercase().contains(q) ||
+                    PinyinHelper.sortKey(label).contains(q) ||
+                    aliases.any { it.lowercase().contains(q) || PinyinHelper.sortKey(it).contains(q) } ||
+                    desc?.lowercase()?.contains(q) == true
+            }
+        }
     }
     val sections = remember(filtered) {
         ActionCenterSection.entries.mapNotNull { section ->
@@ -64,9 +86,11 @@ fun ActionCenterScreen(
     val sectionTitles = ActionCenterSection.entries.associateWith { stringResource(it.titleRes) }
     val emptyText = stringResource(R.string.search_no_actions)
 
-    SettingsLazyScreenScaffold(
+    SettingsLazyScreenScaffoldWithExpandableSearch(
         title = stringResource(R.string.extension_action_center_title),
         pageHint = stringResource(R.string.extension_action_center_subtitle),
+        searchQuery = searchQuery,
+        onSearchQueryChange = { searchQuery = it },
         onBack = onBack,
     ) {
         item(key = "action-center-filter") {

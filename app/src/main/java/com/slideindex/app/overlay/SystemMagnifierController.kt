@@ -12,6 +12,33 @@ import com.slideindex.app.R
 import com.slideindex.app.service.SlideIndexAccessibilityService
 
 /**
+ * 放大镜偏好持久化存储。
+ */
+object MagnifierPrefs {
+    const val PREFS_NAME = "magnifier"
+    const val KEY_SCALE = "scale"
+    const val DEFAULT_SCALE = 2.0f
+    const val MIN_SCALE = 1.25f
+    const val MAX_SCALE = 5.0f
+
+    val SCALES = floatArrayOf(
+        1.25f, 1.5f, 1.75f, 2f, 2.25f, 2.5f, 2.75f, 3f, 3.5f, 4f, 5f, 6f, 8f,
+    )
+
+    fun readScale(context: Context): Float = runCatching {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getFloat(KEY_SCALE, DEFAULT_SCALE)
+    }.getOrDefault(DEFAULT_SCALE)
+
+    fun writeScale(context: Context, value: Float) {
+        runCatching {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit().putFloat(KEY_SCALE, value).apply()
+        }
+    }
+}
+
+/**
  * 「放大镜」动作的落地实现：调用**系统无障碍放大**（`MagnificationController`）。
  *
  * 不抓屏、不弹录屏授权；放大画面由系统合成层提供，视频/动画照常实时。
@@ -35,9 +62,7 @@ object SystemMagnifierController {
      */
 
     /** 放大镜常用缩放倍率阶梯档位。 */
-    private val SCALES = floatArrayOf(
-        1.25f, 1.5f, 1.75f, 2f, 2.25f, 2.5f, 2.75f, 3f, 3.5f, 4f, 5f, 6f, 8f,
-    )
+    val SCALES get() = MagnifierPrefs.SCALES
 
     private val handler = Handler(Looper.getMainLooper())
     private val autoStop = Runnable { stop() }
@@ -45,7 +70,7 @@ object SystemMagnifierController {
     private var controller: AccessibilityService.MagnificationController? = null
     private var active = false
     private var chip: MagnifierChipOverlay? = null
-    private var scale = 2.5f
+    private var scale = MagnifierPrefs.DEFAULT_SCALE
     private var lastX = 0f
     private var lastY = 0f
     /** 本次会话是否用全屏放大（持续触发 = 全屏跟手；开关式 = 窗口小放大镜）。 */
@@ -206,16 +231,9 @@ object SystemMagnifierController {
         scale.toString()
     }
 
-    private fun readScale(context: Context): Float = runCatching {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getFloat(KEY_SCALE, 2.5f)
-    }.getOrDefault(2.5f)
+    private fun readScale(context: Context): Float = MagnifierPrefs.readScale(context)
 
-    private fun writeScale(context: Context, value: Float) {
-        runCatching {
-            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-                .edit().putFloat(KEY_SCALE, value).apply()
-        }
-    }
+    private fun writeScale(context: Context, value: Float) = MagnifierPrefs.writeScale(context, value)
 
     private fun screenSize(): Pair<Float, Float> {
         val metrics = SlideIndexAccessibilityService.overlayHostContext()?.resources?.displayMetrics
@@ -288,6 +306,4 @@ object SystemMagnifierController {
         }
     }
 
-    private const val PREFS = "magnifier"
-    private const val KEY_SCALE = "scale"
 }

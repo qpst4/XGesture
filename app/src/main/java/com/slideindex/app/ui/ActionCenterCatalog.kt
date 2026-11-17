@@ -124,6 +124,7 @@ object ActionCenterCatalog {
         GestureActionType.TASK_SWITCHER,
         GestureActionType.PAGE_SCROLL,
         GestureActionType.REMIND,
+        GestureActionType.MAGNIFIER,
     )
 
     /** 只在特定入口里有意义的动作。 */

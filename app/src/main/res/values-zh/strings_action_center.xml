@@ -91,4 +91,6 @@
     <string name="action_center_special_fingertip">适用入口：指尖轮盘</string>
     <string name="action_center_special_regional">适用入口：区域截图</string>
     <string name="key_event_presets_title">常用按键</string>
+    <string name="magnifier_scale_title">缩放倍率</string>
+    <string name="magnifier_scale_summary">设定放大镜默认放大倍数，全屏跟手推视野与局部视窗均固定以此倍率放大</string>
 </resources>

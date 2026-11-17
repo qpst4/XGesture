@@ -21,6 +21,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +41,9 @@ import com.slideindex.app.R
 import com.slideindex.app.external.AppLinks
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureActionType
+import com.slideindex.app.overlay.MagnifierPrefs
+import java.util.Locale
+import kotlin.math.round
 import com.slideindex.app.gesture.KeyEventPresets
 import com.slideindex.app.pagescroll.PageScrollPrefs
 import com.slideindex.app.pagescroll.PageScrollSettings
@@ -108,6 +112,7 @@ fun ActionDetailScreen(
     var isLongPress by rememberSaveable(action.type) { mutableStateOf(false) }
     var remindMinutes by rememberSaveable(action.type) { mutableIntStateOf(5) }
     var pageScroll by remember(context) { mutableStateOf(PageScrollPrefs.read(context)) }
+    var magnifierScale by remember(context) { mutableFloatStateOf(MagnifierPrefs.readScale(context)) }
     val taskWidth = taskSwitcherWidthDp ?: 226
 
     val keyCode = keyCodeText.toIntOrNull()
@@ -475,6 +480,31 @@ fun ActionDetailScreen(
                                         if (value != pageScroll.controlBarIdleAlpha) {
                                             pageScroll = pageScroll.copy(controlBarIdleAlpha = value)
                                             PageScrollPrefs.saveControlBarIdleAlpha(context, value)
+                                        }
+                                    },
+                                )
+                            },
+                        )
+                    }
+                    entry.type == GestureActionType.MAGNIFIER -> {
+                        add(
+                            settingsCardScopeItem("magnifier-scale") {
+                                SettingsSliderRow(
+                                    title = stringResource(R.string.magnifier_scale_title),
+                                    summary = stringResource(R.string.magnifier_scale_summary),
+                                    value = magnifierScale,
+                                    valueRange = MagnifierPrefs.MIN_SCALE..MagnifierPrefs.MAX_SCALE,
+                                    steps = 14,
+                                    enabled = true,
+                                    label = String.format(Locale.getDefault(), "%.2f×", magnifierScale),
+                                    commitOnFinish = true,
+                                    onValueChange = { raw ->
+                                        val step = 0.25f
+                                        val rounded = (round(raw / step) * step)
+                                            .coerceIn(MagnifierPrefs.MIN_SCALE, MagnifierPrefs.MAX_SCALE)
+                                        if (rounded != magnifierScale) {
+                                            magnifierScale = rounded
+                                            MagnifierPrefs.writeScale(context, rounded)
                                         }
                                     },
                                 )

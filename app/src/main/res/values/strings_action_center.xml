@@ -91,4 +91,6 @@
     <string name="action_center_special_fingertip">Available in: fingertip ring</string>
     <string name="action_center_special_regional">Available in: regional screenshot</string>
     <string name="key_event_presets_title">Common keys</string>
+    <string name="magnifier_scale_title">Magnification scale</string>
+    <string name="magnifier_scale_summary">Set default magnification scale for fullscreen follow and window mode</string>
 </resources>
