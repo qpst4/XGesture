@@ -39,10 +39,6 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -429,7 +425,7 @@ fun FloatingBottomNavBar(
                     },
                     icon = { isSelected ->
                         Icon(
-                            imageVector = if (isSelected) Icons.Default.Home else classicNavSymbol("Home"),
+                            imageVector = if (isSelected) classicNavFilledSymbol("Home") else classicNavSymbol("Home"),
                             contentDescription = cdBottomNavHome(),
                             modifier = Modifier.size(MainBottomNavIconSize),
                         )
@@ -477,7 +473,7 @@ fun FloatingBottomNavBar(
                     },
                     icon = { isSelected ->
                         Icon(
-                            imageVector = if (isSelected) Icons.Default.Notifications else classicNavSymbol("Notifications"),
+                            imageVector = if (isSelected) classicNavFilledSymbol("Notifications") else classicNavSymbol("Notifications"),
                             contentDescription = cdBottomNavNotification(),
                             modifier = Modifier.size(MainBottomNavIconSize),
                         )
@@ -500,7 +496,7 @@ fun FloatingBottomNavBar(
                     },
                     icon = { isSelected ->
                         Icon(
-                            imageVector = if (isSelected) Icons.Default.Widgets else classicNavSymbol("Widgets"),
+                            imageVector = if (isSelected) classicNavFilledSymbol("Widgets") else classicNavSymbol("Widgets"),
                             contentDescription = cdBottomNavExtension(),
                             modifier = Modifier.size(MainBottomNavIconSize),
                         )
@@ -609,7 +605,7 @@ fun FloatingSideNavRail(
                 },
                 icon = { isSelected ->
                     Icon(
-                        imageVector = if (isSelected) Icons.Default.Home else classicNavSymbol("Home"),
+                        imageVector = if (isSelected) classicNavFilledSymbol("Home") else classicNavSymbol("Home"),
                         contentDescription = cdBottomNavHome(),
                         modifier = Modifier.size(MainBottomNavIconSize),
                     )
@@ -657,7 +653,7 @@ fun FloatingSideNavRail(
                 },
                 icon = { isSelected ->
                     Icon(
-                        imageVector = if (isSelected) Icons.Default.Notifications else classicNavSymbol("Notifications"),
+                        imageVector = if (isSelected) classicNavFilledSymbol("Notifications") else classicNavSymbol("Notifications"),
                         contentDescription = cdBottomNavNotification(),
                         modifier = Modifier.size(MainBottomNavIconSize),
                     )
@@ -680,7 +676,7 @@ fun FloatingSideNavRail(
                 },
                 icon = { isSelected ->
                     Icon(
-                        imageVector = if (isSelected) Icons.Default.Widgets else classicNavSymbol("Widgets"),
+                        imageVector = if (isSelected) classicNavFilledSymbol("Widgets") else classicNavSymbol("Widgets"),
                         contentDescription = cdBottomNavExtension(),
                         modifier = Modifier.size(MainBottomNavIconSize),
                     )
@@ -818,3 +814,7 @@ private fun RowScope.FloatingBottomNavItem(
 /** 经典底栏与液态玻璃/Miuix 底栏共用 Material Symbols（wght=350）。 */
 private fun classicNavSymbol(name: String): ImageVector =
     requireNotNull(MaterialSymbolVectors.get(name)) { "unknown Material Symbol: $name" }
+
+/** 选中态使用同一套 Material Symbols 的 FILL=1 变体，避免切换时换几何。 */
+private fun classicNavFilledSymbol(name: String): ImageVector =
+    requireNotNull(MaterialSymbolVectors.getFilled(name)) { "unknown filled Material Symbol: $name" }

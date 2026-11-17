@@ -44,6 +44,24 @@ internal object MaterialSymbolVectors {
 
     fun get(name: String): ImageVector? = icons[name]
 
+    /** Material Symbols 的 FILL=1 变体，供选中态使用，几何与 [get] 的描边版对齐。 */
+    private val filledPaths: Map<String, String> = mapOf(
+        "Home" to "M4.5,20.5V9.25L12,3.61l7.5,5.64V20.5H13.9V13.81H10.1V20.5H4.5Z",
+        "Notifications" to "M4.25 18.94V17.19H6.15V9.96Q6.15 7.92 7.4 6.33Q8.65 4.75 10.63 " +
+            "4.29V3.63Q10.63 3.05 11.03 2.65Q11.43 2.25 12 2.25Q12.57 2.25 12.97 2.65Q13.37 " +
+            "3.05 13.37 3.63V4.29Q15.35 4.75 16.6 6.33Q17.85 7.92 17.85 9.96V17.19H19.75V18.94Z" +
+            "M12 21.85Q11.21 21.85 10.65 21.29Q10.1 20.73 10.1 19.94H13.9Q13.9 20.73 13.34 " +
+            "21.29Q12.78 21.85 12 21.85Z",
+        "Widgets" to "M16.56 12.74 11.27 7.45 16.56 2.15 21.86 7.45ZM3.4 10.9V3.4H10.9V10.9Z" +
+            "M13.1 20.6V13.1H20.6V20.6ZM3.4 20.6V13.1H10.9V20.6Z",
+    )
+
+    private val filledIcons: Map<String, ImageVector> by lazy {
+        filledPaths.mapValues { (name, path) -> icon("${name}Filled", path) }
+    }
+
+    fun getFilled(name: String): ImageVector? = filledIcons[name]
+
     private val paths: Map<String, String> = mapOf(
         "AcUnit" to "M11.13 21.87V17.55L7.75 20.88L6.52 19.65L11.13 15.05V12.87H8.95L4.35 17.48L3.12 16.25L6.45 " +
             "12.87H2.13V11.13H6.45L3.12 7.75L4.35 6.52L8.95 11.13H11.13V8.95L6.52 4.35L7.75 3.12L11.13 " +
