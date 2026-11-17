@@ -39,6 +39,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -80,8 +81,15 @@ fun SettingIconContainer(
             },
         )
     if (LocalBareSettingIcons.current) {
+        // 裸图标没有底板承托，光学尺寸会显得偏小；轻微放大到约 26dp，
+        // 让 1.5dp 细线与带底板时的视觉重量接近。
         Box(modifier = slotModifier, contentAlignment = Alignment.Center) {
-            content()
+            Box(
+                modifier = Modifier.scale(1.08f),
+                contentAlignment = Alignment.Center,
+            ) {
+                content()
+            }
         }
         return
     }
