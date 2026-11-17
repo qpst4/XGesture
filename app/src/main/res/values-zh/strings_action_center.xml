@@ -92,5 +92,9 @@
     <string name="action_center_special_regional">适用入口：区域截图</string>
     <string name="key_event_presets_title">常用按键</string>
     <string name="magnifier_scale_title">缩放倍率</string>
-    <string name="magnifier_scale_summary">设定放大镜默认放大倍数，全屏跟手推视野与局部视窗均固定以此倍率放大</string>
+    <string name="magnifier_scale_summary">设定放大镜放大倍数</string>
+    <string name="magnifier_fullscreen_scale_title">全屏放大倍率（持续跟手）</string>
+    <string name="magnifier_fullscreen_scale_summary">推摇杆或长按手势持续漫游推视野时的全屏放大倍数</string>
+    <string name="magnifier_window_scale_title">局部放大倍率（视窗模式）</string>
+    <string name="magnifier_window_scale_summary">单次点击或松手触发的悬浮视窗放大镜倍数</string>
 </resources>

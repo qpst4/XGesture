@@ -16,8 +16,13 @@ import com.slideindex.app.service.SlideIndexAccessibilityService
  */
 object MagnifierPrefs {
     const val PREFS_NAME = "magnifier"
-    const val KEY_SCALE = "scale"
-    const val DEFAULT_SCALE = 2.0f
+    const val KEY_FULLSCREEN_SCALE = "fullscreen_scale"
+    const val KEY_WINDOW_SCALE = "window_scale"
+    private const val KEY_LEGACY_SCALE = "scale"
+
+    const val DEFAULT_FULLSCREEN_SCALE = 2.0f
+    const val DEFAULT_WINDOW_SCALE = 2.5f
+    const val DEFAULT_SCALE = DEFAULT_WINDOW_SCALE
     const val MIN_SCALE = 1.25f
     const val MAX_SCALE = 5.0f
 
@@ -25,17 +30,41 @@ object MagnifierPrefs {
         1.25f, 1.5f, 1.75f, 2f, 2.25f, 2.5f, 2.75f, 3f, 3.5f, 4f, 5f, 6f, 8f,
     )
 
-    fun readScale(context: Context): Float = runCatching {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getFloat(KEY_SCALE, DEFAULT_SCALE)
-    }.getOrDefault(DEFAULT_SCALE)
+    fun readFullscreenScale(context: Context): Float = runCatching {
+        val sp = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        if (sp.contains(KEY_FULLSCREEN_SCALE)) {
+            sp.getFloat(KEY_FULLSCREEN_SCALE, DEFAULT_FULLSCREEN_SCALE)
+        } else {
+            sp.getFloat(KEY_LEGACY_SCALE, DEFAULT_FULLSCREEN_SCALE)
+        }
+    }.getOrDefault(DEFAULT_FULLSCREEN_SCALE)
 
-    fun writeScale(context: Context, value: Float) {
+    fun writeFullscreenScale(context: Context, value: Float) {
         runCatching {
             context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                .edit().putFloat(KEY_SCALE, value).apply()
+                .edit().putFloat(KEY_FULLSCREEN_SCALE, value).apply()
         }
     }
+
+    fun readWindowScale(context: Context): Float = runCatching {
+        val sp = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        if (sp.contains(KEY_WINDOW_SCALE)) {
+            sp.getFloat(KEY_WINDOW_SCALE, DEFAULT_WINDOW_SCALE)
+        } else {
+            sp.getFloat(KEY_LEGACY_SCALE, DEFAULT_WINDOW_SCALE)
+        }
+    }.getOrDefault(DEFAULT_WINDOW_SCALE)
+
+    fun writeWindowScale(context: Context, value: Float) {
+        runCatching {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit().putFloat(KEY_WINDOW_SCALE, value).apply()
+        }
+    }
+
+    // 兼容方法
+    fun readScale(context: Context): Float = readWindowScale(context)
+    fun writeScale(context: Context, value: Float) = writeWindowScale(context, value)
 }
 
 /**
@@ -150,7 +179,11 @@ object SystemMagnifierController {
             return
         }
         val context = SlideIndexAccessibilityService.overlayHostContext() ?: service
-        scale = readScale(context)
+        scale = if (fullscreen) {
+            MagnifierPrefs.readFullscreenScale(context)
+        } else {
+            MagnifierPrefs.readWindowScale(context)
+        }
         controller = c
         lastX = x
         lastY = y
@@ -219,7 +252,7 @@ object SystemMagnifierController {
     private fun cycleScale(context: Context) {
         val index = SCALES.indexOfFirst { it == scale }.coerceAtLeast(0)
         scale = SCALES[(index + 1) % SCALES.size]
-        writeScale(context, scale)
+        MagnifierPrefs.writeWindowScale(context, scale)
         chip?.update(scaleLabel())
         apply(lastX, lastY)
         Toast.makeText(context, scaleLabel(), Toast.LENGTH_SHORT).show()

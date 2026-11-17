@@ -92,5 +92,9 @@
     <string name="action_center_special_regional">Available in: regional screenshot</string>
     <string name="key_event_presets_title">Common keys</string>
     <string name="magnifier_scale_title">Magnification scale</string>
-    <string name="magnifier_scale_summary">Set default magnification scale for fullscreen follow and window mode</string>
+    <string name="magnifier_scale_summary">Set magnification scale</string>
+    <string name="magnifier_fullscreen_scale_title">Fullscreen Zoom Scale (Continuous pan)</string>
+    <string name="magnifier_fullscreen_scale_summary">Magnification scale used for continuous panning with joysticks or held gestures</string>
+    <string name="magnifier_window_scale_title">Window Zoom Scale (Windowed mode)</string>
+    <string name="magnifier_window_scale_summary">Magnification scale used for floating window magnifier triggered by taps</string>
 </resources>

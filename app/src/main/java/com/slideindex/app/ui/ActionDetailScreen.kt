@@ -112,7 +112,12 @@ fun ActionDetailScreen(
     var isLongPress by rememberSaveable(action.type) { mutableStateOf(false) }
     var remindMinutes by rememberSaveable(action.type) { mutableIntStateOf(5) }
     var pageScroll by remember(context) { mutableStateOf(PageScrollPrefs.read(context)) }
-    var magnifierScale by remember(context) { mutableFloatStateOf(MagnifierPrefs.readScale(context)) }
+    var magnifierFullscreenScale by remember(context) {
+        mutableFloatStateOf(MagnifierPrefs.readFullscreenScale(context))
+    }
+    var magnifierWindowScale by remember(context) {
+        mutableFloatStateOf(MagnifierPrefs.readWindowScale(context))
+    }
     val taskWidth = taskSwitcherWidthDp ?: 226
 
     val keyCode = keyCodeText.toIntOrNull()
@@ -488,23 +493,46 @@ fun ActionDetailScreen(
                     }
                     entry.type == GestureActionType.MAGNIFIER -> {
                         add(
-                            settingsCardScopeItem("magnifier-scale") {
+                            settingsCardScopeItem("magnifier-fullscreen-scale") {
                                 SettingsSliderRow(
-                                    title = stringResource(R.string.magnifier_scale_title),
-                                    summary = stringResource(R.string.magnifier_scale_summary),
-                                    value = magnifierScale,
+                                    title = stringResource(R.string.magnifier_fullscreen_scale_title),
+                                    summary = stringResource(R.string.magnifier_fullscreen_scale_summary),
+                                    value = magnifierFullscreenScale,
                                     valueRange = MagnifierPrefs.MIN_SCALE..MagnifierPrefs.MAX_SCALE,
                                     steps = 14,
                                     enabled = true,
-                                    label = String.format(Locale.getDefault(), "%.2f×", magnifierScale),
+                                    label = String.format(Locale.getDefault(), "%.2f×", magnifierFullscreenScale),
                                     commitOnFinish = true,
                                     onValueChange = { raw ->
                                         val step = 0.25f
                                         val rounded = (round(raw / step) * step)
                                             .coerceIn(MagnifierPrefs.MIN_SCALE, MagnifierPrefs.MAX_SCALE)
-                                        if (rounded != magnifierScale) {
-                                            magnifierScale = rounded
-                                            MagnifierPrefs.writeScale(context, rounded)
+                                        if (rounded != magnifierFullscreenScale) {
+                                            magnifierFullscreenScale = rounded
+                                            MagnifierPrefs.writeFullscreenScale(context, rounded)
+                                        }
+                                    },
+                                )
+                            },
+                        )
+                        add(
+                            settingsCardScopeItem("magnifier-window-scale") {
+                                SettingsSliderRow(
+                                    title = stringResource(R.string.magnifier_window_scale_title),
+                                    summary = stringResource(R.string.magnifier_window_scale_summary),
+                                    value = magnifierWindowScale,
+                                    valueRange = MagnifierPrefs.MIN_SCALE..MagnifierPrefs.MAX_SCALE,
+                                    steps = 14,
+                                    enabled = true,
+                                    label = String.format(Locale.getDefault(), "%.2f×", magnifierWindowScale),
+                                    commitOnFinish = true,
+                                    onValueChange = { raw ->
+                                        val step = 0.25f
+                                        val rounded = (round(raw / step) * step)
+                                            .coerceIn(MagnifierPrefs.MIN_SCALE, MagnifierPrefs.MAX_SCALE)
+                                        if (rounded != magnifierWindowScale) {
+                                            magnifierWindowScale = rounded
+                                            MagnifierPrefs.writeWindowScale(context, rounded)
                                         }
                                     },
                                 )
