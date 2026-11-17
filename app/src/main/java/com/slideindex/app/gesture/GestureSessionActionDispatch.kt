@@ -550,6 +550,7 @@ internal fun GestureSession.handleClassifiedGesture(
         is GestureAction.QuickWheel,
         is GestureAction.ToggleShakeGesture,
         is GestureAction.ToggleFloatBall,
+        GestureAction.MoveFloatBall,
         -> {
             sessionCallbacks.hapticConfirmLaunch()
             sessionActionExecutor.execute(

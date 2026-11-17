@@ -190,6 +190,10 @@ internal class FloatBallTouchHostLayout(
         ballDetector.moveModeActive = active
     }
 
+    fun beginDirectMove(downX: Float, downY: Float, currentX: Float, currentY: Float) {
+        ballDetector.beginDirectMove(downX, downY, currentX, currentY)
+    }
+
     fun lockPickFromPause() {
         ballDetector.lockPickFromPause()
     }

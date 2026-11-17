@@ -125,6 +125,7 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.SCREEN_OFF_KEEP_AWAKE -> ThinActionIcons.ScreenOffKeepAwake
     GestureActionType.TOUCH_BLOCK -> ThinActionIcons.TouchBlockOff
     GestureActionType.PIN_TO_SCREEN -> ThinActionIcons.Pin
+    GestureActionType.MOVE_FLOAT_BALL -> ThinActionIcons.Drag
     GestureActionType.SIMULATE_KEY_EVENT -> ThinActionIcons.Keyboard
     GestureActionType.POINTER_GESTURE_RECORDER -> ThinActionIcons.Gesture
     GestureActionType.POINTER_REALTIME_GESTURE -> ThinActionIcons.Gesture
@@ -251,6 +252,7 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.SCREEN_OFF_KEEP_AWAKE -> ThinActionIcons.ScreenOffKeepAwake
     GestureActionType.TOUCH_BLOCK -> ThinActionIcons.TouchBlockOff
     GestureActionType.PIN_TO_SCREEN -> ThinActionIcons.Pin
+    GestureActionType.MOVE_FLOAT_BALL -> ThinActionIcons.Drag
     GestureActionType.SIMULATE_KEY_EVENT -> ThinActionIcons.Keyboard
     GestureActionType.POINTER_GESTURE_RECORDER -> ThinActionIcons.Gesture
     GestureActionType.POINTER_REALTIME_GESTURE -> ThinActionIcons.Gesture
