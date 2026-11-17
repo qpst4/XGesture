@@ -22,10 +22,14 @@ object AppLinks {
     const val HOST = "open"
     const val QUERY_PARAM = "q"
 
+    /** 动作详情页深链的参数名：`xgesture://open/action?type=OPEN_LINK`。 */
+    const val TYPE_PARAM = "type"
+
     const val PATH_NOTIFICATION_HISTORY = "notification-history"
     const val PATH_STASH = "stash"
     const val PATH_CLIPBOARD = "clipboard"
     const val PATH_SEARCH_PANEL = "search-panel"
+    const val PATH_ACTION = "action"
 
     /**
      * 解析入口。各处不要再自己比较 scheme —— 漏改一处就是「能唤起但面板开错」，
@@ -49,4 +53,19 @@ object AppLinks {
             .build()
 
     fun uriString(path: String): String = uri(path).toString()
+
+    /**
+     * 动作详情页深链：`xgesture://open/action?type=<GestureActionType.name>`。
+     *
+     * 这里单独拼 `type` 参数，因为 [uri] 的 `q` 是给「打开后搜索」用的，不适用于动作类型。
+     */
+    fun actionUri(type: String): Uri =
+        Uri.Builder()
+            .scheme(SCHEME)
+            .authority(HOST)
+            .appendPath(PATH_ACTION)
+            .appendQueryParameter(TYPE_PARAM, type)
+            .build()
+
+    fun actionUriString(type: String): String = actionUri(type).toString()
 }

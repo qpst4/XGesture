@@ -16,6 +16,8 @@
     <string name="action_center_badge_shake">Т</string>
 
     <string name="action_center_info">Описание</string>
+    <string name="action_center_deeplink">Прямая ссылка</string>
+    <string name="action_center_deeplink_copied">Прямая ссылка скопирована</string>
     <string name="action_center_test">Тест</string>
     <string name="action_center_test_success">Выполнено</string>
     <string name="action_center_test_failed">Ошибка выполнения</string>

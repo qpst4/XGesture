@@ -162,6 +162,16 @@
                     android:path="/notification-history"
                     android:scheme="xgesture" />
             </intent-filter>
+            <!-- 动作详情页：xgesture://open/action?type=<GestureActionType.name> -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="open"
+                    android:path="/action"
+                    android:scheme="xgesture" />
+            </intent-filter>
         </activity>
 
         <!-- 冰箱：仅通过手势 / Pin 快捷方式打开，不注册 LAUNCHER alias（避免 Flyme 假「卸载」图标） -->

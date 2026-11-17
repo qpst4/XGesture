@@ -49,6 +49,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.nav.transition.NavSwipeDirection
 import com.slideindex.app.MainActivity
 import com.slideindex.app.di.AppDependencies
+import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.settings.AppRootSettings
 import com.slideindex.app.settings.HomeMainSettings
 import com.slideindex.app.settings.BottomNavMode
@@ -101,6 +102,14 @@ private val MainTabSwitchSlideOffset = 28.dp
 private const val MainTabSwitchInactiveScale = 0.98f
 private const val MainBottomNavHostFadeDurationMs = 150
 
+/** `xgesture://open/action?type=...` 被 [MainActivity] 转成的内部导航路由。 */
+private fun actionDetailTypeFromRoute(route: String?): GestureActionType? =
+    route
+        ?.takeIf { it.startsWith(MainActivity.NAV_ROUTE_ACTION_DETAIL_PREFIX) }
+        ?.removePrefix(MainActivity.NAV_ROUTE_ACTION_DETAIL_PREFIX)
+        ?.takeIf { it.isNotBlank() }
+        ?.let { runCatching { GestureActionType.valueOf(it) }.getOrNull() }
+
 @Composable
 fun MainNavHost(
     activity: MainActivity,
@@ -128,7 +137,8 @@ fun MainNavHost(
                 MainBottomNavDestination.Notification.name
             }
             initialNavRoute == MainActivity.NAV_ROUTE_EXTENSION_FREEZER ||
-                initialNavRoute == MainActivity.NAV_ROUTE_EXTENSION_FREEZER_APPS -> {
+                initialNavRoute == MainActivity.NAV_ROUTE_EXTENSION_FREEZER_APPS ||
+                initialNavRoute?.startsWith(MainActivity.NAV_ROUTE_ACTION_DETAIL_PREFIX) == true -> {
                 MainBottomNavDestination.Extension.name
             }
             else -> MainBottomNavDestination.Home.name
@@ -147,11 +157,17 @@ fun MainNavHost(
     }
     val notificationBackStack = rememberNavBackStack<AppNavKey>(*notificationInitial)
 
-    val extensionInitial = when (initialNavRoute) {
-        MainActivity.NAV_ROUTE_EXTENSION_FREEZER_APPS -> {
+    val deepLinkedAction = actionDetailTypeFromRoute(initialNavRoute)
+    val extensionInitial = when {
+        deepLinkedAction != null -> arrayOf(
+            AppNavKey.ExtensionHub,
+            AppNavKey.ActionCenter,
+            AppNavKey.ActionDetail(deepLinkedAction.name),
+        )
+        initialNavRoute == MainActivity.NAV_ROUTE_EXTENSION_FREEZER_APPS -> {
             arrayOf(AppNavKey.ExtensionHub, AppNavKey.ExtensionFreezer, AppNavKey.ExtensionFreezerApps)
         }
-        MainActivity.NAV_ROUTE_EXTENSION_FREEZER -> {
+        initialNavRoute == MainActivity.NAV_ROUTE_EXTENSION_FREEZER -> {
             arrayOf(AppNavKey.ExtensionHub, AppNavKey.ExtensionFreezer)
         }
         else -> arrayOf(AppNavKey.ExtensionHub)
@@ -217,6 +233,23 @@ fun MainNavHost(
     )
 
     SideEffect {
+        if (initialNavRoute?.startsWith(MainActivity.NAV_ROUTE_ACTION_DETAIL_PREFIX) == true) {
+            val extensionTab = MainBottomNavDestination.Extension.name
+            if (savedBottomNavTab != extensionTab) {
+                savedBottomNavTab = extensionTab
+            }
+            if (deepLinkedAction != null) {
+                val target = AppNavKey.ActionDetail(deepLinkedAction.name)
+                if (extensionBackStack.lastOrNull() != target) {
+                    extensionBackStack.clear()
+                    extensionBackStack.add(AppNavKey.ExtensionHub)
+                    extensionBackStack.add(AppNavKey.ActionCenter)
+                    extensionBackStack.add(target)
+                }
+            }
+            onNavRouteConsumed()
+            return@SideEffect
+        }
         when (initialNavRoute) {
             MainActivity.NAV_ROUTE_EXTENSION_FREEZER -> {
                 val extensionTab = MainBottomNavDestination.Extension.name

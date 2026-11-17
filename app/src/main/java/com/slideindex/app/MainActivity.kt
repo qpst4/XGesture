@@ -229,12 +229,28 @@ class MainActivity : ComponentActivity() {
     private fun applyLaunchIntent(intent: Intent?) {
         val resolvedAction = resolveLaunchAction(intent)
         currentIntentAction.value = resolvedAction
-        pendingNavRoute.value = intent?.getStringExtra(EXTRA_NAV_ROUTE)
+        pendingNavRoute.value = resolveNavRoute(intent)
         pendingShowUpdate.value = intent?.getBooleanExtra(UpdateIntents.EXTRA_SHOW_UPDATE, false) == true
         when (intent?.getStringExtra(EXTRA_FREEZER_TAB)) {
             FREEZER_TAB_FROZEN -> FreezerLaunchState.setPendingInitialTab(FreezerTab.FROZEN)
         }
         reportShortcutUsageIfNeeded(resolvedAction)
+    }
+
+    /**
+     * 启动时要落到的导航位置。
+     *
+     * 显式 `EXTRA_NAV_ROUTE` 优先；否则解析 app link，把 `action?type=` 转成
+     * `action_detail:<GestureActionType.name>`，交给 [MainNavHost] 建栈。
+     */
+    private fun resolveNavRoute(intent: Intent?): String? {
+        intent?.getStringExtra(EXTRA_NAV_ROUTE)?.let { return it }
+        val uri = intent?.data ?: return null
+        if (!AppLinks.isAppLink(uri)) return null
+        if (uri.pathSegments.firstOrNull()?.lowercase() != AppLinks.PATH_ACTION) return null
+        val type = uri.getQueryParameter(AppLinks.TYPE_PARAM)?.trim().orEmpty()
+        if (type.isEmpty()) return null
+        return NAV_ROUTE_ACTION_DETAIL_PREFIX + type
     }
 
     private fun resolveLaunchAction(intent: Intent?): String? {
@@ -421,6 +437,8 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_FREEZER_TAB = "extra_freezer_tab"
         const val NAV_ROUTE_EXTENSION_FREEZER = "extension_freezer"
         const val NAV_ROUTE_EXTENSION_FREEZER_APPS = "extension_freezer_apps"
+        /** 动作详情深链的前缀；完整值是 `action_detail:<GestureActionType.name>`。 */
+        const val NAV_ROUTE_ACTION_DETAIL_PREFIX = "action_detail:"
         const val FREEZER_TAB_FROZEN = "frozen"
 
         /** Gaps after resume; first tick is relative to scheduling (see [schedulePermissionRefreshRetries]). */

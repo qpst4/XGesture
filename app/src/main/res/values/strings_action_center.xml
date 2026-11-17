@@ -16,6 +16,8 @@
     <string name="action_center_badge_shake">S</string>
 
     <string name="action_center_info">About</string>
+    <string name="action_center_deeplink">Deep link</string>
+    <string name="action_center_deeplink_copied">Deep link copied</string>
     <string name="action_center_test">Test</string>
     <string name="action_center_test_success">Executed</string>
     <string name="action_center_test_failed">Failed to execute</string>

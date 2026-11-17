@@ -16,6 +16,8 @@
     <string name="action_center_badge_shake">振</string>
 
     <string name="action_center_info">説明</string>
+    <string name="action_center_deeplink">ディープリンク</string>
+    <string name="action_center_deeplink_copied">ディープリンクをコピーしました</string>
     <string name="action_center_test">テスト</string>
     <string name="action_center_test_success">実行しました</string>
     <string name="action_center_test_failed">実行に失敗しました</string>

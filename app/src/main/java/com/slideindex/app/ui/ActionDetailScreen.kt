@@ -1,5 +1,6 @@
 package com.slideindex.app.ui
 
+import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,8 +13,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,13 +26,18 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
+import com.slideindex.app.external.AppLinks
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.KeyEventPresets
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
@@ -54,6 +63,7 @@ fun ActionDetailScreen(
     onTest: ((GestureAction) -> Unit)?,
 ) {
     val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
     val label = gestureActionLabel(action)
     val description = gestureActionDescription(action)
     val permissionHint = gestureActionPermissionHint(action, context)
@@ -61,6 +71,8 @@ fun ActionDetailScreen(
     val infoTitle = stringResource(R.string.action_center_info)
     val testTitle = stringResource(R.string.action_center_test)
     val settingsTitle = stringResource(R.string.action_center_settings)
+    val deeplinkTitle = stringResource(R.string.action_center_deeplink)
+    val deeplink = AppLinks.actionUriString(action.type.name)
 
     var url by rememberSaveable(action.type) { mutableStateOf("") }
     var linkLabel by rememberSaveable(action.type) { mutableStateOf("") }
@@ -143,6 +155,48 @@ fun ActionDetailScreen(
                                 text = permissionHint,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                        }
+                    }
+                },
+            ),
+        )
+
+        settingsLazySmallTitle(
+            key = "action-detail-deeplink",
+            title = deeplinkTitle,
+        )
+        groupedCardItems(
+            keyPrefix = "action-detail-deeplink",
+            items = listOf(
+                settingsCardScopeItem("deeplink") {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = deeplink,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MiuixTheme.colorScheme.onSurfaceContainer,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        IconButton(
+                            onClick = {
+                                clipboard.setText(AnnotatedString(deeplink))
+                                Toast.makeText(
+                                    context,
+                                    R.string.action_center_deeplink_copied,
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                            },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = deeplinkTitle,
                             )
                         }
                     }
