@@ -5147,4 +5147,31 @@
     <string name="side_gestures_long_press_duration_summary">مدة بقاء مقبض الحافة ثابتًا حتى يُحتسب ضغطًا مطوّلًا (مستقل عن الكرة العائمة)</string>
     <string name="side_gestures_long_press_duration_value">%1$d ms</string>
 
+    <string name="magnifier_opened_toast">تم تشغيل المكبّر: انقر على النقطة أسفل اليمين للإغلاق، واضغط مطولًا لتغيير التكبير</string>
+    <string name="magnifier_requires_android13">يتطلب المكبّر بملء الشاشة Android 13 أو أحدث</string>
+    <string name="float_ball_pick_bar_edit">تعديل</string>
+    <string name="float_ball_pick_bar_edit_desc">فتح المحرر المدمج</string>
+    <string name="float_ball_pick_bar_view">عرض بملء الشاشة</string>
+    <string name="float_ball_pick_bar_view_desc">عرض الصورة الحالية بملء الشاشة داخل اللوحة</string>
+    <string name="floating_pointer_release_click_keep_joystick">النقر عند الإفلات مع إبقاء عصا التحكم</string>
+    <string name="floating_pointer_release_click_keep_joystick_desc">في كل مرة ترفع إصبعك بعد الحركة، يتم النقر عند المؤشر مع إبقاء عصا التحكم لسحبها مجددًا (تختفي تلقائيًا بعد 8 ثوانٍ من عدم النشاط)</string>
+    <string name="floating_pointer_release_click_mode">وضع الإفلات</string>
+    <string name="floating_pointer_release_click_mode_desc">اختر ما يحدث عند رفع إصبعك: لا شيء، النقر وإغلاق عصا التحكم، أو النقر وإبقاؤها لسحب آخر.</string>
+    <string name="floating_pointer_release_click_off">عدم فعل أي شيء</string>
+    <string name="gesture_action_magnifier">المكبّر</string>
+    <string name="gesture_action_magnifier_desc">تكبير الشاشة حول نقطة التشغيل (أو إصبعك)</string>
+    <string name="gesture_action_pointer_pinch">تكبير/تصغير بالقرص في الوقت الفعلي</string>
+    <string name="gesture_action_pointer_pinch_desc">اضغط على المؤشر وحرّكه لتكبير/تصغير بالقرص في الوقت الفعلي</string>
+    <string name="gesture_action_pointer_scroll">تمرير في الوقت الفعلي</string>
+    <string name="gesture_action_pointer_scroll_desc">اضغط على المؤشر وحرّكه للتمرير؛ كلما ابتعدت زادت السرعة</string>
+    <string name="gesture_action_require_min_sdk_33">يتطلب Android 13</string>
+    <string name="magnifier_chip_text">المكبّر %1$s× · انقر للإغلاق</string>
+    <string name="pick_image_tap_edit">تعديل</string>
+    <string name="pick_image_tap_open">فتح بتطبيق العرض</string>
+    <string name="pick_image_tap_save">حفظ</string>
+    <string name="pick_image_tap_share">مشاركة</string>
+    <string name="pick_image_tap_title">إجراء النقر على الصورة</string>
+    <string name="pick_image_tap_view">عرض الصورة</string>
+    <string name="pick_result_action_edit_image">تعديل الصورة</string>
+    <string name="pick_result_translate_target_switched">لغة الترجمة: %1$s</string>
 </resources>

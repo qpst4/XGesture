@@ -5143,4 +5143,31 @@
     <string name="side_gestures_long_press_duration_summary">エッジのトリガーを押したまま動かさずに長押しと判定されるまでの時間（フローティングボールとは独立）</string>
     <string name="side_gestures_long_press_duration_value">%1$d ms</string>
 
+    <string name="magnifier_opened_toast">拡大鏡をオンにしました：右下の点をタップで閉じる、長押しで倍率を切り替え</string>
+    <string name="magnifier_requires_android13">全画面の拡大鏡には Android 13 以降が必要です</string>
+    <string name="float_ball_pick_bar_edit">編集</string>
+    <string name="float_ball_pick_bar_edit_desc">内蔵エディタを開く</string>
+    <string name="float_ball_pick_bar_view">全画面表示</string>
+    <string name="float_ball_pick_bar_view_desc">現在の画像をパネル内で全画面表示</string>
+    <string name="floating_pointer_release_click_keep_joystick">離したときにタップ、ジョイスティックは維持</string>
+    <string name="floating_pointer_release_click_keep_joystick_desc">移動後に指を離すたびにポインタ位置でタップしますが、ジョイスティックは維持して再度ドラッグできます（8秒操作がないと自動的に隠れます）</string>
+    <string name="floating_pointer_release_click_mode">離したときの動作</string>
+    <string name="floating_pointer_release_click_mode_desc">指を離したときの動作を選択：何もしない、タップしてジョイスティックを閉じる、タップしてジョイスティックを維持し再度ドラッグ可能</string>
+    <string name="floating_pointer_release_click_off">何もしない</string>
+    <string name="gesture_action_magnifier">拡大鏡</string>
+    <string name="gesture_action_magnifier_desc">トリガー位置（または指）の周囲を拡大</string>
+    <string name="gesture_action_pointer_pinch">リアルタイムのピンチズーム</string>
+    <string name="gesture_action_pointer_pinch_desc">ポインタを押したまま動かしてリアルタイムにピンチ/ズーム</string>
+    <string name="gesture_action_pointer_scroll">リアルタイムスクロール</string>
+    <string name="gesture_action_pointer_scroll_desc">ポインタを押したまま動かしてスクロール。遠いほど速い</string>
+    <string name="gesture_action_require_min_sdk_33">Android 13 が必要</string>
+    <string name="magnifier_chip_text">拡大鏡 %1$s× · タップで閉じる</string>
+    <string name="pick_image_tap_edit">編集</string>
+    <string name="pick_image_tap_open">ビューアアプリで開く</string>
+    <string name="pick_image_tap_save">保存</string>
+    <string name="pick_image_tap_share">共有</string>
+    <string name="pick_image_tap_title">画像タップ時の動作</string>
+    <string name="pick_image_tap_view">画像を表示</string>
+    <string name="pick_result_action_edit_image">画像を編集</string>
+    <string name="pick_result_translate_target_switched">翻訳先：%1$s</string>
 </resources>

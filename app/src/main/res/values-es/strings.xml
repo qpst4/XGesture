@@ -5152,4 +5152,31 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="side_gestures_long_press_duration_summary">Cuánto tiempo hay que mantener pulsado el borde sin mover el dedo para que cuente como pulsación larga (independiente de la bola flotante)</string>
     <string name="side_gestures_long_press_duration_value">%1$d ms</string>
 
+    <string name="magnifier_opened_toast">Lupa activada: toca el punto de la esquina inferior derecha para cerrarla; mantén pulsado para cambiar el zoom</string>
+    <string name="magnifier_requires_android13">La lupa de pantalla completa requiere Android 13 o superior</string>
+    <string name="float_ball_pick_bar_edit">Editar</string>
+    <string name="float_ball_pick_bar_edit_desc">Abrir el editor integrado</string>
+    <string name="float_ball_pick_bar_view">Vista a pantalla completa</string>
+    <string name="float_ball_pick_bar_view_desc">Ver la imagen actual a pantalla completa dentro del panel</string>
+    <string name="floating_pointer_release_click_keep_joystick">Tocar al soltar y mantener el joystick</string>
+    <string name="floating_pointer_release_click_keep_joystick_desc">Cada vez que levantes el dedo tras mover, se toca en el puntero pero se mantiene el joystick para volver a arrastrar (se oculta tras 8 s sin actividad)</string>
+    <string name="floating_pointer_release_click_mode">Modo al soltar</string>
+    <string name="floating_pointer_release_click_mode_desc">Elige qué ocurre al levantar el dedo: nada, tocar y cerrar el joystick, o tocar y mantenerlo para otro arrastre.</string>
+    <string name="floating_pointer_release_click_off">No hacer nada</string>
+    <string name="gesture_action_magnifier">Lupa</string>
+    <string name="gesture_action_magnifier_desc">Amplía la pantalla alrededor del punto de activación (o de tu dedo)</string>
+    <string name="gesture_action_pointer_pinch">Zoom con pellizco en tiempo real</string>
+    <string name="gesture_action_pointer_pinch_desc">Mantén el puntero y muévete para hacer pellizco/zoom en tiempo real</string>
+    <string name="gesture_action_pointer_scroll">Desplazamiento en tiempo real</string>
+    <string name="gesture_action_pointer_scroll_desc">Mantén el puntero y muévete para desplazarte; más lejos = más rápido</string>
+    <string name="gesture_action_require_min_sdk_33">Requiere Android 13</string>
+    <string name="magnifier_chip_text">Lupa %1$s× · toca para cerrar</string>
+    <string name="pick_image_tap_edit">Editar</string>
+    <string name="pick_image_tap_open">Abrir con la app visor</string>
+    <string name="pick_image_tap_save">Guardar</string>
+    <string name="pick_image_tap_share">Compartir</string>
+    <string name="pick_image_tap_title">Acción al tocar la imagen</string>
+    <string name="pick_image_tap_view">Ver imagen</string>
+    <string name="pick_result_action_edit_image">Editar imagen</string>
+    <string name="pick_result_translate_target_switched">Idioma de traducción: %1$s</string>
 </resources>

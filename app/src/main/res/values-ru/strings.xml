@@ -5175,4 +5175,31 @@
     <string name="side_gestures_long_press_duration_summary">Сколько нужно удерживать краевой триггер, чтобы сработало длительное нажатие (независимо от плавающего шарика)</string>
     <string name="side_gestures_long_press_duration_value">%1$d ms</string>
 
+    <string name="magnifier_opened_toast">Лупа включена: нажмите точку в правом нижнем углу, чтобы закрыть; долгое нажатие меняет масштаб</string>
+    <string name="magnifier_requires_android13">Полноэкранная лупа требует Android 13 или новее</string>
+    <string name="float_ball_pick_bar_edit">Изменить</string>
+    <string name="float_ball_pick_bar_edit_desc">Открыть встроенный редактор</string>
+    <string name="float_ball_pick_bar_view">Полноэкранный просмотр</string>
+    <string name="float_ball_pick_bar_view_desc">Просмотреть текущее изображение на весь экран в панели</string>
+    <string name="floating_pointer_release_click_keep_joystick">Нажатие при отпускании, джойстик остаётся</string>
+    <string name="floating_pointer_release_click_keep_joystick_desc">При каждом отпускании пальца после движения выполняется нажатие у указателя, но джойстик остаётся, чтобы можно было снова тянуть (скрывается через 8 с бездействия)</string>
+    <string name="floating_pointer_release_click_mode">Режим отпускания</string>
+    <string name="floating_pointer_release_click_mode_desc">Выберите, что делать при отпускании пальца: ничего, нажать и закрыть джойстик или нажать и оставить его для следующего перетаскивания.</string>
+    <string name="floating_pointer_release_click_off">Ничего не делать</string>
+    <string name="gesture_action_magnifier">Лупа</string>
+    <string name="gesture_action_magnifier_desc">Увеличивает экран вокруг точки запуска (или пальца)</string>
+    <string name="gesture_action_pointer_pinch">Масштабирование щипком в реальном времени</string>
+    <string name="gesture_action_pointer_pinch_desc">Удерживайте указатель и двигайтесь для масштабирования щипком в реальном времени</string>
+    <string name="gesture_action_pointer_scroll">Прокрутка в реальном времени</string>
+    <string name="gesture_action_pointer_scroll_desc">Удерживайте указатель и двигайтесь для прокрутки; дальше — быстрее</string>
+    <string name="gesture_action_require_min_sdk_33">Требуется Android 13</string>
+    <string name="magnifier_chip_text">Лупа %1$s× · нажмите, чтобы закрыть</string>
+    <string name="pick_image_tap_edit">Изменить</string>
+    <string name="pick_image_tap_open">Открыть в приложении просмотра</string>
+    <string name="pick_image_tap_save">Сохранить</string>
+    <string name="pick_image_tap_share">Поделиться</string>
+    <string name="pick_image_tap_title">Действие при нажатии на изображение</string>
+    <string name="pick_image_tap_view">Просмотреть изображение</string>
+    <string name="pick_result_action_edit_image">Изменить изображение</string>
+    <string name="pick_result_translate_target_switched">Язык перевода: %1$s</string>
 </resources>
