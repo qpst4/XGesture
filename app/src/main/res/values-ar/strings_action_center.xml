@@ -16,7 +16,8 @@
     <string name="action_center_badge_shake">ه</string>
 
     <string name="action_center_info">معلومات أساسية</string>
-    <string name="action_center_deeplink">رابط مباشر</string>
+    <string name="action_center_intro">مقدمة</string>
+    <string name="action_center_deeplink">رابط عميق</string>
     <string name="action_center_deeplink_copied">تم نسخ الرابط المباشر</string>
     <string name="action_center_test">تنفيذ الآن</string>
     <string name="action_center_test_success">تم التنفيذ</string>

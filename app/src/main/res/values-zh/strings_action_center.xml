@@ -16,7 +16,8 @@
     <string name="action_center_badge_shake">晃</string>
 
     <string name="action_center_info">基本信息</string>
-    <string name="action_center_deeplink">深链</string>
+    <string name="action_center_intro">简介</string>
+    <string name="action_center_deeplink">深度链接</string>
     <string name="action_center_deeplink_copied">已复制深链</string>
     <string name="action_center_test">立即执行</string>
     <string name="action_center_test_success">已执行</string>

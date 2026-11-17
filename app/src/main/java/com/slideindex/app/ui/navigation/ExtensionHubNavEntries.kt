@@ -64,6 +64,7 @@ import com.slideindex.app.ui.viewmodel.CloudStorageSettingsViewModel
 import com.slideindex.app.ui.viewmodel.DiagnosticLogViewModel
 import com.slideindex.app.ui.viewmodel.ExtensionHubViewModel
 import com.slideindex.app.ui.viewmodel.ExtensionSettingsViewModel
+import com.slideindex.app.ui.viewmodel.HomeDetailSettingsViewModel
 import com.slideindex.app.ui.viewmodel.MultiTouchGestureViewModel
 import com.slideindex.app.ui.viewmodel.SettingsBackupViewModel
 import com.slideindex.app.settings.SearchEngineType
@@ -128,7 +129,7 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             actionType?.let(ActionCenterCatalog::entryOf)
         }
         if (entry != null) {
-            val viewModel: ExtensionSettingsViewModel = hiltViewModel()
+            val viewModel: HomeDetailSettingsViewModel = hiltViewModel()
             val settings by viewModel.settings.collectAsStateWithLifecycle()
             ActionDetailScreen(
                 action = entry.sample,
@@ -138,6 +139,8 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
                     { ctx.navigate(route) }
                 },
                 onTest = { action -> runActionTest(context, action, settings) },
+                taskSwitcherWidthDp = settings.taskSwitcherPanelWidthDp,
+                onTaskSwitcherWidthChange = viewModel::setTaskSwitcherPanelWidthDp,
             )
         }
     }
@@ -473,11 +476,8 @@ private fun runActionTest(
 /** 动作详情页“相关设置”的跳转；没有独立设置页的动作返回 null。 */
 private fun actionSettingsRoute(type: GestureActionType): AppNavKey? = when (type) {
     GestureActionType.OPEN_INDEX -> AppNavKey.HomeLayout
-    // 任务切换器没有独立设置页；宽度在「应用索引布局」里。
-    GestureActionType.TASK_SWITCHER -> AppNavKey.HomeLayout
     GestureActionType.FLOATING_POINTER -> AppNavKey.FloatingPointer
     GestureActionType.FREE_WINDOW_CURRENT_APP -> AppNavKey.HomeFreeWindow
-    GestureActionType.PAGE_SCROLL -> AppNavKey.PageScrollSettings
     GestureActionType.SHELL_COMMAND_PANEL -> AppNavKey.ShellCommands
     GestureActionType.QUICK_LAUNCHER -> AppNavKey.QuickLauncher
     GestureActionType.HONEYCOMB_LAUNCHER -> AppNavKey.HoneycombLauncher

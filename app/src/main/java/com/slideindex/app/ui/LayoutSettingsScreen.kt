@@ -42,7 +42,6 @@ fun LayoutSettingsScreen(
     onIndexVerticalPositionChange: (Float) -> Unit,
     onAppsPerRowChange: (Int) -> Unit,
     onPanelOpacityChange: (Float) -> Unit,
-    onTaskSwitcherPanelWidthChange: (Int) -> Unit = {},
     onHideEmptyIndexLettersChange: (Boolean) -> Unit,
     onOpenHiddenAppsSettings: () -> Unit,
     onLayoutPreviewStart: () -> Unit,
@@ -58,7 +57,6 @@ fun LayoutSettingsScreen(
 
     val layoutDesc = stringResource(R.string.layout_settings_entry_desc)
     val previewHint = stringResource(R.string.live_preview_hint)
-    val taskWidthFormat = stringResource(R.string.task_switcher_panel_width_value)
 
     MiuixListScaffold(
         title = stringResource(R.string.layout_settings_title),
@@ -155,30 +153,6 @@ fun LayoutSettingsScreen(
                         //（表现为滑块拖不跟手、松手后数值还在慢慢走）。
                         commitOnFinish = true,
                         onValueChange = onPanelOpacityChange,
-                    )
-                },
-                CardItem("task-switcher-width") {
-                    MiuixSliderRow(
-                        title = stringResource(R.string.task_switcher_panel_width),
-                        summary = stringResource(R.string.task_switcher_panel_width_desc),
-                        value = settings.taskSwitcherPanelWidthDp.toFloat(),
-                        valueRange = 180f..340f,
-                        steps = 15,
-                        enabled = serviceEnabled,
-                        label = String.format(
-                            java.util.Locale.US,
-                            taskWidthFormat,
-                            settings.taskSwitcherPanelWidthDp,
-                        ),
-                        formatLabel = { value ->
-                            String.format(
-                                java.util.Locale.US,
-                                taskWidthFormat,
-                                value.roundToInt(),
-                            )
-                        },
-                        commitOnFinish = true,
-                        onValueChange = { onTaskSwitcherPanelWidthChange(it.roundToInt()) },
                     )
                 },
             ),

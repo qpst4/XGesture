@@ -1829,7 +1829,6 @@ fun NavEntryBuilder.layoutSettingsNavEntries(ctx: MainNavContext) {
             onIndexVerticalPositionChange = viewModel::setIndexVerticalPositionFraction,
             onAppsPerRowChange = viewModel::setAppsPerRow,
             onPanelOpacityChange = viewModel::setPanelOpacity,
-            onTaskSwitcherPanelWidthChange = viewModel::setTaskSwitcherPanelWidthDp,
             onHideEmptyIndexLettersChange = viewModel::setHideEmptyIndexLetters,
             onOpenHiddenAppsSettings = { ctx.navigate(AppNavKey.HomeHiddenApps) },
             onLayoutPreviewStart = {

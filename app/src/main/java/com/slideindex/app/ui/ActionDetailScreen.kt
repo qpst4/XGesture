@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,12 +42,18 @@ import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
 import com.slideindex.app.external.AppLinks
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.gesture.KeyEventPresets
+import com.slideindex.app.pagescroll.PageScrollPrefs
+import com.slideindex.app.pagescroll.PageScrollSettings
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
+import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_01
+import com.slideindex.app.ui.settings.components.SettingsSliderRow
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
+import kotlin.math.roundToInt
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
@@ -62,6 +69,8 @@ fun ActionDetailScreen(
     onBack: () -> Unit,
     onOpenSettings: (() -> Unit)?,
     onTest: ((GestureAction) -> Unit)?,
+    taskSwitcherWidthDp: Int? = null,
+    onTaskSwitcherWidthChange: ((Int) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
@@ -70,6 +79,7 @@ fun ActionDetailScreen(
     val permissionHint = gestureActionPermissionHint(action, context)
     val specialHint = entry.special?.let { stringResource(it.hintRes) }
     val infoTitle = stringResource(R.string.action_center_info)
+    val introTitle = stringResource(R.string.action_center_intro)
     val settingsTitle = stringResource(R.string.action_center_settings)
     val openSettingsTitle = stringResource(R.string.action_center_open_settings)
     val settingsDesc = stringResource(R.string.action_center_settings_desc)
@@ -85,6 +95,8 @@ fun ActionDetailScreen(
     var keyCodeText by rememberSaveable(action.type) { mutableStateOf("82") }
     var isLongPress by rememberSaveable(action.type) { mutableStateOf(false) }
     var remindMinutes by rememberSaveable(action.type) { mutableIntStateOf(5) }
+    var pageScroll by remember(context) { mutableStateOf(PageScrollPrefs.read(context)) }
+    val taskWidth = taskSwitcherWidthDp ?: 226
 
     val keyCode = keyCodeText.toIntOrNull()
     val builtAction: GestureAction? = when (entry.testKind) {
@@ -153,6 +165,11 @@ fun ActionDetailScreen(
                     ) {
                         if (!description.isNullOrBlank()) {
                             Text(
+                                text = introTitle,
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MiuixTheme.colorScheme.onSurfaceContainer,
+                            )
+                            Text(
                                 text = description,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
@@ -175,8 +192,8 @@ fun ActionDetailScreen(
 
                         Text(
                             text = deeplinkTitle,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MiuixTheme.colorScheme.onSurfaceContainer,
                         )
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -329,31 +346,111 @@ fun ActionDetailScreen(
         )
         groupedCardItems(
             keyPrefix = "action-detail-settings",
-            items = listOf(
-                settingsCardScopeItem("settings") {
-                    if (openSettings != null) {
-                        SettingNavigationRow(
-                            icon = { contentDescription ->
-                                Icon(
-                                    imageVector = gestureActionTypeOutlinedIcon(entry.type),
-                                    contentDescription = contentDescription,
+            items = buildList {
+                when {
+                    entry.type == GestureActionType.TASK_SWITCHER -> add(
+                        settingsCardScopeItem("task-switcher-width") {
+                            SettingsSliderRow(
+                                title = stringResource(R.string.task_switcher_panel_width),
+                                summary = stringResource(R.string.task_switcher_panel_width_desc),
+                                value = taskWidth.toFloat(),
+                                valueRange = 180f..340f,
+                                steps = 15,
+                                enabled = onTaskSwitcherWidthChange != null,
+                                label = stringResource(
+                                    R.string.task_switcher_panel_width_value,
+                                    taskWidth,
+                                ),
+                                commitOnFinish = true,
+                                onValueChange = { onTaskSwitcherWidthChange?.invoke(it.roundToInt()) },
+                            )
+                        },
+                    )
+                    entry.type == GestureActionType.PAGE_SCROLL -> {
+                        add(
+                            settingsCardScopeItem("page-scroll-speed") {
+                                SettingsSliderRow(
+                                    title = stringResource(R.string.page_scroll_speed_title),
+                                    value = pageScroll.speedLevel.toFloat(),
+                                    valueRange = PageScrollSettings.MIN_SPEED_LEVEL.toFloat()..
+                                        PageScrollSettings.MAX_SPEED_LEVEL.toFloat(),
+                                    steps = PageScrollSettings.MAX_SPEED_LEVEL -
+                                        PageScrollSettings.MIN_SPEED_LEVEL - 1,
+                                    enabled = true,
+                                    label = stringResource(
+                                        R.string.page_scroll_speed_value,
+                                        pageScroll.speedLevel,
+                                        PageScrollSettings.MAX_SPEED_LEVEL,
+                                    ),
+                                    commitOnFinish = true,
+                                    onValueChange = { value ->
+                                        val level = value.roundToInt().coerceIn(
+                                            PageScrollSettings.MIN_SPEED_LEVEL,
+                                            PageScrollSettings.MAX_SPEED_LEVEL,
+                                        )
+                                        if (level != pageScroll.speedLevel) {
+                                            pageScroll = pageScroll.copy(speedLevel = level)
+                                            PageScrollPrefs.saveSpeedLevel(context, level)
+                                        }
+                                    },
                                 )
                             },
-                            title = openSettingsTitle,
-                            subtitle = settingsDesc,
-                            onClick = openSettings,
                         )
-                    } else {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = settingsHint,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            )
-                        }
+                        add(
+                            settingsCardScopeItem("page-scroll-alpha") {
+                                SettingsSliderRow(
+                                    title = stringResource(R.string.page_scroll_bar_idle_alpha_title),
+                                    summary = stringResource(R.string.page_scroll_bar_idle_alpha_summary),
+                                    value = pageScroll.controlBarIdleAlpha,
+                                    valueRange = PageScrollSettings.MIN_CONTROL_BAR_IDLE_ALPHA..
+                                        PageScrollSettings.MAX_CONTROL_BAR_IDLE_ALPHA,
+                                    enabled = true,
+                                    label = idleAlphaPercentLabel(pageScroll.controlBarIdleAlpha),
+                                    formatLabel = ::idleAlphaPercentLabel,
+                                    keyPoints = SETTINGS_SLIDER_PERCENT_KEY_POINTS_01,
+                                    commitOnFinish = true,
+                                    onValueChange = { alpha ->
+                                        val value = alpha.coerceIn(
+                                            PageScrollSettings.MIN_CONTROL_BAR_IDLE_ALPHA,
+                                            PageScrollSettings.MAX_CONTROL_BAR_IDLE_ALPHA,
+                                        )
+                                        if (value != pageScroll.controlBarIdleAlpha) {
+                                            pageScroll = pageScroll.copy(controlBarIdleAlpha = value)
+                                            PageScrollPrefs.saveControlBarIdleAlpha(context, value)
+                                        }
+                                    },
+                                )
+                            },
+                        )
                     }
-                },
-            ),
+                    openSettings != null -> add(
+                        settingsCardScopeItem("settings") {
+                            SettingNavigationRow(
+                                icon = { contentDescription ->
+                                    Icon(
+                                        imageVector = gestureActionTypeOutlinedIcon(entry.type),
+                                        contentDescription = contentDescription,
+                                    )
+                                },
+                                title = openSettingsTitle,
+                                subtitle = settingsDesc,
+                                onClick = openSettings,
+                            )
+                        },
+                    )
+                    else -> add(
+                        settingsCardScopeItem("settings") {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = settingsHint,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                )
+                            }
+                        },
+                    )
+                }
+            },
         )
     }
 }
@@ -389,6 +486,9 @@ private fun RemindChip(
         )
     }
 }
+
+private fun idleAlphaPercentLabel(alpha: Float): String =
+    "${(alpha.coerceIn(0f, 1f) * 100f).roundToInt()}%"
 
 @get:StringRes
 private val ActionSpecialMark.hintRes: Int

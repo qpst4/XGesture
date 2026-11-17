@@ -16,6 +16,7 @@
     <string name="action_center_badge_shake">S</string>
 
     <string name="action_center_info">Basic info</string>
+    <string name="action_center_intro">Intro</string>
     <string name="action_center_deeplink">Deep link</string>
     <string name="action_center_deeplink_copied">Deep link copied</string>
     <string name="action_center_test">Run now</string>
