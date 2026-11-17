@@ -192,7 +192,7 @@ object VolumePanelOverlayWindow {
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT,
         ).apply {
-            gravity = Gravity.TOP or Gravity.START
+            OverlayWindowTypes.applyFullScreen(this)
             title = TAG
         }
         backHandler = OverlayViewBackHandler(view) { handleBack() }.also { it.attach() }

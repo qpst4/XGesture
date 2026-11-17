@@ -340,7 +340,7 @@ fun SearchPanelScreen(
 
     fun applyTextFieldInput(updated: TextFieldValue) {
         val normalized = normalizeSearchPanelQuery(updated.text)
-        if (textQuery.isEmpty() && normalized.isNotEmpty() && normalized.all { it.isWhitespace() }) {
+        if (normalized.isNotEmpty() && normalized.all { it.isWhitespace() }) {
             textFieldValue = TextFieldValue("")
             showSearchHistory = true
             return

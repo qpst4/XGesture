@@ -359,6 +359,7 @@ object EdgeCardOverlayWindow {
             if (entry.view == null) {
                 if (ensureWindow(entry, hostContext)) {
                     applyEntry(entry, animated = false)
+                    scheduleAutoCollapse(entry)
                 } else {
                     // 重建失败：丢掉空壳，避免留下永远不显示的卡。
                     cancelAutoCollapse(entry)
