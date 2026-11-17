@@ -1,4 +1,4 @@
-﻿package com.slideindex.app.ui
+package com.slideindex.app.ui
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
@@ -39,13 +39,6 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Widgets
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -71,6 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
@@ -431,7 +425,7 @@ fun FloatingBottomNavBar(
                     },
                     icon = { isSelected ->
                         Icon(
-                            imageVector = if (isSelected) Icons.Default.Home else Icons.Outlined.Home,
+                            imageVector = classicNavSymbol("Home"),
                             contentDescription = cdBottomNavHome(),
                             modifier = Modifier.size(MainBottomNavIconSize),
                         )
@@ -479,7 +473,7 @@ fun FloatingBottomNavBar(
                     },
                     icon = { isSelected ->
                         Icon(
-                            imageVector = if (isSelected) Icons.Default.Notifications else Icons.Outlined.Notifications,
+                            imageVector = classicNavSymbol("Notifications"),
                             contentDescription = cdBottomNavNotification(),
                             modifier = Modifier.size(MainBottomNavIconSize),
                         )
@@ -502,7 +496,7 @@ fun FloatingBottomNavBar(
                     },
                     icon = { isSelected ->
                         Icon(
-                            imageVector = if (isSelected) Icons.Default.Widgets else Icons.Outlined.Widgets,
+                            imageVector = classicNavSymbol("Widgets"),
                             contentDescription = cdBottomNavExtension(),
                             modifier = Modifier.size(MainBottomNavIconSize),
                         )
@@ -611,7 +605,7 @@ fun FloatingSideNavRail(
                 },
                 icon = { isSelected ->
                     Icon(
-                        imageVector = if (isSelected) Icons.Default.Home else Icons.Outlined.Home,
+                        imageVector = classicNavSymbol("Home"),
                         contentDescription = cdBottomNavHome(),
                         modifier = Modifier.size(MainBottomNavIconSize),
                     )
@@ -659,7 +653,7 @@ fun FloatingSideNavRail(
                 },
                 icon = { isSelected ->
                     Icon(
-                        imageVector = if (isSelected) Icons.Default.Notifications else Icons.Outlined.Notifications,
+                        imageVector = classicNavSymbol("Notifications"),
                         contentDescription = cdBottomNavNotification(),
                         modifier = Modifier.size(MainBottomNavIconSize),
                     )
@@ -682,7 +676,7 @@ fun FloatingSideNavRail(
                 },
                 icon = { isSelected ->
                     Icon(
-                        imageVector = if (isSelected) Icons.Default.Widgets else Icons.Outlined.Widgets,
+                        imageVector = classicNavSymbol("Widgets"),
                         contentDescription = cdBottomNavExtension(),
                         modifier = Modifier.size(MainBottomNavIconSize),
                     )
@@ -816,3 +810,7 @@ private fun RowScope.FloatingBottomNavItem(
         }
     }
 }
+
+/** 经典底栏与液态玻璃/Miuix 底栏共用 Material Symbols（wght=350）。 */
+private fun classicNavSymbol(name: String): ImageVector =
+    requireNotNull(MaterialSymbolVectors.get(name)) { "unknown Material Symbol: $name" }
