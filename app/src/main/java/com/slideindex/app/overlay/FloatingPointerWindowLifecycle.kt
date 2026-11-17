@@ -80,7 +80,7 @@ internal class FloatingPointerWindowLifecycle(
         // 实例不可用时退回 Activity 上下文，用 APPLICATION_OVERLAY 先把指针显示出来。
         val hostContext = overlayHostContext()
             ?.takeIf { SlideIndexAccessibilityService.isConnected() }
-            ?: context
+            ?: context.applicationContext
 
         // Coordinator already posts off the edge touch stack; only defer once for direct callers.
         if (shouldContinueTouch && !attachDeferred) {
