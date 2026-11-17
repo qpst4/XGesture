@@ -103,14 +103,14 @@ object SystemMagnifierController {
         if (active) return
         this.fullscreen = fullscreen
         this.modeApplied = false
-        // setMagnificationConfig / MagnificationConfig 需要 API 33，setActivated 需要 API 34；
-        // 本功能按 Android 14（API 34）起支持。低版本在这里拦截，避免 NoSuchMethodError。
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            Log.i(TAG, "ignored: requires Android 14+")
+        // setMagnificationConfig / MagnificationConfig 需要 API 33；
+        // 本功能按 Android 13（API 33）起支持。低版本在这里拦截，避免 NoSuchMethodError。
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            Log.i(TAG, "ignored: requires Android 13+")
             SlideIndexAccessibilityService.overlayHostContext()?.let { context ->
                 Toast.makeText(
                     context,
-                    context.getString(R.string.magnifier_requires_android14),
+                    context.getString(R.string.magnifier_requires_android13),
                     Toast.LENGTH_SHORT,
                 ).show()
             }
@@ -229,11 +229,14 @@ object SystemMagnifierController {
      * 用系统的 `setScale` + `setCenter`（都 animated=false）：
      * 全屏模式下将手指坐标换算为视窗中心平移偏移：
      * center -= (center - screenSize / 2) / scale。
+     *
+     * 配置里**不调用** `MagnificationConfig.Builder.setActivated(true)`：它是 API 34 才有的
+     * 方法，而 Builder 默认就是 true；Android 13 上 `setMagnificationConfig` 本身就会激活。
      */
     private fun apply(x: Float, y: Float): Boolean {
         val c = controller ?: return false
-        // 正常路径已在 start() 拦掉 <34；这里再兜一道，既防反射调用，也让 lint 识别版本边界。
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return false
+        // 正常路径已在 start() 拦掉 <33；这里再兜一道，既防反射调用，也让 lint 识别版本边界。
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
         val (width, height) = screenSize()
         var cx = x
         var cy = y
@@ -247,7 +250,6 @@ object SystemMagnifierController {
             if (!modeApplied) {
                 val config = MagnificationConfig.Builder()
                     .setMode(MagnificationConfig.MAGNIFICATION_MODE_FULLSCREEN)
-                    .setActivated(true)
                     .setScale(scale)
                     .setCenterX(cx)
                     .setCenterY(cy)
@@ -276,7 +278,6 @@ object SystemMagnifierController {
             cy = cy.coerceIn(height * 0.1f, height * 0.9f)
             val config = MagnificationConfig.Builder()
                 .setMode(MagnificationConfig.MAGNIFICATION_MODE_WINDOW)
-                .setActivated(true)
                 .setScale(scale)
                 .setCenterX(cx)
                 .setCenterY(cy)

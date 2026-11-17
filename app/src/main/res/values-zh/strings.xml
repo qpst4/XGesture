@@ -5196,5 +5196,5 @@ adb 模式应返回 uid=2000。
     <string name="gesture_action_require_min_sdk_33">需要 Android 13</string>
     <string name="magnifier_chip_text">放大镜 %1$s× · 点我关闭</string>
     <string name="magnifier_opened_toast">放大镜已开启：点右下角小圆点关闭，长按切换倍率</string>
-    <string name="magnifier_requires_android14">全屏放大镜需要 Android 11 及以上</string>
+    <string name="magnifier_requires_android13">全屏放大镜需要 Android 13 及以上</string>
 </resources>
