@@ -88,4 +88,7 @@
     <string name="gesture_action_shake_menu_desc">Open a shake menu, then shake again to pick an item.</string>
     <string name="gesture_action_toggle_nfc_desc">Toggle NFC.</string>
     <string name="gesture_action_toggle_bluetooth_desc">Toggle Bluetooth.</string>
+    <string name="action_center_special_fingertip">Available in: fingertip ring</string>
+    <string name="action_center_special_regional">Available in: regional screenshot</string>
+    <string name="key_event_presets_title">Common keys</string>
 </resources>

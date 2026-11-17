@@ -69,6 +69,8 @@ import com.slideindex.app.ui.viewmodel.MultiTouchGestureViewModel
 import com.slideindex.app.ui.viewmodel.SettingsBackupViewModel
 import com.slideindex.app.settings.SearchEngineType
 import com.slideindex.app.ui.viewmodel.SearchEngineSettingsViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
@@ -136,11 +138,13 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
                 entry = entry,
                 onBack = { ctx.navigateBack() },
                 onOpenSettings = actionSettingsRoute(entry.type)?.let { route ->
-                    { ctx.navigate(route) }
+                    { ctx.navigateFromActionDetail(route) }
                 },
                 onTest = { action -> runActionTest(context, action, settings) },
                 taskSwitcherWidthDp = settings.taskSwitcherPanelWidthDp,
                 onTaskSwitcherWidthChange = viewModel::setTaskSwitcherPanelWidthDp,
+                appCarouselSwitcher = settings.appCarouselSwitcher,
+                onAppCarouselSwitcherChange = viewModel::setAppCarouselSwitcherSettings,
             )
         }
     }
@@ -464,6 +468,11 @@ private fun runActionTest(
     val executor = ActionExecutor(
         context = executionContext,
         appRepository = dependencies.appRepository,
+        onShellCommandsPersist = { commands ->
+            CoroutineScope(Dispatchers.IO).launch {
+                dependencies.settingsRepository.setShellCommands(commands)
+            }
+        },
     )
     val executed = runCatching { executor.execute(action, settings) }.getOrDefault(false)
     Toast.makeText(
@@ -488,14 +497,13 @@ private fun actionSettingsRoute(type: GestureActionType): AppNavKey? = when (typ
     GestureActionType.RUN_MACRO -> AppNavKey.MacroList
     GestureActionType.SHAKE_MENU -> AppNavKey.ShakeMenuSettings
     GestureActionType.SEARCH_PANEL -> AppNavKey.SearchPanel
-    GestureActionType.FREEZER_PANEL -> AppNavKey.ExtensionFreezerSettings
+    GestureActionType.FREEZER_PANEL -> AppNavKey.ExtensionFreezer
     GestureActionType.OPEN_STASH_PANEL -> AppNavKey.StashPanelSettings
     GestureActionType.OPEN_CLIPBOARD_PANEL,
     GestureActionType.CLIPBOARD_PICK,
     GestureActionType.CLIPBOARD_PASTE,
     -> AppNavKey.ClipboardHistorySettings
     GestureActionType.OPEN_CLIPBOARD_FLOAT -> AppNavKey.ClipboardFloatSettings
-    GestureActionType.APP_CAROUSEL_SWITCHER -> AppNavKey.AppCarouselSwitcherSettings
     GestureActionType.CORNER_INNER_CANCEL,
     GestureActionType.CORNER_INNER_PIN_WHEEL,
     -> AppNavKey.HomeCornerGestureSlots

@@ -3,6 +3,7 @@ package com.slideindex.app.ui.navigation
 import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
 
 fun NavEntryBuilder.extensionNavEntries(ctx: MainNavContext) {
+    homeNavEntries(ctx)
     layoutSettingsNavEntries(ctx)
     nativeEnginePackNavEntry(ctx)
     extensionHubNavEntries(ctx)
@@ -18,4 +19,5 @@ fun NavEntryBuilder.extensionNavEntries(ctx: MainNavContext) {
     floatBallNavEntries(ctx)
     floatingPointerNavEntries(ctx)
     ringLauncherNavEntries(ctx)
+    shakeNavEntries(ctx)
 }

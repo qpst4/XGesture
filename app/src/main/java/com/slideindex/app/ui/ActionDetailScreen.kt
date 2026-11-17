@@ -16,8 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Switch
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,6 +42,7 @@ import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.gesture.KeyEventPresets
 import com.slideindex.app.pagescroll.PageScrollPrefs
 import com.slideindex.app.pagescroll.PageScrollSettings
+import com.slideindex.app.settings.AppCarouselSwitcherSettings
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_01
 import com.slideindex.app.ui.settings.components.SettingsSliderRow
@@ -51,8 +51,11 @@ import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import kotlin.math.roundToInt
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Copy
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -63,6 +66,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * 与旧分支保持同一张「基本信息」卡；区别是深链换成真实格式，内容型动作的参数放在
  * 同一张卡里，「立即执行」用表单值而不是空动作。
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ActionDetailScreen(
     action: GestureAction,
@@ -72,6 +76,8 @@ fun ActionDetailScreen(
     onTest: ((GestureAction) -> Unit)?,
     taskSwitcherWidthDp: Int? = null,
     onTaskSwitcherWidthChange: ((Int) -> Unit)? = null,
+    appCarouselSwitcher: AppCarouselSwitcherSettings? = null,
+    onAppCarouselSwitcherChange: ((AppCarouselSwitcherSettings) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
@@ -79,6 +85,12 @@ fun ActionDetailScreen(
     val description = gestureActionDescription(action)
     val permissionHint = gestureActionPermissionHint(action, context)
     val specialHint = entry.special?.let { stringResource(it.hintRes) }
+        ?: when (entry.type) {
+            GestureActionType.FINGERTIP_RING -> stringResource(R.string.action_center_special_fingertip)
+            GestureActionType.REGIONAL_SCREENSHOT_PICK ->
+                stringResource(R.string.action_center_special_regional)
+            else -> null
+        }
     val infoTitle = stringResource(R.string.action_center_info)
     val introTitle = stringResource(R.string.action_center_intro)
     val settingsTitle = stringResource(R.string.action_center_settings)
@@ -176,24 +188,28 @@ fun ActionDetailScreen(
                                 style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
-                            Spacer(modifier = Modifier.height(20.dp))
                         }
                         if (specialHint != null) {
+                            if (!description.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                            }
                             Text(
                                 text = specialHint,
                                 style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.primary,
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
                         }
                         if (permissionHint != null) {
+                            if (specialHint != null || !description.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                            }
                             Text(
                                 text = permissionHint,
                                 style = MiuixTheme.textStyles.body2,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
                         }
+                        Spacer(modifier = Modifier.height(20.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -277,6 +293,27 @@ fun ActionDetailScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                 )
                                 Spacer(modifier = Modifier.height(10.dp))
+                                Text(
+                                    text = stringResource(R.string.key_event_presets_title),
+                                    style = MiuixTheme.textStyles.body1,
+                                    color = MiuixTheme.colorScheme.onSurfaceContainer,
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                ) {
+                                    KeyEventPresets.presets.forEach { preset ->
+                                        RemindChip(
+                                            label = preset.label(context),
+                                            selected = keyCode == preset.keyCode,
+                                            onClick = { keyCodeText = preset.keyCode.toString() },
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(10.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,
@@ -349,7 +386,8 @@ fun ActionDetailScreen(
                         Button(
                             onClick = { builtAction?.let { onTest?.invoke(it) } },
                             enabled = runEnabled,
-                            shape = RoundedCornerShape(16.dp),
+                            cornerRadius = 16.dp,
+                            colors = ButtonDefaults.buttonColorsPrimary(),
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(
@@ -445,6 +483,15 @@ fun ActionDetailScreen(
                             },
                         )
                     }
+                    entry.type == GestureActionType.APP_CAROUSEL_SWITCHER &&
+                        appCarouselSwitcher != null &&
+                        onAppCarouselSwitcherChange != null -> addAll(
+                        appCarouselSwitcherSettingsCardItems(
+                            keyPrefix = "action-center-app-carousel",
+                            local = appCarouselSwitcher,
+                            onUpdate = onAppCarouselSwitcherChange,
+                        ),
+                    )
                     openSettings != null -> add(
                         settingsCardScopeItem("settings") {
                             SettingNavigationRow(

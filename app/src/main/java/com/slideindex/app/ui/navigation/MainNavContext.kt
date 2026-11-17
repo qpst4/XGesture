@@ -72,6 +72,10 @@ class MainNavContext(
 
     private var deferredNavigateJob: Job? = null
 
+    /** 动作中心 → 配置页的临时返回目标；配置页自己的 onBack 仍然返回 ActionDetail。 */
+    private var actionConfigReturnKey: AppNavKey? = null
+    private var actionConfigRouteKey: AppNavKey? = null
+
     /** 推迟一帧再入栈，避免 Hub 行在 Miuix 按压高亮绘制前就被 Nav 转场卸掉。 */
     fun navigate(key: AppNavKey) {
         deferredNavigateJob?.cancel()
@@ -81,10 +85,30 @@ class MainNavContext(
         }
     }
 
-    fun navigateBackTo(key: AppNavKey) = backStack.navigateBackTo(key)
+    /** 从动作详情打开配置页：配置页的 onBack 目标改为返回动作详情，而不是它自己的根页。 */
+    fun navigateFromActionDetail(key: AppNavKey) {
+        actionConfigReturnKey = backStack.currentAppNavKey()
+        actionConfigRouteKey = key
+        navigate(key)
+    }
+
+    fun navigateBackTo(key: AppNavKey) {
+        val returnKey = actionConfigReturnKey
+        if (returnKey != null && actionConfigRouteKey == backStack.currentAppNavKey()) {
+            actionConfigReturnKey = null
+            actionConfigRouteKey = null
+            backStack.navigateBackTo(returnKey)
+        } else {
+            backStack.navigateBackTo(key)
+        }
+    }
 
     /** 只回退一层（回来源页）；不要用 [navigateBackTo] 代替，它会跳过中间页。 */
-    fun navigateBack() = backStack.pop()
+    fun navigateBack() {
+        actionConfigReturnKey = null
+        actionConfigRouteKey = null
+        backStack.pop()
+    }
 
     fun replaceRoot(key: AppNavKey) = backStack.replaceRoot(key)
 
