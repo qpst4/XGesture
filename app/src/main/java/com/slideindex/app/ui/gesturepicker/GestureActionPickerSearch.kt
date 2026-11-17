@@ -252,14 +252,6 @@ fun gestureActionSearchAliases(context: Context, action: GestureAction): List<St
         "开关",
         "toggle",
     )
-    GestureActionType.MOVE_FLOAT_BALL -> listOf(
-        "移动悬浮球",
-        "移动位置",
-        "move float ball",
-        "拖动",
-        "挪球",
-        "位置",
-    )
     // 标签去掉了「开关」两个字，这里补回来：搜「开关」「toggle」「switch」仍能命中这些动作。
     GestureActionType.TOGGLE_WIFI -> listOf("wifi", "wlan", "开关", "toggle", "switch")
     GestureActionType.TOGGLE_MOBILE_DATA -> listOf("mobile data", "data", "移动网络", "开关", "toggle", "switch")
@@ -335,7 +327,6 @@ fun gestureActionDescriptionText(context: Context, action: GestureAction): Strin
         GestureActionType.TOGGLE_MUTE -> context.getString(R.string.gesture_action_sound_mode_desc)
         GestureActionType.TOGGLE_SHAKE_GESTURE -> context.getString(R.string.gesture_action_toggle_shake_desc)
         GestureActionType.TOGGLE_FLOAT_BALL -> context.getString(R.string.gesture_action_toggle_float_ball_desc)
-        GestureActionType.MOVE_FLOAT_BALL -> context.getString(R.string.gesture_action_move_float_ball_desc)
         GestureActionType.LOCK_SCREEN_AND_SILENCE_RING -> context.getString(R.string.gesture_action_lock_screen_and_silence_ring_desc)
         GestureActionType.LOCK_SCREEN_AND_MUTE_ALL -> context.getString(R.string.gesture_action_lock_screen_and_mute_all_desc)
         GestureActionType.SNOOZE_OVERLAYS -> context.getString(R.string.gesture_action_snooze_overlays_desc)
@@ -490,7 +481,6 @@ private fun gestureActionBaseLabelText(context: Context, action: GestureAction):
         GestureActionType.TOGGLE_WIFI -> context.getString(R.string.gesture_action_toggle_wifi)
         GestureActionType.TOGGLE_SHAKE_GESTURE -> context.getString(R.string.gesture_action_toggle_shake)
         GestureActionType.TOGGLE_FLOAT_BALL -> context.getString(R.string.gesture_action_toggle_float_ball)
-        GestureActionType.MOVE_FLOAT_BALL -> context.getString(R.string.gesture_action_move_float_ball)
         GestureActionType.TOGGLE_MOBILE_DATA -> context.getString(R.string.gesture_action_toggle_mobile_data)
         GestureActionType.TOGGLE_AIRPLANE -> context.getString(R.string.gesture_action_toggle_airplane)
         GestureActionType.TOGGLE_LOCATION -> context.getString(R.string.gesture_action_toggle_location)
@@ -718,7 +708,6 @@ private fun gestureActionBaseLabel(action: GestureAction, settings: AppSettings?
         GestureActionType.TOGGLE_WIFI -> stringResource(R.string.gesture_action_toggle_wifi)
         GestureActionType.TOGGLE_SHAKE_GESTURE -> stringResource(R.string.gesture_action_toggle_shake)
         GestureActionType.TOGGLE_FLOAT_BALL -> stringResource(R.string.gesture_action_toggle_float_ball)
-        GestureActionType.MOVE_FLOAT_BALL -> stringResource(R.string.gesture_action_move_float_ball)
         GestureActionType.TOGGLE_MOBILE_DATA -> stringResource(R.string.gesture_action_toggle_mobile_data)
         GestureActionType.TOGGLE_AIRPLANE -> stringResource(R.string.gesture_action_toggle_airplane)
         GestureActionType.TOGGLE_LOCATION -> stringResource(R.string.gesture_action_toggle_location)
@@ -832,7 +821,6 @@ fun gestureActionDescription(action: GestureAction): String? = when (action.type
     GestureActionType.TOGGLE_DARK_MODE -> stringResource(R.string.gesture_action_toggle_dark_mode_desc)
     GestureActionType.TOGGLE_SHAKE_GESTURE -> stringResource(R.string.gesture_action_toggle_shake_desc)
     GestureActionType.TOGGLE_FLOAT_BALL -> stringResource(R.string.gesture_action_toggle_float_ball_desc)
-    GestureActionType.MOVE_FLOAT_BALL -> stringResource(R.string.gesture_action_move_float_ball_desc)
     GestureActionType.LOCK_SCREEN_AND_SILENCE_RING -> stringResource(R.string.gesture_action_lock_screen_and_silence_ring_desc)
     GestureActionType.LOCK_SCREEN_AND_MUTE_ALL -> stringResource(R.string.gesture_action_lock_screen_and_mute_all_desc)
     GestureActionType.OPEN_INTERNET_PANEL -> stringResource(R.string.gesture_action_open_internet_panel_desc)

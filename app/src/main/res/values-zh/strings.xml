@@ -1632,8 +1632,6 @@
     <string name="gesture_action_toggle_shake_desc">打开或关闭「晃动」页的总开关</string>
     <string name="gesture_action_toggle_float_ball">悬浮球显示</string>
     <string name="gesture_action_toggle_float_ball_desc">隐藏或重新显示悬浮球；状态保持，不影响边缘手势</string>
-    <string name="gesture_action_move_float_ball">移动悬浮球</string>
-    <string name="gesture_action_move_float_ball_desc">进入悬浮球自由移动模式；长按悬浮球触发时可直接拖动挪球</string>
     <string name="gesture_action_toggle_float_ball_hidden">悬浮球已隐藏；再次执行或从设置恢复</string>
     <string name="gesture_action_toggle_float_ball_shown">悬浮球已显示</string>
     <string name="gesture_action_toggle_float_ball_service_off">悬浮球已开启，但边缘手势总开关是关的</string>

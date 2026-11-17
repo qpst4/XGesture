@@ -2871,8 +2871,6 @@
     <string name="gesture_action_toggle_shake_desc">Turn the shake-gesture master switch on or off</string>
     <string name="gesture_action_toggle_float_ball">Float ball</string>
     <string name="gesture_action_toggle_float_ball_desc">Hide or show the float ball; the state is kept and edge gestures are untouched</string>
-    <string name="gesture_action_move_float_ball">Move float ball</string>
-    <string name="gesture_action_move_float_ball_desc">Enter free move mode; drag directly when triggered by long press</string>
     <string name="gesture_action_toggle_float_ball_hidden">Float ball hidden. Run again or restore it in settings</string>
     <string name="gesture_action_toggle_float_ball_shown">Float ball shown</string>
     <string name="gesture_action_toggle_float_ball_service_off">Float ball enabled, but the edge-gesture master switch is off</string>

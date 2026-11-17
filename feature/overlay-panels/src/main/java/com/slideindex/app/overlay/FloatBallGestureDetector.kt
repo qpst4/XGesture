@@ -91,20 +91,6 @@ class FloatBallGestureDetector(
      * 置位后：不显示手势提示、不执行任何手势，抬手直接走 inishPick()（= 拖动结束，交回覆盖层落位）。
      */
     var moveModeActive: Boolean = false
-
-    /**
-     * 长按手势直接接管为拖动挪球：保持当前会话为 drag，后续 MOVE 驱动球移动，UP 保存落点。
-     */
-    fun beginDirectMove(downX: Float, downY: Float, currentX: Float, currentY: Float) {
-        moveModeActive = true
-        pickActive = true
-        pickDragStarted = true
-        longPressFired = false
-        this.downX = downX
-        this.downY = downY
-        this.lastX = currentX
-        this.lastY = currentY
-    }
     private var pickDragStartTime = 0L
     /** 超过手势窗口后为 true，抬手走取词而非手势。 */
     private var pickGestureLocked = false

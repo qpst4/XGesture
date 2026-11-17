@@ -15,7 +15,7 @@ enum class FloatBallPositionMode(val storageKey: String) {
 
         fun fromStorageKey(key: String?): FloatBallPositionMode =
             when (val mode = entries.firstOrNull { it.storageKey == key }) {
-                null -> RIGHT
+                null, CUSTOM -> RIGHT
                 else -> mode
             }
     }

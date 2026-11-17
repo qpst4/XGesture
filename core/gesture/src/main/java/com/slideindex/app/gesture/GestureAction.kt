@@ -262,9 +262,6 @@ enum class GestureActionType(val id: Int) {
 
     /** 指针专属：实时滚动（按住指针并移动 = 连续短滑，推得越远滚得越快）。 */
     REALTIME_SCROLL(123),
-
-    /** 「移动悬浮球」：进入自由挪球模式；长按悬浮球触发时可直接跟手拖动并吸附保存。 */
-    MOVE_FLOAT_BALL(124),
     ;
 
     companion object {
@@ -1352,12 +1349,6 @@ sealed class GestureAction {
         override val payload = ""
     }
 
-    /** 移动悬浮球：进入自由挪球模式。 */
-    data object MoveFloatBall : GestureAction() {
-        override val type = GestureActionType.MOVE_FLOAT_BALL
-        override val payload = ""
-    }
-
     /** 实时前台活动探测悬浮窗（显示当前前台应用包名与 Activity 类名）。 */
     data object ForegroundActivityInspector : GestureAction() {
         override val type = GestureActionType.FOREGROUND_ACTIVITY_INSPECTOR
@@ -1535,7 +1526,6 @@ sealed class GestureAction {
                 GestureActionType.ALIPAY_SCAN -> AlipayScan
                 GestureActionType.GALLERY_IMAGE_EDIT -> GalleryImageEdit
                 GestureActionType.PIN_TO_SCREEN -> PinToScreen
-                GestureActionType.MOVE_FLOAT_BALL -> MoveFloatBall
                 GestureActionType.FOREGROUND_ACTIVITY_INSPECTOR -> ForegroundActivityInspector
                 GestureActionType.NONE -> None
             }.normalized()

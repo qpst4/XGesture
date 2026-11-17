@@ -742,39 +742,6 @@ object FloatBallOverlay {
         settingsState?.value?.let { applyBallLayout(it) }
     }
 
-    /**
-     * 长按手势直接接管为拖动挪球（手指不抬起直接拖动挪球，抬手保存）。
-     */
-    fun enterDirectMoveDrag(downX: Float, downY: Float, currentX: Float, currentY: Float) {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { enterDirectMoveDrag(downX, downY, currentX, currentY) }
-            return
-        }
-        val settings = settingsState?.value ?: return
-        val view = displayView ?: return
-        val metrics = view.resources.displayMetrics
-
-        moveModeActive = true
-        touchHost?.beginDirectMove(downX, downY, currentX, currentY)
-        scheduleMoveModeTimeout()
-
-        cancelCursorPickPreview()
-        armDragSessionAtFinger(
-            settings = settings,
-            metrics = metrics,
-            touchDownX = downX,
-            touchDownY = downY,
-            fingerX = currentX,
-            fingerY = currentY,
-            fromEdgeGesture = false
-        )
-        setDragging(true)
-        ballDraggingState?.value = true
-        ballIconView?.setDragging(true)
-        flushDragChromeLayout(syncAnchorState = true)
-        updatePickAndBallFromFinger(moveBallWindow = true)
-    }
-
     private fun scheduleMoveModeTimeout() {
         moveModeExitRunnable?.let { mainHandler.removeCallbacks(it) }
         val runnable = Runnable { exitMoveMode() }
@@ -799,7 +766,7 @@ object FloatBallOverlay {
             screenWidth = screenWidthPx,
             screenHeight = screenHeightPx
         )
-        val xFraction = FloatBallLayout.coerceCustomCenterXFraction(center.x / screenWidthPx)
+        val side = if (center.x < screenWidthPx / 2f) FloatBallSide.LEFT else FloatBallSide.RIGHT
         val yFraction = FloatBallLayout.coercePositionYFraction(center.y / screenHeightPx)
 
         moveModeActive = false
@@ -808,25 +775,40 @@ object FloatBallOverlay {
         moveModeExitRunnable = null
         sceneState?.ballCenterPx?.value = null
 
-        touchLayoutParams?.let { fullscreenTouchBackup.remove(it) }
-        lineTouchLayoutParams?.let { fullscreenTouchBackup.remove(it) }
-
-        // 自由移动模式：保留在屏幕任意位置（不贴边），保存横竖比例与 CUSTOM 模式
-        val updated = settings.copy(
-            floatBall = settings.floatBall.copy(
-                floatBallPositionMode = FloatBallPositionMode.CUSTOM,
-                floatBallCustomCenterXFraction = xFraction,
-                floatBallPositionYFraction = yFraction
+        val usesEdgeLines = FloatBallLayout.usesEdgeLines(settings)
+        if (usesEdgeLines) {
+            // 双边/双线模式：落点决定"当前活动侧"（仓库里已有机制，applyActiveSide 会立刻吸附并落盘）。
+            applyActiveSide(side)
+        }
+        val targetMode = if (side == FloatBallSide.LEFT) {
+            FloatBallPositionMode.LEFT
+        } else {
+            FloatBallPositionMode.RIGHT
+        }
+        val updated = if (!usesEdgeLines && settings.floatBallPositionMode != targetMode) {
+            settings.copy(
+                floatBall = settings.floatBall.copy(
+                    floatBallPositionMode = targetMode,
+                    floatBallPositionYFraction = yFraction
+                )
             )
-        )
+        } else {
+            settings.copy(
+                floatBall = settings.floatBall.copy(floatBallPositionYFraction = yFraction)
+            )
+        }
         settingsState?.value = updated
         applyBallLayout(updated)
 
         val hostContext = appContext ?: return
         val deps = OverlayDependencyAccess.overlayDependencies(hostContext) ?: return
         overlayScope.launch {
-            deps.settingsRepository.setFloatBallPosition(xFraction, yFraction)
-            deps.settingsRepository.setFloatBallPositionMode(FloatBallPositionMode.CUSTOM)
+            deps.settingsRepository.setFloatBallPositionYFraction(yFraction)
+            if (usesEdgeLines) {
+                deps.settingsRepository.setFloatBallActiveSide(side)
+            } else if (settings.floatBallPositionMode != targetMode) {
+                deps.settingsRepository.setFloatBallPositionMode(targetMode)
+            }
         }
     }
 
@@ -1974,15 +1956,6 @@ object FloatBallOverlay {
             !settings.floatBallBackGestureHapticEnabled
         if (!skipBackHaptic) {
             displayView?.let { HapticHelper.floatBallGestureStart(it, settings) }
-        }
-        if (action == GestureAction.MoveFloatBall && gestureType == FloatBallGestureType.LONG_PRESS && !fromLineStrip) {
-            enterDirectMoveDrag(
-                downX = touchDownRawX ?: rawX,
-                downY = touchDownRawY ?: rawY,
-                currentX = rawX,
-                currentY = rawY
-            )
-            return
         }
         executeFloatBallAction(
             settings = settings,
