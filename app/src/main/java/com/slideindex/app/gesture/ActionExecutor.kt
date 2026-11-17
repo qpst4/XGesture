@@ -706,6 +706,7 @@ class ActionExecutor(
         item: QuickLauncherItem,
         settings: AppSettings,
         longPressArmed: Boolean = false,
+        anchorRawX: Float? = null,
         anchorRawY: Float? = null,
         panelSide: PanelSide? = null,
     ): Boolean {
@@ -714,7 +715,14 @@ class ActionExecutor(
         return launchHelper.launchQuickItem(item, settings, longPressArmed, anchorRawY) { action, appSettings, armed, y ->
             // 从圆环/蜂窝/面板里点开的条目同样要知道“当前在哪一侧”，否则打开的面板只能按
             // 宿主默认（左优先）落地：真机反馈右侧圆环里点快速启动器槽位，面板弹到左边。
-            execute(action, appSettings, armed, anchorRawX = null, anchorRawY = y, panelSide = panelSide)
+            execute(
+                action,
+                appSettings,
+                armed,
+                anchorRawX = anchorRawX,
+                anchorRawY = y,
+                panelSide = panelSide,
+            )
         }
     }
 
