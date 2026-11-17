@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -196,15 +195,10 @@ private fun ActionGridCell(
                 modifier = Modifier
                     .size(58.dp)
                     .clip(RoundedCornerShape(17.dp))
-                    .background(MiuixTheme.colorScheme.surfaceContainer),
+                    .background(MiuixTheme.colorScheme.surfaceContainerHigh),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(
-                    imageVector = gestureActionTypeOutlinedIcon(entry.type),
-                    contentDescription = label,
-                    tint = MiuixTheme.colorScheme.onSurfaceContainer,
-                    modifier = Modifier.size(27.dp),
-                )
+                ActionIconSlot(action = entry.sample, sizeDp = 27)
             }
             entry.special?.let { mark ->
                 Box(

@@ -349,6 +349,7 @@ fun ActionDetailScreen(
                         Button(
                             onClick = { builtAction?.let { onTest?.invoke(it) } },
                             enabled = runEnabled,
+                            shape = RoundedCornerShape(16.dp),
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(
