@@ -265,7 +265,8 @@ class MultiTouchGestureCoordinator @Inject constructor(
     fun start() {
         if (started) return
         started = true
-        if (!isMainProcess()) return
+        if (!com.slideindex.app.util.AppProcess.isMain) return
+        Log.i(TAG, "MultiTouchCoordinator.start() initialized")
         runCatching { registerDisplayListener() }
         runCatching {
             Shizuku.addBinderReceivedListenerSticky(binderReceivedListener)
@@ -289,9 +290,9 @@ class MultiTouchGestureCoordinator @Inject constructor(
             scheduleAutoReconnect(1000L)
         }
         applicationScope.launch(Dispatchers.IO) {
-            // 组合手势配置与全局特权/服务设置。
-            // 使用 combine 必须等待 settingsRepository.settings 的 DataStore 异步完成初次发射，
-            // 彻底杜绝冷启动首帧因 readSnapshot() 内存默认值 (SHIZUKU) 抢跑导致的分支误走与进程错配。
+            // 先按磁盘最新鲜快照跑一次初始同步，确保冷启动立刻恢复手势观察
+            syncNow()
+            // 组合手势配置与全局特权/服务设置，监听后续变更
             combine(
                 settingsStore.state.map { Triple(it.enabled, it.protocol, it.devicePath) },
                 settingsRepository.settings.map { Pair(it.privilegeMode, it.serviceEnabled) },
@@ -299,8 +300,13 @@ class MultiTouchGestureCoordinator @Inject constructor(
                 Pair(gestureSettings, globalSettings)
             }
                 .distinctUntilChanged()
-                .collect {
-                    syncNow()
+                .collect { (_, globalSettings) ->
+                    val (privilegeMode, serviceEnabled) = globalSettings
+                    Log.i(TAG, "settings flow changed: privilegeMode=$privilegeMode serviceEnabled=$serviceEnabled")
+                    syncNow(
+                        targetPrivilegeMode = privilegeMode,
+                        serviceEnabledOverride = serviceEnabled,
+                    )
                 }
         }
     }
@@ -358,7 +364,10 @@ class MultiTouchGestureCoordinator @Inject constructor(
         applicationScope.launch(Dispatchers.IO) { syncNow() }
     }
 
-    private suspend fun syncNow() {
+    private suspend fun syncNow(
+        targetPrivilegeMode: PrivilegeMode? = null,
+        serviceEnabledOverride: Boolean? = null,
+    ) {
         syncMutex.withLock {
             val settings = settingsStore.state.value
             val shizukuAvailable = runCatching {
@@ -371,10 +380,14 @@ class MultiTouchGestureCoordinator @Inject constructor(
 
             stopObservation()
 
-            val globalSettings = runCatching {
-                settingsRepository.readSnapshot()
-            }.getOrNull()
-            val serviceEnabled = globalSettings?.serviceEnabled ?: true
+            val freshSettings = if (targetPrivilegeMode != null && serviceEnabledOverride != null) {
+                null
+            } else {
+                runCatching { settingsRepository.readFreshSnapshot() }.getOrNull()
+            }
+            val serviceEnabled = serviceEnabledOverride
+                ?: freshSettings?.serviceEnabled
+                ?: runCatching { settingsRepository.readSnapshot().serviceEnabled }.getOrDefault(true)
 
             if (!settings.enabled || !serviceEnabled) {
                 _status.value = _status.value.copy(
@@ -384,9 +397,9 @@ class MultiTouchGestureCoordinator @Inject constructor(
                 return
             }
 
-            val privilegeMode = runCatching {
-                settingsRepository.readSnapshot().privilegeMode
-            }.getOrDefault(PrivilegeMode.SHIZUKU)
+            val privilegeMode = targetPrivilegeMode
+                ?: freshSettings?.privilegeMode
+                ?: runCatching { settingsRepository.readSnapshot().privilegeMode }.getOrDefault(PrivilegeMode.SHIZUKU)
             if (privilegeMode == PrivilegeMode.ROOT) {
                 startRootObservation(false)
                 return

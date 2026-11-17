@@ -107,45 +107,30 @@ object RootTaskManagerServiceHost {
 
 
     fun ensureQuick(context: Context, minApi: Int = 0): ITaskManagerService? {
-
         peek()?.let { live ->
-
-            if (readApi(live) >= minApi) return live
-
+            val api = readApi(live)
+            if (api > 0 && api >= minApi) return live
             drop(context)
-
         }
-
         if (SystemClock.elapsedRealtime() < daemonBackoffUntilMs) return null
-
         synchronized(bindLock) {
-
             ensureLatch?.let { latch ->
-
                 runCatching { latch.await(2_500L, TimeUnit.MILLISECONDS) }
-
-                return peek()?.takeIf { readApi(it) >= minApi }
-
+                return peek()?.takeIf {
+                    val api = readApi(it)
+                    api > 0 && api >= minApi
+                }
             }
-
         }
-
         return connectOrSpawn(context, minApi, quick = true)
-
     }
 
-
-
     fun ensure(context: Context, minApi: Int = 0): ITaskManagerService? {
-
         peek()?.let { live ->
-
-            if (readApi(live) >= minApi) return live
-
-            Log.w(TAG, "stale api=${readApi(live)} need=$minApi, dropping")
-
+            val api = readApi(live)
+            if (api > 0 && api >= minApi) return live
+            Log.w(TAG, "stale api=$api need=$minApi, dropping")
             drop(context)
-
         }
 
 
@@ -177,15 +162,13 @@ object RootTaskManagerServiceHost {
 
 
         if (!isLeader) {
-
             runCatching { latch.await(ENSURE_TIMEOUT_MS, TimeUnit.MILLISECONDS) }
-
             return synchronized(bindLock) {
-
-                peek()?.takeIf { readApi(it) >= minApi }
-
+                peek()?.takeIf {
+                    val api = readApi(it)
+                    api > 0 && api >= minApi
+                }
             }
-
         }
 
 
@@ -317,17 +300,11 @@ object RootTaskManagerServiceHost {
 
 
     private fun bindFromRemote(context: Context, minApi: Int): ITaskManagerService? {
-
         val iface = resolveRemoteService(context) ?: return null
-
         val api = readApi(iface)
-
-        if (api < minApi) {
-
+        if (api <= 0 || api < minApi) {
             drop(context)
-
             return null
-
         }
 
         val rooted = runCatching { iface.probeRootAvailable() }.getOrDefault(false)
@@ -415,15 +392,23 @@ object RootTaskManagerServiceHost {
 
 
     private fun daemonPortFileLooksLive(context: Context): Boolean {
-
         val file = File(portFilePath(context))
-
         if (!file.exists()) return false
-
-        val ageMs = System.currentTimeMillis() - file.lastModified()
-
-        return ageMs in 0 until LIVE_PORT_FILE_MS && readDaemonPort(file.path) != null
-
+        val port = readDaemonPort(file.path) ?: run {
+            runCatching { file.delete() }
+            return false
+        }
+        val isReachable = runCatching {
+            java.net.Socket().use { s ->
+                s.connect(java.net.InetSocketAddress("127.0.0.1", port), 200)
+                true
+            }
+        }.getOrDefault(false)
+        if (!isReachable) {
+            runCatching { file.delete() }
+            return false
+        }
+        return true
     }
 
 
@@ -459,23 +444,15 @@ object RootTaskManagerServiceHost {
 
 
     private fun killStaleDaemons(context: Context) {
-
         cachedRpcPort = 0
-
         val marker = TaskManagerRootDaemonMain::class.java.name
-
         val q = TaskManagerShellExecutor.shellQuote(marker)
-
+        val pkg = TaskManagerShellExecutor.shellQuote(context.packageName)
         val portFile = TaskManagerShellExecutor.shellQuote(portFilePath(context))
-
         TaskManagerShellExecutor.runAsRootUser(
-
-            "pkill -f $q 2>/dev/null; rm -f $portFile; true",
-
+            "pkill -f $q 2>/dev/null; pkill -f ${pkg}:task_manager 2>/dev/null; rm -f $portFile; true",
             SPAWN_TIMEOUT_MS,
-
         )
-
     }
 
 
