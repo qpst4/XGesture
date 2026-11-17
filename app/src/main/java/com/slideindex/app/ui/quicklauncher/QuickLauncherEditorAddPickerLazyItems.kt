@@ -338,7 +338,7 @@ fun rememberQuickLauncherFilteredActions(searchQuery: String): List<GestureActio
     val actionOptions = remember {
         GestureActionCatalog.build(
             scope = GestureActionCatalogScope.QuickLauncher,
-            catalogPolicy = ActionPickerCatalogPolicy.Slot(SlotPickerKind.OverlayTap),
+            catalogPolicy = ActionPickerCatalogPolicy.Slot(SlotPickerKind.QuickLauncher),
         )
     }
     return remember(actionOptions, searchQuery, context) {

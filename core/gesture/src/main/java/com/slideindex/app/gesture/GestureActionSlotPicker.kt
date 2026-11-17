@@ -4,6 +4,8 @@ package com.slideindex.app.gesture
 enum class SlotPickerKind {
     /** 快速启动器、圆环启动器、蜂窝、音量面板扩展槽、悬浮指针边缘条等 overlay 点选槽位 */
     OverlayTap,
+    /** 快速启动器 / 蜂窝的添加快捷项页面：允许「悬浮指针」这类面板控制动作。 */
+    QuickLauncher,
     /** 边角轮盘槽位 */
     CornerWheel,
     /** 摇杆功能环槽位 */
@@ -39,7 +41,7 @@ fun ActionPickerCatalogPolicy.slotPickerKindOrNull(): SlotPickerKind? = when (th
 
 fun GestureAction.isEligibleForSlotPicker(kind: SlotPickerKind): Boolean {
     if (requiresContinuousTriggerOnly()) return false
-    if (this is GestureAction.FloatingPointer) return false
+    if (this is GestureAction.FloatingPointer && kind != SlotPickerKind.QuickLauncher) return false
     // 指尖环仅允许绑定侧滑触钮（ActionPickerCatalogPolicy.EdgeGesture），所有槽位点选场景禁止。
     if (this is GestureAction.FingertipRing) return false
     // 快速启动轮盘同样只允许绑定侧滑触钮，避免轮盘槽位内再嵌轮盘造成递归装配。
@@ -49,6 +51,7 @@ fun GestureAction.isEligibleForSlotPicker(kind: SlotPickerKind): Boolean {
 
     return when (kind) {
         SlotPickerKind.OverlayTap,
+        SlotPickerKind.QuickLauncher,
         SlotPickerKind.CornerWheel,
         -> !isCornerInnerZoneOnly() &&
             this !is GestureAction.OpenFloatingPointerRadialMenu
