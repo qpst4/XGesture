@@ -146,12 +146,8 @@ object VolumePanelOverlayWindow {
             if (token != bringAboveToken) return
             com.slideindex.app.overlay.panels.PanelFloatBallHooks.scheduleChromeAbovePanels?.invoke(0L)
         }
-        attempt()
-        composeView?.post {
-            attempt()
-            composeView?.postOnAnimation { attempt() }
-        }
-        mainHandler.postDelayed({ attempt() }, 200)
+        // 延后至入场动画（220ms）完成后再抬升悬浮球 Z 序，避免在入场首帧争抢 WindowManager 拆装窗口
+        mainHandler.postDelayed({ attempt() }, 250)
         mainHandler.postDelayed({ attempt() }, 800)
     }
 
