@@ -93,8 +93,6 @@ data class ShakeGestureSettings(
     val menuDisplayDelayMs: Long = ShakeMenuRuntime.DEFAULT_DISPLAY_DELAY_MS,
     /** 是否显示菜单浮层；关闭后菜单仍然生效，只是不给视觉提示（盲操作）。 */
     val showMenuOverlay: Boolean = true,
-    /** 菜单浮层里是否显示每个方向绑定的动作名。 */
-    val showMenuActionNames: Boolean = true,
 ) {
     fun actionFor(type: ShakeGestureType): GestureAction =
         basicActions[type] ?: GestureAction.None

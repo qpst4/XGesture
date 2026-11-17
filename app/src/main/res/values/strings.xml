@@ -2861,7 +2861,7 @@
     <string name="toggle_mode_on">Turn on</string>
     <string name="toggle_mode_off">Turn off</string>
     <string name="toggle_mode_label">%1$s · %2$s</string>
-    <string name="gesture_action_toggle_shake">Shake gestures</string>
+    <string name="gesture_action_toggle_shake">Shake gestures switch</string>
     <string name="gesture_action_toggle_shake_desc">Turn the shake-gesture master switch on or off</string>
     <string name="gesture_action_toggle_float_ball">Float ball</string>
     <string name="gesture_action_toggle_float_ball_desc">Hide or show the float ball; the state is kept and edge gestures are untouched</string>
@@ -5178,6 +5178,4 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="magnifier_chip_text">Magnifier %1$s× · tap to close</string>
     <string name="magnifier_opened_toast">Magnifier on: tap the bottom-right dot to close, long-press it to change zoom</string>
     <string name="magnifier_requires_android13">Full-screen magnifier needs Android 13 or newer</string>
-    <string name="shake_menu_show_action_names">Show action names</string>
-    <string name="shake_menu_show_action_names_desc">Show the action bound to each direction in the shake menu</string>
 </resources>

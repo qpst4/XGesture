@@ -1622,7 +1622,7 @@
     <string name="toggle_mode_on">打开</string>
     <string name="toggle_mode_off">关闭</string>
     <string name="toggle_mode_label">%1$s · %2$s</string>
-    <string name="gesture_action_toggle_shake">晃动手势</string>
+    <string name="gesture_action_toggle_shake">晃动手势开关</string>
     <string name="gesture_action_toggle_shake_desc">打开或关闭「晃动」页的总开关</string>
     <string name="gesture_action_toggle_float_ball">悬浮球显示</string>
     <string name="gesture_action_toggle_float_ball_desc">隐藏或重新显示悬浮球；状态保持，不影响边缘手势</string>
@@ -5197,6 +5197,4 @@ adb 模式应返回 uid=2000。
     <string name="magnifier_chip_text">放大镜 %1$s× · 点我关闭</string>
     <string name="magnifier_opened_toast">放大镜已开启：点右下角小圆点关闭，长按切换倍率</string>
     <string name="magnifier_requires_android13">全屏放大镜需要 Android 13 及以上</string>
-    <string name="shake_menu_show_action_names">显示动作名</string>
-    <string name="shake_menu_show_action_names_desc">在晃动菜单中显示每个方向绑定的动作名</string>
 </resources>

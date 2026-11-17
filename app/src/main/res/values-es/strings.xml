@@ -5179,6 +5179,4 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="pick_image_tap_view">Ver imagen</string>
     <string name="pick_result_action_edit_image">Editar imagen</string>
     <string name="pick_result_translate_target_switched">Idioma de traducción: %1$s</string>
-    <string name="shake_menu_show_action_names">Show action names</string>
-    <string name="shake_menu_show_action_names_desc">Show the action bound to each direction in the shake menu</string>
 </resources>

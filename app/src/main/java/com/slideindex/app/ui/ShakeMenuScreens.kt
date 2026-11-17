@@ -66,7 +66,6 @@ fun ShakeMenuSettingsScreen(
     onGuardMsChange: (Long) -> Unit,
     onDisplayDelayMsChange: (Long) -> Unit,
     onShowOverlayChange: (Boolean) -> Unit,
-    onShowActionNamesChange: (Boolean) -> Unit,
 ) {
     var pendingRemoval by remember { mutableStateOf<ShakeMenu?>(null) }
     val menus = settings.menus
@@ -144,15 +143,6 @@ fun ShakeMenuSettingsScreen(
                         checked = settings.showMenuOverlay,
                         enabled = true,
                         onCheckedChange = onShowOverlayChange,
-                    )
-                },
-                settingsCardScopeItem("shake-menu-show-action-names") {
-                    SettingSwitchRow(
-                        title = stringResource(R.string.shake_menu_show_action_names),
-                        subtitle = stringResource(R.string.shake_menu_show_action_names_desc),
-                        checked = settings.showMenuActionNames,
-                        enabled = true,
-                        onCheckedChange = onShowActionNamesChange,
                     )
                 },
             ),

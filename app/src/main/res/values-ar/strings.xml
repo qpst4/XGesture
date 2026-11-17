@@ -5174,6 +5174,4 @@
     <string name="pick_image_tap_view">عرض الصورة</string>
     <string name="pick_result_action_edit_image">تعديل الصورة</string>
     <string name="pick_result_translate_target_switched">لغة الترجمة: %1$s</string>
-    <string name="shake_menu_show_action_names">Show action names</string>
-    <string name="shake_menu_show_action_names_desc">Show the action bound to each direction in the shake menu</string>
 </resources>

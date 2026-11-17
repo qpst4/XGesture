@@ -66,7 +66,7 @@ object ShakeMenuOverlay {
     private var windowManager: WindowManager? = null
     private var attachFailedAt = 0L
 
-    fun show(context: Context, menu: ShakeMenu, showActionNames: Boolean = true) {
+    fun show(context: Context, menu: ShakeMenu) {
         mainHandler.post {
             if (!ensureAttached(context)) return@post
             Log.i(
@@ -92,7 +92,6 @@ object ShakeMenuOverlay {
                             menu = menu,
                             activityShortcuts = appSettings.activityShortcuts,
                             shellCommands = appSettings.shellCommands,
-                            showActionNames = showActionNames,
                         )
                     }
                 }
@@ -178,7 +177,6 @@ object ShakeMenuOverlay {
         menu: ShakeMenu,
         activityShortcuts: List<ActivityShortcut>,
         shellCommands: List<ShellCommand>,
-        showActionNames: Boolean,
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -220,7 +218,6 @@ object ShakeMenuOverlay {
                             action = menu.actionFor(type),
                             activityShortcuts = activityShortcuts,
                             shellCommands = shellCommands,
-                            showActionName = showActionNames,
                         )
                     }
                 }
@@ -234,7 +231,6 @@ object ShakeMenuOverlay {
         action: GestureAction,
         activityShortcuts: List<ActivityShortcut>,
         shellCommands: List<ShellCommand>,
-        showActionName: Boolean,
     ) {
         val bound = action != GestureAction.None
         Row(
@@ -267,16 +263,14 @@ object ShakeMenuOverlay {
                 maxLines = 1,
             )
             Box(modifier = Modifier.weight(1f))
-            if (showActionName) {
-                Text(
-                    text = gestureActionSettingSubtitle(action),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontSize = 13.sp,
-                    color = Color.White.copy(alpha = if (bound) 0.92f else 0.42f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            Text(
+                text = gestureActionSettingSubtitle(action),
+                style = MaterialTheme.typography.bodyMedium,
+                fontSize = 13.sp,
+                color = Color.White.copy(alpha = if (bound) 0.92f else 0.42f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
             if (bound) {
                 GestureActionTargetIcon(
                     action = action,

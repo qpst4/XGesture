@@ -119,8 +119,8 @@ class AppShakeFeedbackPort @Inject constructor() : ShakeFeedbackPort {
         ShakeFeedbackOverlay.detach()
     }
 
-    override fun showMenuOverlay(context: Context, menu: ShakeMenu, showActionNames: Boolean) {
-        ShakeMenuOverlay.show(context, menu, showActionNames)
+    override fun showMenuOverlay(context: Context, menu: ShakeMenu) {
+        ShakeMenuOverlay.show(context, menu)
     }
 
     override fun detachMenuOverlay() {

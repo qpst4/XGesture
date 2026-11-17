@@ -1015,8 +1015,6 @@ internal object SettingsSnapshotReader {
                     ?: ShakeMenuRuntime.DEFAULT_DISPLAY_DELAY_MS,
             ),
             showMenuOverlay = prefs[SettingsPreferenceKeys.SHAKE_MENU_ENABLED] ?: true,
-            showMenuActionNames =
-                prefs[SettingsPreferenceKeys.SHAKE_MENU_SHOW_ACTION_NAMES] ?: true,
         )
     }
 
