@@ -574,6 +574,7 @@ internal fun GestureSession.dispatchQuickLauncherAction(
     action: GestureAction,
     localX: Float,
     localY: Float,
+    rawX: Float,
     rawY: Float,
     confirmHaptic: Boolean = true
 ): Boolean {
@@ -663,7 +664,12 @@ internal fun GestureSession.dispatchQuickLauncherAction(
                 )
                 return false
             }
-            sessionActionExecutor.execute(action, sessionSettings, anchorRawY = rawY)
+            sessionActionExecutor.execute(
+                action,
+                sessionSettings,
+                anchorRawX = rawX,
+                anchorRawY = rawY,
+            )
             return true
         }
     }

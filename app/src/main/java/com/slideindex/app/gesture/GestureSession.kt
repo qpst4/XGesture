@@ -1035,7 +1035,8 @@ class GestureSession(
         action: GestureAction,
         localX: Float,
         localY: Float,
+        rawX: Float,
         rawY: Float,
         confirmHaptic: Boolean = true
-    ): Boolean = dispatchQuickLauncherAction(action, localX, localY, rawY, confirmHaptic)
+    ): Boolean = dispatchQuickLauncherAction(action, localX, localY, rawX, rawY, confirmHaptic)
 }

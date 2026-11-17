@@ -151,6 +151,7 @@ internal class QuickLauncherPickResolver(
                     action,
                     localX,
                     localY,
+                    event.rawX,
                     event.rawY,
                     confirmHaptic = longPress
                 )
