@@ -189,11 +189,14 @@ object VolumePanelOverlayWindow {
             WindowManager.LayoutParams.MATCH_PARENT,
             OverlayWindowTypes.contentPanelWindowType(context),
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
             PixelFormat.TRANSLUCENT,
         ).apply {
-            OverlayWindowTypes.applyFullScreen(this)
+            gravity = Gravity.TOP or Gravity.START
             title = TAG
+            layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
         backHandler = OverlayViewBackHandler(view) { handleBack() }.also { it.attach() }
         wm.addView(view, params)
