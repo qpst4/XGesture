@@ -3,6 +3,8 @@ package com.slideindex.app.ui
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.overlay.PanelSide
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Paste
 
 fun panelSideSwipeOutlinedIcon(side: PanelSide): ImageVector = when (side) {
     PanelSide.LEFT -> ThinActionIcons.Back
@@ -43,7 +45,7 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.OPEN_CLIPBOARD_PANEL -> ThinActionIcons.ContentPaste
     GestureActionType.OPEN_CLIPBOARD_FLOAT -> ThinActionIcons.ContentPaste
     GestureActionType.CLIPBOARD_PICK -> ThinActionIcons.TextFields
-    GestureActionType.CLIPBOARD_PASTE -> ThinActionIcons.ContentPaste
+    GestureActionType.CLIPBOARD_PASTE -> MiuixIcons.Paste
     GestureActionType.FLOATING_POINTER -> ThinActionIcons.MyLocation
     GestureActionType.SIMULATE_POINTER_SWIPE -> ThinActionIcons.TouchApp
     GestureActionType.BACK -> ThinActionIcons.Back
@@ -169,7 +171,7 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.OPEN_CLIPBOARD_PANEL -> ThinActionIcons.ContentPaste
     GestureActionType.OPEN_CLIPBOARD_FLOAT -> ThinActionIcons.ContentPaste
     GestureActionType.CLIPBOARD_PICK -> ThinActionIcons.TextFields
-    GestureActionType.CLIPBOARD_PASTE -> ThinActionIcons.ContentPaste
+    GestureActionType.CLIPBOARD_PASTE -> MiuixIcons.Paste
     GestureActionType.FLOATING_POINTER -> ThinActionIcons.MyLocation
     GestureActionType.SIMULATE_POINTER_SWIPE -> ThinActionIcons.TouchApp
     GestureActionType.BACK -> ThinActionIcons.Back

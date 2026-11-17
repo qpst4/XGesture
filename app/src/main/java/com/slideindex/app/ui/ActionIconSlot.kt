@@ -17,10 +17,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.slideindex.app.R
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.macro.MacroStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -77,8 +81,14 @@ fun ActionIconSlot(
             modifier = modifier.size(sizeDp.dp),
             contentAlignment = Alignment.Center,
         ) {
+            val imageVector = if (action.type == GestureActionType.TOGGLE_SHAKE_GESTURE) {
+                // 动作列表沿用底栏「晃动」tab 的图标，避免同一个功能出现两套图形。
+                ImageVector.vectorResource(R.drawable.ic_nav_shake_outlined)
+            } else {
+                gestureActionIcon(action, outlined = true)
+            }
             Icon(
-                imageVector = gestureActionIcon(action, outlined = true),
+                imageVector = imageVector,
                 contentDescription = null,
                 tint = MiuixTheme.colorScheme.onSurface,
                 modifier = Modifier.size(sizeDp.dp),
