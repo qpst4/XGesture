@@ -476,6 +476,7 @@
     <string name="excluded_apps_scope_triggers_short">Triggers</string>
     <string name="excluded_apps_scope_corner_wheel_short">Wheel</string>
     <string name="excluded_apps_scope_float_ball_short">Float ball</string>
+    <string name="excluded_apps_scope_multitouch_short">Global touch</string>
     <string name="excluded_apps_scope_none">Nothing disabled</string>
     <string name="excluded_apps_scope_dialog_hint">Choose what to hide in this app. Keep at least one option enabled.</string>
     <string name="accessibility_service_name">#XGesture👈</string>
@@ -2223,6 +2224,11 @@
     <string name="task_switcher_panel_width">Task switcher width</string>
     <string name="task_switcher_panel_width_desc">Default 226dp matches the previous fixed width</string>
     <string name="task_switcher_panel_width_value">%1$d dp</string>
+    <string name="task_switcher_close_mode_title">Close button mode</string>
+    <string name="task_switcher_close_mode_desc">Action when tapping the "X" button on task cards</string>
+    <string name="task_switcher_close_mode_dismiss_recents">Dismiss recents card</string>
+    <string name="task_switcher_close_mode_force_stop">Force stop only</string>
+    <string name="task_switcher_close_mode_both">Dismiss and force stop</string>
     <string name="haptic_enabled">Vibration</string>
     <string name="settings_predictive_back">Predictive back gesture</string>
     <string name="settings_predictive_back_summary">Enable predictive back animation</string>
@@ -2865,6 +2871,8 @@
     <string name="gesture_action_toggle_shake_desc">Turn the shake-gesture master switch on or off</string>
     <string name="gesture_action_toggle_float_ball">Float ball</string>
     <string name="gesture_action_toggle_float_ball_desc">Hide or show the float ball; the state is kept and edge gestures are untouched</string>
+    <string name="gesture_action_move_float_ball">Move float ball</string>
+    <string name="gesture_action_move_float_ball_desc">Enter free move mode; drag directly when triggered by long press</string>
     <string name="gesture_action_toggle_float_ball_hidden">Float ball hidden. Run again or restore it in settings</string>
     <string name="gesture_action_toggle_float_ball_shown">Float ball shown</string>
     <string name="gesture_action_toggle_float_ball_service_off">Float ball enabled, but the edge-gesture master switch is off</string>

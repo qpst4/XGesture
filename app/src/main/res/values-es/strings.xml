@@ -473,6 +473,7 @@
     <string name="excluded_apps_scope_triggers_short">Activadores</string>
     <string name="excluded_apps_scope_corner_wheel_short">Rueda</string>
     <string name="excluded_apps_scope_float_ball_short">Bola flotante</string>
+    <string name="excluded_apps_scope_multitouch_short">Toque global</string>
     <string name="excluded_apps_scope_none">Nada desactivado</string>
     <string name="excluded_apps_scope_dialog_hint">Elige qué ocultar en esta app. Mantenga al menos una opción activada.</string>
     <string name="accessibility_service_name">#XGesture👈</string>

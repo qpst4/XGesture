@@ -34,6 +34,8 @@ import com.slideindex.app.shizuku.ShizukuUserServiceHost
 import com.slideindex.app.privilege.root.RootTaskManagerServiceHost
 import com.slideindex.app.privilege.root.TaskManagerRpcClient
 import com.slideindex.app.ui.gestureKindLabelRes
+import com.slideindex.app.util.OverlaySuppression
+import com.slideindex.app.util.OverlaySuppressionScope
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -233,6 +235,13 @@ class MultiTouchGestureCoordinator @Inject constructor(
                 .distinctUntilChanged()
                 .collect { syncNow() }
         }
+        // 磁贴总开关（serviceEnabled）关闭时，停止后台手势监听
+        applicationScope.launch(Dispatchers.IO) {
+            settingsRepository.settings
+                .map { it.serviceEnabled }
+                .distinctUntilChanged()
+                .collect { syncNow() }
+        }
     }
 
     private val binderReceivedListener = Shizuku.OnBinderReceivedListener {
@@ -301,8 +310,16 @@ class MultiTouchGestureCoordinator @Inject constructor(
 
             stopObservation()
 
-            if (!settings.enabled) {
-                _status.value = _status.value.copy(running = false, detail = "disabled")
+            val globalSettings = runCatching {
+                settingsRepository.readSnapshot()
+            }.getOrNull()
+            val serviceEnabled = globalSettings?.serviceEnabled ?: true
+
+            if (!settings.enabled || !serviceEnabled) {
+                _status.value = _status.value.copy(
+                    running = false,
+                    detail = if (!serviceEnabled) "service-disabled" else "disabled"
+                )
                 return
             }
 
@@ -460,6 +477,17 @@ class MultiTouchGestureCoordinator @Inject constructor(
         fingerCount: Int,
         anchor: TouchAnchor?,
     ) {
+        val hostContext = SlideIndexAccessibilityService.overlayHostContext() ?: context
+        val appSettings = runCatching { settingsRepository.readSnapshot() }.getOrNull()
+        if (appSettings != null && OverlaySuppression.shouldSuppress(
+                settings = appSettings,
+                context = hostContext,
+                foregroundPackage = null,
+                scope = OverlaySuppressionScope.MULTI_TOUCH,
+            )) {
+            Log.i(TAG, "multi-touch suppressed by foreground app")
+            return
+        }
         val now = SystemClock.elapsedRealtime()
         if (now - lastActionAtMs < ACTION_COOLDOWN_MS) return
         lastActionAtMs = now

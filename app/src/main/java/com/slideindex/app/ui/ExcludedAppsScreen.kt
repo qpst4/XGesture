@@ -225,7 +225,8 @@ private fun ExcludedAppScopeChipPicker(
     scopes: ExcludedAppScopes,
     onSuppressTriggersChange: (Boolean) -> Unit,
     onSuppressCornerWheelChange: (Boolean) -> Unit,
-    onSuppressFloatBallChange: (Boolean) -> Unit
+    onSuppressFloatBallChange: (Boolean) -> Unit,
+    onSuppressMultiTouchChange: (Boolean) -> Unit,
 ) {
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -245,6 +246,11 @@ private fun ExcludedAppScopeChipPicker(
             label = stringResource(R.string.excluded_apps_scope_float_ball_short),
             selected = scopes.suppressFloatBall,
             onClick = { onSuppressFloatBallChange(!scopes.suppressFloatBall) }
+        )
+        ExcludedAppScopeChip(
+            label = stringResource(R.string.excluded_apps_scope_multitouch_short),
+            selected = scopes.suppressMultiTouch,
+            onClick = { onSuppressMultiTouchChange(!scopes.suppressMultiTouch) }
         )
     }
 }
@@ -272,6 +278,7 @@ private fun formatExcludedAppScopesSummary(scopes: ExcludedAppScopes): String {
         if (scopes.suppressTriggers) add(stringResource(R.string.excluded_apps_scope_triggers_short))
         if (scopes.suppressCornerWheel) add(stringResource(R.string.excluded_apps_scope_corner_wheel_short))
         if (scopes.suppressFloatBall) add(stringResource(R.string.excluded_apps_scope_float_ball_short))
+        if (scopes.suppressMultiTouch) add(stringResource(R.string.excluded_apps_scope_multitouch_short))
     }
     return if (parts.isEmpty()) {
         stringResource(R.string.excluded_apps_scope_none)
@@ -348,7 +355,8 @@ private fun ExcludedAppScopesDialogBody(
             scopes = scopes,
             onSuppressTriggersChange = { onScopesChange(scopes.copy(suppressTriggers = it)) },
             onSuppressCornerWheelChange = { onScopesChange(scopes.copy(suppressCornerWheel = it)) },
-            onSuppressFloatBallChange = { onScopesChange(scopes.copy(suppressFloatBall = it)) }
+            onSuppressFloatBallChange = { onScopesChange(scopes.copy(suppressFloatBall = it)) },
+            onSuppressMultiTouchChange = { onScopesChange(scopes.copy(suppressMultiTouch = it)) },
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(

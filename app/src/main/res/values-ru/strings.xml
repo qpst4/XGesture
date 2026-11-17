@@ -463,6 +463,7 @@
     <string name="excluded_apps_scope_triggers_short">Триггеры</string>
     <string name="excluded_apps_scope_corner_wheel_short">Колесо</string>
     <string name="excluded_apps_scope_float_ball_short">Плавающий шарик</string>
+    <string name="excluded_apps_scope_multitouch_short">Глобальное касание</string>
     <string name="excluded_apps_scope_none">Ничего не отключено</string>
     <string name="excluded_apps_scope_dialog_hint">Выберите, что скрывать в этом приложении. Оставьте хотя бы одну включённую опцию.</string>
     <string name="accessibility_service_name">#XGesture👈</string>

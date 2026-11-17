@@ -281,6 +281,7 @@ class SettingsRepository @Inject constructor(
     suspend fun setQuickLauncherRowsPerPage(value: Int) = edge.setQuickLauncherRowsPerPage(value)
     suspend fun setPanelOpacity(value: Float) = edge.setPanelOpacity(value)
     suspend fun setTaskSwitcherPanelWidthDp(value: Int) = edge.setTaskSwitcherPanelWidthDp(value)
+    suspend fun setTaskSwitcherCloseMode(mode: TaskSwitcherCloseMode) = edge.setTaskSwitcherCloseMode(mode)
     suspend fun setFloatBallEdgeInsetDp(value: Int) = edge.setFloatBallEdgeInsetDp(value)
     suspend fun setEdgeLongPressMs(value: Int) = edge.setEdgeLongPressMs(value)
     suspend fun setHapticEnabled(enabled: Boolean) = edge.setHapticEnabled(enabled)

@@ -468,6 +468,11 @@ class EdgeSettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.TASK_SWITCHER_PANEL_WIDTH_DP] = value.coerceIn(180, 340)
     }
 
+    /** 任务切换器“X”按钮关闭模式。 */
+    suspend fun setTaskSwitcherCloseMode(mode: TaskSwitcherCloseMode) = editor.edit {
+        it[SettingsPreferenceKeys.TASK_SWITCHER_CLOSE_MODE] = mode.id
+    }
+
     /** 触钮长按判定时长（毫秒）。 */
     suspend fun setEdgeLongPressMs(value: Int) = editor.edit {
         it[SettingsPreferenceKeys.EDGE_LONG_PRESS_MS] = value.coerceIn(200, 1200)
@@ -707,11 +712,12 @@ class EdgeSettingsMutator @Inject constructor(
     private fun readExcludedAppDefaultScopes(prefs: androidx.datastore.preferences.core.MutablePreferences): ExcludedAppScopes {
         prefs[SettingsPreferenceKeys.EXCLUDED_APP_DEFAULT_SCOPES]?.let { value ->
             val flags = value.split(',')
-            if (flags.size == 3) {
+            if (flags.size >= 3) {
                 return ExcludedAppScopes(
                     suppressTriggers = flags[0] == "1",
                     suppressCornerWheel = flags[1] == "1",
                     suppressFloatBall = flags[2] == "1",
+                    suppressMultiTouch = flags.getOrNull(3)?.let { it == "1" } ?: true,
                 )
             }
         }
@@ -723,6 +729,7 @@ class EdgeSettingsMutator @Inject constructor(
             if (scopes.suppressTriggers) "1" else "0",
             if (scopes.suppressCornerWheel) "1" else "0",
             if (scopes.suppressFloatBall) "1" else "0",
+            if (scopes.suppressMultiTouch) "1" else "0",
         ).joinToString(",")
 
     suspend fun setKeyboardTriggerBehaviorPortrait(behavior: KeyboardTriggerBehavior) = editor.edit {

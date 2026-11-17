@@ -172,6 +172,7 @@ object EdgeCardOverlayWindow {
             } else {
                 existing.state.unreadCount
             }
+            val wasExpanded = existing.state.isExpanded
             existing.plan = plan
             existing.actionCallback = onAction
             existing.dismissCallback = onDismiss
@@ -181,10 +182,14 @@ object EdgeCardOverlayWindow {
                 existing.state.withUnread(unread)
             }
             if (changed) moveToTop(existing)
-            // 同会话来新消息：窗口直接瞬移到展开位，再播一次“从屏外滑入”的入场动画。
-            applyEntry(existing, animated = false)
-            if (changed || rebuilt) {
+            // 原先已展开的卡片原地更新内容，避免连续消息重复播放入场动画导致抖动
+            if (rebuilt || !wasExpanded) {
+                applyEntry(existing, animated = false)
                 existing.view?.playEntrance(1f)
+            } else {
+                bindView(existing)
+            }
+            if (changed || rebuilt) {
                 scheduleAutoCollapse(existing)
             }
             return
@@ -1103,8 +1108,8 @@ private const val SCROLL_STEP_PAUSE_MS = 800L
 /** 滚到最后一行后停留多久再收起。 */
 private const val SCROLL_FINISH_HOLD_MS = 1_000L
 
-/** 挂起超过这个时长就不再补显，避免解锁瞬间弹出一堆过期卡片。 */
-private const val LOCK_SUSPEND_TTL_MS = 10 * 60 * 1000L
+/** 挂起超过这个时长就不再补显，避免解锁瞬间弹出一堆过期卡片（24小时）。 */
+private const val LOCK_SUSPEND_TTL_MS = 24 * 60 * 60 * 1000L
 
 private class EdgeCardView(context: Context) : ViewGroup(context) {
     var exclusionEdge: SideBubbleHorizontalEdge = SideBubbleHorizontalEdge.Right
@@ -1488,12 +1493,8 @@ private class EdgeCardView(context: Context) : ViewGroup(context) {
         val lines = (contentView.layout?.lineCount ?: 1).coerceIn(1, maxLines)
         val lineHeight = maxOf(contentView.lineHeight, dp(16))
         val contentHeight = lines * lineHeight
-        (contentView.layoutParams as? LinearLayout.LayoutParams)?.let {
-            if (it.height != contentHeight) {
-                it.height = contentHeight
-                contentView.layoutParams = it
-            }
-        }
+        // 只静默更新 LayoutParams 字段，不调用 contentView.layoutParams = it，避免在 onMeasure 期间触发 requestLayout() 导致反复测量震荡
+        (contentView.layoutParams as? LinearLayout.LayoutParams)?.height = contentHeight
         val textHeight = maxOf(titleView.measuredHeight, senderView.measuredHeight) +
             dp(2) + contentHeight
         val cardHeight = maxOf(textHeight + dp(8), dp(42))

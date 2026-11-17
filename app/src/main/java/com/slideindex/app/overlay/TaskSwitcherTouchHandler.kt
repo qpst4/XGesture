@@ -3,6 +3,7 @@ package com.slideindex.app.overlay
 import android.util.Log
 import android.view.MotionEvent
 import com.slideindex.app.overlay.layout.TaskSwitcherPanelLayout
+import com.slideindex.app.settings.TaskSwitcherCloseMode
 import com.slideindex.app.util.RecentAppEntry
 import com.slideindex.app.util.RecentTasksLoader
 import com.slideindex.app.util.TaskManagerUtil
@@ -346,19 +347,27 @@ internal class TaskSwitcherTouchHandler(
         }
 
     private fun dismissTaskCards(entries: List<RecentAppEntry>) {
-        if (entries.isEmpty() || !TaskManagerUtil.hasPermission()) return
+        if (entries.isEmpty()) return
+        val mode = host.settings().taskSwitcherCloseMode
+        val needDismissRecents = mode == TaskSwitcherCloseMode.DISMISS_RECENTS || mode == TaskSwitcherCloseMode.BOTH
+        val needForceStop = mode == TaskSwitcherCloseMode.FORCE_STOP || mode == TaskSwitcherCloseMode.BOTH
         Thread {
             entries.filterNot { it.isLocked }.forEach { entry ->
-                val removed = if (entry.taskId > 0) {
-                    TaskManagerUtil.removeTaskById(entry.taskId)
-                } else {
-                    TaskManagerUtil.removeTaskByPackage(entry.app.packageName)
+                if (needForceStop) {
+                    TaskManagerUtil.forceStopPackage(entry.app.packageName)
                 }
-                if (!removed) {
-                    Log.w(
-                        "EdgeGestureOverlay",
-                        "dismissTaskCards failed package=${entry.app.packageName} taskId=${entry.taskId}"
-                    )
+                if (needDismissRecents && TaskManagerUtil.hasPermission()) {
+                    val removed = if (entry.taskId > 0) {
+                        TaskManagerUtil.removeTaskById(entry.taskId)
+                    } else {
+                        TaskManagerUtil.removeTaskByPackage(entry.app.packageName)
+                    }
+                    if (!removed) {
+                        Log.w(
+                            "EdgeGestureOverlay",
+                            "dismissTaskCards failed package=${entry.app.packageName} taskId=${entry.taskId}"
+                        )
+                    }
                 }
             }
             RecentTasksLoader.requestRefreshAfterSwitch(host.appRepository())

@@ -26,6 +26,7 @@ import com.slideindex.app.pagescroll.PageScrollActionRunner
 import com.slideindex.app.privilege.PrivilegeGateway
 import com.slideindex.app.overlay.FloatBallStashPanel
 import com.slideindex.app.overlay.FloatBallVisibilityToggle
+import com.slideindex.app.overlay.panels.PanelFloatBallHooks
 import com.slideindex.app.overlay.PickResultFromHistoryCoordinator
 import com.slideindex.app.overlay.StashPanelInitialTab
 import com.slideindex.app.overlay.SystemMagnifierController
@@ -503,6 +504,10 @@ class ActionExecutor(
                     ToggleMode.ON -> FloatBallVisibilityToggle.set(context, visible = true)
                     ToggleMode.OFF -> FloatBallVisibilityToggle.set(context, visible = false)
                 }
+                true
+            }
+            is GestureAction.MoveFloatBall -> {
+                PanelFloatBallHooks.enterFreeMoveMode?.invoke()
                 true
             }
             is GestureAction.ToggleAutoBrightness -> if (PrivilegeGateway.isRootMode()) {

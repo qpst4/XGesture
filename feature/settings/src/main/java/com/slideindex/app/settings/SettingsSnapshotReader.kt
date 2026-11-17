@@ -248,6 +248,8 @@ internal object SettingsSnapshotReader {
             panelOpacity = prefs[SettingsPreferenceKeys.PANEL_OPACITY] ?: 0.95f,
             taskSwitcherPanelWidthDp = prefs[SettingsPreferenceKeys.TASK_SWITCHER_PANEL_WIDTH_DP]
                 ?.coerceIn(180, 340) ?: 226,
+            taskSwitcherCloseMode = prefs[SettingsPreferenceKeys.TASK_SWITCHER_CLOSE_MODE]
+                ?.let { TaskSwitcherCloseMode.fromId(it) } ?: TaskSwitcherCloseMode.DISMISS_RECENTS,
             floatBallEdgeInsetDp = resolveFloatBallEdgeInsetDp(prefs, context),
             hapticEnabled = prefs[SettingsPreferenceKeys.HAPTIC_ENABLED] ?: true,
             hapticStrengthLevel = prefs[SettingsPreferenceKeys.HAPTIC_STRENGTH] ?: HapticStrength.MEDIUM.level,
@@ -1454,16 +1456,18 @@ internal object SettingsSnapshotReader {
             suppressTriggers = prefs[LEGACY_EXCLUDED_APP_SUPPRESS_TRIGGERS] ?: true,
             suppressCornerWheel = prefs[LEGACY_EXCLUDED_APP_SUPPRESS_CORNER_WHEEL] ?: true,
             suppressFloatBall = prefs[LEGACY_EXCLUDED_APP_SUPPRESS_FLOAT_BALL] ?: true,
+            suppressMultiTouch = true,
         )
     }
 
     private fun decodeDefaultScopesFlagString(value: String): ExcludedAppScopes? {
         val flags = value.split(',')
-        if (flags.size != 3) return null
+        if (flags.size < 3) return null
         return ExcludedAppScopes(
             suppressTriggers = flags[0] == "1",
             suppressCornerWheel = flags[1] == "1",
             suppressFloatBall = flags[2] == "1",
+            suppressMultiTouch = flags.getOrNull(3)?.let { it == "1" } ?: true,
         )
     }
 

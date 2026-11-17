@@ -31,6 +31,8 @@ data class AppSettings(
     val panelOpacity: Float = 0.95f,
     /** 任务切换器面板宽度（dp）。默认 226 与旧版固定值一致。 */
     val taskSwitcherPanelWidthDp: Int = 226,
+    /** 任务切换器“X”按钮的结束模式（划掉后台卡片 / 强行停止 / 两者同时）。 */
+    val taskSwitcherCloseMode: TaskSwitcherCloseMode = TaskSwitcherCloseMode.DISMISS_RECENTS,
     /**
      * 悬浮球距屏幕边缘的距离（dp）。
      *

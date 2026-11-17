@@ -142,6 +142,8 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
                 onTest = { action -> runActionTest(context, action, settings) },
                 taskSwitcherWidthDp = settings.taskSwitcherPanelWidthDp,
                 onTaskSwitcherWidthChange = viewModel::setTaskSwitcherPanelWidthDp,
+                taskSwitcherCloseMode = settings.taskSwitcherCloseMode,
+                onTaskSwitcherCloseModeChange = viewModel::setTaskSwitcherCloseMode,
                 appCarouselSwitcher = settings.appCarouselSwitcher,
                 onAppCarouselSwitcherChange = viewModel::setAppCarouselSwitcherSettings,
             )

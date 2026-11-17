@@ -90,6 +90,7 @@ internal object SettingsPreferenceKeys {
     val QUICK_LAUNCHER_ROWS_PER_PAGE = intPreferencesKey("quick_launcher_rows_per_page")
     val PANEL_OPACITY = floatPreferencesKey("panel_opacity")
     val TASK_SWITCHER_PANEL_WIDTH_DP = intPreferencesKey("task_switcher_panel_width_dp")
+    val TASK_SWITCHER_CLOSE_MODE = intPreferencesKey("task_switcher_close_mode")
     val FLOAT_BALL_EDGE_INSET_DP = intPreferencesKey("float_ball_edge_inset_dp")
     val HAPTIC_ENABLED = booleanPreferencesKey("haptic_enabled")
     val HAPTIC_STRENGTH = intPreferencesKey("haptic_strength_level")

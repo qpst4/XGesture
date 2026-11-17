@@ -21,6 +21,7 @@ import com.slideindex.app.settings.AndroidBackColorSource
 import com.slideindex.app.settings.CornerSlotSubMenuConfig
 import com.slideindex.app.settings.FreeWindowLayoutFractions
 import com.slideindex.app.settings.SettingsRepository
+import com.slideindex.app.settings.TaskSwitcherCloseMode
 import kotlinx.coroutines.flow.first
 import com.slideindex.app.settings.KeyboardTriggerBehavior
 import com.slideindex.app.settings.WaveStyle
@@ -126,6 +127,10 @@ class HomeDetailSettingsViewModel @Inject constructor(
 
     fun setTaskSwitcherPanelWidthDp(value: Int) = launchSettingsWrite {
         settingsRepository.setTaskSwitcherPanelWidthDp(value.coerceIn(180, 340))
+    }
+
+    fun setTaskSwitcherCloseMode(mode: TaskSwitcherCloseMode) = launchSettingsWrite {
+        settingsRepository.setTaskSwitcherCloseMode(mode)
     }
 
     fun setHideEmptyIndexLetters(enabled: Boolean) = launchSettingsWrite {

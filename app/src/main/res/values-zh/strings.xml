@@ -617,6 +617,11 @@
     <string name="task_switcher_panel_width">任务切换器宽度</string>
     <string name="task_switcher_panel_width_desc">默认 226dp 与旧版固定宽度一致</string>
     <string name="task_switcher_panel_width_value">%1$d dp</string>
+    <string name="task_switcher_close_mode_title">关闭按钮模式</string>
+    <string name="task_switcher_close_mode_desc">点击任务卡片上“X”按钮时的结束行为</string>
+    <string name="task_switcher_close_mode_dismiss_recents">划掉后台卡片</string>
+    <string name="task_switcher_close_mode_force_stop">仅强行停止应用</string>
+    <string name="task_switcher_close_mode_both">划掉并强行停止应用</string>
     <string name="haptic_enabled">震动</string>
     <string name="settings_predictive_back">预测性返回手势</string>
     <string name="settings_predictive_back_summary">启用预测性返回动画效果</string>
@@ -811,6 +816,7 @@
     <string name="excluded_apps_scope_triggers_short">触钮</string>
     <string name="excluded_apps_scope_corner_wheel_short">轮盘</string>
     <string name="excluded_apps_scope_float_ball_short">悬浮球</string>
+    <string name="excluded_apps_scope_multitouch_short">全局触控</string>
     <string name="excluded_apps_scope_none">未禁用任何功能</string>
     <string name="excluded_apps_scope_dialog_hint">选择在此应用中要隐藏的功能；至少保留一项。</string>
     <string name="excluded_apps_section_excluded">已禁用</string>
@@ -1626,6 +1632,8 @@
     <string name="gesture_action_toggle_shake_desc">打开或关闭「晃动」页的总开关</string>
     <string name="gesture_action_toggle_float_ball">悬浮球显示</string>
     <string name="gesture_action_toggle_float_ball_desc">隐藏或重新显示悬浮球；状态保持，不影响边缘手势</string>
+    <string name="gesture_action_move_float_ball">移动悬浮球</string>
+    <string name="gesture_action_move_float_ball_desc">进入悬浮球自由移动模式；长按悬浮球触发时可直接拖动挪球</string>
     <string name="gesture_action_toggle_float_ball_hidden">悬浮球已隐藏；再次执行或从设置恢复</string>
     <string name="gesture_action_toggle_float_ball_shown">悬浮球已显示</string>
     <string name="gesture_action_toggle_float_ball_service_off">悬浮球已开启，但边缘手势总开关是关的</string>

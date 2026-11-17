@@ -48,6 +48,8 @@ import com.slideindex.app.gesture.KeyEventPresets
 import com.slideindex.app.pagescroll.PageScrollPrefs
 import com.slideindex.app.pagescroll.PageScrollSettings
 import com.slideindex.app.settings.AppCarouselSwitcherSettings
+import com.slideindex.app.settings.TaskSwitcherCloseMode
+import com.slideindex.app.ui.settings.components.SettingDropdownRow
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_01
 import com.slideindex.app.ui.settings.components.SettingsSliderRow
@@ -79,6 +81,8 @@ fun ActionDetailScreen(
     onTest: ((GestureAction) -> Unit)?,
     taskSwitcherWidthDp: Int? = null,
     onTaskSwitcherWidthChange: ((Int) -> Unit)? = null,
+    taskSwitcherCloseMode: TaskSwitcherCloseMode? = null,
+    onTaskSwitcherCloseModeChange: ((TaskSwitcherCloseMode) -> Unit)? = null,
     appCarouselSwitcher: AppCarouselSwitcherSettings? = null,
     onAppCarouselSwitcherChange: ((AppCarouselSwitcherSettings) -> Unit)? = null,
 ) {
@@ -416,24 +420,54 @@ fun ActionDetailScreen(
             keyPrefix = "action-detail-settings",
             items = buildList {
                 when {
-                    entry.type == GestureActionType.TASK_SWITCHER -> add(
-                        settingsCardScopeItem("task-switcher-width") {
-                            SettingsSliderRow(
-                                title = stringResource(R.string.task_switcher_panel_width),
-                                summary = stringResource(R.string.task_switcher_panel_width_desc),
-                                value = taskWidth.toFloat(),
-                                valueRange = 180f..340f,
-                                steps = 15,
-                                enabled = onTaskSwitcherWidthChange != null,
-                                label = stringResource(
-                                    R.string.task_switcher_panel_width_value,
-                                    taskWidth,
-                                ),
-                                commitOnFinish = true,
-                                onValueChange = { onTaskSwitcherWidthChange?.invoke(it.roundToInt()) },
-                            )
-                        },
-                    )
+                    entry.type == GestureActionType.TASK_SWITCHER -> {
+                        add(
+                            settingsCardScopeItem("task-switcher-width") {
+                                SettingsSliderRow(
+                                    title = stringResource(R.string.task_switcher_panel_width),
+                                    summary = stringResource(R.string.task_switcher_panel_width_desc),
+                                    value = taskWidth.toFloat(),
+                                    valueRange = 180f..340f,
+                                    steps = 15,
+                                    enabled = onTaskSwitcherWidthChange != null,
+                                    label = stringResource(
+                                        R.string.task_switcher_panel_width_value,
+                                        taskWidth,
+                                    ),
+                                    commitOnFinish = true,
+                                    onValueChange = { onTaskSwitcherWidthChange?.invoke(it.roundToInt()) },
+                                )
+                            },
+                        )
+                        add(
+                            settingsCardScopeItem("task-switcher-close-mode") {
+                                val closeModes = listOf(
+                                    TaskSwitcherCloseMode.DISMISS_RECENTS,
+                                    TaskSwitcherCloseMode.FORCE_STOP,
+                                    TaskSwitcherCloseMode.BOTH,
+                                )
+                                val options = listOf(
+                                    stringResource(R.string.task_switcher_close_mode_dismiss_recents),
+                                    stringResource(R.string.task_switcher_close_mode_force_stop),
+                                    stringResource(R.string.task_switcher_close_mode_both),
+                                )
+                                val currentMode = taskSwitcherCloseMode ?: TaskSwitcherCloseMode.DISMISS_RECENTS
+                                val selectedIndex = closeModes.indexOf(currentMode).coerceAtLeast(0)
+                                SettingDropdownRow(
+                                    title = stringResource(R.string.task_switcher_close_mode_title),
+                                    subtitle = stringResource(R.string.task_switcher_close_mode_desc),
+                                    items = options,
+                                    selectedIndex = selectedIndex,
+                                    enabled = onTaskSwitcherCloseModeChange != null,
+                                    onSelectedIndexChange = { index ->
+                                        closeModes.getOrNull(index)?.let {
+                                            onTaskSwitcherCloseModeChange?.invoke(it)
+                                        }
+                                    },
+                                )
+                            },
+                        )
+                    }
                     entry.type == GestureActionType.PAGE_SCROLL -> {
                         add(
                             settingsCardScopeItem("page-scroll-speed") {

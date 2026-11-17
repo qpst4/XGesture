@@ -58,6 +58,7 @@ fun GestureSettings.toMinimalAppSettings(): AppSettings = AppSettings(
     quickLauncherRowsPerPage = quickLauncherRowsPerPage,
     panelOpacity = panelOpacity,
     taskSwitcherPanelWidthDp = taskSwitcherPanelWidthDp,
+    taskSwitcherCloseMode = taskSwitcherCloseMode,
     hapticEnabled = hapticEnabled,
     hapticStrengthLevel = hapticStrengthLevel,
     hapticGestureTriggerEnabled = hapticGestureTriggerEnabled,

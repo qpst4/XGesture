@@ -27,6 +27,8 @@ object ExcludedAppScopesCodec {
             append(if (scopes.suppressCornerWheel) '1' else '0')
             append(FLAG_SEPARATOR)
             append(if (scopes.suppressFloatBall) '1' else '0')
+            append(FLAG_SEPARATOR)
+            append(if (scopes.suppressMultiTouch) '1' else '0')
         }
 
     private fun decodeEntry(entry: String): Pair<String, ExcludedAppScopes>? {
@@ -34,11 +36,12 @@ object ExcludedAppScopesCodec {
         if (separatorIndex <= 0 || separatorIndex >= entry.lastIndex) return null
         val packageName = entry.substring(0, separatorIndex)
         val flags = entry.substring(separatorIndex + 1).split(FLAG_SEPARATOR)
-        if (flags.size != 3) return null
+        if (flags.size < 3) return null
         return packageName to ExcludedAppScopes(
             suppressTriggers = flags[0] == "1",
             suppressCornerWheel = flags[1] == "1",
             suppressFloatBall = flags[2] == "1",
+            suppressMultiTouch = flags.getOrNull(3)?.let { it == "1" } ?: true,
         )
     }
 }
