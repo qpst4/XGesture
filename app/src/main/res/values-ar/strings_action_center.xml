@@ -30,6 +30,7 @@
 
     <string name="action_center_settings">إعدادات ذات صلة</string>
     <string name="action_center_settings_desc">فتح صفحة الإعدادات ذات الصلة</string>
+    <string name="action_center_open_settings">فتح الإعدادات</string>
 
     <string name="action_center_command">الأمر</string>
     <string name="action_center_remind_duration">المدة</string>

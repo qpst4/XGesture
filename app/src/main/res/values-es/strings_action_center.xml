@@ -30,6 +30,7 @@
 
     <string name="action_center_settings">Ajustes relacionados</string>
     <string name="action_center_settings_desc">Abrir la página de ajustes relacionados</string>
+    <string name="action_center_open_settings">Abrir ajustes</string>
 
     <string name="action_center_command">Comando</string>
     <string name="action_center_remind_duration">Duración</string>

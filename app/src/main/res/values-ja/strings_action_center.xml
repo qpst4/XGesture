@@ -30,6 +30,7 @@
 
     <string name="action_center_settings">関連設定</string>
     <string name="action_center_settings_desc">関連設定ページを開く</string>
+    <string name="action_center_open_settings">設定を開く</string>
 
     <string name="action_center_command">コマンド</string>
     <string name="action_center_remind_duration">時間</string>

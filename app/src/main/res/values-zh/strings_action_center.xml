@@ -30,6 +30,7 @@
 
     <string name="action_center_settings">相关设置</string>
     <string name="action_center_settings_desc">打开相关设置页</string>
+    <string name="action_center_open_settings">打开设置</string>
 
     <string name="action_center_command">命令</string>
     <string name="action_center_remind_duration">时长</string>

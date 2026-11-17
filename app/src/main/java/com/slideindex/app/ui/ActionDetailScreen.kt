@@ -309,7 +309,7 @@ fun ActionDetailScreen(
                                     contentDescription = contentDescription,
                                 )
                             },
-                            title = settingsTitle,
+                            title = stringResource(R.string.action_center_open_settings),
                             subtitle = stringResource(R.string.action_center_settings_desc),
                             onClick = openSettings,
                         )

@@ -30,6 +30,7 @@
 
     <string name="action_center_settings">Связанные настройки</string>
     <string name="action_center_settings_desc">Открыть страницу связанных настроек</string>
+    <string name="action_center_open_settings">Открыть настройки</string>
 
     <string name="action_center_command">Команда</string>
     <string name="action_center_remind_duration">Длительность</string>
