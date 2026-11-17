@@ -2670,7 +2670,8 @@ object FloatBallOverlay {
             screenWidth = screenWidth,
             screenHeight = screenHeight,
             density = density,
-            pickDockSide = pickDockSide
+            pickDockSide = pickDockSide,
+            pressOnBall = pressOnBall
         )
         dragScreenBounds = bounds
     }

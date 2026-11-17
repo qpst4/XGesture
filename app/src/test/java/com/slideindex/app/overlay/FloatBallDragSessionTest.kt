@@ -177,6 +177,76 @@ class FloatBallDragSessionTest {
     assertEquals(screenWidth + anchorOutsidePx, pick.x, 0.5f)
   }
 
+  @Test
+  fun right_docked_pick_anchor_shifts_inward_when_ball_is_inward_inset() {
+    val session = FloatBallDragSession()
+    val settings = testSettings()
+    val centerY = screenHeight * 0.55f
+    val inset = 100f
+    val ballCenterX = screenWidth - ballSize.widthPx / 2f - inset
+    val fingerX = ballCenterX
+
+    session.armAtTouch(
+      settings = settings,
+      touchDownX = fingerX,
+      touchDownY = centerY,
+      fingerX = fingerX,
+      fingerY = centerY,
+      ballCenterX = ballCenterX,
+      ballCenterY = centerY,
+      ballSize = ballSize,
+      screenWidth = screenWidth,
+      screenHeight = screenHeight,
+      density = density,
+      pickDockSide = FloatBallSide.RIGHT,
+    )
+
+    val pick = session.computePick(
+      settings = settings,
+      ballSize = ballSize,
+      screenWidth = screenWidth,
+      screenHeight = screenHeight,
+      density = density,
+      marginPx = marginPx,
+    )
+    assertEquals(screenWidth + anchorOutsidePx - inset, pick.x, 0.5f)
+  }
+
+  @Test
+  fun left_docked_pick_anchor_shifts_inward_when_ball_is_inward_inset() {
+    val session = FloatBallDragSession()
+    val settings = testSettings()
+    val centerY = screenHeight * 0.55f
+    val inset = 80f
+    val ballCenterX = ballSize.widthPx / 2f + inset
+    val fingerX = ballCenterX
+
+    session.armAtTouch(
+      settings = settings,
+      touchDownX = fingerX,
+      touchDownY = centerY,
+      fingerX = fingerX,
+      fingerY = centerY,
+      ballCenterX = ballCenterX,
+      ballCenterY = centerY,
+      ballSize = ballSize,
+      screenWidth = screenWidth,
+      screenHeight = screenHeight,
+      density = density,
+      pickDockSide = FloatBallSide.LEFT,
+    )
+
+    val pick = session.computePick(
+      settings = settings,
+      ballSize = ballSize,
+      screenWidth = screenWidth,
+      screenHeight = screenHeight,
+      density = density,
+      marginPx = marginPx,
+    )
+    assertEquals(0f - anchorOutsidePx + inset, pick.x, 0.5f)
+  }
+
   /** 纵向倍率拉到最大时，红十字也不许掉到手指下面（这是「贴底过渡区」的核心语义）。 */
   @Test
   fun cross_never_drops_below_the_finger_even_with_high_vertical_gain() {

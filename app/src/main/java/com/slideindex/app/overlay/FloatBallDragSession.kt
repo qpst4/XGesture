@@ -62,7 +62,8 @@ internal class FloatBallDragSession {
     screenWidth: Float,
     screenHeight: Float,
     density: Float,
-    pickDockSide: FloatBallSide
+    pickDockSide: FloatBallSide,
+    pressOnBall: Boolean = true
   ) {
     this.pickDockSide = pickDockSide
     pickReleased = false
@@ -85,8 +86,29 @@ internal class FloatBallDragSession {
       density = density,
       dockSide = pickDockSide
     )
-    dragPointerAnchorX = pick.x +
+    val baseAnchorX = pick.x +
       outsideSign() * FloatingPointerBounds.PICK_ANCHOR_OUTSIDE_DP * density
+    val halfWidth = ballSize.widthPx / 2f
+    val configuredInsetPx = (settings.floatBallEdgeInsetDp.coerceAtLeast(0) * density).roundToInt().toFloat()
+    val rawInsetX = when (pickDockSide) {
+      FloatBallSide.LEFT -> (ballCenterX - halfWidth).coerceAtLeast(0f)
+      FloatBallSide.RIGHT -> (screenWidth - halfWidth - ballCenterX).coerceAtLeast(0f)
+    }
+    val edgeInsetX = if (pressOnBall) {
+      if (configuredInsetPx > 0f) {
+        maxOf(configuredInsetPx, rawInsetX)
+      } else if (rawInsetX > 16f * density) {
+        rawInsetX
+      } else {
+        0f
+      }
+    } else {
+      0f
+    }
+    dragPointerAnchorX = when (pickDockSide) {
+      FloatBallSide.LEFT -> baseAnchorX + edgeInsetX
+      FloatBallSide.RIGHT -> baseAnchorX - edgeInsetX
+    }
     dragPointerAnchorY = pick.y
   }
 
