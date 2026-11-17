@@ -195,25 +195,26 @@ fun ActionDetailScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
 
-                        Text(
-                            text = deeplinkTitle,
-                            style = MiuixTheme.textStyles.title4,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MiuixTheme.colorScheme.onSurfaceContainer,
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(
-                                text = deeplink,
-                                style = MiuixTheme.textStyles.body2,
-                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f),
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = deeplinkTitle,
+                                    style = MiuixTheme.textStyles.title4,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MiuixTheme.colorScheme.onSurfaceContainer,
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = deeplink,
+                                    style = MiuixTheme.textStyles.body2,
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
                             IconButton(
                                 onClick = {
                                     clipboard.setText(AnnotatedString(deeplink))
