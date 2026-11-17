@@ -283,6 +283,7 @@ object GestureActionCatalog {
         add(GestureAction.HoneycombLauncher)
         add(GestureAction.HolographicLauncher)
         add(GestureAction.QuickWheel())
+        add(GestureAction.FloatingPointer)
         addAll(sharedCoreActions())
         add(GestureAction.SnoozeOverlays)
         add(GestureAction.RunMacro())
