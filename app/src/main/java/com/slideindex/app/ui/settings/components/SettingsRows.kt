@@ -42,6 +42,7 @@ import com.slideindex.app.ui.SettingIconContainer
 import com.slideindex.app.ui.miuix.MiuixArrowRow
 import com.slideindex.app.ui.miuix.MiuixGroupedCard
 import com.slideindex.app.ui.miuix.miuixGroupedCardItem
+import com.slideindex.app.ui.miuix.MiuixGlassDropdownPreference
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
 import top.yukonga.miuix.kmp.basic.Switch
@@ -52,7 +53,6 @@ import top.yukonga.miuix.kmp.preference.CheckboxPreference
 import top.yukonga.miuix.kmp.preference.RadioButtonLocation
 import top.yukonga.miuix.kmp.preference.RadioButtonPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.OverlaySpinnerPreference
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -345,7 +345,7 @@ fun SettingsCardScope.SettingDropdownRow(
     onSelectedIndexChange: (Int) -> Unit,
 ) {
     SettingsCardRow(key = title) { position ->
-        OverlayDropdownPreference(
+        MiuixGlassDropdownPreference(
             modifier = Modifier.settingsGroupedRowBackground(position.index, position.count),
             title = title,
             summary = subtitle,
@@ -373,7 +373,7 @@ fun SettingsCardScope.SettingExpandableDropdownRow(
 ) {
     SettingsCardRow(key = "$title-expandable-dropdown") { position ->
         Column(modifier = Modifier.settingsGroupedRowBackground(position.index, position.count)) {
-            OverlayDropdownPreference(
+            MiuixGlassDropdownPreference(
                 title = title,
                 summary = subtitle,
                 items = items,

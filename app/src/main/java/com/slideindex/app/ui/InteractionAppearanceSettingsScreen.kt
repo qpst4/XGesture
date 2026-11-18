@@ -16,7 +16,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import com.slideindex.app.ui.settings.components.MiuixNavigationRow
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.InvertColors
@@ -39,6 +38,7 @@ import top.yukonga.miuix.kmp.preference.SwitchPreference
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.miuix.appLanguageSettingsCardItems
 import com.slideindex.app.ui.miuix.themeAppearanceSettingsCardItems
+import com.slideindex.app.ui.miuix.MiuixGlassDropdownPreference
 import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_100
 import com.slideindex.app.ui.settings.components.SettingExpandableDropdownRow
 import com.slideindex.app.ui.settings.components.SettingExpandableSwitchRow
@@ -186,7 +186,7 @@ fun InteractionAppearanceSettingsScreen(
                     )
                 },
                 settingsCardScopeItem("icon-plate") {
-                    OverlayDropdownPreference(
+                    MiuixGlassDropdownPreference(
                         title = iconPlateSectionTitle,
                         items = iconPlateTabLabels,
                         selectedIndex = com.slideindex.app.settings.IconPlateMode

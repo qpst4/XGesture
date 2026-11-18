@@ -9,7 +9,7 @@ import com.slideindex.app.R
 import com.slideindex.app.settings.AppUiLanguage
 import com.slideindex.app.ui.settings.components.settingsCardItem
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import com.slideindex.app.ui.miuix.MiuixGlassDropdownPreference
 
 @Composable
 fun appLanguageSettingsCardItems(
@@ -41,7 +41,7 @@ fun appLanguageSettingsCardItems(
 
     return listOf(
         settingsCardItem("app-language") {
-            OverlayDropdownPreference(
+            MiuixGlassDropdownPreference(
                 title = stringResource(R.string.settings_app_language_title),
                 items = languageOptions,
                 selectedIndex = languageEntries.indexOf(currentLanguage).coerceAtLeast(0),

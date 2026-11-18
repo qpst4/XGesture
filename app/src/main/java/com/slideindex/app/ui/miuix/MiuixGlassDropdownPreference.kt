@@ -27,6 +27,7 @@ fun MiuixGlassDropdownPreference(
     modifier: Modifier = Modifier,
     summary: String? = null,
     enabled: Boolean = true,
+    startAction: (@Composable () -> Unit)? = null,
 ) {
     val backdrop: LayerBackdrop? = LocalMiuixPageBackdrop.current ?: LocalMiuixScreenBackdrop.current
     GlassDropdownPreference(
@@ -38,5 +39,6 @@ fun MiuixGlassDropdownPreference(
         modifier = modifier,
         enabled = enabled,
         summary = summary,
+        startAction = startAction,
     )
 }
