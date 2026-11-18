@@ -47,6 +47,10 @@ import com.slideindex.app.ui.gesturepicker.gestureActionSearchAliases
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffoldWithExpandableSearch
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import com.slideindex.app.util.PinyinHelper
+import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
+import com.slideindex.app.ui.miuix.LocalMiuixScreenBackdrop
+import top.yukonga.miuix.kmp.glass.GlassTabRow
+import top.yukonga.miuix.kmp.glass.GlassTabRowDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /** 内置动作浏览页：按动作类型全量列出，分类分段 + 特殊入口角标 + 筛选。 */
@@ -92,13 +96,13 @@ fun ActionCenterScreen(
         searchQuery = searchQuery,
         onSearchQueryChange = { searchQuery = it },
         onBack = onBack,
-    ) {
-        item(key = "action-center-filter") {
+        extraBottomContent = {
             ActionCenterFilterRow(
                 selected = filter,
                 onSelect = { filter = it },
             )
-        }
+        },
+    ) {
         sections.forEach { (section, items) ->
             settingsLazySmallTitle(
                 key = "action-center-section-${section.name}",
@@ -128,19 +132,35 @@ private fun ActionCenterFilterRow(
     selected: ActionCenterFilter,
     onSelect: (ActionCenterFilter) -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        ActionCenterFilter.entries.forEach { filter ->
-            ActionCenterFilterPill(
-                label = stringResource(filter.labelRes),
-                selected = filter == selected,
-                onClick = { onSelect(filter) },
-            )
+    val tabs = ActionCenterFilter.entries.map { stringResource(it.labelRes) }
+    // 与通知滤盒同源：内容滚到栏下才升起玻璃；无背板（浮层窗口）时退回实色 pills。
+    val backdrop = LocalMiuixScreenBackdrop.current ?: LocalMiuixPageBackdrop.current
+    if (backdrop != null) {
+        GlassTabRow(
+            tabs = tabs,
+            selectedIndex = ActionCenterFilter.entries.indexOf(selected).coerceAtLeast(0),
+            onSelect = { index -> ActionCenterFilter.entries.getOrNull(index)?.let(onSelect) },
+            backdrop = backdrop,
+            surfaceAlpha = 1f,
+            height = GlassTabRowDefaults.NeutralHeight,
+            colors = GlassTabRowDefaults.neutralColors(),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+        )
+    } else {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            ActionCenterFilter.entries.forEach { filter ->
+                ActionCenterFilterPill(
+                    label = stringResource(filter.labelRes),
+                    selected = filter == selected,
+                    onClick = { onSelect(filter) },
+                )
+            }
         }
     }
 }

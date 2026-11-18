@@ -143,6 +143,8 @@ fun SettingsLazyScreenScaffoldWithExpandableSearch(
     floatingActionButton: @Composable () -> Unit = {},
     /** 悬浮按钮需要预留的底部空间，见 [com.slideindex.app.ui.miuix.MiuixSettingsFabInset]。 */
     fabInset: Dp = 0.dp,
+    /** 展开搜索条下方的附加内容（如内置动作的筛选条），与搜索条同处顶栏下方、不在列表层内。 */
+    extraBottomContent: @Composable () -> Unit = {},
     content: LazyListScope.() -> Unit,
 ) {
     var searchExpanded by remember { mutableStateOf(false) }
@@ -185,6 +187,7 @@ fun SettingsLazyScreenScaffoldWithExpandableSearch(
                 focusRequester = searchFocusRequester,
                 hintResId = hintResId,
             )
+            extraBottomContent()
         },
         content = content,
     )
