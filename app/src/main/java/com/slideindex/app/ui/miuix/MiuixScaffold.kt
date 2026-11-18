@@ -49,6 +49,7 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import com.slideindex.app.ui.LocalMainNavContentStartInset
 import com.slideindex.app.ui.mainNavStartInset
 import com.slideindex.app.ui.LocalMainNavTitleAlpha
@@ -60,6 +61,41 @@ import top.yukonga.miuix.kmp.glass.GlassIconButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+
+/** 三个脚手架共用的 Scaffold inset 配置：水平方向交给 `horizontalCutoutPadding()`，避免重复计算。 */
+internal val MiuixScaffoldContentWindowInsets: WindowInsets
+    @Composable get() = WindowInsets.systemBars
+        .union(WindowInsets.displayCutout)
+        .only(WindowInsetsSides.Vertical)
+
+/**
+ * 三个脚手架共用的玻璃顶栏：标题缩进、`titleAlpha`、backdrop、actions 间距统一在这里，
+ * 各页面只传内容。
+ */
+@Composable
+internal fun MiuixGlassTopBar(
+    title: String,
+    scrollBehavior: ScrollBehavior,
+    backdrop: LayerBackdrop?,
+    navigationIcon: @Composable () -> Unit,
+    actions: @Composable RowScope.() -> Unit,
+    bottomContent: @Composable () -> Unit = {},
+) {
+    val contentStartInset = LocalMainNavContentStartInset.current
+    Box(Modifier.fillMaxWidth()) {
+        AdaptiveTopAppBar(
+            modifier = Modifier.fillMaxWidth(),
+            contentModifier = Modifier.mainNavStartInset(contentStartInset),
+            backdrop = backdrop,
+            title = title,
+            titleAlpha = LocalMainNavTitleAlpha.current,
+            scrollBehavior = scrollBehavior,
+            navigationIcon = navigationIcon,
+            actions = actions,
+            bottomContent = bottomContent,
+        )
+    }
+}
 
 private fun PaddingValues.withListContentPadding(
     layoutDirection: androidx.compose.ui.unit.LayoutDirection,
@@ -123,7 +159,6 @@ fun MiuixListScaffold(
     val resolvedListState = listState ?: rememberLazyListState()
     val scrollBehavior = MiuixScrollBehavior()
     val barBackdrop = rememberMiuixBlurBackdrop()
-    val contentStartInset = LocalMainNavContentStartInset.current
     // 供顶栏内的玻璃组件（如 GlassSegmentedTabRow）决定 surfaceAlpha：内容滚到栏下才升起玻璃。
     val contentUnderBar = remember(resolvedListState) {
         derivedStateOf { resolvedListState.canScrollBackward }
@@ -134,24 +169,17 @@ fun MiuixListScaffold(
         LocalMiuixContentUnderBar provides contentUnderBar,
     ) {
         Scaffold(
-        contentWindowInsets = WindowInsets.systemBars
-            .union(WindowInsets.displayCutout)
-            .only(WindowInsetsSides.Vertical),
+        contentWindowInsets = MiuixScaffoldContentWindowInsets,
             modifier = modifier.imePadding(),
             topBar = {
-                Box(Modifier.fillMaxWidth()) {
-                    AdaptiveTopAppBar(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentModifier = Modifier.mainNavStartInset(contentStartInset),
-                        backdrop = barBackdrop,
-                        title = title,
-                        titleAlpha = LocalMainNavTitleAlpha.current,
-                        scrollBehavior = scrollBehavior,
-                        navigationIcon = { navigationIcon?.invoke() },
-                        actions = actions,
-                        bottomContent = bottomContent,
-                    )
-                }
+                MiuixGlassTopBar(
+                    title = title,
+                    scrollBehavior = scrollBehavior,
+                    backdrop = barBackdrop,
+                    navigationIcon = { navigationIcon?.invoke() },
+                    actions = actions,
+                    bottomContent = bottomContent,
+                )
             },
             floatingActionButton = floatingActionButton,
         ) { innerPadding ->
@@ -166,7 +194,7 @@ fun MiuixListScaffold(
                     .then(barBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
                     .horizontalCutoutPadding()
                     .scrollEndHaptic()
-                    .overScrollVertical()
+                    .miuixOverScrollVertical(scrollBehavior)
                     .nestedScroll(scrollBehavior.nestedScrollConnection),
                 contentPadding = innerPadding.withListContentPadding(layoutDirection),
                 overscrollEffect = null,
@@ -216,7 +244,6 @@ fun MiuixSettingsScreenScaffold(
 ) {
     val scrollBehavior = MiuixScrollBehavior()
     val barBackdrop = rememberMiuixBlurBackdrop(enabled = !overlayMode)
-    val contentStartInset = LocalMainNavContentStartInset.current
     val resolvedListState = rememberLazyListState()
     // 供顶栏 bottomContent 里的玻璃组件（如 GlassSegmentedTabRow）决定 surfaceAlpha。
     val contentUnderBar = remember(resolvedListState) {
@@ -227,30 +254,23 @@ fun MiuixSettingsScreenScaffold(
         LocalMiuixContentUnderBar provides contentUnderBar,
     ) {
         Scaffold(
-        contentWindowInsets = WindowInsets.systemBars
-            .union(WindowInsets.displayCutout)
-            .only(WindowInsetsSides.Vertical),
+        contentWindowInsets = MiuixScaffoldContentWindowInsets,
             modifier = modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .imePadding(),
             topBar = {
-                Box(Modifier.fillMaxWidth()) {
-                    AdaptiveTopAppBar(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentModifier = Modifier.mainNavStartInset(contentStartInset),
-                        backdrop = if (overlayMode) null else barBackdrop,
-                        title = title,
-                        titleAlpha = LocalMainNavTitleAlpha.current,
-                        scrollBehavior = scrollBehavior,
-                        navigationIcon = {
-                            if (onBack != null) {
-                                MiuixGlassBackNavigationIcon(onBack)
-                            }
-                        },
-                        actions = actions,
-                        bottomContent = bottomContent,
-                    )
-                }
+                MiuixGlassTopBar(
+                    title = title,
+                    scrollBehavior = scrollBehavior,
+                    backdrop = if (overlayMode) null else barBackdrop,
+                    navigationIcon = {
+                        if (onBack != null) {
+                            MiuixGlassBackNavigationIcon(onBack)
+                        }
+                    },
+                    actions = actions,
+                    bottomContent = bottomContent,
+                )
             },
             floatingActionButton = floatingActionButton,
             bottomBar = bottomBar,
@@ -268,7 +288,7 @@ fun MiuixSettingsScreenScaffold(
                 )
                 .horizontalCutoutPadding()
                 .scrollEndHaptic()
-                .overScrollVertical()
+                .miuixOverScrollVertical(scrollBehavior)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
             val lazyContent: LazyListScope.() -> Unit = {
                 settingsPageHeaderItems(pageHint = pageHint, subtitle = subtitle)

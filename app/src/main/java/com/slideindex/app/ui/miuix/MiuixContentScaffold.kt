@@ -44,32 +44,24 @@ fun MiuixContentScaffold(
 ) {
     val scrollBehavior = MiuixScrollBehavior()
     val barBackdrop = rememberMiuixBlurBackdrop()
-    val contentStartInset = LocalMainNavContentStartInset.current
     // 让顶栏 actions 与内容区的玻璃浮层都能取到页面背板（玻璃菜单采样用）。
     CompositionLocalProvider(LocalMiuixScreenBackdrop provides barBackdrop) {
         Scaffold(
-        contentWindowInsets = WindowInsets.systemBars
-            .union(WindowInsets.displayCutout)
-            .only(WindowInsetsSides.Vertical),
+        contentWindowInsets = MiuixScaffoldContentWindowInsets,
             modifier = modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .imePadding(),
             topBar = {
-                Box(Modifier.fillMaxWidth()) {
-                    AdaptiveTopAppBar(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentModifier = Modifier.mainNavStartInset(contentStartInset),
-                        backdrop = barBackdrop,
-                        title = title,
-                        titleAlpha = LocalMainNavTitleAlpha.current,
-                        scrollBehavior = scrollBehavior,
-                        navigationIcon = {
-                            if (onBack != null) MiuixGlassBackNavigationIcon(onBack)
-                        },
-                        actions = actions,
-                        bottomContent = bottomContent,
-                    )
-                }
+                MiuixGlassTopBar(
+                    title = title,
+                    scrollBehavior = scrollBehavior,
+                    backdrop = barBackdrop,
+                    navigationIcon = {
+                        if (onBack != null) MiuixGlassBackNavigationIcon(onBack)
+                    },
+                    actions = actions,
+                    bottomContent = bottomContent,
+                )
             },
         ) { innerPadding ->
             Column(

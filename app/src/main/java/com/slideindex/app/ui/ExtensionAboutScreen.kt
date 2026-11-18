@@ -83,6 +83,7 @@ import com.slideindex.app.ui.miuix.MiuixGlassBackNavigationIcon
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
 import com.slideindex.app.ui.miuix.effect.BgEffectBackground
 import com.slideindex.app.ui.miuix.groupedCardItems
+import com.slideindex.app.ui.miuix.miuixOverScrollVertical
 import com.slideindex.app.ui.miuix.rememberMiuixBlurBackdrop
 import com.slideindex.app.ui.onboarding.OnboardingPracticeSession
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
@@ -348,7 +349,7 @@ private fun AboutContent(
             modifier = Modifier
                 .fillMaxSize()
                 .scrollEndHaptic()
-                .overScrollVertical()
+                .miuixOverScrollVertical(scrollBehavior)
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = PaddingValues(
                 top = scrollPadding.calculateTopPadding(),
