@@ -92,4 +92,15 @@
     <string name="multitouch_device_summary_auto_current">Auto · current %1$s</string>
     <string name="multitouch_device_pick_title">Choose touch device</string>
     <string name="multitouch_device_empty">No candidate devices found yet</string>
+
+    <!-- 设置页：全局触发条件（对齐 GMD） -->
+    <string name="multitouch_trigger_area_title">Trigger area</string>
+    <string name="multitouch_trigger_keyboard_title">When the keyboard is visible</string>
+    <string name="multitouch_trigger_anywhere">Anywhere</string>
+    <string name="multitouch_trigger_middle">Middle</string>
+    <string name="multitouch_trigger_top">Top half</string>
+    <string name="multitouch_trigger_bottom">Bottom half</string>
+    <string name="multitouch_keyboard_blocked">Disable gestures</string>
+    <string name="multitouch_keyboard_above">Only above the keyboard</string>
+    <string name="multitouch_keyboard_everywhere">Enable in all areas</string>
 </resources>

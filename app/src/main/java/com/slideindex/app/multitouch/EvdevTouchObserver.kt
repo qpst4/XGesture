@@ -26,8 +26,16 @@ import java.util.concurrent.TimeUnit
  * Linux input 的 ioctl 在纯 Java 里拿不到，直接解析 shell 输出最省事），同时拿到坐标范围。
  */
 class EvdevTouchObserver(
-    private val onGesture: (List<RecognizedMultiPointerGesture>, Long, TouchAnchor) -> Unit,
-    private val onPathGesture: (CollectedPath, Long, TouchAnchor) -> Unit = { _, _, _ -> },
+    /**
+     * 手势回调：`(候选列表, 事件时间, 质心锚点, 起点锚点)`。
+     *
+     * 起点锚点 = 这一次触摸**第一次出现触点**时的质心，GMD 的触发区域/键盘条件就是按它判定的；
+     * 没有起点（例如抬手后延迟结算的轻点）时为 null。
+     */
+    private val onGesture:
+        (List<RecognizedMultiPointerGesture>, Long, TouchAnchor, TouchAnchor?) -> Unit,
+    private val onPathGesture: (CollectedPath, Long, TouchAnchor, TouchAnchor?) -> Unit =
+        { _, _, _, _ -> },
     private val onInputConflict: (String?) -> Unit = {},
     private val onState: (Boolean, String) -> Unit = { _, _ -> },
     /**
@@ -57,6 +65,9 @@ class EvdevTouchObserver(
     private val recognizer = MultiPointerGestureRecognizer()
 
     private val pathCollector = PathGestureCollector()
+
+    /** 本次触摸第一次出现触点时的质心（屏幕归一化）；全部抬起后清空。 */
+    private var sessionStartAnchor: TouchAnchor? = null
 
     /** 上一次上报的虚拟设备列表，避免每次枚举都重复回调。 */
     @Volatile
@@ -219,6 +230,7 @@ class EvdevTouchObserver(
                     ranges
                 }
                 val now = android.os.SystemClock.elapsedRealtime()
+                val startAnchor = updateSessionStart(pointers, anchorRanges)
                 val gestures = recognizer.onFrame(pointers, now)
                 if (gestures.isNotEmpty()) {
                     for (gesture in gestures) {
@@ -234,7 +246,7 @@ class EvdevTouchObserver(
                         panelWidth = anchorRanges.width,
                         panelHeight = anchorRanges.height,
                     )
-                    onGesture(gestures, now, anchor)
+                    onGesture(gestures, now, anchor, startAnchor)
                 }
                 // 路径轨迹与几何识别并行采集：最终由 app 侧按条目去重。
                 val path = pathCollector.onFrame(pointers)
@@ -243,7 +255,7 @@ class EvdevTouchObserver(
                         "path x${path.fingerCount} " +
                             "points=${path.strokes.sumOf { it.points.size }}"
                     )
-                    onPathGesture(path, now, pathAnchor(path, anchorRanges))
+                    onPathGesture(path, now, pathAnchor(path, anchorRanges), startAnchor)
                 }
 
                 // 兜底：有原始事件、但两类判定都没产出任何触点 —— 换另一种协议再试一次。
@@ -297,6 +309,37 @@ class EvdevTouchObserver(
                 y = screenY / screenHeight,
             )
         }
+    }
+
+    /**
+     * 记录本次触摸的起点：第一次出现触点时取质心，之后整个会话保持不变。
+     *
+     * 起点用于触发区域/键盘条件判定（GMD 的语义是「手势必须从哪开始」）；
+     * `pointers` 与 [anchorRanges] 用的是同一套归一化，直接复用 [touchAnchorOf]。
+     */
+    private fun updateSessionStart(
+        pointers: List<TouchPointer>,
+        ranges: AbsRanges,
+    ): TouchAnchor? {
+        if (pointers.isEmpty()) {
+            sessionStartAnchor = null
+            return null
+        }
+        sessionStartAnchor?.let { return it }
+        var sumX = 0.0
+        var sumY = 0.0
+        for (pointer in pointers) {
+            sumX += pointer.x
+            sumY += pointer.y
+        }
+        val anchor = touchAnchorOf(
+            anchorX = (sumX / pointers.size).toFloat(),
+            anchorY = (sumY / pointers.size).toFloat(),
+            panelWidth = ranges.width,
+            panelHeight = ranges.height,
+        )
+        sessionStartAnchor = anchor
+        return anchor
     }
 
     /**
@@ -366,7 +409,7 @@ class EvdevTouchObserver(
                 )
                 // onTick 目前只会产出「抬手后延迟结算」的候选（现在恒为 null）；
                 // 这条路上手指坐标已经收不到，锚点退回屏幕中心，不要拿 gesture 里默认的 0 当左上角。
-                onGesture(listOf(gesture), now, TouchAnchor.CENTER)
+                onGesture(listOf(gesture), now, TouchAnchor.CENTER, null)
             }
             sleepQuietly(TICK_INTERVAL_MS)
         }

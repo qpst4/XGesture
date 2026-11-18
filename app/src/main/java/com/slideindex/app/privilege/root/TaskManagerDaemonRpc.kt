@@ -163,6 +163,11 @@ internal object TaskManagerDaemonRpc {
 
             106 -> RpcValue.StrArr(service.getTouchDevices())
 
+            107 -> {
+                service.setMultiTouchTrigger(args.int(0), args.int(1), args.int(2))
+                RpcValue.Void
+            }
+
             30 -> RpcValue.I32(service.getTetheringState())
 
             31 -> RpcValue.Bool(service.setTetheringEnabled(args.boolean(0)))

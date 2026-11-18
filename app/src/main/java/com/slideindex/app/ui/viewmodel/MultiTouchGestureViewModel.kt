@@ -42,6 +42,16 @@ class MultiTouchGestureViewModel @Inject constructor(
         settingsStore.setDevicePath(path)
     }
 
+    /** 全局触发区域：anywhere / middle / top / bottom（对齐 GMD）。 */
+    fun setTriggerArea(area: String) {
+        settingsStore.setTriggerArea(area)
+    }
+
+    /** 键盘可见时的策略：blocked / above / everywhere（对齐 GMD）。 */
+    fun setKeyboardBehavior(behavior: String) {
+        settingsStore.setKeyboardBehavior(behavior)
+    }
+
     private val _diagnostics = MutableStateFlow("")
     val diagnostics: StateFlow<String> = _diagnostics.asStateFlow()
 

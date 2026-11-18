@@ -80,4 +80,15 @@
     <string name="multitouch_protocol_title">Protocolo táctil</string>
     <string name="multitouch_protocol_type_a">Tipo A</string>
     <string name="multitouch_protocol_type_b">Tipo B</string>
+
+    <!-- Ajustes: condiciones de inicio globales (como GMD) -->
+    <string name="multitouch_trigger_area_title">Área de inicio</string>
+    <string name="multitouch_trigger_keyboard_title">Cuando el teclado está visible</string>
+    <string name="multitouch_trigger_anywhere">Cualquier lugar</string>
+    <string name="multitouch_trigger_middle">Centro</string>
+    <string name="multitouch_trigger_top">Mitad superior</string>
+    <string name="multitouch_trigger_bottom">Mitad inferior</string>
+    <string name="multitouch_keyboard_blocked">Desactivar gestos</string>
+    <string name="multitouch_keyboard_above">Solo encima del teclado</string>
+    <string name="multitouch_keyboard_everywhere">Activar en todas las áreas</string>
 </resources>

@@ -29,11 +29,57 @@ data class MultiTouchGestureSettings(
     /** 指定触摸设备（`/dev/input/eventX`）；空串 = 自动挑最合适的。 */
     val devicePath: String = "",
     val entries: List<MultiTouchGestureEntry> = defaultEntries(),
+    /** 全局触发区域（对齐 GMD）：手势起点必须落在哪。 */
+    val triggerArea: String = TRIGGER_ANYWHERE,
+    /** 键盘可见时的策略（对齐 GMD）。 */
+    val keyboardBehavior: String = KEYBOARD_ABOVE,
 ) {
     companion object {
         const val PROTOCOL_AUTO = "auto"
         const val PROTOCOL_TYPE_A = "type_a"
         const val PROTOCOL_TYPE_B = "type_b"
+
+        const val TRIGGER_ANYWHERE = "anywhere"
+        const val TRIGGER_MIDDLE = "middle"
+        const val TRIGGER_TOP = "top"
+        const val TRIGGER_BOTTOM = "bottom"
+
+        const val KEYBOARD_BLOCKED = "blocked"
+        const val KEYBOARD_ABOVE = "above"
+        const val KEYBOARD_EVERYWHERE = "everywhere"
+
+        val triggerAreaOptions: List<String> = listOf(
+            TRIGGER_ANYWHERE,
+            TRIGGER_MIDDLE,
+            TRIGGER_TOP,
+            TRIGGER_BOTTOM,
+        )
+
+        val keyboardBehaviorOptions: List<String> = listOf(
+            KEYBOARD_BLOCKED,
+            KEYBOARD_ABOVE,
+            KEYBOARD_EVERYWHERE,
+        )
+
+        /** GMD 的边缘带默认 5mm，这里固定不开放；由屏幕密度换算成像素。 */
+        fun triggerBorderPx(densityDpi: Int): Int =
+            (TRIGGER_BORDER_MM / 25.4f * densityDpi).toInt().coerceAtLeast(1)
+
+        fun normalizeTriggerArea(raw: String?): String = when (raw) {
+            TRIGGER_MIDDLE -> TRIGGER_MIDDLE
+            TRIGGER_TOP -> TRIGGER_TOP
+            TRIGGER_BOTTOM -> TRIGGER_BOTTOM
+            else -> TRIGGER_ANYWHERE
+        }
+
+        fun normalizeKeyboardBehavior(raw: String?): String = when (raw) {
+            KEYBOARD_BLOCKED -> KEYBOARD_BLOCKED
+            KEYBOARD_EVERYWHERE -> KEYBOARD_EVERYWHERE
+            else -> KEYBOARD_ABOVE
+        }
+
+        private const val TRIGGER_BORDER_MM = 5f
+
         fun defaultEntries(): List<MultiTouchGestureEntry> = listOf(
             entry("pinch3", MultiPointerGesture.PINCH, 3, GestureAction.Home),
             entry("spread3", MultiPointerGesture.SPREAD, 3, GestureAction.Screenshot),
@@ -112,6 +158,22 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         if (_state.value.devicePath == normalized) return
         prefs.edit().putString(KEY_DEVICE_PATH, normalized).apply()
         _state.value = _state.value.copy(devicePath = normalized)
+    }
+
+    /** 全局触发区域：anywhere / middle / top / bottom（对齐 GMD）。 */
+    fun setTriggerArea(area: String) {
+        val normalized = MultiTouchGestureSettings.normalizeTriggerArea(area)
+        if (_state.value.triggerArea == normalized) return
+        prefs.edit().putString(KEY_TRIGGER_AREA, normalized).apply()
+        _state.value = _state.value.copy(triggerArea = normalized)
+    }
+
+    /** 键盘可见时的策略：blocked / above / everywhere（对齐 GMD）。 */
+    fun setKeyboardBehavior(behavior: String) {
+        val normalized = MultiTouchGestureSettings.normalizeKeyboardBehavior(behavior)
+        if (_state.value.keyboardBehavior == normalized) return
+        prefs.edit().putString(KEY_KEYBOARD_BEHAVIOR, normalized).apply()
+        _state.value = _state.value.copy(keyboardBehavior = normalized)
     }
 
     /**
@@ -218,11 +280,13 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         prefs.edit().putString(KEY_ENTRIES, serialize(entries)).apply()
     }
 
-    /** 备份用：开关 + 全部条目（含手绘轨迹）。 */
+    /** 备份用：开关 + 触发条件 + 全部条目（含手绘轨迹）。 */
     fun exportRawJson(): String {
         val current = _state.value
         return JSONObject()
             .put("enabled", current.enabled)
+            .put("triggerArea", current.triggerArea)
+            .put("keyboardBehavior", current.keyboardBehavior)
             .put("entries", JSONArray(serialize(current.entries)))
             .toString()
     }
@@ -236,12 +300,20 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         if (raw.isBlank()) return
         val obj = runCatching { JSONObject(raw) }.getOrNull() ?: return
         val enabled = obj.optBoolean("enabled", false)
+        val triggerArea = MultiTouchGestureSettings.normalizeTriggerArea(
+            obj.optString("triggerArea").takeIf { it.isNotBlank() },
+        )
+        val keyboardBehavior = MultiTouchGestureSettings.normalizeKeyboardBehavior(
+            obj.optString("keyboardBehavior").takeIf { it.isNotBlank() },
+        )
         val entries = runCatching {
             parse(obj.optJSONArray("entries")?.toString() ?: "[]")
         }.getOrDefault(emptyList())
         val sorted = sortEntries(entries).ifEmpty { MultiTouchGestureSettings.defaultEntries() }
         prefs.edit()
             .putBoolean(KEY_ENABLED, enabled)
+            .putString(KEY_TRIGGER_AREA, triggerArea)
+            .putString(KEY_KEYBOARD_BEHAVIOR, keyboardBehavior)
             .putString(KEY_ENTRIES, serialize(sorted))
             .putBoolean(KEY_DEFAULTS_MERGED, true)
             .apply()
@@ -250,6 +322,8 @@ class MultiTouchGestureSettingsStore @Inject constructor(
             protocol = _state.value.protocol,
             devicePath = _state.value.devicePath,
             entries = sorted,
+            triggerArea = triggerArea,
+            keyboardBehavior = keyboardBehavior,
         )
     }
 
@@ -273,6 +347,12 @@ class MultiTouchGestureSettingsStore @Inject constructor(
                 ?: MultiTouchGestureSettings.PROTOCOL_AUTO,
             devicePath = prefs.getString(KEY_DEVICE_PATH, "") ?: "",
             entries = sortEntries(merged).ifEmpty { MultiTouchGestureSettings.defaultEntries() },
+            triggerArea = MultiTouchGestureSettings.normalizeTriggerArea(
+                prefs.getString(KEY_TRIGGER_AREA, null),
+            ),
+            keyboardBehavior = MultiTouchGestureSettings.normalizeKeyboardBehavior(
+                prefs.getString(KEY_KEYBOARD_BEHAVIOR, null),
+            ),
         )
     }
 
@@ -402,6 +482,8 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         const val KEY_DEFAULTS_MERGED = "defaults_merged"
         const val KEY_PROTOCOL = "touch_protocol"
         const val KEY_DEVICE_PATH = "touch_device_path"
+        const val KEY_TRIGGER_AREA = "trigger_area"
+        const val KEY_KEYBOARD_BEHAVIOR = "keyboard_behavior"
     }
 }
 

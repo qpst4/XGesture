@@ -4,8 +4,10 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.Keep
 import androidx.annotation.StringRes
+import com.slideindex.app.gesture.multitouch.TouchAnchor
 import com.slideindex.app.gesture.multitouch.TouchDisplayTransform
 import com.slideindex.app.multitouch.EvdevTouchObserver
+import com.slideindex.app.multitouch.MultiTouchTriggerFilter
 import com.slideindex.app.multitouch.encodePathStrokes
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -38,6 +40,27 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
     @Volatile
     private var touchDevices: Array<String> = emptyArray()
 
+    /** 全局触发条件（GMD 式）：0 任何地方 / 1 中 / 2 上半 / 3 下半。 */
+    @Volatile
+    private var triggerArea: Int = MultiTouchTriggerFilter.AREA_ANYWHERE
+
+    /** 键盘可见时的策略：0 禁用 / 1 键盘上方 / 2 所有区域。 */
+    @Volatile
+    private var keyboardBehavior: Int = MultiTouchTriggerFilter.KEYBOARD_ABOVE
+
+    /** 边缘带宽度（像素），由 app 按 5mm 换算后推过来。 */
+    @Volatile
+    private var triggerBorderPx: Int = 0
+
+    private val keyboardMonitorLazy = lazy {
+        KeyboardInsetsMonitor(
+            dumpsysReader = { shell.shellOutput("/system/bin/dumpsys", "window") },
+        )
+    }
+
+    private val keyboardMonitor: KeyboardInsetsMonitor
+        get() = keyboardMonitorLazy.value
+
     private val shell = TaskManagerShellExecutor
     private val shellRunner = ShellCommandRunner { args -> shell.shellCommand(*args) }
     private val tasks = TaskManagerTaskOperations(shellRunner)
@@ -54,6 +77,9 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
 
     override fun destroy() {
         stopMultiTouchObservation()
+        if (keyboardMonitorLazy.isInitialized()) {
+            runCatching { keyboardMonitor.close() }
+        }
         System.exit(0)
     }
 
@@ -68,6 +94,54 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
     override fun setMultiTouchConfig(protocol: String?, devicePath: String?) {
         protocolOverride = protocol ?: "auto"
         devicePathOverride = devicePath ?: ""
+    }
+
+    /** 全局触发条件：区域 + 键盘策略 + 边缘带宽度（对齐 GMD，所有手势共用）。 */
+    override fun setMultiTouchTrigger(area: Int, keyboardBehavior: Int, borderPx: Int) {
+        triggerArea = area.coerceIn(
+            MultiTouchTriggerFilter.AREA_ANYWHERE,
+            MultiTouchTriggerFilter.AREA_BOTTOM,
+        )
+        this.keyboardBehavior = keyboardBehavior.coerceIn(
+            MultiTouchTriggerFilter.KEYBOARD_BLOCKED,
+            MultiTouchTriggerFilter.KEYBOARD_EVERYWHERE,
+        )
+        triggerBorderPx = borderPx.coerceAtLeast(0)
+    }
+
+    /**
+     * 起始条件判定：先看区域，再看键盘（与 GMD 的 `TriggerEnum.c()` + `fc0.a()` 一致）。
+     *
+     * 没有起点锚点（旧观察器/抬手后延迟结算的轻点）时不拦，保持历史行为。
+     */
+    private fun acceptsTrigger(start: TouchAnchor?): Boolean {
+        val anchor = start ?: return true
+        val startU = anchor.u
+        val startV = anchor.v
+        val transform = displayTransform
+        val areaOk = MultiTouchTriggerFilter.areaAllows(
+            area = triggerArea,
+            startU = startU,
+            startV = startV,
+            widthPx = transform.screenWidthPx,
+            heightPx = transform.screenHeightPx,
+            borderPx = triggerBorderPx,
+        )
+        if (!areaOk) return false
+        val keyboard = runCatching { keyboardMonitor.snapshot() }.getOrNull() ?: return true
+        return MultiTouchTriggerFilter.keyboardAllows(
+            behavior = keyboardBehavior,
+            startU = startU,
+            startV = startV,
+            visible = keyboard.visible,
+            hasBounds = keyboard.hasBounds(),
+            left = keyboard.bounds.left,
+            top = keyboard.bounds.top,
+            right = keyboard.bounds.right,
+            bottom = keyboard.bounds.bottom,
+            displayWidth = keyboard.displayBounds.width(),
+            displayHeight = keyboard.displayBounds.height(),
+        )
     }
 
     override fun getMultiTouchDiagnostics(): String = multitouchDiagnostics
@@ -85,41 +159,46 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
             devicePathOverride = { devicePathOverride },
             onDiagnostics = { multitouchDiagnostics = it },
             onDevices = { touchDevices = it.toTypedArray() },
-            onGesture = { gestures, eventTimeMs, anchor ->
-                runCatching {
-                    Log.i(
-                        "MultiTouchBridge",
-                        "batch: " + gestures.joinToString { "${it.gesture}x${it.fingerCount}" } +
-                            " anchor=(${anchor.u},${anchor.v})",
-                    )
-                    callback.onGestureBatch(
-                        gestures.map { it.gesture.ordinal }.toIntArray(),
-                        gestures.map { it.fingerCount }.toIntArray(),
-                        eventTimeMs,
-                        anchor.u,
-                        anchor.v,
-                    )
-                }
-            },
-            onPathGesture = { path, eventTimeMs, anchor ->
-                val coordinates = ArrayList<Float>()
-                val strokeLengths = IntArray(path.strokes.size)
-                path.strokes.forEachIndexed { index, stroke ->
-                    strokeLengths[index] = stroke.points.size
-                    for (point in stroke.points) {
-                        coordinates += point.x
-                        coordinates += point.y
+            onGesture = { gestures, eventTimeMs, anchor, startAnchor ->
+                if (acceptsTrigger(startAnchor)) {
+                    runCatching {
+                        Log.i(
+                            "MultiTouchBridge",
+                            "batch: " + gestures.joinToString { "${it.gesture}x${it.fingerCount}" } +
+                                " anchor=(${anchor.u},${anchor.v}) " +
+                                "start=(${startAnchor?.u},${startAnchor?.v})",
+                        )
+                        callback.onGestureBatch(
+                            gestures.map { it.gesture.ordinal }.toIntArray(),
+                            gestures.map { it.fingerCount }.toIntArray(),
+                            eventTimeMs,
+                            anchor.u,
+                            anchor.v,
+                        )
                     }
                 }
-                runCatching {
-                    callback.onPathGesture(
-                        path.fingerCount,
-                        coordinates.toFloatArray(),
-                        strokeLengths,
-                        eventTimeMs,
-                        anchor.u,
-                        anchor.v,
-                    )
+            },
+            onPathGesture = { path, eventTimeMs, anchor, startAnchor ->
+                if (acceptsTrigger(startAnchor)) {
+                    val coordinates = ArrayList<Float>()
+                    val strokeLengths = IntArray(path.strokes.size)
+                    path.strokes.forEachIndexed { index, stroke ->
+                        strokeLengths[index] = stroke.points.size
+                        for (point in stroke.points) {
+                            coordinates += point.x
+                            coordinates += point.y
+                        }
+                    }
+                    runCatching {
+                        callback.onPathGesture(
+                            path.fingerCount,
+                            coordinates.toFloatArray(),
+                            strokeLengths,
+                            eventTimeMs,
+                            anchor.u,
+                            anchor.v,
+                        )
+                    }
                 }
             },
             onInputConflict = { devices ->
@@ -168,15 +247,19 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
             devicePathOverride = { devicePathOverride },
             onDiagnostics = { multitouchDiagnostics = it },
             onDevices = { touchDevices = it.toTypedArray() },
-            onGesture = { gestures, _, anchor ->
-                for (gesture in gestures) {
-                    pollingEvents += "g:${gesture.gesture.ordinal}:${gesture.fingerCount}:" +
-                        "${anchor.u}:${anchor.v}"
+            onGesture = { gestures, _, anchor, startAnchor ->
+                if (acceptsTrigger(startAnchor)) {
+                    for (gesture in gestures) {
+                        pollingEvents += "g:${gesture.gesture.ordinal}:${gesture.fingerCount}:" +
+                            "${anchor.u}:${anchor.v}"
+                    }
                 }
             },
-            onPathGesture = { path, _, anchor ->
-                pollingEvents += "p:${path.fingerCount}:${anchor.u}:${anchor.v}:" +
-                    encodePathStrokes(path.strokes)
+            onPathGesture = { path, _, anchor, startAnchor ->
+                if (acceptsTrigger(startAnchor)) {
+                    pollingEvents += "p:${path.fingerCount}:${anchor.u}:${anchor.v}:" +
+                        encodePathStrokes(path.strokes)
+                }
             },
             onState = { _, detail ->
                 // 设备路径只取短名（event7），状态行不用完整的 /dev/input/...。

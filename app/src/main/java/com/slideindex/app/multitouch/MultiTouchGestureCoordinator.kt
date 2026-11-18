@@ -309,6 +309,16 @@ class MultiTouchGestureCoordinator @Inject constructor(
                     )
                 }
         }
+        // 触发区域/键盘策略：只推给正在观察的 service，不重启观察器（改设置不该打断手势）。
+        applicationScope.launch(Dispatchers.IO) {
+            settingsStore.state
+                .map { it.triggerArea to it.keyboardBehavior }
+                .distinctUntilChanged()
+                .collect {
+                    val service = observingService ?: rootService ?: return@collect
+                    pushMultiTouchTrigger(service)
+                }
+        }
     }
 
     private val binderReceivedListener = Shizuku.OnBinderReceivedListener {
@@ -459,9 +469,15 @@ class MultiTouchGestureCoordinator @Inject constructor(
             RootTaskManagerServiceHost.ensure(context) as? TaskManagerRpcClient
         }.getOrNull()
         // API 64 引入了多指手势轮询（startMultiTouchPolling/pollMultiTouchEvents）；
-        // 若当前常驻的守护进程 api < 64（例如系统里留下的远古僵尸进程），必须强制 restart 淘汰并拉起新 Daemon。
-        if (root == null || runCatching { root.apiVersion }.getOrDefault(0) < 64) {
-            Log.i(TAG, "root daemon is missing or outdated (< 64), restarting root service...")
+        // 之后的每个 SERVICE_BUILD 都改过观察器/判定逻辑（73 = 触发区域 + 键盘条件），
+        // 常驻的旧守护进程必须淘汰重拉，否则新代码不生效。
+        val rootApi = runCatching { root?.apiVersion }.getOrNull() ?: 0
+        if (root == null || rootApi < 64 || rootApi < ShizukuUserServiceHost.SERVICE_BUILD) {
+            Log.i(
+                TAG,
+                "root daemon is missing or outdated (api=$rootApi < " +
+                    "${ShizukuUserServiceHost.SERVICE_BUILD}), restarting root service...",
+            )
             RootTaskManagerServiceHost.restart(context)
             root = runCatching {
                 RootTaskManagerServiceHost.ensure(context) as? TaskManagerRpcClient
@@ -713,7 +729,34 @@ class MultiTouchGestureCoordinator @Inject constructor(
         if (!configOk) {
             Log.i(TAG, "service 不支持 setMultiTouchConfig：协议/设备覆盖不可用")
         }
+        pushMultiTouchTrigger(service)
         pushDisplayTransform(service)
+    }
+
+    /**
+     * 把全局触发条件推给 service（区域 + 键盘策略 + 边缘带宽度）。
+     *
+     * 旧版 service / 旧 root 守护进程没有 [ITaskManagerService.setMultiTouchTrigger]，
+     * 调用失败就保持「任何地方 + 不判键盘」，保证升级顺序不会把功能弄坏。
+     */
+    private fun pushMultiTouchTrigger(service: ITaskManagerService) {
+        val settings = settingsStore.state.value
+        val borderPx = MultiTouchGestureSettings.triggerBorderPx(
+            context.resources.displayMetrics.densityDpi,
+        )
+        val ok = runCatching {
+            service.setMultiTouchTrigger(
+                MultiTouchTriggerFilter.areaId(settings.triggerArea),
+                MultiTouchTriggerFilter.keyboardBehaviorId(settings.keyboardBehavior),
+                borderPx,
+            )
+        }.isSuccess
+        if (!ok) {
+            Log.i(
+                TAG,
+                "service 不支持 setMultiTouchTrigger：触发区域/键盘条件暂不生效（重启特权服务后生效）",
+            )
+        }
     }
 
     /**

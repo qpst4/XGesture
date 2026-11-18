@@ -92,4 +92,15 @@
     <string name="multitouch_device_summary_auto_current">تلقائي · الحالي %1$s</string>
     <string name="multitouch_device_pick_title">اختر جهاز اللمس</string>
     <string name="multitouch_device_empty">لم يتم العثور على أجهزة مرشحة بعد</string>
+
+    <!-- إعدادات: شروط البدء العامة (مطابقة GMD) -->
+    <string name="multitouch_trigger_area_title">منطقة البدء</string>
+    <string name="multitouch_trigger_keyboard_title">عند ظهور لوحة المفاتيح</string>
+    <string name="multitouch_trigger_anywhere">أي مكان</string>
+    <string name="multitouch_trigger_middle">الوسط</string>
+    <string name="multitouch_trigger_top">النصف العلوي</string>
+    <string name="multitouch_trigger_bottom">النصف السفلي</string>
+    <string name="multitouch_keyboard_blocked">تعطيل الإيماءات</string>
+    <string name="multitouch_keyboard_above">فوق لوحة المفاتيح فقط</string>
+    <string name="multitouch_keyboard_everywhere">تفعيل في جميع المناطق</string>
 </resources>

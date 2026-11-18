@@ -92,4 +92,15 @@
     <string name="multitouch_device_summary_auto_current">Авто · текущее %1$s</string>
     <string name="multitouch_device_pick_title">Выберите сенсорное устройство</string>
     <string name="multitouch_device_empty">Подходящие устройства пока не найдены</string>
+
+    <!-- 设置页：全局触发条件（对齐 GMD） -->
+    <string name="multitouch_trigger_area_title">Область запуска</string>
+    <string name="multitouch_trigger_keyboard_title">Когда клавиатура видна</string>
+    <string name="multitouch_trigger_anywhere">В любом месте</string>
+    <string name="multitouch_trigger_middle">Центр</string>
+    <string name="multitouch_trigger_top">Верхняя половина</string>
+    <string name="multitouch_trigger_bottom">Нижняя половина</string>
+    <string name="multitouch_keyboard_blocked">Отключить жесты</string>
+    <string name="multitouch_keyboard_above">Только над клавиатурой</string>
+    <string name="multitouch_keyboard_everywhere">Включить во всех областях</string>
 </resources>

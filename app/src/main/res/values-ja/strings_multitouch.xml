@@ -92,4 +92,15 @@
     <string name="multitouch_device_summary_auto_current">自動 · 現在 %1$s</string>
     <string name="multitouch_device_pick_title">タッチデバイスを選択</string>
     <string name="multitouch_device_empty">候補デバイスがまだ見つかりません</string>
+
+    <!-- 設定画面：グローバル開始条件（GMD 準拠） -->
+    <string name="multitouch_trigger_area_title">開始領域</string>
+    <string name="multitouch_trigger_keyboard_title">キーボード表示時</string>
+    <string name="multitouch_trigger_anywhere">どこでも</string>
+    <string name="multitouch_trigger_middle">中央</string>
+    <string name="multitouch_trigger_top">上半分</string>
+    <string name="multitouch_trigger_bottom">下半分</string>
+    <string name="multitouch_keyboard_blocked">ジェスチャーを無効化</string>
+    <string name="multitouch_keyboard_above">キーボードの上のみ</string>
+    <string name="multitouch_keyboard_everywhere">すべての領域で有効</string>
 </resources>

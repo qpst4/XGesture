@@ -237,6 +237,15 @@ internal class TaskManagerRpcClient(
     override fun getTouchDevices(): Array<String> =
         (TaskManagerDaemonRpc.execute(port, 106, emptyList()) as RpcValue.StrArr).value
 
+    /** 全局触发条件（旧守护进程没有 107，调用失败，行为退化为「任何地方 + 不判键盘」）。 */
+    override fun setMultiTouchTrigger(area: Int, keyboardBehavior: Int, borderPx: Int) {
+        TaskManagerDaemonRpc.execute(
+            port,
+            107,
+            listOf(area.toString(), keyboardBehavior.toString(), borderPx.toString()),
+        )
+    }
+
 }
 
 

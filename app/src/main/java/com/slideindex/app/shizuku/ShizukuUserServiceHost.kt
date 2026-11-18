@@ -28,6 +28,9 @@ object ShizukuUserServiceHost {
     /**
      * Bump when the remote service code/ABI changes; drives processNameSuffix.
      *
+     * 73：新增 setMultiTouchTrigger（全局触发区域 / 键盘可见策略）＋ service 侧键盘 insets 监视器
+     *     （反射 IWindowManager.getWindowInsets，对齐 GMD；读不到时 dumpsys 兜底）；root op=107。
+     *     区域/键盘判定发生在观察器回调前，旧进程没有这套逻辑，必须换进程名。
      * 70：新增 getTouchDevices（触摸设备候选列表，设置页「触摸设备」选择用），root op=106。
      * 69：观察器增加运行时协议嗅探（第一帧真实触摸时用事件流纠正静态判断，失败再兜底换协议），
      *     新增 setMultiTouchConfig（手动协议/设备覆盖）与 getMultiTouchDiagnostics；root op=104/105。
@@ -78,7 +81,7 @@ object ShizukuUserServiceHost {
      *     16 次候选调用）。查询逻辑在用户服务进程里，必须换进程名才能让新包生效。
      * 升号后进程名变成 `task_manager_v65`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
      */
-    const val SERVICE_BUILD = 72
+    const val SERVICE_BUILD = 73
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bindLock = Any()

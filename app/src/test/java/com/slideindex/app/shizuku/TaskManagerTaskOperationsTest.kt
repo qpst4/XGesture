@@ -270,6 +270,8 @@ class TaskManagerTaskOperationsTest {
 
         override fun getTouchDevices(): Array<String> = emptyArray()
 
+        override fun setMultiTouchTrigger(area: Int, keyboardBehavior: Int, borderPx: Int) = Unit
+
         // 热点：本测试只覆盖任务操作，桩里一律当"不支持"处理。
         override fun getTetheringState(): Int = -1
 

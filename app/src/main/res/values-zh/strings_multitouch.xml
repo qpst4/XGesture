@@ -92,4 +92,15 @@
     <string name="multitouch_device_summary_auto_current">自动 · 当前 %1$s</string>
     <string name="multitouch_device_pick_title">选择触摸设备</string>
     <string name="multitouch_device_empty">暂时没有候选设备</string>
+
+    <!-- 设置页：全局触发条件（对齐 GMD） -->
+    <string name="multitouch_trigger_area_title">触发区域</string>
+    <string name="multitouch_trigger_keyboard_title">当键盘可见时</string>
+    <string name="multitouch_trigger_anywhere">任何地方</string>
+    <string name="multitouch_trigger_middle">中</string>
+    <string name="multitouch_trigger_top">上半部分</string>
+    <string name="multitouch_trigger_bottom">下半部分</string>
+    <string name="multitouch_keyboard_blocked">禁用手势</string>
+    <string name="multitouch_keyboard_above">仅在键盘上方活动</string>
+    <string name="multitouch_keyboard_everywhere">在所有区域启用</string>
 </resources>

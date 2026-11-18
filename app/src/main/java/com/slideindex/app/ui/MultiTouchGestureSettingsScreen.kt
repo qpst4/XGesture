@@ -114,6 +114,8 @@ fun MultiTouchGestureSettingsScreen(
     onRefreshDiagnostics: () -> Unit = {},
     onRefreshTouchDevices: () -> Unit = {},
     onDevicePathChange: (String) -> Unit = {},
+    onTriggerAreaChange: (String) -> Unit = {},
+    onKeyboardBehaviorChange: (String) -> Unit = {},
     onRetry: () -> Unit,
     onOpenActionPick: (MultiPointerGesture, Int, String, String) -> Unit = { _, _, _, _ -> },
     onOpenRecorder: () -> Unit = {},
@@ -124,6 +126,8 @@ fun MultiTouchGestureSettingsScreen(
     var pendingKind by remember { mutableStateOf<MultiPointerGesture?>(null) }
     var editingEntry by remember { mutableStateOf<MultiTouchGestureEntry?>(null) }
     var showDiagnostics by remember { mutableStateOf(false) }
+    var showTriggerAreaPicker by remember { mutableStateOf(false) }
+    var showKeyboardPicker by remember { mutableStateOf(false) }
 
     // 打开状态/诊断 sheet 时取一次；协议或设备切换会重启观察器，延时再刷新。
     LaunchedEffect(showDiagnostics) {
@@ -239,6 +243,31 @@ fun MultiTouchGestureSettingsScreen(
                                 onRefreshDiagnostics()
                                 onRefreshTouchDevices()
                             },
+                        )
+                    }
+                )
+            },
+        )
+        groupedCardItems(
+            keyPrefix = "multitouch-trigger",
+            items = buildList {
+                add(
+                    settingsCardScopeItem("multitouch-trigger-area") {
+                        MiuixNavigationRow(
+                            title = stringResource(R.string.multitouch_trigger_area_title),
+                            summary = triggerAreaLabel(settings.triggerArea),
+                            enabled = settings.enabled,
+                            onClick = { showTriggerAreaPicker = true },
+                        )
+                    }
+                )
+                add(
+                    settingsCardScopeItem("multitouch-trigger-keyboard") {
+                        MiuixNavigationRow(
+                            title = stringResource(R.string.multitouch_trigger_keyboard_title),
+                            summary = keyboardBehaviorLabel(settings.keyboardBehavior),
+                            enabled = settings.enabled,
+                            onClick = { showKeyboardPicker = true },
                         )
                     }
                 )
@@ -467,6 +496,56 @@ fun MultiTouchGestureSettingsScreen(
                                 .asPaddingValues()
                                 .calculateBottomPadding(),
                     ),
+                )
+            }
+        }
+    }
+
+    MiuixBottomSheet(
+        show = showTriggerAreaPicker,
+        title = stringResource(R.string.multitouch_trigger_area_title),
+        onDismissRequest = { showTriggerAreaPicker = false },
+    ) {
+        Card(
+            modifier = Modifier.padding(bottom = 16.dp),
+            colors = CardDefaults.defaultColors(
+                color = MiuixTheme.colorScheme.secondaryContainer,
+            ),
+        ) {
+            MultiTouchGestureSettings.triggerAreaOptions.forEach { area ->
+                RadioButtonPreference(
+                    title = triggerAreaLabel(area),
+                    selected = settings.triggerArea == area,
+                    onClick = {
+                        showTriggerAreaPicker = false
+                        onTriggerAreaChange(area)
+                    },
+                    radioButtonLocation = RadioButtonLocation.End,
+                )
+            }
+        }
+    }
+
+    MiuixBottomSheet(
+        show = showKeyboardPicker,
+        title = stringResource(R.string.multitouch_trigger_keyboard_title),
+        onDismissRequest = { showKeyboardPicker = false },
+    ) {
+        Card(
+            modifier = Modifier.padding(bottom = 16.dp),
+            colors = CardDefaults.defaultColors(
+                color = MiuixTheme.colorScheme.secondaryContainer,
+            ),
+        ) {
+            MultiTouchGestureSettings.keyboardBehaviorOptions.forEach { behavior ->
+                RadioButtonPreference(
+                    title = keyboardBehaviorLabel(behavior),
+                    selected = settings.keyboardBehavior == behavior,
+                    onClick = {
+                        showKeyboardPicker = false
+                        onKeyboardBehaviorChange(behavior)
+                    },
+                    radioButtonLocation = RadioButtonLocation.End,
                 )
             }
         }
@@ -742,3 +821,24 @@ private fun multiTouchStatusDetail(status: MultiTouchStatus, enabled: Boolean): 
     val name = if (conflict.length > 30) conflict.take(30) + "…" else conflict
     return base + stringResource(R.string.multitouch_detail_conflict, name)
 }
+
+/** 触发区域（GMD 四档）的显示名。 */
+@Composable
+internal fun triggerAreaLabel(area: String): String = stringResource(
+    when (area) {
+        MultiTouchGestureSettings.TRIGGER_MIDDLE -> R.string.multitouch_trigger_middle
+        MultiTouchGestureSettings.TRIGGER_TOP -> R.string.multitouch_trigger_top
+        MultiTouchGestureSettings.TRIGGER_BOTTOM -> R.string.multitouch_trigger_bottom
+        else -> R.string.multitouch_trigger_anywhere
+    },
+)
+
+/** 键盘可见时策略（GMD 三档）的显示名。 */
+@Composable
+internal fun keyboardBehaviorLabel(behavior: String): String = stringResource(
+    when (behavior) {
+        MultiTouchGestureSettings.KEYBOARD_BLOCKED -> R.string.multitouch_keyboard_blocked
+        MultiTouchGestureSettings.KEYBOARD_EVERYWHERE -> R.string.multitouch_keyboard_everywhere
+        else -> R.string.multitouch_keyboard_above
+    },
+)
