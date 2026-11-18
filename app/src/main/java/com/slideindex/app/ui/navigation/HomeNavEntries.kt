@@ -210,6 +210,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             gestureAppProfileCount = appSettings.gestureProfiles.size,
             onOpenCornerWheel = { ctx.navigate(AppNavKey.HomeCornerGesture) },
             onOpenMultiTouchGesture = { ctx.navigate(AppNavKey.ExtensionMultiTouchGesture) },
+            onOpenPhysicalKeySettings = { ctx.navigate(AppNavKey.PhysicalKeySettings) },
             onOpenGestureAngle = { ctx.navigate(AppNavKey.HomeGestureAngle) },
             onOpenSystemBackGestureWidth = { ctx.navigate(AppNavKey.HomeSystemBackGestureWidth) },
             onOpenAnimationStyleSelect = { ctx.navigate(AppNavKey.HomeAnimationStyleSelect) },
@@ -481,6 +482,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
     gestureAppProfileNavEntries(ctx)
 
     multiTouchNavEntries(ctx, AppNavKey.HomeMain)
+    physicalKeyNavEntries(ctx, AppNavKey.HomeMain)
 
     hiltEntry<AppNavKey.HomeCornerGesture> {
         val viewModel: HomeDetailSettingsViewModel = hiltViewModel()

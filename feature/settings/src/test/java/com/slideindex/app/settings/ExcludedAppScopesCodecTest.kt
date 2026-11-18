@@ -8,8 +8,8 @@ class ExcludedAppScopesCodecTest {
     @Test
     fun roundTripsScopesMap() {
         val input = mapOf(
-            "com.example.one" to ExcludedAppScopes(true, false, true),
-            "com.example.two" to ExcludedAppScopes(false, true, false),
+            "com.example.one" to ExcludedAppScopes(true, false, true, false, true),
+            "com.example.two" to ExcludedAppScopes(false, true, false, true, false),
         )
         val encoded = ExcludedAppScopesCodec.encode(input)
         assertEquals(input, ExcludedAppScopesCodec.decode(encoded))

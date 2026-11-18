@@ -12,6 +12,7 @@ enum class OverlaySuppressionScope {
     CORNER_WHEEL,
     FLOAT_BALL,
     MULTI_TOUCH,
+    PHYSICAL_KEY,
 }
 
 object OverlaySuppression {
@@ -70,4 +71,5 @@ private fun ExcludedAppScopes.suppresses(scope: OverlaySuppressionScope): Boolea
         OverlaySuppressionScope.CORNER_WHEEL -> suppressCornerWheel
         OverlaySuppressionScope.FLOAT_BALL -> suppressFloatBall
         OverlaySuppressionScope.MULTI_TOUCH -> suppressMultiTouch
+        OverlaySuppressionScope.PHYSICAL_KEY -> suppressPhysicalKey
     }

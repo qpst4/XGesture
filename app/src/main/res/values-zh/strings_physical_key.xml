@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 实体按键助手（独立资源文件，按键映射与手势触发）。 -->
+<resources>
+    <string name="physical_key_title">实体按键助手</string>
+    <string name="physical_key_home_summary">电源键与音量键长按、双击、并击自定义（无需 Root，支持 Shizuku，息屏可用）</string>
+
+    <!-- 设置页：说明卡片 -->
+    <string name="physical_key_tip">通过特权输入通道（Shizuku / Root）直接读取 Linux 底层硬件按键事件。\n全量支持电源键与音量键长按、双击与双键并击，息屏盲操亦可生效。\n常规单击零延迟直通系统，不影响原生锁屏、开关机与音量调节。</string>
+
+    <!-- 设置页：开关与状态 -->
+    <string name="physical_key_enable_title">启用实体按键手势</string>
+    <string name="physical_key_enable_summary">监听底层物理按键事件并触发指定快捷动作</string>
+    <string name="physical_key_status_title">运行状态</string>
+    <string name="physical_key_status_disabled">未启用</string>
+    <string name="physical_key_status_running">监听中</string>
+    <string name="physical_key_status_stopped">未运行</string>
+
+    <!-- 分组与手势项 -->
+    <string name="physical_key_section_power">电源键手势</string>
+    <string name="physical_key_section_volume">音量键手势</string>
+    <string name="physical_key_section_advanced">高级选项与灵敏度</string>
+
+    <string name="physical_key_gesture_power_long">电源键长按</string>
+    <string name="physical_key_gesture_power_double">电源键双击</string>
+    <string name="physical_key_gesture_vol_up_long">音量加长按</string>
+    <string name="physical_key_gesture_vol_up_double">音量加双击</string>
+    <string name="physical_key_gesture_vol_down_long">音量减长按</string>
+    <string name="physical_key_gesture_vol_down_double">音量减双击</string>
+    <string name="physical_key_gesture_vol_both_press">音量加减并击</string>
+
+    <!-- 高级选项 -->
+    <string name="physical_key_media_priority_title">播放音乐时音量键切歌</string>
+    <string name="physical_key_media_priority_summary">后台有音乐播放时，长按音量加切下一首、音量减切上一首（优先于自定义动作）</string>
+    <string name="physical_key_long_press_duration_title">长按判定时间</string>
+    <string name="physical_key_double_tap_duration_title">双击时间间隔</string>
+    <string name="physical_key_diagnostics_title">按键设备与特权诊断</string>
+    <string name="physical_key_diagnostics_dialog_title">实体按键底层诊断</string>
+
+    <string name="physical_key_hint">提示：特权服务重启后会自动重连并恢复监听。\n物理按键常规单击零延迟放行给系统，不影响原生功能。\n若在特定应用中（如相机、游戏）发生按键冲突，可在主页「排除应用」中按应用屏蔽实体按键手势。</string>
+</resources>

@@ -1,0 +1,364 @@
+package com.slideindex.app.ui
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.dp
+import com.slideindex.app.R
+import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.physicalkey.PhysicalKeyGesture
+import com.slideindex.app.physicalkey.PhysicalKeySettings
+import com.slideindex.app.physicalkey.PhysicalKeyStatus
+import com.slideindex.app.ui.miuix.MiuixBottomSheet
+import com.slideindex.app.ui.miuix.groupedCardItems
+import com.slideindex.app.ui.settings.components.MiuixNavigationRow
+import com.slideindex.app.ui.settings.components.SettingSwitchRow
+import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
+import com.slideindex.app.ui.settings.components.SettingsSliderRow
+import com.slideindex.app.ui.settings.components.StatusRow
+import com.slideindex.app.ui.settings.components.StatusTone
+import com.slideindex.app.ui.settings.components.settingsCardScopeItem
+import com.slideindex.app.ui.settings.components.settingsLazyHint
+import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
+import com.slideindex.app.ui.settings.components.settingsLazyTipCard
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Close
+import top.yukonga.miuix.kmp.icon.extended.Refresh
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+
+@Composable
+fun PhysicalKeySettingsScreen(
+    settings: PhysicalKeySettings,
+    status: PhysicalKeyStatus,
+    diagnostics: String,
+    onBack: () -> Unit,
+    onEnabledChange: (Boolean) -> Unit,
+    onMediaPlaybackPrioritizedChange: (Boolean) -> Unit,
+    onLongPressTimeoutChange: (Long) -> Unit,
+    onDoubleClickTimeoutChange: (Long) -> Unit,
+    onOpenActionPick: (PhysicalKeyGesture) -> Unit,
+    onRefreshDiagnostics: () -> Unit,
+    onRetry: () -> Unit,
+) {
+    var showDiagnostics by remember { mutableStateOf(false) }
+
+    LaunchedEffect(showDiagnostics) {
+        if (showDiagnostics) {
+            onRefreshDiagnostics()
+        }
+    }
+
+    val screenTitle = stringResource(R.string.physical_key_title)
+    val tipText = stringResource(R.string.physical_key_tip)
+    val bottomHint = stringResource(R.string.physical_key_hint)
+
+    val enableTitle = stringResource(R.string.physical_key_enable_title)
+    val enableSummary = stringResource(R.string.physical_key_enable_summary)
+    val statusTitle = stringResource(R.string.physical_key_status_title)
+    val statusDisabled = stringResource(R.string.physical_key_status_disabled)
+    val statusRunning = stringResource(R.string.physical_key_status_running)
+    val statusStopped = stringResource(R.string.physical_key_status_stopped)
+
+    val sectionPowerTitle = stringResource(R.string.physical_key_section_power)
+    val powerLongTitle = stringResource(R.string.physical_key_gesture_power_long)
+    val powerDoubleTitle = stringResource(R.string.physical_key_gesture_power_double)
+
+    val sectionVolumeTitle = stringResource(R.string.physical_key_section_volume)
+    val volUpLongTitle = stringResource(R.string.physical_key_gesture_vol_up_long)
+    val volUpDoubleTitle = stringResource(R.string.physical_key_gesture_vol_up_double)
+    val volDownLongTitle = stringResource(R.string.physical_key_gesture_vol_down_long)
+    val volDownDoubleTitle = stringResource(R.string.physical_key_gesture_vol_down_double)
+    val volBothTitle = stringResource(R.string.physical_key_gesture_vol_both_press)
+
+    val sectionAdvancedTitle = stringResource(R.string.physical_key_section_advanced)
+    val mediaPriorityTitle = stringResource(R.string.physical_key_media_priority_title)
+    val mediaPrioritySummary = stringResource(R.string.physical_key_media_priority_summary)
+    val longPressDurationTitle = stringResource(R.string.physical_key_long_press_duration_title)
+    val doubleTapDurationTitle = stringResource(R.string.physical_key_double_tap_duration_title)
+    val diagnosticsTitle = stringResource(R.string.physical_key_diagnostics_title)
+    val diagnosticsDialogTitle = stringResource(R.string.physical_key_diagnostics_dialog_title)
+
+    SettingsScreenScaffold(title = screenTitle, onBack = onBack) {
+        settingsLazyTipCard(
+            key = "physicalkey-tip",
+            text = tipText,
+        )
+
+        // 开关与状态
+        groupedCardItems(
+            keyPrefix = "physicalkey-status",
+            items = buildList {
+                add(
+                    settingsCardScopeItem("physicalkey-enabled") {
+                        SettingSwitchRow(
+                            title = enableTitle,
+                            subtitle = enableSummary,
+                            checked = settings.enabled,
+                            enabled = true,
+                            onCheckedChange = onEnabledChange,
+                        )
+                    }
+                )
+                add(
+                    settingsCardScopeItem("physicalkey-status-row") {
+                        val enabled = settings.enabled
+                        val tone = when {
+                            !enabled -> StatusTone.Neutral
+                            status.running -> StatusTone.Good
+                            else -> StatusTone.Bad
+                        }
+                        val pill = when {
+                            !enabled -> statusDisabled
+                            status.running -> statusRunning
+                            else -> statusStopped
+                        }
+                        val detail = when {
+                            !enabled -> statusDisabled
+                            status.running -> {
+                                val channel = if (status.channel.isNotBlank()) status.channel else "特权通道"
+                                "通道: $channel · 底层驱动监听正常"
+                            }
+                            else -> "未运行 (${status.detail})，点击重试或查看诊断"
+                        }
+                        StatusRow(
+                            title = statusTitle,
+                            pill = pill,
+                            tone = tone,
+                            detail = detail,
+                            segmentKey = "physicalkey-status-row",
+                            onClick = {
+                                if (!status.running && enabled) {
+                                    onRetry()
+                                }
+                                showDiagnostics = true
+                                onRefreshDiagnostics()
+                            },
+                        )
+                    }
+                )
+            }
+        )
+
+        // 电源键手势
+        settingsLazySmallTitle(
+            key = "section-power",
+            title = sectionPowerTitle,
+        )
+        groupedCardItems(
+            keyPrefix = "physicalkey-power",
+            items = listOf(
+                settingsCardScopeItem("power-long") {
+                    val action = settings.entries[PhysicalKeyGesture.POWER_LONG_PRESS]?.action ?: GestureAction.None
+                    MiuixNavigationRow(
+                        title = powerLongTitle,
+                        summary = gestureActionLabel(action),
+                        enabled = settings.enabled,
+                        onClick = { onOpenActionPick(PhysicalKeyGesture.POWER_LONG_PRESS) },
+                    )
+                },
+                settingsCardScopeItem("power-double") {
+                    val action = settings.entries[PhysicalKeyGesture.POWER_DOUBLE_PRESS]?.action ?: GestureAction.None
+                    MiuixNavigationRow(
+                        title = powerDoubleTitle,
+                        summary = gestureActionLabel(action),
+                        enabled = settings.enabled,
+                        onClick = { onOpenActionPick(PhysicalKeyGesture.POWER_DOUBLE_PRESS) },
+                    )
+                },
+            )
+        )
+
+        // 音量键手势
+        settingsLazySmallTitle(
+            key = "section-volume",
+            title = sectionVolumeTitle,
+        )
+        groupedCardItems(
+            keyPrefix = "physicalkey-volume",
+            items = listOf(
+                settingsCardScopeItem("vol-up-long") {
+                    val action = settings.entries[PhysicalKeyGesture.VOLUME_UP_LONG_PRESS]?.action ?: GestureAction.None
+                    MiuixNavigationRow(
+                        title = volUpLongTitle,
+                        summary = gestureActionLabel(action),
+                        enabled = settings.enabled,
+                        onClick = { onOpenActionPick(PhysicalKeyGesture.VOLUME_UP_LONG_PRESS) },
+                    )
+                },
+                settingsCardScopeItem("vol-up-double") {
+                    val action = settings.entries[PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS]?.action ?: GestureAction.None
+                    MiuixNavigationRow(
+                        title = volUpDoubleTitle,
+                        summary = gestureActionLabel(action),
+                        enabled = settings.enabled,
+                        onClick = { onOpenActionPick(PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS) },
+                    )
+                },
+                settingsCardScopeItem("vol-down-long") {
+                    val action = settings.entries[PhysicalKeyGesture.VOLUME_DOWN_LONG_PRESS]?.action ?: GestureAction.None
+                    MiuixNavigationRow(
+                        title = volDownLongTitle,
+                        summary = gestureActionLabel(action),
+                        enabled = settings.enabled,
+                        onClick = { onOpenActionPick(PhysicalKeyGesture.VOLUME_DOWN_LONG_PRESS) },
+                    )
+                },
+                settingsCardScopeItem("vol-down-double") {
+                    val action = settings.entries[PhysicalKeyGesture.VOLUME_DOWN_DOUBLE_PRESS]?.action ?: GestureAction.None
+                    MiuixNavigationRow(
+                        title = volDownDoubleTitle,
+                        summary = gestureActionLabel(action),
+                        enabled = settings.enabled,
+                        onClick = { onOpenActionPick(PhysicalKeyGesture.VOLUME_DOWN_DOUBLE_PRESS) },
+                    )
+                },
+                settingsCardScopeItem("vol-both-press") {
+                    val action = settings.entries[PhysicalKeyGesture.VOLUME_BOTH_PRESS]?.action ?: GestureAction.None
+                    MiuixNavigationRow(
+                        title = volBothTitle,
+                        summary = gestureActionLabel(action),
+                        enabled = settings.enabled,
+                        onClick = { onOpenActionPick(PhysicalKeyGesture.VOLUME_BOTH_PRESS) },
+                    )
+                },
+            )
+        )
+
+        // 高级与灵敏度
+        settingsLazySmallTitle(
+            key = "section-advanced",
+            title = sectionAdvancedTitle,
+        )
+        groupedCardItems(
+            keyPrefix = "physicalkey-advanced",
+            items = listOf(
+                settingsCardScopeItem("media-priority") {
+                    SettingSwitchRow(
+                        title = mediaPriorityTitle,
+                        subtitle = mediaPrioritySummary,
+                        checked = settings.mediaPlaybackPrioritized,
+                        enabled = settings.enabled,
+                        onCheckedChange = onMediaPlaybackPrioritizedChange,
+                    )
+                },
+                settingsCardScopeItem("long-press-timeout") {
+                    SettingsSliderRow(
+                        title = longPressDurationTitle,
+                        value = settings.longPressTimeoutMs.toFloat(),
+                        valueRange = 300f..1000f,
+                        steps = 14,
+                        enabled = settings.enabled,
+                        label = "${settings.longPressTimeoutMs} ms",
+                        formatLabel = { "${it.toInt()} ms" },
+                        onValueChange = { onLongPressTimeoutChange(it.toLong()) },
+                    )
+                },
+                settingsCardScopeItem("double-tap-timeout") {
+                    SettingsSliderRow(
+                        title = doubleTapDurationTitle,
+                        value = settings.doubleClickTimeoutMs.toFloat(),
+                        valueRange = 200f..600f,
+                        steps = 8,
+                        enabled = settings.enabled,
+                        label = "${settings.doubleClickTimeoutMs} ms",
+                        formatLabel = { "${it.toInt()} ms" },
+                        onValueChange = { onDoubleClickTimeoutChange(it.toLong()) },
+                    )
+                },
+                settingsCardScopeItem("diagnostics-row") {
+                    MiuixNavigationRow(
+                        title = diagnosticsTitle,
+                        summary = "查看捕获的物理按键设备与特权进程状态",
+                        enabled = true,
+                        onClick = {
+                            showDiagnostics = true
+                            onRefreshDiagnostics()
+                        },
+                    )
+                },
+            )
+        )
+
+        settingsLazyHint(key = "bottom-hint", text = bottomHint)
+    }
+
+    // 诊断弹窗
+    MiuixBottomSheet(
+        show = showDiagnostics,
+        title = diagnosticsDialogTitle,
+        startAction = {
+            IconButton(onClick = { showDiagnostics = false }) {
+                MiuixIcon(
+                    imageVector = MiuixIcons.Medium.Close,
+                    contentDescription = "关闭",
+                    tint = MiuixTheme.colorScheme.onBackground,
+                )
+            }
+        },
+        endAction = {
+            IconButton(
+                onClick = {
+                    onRetry()
+                    onRefreshDiagnostics()
+                },
+            ) {
+                MiuixIcon(
+                    imageVector = MiuixIcons.Medium.Refresh,
+                    contentDescription = "刷新",
+                    tint = MiuixTheme.colorScheme.onBackground,
+                )
+            }
+        },
+        onDismissRequest = { showDiagnostics = false },
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        ) {
+            item {
+                SmallTitle(
+                    text = "驱动与服务信息",
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                    ) {
+                        SelectionContainer {
+                            MiuixText(
+                                text = diagnostics.ifBlank { "正在读取诊断信息或尚未连接服务..." },
+                                style = MiuixTheme.textStyles.body2,
+                                fontFamily = FontFamily.Monospace,
+                                color = MiuixTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+}

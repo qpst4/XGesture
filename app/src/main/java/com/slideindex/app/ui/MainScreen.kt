@@ -69,6 +69,7 @@ fun MainScreen(
     gestureAppProfileCount: Int = 0,
     onOpenCornerWheel: () -> Unit,
     onOpenMultiTouchGesture: () -> Unit,
+    onOpenPhysicalKeySettings: () -> Unit = {},
     onOpenGestureAngle: () -> Unit,
     onOpenSystemBackGestureWidth: () -> Unit,
     onOpenAnimationStyleSelect: () -> Unit,
@@ -399,6 +400,23 @@ fun MainScreen(
                                 title = stringResource(R.string.multitouch_title),
                                 subtitle = stringResource(R.string.multitouch_home_summary),
                                 onClick = onOpenMultiTouchGesture,
+                            )
+                        }
+                    },
+                )
+                add(
+                    settingsCardItem("physical-key") {
+                        SettingsCardScopeContent {
+                            SettingNavigationRow(
+                                icon = { label ->
+                                    Icon(
+                                        HomeLeadingIcons.gesture(true),
+                                        contentDescription = label,
+                                    )
+                                },
+                                title = stringResource(R.string.physical_key_title),
+                                subtitle = stringResource(R.string.physical_key_home_summary),
+                                onClick = onOpenPhysicalKeySettings,
                             )
                         }
                     },

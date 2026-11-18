@@ -9,6 +9,8 @@ import com.slideindex.app.gesture.multitouch.TouchDisplayTransform
 import com.slideindex.app.multitouch.EvdevTouchObserver
 import com.slideindex.app.multitouch.MultiTouchTriggerFilter
 import com.slideindex.app.multitouch.encodePathStrokes
+import com.slideindex.app.physicalkey.EvdevPhysicalKeyObserver
+import com.slideindex.app.physicalkey.PhysicalKeyGesture
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class TaskManagerUserService() : ITaskManagerService.Stub() {
@@ -70,6 +72,12 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
 
     private var touchObserver: EvdevTouchObserver? = null
 
+    private var keyObserver: EvdevPhysicalKeyObserver? = null
+    private var pollingKeyObserver: EvdevPhysicalKeyObserver? = null
+    private val pollingKeyEvents = ConcurrentLinkedQueue<String>()
+    @Volatile
+    private var physicalKeyDiagnostics: String = ""
+
     @Keep
     constructor(context: Context) : this() {
         appContext = context.applicationContext
@@ -77,6 +85,9 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
 
     override fun destroy() {
         stopMultiTouchObservation()
+        stopMultiTouchPolling()
+        stopPhysicalKeyObservation()
+        stopPhysicalKeyPolling()
         if (keyboardMonitorLazy.isInitialized()) {
             runCatching { keyboardMonitor.close() }
         }
@@ -291,6 +302,67 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
         pollingObserver = null
         pollingEvents.clear()
     }
+
+    override fun startPhysicalKeyObservation(callback: IOnPhysicalKeyGesture?): Boolean {
+        callback ?: return false
+        stopPhysicalKeyObservation()
+        val observer = EvdevPhysicalKeyObserver(
+            onGesture = { gesture, eventTimeMs ->
+                runCatching {
+                    callback.onKeyGesture(gesture.ordinal, eventTimeMs)
+                }
+            },
+            onState = { running, detail ->
+                if (running || detail != "stopped") {
+                    runCatching { callback.onObserverState(running, detail) }
+                }
+            },
+            onDiagnostics = { physicalKeyDiagnostics = it },
+        )
+        keyObserver = observer
+        return observer.start()
+    }
+
+    override fun stopPhysicalKeyObservation() {
+        keyObserver?.stop()
+        keyObserver = null
+    }
+
+    override fun isPhysicalKeyObservationRunning(): Boolean =
+        keyObserver?.isRunning() == true || pollingKeyObserver?.isRunning() == true
+
+    override fun startPhysicalKeyPolling(): Boolean {
+        stopPhysicalKeyPolling()
+        val observer = EvdevPhysicalKeyObserver(
+            onGesture = { gesture, eventTimeMs ->
+                pollingKeyEvents += "k:${gesture.ordinal}:$eventTimeMs"
+            },
+            onState = { running, detail ->
+                pollingKeyEvents += "s:${if (running) 1 else 0}:$detail"
+            },
+            onDiagnostics = { physicalKeyDiagnostics = it },
+        )
+        val started = observer.start()
+        if (!started) return false
+        pollingKeyObserver = observer
+        return true
+    }
+
+    override fun pollPhysicalKeyEvents(): Array<String> {
+        val events = ArrayList<String>()
+        while (true) {
+            events += pollingKeyEvents.poll() ?: break
+        }
+        return events.toTypedArray()
+    }
+
+    override fun stopPhysicalKeyPolling() {
+        pollingKeyObserver?.stop()
+        pollingKeyObserver = null
+        pollingKeyEvents.clear()
+    }
+
+    override fun getPhysicalKeyDiagnostics(): String = physicalKeyDiagnostics
 
     override fun removeTaskById(taskIdStr: String?): Boolean =
         tasks.removeTaskById(taskIdStr)

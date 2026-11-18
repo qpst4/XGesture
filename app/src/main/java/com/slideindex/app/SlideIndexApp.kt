@@ -101,6 +101,7 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
     @Inject lateinit var updatePreferencesStore: UpdatePreferencesStore
     @Inject lateinit var moduleHookConfigSync: ModuleHookConfigSync
     @Inject lateinit var multiTouchGestureCoordinator: MultiTouchGestureCoordinator
+    @Inject lateinit var physicalKeyGestureCoordinator: com.slideindex.app.physicalkey.PhysicalKeyGestureCoordinator
 
     override fun attachBaseContext(base: Context) {
         // 先把上次的应用语言从 SharedPreferences 同步镜像读回来（只读一个键，不碰 DataStore），
@@ -1481,6 +1482,8 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         if (AppProcess.isMain) {
         // 多指手势（Shizuku evdev 观察）：只在主进程启动，避免子进程重复观察导致一次手势执行多次。
         multiTouchGestureCoordinator.start()
+        // 实体按键助手（Shizuku / Root evdev 观察）：底层硬件按键监听
+        physicalKeyGestureCoordinator.start()
         com.slideindex.app.ui.icon.AppIconTheme.ensureSelectedThemeEnabled(this)
         // 首帧后再做 OCR 校验与应用列表扫描，减轻装后首开卡顿
         // 延迟执行启动期重活：开机瞬间主线程若被 OCR 校验 / 应用列表扫描占住，

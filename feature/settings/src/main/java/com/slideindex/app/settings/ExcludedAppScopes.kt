@@ -5,9 +5,10 @@ data class ExcludedAppScopes(
     val suppressCornerWheel: Boolean = true,
     val suppressFloatBall: Boolean = true,
     val suppressMultiTouch: Boolean = true,
+    val suppressPhysicalKey: Boolean = true,
 ) {
     fun hasAny(): Boolean =
-        suppressTriggers || suppressCornerWheel || suppressFloatBall || suppressMultiTouch
+        suppressTriggers || suppressCornerWheel || suppressFloatBall || suppressMultiTouch || suppressPhysicalKey
 
     companion object {
         val ALL = ExcludedAppScopes(
@@ -15,6 +16,7 @@ data class ExcludedAppScopes(
             suppressCornerWheel = true,
             suppressFloatBall = true,
             suppressMultiTouch = true,
+            suppressPhysicalKey = true,
         )
     }
 }

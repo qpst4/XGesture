@@ -817,6 +817,7 @@
     <string name="excluded_apps_scope_corner_wheel_short">轮盘</string>
     <string name="excluded_apps_scope_float_ball_short">悬浮球</string>
     <string name="excluded_apps_scope_multitouch_short">全局触控</string>
+    <string name="excluded_apps_scope_physical_key_short">实体按键</string>
     <string name="excluded_apps_scope_none">未禁用任何功能</string>
     <string name="excluded_apps_scope_dialog_hint">选择在此应用中要隐藏的功能；至少保留一项。</string>
     <string name="excluded_apps_section_excluded">已禁用</string>

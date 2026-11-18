@@ -29,6 +29,8 @@ object ExcludedAppScopesCodec {
             append(if (scopes.suppressFloatBall) '1' else '0')
             append(FLAG_SEPARATOR)
             append(if (scopes.suppressMultiTouch) '1' else '0')
+            append(FLAG_SEPARATOR)
+            append(if (scopes.suppressPhysicalKey) '1' else '0')
         }
 
     private fun decodeEntry(entry: String): Pair<String, ExcludedAppScopes>? {
@@ -42,6 +44,7 @@ object ExcludedAppScopesCodec {
             suppressCornerWheel = flags[1] == "1",
             suppressFloatBall = flags[2] == "1",
             suppressMultiTouch = flags.getOrNull(3)?.let { it == "1" } ?: true,
+            suppressPhysicalKey = flags.getOrNull(4)?.let { it == "1" } ?: true,
         )
     }
 }

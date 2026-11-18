@@ -477,6 +477,7 @@
     <string name="excluded_apps_scope_corner_wheel_short">Wheel</string>
     <string name="excluded_apps_scope_float_ball_short">Float ball</string>
     <string name="excluded_apps_scope_multitouch_short">Global touch</string>
+    <string name="excluded_apps_scope_physical_key_short">Physical key</string>
     <string name="excluded_apps_scope_none">Nothing disabled</string>
     <string name="excluded_apps_scope_dialog_hint">Choose what to hide in this app. Keep at least one option enabled.</string>
     <string name="accessibility_service_name">#XGesture👈</string>

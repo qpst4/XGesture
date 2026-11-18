@@ -276,5 +276,20 @@ class TaskManagerTaskOperationsTest {
         override fun getTetheringState(): Int = -1
 
         override fun setTetheringEnabled(enable: Boolean): Boolean = false
+
+        // 实体按键观测 / root 轮询：桩实现默认返回 false / 空
+        override fun startPhysicalKeyObservation(callback: com.slideindex.app.shizuku.IOnPhysicalKeyGesture?): Boolean = false
+
+        override fun stopPhysicalKeyObservation() = Unit
+
+        override fun isPhysicalKeyObservationRunning(): Boolean = false
+
+        override fun startPhysicalKeyPolling(): Boolean = false
+
+        override fun pollPhysicalKeyEvents(): Array<String> = emptyArray()
+
+        override fun stopPhysicalKeyPolling() = Unit
+
+        override fun getPhysicalKeyDiagnostics(): String = ""
     }
 }

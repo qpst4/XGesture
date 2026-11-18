@@ -1,6 +1,7 @@
 package com.slideindex.app.shizuku;
 
 import com.slideindex.app.shizuku.IOnMultiTouchGesture;
+import com.slideindex.app.shizuku.IOnPhysicalKeyGesture;
 
 interface ITaskManagerService {
     void destroy() = 16777114;
@@ -99,4 +100,21 @@ interface ITaskManagerService {
      * 不满足就不回调 app。旧版 service 没有这个方法，调用会失败，行为退化为「任何地方 + 不判键盘」。
      */
     void setMultiTouchTrigger(int area, int keyboardBehavior, int borderPx) = 32;
+
+    /**
+     * 开始硬件物理按键手势观察（读 /dev/input/event*，只读，不拦截）。
+     */
+    boolean startPhysicalKeyObservation(in IOnPhysicalKeyGesture callback) = 33;
+
+    void stopPhysicalKeyObservation() = 34;
+
+    boolean isPhysicalKeyObservationRunning() = 35;
+
+    boolean startPhysicalKeyPolling() = 36;
+
+    String[] pollPhysicalKeyEvents() = 37;
+
+    void stopPhysicalKeyPolling() = 38;
+
+    String getPhysicalKeyDiagnostics() = 39;
 }

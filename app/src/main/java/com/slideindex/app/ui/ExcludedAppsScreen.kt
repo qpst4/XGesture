@@ -125,7 +125,9 @@ fun ExcludedAppsScreen(
                             ?: ExcludedAppScopes(
                                 suppressTriggers = false,
                                 suppressCornerWheel = false,
-                                suppressFloatBall = false
+                                suppressFloatBall = false,
+                                suppressMultiTouch = false,
+                                suppressPhysicalKey = false,
                             )
                         formatExcludedAppScopesSummary(scopes)
                     },
@@ -227,6 +229,7 @@ private fun ExcludedAppScopeChipPicker(
     onSuppressCornerWheelChange: (Boolean) -> Unit,
     onSuppressFloatBallChange: (Boolean) -> Unit,
     onSuppressMultiTouchChange: (Boolean) -> Unit,
+    onSuppressPhysicalKeyChange: (Boolean) -> Unit,
 ) {
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -251,6 +254,11 @@ private fun ExcludedAppScopeChipPicker(
             label = stringResource(R.string.excluded_apps_scope_multitouch_short),
             selected = scopes.suppressMultiTouch,
             onClick = { onSuppressMultiTouchChange(!scopes.suppressMultiTouch) }
+        )
+        ExcludedAppScopeChip(
+            label = stringResource(R.string.excluded_apps_scope_physical_key_short),
+            selected = scopes.suppressPhysicalKey,
+            onClick = { onSuppressPhysicalKeyChange(!scopes.suppressPhysicalKey) }
         )
     }
 }
@@ -279,6 +287,7 @@ private fun formatExcludedAppScopesSummary(scopes: ExcludedAppScopes): String {
         if (scopes.suppressCornerWheel) add(stringResource(R.string.excluded_apps_scope_corner_wheel_short))
         if (scopes.suppressFloatBall) add(stringResource(R.string.excluded_apps_scope_float_ball_short))
         if (scopes.suppressMultiTouch) add(stringResource(R.string.excluded_apps_scope_multitouch_short))
+        if (scopes.suppressPhysicalKey) add(stringResource(R.string.excluded_apps_scope_physical_key_short))
     }
     return if (parts.isEmpty()) {
         stringResource(R.string.excluded_apps_scope_none)
@@ -357,6 +366,7 @@ private fun ExcludedAppScopesDialogBody(
             onSuppressCornerWheelChange = { onScopesChange(scopes.copy(suppressCornerWheel = it)) },
             onSuppressFloatBallChange = { onScopesChange(scopes.copy(suppressFloatBall = it)) },
             onSuppressMultiTouchChange = { onScopesChange(scopes.copy(suppressMultiTouch = it)) },
+            onSuppressPhysicalKeyChange = { onScopesChange(scopes.copy(suppressPhysicalKey = it)) },
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(

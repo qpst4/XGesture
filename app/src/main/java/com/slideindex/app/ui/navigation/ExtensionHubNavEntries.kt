@@ -161,6 +161,7 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
     }
 
     multiTouchNavEntries(ctx, AppNavKey.ExtensionHub)
+    physicalKeyNavEntries(ctx, AppNavKey.ExtensionHub)
 
     hiltEntry<AppNavKey.DragDropFlowSettings> {
         val viewModel: ExtensionSettingsViewModel = hiltViewModel()

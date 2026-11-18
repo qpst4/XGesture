@@ -3,6 +3,7 @@ package com.slideindex.app.privilege.root
 
 
 import com.slideindex.app.shizuku.IOnMultiTouchGesture
+import com.slideindex.app.shizuku.IOnPhysicalKeyGesture
 import com.slideindex.app.shizuku.ITaskManagerService
 
 
@@ -246,6 +247,25 @@ internal class TaskManagerRpcClient(
         )
     }
 
+    override fun startPhysicalKeyObservation(callback: IOnPhysicalKeyGesture?): Boolean = false
+
+    override fun stopPhysicalKeyObservation() = Unit
+
+    override fun isPhysicalKeyObservationRunning(): Boolean =
+        rpcBool(113, emptyList())
+
+    override fun startPhysicalKeyPolling(): Boolean =
+        rpcBool(110, emptyList())
+
+    override fun pollPhysicalKeyEvents(): Array<String> =
+        rpcStringArray(112, emptyList())
+
+    override fun stopPhysicalKeyPolling() {
+        runCatching { TaskManagerDaemonRpc.execute(port, 111, emptyList()) }
+    }
+
+    override fun getPhysicalKeyDiagnostics(): String =
+        (TaskManagerDaemonRpc.execute(port, 114, emptyList()) as? RpcValue.Str)?.value ?: ""
 }
 
 

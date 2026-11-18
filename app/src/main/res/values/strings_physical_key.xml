@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Physical key assistant resources -->
+<resources>
+    <string name="physical_key_title">Physical Key Assistant</string>
+    <string name="physical_key_home_summary">Power &amp; volume key long press, double tap, and combo gestures (Root / Shizuku, screen-off supported)</string>
+
+    <!-- Settings: Tip Card -->
+    <string name="physical_key_tip">Reads underlying Linux input events directly via privileged channels (Shizuku / Root).\nFully supports power and volume keys long press, double tap, and combo presses even when screen is off.\nNormal single clicks are passed directly to the system without latency, preserving native power and volume functions.</string>
+
+    <!-- Settings: Toggle and Status -->
+    <string name="physical_key_enable_title">Enable Physical Key Gestures</string>
+    <string name="physical_key_enable_summary">Monitor low-level physical key events and trigger custom actions</string>
+    <string name="physical_key_status_title">Status</string>
+    <string name="physical_key_status_disabled">Disabled</string>
+    <string name="physical_key_status_running">Observing</string>
+    <string name="physical_key_status_stopped">Stopped</string>
+
+    <!-- Sections and Gestures -->
+    <string name="physical_key_section_power">Power Key</string>
+    <string name="physical_key_section_volume">Volume Keys</string>
+    <string name="physical_key_section_advanced">Advanced &amp; Sensitivity</string>
+
+    <string name="physical_key_gesture_power_long">Power Long Press</string>
+    <string name="physical_key_gesture_power_double">Power Double Tap</string>
+    <string name="physical_key_gesture_vol_up_long">Volume Up Long Press</string>
+    <string name="physical_key_gesture_vol_up_double">Volume Up Double Tap</string>
+    <string name="physical_key_gesture_vol_down_long">Volume Down Long Press</string>
+    <string name="physical_key_gesture_vol_down_double">Volume Down Double Tap</string>
+    <string name="physical_key_gesture_vol_both_press">Volume Up + Down Combo</string>
+
+    <!-- Advanced options -->
+    <string name="physical_key_media_priority_title">Media Track Switch on Volume Long Press</string>
+    <string name="physical_key_media_priority_summary">When music is active, long press volume up/down to skip/previous track (overrides custom action)</string>
+    <string name="physical_key_long_press_duration_title">Long Press Timeout</string>
+    <string name="physical_key_double_tap_duration_title">Double Tap Interval</string>
+    <string name="physical_key_diagnostics_title">Device &amp; Privilege Diagnostics</string>
+    <string name="physical_key_diagnostics_dialog_title">Physical Key Diagnostics</string>
+
+    <string name="physical_key_hint">Tip: Privileged services will automatically reconnect and resume observation.\nRegular single clicks pass through to system immediately.\nTo suppress physical key gestures in specific apps (e.g. camera, games), configure per-app scopes in Excluded Apps.</string>
+</resources>

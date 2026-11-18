@@ -168,6 +168,19 @@ internal object TaskManagerDaemonRpc {
                 RpcValue.Void
             }
 
+            110 -> RpcValue.Bool(service.startPhysicalKeyPolling())
+
+            111 -> {
+                service.stopPhysicalKeyPolling()
+                RpcValue.Void
+            }
+
+            112 -> RpcValue.StrArr(service.pollPhysicalKeyEvents())
+
+            113 -> RpcValue.Bool(service.isPhysicalKeyObservationRunning())
+
+            114 -> RpcValue.Str(service.getPhysicalKeyDiagnostics())
+
             30 -> RpcValue.I32(service.getTetheringState())
 
             31 -> RpcValue.Bool(service.setTetheringEnabled(args.boolean(0)))
