@@ -40,7 +40,7 @@ import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
+import com.slideindex.app.ui.miuix.MiuixGlassIconDropdown
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.icon.extended.Add
 import top.yukonga.miuix.kmp.icon.extended.More
@@ -158,13 +158,12 @@ fun WidgetPanelPageManagementSection(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                OverlayIconDropdownMenu(entry = panelMenuEntry) {
-                    MiuixIcon(
-                        MiuixIcons.Medium.More,
-                        contentDescription = renameLabel,
-                        tint = MiuixTheme.colorScheme.onBackground,
-                    )
-                }
+                MiuixGlassIconDropdown(
+                    entries = listOf(panelMenuEntry),
+                    icon = MiuixIcons.Medium.More,
+                    contentDescription = renameLabel,
+                    capsule = false,
+                )
             }
         }
     }

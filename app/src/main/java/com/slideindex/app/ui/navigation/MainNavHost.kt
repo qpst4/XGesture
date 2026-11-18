@@ -4,7 +4,6 @@ package com.slideindex.app.ui.navigation
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -15,6 +14,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -30,6 +31,10 @@ import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.snapshots.SnapshotStateSet
 import androidx.compose.ui.Alignment
+import top.yukonga.miuix.kmp.blur.layerBackdrop
+import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
+import com.slideindex.app.ui.miuix.MiuixPageBackdropBox
+import com.slideindex.app.ui.miuix.rememberMiuixBlurBackdrop
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -64,6 +69,9 @@ import com.slideindex.app.ui.mainNavClassicOverlayContentInsets
 import com.slideindex.app.ui.mainNavMiuixRailContentInsets
 import com.slideindex.app.ui.mainNavRailContentClip
 import com.slideindex.app.ui.MainBottomNavDestination
+import com.slideindex.app.ui.GlassRailContentStartInset
+import com.slideindex.app.ui.LocalMainNavTitleAlpha
+import top.yukonga.miuix.kmp.glass.rememberGlassNavigationRailState
 import com.slideindex.app.ui.MainMiuixNavigationRail
 import com.slideindex.app.ui.FreeWindowLayoutEditorSession
 import com.slideindex.app.ui.MainBottomNavHorizontalPadding
@@ -211,6 +219,15 @@ fun MainNavHost(
     val currentKey = activeBackStack.currentAppNavKey() ?: currentTab.toRootNavKey()
     val isRootDestination = currentKey.isRootDestination()
     val showSideNavRail = prefersNavigationRail
+    // 宽屏玻璃侧栏的展开状态：放在布局分支**之外**，横竖屏切换（Activity 重建）时由
+    // rememberSaveable 恢复上次的展开/收起，不会每次横屏都退回默认值（对齐 Mishka）。
+    val glassRailState = rememberGlassNavigationRailState(
+        initialExpanded = overlayUiSettings.bottomNavRailExpanded,
+    )
+    // ???????:??/????????,???????????(Mishka ? NAV_RAIL_EXPANDED)?
+    LaunchedEffect(glassRailState.expanded) {
+        deps.settingsRepository.setBottomNavRailExpanded(glassRailState.expanded)
+    }
     val showClassicSideNavRail = showSideNavRail && bottomNavStyle == BottomNavStyle.CLASSIC
     val showMiuixSideNavRail = showSideNavRail &&
         (bottomNavStyle == BottomNavStyle.LIQUID_GLASS || bottomNavStyle == BottomNavStyle.FLOATING_NAV)
@@ -514,7 +531,7 @@ fun MainNavHost(
                             )
                             Box(modifier = Modifier.fillMaxSize()) {
                                 CompositionLocalProvider(
-                                    LocalMainNavContentStartInset provides classicRailInset,
+                                    LocalMainNavContentStartInset provides { classicRailInset },
                                 ) {
                                     Box(
                                         modifier = navContentModifier
@@ -537,31 +554,47 @@ fun MainNavHost(
                             }
                         }
                         showMiuixSideNavRail -> {
-                            Row(modifier = Modifier.fillMaxSize()) {
-                                MainMiuixNavigationRail(
-                                    selected = bottomNavSelectedTab,
-                                    onDestinationSelected = onTabSelected,
-                                    modifier = Modifier.fillMaxHeight(),
-                                )
+                            // 玻璃侧栏：浮在内容之上（Mishka §4.1 层级：内容 → 侧栏 → TopLayerHost）。
+                            // 内容单独录进 railBackdrop 供侧栏采样，侧栏本身不进录制，避免自采样。
+                            val railBackdrop = rememberMiuixBlurBackdrop()
+                            // 结构对齐 miuix 官方示例 / Mishka：外层铺不透明底 + 裁剪，
+                            // 内容只有一层 layerBackdrop，侧栏作为它的兄弟节点画在层外。
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(MiuixTheme.colorScheme.surface)
+                                    .clipToBounds(),
+                            ) {
                                 Box(
                                     modifier = navContentModifier
-                                        .weight(1f)
-                                        .fillMaxHeight()
-                                        .mainNavMiuixRailContentInsets()
-                                        .mainNavRailContentClip(),
+                                        .fillMaxSize()
+                                        .then(railBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier),
                                 ) {
                                     CompositionLocalProvider(
-                                        LocalMainNavContentStartInset provides 0.dp,
+                                        LocalMainNavContentStartInset provides
+                                            { GlassRailContentStartInset * glassRailState.progress },
+                                        LocalMainNavTitleAlpha provides { glassRailState.progress },
+                                        // 整页那层录制只在手机分支用；宽屏下弹层/菜单复用这层内容背板。
+                                        LocalMiuixPageBackdrop provides railBackdrop,
                                     ) {
                                         mainTabNavContent()
                                     }
                                 }
+                                MainMiuixNavigationRail(
+                                    selected = bottomNavSelectedTab,
+                                    onDestinationSelected = onTabSelected,
+                                    backdrop = railBackdrop,
+                                    state = glassRailState,
+                                    modifier = Modifier.align(Alignment.TopStart),
+                                )
                             }
                         }
                     }
                 } else {
-                    Box(modifier = navContentModifier) {
-                        mainTabNavContent()
+                    MiuixPageBackdropBox {
+                        Box(modifier = navContentModifier) {
+                            mainTabNavContent()
+                        }
                     }
                     if (isRootDestination && !usePagerBottomNav) {
                         FloatingBottomNavBar(

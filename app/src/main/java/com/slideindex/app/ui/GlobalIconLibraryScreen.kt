@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,11 +45,18 @@ import com.slideindex.app.iconpack.IconPackProvenanceStore
 import com.slideindex.app.iconpack.IconPackTarget
 import com.slideindex.app.iconpack.IconThemeStore
 import com.slideindex.app.service.IconPackPickerTrampolineActivity
-import com.slideindex.app.ui.miuix.MiuixTabRowWithContourInCard
+import com.slideindex.app.ui.miuix.LocalMiuixContentUnderBar
+import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
+import com.slideindex.app.ui.miuix.LocalMiuixScreenBackdrop
+import com.slideindex.app.ui.miuix.MiuixExpandableSearchBottomContent
+import com.slideindex.app.ui.miuix.MiuixExpandableSearchIconAction
+import com.slideindex.app.ui.miuix.MiuixGlassDropdownMenu
+import com.slideindex.app.ui.miuix.MiuixTabRowWithContour
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.viewmodel.GlobalIconLibraryViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import top.yukonga.miuix.kmp.glass.GlassSegmentedTabRow
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
@@ -64,6 +72,9 @@ fun GlobalIconLibraryScreen(
 ) {
     val context = LocalContext.current
     var tab by remember { mutableIntStateOf(0) }
+    var searchExpanded by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    val searchFocusRequester = remember { FocusRequester() }
     // 与其它挑应用页面同源：这里要能列出分身（但图标覆盖按包名存，分身行只展示不可选）。
     val apps by com.slideindex.app.ui.compose.collectPickerAppsAsState(includeClones = true)
 
@@ -91,24 +102,84 @@ fun GlobalIconLibraryScreen(
     val actionsTabLabel = stringResource(R.string.global_icon_tab_actions)
     val appsTabLabel = stringResource(R.string.global_icon_tab_apps)
 
+    // 搜索：动作按中文名过滤，应用按名称/包名过滤；空查询时保持原顺序（拼音序）。
+    val query = searchQuery.trim()
+    val filteredActions = remember(actions, query) {
+        if (query.isEmpty()) {
+            actions
+        } else {
+            actions.filter {
+                com.slideindex.app.ui.gesturepicker.gestureActionLabelText(context, it)
+                    .contains(query, ignoreCase = true) ||
+                    it.type.name.contains(query, ignoreCase = true)
+            }
+        }
+    }
+    val filteredApps = remember(apps, query) {
+        if (query.isEmpty()) {
+            apps
+        } else {
+            apps.filter {
+                it.label.contains(query, ignoreCase = true) ||
+                    it.packageName.contains(query, ignoreCase = true)
+            }
+        }
+    }
+
     SettingsScreenScaffold(
         title = stringResource(R.string.action_icon_library_title),
         onBack = onBack,
-    ) {
-        item(key = "global-icon-tabs") {
-            MiuixTabRowWithContourInCard(
-                tabs = listOf(actionsTabLabel, appsTabLabel),
-                selectedTabIndex = tab,
-                onTabSelected = { tab = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+        actions = {
+            MiuixExpandableSearchIconAction(
+                expanded = searchExpanded,
+                query = searchQuery,
+                onExpandedChange = { searchExpanded = it },
+                onQueryChange = { searchQuery = it },
             )
-        }
+        },
+        bottomContent = {
+            MiuixExpandableSearchBottomContent(
+                searchExpanded = searchExpanded,
+                searchQuery = searchQuery,
+                onSearchQueryChange = { searchQuery = it },
+                focusRequester = searchFocusRequester,
+            )
+            // tab 行迁到玻璃栏的 bottomContent（与「通知滤盒」一致）：能拿到栏的背板，
+            // 内容滚到栏下时升起玻璃；空列表/未滚动时退回纯色，避免越界采样。
+            val tabs = listOf(actionsTabLabel, appsTabLabel)
+            val tabBackdrop = LocalMiuixScreenBackdrop.current ?: LocalMiuixPageBackdrop.current
+            if (tabBackdrop != null) {
+                GlassSegmentedTabRow(
+                    tabs = tabs,
+                    selectedIndex = tab,
+                    onSelect = { tab = it },
+                    backdrop = tabBackdrop,
+                    surfaceAlpha = if (LocalMiuixContentUnderBar.current.value) 1f else 0f,
+                    selectedContentColor = MiuixTheme.colorScheme.primary,
+                    contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            } else {
+                MiuixTabRowWithContour(
+                    tabs = tabs,
+                    selectedTabIndex = tab,
+                    onTabSelected = { tab = it },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
+        },
+    ) {
 
         if (tab == 0) {
+            if (filteredActions.isEmpty()) {
+                item(key = "global-icon-actions-empty") {
+                    GlobalIconEmptyHint(text = stringResource(R.string.search_no_actions))
+                }
+            }
             items(
-                items = actions,
+                items = filteredActions,
                 key = { "action-${it.type.id}" },
             ) { action ->
                 GlobalIconRow(
@@ -138,7 +209,7 @@ fun GlobalIconLibraryScreen(
                     }
                 }
             }
-            if (apps.any { it.isClone }) {
+            if (apps.any { it.isClone } && filteredApps.any { it.isClone }) {
                 item(key = "global-icon-clone-hint") {
                     Text(
                         text = stringResource(R.string.app_clone_package_only),
@@ -148,19 +219,24 @@ fun GlobalIconLibraryScreen(
                     )
                 }
             }
+            if (apps.isNotEmpty() && filteredApps.isEmpty()) {
+                item(key = "global-icon-apps-empty") {
+                    GlobalIconEmptyHint(text = stringResource(R.string.no_apps))
+                }
+            }
             items(
-                count = apps.size,
+                count = filteredApps.size,
                 key = { index ->
-                    val app = apps[index]
+                    val app = filteredApps[index]
                     "app-" + com.slideindex.app.launcher.AppTarget.encode(app.packageName, app.cloneUserId)
                 },
             ) { index ->
-                val app = apps[index]
+                val app = filteredApps[index]
                 if (app.isClone) {
                     // 分身：只展示，不给设图标（GlobalIconStore 的键是包名，设了会连主实例一起换）。
                     Md3PickerListRow(
                         segmentIndex = index,
-                        segmentCount = apps.size,
+                        segmentCount = filteredApps.size,
                         title = app.label,
                         subtitle = app.packageName + " · " + stringResource(R.string.app_clone_package_only_short),
                         selected = false,
@@ -375,12 +451,9 @@ private fun GlobalIconRow(
         },
     )
 
-    top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu(
+    MiuixGlassDropdownMenu(
         entry = menuEntry,
         modifier = Modifier.fillMaxWidth(),
-        minHeight = 64.dp,
-        backgroundColor = androidx.compose.ui.graphics.Color.Transparent,
-        cornerRadius = 12.dp,
     ) {
         Row(
             modifier = Modifier
@@ -537,3 +610,20 @@ private fun decodeIconFile(path: String, maxPx: Int): ImageBitmap? = runCatching
     val options = android.graphics.BitmapFactory.Options().apply { inSampleSize = sample }
     android.graphics.BitmapFactory.decodeFile(path, options)?.asImageBitmap()
 }.getOrNull()
+
+/** 搜索无匹配时的占位提示。 */
+@Composable
+private fun GlobalIconEmptyHint(text: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = MiuixTheme.textStyles.body2,
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+        )
+    }
+}

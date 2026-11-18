@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import com.slideindex.app.ui.miuix.MiuixTopLayerRoot
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
@@ -51,27 +52,29 @@ class IconPackPickerTrampolineActivity : ComponentActivity() {
         val storageKey = intent.getStringExtra(EXTRA_STORAGE_KEY).orEmpty()
 
         setContent {
-            CompositionLocalProvider(LocalAppDependencies provides deps) {
-                ModuleTheme {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MiuixTheme.colorScheme.background,
-                    ) {
-                        IconPackPickerPage(
-                            target = target,
-                            storageKey = storageKey,
-                            onPicked = { path ->
-                                setResult(
-                                    RESULT_OK,
-                                    Intent().putExtra(EXTRA_PICKED_PATH, path),
-                                )
-                                finish()
-                            },
-                            onDismiss = {
-                                setResult(RESULT_CANCELED)
-                                finish()
-                            },
-                        )
+            MiuixTopLayerRoot {
+                CompositionLocalProvider(LocalAppDependencies provides deps) {
+                    ModuleTheme {
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            color = MiuixTheme.colorScheme.background,
+                        ) {
+                            IconPackPickerPage(
+                                target = target,
+                                storageKey = storageKey,
+                                onPicked = { path ->
+                                    setResult(
+                                        RESULT_OK,
+                                        Intent().putExtra(EXTRA_PICKED_PATH, path),
+                                    )
+                                    finish()
+                                },
+                                onDismiss = {
+                                    setResult(RESULT_CANCELED)
+                                    finish()
+                                },
+                            )
+                        }
                     }
                 }
             }

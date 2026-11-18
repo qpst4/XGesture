@@ -33,7 +33,7 @@ android {
     namespace = "com.slideindex.app"
     compileSdk = 37
 
-    compileSdkMinor = 1
+    compileSdkMinor = 2
 
     defaultConfig {
         applicationId = "com.slideindex.app"
@@ -457,8 +457,9 @@ dependencies {
     implementation(libs.miuix.preference)
     implementation(libs.miuix.icons)
     implementation(libs.miuix.blur)
-    implementation(libs.miuix.shader)
-    implementation(libs.materialkolor)
+    implementation(libs.miuix.material)
+    implementation(libs.miuix.glass)
+    implementation(libs.miuix.glass.icons)
     implementation(libs.markdown.renderer)
     implementation(libs.markdown.renderer.m3)
     implementation(libs.kotlinx.serialization.json)

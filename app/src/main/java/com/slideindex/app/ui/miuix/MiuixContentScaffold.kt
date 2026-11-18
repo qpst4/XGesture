@@ -8,10 +8,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.slideindex.app.ui.LocalMainNavContentStartInset
+import com.slideindex.app.ui.mainNavStartInset
+import com.slideindex.app.ui.LocalMainNavTitleAlpha
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 
@@ -35,43 +45,47 @@ fun MiuixContentScaffold(
     val scrollBehavior = MiuixScrollBehavior()
     val barBackdrop = rememberMiuixBlurBackdrop()
     val contentStartInset = LocalMainNavContentStartInset.current
-    Scaffold(
-        modifier = modifier
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
-            .imePadding(),
-        topBar = {
-            Box(Modifier.fillMaxWidth()) {
-                MiuixBlurredTopBar(backdrop = barBackdrop) {
+    // 让顶栏 actions 与内容区的玻璃浮层都能取到页面背板（玻璃菜单采样用）。
+    CompositionLocalProvider(LocalMiuixScreenBackdrop provides barBackdrop) {
+        Scaffold(
+        contentWindowInsets = WindowInsets.systemBars
+            .union(WindowInsets.displayCutout)
+            .only(WindowInsetsSides.Vertical),
+            modifier = modifier
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .imePadding(),
+            topBar = {
+                Box(Modifier.fillMaxWidth()) {
                     AdaptiveTopAppBar(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = contentStartInset),
-                        color = barBackdrop.miuixAppBarColor(),
+                        modifier = Modifier.fillMaxWidth(),
+                        contentModifier = Modifier.mainNavStartInset(contentStartInset),
+                        backdrop = barBackdrop,
                         title = title,
+                        titleAlpha = LocalMainNavTitleAlpha.current,
                         scrollBehavior = scrollBehavior,
                         navigationIcon = {
-                            if (onBack != null) MiuixBackNavigationIcon(onBack)
+                            if (onBack != null) MiuixGlassBackNavigationIcon(onBack)
                         },
                         actions = actions,
                         bottomContent = bottomContent,
                     )
                 }
+            },
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .horizontalCutoutPadding(),
+            ) {
+                if (pageHint != null) {
+                    SettingsPageHintCard(pageHint)
+                }
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    content = content,
+                )
             }
-        },
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .horizontalCutoutPadding(),
-        ) {
-            if (pageHint != null) {
-                SettingsPageHintCard(pageHint)
-            }
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                content = content,
-            )
         }
     }
 }

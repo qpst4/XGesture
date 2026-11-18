@@ -5,10 +5,7 @@ import android.content.Context
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import com.materialkolor.PaletteStyle
-import com.materialkolor.dynamicColorScheme
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.slideindex.app.design.AppThemeSpec
 import com.slideindex.app.settings.AppColorSpec
@@ -31,11 +28,11 @@ object MiuixSeedResolver {
         }
 
     fun materialScheme(seed: Int, spec: AppThemeSpec): ColorScheme =
-        dynamicColorScheme(
-            seedColor = Color(seed),
-            isDark = spec.dark,
-            style = spec.paletteStyle().toMaterialKolor(),
-            specVersion = spec.effectiveColorSpec().toMaterialKolor(),
+        colorSchemeFromSeed(
+            seedArgb = seed,
+            dark = spec.dark,
+            paletteStyle = spec.paletteStyle(),
+            colorSpec = spec.effectiveColorSpec(),
         )
 }
 
@@ -46,18 +43,6 @@ private fun AppThemeSpec.effectiveColorSpec(): AppColorSpec {
     val spec = AppColorSpec.fromId(colorSpecId)
     val palette = ThemePaletteStyle.fromId(paletteStyleId)
     return if (palette.supportsMiuixSpec2025()) spec else AppColorSpec.SPEC_2021
-}
-
-fun ThemePaletteStyle.toMaterialKolor(): PaletteStyle = when (this) {
-    ThemePaletteStyle.TONAL_SPOT -> PaletteStyle.TonalSpot
-    ThemePaletteStyle.VIBRANT -> PaletteStyle.Vibrant
-    ThemePaletteStyle.EXPRESSIVE -> PaletteStyle.Expressive
-    ThemePaletteStyle.MONOCHROME -> PaletteStyle.Monochrome
-    ThemePaletteStyle.NEUTRAL -> PaletteStyle.Neutral
-    ThemePaletteStyle.FIDELITY -> PaletteStyle.Fidelity
-    ThemePaletteStyle.CONTENT -> PaletteStyle.Content
-    ThemePaletteStyle.RAINBOW -> PaletteStyle.Rainbow
-    ThemePaletteStyle.FRUIT_SALAD -> PaletteStyle.FruitSalad
 }
 
 fun ThemePaletteStyle.toMiuix(): MiuixPaletteStyle = when (this) {

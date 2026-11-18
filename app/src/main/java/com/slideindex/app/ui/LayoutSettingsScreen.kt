@@ -21,7 +21,7 @@ import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.ExtensionHubSettings
 import com.slideindex.app.ui.miuix.CardItem
 import com.slideindex.app.ui.miuix.MiuixArrowRow
-import com.slideindex.app.ui.miuix.MiuixBackNavigationIcon
+import com.slideindex.app.ui.miuix.MiuixGlassBackNavigationIcon
 import com.slideindex.app.ui.miuix.MiuixListScaffold
 import com.slideindex.app.ui.miuix.MiuixListSettingsCard
 import com.slideindex.app.ui.miuix.MiuixSliderRow
@@ -62,7 +62,7 @@ fun LayoutSettingsScreen(
         title = stringResource(R.string.layout_settings_title),
         pageHint = "$layoutDesc\n$previewHint",
         showPageHintCard = true,
-        navigationIcon = { MiuixBackNavigationIcon(onBack) },
+        navigationIcon = { MiuixGlassBackNavigationIcon(onBack) },
     ) {
         item(key = "panel_section") {
             SmallTitle(stringResource(R.string.settings_section_panel), modifier = Modifier.fillMaxWidth())

@@ -359,6 +359,7 @@ internal object SettingsSnapshotReader {
             uiDensityScale = UiDensityScaleLimits.normalize(
                 prefs[SettingsPreferenceKeys.UI_DENSITY_SCALE] ?: UiDensityScaleLimits.DEFAULT_SCALE,
             ),
+            bottomNavRailExpanded = prefs[SettingsPreferenceKeys.BOTTOM_NAV_RAIL_EXPANDED] ?: false,
             bottomNavStyleId = prefs[SettingsPreferenceKeys.BOTTOM_NAV_STYLE]
                 ?: BottomNavStyle.FLOATING_NAV.id,
             bottomNavModeId = prefs[SettingsPreferenceKeys.BOTTOM_NAV_MODE]

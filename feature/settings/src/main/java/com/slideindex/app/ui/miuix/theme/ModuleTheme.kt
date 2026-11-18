@@ -86,6 +86,8 @@ fun ModuleTheme(
                 CompositionLocalProvider(
                     Material3LocalContentColor provides materialScheme.onBackground,
                 ) {
+                    // ?? Activity ?? setContent ??? TopLayer ??:??????,
+                    // ???????????(TopLayer ???????)?
                     content()
                 }
             }

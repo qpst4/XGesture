@@ -35,6 +35,7 @@ import com.slideindex.app.ocr.vlm.VlmFormulaOcrEngine
 import com.slideindex.app.ocr.vlm.VlmOcrConfigManager
 import com.slideindex.app.ocr.vlm.VlmProvider
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsLazyHint
@@ -46,7 +47,6 @@ import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.preference.SwitchPreference
@@ -141,7 +141,7 @@ fun VlmOcrSettingsScreen(
         subtitle = targetProvider.description(context),
         onBack = onSaveAndBack,
         actions = {
-            IconButton(onClick = onSaveAndBack) {
+            MiuixTopBarIconButton(onClick = onSaveAndBack) {
                 Icon(
                     imageVector = MiuixIcons.Medium.Ok,
                     contentDescription = stringResource(R.string.gesture_angle_save),

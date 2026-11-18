@@ -386,6 +386,8 @@ class SettingsRepository @Inject constructor(
     suspend fun setIconPlateMode(mode: IconPlateMode) = overlay.setIconPlateMode(mode)
     suspend fun setThemeColorSpec(spec: AppColorSpec) = overlay.setThemeColorSpec(spec)
     suspend fun setBottomNavStyle(style: BottomNavStyle) = overlay.setBottomNavStyle(style)
+
+    suspend fun setBottomNavRailExpanded(expanded: Boolean) = overlay.setBottomNavRailExpanded(expanded)
     suspend fun setBottomNavMode(mode: BottomNavMode) = overlay.setBottomNavMode(mode)
     suspend fun setBottomNavGlassEnabled(enabled: Boolean) = overlay.setBottomNavGlassEnabled(enabled)
     suspend fun setTopAppBarBlurStyle(style: TopAppBarBlurStyle) = overlay.setTopAppBarBlurStyle(style)

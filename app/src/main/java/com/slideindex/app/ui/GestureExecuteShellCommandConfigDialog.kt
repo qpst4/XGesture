@@ -35,6 +35,7 @@ import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardItems
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import androidx.compose.material.icons.Icons
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
@@ -139,7 +140,7 @@ fun GestureExecuteShellCommandScreen(
         enableBackHandler = enableBackHandler,
         overlayMode = overlayMode,
         actions = {
-            top.yukonga.miuix.kmp.basic.IconButton(
+            MiuixTopBarIconButton(
                 onClick = { onConfirm(command.trim()) },
                 enabled = canSave
             ) {

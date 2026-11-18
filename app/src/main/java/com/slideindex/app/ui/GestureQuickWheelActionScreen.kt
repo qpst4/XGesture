@@ -38,12 +38,12 @@ import com.slideindex.app.gesture.QuickWheelLaunchShape
 import com.slideindex.app.overlay.layout.QuickWheelLayoutEngine
 import com.slideindex.app.overlay.layout.QuickWheelShape
 import com.slideindex.app.settings.QuickWheel
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsGroupedCardItems
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.icon.extended.Ok
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 
@@ -127,7 +127,7 @@ fun GestureQuickWheelActionScreen(
         onBack = onBack,
         overlayMode = overlayMode,
         actions = {
-            IconButton(
+            MiuixTopBarIconButton(
                 // ⚠️ 没有轮盘可选时必须禁用确认：wheels 为空时 selectedWheelId 会是空串，
                 // 点确认会落库成 GestureAction.QuickWheel(wheelId = "")，
                 // 这个绑定运行时永远找不到轮盘、静默什么都不做（界面上看着像"设了没反应"）。

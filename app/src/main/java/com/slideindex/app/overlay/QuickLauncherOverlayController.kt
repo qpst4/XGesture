@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay
 
+import com.slideindex.app.ui.miuix.MiuixPageBackdropBox
+
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -830,32 +832,34 @@ internal class QuickLauncherOverlayController(
             androidx.compose.runtime.CompositionLocalProvider(
                 com.slideindex.app.ui.compose.LocalAppDependencies provides appDeps,
             ) {
-                com.slideindex.app.ui.QuickLauncherAddOverlaySheet(
-                    panelSide = host.side(),
-                    apps = host.apps(),
-                    configuredAppPackages = configuredAppPackages,
-                    configuredShortcutKeys = configuredShortcutKeys,
-                    configuredActionKeys = configuredActionKeys,
-                    activityShortcuts = host.settings().activityShortcuts,
-                    shellCommands = host.settings().shellCommands,
-                    onDismiss = {
-                        quickLauncherOverlayDialogHost.dismiss()
-                        host.notifyPresentationTouchRequirementChanged()
-                    },
-                    onAdd = onAdd,
-                    onRemove = onRemove,
-                    launchCreateShortcut = { createHost, onResult ->
-                        CreateShortcutTrampoline.launch(
-                            context = host.context,
-                            host = createHost,
-                            onPrepare = {
-                                quickLauncherOverlayDialogHost.dismiss()
-                                dismissFromBack()
-                            },
-                            onResult = onResult,
-                        )
-                    },
-                )
+                MiuixPageBackdropBox {
+                    com.slideindex.app.ui.QuickLauncherAddOverlaySheet(
+                        panelSide = host.side(),
+                        apps = host.apps(),
+                        configuredAppPackages = configuredAppPackages,
+                        configuredShortcutKeys = configuredShortcutKeys,
+                        configuredActionKeys = configuredActionKeys,
+                        activityShortcuts = host.settings().activityShortcuts,
+                        shellCommands = host.settings().shellCommands,
+                        onDismiss = {
+                            quickLauncherOverlayDialogHost.dismiss()
+                            host.notifyPresentationTouchRequirementChanged()
+                        },
+                        onAdd = onAdd,
+                        onRemove = onRemove,
+                        launchCreateShortcut = { createHost, onResult ->
+                            CreateShortcutTrampoline.launch(
+                                context = host.context,
+                                host = createHost,
+                                onPrepare = {
+                                    quickLauncherOverlayDialogHost.dismiss()
+                                    dismissFromBack()
+                                },
+                                onResult = onResult,
+                            )
+                        },
+                    )
+                }
             }
         }
     }

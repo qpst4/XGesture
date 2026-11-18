@@ -4,11 +4,10 @@ import android.content.Context
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import com.materialkolor.PaletteStyle
-import com.materialkolor.dynamicColorScheme
-import com.materialkolor.dynamiccolor.ColorSpec
 import com.slideindex.app.design.AppThemeSpec
+import com.slideindex.app.settings.AppColorSpec
 import com.slideindex.app.settings.DarkBackgroundStyle
+import com.slideindex.app.settings.ThemePaletteStyle
 import top.yukonga.miuix.kmp.theme.darkColorScheme as miuixDarkColorScheme
 import top.yukonga.miuix.kmp.theme.lightColorScheme as miuixLightColorScheme
 
@@ -63,11 +62,11 @@ fun defaultMiuixMaterialScheme(
     val miuixColors = if (darkTheme) darkColorsFor(darkBackgroundStyle) else miuixLightColorScheme()
     val dialogSurface = miuixColors.surfaceContainer
 
-    return dynamicColorScheme(
-        seedColor = miuixColors.primary,
-        isDark = darkTheme,
-        style = PaletteStyle.TonalSpot,
-        specVersion = ColorSpec.SpecVersion.SPEC_2021,
+    return colorSchemeFromSeed(
+        seedArgb = miuixColors.primary.toArgb(),
+        dark = darkTheme,
+        paletteStyle = ThemePaletteStyle.TONAL_SPOT,
+        colorSpec = AppColorSpec.SPEC_2021,
     ).copy(
         primary = miuixColors.primary,
         onPrimary = miuixColors.onPrimary,

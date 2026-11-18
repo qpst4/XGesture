@@ -44,6 +44,7 @@ import com.slideindex.app.ui.picker.AppPickerTabRow
 import com.slideindex.app.ui.miuix.MiuixExpandableSearchIconAction
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixScaffoldSearchTabBottomContent
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.miuix.consumeExpandableSearchBack
 import com.slideindex.app.ui.picker.filterShortcutCatalog
 import com.slideindex.app.ui.picker.rememberLoadedShortcutCatalog
@@ -162,7 +163,7 @@ fun QuickLauncherAddPickerScreen(
         actions = {
             // 文件夹只有一层，已经在文件夹内时不再提供新建文件夹。
             if (!isInsideFolder) {
-                IconButton(onClick = onOpenCreateFolder) {
+                MiuixTopBarIconButton(onClick = onOpenCreateFolder) {
                     Icon(
                         MiuixIcons.AddFolder,
                         contentDescription = stringResource(R.string.quick_launcher_new_folder),

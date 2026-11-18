@@ -327,6 +327,9 @@ internal object SettingsPreferenceKeys {
     val ICON_PLATE_MODE = intPreferencesKey("icon_plate_mode_id")
     val UI_DENSITY_SCALE = floatPreferencesKey("ui_density_scale")
     val BOTTOM_NAV_STYLE = intPreferencesKey("bottom_nav_style_id")
+
+    /** 宽屏玻璃侧栏是否展开（记住上次状态，跨进程生效）。 */
+    val BOTTOM_NAV_RAIL_EXPANDED = booleanPreferencesKey("bottom_nav_rail_expanded")
     val BOTTOM_NAV_MODE = intPreferencesKey("bottom_nav_mode_id")
     val BOTTOM_NAV_CLASSIC_BLUR_RADIUS_DP = floatPreferencesKey("bottom_nav_classic_blur_radius_dp")
     val BOTTOM_NAV_LIQUID_GLASS_BLUR_RADIUS_DP = floatPreferencesKey("bottom_nav_liquid_glass_blur_radius_dp")

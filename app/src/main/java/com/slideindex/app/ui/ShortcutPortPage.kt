@@ -65,6 +65,7 @@ import com.slideindex.app.util.ShortcutKind
 import com.slideindex.app.util.ShortcutLaunchDispatcher
 import com.slideindex.app.ui.miuix.MiuixProgressCard
 import com.slideindex.app.ui.miuix.groupedCardItems
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffoldWithExpandableSearch
 import com.slideindex.app.ui.settings.components.settingsCardItem
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
@@ -77,6 +78,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Refresh
 import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -251,12 +254,12 @@ fun ShortcutPortPage(onBack: () -> Unit) {
         onBack = onBack,
         hintResId = R.string.shortcut_test_search_hint,
         extraActions = {
-            IconButton(
+            MiuixTopBarIconButton(
                 onClick = { if (!isLoading) reloadKey++ },
                 enabled = !isLoading,
             ) {
                 Icon(
-                    imageVector = Icons.Default.Refresh,
+                    imageVector = MiuixIcons.Medium.Refresh,
                     contentDescription = stringResource(R.string.shortcut_port_rescan),
                 )
             }

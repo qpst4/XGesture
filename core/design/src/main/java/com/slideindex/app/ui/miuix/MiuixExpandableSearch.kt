@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,8 +22,8 @@ import androidx.compose.ui.unit.dp
 import com.slideindex.app.design.R
 import kotlinx.coroutines.delay
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.glass.Search
 import top.yukonga.miuix.kmp.icon.extended.Search
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -37,7 +38,7 @@ fun MiuixExpandableSearchIconAction(
     onQueryChange: (String) -> Unit,
 ) {
     val searchLabel = stringResource(R.string.search_hint)
-    IconButton(
+    MiuixTopBarIconButton(
         onClick = {
             if (expanded) {
                 if (query.isNotBlank()) {
@@ -51,7 +52,8 @@ fun MiuixExpandableSearchIconAction(
         },
     ) {
         Icon(
-            imageVector = MiuixIcons.Search,
+            imageVector = MiuixIcons.Glass.Search,
+            modifier = Modifier.size(28.dp),
             contentDescription = searchLabel,
             tint = MiuixTheme.colorScheme.onBackground,
         )

@@ -57,7 +57,7 @@ import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
-import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
+import com.slideindex.app.ui.miuix.MiuixGlassDropdownMenu
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -249,12 +249,8 @@ internal fun ActionIconPickerHost(
         },
     )
 
-    WindowIconDropdownMenu(
+    MiuixGlassDropdownMenu(
         entry = menuEntry,
-        minHeight = sizeDp.dp,
-        minWidth = sizeDp.dp,
-        backgroundColor = Color.Transparent,
-        cornerRadius = (sizeDp / 3).dp,
     ) {
         Box(modifier = modifier) {
             ActionIconView(action = action, iconKey = iconKey, sizeDp = sizeDp)

@@ -6,7 +6,7 @@ plugins {
 android {
     namespace = "com.slideindex.app.design"
     compileSdk = 37
-    compileSdkMinor = 1
+    compileSdkMinor = 2
 
     defaultConfig {
         minSdk = libs.versions.minSdk.get().toInt()
@@ -43,6 +43,8 @@ dependencies {
     implementation(libs.miuix.ui)
     implementation(libs.miuix.icons)
     implementation(libs.miuix.blur)
-    implementation(libs.miuix.shader)
-    implementation(libs.materialkolor)
+    implementation(libs.miuix.material)
+    implementation(libs.miuix.glass)
+    implementation(libs.miuix.glass.icons)
+    implementation(libs.materialkolor.utilities)
 }

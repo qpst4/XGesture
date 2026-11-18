@@ -5,61 +5,74 @@ package com.slideindex.app.ui
  * Licensed under GPL-3.0. Modified for com.slideindex.app.
  */
 
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import com.slideindex.app.R
-import top.yukonga.miuix.kmp.basic.NavigationRail
-import top.yukonga.miuix.kmp.basic.NavigationRailItem
-import top.yukonga.miuix.kmp.basic.rememberNavigationRailState
+import top.yukonga.miuix.kmp.blur.LayerBackdrop
+import top.yukonga.miuix.kmp.glass.GlassNavigationItem
+import top.yukonga.miuix.kmp.glass.GlassNavigationRail
+import top.yukonga.miuix.kmp.glass.GlassNavigationRailDefaults
+import top.yukonga.miuix.kmp.glass.GlassNavigationRailState
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.glass.HomeOutline
+import top.yukonga.miuix.kmp.icon.glass.NotificationOutline
+import top.yukonga.miuix.kmp.icon.glass.Widget
+
+/** 宽屏玻璃侧栏展开面板占用的起始空间（面板宽 + 外边距）。 */
+val GlassRailContentStartInset = GlassNavigationRailDefaults.ExpandedWidth + GlassNavigationRailDefaults.Margin
 
 /**
- * 宽屏 + 液态玻璃 / Miuix 浮动导航时的侧栏（[NavigationRail] + [NavigationRailItem]）。
- * 经典毛玻璃宽屏仍用 [FloatingSideNavRail]。
+ * 宽屏 + Miuix 浮动导航时的**玻璃**侧栏（对齐 Mishka 的 `GlassNavigationRail`）。
+ *
+ * 形态：浮在内容之上的折叠胶囊，点开后是 250dp 玻璃面板（自带 toggle）；
+ * 内容不随展开位移，只用 [GlassRailContentStartInset] 给顶栏/列表预留起始缩进，
+ * 避免标题压在折叠胶囊上。层级由 `MainNavHost` 保证：内容在下、侧栏在上、
+ * `TopLayerHost` 再在侧栏之上（Mishka 迁移指南 §4.1）。
  */
 @Composable
 fun MainMiuixNavigationRail(
     selected: MainBottomNavDestination,
     onDestinationSelected: (MainBottomNavDestination) -> Unit,
+    backdrop: LayerBackdrop?,
+    state: GlassNavigationRailState,
     modifier: Modifier = Modifier,
 ) {
     val shakeSelectedIcon = ImageVector.vectorResource(R.drawable.ic_nav_shake)
     val shakeUnselectedIcon = ImageVector.vectorResource(R.drawable.ic_nav_shake_outlined)
-    NavigationRail(
-        modifier = modifier.fillMaxHeight(),
-        // 具名传 state 走可展开重载：本栏不提供展开/收起入口，仅用于保持既有布局。
-        // 固定紧凑重载（无 state）在 0.9.4 会给选中项加背板，属于视觉变更，需另行评估。
-        state = rememberNavigationRailState(),
-    ) {
-        NavigationRailItem(
-            selected = selected == MainBottomNavDestination.Home,
-            onClick = { onDestinationSelected(MainBottomNavDestination.Home) },
-            icon = navSymbol("Home"),
+    val destinations = MainBottomNavDestination.entries
+
+    val items = listOf(
+        GlassNavigationItem(
+            icon = MiuixIcons.Glass.HomeOutline,
             label = stringResource(R.string.main_nav_home),
-        )
-        NavigationRailItem(
-            selected = selected == MainBottomNavDestination.Shake,
-            onClick = { onDestinationSelected(MainBottomNavDestination.Shake) },
+            contentDescription = stringResource(R.string.main_nav_home),
+        ),
+        GlassNavigationItem(
             icon = if (selected == MainBottomNavDestination.Shake) shakeSelectedIcon else shakeUnselectedIcon,
             label = stringResource(R.string.main_nav_shake),
-        )
-        NavigationRailItem(
-            selected = selected == MainBottomNavDestination.Notification,
-            onClick = { onDestinationSelected(MainBottomNavDestination.Notification) },
-            icon = navSymbol("Notifications"),
+            contentDescription = stringResource(R.string.main_nav_shake),
+        ),
+        GlassNavigationItem(
+            icon = MiuixIcons.Glass.NotificationOutline,
             label = stringResource(R.string.main_nav_notification),
-        )
-        NavigationRailItem(
-            selected = selected == MainBottomNavDestination.Extension,
-            onClick = { onDestinationSelected(MainBottomNavDestination.Extension) },
-            icon = navSymbol("Widgets"),
+            contentDescription = stringResource(R.string.main_nav_notification),
+        ),
+        GlassNavigationItem(
+            icon = MiuixIcons.Glass.Widget,
             label = stringResource(R.string.main_nav_extension),
-        )
-    }
-}
+            contentDescription = stringResource(R.string.main_nav_extension),
+        ),
+    )
 
-private fun navSymbol(name: String): ImageVector =
-    requireNotNull(MaterialSymbolVectors.get(name)) { "unknown Material Symbol: $name" }
+    GlassNavigationRail(
+        items = items,
+        selectedIndex = destinations.indexOf(selected).coerceAtLeast(0),
+        onSelect = { index -> destinations.getOrNull(index)?.let(onDestinationSelected) },
+        backdrop = backdrop,
+        modifier = modifier,
+        state = state,
+    )
+}

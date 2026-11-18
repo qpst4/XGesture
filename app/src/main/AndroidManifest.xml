@@ -317,13 +317,6 @@
             android:theme="@style/Theme.SlideIndex.Transparent" />
 
         <activity
-            android:name=".service.RingLauncherSlotPickTrampolineActivity"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:taskAffinity=""
-            android:theme="@style/Theme.SlideIndex.Transparent" />
-
-        <activity
             android:name=".service.RingLauncherSlotConfigActivity"
             android:excludeFromRecents="true"
             android:exported="false"

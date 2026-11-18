@@ -17,6 +17,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 
 import androidx.activity.compose.setContent
+import com.slideindex.app.ui.miuix.MiuixTopLayerRoot
 
 import androidx.activity.enableEdgeToEdge
 
@@ -121,77 +122,79 @@ class RingLauncherSlotIconEditorTrampolineActivity : ComponentActivity() {
 
 
         setContent {
+            MiuixTopLayerRoot {
 
-            val scope = rememberCoroutineScope()
+                val scope = rememberCoroutineScope()
 
-            var appSettings by remember { mutableStateOf(AppSettings()) }
+                var appSettings by remember { mutableStateOf(AppSettings()) }
 
-            var slotLabel by remember { mutableStateOf("") }
+                var slotLabel by remember { mutableStateOf("") }
 
-            var slotIconOverride by remember { mutableStateOf<FvRingLauncherSlotIconOverride?>(null) }
-
-
-
-            LaunchedEffect(axis, slotIndex) {
-
-                appSettings = deps.settingsRepository.settings.first()
-
-                val fvSettings = appSettings.fvRingLauncherFor(axis)
-
-                val item = fvSettings.itemAt(slotIndex)
-
-                slotIconOverride = fvSettings.iconOverrideAt(slotIndex)
-
-                slotLabel = item?.label?.ifBlank { item.payload }.orEmpty()
-
-            }
+                var slotIconOverride by remember { mutableStateOf<FvRingLauncherSlotIconOverride?>(null) }
 
 
 
-            BackHandler { finishPicker() }
+                LaunchedEffect(axis, slotIndex) {
+
+                    appSettings = deps.settingsRepository.settings.first()
+
+                    val fvSettings = appSettings.fvRingLauncherFor(axis)
+
+                    val item = fvSettings.itemAt(slotIndex)
+
+                    slotIconOverride = fvSettings.iconOverrideAt(slotIndex)
+
+                    slotLabel = item?.label?.ifBlank { item.payload }.orEmpty()
+
+                }
 
 
 
-            CompositionLocalProvider(LocalAppDependencies provides deps) {
+                BackHandler { finishPicker() }
 
-                ModuleTheme(settings = appSettings) {
 
-                    RingLauncherSlotIconEditorHost(
 
-                        slotLabel = slotLabel,
+                CompositionLocalProvider(LocalAppDependencies provides deps) {
 
-                        initialOverride = slotIconOverride,
+                    ModuleTheme(settings = appSettings) {
 
-                        onBack = { finishPicker() },
+                        RingLauncherSlotIconEditorHost(
 
-                        onSave = { override ->
+                            slotLabel = slotLabel,
 
-                            scope.launch {
+                            initialOverride = slotIconOverride,
 
-                                deps.settingsRepository.setFvRingLauncherSlotIconOverride(
+                            onBack = { finishPicker() },
 
-                                    axis = axis,
+                            onSave = { override ->
 
-                                    index = slotIndex,
+                                scope.launch {
 
-                                    override = override,
+                                    deps.settingsRepository.setFvRingLauncherSlotIconOverride(
 
-                                )
+                                        axis = axis,
 
-                                RingLauncherOverlayWindow.refreshFromSettings()
+                                        index = slotIndex,
 
-                                finishPicker()
+                                        override = override,
 
-                            }
+                                    )
 
-                        },
+                                    RingLauncherOverlayWindow.refreshFromSettings()
 
-                    )
+                                    finishPicker()
+
+                                }
+
+                            },
+
+                        )
+
+                    }
 
                 }
 
             }
-
         }
 
     }

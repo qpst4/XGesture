@@ -3,6 +3,7 @@ package com.slideindex.app.ui.miuix
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
+import top.yukonga.miuix.kmp.glass.GlassBottomSheet
 import top.yukonga.miuix.kmp.layout.BottomSheetDefaults
 import top.yukonga.miuix.kmp.window.WindowBottomSheet
 
@@ -19,6 +20,23 @@ fun MiuixBottomSheet(
     insideMargin: DpSize? = null,
     content: @Composable () -> Unit,
 ) {
+    val overlayBackdrop = LocalMiuixPageBackdrop.current
+    if (overlayBackdrop != null) {
+        GlassBottomSheet(
+            show = show,
+            onDismissRequest = onDismissRequest,
+            backdrop = overlayBackdrop,
+            modifier = modifier,
+            title = title,
+            allowDismiss = allowDismiss,
+            startAction = startAction,
+            endAction = endAction,
+            insideMargin = insideMargin ?: BottomSheetDefaults.insideMargin,
+            content = content,
+        )
+        return
+    }
+
     WindowBottomSheet(
         show = show,
         modifier = modifier,

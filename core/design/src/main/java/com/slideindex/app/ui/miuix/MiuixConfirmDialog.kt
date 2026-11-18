@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.ime
 import com.slideindex.app.design.R
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.glass.GlassDialog
 import top.yukonga.miuix.kmp.window.WindowDialog
 
 @Composable
@@ -42,13 +43,7 @@ fun MiuixConfirmDialog(
     onSecondaryConfirm: (() -> Unit)? = null,
     secondaryDismissOnConfirm: Boolean = true,
 ) {
-    if (!show) return
-
-    WindowDialog(
-        show = true,
-        title = title,
-        onDismissRequest = onDismissRequest,
-    ) {
+    val body: @Composable () -> Unit = {
         Column {
             when {
                 text != null -> text()
@@ -83,6 +78,27 @@ fun MiuixConfirmDialog(
             )
         }
     }
+
+
+    if (!show) return
+    val overlayBackdrop = LocalMiuixPageBackdrop.current
+    if (overlayBackdrop != null) {
+        GlassDialog(
+            onDismissRequest = onDismissRequest,
+            show = show,
+            backdrop = overlayBackdrop,
+            title = title,
+            content = body,
+        )
+        return
+    }
+    WindowDialog(
+        show = true,
+        title = title,
+        onDismissRequest = onDismissRequest,
+    ) {
+        body()
+    }
 }
 
 @Composable
@@ -101,8 +117,6 @@ fun MiuixFormDialog(
     secondaryDismissOnConfirm: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    if (!show) return
-
     val density = LocalDensity.current
     val windowHeightPx = LocalWindowInfo.current.containerSize.height
     val imeBottomPx = WindowInsets.ime.getBottom(density)
@@ -115,11 +129,7 @@ fun MiuixFormDialog(
         availableHeight.toDp().coerceAtLeast(140.dp)
     }
 
-    WindowDialog(
-        show = true,
-        title = title,
-        onDismissRequest = onDismissRequest,
-    ) {
+    val body: @Composable () -> Unit = {
         Column(
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -173,6 +183,27 @@ fun MiuixFormDialog(
                 )
             }
         }
+    }
+
+
+    if (!show) return
+    val overlayBackdrop = LocalMiuixPageBackdrop.current
+    if (overlayBackdrop != null) {
+        GlassDialog(
+            onDismissRequest = onDismissRequest,
+            show = show,
+            backdrop = overlayBackdrop,
+            title = title,
+            content = body,
+        )
+        return
+    }
+    WindowDialog(
+        show = true,
+        title = title,
+        onDismissRequest = onDismissRequest,
+    ) {
+        body()
     }
 }
 

@@ -58,7 +58,7 @@ fun HistoryPanelToolbarIcon(
 /** 收纳面板列表滚动：MIUI 回弹 + 触底触感。 */
 fun Modifier.historyPanelListScrollEffects(): Modifier = this
     .scrollEndHaptic()
-    .overScrollVertical(nestedScrollToParent = false)
+    .overScrollVertical()
 
 /** 列表参与顶栏毛玻璃采样。 */
 fun Modifier.historyPanelListBackdrop(backdrop: LayerBackdrop?): Modifier =

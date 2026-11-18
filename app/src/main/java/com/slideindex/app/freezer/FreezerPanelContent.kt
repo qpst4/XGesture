@@ -5,6 +5,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -52,11 +53,15 @@ import com.slideindex.app.launcher.AppTarget
 import com.slideindex.app.settings.FreezerWorkMode
 import com.slideindex.app.settings.SettingsRepository
 import com.slideindex.app.ui.compose.rememberAppRepository
+import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
+import com.slideindex.app.ui.miuix.LocalMiuixScreenBackdrop
+import com.slideindex.app.ui.miuix.TopLayer
 import com.slideindex.app.ui.miuix.MiuixExpandableSearchBottomContent
 import com.slideindex.app.ui.miuix.MiuixExpandableSearchIconAction
 import com.slideindex.app.ui.miuix.MiuixNavigationBackHandler
 import com.slideindex.app.ui.miuix.MiuixSettingsFab
 import com.slideindex.app.ui.miuix.MiuixSettingsFabInset
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.miuix.consumeExpandableSearchBack
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
@@ -66,14 +71,19 @@ import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
+import top.yukonga.miuix.kmp.glass.GlassIconButton
+import top.yukonga.miuix.kmp.glass.GlassIconDropdownMenu
+import top.yukonga.miuix.kmp.glass.GlassTopAppBarDefaults
+import top.yukonga.miuix.kmp.glass.glassPopupAnchor
+import top.yukonga.miuix.kmp.glass.glassPopupAnchorContent
+import top.yukonga.miuix.kmp.glass.rememberGlassPopupAnchor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.icon.extended.Add
 import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.glass.More
 
 /**
  * 面板**自己挂**返回处理时走哪条派发链。
@@ -131,6 +141,7 @@ fun FreezerPanelContent(
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var searchExpanded by rememberSaveable { mutableStateOf(false) }
     var overflowMenuExpanded by remember { mutableStateOf(false) }
+    val overflowAnchor = rememberGlassPopupAnchor()
     // 多选态刻意不进 rememberSaveable：Set<String> 没有默认 Saver，进程重建会当场崩，
     // 而这个状态丢了也只是退出多选，不值得为它写一个 Saver。
     var selectionMode by remember { mutableStateOf(false) }
@@ -393,7 +404,7 @@ fun FreezerPanelContent(
             userScrollEnabled = false,
             actions = {
                 if (selectionMode) {
-                    IconButton(
+                    MiuixTopBarIconButton(
                         onClick = {
                             selectedTargets = if (allSelected) {
                                 emptySet()
@@ -408,7 +419,7 @@ fun FreezerPanelContent(
                             tint = MiuixTheme.colorScheme.onBackground
                         )
                     }
-                    IconButton(onClick = ::exitSelection) {
+                    MiuixTopBarIconButton(onClick = ::exitSelection) {
                         Icon(
                             imageVector = MiuixIcons.Medium.Close,
                             contentDescription = selectionDoneLabel,
@@ -425,7 +436,7 @@ fun FreezerPanelContent(
                     onQueryChange = { searchQuery = it }
                 )
                 if (onManageApps != null) {
-                    IconButton(onClick = onManageApps) {
+                    MiuixTopBarIconButton(onClick = onManageApps) {
                         Icon(
                             imageVector = MiuixIcons.Medium.Add,
                             contentDescription = stringResource(R.string.freezer_manage_apps),
@@ -433,7 +444,7 @@ fun FreezerPanelContent(
                         )
                     }
                 }
-                IconButton(
+                MiuixTopBarIconButton(
                     onClick = {
                         // 进多选前先收起搜索：展开态的搜索框会占满 actions 行，把"选择/全选/完成"
                         // 这些按钮整个盖掉 —— 那时候多选态是进得去出不来的。
@@ -451,9 +462,9 @@ fun FreezerPanelContent(
                 }
                 if (overlayMode) {
                     Box {
-                        IconButton(onClick = { overflowMenuExpanded = true }) {
+                        MiuixTopBarIconButton(onClick = { overflowMenuExpanded = true }) {
                             Icon(
-                                imageVector = MiuixIcons.Medium.More,
+                                imageVector = MiuixIcons.Glass.More,
                                 contentDescription = stringResource(R.string.freezer_batch_menu),
                                 tint = MiuixTheme.colorScheme.onBackground,
                             )
@@ -523,11 +534,39 @@ fun FreezerPanelContent(
                         }
                     }
                 } else {
-                    OverlayIconDropdownMenu(entry = overflowMenuEntry) {
+                    val pageBackdrop = LocalMiuixPageBackdrop.current
+                    GlassIconButton(
+                        onClick = { overflowMenuExpanded = true },
+                        modifier = Modifier.glassPopupAnchor(
+                            anchor = overflowAnchor,
+                            cornerRadius = GlassTopAppBarDefaults.ButtonSize / 2,
+                        ),
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.MoreVert,
+                            imageVector = MiuixIcons.Glass.More,
                             contentDescription = stringResource(R.string.freezer_batch_menu),
-                            tint = MiuixTheme.colorScheme.onBackground,
+                            tint = MiuixTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .size(28.dp)
+                                .glassPopupAnchorContent(overflowAnchor),
+                        )
+                    }
+                    TopLayer {
+                        GlassIconDropdownMenu(
+                            show = overflowMenuExpanded,
+                            onDismissRequest = { overflowMenuExpanded = false },
+                            anchor = overflowAnchor,
+                            // 副本只画图标，不再回写 anchor 位置（否则副本会追着自己飞）。
+                            anchorContent = {
+                                Icon(
+                                    imageVector = MiuixIcons.Glass.More,
+                                    contentDescription = null,
+                                    tint = MiuixTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(28.dp),
+                                )
+                            },
+                            entries = listOf(overflowMenuEntry),
+                            backdrop = pageBackdrop,
                         )
                     }
                 }

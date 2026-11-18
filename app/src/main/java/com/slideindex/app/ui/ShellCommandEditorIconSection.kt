@@ -61,7 +61,7 @@ import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.icon.extended.GridView
 import top.yukonga.miuix.kmp.icon.extended.Image
 import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
-import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
+import com.slideindex.app.ui.miuix.MiuixGlassDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 internal data class ShellCommandIconDraft(
@@ -307,15 +307,9 @@ internal fun ShellCommandEditorIconSection(
             }
 
             if (useWindowMenu) {
-                WindowIconDropdownMenu(
+                MiuixGlassDropdownMenu(
                     entry = DropdownEntry(items = menuItems),
                     modifier = Modifier.size(56.dp),
-                    minWidth = 56.dp,
-                    minHeight = 56.dp,
-                    cornerRadius = 16.dp,
-                    backgroundColor = MiuixTheme.colorScheme.surfaceContainerHigh,
-                    maxHeight = 320.dp,
-                    dropdownColors = DropdownDefaults.dropdownColors(),
                 ) {
                     iconButtonContent()
                 }

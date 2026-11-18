@@ -9,7 +9,7 @@ plugins {
 android {
     namespace = "com.slideindex.app.settings"
     compileSdk = 37
-    compileSdkMinor = 1
+    compileSdkMinor = 2
 
     defaultConfig {
         minSdk = libs.versions.minSdk.get().toInt()
@@ -32,6 +32,7 @@ dependencies {
     implementation(project(":core:gesture"))
     implementation(project(":core:notification"))
     implementation(project(":core:overlay-layout"))
+    implementation(project(":core:overlay-host"))
     implementation(project(":core:translate"))
     implementation(libs.core.ktx)
     implementation(libs.datastore.preferences)

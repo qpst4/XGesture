@@ -102,6 +102,7 @@ import com.slideindex.app.shizuku.ShizukuUserServiceHost
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.PermissionGatedFeature
 import com.slideindex.app.ui.miuix.MiuixHintText
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingsCardScope
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
@@ -250,7 +251,7 @@ fun ShellCommandPanelScreen(
         title = stringResource(R.string.shell_panel_title),
         onBack = onBack,
         actions = {
-            IconButton(onClick = onOpenHistory) {
+            MiuixTopBarIconButton(onClick = onOpenHistory) {
                 Icon(
                     MiuixIcons.Medium.Recent,
                     contentDescription = stringResource(R.string.shell_panel_history_action),

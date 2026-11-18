@@ -55,7 +55,7 @@ import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
+import com.slideindex.app.ui.miuix.MiuixGlassIconDropdown
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /** 挑应用列表里如何处理应用分身条目。 */
@@ -456,6 +456,7 @@ private fun EmbeddedActivityPickAppList(
                     SystemAppsMenuAction(
                         showSystemApps = showSystemApps,
                         onToggle = onToggleSystemApps,
+                        capsule = false,
                     )
                 }
             } else {
@@ -625,6 +626,8 @@ private fun ColumnScope.EmbeddedActivityPickerLazyList(
 private fun SystemAppsMenuAction(
     showSystemApps: Boolean,
     onToggle: () -> Unit,
+    /** 顶栏里用胶囊，列表头部里用普通图标按钮。 */
+    capsule: Boolean = true,
 ) {
     val showLabel = stringResource(R.string.app_picker_show_system_apps)
     val hideLabel = stringResource(R.string.app_picker_hide_system_apps)
@@ -639,11 +642,10 @@ private fun SystemAppsMenuAction(
             ),
         )
     }
-    OverlayIconDropdownMenu(entry = entry) {
-        Icon(
-            imageVector = Icons.Default.MoreVert,
-            contentDescription = stringResource(R.string.app_picker_more_menu),
-            tint = MiuixTheme.colorScheme.onBackground,
-        )
-    }
+    MiuixGlassIconDropdown(
+        entries = listOf(entry),
+        icon = Icons.Default.MoreVert,
+        contentDescription = stringResource(R.string.app_picker_more_menu),
+        capsule = capsule,
+    )
 }

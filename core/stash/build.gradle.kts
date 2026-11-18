@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.slideindex.app.stash"
     compileSdk = 37
-    compileSdkMinor = 1
+    compileSdkMinor = 2
 
     defaultConfig {
         minSdk = libs.versions.minSdk.get().toInt()

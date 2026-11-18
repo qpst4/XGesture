@@ -56,6 +56,7 @@ import com.slideindex.app.shell.ShellExecutionMode
 import com.slideindex.app.shell.ShellResultDisplay
 import com.slideindex.app.shell.normalizeShellCommand
 import com.slideindex.app.shell.resolveShellCommandLabel
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.util.ShellResultFormatter
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
@@ -71,6 +72,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.icon.extended.Copy
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.glass.Delete
 
 private data class ShellTestResultState(
     val exitCode: Int,
@@ -201,7 +203,7 @@ private fun ShellCommandEditorActionsRow(
         if (onDelete != null) {
             IconButton(onClick = onDelete) {
                 Icon(
-                    imageVector = MiuixIcons.Medium.Delete,
+                    imageVector = MiuixIcons.Glass.Delete,
                     contentDescription = stringResource(R.string.shell_panel_delete),
                     tint = MiuixTheme.colorScheme.error,
                 )
@@ -483,7 +485,7 @@ fun ShellResultScreen(
         onBack = onBack,
         scrollContent = false,
         actions = {
-            IconButton(onClick = onCopy) {
+            MiuixTopBarIconButton(onClick = onCopy) {
                 Material3Icon(
                     imageVector = MiuixIcons.Medium.Copy,
                     contentDescription = stringResource(R.string.shell_panel_copy),

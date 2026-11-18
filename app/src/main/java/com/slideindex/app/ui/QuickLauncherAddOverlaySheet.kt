@@ -45,6 +45,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
+import com.slideindex.app.ui.miuix.AdaptiveTopAppBar
+import com.slideindex.app.ui.miuix.MiuixGlassBackNavigationIcon
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
+
 import com.slideindex.app.R
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.data.AppInfo
@@ -468,62 +473,34 @@ private fun QuickLauncherAddOverlayHeader(
         QuickLauncherAddSubScreen.MyShortcuts -> stringResource(R.string.quick_launcher_my_shortcuts)
         QuickLauncherAddSubScreen.PresetShortcuts -> stringResource(R.string.quick_launcher_preset_shortcuts)
     }
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+    // 标准玻璃顶栏：与其它页面一致（胶囊按钮、内容滚到栏下才升起材质、常驻 band 模糊）。
+    AdaptiveTopAppBar(
+        title = title,
+        expandable = false,
+        backdrop = LocalMiuixPageBackdrop.current,
+        progressiveBlur = true,
+        defaultWindowInsetsPadding = false,
+        navigationIcon = {
             if (subScreen != QuickLauncherAddSubScreen.Main) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.cd_navigate_back),
-                        tint = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
+                MiuixGlassBackNavigationIcon(onBack)
             }
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 4.dp),
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (subScreen == QuickLauncherAddSubScreen.Main) {
-                    Text(
-                        text = stringResource(R.string.quick_launcher_multi_select_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
+        },
+        actions = {
             embedParentConfirm?.let { confirm ->
-                IconButton(onClick = confirm.onConfirm, enabled = confirm.enabled) {
+                MiuixTopBarIconButton(onClick = confirm.onConfirm, enabled = confirm.enabled) {
                     Icon(
                         imageVector = MiuixIcons.Medium.Ok,
                         contentDescription = stringResource(R.string.confirm),
-                        tint = MaterialTheme.colorScheme.onSurface,
+                        tint = MiuixTheme.colorScheme.onSurface,
                     )
                 }
             }
             if (subScreen == QuickLauncherAddSubScreen.Main) {
-                IconButton(onClick = onCreateFolder) {
+                MiuixTopBarIconButton(onClick = onCreateFolder) {
                     Icon(
-                        MiuixIcons.Medium.AddFolder,
+                        imageVector = MiuixIcons.Medium.AddFolder,
                         contentDescription = stringResource(R.string.quick_launcher_new_folder),
-                        tint = MaterialTheme.colorScheme.onSurface,
+                        tint = MiuixTheme.colorScheme.onSurface,
                     )
                 }
             }
@@ -539,34 +516,38 @@ private fun QuickLauncherAddOverlayHeader(
                 TextButton(onClick = onDone) {
                     Text(
                         stringResource(R.string.quick_launcher_add_overlay_done),
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MiuixTheme.colorScheme.primary,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
                     )
                 }
             }
-        }
-        if (showPickerChrome) {
-            MiuixExpandableSearchFieldStrip(
-                expanded = searchExpanded,
-                query = searchQuery,
-                onQueryChange = onSearchChange,
-                focusRequester = searchFocusRequester,
-                hintResId = searchHintResId,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-            )
-            if (subScreen is QuickLauncherAddSubScreen.Main || subScreen is QuickLauncherAddSubScreen.CreateFolder) {
-                AppPickerTabRow(
-                    tabs = listOf(
-                        stringResource(R.string.action_picker_tab_actions),
-                        stringResource(R.string.action_picker_tab_apps),
-                        stringResource(R.string.action_picker_tab_shortcuts),
-                    ),
-                    selectedTabIndex = selectedTab,
-                    onTabSelected = onTabSelected,
-                    contourHost = MiuixTabRowContourHost.SurfaceContainer,
+        },
+        bottomContent = {
+            if (showPickerChrome) {
+                MiuixExpandableSearchFieldStrip(
+                    expanded = searchExpanded,
+                    query = searchQuery,
+                    onQueryChange = onSearchChange,
+                    focusRequester = searchFocusRequester,
+                    hintResId = searchHintResId,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                 )
+                if (subScreen is QuickLauncherAddSubScreen.Main ||
+                    subScreen is QuickLauncherAddSubScreen.CreateFolder
+                ) {
+                    AppPickerTabRow(
+                        tabs = listOf(
+                            stringResource(R.string.action_picker_tab_actions),
+                            stringResource(R.string.action_picker_tab_apps),
+                            stringResource(R.string.action_picker_tab_shortcuts),
+                        ),
+                        selectedTabIndex = selectedTab,
+                        onTabSelected = onTabSelected,
+                        contourHost = MiuixTabRowContourHost.SurfaceContainer,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    )
+                }
             }
-        }
-    }
+        },
+    )
 }

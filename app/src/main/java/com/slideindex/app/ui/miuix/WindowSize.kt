@@ -5,7 +5,6 @@ package com.slideindex.app.ui.miuix
  * Licensed under GPL-3.0. Modified for com.slideindex.app.
  */
 
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
@@ -21,16 +20,13 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.ui.LocalMainNavContentStartInset
+import com.slideindex.app.ui.mainNavStartInset
 import com.slideindex.app.ui.theme.LocalPlatformDensity
 
 /** 宽屏阈值：与 Material [androidx.window.core.layout.WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND] 一致。 */
 private val WideScreenMinWidth: Dp = 600.dp
 
-/** 宽屏下设置列表内容的最大宽度；LazyColumn 本身保持全宽，通过 contentPadding 居中限宽。 */
-val SettingsContentMaxWidth: Dp = 720.dp
-
-/** 列表内容与屏幕边缘的基础水平间距（叠加 [WideContentBox] 的 sidePadding）。 */
-val SettingsListHorizontalPadding: Dp = 12.dp
+/** 宽屏阈值：与 Material [androidx.window.core.layout.WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND] 一致。 */
 
 /**
  * 是否宽屏：用缩放前的 [LocalPlatformDensity] 量宽，避免界面缩放与外壳/内容居中判定不一致。
@@ -43,32 +39,19 @@ fun rememberIsWideScreen(): Boolean {
 }
 
 /**
- * 宽屏内容居中：算出单侧留白 [sidePadding]，交给调用方加进 LazyColumn 的 `contentPadding`。
- * LazyColumn 保持全宽，避免两侧滚动死区（对齐 Mishka [WideContentBox]）。
+ * 二级页 LazyColumn 根节点：补水平方向 displayCutout ∪ navigationBars inset，
+ * 以及宽屏玻璃侧栏的起始缩进（对齐 Mishka：其 `horizontalCutoutPadding` 同样内含 `sidebarStartInset`）。
+ * 竖屏 / 侧栏收起时增量为 0。
  */
 @Composable
-fun WideContentBox(
-    modifier: Modifier = Modifier,
-    content: @Composable (sidePadding: Dp) -> Unit,
-) {
-    val isWideScreen = rememberIsWideScreen()
-    val structuralStartInset = LocalMainNavContentStartInset.current
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val availableWidth = (maxWidth - structuralStartInset).coerceAtLeast(0.dp)
-        val sidePadding = if (isWideScreen) {
-            ((availableWidth - SettingsContentMaxWidth) / 2).coerceAtLeast(0.dp)
+fun Modifier.horizontalCutoutPadding(applySidebarInset: Boolean = true): Modifier = this
+    .windowInsetsPadding(
+        WindowInsets.displayCutout.union(WindowInsets.navigationBars).only(WindowInsetsSides.Horizontal),
+    )
+    .then(
+        if (applySidebarInset) {
+            Modifier.mainNavStartInset(LocalMainNavContentStartInset.current)
         } else {
-            0.dp
-        }
-        content(sidePadding)
-    }
-}
-
-/**
- * 二级页 LazyColumn 根节点：补水平方向 displayCutout ∪ navigationBars inset。
- * 竖屏或无侧边缺口时为 0。主 Tab Hub 不需要（外壳已处理）。
- */
-@Composable
-fun Modifier.horizontalCutoutPadding(): Modifier = windowInsetsPadding(
-    WindowInsets.displayCutout.union(WindowInsets.navigationBars).only(WindowInsetsSides.Horizontal),
-)
+            Modifier
+        },
+    )

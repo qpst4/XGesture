@@ -23,6 +23,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
@@ -57,6 +58,11 @@ import com.slideindex.app.service.WidgetBindTrampolineActivity
 import com.slideindex.app.service.WidgetPickerTrampoline
 import com.slideindex.app.service.StashClipboardTrampolineActivity
 import com.slideindex.app.ui.navigation.MainNavHost
+import com.slideindex.app.ui.miuix.LocalTopLayer
+import top.yukonga.miuix.kmp.basic.Scaffold
+import com.slideindex.app.ui.miuix.MiuixPageBackdropBox
+import com.slideindex.app.ui.miuix.TopLayerHost
+import com.slideindex.app.ui.miuix.TopLayerState
 import com.slideindex.app.ui.navigation.NavPermissionStates
 import com.slideindex.app.ui.onboarding.OnboardingPracticeOverlay
 import com.slideindex.app.ui.onboarding.OnboardingPracticeSession
@@ -81,16 +87,9 @@ class MainActivity : ComponentActivity() {
         super.attachBaseContext(AppLocaleApplier.wrapContextIfNeeded(newBase))
     }
 
-    internal val permissionStates = NavPermissionStates(
-        overlayGranted = mutableStateOf(false),
-        notificationGranted = mutableStateOf(true),
-        usageAccessGranted = mutableStateOf(false),
-        shizukuGranted = mutableStateOf(false),
-        accessibilityGranted = mutableStateOf(false),
-        batteryOptimizationExempt = mutableStateOf(false),
-        writeSecureSettingsGranted = mutableStateOf(false),
-        notificationListenerEnabled = mutableStateOf(false)
-    )
+    /** 进程级权限状态（见 [SlideIndexApp.permissionStates]）：旋转重建不会重置，避免首页授权卡片闪现。 */
+    internal val permissionStates: NavPermissionStates
+        get() = (application as SlideIndexApp).permissionStates
 
     private val currentIntentAction = mutableStateOf<String?>(null)
     private val pendingNavRoute = mutableStateOf<String?>(null)
@@ -173,20 +172,29 @@ class MainActivity : ComponentActivity() {
                 initialValue = HomeMainSettings.from(deps.settingsRepository.readSnapshot()),
             )
             val editorScope = rememberCoroutineScope()
+            // 根层覆盖层：玻璃下拉菜单等需要盖住顶栏 / 底栏的浮层通过 TopLayer 提升到这里。
+            val topLayer = remember { TopLayerState() }
             Box(modifier = Modifier.fillMaxSize()) {
                 CompositionLocalProvider(
                     LocalBareSettingIcons provides !homeMainSettings.settingIconPlateEnabled,
+                    LocalTopLayer provides topLayer,
                 ) {
-                    MainNavHost(
-                        activity = this@MainActivity,
-                        deps = deps,
-                        permissionStates = permissionStates,
-                        initialIntentAction = initialIntentAction,
-                        initialNavRoute = initialNavRoute,
-                        showUpdateFromIntent = showUpdate,
-                        onNavRouteConsumed = { pendingNavRoute.value = null },
-                        onShowUpdateConsumed = { pendingShowUpdate.value = false }
-                    )
+                    // 根部 miuix Scaffold：它是最外层 Scaffold，`GlassDialog`/`GlassBottomSheet`
+                    // 的弹窗宿主挂在它的 popup 层上；popup 层由 ScaffoldLayout 在 body 之后绘制，
+                    // 因此弹层**不在**下面这层整页录制里，采样整页不会再自采样（迁移指南 §2.1/§2.2）。
+                    Scaffold(modifier = Modifier.fillMaxSize()) {
+                        // 整页采样层：录制整屏（正文 + 顶栏 + 底栏），供玻璃弹层 / 浮层采样。
+                            MainNavHost(
+                                    activity = this@MainActivity,
+                                    deps = deps,
+                                    permissionStates = permissionStates,
+                                    initialIntentAction = initialIntentAction,
+                                    initialNavRoute = initialNavRoute,
+                                    showUpdateFromIntent = showUpdate,
+                                    onNavRouteConsumed = { pendingNavRoute.value = null },
+                                    onShowUpdateConsumed = { pendingShowUpdate.value = false }
+                            )
+                    }
                 }
                 if (FreeWindowLayoutEditorSession.isOpen) {
                     FreeWindowLayoutEditorOverlay(
@@ -226,6 +234,7 @@ class MainActivity : ComponentActivity() {
                         onClose = { OnboardingPracticeSession.close() },
                     )
                 }
+                TopLayerHost(topLayer)
             }
         }
     }

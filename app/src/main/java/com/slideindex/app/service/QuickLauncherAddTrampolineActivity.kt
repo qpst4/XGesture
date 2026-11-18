@@ -8,6 +8,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import com.slideindex.app.ui.miuix.MiuixTopLayerRoot
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.CompositionLocalProvider
@@ -54,17 +55,19 @@ class QuickLauncherAddTrampolineActivity : ComponentActivity() {
         }
 
         setContent {
-            var appSettings by remember { mutableStateOf(deps.settingsRepository.readSnapshot()) }
-            LaunchedEffect(Unit) {
-                deps.settingsRepository.settings.collect { appSettings = it }
-            }
-            CompositionLocalProvider(LocalAppDependencies provides deps) {
-                ModuleTheme(settings = appSettings) {
-                    QuickLauncherAddFlowScreen(
-                        panelId = panelId,
-                        viewModel = viewModel,
-                        onExit = { finishPicker() },
-                    )
+            MiuixTopLayerRoot {
+                var appSettings by remember { mutableStateOf(deps.settingsRepository.readSnapshot()) }
+                LaunchedEffect(Unit) {
+                    deps.settingsRepository.settings.collect { appSettings = it }
+                }
+                CompositionLocalProvider(LocalAppDependencies provides deps) {
+                    ModuleTheme(settings = appSettings) {
+                        QuickLauncherAddFlowScreen(
+                            panelId = panelId,
+                            viewModel = viewModel,
+                            onExit = { finishPicker() },
+                        )
+                    }
                 }
             }
         }

@@ -15,6 +15,7 @@ import com.slideindex.app.overlay.TaskSwitcherMenuItem
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.CornerSlotSubMenuConfig
 import com.slideindex.app.ui.gesturepicker.launchShortcutDisplayLabel
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
@@ -25,6 +26,7 @@ import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Ok
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.glass.Delete
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -61,7 +63,7 @@ fun CornerGestureSlotSettingsScreen(
         pageHint = stringResource(R.string.corner_gesture_slots_entry_desc),
         onBack = onBack,
         actions = {
-            IconButton(onClick = onSave) {
+            MiuixTopBarIconButton(onClick = onSave) {
                 Icon(
                     imageVector = MiuixIcons.Medium.Ok,
                     contentDescription = stringResource(R.string.fv_ring_launcher_done),
@@ -141,7 +143,7 @@ fun CornerGestureSlotSettingsScreen(
                                     trailingContent = {
                                         IconButton(onClick = { onRemoveSubMenuItem(index) }) {
                                             Icon(
-                                                imageVector = MiuixIcons.Medium.Delete,
+                                                imageVector = MiuixIcons.Glass.Delete,
                                                 contentDescription = subMenuRemoveItem,
                                                 tint = MaterialTheme.colorScheme.error
                                             )

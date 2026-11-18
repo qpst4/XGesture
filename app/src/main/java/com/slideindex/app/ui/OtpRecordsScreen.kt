@@ -51,7 +51,7 @@ import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
+import com.slideindex.app.ui.miuix.MiuixGlassIconDropdown
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.text.DateFormat
@@ -286,20 +286,16 @@ private fun OtpRecordsFilterSortActions(
             ),
         )
     }
-    OverlayIconDropdownMenu(entry = filterEntry) {
-        Icon(
-            Icons.Default.FilterList,
-            contentDescription = stringResource(R.string.otp_records_filter),
-            tint = MiuixTheme.colorScheme.onBackground,
-        )
-    }
-    OverlayIconDropdownMenu(entry = sortEntry) {
-        Icon(
-            Icons.Default.SwapVert,
-            contentDescription = stringResource(R.string.otp_records_sort),
-            tint = MiuixTheme.colorScheme.onBackground,
-        )
-    }
+    MiuixGlassIconDropdown(
+        entries = listOf(filterEntry),
+        icon = Icons.Default.FilterList,
+        contentDescription = stringResource(R.string.otp_records_filter),
+    )
+    MiuixGlassIconDropdown(
+        entries = listOf(sortEntry),
+        icon = Icons.Default.SwapVert,
+        contentDescription = stringResource(R.string.otp_records_sort),
+    )
 }
 
 @Composable

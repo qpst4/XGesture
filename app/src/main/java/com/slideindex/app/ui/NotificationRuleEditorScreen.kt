@@ -31,6 +31,7 @@ import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.viewmodel.NotificationHistoryViewModel
 import androidx.compose.material.icons.Icons
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.icon.extended.Ok
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -111,7 +112,7 @@ fun NotificationRuleEditorScreen(
         title = title,
         onBack = onBack,
         actions = {
-            top.yukonga.miuix.kmp.basic.IconButton(onClick = saveRule) {
+            MiuixTopBarIconButton(onClick = saveRule) {
                 top.yukonga.miuix.kmp.basic.Icon(
                     imageVector = MiuixIcons.Medium.Ok,
                     contentDescription = stringResource(R.string.confirm),

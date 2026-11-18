@@ -31,7 +31,7 @@ import com.slideindex.app.settings.HomeMainSettings
 import com.slideindex.app.settings.KeyboardTriggerBehavior
 import com.slideindex.app.settings.TopAppBarBlurStyle
 import com.slideindex.app.ui.HomeLeadingIcons
-import com.slideindex.app.ui.miuix.MiuixBackNavigationIcon
+import com.slideindex.app.ui.miuix.MiuixGlassBackNavigationIcon
 import com.slideindex.app.ui.miuix.MiuixListScaffold
 import com.slideindex.app.ui.miuix.MiuixListSettingsCard
 import top.yukonga.miuix.kmp.basic.SmallTitle
@@ -150,7 +150,7 @@ fun InteractionAppearanceSettingsScreen(
         title = stringResource(R.string.interaction_appearance_settings_title),
         pageHint = stringResource(R.string.interaction_appearance_settings_entry_desc),
         showPageHintCard = true,
-        navigationIcon = { MiuixBackNavigationIcon(onBack) },
+        navigationIcon = { MiuixGlassBackNavigationIcon(onBack) },
     ) {
         item(key = "theme_section") {
             SmallTitle(

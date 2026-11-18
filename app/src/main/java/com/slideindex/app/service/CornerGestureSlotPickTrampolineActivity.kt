@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import com.slideindex.app.ui.miuix.MiuixTopLayerRoot
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -59,20 +60,22 @@ class CornerGestureSlotPickTrampolineActivity : ComponentActivity() {
         }
 
         setContent {
-            var appSettings by remember { mutableStateOf(AppSettings()) }
-            LaunchedEffect(corner, slotIndex) {
-                appSettings = deps.settingsRepository.settings.first()
-            }
+            MiuixTopLayerRoot {
+                var appSettings by remember { mutableStateOf(AppSettings()) }
+                LaunchedEffect(corner, slotIndex) {
+                    appSettings = deps.settingsRepository.settings.first()
+                }
 
-            CompositionLocalProvider(LocalAppDependencies provides deps) {
-                com.slideindex.app.ui.miuix.theme.ModuleTheme(settings = appSettings) {
-                    CornerGestureSlotEditorHost(
-                        corner = corner,
-                        slotIndex = slotIndex,
-                        cornerTitle = getString(cornerTitleRes),
-                        onExit = { finishPicker() },
-                        settingsRepository = deps.settingsRepository
-                    )
+                CompositionLocalProvider(LocalAppDependencies provides deps) {
+                    com.slideindex.app.ui.miuix.theme.ModuleTheme(settings = appSettings) {
+                        CornerGestureSlotEditorHost(
+                            corner = corner,
+                            slotIndex = slotIndex,
+                            cornerTitle = getString(cornerTitleRes),
+                            onExit = { finishPicker() },
+                            settingsRepository = deps.settingsRepository
+                        )
+                    }
                 }
             }
         }

@@ -64,6 +64,7 @@ import com.slideindex.app.ui.miuix.miuixGroupedCardItem
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import com.slideindex.app.settings.gestureConfigSide
 import com.slideindex.app.settings.triggerCollectionEntries
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingsCardScope
@@ -74,6 +75,7 @@ import com.slideindex.app.ui.settings.components.SwitchNavigationTrailingContent
 import kotlinx.coroutines.delay
 import top.yukonga.miuix.kmp.icon.extended.Copy
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.glass.Close
 
 private const val TRIGGER_PAIR_ENTER_MS = 260
 private const val TRIGGER_PAIR_EXIT_MS = 200
@@ -193,14 +195,14 @@ fun TriggerCollectionScreen(
         onBack = onBack,
         actions = {
             if (landscapeMode) {
-                IconButton(onClick = { showCopyPortraitConfirm = true }) {
+                MiuixTopBarIconButton(onClick = { showCopyPortraitConfirm = true }) {
                     Icon(
                         MiuixIcons.Medium.Copy,
                         contentDescription = stringResource(R.string.trigger_copy_portrait),
                     )
                 }
             }
-            IconButton(
+            MiuixTopBarIconButton(
                 onClick = {
                     val nextLandscape = !(manualLandscapeDisplay ?: systemLandscape)
                     manualLandscapeDisplay = nextLandscape
@@ -235,7 +237,7 @@ fun TriggerCollectionScreen(
                     managedAppPackageRows(
                         keyPrefix = "profile-bound-apps",
                         entries = profileScope.boundAppEntries,
-                        actionIcon = Icons.Default.Close,
+                        actionIcon = MiuixIcons.Glass.Close,
                         actionDescription = { stringResource(R.string.gesture_app_profiles_remove) },
                         missingIcon = Icons.Default.Block,
                         onAction = { entry -> profileScope.onUnbindApp(entry.packageName) },

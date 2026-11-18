@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import com.slideindex.app.ui.miuix.MiuixTopLayerRoot
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -61,47 +62,49 @@ class ShellCommandEditorTrampolineActivity : ComponentActivity() {
         overridePendingTransition(0, 0)
 
         setContent {
-            val scope = rememberCoroutineScope()
-            var appSettings by remember { mutableStateOf(AppSettings()) }
-            var dismissRequest by remember { mutableStateOf<(() -> Unit)?>(null) }
+            MiuixTopLayerRoot {
+                val scope = rememberCoroutineScope()
+                var appSettings by remember { mutableStateOf(AppSettings()) }
+                var dismissRequest by remember { mutableStateOf<(() -> Unit)?>(null) }
 
-            LaunchedEffect(Unit) {
-                appSettings = deps.settingsRepository.settings.first()
-            }
+                LaunchedEffect(Unit) {
+                    appSettings = deps.settingsRepository.settings.first()
+                }
 
-            BackHandler(enabled = dismissRequest != null) {
-                dismissRequest?.invoke()
-            }
+                BackHandler(enabled = dismissRequest != null) {
+                    dismissRequest?.invoke()
+                }
 
-            ModuleTheme(settings = appSettings) {
-                CompositionLocalProvider(LocalAppDependencies provides deps) {
-                    ShellCommandEditorOverlaySheet(
-                        onDismissComplete = { finishPicker() },
-                        onWindowReady = { ShellCommandEditorTrampoline.runPrepareIfNeeded() },
-                        initial = existing,
-                        shizukuGranted = shizukuGranted,
-                        onSave = { saved ->
-                            ShellCommandEditorTrampoline.onItemSave(saved)
-                            finishPicker()
-                        },
-                        onDelete = if (canDelete) {
-                            {
-                                ShellCommandEditorTrampoline.onItemDelete()
+                ModuleTheme(settings = appSettings) {
+                    CompositionLocalProvider(LocalAppDependencies provides deps) {
+                        ShellCommandEditorOverlaySheet(
+                            onDismissComplete = { finishPicker() },
+                            onWindowReady = { ShellCommandEditorTrampoline.runPrepareIfNeeded() },
+                            initial = existing,
+                            shizukuGranted = shizukuGranted,
+                            onSave = { saved ->
+                                ShellCommandEditorTrampoline.onItemSave(saved)
                                 finishPicker()
-                            }
-                        } else {
-                            null
-                        },
-                        onTest = { command, callback ->
-                            scope.launch {
-                                val outcome = withContext(Dispatchers.IO) {
-                                    ShellCommandRunner.execute(this@ShellCommandEditorTrampolineActivity, command)
+                            },
+                            onDelete = if (canDelete) {
+                                {
+                                    ShellCommandEditorTrampoline.onItemDelete()
+                                    finishPicker()
                                 }
-                                callback(outcome.exitCode, outcome.output)
-                            }
-                        },
-                        registerBackHandler = { dismissRequest = it }
-                    )
+                            } else {
+                                null
+                            },
+                            onTest = { command, callback ->
+                                scope.launch {
+                                    val outcome = withContext(Dispatchers.IO) {
+                                        ShellCommandRunner.execute(this@ShellCommandEditorTrampolineActivity, command)
+                                    }
+                                    callback(outcome.exitCode, outcome.output)
+                                }
+                            },
+                            registerBackHandler = { dismissRequest = it }
+                        )
+                    }
                 }
             }
         }

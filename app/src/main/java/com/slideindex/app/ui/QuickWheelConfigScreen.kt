@@ -25,7 +25,9 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import com.slideindex.app.ui.miuix.MiuixGlassDropdownMenu
+import com.slideindex.app.ui.miuix.MiuixGlassDropdownPreference
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -56,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
@@ -1217,80 +1220,16 @@ private fun <T> QuickWheelDropdownRow(
     labelOf: @Composable (T) -> String,
     onSelect: (T) -> Unit,
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    // 只取按下位置的横向坐标：菜单横向落在「点击处」；纵向交给菜单自己紧贴本行上/下边缘展开
-    // （若把按下点的纵坐标也加进去，向下展开时会与本行多出一段距离）。
-    var anchorX by remember { mutableStateOf(0.dp) }
-    val density = LocalDensity.current
-    val interact = LocalQuickWheelAppearanceInteract.current
-    Box(
-        modifier = Modifier
-            .appearanceInteract(interact)
-            .pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val down = awaitFirstDown(requireUnconsumed = false)
-                        anchorX = with(density) { down.position.x.toDp() }
-                    }
-                }
-            },
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = true }
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Text(
-                text = labelOf(value),
-                style = MaterialTheme.typography.bodyMedium,
-                color = QuickWheelAccent,
-            )
-            Icon(
-                imageVector = Icons.Default.ArrowDropDown,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            // 纵向不加偏移：菜单自己紧贴本行上/下边缘展开，避免向下展开时出现空隙。
-            offset = DpOffset(anchorX, 0.dp),
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(labelOf(option)) },
-                    onClick = {
-                        onSelect(option)
-                        expanded = false
-                    },
-                    trailingIcon = {
-                        if (option == value) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = null,
-                                tint = QuickWheelAccent,
-                            )
-                        }
-                    },
-                )
-            }
-        }
-    }
+    // 行内选值改用 miuix 的 GlassDropdownPreference（对齐 Mishka）：当前值显示在行尾，
+    // 点击展开玻璃下拉面板。
+    val labels = options.map { labelOf(it) }
+    MiuixGlassDropdownPreference(
+        title = title,
+        summary = description,
+        items = labels,
+        selectedIndex = options.indexOf(value).coerceAtLeast(0),
+        onSelectedIndexChange = { index -> options.getOrNull(index)?.let(onSelect) },
+    )
 }
 
 /** 开关行（本页与「呼出形态」页共用）：标题 + 说明 + 右侧开关。 */

@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import com.slideindex.app.ui.miuix.MiuixTopLayerRoot
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -72,88 +73,90 @@ class RingLauncherSlotConfigActivity : ComponentActivity() {
         RingLauncherOverlayWindow.suspendForSlotIconEditor()
 
         setContent {
-            val scope = rememberCoroutineScope()
-            var appSettings by remember { mutableStateOf(deps.settingsRepository.readSnapshot()) }
-            var apps by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
-            var iconEditing by remember { mutableStateOf(false) }
-            var sheetBack by remember { mutableStateOf<(() -> Unit)?>(null) }
+            MiuixTopLayerRoot {
+                val scope = rememberCoroutineScope()
+                var appSettings by remember { mutableStateOf(deps.settingsRepository.readSnapshot()) }
+                var apps by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
+                var iconEditing by remember { mutableStateOf(false) }
+                var sheetBack by remember { mutableStateOf<(() -> Unit)?>(null) }
 
-            LaunchedEffect(axis, slotIndex) {
-                appSettings = deps.settingsRepository.settings.first()
-                apps = PickerApps.fromCached(
-                    this@RingLauncherSlotConfigActivity,
-                    deps.appRepository,
-                    appSettings.freezerAppPackages,
-                )
-                // 图标编辑保存后回来，重新读一次以刷新预览。
-                appSettings = deps.settingsRepository.settings.first()
-            }
+                LaunchedEffect(axis, slotIndex) {
+                    appSettings = deps.settingsRepository.settings.first()
+                    apps = PickerApps.fromCached(
+                        this@RingLauncherSlotConfigActivity,
+                        deps.appRepository,
+                        appSettings.freezerAppPackages,
+                    )
+                    // 图标编辑保存后回来，重新读一次以刷新预览。
+                    appSettings = deps.settingsRepository.settings.first()
+                }
 
-            BackHandler(enabled = iconEditing) { iconEditing = false }
-            BackHandler(enabled = !iconEditing) {
-                val back = sheetBack
-                if (back != null) back() else finishPicker()
-            }
+                BackHandler(enabled = iconEditing) { iconEditing = false }
+                BackHandler(enabled = !iconEditing) {
+                    val back = sheetBack
+                    if (back != null) back() else finishPicker()
+                }
 
-            CompositionLocalProvider(LocalAppDependencies provides deps) {
-                ModuleTheme(settings = appSettings) {
-                    if (iconEditing) {
-                        val fvSettings = appSettings.fvRingLauncherFor(axis)
-                        val slotLabel = fvSettings.itemAt(slotIndex)
-                            ?.let { it.label.ifBlank { it.payload } }
-                            .orEmpty()
-                        RingLauncherSlotIconEditorHost(
-                            slotLabel = slotLabel,
-                            initialOverride = fvSettings.iconOverrideAt(slotIndex),
-                            onBack = { iconEditing = false },
-                            onSave = { override ->
-                                scope.launch {
-                                    deps.settingsRepository.setFvRingLauncherSlotIconOverride(
-                                        axis = axis,
-                                        index = slotIndex,
-                                        override = override,
+                CompositionLocalProvider(LocalAppDependencies provides deps) {
+                    ModuleTheme(settings = appSettings) {
+                        if (iconEditing) {
+                            val fvSettings = appSettings.fvRingLauncherFor(axis)
+                            val slotLabel = fvSettings.itemAt(slotIndex)
+                                ?.let { it.label.ifBlank { it.payload } }
+                                .orEmpty()
+                            RingLauncherSlotIconEditorHost(
+                                slotLabel = slotLabel,
+                                initialOverride = fvSettings.iconOverrideAt(slotIndex),
+                                onBack = { iconEditing = false },
+                                onSave = { override ->
+                                    scope.launch {
+                                        deps.settingsRepository.setFvRingLauncherSlotIconOverride(
+                                            axis = axis,
+                                            index = slotIndex,
+                                            override = override,
+                                        )
+                                        RingLauncherOverlayWindow.refreshFromSettings()
+                                        appSettings = deps.settingsRepository.settings.first()
+                                        iconEditing = false
+                                    }
+                                },
+                            )
+                        } else {
+                            RingLauncherSlotConfigSheet(
+                                slotIndex = slotIndex,
+                                currentItem = appSettings.fvRingLauncherFor(axis).itemAt(slotIndex),
+                                apps = apps,
+                                activityShortcuts = appSettings.activityShortcuts,
+                                shellCommands = appSettings.shellCommands,
+                                quickLauncherPanels = appSettings.quickLauncherPanels,
+                                onDismiss = { finishPicker() },
+                                onSelectItem = { selectedItem ->
+                                    scope.launch {
+                                        // 与浮层版一致：清空槽位时落一个空 APP 条目。
+                                        val itemToSet = selectedItem
+                                            ?: QuickLauncherItem(QuickLauncherItemType.APP, "", "")
+                                        deps.settingsRepository.setFvRingLauncherSlot(
+                                            axis = axis,
+                                            index = slotIndex,
+                                            item = itemToSet,
+                                        )
+                                        RingLauncherOverlayWindow.refreshFromSettings()
+                                        finishPicker()
+                                    }
+                                },
+                                onOpenCustomIconEditor = { iconEditing = true },
+                                launchCreateShortcut = { host, onResult ->
+                                    CreateShortcutTrampoline.launch(
+                                        context = this@RingLauncherSlotConfigActivity,
+                                        host = host,
+                                        onPrepare = {},
+                                        onResult = onResult,
                                     )
-                                    RingLauncherOverlayWindow.refreshFromSettings()
-                                    appSettings = deps.settingsRepository.settings.first()
-                                    iconEditing = false
-                                }
-                            },
-                        )
-                    } else {
-                        RingLauncherSlotConfigSheet(
-                            slotIndex = slotIndex,
-                            currentItem = appSettings.fvRingLauncherFor(axis).itemAt(slotIndex),
-                            apps = apps,
-                            activityShortcuts = appSettings.activityShortcuts,
-                            shellCommands = appSettings.shellCommands,
-                            quickLauncherPanels = appSettings.quickLauncherPanels,
-                            onDismiss = { finishPicker() },
-                            onSelectItem = { selectedItem ->
-                                scope.launch {
-                                    // 与浮层版一致：清空槽位时落一个空 APP 条目。
-                                    val itemToSet = selectedItem
-                                        ?: QuickLauncherItem(QuickLauncherItemType.APP, "", "")
-                                    deps.settingsRepository.setFvRingLauncherSlot(
-                                        axis = axis,
-                                        index = slotIndex,
-                                        item = itemToSet,
-                                    )
-                                    RingLauncherOverlayWindow.refreshFromSettings()
-                                    finishPicker()
-                                }
-                            },
-                            onOpenCustomIconEditor = { iconEditing = true },
-                            launchCreateShortcut = { host, onResult ->
-                                CreateShortcutTrampoline.launch(
-                                    context = this@RingLauncherSlotConfigActivity,
-                                    host = host,
-                                    onPrepare = {},
-                                    onResult = onResult,
-                                )
-                            },
-                            onBackHandlerReady = { handler -> sheetBack = handler },
-                            pageMode = true,
-                        )
+                                },
+                                onBackHandlerReady = { handler -> sheetBack = handler },
+                                pageMode = true,
+                            )
+                        }
                     }
                 }
             }

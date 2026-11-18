@@ -14,7 +14,7 @@ import com.slideindex.app.ui.gesturepicker.ringerModeLabel
 import com.slideindex.app.ui.gesturepicker.toggleModeLabel
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
-import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
+import com.slideindex.app.ui.miuix.MiuixGlassDropdownMenu
 
 /** 菜单里的一个模式选项：显示文案 + 是否在当前绑定上打勾 + 选它得到的动作。 */
 data class ActionModeOption(
@@ -83,14 +83,9 @@ fun ActionModeMenu(
             onClick = { onPick(option.action) },
         )
     }
-    WindowIconDropdownMenu(
+    MiuixGlassDropdownMenu(
         entry = DropdownEntry(items = items),
         modifier = modifier,
-        minWidth = 58.dp,
-        minHeight = 58.dp,
-        // 透明底：锚点只负责"可点 + 定位"，视觉仍由格子自己画。
-        backgroundColor = Color.Transparent,
-        cornerRadius = 17.dp,
     ) {
         content()
     }

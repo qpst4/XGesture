@@ -22,12 +22,12 @@ import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.launcher.QuickLauncherPanel
 import com.slideindex.app.launcher.QuickLauncherPanelDefaults
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsGroupedCardItems
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Ok
 
@@ -73,7 +73,7 @@ fun GestureQuickLauncherActionScreen(
         onBack = onBack,
         overlayMode = overlayMode,
         actions = {
-            IconButton(
+            MiuixTopBarIconButton(
                 // 没有面板可选时禁止确认：否则会写入 panelId="" 的绑定（运行期等价于第一个面板，
                 // 面板顺序一变就漂移，用户看着像"设了没反应"）。
                 enabled = selectedPanelId.isNotBlank(),

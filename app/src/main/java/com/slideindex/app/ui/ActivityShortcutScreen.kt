@@ -69,7 +69,7 @@ import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
+import com.slideindex.app.ui.miuix.MiuixGlassIconDropdown
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -530,13 +530,12 @@ private fun ActivityShortcutSavedRowContent(
                     tint = MiuixTheme.colorScheme.primary
                 )
             }
-            OverlayIconDropdownMenu(entry = menuEntry) {
-                MiuixIcon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = moreMenuDesc,
-                    tint = MiuixTheme.colorScheme.onBackground
-                )
-            }
+            MiuixGlassIconDropdown(
+                entries = listOf(menuEntry),
+                icon = Icons.Default.MoreVert,
+                contentDescription = moreMenuDesc,
+                capsule = false,
+            )
         }
     )
 }

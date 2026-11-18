@@ -38,6 +38,8 @@ fun MainScreen(
     privilegeMode: PrivilegeMode,
     privilegedAccessGranted: Boolean,
     rootAccessGranted: Boolean,
+    /** ???????????????;??????????,??????????? */
+    privilegeStateKnown: Boolean = true,
     notificationGranted: Boolean,
     shizukuGranted: Boolean,
     accessibilityGranted: Boolean,
@@ -120,7 +122,7 @@ fun MainScreen(
                 ),
             )
         }
-        if (privilegeMode == PrivilegeMode.SHIZUKU && !shizukuGranted) {
+        if (privilegeStateKnown && privilegeMode == PrivilegeMode.SHIZUKU && !shizukuGranted) {
             add(
                 PendingPermissionItem(
                     title = stringResource(R.string.permission_shizuku_title),
@@ -130,7 +132,7 @@ fun MainScreen(
                 ),
             )
         }
-        if (privilegeMode == PrivilegeMode.ROOT && !rootAccessGranted) {
+        if (privilegeStateKnown && privilegeMode == PrivilegeMode.ROOT && !rootAccessGranted) {
             add(
                 PendingPermissionItem(
                     title = stringResource(R.string.permission_root_title),

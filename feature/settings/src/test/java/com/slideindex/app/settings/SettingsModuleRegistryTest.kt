@@ -124,7 +124,8 @@ class SettingsModuleRegistryTest {
         // 704 = 701 + 3：悬浮指针「松手点击」模式 / 保持摇杆两个键（FLOATING_POINTER）
         //            + 取图点击动作 `pick_image_tap_action`（无匹配前缀，落 GENERAL）。
         // 705 = 704 + 1：任务切换器“X”按钮关闭模式 `task_switcher_close_mode`（无匹配前缀，落 GENERAL）。
-        const val EXPECTED_TOTAL_KEYS = 706
+        // 707 = 706 + 1：宽屏玻璃侧栏展开态 `bottom_nav_rail_expanded`（THEME_UI）。
+        const val EXPECTED_TOTAL_KEYS = 707
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
             SettingsModule.EDGE_GESTURE to 85,
@@ -146,7 +147,7 @@ class SettingsModuleRegistryTest {
             SettingsModule.FREEZER to 6,
             SettingsModule.SHELL to 1,
             SettingsModule.ACTIVITY_SHORTCUTS to 3,
-            SettingsModule.THEME_UI to 19,
+            SettingsModule.THEME_UI to 20,
             SettingsModule.GENERAL to 37,
         )
     }

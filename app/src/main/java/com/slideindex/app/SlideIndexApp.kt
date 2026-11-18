@@ -43,6 +43,24 @@ import kotlinx.coroutines.launch
 
 @HiltAndroidApp
 class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
+    /**
+     * 进程级权限状态：放在 Application 而不是 Activity。
+     *
+     * 之前它是 `MainActivity` 的字段，旋转/配置变更重建 Activity 时会重新初始化为 false，
+     * 首页的「待完成授权」红色卡片会先闪一下，等 `refreshPermissionState()` 回填后再消失。
+     * 提到进程级后，重建复用同一份已授权状态。
+     */
+    val permissionStates = com.slideindex.app.ui.navigation.NavPermissionStates(
+        overlayGranted = androidx.compose.runtime.mutableStateOf(false),
+        notificationGranted = androidx.compose.runtime.mutableStateOf(true),
+        usageAccessGranted = androidx.compose.runtime.mutableStateOf(false),
+        shizukuGranted = androidx.compose.runtime.mutableStateOf(false),
+        accessibilityGranted = androidx.compose.runtime.mutableStateOf(false),
+        batteryOptimizationExempt = androidx.compose.runtime.mutableStateOf(false),
+        writeSecureSettingsGranted = androidx.compose.runtime.mutableStateOf(false),
+        notificationListenerEnabled = androidx.compose.runtime.mutableStateOf(false),
+    )
+
     private companion object {
         /** 启动期重活延后时间，给前台服务 startForeground 留出窗口。 */
         const val STARTUP_HEAVY_TASK_DELAY_MS = 1_500L

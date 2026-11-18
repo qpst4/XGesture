@@ -6,7 +6,7 @@ plugins {
 android {
     namespace = "com.slideindex.app.baselineprofile"
     compileSdk = 37
-    compileSdkMinor = 1
+    compileSdkMinor = 2
 
     defaultConfig {
         minSdk = libs.versions.minSdk.get().toInt()

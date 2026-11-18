@@ -8,6 +8,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -146,14 +147,29 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
         } else {
             gestureSettings.keyboardTriggerNarrowPercentPortrait
         }
-        var privilegedAccessGranted by remember { mutableStateOf(false) }
-        var rootAccessGranted by remember { mutableStateOf(false) }
+        // 用 rememberSaveable：旋转/配置变更重建 Activity 时保留上次判定结果，
+        // 否则 `remember { false }` 会先渲染一帧「Root 未就绪」红卡片，再等 IO 检查回填。
+        var privilegedAccessGranted by rememberSaveable { mutableStateOf(false) }
+        var rootAccessGranted by rememberSaveable { mutableStateOf(false) }
+        var privilegeStateKnown by rememberSaveable { mutableStateOf(false) }
         LaunchedEffect(appSettings.privilegeMode, permissions.shizukuGranted) {
             withContext(Dispatchers.IO) {
-                privilegedAccessGranted = com.slideindex.app.util.TaskManagerUtil.hasPrivilegedAccess()
+                // 重建 Activity 后第一次查询经常赶上 root 服务/守护进程重建，会瞬时返回 false。
+                // 这里重试几次，并且「已就绪」不因单次 false 回退，避免红卡片闪一下又消失。
+                var privileged = privilegedAccessGranted
+                if (!privileged) {
+                    repeat(3) { attempt ->
+                        if (com.slideindex.app.util.TaskManagerUtil.hasPrivilegedAccess()) {
+                            privileged = true
+                            return@repeat
+                        }
+                        if (attempt < 2) Thread.sleep(200)
+                    }
+                }
+                privilegedAccessGranted = privileged
+                privilegeStateKnown = true
                 rootAccessGranted = when (appSettings.privilegeMode) {
-                    com.slideindex.app.settings.PrivilegeMode.ROOT ->
-                        com.slideindex.app.util.TaskManagerUtil.hasPrivilegedAccess()
+                    com.slideindex.app.settings.PrivilegeMode.ROOT -> privileged
                     com.slideindex.app.settings.PrivilegeMode.SHIZUKU -> true
                 }
             }
@@ -164,6 +180,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             privilegeMode = appSettings.privilegeMode,
             privilegedAccessGranted = privilegedAccessGranted,
             rootAccessGranted = rootAccessGranted,
+            privilegeStateKnown = privilegeStateKnown,
             notificationGranted = permissions.notificationGranted,
             shizukuGranted = permissions.shizukuGranted,
             accessibilityGranted = permissions.accessibilityGranted,

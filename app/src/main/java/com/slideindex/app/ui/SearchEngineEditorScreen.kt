@@ -66,6 +66,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.material.icons.Icons
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
@@ -235,7 +236,7 @@ fun SearchEngineEditorScreen(
         ),
         onBack = onBack,
         actions = {
-            top.yukonga.miuix.kmp.basic.IconButton(onClick = saveAction) {
+            MiuixTopBarIconButton(onClick = saveAction) {
                 top.yukonga.miuix.kmp.basic.Icon(
                     imageVector = MiuixIcons.Medium.Ok,
                     contentDescription = stringResource(R.string.search_engine_save),

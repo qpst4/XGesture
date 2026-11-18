@@ -95,6 +95,8 @@ data class AppSettings(
     val uiDensityScale: Float = UiDensityScaleLimits.DEFAULT_SCALE,
     /** 底栏内容模式（图标+文字 / 仅图标）。 */
     val bottomNavStyleId: Int = BottomNavStyle.FLOATING_NAV.id,
+    /** 宽屏玻璃侧栏是否展开（上次状态）。 */
+    val bottomNavRailExpanded: Boolean = false,
     val bottomNavModeId: Int = BottomNavMode.ICON_AND_TEXT.id,
     /** 是否启用底部导航液态玻璃（backdrop 采样）；关闭时底栏为纯色。 */
     val bottomNavGlassEnabled: Boolean = true,

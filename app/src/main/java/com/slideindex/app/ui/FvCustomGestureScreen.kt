@@ -31,6 +31,9 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.glass.Delete
+import top.yukonga.miuix.kmp.icon.glass.Add
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -60,6 +63,7 @@ import com.slideindex.app.gesture.isEffective
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.picker.ActivityShortcutPickActivityScreen
 import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
 import com.slideindex.app.ui.picker.MyShortcutsFolderScreen
@@ -432,8 +436,8 @@ private fun FvCustomGestureList(
         pageHint = stringResource(R.string.fv_custom_gesture_summary),
         onBack = onBack,
         actions = {
-            IconButton(onClick = onAdd) {
-                Icon(Icons.Default.Add, contentDescription = addLabel)
+            MiuixTopBarIconButton(onClick = onAdd) {
+                Icon(MiuixIcons.Glass.Add, contentDescription = addLabel)
             }
         },
     ) {
@@ -487,7 +491,7 @@ private fun FvCustomGestureList(
                                     Icon(Icons.Default.Edit, contentDescription = editLabel)
                                 }
                                 IconButton(onClick = { onDelete(row) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = deleteLabel)
+                                    Icon(MiuixIcons.Glass.Delete, contentDescription = deleteLabel)
                                 }
                             }
                         },

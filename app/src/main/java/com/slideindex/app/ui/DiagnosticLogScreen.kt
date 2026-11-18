@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.slideindex.app.R
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingsCardScope
@@ -45,8 +46,12 @@ import com.slideindex.app.util.LocalCrashHandler
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
+import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Share
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.glass.Share
+import top.yukonga.miuix.kmp.icon.glass.Delete
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun DiagnosticLogListScreen(
@@ -77,17 +82,18 @@ fun DiagnosticLogListScreen(
         onBack = onBack,
         hintResId = R.string.diagnostic_log_search_hint,
         extraActions = {
-            IconButton(onClick = { DiagnosticReportExporter.shareOrCopy(context) }) {
+            MiuixTopBarIconButton(onClick = { DiagnosticReportExporter.shareOrCopy(context) }) {
                 Icon(
-                    imageVector = MiuixIcons.Medium.Share,
+                    imageVector = MiuixIcons.Glass.Share,
                     contentDescription = stringResource(R.string.diagnostic_log_share)
                 )
             }
             if (crashReports.isNotEmpty()) {
-                IconButton(onClick = { showClearCrashesConfirm = true }) {
-                    Text(
-                        text = stringResource(R.string.diagnostic_log_clear),
-                        style = MaterialTheme.typography.bodyMedium,
+                MiuixTopBarIconButton(onClick = { showClearCrashesConfirm = true }) {
+                    Icon(
+                        imageVector = MiuixIcons.Glass.Delete,
+                        contentDescription = stringResource(R.string.diagnostic_log_clear),
+                        tint = MiuixTheme.colorScheme.error,
                     )
                 }
             }
@@ -184,12 +190,12 @@ fun DiagnosticLogDetailScreen(
         onBack = onBack,
         scrollContent = true,
         actions = {
-            IconButton(
+            MiuixTopBarIconButton(
                 onClick = { DiagnosticReportExporter.shareCrashReport(context, fileName) },
                 enabled = !detail.loading && detail.text.isNotBlank(),
             ) {
                 Icon(
-                    imageVector = MiuixIcons.Medium.Share,
+                    imageVector = MiuixIcons.Glass.Share,
                     contentDescription = stringResource(R.string.diagnostic_log_share),
                 )
             }

@@ -69,6 +69,10 @@ class OverlaySettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.BOTTOM_NAV_STYLE] = style.id
     }
 
+    suspend fun setBottomNavRailExpanded(expanded: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.BOTTOM_NAV_RAIL_EXPANDED] = expanded
+    }
+
     suspend fun setBottomNavMode(mode: BottomNavMode) = editor.edit {
         it[SettingsPreferenceKeys.BOTTOM_NAV_MODE] = mode.id
     }

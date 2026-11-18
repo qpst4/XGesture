@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import com.slideindex.app.ui.miuix.MiuixTopLayerRoot
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
@@ -46,28 +47,30 @@ class IconLibraryPickerTrampolineActivity : ComponentActivity() {
         val initialKey = intent.getStringExtra(EXTRA_INITIAL_KEY)
 
         setContent {
-            CompositionLocalProvider(LocalAppDependencies provides deps) {
-                ModuleTheme {
-                    // 不加 statusBarsPadding：内容要延伸到系统栏后面，
-                    // 具体 inset 由 SettingsScreenScaffold（Miuix Scaffold）处理。
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MiuixTheme.colorScheme.background,
-                    ) {
-                        IconLibraryPickerPage(
-                            initialKey = initialKey,
-                            onPick = { picked ->
-                                setResult(
-                                    RESULT_OK,
-                                    Intent().putExtra(EXTRA_PICKED_KEY, picked),
-                                )
-                                finish()
-                            },
-                            onDismiss = {
-                                setResult(RESULT_CANCELED)
-                                finish()
-                            },
-                        )
+            MiuixTopLayerRoot {
+                CompositionLocalProvider(LocalAppDependencies provides deps) {
+                    ModuleTheme {
+                        // 不加 statusBarsPadding：内容要延伸到系统栏后面，
+                        // 具体 inset 由 SettingsScreenScaffold（Miuix Scaffold）处理。
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            color = MiuixTheme.colorScheme.background,
+                        ) {
+                            IconLibraryPickerPage(
+                                initialKey = initialKey,
+                                onPick = { picked ->
+                                    setResult(
+                                        RESULT_OK,
+                                        Intent().putExtra(EXTRA_PICKED_KEY, picked),
+                                    )
+                                    finish()
+                                },
+                                onDismiss = {
+                                    setResult(RESULT_CANCELED)
+                                    finish()
+                                },
+                            )
+                        }
                     }
                 }
             }

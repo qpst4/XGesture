@@ -27,9 +27,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
+import com.slideindex.app.ui.miuix.MiuixGlassDropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
+import top.yukonga.miuix.kmp.basic.DropdownItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -44,6 +45,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
@@ -701,71 +704,43 @@ private fun QuickWheelSlotSettingsPage(
                             onNameChange = { value -> onPatch { it.copy(name = value) } },
                             onOpenIconMenu = { onIconMenuExpandedChange(true) },
                             // 菜单与图标框同父：DropdownMenu 只按父节点定位，这样才会贴着图标弹出。
-                            menuContent = {
-                                DropdownMenu(
+                            // 玻璃下拉：菜单在应用根层渲染，按图标框矩形定位。
+                            menuContent = { anchorBounds ->
+                                MiuixGlassDropdownMenu(
                                     expanded = iconMenuExpanded,
                                     onDismissRequest = { onIconMenuExpandedChange(false) },
-                                ) {
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                stringResource(R.string.quick_wheel_icon_pick_library),
-                                            )
-                                        },
-                                        onClick = {
-                                            onIconMenuExpandedChange(false)
-                                            onOpenFontLibrary()
-                                        },
-                                    )
-                                    DropdownMenuItem(
-                                        // 「图标库」改为「文字图标」：容器以文字形式展示图标，文字由用户输入。
-                                        text = {
-                                            Text(stringResource(R.string.quick_wheel_icon_pick_text))
-                                        },
-                                        onClick = {
-                                            onIconMenuExpandedChange(false)
-                                            onOpenIconLibrary()
-                                        },
-                                    )
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(stringResource(R.string.quick_wheel_icon_pick_app))
-                                        },
-                                        onClick = {
-                                            onIconMenuExpandedChange(false)
-                                            onOpenAppPicker()
-                                        },
-                                    )
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                stringResource(R.string.quick_wheel_icon_pick_gallery),
-                                            )
-                                        },
-                                        onClick = {
-                                            onIconMenuExpandedChange(false)
-                                            onOpenGallery()
-                                        },
-                                    )
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                stringResource(R.string.quick_wheel_slot_icon_clear),
-                                            )
-                                        },
-                                        onClick = {
-                                            onIconMenuExpandedChange(false)
-                                            onPatch {
-                                                it.copy(
-                                                    iconSource = QuickWheelIconSource.NONE,
-                                                    iconValue = "",
-                                                    // 清图标时一并清掉文字颜色，免得下次设文字图标时带出旧颜色。
-                                                    textColorArgb = null,
-                                                )
-                                            }
-                                        },
-                                    )
-                                }
+                                    anchorBounds = anchorBounds,
+                                    items = listOf(
+                                        DropdownItem(
+                                            text = stringResource(R.string.quick_wheel_icon_pick_library),
+                                            onClick = { onOpenFontLibrary() },
+                                        ),
+                                        DropdownItem(
+                                            text = stringResource(R.string.quick_wheel_icon_pick_text),
+                                            onClick = { onOpenIconLibrary() },
+                                        ),
+                                        DropdownItem(
+                                            text = stringResource(R.string.quick_wheel_icon_pick_app),
+                                            onClick = { onOpenAppPicker() },
+                                        ),
+                                        DropdownItem(
+                                            text = stringResource(R.string.quick_wheel_icon_pick_gallery),
+                                            onClick = { onOpenGallery() },
+                                        ),
+                                        DropdownItem(
+                                            text = stringResource(R.string.quick_wheel_slot_icon_clear),
+                                            onClick = {
+                                                onPatch {
+                                                    it.copy(
+                                                        iconSource = QuickWheelIconSource.NONE,
+                                                        iconValue = "",
+                                                        textColorArgb = null,
+                                                    )
+                                                }
+                                            },
+                                        ),
+                                    ),
+                                )
                             },
                         )
                     },
@@ -1002,9 +977,10 @@ private fun QuickWheelIconNameRow(
      * ⚠️ 必须挂在这个 56dp 图标框里：`DropdownMenu` 只按**父布局节点**定位，
      * 之前它挂在页面根节点上，于是弹在屏幕左上角、离图标很远。
      */
-    menuContent: @Composable () -> Unit,
+    menuContent: @Composable (anchorBounds: androidx.compose.ui.geometry.Rect) -> Unit,
 ) {
     val context = LocalContext.current
+    var iconAnchorBounds by remember { mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1018,11 +994,12 @@ private fun QuickWheelIconNameRow(
                 .clip(RoundedCornerShape(14.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
+                .onGloballyPositioned { iconAnchorBounds = it.boundsInWindow() }
                 .clickable { onOpenIconMenu() },
             contentAlignment = Alignment.Center,
         ) {
             // 菜单只是 Popup，不参与这里的排版，所以不会影响图标居中。
-            menuContent()
+            menuContent(iconAnchorBounds)
             val preview = slot.copy(name = slot.name.ifBlank { " " })
             val vector = if (preview.iconSource == QuickWheelIconSource.ICON_LIBRARY) {
                 QuickWheelIconResolver.vectorFor(preview.iconValue)

@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import kotlin.math.roundToInt
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.lifecycleScope
@@ -73,7 +74,21 @@ class OverlayFullScreenPanelHost(
         val compose = OverlayCompose.createComposeView(overlayContext, dialogOwner).apply {
             isFocusable = true
             isFocusableInTouchMode = true
-            setContent { content() }
+            setContent {
+                // ??????? TopLayer ??:???????????????,
+                // ????????????????? Box(????????)?
+                val topLayer = androidx.compose.runtime.remember { com.slideindex.app.ui.miuix.TopLayerState() }
+                androidx.compose.runtime.CompositionLocalProvider(
+                    com.slideindex.app.ui.miuix.LocalTopLayer provides topLayer,
+                ) {
+                    androidx.compose.foundation.layout.Box(
+                        modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+                    ) {
+                        content()
+                        com.slideindex.app.ui.miuix.TopLayerHost(topLayer)
+                    }
+                }
+            }
         }
 
         val wm = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager ?: run {

@@ -1,6 +1,9 @@
 package com.slideindex.app.ui
 
 import com.slideindex.app.ui.viewmodel.NotificationHistoryViewModel
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
@@ -15,8 +18,12 @@ import androidx.compose.material3.Text
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
+import top.yukonga.miuix.kmp.glass.GlassIconButton
+import top.yukonga.miuix.kmp.glass.GlassIconDropdownMenu
+import top.yukonga.miuix.kmp.glass.GlassTopAppBarDefaults
+import top.yukonga.miuix.kmp.glass.glassPopupAnchor
+import top.yukonga.miuix.kmp.glass.glassPopupAnchorContent
+import top.yukonga.miuix.kmp.glass.rememberGlassPopupAnchor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +33,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -44,6 +52,9 @@ import com.slideindex.app.ui.notificationhistory.notificationHistoryFilterBarIte
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingsCardScope
 import androidx.compose.runtime.snapshotFlow
+import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
+import com.slideindex.app.ui.miuix.LocalMiuixScreenBackdrop
+import com.slideindex.app.ui.miuix.TopLayer
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -52,9 +63,8 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Locale
-import top.yukonga.miuix.kmp.icon.extended.Tune
-import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.More
+import top.yukonga.miuix.kmp.icon.MiuixIcons
 
 private data class NotificationHistoryQuery(
     val items: List<NotificationHistoryItem>,
@@ -81,6 +91,8 @@ fun NotificationHistoryScreen(
     var uiState by remember { mutableStateOf(NotificationHistoryUiState()) }
     var pendingDeleteItem by remember { mutableStateOf<NotificationHistoryItem?>(null) }
     var showClearAllConfirm by remember { mutableStateOf(false) }
+    var moreMenuExpanded by remember { mutableStateOf(false) }
+    val moreMenuAnchor = rememberGlassPopupAnchor()
     val filterSettings by viewModel.filterSettings.collectAsStateWithLifecycle()
     val groupByApp = filterSettings.groupHistoryByApp
     var expandedGroups by remember { mutableStateOf(setOf<String>()) }
@@ -161,6 +173,7 @@ fun NotificationHistoryScreen(
         visibleHistoryItems.isNotEmpty()
     val showSearchUi = selectedTab != NotificationFilterTab.ACTIVE.ordinal
     val clearAllLabel = stringResource(R.string.notification_history_clear_all)
+    val rulesLabel = stringResource(R.string.notification_filter_rules_action)
     val filterSettingsLabel = stringResource(R.string.notification_filter_settings_title)
     val moreMenuEntry = DropdownEntry(
         items = buildList {
@@ -172,6 +185,12 @@ fun NotificationHistoryScreen(
                     ),
                 )
             }
+            add(
+                DropdownItem(
+                    text = rulesLabel,
+                    onClick = onOpenRules,
+                ),
+            )
             add(
                 DropdownItem(
                     text = filterSettingsLabel,
@@ -220,18 +239,39 @@ fun NotificationHistoryScreen(
                     onQueryChange = { searchQuery = it },
                 )
             }
-            IconButton(onClick = onOpenRules) {
-                Icon(
-                    MiuixIcons.Medium.Tune,
-                    contentDescription = stringResource(R.string.notification_filter_rules_action),
-                    tint = MiuixTheme.colorScheme.onBackground,
-                )
-            }
-            OverlayIconDropdownMenu(entry = moreMenuEntry) {
+            val pageBackdrop = LocalMiuixPageBackdrop.current
+            GlassIconButton(
+                onClick = { moreMenuExpanded = true },
+                modifier = Modifier.glassPopupAnchor(
+                    anchor = moreMenuAnchor,
+                    cornerRadius = GlassTopAppBarDefaults.ButtonSize / 2,
+                ),
+            ) {
                 Icon(
                     MiuixIcons.Medium.More,
                     contentDescription = stringResource(R.string.notification_filter_more_menu),
-                    tint = MiuixTheme.colorScheme.onBackground,
+                    tint = MiuixTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .size(28.dp)
+                        .glassPopupAnchorContent(moreMenuAnchor),
+                )
+            }
+            TopLayer {
+                GlassIconDropdownMenu(
+                    show = moreMenuExpanded,
+                    onDismissRequest = { moreMenuExpanded = false },
+                    anchor = moreMenuAnchor,
+                    // 副本只画图标，不再回写 anchor 位置（否则副本会追着自己飞）。
+                    anchorContent = {
+                        Icon(
+                            MiuixIcons.Medium.More,
+                            contentDescription = null,
+                            tint = MiuixTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(28.dp),
+                        )
+                    },
+                    entries = listOf(moreMenuEntry),
+                    backdrop = pageBackdrop,
                 )
             }
         },

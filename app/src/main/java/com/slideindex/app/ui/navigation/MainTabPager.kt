@@ -177,7 +177,6 @@ internal fun MainTabPagerHost(
                             showLabel = showBottomNavLabels,
                             backdrop = floatingNavBackdrop,
                             blurEnabled = bottomNavUsesHaze,
-                            blurRadiusDp = bottomNavBlurRadiusDp,
                         )
                         else -> Unit
                     }

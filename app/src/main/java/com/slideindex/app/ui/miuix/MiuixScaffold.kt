@@ -6,6 +6,7 @@ package com.slideindex.app.ui.miuix
  */
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,6 +20,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -26,6 +34,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -40,23 +50,25 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import com.slideindex.app.ui.LocalMainNavContentStartInset
+import com.slideindex.app.ui.mainNavStartInset
+import com.slideindex.app.ui.LocalMainNavTitleAlpha
+import top.yukonga.miuix.kmp.blur.LayerBackdrop
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.glass.ChevronBackward
 import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.glass.GlassIconButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
-private fun PaddingValues.withWideContentPadding(
-    sidePadding: Dp,
-    structuralStartInset: Dp,
+private fun PaddingValues.withListContentPadding(
     layoutDirection: androidx.compose.ui.unit.LayoutDirection,
-): PaddingValues {
-    return PaddingValues(
-        start = calculateStartPadding(layoutDirection) + structuralStartInset + sidePadding,
-        top = calculateTopPadding(),
-        end = calculateEndPadding(layoutDirection) + sidePadding,
-        bottom = calculateBottomPadding(),
-    )
-}
+): PaddingValues = PaddingValues(
+    start = calculateStartPadding(layoutDirection),
+    top = calculateTopPadding(),
+    end = calculateEndPadding(layoutDirection),
+    bottom = calculateBottomPadding(),
+)
 
 /** 子页列表顶部的 Mishka 式灰 Card；[subtitle] 仅在同时提供 [pageHint] 时作为 Card 后的补充纯文本。 */
 fun LazyListScope.settingsPageHeaderItems(
@@ -112,45 +124,51 @@ fun MiuixListScaffold(
     val scrollBehavior = MiuixScrollBehavior()
     val barBackdrop = rememberMiuixBlurBackdrop()
     val contentStartInset = LocalMainNavContentStartInset.current
-    Scaffold(
-        modifier = modifier.imePadding(),
-        topBar = {
-            Box(Modifier.fillMaxWidth()) {
-                MiuixBlurredTopBar(
-                    backdrop = barBackdrop,
-                ) {
+    // 供顶栏内的玻璃组件（如 GlassSegmentedTabRow）决定 surfaceAlpha：内容滚到栏下才升起玻璃。
+    val contentUnderBar = remember(resolvedListState) {
+        derivedStateOf { resolvedListState.canScrollBackward }
+    }
+    // 让顶栏 actions 与列表项里的玻璃浮层都能取到页面背板（玻璃菜单采样用）。
+    CompositionLocalProvider(
+        LocalMiuixScreenBackdrop provides barBackdrop,
+        LocalMiuixContentUnderBar provides contentUnderBar,
+    ) {
+        Scaffold(
+        contentWindowInsets = WindowInsets.systemBars
+            .union(WindowInsets.displayCutout)
+            .only(WindowInsetsSides.Vertical),
+            modifier = modifier.imePadding(),
+            topBar = {
+                Box(Modifier.fillMaxWidth()) {
                     AdaptiveTopAppBar(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = contentStartInset),
-                        color = barBackdrop.miuixAppBarColor(),
+                        modifier = Modifier.fillMaxWidth(),
+                        contentModifier = Modifier.mainNavStartInset(contentStartInset),
+                        backdrop = barBackdrop,
                         title = title,
+                        titleAlpha = LocalMainNavTitleAlpha.current,
                         scrollBehavior = scrollBehavior,
                         navigationIcon = { navigationIcon?.invoke() },
                         actions = actions,
                         bottomContent = bottomContent,
                     )
                 }
-            }
-        },
-        floatingActionButton = floatingActionButton,
-    ) { innerPadding ->
-        val layoutDirection = LocalLayoutDirection.current
-        WideContentBox { sidePadding ->
+            },
+            floatingActionButton = floatingActionButton,
+        ) { innerPadding ->
+            val layoutDirection = LocalLayoutDirection.current
             LazyColumn(
                 state = resolvedListState,
                 modifier = Modifier
                     .fillMaxHeight()
-                    .horizontalCutoutPadding()
+                    // layerBackdrop 必须在 inset/padding 之前（Mishka 迁移指南 §6.1）：
+                    // 放在 horizontalCutoutPadding 之后会把录制的图层缩窄、起点右移，
+                    // 顶栏从 (0,0) 全宽采样，横竖屏/刘海切换就会出现模糊截断错位。
                     .then(barBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
+                    .horizontalCutoutPadding()
                     .scrollEndHaptic()
                     .overScrollVertical()
                     .nestedScroll(scrollBehavior.nestedScrollConnection),
-                contentPadding = innerPadding.withWideContentPadding(
-                    sidePadding = sidePadding,
-                    structuralStartInset = contentStartInset,
-                    layoutDirection = layoutDirection,
-                ),
+                contentPadding = innerPadding.withListContentPadding(layoutDirection),
                 overscrollEffect = null,
                 userScrollEnabled = userScrollEnabled,
             ) {
@@ -189,6 +207,8 @@ fun MiuixSettingsScreenScaffold(
     actions: @Composable RowScope.() -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
+    /** 顶栏下方的附加内容（可展开搜索条等），与 [MiuixListScaffold] 的 `bottomContent` 一致。 */
+    bottomContent: @Composable () -> Unit = {},
     bottomContentPadding: Dp = 0.dp,
     /** 悬浮按钮需要预留的底部空间，见 [MiuixSettingsFabInset]；默认 0 = 不做任何预留。 */
     fabInset: Dp = 0.dp,
@@ -197,36 +217,39 @@ fun MiuixSettingsScreenScaffold(
     val scrollBehavior = MiuixScrollBehavior()
     val barBackdrop = rememberMiuixBlurBackdrop(enabled = !overlayMode)
     val contentStartInset = LocalMainNavContentStartInset.current
-    CompositionLocalProvider(LocalMiuixScreenBackdrop provides barBackdrop) {
+    val resolvedListState = rememberLazyListState()
+    // 供顶栏 bottomContent 里的玻璃组件（如 GlassSegmentedTabRow）决定 surfaceAlpha。
+    val contentUnderBar = remember(resolvedListState) {
+        derivedStateOf { resolvedListState.canScrollBackward }
+    }
+    CompositionLocalProvider(
+        LocalMiuixScreenBackdrop provides barBackdrop,
+        LocalMiuixContentUnderBar provides contentUnderBar,
+    ) {
         Scaffold(
+        contentWindowInsets = WindowInsets.systemBars
+            .union(WindowInsets.displayCutout)
+            .only(WindowInsetsSides.Vertical),
             modifier = modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .imePadding(),
             topBar = {
                 Box(Modifier.fillMaxWidth()) {
-                    MiuixBlurredTopBar(
-                        backdrop = barBackdrop,
-                        enabled = !overlayMode,
-                    ) {
-                        AdaptiveTopAppBar(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = contentStartInset),
-                            color = if (overlayMode) {
-                                MiuixTheme.colorScheme.surface
-                            } else {
-                                barBackdrop.miuixAppBarColor()
-                            },
-                            title = title,
-                            scrollBehavior = scrollBehavior,
-                            navigationIcon = {
-                                if (onBack != null) {
-                                    MiuixBackNavigationIcon(onBack)
-                                }
-                            },
-                            actions = actions,
-                        )
-                    }
+                    AdaptiveTopAppBar(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentModifier = Modifier.mainNavStartInset(contentStartInset),
+                        backdrop = if (overlayMode) null else barBackdrop,
+                        title = title,
+                        titleAlpha = LocalMainNavTitleAlpha.current,
+                        scrollBehavior = scrollBehavior,
+                        navigationIcon = {
+                            if (onBack != null) {
+                                MiuixGlassBackNavigationIcon(onBack)
+                            }
+                        },
+                        actions = actions,
+                        bottomContent = bottomContent,
+                    )
                 }
             },
             floatingActionButton = floatingActionButton,
@@ -235,7 +258,7 @@ fun MiuixSettingsScreenScaffold(
             val layoutDirection = LocalLayoutDirection.current
             val listModifier = Modifier
                 .fillMaxSize()
-                .horizontalCutoutPadding()
+                // 同上：layerBackdrop 必须先于 inset/padding（Mishka 迁移指南 §6.1）。
                 .then(
                     if (!overlayMode) {
                         barBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier
@@ -243,6 +266,7 @@ fun MiuixSettingsScreenScaffold(
                         Modifier
                     },
                 )
+                .horizontalCutoutPadding()
                 .scrollEndHaptic()
                 .overScrollVertical()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -255,30 +279,22 @@ fun MiuixSettingsScreenScaffold(
             }
             if (overlayMode) {
                 LazyColumn(
+                    state = resolvedListState,
                     modifier = listModifier,
-                    contentPadding = innerPadding.withWideContentPadding(
-                        sidePadding = 0.dp,
-                        structuralStartInset = contentStartInset,
-                        layoutDirection = layoutDirection,
-                    ),
+                    contentPadding = innerPadding.withListContentPadding(layoutDirection),
                     overscrollEffect = null,
                     userScrollEnabled = scrollContent,
                     content = lazyContent,
                 )
             } else {
-                WideContentBox { sidePadding ->
-                    LazyColumn(
-                        modifier = listModifier,
-                        contentPadding = innerPadding.withWideContentPadding(
-                            sidePadding = sidePadding,
-                            structuralStartInset = contentStartInset,
-                            layoutDirection = layoutDirection,
-                        ),
-                        overscrollEffect = null,
-                        userScrollEnabled = scrollContent,
-                        content = lazyContent,
-                    )
-                }
+                LazyColumn(
+                    state = resolvedListState,
+                    modifier = listModifier,
+                    contentPadding = innerPadding.withListContentPadding(layoutDirection),
+                    overscrollEffect = null,
+                    userScrollEnabled = scrollContent,
+                    content = lazyContent,
+                )
             }
         }
     }
@@ -309,6 +325,19 @@ fun MiuixBackNavigationIcon(onBack: () -> Unit) {
             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
             contentDescription = stringResource(R.string.cd_navigate_back),
             tint = MiuixTheme.colorScheme.onBackground,
+        )
+    }
+}
+
+/** OS4 玻璃顶栏里的返回按钮：胶囊材质/尺寸由 [GlassIconButton] 从顶栏上下文继承。 */
+@Composable
+fun MiuixGlassBackNavigationIcon(onBack: () -> Unit) {
+    GlassIconButton(onClick = onBack) {
+        Icon(
+            imageVector = MiuixIcons.Glass.ChevronBackward,
+            contentDescription = stringResource(R.string.cd_navigate_back),
+            tint = MiuixTheme.colorScheme.onSurface,
+            modifier = Modifier.size(28.dp),
         )
     }
 }

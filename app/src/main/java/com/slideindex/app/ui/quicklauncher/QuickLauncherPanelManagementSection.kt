@@ -25,7 +25,7 @@ import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
+import com.slideindex.app.ui.miuix.MiuixGlassIconDropdown
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import com.slideindex.app.ui.miuix.MiuixFormDialog
@@ -230,13 +230,12 @@ fun QuickLauncherPanelManagementSection(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                OverlayIconDropdownMenu(entry = panelMenuEntry) {
-                    MiuixIcon(
-                        MiuixIcons.Medium.More,
-                        contentDescription = renameLabel,
-                        tint = MiuixTheme.colorScheme.onBackground,
-                    )
-                }
+                MiuixGlassIconDropdown(
+                    entries = listOf(panelMenuEntry),
+                    icon = MiuixIcons.Medium.More,
+                    contentDescription = renameLabel,
+                    capsule = false,
+                )
             }
             MiuixSliderRow(
                 title = stringResource(R.string.quick_launcher_grid_columns),
