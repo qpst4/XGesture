@@ -49,6 +49,7 @@ import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import com.slideindex.app.util.PinyinHelper
 import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
 import com.slideindex.app.ui.miuix.LocalMiuixScreenBackdrop
+import com.slideindex.app.ui.miuix.LocalMiuixContentUnderBar
 import top.yukonga.miuix.kmp.glass.GlassTabRow
 import top.yukonga.miuix.kmp.glass.GlassTabRowDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -136,14 +137,20 @@ private fun ActionCenterFilterRow(
     // 与通知滤盒同源：内容滚到栏下才升起玻璃；无背板（浮层窗口）时退回实色 pills。
     val backdrop = LocalMiuixScreenBackdrop.current ?: LocalMiuixPageBackdrop.current
     if (backdrop != null) {
+        // 静息态：未选中是灰色胶囊；内容滚到栏下（材质升起）才交给玻璃（miuix neutralColors 的设计意图）。
+        val contentUnderBar = LocalMiuixContentUnderBar.current.value
         GlassTabRow(
             tabs = tabs,
             selectedIndex = ActionCenterFilter.entries.indexOf(selected).coerceAtLeast(0),
             onSelect = { index -> ActionCenterFilter.entries.getOrNull(index)?.let(onSelect) },
             backdrop = backdrop,
-            surfaceAlpha = 1f,
-            height = GlassTabRowDefaults.NeutralHeight,
-            colors = GlassTabRowDefaults.neutralColors(),
+            surfaceAlpha = if (contentUnderBar) 1f else 0f,
+            height = GlassTabRowDefaults.Height,
+            // 选中态用主题蓝（同开关），静息态未选中仍是灰色胶囊：取中性套的静息灰 + 换掉选中色。
+            colors = GlassTabRowDefaults.neutralColors().copy(
+                selectedContainerColor = MiuixTheme.colorScheme.primary,
+                selectedContentColor = androidx.compose.ui.graphics.Color.White,
+            ),
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
         )
     } else {
