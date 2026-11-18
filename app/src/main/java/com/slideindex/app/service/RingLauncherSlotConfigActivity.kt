@@ -28,7 +28,7 @@ import com.slideindex.app.settings.fvRingLauncherFor
 import com.slideindex.app.ui.compose.LocalAppDependencies
 import com.slideindex.app.ui.miuix.theme.ModuleTheme
 import com.slideindex.app.ui.picker.PickerApps
-import com.slideindex.app.ui.ringlauncher.RingLauncherSlotConfigSheet
+import com.slideindex.app.ui.ringlauncher.RingSlotPickScreen
 import com.slideindex.app.ui.ringlauncher.RingLauncherSlotIconEditorHost
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -122,14 +122,12 @@ class RingLauncherSlotConfigActivity : ComponentActivity() {
                                 },
                             )
                         } else {
-                            RingLauncherSlotConfigSheet(
+                            RingSlotPickScreen(
                                 slotIndex = slotIndex,
                                 currentItem = appSettings.fvRingLauncherFor(axis).itemAt(slotIndex),
                                 apps = apps,
-                                activityShortcuts = appSettings.activityShortcuts,
-                                shellCommands = appSettings.shellCommands,
-                                quickLauncherPanels = appSettings.quickLauncherPanels,
-                                onDismiss = { finishPicker() },
+                                settings = appSettings,
+                                onBack = { finishPicker() },
                                 onSelectItem = { selectedItem ->
                                     scope.launch {
                                         // 与浮层版一致：清空槽位时落一个空 APP 条目。
@@ -154,7 +152,6 @@ class RingLauncherSlotConfigActivity : ComponentActivity() {
                                     )
                                 },
                                 onBackHandlerReady = { handler -> sheetBack = handler },
-                                pageMode = true,
                             )
                         }
                     }
