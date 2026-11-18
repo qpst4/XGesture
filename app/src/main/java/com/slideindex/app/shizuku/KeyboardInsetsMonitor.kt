@@ -182,7 +182,9 @@ internal class KeyboardInsetsMonitor(
                 // 新签名：getWindowInsets(LayoutParams, int displayId, InsetsState)
                 types[1] == Int::class.javaPrimitiveType -> {
                     val params = android.view.WindowManager.LayoutParams().apply {
-                        flags = WINDOW_FLAGS
+                        // 等价于原来的裸 0x10100：写成命名 flag 后 lint 的 WrongConstant 才能识别
+                        flags = android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                            android.view.WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
                     }
                     runCatching { method.invoke(windowManager, params, displayId, state) }.isSuccess
                 }
@@ -260,7 +262,6 @@ internal class KeyboardInsetsMonitor(
         const val TAG = "KeyboardInsets"
         const val DEFAULT_DISPLAY = 0
         const val IME_TYPE = 8
-        const val WINDOW_FLAGS = 0x10100
         const val CACHE_TTL_MS = 250L
         const val FALLBACK_INTERVAL_MS = 2_000L
 
