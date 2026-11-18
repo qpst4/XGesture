@@ -1,11 +1,15 @@
 package com.slideindex.app.ui.miuix.effect
 
+import android.annotation.SuppressLint
 import androidx.compose.ui.graphics.Brush
 import top.yukonga.miuix.kmp.material.RuntimeShader
 import top.yukonga.miuix.kmp.material.asBrush
 import kotlin.math.cos
 import kotlin.math.sin
 
+// 唯一构造点 BgEffectBackground 在创建本类之前已用 isRuntimeShaderSupported() 保证 SDK≥33，
+// 因此 RuntimeShader / asBrush 的 @RequiresApi(33) 由调用方满足；此处对 lint 的 NewApi 做局部豁免。
+@SuppressLint("NewApi")
 internal class BgEffectPainter {
 
     val runtimeShader by lazy {

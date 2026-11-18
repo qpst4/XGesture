@@ -7,6 +7,7 @@ package com.slideindex.app.ui.miuix.bottombar.animation
 
 // Adapted from Kyant0/AndroidLiquidGlass — https://github.com/Kyant0/AndroidLiquidGlass (Apache 2.0).
 
+import android.os.Build
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.VisibilityThreshold
@@ -56,7 +57,8 @@ internal class InteractiveHighlight(
                 y = pos.y.coerceIn(0f, size.height),
             )
             val spotColor = Color.White.copy(alpha = 0.12f * progress)
-            if (spotShader != null) {
+            // spotShader 只在 isRuntimeShaderSupported()（SDK≥33）时创建；显式版本判断让 lint 认出 NewApi 已受保护。
+            if (spotShader != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 spotShader.setFloatUniform("size", size.width, size.height)
                 spotShader.setColorUniform("color", spotColor)
                 spotShader.setFloatUniform("radius", radius)

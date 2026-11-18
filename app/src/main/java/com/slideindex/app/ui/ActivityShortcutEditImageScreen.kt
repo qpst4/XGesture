@@ -93,8 +93,10 @@ fun ActivityShortcutEditImageScreen(
         initialShortcut?.let { ActivityShortcutImageSupport.configFrom(it) } ?: ImageShortcutConfig(uri = "")
     }
 
+    val defaultLabel = stringResource(R.string.activity_shortcut_default_name)
+
     var label by rememberSaveable(initialShortcut?.id) {
-        mutableStateOf(initialShortcut?.label ?: context.getString(R.string.activity_shortcut_default_name))
+        mutableStateOf(initialShortcut?.label ?: defaultLabel)
     }
     var subtitle by rememberSaveable(initialShortcut?.id) { mutableStateOf("") }
     var iconPath by rememberSaveable(initialShortcut?.id) { mutableStateOf(initialShortcut?.iconPath) }
