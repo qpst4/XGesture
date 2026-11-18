@@ -91,4 +91,10 @@
     <string name="action_center_special_fingertip">Available in: fingertip ring</string>
     <string name="action_center_special_regional">Available in: regional screenshot</string>
     <string name="key_event_presets_title">Common keys</string>
+    <string name="magnifier_scale_title">Escala de ampliación</string>
+    <string name="magnifier_scale_summary">Ajusta la escala de ampliación de la lupa</string>
+    <string name="magnifier_fullscreen_scale_title">Escala de ampliación a pantalla completa (seguimiento continuo)</string>
+    <string name="magnifier_fullscreen_scale_summary">Escala de ampliación a pantalla completa al desplazar la vista de forma continua con el joystick o gestos mantenidos</string>
+    <string name="magnifier_window_scale_title">Escala de ampliación local (modo ventana)</string>
+    <string name="magnifier_window_scale_summary">Escala de la lupa en ventana flotante que se activa al tocar o al levantar el dedo</string>
 </resources>

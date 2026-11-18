@@ -91,4 +91,10 @@
     <string name="action_center_special_fingertip">Available in: fingertip ring</string>
     <string name="action_center_special_regional">Available in: regional screenshot</string>
     <string name="key_event_presets_title">Common keys</string>
+    <string name="magnifier_scale_title">نسبة التكبير</string>
+    <string name="magnifier_scale_summary">اضبط نسبة تكبير المكبّر</string>
+    <string name="magnifier_fullscreen_scale_title">نسبة تكبير ملء الشاشة (متابعة مستمرة)</string>
+    <string name="magnifier_fullscreen_scale_summary">نسبة تكبير ملء الشاشة عند التحريك المستمر للعرض بالعصا أو بالإيماءات المطوّلة</string>
+    <string name="magnifier_window_scale_title">نسبة التكبير الموضعي (الوضع النافذي)</string>
+    <string name="magnifier_window_scale_summary">نسبة تكبير مكبّر النافذة العائمة الذي يظهر عند النقر أو رفع الإصبع</string>
 </resources>

@@ -91,4 +91,10 @@
     <string name="action_center_special_fingertip">Available in: fingertip ring</string>
     <string name="action_center_special_regional">Available in: regional screenshot</string>
     <string name="key_event_presets_title">Common keys</string>
+    <string name="magnifier_scale_title">拡大倍率</string>
+    <string name="magnifier_scale_summary">拡大鏡の倍率を設定します</string>
+    <string name="magnifier_fullscreen_scale_title">全画面の拡大倍率（連続追従）</string>
+    <string name="magnifier_fullscreen_scale_summary">スティック操作や長押しジェスチャーで継続的にビューを動かすときの全画面倍率</string>
+    <string name="magnifier_window_scale_title">部分拡大倍率（ウィンドウモード）</string>
+    <string name="magnifier_window_scale_summary">タップや指を離したときに起動するフローティングウィンドウ拡大鏡の倍率</string>
 </resources>

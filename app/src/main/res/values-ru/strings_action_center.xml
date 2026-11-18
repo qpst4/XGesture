@@ -91,4 +91,10 @@
     <string name="action_center_special_fingertip">Available in: fingertip ring</string>
     <string name="action_center_special_regional">Available in: regional screenshot</string>
     <string name="key_event_presets_title">Common keys</string>
+    <string name="magnifier_scale_title">Масштаб увеличения</string>
+    <string name="magnifier_scale_summary">Задайте масштаб увеличения лупы</string>
+    <string name="magnifier_fullscreen_scale_title">Масштаб полноэкранного увеличения (постоянное следование)</string>
+    <string name="magnifier_fullscreen_scale_summary">Масштаб для полноэкранного режима при непрерывном панорамировании стиком или удержанием жеста</string>
+    <string name="magnifier_window_scale_title">Масштаб лупы в окне (оконный режим)</string>
+    <string name="magnifier_window_scale_summary">Масштаб плавающей лупы-окна, вызываемой нажатием или отпусканием пальца</string>
 </resources>
