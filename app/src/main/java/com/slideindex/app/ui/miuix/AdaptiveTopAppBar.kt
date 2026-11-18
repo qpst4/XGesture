@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -35,6 +37,7 @@ fun AdaptiveTopAppBar(
     progressiveBlur: Boolean = LocalTopAppBarBlurStyle.current == TopAppBarBlurStyle.PROGRESSIVE,
     scrollBehavior: ScrollBehavior? = null,
     contentUnderBar: Boolean? = null,
+    visualContentOffset: (() -> Float)? = null,
     defaultWindowInsetsPadding: Boolean = true,
     titleAlpha: () -> Float = { 1f },
     navigationIcon: @Composable () -> Unit = {},
@@ -43,9 +46,18 @@ fun AdaptiveTopAppBar(
 ) {
     val surfaceColor = MiuixTheme.colorScheme.surface
     val bandBrush = remember(surfaceColor) { GlassTopAppBarDefaults.bandBrush(surfaceColor) }
+    // 显式 overlap 状态优先（对齐 miuix 示例 PageUtils / IconPage：用 listState.canScrollBackward）。
+    // 程序化滚动（如"跳转动作"页进页面自动定位到当前动作）不会产生 nestedScroll 事件，
+    // 只靠 contentOffset 会一直读到 0 → 顶栏永远透明；这里让页面能直接声明"正文已压在栏下"。
+    val contentScrolled by remember(scrollBehavior, contentUnderBar) {
+        derivedStateOf {
+            contentUnderBar ?: (scrollBehavior?.state?.contentOffset?.let { it < 0f } ?: true)
+        }
+    }
 
     GlassTopAppBar(
         title = title,
+        isContentScrolled = contentScrolled,
         modifier = modifier,
         contentModifier = contentModifier,
         expandable = expandable,
@@ -54,6 +66,7 @@ fun AdaptiveTopAppBar(
         bandBrush = bandBrush,
         bandOverhang = GlassTopAppBarDefaults.BandOverhang,
         scrollBehavior = scrollBehavior,
+        visualContentOffset = visualContentOffset,
         defaultWindowInsetsPadding = defaultWindowInsetsPadding,
         titleAlpha = titleAlpha,
         navigationIcon = navigationIcon,
