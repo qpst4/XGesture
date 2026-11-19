@@ -80,6 +80,9 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
     @Volatile
     private var lastActionAtMs = 0L
 
+    @Volatile
+    private var volumeGestureFiredDuringPress = false
+
     private var reconnectJob: Job? = null
 
     private val serviceDeathRecipient = IBinder.DeathRecipient {
@@ -381,6 +384,15 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
             return
         }
 
+        if (gesture == PhysicalKeyGesture.VOLUME_UP_LONG_PRESS ||
+            gesture == PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS ||
+            gesture == PhysicalKeyGesture.VOLUME_DOWN_LONG_PRESS ||
+            gesture == PhysicalKeyGesture.VOLUME_DOWN_DOUBLE_PRESS ||
+            gesture == PhysicalKeyGesture.VOLUME_BOTH_PRESS
+        ) {
+            volumeGestureFiredDuringPress = true
+        }
+
         // 若是电源键手势且开启了拦截原生事件或设置了动作，尝试压制系统关机弹窗
         if (gesture == PhysicalKeyGesture.POWER_LONG_PRESS || gesture == PhysicalKeyGesture.POWER_DOUBLE_PRESS) {
             suppressSystemPowerDialogIfNeeded()
@@ -408,6 +420,16 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
     }
 
     private fun suppressSystemPowerDialogIfNeeded() {
+        // 1. 无障碍服务执行返回以关闭顶层关机弹窗
+        runCatching {
+            SlideIndexAccessibilityService.performGlobalBack()
+        }
+        // 2. 特权服务广播 CLOSE_SYSTEM_DIALOGS（root / shell 具备该权限）
+        runCatching {
+            val service = observingService ?: rootService
+            service?.runShellCommand(arrayOf("am", "broadcast", "-a", "android.intent.action.CLOSE_SYSTEM_DIALOGS"))
+        }
+        // 3. 应用自身发送广播兜底
         runCatching {
             @Suppress("DEPRECATION")
             val closeIntent = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
@@ -431,7 +453,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
             return true
         }
 
-        return state.entries.any { (gesture, entry) ->
+        val hasMappedGesture = state.entries.any { (gesture, entry) ->
             entry.action != GestureAction.None && when (gesture) {
                 PhysicalKeyGesture.VOLUME_UP_LONG_PRESS,
                 PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS -> isVolumeUp
@@ -441,6 +463,37 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
                 else -> false
             }
         }
+
+        if (!hasMappedGesture) {
+            return false
+        }
+
+        // 拦截音量键以压制系统原生音量条
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            if (event.repeatCount == 0) {
+                volumeGestureFiredDuringPress = false
+            }
+            return true
+        } else if (event.action == KeyEvent.ACTION_UP) {
+            val gestureFired = volumeGestureFiredDuringPress
+            volumeGestureFiredDuringPress = false
+            if (!gestureFired) {
+                // 未触发长按手势（短促单击）：松开时补发原生音量调节，确保正常调音不受阻
+                mainHandler.post {
+                    runCatching {
+                        val audioManager = context.getSystemService(AudioManager::class.java)
+                        audioManager?.adjustSuggestedStreamVolume(
+                            if (isVolumeUp) AudioManager.ADJUST_RAISE else AudioManager.ADJUST_LOWER,
+                            AudioManager.USE_DEFAULT_STREAM_TYPE,
+                            AudioManager.FLAG_SHOW_UI,
+                        )
+                    }
+                }
+            }
+            return true
+        }
+
+        return true
     }
 
     private fun isMediaPlaying(): Boolean = runCatching {
