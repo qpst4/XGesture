@@ -66,8 +66,11 @@ class EvdevTouchObserver(
 
     private val pathCollector = PathGestureCollector()
 
-    /** 本次触摸第一次出现触点时的质心（屏幕归一化）；全部抬起后清空。 */
+    /** 本次触摸第一次出现触点时的质心（屏幕归一化）。 */
     private var sessionStartAnchor: TouchAnchor? = null
+
+    /** 当前是否有手指按着；全部抬起后只置 false，不清 [sessionStartAnchor]。 */
+    private var sessionActive = false
 
     /** 上一次上报的虚拟设备列表，避免每次枚举都重复回调。 */
     @Volatile
@@ -255,7 +258,12 @@ class EvdevTouchObserver(
                         "path x${path.fingerCount} " +
                             "points=${path.strokes.sumOf { it.points.size }}"
                     )
-                    onPathGesture(path, now, pathAnchor(path, anchorRanges), startAnchor)
+                    onPathGesture(
+                        path,
+                        now,
+                        pathAnchor(path, anchorRanges),
+                        startAnchor ?: pathStartAnchor(path, anchorRanges),
+                    )
                 }
 
                 // 兜底：有原始事件、但两类判定都没产出任何触点 —— 换另一种协议再试一次。
@@ -314,7 +322,9 @@ class EvdevTouchObserver(
     /**
      * 记录本次触摸的起点：第一次出现触点时取质心，之后整个会话保持不变。
      *
-     * 起点用于触发区域/键盘条件判定（GMD 的语义是「手势必须从哪开始」）；
+     * 手指全部抬起的空帧**不清起点**：绘制手势是在抬起这一帧才结算的，它还需要本次触摸的
+     * 起点（GMD 的键盘策略按落点判）；下一次手指按下时才覆盖。
+     *
      * `pointers` 与 [anchorRanges] 用的是同一套归一化，直接复用 [touchAnchorOf]。
      */
     private fun updateSessionStart(
@@ -322,10 +332,11 @@ class EvdevTouchObserver(
         ranges: AbsRanges,
     ): TouchAnchor? {
         if (pointers.isEmpty()) {
-            sessionStartAnchor = null
-            return null
+            sessionActive = false
+            return sessionStartAnchor
         }
-        sessionStartAnchor?.let { return it }
+        if (sessionActive) return sessionStartAnchor
+        sessionActive = true
         var sumX = 0.0
         var sumY = 0.0
         for (pointer in pointers) {
@@ -340,6 +351,23 @@ class EvdevTouchObserver(
         )
         sessionStartAnchor = anchor
         return anchor
+    }
+
+    /**
+     * 路径手势的起点兜底：轨迹第一个点就是落点。
+     *
+     * 正常情况下 [updateSessionStart] 已经保留了起点；这条只在协议嗅探 reset、采集取消等
+     * 边界把起点弄丢时兜底。
+     */
+    private fun pathStartAnchor(path: CollectedPath, ranges: AbsRanges): TouchAnchor {
+        val first = path.strokes.firstOrNull()?.points?.firstOrNull()
+            ?: return TouchAnchor.CENTER
+        return touchAnchorOf(
+            anchorX = first.x,
+            anchorY = first.y,
+            panelWidth = ranges.width,
+            panelHeight = ranges.height,
+        )
     }
 
     /**
@@ -409,7 +437,8 @@ class EvdevTouchObserver(
                 )
                 // onTick 目前只会产出「抬手后延迟结算」的候选（现在恒为 null）；
                 // 这条路上手指坐标已经收不到，锚点退回屏幕中心，不要拿 gesture 里默认的 0 当左上角。
-                onGesture(listOf(gesture), now, TouchAnchor.CENTER, null)
+                // 起点沿用本次触摸的落点：抬手后延迟结算的轻点也要按它判区域/键盘。
+                onGesture(listOf(gesture), now, TouchAnchor.CENTER, sessionStartAnchor)
             }
             sleepQuietly(TICK_INTERVAL_MS)
         }

@@ -1,5 +1,7 @@
 package com.slideindex.app.multitouch
 
+import com.slideindex.app.gesture.multitouch.TouchAnchor
+
 /**
  * 全局触控的触发条件判定，对齐 GMD 的 `TriggerEnum.c()` / `KeyboardBehaviorEnum`。
  *
@@ -98,5 +100,59 @@ object MultiTouchTriggerFilter {
                 }
             }
         }
+    }
+
+    /** 键盘矩形（display 坐标），避免长参数列表。 */
+    data class KeyboardRect(
+        val left: Int,
+        val top: Int,
+        val right: Int,
+        val bottom: Int,
+    )
+
+    /**
+     * 组合判定：先区域、再键盘。
+     *
+     * - **区域**：绘制手势（[path] 非空）按 GMD 的语义——轨迹上**任意一个采样点**落在选中区域
+     *   就算命中（`sx.C()` 遍历全部轨迹点）；几何手势只看起点。
+     * - **键盘**：只看起点是否压在 IME 矩形内，与触发型手势一致；没有起点时跳过键盘判定。
+     */
+    fun accepts(
+        area: Int,
+        keyboardBehavior: Int,
+        start: TouchAnchor?,
+        path: List<TouchAnchor>?,
+        widthPx: Int,
+        heightPx: Int,
+        borderPx: Int,
+        keyboardVisible: Boolean,
+        keyboardHasBounds: Boolean,
+        keyboardBounds: KeyboardRect,
+        displayWidth: Int,
+        displayHeight: Int,
+    ): Boolean {
+        val areaOk = when {
+            !path.isNullOrEmpty() -> path.any {
+                areaAllows(area, it.u, it.v, widthPx, heightPx, borderPx)
+            }
+
+            start != null -> areaAllows(area, start.u, start.v, widthPx, heightPx, borderPx)
+            else -> true
+        }
+        if (!areaOk) return false
+        val anchor = start ?: return true
+        return keyboardAllows(
+            behavior = keyboardBehavior,
+            startU = anchor.u,
+            startV = anchor.v,
+            visible = keyboardVisible,
+            hasBounds = keyboardHasBounds,
+            left = keyboardBounds.left,
+            top = keyboardBounds.top,
+            right = keyboardBounds.right,
+            bottom = keyboardBounds.bottom,
+            displayWidth = displayWidth,
+            displayHeight = displayHeight,
+        )
     }
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.Keep
 import androidx.annotation.StringRes
+import com.slideindex.app.gesture.multitouch.CollectedPath
 import com.slideindex.app.gesture.multitouch.TouchAnchor
 import com.slideindex.app.gesture.multitouch.TouchDisplayTransform
 import com.slideindex.app.multitouch.EvdevTouchObserver
@@ -121,38 +122,56 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
     }
 
     /**
-     * 起始条件判定：先看区域，再看键盘（与 GMD 的 `TriggerEnum.c()` + `fc0.a()` 一致）。
+     * 触发条件判定：区域 + 键盘（对齐 GMD）。
      *
-     * 没有起点锚点（旧观察器/抬手后延迟结算的轻点）时不拦，保持历史行为。
+     * - 几何手势：区域与键盘都只看起点；
+     * - 绘制手势（[path] 非空）：区域按 GMD 语义看整条轨迹（任意点命中），键盘仍看起点。
      */
-    private fun acceptsTrigger(start: TouchAnchor?): Boolean {
-        val anchor = start ?: return true
-        val startU = anchor.u
-        val startV = anchor.v
+    private fun acceptsTrigger(start: TouchAnchor?, path: List<TouchAnchor>? = null): Boolean {
         val transform = displayTransform
-        val areaOk = MultiTouchTriggerFilter.areaAllows(
+        val keyboard = runCatching { keyboardMonitor.snapshot() }.getOrNull()
+        return MultiTouchTriggerFilter.accepts(
             area = triggerArea,
-            startU = startU,
-            startV = startV,
+            keyboardBehavior = keyboardBehavior,
+            start = start,
+            path = path,
             widthPx = transform.screenWidthPx,
             heightPx = transform.screenHeightPx,
             borderPx = triggerBorderPx,
+            keyboardVisible = keyboard?.visible == true,
+            keyboardHasBounds = keyboard?.hasBounds() == true,
+            keyboardBounds = MultiTouchTriggerFilter.KeyboardRect(
+                left = keyboard?.bounds?.left ?: 0,
+                top = keyboard?.bounds?.top ?: 0,
+                right = keyboard?.bounds?.right ?: 0,
+                bottom = keyboard?.bounds?.bottom ?: 0,
+            ),
+            displayWidth = keyboard?.displayBounds?.width() ?: 0,
+            displayHeight = keyboard?.displayBounds?.height() ?: 0,
         )
-        if (!areaOk) return false
-        val keyboard = runCatching { keyboardMonitor.snapshot() }.getOrNull() ?: return true
-        return MultiTouchTriggerFilter.keyboardAllows(
-            behavior = keyboardBehavior,
-            startU = startU,
-            startV = startV,
-            visible = keyboard.visible,
-            hasBounds = keyboard.hasBounds(),
-            left = keyboard.bounds.left,
-            top = keyboard.bounds.top,
-            right = keyboard.bounds.right,
-            bottom = keyboard.bounds.bottom,
-            displayWidth = keyboard.displayBounds.width(),
-            displayHeight = keyboard.displayBounds.height(),
-        )
+    }
+
+    /**
+     * 把路径手势的采样点换算成屏幕归一化锚点（u 按屏宽、v 按屏高）。
+     *
+     * 轨迹点与观察器里的触点用同一套归一化（x、y 都除以屏高），所以 `u = x · H / W`。
+     * 显示状态还没推过来（transform 无效）时返回 null：路径区域判定跳过，行为退回只看起点。
+     */
+    private fun pathAnchors(path: CollectedPath): List<TouchAnchor>? {
+        val transform = displayTransform
+        val width = transform.screenWidthPx.toFloat()
+        if (!transform.valid || width <= 0f) return null
+        val scale = transform.screenHeightPx.toFloat() / width
+        val anchors = ArrayList<TouchAnchor>(path.strokes.size * 8)
+        for (stroke in path.strokes) {
+            for (point in stroke.points) {
+                anchors += TouchAnchor(
+                    u = (point.x * scale).coerceIn(0f, 1f),
+                    v = point.y.coerceIn(0f, 1f),
+                )
+            }
+        }
+        return anchors.ifEmpty { null }
     }
 
     override fun getMultiTouchDiagnostics(): String = multitouchDiagnostics
@@ -190,7 +209,7 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
                 }
             },
             onPathGesture = { path, eventTimeMs, anchor, startAnchor ->
-                if (acceptsTrigger(startAnchor)) {
+                if (acceptsTrigger(startAnchor, pathAnchors(path))) {
                     val coordinates = ArrayList<Float>()
                     val strokeLengths = IntArray(path.strokes.size)
                     path.strokes.forEachIndexed { index, stroke ->
@@ -267,7 +286,7 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
                 }
             },
             onPathGesture = { path, _, anchor, startAnchor ->
-                if (acceptsTrigger(startAnchor)) {
+                if (acceptsTrigger(startAnchor, pathAnchors(path))) {
                     pollingEvents += "p:${path.fingerCount}:${anchor.u}:${anchor.v}:" +
                         encodePathStrokes(path.strokes)
                 }
