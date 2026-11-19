@@ -117,7 +117,7 @@ fun searchIconSizeForColumns(columns: Int): Dp = when {
     else -> SearchIconSizeDefault
 }
 
-/** 横屏时按可用宽度自动增加列数；竖屏保持用户设置。 */
+/** 横屏时按可用宽度自动计算列数；避免在双栏等窄区强行沿用竖屏高列数把文字挤爆。 */
 fun effectiveSearchGridColumns(
     configuredColumns: Int,
     availableWidth: Dp,
@@ -127,8 +127,15 @@ fun effectiveSearchGridColumns(
     if (!isLandscape) return base
     val minCellWidth = 44.dp
     val horizontalPadding = 24.dp
-    val autoFit = ((availableWidth - horizontalPadding) / minCellWidth).toInt()
-    return maxOf(base, autoFit).coerceIn(3, 8)
+    val autoFit = ((availableWidth - horizontalPadding).coerceAtLeast(0.dp) / minCellWidth).toInt().coerceIn(3, 8)
+    // 双栏等场景下，横屏分给搜索区的宽度可能甚至小于竖屏全宽；
+    // 此时若强行 maxOf(base, autoFit)，会导致在 200dp 出头的宽度下硬挤 7-8 列，文字被全部掐断。
+    // 因此在可用宽度偏窄（< 340dp）时，列数应当受可用空间物理上限约束。
+    return if (availableWidth < 340.dp) {
+        minOf(base, autoFit).coerceIn(3, 8)
+    } else {
+        maxOf(base, autoFit).coerceIn(3, 8)
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)

@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.slideindex.app.settings.PickResultPanelPlacement
 
 private val LandscapePanelMaxWidth = 560.dp
+private val LandscapePickPanelMaxWidth = 660.dp
 private const val LandscapePanelWidthFraction = 0.72f
 private const val PortraitPanelMaxHeightFraction = 0.85f
 private const val LandscapePanelMaxHeightFraction = 0.92f
@@ -89,9 +90,15 @@ fun overlayPickPanelMaxHeightFraction(placement: PickResultPanelPlacement): Floa
 @Composable
 fun overlayPickPanelMaxWidth(placement: PickResultPanelPlacement): Dp? =
     if (placement == PickResultPanelPlacement.CENTER) {
-        minOf(overlayContainerWidthDp() * CenteredPortraitPanelWidthFraction, LandscapePanelMaxWidth)
+        val maxCap = if (overlayIsLandscape()) LandscapePickPanelMaxWidth else LandscapePanelMaxWidth
+        minOf(overlayContainerWidthDp() * CenteredPortraitPanelWidthFraction, maxCap)
     } else {
-        overlayBottomPanelMaxWidth()
+        if (overlayIsLandscape()) {
+            val screenWidth = overlayContainerWidthDp()
+            minOf(LandscapePickPanelMaxWidth, screenWidth * LandscapePanelWidthFraction)
+        } else {
+            overlayBottomPanelMaxWidth()
+        }
     }
 
 /** 取词面板落位方式对应的宽度约束：贴底铺满（横屏限宽），居中时两侧留白。 */

@@ -12,8 +12,11 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -349,12 +352,13 @@ fun PickResultImageSearchBar(
         val toolbarOnRight = imageToolbarPosition == PickResultImageToolbarPosition.RIGHT
 
         @Composable
-        fun ShareEngineSlot() {
+        fun ShareEngineSlot(compactChip: Boolean = false, iconOnly: Boolean = false) {
             if (shareEngines.isNotEmpty()) {
                 ImageShareEngineChip(
                     engines = shareEngines,
                     onShareEngineClick = onShareEngineClick,
-                    compact = true,
+                    compact = compactChip,
+                    iconOnly = iconOnly,
                 )
             } else {
                 Spacer(Modifier.width(1.dp))
@@ -362,7 +366,7 @@ fun PickResultImageSearchBar(
         }
 
         @Composable
-        fun ImageActionIcons() {
+        fun ImageActionIcons(compactIcons: Boolean = false) {
             CompositionLocalProvider(
                 LocalLayoutDirection provides if (toolbarOnRight) LayoutDirection.Rtl else LayoutDirection.Ltr,
             ) {
@@ -379,25 +383,33 @@ fun PickResultImageSearchBar(
                     onPinToScreen = onPinToScreen,
                     onStash = onStash,
                     overlayMode = false,
-                    compact = true,
+                    compact = compactIcons,
                 )
             }
         }
 
-        Row(
+        BoxWithConstraints(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(horizontal = 10.dp, vertical = 2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            if (toolbarOnRight) {
-                // 「右侧」= 工具图标组在右、分享芯片在左。
-                ShareEngineSlot()
-                ImageActionIcons()
-            } else {
-                ImageActionIcons()
-                ShareEngineSlot()
+            val isNarrow = maxWidth < 260.dp
+            val useCompact = isNarrow
+            val useIconOnly = isNarrow
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                if (toolbarOnRight) {
+                    // 「右侧」= 工具图标组在右、分享芯片在左。
+                    ShareEngineSlot(compactChip = useCompact, iconOnly = useIconOnly)
+                    ImageActionIcons(compactIcons = useCompact)
+                } else {
+                    ImageActionIcons(compactIcons = useCompact)
+                    ShareEngineSlot(compactChip = useCompact, iconOnly = useIconOnly)
+                }
             }
         }
         return
@@ -497,6 +509,7 @@ private fun ImageShareEngineChip(
     engines: List<SearchEngineConfig>,
     onShareEngineClick: (SearchEngineConfig) -> Unit,
     compact: Boolean = false,
+    iconOnly: Boolean = false,
 ) {
     val (displayEngineOrNull, rememberEngine) = rememberLastUsedImageShareEngine(engines)
     // 调用方只在有引擎时才挂这个芯片；这里再兜一层，避免空列表从别的入口进来。
@@ -572,8 +585,8 @@ private fun ImageShareEngineChip(
         rowAnchorLeftInWindow = clampRowAnchorLeft(desiredLeft)
     }
 
-    val chipHeight = 40.dp
-    val chipCorner = 20.dp
+    val chipHeight = if (compact) 32.dp else 40.dp
+    val chipCorner = if (compact) 16.dp else 20.dp
 
     Box(
         modifier = Modifier.onGloballyPositioned { anchorCoordinates = it }
@@ -648,31 +661,37 @@ private fun ImageShareEngineChip(
                     }
                 }
                 .padding(
-                    start = 14.dp,
-                    end = if (showEnginePicker) 6.dp else 14.dp
+                    start = if (iconOnly) 8.dp else if (compact) 10.dp else 14.dp,
+                    end = if (iconOnly) {
+                        if (showEnginePicker) 4.dp else 8.dp
+                    } else {
+                        if (showEnginePicker) 6.dp else if (compact) 10.dp else 14.dp
+                    }
                 ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 6.dp)
         ) {
             SearchEngineIcon(
                 engine = displayEngine,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(if (compact) 18.dp else 20.dp)
             )
-            Text(
-                text = displayEngine.name,
-                style = MaterialTheme.typography.labelMedium.copy(
-                    fontSize = 14.sp,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
-                ),
-                color = Color.White,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (!iconOnly) {
+                Text(
+                    text = displayEngine.name,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontSize = if (compact) 13.sp else 14.sp,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    ),
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             if (showEnginePicker) {
                 Box(
                     modifier = Modifier
-                        .size(if (compact) 20.dp else 24.dp)
-                        .clip(RoundedCornerShape(if (compact) 10.dp else 12.dp))
+                        .size(if (compact) 18.dp else 24.dp)
+                        .clip(RoundedCornerShape(if (compact) 9.dp else 12.dp))
                         .clickable { menuExpanded = true },
                     contentAlignment = Alignment.Center
                 ) {
@@ -760,6 +779,7 @@ private fun ImageSearchIconButton(
     engines: List<SearchEngineConfig>,
     onImageSearch: () -> Unit,
     onShareEngineClick: (SearchEngineConfig) -> Unit,
+    compact: Boolean = false,
 ) {
     val (displayEngine, rememberEngine) = rememberLastUsedImageShareEngine(engines)
     var anchorCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
@@ -830,9 +850,12 @@ private fun ImageSearchIconButton(
         rowAnchorLeftInWindow = clampRowAnchorLeft(desiredLeft)
     }
 
+    val buttonSize = if (compact) 32.dp else 42.dp
+    val iconSize = if (compact) 18.dp else 22.dp
+
     Box(
         modifier = Modifier
-            .size(42.dp)
+            .size(buttonSize)
             .clip(CircleShape)
             .onGloballyPositioned { anchorCoordinates = it }
             .then(
@@ -913,7 +936,7 @@ private fun ImageSearchIconButton(
             imageVector = Icons.Outlined.ImageSearch,
             contentDescription = stringResource(R.string.pick_result_action_image_search),
             tint = iconTint,
-            modifier = Modifier.size(22.dp),
+            modifier = Modifier.size(iconSize),
         )
     }
 
@@ -979,78 +1002,110 @@ private fun PickResultImageIconBar(
         }
     }
 
-    Row(
+    val normalItemSize = 42.dp
+    val compactItemSize = 32.dp
+    val itemSpacing = 2.dp
+    val normalContentWidth = normalItemSize * visible.size + itemSpacing * (visible.size - 1).coerceAtLeast(0)
+    val compactContentWidth = compactItemSize * visible.size + itemSpacing * (visible.size - 1).coerceAtLeast(0)
+
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 10.dp, vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
     ) {
-        // 「查看图片」现在是可排序按钮（VIEW），由 visible 统一渲染；
-        // 这里不再额外画一个固定入口，否则纯图标模式下会出现两个全屏查看。
-        visible.forEach { button ->
-            when (button) {
-                com.slideindex.app.settings.PickResultImageBarButton.VIEW ->
-                    if (onViewImage != null) {
-                        PickResultActionIcon(
-                            icon = PickResultViewImageIcon,
-                            enabled = true,
-                            onClick = onViewImage,
-                            contentDescription = stringResource(R.string.pick_result_action_view_image),
-                        )
+        val useCompact = normalContentWidth > maxWidth
+        val overflows = compactContentWidth > maxWidth
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(
+                    if (overflows) {
+                        Modifier.horizontalScroll(rememberScrollState())
+                    } else {
+                        Modifier
                     }
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = if (overflows) {
+                Arrangement.spacedBy(itemSpacing, Alignment.Start)
+            } else {
+                Arrangement.spacedBy(itemSpacing, Alignment.CenterHorizontally)
+            },
+        ) {
+            // 「查看图片」现在是可排序按钮（VIEW），由 visible 统一渲染；
+            // 这里不再额外画一个固定入口，否则纯图标模式下会出现两个全屏查看。
+            visible.forEach { button ->
+                when (button) {
+                    com.slideindex.app.settings.PickResultImageBarButton.VIEW ->
+                        if (onViewImage != null) {
+                            PickResultActionIcon(
+                                icon = PickResultViewImageIcon,
+                                enabled = true,
+                                onClick = onViewImage,
+                                contentDescription = stringResource(R.string.pick_result_action_view_image),
+                                compact = useCompact,
+                            )
+                        }
 
-                com.slideindex.app.settings.PickResultImageBarButton.EDIT ->
-                    if (editAction != null) {
-                        PickResultActionIcon(
-                            icon = Icons.Outlined.Edit,
-                            enabled = true,
-                            onClick = editAction,
-                            contentDescription = stringResource(R.string.pick_result_action_edit_image),
+                    com.slideindex.app.settings.PickResultImageBarButton.EDIT ->
+                        if (editAction != null) {
+                            PickResultActionIcon(
+                                icon = Icons.Outlined.Edit,
+                                enabled = true,
+                                onClick = editAction,
+                                contentDescription = stringResource(R.string.pick_result_action_edit_image),
+                                compact = useCompact,
+                            )
+                        }
+
+                    com.slideindex.app.settings.PickResultImageBarButton.IMAGE_SEARCH ->
+                        ImageSearchIconButton(
+                            engines = engines,
+                            onImageSearch = onImageSearch,
+                            onShareEngineClick = onShareEngineClick,
+                            compact = useCompact,
                         )
-                    }
 
-                com.slideindex.app.settings.PickResultImageBarButton.IMAGE_SEARCH ->
-                    ImageSearchIconButton(
-                        engines = engines,
-                        onImageSearch = onImageSearch,
-                        onShareEngineClick = onShareEngineClick,
-                    )
+                    com.slideindex.app.settings.PickResultImageBarButton.SAVE ->
+                        PickResultActionIcon(
+                            icon = Icons.Outlined.Save,
+                            enabled = true,
+                            onClick = onSave,
+                            onLongClick = onSaveLongClick,
+                            contentDescription = stringResource(R.string.pick_result_action_save_image),
+                            compact = useCompact,
+                        )
 
-                com.slideindex.app.settings.PickResultImageBarButton.SAVE ->
-                    PickResultActionIcon(
-                        icon = Icons.Outlined.Save,
-                        enabled = true,
-                        onClick = onSave,
-                        onLongClick = onSaveLongClick,
-                        contentDescription = stringResource(R.string.pick_result_action_save_image),
-                    )
+                    com.slideindex.app.settings.PickResultImageBarButton.SHARE ->
+                        PickResultActionIcon(
+                            icon = Icons.Outlined.Share,
+                            enabled = true,
+                            onClick = onShareClick ?: onShare,
+                            onLongClick = onShareLongClick ?: onStartImageDrag,
+                            contentDescription = stringResource(R.string.pick_result_action_share_image),
+                            badge = shareDefault,
+                            compact = useCompact,
+                        )
 
-                com.slideindex.app.settings.PickResultImageBarButton.SHARE ->
-                    PickResultActionIcon(
-                        icon = Icons.Outlined.Share,
-                        enabled = true,
-                        onClick = onShareClick ?: onShare,
-                        onLongClick = onShareLongClick ?: onStartImageDrag,
-                        contentDescription = stringResource(R.string.pick_result_action_share_image),
-                        badge = shareDefault,
-                    )
+                    com.slideindex.app.settings.PickResultImageBarButton.PIN ->
+                        PickResultActionIcon(
+                            icon = Icons.Outlined.PushPin,
+                            enabled = true,
+                            onClick = { onPinToScreen?.invoke() },
+                            contentDescription = stringResource(R.string.pick_result_pin),
+                            compact = useCompact,
+                        )
 
-                com.slideindex.app.settings.PickResultImageBarButton.PIN ->
-                    PickResultActionIcon(
-                        icon = Icons.Outlined.PushPin,
-                        enabled = true,
-                        onClick = { onPinToScreen?.invoke() },
-                        contentDescription = stringResource(R.string.pick_result_pin),
-                    )
-
-                com.slideindex.app.settings.PickResultImageBarButton.STASH ->
-                    PickResultActionIcon(
-                        icon = Icons.Outlined.Archive,
-                        enabled = true,
-                        onClick = { onStash?.invoke() },
-                        contentDescription = stringResource(R.string.pick_result_stash),
-                    )
+                    com.slideindex.app.settings.PickResultImageBarButton.STASH ->
+                        PickResultActionIcon(
+                            icon = Icons.Outlined.Archive,
+                            enabled = true,
+                            onClick = { onStash?.invoke() },
+                            contentDescription = stringResource(R.string.pick_result_stash),
+                            compact = useCompact,
+                        )
+                }
             }
         }
     }
@@ -1244,8 +1299,8 @@ private fun PickResultActionIcon(
 ) {
     val isDark = LocalAppDarkTheme.current
     val iconTint = if (overlayMode) Color(0xFFF2F2F7) else if (isDark) Color(0xFFE0E0E6) else Color(0xFF333333)
-    val buttonSize = 42.dp
-    val iconSize = 22.dp
+    val buttonSize = if (compact) 32.dp else 42.dp
+    val iconSize = if (compact) 18.dp else 22.dp
 
     Box(
         modifier = modifier
