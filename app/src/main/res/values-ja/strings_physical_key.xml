@@ -23,10 +23,13 @@
     <string name="physical_key_section_volume">音量キー</string>
     <string name="physical_key_section_advanced">詳細設定と感度</string>
 
+    <string name="physical_key_gesture_power_single">電源キー単押し</string>
     <string name="physical_key_gesture_power_long">電源キー長押し</string>
     <string name="physical_key_gesture_power_double">電源キーダブルタップ</string>
+    <string name="physical_key_gesture_vol_up_single">音量＋単押し</string>
     <string name="physical_key_gesture_vol_up_long">音量＋長押し</string>
     <string name="physical_key_gesture_vol_up_double">音量＋ダブルタップ</string>
+    <string name="physical_key_gesture_vol_down_single">音量－単押し</string>
     <string name="physical_key_gesture_vol_down_long">音量－長押し</string>
     <string name="physical_key_gesture_vol_down_double">音量－ダブルタップ</string>
     <string name="physical_key_gesture_vol_both_press">音量＋と－の同時押し</string>

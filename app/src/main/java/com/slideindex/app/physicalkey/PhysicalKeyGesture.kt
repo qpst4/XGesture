@@ -11,6 +11,9 @@ enum class PhysicalKeyGesture {
     VOLUME_DOWN_LONG_PRESS,
     VOLUME_DOWN_DOUBLE_PRESS,
     VOLUME_BOTH_PRESS,
+    POWER_SINGLE_PRESS,
+    VOLUME_UP_SINGLE_PRESS,
+    VOLUME_DOWN_SINGLE_PRESS,
     ;
 
     companion object {

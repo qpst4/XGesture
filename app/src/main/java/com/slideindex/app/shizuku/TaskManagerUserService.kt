@@ -338,8 +338,7 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
             },
             onDiagnostics = { physicalKeyDiagnostics = it },
         )
-        observer.mappedKeyCodes = configuredMappedKeyCodes
-        observer.doublePressKeyCodes = configuredDoublePressKeyCodes
+        observer.updateTargets(configuredMappedKeyCodes, configuredDoublePressKeyCodes, configuredSinglePressKeyCodes)
         keyObserver = observer
         return observer.start()
     }
@@ -363,8 +362,7 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
             },
             onDiagnostics = { physicalKeyDiagnostics = it },
         )
-        observer.mappedKeyCodes = configuredMappedKeyCodes
-        observer.doublePressKeyCodes = configuredDoublePressKeyCodes
+        observer.updateTargets(configuredMappedKeyCodes, configuredDoublePressKeyCodes, configuredSinglePressKeyCodes)
         val started = observer.start()
         if (!started) return false
         pollingKeyObserver = observer
@@ -393,17 +391,27 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
     @Volatile
     private var configuredDoublePressKeyCodes: Set<Int> = emptySet()
 
+    @Volatile
+    private var configuredSinglePressKeyCodes: Set<Int> = emptySet()
+
     override fun updatePhysicalKeyTargets(mappedKeyCodes: IntArray?, doublePressKeyCodes: IntArray?) {
+        updatePhysicalKeyCustomTargets(mappedKeyCodes, doublePressKeyCodes, intArrayOf())
+    }
+
+    override fun updatePhysicalKeyCustomTargets(
+        mappedKeyCodes: IntArray?,
+        doublePressKeyCodes: IntArray?,
+        singlePressKeyCodes: IntArray?,
+    ) {
         val mapped = mappedKeyCodes?.toSet() ?: emptySet()
         val doublePress = doublePressKeyCodes?.toSet() ?: emptySet()
+        val singlePress = singlePressKeyCodes?.toSet() ?: emptySet()
         configuredMappedKeyCodes = mapped
         configuredDoublePressKeyCodes = doublePress
+        configuredSinglePressKeyCodes = singlePress
 
-        keyObserver?.mappedKeyCodes = mapped
-        keyObserver?.doublePressKeyCodes = doublePress
-
-        pollingKeyObserver?.mappedKeyCodes = mapped
-        pollingKeyObserver?.doublePressKeyCodes = doublePress
+        keyObserver?.updateTargets(mapped, doublePress, singlePress)
+        pollingKeyObserver?.updateTargets(mapped, doublePress, singlePress)
     }
 
     override fun removeTaskById(taskIdStr: String?): Boolean =

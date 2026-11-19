@@ -82,12 +82,15 @@ fun PhysicalKeySettingsScreen(
     val statusStopped = stringResource(R.string.physical_key_status_stopped)
 
     val sectionPowerTitle = stringResource(R.string.physical_key_section_power)
+    val powerSingleTitle = stringResource(R.string.physical_key_gesture_power_single)
     val powerLongTitle = stringResource(R.string.physical_key_gesture_power_long)
     val powerDoubleTitle = stringResource(R.string.physical_key_gesture_power_double)
 
     val sectionVolumeTitle = stringResource(R.string.physical_key_section_volume)
+    val volUpSingleTitle = stringResource(R.string.physical_key_gesture_vol_up_single)
     val volUpLongTitle = stringResource(R.string.physical_key_gesture_vol_up_long)
     val volUpDoubleTitle = stringResource(R.string.physical_key_gesture_vol_up_double)
+    val volDownSingleTitle = stringResource(R.string.physical_key_gesture_vol_down_single)
     val volDownLongTitle = stringResource(R.string.physical_key_gesture_vol_down_long)
     val volDownDoubleTitle = stringResource(R.string.physical_key_gesture_vol_down_double)
     val volBothTitle = stringResource(R.string.physical_key_gesture_vol_both_press)
@@ -182,13 +185,13 @@ fun PhysicalKeySettingsScreen(
         groupedCardItems(
             keyPrefix = "physicalkey-power",
             items = listOf(
-                settingsCardScopeItem("power-long") {
-                    val action = settings.entries[PhysicalKeyGesture.POWER_LONG_PRESS]?.action ?: GestureAction.None
+                settingsCardScopeItem("power-single") {
+                    val action = settings.entries[PhysicalKeyGesture.POWER_SINGLE_PRESS]?.action ?: GestureAction.None
                     MiuixNavigationRow(
-                        title = powerLongTitle,
+                        title = powerSingleTitle,
                         summary = gestureActionLabel(action),
                         enabled = settings.enabled,
-                        onClick = { onOpenActionPick(PhysicalKeyGesture.POWER_LONG_PRESS) },
+                        onClick = { onOpenActionPick(PhysicalKeyGesture.POWER_SINGLE_PRESS) },
                     )
                 },
                 settingsCardScopeItem("power-double") {
@@ -198,6 +201,15 @@ fun PhysicalKeySettingsScreen(
                         summary = gestureActionLabel(action),
                         enabled = settings.enabled,
                         onClick = { onOpenActionPick(PhysicalKeyGesture.POWER_DOUBLE_PRESS) },
+                    )
+                },
+                settingsCardScopeItem("power-long") {
+                    val action = settings.entries[PhysicalKeyGesture.POWER_LONG_PRESS]?.action ?: GestureAction.None
+                    MiuixNavigationRow(
+                        title = powerLongTitle,
+                        summary = gestureActionLabel(action),
+                        enabled = settings.enabled,
+                        onClick = { onOpenActionPick(PhysicalKeyGesture.POWER_LONG_PRESS) },
                     )
                 },
             )
@@ -211,13 +223,13 @@ fun PhysicalKeySettingsScreen(
         groupedCardItems(
             keyPrefix = "physicalkey-volume",
             items = listOf(
-                settingsCardScopeItem("vol-up-long") {
-                    val action = settings.entries[PhysicalKeyGesture.VOLUME_UP_LONG_PRESS]?.action ?: GestureAction.None
+                settingsCardScopeItem("vol-up-single") {
+                    val action = settings.entries[PhysicalKeyGesture.VOLUME_UP_SINGLE_PRESS]?.action ?: GestureAction.None
                     MiuixNavigationRow(
-                        title = volUpLongTitle,
+                        title = volUpSingleTitle,
                         summary = gestureActionLabel(action),
                         enabled = settings.enabled,
-                        onClick = { onOpenActionPick(PhysicalKeyGesture.VOLUME_UP_LONG_PRESS) },
+                        onClick = { onOpenActionPick(PhysicalKeyGesture.VOLUME_UP_SINGLE_PRESS) },
                     )
                 },
                 settingsCardScopeItem("vol-up-double") {
@@ -229,13 +241,22 @@ fun PhysicalKeySettingsScreen(
                         onClick = { onOpenActionPick(PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS) },
                     )
                 },
-                settingsCardScopeItem("vol-down-long") {
-                    val action = settings.entries[PhysicalKeyGesture.VOLUME_DOWN_LONG_PRESS]?.action ?: GestureAction.None
+                settingsCardScopeItem("vol-up-long") {
+                    val action = settings.entries[PhysicalKeyGesture.VOLUME_UP_LONG_PRESS]?.action ?: GestureAction.None
                     MiuixNavigationRow(
-                        title = volDownLongTitle,
+                        title = volUpLongTitle,
                         summary = gestureActionLabel(action),
                         enabled = settings.enabled,
-                        onClick = { onOpenActionPick(PhysicalKeyGesture.VOLUME_DOWN_LONG_PRESS) },
+                        onClick = { onOpenActionPick(PhysicalKeyGesture.VOLUME_UP_LONG_PRESS) },
+                    )
+                },
+                settingsCardScopeItem("vol-down-single") {
+                    val action = settings.entries[PhysicalKeyGesture.VOLUME_DOWN_SINGLE_PRESS]?.action ?: GestureAction.None
+                    MiuixNavigationRow(
+                        title = volDownSingleTitle,
+                        summary = gestureActionLabel(action),
+                        enabled = settings.enabled,
+                        onClick = { onOpenActionPick(PhysicalKeyGesture.VOLUME_DOWN_SINGLE_PRESS) },
                     )
                 },
                 settingsCardScopeItem("vol-down-double") {
@@ -245,6 +266,15 @@ fun PhysicalKeySettingsScreen(
                         summary = gestureActionLabel(action),
                         enabled = settings.enabled,
                         onClick = { onOpenActionPick(PhysicalKeyGesture.VOLUME_DOWN_DOUBLE_PRESS) },
+                    )
+                },
+                settingsCardScopeItem("vol-down-long") {
+                    val action = settings.entries[PhysicalKeyGesture.VOLUME_DOWN_LONG_PRESS]?.action ?: GestureAction.None
+                    MiuixNavigationRow(
+                        title = volDownLongTitle,
+                        summary = gestureActionLabel(action),
+                        enabled = settings.enabled,
+                        onClick = { onOpenActionPick(PhysicalKeyGesture.VOLUME_DOWN_LONG_PRESS) },
                     )
                 },
                 settingsCardScopeItem("vol-both-press") {

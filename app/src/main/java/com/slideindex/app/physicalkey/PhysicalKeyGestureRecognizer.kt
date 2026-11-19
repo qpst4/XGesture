@@ -10,6 +10,8 @@ class PhysicalKeyGestureRecognizer(
     var longPressTimeoutMs: Long = DEFAULT_LONG_PRESS_TIMEOUT_MS,
     var doubleClickTimeoutMs: Long = DEFAULT_DOUBLE_CLICK_TIMEOUT_MS,
     var chordWindowMs: Long = DEFAULT_CHORD_WINDOW_MS,
+    var doublePressKeyCodes: Set<Int> = emptySet(),
+    var singlePressKeyCodes: Set<Int> = emptySet(),
 ) {
     companion object {
         const val KEY_VOLUMEDOWN = 114
@@ -94,16 +96,27 @@ class PhysicalKeyGestureRecognizer(
                 return recognized
             }
 
-            // 短按松开：判定是否构成双击
-            if (state.lastClickTimeMs > 0L && (nowMs - state.lastClickTimeMs <= doubleClickTimeoutMs)) {
-                state.lastClickTimeMs = 0L
-                when (keyCode) {
-                    KEY_POWER -> recognized.add(PhysicalKeyGesture.POWER_DOUBLE_PRESS)
-                    KEY_VOLUMEUP -> recognized.add(PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS)
-                    KEY_VOLUMEDOWN -> recognized.add(PhysicalKeyGesture.VOLUME_DOWN_DOUBLE_PRESS)
+            // 短按松开：判定是否构成双击或单击
+            if (keyCode in doublePressKeyCodes) {
+                if (state.lastClickTimeMs > 0L && (nowMs - state.lastClickTimeMs <= doubleClickTimeoutMs)) {
+                    state.lastClickTimeMs = 0L
+                    when (keyCode) {
+                        KEY_POWER -> recognized.add(PhysicalKeyGesture.POWER_DOUBLE_PRESS)
+                        KEY_VOLUMEUP -> recognized.add(PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS)
+                        KEY_VOLUMEDOWN -> recognized.add(PhysicalKeyGesture.VOLUME_DOWN_DOUBLE_PRESS)
+                    }
+                } else {
+                    state.lastClickTimeMs = nowMs
                 }
             } else {
-                state.lastClickTimeMs = nowMs
+                state.lastClickTimeMs = 0L
+                if (keyCode in singlePressKeyCodes) {
+                    when (keyCode) {
+                        KEY_POWER -> recognized.add(PhysicalKeyGesture.POWER_SINGLE_PRESS)
+                        KEY_VOLUMEUP -> recognized.add(PhysicalKeyGesture.VOLUME_UP_SINGLE_PRESS)
+                        KEY_VOLUMEDOWN -> recognized.add(PhysicalKeyGesture.VOLUME_DOWN_SINGLE_PRESS)
+                    }
+                }
             }
         }
 
@@ -111,7 +124,7 @@ class PhysicalKeyGestureRecognizer(
     }
 
     /**
-     * 定时心跳轮询（在没有新按键事件时驱动长按超时判定）。
+     * 定时心跳轮询（在没有新按键事件时驱动长按超时与双击消歧单击判定）。
      */
     fun onTick(nowMs: Long): List<PhysicalKeyGesture> {
         val recognized = mutableListOf<PhysicalKeyGesture>()
@@ -128,9 +141,16 @@ class PhysicalKeyGestureRecognizer(
                     }
                 }
             } else if (!state.isDown && state.lastClickTimeMs > 0L) {
-                // 清理过期的单击时间戳
+                // 双击消歧窗口结束判定
                 if (nowMs - state.lastClickTimeMs > doubleClickTimeoutMs) {
                     state.lastClickTimeMs = 0L
+                    if (keyCode in singlePressKeyCodes) {
+                        when (keyCode) {
+                            KEY_POWER -> recognized.add(PhysicalKeyGesture.POWER_SINGLE_PRESS)
+                            KEY_VOLUMEUP -> recognized.add(PhysicalKeyGesture.VOLUME_UP_SINGLE_PRESS)
+                            KEY_VOLUMEDOWN -> recognized.add(PhysicalKeyGesture.VOLUME_DOWN_SINGLE_PRESS)
+                        }
+                    }
                 }
             }
         }

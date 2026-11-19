@@ -119,4 +119,6 @@ interface ITaskManagerService {
     String getPhysicalKeyDiagnostics() = 39;
 
     void updatePhysicalKeyTargets(in int[] mappedKeyCodes, in int[] doublePressKeyCodes) = 40;
+
+    void updatePhysicalKeyCustomTargets(in int[] mappedKeyCodes, in int[] doublePressKeyCodes, in int[] singlePressKeyCodes) = 41;
 }

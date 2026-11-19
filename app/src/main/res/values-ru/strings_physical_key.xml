@@ -23,10 +23,13 @@
     <string name="physical_key_section_volume">Клавиши громкости</string>
     <string name="physical_key_section_advanced">Дополнительно и чувствительность</string>
 
+    <string name="physical_key_gesture_power_single">Короткое нажатие питания</string>
     <string name="physical_key_gesture_power_long">Долгое нажатие питания</string>
     <string name="physical_key_gesture_power_double">Двойное нажатие питания</string>
+    <string name="physical_key_gesture_vol_up_single">Короткое нажатие громкости +</string>
     <string name="physical_key_gesture_vol_up_long">Долгое нажатие громкости +</string>
     <string name="physical_key_gesture_vol_up_double">Двойное нажатие громкости +</string>
+    <string name="physical_key_gesture_vol_down_single">Короткое нажатие громкости -</string>
     <string name="physical_key_gesture_vol_down_long">Долгое нажатие громкости -</string>
     <string name="physical_key_gesture_vol_down_double">Двойное нажатие громкости -</string>
     <string name="physical_key_gesture_vol_both_press">Комбинация громкости + и -</string>

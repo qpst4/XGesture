@@ -23,10 +23,13 @@
     <string name="physical_key_section_volume">音量键手势</string>
     <string name="physical_key_section_advanced">高级选项与灵敏度</string>
 
+    <string name="physical_key_gesture_power_single">电源键单击</string>
     <string name="physical_key_gesture_power_long">电源键长按</string>
     <string name="physical_key_gesture_power_double">电源键双击</string>
+    <string name="physical_key_gesture_vol_up_single">音量加单击</string>
     <string name="physical_key_gesture_vol_up_long">音量加长按</string>
     <string name="physical_key_gesture_vol_up_double">音量加双击</string>
+    <string name="physical_key_gesture_vol_down_single">音量减单击</string>
     <string name="physical_key_gesture_vol_down_long">音量减长按</string>
     <string name="physical_key_gesture_vol_down_double">音量减双击</string>
     <string name="physical_key_gesture_vol_both_press">音量加减并击</string>

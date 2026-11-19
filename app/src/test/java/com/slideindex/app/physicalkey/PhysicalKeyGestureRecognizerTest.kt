@@ -15,6 +15,11 @@ class PhysicalKeyGestureRecognizerTest {
             longPressTimeoutMs = 500L,
             doubleClickTimeoutMs = 350L,
             chordWindowMs = 150L,
+            doublePressKeyCodes = setOf(
+                PhysicalKeyGestureRecognizer.KEY_POWER,
+                PhysicalKeyGestureRecognizer.KEY_VOLUMEUP,
+                PhysicalKeyGestureRecognizer.KEY_VOLUMEDOWN,
+            ),
         )
     }
 
@@ -107,6 +112,51 @@ class PhysicalKeyGestureRecognizerTest {
         recognizer.onKeyEvent(PhysicalKeyGestureRecognizer.KEY_POWER, isDown = false, nowMs = 300L)
 
         val tick = recognizer.onTick(700L)
+        assertTrue(tick.isEmpty())
+    }
+
+    @Test
+    fun testSinglePressImmediateWhenNoDoubleClick() {
+        recognizer.doublePressKeyCodes = emptySet()
+        recognizer.singlePressKeyCodes = setOf(PhysicalKeyGestureRecognizer.KEY_VOLUMEUP)
+
+        recognizer.onKeyEvent(PhysicalKeyGestureRecognizer.KEY_VOLUMEUP, isDown = true, nowMs = 100L)
+        val up = recognizer.onKeyEvent(PhysicalKeyGestureRecognizer.KEY_VOLUMEUP, isDown = false, nowMs = 180L)
+        assertEquals(listOf(PhysicalKeyGesture.VOLUME_UP_SINGLE_PRESS), up)
+    }
+
+    @Test
+    fun testSinglePressAfterDoubleClickTimeout() {
+        recognizer.doublePressKeyCodes = setOf(PhysicalKeyGestureRecognizer.KEY_POWER)
+        recognizer.singlePressKeyCodes = setOf(PhysicalKeyGestureRecognizer.KEY_POWER)
+
+        recognizer.onKeyEvent(PhysicalKeyGestureRecognizer.KEY_POWER, isDown = true, nowMs = 100L)
+        val up1 = recognizer.onKeyEvent(PhysicalKeyGestureRecognizer.KEY_POWER, isDown = false, nowMs = 180L)
+        assertTrue(up1.isEmpty())
+
+        // 350ms 内无第二次按键
+        val tickEarly = recognizer.onTick(300L)
+        assertTrue(tickEarly.isEmpty())
+
+        // 超过 350ms (180 + 351 = 531)
+        val tickTimeout = recognizer.onTick(550L)
+        assertEquals(listOf(PhysicalKeyGesture.POWER_SINGLE_PRESS), tickTimeout)
+    }
+
+    @Test
+    fun testDoubleClickSuppressesSinglePress() {
+        recognizer.doublePressKeyCodes = setOf(PhysicalKeyGestureRecognizer.KEY_POWER)
+        recognizer.singlePressKeyCodes = setOf(PhysicalKeyGestureRecognizer.KEY_POWER)
+
+        recognizer.onKeyEvent(PhysicalKeyGestureRecognizer.KEY_POWER, isDown = true, nowMs = 100L)
+        val up1 = recognizer.onKeyEvent(PhysicalKeyGestureRecognizer.KEY_POWER, isDown = false, nowMs = 180L)
+        assertTrue(up1.isEmpty())
+
+        recognizer.onKeyEvent(PhysicalKeyGestureRecognizer.KEY_POWER, isDown = true, nowMs = 300L)
+        val up2 = recognizer.onKeyEvent(PhysicalKeyGestureRecognizer.KEY_POWER, isDown = false, nowMs = 380L)
+        assertEquals(listOf(PhysicalKeyGesture.POWER_DOUBLE_PRESS), up2)
+
+        val tick = recognizer.onTick(800L)
         assertTrue(tick.isEmpty())
     }
 }

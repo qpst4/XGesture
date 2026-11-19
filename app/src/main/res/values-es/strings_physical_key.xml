@@ -23,10 +23,13 @@
     <string name="physical_key_section_volume">Teclas de volumen</string>
     <string name="physical_key_section_advanced">Opciones avanzadas y sensibilidad</string>
 
+    <string name="physical_key_gesture_power_single">Pulsación corta de encendido</string>
     <string name="physical_key_gesture_power_long">Pulsación larga de encendido</string>
     <string name="physical_key_gesture_power_double">Doble toque de encendido</string>
+    <string name="physical_key_gesture_vol_up_single">Pulsación corta de volumen +</string>
     <string name="physical_key_gesture_vol_up_long">Pulsación larga de volumen +</string>
     <string name="physical_key_gesture_vol_up_double">Doble toque de volumen +</string>
+    <string name="physical_key_gesture_vol_down_single">Pulsación corta de volumen -</string>
     <string name="physical_key_gesture_vol_down_long">Pulsación larga de volumen -</string>
     <string name="physical_key_gesture_vol_down_double">Doble toque de volumen -</string>
     <string name="physical_key_gesture_vol_both_press">Combinación de volumen + y -</string>

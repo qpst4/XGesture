@@ -31,6 +31,11 @@ data class PhysicalKeySettings(
     companion object {
         fun defaultEntries(): Map<PhysicalKeyGesture, PhysicalKeyEntry> {
             return mapOf(
+                PhysicalKeyGesture.POWER_SINGLE_PRESS to PhysicalKeyEntry(
+                    gesture = PhysicalKeyGesture.POWER_SINGLE_PRESS,
+                    enabled = false,
+                    action = GestureAction.None,
+                ),
                 PhysicalKeyGesture.POWER_LONG_PRESS to PhysicalKeyEntry(
                     gesture = PhysicalKeyGesture.POWER_LONG_PRESS,
                     enabled = true,
@@ -41,6 +46,11 @@ data class PhysicalKeySettings(
                     enabled = false,
                     action = GestureAction.None,
                 ),
+                PhysicalKeyGesture.VOLUME_UP_SINGLE_PRESS to PhysicalKeyEntry(
+                    gesture = PhysicalKeyGesture.VOLUME_UP_SINGLE_PRESS,
+                    enabled = false,
+                    action = GestureAction.None,
+                ),
                 PhysicalKeyGesture.VOLUME_UP_LONG_PRESS to PhysicalKeyEntry(
                     gesture = PhysicalKeyGesture.VOLUME_UP_LONG_PRESS,
                     enabled = true,
@@ -48,6 +58,11 @@ data class PhysicalKeySettings(
                 ),
                 PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS to PhysicalKeyEntry(
                     gesture = PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS,
+                    enabled = false,
+                    action = GestureAction.None,
+                ),
+                PhysicalKeyGesture.VOLUME_DOWN_SINGLE_PRESS to PhysicalKeyEntry(
+                    gesture = PhysicalKeyGesture.VOLUME_DOWN_SINGLE_PRESS,
                     enabled = false,
                     action = GestureAction.None,
                 ),

@@ -46,6 +46,19 @@ class EvdevPhysicalKeyObserver(
     var doublePressKeyCodes: Set<Int> = emptySet()
 
     @Volatile
+    var singlePressKeyCodes: Set<Int> = emptySet()
+
+    fun updateTargets(mapped: Set<Int>, doublePress: Set<Int>, singlePress: Set<Int>) {
+        mappedKeyCodes = mapped
+        doublePressKeyCodes = doublePress
+        singlePressKeyCodes = singlePress
+        synchronized(recognizer) {
+            recognizer.doublePressKeyCodes = doublePress
+            recognizer.singlePressKeyCodes = singlePress
+        }
+    }
+
+    @Volatile
     private var systemBridge: SystemBridge? = null
 
     @Volatile
@@ -123,6 +136,11 @@ class EvdevPhysicalKeyObserver(
                                         it == PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS ||
                                         it == PhysicalKeyGesture.VOLUME_DOWN_DOUBLE_PRESS
                                 }
+                                val isSinglePress = gestures.any {
+                                    it == PhysicalKeyGesture.POWER_SINGLE_PRESS ||
+                                        it == PhysicalKeyGesture.VOLUME_UP_SINGLE_PRESS ||
+                                        it == PhysicalKeyGesture.VOLUME_DOWN_SINGLE_PRESS
+                                }
                                 handleGestures(gestures, nowMs)
 
                                 if (!isMapped) {
@@ -136,13 +154,16 @@ class EvdevPhysicalKeyObserver(
                                 } else if (isDoublePress) {
                                     log("native engine: keyCode=$code double press triggered, suppressing uinput to avoid conflicting system actions")
                                     return true
+                                } else if (isSinglePress) {
+                                    log("native engine: keyCode=$code single press triggered immediately (no double-press), suppressing uinput")
+                                    return true
                                 } else if (code in doublePressKeyCodes) {
                                     // 仅当用户为该按键配置了双击手势时才启动消歧等待（若用户按第2下则取消回写）
                                     pendingClicks[code] = PendingClick(deviceId, code, nowMs)
                                     return true
                                 } else {
-                                    // 配置了长按但未配置双击的按键：短按松开立刻补发完整 DOWN+UP，0ms 延迟瞬间锁屏/调音！
-                                    log("native engine: single click confirmed for keyCode=$code (no double-press configured), emitting immediately to uinput (0ms)")
+                                    // 配置了长按但未配置双击与自定义单击的按键：短按松开立刻补发完整 DOWN+UP，0ms 延迟瞬间锁屏/调音！
+                                    log("native engine: single click confirmed for keyCode=$code (no double-press/single configured), emitting immediately to uinput (0ms)")
                                     systemBridge?.let { bridge ->
                                         emitUinputClick(bridge, deviceId, code)
                                     }
@@ -301,15 +322,19 @@ class EvdevPhysicalKeyObserver(
 
             // 检查待发射的单键回写（双击消歧窗口确认）
             val bridge = systemBridge
-            if (bridge != null && pendingClicks.isNotEmpty()) {
+            if (pendingClicks.isNotEmpty()) {
                 val it = pendingClicks.entries.iterator()
                 while (it.hasNext()) {
                     val entry = it.next()
                     val pending = entry.value
                     if (nowMs - pending.timeMs >= DOUBLE_TAP_DISAMBIGUATION_MS) {
                         it.remove()
-                        log("native engine: single click confirmed for keyCode=${pending.keyCode} after double-tap window, emitting to uinput")
-                        emitUinputClick(bridge, pending.deviceId, pending.keyCode)
+                        if (pending.keyCode !in singlePressKeyCodes && bridge != null) {
+                            log("native engine: single click confirmed for keyCode=${pending.keyCode} after double-tap window, emitting to uinput")
+                            emitUinputClick(bridge, pending.deviceId, pending.keyCode)
+                        } else {
+                            log("native engine: single click gesture for keyCode=${pending.keyCode} delegated to recognizer after double-tap window")
+                        }
                     }
                 }
             }

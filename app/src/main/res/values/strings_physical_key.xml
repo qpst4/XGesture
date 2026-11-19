@@ -23,10 +23,13 @@
     <string name="physical_key_section_volume">Volume Keys</string>
     <string name="physical_key_section_advanced">Advanced &amp; Sensitivity</string>
 
+    <string name="physical_key_gesture_power_single">Power Single Press</string>
     <string name="physical_key_gesture_power_long">Power Long Press</string>
     <string name="physical_key_gesture_power_double">Power Double Tap</string>
+    <string name="physical_key_gesture_vol_up_single">Volume Up Single Press</string>
     <string name="physical_key_gesture_vol_up_long">Volume Up Long Press</string>
     <string name="physical_key_gesture_vol_up_double">Volume Up Double Tap</string>
+    <string name="physical_key_gesture_vol_down_single">Volume Down Single Press</string>
     <string name="physical_key_gesture_vol_down_long">Volume Down Long Press</string>
     <string name="physical_key_gesture_vol_down_double">Volume Down Double Tap</string>
     <string name="physical_key_gesture_vol_both_press">Volume Up + Down Combo</string>

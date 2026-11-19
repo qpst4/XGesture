@@ -23,10 +23,13 @@
     <string name="physical_key_section_volume">مفاتيح الصوت</string>
     <string name="physical_key_section_advanced">خيارات متقدمة والحساسية</string>
 
+    <string name="physical_key_gesture_power_single">نقر مفتاح الطاقة</string>
     <string name="physical_key_gesture_power_long">ضغط طويل على مفتاح الطاقة</string>
     <string name="physical_key_gesture_power_double">نقر مزدوج على مفتاح الطاقة</string>
+    <string name="physical_key_gesture_vol_up_single">نقر رفع الصوت</string>
     <string name="physical_key_gesture_vol_up_long">ضغط طويل على رفع الصوت</string>
     <string name="physical_key_gesture_vol_up_double">نقر مزدوج على رفع الصوت</string>
+    <string name="physical_key_gesture_vol_down_single">نقر خفض الصوت</string>
     <string name="physical_key_gesture_vol_down_long">ضغط طويل على خفض الصوت</string>
     <string name="physical_key_gesture_vol_down_double">نقر مزدوج على خفض الصوت</string>
     <string name="physical_key_gesture_vol_both_press">ضغط رفع وخفض الصوت معًا</string>
