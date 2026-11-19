@@ -242,6 +242,7 @@ internal fun FloatBallIdleBallChrome(
     }
     // 闲置隐身：窗内这份球自己跑 alpha 动画（Display 层那份由 FloatBallOverlay 的 ValueAnimator 驱动）。
     val idleHidden by sceneState.ballIdleHidden
+    val ballIdle by sceneState.ballIdle
     val idleOpacity by sceneState.ballIdleOpacity
     val ballOpacity = settings.floatBallOpacity.coerceIn(0f, 1f)
     val targetBallAlpha = if (idleHidden) idleOpacity.coerceIn(0f, 1f) else ballOpacity
@@ -265,7 +266,7 @@ internal fun FloatBallIdleBallChrome(
                 )
                 view.setDragging(false)
                 view.setAlphaOverride(animatedBallAlpha)
-                view.setGifFrozen(idleHidden && settings.floatBallIdleFreezeGif)
+                view.setGifFrozen(ballIdle && settings.floatBallIdleFreezeGif)
             }
         )
     }

@@ -180,14 +180,18 @@ fun SettingsLazyScreenScaffoldWithExpandableSearch(
             extraActions()
         },
         bottomContent = {
-            MiuixExpandableSearchBottomContent(
-                searchExpanded = searchExpanded,
-                searchQuery = searchQuery,
-                onSearchQueryChange = onSearchQueryChange,
-                focusRequester = searchFocusRequester,
-                hintResId = hintResId,
-            )
-            extraBottomContent()
+            // 顶栏的 bottomContent 是单槽：兄弟节点会叠在同一位置（内置动作页的筛选条把搜索框盖住）。
+            // 这里统一包一层 Column，保证「搜索条在上、附加内容在下」按参数注释的约定堆叠。
+            Column(modifier = Modifier.fillMaxWidth()) {
+                MiuixExpandableSearchBottomContent(
+                    searchExpanded = searchExpanded,
+                    searchQuery = searchQuery,
+                    onSearchQueryChange = onSearchQueryChange,
+                    focusRequester = searchFocusRequester,
+                    hintResId = hintResId,
+                )
+                extraBottomContent()
+            }
         },
         content = content,
     )

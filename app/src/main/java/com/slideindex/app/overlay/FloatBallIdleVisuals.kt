@@ -63,6 +63,8 @@ internal object FloatBallIdleVisuals {
     private fun publishBallIdleTarget(settings: AppSettings, shown: Boolean) {
         val state = FloatBallOverlay.sceneState ?: return
         state.ballIdleHidden.value = settings.floatBallHideWhenIdle && !shown
+        // 闲置本身与隐身解耦：只开「停止动图」不开隐身时，窗内那份球也要定格。
+        state.ballIdle.value = !shown
         state.ballIdleOpacity.value = settings.floatBallIdleOpacity.coerceIn(0f, 1f)
     }
 

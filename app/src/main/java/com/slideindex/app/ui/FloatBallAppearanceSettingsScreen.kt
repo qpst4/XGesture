@@ -187,6 +187,39 @@ fun FloatBallAppearanceSettingsScreen(
                         )
                     }
                 )
+                // 闲置判定时长与「停止动图」都是独立功能，不能藏在「闲置隐身」的展开区里：
+                // 展开区只在开关打开时渲染，用户会找不到、也调不了（见反馈）。
+                add(
+                    settingsCardScopeItem("idle-delay") {
+                        SettingsSliderRow(
+                            title = stringResource(R.string.float_ball_idle_delay),
+                            value = settings.floatBallIdleDelayMs / 1000f,
+                            valueRange = floatBallIdleDelayRange,
+                            steps = 19,
+                            enabled = true,
+                            label = idleDelayValueFormat.format(
+                                idleDelaySecondsLabel(settings.floatBallIdleDelayMs / 1000f)
+                            ),
+                            formatLabel = { seconds ->
+                                idleDelayValueFormat.format(idleDelaySecondsLabel(seconds))
+                            },
+                            onValueChange = { seconds ->
+                                onIdleDelayChange((seconds * 1000f).roundToInt())
+                            }
+                        )
+                    }
+                )
+                add(
+                    settingsCardScopeItem("idle-freeze-gif") {
+                        SettingSwitchRow(
+                            title = stringResource(R.string.float_ball_idle_freeze_gif),
+                            subtitle = stringResource(R.string.float_ball_idle_freeze_gif_desc),
+                            checked = settings.floatBallIdleFreezeGif,
+                            enabled = true,
+                            onCheckedChange = onIdleFreezeGifChange
+                        )
+                    }
+                )
                 add(
                     settingsCardScopeItem("hide-when-idle") {
                         SettingExpandableSwitchRow(
@@ -205,29 +238,6 @@ fun FloatBallAppearanceSettingsScreen(
                                 formatLabel = ::fractionPercentLabel,
                                 keyPoints = SETTINGS_SLIDER_PERCENT_KEY_POINTS_01,
                                 onValueChange = onIdleOpacityChange
-                            )
-                            SettingsSliderRow(
-                                title = stringResource(R.string.float_ball_idle_delay),
-                                value = settings.floatBallIdleDelayMs / 1000f,
-                                valueRange = floatBallIdleDelayRange,
-                                steps = 19,
-                                enabled = true,
-                                label = idleDelayValueFormat.format(
-                                    idleDelaySecondsLabel(settings.floatBallIdleDelayMs / 1000f)
-                                ),
-                                formatLabel = { seconds ->
-                                    idleDelayValueFormat.format(idleDelaySecondsLabel(seconds))
-                                },
-                                onValueChange = { seconds ->
-                                    onIdleDelayChange((seconds * 1000f).roundToInt())
-                                }
-                            )
-                            SettingSwitchRow(
-                                title = stringResource(R.string.float_ball_idle_freeze_gif),
-                                subtitle = stringResource(R.string.float_ball_idle_freeze_gif_desc),
-                                checked = settings.floatBallIdleFreezeGif,
-                                enabled = true,
-                                onCheckedChange = onIdleFreezeGifChange
                             )
                         }
                     }

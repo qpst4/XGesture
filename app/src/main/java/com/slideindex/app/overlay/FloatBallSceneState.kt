@@ -34,6 +34,8 @@ internal class FloatBallSceneState(initialSettings: AppSettings) {
     val ballVisible: MutableState<Boolean> = mutableStateOf(true)
     /** 闲置隐身：true = 球按 [ballIdleOpacity] 绘制（0 = 完全看不见）。 */
     val ballIdleHidden: MutableState<Boolean> = mutableStateOf(false)
+    /** 是否处于闲置（超过判定时长且未触摸）：与隐身无关，「闲置时停止动图」也读它。 */
+    val ballIdle: MutableState<Boolean> = mutableStateOf(false)
     val ballIdleOpacity: MutableState<Float> = mutableStateOf(0f)
 
     fun resolvedActiveSide(
