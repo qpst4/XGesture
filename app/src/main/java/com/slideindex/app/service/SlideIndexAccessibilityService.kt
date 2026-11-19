@@ -1013,9 +1013,6 @@ class SlideIndexAccessibilityService : AccessibilityService() {
             }
         }
 
-        fun performGlobalBack(): Boolean =
-            runCatching { instance?.performGlobalAction(GLOBAL_ACTION_BACK) ?: false }.getOrDefault(false)
-
         private const val TAG = "SlideIndexA11y"
         private const val CONFIG_CHANGE_SUPPRESSION_RETRY_MS = 400L
         private const val SCROLL_BOTTOM_STROKE_COUNT = 10
