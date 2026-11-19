@@ -117,6 +117,8 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.TOGGLE_NFC -> MaterialSymbolThinIcons.Nfc
     GestureActionType.TOGGLE_BLUETOOTH -> MaterialSymbolThinIcons.Bluetooth
     GestureActionType.SWITCH_INPUT_METHOD -> ThinActionIcons.Keyboard
+    GestureActionType.CYCLE_INPUT_METHOD -> ThinActionIcons.CycleKeyboard
+    GestureActionType.MICROPHONE_MENU -> ThinActionIcons.Mic
     GestureActionType.OPEN_INTERNET_PANEL -> FilledActionIcons.InternetPanel
     GestureActionType.OPEN_VOLUME_PANEL -> MaterialSymbolThinIcons.Tune
     GestureActionType.OPEN_VOLUME_SLIDER -> MaterialSymbolThinIcons.Tune
@@ -244,6 +246,8 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.TOGGLE_NFC -> MaterialSymbolThinIcons.Nfc
     GestureActionType.TOGGLE_BLUETOOTH -> MaterialSymbolThinIcons.Bluetooth
     GestureActionType.SWITCH_INPUT_METHOD -> ThinActionIcons.Keyboard
+    GestureActionType.CYCLE_INPUT_METHOD -> ThinActionIcons.CycleKeyboard
+    GestureActionType.MICROPHONE_MENU -> ThinActionIcons.Mic
     GestureActionType.OPEN_INTERNET_PANEL -> FilledActionIcons.InternetPanel
     GestureActionType.OPEN_VOLUME_PANEL -> MaterialSymbolThinIcons.Tune
     GestureActionType.OPEN_VOLUME_SLIDER -> MaterialSymbolThinIcons.Tune

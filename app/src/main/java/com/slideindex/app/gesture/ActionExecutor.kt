@@ -522,6 +522,11 @@ class ActionExecutor(
                     .applyAutoBrightness(context, action.mode) != null
             }
             GestureAction.SwitchInputMethod -> InputMethodHelper.switchInputMethod(context)
+            GestureAction.CycleInputMethod -> com.slideindex.app.util.CycleKeyboardHelper.cycleKeyboard(context)
+            GestureAction.MicrophoneMenu -> {
+                com.slideindex.app.overlay.MicrophoneControlOverlay.show(context)
+                true
+            }
             GestureAction.LaunchAssistant -> {
                 AssistantLauncher.launchDefault(context)
                 true

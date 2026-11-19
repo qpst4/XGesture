@@ -265,6 +265,12 @@ enum class GestureActionType(val id: Int) {
 
     /** 「移动悬浮球」：进入自由挪球模式；长按悬浮球触发时可直接跟手拖动并吸附保存。 */
     MOVE_FLOAT_BALL(124),
+
+    /** 「循环切换输入法」：在已启用的输入法之间依次切换。 */
+    CYCLE_INPUT_METHOD(125),
+
+    /** 「麦克风控制」：弹出控制菜单（切换、开启、静音）。 */
+    MICROPHONE_MENU(126),
     ;
 
     companion object {
@@ -1358,6 +1364,18 @@ sealed class GestureAction {
         override val payload = ""
     }
 
+    /** 循环切换输入法：在已启用的键盘间轮流切换。 */
+    data object CycleInputMethod : GestureAction() {
+        override val type = GestureActionType.CYCLE_INPUT_METHOD
+        override val payload = ""
+    }
+
+    /** 麦克风控制：弹出麦克风控制菜单（切换、开启、静音）。 */
+    data object MicrophoneMenu : GestureAction() {
+        override val type = GestureActionType.MICROPHONE_MENU
+        override val payload = ""
+    }
+
     /** 实时前台活动探测悬浮窗（显示当前前台应用包名与 Activity 类名）。 */
     data object ForegroundActivityInspector : GestureAction() {
         override val type = GestureActionType.FOREGROUND_ACTIVITY_INSPECTOR
@@ -1536,6 +1554,8 @@ sealed class GestureAction {
                 GestureActionType.GALLERY_IMAGE_EDIT -> GalleryImageEdit
                 GestureActionType.PIN_TO_SCREEN -> PinToScreen
                 GestureActionType.MOVE_FLOAT_BALL -> MoveFloatBall
+                GestureActionType.CYCLE_INPUT_METHOD -> CycleInputMethod
+                GestureActionType.MICROPHONE_MENU -> MicrophoneMenu
                 GestureActionType.FOREGROUND_ACTIVITY_INSPECTOR -> ForegroundActivityInspector
                 GestureActionType.NONE -> None
             }.normalized()

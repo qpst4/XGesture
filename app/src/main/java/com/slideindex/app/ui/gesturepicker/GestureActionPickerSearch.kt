@@ -278,6 +278,8 @@ fun gestureActionSearchAliases(context: Context, action: GestureAction): List<St
     GestureActionType.TOGGLE_AUTO_BRIGHTNESS -> listOf("auto brightness", "开关", "toggle")
     GestureActionType.FLASHLIGHT -> listOf("flashlight", "torch", "手电", "开关", "toggle")
     GestureActionType.TOGGLE_SHAKE_GESTURE -> listOf("shake", "晃动", "开关", "toggle")
+    GestureActionType.CYCLE_INPUT_METHOD -> listOf("输入法", "循环切换输入法", "切换输入法", "键盘", "切换键盘", "cycle input method", "cycle keyboard", "ime", "switch ime")
+    GestureActionType.MICROPHONE_MENU -> listOf("麦克风", "话筒", "静音麦克风", "开麦", "闭麦", "mic", "microphone", "mute mic")
     else -> emptyList()
 }
 
@@ -347,6 +349,8 @@ fun gestureActionDescriptionText(context: Context, action: GestureAction): Strin
         GestureActionType.FORCE_STOP_CURRENT_APP -> context.getString(R.string.gesture_action_force_stop_current_app_desc)
         GestureActionType.CURRENT_APP_INFO -> context.getString(R.string.gesture_action_current_app_info_desc)
         GestureActionType.SIMULATE_KEY_EVENT -> context.getString(R.string.gesture_action_simulate_key_event_desc)
+        GestureActionType.CYCLE_INPUT_METHOD -> context.getString(R.string.gesture_action_cycle_input_method_desc)
+        GestureActionType.MICROPHONE_MENU -> context.getString(R.string.gesture_action_microphone_menu_desc)
         else -> null
     }
 
@@ -500,6 +504,8 @@ private fun gestureActionBaseLabelText(context: Context, action: GestureAction):
         GestureActionType.TOGGLE_NFC -> context.getString(R.string.gesture_action_toggle_nfc)
         GestureActionType.TOGGLE_BLUETOOTH -> context.getString(R.string.gesture_action_toggle_bluetooth)
         GestureActionType.SWITCH_INPUT_METHOD -> context.getString(R.string.gesture_action_switch_input_method)
+        GestureActionType.CYCLE_INPUT_METHOD -> context.getString(R.string.gesture_action_cycle_input_method)
+        GestureActionType.MICROPHONE_MENU -> context.getString(R.string.gesture_action_microphone_menu)
         GestureActionType.OPEN_INTERNET_PANEL -> context.getString(R.string.gesture_action_open_internet_panel)
         GestureActionType.OPEN_VOLUME_PANEL -> context.getString(R.string.gesture_action_open_volume_panel)
         GestureActionType.OPEN_VOLUME_SLIDER -> context.getString(R.string.gesture_action_open_volume_slider)
@@ -728,6 +734,8 @@ private fun gestureActionBaseLabel(action: GestureAction, settings: AppSettings?
         GestureActionType.TOGGLE_NFC -> stringResource(R.string.gesture_action_toggle_nfc)
         GestureActionType.TOGGLE_BLUETOOTH -> stringResource(R.string.gesture_action_toggle_bluetooth)
         GestureActionType.SWITCH_INPUT_METHOD -> stringResource(R.string.gesture_action_switch_input_method)
+        GestureActionType.CYCLE_INPUT_METHOD -> stringResource(R.string.gesture_action_cycle_input_method)
+        GestureActionType.MICROPHONE_MENU -> stringResource(R.string.gesture_action_microphone_menu)
         GestureActionType.OPEN_INTERNET_PANEL -> stringResource(R.string.gesture_action_open_internet_panel)
         GestureActionType.OPEN_VOLUME_PANEL -> stringResource(R.string.gesture_action_open_volume_panel)
         GestureActionType.OPEN_VOLUME_SLIDER -> stringResource(R.string.gesture_action_open_volume_slider)
@@ -889,6 +897,8 @@ fun gestureActionDescription(action: GestureAction): String? = when (action.type
     GestureActionType.TOGGLE_WIFI -> stringResource(R.string.gesture_action_toggle_wifi_desc)
     GestureActionType.TOGGLE_MOBILE_DATA -> stringResource(R.string.gesture_action_toggle_mobile_data_desc)
     GestureActionType.SWITCH_INPUT_METHOD -> stringResource(R.string.gesture_action_switch_input_method_desc)
+    GestureActionType.CYCLE_INPUT_METHOD -> stringResource(R.string.gesture_action_cycle_input_method_desc)
+    GestureActionType.MICROPHONE_MENU -> stringResource(R.string.gesture_action_microphone_menu_desc)
     GestureActionType.WIDGET_POPUP_OVERLAY -> stringResource(R.string.gesture_action_widget_popup_overlay_desc)
     GestureActionType.FLOATING_POINTER -> stringResource(R.string.gesture_action_floating_pointer_desc)
     GestureActionType.OPEN_STASH_PANEL -> stringResource(R.string.gesture_action_open_stash_panel_desc)

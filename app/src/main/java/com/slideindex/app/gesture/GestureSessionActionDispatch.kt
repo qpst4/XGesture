@@ -480,6 +480,8 @@ internal fun GestureSession.handleClassifiedGesture(
         GestureAction.ForcePortrait,
         GestureAction.ForceLandscape,
         GestureAction.SwitchInputMethod,
+        GestureAction.CycleInputMethod,
+        GestureAction.MicrophoneMenu,
         GestureAction.MediaPlayPause,
         GestureAction.MediaPrevious,
         GestureAction.MediaNext,

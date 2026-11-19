@@ -85,6 +85,15 @@ class GestureActionNormalizedTest {
     }
 
     @Test
+    fun cycleKeyboardAndMicMenu_roundTripThroughId() {
+        assertEquals(GestureActionType.CYCLE_INPUT_METHOD, GestureActionType.fromId(125))
+        assertEquals(GestureAction.CycleInputMethod, GestureAction.from(GestureActionType.CYCLE_INPUT_METHOD, ""))
+
+        assertEquals(GestureActionType.MICROPHONE_MENU, GestureActionType.fromId(126))
+        assertEquals(GestureAction.MicrophoneMenu, GestureAction.from(GestureActionType.MICROPHONE_MENU, ""))
+    }
+
+    @Test
     fun toggleFloatBall_roundTripsThroughId() {
         // 108 = 「切换悬浮球」：id 是持久化 ABI，新动作只能往后追加（见上一条测试）。
         assertEquals(GestureActionType.TOGGLE_FLOAT_BALL, GestureActionType.fromId(108))

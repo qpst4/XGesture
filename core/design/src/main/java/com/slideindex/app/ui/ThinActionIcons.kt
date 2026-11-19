@@ -2092,4 +2092,30 @@ object ThinActionIcons {
             }
         }
     }
+
+    /** 「循环切换键盘」：带循环回环箭头的虚拟键盘。 */
+    val CycleKeyboard: ImageVector by lazy {
+        createThinIcon("ThinCycleKeyboard") {
+            addPath(
+                pathData = PathParser().parsePathString(CYCLE_KEYBOARD_PATH).toNodes(),
+                fill = strokeBrush,
+            )
+        }
+    }
+
+    /** 「麦克风控制」：标准麦克风图标。 */
+    val Mic: ImageVector by lazy {
+        createThinIcon("ThinMic") {
+            addPath(
+                pathData = PathParser().parsePathString(MIC_PATH).toNodes(),
+                fill = strokeBrush,
+            )
+        }
+    }
+
+    private const val CYCLE_KEYBOARD_PATH =
+        "M4.31,21.5q-0.76,0-1.28-0.52T2.5,19.69V10.31q0-0.76 0.52-1.28T4.31,8.5H19.69q0.76,0 1.28,0.52t0.52,1.28v9.38q0,0.76-0.52,1.28T19.69,21.5H4.31Zm0-1.5H19.69q0.12,0 0.21-0.1T20,19.69V10.31q0-0.12-0.1-0.21T19.69,10H4.31Q4.19,10 4.1,10.1T4,10.31v9.38q0,0.12 0.1,0.21T4.31,20Zm3.81-1.12h7.77V17.12H8.12v1.77Zm-3-3H6.88V14.12H5.12v1.77Zm3,0H9.88V14.12H8.12v1.77Zm3,0h1.77V14.12H11.12v1.77Zm3,0h1.77V14.12H14.12v1.77Zm3,0h1.77V14.12H17.12v1.77Zm-12-3H6.88V11.12H5.12v1.77Zm3,0H9.88V11.12H8.12v1.77Zm3,0h1.77V11.12H11.12v1.77Zm3,0h1.77V11.12H14.12v1.77Zm3,0h1.77V11.12H17.12v1.77ZM4,20q0,0 0-0.1t0-0.21V10.31q0-0.12 0-0.21T4,10q0,0 0,0.1t0,0.21v9.38q0,0.12 0,0.21T4,20ZM6.25,6.38V1.88h1.5V3.71Q8.53,2.86 9.61,2.37t2.33-0.49q2.05,0 3.63,1.26t2.01,3.24H16.03q-0.42-1.33-1.54-2.17T11.94,3.38q-0.96,0-1.8,0.4t-1.4,1.1h2.01v1.5H6.25Z"
+
+    private const val MIC_PATH =
+        "M12,14q-1.25,0-2.125-0.875T9,11V5q0-1.25 0.875-2.125T12,2q1.25,0 2.125,0.875T15,5v6q0,1.25-0.875,2.125T12,14Zm-1,7v-3.075q-2.6-0.35-4.3-2.325Q5,13.625 5,11h2q0,2.075 1.463,3.538Q9.925,16 12,16q2.075,0 3.538-1.462Q17,13.075 17,11h2q0,2.625-1.7,4.6q-1.7,1.975-4.3,2.325V21Z"
 }
