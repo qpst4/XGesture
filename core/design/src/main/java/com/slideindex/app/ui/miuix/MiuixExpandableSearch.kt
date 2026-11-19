@@ -77,7 +77,11 @@ fun consumeExpandableSearchBack(
 }
 
 /**
- * [TopAppBar.bottomContent]：仅带动画展开的 Miuix 搜索框（无 Tab）。
+ * [TopAppBar.bottomContent]：带动画展开的 Miuix 搜索框。
+ *
+ * 顶栏的 bottomContent 是**单槽**：调用方直接写两个兄弟节点会叠在同一位置
+ * （典型症状是搜索框展开后被下方 tab 行压住）。需要搜索条下方再加内容时，
+ * 必须走 [extraContent]，由本组件统一包一层 Column。
  */
 @Composable
 fun MiuixExpandableSearchBottomContent(
@@ -86,6 +90,8 @@ fun MiuixExpandableSearchBottomContent(
     onSearchQueryChange: (String) -> Unit,
     focusRequester: FocusRequester,
     hintResId: Int = R.string.search_hint,
+    /** 搜索条下方的附加内容（筛选 tab、过滤器等）；与搜索框同处一个 Column，不会互相遮挡。 */
+    extraContent: (@Composable () -> Unit)? = null,
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -98,27 +104,31 @@ fun MiuixExpandableSearchBottomContent(
         }
     }
 
-    AnimatedVisibility(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clipToBounds()
-            .padding(start = 12.dp, end = 12.dp, bottom = 8.dp),
-        visible = searchExpanded,
-        enter = expandVertically(
-            animationSpec = tween(ExpandableSearchEnterMs),
-            expandFrom = Alignment.Top,
-        ) + fadeIn(animationSpec = tween(ExpandableSearchEnterMs)),
-        exit = shrinkVertically(
-            animationSpec = tween(ExpandableSearchExitMs),
-            shrinkTowards = Alignment.Top,
-        ) + fadeOut(animationSpec = tween(ExpandableSearchExitMs)),
-    ) {
-        MiuixSearchField(
-            query = searchQuery,
-            onQueryChange = onSearchQueryChange,
-            hintResId = hintResId,
-            focusRequester = focusRequester,
-        )
+    Column(modifier = Modifier.fillMaxWidth()) {
+        AnimatedVisibility(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clipToBounds()
+                // 有附加内容时交给它自己撑开间距，否则搜索条贴着附加内容会显得挤。
+                .padding(start = 12.dp, end = 12.dp, bottom = if (extraContent == null) 8.dp else 0.dp),
+            visible = searchExpanded,
+            enter = expandVertically(
+                animationSpec = tween(ExpandableSearchEnterMs),
+                expandFrom = Alignment.Top,
+            ) + fadeIn(animationSpec = tween(ExpandableSearchEnterMs)),
+            exit = shrinkVertically(
+                animationSpec = tween(ExpandableSearchExitMs),
+                shrinkTowards = Alignment.Top,
+            ) + fadeOut(animationSpec = tween(ExpandableSearchExitMs)),
+        ) {
+            MiuixSearchField(
+                query = searchQuery,
+                onQueryChange = onSearchQueryChange,
+                hintResId = hintResId,
+                focusRequester = focusRequester,
+            )
+        }
+        extraContent?.invoke()
     }
 }
 

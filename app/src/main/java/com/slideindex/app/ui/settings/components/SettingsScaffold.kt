@@ -144,7 +144,7 @@ fun SettingsLazyScreenScaffoldWithExpandableSearch(
     /** 悬浮按钮需要预留的底部空间，见 [com.slideindex.app.ui.miuix.MiuixSettingsFabInset]。 */
     fabInset: Dp = 0.dp,
     /** 展开搜索条下方的附加内容（如内置动作的筛选条），与搜索条同处顶栏下方、不在列表层内。 */
-    extraBottomContent: @Composable () -> Unit = {},
+    extraBottomContent: (@Composable () -> Unit)? = null,
     content: LazyListScope.() -> Unit,
 ) {
     var searchExpanded by remember { mutableStateOf(false) }
@@ -180,18 +180,15 @@ fun SettingsLazyScreenScaffoldWithExpandableSearch(
             extraActions()
         },
         bottomContent = {
-            // 顶栏的 bottomContent 是单槽：兄弟节点会叠在同一位置（内置动作页的筛选条把搜索框盖住）。
-            // 这里统一包一层 Column，保证「搜索条在上、附加内容在下」按参数注释的约定堆叠。
-            Column(modifier = Modifier.fillMaxWidth()) {
-                MiuixExpandableSearchBottomContent(
-                    searchExpanded = searchExpanded,
-                    searchQuery = searchQuery,
-                    onSearchQueryChange = onSearchQueryChange,
-                    focusRequester = searchFocusRequester,
-                    hintResId = hintResId,
-                )
-                extraBottomContent()
-            }
+            // 搜索条与附加内容都交给同一个组件：顶栏 bottomContent 是单槽，兄弟节点会重叠。
+            MiuixExpandableSearchBottomContent(
+                searchExpanded = searchExpanded,
+                searchQuery = searchQuery,
+                onSearchQueryChange = onSearchQueryChange,
+                focusRequester = searchFocusRequester,
+                hintResId = hintResId,
+                extraContent = extraBottomContent,
+            )
         },
         content = content,
     )

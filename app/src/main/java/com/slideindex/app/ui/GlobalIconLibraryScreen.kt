@@ -138,37 +138,41 @@ fun GlobalIconLibraryScreen(
             )
         },
         bottomContent = {
+            // tab 行迁到玻璃栏的 bottomContent（与「通知滤盒」一致）：能拿到栏的背板，
+            // 内容滚到栏下时升起玻璃；空列表/未滚动时退回纯色，避免越界采样。
+            // 注意：顶栏 bottomContent 是单槽，tab 行必须走 extraContent，不能与搜索条当兄弟节点
+            // 直接并列（那样会叠在一起，搜索框展开后被 tab 行压住）。
+            val tabs = listOf(actionsTabLabel, appsTabLabel)
+            val tabBackdrop = LocalMiuixScreenBackdrop.current ?: LocalMiuixPageBackdrop.current
             MiuixExpandableSearchBottomContent(
                 searchExpanded = searchExpanded,
                 searchQuery = searchQuery,
                 onSearchQueryChange = { searchQuery = it },
                 focusRequester = searchFocusRequester,
+                extraContent = {
+                    if (tabBackdrop != null) {
+                        GlassSegmentedTabRow(
+                            tabs = tabs,
+                            selectedIndex = tab,
+                            onSelect = { tab = it },
+                            backdrop = tabBackdrop,
+                            surfaceAlpha = if (LocalMiuixContentUnderBar.current.value) 1f else 0f,
+                            selectedContentColor = MiuixTheme.colorScheme.primary,
+                            contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                        )
+                    } else {
+                        MiuixTabRowWithContour(
+                            tabs = tabs,
+                            selectedTabIndex = tab,
+                            onTabSelected = { tab = it },
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        )
+                    }
+                },
             )
-            // tab 行迁到玻璃栏的 bottomContent（与「通知滤盒」一致）：能拿到栏的背板，
-            // 内容滚到栏下时升起玻璃；空列表/未滚动时退回纯色，避免越界采样。
-            val tabs = listOf(actionsTabLabel, appsTabLabel)
-            val tabBackdrop = LocalMiuixScreenBackdrop.current ?: LocalMiuixPageBackdrop.current
-            if (tabBackdrop != null) {
-                GlassSegmentedTabRow(
-                    tabs = tabs,
-                    selectedIndex = tab,
-                    onSelect = { tab = it },
-                    backdrop = tabBackdrop,
-                    surfaceAlpha = if (LocalMiuixContentUnderBar.current.value) 1f else 0f,
-                    selectedContentColor = MiuixTheme.colorScheme.primary,
-                    contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                )
-            } else {
-                MiuixTabRowWithContour(
-                    tabs = tabs,
-                    selectedTabIndex = tab,
-                    onTabSelected = { tab = it },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                )
-            }
         },
     ) {
 
