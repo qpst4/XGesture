@@ -34,6 +34,8 @@
     <!-- Advanced options -->
     <string name="physical_key_intercept_native_title">ネイティブのキーイベントを遮断</string>
     <string name="physical_key_intercept_native_summary">ジェスチャー実行時にシステムのネイティブ応答を抑止します（音量パネルの非表示、電源メニューの抑制など）</string>
+    <string name="physical_key_screen_off_trigger_title">画面オフ時のトリガーを許可</string>
+    <string name="physical_key_screen_off_trigger_summary">画面がオフでも物理キージェスチャーに反応します（例：画面を見ずに曲送り、ライトの切り替え）</string>
     <string name="physical_key_media_priority_title">音量長押しで曲送り</string>
     <string name="physical_key_media_priority_summary">音楽の再生中に音量＋を長押しで次の曲、音量－で前の曲へ（カスタムアクションより優先）</string>
     <string name="physical_key_long_press_duration_title">長押し判定時間</string>

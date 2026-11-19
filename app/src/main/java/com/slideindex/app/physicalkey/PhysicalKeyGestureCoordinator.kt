@@ -533,7 +533,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
     }
 
     private fun suppressSystemPowerDialogIfNeeded() {
-        // 1. 特权服务广播 CLOSE_SYSTEM_DIALOGS（root / shell 具备该权限，严禁盲目发送全局返回键）
+        // 特权服务广播 CLOSE_SYSTEM_DIALOGS（root / shell 具备该权限，严禁盲目发送全局返回键）
         runCatching {
             val service = observingService ?: rootService
             service?.runShellCommand(arrayOf("am", "broadcast", "-a", "android.intent.action.CLOSE_SYSTEM_DIALOGS"))
@@ -541,12 +541,6 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
             service?.runShellCommand(arrayOf("settings", "put", "global", "power_button_long_press", "0"))
             service?.runShellCommand(arrayOf("settings", "put", "global", "intercpt_powerkey", "1"))
             service?.runShellCommand(arrayOf("settings", "put", "system", "intercpt_powerkey", "1"))
-        }
-        // 2. 应用自身发送广播兜底
-        runCatching {
-            @Suppress("DEPRECATION")
-            val closeIntent = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
-            context.sendBroadcast(closeIntent)
         }
     }
 

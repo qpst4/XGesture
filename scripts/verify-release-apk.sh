@@ -143,7 +143,7 @@ verify_one_apk() {
       fi
     done
     echo "OK: Lite release APK has no bundled native engine assets"
-    local max_bytes="${MAX_RELEASE_LITE_APK_BYTES:-36700160}" # 35 MiB（2026-10-20 由 32 MiB 上调：图标库三个字体使 lite 实测 33,648,752 B）
+    local max_bytes="${MAX_RELEASE_LITE_APK_BYTES:-41943040}" # 40 MiB（2026-11-19 由 35 MiB 上调：KeyMapper 内核引擎 libevdev_manager.so 使 lite 实测 37,757,686 B）
     if [[ "$apk_bytes" -gt "$max_bytes" ]]; then
       echo "ERROR: Lite release APK too large (max ${max_bytes} bytes)." >&2
       exit 1

@@ -34,6 +34,8 @@
     <!-- Advanced options -->
     <string name="physical_key_intercept_native_title">Interceptar eventos de teclas nativos</string>
     <string name="physical_key_intercept_native_summary">Evita la respuesta nativa del sistema al activar los gestos (por ejemplo, ocultar el panel de volumen o suprimir el diálogo de apagado)</string>
+    <string name="physical_key_screen_off_trigger_title">Permitir disparos con pantalla apagada</string>
+    <string name="physical_key_screen_off_trigger_summary">Responde a los gestos de teclas físicas (por ejemplo, cambiar de canción a ciegas o activar la linterna) incluso con la pantalla apagada</string>
     <string name="physical_key_media_priority_title">Cambiar de pista con pulsación larga de volumen</string>
     <string name="physical_key_media_priority_summary">Con música activa, mantén pulsado volumen + o - para pasar a la pista siguiente o anterior (tiene prioridad sobre la acción personalizada)</string>
     <string name="physical_key_long_press_duration_title">Duración de pulsación larga</string>

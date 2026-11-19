@@ -34,6 +34,8 @@
     <!-- Advanced options -->
     <string name="physical_key_intercept_native_title">Перехватывать системные события клавиш</string>
     <string name="physical_key_intercept_native_summary">Блокирует штатный отклик системы при срабатывании жестов (например, скрывает панель громкости и меню питания)</string>
+    <string name="physical_key_screen_off_trigger_title">Разрешить срабатывание при выключенном экране</string>
+    <string name="physical_key_screen_off_trigger_summary">Реагировать на жесты физических клавиш (например, переключение треков вслепую или фонарик) даже при выключенном экране</string>
     <string name="physical_key_media_priority_title">Переключение треков долгим нажатием громкости</string>
     <string name="physical_key_media_priority_summary">При воспроизведении музыки долгое нажатие громкости + или - переключает на следующий или предыдущий трек (приоритетнее пользовательского действия)</string>
     <string name="physical_key_long_press_duration_title">Порог длительного нажатия</string>

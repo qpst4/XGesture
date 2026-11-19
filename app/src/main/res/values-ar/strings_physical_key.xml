@@ -34,6 +34,8 @@
     <!-- Advanced options -->
     <string name="physical_key_intercept_native_title">اعتراض أحداث المفاتيح الأصلية</string>
     <string name="physical_key_intercept_native_summary">يمنع استجابة النظام الأصلية عند تفعيل الإيماءات (مثل إخفاء لوحة الصوت أو منع قائمة الطاقة)</string>
+    <string name="physical_key_screen_off_trigger_title">السماح بالتشغيل والشاشة مطفأة</string>
+    <string name="physical_key_screen_off_trigger_summary">الاستجابة لإيماءات المفاتيح الفيزيائية (مثل تبديل الموسيقى دون النظر أو تشغيل المصباح) حتى والشاشة مطفأة</string>
     <string name="physical_key_media_priority_title">تبديل المقطع بالضغط الطويل على الصوت</string>
     <string name="physical_key_media_priority_summary">أثناء تشغيل الموسيقى، اضغط مطوّلًا على رفع أو خفض الصوت للانتقال إلى المقطع التالي أو السابق (يتجاوز الإجراء المخصص)</string>
     <string name="physical_key_long_press_duration_title">مدة الضغط الطويل</string>
