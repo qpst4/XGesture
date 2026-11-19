@@ -113,9 +113,10 @@ class PhysicalKeySettingsStore @Inject constructor(
 
     fun updateEntry(gesture: PhysicalKeyGesture, enabled: Boolean, action: GestureAction) {
         val currentEntries = _state.value.entries.toMutableMap()
+        val isEffectiveEnabled = action !is GestureAction.None
         currentEntries[gesture] = PhysicalKeyEntry(
             gesture = gesture,
-            enabled = enabled,
+            enabled = isEffectiveEnabled,
             action = action,
         )
         val serialized = serialize(currentEntries)
@@ -171,8 +172,8 @@ class PhysicalKeySettingsStore @Inject constructor(
             val obj = array.optJSONObject(i) ?: continue
             val gestureName = obj.optString("gesture")
             val gesture = runCatching { PhysicalKeyGesture.valueOf(gestureName) }.getOrNull() ?: continue
-            val enabled = obj.optBoolean("enabled", true)
             val action = decodeAction(obj.optString("action").ifBlank { null }) ?: GestureAction.None
+            val enabled = action !is GestureAction.None
             map[gesture] = PhysicalKeyEntry(
                 gesture = gesture,
                 enabled = enabled,

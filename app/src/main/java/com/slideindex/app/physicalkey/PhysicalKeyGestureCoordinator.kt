@@ -272,6 +272,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
                 runCatching { service.asBinder().linkToDeath(serviceDeathRecipient, 0) }
                 observingService = service
                 _status.value = _status.value.copy(running = true, detail = "watching:shizuku", channel = "shizuku")
+                applyPowerKeySuppression(true)
             } else {
                 _status.value = _status.value.copy(running = false, detail = "device-unavailable")
                 scheduleAutoReconnect(3000L)
@@ -280,6 +281,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
     }
 
     private fun stopObservation() {
+        applyPowerKeySuppression(false)
         val service = observingService
         observingService = null
         if (service != null) {
@@ -338,6 +340,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
             detail = "watching:root",
             channel = "root",
         )
+        applyPowerKeySuppression(true)
 
         rootPollJob = applicationScope.launch(Dispatchers.IO) {
             var consecutiveErrors = 0
@@ -377,7 +380,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
 
     private fun dispatchGesture(gesture: PhysicalKeyGesture) {
         val entry = settingsStore.state.value.entries[gesture] ?: return
-        if (!entry.enabled || entry.action == GestureAction.None) {
+        if (entry.action == GestureAction.None) {
             return
         }
 
@@ -407,11 +410,36 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
         }
     }
 
+    private fun applyPowerKeySuppression(suppress: Boolean) {
+        val service = observingService ?: rootService ?: return
+        val state = settingsStore.state.value
+        val hasPowerMapping = state.entries[PhysicalKeyGesture.POWER_LONG_PRESS]?.action != GestureAction.None
+        val shouldSuppress = suppress && state.enabled && state.interceptNativeEvents && hasPowerMapping
+
+        runCatching {
+            if (shouldSuppress) {
+                // 通过系统全局设置直接关闭系统 PhoneWindowManager 对长按电源键的响应（AOSP 原生 + 厂商深度定制）
+                service.runShellCommand(arrayOf("settings", "put", "global", "power_button_long_press", "0"))
+                service.runShellCommand(arrayOf("settings", "put", "global", "intercpt_powerkey", "1"))
+                service.runShellCommand(arrayOf("settings", "put", "system", "intercpt_powerkey", "1"))
+            } else {
+                // 恢复系统默认行为
+                service.runShellCommand(arrayOf("settings", "put", "global", "power_button_long_press", "1"))
+                service.runShellCommand(arrayOf("settings", "put", "global", "intercpt_powerkey", "0"))
+                service.runShellCommand(arrayOf("settings", "put", "system", "intercpt_powerkey", "0"))
+            }
+        }
+    }
+
     private fun suppressSystemPowerDialogIfNeeded() {
         // 1. 特权服务广播 CLOSE_SYSTEM_DIALOGS（root / shell 具备该权限，严禁盲目发送全局返回键）
         runCatching {
             val service = observingService ?: rootService
             service?.runShellCommand(arrayOf("am", "broadcast", "-a", "android.intent.action.CLOSE_SYSTEM_DIALOGS"))
+            // 确保底层设置也被强化压制
+            service?.runShellCommand(arrayOf("settings", "put", "global", "power_button_long_press", "0"))
+            service?.runShellCommand(arrayOf("settings", "put", "global", "intercpt_powerkey", "1"))
+            service?.runShellCommand(arrayOf("settings", "put", "system", "intercpt_powerkey", "1"))
         }
         // 2. 应用自身发送广播兜底
         runCatching {
@@ -438,7 +466,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
         }
 
         val hasMappedGesture = state.entries.any { (gesture, entry) ->
-            entry.enabled && entry.action != GestureAction.None && when (gesture) {
+            entry.action != GestureAction.None && when (gesture) {
                 PhysicalKeyGesture.VOLUME_UP_LONG_PRESS,
                 PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS -> isVolumeUp
                 PhysicalKeyGesture.VOLUME_DOWN_LONG_PRESS,
