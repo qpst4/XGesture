@@ -47,6 +47,10 @@ class PhysicalKeyViewModel @Inject constructor(
         settingsStore.setInterceptNativeEvents(intercept)
     }
 
+    fun setScreenOffTriggerEnabled(enabled: Boolean) {
+        settingsStore.setScreenOffTriggerEnabled(enabled)
+    }
+
     fun setLongPressTimeout(ms: Long) {
         settingsStore.setLongPressTimeoutMs(ms)
     }

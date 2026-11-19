@@ -181,6 +181,12 @@ internal object TaskManagerDaemonRpc {
 
             114 -> RpcValue.Str(service.getPhysicalKeyDiagnostics())
 
+            115 -> {
+                val arr = args.mapNotNull { it?.toIntOrNull() }.toIntArray()
+                service.updatePhysicalKeyDoublePressTargets(arr)
+                RpcValue.Void
+            }
+
             30 -> RpcValue.I32(service.getTetheringState())
 
             31 -> RpcValue.Bool(service.setTetheringEnabled(args.boolean(0)))

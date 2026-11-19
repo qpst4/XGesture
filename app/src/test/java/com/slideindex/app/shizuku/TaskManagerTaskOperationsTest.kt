@@ -291,5 +291,7 @@ class TaskManagerTaskOperationsTest {
         override fun stopPhysicalKeyPolling() = Unit
 
         override fun getPhysicalKeyDiagnostics(): String = ""
+
+        override fun updatePhysicalKeyDoublePressTargets(keyCodes: IntArray?) = Unit
     }
 }

@@ -54,6 +54,7 @@ fun PhysicalKeySettingsScreen(
     onBack: () -> Unit,
     onEnabledChange: (Boolean) -> Unit,
     onInterceptNativeEventsChange: (Boolean) -> Unit,
+    onScreenOffTriggerChange: (Boolean) -> Unit = {},
     onMediaPlaybackPrioritizedChange: (Boolean) -> Unit,
     onLongPressTimeoutChange: (Long) -> Unit,
     onDoubleClickTimeoutChange: (Long) -> Unit,
@@ -94,6 +95,8 @@ fun PhysicalKeySettingsScreen(
     val sectionAdvancedTitle = stringResource(R.string.physical_key_section_advanced)
     val interceptNativeTitle = stringResource(R.string.physical_key_intercept_native_title)
     val interceptNativeSummary = stringResource(R.string.physical_key_intercept_native_summary)
+    val screenOffTriggerTitle = stringResource(R.string.physical_key_screen_off_trigger_title)
+    val screenOffTriggerSummary = stringResource(R.string.physical_key_screen_off_trigger_summary)
     val mediaPriorityTitle = stringResource(R.string.physical_key_media_priority_title)
     val mediaPrioritySummary = stringResource(R.string.physical_key_media_priority_summary)
     val longPressDurationTitle = stringResource(R.string.physical_key_long_press_duration_title)
@@ -271,6 +274,15 @@ fun PhysicalKeySettingsScreen(
                         checked = settings.interceptNativeEvents,
                         enabled = settings.enabled,
                         onCheckedChange = onInterceptNativeEventsChange,
+                    )
+                },
+                settingsCardScopeItem("screen-off-trigger") {
+                    SettingSwitchRow(
+                        title = screenOffTriggerTitle,
+                        subtitle = screenOffTriggerSummary,
+                        checked = settings.screenOffTriggerEnabled,
+                        enabled = settings.enabled,
+                        onCheckedChange = onScreenOffTriggerChange,
                     )
                 },
                 settingsCardScopeItem("media-priority") {

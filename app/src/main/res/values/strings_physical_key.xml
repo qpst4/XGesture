@@ -34,6 +34,8 @@
     <!-- Advanced options -->
     <string name="physical_key_intercept_native_title">Intercept Native Key Events</string>
     <string name="physical_key_intercept_native_summary">Prevent native system response (e.g. hide volume panel, suppress power dialog) when triggering gestures</string>
+    <string name="physical_key_screen_off_trigger_title">Allow Screen-Off Triggers</string>
+    <string name="physical_key_screen_off_trigger_summary">Respond to physical key gestures (e.g. blind music skip, flashlight toggle) even when screen is off</string>
     <string name="physical_key_media_priority_title">Media Track Switch on Volume Long Press</string>
     <string name="physical_key_media_priority_summary">When music is active, long press volume up/down to skip/previous track (overrides custom action)</string>
     <string name="physical_key_long_press_duration_title">Long Press Timeout</string>

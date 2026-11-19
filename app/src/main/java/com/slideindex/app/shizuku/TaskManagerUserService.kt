@@ -338,6 +338,7 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
             },
             onDiagnostics = { physicalKeyDiagnostics = it },
         )
+        observer.doublePressKeyCodes = configuredDoublePressKeyCodes
         keyObserver = observer
         return observer.start()
     }
@@ -361,6 +362,7 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
             },
             onDiagnostics = { physicalKeyDiagnostics = it },
         )
+        observer.doublePressKeyCodes = configuredDoublePressKeyCodes
         val started = observer.start()
         if (!started) return false
         pollingKeyObserver = observer
@@ -382,6 +384,16 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
     }
 
     override fun getPhysicalKeyDiagnostics(): String = physicalKeyDiagnostics
+
+    @Volatile
+    private var configuredDoublePressKeyCodes: Set<Int> = emptySet()
+
+    override fun updatePhysicalKeyDoublePressTargets(keyCodes: IntArray?) {
+        val set = keyCodes?.toSet() ?: emptySet()
+        configuredDoublePressKeyCodes = set
+        keyObserver?.doublePressKeyCodes = set
+        pollingKeyObserver?.doublePressKeyCodes = set
+    }
 
     override fun removeTaskById(taskIdStr: String?): Boolean =
         tasks.removeTaskById(taskIdStr)

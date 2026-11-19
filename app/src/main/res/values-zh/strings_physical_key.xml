@@ -34,6 +34,8 @@
     <!-- 高级选项 -->
     <string name="physical_key_intercept_native_title">拦截原生按键响应</string>
     <string name="physical_key_intercept_native_summary">触发自定义动作时阻止系统原生响应（阻止音量调节弹窗、压制电源关机菜单）</string>
+    <string name="physical_key_screen_off_trigger_title">允许熄屏时触发</string>
+    <string name="physical_key_screen_off_trigger_summary">手机熄屏状态下仍可响应实体按键手势（如盲按切歌、开关手电筒）</string>
     <string name="physical_key_media_priority_title">播放音乐时音量键切歌</string>
     <string name="physical_key_media_priority_summary">后台有音乐播放时，长按音量加切下一首、音量减切上一首（优先于自定义动作）</string>
     <string name="physical_key_long_press_duration_title">长按判定时间</string>

@@ -26,6 +26,7 @@ data class PhysicalKeySettings(
     val doubleClickTimeoutMs: Long = 350L,
     val mediaPlaybackPrioritized: Boolean = true,
     val interceptNativeEvents: Boolean = false,
+    val screenOffTriggerEnabled: Boolean = true,
 ) {
     companion object {
         fun defaultEntries(): Map<PhysicalKeyGesture, PhysicalKeyEntry> {
@@ -111,6 +112,12 @@ class PhysicalKeySettingsStore @Inject constructor(
         _state.value = _state.value.copy(interceptNativeEvents = intercept)
     }
 
+    fun setScreenOffTriggerEnabled(enabled: Boolean) {
+        if (_state.value.screenOffTriggerEnabled == enabled) return
+        prefs.edit().putBoolean(KEY_SCREEN_OFF_TRIGGER, enabled).apply()
+        _state.value = _state.value.copy(screenOffTriggerEnabled = enabled)
+    }
+
     fun updateEntry(gesture: PhysicalKeyGesture, enabled: Boolean, action: GestureAction) {
         val currentEntries = _state.value.entries.toMutableMap()
         val isEffectiveEnabled = action !is GestureAction.None
@@ -130,6 +137,7 @@ class PhysicalKeySettingsStore @Inject constructor(
         val doubleClickTimeout = prefs.getLong(KEY_DOUBLE_CLICK_TIMEOUT, 350L)
         val mediaPrioritized = prefs.getBoolean(KEY_MEDIA_PRIORITIZED, true)
         val interceptNative = prefs.getBoolean(KEY_INTERCEPT_NATIVE, false)
+        val screenOffTrigger = prefs.getBoolean(KEY_SCREEN_OFF_TRIGGER, true)
         val entriesRaw = prefs.getString(KEY_ENTRIES, null)
         val entries = if (entriesRaw.isNullOrBlank()) {
             PhysicalKeySettings.defaultEntries()
@@ -144,6 +152,7 @@ class PhysicalKeySettingsStore @Inject constructor(
             doubleClickTimeoutMs = doubleClickTimeout,
             mediaPlaybackPrioritized = mediaPrioritized,
             interceptNativeEvents = interceptNative,
+            screenOffTriggerEnabled = screenOffTrigger,
         )
     }
 
@@ -227,5 +236,6 @@ class PhysicalKeySettingsStore @Inject constructor(
         private const val KEY_DOUBLE_CLICK_TIMEOUT = "double_click_timeout"
         private const val KEY_MEDIA_PRIORITIZED = "media_prioritized"
         private const val KEY_INTERCEPT_NATIVE = "intercept_native"
+        private const val KEY_SCREEN_OFF_TRIGGER = "screen_off_trigger"
     }
 }

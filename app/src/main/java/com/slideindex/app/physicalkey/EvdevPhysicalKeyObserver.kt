@@ -30,8 +30,17 @@ class EvdevPhysicalKeyObserver(
     private val readerWorkers = CopyOnWriteArrayList<Thread>()
     private val openStreams = CopyOnWriteArrayList<FileInputStream>()
 
+    private class PendingClick(
+        val deviceId: Int,
+        val keyCode: Int,
+        val timeMs: Long,
+    )
+
+    private val pendingClicks = java.util.concurrent.ConcurrentHashMap<Int, PendingClick>()
+    private val longPressConsumedKeys = java.util.concurrent.ConcurrentHashMap.newKeySet<Int>()
+
     @Volatile
-    private var powerKeyConsumedByLongPress = false
+    var doublePressKeyCodes: Set<Int> = emptySet()
 
     @Volatile
     private var systemBridge: SystemBridge? = null
@@ -60,6 +69,8 @@ class EvdevPhysicalKeyObserver(
         onDiagnostics(diag)
         onState(true, "starting:${devices.size}")
 
+        var nativeGrabbedDeviceNames = emptySet<String>()
+
         // 尝试加载 KeyMapper 原生 libevdev_manager 独占拦截引擎
         val bridge = SystemBridge.getOrCreate()
         if (bridge != null) {
@@ -76,49 +87,50 @@ class EvdevPhysicalKeyObserver(
                         androidCode: Int,
                     ): Boolean {
                         if (type == EV_KEY) {
-                            val isDown = value == 1 || value == 2
                             val nowMs = SystemClock.elapsedRealtime()
 
-                            if (code == KEY_POWER) {
-                                if (value == 1) {
-                                    powerKeyConsumedByLongPress = false
-                                    val gestures = synchronized(recognizer) {
-                                        recognizer.onKeyEvent(code, true, nowMs)
-                                    }
-                                    handleGestures(gestures, nowMs)
-                                    return true // 彻底拦截按下中断，阻止 PhoneWindowManager 计时关机
-                                } else if (value == 2) {
-                                    val gestures = synchronized(recognizer) {
-                                        recognizer.onKeyEvent(code, true, nowMs)
-                                    }
-                                    handleGestures(gestures, nowMs)
-                                    return true
-                                } else if (value == 0) {
-                                    val gestures = synchronized(recognizer) {
-                                        recognizer.onKeyEvent(code, false, nowMs)
-                                    }
-                                    handleGestures(gestures, nowMs)
-
-                                    if (powerKeyConsumedByLongPress) {
-                                        log("native engine: power key released after long press, suppressed")
-                                        powerKeyConsumedByLongPress = false
-                                        return true
-                                    } else {
-                                        log("native engine: power key click, emitting down/up to uinput")
-                                        bridge.writeEvdevEventNative(deviceId, EV_KEY, KEY_POWER, 1)
-                                        bridge.writeEvdevEventNative(deviceId, 0 /* EV_SYN */, 0, 0)
-                                        SystemClock.sleep(15)
-                                        bridge.writeEvdevEventNative(deviceId, EV_KEY, KEY_POWER, 0)
-                                        bridge.writeEvdevEventNative(deviceId, 0 /* EV_SYN */, 0, 0)
-                                        return true
-                                    }
+                            if (value == 1) {
+                                longPressConsumedKeys.remove(code)
+                                pendingClicks.remove(code)?.let {
+                                    log("native engine: double press in progress for keyCode=$code, suppressed single click emission")
                                 }
-                            } else {
                                 val gestures = synchronized(recognizer) {
-                                    recognizer.onKeyEvent(code, isDown, nowMs)
+                                    recognizer.onKeyEvent(code, true, nowMs)
                                 }
                                 handleGestures(gestures, nowMs)
-                                return false // 非电源键原样放行给系统
+                                return true // 独占拦截按下中断，防止系统 PhoneWindowManager 提前计时关机或调音
+                            } else if (value == 2) {
+                                val gestures = synchronized(recognizer) {
+                                    recognizer.onKeyEvent(code, true, nowMs)
+                                }
+                                handleGestures(gestures, nowMs)
+                                return true
+                            } else if (value == 0) {
+                                val gestures = synchronized(recognizer) {
+                                    recognizer.onKeyEvent(code, false, nowMs)
+                                }
+                                val isDoublePress = gestures.any {
+                                    it == PhysicalKeyGesture.POWER_DOUBLE_PRESS ||
+                                        it == PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS ||
+                                        it == PhysicalKeyGesture.VOLUME_DOWN_DOUBLE_PRESS
+                                }
+                                handleGestures(gestures, nowMs)
+
+                                if (longPressConsumedKeys.remove(code)) {
+                                    log("native engine: keyCode=$code released after long press, suppressed")
+                                    return true
+                                } else if (isDoublePress) {
+                                    log("native engine: keyCode=$code double press triggered, suppressing uinput to avoid conflicting system actions")
+                                    return true
+                                } else if (code in doublePressKeyCodes) {
+                                    // 仅当用户为该按键配置了双击手势时才启动消歧等待（若用户按第2下则取消回写）
+                                    pendingClicks[code] = PendingClick(deviceId, code, nowMs)
+                                    return true
+                                } else {
+                                    // 未配置双击手势：直接放行（0ms 延迟，恢复系统原生即时锁屏与调音）
+                                    log("native engine: keyCode=$code has no double-press mapping, bypassing disambiguation directly")
+                                    return false
+                                }
                             }
                         }
                         return false
@@ -127,22 +139,29 @@ class EvdevPhysicalKeyObserver(
 
                 val evdevDevices = bridge.getEvdevDevicesNative()
                 log("native evdev devices found: ${evdevDevices.size}")
-                val powerTargets = evdevDevices.filter { dev ->
-                    dev.name.contains("pwrkey", ignoreCase = true) ||
-                        dev.name.contains("power", ignoreCase = true)
+                val targetDeviceNames = devices.associateBy { it.name }
+                val grabTargets = evdevDevices.filter { dev ->
+                    targetDeviceNames.containsKey(dev.name) ||
+                        dev.name.contains("pwrkey", ignoreCase = true) ||
+                        dev.name.contains("power", ignoreCase = true) ||
+                        dev.name.contains("gpio-keys", ignoreCase = true) ||
+                        dev.name.contains("resin", ignoreCase = true)
                 }.map { dev ->
+                    val keyCodes = targetDeviceNames[dev.name]?.keys?.toIntArray()
+                        ?: intArrayOf(KEY_POWER, KEY_VOLUMEUP, KEY_VOLUMEDOWN)
                     GrabTargetKeyCode(
                         name = dev.name,
                         bus = dev.bus,
                         vendor = dev.vendor,
                         product = dev.product,
-                        extraKeyCodes = intArrayOf(KEY_POWER),
+                        extraKeyCodes = keyCodes,
                     )
                 }.toTypedArray()
 
-                if (powerTargets.isNotEmpty()) {
-                    val grabbed = bridge.setGrabTargetsNative(powerTargets)
-                    log("grabbed targets via native engine: ${grabbed.size} devices grabbed successfully")
+                if (grabTargets.isNotEmpty()) {
+                    val grabbed = bridge.setGrabTargetsNative(grabTargets)
+                    nativeGrabbedDeviceNames = grabbed.map { it.name }.toSet()
+                    log("grabbed targets via native engine: ${grabbed.size} devices grabbed successfully ($nativeGrabbedDeviceNames)")
                 }
 
                 systemBridge = bridge
@@ -151,19 +170,10 @@ class EvdevPhysicalKeyObserver(
             }
         }
 
-        // 为每一个未被原生引擎独占的按键设备启动独立读取线程（非独占设备监听或降级只读监听）
-        val grabbedPaths = if (systemBridge != null) {
-            devices.filter { dev ->
-                dev.name.contains("pwrkey", ignoreCase = true) ||
-                    dev.name.contains("power", ignoreCase = true)
-            }.map { it.eventPath }.toSet()
-        } else {
-            emptySet()
-        }
-
+        // 为每一个未被原生引擎成功独占的按键设备启动独立读取线程（非独占设备监听或降级只读监听）
         for (device in devices) {
-            if (device.eventPath in grabbedPaths) {
-                log("skip java reader for ${device.eventPath} (handled by native engine)")
+            if (device.name in nativeGrabbedDeviceNames) {
+                log("skip java reader for ${device.eventPath} (${device.name} handled by native engine)")
                 continue
             }
             val thread = Thread({ readDeviceLoop(device) }, "evdev-key-${device.eventPath.substringAfterLast('/')}").apply {
@@ -185,6 +195,8 @@ class EvdevPhysicalKeyObserver(
 
     fun stop() {
         running = false
+        pendingClicks.clear()
+        longPressConsumedKeys.clear()
 
         systemBridge?.let { bridge ->
             runCatching {
@@ -216,8 +228,11 @@ class EvdevPhysicalKeyObserver(
 
     private fun handleGestures(gestures: List<PhysicalKeyGesture>, nowMs: Long) {
         for (gesture in gestures) {
-            if (gesture == PhysicalKeyGesture.POWER_LONG_PRESS) {
-                powerKeyConsumedByLongPress = true
+            when (gesture) {
+                PhysicalKeyGesture.POWER_LONG_PRESS -> longPressConsumedKeys.add(KEY_POWER)
+                PhysicalKeyGesture.VOLUME_UP_LONG_PRESS -> longPressConsumedKeys.add(KEY_VOLUMEUP)
+                PhysicalKeyGesture.VOLUME_DOWN_LONG_PRESS -> longPressConsumedKeys.add(KEY_VOLUMEDOWN)
+                else -> {}
             }
             log("recognized physical key gesture: $gesture")
             onGesture(gesture, nowMs)
@@ -266,10 +281,36 @@ class EvdevPhysicalKeyObserver(
         while (running) {
             sleepQuietly(TICK_INTERVAL_MS)
             val nowMs = SystemClock.elapsedRealtime()
+
+            // 检查待发射的单键回写（双击消歧窗口确认）
+            val bridge = systemBridge
+            if (bridge != null && pendingClicks.isNotEmpty()) {
+                val it = pendingClicks.entries.iterator()
+                while (it.hasNext()) {
+                    val entry = it.next()
+                    val pending = entry.value
+                    if (nowMs - pending.timeMs >= DOUBLE_TAP_DISAMBIGUATION_MS) {
+                        it.remove()
+                        log("native engine: single click confirmed for keyCode=${pending.keyCode} after double-tap window, emitting to uinput")
+                        emitUinputClick(bridge, pending.deviceId, pending.keyCode)
+                    }
+                }
+            }
+
             val gestures = synchronized(recognizer) {
                 recognizer.onTick(nowMs)
             }
             handleGestures(gestures, nowMs)
+        }
+    }
+
+    private fun emitUinputClick(bridge: SystemBridge, deviceId: Int, keyCode: Int) {
+        runCatching {
+            bridge.writeEvdevEventNative(deviceId, EV_KEY, keyCode, 1)
+            bridge.writeEvdevEventNative(deviceId, 0 /* EV_SYN */, 0, 0)
+            SystemClock.sleep(15)
+            bridge.writeEvdevEventNative(deviceId, EV_KEY, keyCode, 0)
+            bridge.writeEvdevEventNative(deviceId, 0 /* EV_SYN */, 0, 0)
         }
     }
 
@@ -408,5 +449,6 @@ class EvdevPhysicalKeyObserver(
         const val EVENT_SIZE = 24
 
         const val TICK_INTERVAL_MS = 40L
+        const val DOUBLE_TAP_DISAMBIGUATION_MS = 280L
     }
 }

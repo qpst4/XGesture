@@ -9,6 +9,7 @@ import android.media.AudioManager
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Log
 import android.view.KeyEvent
@@ -82,6 +83,8 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
 
     private var reconnectJob: Job? = null
 
+    private var screenOffWakeLock: PowerManager.WakeLock? = null
+
     private val serviceDeathRecipient = IBinder.DeathRecipient {
         Log.w(TAG, "observingService binder died, scheduling reconnect")
         observingService = null
@@ -92,8 +95,46 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
     private val screenReceiver = object : BroadcastReceiver() {
         override fun onReceive(c: Context?, intent: Intent?) {
             val action = intent?.action ?: return
-            if (action == Intent.ACTION_SCREEN_ON || action == Intent.ACTION_USER_PRESENT) {
-                checkChannelHealthAndRecover()
+            when (action) {
+                Intent.ACTION_SCREEN_ON, Intent.ACTION_USER_PRESENT -> {
+                    releaseScreenOffWakeLock()
+                    checkChannelHealthAndRecover()
+                }
+                Intent.ACTION_SCREEN_OFF -> {
+                    updateScreenOffWakeLock()
+                }
+            }
+        }
+    }
+
+    private fun updateScreenOffWakeLock() {
+        val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return
+        val state = settingsStore.state.value
+        val hasActiveGestures = state.entries.values.any { it.enabled && it.action !is GestureAction.None }
+        val shouldHold = state.enabled && state.screenOffTriggerEnabled && !pm.isInteractive && hasActiveGestures
+
+        if (shouldHold) {
+            if (screenOffWakeLock == null) {
+                screenOffWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "XGesture:PhysicalKeyScreenOff").apply {
+                    setReferenceCounted(false)
+                }
+            }
+            if (screenOffWakeLock?.isHeld == false) {
+                runCatching {
+                    screenOffWakeLock?.acquire(8 * 3600 * 1000L) // 8 小时超时保护
+                    Log.i(TAG, "acquired screen-off partial wake lock for physical key gestures")
+                }
+            }
+        } else {
+            releaseScreenOffWakeLock()
+        }
+    }
+
+    private fun releaseScreenOffWakeLock() {
+        if (screenOffWakeLock?.isHeld == true) {
+            runCatching {
+                screenOffWakeLock?.release()
+                Log.i(TAG, "released screen-off partial wake lock")
             }
         }
     }
@@ -150,6 +191,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
             val filter = IntentFilter().apply {
                 addAction(Intent.ACTION_SCREEN_ON)
                 addAction(Intent.ACTION_USER_PRESENT)
+                addAction(Intent.ACTION_SCREEN_OFF)
             }
             context.registerReceiver(screenReceiver, filter)
         }
@@ -173,6 +215,16 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
                         serviceEnabledOverride = serviceEnabled,
                     )
                 }
+        }
+
+        applicationScope.launch(Dispatchers.IO) {
+            settingsStore.state.collect {
+                updateScreenOffWakeLock()
+                val service = observingService ?: rootService
+                if (service != null) {
+                    updateDoublePressTargets(service)
+                }
+            }
         }
     }
 
@@ -272,6 +324,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
                 runCatching { service.asBinder().linkToDeath(serviceDeathRecipient, 0) }
                 observingService = service
                 _status.value = _status.value.copy(running = true, detail = "watching:shizuku", channel = "shizuku")
+                updateDoublePressTargets(service)
                 applyPowerKeySuppression(true)
             } else {
                 _status.value = _status.value.copy(running = false, detail = "device-unavailable")
@@ -281,6 +334,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
     }
 
     private fun stopObservation() {
+        releaseScreenOffWakeLock()
         applyPowerKeySuppression(false)
         val service = observingService
         observingService = null
@@ -340,6 +394,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
             detail = "watching:root",
             channel = "root",
         )
+        updateDoublePressTargets(root)
         applyPowerKeySuppression(true)
 
         rootPollJob = applicationScope.launch(Dispatchers.IO) {
@@ -431,6 +486,24 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
         }
     }
 
+    private fun updateDoublePressTargets(service: ITaskManagerService) {
+        val state = settingsStore.state.value
+        val doublePressKeys = mutableListOf<Int>()
+        if (state.entries[PhysicalKeyGesture.POWER_DOUBLE_PRESS]?.action !is GestureAction.None) {
+            doublePressKeys.add(EvdevPhysicalKeyObserver.KEY_POWER)
+        }
+        if (state.entries[PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS]?.action !is GestureAction.None) {
+            doublePressKeys.add(EvdevPhysicalKeyObserver.KEY_VOLUMEUP)
+        }
+        if (state.entries[PhysicalKeyGesture.VOLUME_DOWN_DOUBLE_PRESS]?.action !is GestureAction.None) {
+            doublePressKeys.add(EvdevPhysicalKeyObserver.KEY_VOLUMEDOWN)
+        }
+        runCatching {
+            service.updatePhysicalKeyDoublePressTargets(doublePressKeys.toIntArray())
+            Log.i(TAG, "updated physical key double press targets: $doublePressKeys")
+        }
+    }
+
     private fun suppressSystemPowerDialogIfNeeded() {
         // 1. 特权服务广播 CLOSE_SYSTEM_DIALOGS（root / shell 具备该权限，严禁盲目发送全局返回键）
         runCatching {
@@ -505,6 +578,11 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
 
         runCatching { ShakeVibrationHelper.vibrate(context) }
 
+        val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        if (pm?.isInteractive == false && requiresScreenOn(action)) {
+            wakeScreenUp()
+        }
+
         runCatching {
             val executor = ActionExecutor(
                 context = SlideIndexAccessibilityService.overlayHostContext() ?: context,
@@ -516,6 +594,21 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
             )
         }.onFailure {
             Log.w(TAG, "perform physical key action failed: ${it.message}")
+        }
+    }
+
+    private fun requiresScreenOn(action: GestureAction): Boolean = when (action) {
+        is GestureAction.Flashlight,
+        is GestureAction.MediaNext,
+        is GestureAction.MediaPrevious,
+        is GestureAction.MediaPlayPause -> false
+        else -> true
+    }
+
+    private fun wakeScreenUp() {
+        runCatching {
+            val service = observingService ?: rootService
+            service?.runShellCommand(arrayOf("input", "keyevent", "KEYCODE_WAKEUP"))
         }
     }
 

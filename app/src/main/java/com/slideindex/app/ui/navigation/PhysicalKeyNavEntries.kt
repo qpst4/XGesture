@@ -38,6 +38,7 @@ fun NavEntryBuilder.physicalKeyNavEntries(ctx: MainNavContext, backKey: AppNavKe
             onBack = { ctx.navigateBackTo(backKey) },
             onEnabledChange = viewModel::setEnabled,
             onInterceptNativeEventsChange = viewModel::setInterceptNativeEvents,
+            onScreenOffTriggerChange = viewModel::setScreenOffTriggerEnabled,
             onMediaPlaybackPrioritizedChange = viewModel::setMediaPlaybackPrioritized,
             onLongPressTimeoutChange = viewModel::setLongPressTimeout,
             onDoubleClickTimeoutChange = viewModel::setDoubleClickTimeout,
