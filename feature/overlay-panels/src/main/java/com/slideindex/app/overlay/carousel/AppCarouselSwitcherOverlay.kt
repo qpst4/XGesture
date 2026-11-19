@@ -42,12 +42,24 @@ object AppCarouselSwitcherOverlay {
         anchorX: Float,
         anchorY: Float,
         externalTracking: Boolean = true,
+        /** 关闭动作执行方；为空时「关闭」不生效。 */
+        closeHost: AppCarouselCloseHost? = null,
+        /** 是否有特权权限（后台任务模式的空态提示用）。 */
+        privilegedAccess: Boolean = true,
     ): Boolean {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             var result = false
             val latch = CountDownLatch(1)
             mainHandler.post {
-                result = show(context, settings, anchorX, anchorY, externalTracking)
+                result = show(
+                    context,
+                    settings,
+                    anchorX,
+                    anchorY,
+                    externalTracking,
+                    closeHost,
+                    privilegedAccess,
+                )
                 latch.countDown()
             }
             runCatching { latch.await(500, TimeUnit.MILLISECONDS) }
@@ -74,7 +86,11 @@ object AppCarouselSwitcherOverlay {
             }
         windowManager = wm
 
-        val view = AppCarouselSwitcherView(hostContext) {
+        val view = AppCarouselSwitcherView(
+            context = hostContext,
+            closeHost = closeHost,
+            privilegedAccess = privilegedAccess,
+        ) {
             dismiss()
         }
         view.configure(settings, anchorX, anchorY)

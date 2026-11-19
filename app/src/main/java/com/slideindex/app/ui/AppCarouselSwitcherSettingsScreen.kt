@@ -9,10 +9,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
+import com.slideindex.app.settings.AppCarouselListSource
 import com.slideindex.app.settings.AppCarouselSwitcherSettings
+import com.slideindex.app.settings.TaskSwitcherCloseMode
 import com.slideindex.app.ui.SettingSwitchRow
 import com.slideindex.app.ui.miuix.CardItem
 import com.slideindex.app.ui.miuix.groupedCardItems
+import com.slideindex.app.ui.settings.components.SettingDropdownRow
+import com.slideindex.app.ui.settings.components.SettingSegmentedRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.SettingsSliderRow
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
@@ -65,7 +69,59 @@ fun appCarouselSwitcherSettingsCardItems(
         AppCarouselSwitcherSettings.MAX_CANCEL_DISTANCE_DP.toFloat()
     val sliderSteps = AppCarouselSwitcherSettings.MAX_CANCEL_DISTANCE_DP -
         AppCarouselSwitcherSettings.MIN_CANCEL_DISTANCE_DP - 1
-    return listOf(
+    return listOfNotNull(
+        settingsCardScopeItem("$keyPrefix-list-source") {
+            SettingSegmentedRow(
+                title = stringResource(R.string.app_carousel_list_source_title),
+                subtitle = stringResource(
+                    when (local.listSource) {
+                        AppCarouselListSource.RECENT_APPS ->
+                            R.string.app_carousel_list_source_recent_desc
+                        AppCarouselListSource.BACKGROUND_TASKS ->
+                            R.string.app_carousel_list_source_background_desc
+                    },
+                ),
+                items = AppCarouselListSource.entries,
+                selected = local.listSource,
+                labelRes = { source ->
+                    when (source) {
+                        AppCarouselListSource.RECENT_APPS -> R.string.app_carousel_list_source_recent
+                        AppCarouselListSource.BACKGROUND_TASKS ->
+                            R.string.app_carousel_list_source_background
+                    }
+                },
+                onSelect = { source -> onUpdate(local.copy(listSource = source)) },
+            )
+        },
+        // 「关闭」胶囊只在后台任务模式下可配：最近任务模式的卡片可能没有真实任务，
+        // 划掉无从谈起，因此固定为仅强行停止，不暴露三选一。
+        if (local.listSource == AppCarouselListSource.BACKGROUND_TASKS) {
+            settingsCardScopeItem("$keyPrefix-close-mode") {
+                val closeModes = listOf(
+                    TaskSwitcherCloseMode.DISMISS_RECENTS,
+                    TaskSwitcherCloseMode.FORCE_STOP,
+                    TaskSwitcherCloseMode.BOTH,
+                )
+                SettingDropdownRow(
+                    title = stringResource(R.string.app_carousel_close_mode_title),
+                    subtitle = stringResource(R.string.app_carousel_close_mode_desc),
+                    items = listOf(
+                        stringResource(R.string.task_switcher_close_mode_dismiss_recents),
+                        stringResource(R.string.task_switcher_close_mode_force_stop),
+                        stringResource(R.string.task_switcher_close_mode_both),
+                    ),
+                    selectedIndex = closeModes.indexOf(local.closeMode).coerceAtLeast(0),
+                    onSelectedIndexChange = { index ->
+                        closeModes.getOrNull(index)?.let { mode ->
+                            onUpdate(local.copy(closeMode = mode))
+                        }
+                    },
+                )
+            }
+        } else {
+            null
+        },
+    ) + listOf(
         settingsCardScopeItem("$keyPrefix-up") {
             SettingsSliderRow(
                 title = stringResource(R.string.app_carousel_cancel_distance_up),

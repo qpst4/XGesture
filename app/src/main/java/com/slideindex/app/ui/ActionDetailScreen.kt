@@ -90,7 +90,11 @@ fun ActionDetailScreen(
     val clipboard = LocalClipboardManager.current
     val label = gestureActionLabel(action)
     val description = gestureActionDescription(action)
-    val permissionHint = gestureActionPermissionHint(action, context)
+    val permissionHint = gestureActionPermissionHint(
+        action,
+        context,
+        appCarouselSwitcher?.listSource,
+    )
     val specialHint = entry.special?.let { stringResource(it.hintRes) }
         ?: when (entry.type) {
             GestureActionType.FINGERTIP_RING -> stringResource(R.string.action_center_special_fingertip)

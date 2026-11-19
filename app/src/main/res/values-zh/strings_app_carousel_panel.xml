@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 应用切换器浮层内的状态提示（后台任务模式） -->
+    <string name="app_carousel_hint_loading">加载中…</string>
+    <string name="app_carousel_hint_empty_tasks">无后台任务</string>
+    <string name="app_carousel_hint_no_privilege">需要特权权限以显示后台任务</string>
+</resources>

@@ -23,12 +23,16 @@ import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toBitmap
 import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.settings.AppCarouselClosePlan
+import com.slideindex.app.settings.AppCarouselListSource
 import com.slideindex.app.settings.AppCarouselSwitcherSettings
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.settings.TaskSwitcherCloseMode
 import com.slideindex.app.util.CloneBadge
 import com.slideindex.app.util.HapticHelper
 import com.slideindex.app.util.PermissionHelper
 import com.slideindex.app.util.RecentAppEntry
+import com.slideindex.app.util.TaskSwitcherLockStore
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -68,6 +72,10 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
+    /** 关闭动作的执行方（`:app` 注入）；为空时关闭不生效。 */
+    private val closeHost: AppCarouselCloseHost? = null,
+    /** 是否有特权权限：后台任务模式用来区分「没任务」和「没权限」。 */
+    private val privilegedAccess: Boolean = true,
     private val onDismissRequest: () -> Unit,
 ) : View(context, attrs, defStyleAttr) {
 
@@ -78,6 +86,9 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
     private val cornerRadius = 22f * density
     private var carouselSettings: AppCarouselSwitcherSettings = AppCarouselSwitcherSettings()
     private var appSettings: AppSettings? = null
+    private var listSource: AppCarouselListSource = AppCarouselListSource.RECENT_APPS
+    private var isLoading = false
+    private var lockedPackages: Set<String> = emptySet()
     private val items = mutableListOf<AppCarouselItem>()
     private var selectedIndex = 0
     private var lastHapticIndex = 0
@@ -118,6 +129,16 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
         textSize = 13f * density
         textAlign = Paint.Align.CENTER
     }
+    /** 锁定任务卡片右上角的锁角标：底板 + 锁体 + 锁钩。 */
+    private val lockPlatePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val lockGlyphPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+    }
+    private val lockStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        color = Color.WHITE
+        strokeCap = Paint.Cap.ROUND
+    }
 
     private val optionPlatePaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val optionStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -140,6 +161,8 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
     private val iconRect = RectF()
     private val strokeRect = RectF()
     private val optionRect = RectF()
+    private val lockBodyRect = RectF()
+    private val lockShackleRect = RectF()
     private val clipPath = Path()
 
     init {
@@ -153,6 +176,11 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
     fun configure(settings: AppSettings, anchorX: Float, anchorY: Float) {
         this.appSettings = settings
         this.carouselSettings = settings.appCarouselSwitcher
+        this.listSource = carouselSettings.listSource
+        this.lockedPackages = runCatching {
+            TaskSwitcherLockStore.lockedPackages(context)
+        }.getOrDefault(emptySet())
+        this.isLoading = false
         this.initialTouchX = anchorX
         this.initialTouchY = anchorY
         this.currentTouchX = anchorX
@@ -190,6 +218,15 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
     }
 
     private fun loadCandidateApps() {
+        if (listSource == AppCarouselListSource.BACKGROUND_TASKS) {
+            // 后台任务模式：只认真实任务，不拿 UsageStats / 已安装应用凑数。
+            // 先铺一屏缓存，异步任务回来后再原地重建，避免首帧只有「全部关闭」。
+            basePackages = emptyList()
+            recentTaskEntries = cachedRecentTaskEntries()
+            rebuildItems()
+            refreshRecentTasksAsync()
+            return
+        }
         val pm = context.packageManager
         val recentPackages = LinkedHashSet<String>()
 
@@ -248,19 +285,34 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
         refreshRecentTasksAsync()
     }
 
+    /** 已有缓存的任务条目：后台任务模式先同步铺一屏，避免首帧空白。 */
+    private fun cachedRecentTaskEntries(): List<RecentAppEntry> =
+        runCatching {
+            com.slideindex.app.overlay.panels.PanelRuntimeHooks.cachedRecentTasks?.invoke()
+        }.getOrNull().orEmpty()
+
     /**
      * 异步取任务级条目：任务条目带 taskId/userId，才能把「微信分身」和主微信分开。
      * UsageStats 只有包名，只适合做补充；任务回来之前先显示包名列表，回来后原地重建。
      */
     private fun refreshRecentTasksAsync() {
         val repo = com.slideindex.app.overlay.panels.PanelRuntimeHooks.appRepository?.invoke(context)
-            ?: return
+            ?: run {
+                isLoading = false
+                return
+            }
         val refresh = com.slideindex.app.overlay.panels.PanelRuntimeHooks.refreshRecentTasks
-            ?: return
+            ?: run {
+                isLoading = false
+                return
+            }
         val generation = ++loadGeneration
+        isLoading = true
+        invalidate()
         refresh(repo) { entries ->
             if (generation != loadGeneration) return@refresh
             recentTaskEntries = entries
+            isLoading = false
             rebuildItems()
             invalidate()
         }
@@ -304,24 +356,27 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
             loaded.add(item)
         }
 
-        // 末尾追加 ×（关闭所有应用）卡片
-        val closeAllIconSizePx = (48f * density).roundToInt().coerceAtLeast(32)
-        val closeAllBitmap = createCloseAllBitmap(closeAllIconSizePx)
-        val closeAllColors = AppCarouselCardColors(
-            baseCardColor = 0x33E53935.toInt(),
-            highlightCardColor = 0xDDE53935.toInt(),
-            strokeColor = 0xFFFF5252.toInt(),
-            titleTextColor = Color.WHITE,
-        )
-        loaded.add(
-            AppCarouselItem(
-                packageName = "action.close_all",
-                label = context.getString(R.string.app_carousel_close_all),
-                iconBitmap = closeAllBitmap,
-                cardColors = closeAllColors,
-                isCloseAll = true,
+        // 末尾追加 ×（关闭所有应用）卡片。
+        // 一张应用卡都没有时不加：否则空态会剩一张孤零零的「全部关闭」，看着像正常的列表。
+        if (loaded.isNotEmpty()) {
+            val closeAllIconSizePx = (48f * density).roundToInt().coerceAtLeast(32)
+            val closeAllBitmap = createCloseAllBitmap(closeAllIconSizePx)
+            val closeAllColors = AppCarouselCardColors(
+                baseCardColor = 0x33E53935.toInt(),
+                highlightCardColor = 0xDDE53935.toInt(),
+                strokeColor = 0xFFFF5252.toInt(),
+                titleTextColor = Color.WHITE,
             )
-        )
+            loaded.add(
+                AppCarouselItem(
+                    packageName = "action.close_all",
+                    label = context.getString(R.string.app_carousel_close_all),
+                    iconBitmap = closeAllBitmap,
+                    cardColors = closeAllColors,
+                    isCloseAll = true,
+                )
+            )
+        }
 
         items.clear()
         items.addAll(loaded)
@@ -531,7 +586,7 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
                 executeFloating(target.packageName)
             }
             CarouselVerticalAction.CLOSE_APP -> {
-                executeCloseApp(target.packageName)
+                executeCloseApp(target)
             }
         }
         onDismissRequest()
@@ -541,23 +596,32 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
         onDismissRequest()
     }
 
+    /**
+     * 「关闭」胶囊实际生效的模式。
+     *
+     * 最近任务模式的卡片可能只是使用记录、没有真实任务，划掉无从谈起，因此固定为仅强停；
+     * 三个选项只在后台任务模式暴露（设置页也按同一条件隐藏下拉）。
+     */
+    private fun effectiveCloseMode(): TaskSwitcherCloseMode =
+        AppCarouselClosePlan.effectiveMode(listSource, carouselSettings.closeMode)
+
     private fun executeCloseAll() {
-        val packages = items.filterNot { it.isCloseAll }.map { it.packageName }
-        if (packages.isNotEmpty()) {
-            com.slideindex.app.overlay.panels.PanelRuntimeHooks.removeRecentPackages?.invoke(packages)
-            Thread {
-                for (pkg in packages) {
-                    com.slideindex.app.overlay.panels.PanelRuntimeHooks.forceStopPackage?.invoke(pkg)
-                }
-            }.start()
-        }
+        val targets = items.asSequence()
+            .filterNot { it.isCloseAll }
+            .filterNot { it.packageName in lockedPackages }
+            .map { AppCarouselCloseTarget(it.packageName, it.taskId) }
+            .toList()
+        if (targets.isEmpty()) return
+        closeHost?.close(targets, effectiveCloseMode())
     }
 
-    private fun executeCloseApp(packageName: String) {
-        com.slideindex.app.overlay.panels.PanelRuntimeHooks.removeRecentPackages?.invoke(listOf(packageName))
-        Thread {
-            com.slideindex.app.overlay.panels.PanelRuntimeHooks.forceStopPackage?.invoke(packageName)
-        }.start()
+    private fun executeCloseApp(item: AppCarouselItem) {
+        // 锁定的任务和任务切换器一样不允许结束。
+        if (item.packageName in lockedPackages) return
+        closeHost?.close(
+            listOf(AppCarouselCloseTarget(item.packageName, item.taskId)),
+            effectiveCloseMode(),
+        )
     }
 
     private fun executeFloating(packageName: String) {
@@ -613,7 +677,10 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
         super.onDraw(canvas)
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), bgDimPaint)
 
-        if (items.isEmpty()) return
+        if (items.isEmpty()) {
+            drawEmptyHint(canvas)
+            return
+        }
 
         val centerY = height / 2f
         val itemStep = cardBaseWidth + cardSpacing
@@ -680,6 +747,11 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
                     iconSize,
                     circular = false,
                 )
+            }
+
+            // 锁定的任务和任务切换器一致：右上角画锁，关闭时跳过。
+            if (item.taskId > 0 && item.packageName in lockedPackages) {
+                drawLockBadge(canvas, left, top, cardW, scale)
             }
 
             // 高亮外描边
@@ -782,6 +854,42 @@ class AppCarouselSwitcherView @JvmOverloads constructor(
             val hintY = centerY + cardBaseHeight * 0.9f
             canvas.drawText(context.getString(R.string.app_carousel_cancel_down_hint), width / 2f, hintY, hintPaint)
         }
+    }
+
+    /** 后台任务模式的空态：区分没权限、加载中、确实没任务。最近任务模式有回退来源，不会走到这。 */
+    private fun drawEmptyHint(canvas: Canvas) {
+        if (listSource != AppCarouselListSource.BACKGROUND_TASKS) return
+        val text = when {
+            !privilegedAccess -> context.getString(R.string.app_carousel_hint_no_privilege)
+            isLoading -> context.getString(R.string.app_carousel_hint_loading)
+            else -> context.getString(R.string.app_carousel_hint_empty_tasks)
+        }
+        val baseline = height / 2f - (hintPaint.descent() + hintPaint.ascent()) / 2f
+        canvas.drawText(text, width / 2f, baseline, hintPaint)
+    }
+
+    /** 卡片右上角的锁角标（锁定任务）。 */
+    private fun drawLockBadge(canvas: Canvas, cardLeft: Float, cardTop: Float, cardWidth: Float, scale: Float) {
+        val badge = 20f * density * scale
+        val cx = cardLeft + cardWidth - badge * 0.55f
+        val cy = cardTop + badge * 0.55f
+        lockPlatePaint.color = 0x99000000.toInt()
+        canvas.drawCircle(cx, cy, badge * 0.5f, lockPlatePaint)
+
+        val bodyW = badge * 0.34f
+        val bodyH = badge * 0.26f
+        val bodyTop = cy - bodyH * 0.05f
+        lockBodyRect.set(cx - bodyW / 2f, bodyTop, cx + bodyW / 2f, bodyTop + bodyH)
+        canvas.drawRoundRect(lockBodyRect, bodyH * 0.3f, bodyH * 0.3f, lockGlyphPaint)
+
+        lockStrokePaint.strokeWidth = badge * 0.09f
+        lockShackleRect.set(
+            cx - bodyW * 0.42f,
+            bodyTop - bodyH * 0.85f,
+            cx + bodyW * 0.42f,
+            bodyTop + bodyH * 0.15f,
+        )
+        canvas.drawArc(lockShackleRect, 180f, 180f, false, lockStrokePaint)
     }
 
     private fun drawOptionPill(

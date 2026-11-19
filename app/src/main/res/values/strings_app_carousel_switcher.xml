@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 应用切换器（卡片轮播）设置 -->
+    <string name="app_carousel_list_source_title">List source</string>
+    <string name="app_carousel_list_source_recent">Recent tasks</string>
+    <string name="app_carousel_list_source_background">Background tasks</string>
+    <string name="app_carousel_list_source_recent_desc">Recently used apps, up to 8 cards</string>
+    <string name="app_carousel_list_source_background_desc">Only system background tasks; requires Shizuku or root</string>
+    <string name="app_carousel_close_mode_title">Close button mode</string>
+    <string name="app_carousel_close_mode_desc">Action when releasing on “Close”</string>
+</resources>

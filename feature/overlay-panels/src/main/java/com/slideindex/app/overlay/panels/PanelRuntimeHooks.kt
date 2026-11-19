@@ -136,14 +136,6 @@ object PanelRuntimeHooks {
     @Volatile
     var recentTaskIdentifiers: (() -> List<String>?)? = null
 
-    /** 强停应用；返回是否成功。 */
-    @Volatile
-    var forceStopPackage: ((String) -> Boolean)? = null
-
-    /** 从最近任务列表里移除这些包。 */
-    @Volatile
-    var removeRecentPackages: ((Collection<String>) -> Unit)? = null
-
     /** 以小窗启动应用；`onSessionEnd` 在小窗结束时回调。 */
     @Volatile
     var launchFreeWindow: ((Context, String, AppSettings, (() -> Unit)?) -> Unit)? = null

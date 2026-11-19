@@ -940,14 +940,27 @@ fun gestureActionRequirementHint(action: GestureAction): String? = when (action.
 }
 
 @Composable
-fun gestureActionPermissionHint(action: GestureAction, context: Context): String? =
-    gestureActionPermissionHintText(context, action)
+fun gestureActionPermissionHint(
+    action: GestureAction,
+    context: Context,
+    appCarouselListSource: com.slideindex.app.settings.AppCarouselListSource? = null,
+): String? = gestureActionPermissionHintText(context, action, appCarouselListSource)
 
-fun gestureActionPermissionHintText(context: Context, action: GestureAction): String? =
+fun gestureActionPermissionHintText(
+    context: Context,
+    action: GestureAction,
+    appCarouselListSource: com.slideindex.app.settings.AppCarouselListSource? = null,
+): String? =
     when (action.type) {
         GestureActionType.APP_CAROUSEL_SWITCHER -> {
-            if (PermissionHelper.hasUsageAccess(context)) return null
-            context.getString(R.string.gesture_action_app_carousel_switcher_permission)
+            if (appCarouselListSource == com.slideindex.app.settings.AppCarouselListSource.BACKGROUND_TASKS) {
+                // 后台任务模式不读 UsageStats，要的是特权权限（Shizuku / root）。
+                if (TaskManagerUtil.peekPrivilegedAccess()) return null
+                context.getString(R.string.task_switcher_no_privileged_access)
+            } else {
+                if (PermissionHelper.hasUsageAccess(context)) return null
+                context.getString(R.string.gesture_action_app_carousel_switcher_permission)
+            }
         }
         GestureActionType.ADJUST_VOLUME -> {
             if (PermissionHelper.hasNotificationPolicyAccess(context)) return null

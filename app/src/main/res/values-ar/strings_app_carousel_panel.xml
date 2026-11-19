@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 应用切换器浮层内的状态提示（后台任务模式） -->
+    <string name="app_carousel_hint_loading">جارٍ التحميل…</string>
+    <string name="app_carousel_hint_empty_tasks">لا توجد مهام خلفية</string>
+    <string name="app_carousel_hint_no_privilege">يتطلب صلاحيات امتياز لعرض مهام الخلفية</string>
+</resources>

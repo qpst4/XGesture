@@ -743,7 +743,9 @@ class GestureSession(
                     sessionSettings,
                     x,
                     y,
-                    externalTracking = false
+                    externalTracking = false,
+                    closeHost = com.slideindex.app.overlay.carousel.AppCarouselCloseDispatcher,
+                    privilegedAccess = com.slideindex.app.util.TaskManagerUtil.peekPrivilegedAccess(),
                 )
             }
             is GestureAction.QuickWheel -> {

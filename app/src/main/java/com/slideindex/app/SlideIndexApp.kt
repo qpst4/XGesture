@@ -252,12 +252,6 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 com.slideindex.app.util.TaskManagerUtil.refreshRecentTasks().map { it.identifier }
             }.getOrNull()
         }
-        com.slideindex.app.overlay.panels.PanelRuntimeHooks.forceStopPackage = { pkg ->
-            com.slideindex.app.util.TaskManagerUtil.forceStopPackage(pkg)
-        }
-        com.slideindex.app.overlay.panels.PanelRuntimeHooks.removeRecentPackages = { packages ->
-            com.slideindex.app.util.RecentTasksLoader.removePackages(packages)
-        }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchFreeWindow = { ctx, pkg, settings, onEnd ->
             com.slideindex.app.util.TaskSwitcherMenuActions.launchFreeWindow(
                 context = ctx,

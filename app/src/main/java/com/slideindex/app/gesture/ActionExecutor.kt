@@ -309,7 +309,9 @@ class ActionExecutor(
                     settings,
                     x,
                     y,
-                    externalTracking = continueTouch
+                    externalTracking = continueTouch,
+                    closeHost = com.slideindex.app.overlay.carousel.AppCarouselCloseDispatcher,
+                    privilegedAccess = com.slideindex.app.util.TaskManagerUtil.peekPrivilegedAccess(),
                 )
             }
             GestureAction.HolographicLauncher ->

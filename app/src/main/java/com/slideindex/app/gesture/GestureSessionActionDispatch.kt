@@ -131,7 +131,9 @@ internal fun GestureSession.trackContinuousGesture(
                     sessionSettings,
                     rawX,
                     rawY,
-                    externalTracking = true
+                    externalTracking = true,
+                    closeHost = com.slideindex.app.overlay.carousel.AppCarouselCloseDispatcher,
+                    privilegedAccess = com.slideindex.app.util.TaskManagerUtil.peekPrivilegedAccess(),
                 )
                 if (shown) {
                     sessionContinuousPick.appCarouselSwitcher = true
@@ -363,7 +365,9 @@ internal fun GestureSession.handleClassifiedGesture(
                 sessionSettings,
                 rawX,
                 rawY,
-                externalTracking = false
+                externalTracking = false,
+                closeHost = com.slideindex.app.overlay.carousel.AppCarouselCloseDispatcher,
+                privilegedAccess = com.slideindex.app.util.TaskManagerUtil.peekPrivilegedAccess(),
             )
             val triggerMode = sessionSettings.resolvedTriggerMode(
                 sessionSide,

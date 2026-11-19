@@ -10,6 +10,10 @@ data class AppCarouselSwitcherSettings(
     val slideReversed: Boolean = false,
     /** 左右切换灵敏度（1~10）：越大，需要的滑动行程越短、切换越快。 */
     val slideSensitivity: Int = DEFAULT_SLIDE_SENSITIVITY,
+    /** 列表来源：最近任务（默认）或真实后台任务。 */
+    val listSource: AppCarouselListSource = AppCarouselListSource.RECENT_APPS,
+    /** 「关闭」胶囊的行为；只在后台任务模式下生效，最近任务模式固定为仅强行停止。 */
+    val closeMode: TaskSwitcherCloseMode = TaskSwitcherCloseMode.FORCE_STOP,
 ) {
     /** 左右切换一整个列表所需的手指行程（px）。 */
     fun slideTravelPx(density: Float): Float {
@@ -48,6 +52,14 @@ data class AppCarouselSwitcherSettings(
                 slideReversed = prefs[SettingsPreferenceKeys.APP_CAROUSEL_SLIDE_REVERSED] ?: false,
                 slideSensitivity = prefs[SettingsPreferenceKeys.APP_CAROUSEL_SLIDE_SENSITIVITY]
                     ?: DEFAULT_SLIDE_SENSITIVITY,
+                listSource = prefs[SettingsPreferenceKeys.APP_CAROUSEL_LIST_SOURCE]
+                    ?.let { AppCarouselListSource.fromId(it) }
+                    ?: AppCarouselListSource.RECENT_APPS,
+                // 未知/损坏的 id 一律回落到本设置自己的默认值（仅强停），
+                // 不能借用 TaskSwitcherCloseMode.fromId 的兜底（那个是「划掉」）。
+                closeMode = prefs[SettingsPreferenceKeys.APP_CAROUSEL_CLOSE_MODE]
+                    ?.let { id -> TaskSwitcherCloseMode.entries.firstOrNull { it.id == id } }
+                    ?: TaskSwitcherCloseMode.FORCE_STOP,
             )
         }
 
@@ -62,6 +74,8 @@ data class AppCarouselSwitcherSettings(
             prefs[SettingsPreferenceKeys.APP_CAROUSEL_SLIDE_REVERSED] = settings.slideReversed
             prefs[SettingsPreferenceKeys.APP_CAROUSEL_SLIDE_SENSITIVITY] =
                 settings.slideSensitivity.coerceIn(MIN_SLIDE_SENSITIVITY, MAX_SLIDE_SENSITIVITY)
+            prefs[SettingsPreferenceKeys.APP_CAROUSEL_LIST_SOURCE] = settings.listSource.id
+            prefs[SettingsPreferenceKeys.APP_CAROUSEL_CLOSE_MODE] = settings.closeMode.id
         }
     }
 }

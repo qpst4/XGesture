@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 应用切换器（卡片轮播）设置 -->
+    <string name="app_carousel_list_source_title">Источник списка</string>
+    <string name="app_carousel_list_source_recent">Недавние задачи</string>
+    <string name="app_carousel_list_source_background">Фоновые задачи</string>
+    <string name="app_carousel_list_source_recent_desc">Недавно использованные приложения, до 8 карточек</string>
+    <string name="app_carousel_list_source_background_desc">Только системные фоновые задачи; требуется Shizuku или root</string>
+    <string name="app_carousel_close_mode_title">Режим кнопки закрытия</string>
+    <string name="app_carousel_close_mode_desc">Действие при отпускании на «Закрыть»</string>
+</resources>

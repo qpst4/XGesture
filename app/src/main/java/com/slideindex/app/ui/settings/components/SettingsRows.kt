@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.ui.SettingIconContainer
+import com.slideindex.app.ui.SegmentedControl
 import com.slideindex.app.ui.miuix.MiuixArrowRow
 import com.slideindex.app.ui.miuix.MiuixGroupedCard
 import com.slideindex.app.ui.miuix.miuixGroupedCardItem
@@ -655,6 +656,53 @@ fun SettingsCardScope.SettingGrid2Row(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * 设置行：标题 + 副标题 + 一整行 [SegmentedControl]（替代只有两项的下拉）。
+ *
+ * 与「悬浮球取词面板」页里的同款行一致：整行留 16dp 内边距，容器/指示器用页面底色，
+ * 避免分段控件在卡片里显得比相邻行更宽（见 AGENTS.md 第五节）。
+ */
+@Composable
+fun <T> SettingsCardScope.SettingSegmentedRow(
+    title: String,
+    subtitle: String? = null,
+    items: List<T>,
+    selected: T,
+    labelRes: (T) -> Int,
+    onSelect: (T) -> Unit,
+) {
+    SettingsCardRow(key = "$title-segmented") { position ->
+        Column(
+            modifier = Modifier
+                .settingsGroupedRowBackground(position.index, position.count)
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = title,
+                style = MiuixTheme.textStyles.headline1,
+                fontWeight = FontWeight.Medium,
+            )
+            subtitle?.let {
+                Text(
+                    text = it,
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                )
+            }
+            SegmentedControl(
+                items = items,
+                selected = selected,
+                labelRes = labelRes,
+                onSelect = onSelect,
+                containerColor = MiuixTheme.colorScheme.surface,
+                indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
+            )
         }
     }
 }

@@ -3,6 +3,7 @@ package com.slideindex.app.ui
 import android.content.Context
 import androidx.compose.runtime.Composable
 import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.settings.AppCarouselListSource
 import com.slideindex.app.settings.AppSettings
 
 @Composable
@@ -18,8 +19,16 @@ fun gestureActionDescription(action: GestureAction): String? =
     com.slideindex.app.ui.gesturepicker.gestureActionDescription(action)
 
 @Composable
-fun gestureActionPermissionHint(action: GestureAction, context: Context): String? =
-    com.slideindex.app.ui.gesturepicker.gestureActionPermissionHint(action, context)
+fun gestureActionPermissionHint(
+    action: GestureAction,
+    context: Context,
+    appCarouselListSource: AppCarouselListSource? = null,
+): String? =
+    com.slideindex.app.ui.gesturepicker.gestureActionPermissionHint(
+        action,
+        context,
+        appCarouselListSource,
+    )
 
 @Composable
 fun gestureActionRequirementHint(action: GestureAction): String? =
