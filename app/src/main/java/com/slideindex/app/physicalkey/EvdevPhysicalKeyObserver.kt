@@ -2,6 +2,8 @@ package com.slideindex.app.physicalkey
 
 import android.os.SystemClock
 import android.util.Log
+import io.github.sds100.keymapper.common.models.GrabTargetKeyCode
+import io.github.sds100.keymapper.sysbridge.service.SystemBridge
 import java.io.FileInputStream
 import java.io.IOException
 import java.util.concurrent.CopyOnWriteArrayList
@@ -29,6 +31,12 @@ class EvdevPhysicalKeyObserver(
     private val openStreams = CopyOnWriteArrayList<FileInputStream>()
 
     @Volatile
+    private var powerKeyConsumedByLongPress = false
+
+    @Volatile
+    private var systemBridge: SystemBridge? = null
+
+    @Volatile
     private var tickWorker: Thread? = null
 
     private val recognizer = PhysicalKeyGestureRecognizer()
@@ -52,9 +60,113 @@ class EvdevPhysicalKeyObserver(
         onDiagnostics(diag)
         onState(true, "starting:${devices.size}")
 
-        // 为每一个按键设备启动独立读取线程
+        // 尝试加载 KeyMapper 原生 libevdev_manager 独占拦截引擎
+        val bridge = SystemBridge.getOrCreate()
+        if (bridge != null) {
+            log("native evdev_manager engine ready, setting up listener...")
+            runCatching {
+                bridge.listener = object : SystemBridge.Listener {
+                    override fun onEvdevEvent(
+                        deviceId: Int,
+                        timeSec: Long,
+                        timeUsec: Long,
+                        type: Int,
+                        code: Int,
+                        value: Int,
+                        androidCode: Int,
+                    ): Boolean {
+                        if (type == EV_KEY) {
+                            val isDown = value == 1 || value == 2
+                            val nowMs = SystemClock.elapsedRealtime()
+
+                            if (code == KEY_POWER) {
+                                if (value == 1) {
+                                    powerKeyConsumedByLongPress = false
+                                    val gestures = synchronized(recognizer) {
+                                        recognizer.onKeyEvent(code, true, nowMs)
+                                    }
+                                    handleGestures(gestures, nowMs)
+                                    return true // 彻底拦截按下中断，阻止 PhoneWindowManager 计时关机
+                                } else if (value == 2) {
+                                    val gestures = synchronized(recognizer) {
+                                        recognizer.onKeyEvent(code, true, nowMs)
+                                    }
+                                    handleGestures(gestures, nowMs)
+                                    return true
+                                } else if (value == 0) {
+                                    val gestures = synchronized(recognizer) {
+                                        recognizer.onKeyEvent(code, false, nowMs)
+                                    }
+                                    handleGestures(gestures, nowMs)
+
+                                    if (powerKeyConsumedByLongPress) {
+                                        log("native engine: power key released after long press, suppressed")
+                                        powerKeyConsumedByLongPress = false
+                                        return true
+                                    } else {
+                                        log("native engine: power key click, emitting down/up to uinput")
+                                        bridge.writeEvdevEventNative(deviceId, EV_KEY, KEY_POWER, 1)
+                                        bridge.writeEvdevEventNative(deviceId, 0 /* EV_SYN */, 0, 0)
+                                        SystemClock.sleep(15)
+                                        bridge.writeEvdevEventNative(deviceId, EV_KEY, KEY_POWER, 0)
+                                        bridge.writeEvdevEventNative(deviceId, 0 /* EV_SYN */, 0, 0)
+                                        return true
+                                    }
+                                }
+                            } else {
+                                val gestures = synchronized(recognizer) {
+                                    recognizer.onKeyEvent(code, isDown, nowMs)
+                                }
+                                handleGestures(gestures, nowMs)
+                                return false // 非电源键原样放行给系统
+                            }
+                        }
+                        return false
+                    }
+                }
+
+                val evdevDevices = bridge.getEvdevDevicesNative()
+                log("native evdev devices found: ${evdevDevices.size}")
+                val powerTargets = evdevDevices.filter { dev ->
+                    dev.name.contains("pwrkey", ignoreCase = true) ||
+                        dev.name.contains("power", ignoreCase = true)
+                }.map { dev ->
+                    GrabTargetKeyCode(
+                        name = dev.name,
+                        bus = dev.bus,
+                        vendor = dev.vendor,
+                        product = dev.product,
+                        extraKeyCodes = intArrayOf(KEY_POWER),
+                    )
+                }.toTypedArray()
+
+                if (powerTargets.isNotEmpty()) {
+                    val grabbed = bridge.setGrabTargetsNative(powerTargets)
+                    log("grabbed targets via native engine: ${grabbed.size} devices grabbed successfully")
+                }
+
+                systemBridge = bridge
+            }.onFailure {
+                log("failed to configure SystemBridge: ${it.message}")
+            }
+        }
+
+        // 为每一个未被原生引擎独占的按键设备启动独立读取线程（非独占设备监听或降级只读监听）
+        val grabbedPaths = if (systemBridge != null) {
+            devices.filter { dev ->
+                dev.name.contains("pwrkey", ignoreCase = true) ||
+                    dev.name.contains("power", ignoreCase = true)
+            }.map { it.eventPath }.toSet()
+        } else {
+            emptySet()
+        }
+
         for (device in devices) {
-            val thread = Thread({ readDeviceLoop(device.eventPath) }, "evdev-key-${device.eventPath.substringAfterLast('/')}").apply {
+            if (device.eventPath in grabbedPaths) {
+                log("skip java reader for ${device.eventPath} (handled by native engine)")
+                continue
+            }
+            val thread = Thread({ readDeviceLoop(device) }, "evdev-key-${device.eventPath.substringAfterLast('/')}").apply {
                 isDaemon = true
                 start()
             }
@@ -73,6 +185,16 @@ class EvdevPhysicalKeyObserver(
 
     fun stop() {
         running = false
+
+        systemBridge?.let { bridge ->
+            runCatching {
+                bridge.setGrabTargetsNative(emptyArray())
+                bridge.listener = null
+                log("SystemBridge grab released")
+            }
+            systemBridge = null
+        }
+
         for (stream in openStreams) {
             runCatching { stream.close() }
         }
@@ -90,9 +212,20 @@ class EvdevPhysicalKeyObserver(
         onState(false, "stopped")
     }
 
-    fun isRunning(): Boolean = running && readerWorkers.any { it.isAlive }
+    fun isRunning(): Boolean = running && (readerWorkers.any { it.isAlive } || systemBridge != null)
 
-    private fun readDeviceLoop(eventPath: String) {
+    private fun handleGestures(gestures: List<PhysicalKeyGesture>, nowMs: Long) {
+        for (gesture in gestures) {
+            if (gesture == PhysicalKeyGesture.POWER_LONG_PRESS) {
+                powerKeyConsumedByLongPress = true
+            }
+            log("recognized physical key gesture: $gesture")
+            onGesture(gesture, nowMs)
+        }
+    }
+
+    private fun readDeviceLoop(device: KeyDevice) {
+        val eventPath = device.eventPath
         val stream = try {
             FileInputStream(eventPath).also { openStreams.add(it) }
         } catch (e: Exception) {
@@ -116,11 +249,7 @@ class EvdevPhysicalKeyObserver(
                     val gestures = synchronized(recognizer) {
                         recognizer.onKeyEvent(code, isDown, nowMs)
                     }
-
-                    for (gesture in gestures) {
-                        log("recognized physical key gesture: $gesture")
-                        onGesture(gesture, nowMs)
-                    }
+                    handleGestures(gestures, nowMs)
                 }
             }
         } catch (e: Throwable) {
@@ -140,10 +269,7 @@ class EvdevPhysicalKeyObserver(
             val gestures = synchronized(recognizer) {
                 recognizer.onTick(nowMs)
             }
-            for (gesture in gestures) {
-                log("recognized physical key gesture (tick): $gesture")
-                onGesture(gesture, nowMs)
-            }
+            handleGestures(gestures, nowMs)
         }
     }
 
