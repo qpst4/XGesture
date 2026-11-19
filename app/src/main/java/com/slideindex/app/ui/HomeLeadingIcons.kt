@@ -75,6 +75,15 @@ internal object HomeLeadingIcons {
     @Suppress("UNUSED_PARAMETER")
     fun keyboardTrigger(outlined: Boolean) = symbol("Keyboard")
 
+    /**
+     * 「实体按键助手」。
+     *
+     * 用 Material Symbols 的 `key`：字面就是"按键"，且首页相邻的「全局触控」已经占了 [gesture]，
+     * 两行不能同图标（同 [gestureAppProfiles] 的教训）。
+     */
+    @Suppress("UNUSED_PARAMETER")
+    fun physicalKey(outlined: Boolean) = symbol("Key")
+
     @Suppress("UNUSED_PARAMETER")
     fun haptic(outlined: Boolean) = symbol("Vibration")
 
