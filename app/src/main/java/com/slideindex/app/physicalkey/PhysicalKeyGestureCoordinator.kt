@@ -143,6 +143,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
         if (started) return
         started = true
         PhysicalKeyFilterBridge.keyEventFilter = { event -> shouldInterceptKeyEvent(event) }
+        SlideIndexAccessibilityService.ensureKeyFilterEnabled()
         Log.i(TAG, "PhysicalKeyGestureCoordinator.start() initialized")
 
         if (isMainProcess()) {
@@ -424,6 +425,10 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
         val isVolumeDown = event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN
         if (!isVolumeUp && !isVolumeDown) {
             return false
+        }
+
+        if (state.mediaPlaybackPrioritized && isMediaPlaying()) {
+            return true
         }
 
         return state.entries.any { (gesture, entry) ->

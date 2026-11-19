@@ -1003,6 +1003,16 @@ class SlideIndexAccessibilityService : AccessibilityService() {
             return OtpAutoFillController.fillNow(service, settings, code)
         }
 
+        fun ensureKeyFilterEnabled() {
+            runCatching {
+                val s = instance ?: return
+                val info = s.serviceInfo ?: return
+                info.flags = info.flags or android.accessibilityservice.AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
+                s.serviceInfo = info
+                Log.i(TAG, "ensureKeyFilterEnabled: applied FLAG_REQUEST_FILTER_KEY_EVENTS (flags=0x${Integer.toHexString(info.flags)})")
+            }
+        }
+
         private const val TAG = "SlideIndexA11y"
         private const val CONFIG_CHANGE_SUPPRESSION_RETRY_MS = 400L
         private const val SCROLL_BOTTOM_STROKE_COUNT = 10
@@ -1012,6 +1022,7 @@ class SlideIndexAccessibilityService : AccessibilityService() {
 
     override fun onKeyEvent(event: android.view.KeyEvent?): Boolean {
         if (event != null && com.slideindex.app.physicalkey.PhysicalKeyFilterBridge.shouldIntercept(event)) {
+            Log.i("SlideIndexA11y", "intercepted key event: code=${event.keyCode} action=${event.action}")
             return true
         }
         return super.onKeyEvent(event)
@@ -1022,6 +1033,14 @@ class SlideIndexAccessibilityService : AccessibilityService() {
         instance = this
         instanceGeneration++
         AccessibilityLink.noteAlive("onServiceConnected")
+        runCatching {
+            val info = serviceInfo
+            if (info != null) {
+                info.flags = info.flags or android.accessibilityservice.AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
+                serviceInfo = info
+                Log.i(TAG, "onServiceConnected: applied key filter flags=0x${Integer.toHexString(info.flags)}")
+            }
+        }
         // 同一服务实例可能被系统重复回调 onServiceConnected（重绑 / 抖动重绑）。
         // 旧看门狗注册的熄屏广播与唤醒锁必须先解绑：字段被覆盖后旧对象再没人引用，
         // 它注册的接收者会一直留着，每重连一次就多一份。

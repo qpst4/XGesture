@@ -1,6 +1,7 @@
 package com.slideindex.app.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,6 +36,7 @@ import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.SmallTitle
@@ -304,17 +306,6 @@ fun PhysicalKeySettingsScreen(
                         onValueChange = { onDoubleClickTimeoutChange(it.toLong()) },
                     )
                 },
-                settingsCardScopeItem("diagnostics-row") {
-                    MiuixNavigationRow(
-                        title = diagnosticsTitle,
-                        summary = diagnosticsSummary,
-                        enabled = true,
-                        onClick = {
-                            showDiagnostics = true
-                            onRefreshDiagnostics()
-                        },
-                    )
-                },
             )
         )
 
@@ -350,35 +341,28 @@ fun PhysicalKeySettingsScreen(
         },
         onDismissRequest = { showDiagnostics = false },
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-        ) {
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
             item {
                 SmallTitle(
                     text = diagnosticsDriverInfo,
-                    modifier = Modifier.padding(bottom = 8.dp),
+                    insideMargin = PaddingValues(16.dp, 8.dp),
                 )
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.padding(bottom = 16.dp),
+                    colors = CardDefaults.defaultColors(
+                        color = MiuixTheme.colorScheme.secondaryContainer,
+                    ),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                    ) {
-                        SelectionContainer {
-                            MiuixText(
-                                text = diagnostics.ifBlank { diagnosticsLoading },
-                                style = MiuixTheme.textStyles.body2,
-                                fontFamily = FontFamily.Monospace,
-                                color = MiuixTheme.colorScheme.onSurface,
-                            )
-                        }
+                    SelectionContainer {
+                        MiuixText(
+                            text = diagnostics.ifBlank { diagnosticsLoading },
+                            style = MiuixTheme.textStyles.body2,
+                            fontFamily = FontFamily.Monospace,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            modifier = Modifier.padding(16.dp),
+                        )
                     }
                 }
-                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
