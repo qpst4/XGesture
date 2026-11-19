@@ -267,9 +267,10 @@ internal class TaskManagerRpcClient(
     override fun getPhysicalKeyDiagnostics(): String =
         (TaskManagerDaemonRpc.execute(port, 114, emptyList()) as? RpcValue.Str)?.value ?: ""
 
-    override fun updatePhysicalKeyDoublePressTargets(keyCodes: IntArray?) {
-        val args = keyCodes?.map { it.toString() } ?: emptyList()
-        runCatching { TaskManagerDaemonRpc.execute(port, 115, args) }
+    override fun updatePhysicalKeyTargets(mappedKeyCodes: IntArray?, doublePressKeyCodes: IntArray?) {
+        val mappedStr = mappedKeyCodes?.joinToString(",") ?: ""
+        val doublePressStr = doublePressKeyCodes?.joinToString(",") ?: ""
+        runCatching { TaskManagerDaemonRpc.execute(port, 115, listOf(mappedStr, doublePressStr)) }
     }
 }
 

@@ -488,19 +488,47 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
 
     private fun updateDoublePressTargets(service: ITaskManagerService) {
         val state = settingsStore.state.value
-        val doublePressKeys = mutableListOf<Int>()
-        if (state.entries[PhysicalKeyGesture.POWER_DOUBLE_PRESS]?.action !is GestureAction.None) {
+        val mappedKeys = mutableSetOf<Int>()
+        val doublePressKeys = mutableSetOf<Int>()
+
+        fun check(gesture: PhysicalKeyGesture, keyCode: Int) {
+            val entry = state.entries[gesture]
+            if (entry != null && entry.enabled && entry.action !is GestureAction.None) {
+                mappedKeys.add(keyCode)
+            }
+        }
+
+        check(PhysicalKeyGesture.POWER_LONG_PRESS, EvdevPhysicalKeyObserver.KEY_POWER)
+        check(PhysicalKeyGesture.VOLUME_UP_LONG_PRESS, EvdevPhysicalKeyObserver.KEY_VOLUMEUP)
+        check(PhysicalKeyGesture.VOLUME_DOWN_LONG_PRESS, EvdevPhysicalKeyObserver.KEY_VOLUMEDOWN)
+
+        val powerDouble = state.entries[PhysicalKeyGesture.POWER_DOUBLE_PRESS]
+        if (powerDouble != null && powerDouble.enabled && powerDouble.action !is GestureAction.None) {
+            mappedKeys.add(EvdevPhysicalKeyObserver.KEY_POWER)
             doublePressKeys.add(EvdevPhysicalKeyObserver.KEY_POWER)
         }
-        if (state.entries[PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS]?.action !is GestureAction.None) {
+
+        val volUpDouble = state.entries[PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS]
+        if (volUpDouble != null && volUpDouble.enabled && volUpDouble.action !is GestureAction.None) {
+            mappedKeys.add(EvdevPhysicalKeyObserver.KEY_VOLUMEUP)
             doublePressKeys.add(EvdevPhysicalKeyObserver.KEY_VOLUMEUP)
         }
-        if (state.entries[PhysicalKeyGesture.VOLUME_DOWN_DOUBLE_PRESS]?.action !is GestureAction.None) {
+
+        val volDownDouble = state.entries[PhysicalKeyGesture.VOLUME_DOWN_DOUBLE_PRESS]
+        if (volDownDouble != null && volDownDouble.enabled && volDownDouble.action !is GestureAction.None) {
+            mappedKeys.add(EvdevPhysicalKeyObserver.KEY_VOLUMEDOWN)
             doublePressKeys.add(EvdevPhysicalKeyObserver.KEY_VOLUMEDOWN)
         }
+
+        val bothPress = state.entries[PhysicalKeyGesture.VOLUME_BOTH_PRESS]
+        if (bothPress != null && bothPress.enabled && bothPress.action !is GestureAction.None) {
+            mappedKeys.add(EvdevPhysicalKeyObserver.KEY_VOLUMEUP)
+            mappedKeys.add(EvdevPhysicalKeyObserver.KEY_VOLUMEDOWN)
+        }
+
         runCatching {
-            service.updatePhysicalKeyDoublePressTargets(doublePressKeys.toIntArray())
-            Log.i(TAG, "updated physical key double press targets: $doublePressKeys")
+            service.updatePhysicalKeyTargets(mappedKeys.toIntArray(), doublePressKeys.toIntArray())
+            Log.i(TAG, "updated physical key targets: mapped=$mappedKeys, doublePress=$doublePressKeys")
         }
     }
 

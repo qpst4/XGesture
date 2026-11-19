@@ -182,8 +182,9 @@ internal object TaskManagerDaemonRpc {
             114 -> RpcValue.Str(service.getPhysicalKeyDiagnostics())
 
             115 -> {
-                val arr = args.mapNotNull { it?.toIntOrNull() }.toIntArray()
-                service.updatePhysicalKeyDoublePressTargets(arr)
+                val mapped = args.string(0).split(',').mapNotNull { it.toIntOrNull() }.toIntArray()
+                val doublePress = args.string(1).split(',').mapNotNull { it.toIntOrNull() }.toIntArray()
+                service.updatePhysicalKeyTargets(mapped, doublePress)
                 RpcValue.Void
             }
 

@@ -40,6 +40,9 @@ class EvdevPhysicalKeyObserver(
     private val longPressConsumedKeys = java.util.concurrent.ConcurrentHashMap.newKeySet<Int>()
 
     @Volatile
+    var mappedKeyCodes: Set<Int> = emptySet()
+
+    @Volatile
     var doublePressKeyCodes: Set<Int> = emptySet()
 
     @Volatile
@@ -88,6 +91,7 @@ class EvdevPhysicalKeyObserver(
                     ): Boolean {
                         if (type == EV_KEY) {
                             val nowMs = SystemClock.elapsedRealtime()
+                            val isMapped = code in mappedKeyCodes
 
                             if (value == 1) {
                                 longPressConsumedKeys.remove(code)
@@ -98,13 +102,18 @@ class EvdevPhysicalKeyObserver(
                                     recognizer.onKeyEvent(code, true, nowMs)
                                 }
                                 handleGestures(gestures, nowMs)
-                                return true // 独占拦截按下中断，防止系统 PhoneWindowManager 提前计时关机或调音
+
+                                if (!isMapped) {
+                                    // 未映射任何手势的按键：按下完全不拦截，直通原生系统
+                                    return false
+                                }
+                                return true // 已映射手势的按键：拦截按下，防止系统提前关机或调音
                             } else if (value == 2) {
                                 val gestures = synchronized(recognizer) {
                                     recognizer.onKeyEvent(code, true, nowMs)
                                 }
                                 handleGestures(gestures, nowMs)
-                                return true
+                                return isMapped
                             } else if (value == 0) {
                                 val gestures = synchronized(recognizer) {
                                     recognizer.onKeyEvent(code, false, nowMs)
@@ -115,6 +124,11 @@ class EvdevPhysicalKeyObserver(
                                         it == PhysicalKeyGesture.VOLUME_DOWN_DOUBLE_PRESS
                                 }
                                 handleGestures(gestures, nowMs)
+
+                                if (!isMapped) {
+                                    // 未映射任何手势的按键：松开完全不拦截，直通原生系统
+                                    return false
+                                }
 
                                 if (longPressConsumedKeys.remove(code)) {
                                     log("native engine: keyCode=$code released after long press, suppressed")
@@ -127,9 +141,12 @@ class EvdevPhysicalKeyObserver(
                                     pendingClicks[code] = PendingClick(deviceId, code, nowMs)
                                     return true
                                 } else {
-                                    // 未配置双击手势：直接放行（0ms 延迟，恢复系统原生即时锁屏与调音）
-                                    log("native engine: keyCode=$code has no double-press mapping, bypassing disambiguation directly")
-                                    return false
+                                    // 配置了长按但未配置双击的按键：短按松开立刻补发完整 DOWN+UP，0ms 延迟瞬间锁屏/调音！
+                                    log("native engine: single click confirmed for keyCode=$code (no double-press configured), emitting immediately to uinput (0ms)")
+                                    systemBridge?.let { bridge ->
+                                        emitUinputClick(bridge, deviceId, code)
+                                    }
+                                    return true
                                 }
                             }
                         }
