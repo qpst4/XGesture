@@ -12,14 +12,19 @@ Where the two files differ, `CHANGELOG.md` is authoritative.
 
 ### Added
 - Added Physical Key Assistant with single-press, double-press, long-press, and chord gesture mapping for Power, Volume Up, and Volume Down keys
+- Magnifier supports independent full-screen follow-hand and local viewport zoom ratios with inline adjustments
+- Floating pointer adds pinch-to-zoom (two-finger visuals) and smooth scrolling (flowing trajectory lines and axis lock)
+- Floating pointer joystick adds a "tap on release, keep joystick" interaction mode
+- Pick panel adds an image Edit button, tap actions, and in-panel language switching on long press
 - Added Microphone Control action with toggle, mute, and unmute modes alongside a global floating indicator
 - Added Cycle Keyboards action to switch between enabled input methods
 - Added Portable Hotspot action with toggle, turn on, and turn off modes
 - Added image and file shortcuts to activity shortcuts with direct opening and preview
+- Long-press gestures support a continuous trigger mode
 - Added trigger area constraints and keyboard avoidance policies to multi-touch gestures
 - Added task list source and close behavior settings to the task switcher
-- Added fully transparent containers, custom touch anchors, and mirrored layouts to the quick wheel (thanks @looper-w)
-- Added free-form drag-to-select lasso selection to smart screenshot (thanks @susan8991)
+- Quick wheel adds transparent containers, tint/intensity/feather background controls, text colors, and touch anchors (thanks @looper-w)
+- Smart screenshot upgrades to drag-to-select free-form selection (thanks @susan8991)
 - Upgraded UI components with liquid glass materials and bouncy overscroll effects
 - Added Spanish (Español) language localization (thanks @Leostrange)
 
@@ -28,9 +33,11 @@ Where the two files differ, `CHANGELOG.md` is authoritative.
 - Floating ball supports long-press dragging to any screen location with automatic edge snapping
 - Added expandable search to the built-in Action Center
 - Redesigned the ring launcher slot picker into a full-page glass list
+- Shell actions deliver execution feedback strictly according to configured display policies
 - Decoupled haptic feedback from the system tactile feedback toggle (thanks @looper-w)
 
 ### Fixed
+- Fixed screen brightness slider failing to adjust system brightness
 - Fixed layout clipping and overlaps in the text selection panel on landscape screens
 - Fixed the search bar in the icon picker being covered by the category tab row
 - Fixed occasional Root daemon deadlocks and cold-start race conditions on certain devices
