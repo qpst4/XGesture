@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Physical key assistant resources -->
+<resources>
+    <string name="physical_key_title">Помощник физических клавиш</string>
+    <string name="physical_key_home_summary">Жесты длительного нажатия, двойного нажатия и комбинаций клавиш питания и громкости (Root / Shizuku, работает при выключенном экране)</string>
+
+    <!-- Settings: Tip Card -->
+    <string name="physical_key_tip">Напрямую считывает низкоуровневые события ввода Linux через привилегированные каналы (Shizuku / Root).\nПолностью поддерживает длительное нажатие, двойное нажатие и комбинации клавиш питания и громкости даже при выключенном экране.\nОбычные одиночные нажатия передаются системе без задержки, сохраняя штатные функции питания и громкости.</string>
+
+    <!-- Settings: Toggle and Status -->
+    <string name="physical_key_enable_title">Включить жесты физических клавиш</string>
+    <string name="physical_key_enable_summary">Отслеживает низкоуровневые события физических клавиш и запускает пользовательские действия</string>
+    <string name="physical_key_status_title">Состояние</string>
+    <string name="physical_key_status_disabled">Отключено</string>
+    <string name="physical_key_status_running">Наблюдение</string>
+    <string name="physical_key_status_stopped">Остановлено</string>
+    <string name="physical_key_status_channel_fallback">Привилегированный канал</string>
+    <string name="physical_key_status_channel_detail">Канал: %1$s · прослушивание низкоуровневого драйвера</string>
+    <string name="physical_key_status_not_running">Не работает (%1$s). Нажмите, чтобы повторить попытку или открыть диагностику.</string>
+
+    <!-- Sections and Gestures -->
+    <string name="physical_key_section_power">Клавиша питания</string>
+    <string name="physical_key_section_volume">Клавиши громкости</string>
+    <string name="physical_key_section_advanced">Дополнительно и чувствительность</string>
+
+    <string name="physical_key_gesture_power_long">Долгое нажатие питания</string>
+    <string name="physical_key_gesture_power_double">Двойное нажатие питания</string>
+    <string name="physical_key_gesture_vol_up_long">Долгое нажатие громкости +</string>
+    <string name="physical_key_gesture_vol_up_double">Двойное нажатие громкости +</string>
+    <string name="physical_key_gesture_vol_down_long">Долгое нажатие громкости -</string>
+    <string name="physical_key_gesture_vol_down_double">Двойное нажатие громкости -</string>
+    <string name="physical_key_gesture_vol_both_press">Комбинация громкости + и -</string>
+
+    <!-- Advanced options -->
+    <string name="physical_key_intercept_native_title">Перехватывать системные события клавиш</string>
+    <string name="physical_key_intercept_native_summary">Блокирует штатный отклик системы при срабатывании жестов (например, скрывает панель громкости и меню питания)</string>
+    <string name="physical_key_media_priority_title">Переключение треков долгим нажатием громкости</string>
+    <string name="physical_key_media_priority_summary">При воспроизведении музыки долгое нажатие громкости + или - переключает на следующий или предыдущий трек (приоритетнее пользовательского действия)</string>
+    <string name="physical_key_long_press_duration_title">Порог длительного нажатия</string>
+    <string name="physical_key_double_tap_duration_title">Интервал двойного нажатия</string>
+    <string name="physical_key_diagnostics_title">Диагностика устройств и привилегий</string>
+    <string name="physical_key_diagnostics_dialog_title">Диагностика физических клавиш</string>
+    <string name="physical_key_diagnostics_summary">Просмотр обнаруженных устройств физических клавиш и состояния привилегированного процесса</string>
+    <string name="physical_key_diagnostics_driver_info">Сведения о драйвере и службе</string>
+    <string name="physical_key_diagnostics_loading">Чтение диагностики или служба ещё не подключена…</string>
+    <string name="physical_key_close">Закрыть</string>
+    <string name="physical_key_refresh">Обновить</string>
+
+    <string name="physical_key_hint">Совет: привилегированные службы автоматически переподключаются и возобновляют наблюдение.\nОбычные одиночные нажатия сразу передаются системе.\nЧтобы отключить жесты физических клавиш в отдельных приложениях (например, в камере или играх), настройте области по приложениям в разделе «Отключение для приложений».</string>
+</resources>

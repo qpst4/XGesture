@@ -789,6 +789,7 @@
     <string name="excluded_apps_scope_corner_wheel_short">ホイール</string>
     <string name="excluded_apps_scope_float_ball_short">フローティングボール</string>
     <string name="excluded_apps_scope_multitouch_short">マルチタッチ</string>
+    <string name="excluded_apps_scope_physical_key_short">物理キー</string>
     <string name="excluded_apps_scope_none">無効化なし</string>
     <string name="excluded_apps_scope_dialog_hint">このアプリで非表示にする項目を選択。少なくとも 1 つは有効にしてください。</string>
     <string name="excluded_apps_section_excluded">無効</string>

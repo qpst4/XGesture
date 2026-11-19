@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Physical key assistant resources -->
+<resources>
+    <string name="physical_key_title">مساعد المفاتيح الفيزيائية</string>
+    <string name="physical_key_home_summary">إيماءات الضغط الطويل والنقر المزدوج والضغط المشترك لمفتاحي الطاقة والصوت (Root / Shizuku، يعمل والشاشة مطفأة)</string>
+
+    <!-- Settings: Tip Card -->
+    <string name="physical_key_tip">يقرأ أحداث الإدخال منخفضة المستوى في Linux مباشرةً عبر قنوات مميزة (Shizuku / Root).\nيدعم بالكامل الضغط الطويل والنقر المزدوج والضغط المشترك لمفتاحي الطاقة والصوت حتى والشاشة مطفأة.\nتُمرَّر النقرات المفردة العادية إلى النظام دون تأخير، مع الحفاظ على وظائف الطاقة والصوت الأصلية.</string>
+
+    <!-- Settings: Toggle and Status -->
+    <string name="physical_key_enable_title">تفعيل إيماءات المفاتيح الفيزيائية</string>
+    <string name="physical_key_enable_summary">يراقب أحداث المفاتيح الفيزيائية منخفضة المستوى وينفّذ إجراءات مخصصة</string>
+    <string name="physical_key_status_title">الحالة</string>
+    <string name="physical_key_status_disabled">معطّل</string>
+    <string name="physical_key_status_running">قيد المراقبة</string>
+    <string name="physical_key_status_stopped">متوقف</string>
+    <string name="physical_key_status_channel_fallback">قناة مميزة</string>
+    <string name="physical_key_status_channel_detail">القناة: %1$s · مستمع برنامج التشغيل منخفض المستوى</string>
+    <string name="physical_key_status_not_running">غير قيد التشغيل (%1$s). انقر لإعادة المحاولة أو عرض التشخيص.</string>
+
+    <!-- Sections and Gestures -->
+    <string name="physical_key_section_power">مفتاح الطاقة</string>
+    <string name="physical_key_section_volume">مفاتيح الصوت</string>
+    <string name="physical_key_section_advanced">خيارات متقدمة والحساسية</string>
+
+    <string name="physical_key_gesture_power_long">ضغط طويل على مفتاح الطاقة</string>
+    <string name="physical_key_gesture_power_double">نقر مزدوج على مفتاح الطاقة</string>
+    <string name="physical_key_gesture_vol_up_long">ضغط طويل على رفع الصوت</string>
+    <string name="physical_key_gesture_vol_up_double">نقر مزدوج على رفع الصوت</string>
+    <string name="physical_key_gesture_vol_down_long">ضغط طويل على خفض الصوت</string>
+    <string name="physical_key_gesture_vol_down_double">نقر مزدوج على خفض الصوت</string>
+    <string name="physical_key_gesture_vol_both_press">ضغط رفع وخفض الصوت معًا</string>
+
+    <!-- Advanced options -->
+    <string name="physical_key_intercept_native_title">اعتراض أحداث المفاتيح الأصلية</string>
+    <string name="physical_key_intercept_native_summary">يمنع استجابة النظام الأصلية عند تفعيل الإيماءات (مثل إخفاء لوحة الصوت أو منع قائمة الطاقة)</string>
+    <string name="physical_key_media_priority_title">تبديل المقطع بالضغط الطويل على الصوت</string>
+    <string name="physical_key_media_priority_summary">أثناء تشغيل الموسيقى، اضغط مطوّلًا على رفع أو خفض الصوت للانتقال إلى المقطع التالي أو السابق (يتجاوز الإجراء المخصص)</string>
+    <string name="physical_key_long_press_duration_title">مدة الضغط الطويل</string>
+    <string name="physical_key_double_tap_duration_title">الفاصل الزمني للنقر المزدوج</string>
+    <string name="physical_key_diagnostics_title">تشخيص الأجهزة والصلاحيات</string>
+    <string name="physical_key_diagnostics_dialog_title">تشخيص المفاتيح الفيزيائية</string>
+    <string name="physical_key_diagnostics_summary">عرض أجهزة المفاتيح الفيزيائية المكتشفة وحالة العملية المميزة</string>
+    <string name="physical_key_diagnostics_driver_info">معلومات برنامج التشغيل والخدمة</string>
+    <string name="physical_key_diagnostics_loading">جارٍ قراءة التشخيص أو الخدمة غير متصلة بعد…</string>
+    <string name="physical_key_close">إغلاق</string>
+    <string name="physical_key_refresh">تحديث</string>
+
+    <string name="physical_key_hint">تلميح: تُعيد الخدمات المميزة الاتصال وتستأنف المراقبة تلقائيًا.\nتُمرَّر النقرات المفردة العادية إلى النظام فورًا.\nلكتم إيماءات المفاتيح الفيزيائية في تطبيقات معيّنة (مثل الكاميرا والألعاب)، اضبط النطاقات لكل تطبيق في «تعطيل حسب التطبيق».</string>
+</resources>

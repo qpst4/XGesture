@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Physical key assistant resources -->
+<resources>
+    <string name="physical_key_title">物理キーアシスタント</string>
+    <string name="physical_key_home_summary">電源キーと音量キーの長押し・ダブルタップ・同時押しのジェスチャー（Root / Shizuku 対応、画面オフでも使用可能）</string>
+
+    <!-- Settings: Tip Card -->
+    <string name="physical_key_tip">特権チャネル（Shizuku / Root）を介して Linux の低レベル入力イベントを直接読み取ります。\n画面オフ時でも、電源キーと音量キーの長押し・ダブルタップ・同時押しに完全対応します。\n通常のシングルクリックは遅延なくそのままシステムへ渡され、電源・音量のネイティブ機能を損ないません。</string>
+
+    <!-- Settings: Toggle and Status -->
+    <string name="physical_key_enable_title">物理キージェスチャーを有効にする</string>
+    <string name="physical_key_enable_summary">低レベルの物理キーイベントを監視し、カスタムアクションを実行します</string>
+    <string name="physical_key_status_title">ステータス</string>
+    <string name="physical_key_status_disabled">無効</string>
+    <string name="physical_key_status_running">監視中</string>
+    <string name="physical_key_status_stopped">停止中</string>
+    <string name="physical_key_status_channel_fallback">特権チャネル</string>
+    <string name="physical_key_status_channel_detail">チャネル: %1$s ・ 低レベルドライバー監視中</string>
+    <string name="physical_key_status_not_running">未実行（%1$s）。タップして再試行するか診断を表示します。</string>
+
+    <!-- Sections and Gestures -->
+    <string name="physical_key_section_power">電源キー</string>
+    <string name="physical_key_section_volume">音量キー</string>
+    <string name="physical_key_section_advanced">詳細設定と感度</string>
+
+    <string name="physical_key_gesture_power_long">電源キー長押し</string>
+    <string name="physical_key_gesture_power_double">電源キーダブルタップ</string>
+    <string name="physical_key_gesture_vol_up_long">音量＋長押し</string>
+    <string name="physical_key_gesture_vol_up_double">音量＋ダブルタップ</string>
+    <string name="physical_key_gesture_vol_down_long">音量－長押し</string>
+    <string name="physical_key_gesture_vol_down_double">音量－ダブルタップ</string>
+    <string name="physical_key_gesture_vol_both_press">音量＋と－の同時押し</string>
+
+    <!-- Advanced options -->
+    <string name="physical_key_intercept_native_title">ネイティブのキーイベントを遮断</string>
+    <string name="physical_key_intercept_native_summary">ジェスチャー実行時にシステムのネイティブ応答を抑止します（音量パネルの非表示、電源メニューの抑制など）</string>
+    <string name="physical_key_media_priority_title">音量長押しで曲送り</string>
+    <string name="physical_key_media_priority_summary">音楽の再生中に音量＋を長押しで次の曲、音量－で前の曲へ（カスタムアクションより優先）</string>
+    <string name="physical_key_long_press_duration_title">長押し判定時間</string>
+    <string name="physical_key_double_tap_duration_title">ダブルタップ間隔</string>
+    <string name="physical_key_diagnostics_title">デバイスと特権の診断</string>
+    <string name="physical_key_diagnostics_dialog_title">物理キーの詳細診断</string>
+    <string name="physical_key_diagnostics_summary">検出された物理キーデバイスと特権プロセスの状態を表示します</string>
+    <string name="physical_key_diagnostics_driver_info">ドライバーとサービスの情報</string>
+    <string name="physical_key_diagnostics_loading">診断情報を読み取り中、またはサービスに未接続です…</string>
+    <string name="physical_key_close">閉じる</string>
+    <string name="physical_key_refresh">更新</string>
+
+    <string name="physical_key_hint">ヒント：特権サービスは自動的に再接続し、監視を再開します。\n通常のシングルクリックは即座にシステムへ渡されます。\n特定のアプリ（カメラやゲームなど）で物理キージェスチャーを抑止するには、「アプリ別無効化」でアプリごとのスコープを設定してください。</string>
+</resources>

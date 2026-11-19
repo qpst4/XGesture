@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Physical key assistant resources -->
+<resources>
+    <string name="physical_key_title">Asistente de teclas físicas</string>
+    <string name="physical_key_home_summary">Gestos de pulsación larga, doble toque y combinación con las teclas de encendido y volumen (Root / Shizuku, compatible con pantalla apagada)</string>
+
+    <!-- Settings: Tip Card -->
+    <string name="physical_key_tip">Lee los eventos de entrada de Linux subyacentes directamente mediante canales privilegiados (Shizuku / Root).\nAdmite por completo pulsaciones largas, dobles toques y pulsaciones combinadas de las teclas de encendido y volumen incluso con la pantalla apagada.\nLos clics normales se envían directamente al sistema sin latencia, conservando las funciones nativas de encendido y volumen.</string>
+
+    <!-- Settings: Toggle and Status -->
+    <string name="physical_key_enable_title">Activar gestos de teclas físicas</string>
+    <string name="physical_key_enable_summary">Supervisa los eventos de bajo nivel de las teclas físicas y ejecuta acciones personalizadas</string>
+    <string name="physical_key_status_title">Estado</string>
+    <string name="physical_key_status_disabled">Desactivado</string>
+    <string name="physical_key_status_running">Supervisando</string>
+    <string name="physical_key_status_stopped">Detenido</string>
+    <string name="physical_key_status_channel_fallback">Canal privilegiado</string>
+    <string name="physical_key_status_channel_detail">Canal: %1$s · escucha del controlador de bajo nivel</string>
+    <string name="physical_key_status_not_running">No está en ejecución (%1$s). Toca para reintentar o ver el diagnóstico.</string>
+
+    <!-- Sections and Gestures -->
+    <string name="physical_key_section_power">Tecla de encendido</string>
+    <string name="physical_key_section_volume">Teclas de volumen</string>
+    <string name="physical_key_section_advanced">Opciones avanzadas y sensibilidad</string>
+
+    <string name="physical_key_gesture_power_long">Pulsación larga de encendido</string>
+    <string name="physical_key_gesture_power_double">Doble toque de encendido</string>
+    <string name="physical_key_gesture_vol_up_long">Pulsación larga de volumen +</string>
+    <string name="physical_key_gesture_vol_up_double">Doble toque de volumen +</string>
+    <string name="physical_key_gesture_vol_down_long">Pulsación larga de volumen -</string>
+    <string name="physical_key_gesture_vol_down_double">Doble toque de volumen -</string>
+    <string name="physical_key_gesture_vol_both_press">Combinación de volumen + y -</string>
+
+    <!-- Advanced options -->
+    <string name="physical_key_intercept_native_title">Interceptar eventos de teclas nativos</string>
+    <string name="physical_key_intercept_native_summary">Evita la respuesta nativa del sistema al activar los gestos (por ejemplo, ocultar el panel de volumen o suprimir el diálogo de apagado)</string>
+    <string name="physical_key_media_priority_title">Cambiar de pista con pulsación larga de volumen</string>
+    <string name="physical_key_media_priority_summary">Con música activa, mantén pulsado volumen + o - para pasar a la pista siguiente o anterior (tiene prioridad sobre la acción personalizada)</string>
+    <string name="physical_key_long_press_duration_title">Duración de pulsación larga</string>
+    <string name="physical_key_double_tap_duration_title">Intervalo de doble toque</string>
+    <string name="physical_key_diagnostics_title">Diagnóstico de dispositivos y privilegios</string>
+    <string name="physical_key_diagnostics_dialog_title">Diagnóstico de teclas físicas</string>
+    <string name="physical_key_diagnostics_summary">Ver los dispositivos de teclas físicas detectados y el estado del proceso privilegiado</string>
+    <string name="physical_key_diagnostics_driver_info">Información del controlador y del servicio</string>
+    <string name="physical_key_diagnostics_loading">Leyendo el diagnóstico o el servicio aún no está conectado…</string>
+    <string name="physical_key_close">Cerrar</string>
+    <string name="physical_key_refresh">Actualizar</string>
+
+    <string name="physical_key_hint">Consejo: los servicios privilegiados se reconectan y reanudan la supervisión automáticamente.\nLos clics simples normales pasan al sistema de inmediato.\nPara suprimir los gestos de teclas físicas en aplicaciones concretas (por ejemplo, cámara o juegos), configura los ámbitos por aplicación en «Desactivación por aplicación».</string>
+</resources>
