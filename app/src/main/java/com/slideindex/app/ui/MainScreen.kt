@@ -52,8 +52,7 @@ fun MainScreen(
     onRequestOverlay: () -> Unit,
     onRequestBatteryOptimization: () -> Unit = {},
     onGestureEnabledChange: (Boolean) -> Unit,
-    onOpenPrivilegeModeSettings: () -> Unit,
-    onOpenAppKeepAliveSettings: () -> Unit,
+    onOpenBackgroundPermissions: () -> Unit,
     onOpenFloatBallSettings: () -> Unit,
     onOpenPickSettings: () -> Unit,
     pickOcrFallbackEnabled: Boolean,
@@ -217,26 +216,16 @@ fun MainScreen(
                     },
                 )
                 add(
-                    settingsCardItem("privilege-mode") {
+                    settingsCardItem("background-permissions") {
                         SettingsCardScopeContent {
-                            PrivilegeModeEntryCard(
+                            BackgroundPermissionsEntryCard(
                                 privilegeMode = privilegeMode,
                                 privilegedAccessGranted = privilegedAccessGranted,
-                                outlinedLeadingIcons = true,
-                                onClick = onOpenPrivilegeModeSettings,
-                            )
-                        }
-                    },
-                )
-                add(
-                    settingsCardItem("app-keep-alive") {
-                        SettingsCardScopeContent {
-                            AppKeepAliveEntryCard(
                                 batteryOptimizationExempt = batteryOptimizationExempt,
                                 hideFromRecents = settings.hideFromRecents,
                                 accessibilityKeepAliveEnabled = settings.accessibilityKeepAliveEnabled,
                                 outlinedLeadingIcons = true,
-                                onClick = onOpenAppKeepAliveSettings,
+                                onClick = onOpenBackgroundPermissions,
                             )
                         }
                     },
@@ -410,7 +399,7 @@ fun MainScreen(
                             SettingNavigationRow(
                                 icon = { label ->
                                     Icon(
-                                        HomeLeadingIcons.gesture(true),
+                                        HomeLeadingIcons.physicalKey(true),
                                         contentDescription = label,
                                     )
                                 },

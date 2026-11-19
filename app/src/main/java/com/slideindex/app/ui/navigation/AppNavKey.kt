@@ -10,8 +10,7 @@ sealed interface AppNavKey : NavKey {
     @Serializable data object HomeMain : AppNavKey
     @Serializable data object HomeInteractionAppearance : AppNavKey
 @Serializable data object HomeHapticSettings : AppNavKey
-    @Serializable data object HomeAppKeepAlive : AppNavKey
-    @Serializable data object HomePrivilegeMode : AppNavKey
+    @Serializable data object HomeBackgroundPermissions : AppNavKey
     @Serializable data object HomeLayout : AppNavKey
     @Serializable data object HomeHiddenApps : AppNavKey
     @Serializable data object HomePreviousAppBlacklist : AppNavKey
