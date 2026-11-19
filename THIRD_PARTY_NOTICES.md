@@ -210,6 +210,16 @@ XGesture（`com.slideindex.app`）在 [GNU Affero General Public License v3.0](L
 
 ---
 
+## Key Mapper
+
+- **Copyright:** sds100 and contributors
+- **License:** [GNU General Public License v3.0](app/src/main/assets/licenses/GPL-3.0.txt)
+- **Source:** https://github.com/keymapperorg/KeyMapper
+- **Used in:** 实体按键助手底层 native 内核独占抓取（`libevdev_manager.so`、`EvdevDeviceInfo`、`GrabTargetKeyCode`、`GrabbedDeviceHandle`、`SystemBridge`）；Root / Shizuku 双模特权跨进程 keycode 拦截分发与消歧思路
+- **Modifications:** 保留原包名 `io.github.sds100.keymapper` 及 native 预编译 so；编写 Kotlin 上层调度适配器（`EvdevPhysicalKeyObserver`、`PhysicalKeyFilterBridge`、`PhysicalKeyGestureRecognizer`）；将事件桥接到 XGesture 的手势动作分发与 AIDL IPC 服务体系
+
+---
+
 ## 许可证全文
 
 - [Apache License 2.0](app/src/main/assets/licenses/Apache-2.0.txt)

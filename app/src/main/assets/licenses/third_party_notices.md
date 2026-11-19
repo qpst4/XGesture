@@ -190,6 +190,36 @@ XGesture（`com.slideindex.app`）在 [GNU Affero General Public License v3.0](L
 
 ---
 
+## Material Symbols（Google）
+
+- **Copyright:** Google LLC
+- **License:** [Apache License 2.0](app/src/main/assets/licenses/Apache-2.0.txt)
+- **Source:** https://github.com/google/material-design-icons
+- **Used in:** `app/src/main/java/com/slideindex/app/ui/MaterialSymbolVectors.kt`（由 Material Symbols 字形生成的矢量图标，页面行首图标 `SymbolsIcon` 用）
+- **Modifications:** 以脚本把可变字体实例化到 wght=350 / opsz=24 后取字形轮廓，转成 130 个 `ImageVector`（24 单位视口）；不再随包分发字体文件
+
+---
+
+## AOSP tethering AIDL（Wi-Fi 热点）
+
+- **Copyright:** The Android Open Source Project
+- **License:** [Apache License 2.0](app/src/main/assets/licenses/Apache-2.0.txt)
+- **Source:** https://android.googlesource.com/platform/frameworks/base/
+- **Used in:** `app/src/main/aidl/android/net/*.aidl`（`ITetheringConnector`、`ITetheringEventCallback`、`TetheringRequestParcel`、`TetherStatesParcel` 等 9 个**编译期垫片**），供 `TetheringOps` 在 root / Shizuku 特权进程里读写 Wi-Fi 热点状态
+- **Modifications:** 只保留本项目实际调用的方法与字段；运行时由系统里的同名类接管（boot classpath 优先），垫片不参与运行
+
+---
+
+## Key Mapper
+
+- **Copyright:** sds100 and contributors
+- **License:** [GNU General Public License v3.0](app/src/main/assets/licenses/GPL-3.0.txt)
+- **Source:** https://github.com/keymapperorg/KeyMapper
+- **Used in:** 实体按键助手底层 native 内核独占抓取（`libevdev_manager.so`、`EvdevDeviceInfo`、`GrabTargetKeyCode`、`GrabbedDeviceHandle`、`SystemBridge`）；Root / Shizuku 双模特权跨进程 keycode 拦截分发与消歧思路
+- **Modifications:** 保留原包名 `io.github.sds100.keymapper` 及 native 预编译 so；编写 Kotlin 上层调度适配器（`EvdevPhysicalKeyObserver`、`PhysicalKeyFilterBridge`、`PhysicalKeyGestureRecognizer`）；将事件桥接到 XGesture 的手势动作分发与 AIDL IPC 服务体系
+
+---
+
 ## 许可证全文
 
 - [Apache License 2.0](app/src/main/assets/licenses/Apache-2.0.txt)

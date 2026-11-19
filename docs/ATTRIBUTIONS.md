@@ -139,6 +139,12 @@
 | `app/.../freezer/*`（应用冻结室） | [EdgeX](https://github.com/oxohang/EdgeX) | 移植+重构 | GPL-3.0 |
 | `app/.../freezer/FreezerPrivilegedOps.kt` | [Hail](https://github.com/aistra0528/Hail) | 行为对齐（PM API/shell 兜底、挂起 7/9 参反射级联 + `FLAG_SUSPENDED` 回读） | GPL-3.0 |
 | `feature/apps/.../FreezerAppsScreen.kt` | 同上 | 界面重写 | GPL-3.0 |
+| `app/src/main/jniLibs/*/libevdev_manager.so` | [Key Mapper](https://github.com/keymapperorg/KeyMapper) | 预编译二进制复用（ARMv7/ARMv8 原生 evdev grab 引擎） | GPL-3.0 |
+| `app/.../io/github/sds100/keymapper/sysbridge/service/SystemBridge.kt` | 同上 | 移植（JNI 桥接契约声明与回调分发） | GPL-3.0 |
+| `app/.../io/github/sds100/keymapper/common/models/*`（3 个模型文件） | 同上 | 移植（`EvdevDeviceInfo`/`GrabTargetKeyCode`/`GrabbedDeviceHandle`） | GPL-3.0 |
+| `app/.../physicalkey/EvdevPhysicalKeyObserver.kt` | 同上 | 衍生/适配（`EVIOCGRAB` + input 节点扫描与手势事件转换） | GPL-3.0 |
+| `app/.../physicalkey/PhysicalKeyFilterBridge.kt` | 同上 | 衍生/适配（Root/Shizuku 特权拦截与 AIDL IPC 跨进程桥接） | GPL-3.0 |
+| `app/.../physicalkey/PhysicalKeyGestureRecognizer.kt` | 同上 | 行为参考（多击/长按消歧与动态 0 延迟即刻放行） | GPL-3.0 |
 | `app/.../search/settings/SystemSettingsSearch*.kt` | — | 本项目自有（Android `indexables/raw`） | AGPL-3.0 |
 
 更新借鉴代码时请同步修改 `THIRD_PARTY_NOTICES.md` 与本表。

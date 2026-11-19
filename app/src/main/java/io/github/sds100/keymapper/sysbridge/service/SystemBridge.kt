@@ -1,3 +1,9 @@
+/*
+ * Derived from Key Mapper (https://github.com/keymapperorg/KeyMapper)
+ * Copyright (C) sds100 and contributors.
+ * Licensed under GNU General Public License v3.0.
+ */
+
 package io.github.sds100.keymapper.sysbridge.service
 
 import android.util.Log
