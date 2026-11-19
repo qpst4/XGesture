@@ -43,6 +43,10 @@ class PhysicalKeyViewModel @Inject constructor(
         settingsStore.setMediaPlaybackPrioritized(prioritized)
     }
 
+    fun setInterceptNativeEvents(intercept: Boolean) {
+        settingsStore.setInterceptNativeEvents(intercept)
+    }
+
     fun setLongPressTimeout(ms: Long) {
         settingsStore.setLongPressTimeoutMs(ms)
     }

@@ -265,7 +265,7 @@ object RootTaskManagerServiceHost {
 
 
 
-        val spawned = maybeSpawnDaemon(context)
+        val spawned = maybeSpawnDaemon(context, minApi)
 
         val postTries = if (quick) POST_SPAWN_LOOKUP_TRIES_QUICK else POST_SPAWN_LOOKUP_TRIES_FULL
 
@@ -413,7 +413,7 @@ object RootTaskManagerServiceHost {
 
 
 
-    private fun maybeSpawnDaemon(context: Context): Boolean {
+    private fun maybeSpawnDaemon(context: Context, minApi: Int = 0): Boolean {
 
         if (daemonPortFileLooksLive(context)) {
 
@@ -435,7 +435,7 @@ object RootTaskManagerServiceHost {
 
         }
 
-        spawnDaemon(context)
+        spawnDaemon(context, minApi)
 
         return true
 
@@ -457,11 +457,18 @@ object RootTaskManagerServiceHost {
 
 
 
-    private fun spawnDaemon(context: Context) {
+    private fun spawnDaemon(context: Context, minApi: Int = 0) {
 
-        if (bindFromRemote(context, minApi = 0) != null) return
-
-        if (!daemonPortFileLooksLive(context)) {
+        val existing = bindFromRemote(context, minApi = 0)
+        if (existing != null) {
+            val api = readApi(existing)
+            if (api > 0 && api >= minApi) {
+                return
+            }
+            Log.w(TAG, "spawnDaemon: killing stale daemon with api=$api (need $minApi)")
+            killStaleDaemons(context)
+            drop(context)
+        } else if (!daemonPortFileLooksLive(context)) {
 
             killStaleDaemons(context)
 

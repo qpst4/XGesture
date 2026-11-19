@@ -51,6 +51,7 @@ fun PhysicalKeySettingsScreen(
     diagnostics: String,
     onBack: () -> Unit,
     onEnabledChange: (Boolean) -> Unit,
+    onInterceptNativeEventsChange: (Boolean) -> Unit,
     onMediaPlaybackPrioritizedChange: (Boolean) -> Unit,
     onLongPressTimeoutChange: (Long) -> Unit,
     onDoubleClickTimeoutChange: (Long) -> Unit,
@@ -89,12 +90,26 @@ fun PhysicalKeySettingsScreen(
     val volBothTitle = stringResource(R.string.physical_key_gesture_vol_both_press)
 
     val sectionAdvancedTitle = stringResource(R.string.physical_key_section_advanced)
+    val interceptNativeTitle = stringResource(R.string.physical_key_intercept_native_title)
+    val interceptNativeSummary = stringResource(R.string.physical_key_intercept_native_summary)
     val mediaPriorityTitle = stringResource(R.string.physical_key_media_priority_title)
     val mediaPrioritySummary = stringResource(R.string.physical_key_media_priority_summary)
     val longPressDurationTitle = stringResource(R.string.physical_key_long_press_duration_title)
     val doubleTapDurationTitle = stringResource(R.string.physical_key_double_tap_duration_title)
     val diagnosticsTitle = stringResource(R.string.physical_key_diagnostics_title)
     val diagnosticsDialogTitle = stringResource(R.string.physical_key_diagnostics_dialog_title)
+
+    val channelFallback = stringResource(R.string.physical_key_status_channel_fallback)
+    val channelDetail = stringResource(
+        R.string.physical_key_status_channel_detail,
+        status.channel.ifBlank { channelFallback },
+    )
+    val statusNotRunning = stringResource(R.string.physical_key_status_not_running, status.detail)
+    val diagnosticsSummary = stringResource(R.string.physical_key_diagnostics_summary)
+    val diagnosticsDriverInfo = stringResource(R.string.physical_key_diagnostics_driver_info)
+    val diagnosticsLoading = stringResource(R.string.physical_key_diagnostics_loading)
+    val closeDescription = stringResource(R.string.physical_key_close)
+    val refreshDescription = stringResource(R.string.physical_key_refresh)
 
     SettingsScreenScaffold(title = screenTitle, onBack = onBack) {
         settingsLazyTipCard(
@@ -132,11 +147,8 @@ fun PhysicalKeySettingsScreen(
                         }
                         val detail = when {
                             !enabled -> statusDisabled
-                            status.running -> {
-                                val channel = if (status.channel.isNotBlank()) status.channel else "特权通道"
-                                "通道: $channel · 底层驱动监听正常"
-                            }
-                            else -> "未运行 (${status.detail})，点击重试或查看诊断"
+                            status.running -> channelDetail
+                            else -> statusNotRunning
                         }
                         StatusRow(
                             title = statusTitle,
@@ -250,6 +262,15 @@ fun PhysicalKeySettingsScreen(
         groupedCardItems(
             keyPrefix = "physicalkey-advanced",
             items = listOf(
+                settingsCardScopeItem("intercept-native") {
+                    SettingSwitchRow(
+                        title = interceptNativeTitle,
+                        subtitle = interceptNativeSummary,
+                        checked = settings.interceptNativeEvents,
+                        enabled = settings.enabled,
+                        onCheckedChange = onInterceptNativeEventsChange,
+                    )
+                },
                 settingsCardScopeItem("media-priority") {
                     SettingSwitchRow(
                         title = mediaPriorityTitle,
@@ -286,7 +307,7 @@ fun PhysicalKeySettingsScreen(
                 settingsCardScopeItem("diagnostics-row") {
                     MiuixNavigationRow(
                         title = diagnosticsTitle,
-                        summary = "查看捕获的物理按键设备与特权进程状态",
+                        summary = diagnosticsSummary,
                         enabled = true,
                         onClick = {
                             showDiagnostics = true
@@ -308,7 +329,7 @@ fun PhysicalKeySettingsScreen(
             IconButton(onClick = { showDiagnostics = false }) {
                 MiuixIcon(
                     imageVector = MiuixIcons.Medium.Close,
-                    contentDescription = "关闭",
+                    contentDescription = closeDescription,
                     tint = MiuixTheme.colorScheme.onBackground,
                 )
             }
@@ -322,7 +343,7 @@ fun PhysicalKeySettingsScreen(
             ) {
                 MiuixIcon(
                     imageVector = MiuixIcons.Medium.Refresh,
-                    contentDescription = "刷新",
+                    contentDescription = refreshDescription,
                     tint = MiuixTheme.colorScheme.onBackground,
                 )
             }
@@ -336,7 +357,7 @@ fun PhysicalKeySettingsScreen(
         ) {
             item {
                 SmallTitle(
-                    text = "驱动与服务信息",
+                    text = diagnosticsDriverInfo,
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
                 Card(
@@ -349,7 +370,7 @@ fun PhysicalKeySettingsScreen(
                     ) {
                         SelectionContainer {
                             MiuixText(
-                                text = diagnostics.ifBlank { "正在读取诊断信息或尚未连接服务..." },
+                                text = diagnostics.ifBlank { diagnosticsLoading },
                                 style = MiuixTheme.textStyles.body2,
                                 fontFamily = FontFamily.Monospace,
                                 color = MiuixTheme.colorScheme.onSurface,

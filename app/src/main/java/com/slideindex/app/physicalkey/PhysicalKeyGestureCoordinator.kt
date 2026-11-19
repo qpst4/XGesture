@@ -11,6 +11,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
+import android.view.KeyEvent
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.gesture.ActionExecutor
 import com.slideindex.app.gesture.GestureAction
@@ -72,7 +73,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
     private var observingService: ITaskManagerService? = null
 
     @Volatile
-    private var rootService: TaskManagerRpcClient? = null
+    private var rootService: ITaskManagerService? = null
 
     private var rootPollJob: Job? = null
 
@@ -105,7 +106,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
         val s = observingService
         val r = rootService
         val isAlive = (s != null && runCatching { s.asBinder().pingBinder() }.getOrDefault(false)) ||
-            (r != null && runCatching { r.apiVersion }.getOrNull() != null)
+            (r != null && rootPollJob?.isActive == true)
         if (!isAlive) {
             Log.i(TAG, "screen wakeup check: physical-key channel inactive, auto recovering...")
             scheduleAutoReconnect(300L)
@@ -141,6 +142,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
     fun start() {
         if (started) return
         started = true
+        PhysicalKeyFilterBridge.keyEventFilter = { event -> shouldInterceptKeyEvent(event) }
         Log.i(TAG, "PhysicalKeyGestureCoordinator.start() initialized")
 
         if (isMainProcess()) {
@@ -185,8 +187,13 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
     }
 
     suspend fun readDiagnostics(): String {
-        val service = observingService ?: rootService ?: return ""
-        return runCatching { service.getPhysicalKeyDiagnostics() }.getOrDefault("")
+        val service = observingService ?: rootService
+        if (service == null) {
+            val statusVal = _status.value
+            return "特权服务未连接 (enabled=${statusVal.enabled}, detail=${statusVal.detail}, channel=${statusVal.channel.ifBlank { "none" }})"
+        }
+        val diag = runCatching { service.getPhysicalKeyDiagnostics() }.getOrDefault("")
+        return diag.ifBlank { "特权服务已就绪，正在扫描硬件按键设备..." }
     }
 
     fun refreshStatus() {
@@ -290,7 +297,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
 
     private fun startRootObservation() {
         var root = runCatching {
-            RootTaskManagerServiceHost.ensure(context) as? TaskManagerRpcClient
+            RootTaskManagerServiceHost.ensure(context, minApi = ShizukuUserServiceHost.SERVICE_BUILD)
         }.getOrNull()
 
         if (root == null) {
@@ -309,7 +316,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
             Log.w(TAG, "root start physical key polling failed, restarting root service...")
             RootTaskManagerServiceHost.restart(context)
             root = runCatching {
-                RootTaskManagerServiceHost.ensure(context) as? TaskManagerRpcClient
+                RootTaskManagerServiceHost.ensure(context, minApi = ShizukuUserServiceHost.SERVICE_BUILD)
             }.getOrNull()
             started = root != null && runCatching { root.startPhysicalKeyPolling() }.getOrDefault(false)
         }
@@ -369,8 +376,13 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
 
     private fun dispatchGesture(gesture: PhysicalKeyGesture) {
         val entry = settingsStore.state.value.entries[gesture] ?: return
-        if (!entry.enabled || entry.action == GestureAction.None) {
+        if (entry.action == GestureAction.None) {
             return
+        }
+
+        // 若是电源键手势且开启了拦截原生事件或设置了动作，尝试压制系统关机弹窗
+        if (gesture == PhysicalKeyGesture.POWER_LONG_PRESS || gesture == PhysicalKeyGesture.POWER_DOUBLE_PRESS) {
+            suppressSystemPowerDialogIfNeeded()
         }
 
         val now = SystemClock.elapsedRealtime()
@@ -391,6 +403,38 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
         Log.i(TAG, "dispatch physical key gesture $gesture -> $targetAction")
         mainHandler.post {
             performAction(targetAction)
+        }
+    }
+
+    private fun suppressSystemPowerDialogIfNeeded() {
+        runCatching {
+            @Suppress("DEPRECATION")
+            val closeIntent = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
+            context.sendBroadcast(closeIntent)
+        }
+    }
+
+    fun shouldInterceptKeyEvent(event: KeyEvent): Boolean {
+        val state = settingsStore.state.value
+        if (!state.enabled || !state.interceptNativeEvents) {
+            return false
+        }
+
+        val isVolumeUp = event.keyCode == KeyEvent.KEYCODE_VOLUME_UP
+        val isVolumeDown = event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN
+        if (!isVolumeUp && !isVolumeDown) {
+            return false
+        }
+
+        return state.entries.any { (gesture, entry) ->
+            entry.action != GestureAction.None && when (gesture) {
+                PhysicalKeyGesture.VOLUME_UP_LONG_PRESS,
+                PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS -> isVolumeUp
+                PhysicalKeyGesture.VOLUME_DOWN_LONG_PRESS,
+                PhysicalKeyGesture.VOLUME_DOWN_DOUBLE_PRESS -> isVolumeDown
+                PhysicalKeyGesture.VOLUME_BOTH_PRESS -> true
+                else -> false
+            }
         }
     }
 

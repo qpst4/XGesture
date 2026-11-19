@@ -14,6 +14,9 @@
     <string name="physical_key_status_disabled">未启用</string>
     <string name="physical_key_status_running">监听中</string>
     <string name="physical_key_status_stopped">未运行</string>
+    <string name="physical_key_status_channel_fallback">特权通道</string>
+    <string name="physical_key_status_channel_detail">通道: %1$s · 底层驱动监听正常</string>
+    <string name="physical_key_status_not_running">未运行（%1$s），点击重试或查看诊断</string>
 
     <!-- 分组与手势项 -->
     <string name="physical_key_section_power">电源键手势</string>
@@ -29,12 +32,19 @@
     <string name="physical_key_gesture_vol_both_press">音量加减并击</string>
 
     <!-- 高级选项 -->
+    <string name="physical_key_intercept_native_title">拦截原生按键响应</string>
+    <string name="physical_key_intercept_native_summary">触发自定义动作时阻止系统原生响应（阻止音量调节弹窗、压制电源关机菜单）</string>
     <string name="physical_key_media_priority_title">播放音乐时音量键切歌</string>
     <string name="physical_key_media_priority_summary">后台有音乐播放时，长按音量加切下一首、音量减切上一首（优先于自定义动作）</string>
     <string name="physical_key_long_press_duration_title">长按判定时间</string>
     <string name="physical_key_double_tap_duration_title">双击时间间隔</string>
     <string name="physical_key_diagnostics_title">按键设备与特权诊断</string>
     <string name="physical_key_diagnostics_dialog_title">实体按键底层诊断</string>
+    <string name="physical_key_diagnostics_summary">查看捕获的物理按键设备与特权进程状态</string>
+    <string name="physical_key_diagnostics_driver_info">驱动与服务信息</string>
+    <string name="physical_key_diagnostics_loading">正在读取诊断信息或尚未连接服务…</string>
+    <string name="physical_key_close">关闭</string>
+    <string name="physical_key_refresh">刷新</string>
 
     <string name="physical_key_hint">提示：特权服务重启后会自动重连并恢复监听。\n物理按键常规单击零延迟放行给系统，不影响原生功能。\n若在特定应用中（如相机、游戏）发生按键冲突，可在主页「排除应用」中按应用屏蔽实体按键手势。</string>
 </resources>

@@ -41,7 +41,8 @@ class EvdevPhysicalKeyObserver(
         if (devices.isEmpty()) {
             log("no physical key devices found via getevent -p")
             onState(false, "no-key-devices")
-            onDiagnostics("未找到包含电源键或音量键的硬件输入设备")
+            // 跨进程诊断数据，随设备状态变化，不是可翻译的界面文案。
+            onDiagnostics("未找到包含电源键或音量键的硬件输入设备") // i18n-ignore
             running = false
             return false
         }
@@ -173,7 +174,9 @@ class EvdevPhysicalKeyObserver(
             val path = currentPath ?: return
             val isVirtual = currentName.contains("uinput", ignoreCase = true) ||
                 currentName.contains("virtual", ignoreCase = true) ||
-                currentName.contains("relay", ignoreCase = true)
+                currentName.contains("relay", ignoreCase = true) ||
+                currentName.contains("touch", ignoreCase = true) ||
+                currentName.contains("qbt", ignoreCase = true)
             if (!isVirtual && currentKeys.isNotEmpty()) {
                 candidates.add(
                     KeyDevice(

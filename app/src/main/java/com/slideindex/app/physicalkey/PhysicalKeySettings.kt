@@ -25,13 +25,14 @@ data class PhysicalKeySettings(
     val longPressTimeoutMs: Long = 500L,
     val doubleClickTimeoutMs: Long = 350L,
     val mediaPlaybackPrioritized: Boolean = true,
+    val interceptNativeEvents: Boolean = false,
 ) {
     companion object {
         fun defaultEntries(): Map<PhysicalKeyGesture, PhysicalKeyEntry> {
             return mapOf(
                 PhysicalKeyGesture.POWER_LONG_PRESS to PhysicalKeyEntry(
                     gesture = PhysicalKeyGesture.POWER_LONG_PRESS,
-                    enabled = false,
+                    enabled = true,
                     action = GestureAction.Flashlight(),
                 ),
                 PhysicalKeyGesture.POWER_DOUBLE_PRESS to PhysicalKeyEntry(
@@ -41,7 +42,7 @@ data class PhysicalKeySettings(
                 ),
                 PhysicalKeyGesture.VOLUME_UP_LONG_PRESS to PhysicalKeyEntry(
                     gesture = PhysicalKeyGesture.VOLUME_UP_LONG_PRESS,
-                    enabled = false,
+                    enabled = true,
                     action = GestureAction.MediaNext,
                 ),
                 PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS to PhysicalKeyEntry(
@@ -51,7 +52,7 @@ data class PhysicalKeySettings(
                 ),
                 PhysicalKeyGesture.VOLUME_DOWN_LONG_PRESS to PhysicalKeyEntry(
                     gesture = PhysicalKeyGesture.VOLUME_DOWN_LONG_PRESS,
-                    enabled = false,
+                    enabled = true,
                     action = GestureAction.Screenshot,
                 ),
                 PhysicalKeyGesture.VOLUME_DOWN_DOUBLE_PRESS to PhysicalKeyEntry(
@@ -61,7 +62,7 @@ data class PhysicalKeySettings(
                 ),
                 PhysicalKeyGesture.VOLUME_BOTH_PRESS to PhysicalKeyEntry(
                     gesture = PhysicalKeyGesture.VOLUME_BOTH_PRESS,
-                    enabled = false,
+                    enabled = true,
                     action = GestureAction.SearchPanel,
                 ),
             )
@@ -104,6 +105,12 @@ class PhysicalKeySettingsStore @Inject constructor(
         _state.value = _state.value.copy(mediaPlaybackPrioritized = prioritized)
     }
 
+    fun setInterceptNativeEvents(intercept: Boolean) {
+        if (_state.value.interceptNativeEvents == intercept) return
+        prefs.edit().putBoolean(KEY_INTERCEPT_NATIVE, intercept).apply()
+        _state.value = _state.value.copy(interceptNativeEvents = intercept)
+    }
+
     fun updateEntry(gesture: PhysicalKeyGesture, enabled: Boolean, action: GestureAction) {
         val currentEntries = _state.value.entries.toMutableMap()
         currentEntries[gesture] = PhysicalKeyEntry(
@@ -121,6 +128,7 @@ class PhysicalKeySettingsStore @Inject constructor(
         val longPressTimeout = prefs.getLong(KEY_LONG_PRESS_TIMEOUT, 500L)
         val doubleClickTimeout = prefs.getLong(KEY_DOUBLE_CLICK_TIMEOUT, 350L)
         val mediaPrioritized = prefs.getBoolean(KEY_MEDIA_PRIORITIZED, true)
+        val interceptNative = prefs.getBoolean(KEY_INTERCEPT_NATIVE, false)
         val entriesRaw = prefs.getString(KEY_ENTRIES, null)
         val entries = if (entriesRaw.isNullOrBlank()) {
             PhysicalKeySettings.defaultEntries()
@@ -134,6 +142,7 @@ class PhysicalKeySettingsStore @Inject constructor(
             longPressTimeoutMs = longPressTimeout,
             doubleClickTimeoutMs = doubleClickTimeout,
             mediaPlaybackPrioritized = mediaPrioritized,
+            interceptNativeEvents = interceptNative,
         )
     }
 
@@ -216,5 +225,6 @@ class PhysicalKeySettingsStore @Inject constructor(
         private const val KEY_LONG_PRESS_TIMEOUT = "long_press_timeout"
         private const val KEY_DOUBLE_CLICK_TIMEOUT = "double_click_timeout"
         private const val KEY_MEDIA_PRIORITIZED = "media_prioritized"
+        private const val KEY_INTERCEPT_NATIVE = "intercept_native"
     }
 }

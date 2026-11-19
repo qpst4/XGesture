@@ -1010,6 +1010,13 @@ class SlideIndexAccessibilityService : AccessibilityService() {
         private const val OVERLAY_HOST_LEASE_RENEW_MS = 2_000L
     }
 
+    override fun onKeyEvent(event: android.view.KeyEvent?): Boolean {
+        if (event != null && com.slideindex.app.physicalkey.PhysicalKeyFilterBridge.shouldIntercept(event)) {
+            return true
+        }
+        return super.onKeyEvent(event)
+    }
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
