@@ -104,7 +104,7 @@ fun darkColorsFor(style: DarkBackgroundStyle) = miuixDarkColorScheme().copy(
     surface = when (style) {
         DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF16212B)
         DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF10151C)
-        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF0C0C0C)
+        DarkBackgroundStyle.AMOLED_BLACK -> Color.Black
     },
     surfaceContainer = when (style) {
         DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF1E2D3B)
