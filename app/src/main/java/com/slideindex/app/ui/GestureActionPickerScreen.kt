@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -43,6 +44,7 @@ import com.slideindex.app.ui.gesturepicker.actionPickerActionItems
 import com.slideindex.app.ui.gesturepicker.actionPickerAppItems
 import com.slideindex.app.ui.gesturepicker.actionPickerIndexOfCurrent
 import com.slideindex.app.ui.gesturepicker.actionPickerShortcutIndexOfCurrent
+import com.slideindex.app.ui.gesturepicker.calculateActionGridColumns
 import com.slideindex.app.ui.gesturepicker.pickerTab
 import com.slideindex.app.ui.gesturepicker.ActionPickerShortcutRow
 import com.slideindex.app.ui.gesturepicker.actionPickerShortcutItems
@@ -180,6 +182,11 @@ fun GestureActionPickerScreen(
         }
     }
 
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val gridColumns = remember(configuration.screenWidthDp) {
+        calculateActionGridColumns(configuration.screenWidthDp.dp)
+    }
+
     // 「重新点进来选动作」时直接停在已绑定的那一项上，省掉从顶部一路滑。
     //
     // ⚠️ 本页没有 pageHint / subtitle，`MiuixListScaffold` 不会往列表前面插任何行
@@ -193,12 +200,15 @@ fun GestureActionPickerScreen(
         loadedCatalog.loading,
         activityShortcuts,
         searchQuery,
+        gridColumns,
     ) {
         when (current.pickerTab()) {
-            ActionPickerTab.ACTIONS -> actionPickerIndexOfCurrent(filteredActions, current)
+            ActionPickerTab.ACTIONS -> actionPickerIndexOfCurrent(filteredActions, current, gridColumns)
             ActionPickerTab.APPS -> (current as? GestureAction.LaunchApp)
-                ?.let { app -> filteredApps.indexOfFirst { it.packageName == app.packageName } }
-                ?.takeIf { it >= 0 }
+                ?.let { app ->
+                    val indexInList = filteredApps.indexOfFirst { it.packageName == app.packageName }
+                    if (indexInList >= 0) indexInList / gridColumns else null
+                }
             ActionPickerTab.SHORTCUTS -> actionPickerShortcutIndexOfCurrent(
                 filtered = filteredShortcuts,
                 activityShortcuts = activityShortcuts,
@@ -341,6 +351,7 @@ fun GestureActionPickerScreen(
                         },
                         highlightPulse = pickerHighlightPulse.value,
                         liveRingerMode = liveRingerMode,
+                        columns = gridColumns,
                     )
                 }
                 ActionPickerTab.APPS -> {
@@ -349,6 +360,7 @@ fun GestureActionPickerScreen(
                         current = current,
                         onSelect = { app -> pendingLaunchApp = app },
                         highlightPulse = pickerHighlightPulse.value,
+                        columns = gridColumns,
                     )
                 }
                 ActionPickerTab.SHORTCUTS -> {

@@ -6,13 +6,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,9 +30,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.slideindex.app.ui.miuix.CardSegment
 import com.slideindex.app.R
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.data.AppInfo
@@ -46,6 +51,7 @@ import com.slideindex.app.ui.toRingerMode
 import com.slideindex.app.ui.picker.FilteredShortcutCatalog
 import com.slideindex.app.ui.picker.GestureActionCatalog
 import com.slideindex.app.ui.picker.GestureActionCatalogScope
+import com.slideindex.app.ui.picker.APP_PICKER_GRID_COLUMNS
 import com.slideindex.app.ui.picker.appPickerGridItems
 import com.slideindex.app.ui.picker.activityShortcutPickerRadioSection
 import com.slideindex.app.ui.picker.shortcutFolderCardsSection
@@ -56,8 +62,25 @@ import com.slideindex.app.util.ShortcutScanProgress
 import com.slideindex.app.ui.gestureActionIcon
 import top.yukonga.miuix.kmp.basic.Icon
 
-/** 动作网格列数（列表排布与「定位到当前动作」的下标计算共用，改这里两处一起变）。 */
+/** 动作网格默认列数（竖屏）。 */
 internal const val ACTION_GRID_COLUMNS = 4
+
+/** 动作网格单元格基准推荐最小宽度，保证正方形/微长方形比例与触控体验。 */
+internal val ACTION_GRID_MIN_CELL_WIDTH = 78.dp
+
+/**
+ * 根据容器实际可用宽度计算自适应列数：
+ * - 竖屏（~360-430dp）：4 列
+ * - 折叠屏展开态 / 小平板（~600dp）：6 列
+ * - 横屏 / 大平板（~800-1000dp）：8~10 列
+ */
+internal fun calculateActionGridColumns(availableWidth: Dp): Int {
+    val horizontalPadding = 24.dp // 左右各 12.dp 外边距
+    val spacing = 8.dp
+    val available = availableWidth - horizontalPadding
+    val cols = ((available + spacing) / (ACTION_GRID_MIN_CELL_WIDTH + spacing)).toInt()
+    return cols.coerceAtLeast(ACTION_GRID_COLUMNS)
+}
 
 /**
  * 这个动作"选完还有参数要配"吗？
@@ -80,10 +103,8 @@ internal fun actionHasDetailParams(type: GestureActionType): Boolean = when (typ
 }
 
 /**
- * 动作网格格子：图标 + 最多 2 行标题 + 右上角"有参数"小圆点，选中时描边。
- *
- * 原来的行内副标题（动作描述 / 当前配置摘要，如"钉住·仅本应用"、Shell 命令预览）在网格里没有
- * 位置，统一由动作详情页承载 —— 这也是"网格化"必须和"详情页"一起做的原因。
+ * 动作网格单元项：排布于分类大卡片内部，平时透明与大卡片融为一体，
+ * 选中时浮现主题色微透底色与微描边，点击时有圆角水波纹。
  */
 @Composable
 private fun ActionPickerGridCell(
@@ -104,7 +125,7 @@ private fun ActionPickerGridCell(
     val baseBackground = if (selected) {
         accent.copy(alpha = 0.16f)
     } else {
-        MiuixTheme.colorScheme.surfaceContainerHigh
+        androidx.compose.ui.graphics.Color.Transparent
     }
     val cellBackground = if (highlightPulse > 0.05f) {
         lerp(
@@ -116,67 +137,67 @@ private fun ActionPickerGridCell(
         baseBackground
     }
 
-    Column(
+    val cornerRadius = 12.dp
+    val shape = RoundedCornerShape(cornerRadius)
+
+    Box(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
-            .padding(vertical = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .clip(shape)
+            .background(cellBackground)
+            .then(
+                if (effectiveSelected) {
+                    Modifier.border(
+                        width = 1.5.dp,
+                        color = accent.copy(alpha = if (selected) 0.65f else highlightPulse * 0.7f),
+                        shape = shape,
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 4.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            com.slideindex.app.ui.ActionIconSlot(
+                action = iconAction,
+                sizeDp = 28,
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = label ?: gestureActionLabel(action),
+                fontSize = 11.5.sp,
+                lineHeight = 15.sp,
+                minLines = 2,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (selected) {
+                    accent
+                } else {
+                    MiuixTheme.colorScheme.onSurface
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 2.dp),
+            )
+        }
+        if (hasParams) {
             Box(
                 modifier = Modifier
-                    .size(58.dp)
-                    .clip(RoundedCornerShape(17.dp))
-                    .background(cellBackground)
-                    .then(
-                        if (effectiveSelected) {
-                            Modifier.border(
-                                width = 1.5.dp,
-                                color = accent.copy(alpha = if (selected) 0.55f else highlightPulse * 0.7f),
-                                shape = RoundedCornerShape(17.dp),
-                            )
-                        } else {
-                            Modifier
-                        },
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                com.slideindex.app.ui.ActionIconSlot(
-                    action = iconAction,
-                    sizeDp = 27,
-                )
-            }
-            if (hasParams) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(4.dp)
-                        .size(8.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(accent),
-                )
-            }
+                    .align(Alignment.TopEnd)
+                    .padding(top = 1.dp, end = 2.dp)
+                    .size(7.dp)
+                    .clip(CircleShape)
+                    .background(accent),
+            )
         }
-        // 标题固定两行：动作名最长到「执行 Shell 命令」「模拟按键 (KeyEvent)」这个量级，
-        // 4 列时一格只有 ~74dp 文字宽（一行约 6 个汉字），一行必然打省略号。
-        // minLines = 2 让短标签也占满两行高度，整行格子等高，行距不会参差不齐。
-        Text(
-            text = label ?: gestureActionLabel(action),
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
-            minLines = 2,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (selected) {
-                accent
-            } else {
-                MiuixTheme.colorScheme.onSurfaceVariantSummary
-            },
-            modifier = Modifier.padding(top = 5.dp, start = 2.dp, end = 2.dp),
-        )
     }
 }
 
@@ -259,6 +280,8 @@ fun LazyListScope.actionPickerActionItems(
      * `null` = 调用方没接实时状态，退回静态铃铛。
      */
     liveRingerMode: Int? = null,
+    /** 网格列数：自适应计算，默认 4 列（竖屏）；横屏/平板自动扩展。 */
+    columns: Int = ACTION_GRID_COLUMNS,
 ) {
     if (filtered.isEmpty()) {
         item(key = "actions-empty") {
@@ -278,15 +301,23 @@ fun LazyListScope.actionPickerActionItems(
             com.slideindex.app.ui.Md3PickerSectionHeader(stringResource(section.category.titleRes))
         }
 
-        // 网格：每行 4 个。与快速启动器「添加快捷项」页保持统一的边距与间距（12.dp / 8.dp）。
-        section.actions.chunked(ACTION_GRID_COLUMNS).forEachIndexed { rowIndex, rowActions ->
-            item(key = "action-row-${section.category.name}-$rowIndex") {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 2.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
+        // 整个分类封装为一张标准的 MIUIX 大卡片（CardSegment，12dp 外边距），内部整齐排布动作网格
+        item(key = "action-card-${section.category.name}") {
+            CardSegment(
+                isFirst = true,
+                isLast = true,
+                outerHorizontalPadding = 12.dp,
+                insidePadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp),
+            ) {
+                val rows = section.actions.chunked(columns)
+                rows.forEachIndexed { rowIndex, rowActions ->
+                    if (rowIndex > 0) {
+                        Spacer(Modifier.height(6.dp))
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
                     rowActions.forEach { action ->
                         val context = LocalContext.current
                         val selected = when {
@@ -360,14 +391,15 @@ fun LazyListScope.actionPickerActionItems(
                             )
                         }
                     }
-                    // 最后一行不足 4 个时补空位，保证格子等宽。
-                    repeat(ACTION_GRID_COLUMNS - rowActions.size) {
+                    // 最后一行不足 columns 个时补空位，保证格子等宽。
+                    repeat(columns - rowActions.size) {
                         Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }
         }
     }
+}
 }
 
 fun LazyListScope.actionPickerAppItems(
@@ -376,6 +408,7 @@ fun LazyListScope.actionPickerAppItems(
     onSelect: (AppInfo) -> Unit,
     /** 定位到"当前已绑定应用"之后闪一下的强度（0..1），只作用在当前那一行上。 */
     highlightPulse: Float = 0f,
+    columns: Int = APP_PICKER_GRID_COLUMNS,
 ) {
     val currentApp = current as? GestureAction.LaunchApp
     appPickerGridItems(
@@ -391,6 +424,7 @@ fun LazyListScope.actionPickerAppItems(
             )
         },
         onAppClick = onSelect,
+        columns = columns,
     )
 }
 
@@ -460,6 +494,7 @@ internal fun GestureAction.pickerTab(): ActionPickerTab = when (this) {
 internal fun actionPickerIndexOfCurrent(
     filtered: List<GestureAction>,
     current: GestureAction,
+    @Suppress("UNUSED_PARAMETER") columns: Int = ACTION_GRID_COLUMNS,
 ): Int? {
     if (current.type == GestureActionType.LAUNCH_APP ||
         current.type == GestureActionType.LAUNCH_SHORTCUT ||
@@ -469,10 +504,10 @@ internal fun actionPickerIndexOfCurrent(
     }
     var index = 0
     for (section in GestureActionCatalog.groupIntoSections(filtered)) {
-        val offset = section.actions.indexOfFirst { it.type == current.type }
-        // 网格里一个分组占 1 行标题 + ceil(N / 列数) 行格子。
-        if (offset >= 0) return index + 1 + offset / ACTION_GRID_COLUMNS
-        index += 1 + (section.actions.size + ACTION_GRID_COLUMNS - 1) / ACTION_GRID_COLUMNS
+        val contains = section.actions.any { it.type == current.type }
+        // 每个分类占 1 行标题 + 1 行大卡片；若找到了直接定位到该分类的大卡片
+        if (contains) return index + 1
+        index += 2
     }
     return null
 }

@@ -40,6 +40,8 @@ import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.ui.compose.collectLaunchableAppsWithClonesAsState
 import com.slideindex.app.ui.compose.rememberAppRepository
 import com.slideindex.app.ui.gesturepicker.MacroPickDialog
+import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.gesturepicker.calculateActionGridColumns
 import com.slideindex.app.ui.picker.AppPickerTabRow
 import com.slideindex.app.ui.miuix.MiuixExpandableSearchIconAction
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
@@ -156,6 +158,11 @@ fun QuickLauncherAddPickerScreen(
         }
     }
 
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val gridColumns = remember(configuration.screenWidthDp) {
+        calculateActionGridColumns(configuration.screenWidthDp.dp)
+    }
+
     SettingsLazyScreenScaffold(
         title = stringResource(R.string.quick_launcher_add),
         onBack = addPickerBack,
@@ -221,6 +228,7 @@ fun QuickLauncherAddPickerScreen(
                     onOpenSimulateKeyEvent = onOpenSimulateKeyEvent,
                     onRequestRunMacro = { onPicked -> pendingMacroPick = onPicked },
                     liveRingerMode = liveRingerMode,
+                    columns = gridColumns,
                 )
             }
             QuickLauncherEditorAddTab.APPS -> {
@@ -230,6 +238,7 @@ fun QuickLauncherAddPickerScreen(
                     onToggle = { app, added ->
                         onToggleItem(QuickLauncherItem.app(app.packageName, app.label, app.cloneUserId), added)
                     },
+                    columns = gridColumns,
                 )
             }
             QuickLauncherEditorAddTab.SHORTCUTS -> {
@@ -371,6 +380,11 @@ fun QuickLauncherCreateFolderScreen(
         }
     }
 
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val gridColumns = remember(configuration.screenWidthDp) {
+        calculateActionGridColumns(configuration.screenWidthDp.dp)
+    }
+
     SettingsLazyScreenScaffold(
         title = stringResource(R.string.quick_launcher_create_folder),
         onBack = createFolderBack,
@@ -459,6 +473,7 @@ fun QuickLauncherCreateFolderScreen(
                     onOpenSimulateKeyEvent = onOpenSimulateKeyEvent,
                     onRequestRunMacro = { onPicked -> pendingMacroPick = onPicked },
                     liveRingerMode = liveRingerMode,
+                    columns = gridColumns,
                 )
             }
             QuickLauncherEditorAddTab.APPS -> {
@@ -468,6 +483,7 @@ fun QuickLauncherCreateFolderScreen(
                     onToggle = { app, added ->
                         onToggleItem(QuickLauncherItem.app(app.packageName, app.label, app.cloneUserId), added)
                     },
+                    columns = gridColumns,
                 )
             }
             QuickLauncherEditorAddTab.SHORTCUTS -> {

@@ -6,9 +6,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
@@ -25,6 +27,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.slideindex.app.ui.miuix.CardSegment
+import com.slideindex.app.ui.gesturepicker.ACTION_GRID_COLUMNS
 import com.slideindex.app.ui.Md3PickerAppEntryLeading
 import com.slideindex.app.ui.picker.appPickerGridItems
 import androidx.compose.material.icons.automirrored.outlined.Shortcut
@@ -87,6 +91,8 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
      * `null` = 调用方没接实时状态，退回静态铃铛。
      */
     liveRingerMode: Int? = null,
+    /** 网格列数：自适应计算，默认 4 列（竖屏）；横屏/平板自动扩展。 */
+    columns: Int = ACTION_GRID_COLUMNS,
 ) {
     if (filtered.isEmpty()) {
         item(key = "actions_empty") {
@@ -110,15 +116,23 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
         item(key = "ql-action-cat-${section.category.name}") {
             com.slideindex.app.ui.Md3PickerSectionHeader(stringResource(section.category.titleRes))
         }
-        val rows = section.actions.chunked(PICKER_GRID_COLUMNS)
-        items(rows.size, key = { "ql-action-row-${section.category.name}-$it" }) { rowIndex ->
-            val rowActions = rows[rowIndex]
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+        // 整个分类封装为一张标准的 MIUIX 大卡片（CardSegment，12dp 外边距），内部整齐排布动作网格
+        item(key = "ql-action-card-${section.category.name}") {
+            CardSegment(
+                isFirst = true,
+                isLast = true,
+                outerHorizontalPadding = 12.dp,
+                insidePadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp),
             ) {
+                val rows = section.actions.chunked(columns)
+                rows.forEachIndexed { rowIndex, rowActions ->
+                    if (rowIndex > 0) {
+                        Spacer(Modifier.height(6.dp))
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
                 rowActions.forEach { action ->
                     val context = LocalContext.current
                     val isNone = action.type == GestureActionType.NONE
@@ -254,8 +268,11 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
                         }
                     }
                 }
-                repeat(PICKER_GRID_COLUMNS - rowActions.size) {
-                    Spacer(modifier = Modifier.weight(1f))
+                        // 最后一行不足 columns 个时补空位，保证格子等宽。
+                        repeat(columns - rowActions.size) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
             }
         }
@@ -267,11 +284,13 @@ fun LazyListScope.quickLauncherAddPickerAppItems(
     configuredAppPackages: Set<String>,
     onToggle: (AppInfo, Boolean) -> Unit,
     singleSelect: Boolean = false,
+    columns: Int = com.slideindex.app.ui.picker.APP_PICKER_GRID_COLUMNS,
 ) {
     appPickerGridItems(
         apps = filtered,
         selectedKeys = configuredAppPackages,
         singleSelect = singleSelect,
+        columns = columns,
         onAppClick = { app ->
             val added = com.slideindex.app.launcher.AppTarget.encode(app.packageName, app.cloneUserId) in
                 configuredAppPackages
@@ -377,9 +396,8 @@ fun rememberQuickLauncherFilteredApps(
 private const val PICKER_GRID_COLUMNS = 4
 
 /**
- * 添加页网格中的一个格子：图标 + 名称 + 选中勾。
- *
- * 图标由调用方给（应用图标组件 / 动作矢量图标），这样三种内容共用同一套格子。
+ * 添加页网格中的单元项：排布于分类大卡片内部，平时透明与大卡片融为一体，
+ * 选中时（单选）浮现主题色微透底色与微描边，多选右上角带勾选徽章，点击时有圆角水波纹。
  */
 @Composable
 private fun PickerGridCell(
@@ -399,7 +417,7 @@ private fun PickerGridCell(
     val baseBackground = if (isSingleSelected) {
         accent.copy(alpha = 0.16f)
     } else {
-        MiuixTheme.colorScheme.surfaceContainerHigh
+        androidx.compose.ui.graphics.Color.Transparent
     }
     val cellBackground = if (highlightPulse > 0.05f) {
         lerp(
@@ -411,67 +429,75 @@ private fun PickerGridCell(
         baseBackground
     }
 
-    Column(
+    val cornerRadius = 12.dp
+    val shape = RoundedCornerShape(cornerRadius)
+
+    Box(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(shape)
+            .background(cellBackground)
+            .then(
+                if (effectiveSelected) {
+                    Modifier.border(
+                        width = 1.5.dp,
+                        color = accent.copy(alpha = if (isSingleSelected) 0.65f else highlightPulse * 0.7f),
+                        shape = shape,
+                    )
+                } else {
+                    Modifier
+                }
+            )
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(vertical = 6.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(horizontal = 4.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        Box {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
             Box(
-                modifier = Modifier
-                    .size(58.dp)
-                    .clip(RoundedCornerShape(17.dp))
-                    .background(cellBackground)
-                    .then(
-                        if (effectiveSelected) {
-                            Modifier.border(
-                                width = 1.5.dp,
-                                color = accent.copy(alpha = if (isSingleSelected) 0.55f else highlightPulse * 0.7f),
-                                shape = RoundedCornerShape(17.dp),
-                            )
-                        } else {
-                            Modifier
-                        },
-                    ),
+                modifier = Modifier.size(28.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 icon()
             }
-            if (selected && !singleSelect) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .size(16.dp)
-                        .clip(androidx.compose.foundation.shape.CircleShape)
-                        .background(accent),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    androidx.compose.material3.Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Filled.Check,
-                        contentDescription = null,
-                        tint = MiuixTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(10.dp),
-                    )
-                }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = label,
+                fontSize = 11.5.sp,
+                lineHeight = 15.sp,
+                minLines = 2,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                fontWeight = if (isSingleSelected) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (isSingleSelected) {
+                    accent
+                } else {
+                    MiuixTheme.colorScheme.onSurface
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 2.dp),
+            )
+        }
+        if (selected && !singleSelect) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(16.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(accent),
+                contentAlignment = Alignment.Center,
+            ) {
+                androidx.compose.material3.Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = MiuixTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(10.dp),
+                )
             }
         }
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
-            minLines = 2,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            fontWeight = if (isSingleSelected) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (isSingleSelected) {
-                accent
-            } else {
-                MiuixTheme.colorScheme.onSurfaceVariantSummary
-            },
-            modifier = Modifier.padding(top = 5.dp, start = 2.dp, end = 2.dp),
-        )
     }
 }

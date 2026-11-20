@@ -58,6 +58,8 @@ import com.slideindex.app.ui.picker.rememberLoadedShortcutCatalog
 import com.slideindex.app.ui.PickerTrailingMode
 import com.slideindex.app.ui.gestureActionIcon
 import com.slideindex.app.ui.pickerListSegmentedGap
+import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.gesturepicker.calculateActionGridColumns
 import com.slideindex.app.ui.quicklauncher.QuickLauncherEditorAddTab
 import com.slideindex.app.ui.quicklauncher.quickLauncherAddPickerActionItems
 import com.slideindex.app.ui.quicklauncher.quickLauncherAddPickerAppItems
@@ -165,6 +167,10 @@ fun RingSlotPickScreen(
     }
     val configuredAppPackages = remember(currentItem) {
         if (currentItem?.type == QuickLauncherItemType.APP) setOf(currentItem.payload) else emptySet()
+    }
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val gridColumns = remember(configuration.screenWidthDp) {
+        calculateActionGridColumns(configuration.screenWidthDp.dp)
     }
     val configuredShortcutKeys = remember(currentItem) {
         if (currentItem?.type == QuickLauncherItemType.SHORTCUT) {
@@ -295,6 +301,7 @@ fun RingSlotPickScreen(
                             noneSelected = currentItem == null,
                             onSelectNone = { onSelectItem(null) },
                             searchQuery = searchQuery,
+                            columns = gridColumns,
                         )
                     }
                     QuickLauncherEditorAddTab.APPS -> {
@@ -307,6 +314,7 @@ fun RingSlotPickScreen(
                                 )
                             },
                             singleSelect = true,
+                            columns = gridColumns,
                         )
                     }
                     QuickLauncherEditorAddTab.SHORTCUTS -> {
