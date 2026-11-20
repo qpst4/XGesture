@@ -99,4 +99,33 @@ class RingerModeTest {
             }
         }
     }
+
+    @Test
+    fun resolveRinger_onEntersTargetOnlyWhenNeeded() {
+        // 「打开」= 设成该档；已经在该档就不写系统（null）。
+        assertEquals(RingerMode.SILENT, ToggleMode.ON.resolveRinger(RingerMode.RING, RingerMode.SILENT))
+        assertEquals(RingerMode.VIBRATE, ToggleMode.ON.resolveRinger(RingerMode.SILENT, RingerMode.VIBRATE))
+        assertNull(ToggleMode.ON.resolveRinger(RingerMode.SILENT, RingerMode.SILENT))
+    }
+
+    @Test
+    fun resolveRinger_offExitsTargetOnlyWhenInside() {
+        // 「关闭」= 退出该档；本来就不在该档就不动。
+        assertEquals(RingerMode.RING, ToggleMode.OFF.resolveRinger(RingerMode.SILENT, RingerMode.SILENT))
+        assertEquals(RingerMode.RING, ToggleMode.OFF.resolveRinger(RingerMode.VIBRATE, RingerMode.VIBRATE))
+        assertEquals(RingerMode.SILENT, ToggleMode.OFF.resolveRinger(RingerMode.RING, RingerMode.RING))
+        assertNull(ToggleMode.OFF.resolveRinger(RingerMode.RING, RingerMode.SILENT))
+    }
+
+    @Test
+    fun resolveRinger_toggleMatchesLegacyExplicitMode() {
+        // 「切换」必须与旧「声音模式 · 档位」绑定逐格一致。
+        RingerMode.entries.forEach { target ->
+            if (target == RingerMode.TOGGLE) return@forEach
+            RingerMode.entries.forEach { current ->
+                if (current == RingerMode.TOGGLE) return@forEach
+                assertEquals(target.resolve(current), ToggleMode.TOGGLE.resolveRinger(current, target))
+            }
+        }
+    }
 }

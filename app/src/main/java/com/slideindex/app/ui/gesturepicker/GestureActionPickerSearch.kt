@@ -430,6 +430,9 @@ private fun gestureActionBaseLabelText(context: Context, action: GestureAction):
         GestureActionType.FORCE_PORTRAIT -> context.getString(R.string.gesture_action_force_portrait)
         GestureActionType.FORCE_LANDSCAPE -> context.getString(R.string.gesture_action_force_landscape)
         GestureActionType.TOGGLE_MUTE -> context.getString(R.string.gesture_action_sound_mode)
+        GestureActionType.RINGER_RING -> context.getString(R.string.ringer_mode_ring)
+        GestureActionType.RINGER_VIBRATE -> context.getString(R.string.ringer_mode_vibrate)
+        GestureActionType.RINGER_SILENT -> context.getString(R.string.ringer_mode_silent)
         GestureActionType.MEDIA_PLAY_PAUSE -> context.getString(R.string.gesture_action_media_play_pause)
         GestureActionType.MEDIA_PREVIOUS -> context.getString(R.string.gesture_action_media_previous)
         GestureActionType.MEDIA_NEXT -> context.getString(R.string.gesture_action_media_next)
@@ -660,6 +663,9 @@ private fun gestureActionBaseLabel(action: GestureAction, settings: AppSettings?
         GestureActionType.FORCE_PORTRAIT -> stringResource(R.string.gesture_action_force_portrait)
         GestureActionType.FORCE_LANDSCAPE -> stringResource(R.string.gesture_action_force_landscape)
         GestureActionType.TOGGLE_MUTE -> stringResource(R.string.gesture_action_sound_mode)
+        GestureActionType.RINGER_RING -> stringResource(R.string.ringer_mode_ring)
+        GestureActionType.RINGER_VIBRATE -> stringResource(R.string.ringer_mode_vibrate)
+        GestureActionType.RINGER_SILENT -> stringResource(R.string.ringer_mode_silent)
         GestureActionType.MEDIA_PLAY_PAUSE -> stringResource(R.string.gesture_action_media_play_pause)
         GestureActionType.MEDIA_PREVIOUS -> stringResource(R.string.gesture_action_media_previous)
         GestureActionType.MEDIA_NEXT -> stringResource(R.string.gesture_action_media_next)
@@ -985,7 +991,11 @@ fun gestureActionPermissionHintText(
             if (PermissionHelper.canWriteSettings(context) || TaskManagerUtil.hasPermission()) return null
             context.getString(R.string.gesture_action_adjust_brightness_permission)
         }
-        GestureActionType.TOGGLE_MUTE -> {
+        GestureActionType.TOGGLE_MUTE,
+        GestureActionType.RINGER_RING,
+        GestureActionType.RINGER_VIBRATE,
+        GestureActionType.RINGER_SILENT,
+        -> {
             if (PermissionHelper.hasNotificationPolicyAccess(context)) return null
             context.getString(R.string.gesture_action_toggle_mute_permission)
         }

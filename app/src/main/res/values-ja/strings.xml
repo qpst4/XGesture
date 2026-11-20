@@ -1620,7 +1620,7 @@
     <string name="gesture_action_toggle_nfc">NFC の切り替え</string>
     <string name="gesture_action_toggle_bluetooth">Bluetooth の切り替え</string>
     <string name="gesture_action_sound_mode">サウンドモード</string>
-    <string name="gesture_action_sound_mode_desc">着信音・バイブ・サイレントを順に切り替え、選んだモードは再度実行で解除されます</string>
+    <string name="gesture_action_sound_mode_desc">着信音・バイブ・サイレントを順に切り替えます</string>
     <string name="ringer_mode_toggle">切り替え</string>
     <string name="ringer_mode_ring">着信音</string>
     <string name="ringer_mode_vibrate">バイブ</string>

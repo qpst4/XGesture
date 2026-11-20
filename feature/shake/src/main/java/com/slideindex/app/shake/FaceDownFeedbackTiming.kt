@@ -16,5 +16,7 @@ internal fun GestureAction.requiresFaceDownFeedbackBeforeExecution(context: Cont
             val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
             audioManager?.ringerMode != AudioManager.RINGER_MODE_SILENT
         }
+        // 独立「静音」动作可能把手机切进静音，提示音必须先播。
+        is GestureAction.RingerSilent -> true
         else -> false
     }

@@ -5144,7 +5144,7 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="gesture_action_open_volume_slider">Control de volumen del sistema</string>
     <string name="gesture_action_open_volume_slider_desc">Muestra el control de volumen del sistema sin cambiar el nivel</string>
     <string name="gesture_action_sound_mode">Modo de sonido</string>
-    <string name="gesture_action_sound_mode_desc">Alterna entre sonido, vibración y silencio; el modo elegido se desactiva al repetir la acción</string>
+    <string name="gesture_action_sound_mode_desc">Alterna entre sonido, vibración y silencio</string>
     <string name="gesture_action_toggle_airplane">Modo avión</string>
     <string name="gesture_action_toggle_airplane_desc">Activa o desactiva el modo avión; requiere Shizuku o root, de lo contrario abre los ajustes del sistema</string>
     <string name="gesture_action_toggle_bluetooth">Bluetooth</string>

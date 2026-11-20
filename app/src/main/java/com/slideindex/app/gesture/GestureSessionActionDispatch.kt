@@ -464,6 +464,9 @@ internal fun GestureSession.handleClassifiedGesture(
         }
 
         is GestureAction.ToggleMute,
+        is GestureAction.RingerRing,
+        is GestureAction.RingerVibrate,
+        is GestureAction.RingerSilent,
         is GestureAction.ToggleDnd,
         GestureAction.ScreenRecord,
         is GestureAction.ToggleWifi,

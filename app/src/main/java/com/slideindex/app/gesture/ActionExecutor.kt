@@ -551,6 +551,12 @@ class ActionExecutor(
             }
             is GestureAction.ToggleMute ->
                 VolumeControlHelper.applyRingerMode(context, action.ringerMode)
+            is GestureAction.RingerRing ->
+                VolumeControlHelper.applyRingerTarget(context, RingerMode.RING, action.mode)
+            is GestureAction.RingerVibrate ->
+                VolumeControlHelper.applyRingerTarget(context, RingerMode.VIBRATE, action.mode)
+            is GestureAction.RingerSilent ->
+                VolumeControlHelper.applyRingerTarget(context, RingerMode.SILENT, action.mode)
             GestureAction.LockScreenAndSilenceRing -> {
                 SystemGestureActions.silenceRinger(context)
                 SlideIndexAccessibilityService.perform(GestureAction.LockScreen)

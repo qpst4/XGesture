@@ -6,11 +6,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.gesture.GestureAction
-import com.slideindex.app.gesture.RingerCapable
-import com.slideindex.app.gesture.RingerMode
 import com.slideindex.app.gesture.ToggleCapable
 import com.slideindex.app.gesture.ToggleMode
-import com.slideindex.app.ui.gesturepicker.ringerModeLabel
 import com.slideindex.app.ui.gesturepicker.toggleModeLabel
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
@@ -26,9 +23,8 @@ data class ActionModeOption(
 /**
  * 某个动作的「操作方式」选项；不支持模式的动作返回 null。
  *
- * 两套模式家族：
- * - [ToggleCapable]：切换 / 打开 / 关闭；
- * - [RingerCapable]：切换 / 响铃 / 振动 / 静音。
+ * 只有 [ToggleCapable] 一族有菜单（切换 / 打开 / 关闭）。「声音模式」是纯三档循环，
+ * 响铃 / 振动 / 静音各自是独立动作（同样是这三个选项），所以这里不再有铃声档位菜单。
  *
  * @param bound 当前已绑定的同类型动作（网格里那一格已经绑过什么），用来给菜单打勾。
  */
@@ -45,14 +41,6 @@ fun actionModeOptions(
                 label = toggleModeLabel(context, mode),
                 selected = (boundSameType as? ToggleCapable)?.mode == mode,
                 action = action.withToggleMode(mode),
-            )
-        }
-
-        is RingerCapable -> RingerMode.entries.map { mode ->
-            ActionModeOption(
-                label = ringerModeLabel(context, mode),
-                selected = (boundSameType as? RingerCapable)?.ringerMode == mode,
-                action = action.withRingerMode(mode),
             )
         }
 

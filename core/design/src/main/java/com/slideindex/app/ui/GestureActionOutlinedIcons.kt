@@ -68,6 +68,9 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.FORCE_PORTRAIT -> ThinActionIcons.ForcePortrait
     GestureActionType.FORCE_LANDSCAPE -> ThinActionIcons.ForceLandscape
     GestureActionType.TOGGLE_MUTE -> MaterialSymbolThinIcons.Notifications
+    GestureActionType.RINGER_RING -> MaterialSymbolThinIcons.Notifications
+    GestureActionType.RINGER_VIBRATE -> MaterialSymbolThinIcons.RingerVibrate
+    GestureActionType.RINGER_SILENT -> MaterialSymbolThinIcons.NotificationsOff
     GestureActionType.MEDIA_PLAY_PAUSE -> ThinActionIcons.PlayPause
     GestureActionType.MEDIA_PREVIOUS -> ThinActionIcons.SkipPrevious
     GestureActionType.MEDIA_NEXT -> ThinActionIcons.SkipNext
@@ -197,6 +200,9 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.FORCE_PORTRAIT -> ThinActionIcons.ForcePortrait
     GestureActionType.FORCE_LANDSCAPE -> ThinActionIcons.ForceLandscape
     GestureActionType.TOGGLE_MUTE -> MaterialSymbolThinIcons.Notifications
+    GestureActionType.RINGER_RING -> MaterialSymbolThinIcons.Notifications
+    GestureActionType.RINGER_VIBRATE -> MaterialSymbolThinIcons.RingerVibrate
+    GestureActionType.RINGER_SILENT -> MaterialSymbolThinIcons.NotificationsOff
     GestureActionType.MEDIA_PLAY_PAUSE -> ThinActionIcons.PlayPause
     GestureActionType.MEDIA_PREVIOUS -> ThinActionIcons.SkipPrevious
     GestureActionType.MEDIA_NEXT -> ThinActionIcons.SkipNext

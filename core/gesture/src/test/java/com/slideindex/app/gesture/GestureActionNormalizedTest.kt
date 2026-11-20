@@ -104,6 +104,26 @@ class GestureActionNormalizedTest {
     }
 
     @Test
+    fun ringerModeActions_roundTripThroughIds() {
+        // 127~129 = 响铃 / 振动 / 静音独立动作：id 是持久化 ABI，只能往后追加。
+        assertEquals(GestureActionType.RINGER_RING, GestureActionType.fromId(127))
+        assertEquals(GestureActionType.RINGER_VIBRATE, GestureActionType.fromId(128))
+        assertEquals(GestureActionType.RINGER_SILENT, GestureActionType.fromId(129))
+        assertEquals(
+            GestureAction.RingerRing(),
+            GestureAction.from(GestureActionType.RINGER_RING, ""),
+        )
+        assertEquals(
+            GestureAction.RingerVibrate(ToggleMode.OFF),
+            GestureAction.from(GestureActionType.RINGER_VIBRATE, "0"),
+        )
+        assertEquals(
+            GestureAction.RingerSilent(ToggleMode.ON),
+            GestureAction.from(GestureActionType.RINGER_SILENT, "1"),
+        )
+    }
+
+    @Test
     fun volumeSlider_roundTripsThroughId() {
         // 115 = 「音量条（不改音量）」：id 是持久化 ABI，新动作只能往后追加（见上一条测试）。
         assertEquals(GestureActionType.OPEN_VOLUME_SLIDER, GestureActionType.fromId(115))

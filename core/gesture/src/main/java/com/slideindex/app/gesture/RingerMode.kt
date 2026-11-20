@@ -44,10 +44,13 @@ enum class RingerMode(val encoded: String) {
  */
 fun RingerMode.resolve(current: RingerMode): RingerMode = when (this) {
     RingerMode.TOGGLE -> current.cycleNext()
-    RingerMode.RING -> if (current == RingerMode.RING) RingerMode.SILENT else RingerMode.RING
-    RingerMode.VIBRATE -> if (current == RingerMode.VIBRATE) RingerMode.RING else RingerMode.VIBRATE
-    RingerMode.SILENT -> if (current == RingerMode.SILENT) RingerMode.RING else RingerMode.SILENT
+    RingerMode.RING, RingerMode.VIBRATE, RingerMode.SILENT ->
+        if (current == this) exitRingerMode() else this
 }
+
+/** 退出某个显式档：静音 / 振动回到响铃；响铃只能往安静的方向走到静音。 */
+fun RingerMode.exitRingerMode(): RingerMode =
+    if (this == RingerMode.RING) RingerMode.SILENT else RingerMode.RING
 
 /** 三档循环的下一档；传入 [RingerMode.TOGGLE] 时按「响铃」处理（它不是系统状态）。 */
 fun RingerMode.cycleNext(): RingerMode = when (this) {

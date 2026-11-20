@@ -32,6 +32,20 @@ fun ToggleMode.resolve(current: Boolean): Boolean = when (this) {
 }
 
 /**
+ * 把「切换 / 打开 / 关闭」换算成铃声模式的目标档；**返回 null 表示已经满足、不用写系统**。
+ *
+ * [target] 是动作代表的档位（响铃 / 振动 / 静音）：
+ * - 打开：当前不是该档就设成该档；
+ * - 关闭：当前正是该档就退出该档（静音/振动→响铃，响铃→静音）；
+ * - 切换：不在就进、在就退出（与旧「声音模式 · 档位」绑定的行为一致）。
+ */
+fun ToggleMode.resolveRinger(current: RingerMode, target: RingerMode): RingerMode? = when (this) {
+    ToggleMode.ON -> if (current == target) null else target
+    ToggleMode.OFF -> if (current == target) target.exitRingerMode() else null
+    ToggleMode.TOGGLE -> target.resolve(current)
+}
+
+/**
  * 带「操作方式」的动作（WiFi / 移动数据 / 蓝牙 / NFC）。
  *
  * 做成接口而不是给 [GestureAction] 基类加字段：只有这几个动作有这个概念，

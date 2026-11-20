@@ -271,6 +271,15 @@ enum class GestureActionType(val id: Int) {
 
     /** 「麦克风控制」：弹出控制菜单（切换、开启、静音）。 */
     MICROPHONE_MENU(126),
+
+    /** 「响铃」：把铃声模式设成 / 切到响铃（菜单：切换 / 打开 / 关闭）。 */
+    RINGER_RING(127),
+
+    /** 「振动」：把铃声模式设成 / 切到振动（菜单：切换 / 打开 / 关闭）。 */
+    RINGER_VIBRATE(128),
+
+    /** 「静音」：把铃声模式设成 / 切到静音（菜单：切换 / 打开 / 关闭）。 */
+    RINGER_SILENT(129),
     ;
 
     companion object {
@@ -569,11 +578,11 @@ sealed class GestureAction {
     }
 
     /**
-     * 「声音模式」：默认切换（响铃 → 振动 → 静音 → 响铃），也可指定某一档当开关用——
-     * 不在该档时切到该档，已在该档时再触发一次就退出（见 [RingerMode.resolve]）。
+     * 「声音模式」：三档循环（响铃 → 振动 → 静音 → 响铃）。
      *
-     * 与其它开关不同，它的模式是 [RingerMode]（四值）。旧绑定的空 payload = 切换，
-     * 兼容老数据；只是「切换」从旧的二态取反变成了三模式循环。
+     * 新绑定只有「切换」一种用法（UI 不再提供档位菜单，档位各自由 [RingerRing] /
+     * [RingerVibrate] / [RingerSilent] 承担）。保留 [ringerMode] 只为**旧数据兼容**：
+     * 以前存下来的 payload 1/2/3 仍按"该档开关"执行（见 [RingerMode.resolve]）。
      */
     data class ToggleMute(
         override val ringerMode: RingerMode = RingerMode.TOGGLE,
@@ -581,6 +590,45 @@ sealed class GestureAction {
         override val type = GestureActionType.TOGGLE_MUTE
         override val payload = ringerMode.encoded
         override fun withRingerMode(mode: RingerMode) = copy(ringerMode = mode)
+    }
+
+    /**
+     * 「响铃」独立动作：payload 是 [ToggleMode]。
+     *
+     * 打开 = 设成响铃；关闭 = 退出响铃（回静音）；切换 = 不在响铃就进、在响铃就退出。
+     */
+    data class RingerRing(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
+        override val type = GestureActionType.RINGER_RING
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
+    }
+
+    /**
+     * 「振动」独立动作：payload 是 [ToggleMode]。
+     *
+     * 打开 = 设成振动；关闭 = 退出振动（回响铃）；切换 = 不在振动就进、在振动就退出。
+     */
+    data class RingerVibrate(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
+        override val type = GestureActionType.RINGER_VIBRATE
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
+    }
+
+    /**
+     * 「静音」独立动作：payload 是 [ToggleMode]。
+     *
+     * 打开 = 设成静音；关闭 = 退出静音（回响铃）；切换 = 不在静音就进、在静音就退出。
+     */
+    data class RingerSilent(
+        override val mode: ToggleMode = ToggleMode.TOGGLE,
+    ) : GestureAction(), ToggleCapable {
+        override val type = GestureActionType.RINGER_SILENT
+        override val payload = mode.encoded
+        override fun withToggleMode(mode: ToggleMode) = copy(mode = mode)
     }
 
     data object MediaPlayPause : GestureAction() {
@@ -1455,6 +1503,9 @@ sealed class GestureAction {
                 GestureActionType.FORCE_PORTRAIT -> ForcePortrait
                 GestureActionType.FORCE_LANDSCAPE -> ForceLandscape
                 GestureActionType.TOGGLE_MUTE -> ToggleMute(RingerMode.decode(payload))
+                GestureActionType.RINGER_RING -> RingerRing(ToggleMode.decode(payload))
+                GestureActionType.RINGER_VIBRATE -> RingerVibrate(ToggleMode.decode(payload))
+                GestureActionType.RINGER_SILENT -> RingerSilent(ToggleMode.decode(payload))
                 GestureActionType.MEDIA_PLAY_PAUSE -> MediaPlayPause
                 GestureActionType.MEDIA_PREVIOUS -> MediaPrevious
                 GestureActionType.MEDIA_NEXT -> MediaNext

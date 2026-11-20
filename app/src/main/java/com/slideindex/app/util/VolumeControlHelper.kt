@@ -9,6 +9,7 @@ import android.util.Log
 import com.slideindex.app.gesture.RingerMode
 import com.slideindex.app.gesture.ToggleMode
 import com.slideindex.app.gesture.resolve
+import com.slideindex.app.gesture.resolveRinger
 import com.slideindex.app.privilege.PrivilegeGateway
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -47,14 +48,11 @@ object VolumeControlHelper {
     }
 
     /**
-     * 应用铃声模式。
+     * 应用铃声模式（旧「声音模式」档位绑定走这里）。
      *
      * [RingerMode.TOGGLE] 走三档循环；[RingerMode.RING] / [RingerMode.VIBRATE] / [RingerMode.SILENT]
-     * 当**开关**用：不在该档时切到该档，已在该档时再触发一次就退出（见 [RingerMode.resolve]）。
-     * 所以「已经是目标档」不再是 no-op，而是"再按一下关掉"。
-     *
-     * 写完回读校验：部分 ROM 会静默忽略铃声模式写入（与 [applyStreamLevel] 记录的绝对音量
-     * 设置同类：不抛异常、值也不变），成败只能靠回读判断，否则调用方会以为切过去了。
+     * 是旧数据里的"档位开关"：不在该档时切到该档，已在该档时再触发一次就退出
+     * （见 [RingerMode.resolve]）。
      */
     fun applyRingerMode(context: Context, mode: RingerMode): Boolean {
         if (!hasAccess(context)) {
@@ -63,16 +61,42 @@ object VolumeControlHelper {
             return false
         }
         val manager = audioManager(context) ?: return false
-        val target = mode.resolve(manager.ringerMode.toActionRingerMode()).toAudioManagerRingerMode()
-        val applied = runCatching {
-            manager.ringerMode = target
-            manager.ringerMode
-        }.getOrElse { error ->
-            Log.w(TAG, "apply ringer mode failed: $mode", error)
+        val target = mode.resolve(manager.ringerMode.toActionRingerMode())
+        return writeRingerMode(manager, target, "mode=$mode")
+    }
+
+    /**
+     * 「响铃 / 振动 / 静音」三个独立动作：按 [toggle] 决定进入 / 退出 / 翻转该档。
+     *
+     * 已经满足目标（比如"打开振动"而当前就是振动，"关闭静音"而当前本来就不静音）时不写系统，
+     * 直接返回成功。
+     */
+    fun applyRingerTarget(context: Context, target: RingerMode, toggle: ToggleMode): Boolean {
+        if (!hasAccess(context)) {
+            PermissionHelper.requestNotificationPolicyAccess(context)
             return false
         }
-        if (applied != target) {
-            Log.w(TAG, "ringer mode not applied: mode=$mode target=$target actual=$applied")
+        val manager = audioManager(context) ?: return false
+        val resolved = toggle.resolveRinger(manager.ringerMode.toActionRingerMode(), target)
+            ?: return true
+        return writeRingerMode(manager, resolved, "target=$target toggle=$toggle")
+    }
+
+    /**
+     * 写铃声模式并回读校验：部分 ROM 会静默忽略写入（与 [applyStreamLevel] 记录的绝对音量
+     * 设置同类：不抛异常、值也不变），成败只能靠回读判断。
+     */
+    private fun writeRingerMode(manager: AudioManager, target: RingerMode, label: String): Boolean {
+        val sdkTarget = target.toAudioManagerRingerMode()
+        val applied = runCatching {
+            manager.ringerMode = sdkTarget
+            manager.ringerMode
+        }.getOrElse { error ->
+            Log.w(TAG, "apply ringer mode failed: $label", error)
+            return false
+        }
+        if (applied != sdkTarget) {
+            Log.w(TAG, "ringer mode not applied: $label target=$sdkTarget actual=$applied")
             return false
         }
         return true
