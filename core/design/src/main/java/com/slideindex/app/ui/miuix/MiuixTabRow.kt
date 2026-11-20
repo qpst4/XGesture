@@ -29,14 +29,14 @@ fun miuixTabRowContourColors(host: MiuixTabRowContourHost): TabRowColors {
     val scheme = MiuixTheme.colorScheme
     return when (host) {
         MiuixTabRowContourHost.AppScaffold -> TabRowDefaults.tabRowColors(
-            backgroundColor = if (isDark) scheme.surface else scheme.surfaceVariant,
-            selectedBackgroundColor = if (isDark) scheme.surfaceContainer else Color.White,
+            backgroundColor = scheme.surface,
+            selectedBackgroundColor = scheme.surfaceContainer,
             contentColor = scheme.onSurfaceVariantSummary,
             selectedContentColor = scheme.primary,
         )
         MiuixTabRowContourHost.SurfaceContainer -> TabRowDefaults.tabRowColors(
-            backgroundColor = if (isDark) scheme.surface else scheme.surfaceVariant,
-            selectedBackgroundColor = if (isDark) scheme.surfaceContainerHigh else Color.White,
+            backgroundColor = scheme.surface,
+            selectedBackgroundColor = if (isDark) scheme.surfaceContainerHigh else scheme.surfaceContainer,
             contentColor = scheme.onSurfaceVariantSummary,
             selectedContentColor = scheme.primary,
         )
