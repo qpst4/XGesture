@@ -107,7 +107,10 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
     }.toMap()
     sections.forEach { section ->
         item(key = "ql-action-cat-${section.category.name}") {
-            com.slideindex.app.ui.Md3PickerSectionHeader(stringResource(section.category.titleRes))
+            com.slideindex.app.ui.Md3PickerSectionHeader(
+                title = stringResource(section.category.titleRes),
+                color = MiuixTheme.colorScheme.primary,
+            )
         }
         val rows = section.actions.chunked(PICKER_GRID_COLUMNS)
         items(rows.size, key = { "ql-action-row-${section.category.name}-$it" }) { rowIndex ->
