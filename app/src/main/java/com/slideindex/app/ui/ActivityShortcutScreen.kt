@@ -570,6 +570,7 @@ private fun ActivityShortcutAddBottomSheet(
                 CardSegment(
                     isFirst = index == 0,
                     isLast = index == addOptions.lastIndex,
+                    outerHorizontalPadding = 0.dp,
                 ) {
                     ArrowPreference(
                         title = stringResource(titleRes),
