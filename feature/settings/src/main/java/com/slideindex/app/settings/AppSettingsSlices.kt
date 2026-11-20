@@ -637,17 +637,31 @@ data class SearchPanelSettings(
 data class FreeWindowSettings(
     val freeWindowEnabled: Boolean = false,
     val freeWindowModeId: Int = FreeWindowMode.detectDefault().id,
-    // 竖屏预置
+    /**
+     * 跟随触发位置：小窗水平贴到本次手势/轮盘触发的那一侧、竖直以触发高度居中。
+     * 拿不到触发信息（或已过期）时仍用上面的固定坐标。
+     */
+    val freeWindowFollowTriggerSide: Boolean = false,
+
+    // 竖屏预置 (dp 体系，对齐 GestureEVO 默认尺寸与边距)
+    val freeWindowWidthDp: Int = 230,
+    val freeWindowHeightDp: Int = 380,
+    val freeWindowLeftDp: Int = 70,
+    val freeWindowTopDp: Int = 250,
+    val freeWindowEdgeMarginDp: Int = 70,
+
+    // 横屏预置 (dp 体系，与竖屏完全独立)
+    val freeWindowLandWidthDp: Int = 200,
+    val freeWindowLandHeightDp: Int = 300,
+    val freeWindowLandLeftDp: Int = 550,
+    val freeWindowLandTopDp: Int = 30,
+    val freeWindowLandEdgeMarginDp: Int = 90,
+
+    // 存量百分比字段（保留供向后兼容）
     val freeWindowWidthFraction: Float = 0.8f,
     val freeWindowHeightFraction: Float = 0.55f,
     val freeWindowLeftFraction: Float = 0.1f,
     val freeWindowTopFraction: Float = 0.15f,
-    /**
-     * 跟随触发位置：小窗水平贴到本次手势/轮盘触发的那一侧、竖直以触发高度居中。
-     * 拿不到触发信息（或已过期）时仍用上面的固定百分比。
-     */
-    val freeWindowFollowTriggerSide: Boolean = false,
-    // 横屏预置（与竖屏完全独立，运行时按当前显示方向二选一）
     val freeWindowLandWidthFraction: Float = 0.68f,
     val freeWindowLandHeightFraction: Float = 0.4f,
     val freeWindowLandLeftFraction: Float = 0.16f,

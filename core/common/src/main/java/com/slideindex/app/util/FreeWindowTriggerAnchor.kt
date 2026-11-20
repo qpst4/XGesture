@@ -23,6 +23,8 @@ object FreeWindowTriggerAnchor {
         val side: PanelSide?,
         /** 触发高度的屏幕 y 坐标；<= 0 表示未知。 */
         val rawY: Float,
+        /** 触控点全局 x 坐标；为 null 时根据 side 判断。 */
+        val rawX: Float? = null,
     )
 
     @Volatile
@@ -32,9 +34,9 @@ object FreeWindowTriggerAnchor {
     private var recordedAtMs: Long = 0L
 
     /** 记录一次触发；侧与高度都拿不到时保持原值不动。 */
-    fun record(side: PanelSide?, rawY: Float?) {
-        if (side == null && (rawY == null || rawY <= 0f)) return
-        anchor = Anchor(side = side, rawY = rawY ?: 0f)
+    fun record(side: PanelSide?, rawY: Float?, rawX: Float? = null) {
+        if (side == null && (rawY == null || rawY <= 0f) && rawX == null) return
+        anchor = Anchor(side = side, rawY = rawY ?: 0f, rawX = rawX)
         recordedAtMs = SystemClock.uptimeMillis()
     }
 

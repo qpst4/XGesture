@@ -30,7 +30,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import com.slideindex.app.settings.FreeWindowLayoutFractions
+import com.slideindex.app.settings.FreeWindowLayoutDp
+import com.slideindex.app.settings.FreeWindowUiSettings
 import com.slideindex.app.settings.HomeMainSettings
 import com.slideindex.app.settings.OverlaySettings
 import com.slideindex.app.ui.LocalBareSettingIcons
@@ -171,6 +172,9 @@ class MainActivity : ComponentActivity() {
             val overlaySettings by deps.settingsRepository.overlaySettings.collectAsStateWithLifecycle(
                 initialValue = OverlaySettings.from(deps.settingsRepository.readSnapshot()),
             )
+            val freeWindowUiSettings by deps.settingsRepository.freeWindowUiSettings.collectAsStateWithLifecycle(
+                initialValue = FreeWindowUiSettings.from(deps.settingsRepository.readSnapshot()),
+            )
             val homeMainSettings by deps.settingsRepository.homeMainSettings.collectAsStateWithLifecycle(
                 initialValue = HomeMainSettings.from(deps.settingsRepository.readSnapshot()),
             )
@@ -200,22 +204,24 @@ class MainActivity : ComponentActivity() {
                         }
                         if (FreeWindowLayoutEditorSession.isOpen) {
                             FreeWindowLayoutEditorOverlay(
-                                portrait = FreeWindowLayoutFractions(
-                                    widthFraction = overlaySettings.freeWindowWidthFraction,
-                                    heightFraction = overlaySettings.freeWindowHeightFraction,
-                                    leftFraction = overlaySettings.freeWindowLeftFraction,
-                                    topFraction = overlaySettings.freeWindowTopFraction,
+                                portrait = FreeWindowLayoutDp(
+                                    widthDp = freeWindowUiSettings.freeWindowWidthDp,
+                                    heightDp = freeWindowUiSettings.freeWindowHeightDp,
+                                    leftDp = freeWindowUiSettings.freeWindowLeftDp,
+                                    topDp = freeWindowUiSettings.freeWindowTopDp,
+                                    edgeMarginDp = freeWindowUiSettings.freeWindowEdgeMarginDp,
                                 ),
-                                landscape = FreeWindowLayoutFractions(
-                                    widthFraction = overlaySettings.freeWindowLandWidthFraction,
-                                    heightFraction = overlaySettings.freeWindowLandHeightFraction,
-                                    leftFraction = overlaySettings.freeWindowLandLeftFraction,
-                                    topFraction = overlaySettings.freeWindowLandTopFraction,
+                                landscape = FreeWindowLayoutDp(
+                                    widthDp = freeWindowUiSettings.freeWindowLandWidthDp,
+                                    heightDp = freeWindowUiSettings.freeWindowLandHeightDp,
+                                    leftDp = freeWindowUiSettings.freeWindowLandLeftDp,
+                                    topDp = freeWindowUiSettings.freeWindowLandTopDp,
+                                    edgeMarginDp = freeWindowUiSettings.freeWindowLandEdgeMarginDp,
                                 ),
                                 onDismiss = { FreeWindowLayoutEditorSession.close() },
                                 onSave = { portrait, landscape ->
                                     editorScope.launch {
-                                        deps.settingsRepository.setFreeWindowLayout(portrait, landscape)
+                                        deps.settingsRepository.setFreeWindowLayoutDp(portrait, landscape)
                                     }
                                 },
                             )

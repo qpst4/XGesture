@@ -161,13 +161,7 @@ fun FreeWindowSettingsScreen(
                             icon = { label -> SymbolsIcon("AspectRatio", contentDescription = label) },
                             title = stringResource(R.string.free_window_adjust_layout),
                             subtitle = if (layoutApplies) {
-                                stringResource(
-                                    R.string.free_window_layout_summary,
-                                    (settings.freeWindowWidthFraction * 100).roundToInt(),
-                                    (settings.freeWindowHeightFraction * 100).roundToInt(),
-                                    (settings.freeWindowLandWidthFraction * 100).roundToInt(),
-                                    (settings.freeWindowLandHeightFraction * 100).roundToInt(),
-                                )
+                                "竖屏 ${settings.freeWindow.freeWindowWidthDp}×${settings.freeWindow.freeWindowHeightDp} dp · 横屏 ${settings.freeWindow.freeWindowLandWidthDp}×${settings.freeWindow.freeWindowLandHeightDp} dp"
                             } else {
                                 stringResource(R.string.free_window_layout_unsupported)
                             },

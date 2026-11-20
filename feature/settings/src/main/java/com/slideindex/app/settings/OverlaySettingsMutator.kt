@@ -113,6 +113,22 @@ class OverlaySettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.FREE_WINDOW_LAND_TOP] =
             FreeWindowLayoutLimits.normalizeTop(landscape.topFraction)
     }
+
+    suspend fun setFreeWindowLayoutDp(
+        portrait: FreeWindowLayoutDp,
+        landscape: FreeWindowLayoutDp,
+    ) = editor.edit {
+        it[SettingsPreferenceKeys.FREE_WINDOW_WIDTH_DP] = portrait.widthDp
+        it[SettingsPreferenceKeys.FREE_WINDOW_HEIGHT_DP] = portrait.heightDp
+        it[SettingsPreferenceKeys.FREE_WINDOW_LEFT_DP] = portrait.leftDp
+        it[SettingsPreferenceKeys.FREE_WINDOW_TOP_DP] = portrait.topDp
+        it[SettingsPreferenceKeys.FREE_WINDOW_EDGE_MARGIN_DP] = portrait.edgeMarginDp
+        it[SettingsPreferenceKeys.FREE_WINDOW_LAND_WIDTH_DP] = landscape.widthDp
+        it[SettingsPreferenceKeys.FREE_WINDOW_LAND_HEIGHT_DP] = landscape.heightDp
+        it[SettingsPreferenceKeys.FREE_WINDOW_LAND_LEFT_DP] = landscape.leftDp
+        it[SettingsPreferenceKeys.FREE_WINDOW_LAND_TOP_DP] = landscape.topDp
+        it[SettingsPreferenceKeys.FREE_WINDOW_LAND_EDGE_MARGIN_DP] = landscape.edgeMarginDp
+    }
     suspend fun setAppLaunchPolicyId(id: Int) = editor.edit {
         it[SettingsPreferenceKeys.APP_LAUNCH_POLICY] = AppLaunchPolicy.fromId(id).id
     }

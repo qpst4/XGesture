@@ -19,7 +19,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -43,8 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
-import com.slideindex.app.settings.FreeWindowLayoutFractions
-import com.slideindex.app.settings.FreeWindowLayoutLimits
+import com.slideindex.app.settings.FreeWindowLayoutDp
 import kotlin.math.roundToInt
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -52,33 +50,29 @@ private const val TAB_PORTRAIT = 0
 private const val TAB_LANDSCAPE = 1
 
 /**
- * 小窗尺寸位置编辑层（对齐 LinkGo 的 `FullScreenEditorOverlay`）。
+ * 小窗物理尺寸位置编辑层（以 dp 为单位，直接对齐 GestureEVO 交互规范）。
  *
- * - 挂在 App 根部，盖住整屏（含底栏/侧栏），半透明黑底 + 可拖拽/缩放的窗口预览；
- * - 顶部切竖屏/横屏会把宿主 Activity 真的转到该方向，画布就是真机当前方向的真实屏幕；
- * - 拖动窗口改位置、拖右下角手柄改尺寸，点“完成并保存”一次性写回两套参数。
- *
- * 方向下发与还原见 [FreeWindowPreviewOrientationSession]（幂等 + 关闭时延迟还原），
- * 这样转屏引起的外壳重建不会把方向来回推。
+ * - 挂在 App 根部，盖住整屏，半透明黑底 + 可拖拽/缩放的窗口预览；
+ * - 顶部切竖屏/横屏会把宿主 Activity 真实旋转，画布就是真实屏幕物理空间；
+ * - 拖动窗口改位置 (leftDp, topDp)、拖右下角手柄改尺寸 (widthDp, heightDp)；
+ * - 点“完成并保存”一次性写回两套 dp 参数。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FreeWindowLayoutEditorOverlay(
-    portrait: FreeWindowLayoutFractions,
-    landscape: FreeWindowLayoutFractions,
+    portrait: FreeWindowLayoutDp,
+    landscape: FreeWindowLayoutDp,
     onDismiss: () -> Unit,
-    onSave: (portrait: FreeWindowLayoutFractions, landscape: FreeWindowLayoutFractions) -> Unit,
+    onSave: (portrait: FreeWindowLayoutDp, landscape: FreeWindowLayoutDp) -> Unit,
 ) {
     val activity = LocalActivity.current
     var selectedTab by rememberSaveable { mutableIntStateOf(TAB_PORTRAIT) }
-    // 不按"系统二次缩放"的上限夹取：那只是我们尚未在真机验证的假设，
-    // 按它夹会把用户存量配置单向改小。上限只做提示（见设置页），不在这里限制也不改写数据。
     val portraitState = remember(portrait) { mutableStateOf(portrait) }
     val landscapeState = remember(landscape) { mutableStateOf(landscape) }
     val isLandscape = selectedTab == TAB_LANDSCAPE
     val currentLayout = if (isLandscape) landscapeState.value else portraitState.value
 
-    fun applyLayout(transform: (FreeWindowLayoutFractions) -> FreeWindowLayoutFractions) {
+    fun applyLayout(transform: (FreeWindowLayoutDp) -> FreeWindowLayoutDp) {
         val target = if (isLandscape) landscapeState else portraitState
         target.value = transform(target.value)
     }
@@ -92,8 +86,6 @@ fun FreeWindowLayoutEditorOverlay(
     }
     BackHandler(enabled = true) { onDismiss() }
 
-    // 组件维持 M3 分段控件 / 按钮，但配色统一走 Miuix 主题色，
-    // 避免与预览窗口（同样用 Miuix 主色）出现「同一主题两种蓝」。
     val segmentedColors = SegmentedButtonDefaults.colors(
         activeContainerColor = MiuixTheme.colorScheme.primary,
         activeContentColor = MiuixTheme.colorScheme.onPrimary,
@@ -110,19 +102,23 @@ fun FreeWindowLayoutEditorOverlay(
             val density = LocalDensity.current
             val canvasWidthPx = constraints.maxWidth.toFloat()
             val canvasHeightPx = constraints.maxHeight.toFloat()
-            val windowWidthPx = canvasWidthPx * currentLayout.widthFraction
-            val windowHeightPx = canvasHeightPx * currentLayout.heightFraction
-            val maxLeftPx = (canvasWidthPx - windowWidthPx).coerceAtLeast(0f)
-            val maxTopPx = (canvasHeightPx - windowHeightPx).coerceAtLeast(0f)
-            val offsetXPx = (currentLayout.leftFraction * canvasWidthPx).coerceIn(0f, maxLeftPx)
-            val offsetYPx = (currentLayout.topFraction * canvasHeightPx).coerceIn(0f, maxTopPx)
+            val canvasWidthDp = with(density) { canvasWidthPx.toDp().value }.roundToInt()
+            val canvasHeightDp = with(density) { canvasHeightPx.toDp().value }.roundToInt()
+
+            val wPx = with(density) { currentLayout.widthDp.dp.toPx() }
+            val hPx = with(density) { currentLayout.heightDp.dp.toPx() }
+            val maxLeftPx = (canvasWidthPx - wPx).coerceAtLeast(0f)
+            val maxTopPx = (canvasHeightPx - hPx).coerceAtLeast(0f)
+
+            val offsetXPx = with(density) { currentLayout.leftDp.dp.toPx() }.coerceIn(0f, maxLeftPx)
+            val offsetYPx = with(density) { currentLayout.topDp.dp.toPx() }.coerceIn(0f, maxTopPx)
 
             Box(
                 modifier = Modifier
                     .offset { IntOffset(offsetXPx.roundToInt(), offsetYPx.roundToInt()) }
                     .size(
-                        width = with(density) { windowWidthPx.toDp() },
-                        height = with(density) { windowHeightPx.toDp() },
+                        width = with(density) { wPx.toDp() },
+                        height = with(density) { hPx.toDp() },
                     )
                     .clip(RoundedCornerShape(20.dp))
                     .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.22f))
@@ -131,19 +127,18 @@ fun FreeWindowLayoutEditorOverlay(
                         detectDragGestures { change, dragAmount ->
                             change.consume()
                             applyLayout { layout ->
-                                val wPx = layout.widthFraction * canvasWidthPx
-                                val hPx = layout.heightFraction * canvasHeightPx
-                                val limitX = (canvasWidthPx - wPx).coerceAtLeast(0f)
-                                val limitY = (canvasHeightPx - hPx).coerceAtLeast(0f)
-                                val newLeftPx = (layout.leftFraction * canvasWidthPx + dragAmount.x)
-                                    .coerceIn(0f, limitX)
-                                val newTopPx = (layout.topFraction * canvasHeightPx + dragAmount.y)
-                                    .coerceIn(0f, limitY)
+                                val dragAmountDpX = with(density) { dragAmount.x.toDp().value }.roundToInt()
+                                val dragAmountDpY = with(density) { dragAmount.y.toDp().value }.roundToInt()
+                                val maxLeftDp = (canvasWidthDp - layout.widthDp).coerceAtLeast(0)
+                                val maxTopDp = (canvasHeightDp - layout.heightDp).coerceAtLeast(0)
+                                val newLeftDp = (layout.leftDp + dragAmountDpX).coerceIn(0, maxLeftDp)
+                                val newTopDp = (layout.topDp + dragAmountDpY).coerceIn(0, maxTopDp)
+                                val rightInsetDp = (canvasWidthDp - newLeftDp - layout.widthDp).coerceAtLeast(0)
+                                val edgeMarginDp = minOf(newLeftDp, rightInsetDp)
                                 layout.copy(
-                                    leftFraction = FreeWindowLayoutLimits
-                                        .normalizeLeft(newLeftPx / canvasWidthPx),
-                                    topFraction = FreeWindowLayoutLimits
-                                        .normalizeTop(newTopPx / canvasHeightPx),
+                                    leftDp = newLeftDp,
+                                    topDp = newTopDp,
+                                    edgeMarginDp = edgeMarginDp,
                                 )
                             }
                         }
@@ -151,8 +146,7 @@ fun FreeWindowLayoutEditorOverlay(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "${(currentLayout.widthFraction * 100).roundToInt()}% × " +
-                        "${(currentLayout.heightFraction * 100).roundToInt()}%",
+                    text = "${currentLayout.widthDp} × ${currentLayout.heightDp} dp",
                     color = MiuixTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -166,21 +160,24 @@ fun FreeWindowLayoutEditorOverlay(
                             detectDragGestures { change, dragAmount ->
                                 change.consume()
                                 applyLayout { layout ->
-                                    val newWidthPx = FreeWindowLayoutLimits.normalizeWidth(
-                                        layout.widthFraction + dragAmount.x / canvasWidthPx
-                                    ) * canvasWidthPx
-                                    val newHeightPx = FreeWindowLayoutLimits.normalizeHeight(
-                                        layout.heightFraction + dragAmount.y / canvasHeightPx
-                                    ) * canvasHeightPx
-                                    val maxLeft =
-                                        ((canvasWidthPx - newWidthPx) / canvasWidthPx).coerceAtLeast(0f)
-                                    val maxTop =
-                                        ((canvasHeightPx - newHeightPx) / canvasHeightPx).coerceAtLeast(0f)
+                                    val dragAmountDpX = with(density) { dragAmount.x.toDp().value }.roundToInt()
+                                    val dragAmountDpY = with(density) { dragAmount.y.toDp().value }.roundToInt()
+                                    val maxAllowedWDp = (canvasWidthDp - layout.leftDp).coerceAtLeast(100)
+                                    val maxAllowedHDp = (canvasHeightDp - layout.topDp).coerceAtLeast(100)
+                                    val newWDp = (layout.widthDp + dragAmountDpX).coerceIn(100, maxAllowedWDp)
+                                    val newHDp = (layout.heightDp + dragAmountDpY).coerceIn(100, maxAllowedHDp)
+                                    val maxLeftDp = (canvasWidthDp - newWDp).coerceAtLeast(0)
+                                    val maxTopDp = (canvasHeightDp - newHDp).coerceAtLeast(0)
+                                    val clampedLeftDp = layout.leftDp.coerceIn(0, maxLeftDp)
+                                    val clampedTopDp = layout.topDp.coerceIn(0, maxTopDp)
+                                    val rightInsetDp = (canvasWidthDp - clampedLeftDp - newWDp).coerceAtLeast(0)
+                                    val edgeMarginDp = minOf(clampedLeftDp, rightInsetDp)
                                     layout.copy(
-                                        widthFraction = newWidthPx / canvasWidthPx,
-                                        heightFraction = newHeightPx / canvasHeightPx,
-                                        leftFraction = layout.leftFraction.coerceIn(0f, maxLeft),
-                                        topFraction = layout.topFraction.coerceIn(0f, maxTop),
+                                        widthDp = newWDp,
+                                        heightDp = newHDp,
+                                        leftDp = clampedLeftDp,
+                                        topDp = clampedTopDp,
+                                        edgeMarginDp = edgeMarginDp,
                                     )
                                 }
                             }

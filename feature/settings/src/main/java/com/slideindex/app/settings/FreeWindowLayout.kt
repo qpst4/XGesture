@@ -64,3 +64,40 @@ fun FreeWindowSettings.layoutFractions(isLandscape: Boolean): FreeWindowLayoutFr
 /** 当前显示方向下实际生效的小窗参数。 */
 fun AppSettings.resolvedFreeWindowLayout(isLandscape: Boolean): FreeWindowLayoutFractions =
     freeWindow.layoutFractions(isLandscape)
+
+/**
+ * 某一个方向（竖屏 / 横屏）下的小窗物理尺寸与边距（以 dp 为单位，直接对齐 GestureEVO 架构）。
+ */
+data class FreeWindowLayoutDp(
+    val widthDp: Int,
+    val heightDp: Int,
+    val leftDp: Int,
+    val topDp: Int,
+    val edgeMarginDp: Int,
+)
+
+/**
+ * 按方向取出该方向专属的那套物理 dp 预置参数。
+ */
+fun FreeWindowSettings.layoutDp(isLandscape: Boolean): FreeWindowLayoutDp =
+    if (isLandscape) {
+        FreeWindowLayoutDp(
+            widthDp = freeWindowLandWidthDp,
+            heightDp = freeWindowLandHeightDp,
+            leftDp = freeWindowLandLeftDp,
+            topDp = freeWindowLandTopDp,
+            edgeMarginDp = freeWindowLandEdgeMarginDp,
+        )
+    } else {
+        FreeWindowLayoutDp(
+            widthDp = freeWindowWidthDp,
+            heightDp = freeWindowHeightDp,
+            leftDp = freeWindowLeftDp,
+            topDp = freeWindowTopDp,
+            edgeMarginDp = freeWindowEdgeMarginDp,
+        )
+    }
+
+/** 当前显示方向下实际生效的物理 dp 参数。 */
+fun AppSettings.resolvedFreeWindowLayoutDp(isLandscape: Boolean): FreeWindowLayoutDp =
+    freeWindow.layoutDp(isLandscape)

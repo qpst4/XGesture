@@ -53,32 +53,38 @@ class FreeWindowLauncherBoundsTest {
 
     private fun settings(
         mode: FreeWindowMode = FreeWindowMode.STANDARD,
-        widthFraction: Float = 0.8f,
-        heightFraction: Float = 0.55f,
-        leftFraction: Float = 0.1f,
-        topFraction: Float = 0.15f,
+        widthDp: Int = 230,
+        heightDp: Int = 380,
+        leftDp: Int = 70,
+        topDp: Int = 250,
+        edgeMarginDp: Int = 70,
         followTrigger: Boolean = false,
     ): AppSettings = AppSettings(
         freeWindow = FreeWindowSettings(
             freeWindowEnabled = true,
             freeWindowModeId = mode.id,
-            freeWindowWidthFraction = widthFraction,
-            freeWindowHeightFraction = heightFraction,
-            freeWindowLeftFraction = leftFraction,
-            freeWindowTopFraction = topFraction,
+            freeWindowWidthDp = widthDp,
+            freeWindowHeightDp = heightDp,
+            freeWindowLeftDp = leftDp,
+            freeWindowTopDp = topDp,
+            freeWindowEdgeMarginDp = edgeMarginDp,
             freeWindowFollowTriggerSide = followTrigger,
         ),
     )
 
-    /** 默认配置放得下：结果就是配置的百分比（安全边距不该动它）。 */
+    /** 默认配置放得下：结果就是配置的物理 dp 尺寸（转换为 px）。 */
     @Test
     fun defaultLayoutIsUntouchedBySafeMargin() {
+        val density = context.resources.displayMetrics.density
         val bounds = FreeWindowLauncher.launchBounds(context, settings())
 
-        assertEquals((widthPx * 0.1f).toInt(), bounds.left)
-        assertEquals((heightPx * 0.15f).toInt(), bounds.top)
-        assertEquals((widthPx * 0.8f).toInt(), bounds.width())
-        assertEquals((heightPx * 0.55f).toInt(), bounds.height())
+        assertEquals((70 * density).toInt(), bounds.left)
+        // 顶部为 statusBarHeight + topDp*density
+        val id = context.resources.getIdentifier("status_bar_height", "dimen", "android")
+        val statusBar = if (id > 0) context.resources.getDimensionPixelSize(id) else 0
+        assertEquals(statusBar + (250 * density).toInt(), bounds.top)
+        assertEquals((230 * density).toInt(), bounds.width())
+        assertEquals((380 * density).toInt(), bounds.height())
     }
 
     /** 配置高到会压住底部手势条 / 输入法区：高度与位置都被压回安全区之内。 */
@@ -86,7 +92,7 @@ class FreeWindowLauncherBoundsTest {
     fun tallLayoutIsClampedAboveBottomSafeMargin() {
         val bounds = FreeWindowLauncher.launchBounds(
             context,
-            settings(widthFraction = 0.8f, heightFraction = 0.9f, topFraction = 0.5f),
+            settings(widthDp = 300, heightDp = 800, topDp = 200),
         )
 
         assertTrue(
@@ -102,7 +108,7 @@ class FreeWindowLauncherBoundsTest {
     fun landscapeLayoutRespectsSafeMargin() {
         val bounds = FreeWindowLauncher.launchBounds(
             context,
-            settings(heightFraction = 0.9f, topFraction = 0.6f),
+            settings(heightDp = 400, topDp = 100),
         )
 
         assertTrue(
@@ -111,65 +117,61 @@ class FreeWindowLauncherBoundsTest {
         )
     }
 
-    /** 跟随右触发：窗口贴右，右侧留白 = 配置的贴边距（也就是配置里那个"离边的距离"）。 */
+    /** 跟随右触发：窗口贴右，右侧留白 = 配置的贴边距 edgeMargin。 */
     @Test
     fun followTriggerOnRightEdgeDocksRight() {
+        val density = context.resources.displayMetrics.density
+        val edgeMarginDp = 50
         val base = settings(
-            widthFraction = 0.5f,
-            heightFraction = 0.3f,
-            leftFraction = 0.1f,
-            topFraction = 0.15f,
+            widthDp = 200,
+            heightDp = 300,
+            leftDp = 70,
+            edgeMarginDp = edgeMarginDp,
             followTrigger = true,
         )
         val withoutFollow = FreeWindowLauncher.launchBounds(context, settings(
-            widthFraction = 0.5f,
-            heightFraction = 0.3f,
-            leftFraction = 0.1f,
-            topFraction = 0.15f,
+            widthDp = 200,
+            heightDp = 300,
+            leftDp = 70,
+            edgeMarginDp = edgeMarginDp,
             followTrigger = false,
         ))
 
         FreeWindowTriggerAnchor.record(PanelSide.RIGHT, heightPx / 2f)
         val bounds = FreeWindowLauncher.launchBounds(context, base)
 
-        assertEquals((widthPx * 0.1f).toInt(), widthPx - bounds.right)
+        val expectedRightMargin = (edgeMarginDp * density).toInt()
+        assertEquals(expectedRightMargin, widthPx - bounds.right)
         assertNotEquals(withoutFollow.left, bounds.left)
         assertEquals(withoutFollow.width(), bounds.width())
     }
 
-    /** 跟随左触发：贴左。配置本身已经贴左时，位置与不跟随一致。 */
+    /** 跟随左触发：贴左。 */
     @Test
     fun followTriggerOnLeftEdgeDocksLeft() {
+        val density = context.resources.displayMetrics.density
+        val edgeMarginDp = 60
         val config = settings(
-            widthFraction = 0.5f,
-            heightFraction = 0.3f,
-            leftFraction = 0.1f,
-            topFraction = 0.15f,
+            widthDp = 200,
+            heightDp = 300,
+            leftDp = 60,
+            edgeMarginDp = edgeMarginDp,
             followTrigger = true,
         )
-        val withoutFollow = FreeWindowLauncher.launchBounds(context, settings(
-            widthFraction = 0.5f,
-            heightFraction = 0.3f,
-            leftFraction = 0.1f,
-            topFraction = 0.15f,
-            followTrigger = false,
-        ))
 
         FreeWindowTriggerAnchor.record(PanelSide.LEFT, heightPx / 2f)
         val bounds = FreeWindowLauncher.launchBounds(context, config)
 
-        assertEquals((widthPx * 0.1f).toInt(), bounds.left)
-        assertEquals(withoutFollow.left, bounds.left)
+        val expectedLeftMargin = (edgeMarginDp * density).toInt()
+        assertEquals(expectedLeftMargin, bounds.left)
     }
 
     /** 竖直方向以触发高度居中。 */
     @Test
     fun followTriggerCentersOnTriggerHeight() {
         val config = settings(
-            widthFraction = 0.5f,
-            heightFraction = 0.2f,
-            leftFraction = 0.1f,
-            topFraction = 0.1f,
+            widthDp = 200,
+            heightDp = 200,
             followTrigger = true,
         )
         val triggerY = heightPx / 2f
@@ -186,9 +188,9 @@ class FreeWindowLauncherBoundsTest {
         FreeWindowTriggerAnchor.record(PanelSide.RIGHT, heightPx / 2f)
 
         val bounds = FreeWindowLauncher.launchBounds(context, settings(followTrigger = false))
+        val density = context.resources.displayMetrics.density
 
-        assertEquals((widthPx * 0.1f).toInt(), bounds.left)
-        assertEquals((heightPx * 0.15f).toInt(), bounds.top)
+        assertEquals((70 * density).toInt(), bounds.left)
     }
 
     /** 过期锚点按"没有锚点"处理：手势开面板、很久之后再启动不会拿旧方位摆窗口。 */
@@ -258,27 +260,28 @@ class FreeWindowLauncherBoundsTest {
     }
 
     /**
-     * 小米上请求 95% 宽不会得到 95%：逻辑矩形不能溢屏，可见宽被压到 70%×屏宽。
-     * 这条同时钉住"不会再静默交出一个溢屏的逻辑矩形"。
+     * 小米 MIUI 13+ / HyperOS：竖屏补偿 1.42f，且以 left / top 为原点锚点。
      */
     @Test
-    fun xiaomiRequestIsCappedByCompensation() {
+    fun xiaomiUsesMiuiCompensationAndTopLeftAnchor() {
         ShadowBuild.setManufacturer("Xiaomi")
         ShadowBuild.setBrand("Xiaomi")
 
-        val bounds = FreeWindowLauncher.launchBounds(
-            context,
-            settings(widthFraction = 0.95f, heightFraction = 0.9f, topFraction = 0.05f),
-        )
+        val density = context.resources.displayMetrics.density
+        val config = settings(widthDp = 200, heightDp = 300, leftDp = 50, topDp = 100)
+        val bounds = FreeWindowLauncher.launchBounds(context, config)
 
-        val visibleWidth = bounds.width() * 0.7f
-        assertTrue(
-            "可见宽 $visibleWidth 不应超过屏宽 70%（${widthPx * 0.7f}）",
-            visibleWidth <= widthPx * 0.7f + 1f,
-        )
-        assertTrue(
-            "可见高 ${bounds.height() * 0.7f} 不应超过屏高 70%（${heightPx * 0.7f}）",
-            bounds.height() * 0.7f <= heightPx * 0.7f + 1f,
-        )
+        val id = context.resources.getIdentifier("status_bar_height", "dimen", "android")
+        val statusBar = if (id > 0) context.resources.getDimensionPixelSize(id) else 0
+
+        // 锚点为 Top-Left：left 与 top 不缩放，直接作为起始边界
+        assertEquals((50 * density).toInt(), bounds.left)
+        assertEquals(statusBar + (100 * density).toInt(), bounds.top)
+
+        // 宽高按 1.42f 补偿放大
+        val expectedW = ((200 * density) * 1.42f).toInt()
+        val expectedH = ((300 * density) * 1.42f).toInt()
+        assertEquals(expectedW, bounds.width())
+        assertEquals(expectedH, bounds.height())
     }
 }

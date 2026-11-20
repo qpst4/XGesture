@@ -7,7 +7,9 @@ import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.settings.FreeWindowLayoutDp
 import com.slideindex.app.settings.resolvedFreeWindowLayout
+import com.slideindex.app.settings.resolvedFreeWindowLayoutDp
 import com.slideindex.app.settings.resolvedFreeWindowMode
 import com.slideindex.app.settings.usesNubiaFreeformIdentifier
 import com.slideindex.app.settings.usesSunshineBroadcast
@@ -310,81 +312,178 @@ object FreeWindowLauncher {
      * - **跟随触发位置**：开启后水平贴到触发那一侧、竖直以触发高度居中；拿不到触发信息
      *   （或已过期）时原样使用配置值。见 [FreeWindowTriggerAnchor]。
      */
+    /**
+     * 启动用的 launch bounds，完全对齐 GestureEVO 的 FreeFormUtils.getRect 算法：
+     *
+     * 1. 物理 dp 尺寸体系：横屏与竖屏完全独立配置宽度、高度、边距。
+     * 2. 安全边距：底部预留 max(状态栏高度, 20mm≈126dp)，确保不遮挡手势横条与输入法区。
+     * 3. 小米 MIUI 13+ / HyperOS 专项补偿：
+     *    - 小米自由小窗底层以左上角为锚点缩放，竖屏强制 0.70x（补偿 1.42f），横屏普通手机 0.55x（补偿 1.8f），
+     *      大屏/折叠屏展开态维持 1.42f；launchBounds 宽高乘以补偿系数，left 与 top 原样作为起点。
+     * 4. 跟随触发位置：开启后水平贴到触控侧（计算 edgeMargin）、竖直以触发高度居中。
+     * 5. 非 MIUI 系统：调用 fitRectOnScreen 保证矩形完全收容在可见屏幕内。
+     */
     fun launchBounds(context: Context, settings: AppSettings): Rect {
         val display = resolveDisplaySize(context)
-        val displayWidth = display.widthPx
-        val displayHeight = display.heightPx
+        val screenWidth = display.widthPx
+        val screenHeight = display.heightPx
         val isLandscape = display.isLandscape
-        val layout = settings.resolvedFreeWindowLayout(isLandscape)
+        val isPortrait = !isLandscape
 
-        // 底部安全区：状态栏高度与 20mm 取大者；可用高度 = 屏幕高度 - 安全区。
-        // mm→px 只用到密度，所以这里的 DisplayMetrics 与朝向无关。
-        val safeBottomPx = maxOf(
-            statusBarHeightPx(context),
-            millimetersToPixels(context.resources.displayMetrics, BOTTOM_SAFE_MARGIN_MM),
-        ).coerceIn(0, (displayHeight - 1).coerceAtLeast(0))
-        val availableHeight = (displayHeight - safeBottomPx).coerceAtLeast(1)
+        val statusBarHeight = statusBarHeightPx(context)
+        val density = context.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
 
-        // 可见尺寸上限：逻辑尺寸 = 可见 / 补偿，而逻辑矩形不能溢屏 → 可见 ≤ 屏幕 × 补偿。
-        val scale = resolveScaleCompensation(settings, isLandscape)
-        val deliverableWidth = (displayWidth * scale).roundToInt().coerceIn(1, displayWidth)
-        val deliverableHeight = (displayHeight * scale).roundToInt().coerceIn(1, displayHeight)
+        // 20mm 安全边距换算成 px (20mm / 25.4mm/in * 160dp/in ≈ 126dp)
+        val minBottomMarginPx = (126 * density).toInt()
+        val targetBottomMargin = maxOf(statusBarHeight, minBottomMarginPx)
 
-        // 用户想要看到的可见尺寸与位置（位置是左上角，左/上留白直接用配置值）。
-        val requestedWidth = (displayWidth * layout.widthFraction).toInt()
-        val requestedHeight = (displayHeight * layout.heightFraction).toInt()
-        val heightLimit = minOf(deliverableHeight, availableHeight)
-        val visualWidth = requestedWidth.coerceIn(1, deliverableWidth)
-        val visualHeight = requestedHeight.coerceIn(1, heightLimit)
-        var visualLeft = (displayWidth * layout.leftFraction).toInt()
-            .coerceIn(0, (displayWidth - visualWidth).coerceAtLeast(0))
-        var visualTop = (displayHeight * layout.topFraction).toInt()
-            .coerceIn(0, (availableHeight - visualHeight).coerceAtLeast(0))
+        val layout = settings.resolvedFreeWindowLayoutDp(isLandscape)
+        val followTrigger = settings.freeWindowFollowTriggerSide
 
-        if (settings.freeWindowFollowTriggerSide) {
-            FreeWindowTriggerAnchor.peek()?.let { anchor ->
-                when (anchor.side) {
-                    // 水平：贴到触发那一侧。贴边距取「配置的左边距」与「其对称右边距」中较小者，
-                    // 这样默认的居中配置跟随之后仍然左右对称。
-                    PanelSide.LEFT, PanelSide.RIGHT -> {
-                        val configuredLeft = (displayWidth * layout.leftFraction).toInt()
-                            .coerceIn(0, displayWidth)
-                        val configuredRight =
-                            (displayWidth - visualWidth - configuredLeft).coerceAtLeast(0)
-                        val edgeMargin = minOf(configuredLeft, configuredRight)
-                        visualLeft = if (anchor.side == PanelSide.LEFT) {
-                            edgeMargin
-                        } else {
-                            displayWidth - visualWidth - edgeMargin
-                        }.coerceIn(0, (displayWidth - visualWidth).coerceAtLeast(0))
-                    }
-                    // TOP / BOTTOM 触发没有「左右侧」可言，保持配置里的水平位置。
-                    else -> Unit
-                }
-                // 竖直：以触发高度为中心。
-                if (anchor.rawY > 0f) {
-                    visualTop = (anchor.rawY - visualHeight / 2f).toInt()
-                        .coerceIn(0, (availableHeight - visualHeight).coerceAtLeast(0))
-                }
-            }
-        }
+        // 1. 约束宽度：确保窗口宽度至少 100px，且不超过屏幕宽度
+        val maxAllowedW = screenWidth.coerceAtLeast(100)
+        val w = (layout.widthDp * density).toInt().coerceIn(100, maxAllowedW)
 
-        // 逻辑尺寸 = 可见尺寸 / 补偿；再夹一次屏幕，保证逻辑矩形也不会溢屏。
-        val logicalWidth = (visualWidth / scale).roundToInt().coerceIn(1, displayWidth)
-        val logicalHeight = (visualHeight / scale).roundToInt().coerceIn(1, displayHeight)
-        val bounds = Rect(visualLeft, visualTop, visualLeft + logicalWidth, visualTop + logicalHeight)
+        // 2. 约束高度与底部边距：确保在任何情况下窗口底部绝不侵入 20mm 安全边距
+        val bottomMargin = targetBottomMargin
+        val maxAllowedH = (screenHeight - statusBarHeight - bottomMargin).coerceAtLeast(100)
+        val h = (layout.heightDp * density).toInt().coerceIn(100, maxAllowedH)
 
-        // 一条可诊断日志：用户报"尺寸不生效"时，靠它就能分辨是"被我们夹了"还是"系统没照做"。
+        val anchor = if (followTrigger) FreeWindowTriggerAnchor.peek() else null
+        val left = resolveLeft(isPortrait, layout, density, w, screenWidth, followTrigger, anchor)
+        val top = resolveTop(layout, density, h, screenHeight, statusBarHeight, bottomMargin, followTrigger, anchor)
+
         android.util.Log.d(
             TAG,
-            "launchBounds 屏幕=${displayWidth}x${displayHeight} ${if (isLandscape) "横屏" else "竖屏"} " +
-                "请求=${requestedWidth}x${requestedHeight} scale=$scale " +
-                "上限=${deliverableWidth}x$heightLimit 被夹=${requestedWidth > deliverableWidth}," +
-                "${requestedHeight > heightLimit} 安全底边距=${safeBottomPx}px " +
-                "跟随触发=${settings.freeWindowFollowTriggerSide}",
+            "getRect: left=$left, top=$top, w=$w, h=$h, followTrigger=$followTrigger, isPortrait=$isPortrait",
         )
-        android.util.Log.d(TAG, "launchBounds → $bounds")
-        return bounds
+
+        // 3. 小米 MIUI 13+ / HyperOS 专用缩放补偿（对齐 GestureEVO）
+        if (FreeWindowRomHelper.isMiui13Plus(context)) {
+            val compensation = FreeWindowRomHelper.calculateMiuiCompensation(
+                context, screenWidth, screenHeight, isPortrait,
+            )
+            val launchW = (w * compensation).toInt().coerceAtLeast(100)
+            val launchH = (h * compensation).toInt().coerceAtLeast(100)
+            // MIUI 以左上角为锚点缩放，所以 targetLeft 与 targetTop 直接作为起始边界
+            val miuiBounds = Rect(left, top, left + launchW, top + launchH)
+            android.util.Log.d(TAG, "MIUI compensation=$compensation launchBounds → $miuiBounds")
+            return miuiBounds
+        }
+
+        // 4. 其他系统：保证窗口在屏幕可见区域内
+        val bounds = Rect(left, top, left + w, top + h)
+        val finalBounds = fitRectOnScreen(bounds, screenWidth, screenHeight, statusBarHeight, bottomMargin)
+        android.util.Log.d(TAG, "Standard launchBounds → $finalBounds")
+        return finalBounds
+    }
+
+    private fun resolveLeft(
+        isPortrait: Boolean,
+        layout: FreeWindowLayoutDp,
+        density: Float,
+        widthPx: Int,
+        screenWidth: Int,
+        followTrigger: Boolean,
+        anchor: FreeWindowTriggerAnchor.Anchor?,
+    ): Int {
+        val maxLeft = (screenWidth - widthPx).coerceAtLeast(0)
+        val rawSavedLeft = (layout.leftDp * density).toInt()
+        val savedLeft = rawSavedLeft.coerceIn(0, maxLeft)
+        if (!followTrigger || anchor == null) return savedLeft
+
+        // 判断触发侧（左还是右）
+        val rawX = anchor.rawX
+        val isLeft = when {
+            anchor.side == PanelSide.LEFT -> true
+            anchor.side == PanelSide.RIGHT -> false
+            rawX != null && screenWidth > 0 -> rawX < screenWidth / 2f
+            else -> return savedLeft
+        }
+
+        val edgeMargin = calculateEdgeMargin(
+            isPortrait = isPortrait,
+            savedEdgeMarginDp = layout.edgeMarginDp,
+            rawSavedLeft = rawSavedLeft,
+            widthPx = widthPx,
+            screenWidth = screenWidth,
+            maxLeft = maxLeft,
+            density = density,
+        )
+
+        return if (isLeft) {
+            edgeMargin.coerceIn(0, maxLeft)
+        } else {
+            (screenWidth - widthPx - edgeMargin).coerceIn(0, maxLeft)
+        }
+    }
+
+    private fun calculateEdgeMargin(
+        isPortrait: Boolean,
+        savedEdgeMarginDp: Int,
+        rawSavedLeft: Int,
+        widthPx: Int,
+        screenWidth: Int,
+        maxLeft: Int,
+        density: Float,
+    ): Int {
+        if (savedEdgeMarginDp > 0) {
+            return (savedEdgeMarginDp * density).toInt()
+        }
+        val defaultPortraitLeft = (70 * density).toInt()
+        val defaultLandscapeLeft = (550 * density).toInt()
+        val defaultLandscapeEdgeMargin = (90 * density).toInt()
+
+        if (isPortrait && rawSavedLeft == defaultPortraitLeft) {
+            return defaultPortraitLeft
+        }
+        if (!isPortrait && rawSavedLeft == defaultLandscapeLeft) {
+            return defaultLandscapeEdgeMargin
+        }
+
+        if (rawSavedLeft <= maxLeft) {
+            val rightInset = (screenWidth - rawSavedLeft - widthPx).coerceAtLeast(0)
+            return minOf(rawSavedLeft, rightInset)
+        }
+
+        val fallbackMargin = if (isPortrait) defaultPortraitLeft else defaultLandscapeEdgeMargin
+        return minOf(fallbackMargin, maxLeft / 2)
+    }
+
+    private fun resolveTop(
+        layout: FreeWindowLayoutDp,
+        density: Float,
+        heightPx: Int,
+        screenHeight: Int,
+        statusBarHeight: Int,
+        bottomMargin: Int,
+        followTrigger: Boolean,
+        anchor: FreeWindowTriggerAnchor.Anchor?,
+    ): Int {
+        val maxTop = (screenHeight - heightPx - bottomMargin).coerceAtLeast(statusBarHeight)
+        val defaultTop = ((layout.topDp * density).toInt() + statusBarHeight)
+            .coerceIn(statusBarHeight, maxTop)
+        if (!followTrigger || anchor == null || anchor.rawY <= 0f) return defaultTop
+
+        // 垂直居中对齐触发手势 Y
+        val targetTop = (anchor.rawY - heightPx / 2f).toInt()
+        return targetTop.coerceIn(statusBarHeight, maxTop)
+    }
+
+    private fun fitRectOnScreen(
+        rect: Rect,
+        screenWidth: Int,
+        screenHeight: Int,
+        statusBarHeight: Int,
+        bottomMargin: Int,
+    ): Rect {
+        val width = rect.width().coerceIn(1, screenWidth.coerceAtLeast(1))
+        val maxAllowedH = (screenHeight - statusBarHeight - bottomMargin).coerceAtLeast(100)
+        val height = rect.height().coerceIn(1, maxAllowedH)
+        val left = rect.left.coerceIn(0, (screenWidth - width).coerceAtLeast(0))
+        val maxTop = (screenHeight - height - bottomMargin).coerceAtLeast(statusBarHeight)
+        val top = rect.top.coerceIn(statusBarHeight, maxTop)
+        return Rect(left, top, left + width, top + height)
     }
 
     /** 状态栏高度；拿不到时按 0 处理，安全边距退回 20mm。 */

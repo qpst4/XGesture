@@ -189,6 +189,7 @@ class ActionExecutor(
         FreeWindowTriggerAnchor.record(
             side = resolvedSide,
             rawY = overlayAnchorY ?: anchorRawY ?: gestureTouchDownRawY,
+            rawX = overlayAnchorX ?: anchorRawX ?: gestureTouchDownRawX,
         )
         return when (action) {
             GestureAction.OpenIndex,
@@ -729,7 +730,11 @@ class ActionExecutor(
         panelSide: PanelSide? = null,
     ): Boolean {
         // 蜂窝 / 轮盘 / 圆环里挑应用是直接启动、不经过 execute()，所以在这里补记触发锚点。
-        FreeWindowTriggerAnchor.record(side = panelSide ?: side, rawY = anchorRawY)
+        FreeWindowTriggerAnchor.record(
+            side = panelSide ?: side,
+            rawY = anchorRawY,
+            rawX = anchorRawX,
+        )
         return launchHelper.launchQuickItem(item, settings, longPressArmed, anchorRawY) { action, appSettings, armed, y ->
             // 从圆环/蜂窝/面板里点开的条目同样要知道“当前在哪一侧”，否则打开的面板只能按
             // 宿主默认（左优先）落地：真机反馈右侧圆环里点快速启动器槽位，面板弹到左边。
