@@ -47,8 +47,14 @@ object VolumeControlHelper {
     }
 
     /**
-     * 设置铃声模式。[RingerMode.TOGGLE] 走既有的三模式循环（与快捷工具磁贴一致），
-     * 其余三档是幂等目标态：已经是该档时直接成功。
+     * 应用铃声模式。
+     *
+     * [RingerMode.TOGGLE] 走三档循环；[RingerMode.RING] / [RingerMode.VIBRATE] / [RingerMode.SILENT]
+     * 当**开关**用：不在该档时切到该档，已在该档时再触发一次就退出（见 [RingerMode.resolve]）。
+     * 所以「已经是目标档」不再是 no-op，而是"再按一下关掉"。
+     *
+     * 写完回读校验：部分 ROM 会静默忽略铃声模式写入（与 [applyStreamLevel] 记录的绝对音量
+     * 设置同类：不抛异常、值也不变），成败只能靠回读判断，否则调用方会以为切过去了。
      */
     fun applyRingerMode(context: Context, mode: RingerMode): Boolean {
         if (!hasAccess(context)) {
@@ -57,25 +63,19 @@ object VolumeControlHelper {
             return false
         }
         val manager = audioManager(context) ?: return false
-        val current = manager.ringerMode
-        val target = when (mode) {
-            RingerMode.TOGGLE -> when (current) {
-                AudioManager.RINGER_MODE_NORMAL -> AudioManager.RINGER_MODE_VIBRATE
-                AudioManager.RINGER_MODE_VIBRATE -> AudioManager.RINGER_MODE_SILENT
-                else -> AudioManager.RINGER_MODE_NORMAL
-            }
-            RingerMode.RING -> AudioManager.RINGER_MODE_NORMAL
-            RingerMode.VIBRATE -> AudioManager.RINGER_MODE_VIBRATE
-            RingerMode.SILENT -> AudioManager.RINGER_MODE_SILENT
-        }
-        if (mode != RingerMode.TOGGLE && current == target) return true
-        return runCatching {
+        val target = mode.resolve(manager.ringerMode.toActionRingerMode()).toAudioManagerRingerMode()
+        val applied = runCatching {
             manager.ringerMode = target
-            true
+            manager.ringerMode
         }.getOrElse { error ->
             Log.w(TAG, "apply ringer mode failed: $mode", error)
-            false
+            return false
         }
+        if (applied != target) {
+            Log.w(TAG, "ringer mode not applied: mode=$mode target=$target actual=$applied")
+            return false
+        }
+        return true
     }
 
     /**
@@ -353,6 +353,20 @@ object VolumeControlHelper {
         Stream.RING -> AudioManager.STREAM_RING
         Stream.NOTIFICATION -> AudioManager.STREAM_NOTIFICATION
         Stream.ALARM -> AudioManager.STREAM_ALARM
+    }
+
+    /** `AudioManager.RINGER_MODE_*` → 动作层档位；未知值按「响铃」（与 [readRingerMode] 的兜底一致）。 */
+    private fun Int.toActionRingerMode(): RingerMode = when (this) {
+        AudioManager.RINGER_MODE_VIBRATE -> RingerMode.VIBRATE
+        AudioManager.RINGER_MODE_SILENT -> RingerMode.SILENT
+        else -> RingerMode.RING
+    }
+
+    /** 动作层档位 → `AudioManager.RINGER_MODE_*`；[RingerMode.TOGGLE] 不该走到这里，按响铃兜底。 */
+    private fun RingerMode.toAudioManagerRingerMode(): Int = when (this) {
+        RingerMode.TOGGLE, RingerMode.RING -> AudioManager.RINGER_MODE_NORMAL
+        RingerMode.VIBRATE -> AudioManager.RINGER_MODE_VIBRATE
+        RingerMode.SILENT -> AudioManager.RINGER_MODE_SILENT
     }
 
     private fun Stream.requiresPolicyAccess(): Boolean =

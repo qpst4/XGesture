@@ -2633,7 +2633,7 @@
     <string name="gesture_action_force_landscape_desc">Disable auto-rotation and lock screen to landscape orientation</string>
     <string name="gesture_action_toggle_mute">Ringer silent</string>
     <string name="gesture_action_sound_mode">Sound mode</string>
-    <string name="gesture_action_sound_mode_desc">Cycle ring / vibrate / silent, or set one directly</string>
+    <string name="gesture_action_sound_mode_desc">Cycle ring / vibrate / silent; a chosen mode exits when triggered again</string>
     <string name="ringer_mode_toggle">Cycle</string>
     <string name="ringer_mode_ring">Ring</string>
     <string name="ringer_mode_vibrate">Vibrate</string>

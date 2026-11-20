@@ -1100,7 +1100,7 @@
     <string name="gesture_action_force_landscape_desc">关闭自动旋转并锁定屏幕为横屏方向</string>
     <string name="gesture_action_toggle_mute">响铃静音</string>
     <string name="gesture_action_sound_mode">声音模式</string>
-    <string name="gesture_action_sound_mode_desc">在响铃、振动、静音之间循环，或直接设成某一档</string>
+    <string name="gesture_action_sound_mode_desc">在响铃、振动、静音之间循环；指定某一档后，再触发一次会退出该档</string>
     <string name="ringer_mode_toggle">切换</string>
     <string name="ringer_mode_ring">响铃</string>
     <string name="ringer_mode_vibrate">振动</string>
