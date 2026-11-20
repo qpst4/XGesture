@@ -1609,7 +1609,7 @@
     <string name="gesture_action_toggle_nfc">تبديل NFC</string>
     <string name="gesture_action_toggle_bluetooth">تبديل Bluetooth</string>
     <string name="gesture_action_sound_mode">وضع الصوت</string>
-    <string name="gesture_action_sound_mode_desc">التنقل بين الرنين والاهتزاز والصامت، أو ضبط وضع واحد مباشرة</string>
+    <string name="gesture_action_sound_mode_desc">التنقل بين الرنين والاهتزاز والصامت، والوضع المحدد يُلغى عند التكرار</string>
     <string name="ringer_mode_toggle">تبديل</string>
     <string name="ringer_mode_ring">رنين</string>
     <string name="ringer_mode_vibrate">اهتزاز</string>

@@ -2880,7 +2880,7 @@
     <string name="gesture_action_toggle_nfc">Переключить NFC</string>
     <string name="gesture_action_toggle_bluetooth">Переключить Bluetooth</string>
     <string name="gesture_action_sound_mode">Режим звука</string>
-    <string name="gesture_action_sound_mode_desc">Переключение между звонком, вибрацией и беззвучием или сразу нужный режим</string>
+    <string name="gesture_action_sound_mode_desc">Переключение между звонком, вибрацией и беззвучием; выбранный режим снимается при повторном срабатывании</string>
     <string name="ringer_mode_toggle">Цикл</string>
     <string name="ringer_mode_ring">Звонок</string>
     <string name="ringer_mode_vibrate">Вибрация</string>
