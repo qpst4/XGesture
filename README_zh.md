@@ -44,7 +44,7 @@
 
 [![Download Full APK](https://img.shields.io/badge/下载%20Full%20完整包-内置离线引擎-238636?style=for-the-badge&logo=android&logoColor=white)](https://github.com/qpst4/XGesture/releases/latest)
 [![Download Lite APK](https://img.shields.io/badge/下载%20Lite%20轻量包-体积小巧-0969DA?style=for-the-badge&logo=android&logoColor=white)](https://github.com/qpst4/XGesture/releases/latest)
-[![Get on Obtainium](https://img.shields.io/badge/Obtainium-自动更新订阅-6340E6?style=for-the-badge&logo=android&logoColor=white)](obtainium://app/https://github.com/qpst4/XGesture)
+[![Get on Obtainium](https://img.shields.io/badge/Obtainium-自动更新订阅-6340E6?style=for-the-badge&logo=android&logoColor=white)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.slideindex.app%22%2C%22url%22%3A%22https%3A//github.com/qpst4/XGesture%22%2C%22author%22%3A%22qpst4%22%2C%22name%22%3A%22XGesture%22%7D)
 
 </div>
 

@@ -44,7 +44,7 @@ Easily trigger **50+ system actions** via customizable multi-angle screen-edge s
 
 [![Download Full APK](https://img.shields.io/badge/Download%20Full%20APK-Built--in%20Offline%20Engines-238636?style=for-the-badge&logo=android&logoColor=white)](https://github.com/qpst4/XGesture/releases/latest)
 [![Download Lite APK](https://img.shields.io/badge/Download%20Lite%20APK-Compact%20Size-0969DA?style=for-the-badge&logo=android&logoColor=white)](https://github.com/qpst4/XGesture/releases/latest)
-[![Get on Obtainium](https://img.shields.io/badge/Get%20on%20Obtainium-Auto_Update-6340E6?style=for-the-badge&logo=android&logoColor=white)](obtainium://app/https://github.com/qpst4/XGesture)
+[![Get on Obtainium](https://img.shields.io/badge/Get%20on%20Obtainium-Auto_Update-6340E6?style=for-the-badge&logo=android&logoColor=white)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.slideindex.app%22%2C%22url%22%3A%22https%3A//github.com/qpst4/XGesture%22%2C%22author%22%3A%22qpst4%22%2C%22name%22%3A%22XGesture%22%7D)
 
 </div>
 
