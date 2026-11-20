@@ -54,6 +54,7 @@ import com.slideindex.app.ui.ActionModeMenu
 import com.slideindex.app.ui.actionModeOptions
 import com.slideindex.app.ui.toRingerMode
 import com.slideindex.app.ui.picker.GestureActionCatalogScope
+import com.slideindex.app.ui.picker.withNonePinnedAtTop
 import com.slideindex.app.ui.picker.activityShortcutPickerToggleSection
 import com.slideindex.app.ui.picker.shortcutFolderCardsSection
 import com.slideindex.app.ui.picker.systemShortcutCatalogItems
@@ -333,7 +334,11 @@ fun LazyListScope.quickLauncherAddPickerShortcutItems(
 }
 
 @Composable
-fun rememberQuickLauncherFilteredActions(searchQuery: String): List<GestureAction> {
+fun rememberQuickLauncherFilteredActions(
+    searchQuery: String,
+    /** 槽位单选页传 true：目录本身不含「无」，在过滤前补进去（多选添加页不需要）。 */
+    pinNoneAtTop: Boolean = false,
+): List<GestureAction> {
     val context = LocalContext.current
     val actionOptions = remember {
         GestureActionCatalog.build(
@@ -341,8 +346,11 @@ fun rememberQuickLauncherFilteredActions(searchQuery: String): List<GestureActio
             catalogPolicy = ActionPickerCatalogPolicy.Slot(SlotPickerKind.QuickLauncher),
         )
     }
-    return remember(actionOptions, searchQuery, context) {
-        GestureActionCatalog.filter(context, actionOptions, searchQuery)
+    val options = remember(actionOptions, pinNoneAtTop) {
+        if (pinNoneAtTop) actionOptions.withNonePinnedAtTop() else actionOptions
+    }
+    return remember(options, searchQuery, context) {
+        GestureActionCatalog.filter(context, options, searchQuery)
     }
 }
 

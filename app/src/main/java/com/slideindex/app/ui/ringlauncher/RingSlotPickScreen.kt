@@ -121,7 +121,9 @@ fun RingSlotPickScreen(
 
     val isAppsTabActive = tabs[selectedTab] == QuickLauncherEditorAddTab.APPS
     val isShortcutsTabActive = tabs[selectedTab] == QuickLauncherEditorAddTab.SHORTCUTS
-    val filteredActions = rememberQuickLauncherFilteredActions(searchQuery)
+    // 槽位可以「无」：快捷启动器目录不含 None（多选添加页不需要），在这里补进动作列表，
+    // 与边角轮盘/指尖环等槽位页一致。
+    val filteredActions = rememberQuickLauncherFilteredActions(searchQuery, pinNoneAtTop = true)
     val filteredApps = rememberQuickLauncherFilteredApps(
         apps = apps,
         searchQuery = searchQuery,

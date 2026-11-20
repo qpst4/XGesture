@@ -409,3 +409,13 @@ object GestureActionCatalog {
         GestureAction.Remind,
     )
 }
+
+/**
+ * 把「无」放到列表头（已存在则不重复）。
+ *
+ * 快捷启动器目录不含 [GestureAction.None]：多选「添加条目」页面没有“无”的语义。
+ * 槽位单选页需要它，所以由调用方在**过滤前**补进来 —— 这样搜索时它和其它动作一样
+ * 走标签 / 拼音匹配（例如「wu」），而不是单独判一次文案。
+ */
+fun List<GestureAction>.withNonePinnedAtTop(): List<GestureAction> =
+    if (any { it.type == GestureActionType.NONE }) this else listOf(GestureAction.None) + this
