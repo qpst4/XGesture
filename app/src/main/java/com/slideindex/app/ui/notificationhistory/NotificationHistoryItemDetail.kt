@@ -30,6 +30,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
@@ -43,7 +46,7 @@ import com.slideindex.app.notification.NotificationFilterRule
 import com.slideindex.app.notification.NotificationHistoryItem
 import com.slideindex.app.otp.OtpClipboardHelper
 import com.slideindex.app.ui.Md3PickerAppLeading
-import top.yukonga.miuix.kmp.basic.DropdownDefaults
+import com.slideindex.app.ui.miuix.MiuixGlassDropdownMenu
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
@@ -53,7 +56,6 @@ import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Copy
 import top.yukonga.miuix.kmp.icon.extended.More
-import top.yukonga.miuix.kmp.popup.OverlayDropdownPopup
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private val RowHorizontalPadding = 14.dp
@@ -95,6 +97,7 @@ internal fun NotificationHistoryRow(
 ) {
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
+    var anchorBounds by remember { mutableStateOf(Rect.Zero) }
     val displayTitle = item.title.ifBlank { appInfo?.label ?: item.packageName }
     val channelId = remember(item.id, item.channelId, item.notificationKey, item.postedAtMs) {
         NotificationChannelSupport.resolveChannelId(item)
@@ -203,6 +206,11 @@ internal fun NotificationHistoryRow(
                             end = Offset(lineX, bottom),
                             strokeWidth = 1.dp.toPx(),
                         )
+                    }
+                }
+                .onGloballyPositioned {
+                    if (anchorBounds == Rect.Zero) {
+                        anchorBounds = it.boundsInWindow()
                     }
                 }
                 .combinedClickable(
@@ -322,7 +330,9 @@ internal fun NotificationHistoryRow(
             } else {
                 IconButton(
                     onClick = { showMenu = true },
-                    modifier = Modifier.size(30.dp),
+                    modifier = Modifier
+                        .size(30.dp)
+                        .onGloballyPositioned { anchorBounds = it.boundsInWindow() },
                 ) {
                     Icon(
                         imageVector = MiuixIcons.Medium.More,
@@ -333,14 +343,11 @@ internal fun NotificationHistoryRow(
                 }
             }
         }
-        OverlayDropdownPopup(
-            entries = listOf(menuEntry),
-            show = showMenu,
-            onDismiss = { showMenu = false },
-            onDismissFinished = {},
-            maxHeight = null,
-            dropdownColors = DropdownDefaults.dropdownColors(),
-            renderInRootScaffold = true,
+        MiuixGlassDropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false },
+            anchorBounds = anchorBounds,
+            items = menuEntry.items,
         )
     }
 }
