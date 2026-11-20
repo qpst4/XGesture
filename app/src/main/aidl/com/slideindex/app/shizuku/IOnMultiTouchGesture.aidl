@@ -26,13 +26,17 @@ oneway interface IOnMultiTouchGesture {
      * @param eventTimeMs 观察进程的单调时钟（elapsedRealtime）
      * @param anchorU 面板自然坐标里的横向位置（0..1）
      * @param anchorV 面板自然坐标里的纵向位置（0..1）
+     * @param startU 本次触摸**起点**的横向位置（0..1，屏幕归一化）
+     * @param startV 本次触摸**起点**的纵向位置（0..1）
      */
     void onGestureBatch(
         in int[] kinds,
         in int[] fingerCounts,
         long eventTimeMs,
         float anchorU,
-        float anchorV
+        float anchorV,
+        float startU,
+        float startV
     );
 
     /** 观察器状态变化（启动 / 停止 / 找不到触摸屏 / 读取出错）。 */
@@ -45,6 +49,8 @@ oneway interface IOnMultiTouchGesture {
      * @param strokeLengths 每条轨迹的点数（按顺序切分 [points]）
      * @param anchorU 面板自然坐标里的横向位置（0..1），整条路径的质心
      * @param anchorV 面板自然坐标里的纵向位置（0..1）
+     * @param startU 本次触摸起点的横向位置（0..1，屏幕归一化）
+     * @param startV 本次触摸起点的纵向位置（0..1）
      */
     void onPathGesture(
         int fingerCount,
@@ -52,7 +58,9 @@ oneway interface IOnMultiTouchGesture {
         in int[] strokeLengths,
         long eventTimeMs,
         float anchorU,
-        float anchorV
+        float anchorV,
+        float startU,
+        float startV
     );
 
     /**

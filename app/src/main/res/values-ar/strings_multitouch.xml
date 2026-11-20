@@ -26,6 +26,7 @@
     <string name="multitouch_edit_title">تعديل الإيماءة</string>
     <string name="multitouch_edit_rerecord_hint">اضغط على المعاينة أعلاه لإعادة تسجيل الإيماءة</string>
     <string name="multitouch_entry_label">%1$d أصابع · %2$s</string>
+    <string name="multitouch_entry_label_area">%1$d أصابع · %2$s · %3$s</string>
     <string name="multitouch_delete">حذف</string>
     <string name="multitouch_done">تم</string>
     <string name="multitouch_hint">لا يعترض وضع المراقبة الأحداث: سيظل التطبيق يتلقى الإيماءة نفسها عند تنفيذها.\nيلزم إعادة تفويض Shizuku وتشغيله بعد إعادة التشغيل؛ الإيماءات بعدد أصابع قليل تتعارض عادةً مع إيماءات التطبيق نفسه.</string>
@@ -96,8 +97,7 @@
     <!-- إعدادات: شروط البدء العامة (مطابقة GMD) -->
     <string name="multitouch_trigger_area_title">منطقة البدء</string>
     <string name="multitouch_trigger_keyboard_title">عند ظهور لوحة المفاتيح</string>
-    <string name="multitouch_trigger_anywhere">أي مكان</string>
-    <string name="multitouch_trigger_middle">الوسط</string>
+    <string name="multitouch_trigger_anywhere">الشاشة كاملة</string>
     <string name="multitouch_trigger_top">النصف العلوي</string>
     <string name="multitouch_trigger_bottom">النصف السفلي</string>
     <string name="multitouch_keyboard_blocked">تعطيل الإيماءات</string>

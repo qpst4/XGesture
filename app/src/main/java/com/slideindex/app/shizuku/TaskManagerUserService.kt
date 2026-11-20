@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.Keep
 import androidx.annotation.StringRes
-import com.slideindex.app.gesture.multitouch.CollectedPath
 import com.slideindex.app.gesture.multitouch.TouchAnchor
 import com.slideindex.app.gesture.multitouch.TouchDisplayTransform
 import com.slideindex.app.multitouch.EvdevTouchObserver
@@ -43,17 +42,9 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
     @Volatile
     private var touchDevices: Array<String> = emptyArray()
 
-    /** 全局触发条件（GMD 式）：0 任何地方 / 1 中 / 2 上半 / 3 下半。 */
-    @Volatile
-    private var triggerArea: Int = MultiTouchTriggerFilter.AREA_ANYWHERE
-
-    /** 键盘可见时的策略：0 禁用 / 1 键盘上方 / 2 所有区域。 */
+    /** 键盘可见时的策略：0 禁用 / 1 键盘上方 / 2 所有区域（全局一条）。 */
     @Volatile
     private var keyboardBehavior: Int = MultiTouchTriggerFilter.KEYBOARD_ABOVE
-
-    /** 边缘带宽度（像素），由 app 按 5mm 换算后推过来。 */
-    @Volatile
-    private var triggerBorderPx: Int = 0
 
     private val keyboardMonitorLazy = lazy {
         KeyboardInsetsMonitor(
@@ -108,70 +99,40 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
         devicePathOverride = devicePath ?: ""
     }
 
-    /** 全局触发条件：区域 + 键盘策略 + 边缘带宽度（对齐 GMD，所有手势共用）。 */
+    /**
+     * 键盘策略（全局一条）。
+     *
+     * 区域判定已下沉到 app（每个手势自带生效区域），所以 area / borderPx 只保留签名兼容，
+     * 不再参与判定。
+     */
     override fun setMultiTouchTrigger(area: Int, keyboardBehavior: Int, borderPx: Int) {
-        triggerArea = area.coerceIn(
-            MultiTouchTriggerFilter.AREA_ANYWHERE,
-            MultiTouchTriggerFilter.AREA_BOTTOM,
-        )
         this.keyboardBehavior = keyboardBehavior.coerceIn(
             MultiTouchTriggerFilter.KEYBOARD_BLOCKED,
             MultiTouchTriggerFilter.KEYBOARD_EVERYWHERE,
         )
-        triggerBorderPx = borderPx.coerceAtLeast(0)
     }
 
     /**
-     * 触发条件判定：区域 + 键盘（对齐 GMD）。
+     * 键盘门控：键盘可见且策略不是"所有区域"时，按起点是否压在 IME 矩形内决定放不放行。
      *
-     * - 几何手势：区域与键盘都只看起点；
-     * - 绘制手势（[path] 非空）：区域按 GMD 语义看整条轨迹（任意点命中），键盘仍看起点。
+     * 区域是每个手势自己的属性，由 app 按条目判定，这里不处理。
      */
-    private fun acceptsTrigger(start: TouchAnchor?, path: List<TouchAnchor>? = null): Boolean {
-        val transform = displayTransform
-        val keyboard = runCatching { keyboardMonitor.snapshot() }.getOrNull()
-        return MultiTouchTriggerFilter.accepts(
-            area = triggerArea,
-            keyboardBehavior = keyboardBehavior,
-            start = start,
-            path = path,
-            widthPx = transform.screenWidthPx,
-            heightPx = transform.screenHeightPx,
-            borderPx = triggerBorderPx,
-            keyboardVisible = keyboard?.visible == true,
-            keyboardHasBounds = keyboard?.hasBounds() == true,
-            keyboardBounds = MultiTouchTriggerFilter.KeyboardRect(
-                left = keyboard?.bounds?.left ?: 0,
-                top = keyboard?.bounds?.top ?: 0,
-                right = keyboard?.bounds?.right ?: 0,
-                bottom = keyboard?.bounds?.bottom ?: 0,
-            ),
-            displayWidth = keyboard?.displayBounds?.width() ?: 0,
-            displayHeight = keyboard?.displayBounds?.height() ?: 0,
+    private fun acceptsKeyboard(start: TouchAnchor?): Boolean {
+        val anchor = start ?: return true
+        val keyboard = runCatching { keyboardMonitor.snapshot() }.getOrNull() ?: return true
+        return MultiTouchTriggerFilter.keyboardAllows(
+            behavior = keyboardBehavior,
+            startU = anchor.u,
+            startV = anchor.v,
+            visible = keyboard.visible,
+            hasBounds = keyboard.hasBounds(),
+            left = keyboard.bounds.left,
+            top = keyboard.bounds.top,
+            right = keyboard.bounds.right,
+            bottom = keyboard.bounds.bottom,
+            displayWidth = keyboard.displayBounds.width(),
+            displayHeight = keyboard.displayBounds.height(),
         )
-    }
-
-    /**
-     * 把路径手势的采样点换算成屏幕归一化锚点（u 按屏宽、v 按屏高）。
-     *
-     * 轨迹点与观察器里的触点用同一套归一化（x、y 都除以屏高），所以 `u = x · H / W`。
-     * 显示状态还没推过来（transform 无效）时返回 null：路径区域判定跳过，行为退回只看起点。
-     */
-    private fun pathAnchors(path: CollectedPath): List<TouchAnchor>? {
-        val transform = displayTransform
-        val width = transform.screenWidthPx.toFloat()
-        if (!transform.valid || width <= 0f) return null
-        val scale = transform.screenHeightPx.toFloat() / width
-        val anchors = ArrayList<TouchAnchor>(path.strokes.size * 8)
-        for (stroke in path.strokes) {
-            for (point in stroke.points) {
-                anchors += TouchAnchor(
-                    u = (point.x * scale).coerceIn(0f, 1f),
-                    v = point.y.coerceIn(0f, 1f),
-                )
-            }
-        }
-        return anchors.ifEmpty { null }
     }
 
     override fun getMultiTouchDiagnostics(): String = multitouchDiagnostics
@@ -190,7 +151,7 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
             onDiagnostics = { multitouchDiagnostics = it },
             onDevices = { touchDevices = it.toTypedArray() },
             onGesture = { gestures, eventTimeMs, anchor, startAnchor ->
-                if (acceptsTrigger(startAnchor)) {
+                if (acceptsKeyboard(startAnchor)) {
                     runCatching {
                         Log.i(
                             "MultiTouchBridge",
@@ -204,12 +165,14 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
                             eventTimeMs,
                             anchor.u,
                             anchor.v,
+                            startAnchor?.u ?: Float.NaN,
+                            startAnchor?.v ?: Float.NaN,
                         )
                     }
                 }
             },
             onPathGesture = { path, eventTimeMs, anchor, startAnchor ->
-                if (acceptsTrigger(startAnchor, pathAnchors(path))) {
+                if (acceptsKeyboard(startAnchor)) {
                     val coordinates = ArrayList<Float>()
                     val strokeLengths = IntArray(path.strokes.size)
                     path.strokes.forEachIndexed { index, stroke ->
@@ -227,6 +190,8 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
                             eventTimeMs,
                             anchor.u,
                             anchor.v,
+                            startAnchor?.u ?: Float.NaN,
+                            startAnchor?.v ?: Float.NaN,
                         )
                     }
                 }
@@ -266,8 +231,8 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
      * root 模式：启动观察器，事件进队列，由 app 轮询取走。
      *
      * 事件格式（`u`/`v` 是面板自然坐标 0..1，见 [IOnMultiTouchGesture]）：
-     * - `g:<手势 ordinal>:<触点数>:<u>:<v>`
-     * - `p:<触点数>:<u>:<v>:<轨迹>`（轨迹里没有冒号，可以直接按 limit 切）
+     * - `g:<手势 ordinal>:<触点数>:<u>:<v>:<起点u>:<起点v>`
+     * - `p:<触点数>:<u>:<v>:<起点u>:<起点v>:<轨迹>`（轨迹里没有冒号，可以直接按 limit 切）
      */
     override fun startMultiTouchPolling(pathPriority: Boolean): Boolean {
         stopMultiTouchPolling()
@@ -278,17 +243,21 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
             onDiagnostics = { multitouchDiagnostics = it },
             onDevices = { touchDevices = it.toTypedArray() },
             onGesture = { gestures, _, anchor, startAnchor ->
-                if (acceptsTrigger(startAnchor)) {
+                if (acceptsKeyboard(startAnchor)) {
+                    val startU = startAnchor?.u ?: Float.NaN
+                    val startV = startAnchor?.v ?: Float.NaN
                     for (gesture in gestures) {
                         pollingEvents += "g:${gesture.gesture.ordinal}:${gesture.fingerCount}:" +
-                            "${anchor.u}:${anchor.v}"
+                            "${anchor.u}:${anchor.v}:$startU:$startV"
                     }
                 }
             },
             onPathGesture = { path, _, anchor, startAnchor ->
-                if (acceptsTrigger(startAnchor, pathAnchors(path))) {
+                if (acceptsKeyboard(startAnchor)) {
+                    val startU = startAnchor?.u ?: Float.NaN
+                    val startV = startAnchor?.v ?: Float.NaN
                     pollingEvents += "p:${path.fingerCount}:${anchor.u}:${anchor.v}:" +
-                        encodePathStrokes(path.strokes)
+                        "$startU:$startV:" + encodePathStrokes(path.strokes)
                 }
             },
             onState = { _, detail ->

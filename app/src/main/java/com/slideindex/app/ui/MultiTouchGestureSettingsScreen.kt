@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
 import com.slideindex.app.gesture.multitouch.MultiTouchGestureEntry
+import com.slideindex.app.gesture.multitouch.MultiTouchTriggerArea
 import com.slideindex.app.multitouch.MultiTouchGestureSettings
 import com.slideindex.app.multitouch.MultiTouchStatus
 import com.slideindex.app.multitouch.encodePathStrokes
@@ -114,7 +115,7 @@ fun MultiTouchGestureSettingsScreen(
     onRefreshDiagnostics: () -> Unit = {},
     onRefreshTouchDevices: () -> Unit = {},
     onDevicePathChange: (String) -> Unit = {},
-    onTriggerAreaChange: (String) -> Unit = {},
+    onEntryAreaChange: (entryId: String, areaKey: String) -> Unit = { _, _ -> },
     onKeyboardBehaviorChange: (String) -> Unit = {},
     onRetry: () -> Unit,
     onOpenActionPick: (MultiPointerGesture, Int, String, String) -> Unit = { _, _, _, _ -> },
@@ -126,7 +127,6 @@ fun MultiTouchGestureSettingsScreen(
     var pendingKind by remember { mutableStateOf<MultiPointerGesture?>(null) }
     var editingEntry by remember { mutableStateOf<MultiTouchGestureEntry?>(null) }
     var showDiagnostics by remember { mutableStateOf(false) }
-    var showTriggerAreaPicker by remember { mutableStateOf(false) }
     var showKeyboardPicker by remember { mutableStateOf(false) }
 
     // 打开状态/诊断 sheet 时取一次；协议或设备切换会重启观察器，延时再刷新。
@@ -251,16 +251,6 @@ fun MultiTouchGestureSettingsScreen(
         groupedCardItems(
             keyPrefix = "multitouch-trigger",
             items = buildList {
-                add(
-                    settingsCardScopeItem("multitouch-trigger-area") {
-                        MiuixNavigationRow(
-                            title = stringResource(R.string.multitouch_trigger_area_title),
-                            summary = triggerAreaLabel(settings.triggerArea),
-                            enabled = settings.enabled,
-                            onClick = { showTriggerAreaPicker = true },
-                        )
-                    }
-                )
                 add(
                     settingsCardScopeItem("multitouch-trigger-keyboard") {
                         MiuixNavigationRow(
@@ -502,31 +492,6 @@ fun MultiTouchGestureSettingsScreen(
     }
 
     MiuixBottomSheet(
-        show = showTriggerAreaPicker,
-        title = stringResource(R.string.multitouch_trigger_area_title),
-        onDismissRequest = { showTriggerAreaPicker = false },
-    ) {
-        Card(
-            modifier = Modifier.padding(bottom = 16.dp),
-            colors = CardDefaults.defaultColors(
-                color = MiuixTheme.colorScheme.secondaryContainer,
-            ),
-        ) {
-            MultiTouchGestureSettings.triggerAreaOptions.forEach { area ->
-                RadioButtonPreference(
-                    title = triggerAreaLabel(area),
-                    selected = settings.triggerArea == area,
-                    onClick = {
-                        showTriggerAreaPicker = false
-                        onTriggerAreaChange(area)
-                    },
-                    radioButtonLocation = RadioButtonLocation.End,
-                )
-            }
-        }
-    }
-
-    MiuixBottomSheet(
         show = showKeyboardPicker,
         title = stringResource(R.string.multitouch_trigger_keyboard_title),
         onDismissRequest = { showKeyboardPicker = false },
@@ -599,6 +564,23 @@ fun MultiTouchGestureSettingsScreen(
                     },
                 )
                 Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = stringResource(R.string.multitouch_trigger_area_title),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                SegmentedControl(
+                    items = MultiTouchTriggerArea.entries.map { it.key },
+                    selected = editing.triggerArea.key,
+                    labelRes = ::triggerAreaLabelRes,
+                    onSelect = { key ->
+                        val area = MultiTouchTriggerArea.fromKey(key)
+                        editingEntry = editing.copy(triggerArea = area)
+                        onEntryAreaChange(editing.id, key)
+                    },
+                )
+                Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -643,9 +625,10 @@ private fun EntryRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(
-                    R.string.multitouch_entry_label,
+                    R.string.multitouch_entry_label_area,
                     entry.fingerCount,
                     entry.kind.displayName(),
+                    triggerAreaLabel(entry.triggerArea.key),
                 ),
                 style = MaterialTheme.typography.bodyLarge,
             )
@@ -822,16 +805,17 @@ private fun multiTouchStatusDetail(status: MultiTouchStatus, enabled: Boolean): 
     return base + stringResource(R.string.multitouch_detail_conflict, name)
 }
 
+/** 触发区域（GMD 四档）的字符串资源。 */
+private fun triggerAreaLabelRes(areaKey: String): Int = when (areaKey) {
+    MultiTouchTriggerArea.TOP.key -> R.string.multitouch_trigger_top
+    MultiTouchTriggerArea.BOTTOM.key -> R.string.multitouch_trigger_bottom
+    else -> R.string.multitouch_trigger_anywhere
+}
+
 /** 触发区域（GMD 四档）的显示名。 */
 @Composable
-internal fun triggerAreaLabel(area: String): String = stringResource(
-    when (area) {
-        MultiTouchGestureSettings.TRIGGER_MIDDLE -> R.string.multitouch_trigger_middle
-        MultiTouchGestureSettings.TRIGGER_TOP -> R.string.multitouch_trigger_top
-        MultiTouchGestureSettings.TRIGGER_BOTTOM -> R.string.multitouch_trigger_bottom
-        else -> R.string.multitouch_trigger_anywhere
-    },
-)
+internal fun triggerAreaLabel(areaKey: String): String =
+    stringResource(triggerAreaLabelRes(areaKey))
 
 /** 键盘可见时策略（GMD 三档）的显示名。 */
 @Composable

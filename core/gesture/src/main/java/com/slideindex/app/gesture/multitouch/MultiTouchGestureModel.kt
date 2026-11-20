@@ -47,13 +47,27 @@ enum class MultiPointerGesture {
     }
 }
 
-/** 手势条目：类型 + 接触点数 + 动作；`PATH` 额外带录制轨迹。 */
+/** 手势的生效区域：手势起点（绘制手势为轨迹任意点）落在该区域才触发。 */
+enum class MultiTouchTriggerArea(val key: String) {
+    ANYWHERE("anywhere"),
+    TOP("top"),
+    BOTTOM("bottom"),
+    ;
+
+    companion object {
+        fun fromKey(raw: String?): MultiTouchTriggerArea =
+            entries.firstOrNull { it.key == raw } ?: ANYWHERE
+    }
+}
+
+/** 手势条目：类型 + 接触点数 + 动作 + 生效区域；`PATH` 额外带录制轨迹。 */
 data class MultiTouchGestureEntry(
     val id: String,
     val kind: MultiPointerGesture,
     val fingerCount: Int,
     val action: GestureAction,
     val pathStrokes: List<PathStroke> = emptyList(),
+    val triggerArea: MultiTouchTriggerArea = MultiTouchTriggerArea.ANYWHERE,
 ) {
     val isPath: Boolean get() = kind == MultiPointerGesture.PATH
 }

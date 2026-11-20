@@ -26,6 +26,7 @@
     <string name="multitouch_edit_title">ジェスチャーを編集</string>
     <string name="multitouch_edit_rerecord_hint">上のプレビューをタップすると録り直せます</string>
     <string name="multitouch_entry_label">%1$d 本の指 · %2$s</string>
+    <string name="multitouch_entry_label_area">%1$d 本の指 · %2$s · %3$s</string>
     <string name="multitouch_delete">削除</string>
     <string name="multitouch_done">完了</string>
     <string name="multitouch_hint">観察モードはイベントを遮断しません。ジェスチャーの実行時もアプリは同じジェスチャーを受け取ります。\nShizuku は再起動後に再認証／再起動が必要です。指の数が少ないジェスチャーはアプリ自身のジェスチャーと競合しやすくなります。</string>
@@ -96,8 +97,7 @@
     <!-- 設定画面：グローバル開始条件（GMD 準拠） -->
     <string name="multitouch_trigger_area_title">開始領域</string>
     <string name="multitouch_trigger_keyboard_title">キーボード表示時</string>
-    <string name="multitouch_trigger_anywhere">どこでも</string>
-    <string name="multitouch_trigger_middle">中央</string>
+    <string name="multitouch_trigger_anywhere">全画面</string>
     <string name="multitouch_trigger_top">上半分</string>
     <string name="multitouch_trigger_bottom">下半分</string>
     <string name="multitouch_keyboard_blocked">ジェスチャーを無効化</string>

@@ -19,6 +19,7 @@
     <string name="multitouch_edit_title">Editar gesto</string>
     <string name="multitouch_edit_rerecord_hint">Pulse la vista previa anterior para grabar el gesto de nuevo</string>
     <string name="multitouch_entry_label">Dedos %1$d·%2$s</string>
+    <string name="multitouch_entry_label_area">Dedos %1$d·%2$s·%3$s</string>
     <string name="multitouch_delete">Eliminar</string>
     <string name="multitouch_done">Listo</string>
     <string name="multitouch_hint">El modo de observador nunca intercepta eventos: la aplicación todavía recibe el mismo gesto cuando se dispara.\nShizuku debe ser autorizado y comenzar de nuevo después de un reinicio; gestos con pocos dedos fácilmente conflicto con los propios gestos de la aplicación.</string>
@@ -84,8 +85,7 @@
     <!-- Ajustes: condiciones de inicio globales (como GMD) -->
     <string name="multitouch_trigger_area_title">Área de inicio</string>
     <string name="multitouch_trigger_keyboard_title">Cuando el teclado está visible</string>
-    <string name="multitouch_trigger_anywhere">Cualquier lugar</string>
-    <string name="multitouch_trigger_middle">Centro</string>
+    <string name="multitouch_trigger_anywhere">Pantalla completa</string>
     <string name="multitouch_trigger_top">Mitad superior</string>
     <string name="multitouch_trigger_bottom">Mitad inferior</string>
     <string name="multitouch_keyboard_blocked">Desactivar gestos</string>

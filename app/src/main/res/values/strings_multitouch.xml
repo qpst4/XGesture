@@ -26,6 +26,7 @@
     <string name="multitouch_edit_title">Edit gesture</string>
     <string name="multitouch_edit_rerecord_hint">Tap the preview above to record the gesture again</string>
     <string name="multitouch_entry_label">%1$d fingers · %2$s</string>
+    <string name="multitouch_entry_label_area">%1$d fingers · %2$s · %3$s</string>
     <string name="multitouch_delete">Delete</string>
     <string name="multitouch_done">Done</string>
     <string name="multitouch_hint">Observer mode never intercepts events: the app still receives the same gesture when it fires.\nShizuku must be authorized and started again after a restart; gestures with few fingers easily conflict with the app own gestures.</string>
@@ -96,8 +97,7 @@
     <!-- 设置页：全局触发条件（对齐 GMD） -->
     <string name="multitouch_trigger_area_title">Trigger area</string>
     <string name="multitouch_trigger_keyboard_title">When the keyboard is visible</string>
-    <string name="multitouch_trigger_anywhere">Anywhere</string>
-    <string name="multitouch_trigger_middle">Middle</string>
+    <string name="multitouch_trigger_anywhere">Full screen</string>
     <string name="multitouch_trigger_top">Top half</string>
     <string name="multitouch_trigger_bottom">Bottom half</string>
     <string name="multitouch_keyboard_blocked">Disable gestures</string>

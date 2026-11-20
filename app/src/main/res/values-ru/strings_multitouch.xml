@@ -26,6 +26,7 @@
     <string name="multitouch_edit_title">Изменить жест</string>
     <string name="multitouch_edit_rerecord_hint">Нажмите на превью выше, чтобы записать жест заново</string>
     <string name="multitouch_entry_label">Пальцев: %1$d · %2$s</string>
+    <string name="multitouch_entry_label_area">Пальцев: %1$d · %2$s · %3$s</string>
     <string name="multitouch_delete">Удалить</string>
     <string name="multitouch_done">Готово</string>
     <string name="multitouch_hint">Режим наблюдения не перехватывает события: при срабатывании жеста приложение всё равно получит тот же жест.\nПосле перезапуска Shizuku нужна повторная авторизация и запуск; жесты с малым числом пальцев часто конфликтуют с жестами самого приложения.</string>
@@ -96,8 +97,7 @@
     <!-- 设置页：全局触发条件（对齐 GMD） -->
     <string name="multitouch_trigger_area_title">Область запуска</string>
     <string name="multitouch_trigger_keyboard_title">Когда клавиатура видна</string>
-    <string name="multitouch_trigger_anywhere">В любом месте</string>
-    <string name="multitouch_trigger_middle">Центр</string>
+    <string name="multitouch_trigger_anywhere">Весь экран</string>
     <string name="multitouch_trigger_top">Верхняя половина</string>
     <string name="multitouch_trigger_bottom">Нижняя половина</string>
     <string name="multitouch_keyboard_blocked">Отключить жесты</string>

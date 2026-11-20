@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
+import com.slideindex.app.gesture.multitouch.MultiTouchTriggerArea
 import com.slideindex.app.multitouch.MultiTouchGestureCoordinator
 import com.slideindex.app.multitouch.MultiTouchGestureSettingsStore
 import com.slideindex.app.multitouch.decodePathStrokes
@@ -42,9 +43,9 @@ class MultiTouchGestureViewModel @Inject constructor(
         settingsStore.setDevicePath(path)
     }
 
-    /** 全局触发区域：anywhere / middle / top / bottom（对齐 GMD）。 */
-    fun setTriggerArea(area: String) {
-        settingsStore.setTriggerArea(area)
+    /** 修改某个手势的生效区域：anywhere / middle / top / bottom。 */
+    fun setEntryArea(entryId: String, areaKey: String) {
+        settingsStore.setEntryArea(entryId, MultiTouchTriggerArea.fromKey(areaKey))
     }
 
     /** 键盘可见时的策略：blocked / above / everywhere（对齐 GMD）。 */

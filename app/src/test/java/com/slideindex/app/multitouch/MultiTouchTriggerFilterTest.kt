@@ -1,5 +1,6 @@
 package com.slideindex.app.multitouch
 
+import com.slideindex.app.gesture.multitouch.MultiTouchTriggerArea
 import com.slideindex.app.gesture.multitouch.TouchAnchor
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -14,18 +15,17 @@ class MultiTouchTriggerFilterTest {
 
     private val width = 1000
     private val height = 2000
-    private val border = 50
 
     @Test
     fun `anywhere accepts every start point`() {
         assertTrue(
             MultiTouchTriggerFilter.areaAllows(
-                MultiTouchTriggerFilter.AREA_ANYWHERE, 0f, 0f, width, height, border,
+                MultiTouchTriggerFilter.AREA_ANYWHERE, 0f, 0f, width, height,
             ),
         )
         assertTrue(
             MultiTouchTriggerFilter.areaAllows(
-                MultiTouchTriggerFilter.AREA_ANYWHERE, 1f, 1f, width, height, border,
+                MultiTouchTriggerFilter.AREA_ANYWHERE, 1f, 1f, width, height,
             ),
         )
     }
@@ -34,17 +34,17 @@ class MultiTouchTriggerFilterTest {
     fun `top half uses the start height`() {
         assertTrue(
             MultiTouchTriggerFilter.areaAllows(
-                MultiTouchTriggerFilter.AREA_TOP, 0.5f, 0.4f, width, height, border,
+                MultiTouchTriggerFilter.AREA_TOP, 0.5f, 0.4f, width, height,
             ),
         )
         assertTrue(
             MultiTouchTriggerFilter.areaAllows(
-                MultiTouchTriggerFilter.AREA_TOP, 0.5f, 0.5f, width, height, border,
+                MultiTouchTriggerFilter.AREA_TOP, 0.5f, 0.5f, width, height,
             ),
         )
         assertFalse(
             MultiTouchTriggerFilter.areaAllows(
-                MultiTouchTriggerFilter.AREA_TOP, 0.5f, 0.51f, width, height, border,
+                MultiTouchTriggerFilter.AREA_TOP, 0.5f, 0.51f, width, height,
             ),
         )
     }
@@ -53,48 +53,12 @@ class MultiTouchTriggerFilterTest {
     fun `bottom half uses the start height`() {
         assertFalse(
             MultiTouchTriggerFilter.areaAllows(
-                MultiTouchTriggerFilter.AREA_BOTTOM, 0.5f, 0.49f, width, height, border,
+                MultiTouchTriggerFilter.AREA_BOTTOM, 0.5f, 0.49f, width, height,
             ),
         )
         assertTrue(
             MultiTouchTriggerFilter.areaAllows(
-                MultiTouchTriggerFilter.AREA_BOTTOM, 0.5f, 0.51f, width, height, border,
-            ),
-        )
-    }
-
-    @Test
-    fun `middle means away from every edge`() {
-        assertTrue(
-            MultiTouchTriggerFilter.areaAllows(
-                MultiTouchTriggerFilter.AREA_MIDDLE, 0.5f, 0.5f, width, height, border,
-            ),
-        )
-        // 贴左边（x < border）
-        assertFalse(
-            MultiTouchTriggerFilter.areaAllows(
-                MultiTouchTriggerFilter.AREA_MIDDLE, 0.04f, 0.5f, width, height, border,
-            ),
-        )
-        // 贴下边（y > height - border）
-        assertFalse(
-            MultiTouchTriggerFilter.areaAllows(
-                MultiTouchTriggerFilter.AREA_MIDDLE, 0.5f, 0.98f, width, height, border,
-            ),
-        )
-        // 边缘带内边界：x = width - border 不算「中」
-        assertFalse(
-            MultiTouchTriggerFilter.areaAllows(
-                MultiTouchTriggerFilter.AREA_MIDDLE, 0.95f, 0.5f, width, height, border,
-            ),
-        )
-    }
-
-    @Test
-    fun `middle does not block when screen size is unknown`() {
-        assertTrue(
-            MultiTouchTriggerFilter.areaAllows(
-                MultiTouchTriggerFilter.AREA_MIDDLE, 0f, 0f, 0, 0, border,
+                MultiTouchTriggerFilter.AREA_BOTTOM, 0.5f, 0.51f, width, height,
             ),
         )
     }
@@ -178,7 +142,6 @@ class MultiTouchTriggerFilterTest {
 
     @Test
     fun `string ids round trip`() {
-        assertTrue(MultiTouchTriggerFilter.areaId("middle") == MultiTouchTriggerFilter.AREA_MIDDLE)
         assertTrue(MultiTouchTriggerFilter.areaId("top") == MultiTouchTriggerFilter.AREA_TOP)
         assertTrue(MultiTouchTriggerFilter.areaId("bottom") == MultiTouchTriggerFilter.AREA_BOTTOM)
         assertTrue(
@@ -219,7 +182,6 @@ class MultiTouchTriggerFilterTest {
         path = path,
         widthPx = width,
         heightPx = height,
-        borderPx = border,
         keyboardVisible = keyboard.visible,
         keyboardHasBounds = keyboard.hasBounds,
         keyboardBounds = MultiTouchTriggerFilter.KeyboardRect(
@@ -342,5 +304,58 @@ class MultiTouchTriggerFilterTest {
                 keyboard = keyboardShownNoBounds,
             ),
         )
+    }
+
+    // ---- 每个手势自己的生效区域 ----
+
+    @Test
+    fun `any-point area check hits when one sample is inside`() {
+        val points = listOf(
+            TouchAnchor(0.5f, 0.8f),
+            TouchAnchor(0.5f, 0.6f),
+            TouchAnchor(0.5f, 0.3f),
+        )
+        assertTrue(
+            MultiTouchTriggerFilter.areaAllowsAny(
+                MultiTouchTriggerFilter.AREA_TOP,
+                points,
+                width,
+                height,
+            ),
+        )
+        assertFalse(
+            MultiTouchTriggerFilter.areaAllowsAny(
+                MultiTouchTriggerFilter.AREA_BOTTOM,
+                listOf(TouchAnchor(0.5f, 0.3f)),
+                width,
+                height,
+            ),
+        )
+    }
+
+    @Test
+    fun `trigger area enum maps to filter ids`() {
+        assertTrue(
+            MultiTouchTriggerFilter.areaId(MultiTouchTriggerArea.ANYWHERE) ==
+                MultiTouchTriggerFilter.AREA_ANYWHERE,
+        )
+        assertTrue(
+            MultiTouchTriggerFilter.areaId(MultiTouchTriggerArea.TOP) ==
+                MultiTouchTriggerFilter.AREA_TOP,
+        )
+        assertTrue(
+            MultiTouchTriggerFilter.areaId(MultiTouchTriggerArea.BOTTOM) ==
+                MultiTouchTriggerFilter.AREA_BOTTOM,
+        )
+    }
+
+    @Test
+    fun `trigger area key round trip falls back to anywhere`() {
+        assertTrue(MultiTouchTriggerArea.fromKey("top") == MultiTouchTriggerArea.TOP)
+        assertTrue(MultiTouchTriggerArea.fromKey("bottom") == MultiTouchTriggerArea.BOTTOM)
+        assertTrue(MultiTouchTriggerArea.fromKey("middle") == MultiTouchTriggerArea.ANYWHERE)
+        assertTrue(MultiTouchTriggerArea.fromKey("anywhere") == MultiTouchTriggerArea.ANYWHERE)
+        assertTrue(MultiTouchTriggerArea.fromKey("nope") == MultiTouchTriggerArea.ANYWHERE)
+        assertTrue(MultiTouchTriggerArea.fromKey(null) == MultiTouchTriggerArea.ANYWHERE)
     }
 }

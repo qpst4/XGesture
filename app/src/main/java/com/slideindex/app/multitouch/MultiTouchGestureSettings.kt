@@ -5,6 +5,7 @@ import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
 import com.slideindex.app.gesture.multitouch.MultiTouchGestureEntry
+import com.slideindex.app.gesture.multitouch.MultiTouchTriggerArea
 import com.slideindex.app.gesture.multitouch.PathPoint
 import com.slideindex.app.gesture.multitouch.PathStroke
 import com.slideindex.app.launcher.QuickLauncherItemCodec
@@ -29,9 +30,7 @@ data class MultiTouchGestureSettings(
     /** 指定触摸设备（`/dev/input/eventX`）；空串 = 自动挑最合适的。 */
     val devicePath: String = "",
     val entries: List<MultiTouchGestureEntry> = defaultEntries(),
-    /** 全局触发区域（对齐 GMD）：手势起点必须落在哪。 */
-    val triggerArea: String = TRIGGER_ANYWHERE,
-    /** 键盘可见时的策略（对齐 GMD）。 */
+    /** 键盘可见时的策略（全局一条，对齐 GMD）。 */
     val keyboardBehavior: String = KEYBOARD_ABOVE,
 ) {
     companion object {
@@ -39,21 +38,9 @@ data class MultiTouchGestureSettings(
         const val PROTOCOL_TYPE_A = "type_a"
         const val PROTOCOL_TYPE_B = "type_b"
 
-        const val TRIGGER_ANYWHERE = "anywhere"
-        const val TRIGGER_MIDDLE = "middle"
-        const val TRIGGER_TOP = "top"
-        const val TRIGGER_BOTTOM = "bottom"
-
         const val KEYBOARD_BLOCKED = "blocked"
         const val KEYBOARD_ABOVE = "above"
         const val KEYBOARD_EVERYWHERE = "everywhere"
-
-        val triggerAreaOptions: List<String> = listOf(
-            TRIGGER_ANYWHERE,
-            TRIGGER_MIDDLE,
-            TRIGGER_TOP,
-            TRIGGER_BOTTOM,
-        )
 
         val keyboardBehaviorOptions: List<String> = listOf(
             KEYBOARD_BLOCKED,
@@ -61,24 +48,11 @@ data class MultiTouchGestureSettings(
             KEYBOARD_EVERYWHERE,
         )
 
-        /** GMD 的边缘带默认 5mm，这里固定不开放；由屏幕密度换算成像素。 */
-        fun triggerBorderPx(densityDpi: Int): Int =
-            (TRIGGER_BORDER_MM / 25.4f * densityDpi).toInt().coerceAtLeast(1)
-
-        fun normalizeTriggerArea(raw: String?): String = when (raw) {
-            TRIGGER_MIDDLE -> TRIGGER_MIDDLE
-            TRIGGER_TOP -> TRIGGER_TOP
-            TRIGGER_BOTTOM -> TRIGGER_BOTTOM
-            else -> TRIGGER_ANYWHERE
-        }
-
         fun normalizeKeyboardBehavior(raw: String?): String = when (raw) {
             KEYBOARD_BLOCKED -> KEYBOARD_BLOCKED
             KEYBOARD_EVERYWHERE -> KEYBOARD_EVERYWHERE
             else -> KEYBOARD_ABOVE
         }
-
-        private const val TRIGGER_BORDER_MM = 5f
 
         fun defaultEntries(): List<MultiTouchGestureEntry> = listOf(
             entry("pinch3", MultiPointerGesture.PINCH, 3, GestureAction.Home),
@@ -160,15 +134,7 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         _state.value = _state.value.copy(devicePath = normalized)
     }
 
-    /** 全局触发区域：anywhere / middle / top / bottom（对齐 GMD）。 */
-    fun setTriggerArea(area: String) {
-        val normalized = MultiTouchGestureSettings.normalizeTriggerArea(area)
-        if (_state.value.triggerArea == normalized) return
-        prefs.edit().putString(KEY_TRIGGER_AREA, normalized).apply()
-        _state.value = _state.value.copy(triggerArea = normalized)
-    }
-
-    /** 键盘可见时的策略：blocked / above / everywhere（对齐 GMD）。 */
+    /** 键盘可见时的策略：blocked / above / everywhere（对齐 GMD，全局一条）。 */
     fun setKeyboardBehavior(behavior: String) {
         val normalized = MultiTouchGestureSettings.normalizeKeyboardBehavior(behavior)
         if (_state.value.keyboardBehavior == normalized) return
@@ -177,10 +143,31 @@ class MultiTouchGestureSettingsStore @Inject constructor(
     }
 
     /**
+     * 修改某个手势的生效区域。
+     *
+     * 同一「类型 + 接触点数 + 区域」只保留一条：改成和另一条完全相同时，优先保留当前这条，
+     * 另一条移除（否则两条都命中，结果取决于顺序）。
+     */
+    fun setEntryArea(entryId: String, area: MultiTouchTriggerArea) {
+        val current = _state.value
+        val target = current.entries.firstOrNull { it.id == entryId } ?: return
+        val kept = current.entries.filterNot { other ->
+            other.id != entryId && other.kind == target.kind &&
+                other.fingerCount == target.fingerCount && other.triggerArea == area
+        }
+        val updated = kept.map { entry ->
+            if (entry.id == entryId) entry.copy(triggerArea = area) else entry
+        }
+        persist(sortEntries(updated))
+        _state.value = current.copy(entries = sortEntries(updated))
+    }
+
+    /**
      * 保存/更新一个条目。
      *
-     * 预设类型按「类型 + 接触点数」唯一（重复没有意义）；绘制手势（PATH）允许同触点数多条，
-     * 只有带 [entryId] 编辑时才按 id 覆盖，否则总是新增。
+     * 唯一键是「类型 + 接触点数 + 生效区域」：同一区域内重复添加会覆盖原条目；
+     * 区域不同的同名手势可以共存（例如 3 指上滑：上半=Home、下半=Back）。
+     * 绘制手势（PATH）允许同触点数多条，只有带 [entryId] 编辑时才按 id 覆盖，否则总是新增。
      */
     fun applyEntry(
         kind: MultiPointerGesture,
@@ -196,8 +183,10 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         val existing = byId ?: if (kind == MultiPointerGesture.PATH) {
             null
         } else {
+            // 新条目默认「任何地方」：只覆盖同样在「任何地方」的旧条目，不同区域各留一条。
             current.entries.firstOrNull {
-                it.kind == kind && it.fingerCount == fingerCount
+                it.kind == kind && it.fingerCount == fingerCount &&
+                    it.triggerArea == MultiTouchTriggerArea.ANYWHERE
             }
         }
         val entry = if (existing != null) {
@@ -280,12 +269,11 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         prefs.edit().putString(KEY_ENTRIES, serialize(entries)).apply()
     }
 
-    /** 备份用：开关 + 触发条件 + 全部条目（含手绘轨迹）。 */
+    /** 备份用：开关 + 键盘策略 + 全部条目（含生效区域与手绘轨迹）。 */
     fun exportRawJson(): String {
         val current = _state.value
         return JSONObject()
             .put("enabled", current.enabled)
-            .put("triggerArea", current.triggerArea)
             .put("keyboardBehavior", current.keyboardBehavior)
             .put("entries", JSONArray(serialize(current.entries)))
             .toString()
@@ -295,14 +283,12 @@ class MultiTouchGestureSettingsStore @Inject constructor(
      * 恢复用：写回 prefs 并同步内存态。
      *
      * 备份文件里的条目就是完整列表，不再和默认条目合并；否则用户删掉的默认手势会复活。
+     * 旧备份里的全局 `triggerArea` 忽略：区域现在跟着条目走，缺失时按「任何地方」。
      */
     fun importRawJson(raw: String) {
         if (raw.isBlank()) return
         val obj = runCatching { JSONObject(raw) }.getOrNull() ?: return
         val enabled = obj.optBoolean("enabled", false)
-        val triggerArea = MultiTouchGestureSettings.normalizeTriggerArea(
-            obj.optString("triggerArea").takeIf { it.isNotBlank() },
-        )
         val keyboardBehavior = MultiTouchGestureSettings.normalizeKeyboardBehavior(
             obj.optString("keyboardBehavior").takeIf { it.isNotBlank() },
         )
@@ -312,7 +298,6 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         val sorted = sortEntries(entries).ifEmpty { MultiTouchGestureSettings.defaultEntries() }
         prefs.edit()
             .putBoolean(KEY_ENABLED, enabled)
-            .putString(KEY_TRIGGER_AREA, triggerArea)
             .putString(KEY_KEYBOARD_BEHAVIOR, keyboardBehavior)
             .putString(KEY_ENTRIES, serialize(sorted))
             .putBoolean(KEY_DEFAULTS_MERGED, true)
@@ -322,7 +307,6 @@ class MultiTouchGestureSettingsStore @Inject constructor(
             protocol = _state.value.protocol,
             devicePath = _state.value.devicePath,
             entries = sorted,
-            triggerArea = triggerArea,
             keyboardBehavior = keyboardBehavior,
         )
     }
@@ -347,9 +331,6 @@ class MultiTouchGestureSettingsStore @Inject constructor(
                 ?: MultiTouchGestureSettings.PROTOCOL_AUTO,
             devicePath = prefs.getString(KEY_DEVICE_PATH, "") ?: "",
             entries = sortEntries(merged).ifEmpty { MultiTouchGestureSettings.defaultEntries() },
-            triggerArea = MultiTouchGestureSettings.normalizeTriggerArea(
-                prefs.getString(KEY_TRIGGER_AREA, null),
-            ),
             keyboardBehavior = MultiTouchGestureSettings.normalizeKeyboardBehavior(
                 prefs.getString(KEY_KEYBOARD_BEHAVIOR, null),
             ),
@@ -410,6 +391,7 @@ class MultiTouchGestureSettingsStore @Inject constructor(
             obj.put("kind", entry.kind.name)
             obj.put("fingers", entry.fingerCount)
             obj.put("action", encodeAction(entry.action))
+            obj.put("area", entry.triggerArea.key)
             if (entry.pathStrokes.isNotEmpty()) {
                 obj.put("strokes", encodePathStrokes(entry.pathStrokes))
             }
@@ -433,6 +415,7 @@ class MultiTouchGestureSettingsStore @Inject constructor(
                 fingerCount = fingers,
                 action = action,
                 pathStrokes = strokes,
+                triggerArea = MultiTouchTriggerArea.fromKey(obj.optString("area")),
             )
         }
     }.getOrDefault(emptyList())
@@ -482,7 +465,6 @@ class MultiTouchGestureSettingsStore @Inject constructor(
         const val KEY_DEFAULTS_MERGED = "defaults_merged"
         const val KEY_PROTOCOL = "touch_protocol"
         const val KEY_DEVICE_PATH = "touch_device_path"
-        const val KEY_TRIGGER_AREA = "trigger_area"
         const val KEY_KEYBOARD_BEHAVIOR = "keyboard_behavior"
     }
 }

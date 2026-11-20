@@ -18,6 +18,8 @@ import com.slideindex.app.gesture.ActionExecutor
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.capturesScreen
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
+import com.slideindex.app.gesture.multitouch.MultiTouchGestureEntry
+import com.slideindex.app.gesture.multitouch.MultiTouchTriggerArea
 import com.slideindex.app.gesture.multitouch.PathGestureMatcher
 import com.slideindex.app.gesture.multitouch.PathGestureTemplate
 import com.slideindex.app.gesture.multitouch.PathPoint
@@ -164,8 +166,8 @@ class MultiTouchGestureCoordinator @Inject constructor(
 
     private val callback = object : IOnMultiTouchGesture.Stub() {
         override fun onGesture(gesture: Int, fingerCount: Int, eventTimeMs: Long) {
-            // 旧接口（服务端已改用 onGestureBatch，这里保留兼容）：没有锚点，按历史行为落屏幕中心。
-            dispatchGesture(gesture, fingerCount, anchor = null)
+            // 旧接口（服务端已改用 onGestureBatch，这里保留兼容）：没有锚点与起点。
+            dispatchGesture(gesture, fingerCount, anchor = null, start = null)
         }
 
         override fun onGestureBatch(
@@ -174,13 +176,16 @@ class MultiTouchGestureCoordinator @Inject constructor(
             eventTimeMs: Long,
             anchorU: Float,
             anchorV: Float,
+            startU: Float,
+            startV: Float,
         ) {
             val kindArray = kinds ?: return
             val fingerArray = fingerCounts ?: return
             if (kindArray.size != fingerArray.size) return
             val anchor = TouchAnchor(anchorU.coerceIn(0f, 1f), anchorV.coerceIn(0f, 1f))
+            val start = startAnchorOrNull(startU, startV)
             for (index in kindArray.indices) {
-                if (dispatchGesture(kindArray[index], fingerArray[index], anchor)) return
+                if (dispatchGesture(kindArray[index], fingerArray[index], anchor, start)) return
             }
         }
 
@@ -191,6 +196,8 @@ class MultiTouchGestureCoordinator @Inject constructor(
             eventTimeMs: Long,
             anchorU: Float,
             anchorV: Float,
+            startU: Float,
+            startV: Float,
         ) {
             val coordinates = points ?: return
             val lengths = strokeLengths ?: return
@@ -210,6 +217,7 @@ class MultiTouchGestureCoordinator @Inject constructor(
                 fingerCount = fingerCount,
                 strokes = strokes,
                 anchor = TouchAnchor(anchorU.coerceIn(0f, 1f), anchorV.coerceIn(0f, 1f)),
+                start = startAnchorOrNull(startU, startV),
             )
         }
 
@@ -241,10 +249,14 @@ class MultiTouchGestureCoordinator @Inject constructor(
         fingerCount: Int,
         strokes: List<PathStroke>,
         anchor: TouchAnchor? = null,
+        start: TouchAnchor? = null,
     ) {
         if (strokes.isEmpty()) return
         val candidates = settingsStore.state.value.entries
-            .filter { it.isPath && it.fingerCount == fingerCount && it.pathStrokes.isNotEmpty() }
+            .filter {
+                it.isPath && it.fingerCount == fingerCount && it.pathStrokes.isNotEmpty() &&
+                    areaAllowsPath(it, strokes, start)
+            }
         if (candidates.isEmpty()) return
         val templates = candidates.map { entry ->
             PathGestureTemplate(
@@ -260,6 +272,66 @@ class MultiTouchGestureCoordinator @Inject constructor(
         mainHandler.post {
             performAction(match.action, MultiPointerGesture.PATH, fingerCount, anchor)
         }
+    }
+
+    /** 服务端没给起点时（旧协议 / 延迟结算）用 NaN 表示；这里统一转成 null。 */
+    private fun startAnchorOrNull(u: Float, v: Float): TouchAnchor? {
+        if (!u.isFinite() || !v.isFinite()) return null
+        return TouchAnchor(u.coerceIn(0f, 1f), v.coerceIn(0f, 1f))
+    }
+
+    /** 条目区域判定（几何手势）：起点落在条目区域里才允许。 */
+    private fun areaAllowsEntry(entry: MultiTouchGestureEntry, start: TouchAnchor?): Boolean {
+        if (entry.triggerArea == MultiTouchTriggerArea.ANYWHERE) return true
+        if (start == null) return true
+        val metrics = runCatching { OverlayScreenMetrics.snapshot(context) }.getOrNull()
+            ?: return true
+        if (metrics.widthPx <= 0 || metrics.heightPx <= 0) return true
+        val point = resolveTriggerAnchor(start)
+        return MultiTouchTriggerFilter.areaAllows(
+            area = MultiTouchTriggerFilter.areaId(entry.triggerArea),
+            startU = point.x / metrics.widthPx,
+            startV = point.y / metrics.heightPx,
+            widthPx = metrics.widthPx,
+            heightPx = metrics.heightPx,
+        )
+    }
+
+    /**
+     * 条目区域判定（绘制手势）：整条轨迹任意点命中即可（GMD 语义）。
+     *
+     * 新服务已把轨迹点旋转到屏幕坐标（按屏高归一化），换算成 u/v 后逐点判；
+     * 旧服务（未做入口旋转）没有可靠的点坐标，退回按起点判。
+     */
+    private fun areaAllowsPath(
+        entry: MultiTouchGestureEntry,
+        strokes: List<PathStroke>,
+        start: TouchAnchor?,
+    ): Boolean {
+        if (entry.triggerArea == MultiTouchTriggerArea.ANYWHERE) return true
+        val metrics = runCatching { OverlayScreenMetrics.snapshot(context) }.getOrNull()
+        if (!serviceHandlesRotation || metrics == null ||
+            metrics.widthPx <= 0 || metrics.heightPx <= 0
+        ) {
+            return areaAllowsEntry(entry, start)
+        }
+        val scale = metrics.heightPx.toFloat() / metrics.widthPx
+        val points = ArrayList<TouchAnchor>(strokes.size * 8)
+        for (stroke in strokes) {
+            for (point in stroke.points) {
+                points += TouchAnchor(
+                    u = (point.x * scale).coerceIn(0f, 1f),
+                    v = point.y.coerceIn(0f, 1f),
+                )
+            }
+        }
+        if (points.isEmpty()) return areaAllowsEntry(entry, start)
+        return MultiTouchTriggerFilter.areaAllowsAny(
+            area = MultiTouchTriggerFilter.areaId(entry.triggerArea),
+            points = points,
+            widthPx = metrics.widthPx,
+            heightPx = metrics.heightPx,
+        )
     }
 
     fun start() {
@@ -309,10 +381,10 @@ class MultiTouchGestureCoordinator @Inject constructor(
                     )
                 }
         }
-        // 触发区域/键盘策略：只推给正在观察的 service，不重启观察器（改设置不该打断手势）。
+        // 键盘策略是全局一条：只推给正在观察的 service，不重启观察器（改设置不该打断手势）。
         applicationScope.launch(Dispatchers.IO) {
             settingsStore.state
-                .map { it.triggerArea to it.keyboardBehavior }
+                .map { it.keyboardBehavior }
                 .distinctUntilChanged()
                 .collect {
                     val service = observingService ?: rootService ?: return@collect
@@ -560,23 +632,49 @@ class MultiTouchGestureCoordinator @Inject constructor(
 
     private fun handleRootEvent(event: String) {
         if (event.startsWith("g:")) {
-            // 新：g:<kind>:<fingers>:<u>:<v>；旧：g:<kind>:<fingers>（无锚点）。
-            val parts = event.split(':', limit = 5)
+            // 新：g:<kind>:<fingers>:<u>:<v>:<startU>:<startV>；旧：无起点 / 无锚点。
+            val parts = event.split(':', limit = 7)
             val kind = parts.getOrNull(1)?.toIntOrNull() ?: return
             val fingers = parts.getOrNull(2)?.toIntOrNull() ?: return
-            dispatchGesture(kind, fingers, parseAnchor(parts.getOrNull(3), parts.getOrNull(4)))
+            val anchor = parseAnchor(parts.getOrNull(3), parts.getOrNull(4))
+            val start = if (parts.size >= 7) {
+                parseAnchor(parts.getOrNull(5), parts.getOrNull(6))
+            } else {
+                null
+            }
+            dispatchGesture(kind, fingers, anchor, start)
             return
         }
         if (event.startsWith("p:")) {
-            // 新：p:<fingers>:<u>:<v>:<strokes>；旧：p:<fingers>:<strokes>。
-            val parts = event.split(':', limit = 5)
+            // 新：p:<fingers>:<u>:<v>:<startU>:<startV>:<strokes>；
+            // 旧：p:<fingers>:<u>:<v>:<strokes> / p:<fingers>:<strokes>。
+            val parts = event.split(':', limit = 7)
             val fingers = parts.getOrNull(1)?.toIntOrNull() ?: return
-            val hasAnchor = parts.size >= 5
-            val anchor = if (hasAnchor) parseAnchor(parts.getOrNull(2), parts.getOrNull(3)) else null
-            val rawStrokes = (if (hasAnchor) parts.getOrNull(4) else parts.getOrNull(2)) ?: return
+            val anchor: TouchAnchor?
+            val start: TouchAnchor?
+            val rawStrokes: String
+            when {
+                parts.size >= 7 -> {
+                    anchor = parseAnchor(parts.getOrNull(2), parts.getOrNull(3))
+                    start = parseAnchor(parts.getOrNull(4), parts.getOrNull(5))
+                    rawStrokes = parts.getOrNull(6) ?: return
+                }
+
+                parts.size >= 5 -> {
+                    anchor = parseAnchor(parts.getOrNull(2), parts.getOrNull(3))
+                    start = null
+                    rawStrokes = parts.getOrNull(4) ?: return
+                }
+
+                else -> {
+                    anchor = null
+                    start = null
+                    rawStrokes = parts.getOrNull(2) ?: return
+                }
+            }
             val strokes = decodePathStrokes(rawStrokes)
             if (strokes.isEmpty()) return
-            handlePathStrokes(fingers, strokes, anchor)
+            handlePathStrokes(fingers, strokes, anchor, start)
             return
         }
         if (event.startsWith("d:")) {
@@ -691,19 +789,26 @@ class MultiTouchGestureCoordinator @Inject constructor(
     private fun currentDisplayRotation(): Int =
         runCatching { OverlayScreenMetrics.displayRotation(context) }.getOrDefault(0)
 
-    /** 候选按顺序匹配条目，命中第一个就执行并返回 true。 */
-    private fun dispatchGesture(gesture: Int, fingerCount: Int, anchor: TouchAnchor?): Boolean {
+    /** 候选按顺序匹配条目，命中第一个（且其生效区域包含起点）就执行并返回 true。 */
+    private fun dispatchGesture(
+        gesture: Int,
+        fingerCount: Int,
+        anchor: TouchAnchor?,
+        start: TouchAnchor? = null,
+    ): Boolean {
         val panelKind = MultiPointerGesture.entries.getOrNull(gesture) ?: return false
         // service 支持入口旋转时，识别结果已经是屏幕方向；否则回退到 app 侧方向翻译。
         val rotation = currentDisplayRotation()
         val kind = if (serviceHandlesRotation) panelKind else panelKind.forDisplayRotation(rotation)
         val entry = settingsStore.state.value.entries.firstOrNull {
             it.kind == kind && it.fingerCount == fingerCount &&
-                it.action != GestureAction.None
+                it.action != GestureAction.None &&
+                areaAllowsEntry(it, start)
         } ?: run {
             Log.i(
                 TAG,
-                "no entry for ${kind.name} x$fingerCount（panel=${panelKind.name} rot=$rotation）",
+                "no entry for ${kind.name} x$fingerCount（panel=${panelKind.name} rot=$rotation" +
+                    " start=${start?.u},${start?.v}）",
             )
             return false
         }
@@ -734,27 +839,25 @@ class MultiTouchGestureCoordinator @Inject constructor(
     }
 
     /**
-     * 把全局触发条件推给 service（区域 + 键盘策略 + 边缘带宽度）。
+     * 把全局键盘策略推给 service。
      *
-     * 旧版 service / 旧 root 守护进程没有 [ITaskManagerService.setMultiTouchTrigger]，
-     * 调用失败就保持「任何地方 + 不判键盘」，保证升级顺序不会把功能弄坏。
+     * 区域判定已经下沉到 app（每个手势自带生效区域），所以 area / borderPx 统一传 0，
+     * service 只消费 keyboardBehavior；旧版 service / 旧 root 守护进程没有这个方法，
+     * 调用失败就保持默认策略，不影响手势本身。
      */
     private fun pushMultiTouchTrigger(service: ITaskManagerService) {
         val settings = settingsStore.state.value
-        val borderPx = MultiTouchGestureSettings.triggerBorderPx(
-            context.resources.displayMetrics.densityDpi,
-        )
         val ok = runCatching {
             service.setMultiTouchTrigger(
-                MultiTouchTriggerFilter.areaId(settings.triggerArea),
+                0,
                 MultiTouchTriggerFilter.keyboardBehaviorId(settings.keyboardBehavior),
-                borderPx,
+                0,
             )
         }.isSuccess
         if (!ok) {
             Log.i(
                 TAG,
-                "service 不支持 setMultiTouchTrigger：触发区域/键盘条件暂不生效（重启特权服务后生效）",
+                "service 不支持 setMultiTouchTrigger：键盘条件暂不生效（重启特权服务后生效）",
             )
         }
     }

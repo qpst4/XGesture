@@ -82,7 +82,7 @@ fun NavEntryBuilder.multiTouchNavEntries(ctx: MainNavContext, backKey: AppNavKey
             onRefreshDiagnostics = viewModel::refreshDiagnostics,
             onRefreshTouchDevices = viewModel::refreshTouchDevices,
             onDevicePathChange = viewModel::setDevicePath,
-            onTriggerAreaChange = viewModel::setTriggerArea,
+            onEntryAreaChange = viewModel::setEntryArea,
             onKeyboardBehaviorChange = viewModel::setKeyboardBehavior,
             onRetry = viewModel::retry,
             onOpenActionPick = { kind, fingers, pending, entryId ->

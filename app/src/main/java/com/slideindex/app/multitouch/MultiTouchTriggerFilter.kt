@@ -1,21 +1,20 @@
 package com.slideindex.app.multitouch
 
+import com.slideindex.app.gesture.multitouch.MultiTouchTriggerArea
 import com.slideindex.app.gesture.multitouch.TouchAnchor
 
 /**
  * 全局触控的触发条件判定，对齐 GMD 的 `TriggerEnum.c()` / `KeyboardBehaviorEnum`。
  *
- * 只认手势**起点**：落在哪块区域、是不是压在键盘上，都在手指落下的那一刻定死。
- * 放在这里的都是纯函数，service 进程负责把真实坐标和键盘矩形喂进来，单测不需要设备。
+ * 区域是**每个手势自己的属性**（[MultiTouchTriggerArea]）：几何手势只看起点，绘制手势看
+ * 整条轨迹（任意采样点命中即可）。键盘策略仍是全局一条，按起点判定。
+ * 这里都是纯函数，service / app 把真实坐标和键盘矩形喂进来，单测不需要设备。
  */
 object MultiTouchTriggerFilter {
 
     const val AREA_ANYWHERE = 0
-
-    /** 中：离四条边都超过边缘带宽度才算。 */
-    const val AREA_MIDDLE = 1
-    const val AREA_TOP = 2
-    const val AREA_BOTTOM = 3
+    const val AREA_TOP = 1
+    const val AREA_BOTTOM = 2
 
     const val KEYBOARD_BLOCKED = 0
 
@@ -24,10 +23,15 @@ object MultiTouchTriggerFilter {
     const val KEYBOARD_EVERYWHERE = 2
 
     fun areaId(raw: String?): Int = when (raw) {
-        "middle" -> AREA_MIDDLE
         "top" -> AREA_TOP
         "bottom" -> AREA_BOTTOM
         else -> AREA_ANYWHERE
+    }
+
+    fun areaId(area: MultiTouchTriggerArea): Int = when (area) {
+        MultiTouchTriggerArea.TOP -> AREA_TOP
+        MultiTouchTriggerArea.BOTTOM -> AREA_BOTTOM
+        MultiTouchTriggerArea.ANYWHERE -> AREA_ANYWHERE
     }
 
     fun keyboardBehaviorId(raw: String?): Int = when (raw) {
@@ -48,23 +52,23 @@ object MultiTouchTriggerFilter {
         startV: Float,
         widthPx: Int,
         heightPx: Int,
-        borderPx: Int,
     ): Boolean = when (area) {
         AREA_TOP -> startV <= 0.5f
         AREA_BOTTOM -> startV >= 0.5f
-        AREA_MIDDLE -> {
-            // 没有屏幕尺寸（刚启动还没推 display）时不拦，保持可用。
-            if (widthPx <= 0 || heightPx <= 0) {
-                true
-            } else {
-                val x = startU * widthPx
-                val y = startV * heightPx
-                val border = borderPx.toFloat()
-                x > border && x < widthPx - border && y > border && y < heightPx - border
-            }
-        }
-
         else -> true
+    }
+
+    /**
+     * 绘制手势的区域判定（GMD 语义）：轨迹上**任意一个采样点**命中即可。
+     */
+    fun areaAllowsAny(
+        area: Int,
+        points: List<TouchAnchor>,
+        widthPx: Int,
+        heightPx: Int,
+    ): Boolean {
+        if (area == AREA_ANYWHERE) return true
+        return points.any { areaAllows(area, it.u, it.v, widthPx, heightPx) }
     }
 
     /**
@@ -124,7 +128,6 @@ object MultiTouchTriggerFilter {
         path: List<TouchAnchor>?,
         widthPx: Int,
         heightPx: Int,
-        borderPx: Int,
         keyboardVisible: Boolean,
         keyboardHasBounds: Boolean,
         keyboardBounds: KeyboardRect,
@@ -132,11 +135,10 @@ object MultiTouchTriggerFilter {
         displayHeight: Int,
     ): Boolean {
         val areaOk = when {
-            !path.isNullOrEmpty() -> path.any {
-                areaAllows(area, it.u, it.v, widthPx, heightPx, borderPx)
-            }
+            !path.isNullOrEmpty() ->
+                areaAllowsAny(area, path, widthPx, heightPx)
 
-            start != null -> areaAllows(area, start.u, start.v, widthPx, heightPx, borderPx)
+            start != null -> areaAllows(area, start.u, start.v, widthPx, heightPx)
             else -> true
         }
         if (!areaOk) return false
