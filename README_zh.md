@@ -44,6 +44,7 @@
 
 [![Download Full APK](https://img.shields.io/badge/下载%20Full%20完整包-内置离线引擎-238636?style=for-the-badge&logo=android&logoColor=white)](https://github.com/qpst4/XGesture/releases/latest)
 [![Download Lite APK](https://img.shields.io/badge/下载%20Lite%20轻量包-体积小巧-0969DA?style=for-the-badge&logo=android&logoColor=white)](https://github.com/qpst4/XGesture/releases/latest)
+[![Get on Obtainium](https://img.shields.io/badge/Obtainium-自动更新订阅-6340E6?style=for-the-badge&logo=android&logoColor=white)](obtainium://app/https://github.com/qpst4/XGesture)
 
 </div>
 
@@ -54,6 +55,9 @@
 
 > [!TIP]
 > 两个版本的 `applicationId` 均为 `com.slideindex.app`，支持直接相互覆盖安装，配置无缝保留。
+
+> [!NOTE]
+> **自动更新推荐**：手机安装 [Obtainium](https://github.com/ImranR98/Obtainium) 后，点击上方「Obtainium 自动更新订阅」按钮即可一键添加，无需应用商店也能在发布新版时自动检测并无缝升级。
 
 ---
 

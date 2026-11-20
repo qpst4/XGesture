@@ -44,6 +44,7 @@ Easily trigger **50+ system actions** via customizable multi-angle screen-edge s
 
 [![Download Full APK](https://img.shields.io/badge/Download%20Full%20APK-Built--in%20Offline%20Engines-238636?style=for-the-badge&logo=android&logoColor=white)](https://github.com/qpst4/XGesture/releases/latest)
 [![Download Lite APK](https://img.shields.io/badge/Download%20Lite%20APK-Compact%20Size-0969DA?style=for-the-badge&logo=android&logoColor=white)](https://github.com/qpst4/XGesture/releases/latest)
+[![Get on Obtainium](https://img.shields.io/badge/Get%20on%20Obtainium-Auto_Update-6340E6?style=for-the-badge&logo=android&logoColor=white)](obtainium://app/https://github.com/qpst4/XGesture)
 
 </div>
 
@@ -54,6 +55,9 @@ Easily trigger **50+ system actions** via customizable multi-angle screen-edge s
 
 > [!TIP]
 > Both packages share the same `applicationId` (`com.slideindex.app`), allowing direct overwriting installation without losing configurations.
+
+> [!NOTE]
+> **Auto-Update via Obtainium**: If you have [Obtainium](https://github.com/ImranR98/Obtainium) installed on your phone, click the **Get on Obtainium** button above to subscribe and receive automatic update notifications directly from GitHub Releases.
 
 ---
 
