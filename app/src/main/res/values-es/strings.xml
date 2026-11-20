@@ -73,7 +73,6 @@
     <string name="shake_gestures_section_feedback">Efectos de retroalimentación</string>
     <string name="shake_gestures_section_advanced_features">Funciones avanzadas</string>
     <string name="shake_gestures_section_action_scope">Pantalla de bloqueo y por app</string>
-    <string name="shake_gestures_section_other">Otros gestos</string>
     <string name="shake_gestures_other_hint">Boca abajo y toque trasero tienen sus propios interruptores y modos; el modo de activación de agitación anterior no los afecta.</string>
     <string name="shake_work_mode_section">Modo de activación de agitación</string>
     <string name="shake_work_mode_always">Siempre</string>
@@ -1895,7 +1894,6 @@
     <string name="key_event_code_label">Código clave (KeyCode)</string>
     <string name="key_event_name_label">Nombre clave / nota</string>
     <string name="key_event_long_press_title">Simularmantener presionado</string>
-    <string name="key_event_long_press_summary" tools:ignore="TypographyDashes">Utilice el botón de entrada --longpress para enviar el evento clave</string>
     <string name="key_event_permission_hint">Nota: Simular eventos clave requiere permisos Root o servicio activo Shizuku.</string>
     <string name="key_event_failed_hint">La clave simulada falló:%1$s</string>
     <string name="current_app_info_not_found">No se detecta ninguna aplicación de primer nivel</string>
