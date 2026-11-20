@@ -24,23 +24,14 @@ enum class MiuixTabRowContourHost {
 }
 
 @Composable
-fun miuixTabRowContourColors(host: MiuixTabRowContourHost): TabRowColors {
-    val isDark = LocalAppDarkTheme.current
+fun miuixTabRowContourColors(host: MiuixTabRowContourHost = MiuixTabRowContourHost.AppScaffold): TabRowColors {
     val scheme = MiuixTheme.colorScheme
-    return when (host) {
-        MiuixTabRowContourHost.AppScaffold -> TabRowDefaults.tabRowColors(
-            backgroundColor = scheme.surface,
-            selectedBackgroundColor = scheme.surfaceContainer,
-            contentColor = scheme.onSurfaceVariantSummary,
-            selectedContentColor = scheme.primary,
-        )
-        MiuixTabRowContourHost.SurfaceContainer -> TabRowDefaults.tabRowColors(
-            backgroundColor = scheme.surface,
-            selectedBackgroundColor = if (isDark) scheme.surfaceContainerHigh else scheme.surfaceContainer,
-            contentColor = scheme.onSurfaceVariantSummary,
-            selectedContentColor = scheme.primary,
-        )
-    }
+    return TabRowDefaults.tabRowColors(
+        backgroundColor = scheme.surface,
+        selectedBackgroundColor = scheme.surfaceContainer,
+        contentColor = scheme.onSurfaceVariantSummary,
+        selectedContentColor = scheme.primary,
+    )
 }
 
 private fun Modifier.miuixTabRowPadding(
