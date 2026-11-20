@@ -109,26 +109,26 @@ fun darkColorsFor(style: DarkBackgroundStyle) = miuixDarkColorScheme().copy(
     surfaceContainer = when (style) {
         DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF1E2D3B)
         DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF1B232D)
-        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF1E1E20)
+        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF242424)
     },
     surfaceContainerHigh = when (style) {
         DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF2A3D4E)
         DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF26323F)
-        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF2A2A2D)
+        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF2D2D2D)
     },
     surfaceContainerHighest = when (style) {
         DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF364D62)
         DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF324050)
-        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF38383B)
+        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF383838)
     },
     outline = when (style) {
         DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF3D556C)
         DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF364555)
-        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF333336)
+        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF404040)
     },
     dividerLine = when (style) {
         DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF283949)
         DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF24303B)
-        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF28282A)
+        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF393939)
     },
 )
