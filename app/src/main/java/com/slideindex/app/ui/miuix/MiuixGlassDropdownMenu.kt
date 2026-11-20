@@ -40,7 +40,7 @@ fun MiuixGlassDropdownMenu(
 ) {
     var expanded by remember { mutableStateOf(false) }
     var anchorBounds by remember { mutableStateOf(Rect.Zero) }
-    val backdrop: LayerBackdrop? = LocalMiuixPageBackdrop.current
+    val backdrop: LayerBackdrop? = LocalMiuixPageBackdrop.current ?: LocalMiuixScreenBackdrop.current
 
     Box(
         modifier = modifier.onGloballyPositioned { anchorBounds = it.boundsInWindow() },
@@ -86,7 +86,7 @@ fun MiuixGlassDropdownMenu(
     anchorBounds: Rect,
     items: List<top.yukonga.miuix.kmp.basic.DropdownItem>,
 ) {
-    val backdrop: LayerBackdrop? = LocalMiuixPageBackdrop.current
+    val backdrop: LayerBackdrop? = LocalMiuixPageBackdrop.current ?: LocalMiuixScreenBackdrop.current
     TopLayer {
         GlassDropdownPopup(
             show = expanded,

@@ -58,7 +58,10 @@ import com.slideindex.app.service.WidgetBindTrampolineActivity
 import com.slideindex.app.service.WidgetPickerTrampoline
 import com.slideindex.app.service.StashClipboardTrampolineActivity
 import com.slideindex.app.ui.navigation.MainNavHost
+import com.slideindex.app.ui.compose.LocalAppDependencies
 import com.slideindex.app.ui.miuix.LocalTopLayer
+import com.slideindex.app.ui.miuix.theme.ModuleTheme
+import com.slideindex.app.ui.miuix.theme.toModuleThemeSettings
 import top.yukonga.miuix.kmp.basic.Scaffold
 import com.slideindex.app.ui.miuix.MiuixPageBackdropBox
 import com.slideindex.app.ui.miuix.TopLayerHost
@@ -164,8 +167,8 @@ class MainActivity : ComponentActivity() {
             val initialIntentAction by currentIntentAction
             val initialNavRoute by pendingNavRoute
             val showUpdate by pendingShowUpdate
-            // 小窗尺寸编辑层挂在根部（导航宿主之上），这样它能盖住整屏、且不受导航栈影响。
-            val freeWindowSettings by deps.settingsRepository.overlaySettings.collectAsStateWithLifecycle(
+            // 主题与小窗尺寸等设置：统一在根部监听并注入主题，确保根 Scaffold 与 TopLayerHost 均在主题作用域内。
+            val overlaySettings by deps.settingsRepository.overlaySettings.collectAsStateWithLifecycle(
                 initialValue = OverlaySettings.from(deps.settingsRepository.readSnapshot()),
             )
             val homeMainSettings by deps.settingsRepository.homeMainSettings.collectAsStateWithLifecycle(
@@ -174,67 +177,68 @@ class MainActivity : ComponentActivity() {
             val editorScope = rememberCoroutineScope()
             // 根层覆盖层：玻璃下拉菜单等需要盖住顶栏 / 底栏的浮层通过 TopLayer 提升到这里。
             val topLayer = remember { TopLayerState() }
-            Box(modifier = Modifier.fillMaxSize()) {
-                CompositionLocalProvider(
-                    LocalBareSettingIcons provides !homeMainSettings.settingIconPlateEnabled,
-                    LocalTopLayer provides topLayer,
-                ) {
-                    // 根部 miuix Scaffold：它是最外层 Scaffold，`GlassDialog`/`GlassBottomSheet`
-                    // 的弹窗宿主挂在它的 popup 层上；popup 层由 ScaffoldLayout 在 body 之后绘制，
-                    // 因此弹层**不在**下面这层整页录制里，采样整页不会再自采样（迁移指南 §2.1/§2.2）。
-                    Scaffold(modifier = Modifier.fillMaxSize()) {
-                        // 整页采样层：录制整屏（正文 + 顶栏 + 底栏），供玻璃弹层 / 浮层采样。
+            CompositionLocalProvider(
+                LocalAppDependencies provides deps,
+                LocalBareSettingIcons provides !homeMainSettings.settingIconPlateEnabled,
+                LocalTopLayer provides topLayer,
+            ) {
+                ModuleTheme(settings = overlaySettings.toModuleThemeSettings()) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        // 根部 miuix Scaffold：它是最外层 Scaffold，`GlassDialog`/`GlassBottomSheet`/`DropdownPreference`
+                        // 的弹窗宿主挂在它的 popup 层上；外层包裹 ModuleTheme 后，根弹窗层与 TopLayerHost 均能正确获取深色模式。
+                        Scaffold(modifier = Modifier.fillMaxSize()) {
                             MainNavHost(
-                                    activity = this@MainActivity,
-                                    deps = deps,
-                                    permissionStates = permissionStates,
-                                    initialIntentAction = initialIntentAction,
-                                    initialNavRoute = initialNavRoute,
-                                    showUpdateFromIntent = showUpdate,
-                                    onNavRouteConsumed = { pendingNavRoute.value = null },
-                                    onShowUpdateConsumed = { pendingShowUpdate.value = false }
+                                activity = this@MainActivity,
+                                deps = deps,
+                                permissionStates = permissionStates,
+                                initialIntentAction = initialIntentAction,
+                                initialNavRoute = initialNavRoute,
+                                showUpdateFromIntent = showUpdate,
+                                onNavRouteConsumed = { pendingNavRoute.value = null },
+                                onShowUpdateConsumed = { pendingShowUpdate.value = false }
                             )
+                        }
+                        if (FreeWindowLayoutEditorSession.isOpen) {
+                            FreeWindowLayoutEditorOverlay(
+                                portrait = FreeWindowLayoutFractions(
+                                    widthFraction = overlaySettings.freeWindowWidthFraction,
+                                    heightFraction = overlaySettings.freeWindowHeightFraction,
+                                    leftFraction = overlaySettings.freeWindowLeftFraction,
+                                    topFraction = overlaySettings.freeWindowTopFraction,
+                                ),
+                                landscape = FreeWindowLayoutFractions(
+                                    widthFraction = overlaySettings.freeWindowLandWidthFraction,
+                                    heightFraction = overlaySettings.freeWindowLandHeightFraction,
+                                    leftFraction = overlaySettings.freeWindowLandLeftFraction,
+                                    topFraction = overlaySettings.freeWindowLandTopFraction,
+                                ),
+                                onDismiss = { FreeWindowLayoutEditorSession.close() },
+                                onSave = { portrait, landscape ->
+                                    editorScope.launch {
+                                        deps.settingsRepository.setFreeWindowLayout(portrait, landscape)
+                                    }
+                                },
+                            )
+                        }
+                        // 「关于 → 重看新手引导」：整屏盖住导航宿主，与开屏引导共用同一份内容。
+                        if (OnboardingPracticeSession.isOpen) {
+                            OnboardingPracticeOverlay(
+                                settingsRepository = deps.settingsRepository,
+                                onPreviewTriggerBar = { active ->
+                                    if (active) {
+                                        overlayServiceController.startLayoutPreview(
+                                            com.slideindex.app.overlay.LayoutPreviewContent.TRIGGER_ONLY,
+                                        )
+                                    } else {
+                                        overlayServiceController.stopLayoutPreview()
+                                    }
+                                },
+                                onClose = { OnboardingPracticeSession.close() },
+                            )
+                        }
+                        TopLayerHost(topLayer)
                     }
                 }
-                if (FreeWindowLayoutEditorSession.isOpen) {
-                    FreeWindowLayoutEditorOverlay(
-                        portrait = FreeWindowLayoutFractions(
-                            widthFraction = freeWindowSettings.freeWindowWidthFraction,
-                            heightFraction = freeWindowSettings.freeWindowHeightFraction,
-                            leftFraction = freeWindowSettings.freeWindowLeftFraction,
-                            topFraction = freeWindowSettings.freeWindowTopFraction,
-                        ),
-                        landscape = FreeWindowLayoutFractions(
-                            widthFraction = freeWindowSettings.freeWindowLandWidthFraction,
-                            heightFraction = freeWindowSettings.freeWindowLandHeightFraction,
-                            leftFraction = freeWindowSettings.freeWindowLandLeftFraction,
-                            topFraction = freeWindowSettings.freeWindowLandTopFraction,
-                        ),
-                        onDismiss = { FreeWindowLayoutEditorSession.close() },
-                        onSave = { portrait, landscape ->
-                            editorScope.launch {
-                                deps.settingsRepository.setFreeWindowLayout(portrait, landscape)
-                            }
-                        },
-                    )
-                }
-                // 「关于 → 重看新手引导」：整屏盖住导航宿主，与开屏引导共用同一份内容。
-                if (OnboardingPracticeSession.isOpen) {
-                    OnboardingPracticeOverlay(
-                        settingsRepository = deps.settingsRepository,
-                        onPreviewTriggerBar = { active ->
-                            if (active) {
-                                overlayServiceController.startLayoutPreview(
-                                    com.slideindex.app.overlay.LayoutPreviewContent.TRIGGER_ONLY,
-                                )
-                            } else {
-                                overlayServiceController.stopLayoutPreview()
-                            }
-                        },
-                        onClose = { OnboardingPracticeSession.close() },
-                    )
-                }
-                TopLayerHost(topLayer)
             }
         }
     }
