@@ -150,11 +150,24 @@ fun PickerSearchListHeader(
 }
 
 @Composable
-fun Md3PickerSectionHeader(title: String, modifier: Modifier = Modifier) {
-    SmallTitle(
-        text = title,
-        modifier = modifier.fillMaxWidth(),
-    )
+fun Md3PickerSectionHeader(
+    title: String,
+    modifier: Modifier = Modifier,
+    /** 非 null 时覆盖 SmallTitle 的默认文字色（动作列表用 primary 区分大分区）。 */
+    color: Color? = null,
+) {
+    if (color == null) {
+        SmallTitle(
+            text = title,
+            modifier = modifier.fillMaxWidth(),
+        )
+    } else {
+        SmallTitle(
+            text = title,
+            modifier = modifier.fillMaxWidth(),
+            textColor = color,
+        )
+    }
 }
 
 /**
