@@ -275,10 +275,7 @@ fun LazyListScope.actionPickerActionItems(
     val sections = GestureActionCatalog.groupIntoSections(filtered)
     sections.forEach { section ->
         item(key = "action-cat-${section.category.name}") {
-            com.slideindex.app.ui.Md3PickerSectionHeader(
-                title = stringResource(section.category.titleRes),
-                color = MiuixTheme.colorScheme.primary,
-            )
+            com.slideindex.app.ui.Md3PickerSectionHeader(stringResource(section.category.titleRes))
         }
 
         // 网格：每行 4 个。与快速启动器「添加快捷项」页保持统一的边距与间距（12.dp / 8.dp）。

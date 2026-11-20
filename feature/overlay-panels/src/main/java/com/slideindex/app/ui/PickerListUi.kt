@@ -149,25 +149,23 @@ fun PickerSearchListHeader(
     }
 }
 
+/**
+ * 选择器的分区小标题（「导航与系统」「活动快捷方式」这类）。
+ *
+ * 全站统一用 primary 色：分组标题要能一眼和卡片标题/正文区分开；
+ * 需要例外时显式传 [textColor]。
+ */
 @Composable
 fun Md3PickerSectionHeader(
     title: String,
     modifier: Modifier = Modifier,
-    /** 非 null 时覆盖 SmallTitle 的默认文字色（动作列表用 primary 区分大分区）。 */
-    color: Color? = null,
+    textColor: Color = MiuixTheme.colorScheme.primary,
 ) {
-    if (color == null) {
-        SmallTitle(
-            text = title,
-            modifier = modifier.fillMaxWidth(),
-        )
-    } else {
-        SmallTitle(
-            text = title,
-            modifier = modifier.fillMaxWidth(),
-            textColor = color,
-        )
-    }
+    SmallTitle(
+        text = title,
+        modifier = modifier.fillMaxWidth(),
+        textColor = textColor,
+    )
 }
 
 /**
