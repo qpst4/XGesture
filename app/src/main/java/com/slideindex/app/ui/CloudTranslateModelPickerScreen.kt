@@ -27,7 +27,9 @@ import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import com.slideindex.app.translate.CloudTranslateRemoteModelsUiState
 import top.yukonga.miuix.kmp.basic.Button
-import top.yukonga.miuix.kmp.basic.Card
+import com.slideindex.app.ui.miuix.CardItem
+import com.slideindex.app.ui.miuix.CardSegment
+import com.slideindex.app.ui.miuix.groupedCardItems
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -75,12 +77,11 @@ fun CloudTranslateModelPickerScreen(
         onBack = onBack,
     ) {
         settingsLazySmallTitle(key = "model-picker-search", title = searchLabel)
-        LazySettingsItem(key = "model-picker-search-card") {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                insideMargin = PaddingValues(16.dp),
+        item(key = "model-picker-search-card") {
+            CardSegment(
+                isFirst = true,
+                isLast = true,
+                insidePadding = PaddingValues(16.dp),
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     MiuixLabeledTextField(
@@ -121,13 +122,10 @@ fun CloudTranslateModelPickerScreen(
                 key = "model-picker-list",
                 title = listCountTitle,
             )
-            for (modelId in filtered) {
-                LazySettingsItem(key = "model-picker-item-$modelId") {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 4.dp),
-                    ) {
+            groupedCardItems(
+                keyPrefix = "model-picker",
+                items = filtered.map { modelId ->
+                    CardItem(modelId) {
                         androidx.compose.foundation.layout.Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -149,8 +147,8 @@ fun CloudTranslateModelPickerScreen(
                             }
                         }
                     }
-                }
-            }
+                },
+            )
         }
     }
 }

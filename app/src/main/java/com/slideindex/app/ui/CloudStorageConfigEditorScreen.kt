@@ -27,6 +27,7 @@ import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingDropdownRow
+import com.slideindex.app.ui.miuix.CardSegment
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
@@ -37,7 +38,6 @@ import com.slideindex.app.ui.viewmodel.CloudConnectionTestState
 import java.util.UUID
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -176,12 +176,11 @@ fun CloudStorageConfigEditorScreen(
         )
 
         settingsLazySmallTitle(key = "cloud-storage-editor-fields", title = fieldsSectionTitle)
-        LazySettingsItem(key = "cloud-storage-editor-fields-card") {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                insideMargin = PaddingValues(16.dp),
+        item(key = "cloud-storage-editor-fields-card") {
+            CardSegment(
+                isFirst = true,
+                isLast = true,
+                insidePadding = PaddingValues(16.dp),
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     MiuixLabeledTextField(

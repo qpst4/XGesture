@@ -44,7 +44,7 @@ import com.slideindex.app.ui.miuix.CardItem
 import com.slideindex.app.ui.miuix.MiuixHintText
 import com.slideindex.app.ui.miuix.MiuixInsetCardComponentMargin
 import com.slideindex.app.ui.miuix.MiuixSliderRow
-import com.slideindex.app.ui.miuix.MiuixTabSettingsCard
+import com.slideindex.app.ui.miuix.MiuixGroupedTabSettingsCard
 import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import com.slideindex.app.ui.miuix.groupedCardItems
@@ -122,6 +122,15 @@ fun SideGestureSettingsScreen(
     val compoundInwardGroupTitle = stringResource(R.string.side_gestures_compound_group_inward)
     val compoundAlongGroupTitle = stringResource(R.string.side_gestures_compound_group_along)
     val resources = LocalContext.current.resources
+    val distanceTabs = SideGestureDistanceTab.entries.map { tab ->
+        stringResource(
+            when (tab) {
+                SideGestureDistanceTab.Short -> R.string.side_gestures_tab_short_distance
+                SideGestureDistanceTab.Long -> R.string.side_gestures_tab_long_distance
+                SideGestureDistanceTab.Compound -> R.string.side_gestures_tab_compound
+            },
+        )
+    }
 
     val pressTapItems = sideGestureSlotCardItems(
         settings = settings,
@@ -143,130 +152,143 @@ fun SideGestureSettingsScreen(
             title = swipeDirectionsSectionTitle,
         )
 
-        item(key = "swipe-distance-tab-card") {
-            val distanceTabs = SideGestureDistanceTab.entries.map { tab ->
-                stringResource(
-                    when (tab) {
-                        SideGestureDistanceTab.Short -> R.string.side_gestures_tab_short_distance
-                        SideGestureDistanceTab.Long -> R.string.side_gestures_tab_long_distance
-                        SideGestureDistanceTab.Compound -> R.string.side_gestures_tab_compound
-                    },
-                )
-            }
-            MiuixTabSettingsCard(
-                tabs = distanceTabs,
-                selectedTabIndex = selectedTab.ordinal,
-                onTabSelected = { selectedTab = SideGestureDistanceTab.entries[it] },
-            ) {
-                when (selectedTab) {
-                    SideGestureDistanceTab.Short -> {
-                        SmallTitle(
-                            text = straightSectionTitle,
-                            insideMargin = PaddingValues(bottom = 4.dp),
-                        )
-                        RenderSideGestureSlotItems(
-                            sideGestureSlotCardItems(
-                                settings = settings,
-                                slotSide = slotSide,
-                                handleId = handleId,
-                                side = side,
-                                triggers = SwipeDirectionFamily.orderedEntries().map { it.shortTrigger },
-                                titleStyle = SideGestureSlotTitleStyle.SlotLabel,
-                                onOpenSlotConfig = onOpenSlotConfig,
-                                rowInsideMargin = MiuixInsetCardComponentMargin,
-                            ),
-                        )
-                        SmallTitle(
-                            text = hoverSectionTitle,
-                            insideMargin = PaddingValues(top = 8.dp, bottom = 4.dp),
-                        )
-                        RenderSideGestureSlotItems(
-                            sideGestureSlotCardItems(
-                                settings = settings,
-                                slotSide = slotSide,
-                                handleId = handleId,
-                                side = side,
-                                triggers = SwipeDirectionFamily.orderedEntries().map { it.hoverTrigger },
-                                titleStyle = SideGestureSlotTitleStyle.TriggerLabel,
-                                onOpenSlotConfig = onOpenSlotConfig,
-                                rowInsideMargin = MiuixInsetCardComponentMargin,
-                            ),
-                        )
-                        // 悬停时长滑条放到卡片最底部，避免把「直向」和「悬停」两组槽位夹断。
-                        MiuixSliderRow(
-                            title = stringResource(R.string.side_gestures_hover_duration),
-                            summary = hoverDurationSummary,
-                            value = settings.swipeHoverDurationMs.toFloat(),
-                            valueRange = SwipeHoverDurationLimits.MIN_MS.toFloat()..SwipeHoverDurationLimits.MAX_MS.toFloat(),
-                            enabled = serviceEnabled,
-                            insideMargin = MiuixInsetCardComponentMargin,
-                            steps = 0,
-                            showKeyPoints = true,
-                            keyPoints = SwipeHoverDurationLimits.UI_KEY_POINTS,
-                            commitOnFinish = true,
-                            formatLabel = { ms ->
-                                resources.getString(
-                                    R.string.side_gestures_hover_duration_value,
-                                    ms.roundToInt(),
-                                )
-                            },
-                            onValueChange = { onSwipeHoverDurationChange(it.roundToInt()) },
-                        )
-                    }
+        val currentTabItems = buildList {
+            when (selectedTab) {
+                SideGestureDistanceTab.Short -> {
+                    add(
+                        CardItem("short-straight-title") {
+                            SmallTitle(
+                                text = straightSectionTitle,
+                                insideMargin = PaddingValues(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 4.dp),
+                            )
+                        },
+                    )
+                    addAll(
+                        sideGestureSlotCardItems(
+                            settings = settings,
+                            slotSide = slotSide,
+                            handleId = handleId,
+                            side = side,
+                            triggers = SwipeDirectionFamily.orderedEntries().map { it.shortTrigger },
+                            titleStyle = SideGestureSlotTitleStyle.SlotLabel,
+                            onOpenSlotConfig = onOpenSlotConfig,
+                        ),
+                    )
+                    add(
+                        CardItem("short-hover-title") {
+                            SmallTitle(
+                                text = hoverSectionTitle,
+                                insideMargin = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 4.dp),
+                            )
+                        },
+                    )
+                    addAll(
+                        sideGestureSlotCardItems(
+                            settings = settings,
+                            slotSide = slotSide,
+                            handleId = handleId,
+                            side = side,
+                            triggers = SwipeDirectionFamily.orderedEntries().map { it.hoverTrigger },
+                            titleStyle = SideGestureSlotTitleStyle.TriggerLabel,
+                            onOpenSlotConfig = onOpenSlotConfig,
+                        ),
+                    )
+                    // 悬停时长滑条放到卡片最底部，避免把「直向」和「悬停」两组槽位夹断。
+                    add(
+                        CardItem("short-hover-duration") {
+                            MiuixSliderRow(
+                                title = stringResource(R.string.side_gestures_hover_duration),
+                                summary = hoverDurationSummary,
+                                value = settings.swipeHoverDurationMs.toFloat(),
+                                valueRange = SwipeHoverDurationLimits.MIN_MS.toFloat()..SwipeHoverDurationLimits.MAX_MS.toFloat(),
+                                enabled = serviceEnabled,
+                                insideMargin = BasicComponentDefaults.InsideMargin,
+                                steps = 0,
+                                showKeyPoints = true,
+                                keyPoints = SwipeHoverDurationLimits.UI_KEY_POINTS,
+                                commitOnFinish = true,
+                                formatLabel = { ms ->
+                                    resources.getString(
+                                        R.string.side_gestures_hover_duration_value,
+                                        ms.roundToInt(),
+                                    )
+                                },
+                                onValueChange = { onSwipeHoverDurationChange(it.roundToInt()) },
+                            )
+                        },
+                    )
+                }
 
-                    SideGestureDistanceTab.Long -> {
-                        RenderSideGestureSlotItems(
-                            sideGestureSlotCardItems(
-                                settings = settings,
-                                slotSide = slotSide,
-                                handleId = handleId,
-                                side = side,
-                                triggers = SwipeDirectionFamily.orderedEntries().map { it.longTrigger },
-                                titleStyle = SideGestureSlotTitleStyle.SlotLabel,
-                                onOpenSlotConfig = onOpenSlotConfig,
-                                rowInsideMargin = MiuixInsetCardComponentMargin,
-                            ),
-                        )
-                    }
+                SideGestureDistanceTab.Long -> {
+                    addAll(
+                        sideGestureSlotCardItems(
+                            settings = settings,
+                            slotSide = slotSide,
+                            handleId = handleId,
+                            side = side,
+                            triggers = SwipeDirectionFamily.orderedEntries().map { it.longTrigger },
+                            titleStyle = SideGestureSlotTitleStyle.SlotLabel,
+                            onOpenSlotConfig = onOpenSlotConfig,
+                        ),
+                    )
+                }
 
-                    SideGestureDistanceTab.Compound -> {
-                        MiuixHintText(
-                            text = compoundHint,
-                            horizontalPadding = 0.dp,
-                            modifier = Modifier.padding(bottom = 8.dp),
-                        )
-                        SmallTitle(
-                            text = compoundInwardGroupTitle,
-                            insideMargin = PaddingValues(bottom = 4.dp),
-                        )
-                        RenderSideGestureSlotItems(
-                            sideGestureCompoundPathItems(
-                                settings = settings,
-                                slotSide = slotSide,
-                                handleId = handleId,
-                                side = side,
-                                paths = inwardCompoundPaths(),
-                                onOpenSlotConfig = onOpenSlotConfig,
-                            ),
-                        )
-                        SmallTitle(
-                            text = compoundAlongGroupTitle,
-                            insideMargin = PaddingValues(top = 8.dp, bottom = 4.dp),
-                        )
-                        RenderSideGestureSlotItems(
-                            sideGestureCompoundPathItems(
-                                settings = settings,
-                                slotSide = slotSide,
-                                handleId = handleId,
-                                side = side,
-                                paths = alongCompoundPaths(),
-                                onOpenSlotConfig = onOpenSlotConfig,
-                            ),
-                        )
-                    }
+                SideGestureDistanceTab.Compound -> {
+                    add(
+                        CardItem("compound-hint") {
+                            MiuixHintText(
+                                text = compoundHint,
+                                horizontalPadding = 16.dp,
+                                modifier = Modifier.padding(bottom = 8.dp),
+                            )
+                        },
+                    )
+                    add(
+                        CardItem("compound-inward-title") {
+                            SmallTitle(
+                                text = compoundInwardGroupTitle,
+                                insideMargin = PaddingValues(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 4.dp),
+                            )
+                        },
+                    )
+                    addAll(
+                        sideGestureCompoundPathItems(
+                            settings = settings,
+                            slotSide = slotSide,
+                            handleId = handleId,
+                            side = side,
+                            paths = inwardCompoundPaths(),
+                            onOpenSlotConfig = onOpenSlotConfig,
+                        ),
+                    )
+                    add(
+                        CardItem("compound-along-title") {
+                            SmallTitle(
+                                text = compoundAlongGroupTitle,
+                                insideMargin = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 4.dp),
+                            )
+                        },
+                    )
+                    addAll(
+                        sideGestureCompoundPathItems(
+                            settings = settings,
+                            slotSide = slotSide,
+                            handleId = handleId,
+                            side = side,
+                            paths = alongCompoundPaths(),
+                            onOpenSlotConfig = onOpenSlotConfig,
+                        ),
+                    )
                 }
             }
         }
+        MiuixGroupedTabSettingsCard(
+            tabs = distanceTabs,
+            selectedTabIndex = selectedTab.ordinal,
+            onTabSelected = { selectedTab = SideGestureDistanceTab.entries[it] },
+            keyPrefix = "swipe-distance-tab",
+            items = currentTabItems,
+        )
 
         settingsLazySmallTitle(
             key = "section-press-tap",
@@ -505,15 +527,6 @@ private fun sideGestureSlotCardItems(
                 )
             },
         )
-    }
-}
-
-@Composable
-private fun ColumnScope.RenderSideGestureSlotItems(items: List<CardItem>) {
-    items.forEach { cardItem ->
-        key(cardItem.key) {
-            cardItem.content(this)
-        }
     }
 }
 

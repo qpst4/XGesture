@@ -15,6 +15,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -57,6 +58,7 @@ import com.slideindex.app.activity.ImageSourceType
 import com.slideindex.app.activity.ShortcutIconStorage
 import com.slideindex.app.activity.ShortcutImagePreviewActivity
 import com.slideindex.app.ui.miuix.CardItem
+import com.slideindex.app.ui.miuix.CardSegment
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixListSettingsCard
@@ -71,7 +73,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -317,13 +318,14 @@ fun ActivityShortcutEditImageScreen(
                 }
 
                 // 图片添加卡片区域（图二、图三）
-                Card(
+                CardSegment(
+                    isFirst = true,
+                    isLast = true,
                     modifier = Modifier
-                        .fillMaxWidth()
                         .height(200.dp)
-                        .clip(RoundedCornerShape(16.dp))
                         .clickable { showSourceTypePicker = true },
-                    cornerRadius = 16.dp,
+                    outerHorizontalPadding = 0.dp,
+                    insidePadding = PaddingValues(0.dp),
                 ) {
                     Box(
                         modifier = Modifier

@@ -15,6 +15,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,6 +52,7 @@ import com.slideindex.app.activity.ActivityShortcutFileSupport
 import com.slideindex.app.activity.FileShortcutConfig
 import com.slideindex.app.activity.ShortcutIconStorage
 import com.slideindex.app.ui.miuix.CardItem
+import com.slideindex.app.ui.miuix.CardSegment
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixListSettingsCard
 import com.slideindex.app.ui.miuix.MiuixSwitchRow
@@ -61,7 +63,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -301,17 +302,15 @@ fun ActivityShortcutEditFileScreen(
                 }
 
                 // 选择应用卡片（图五、图六）
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .clickable { onPickApp(mimeType, isShareMode) },
-                    cornerRadius = 16.dp,
+                CardSegment(
+                    isFirst = true,
+                    isLast = true,
+                    modifier = Modifier.clickable { onPickApp(mimeType, isShareMode) },
+                    outerHorizontalPadding = 0.dp,
+                    insidePadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
@@ -341,14 +340,14 @@ fun ActivityShortcutEditFileScreen(
                 }
 
                 // 选择文件卡片（图五、图六）
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    cornerRadius = 16.dp,
+                CardSegment(
+                    isFirst = true,
+                    isLast = true,
+                    outerHorizontalPadding = 0.dp,
+                    insidePadding = PaddingValues(16.dp),
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),

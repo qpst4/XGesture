@@ -52,6 +52,7 @@ import com.slideindex.app.settings.SearchEngineType
 import com.slideindex.app.settings.SearchIconType
 import com.slideindex.app.overlay.pickresult.SearchEngineIcon
 import com.slideindex.app.overlay.searchpanel.SearchPanelAliasResolver
+import com.slideindex.app.ui.miuix.CardSegment
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.miuix.MiuixHintText
 import com.slideindex.app.ui.miuix.MiuixInsetCardComponentMargin
@@ -69,8 +70,6 @@ import androidx.compose.material.icons.Icons
 import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator as MiuixCircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
@@ -244,20 +243,11 @@ fun SearchEngineEditorScreen(
             }
         },
     ) {
-        LazySettingsItem(key = "search-engine-editor") {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.defaultColors(
-                    color = MiuixTheme.colorScheme.surfaceContainer,
-                    contentColor = MiuixTheme.colorScheme.onSurfaceContainer,
-                ),
-                insideMargin = PaddingValues(16.dp),
+        item(key = "search-engine-editor-icon-card") {
+            CardSegment(
+                isFirst = true,
+                isLast = true,
+                insidePadding = PaddingValues(16.dp),
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -446,15 +436,14 @@ fun SearchEngineEditorScreen(
                     }
                 }
             }
+        }
 
-            if (isShareImageType) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.defaultColors(
-                        color = MiuixTheme.colorScheme.surfaceContainer,
-                        contentColor = MiuixTheme.colorScheme.onSurfaceContainer,
-                    ),
-                    insideMargin = PaddingValues(16.dp),
+        if (isShareImageType) {
+            item(key = "search-engine-editor-share-image-target-card") {
+                CardSegment(
+                    isFirst = true,
+                    isLast = true,
+                    insidePadding = PaddingValues(16.dp),
                 ) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -477,7 +466,9 @@ fun SearchEngineEditorScreen(
                         }
                     }
                 }
-            } else {
+            }
+        } else {
+            item(key = "search-engine-editor-type-fields") {
                 EditorTypeFields(
                     engineType = engineType,
                     onEngineTypeChange = { onUpdateDraft { d -> d.copy(engineType = it) } },
@@ -521,7 +512,6 @@ fun SearchEngineEditorScreen(
                     onPickShareTarget = { onPickShareTarget(targetPackage, targetActivity) },
                 )
             }
-        }
         }
     }
 
@@ -611,8 +601,6 @@ private fun EditorTypeFields(
                 onEngineTypeChange(engineTypes[index].first)
             }
         },
-        outerHorizontalPadding = 0.dp,
-        outerBottomPadding = 0.dp,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             when (engineType) {

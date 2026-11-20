@@ -62,14 +62,13 @@ import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.viewmodel.ActivityShortcutPickerResult
 import com.slideindex.app.util.TaskManagerUtil
+import com.slideindex.app.ui.miuix.CardSegment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
@@ -357,23 +356,14 @@ fun ActivityShortcutEditScreen(
             }
         },
     ) {
-        LazySettingsItem(key = "activity-shortcut-edit-form") {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+        item(key = "activity-shortcut-edit-form") {
+            CardSegment(
+                isFirst = true,
+                isLast = true,
+                insidePadding = PaddingValues(16.dp),
             ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.defaultColors(
-                        color = MiuixTheme.colorScheme.surfaceContainer,
-                        contentColor = MiuixTheme.colorScheme.onSurfaceContainer,
-                    ),
-                    insideMargin = PaddingValues(16.dp),
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        ShortcutPreviewRow(
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    ShortcutPreviewRow(
                             bitmap = previewBitmap,
                             title = previewTitle.ifBlank { label },
                             typeLabel = typeLabel,
@@ -566,7 +556,6 @@ fun ActivityShortcutEditScreen(
                         }
                     }
                 }
-            }
         }
     }
 

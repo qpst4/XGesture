@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -54,7 +55,7 @@ import com.slideindex.app.ui.miuix.consumeExpandableSearchBack
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import top.yukonga.miuix.kmp.basic.Card
+import com.slideindex.app.ui.miuix.CardSegment
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -206,15 +207,18 @@ fun PresetSearchEnginePickerScreen(
                 }
             }
         } else {
-            items(
+            val lastIdx = filteredPresets.lastIndex
+            itemsIndexed(
                 items = filteredPresets,
-                key = { it.presetId },
-            ) { preset ->
+                key = { _, item -> item.presetId },
+            ) { index, preset ->
                 val alreadyAdded = isAlreadyAdded(preset)
 
                 PresetEngineItemRow(
                     preset = preset,
                     alreadyAdded = alreadyAdded,
+                    isFirst = index == 0,
+                    isLast = index == lastIdx,
                     onAddSingle = {
                         val config = instantiatePreset(preset, currentEngines.size)
                         onAddEngines(listOf(config))
@@ -238,6 +242,8 @@ fun PresetSearchEnginePickerScreen(
 private fun PresetEngineItemRow(
     preset: PresetSearchEngine,
     alreadyAdded: Boolean,
+    isFirst: Boolean,
+    isLast: Boolean,
     onAddSingle: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -271,10 +277,9 @@ private fun PresetEngineItemRow(
         }
     }
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 5.dp),
+    CardSegment(
+        isFirst = isFirst,
+        isLast = isLast,
     ) {
         Row(
             modifier = Modifier

@@ -73,8 +73,7 @@ import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
+import com.slideindex.app.ui.miuix.CardSegment
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.SmallTitle
@@ -410,11 +409,13 @@ fun MultiTouchGestureSettingsScreen(
                     text = stringResource(R.string.multitouch_diagnostics_title),
                     insideMargin = PaddingValues(16.dp, 8.dp),
                 )
-                Card(
-                    modifier = Modifier.padding(bottom = 16.dp),
-                    colors = CardDefaults.defaultColors(
-                        color = MiuixTheme.colorScheme.secondaryContainer,
-                    ),
+                CardSegment(
+                    isFirst = true,
+                    isLast = true,
+                    color = MiuixTheme.colorScheme.secondaryContainer,
+                    outerHorizontalPadding = 0.dp,
+                    outerBottomPadding = 16.dp,
+                    insidePadding = PaddingValues(16.dp),
                 ) {
                     MiuixText(
                         text = diagnostics.ifBlank {
@@ -422,7 +423,6 @@ fun MultiTouchGestureSettingsScreen(
                         },
                         style = MiuixTheme.textStyles.body2,
                         color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        modifier = Modifier.padding(16.dp),
                     )
                 }
             }
@@ -431,48 +431,50 @@ fun MultiTouchGestureSettingsScreen(
                     text = stringResource(R.string.multitouch_device_title),
                     insideMargin = PaddingValues(16.dp, 8.dp),
                 )
-                Card(
-                    modifier = Modifier.padding(bottom = 16.dp),
-                    colors = CardDefaults.defaultColors(
+                Column(modifier = Modifier.padding(bottom = 16.dp)) {
+                    val hasCustomDevices = touchDevices.isNotEmpty()
+                    CardSegment(
+                        isFirst = true,
+                        isLast = !hasCustomDevices,
                         color = MiuixTheme.colorScheme.secondaryContainer,
-                    ),
-                ) {
-                    RadioButtonPreference(
-                        title = stringResource(R.string.multitouch_device_auto),
-                        summary = if (currentDeviceName.isNotBlank()) {
-                            stringResource(
-                                R.string.multitouch_device_summary_auto_current,
-                                currentDeviceName,
-                            )
-                        } else {
-                            stringResource(R.string.multitouch_device_summary_auto)
-                        },
-                        selected = settings.devicePath.isBlank(),
-                        onClick = { onDevicePathChange("") },
-                        radioButtonLocation = RadioButtonLocation.End,
-                    )
-                    touchDevices.forEach { line ->
+                        outerHorizontalPadding = 0.dp,
+                    ) {
+                        RadioButtonPreference(
+                            title = stringResource(R.string.multitouch_device_auto),
+                            summary = if (currentDeviceName.isNotBlank()) {
+                                stringResource(
+                                    R.string.multitouch_device_summary_auto_current,
+                                    currentDeviceName,
+                                )
+                            } else {
+                                stringResource(R.string.multitouch_device_summary_auto)
+                            },
+                            selected = settings.devicePath.isBlank(),
+                            onClick = { onDevicePathChange("") },
+                            radioButtonLocation = RadioButtonLocation.End,
+                        )
+                    }
+                    touchDevices.forEachIndexed { index, line ->
                         val parts = line.split('|')
                         val path = parts.getOrNull(0).orEmpty()
                         val name = parts.getOrNull(1).orEmpty()
                         val protocol = parts.getOrNull(2).orEmpty()
                         val range = "${parts.getOrNull(3).orEmpty()}×" +
                             parts.getOrNull(4).orEmpty()
-                        RadioButtonPreference(
-                            title = name.ifBlank { path },
-                            summary = "$path · $protocol · $range",
-                            selected = settings.devicePath == path,
-                            onClick = { onDevicePathChange(path) },
-                            radioButtonLocation = RadioButtonLocation.End,
-                        )
-                    }
-                    if (touchDevices.isEmpty()) {
-                        MiuixText(
-                            text = stringResource(R.string.multitouch_device_empty),
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            modifier = Modifier.padding(16.dp),
-                        )
+                        CardSegment(
+                            isFirst = false,
+                            isLast = index == touchDevices.lastIndex,
+                            color = MiuixTheme.colorScheme.secondaryContainer,
+                            outerHorizontalPadding = 0.dp,
+                        ) {
+                            RadioButtonPreference(
+                                title = name.ifBlank { path },
+                                summary = "$path · $protocol · $range",
+                                selected = settings.devicePath == path,
+                                onClick = { onDevicePathChange(path) },
+                                radioButtonLocation = RadioButtonLocation.End,
+                            )
+                        }
                     }
                 }
             }
@@ -496,22 +498,25 @@ fun MultiTouchGestureSettingsScreen(
         title = stringResource(R.string.multitouch_trigger_keyboard_title),
         onDismissRequest = { showKeyboardPicker = false },
     ) {
-        Card(
-            modifier = Modifier.padding(bottom = 16.dp),
-            colors = CardDefaults.defaultColors(
-                color = MiuixTheme.colorScheme.secondaryContainer,
-            ),
-        ) {
-            MultiTouchGestureSettings.keyboardBehaviorOptions.forEach { behavior ->
-                RadioButtonPreference(
-                    title = keyboardBehaviorLabel(behavior),
-                    selected = settings.keyboardBehavior == behavior,
-                    onClick = {
-                        showKeyboardPicker = false
-                        onKeyboardBehaviorChange(behavior)
-                    },
-                    radioButtonLocation = RadioButtonLocation.End,
-                )
+        Column(modifier = Modifier.padding(bottom = 16.dp)) {
+            val options = MultiTouchGestureSettings.keyboardBehaviorOptions
+            options.forEachIndexed { index, behavior ->
+                CardSegment(
+                    isFirst = index == 0,
+                    isLast = index == options.lastIndex,
+                    color = MiuixTheme.colorScheme.secondaryContainer,
+                    outerHorizontalPadding = 0.dp,
+                ) {
+                    RadioButtonPreference(
+                        title = keyboardBehaviorLabel(behavior),
+                        selected = settings.keyboardBehavior == behavior,
+                        onClick = {
+                            showKeyboardPicker = false
+                            onKeyboardBehaviorChange(behavior)
+                        },
+                        radioButtonLocation = RadioButtonLocation.End,
+                    )
+                }
             }
         }
     }

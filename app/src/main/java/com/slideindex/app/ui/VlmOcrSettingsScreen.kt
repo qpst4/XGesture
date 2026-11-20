@@ -44,7 +44,7 @@ import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
+import com.slideindex.app.ui.miuix.CardSegment
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
@@ -154,12 +154,11 @@ fun VlmOcrSettingsScreen(
             title = sectionApiTitle,
         )
 
-        LazySettingsItem(key = "api-card") {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                insideMargin = PaddingValues(16.dp),
+        item(key = "api-card") {
+            CardSegment(
+                isFirst = true,
+                isLast = true,
+                insidePadding = PaddingValues(16.dp),
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
@@ -239,12 +238,11 @@ fun VlmOcrSettingsScreen(
             title = sectionModelTitle,
         )
 
-        LazySettingsItem(key = "model-card") {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                insideMargin = PaddingValues(16.dp),
+        item(key = "model-card") {
+            CardSegment(
+                isFirst = true,
+                isLast = true,
+                insidePadding = PaddingValues(16.dp),
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     MiuixLabeledTextField(
@@ -371,11 +369,10 @@ fun VlmOcrSettingsScreen(
             title = sectionPromptTitle,
         )
 
-        LazySettingsItem(key = "prompt-card") {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
+        item(key = "prompt-card") {
+            CardSegment(
+                isFirst = true,
+                isLast = true,
             ) {
                 Column {
                     SwitchPreference(

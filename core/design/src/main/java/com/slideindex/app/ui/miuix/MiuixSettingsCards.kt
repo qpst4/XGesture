@@ -37,6 +37,51 @@ fun LazyListScope.MiuixListSettingsCard(
 }
 
 /**
+ * 类型 2A：支持虚拟化拆段的 Tab 列表卡片（Tab 条自动作为顶段圆角，下属各行独立为后续分段）。
+ * 彻底替换 `item { MiuixTabSettingsCard { ... } }` 长列表反模式。
+ */
+fun LazyListScope.MiuixGroupedTabSettingsCard(
+    keyPrefix: String,
+    tabs: List<String>?,
+    selectedTabIndex: Int,
+    onTabSelected: (Int) -> Unit,
+    items: List<CardItem>,
+    outerTopPadding: Dp = 0.dp,
+    outerBottomPadding: Dp = 12.dp,
+    outerHorizontalPadding: Dp = 12.dp,
+    insidePadding: PaddingValues = PaddingValues(0.dp),
+    contourHost: MiuixTabRowContourHost = MiuixTabRowContourHost.SurfaceContainer,
+) {
+    val showTabs = !tabs.isNullOrEmpty()
+    val allItems = buildList {
+        if (showTabs && tabs != null) {
+            add(
+                CardItem(key = "tab-header") {
+                    MiuixTabRowWithContourInCard(
+                        tabs = tabs,
+                        selectedTabIndex = selectedTabIndex,
+                        onTabSelected = onTabSelected,
+                        contourHost = contourHost,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                    )
+                }
+            )
+        }
+        addAll(items)
+    }
+    groupedCardItems(
+        keyPrefix = keyPrefix,
+        items = allItems,
+        outerTopPadding = outerTopPadding,
+        outerBottomPadding = outerBottomPadding,
+        outerHorizontalPadding = outerHorizontalPadding,
+        insidePadding = insidePadding,
+    )
+}
+
+/**
  * 类型 2：Tab 在白 Card 内（Tab 条为浅灰，选中 Tab 为白 pill）。
  * 对齐 miuix TabRowSection。
  */

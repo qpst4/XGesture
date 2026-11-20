@@ -35,8 +35,7 @@ import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
+import com.slideindex.app.ui.miuix.CardSegment
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.SmallTitle
@@ -389,11 +388,13 @@ fun PhysicalKeySettingsScreen(
                     text = diagnosticsDriverInfo,
                     insideMargin = PaddingValues(16.dp, 8.dp),
                 )
-                Card(
-                    modifier = Modifier.padding(bottom = 16.dp),
-                    colors = CardDefaults.defaultColors(
-                        color = MiuixTheme.colorScheme.secondaryContainer,
-                    ),
+                CardSegment(
+                    isFirst = true,
+                    isLast = true,
+                    color = MiuixTheme.colorScheme.secondaryContainer,
+                    outerHorizontalPadding = 0.dp,
+                    outerBottomPadding = 16.dp,
+                    insidePadding = PaddingValues(16.dp),
                 ) {
                     SelectionContainer {
                         MiuixText(
@@ -401,7 +402,6 @@ fun PhysicalKeySettingsScreen(
                             style = MiuixTheme.textStyles.body2,
                             fontFamily = FontFamily.Monospace,
                             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            modifier = Modifier.padding(16.dp),
                         )
                     }
                 }

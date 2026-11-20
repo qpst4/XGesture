@@ -49,6 +49,7 @@ import com.slideindex.app.service.IconPackPickerTrampolineActivity
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.ui.compose.rememberAppRepository
 import com.slideindex.app.ui.miuix.CardItem
+import com.slideindex.app.ui.miuix.CardSegment
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import com.slideindex.app.ui.miuix.MiuixSettingsFab
@@ -556,37 +557,27 @@ private fun ActivityShortcutAddBottomSheet(
         title = stringResource(R.string.activity_shortcut_add),
         onDismissRequest = onDismiss
     ) {
-        top.yukonga.miuix.kmp.basic.Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
-            ArrowPreference(
-                title = stringResource(R.string.activity_shortcut_add_from_presets),
-                summary = stringResource(R.string.activity_shortcut_add_from_presets_sub),
-                onClick = onOpenPresets
-            )
-            ArrowPreference(
-                title = stringResource(R.string.activity_shortcut_browse_custom),
-                summary = stringResource(R.string.activity_shortcut_browse_custom_sub),
-                onClick = onBrowseActivity
-            )
-            ArrowPreference(
-                title = stringResource(R.string.activity_shortcut_add_from_shortcuts),
-                summary = stringResource(R.string.activity_shortcut_add_from_shortcuts_sub),
-                onClick = onAddAppShortcut
-            )
-            ArrowPreference(
-                title = stringResource(R.string.activity_shortcut_add_from_shell),
-                summary = stringResource(R.string.activity_shortcut_add_from_shell_sub),
-                onClick = onAddShellCommand
-            )
-            ArrowPreference(
-                title = stringResource(R.string.activity_shortcut_add_image),
-                summary = stringResource(R.string.activity_shortcut_add_image_sub),
-                onClick = onAddImage
-            )
-            ArrowPreference(
-                title = stringResource(R.string.activity_shortcut_add_file),
-                summary = stringResource(R.string.activity_shortcut_add_file_sub),
-                onClick = onAddFile
-            )
+        val addOptions = listOf(
+            Triple(R.string.activity_shortcut_add_from_presets, R.string.activity_shortcut_add_from_presets_sub, onOpenPresets),
+            Triple(R.string.activity_shortcut_browse_custom, R.string.activity_shortcut_browse_custom_sub, onBrowseActivity),
+            Triple(R.string.activity_shortcut_add_from_shortcuts, R.string.activity_shortcut_add_from_shortcuts_sub, onAddAppShortcut),
+            Triple(R.string.activity_shortcut_add_from_shell, R.string.activity_shortcut_add_from_shell_sub, onAddShellCommand),
+            Triple(R.string.activity_shortcut_add_image, R.string.activity_shortcut_add_image_sub, onAddImage),
+            Triple(R.string.activity_shortcut_add_file, R.string.activity_shortcut_add_file_sub, onAddFile),
+        )
+        Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+            addOptions.forEachIndexed { index, (titleRes, subRes, action) ->
+                CardSegment(
+                    isFirst = index == 0,
+                    isLast = index == addOptions.lastIndex,
+                ) {
+                    ArrowPreference(
+                        title = stringResource(titleRes),
+                        summary = stringResource(subRes),
+                        onClick = action,
+                    )
+                }
+            }
         }
     }
 }
