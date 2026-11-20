@@ -45,6 +45,7 @@ import com.slideindex.app.util.ShortcutScanProgress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 data class LoadedShortcutCatalog(
     val catalog: AppShortcutLoader.ShortcutCatalog?,
@@ -145,6 +146,7 @@ private fun ShortcutCreateSection(
             SmallTitle(
                 text = stringResource(R.string.create_shortcut),
                 modifier = Modifier.weight(1f),
+                textColor = MiuixTheme.colorScheme.primary,
             )
             Icon(
                 imageVector = if (showHosts) {
