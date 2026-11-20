@@ -37,6 +37,7 @@ import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import androidx.compose.material.icons.Icons
 import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import com.slideindex.app.ui.miuix.CardSegment
 import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.icon.extended.Ok
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -101,7 +102,11 @@ fun GestureExecuteShellCommandScreen(
                 // 父容器已有 16dp，默认 28dp 会叠成 44dp；这里对齐卡片正文的 32dp。
                 insideMargin = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             )
-            MiuixCard(modifier = Modifier.fillMaxWidth()) {
+            CardSegment(
+                isFirst = true,
+                isLast = true,
+                outerHorizontalPadding = 0.dp,
+            ) {
                 MiuixLabeledTextField(
                     value = command,
                     onValueChange = { command = it },

@@ -32,6 +32,7 @@ import com.slideindex.app.ui.quicklauncher.ReportQuickLauncherEmbedParentConfirm
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
+import com.slideindex.app.ui.miuix.CardSegment
 import top.yukonga.miuix.kmp.preference.RadioButtonLocation
 import top.yukonga.miuix.kmp.preference.RadioButtonPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
@@ -192,7 +193,11 @@ fun GestureSimulateKeyEventScreen(
                         // 父容器 16dp + 默认 28dp 会叠成 44dp；这里对齐卡片正文的 32dp。
                         insideMargin = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     )
-                    MiuixCard(modifier = Modifier.fillMaxWidth()) {
+                    CardSegment(
+                        isFirst = true,
+                        isLast = true,
+                        outerHorizontalPadding = 0.dp,
+                    ) {
                         Column(
                             modifier = Modifier.padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)

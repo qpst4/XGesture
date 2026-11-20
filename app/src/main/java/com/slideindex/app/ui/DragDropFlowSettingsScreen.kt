@@ -41,6 +41,7 @@ import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
+import com.slideindex.app.ui.miuix.CardSegment
 
 /** 下拉框按枚举顺序展示，文案走资源，别再在这里写死中文。 */
 private val DragDropFlowPosition.labelRes: Int
@@ -242,10 +243,9 @@ private fun DragFlowTryItCard() {
     val textColor = scheme.onSurface.toArgb()
     val chipColor = scheme.primary.copy(alpha = 0.12f).toArgb()
 
-    MiuixCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp),
+    CardSegment(
+        isFirst = true,
+        isLast = true,
     ) {
         Column(
             modifier = Modifier

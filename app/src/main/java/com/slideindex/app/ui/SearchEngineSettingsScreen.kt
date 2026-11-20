@@ -3,6 +3,7 @@
 package com.slideindex.app.ui
 
 import androidx.compose.ui.unit.DpSize
+import com.slideindex.app.ui.miuix.CardSegment
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -296,11 +297,10 @@ private fun DragFlowBarCard(
 ) {
     val scheme = MaterialTheme.colorScheme
 
-    MiuixCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .onGloballyPositioned { onBoundsChanged(it.boundsInWindow()) },
+    CardSegment(
+        isFirst = true,
+        isLast = true,
+        modifier = Modifier.onGloballyPositioned { onBoundsChanged(it.boundsInWindow()) },
     ) {
         Column(
             modifier = Modifier

@@ -48,7 +48,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 MIUIX_CARD_IMPORT = re.compile(r"import\s+top\.yukonga\.miuix\.kmp\.basic\.Card\b")
 M3_CARD_IMPORT = re.compile(r"import\s+androidx\.compose\.material3\.Card\b")
 EXPLICIT_MIUIX_CARD_CALL = re.compile(r"top\.yukonga\.miuix\.kmp\.basic\.Card\s*\(")
-CARD_CALL_PATTERN = re.compile(r"(?<![A-Za-z0-9_])Card\s*\(")
+CARD_CALL_PATTERN = re.compile(r"(?<![A-Za-z0-9_])(?:Card|MiuixCard)\s*\(")
 
 def check_file(path: Path) -> list:
     rel_path = path.relative_to(ROOT_DIR).as_posix()

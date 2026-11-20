@@ -66,6 +66,7 @@ import androidx.compose.ui.zIndex
 import com.slideindex.app.overlay.pickresult.SearchEngineIcon
 import com.slideindex.app.settings.SearchEngineConfig
 import com.slideindex.app.settings.SearchEngineIconShape
+import com.slideindex.app.ui.miuix.CardSegment
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -367,9 +368,13 @@ fun AggregatedSearchEngineManager(
                 .padding(top = 10.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // 1. 多页平铺卡片（每一页为独立 MiuixCard，外圈 12dp 标准边距）
+            // 1. 多页平铺卡片（每一页为独立 CardSegment，外圈 12dp 标准边距）
             if (pages.isEmpty()) {
-                MiuixCard(modifier = Modifier.fillMaxWidth()) {
+                CardSegment(
+                    isFirst = true,
+                    isLast = true,
+                    outerHorizontalPadding = 0.dp,
+                ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -420,7 +425,10 @@ fun AggregatedSearchEngineManager(
                         label = "page_reorder_offset_$pageIndex",
                     )
 
-                    MiuixCard(
+                    CardSegment(
+                        isFirst = true,
+                        isLast = true,
+                        outerHorizontalPadding = 0.dp,
                         modifier = Modifier
                             .fillMaxWidth()
                             .zIndex(if (isBeingDragged) 10f else 1f)
@@ -482,7 +490,10 @@ fun AggregatedSearchEngineManager(
             }
 
             // 2. 已隐藏卡片池
-            MiuixCard(
+            CardSegment(
+                isFirst = true,
+                isLast = true,
+                outerHorizontalPadding = 0.dp,
                 modifier = Modifier
                     .fillMaxWidth()
                     .onGloballyPositioned { coords ->
@@ -896,7 +907,10 @@ private fun MiuixEngineActionDialog(
     onDelete: () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismiss) {
-        MiuixCard(
+        CardSegment(
+            isFirst = true,
+            isLast = true,
+            outerHorizontalPadding = 0.dp,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
