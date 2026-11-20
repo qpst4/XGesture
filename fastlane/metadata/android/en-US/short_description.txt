@@ -1,0 +1,1 @@
+Powerful edge gestures, floating buttons, and navigation tools for Android.

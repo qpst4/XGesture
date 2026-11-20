@@ -1,0 +1,10 @@
+XGesture is a universal system-level gesture and single-handed productivity suite designed for Android devices.
+
+Key Features:
+- Customizable edge triggers (multi-angle swipes, long swipes, double taps)
+- Floating ball, ring launcher, and corner wheel quick menus
+- Quick tools, notification timeline, and widget panels
+- Reachability floating pointer for easy one-handed large-screen operation
+- 50+ system actions: brightness, volume, flashlight, lock screen, screenshot, OCR
+- Accessibility & Shizuku integration for advanced gestures
+- Privacy-friendly: 100% open-source with no ads or proprietary tracking SDKs
