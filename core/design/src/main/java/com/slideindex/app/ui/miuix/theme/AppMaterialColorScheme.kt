@@ -102,23 +102,33 @@ fun darkColorsFor(style: DarkBackgroundStyle) = miuixDarkColorScheme().copy(
         DarkBackgroundStyle.AMOLED_BLACK -> Color.Black
     },
     surface = when (style) {
-        DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF17232D)
-        DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF11161C)
-        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF080808)
+        DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF16212B)
+        DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF10151C)
+        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF0C0C0C)
     },
     surfaceContainer = when (style) {
-        DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF1C2B36)
-        DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF171D24)
-        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF101010)
+        DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF1E2D3B)
+        DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF1B232D)
+        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF1E1E20)
     },
     surfaceContainerHigh = when (style) {
-        DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF243744)
-        DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF202832)
-        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF181818)
+        DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF2A3D4E)
+        DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF26323F)
+        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF2A2A2D)
     },
     surfaceContainerHighest = when (style) {
-        DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF2C4352)
-        DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF29333E)
-        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF202020)
+        DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF364D62)
+        DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF324050)
+        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF38383B)
+    },
+    outline = when (style) {
+        DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF3D556C)
+        DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF364555)
+        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF333336)
+    },
+    dividerLine = when (style) {
+        DarkBackgroundStyle.QUIET_BLUE -> Color(0xFF283949)
+        DarkBackgroundStyle.DEEP_BLACK -> Color(0xFF24303B)
+        DarkBackgroundStyle.AMOLED_BLACK -> Color(0xFF28282A)
     },
 )

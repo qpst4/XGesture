@@ -26,18 +26,19 @@ enum class MiuixTabRowContourHost {
 @Composable
 fun miuixTabRowContourColors(host: MiuixTabRowContourHost): TabRowColors {
     val isDark = LocalAppDarkTheme.current
+    val scheme = MiuixTheme.colorScheme
     return when (host) {
         MiuixTabRowContourHost.AppScaffold -> TabRowDefaults.tabRowColors(
-            backgroundColor = if (isDark) Color(0xFF242426) else Color(0xFFF0F0F0),
-            selectedBackgroundColor = if (isDark) Color(0xFF3A3A3C) else Color.White,
-            contentColor = if (isDark) Color(0xFF8E8E93) else Color(0xFF8E8E93),
-            selectedContentColor = MiuixTheme.colorScheme.primary,
+            backgroundColor = if (isDark) scheme.surfaceContainer else scheme.surfaceVariant,
+            selectedBackgroundColor = if (isDark) scheme.surfaceContainerHigh else scheme.surface,
+            contentColor = scheme.onSurfaceVariantSummary,
+            selectedContentColor = scheme.onBackground,
         )
         MiuixTabRowContourHost.SurfaceContainer -> TabRowDefaults.tabRowColors(
-            backgroundColor = if (isDark) Color(0xFF1C1C1E) else Color(0xFFF0F0F0),
-            selectedBackgroundColor = if (isDark) Color(0xFF3A3A3C) else Color.White,
-            contentColor = if (isDark) Color(0xFF8E8E93) else Color(0xFF8E8E93),
-            selectedContentColor = MiuixTheme.colorScheme.primary,
+            backgroundColor = if (isDark) scheme.surface else scheme.surfaceVariant,
+            selectedBackgroundColor = if (isDark) scheme.surfaceContainerHigh else Color.White,
+            contentColor = scheme.onSurfaceVariantSummary,
+            selectedContentColor = scheme.onBackground,
         )
     }
 }
