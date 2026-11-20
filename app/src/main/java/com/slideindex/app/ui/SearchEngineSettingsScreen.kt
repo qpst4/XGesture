@@ -3,7 +3,6 @@
 package com.slideindex.app.ui
 
 import androidx.compose.ui.unit.DpSize
-import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme

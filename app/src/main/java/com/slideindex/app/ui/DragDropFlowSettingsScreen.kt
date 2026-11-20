@@ -41,7 +41,6 @@ import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
-import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 
 /** 下拉框按枚举顺序展示，文案走资源，别再在这里写死中文。 */
 private val DragDropFlowPosition.labelRes: Int

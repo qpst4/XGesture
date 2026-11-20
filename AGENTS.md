@@ -91,14 +91,20 @@ overlay 迁移已完成到"可维护"的程度，**不再启动项目级重构**
 
 ---
 
-## 五、UI 卡片内容的内边距（硬规则）
+## 五、UI 卡片体系与边距对齐（硬规则）
 
-> 起因：2026-11-15 在"点击与长按"卡片里加长按滑条，复用了 `MiuixInsetCardComponentMargin`
-> （它只有**纵向** 16dp，横向是 0），文字直接贴到卡片边缘。这类错误不能靠"下次注意"。
+> 起因：
+> 1. 2026-11-15 在"点击与长按"卡片里加长按滑条，复用了 `MiuixInsetCardComponentMargin`（横向 0），文字贴边。
+> 2. 2026-11-20 全工程卡片重构发现大量老旧手拼 `Card { ... }` 破坏 Lazy 虚拟化；且存在 BottomSheet 内部双重缩进、页面表单 Column 写死 16dp 导致与 12dp 卡片边缘上下错位。
 
-1. **新增卡片行（滑条 / 开关 / 导航行）必须复用同页容器**：放进 `MiuixTabSettingsCard` /
-   `MiuixListSettingsCard`，或给 `groupedCardItems` 显式 `insidePadding`；
-   行自身的 `insideMargin` 用 `BasicComponentDefaults.InsideMargin`。
-2. **禁止**把 `MiuixInsetCardComponentMargin` 当"通用边距"用（横向 0）。
-3. **交付前必须截图自检**：`adb shell screencap` 拉图，确认左右 ≥16dp、与相邻行对齐、
-   卡片圆角/背景与同页一致。截图随交付一起给用户，不截图不算完成。
+### 5.1 卡片容器选型（严禁业务层直接调用 `Card(`）
+1. **常规设置列表项**：必须使用 `groupedCardItems` / `MiuixListSettingsCard`。自动按索引将每一行拆分成独立虚拟化 item，首段自动切顶圆角，尾段切底圆角。
+2. **带 Tab 切换的分组卡片**：必须使用 `MiuixGroupedTabSettingsCard`。TabRow 自动作为首段大圆角，各子项挂为后续 CardSegment，严禁把几十个槽位硬塞在单一 `item { Card }` 里。
+3. **弹窗选项与特殊独立表单**：使用 `CardSegment`（`isFirst = true, isLast = true`）。
+4. **禁止**在 `:app` / `:feature` 业务界面直接 `import top.yukonga.miuix.kmp.basic.Card` 或手写 `Card(...)` 构造。
+
+### 5.2 垂直基准线与边距对齐（全页统一 12dp 基线）
+1. **页面级统一外边距**：设置页所有卡片以及外部表单 Column 的左右外边距基线必须统一为 **12dp**（`padding(horizontal = 12.dp)`）。**严禁**在外层手写 16dp 导致上下卡片呈现阶梯状错位。
+2. **弹窗脱外边距**：在 `MiuixBottomSheet` / 底部弹窗内使用 `CardSegment` 时，由于 Sheet 自身已内置 `insideMargin`，必须显式指定 `outerHorizontalPadding = 0.dp`，**严禁双重缩进**。
+3. **卡片行内部边距**：卡片行自身的 `insideMargin` 必须用 `BasicComponentDefaults.InsideMargin`（左右 16dp，水波纹撑满切角），**严禁**使用横向为 0 的 `MiuixInsetCardComponentMargin`。
+4. **交付前必须截图自检**：`adb shell screencap` 拉图，确认整页在同一条垂线上对齐、左右 ≥16dp、卡片圆角/背景与同页一致。截图随交付一起给用户，不截图不算完成。
