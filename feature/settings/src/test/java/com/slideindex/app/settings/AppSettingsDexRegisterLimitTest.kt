@@ -28,6 +28,7 @@ class AppSettingsDexRegisterLimitTest {
         FloatBallSettings::class.java,
         ClipboardSettings::class.java,
         SearchPanelSettings::class.java,
+        OverlaySettings::class.java,
     )
 
     @Test
