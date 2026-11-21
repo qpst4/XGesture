@@ -1,22 +1,54 @@
 package com.slideindex.app.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FindInPage
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LibraryAdd
+import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,73 +59,75 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.slideindex.app.R
+import com.slideindex.app.link.BrowserAppOption
+import com.slideindex.app.link.BrowserSelectorActivity
+import com.slideindex.app.link.LinkConfigBackup
 import com.slideindex.app.link.LinkConfigTransfer
 import com.slideindex.app.link.LinkDispatchResult
 import com.slideindex.app.link.LinkDispatchRule
 import com.slideindex.app.link.LinkDispatcher
+import com.slideindex.app.link.LinkExemptDomain
+import com.slideindex.app.link.LinkExtractPattern
 import com.slideindex.app.link.LinkLauncher
 import com.slideindex.app.link.LinkMatchType
 import com.slideindex.app.link.LinkResolveStrategy
+import com.slideindex.app.link.LinkRouteTrace
 import com.slideindex.app.link.LinkRuleRepository
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.ui.link.LinkAppIcon
-import com.slideindex.app.ui.link.LinkExemptsBottomSheet
-import com.slideindex.app.ui.link.LinkExtractsBottomSheet
-import com.slideindex.app.ui.link.LinkRuleEditDialog
 import com.slideindex.app.ui.link.LinkTemplateImportDialog
 import com.slideindex.app.ui.link.linkAppNameCache
+import com.slideindex.app.ui.miuix.CardSegment
+import com.slideindex.app.ui.miuix.MiuixBottomSheet
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
-import com.slideindex.app.ui.miuix.MiuixProgressCard
+import com.slideindex.app.ui.miuix.MiuixRadioSelectDialog
 import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
-import com.slideindex.app.ui.miuix.groupedCardItems
-import com.slideindex.app.ui.settings.components.SettingDropdownRow
-import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffoldWithExpandableSearch
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
-import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
-import com.slideindex.app.ui.settings.components.settingsLazyTipCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
+/**
+ * 链接分发与雷达主设置页面。
+ *
+ * 结合 Gevo 全折叠仪表盘架构 + LinkGo-X 分门别类机制：
+ * 1. 所有功能块默认折叠（极简一屏展示所有控制台大块）；
+ * 2. 规则列表按「分发规则 (短链重分发)」与「跳转规则 (应用直达)」分栏清晰展示；
+ * 3. 规则展示项全面精致化（40dp 图标 + 等宽 Pattern 微标签 + 胶囊徽章 + Switch）；
+ * 4. 具备系统默认浏览器与备选兜底浏览器能力；
+ * 5. 顶栏提供独立「跳转记录」流水日志入口。
+ */
 @Composable
 fun LinkDispatchSettingsScreen(
     settings: AppSettings,
     onBack: () -> Unit,
+    onNavigateToEditRule: (String?) -> Unit = {},
+    onNavigateToHistory: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val clipboardManager = LocalClipboardManager.current
 
     val pageTitle = stringResource(R.string.link_dispatch_title)
-    val pageDesc = "按规则把链接送往指定应用。规则按顺序匹配，命中第一条即停止；未命中或域名被豁免时使用系统默认方式打开。"
-
-    val openSmallWinTitle = "小窗打开"
-    val openSmallWinDesc = "分发规则触发时用小窗打开链接目标，关闭则全屏打开"
-    val radarPointerTitle = "启用链接雷达"
-    val radarPointerDesc = "指针靠近屏幕链接时高亮并显示打开气泡，指针点击或松手按规则跳转"
-    val radarScreenTitle = "屏幕内容链接雷达"
-    val radarScreenDesc = "全局复制或框选悬浮窗中高亮链接，轻点直达目标应用"
-
-    val sandboxTitle = stringResource(R.string.link_dispatch_sandbox_title)
-    val sandboxHint = stringResource(R.string.link_dispatch_sandbox_hint)
-    val sandboxBtnText = stringResource(R.string.link_dispatch_sandbox_test_btn)
-    val sandboxNoMatchText = stringResource(R.string.link_dispatch_sandbox_no_match)
-
-    val importFailedMsg = stringResource(R.string.link_dispatch_import_failed)
-    val exportSuccessMsg = stringResource(R.string.link_dispatch_export_success)
 
     val rules by LinkRuleRepository.observeRules(context).collectAsStateWithLifecycle(initialValue = emptyList())
     val exempts by LinkRuleRepository.observeExemptDomains(context).collectAsStateWithLifecycle(initialValue = emptyList())
@@ -102,27 +136,43 @@ fun LinkDispatchSettingsScreen(
     val radarScreenContent by LinkRuleRepository.observeRadarScreenContent(context).collectAsStateWithLifecycle(initialValue = true)
     val radarPointer by LinkRuleRepository.observeRadarPointer(context).collectAsStateWithLifecycle(initialValue = true)
     val radarHoverHoldMs by LinkRuleRepository.observeRadarHoverHoldMs(context).collectAsStateWithLifecycle(
-        initialValue = LinkRuleRepository.DEFAULT_RADAR_HOVER_HOLD_MS
+        initialValue = LinkRuleRepository.DEFAULT_RADAR_HOVER_HOLD_MS,
     )
+    val fallbackBrowser by LinkRuleRepository.observeFallbackBrowser(context).collectAsStateWithLifecycle(initialValue = null)
+
     val holdValues = listOf(650, 800, 1000, 1250, 1500, 2000, 3000, 0)
     val holdLabels = listOf("0.65 秒", "0.8 秒", "1 秒", "1.25 秒", "1.5 秒", "2 秒", "3 秒", "始终保持（不自动变黄）")
     val currentHoldIndex = holdValues.indexOf(radarHoverHoldMs).let { if (it < 0) 2 else it }
 
     var searchQuery by rememberSaveable { mutableStateOf("") }
-    var showEditDialog by remember { mutableStateOf(false) }
-    var editingRule by remember { mutableStateOf<LinkDispatchRule?>(null) }
+
+    // Gevo 风格全折叠仪表盘状态（默认全部折叠）
+    var rulesExpanded by rememberSaveable { mutableStateOf(false) }
+    var behaviorExpanded by rememberSaveable { mutableStateOf(false) }
+    var fallbackExpanded by rememberSaveable { mutableStateOf(false) }
+    var sandboxExpanded by rememberSaveable { mutableStateOf(false) }
+    var toolsExpanded by rememberSaveable { mutableStateOf(false) }
+
     var showBuiltinImportDialog by remember { mutableStateOf(false) }
-    var clipboardParsedBackup by remember { mutableStateOf<com.slideindex.app.link.LinkConfigBackup?>(null) }
+    var clipboardParsedBackup by remember { mutableStateOf<LinkConfigBackup?>(null) }
     var showExemptsSheet by remember { mutableStateOf(false) }
     var showExtractsSheet by remember { mutableStateOf(false) }
+    var showBrowserPickerSheet by remember { mutableStateOf(false) }
+    var showHoldPickerSheet by remember { mutableStateOf(false) }
     var appNamesVersion by remember { mutableStateOf(0) }
 
+    var fallbackAppDisplayName by remember(fallbackBrowser) { mutableStateOf("") }
+
     // 预解析规则中的目标应用中文名
-    LaunchedEffect(rules) {
+    LaunchedEffect(rules, fallbackBrowser) {
         var changed = false
         withContext(Dispatchers.IO) {
             val pm = context.packageManager
-            rules.map { it.targetPackage }.filter { it.isNotBlank() }.distinct().forEach { pkg ->
+            val packagesToResolve = (rules.map { it.targetPackage } + listOfNotNull(fallbackBrowser))
+                .filter { it.isNotBlank() }
+                .distinct()
+
+            packagesToResolve.forEach { pkg ->
                 if (!linkAppNameCache.containsKey(pkg)) {
                     val label = runCatching {
                         pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
@@ -135,6 +185,11 @@ fun LinkDispatchSettingsScreen(
             }
         }
         if (changed) appNamesVersion++
+        if (!fallbackBrowser.isNullOrBlank()) {
+            fallbackAppDisplayName = linkAppNameCache[fallbackBrowser].orEmpty().ifBlank { fallbackBrowser!! }
+        } else {
+            fallbackAppDisplayName = ""
+        }
     }
 
     val filteredRules = remember(rules, searchQuery, appNamesVersion) {
@@ -150,11 +205,22 @@ fun LinkDispatchSettingsScreen(
     }
 
     val enabledCount = remember(rules) { rules.count { it.isEnabled } }
-    val rulesHeaderTitle = if (searchQuery.isBlank()) {
-        "链接分发规则 (共 ${rules.size} 条 · 已启用 $enabledCount 条)"
-    } else {
-        "链接分发规则 (找到 ${filteredRules.size} / ${rules.size} 条)"
+
+    // 搜索有输入时自动展开规则
+    val isRulesOpen = rulesExpanded || searchQuery.isNotBlank()
+
+    // 区分分发规则与跳转规则
+    val dispatchRules = remember(filteredRules) {
+        filteredRules.filter { it.resolveStrategy == LinkResolveStrategy.REDISPATCH }
     }
+    val redirectRules = remember(filteredRules) {
+        filteredRules.filter { it.resolveStrategy != LinkResolveStrategy.REDISPATCH }
+    }
+
+    // 沙盒测试状态
+    var sandboxUrl by remember { mutableStateOf("") }
+    var sandboxResult by remember { mutableStateOf<LinkRouteTrace?>(null) }
+    var isSandboxSimulating by remember { mutableStateOf(false) }
 
     SettingsLazyScreenScaffoldWithExpandableSearch(
         title = pageTitle,
@@ -163,12 +229,13 @@ fun LinkDispatchSettingsScreen(
         onBack = onBack,
         hintResId = R.string.shortcut_test_search_hint,
         extraActions = {
-            MiuixTopBarIconButton(
-                onClick = {
-                    editingRule = null
-                    showEditDialog = true
-                },
-            ) {
+            MiuixTopBarIconButton(onClick = onNavigateToHistory) {
+                Icon(
+                    imageVector = Icons.Default.History,
+                    contentDescription = "跳转记录",
+                )
+            }
+            MiuixTopBarIconButton(onClick = { onNavigateToEditRule(null) }) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "添加规则",
@@ -176,369 +243,802 @@ fun LinkDispatchSettingsScreen(
             }
         },
     ) {
-        settingsLazyTipCard(
-            key = "link_dispatch_intro_tip",
-            text = pageDesc,
-        )
-
-        // 1. 链接分发规则区
-        settingsLazySmallTitle(
-            key = "link_dispatch_rules_header",
-            title = rulesHeaderTitle,
-        )
-
-        groupedCardItems(
-            keyPrefix = "dispatch_add_rule_card",
-            items = listOf(
-                settingsCardScopeItem("add_new_rule_btn") {
-                    SettingNavigationRow(
-                        title = "添加规则",
-                        subtitle = "新建一条自定义链接匹配与打开目标规则",
-                        icon = { MiuixIcon(imageVector = Icons.Default.Add, contentDescription = null) },
-                        onClick = {
-                            editingRule = null
-                            showEditDialog = true
-                        },
-                    )
-                },
-            ),
-        )
-
-        if (filteredRules.isEmpty()) {
-            settingsLazyTipCard(
-                key = "link_dispatch_rules_empty_tip",
-                text = if (rules.isEmpty()) "还没有规则。点击上方「添加规则」或下方「工具 -> 导入常用模板」开始分发链接。"
-                    else "没有找到匹配的规则，试试其他名称、域名或应用。",
-            )
-        } else {
-            groupedCardItems(
-                keyPrefix = "dispatch_rules",
-                items = filteredRules.map { rule: LinkDispatchRule ->
-                    settingsCardScopeItem(rule.id) {
-                        LinkDispatchRuleItemRow(
-                            rule = rule,
-                            appName = linkAppNameCache[rule.targetPackage].orEmpty().ifBlank { rule.targetPackage },
-                            onClick = {
-                                editingRule = rule
-                                showEditDialog = true
-                            },
-                            onToggleEnabled = { checked ->
-                                scope.launch {
-                                    LinkRuleRepository.updateRules(context) { list ->
-                                        list.map { if (it.id == rule.id) it.copy(isEnabled = checked) else it }
-                                    }
-                                }
-                            },
-                        )
-                    }
-                },
-            )
+        // 页面简述
+        item(key = "link_dispatch_desc_tip") {
+            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
+                MiuixText(
+                    text = "全功能链接分发中枢：支持规则精准重定向、短链深度追踪、指针与屏幕雷达感知，并具备系统默认浏览器与备选兜底能力。",
+                    style = MiuixTheme.textStyles.footnote2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                )
+            }
         }
 
-        // 2. 工具区（导入常用模板 / 豁免域名 / 链接提取规则）
-        settingsLazySmallTitle(
-            key = "link_dispatch_tools_header",
-            title = "工具",
-        )
+        // ==========================================
+        // 模块 1：【分发规则】（折叠控制台）
+        // ==========================================
+        item(key = "collapsible_block_rules") {
+            val ruleHeaderSummary = if (searchQuery.isBlank()) {
+                "共 ${rules.size} 条规则 · 已启用 $enabledCount 条"
+            } else {
+                "搜索找到 ${filteredRules.size} / ${rules.size} 条规则"
+            }
 
-        groupedCardItems(
-            keyPrefix = "dispatch_tools",
-            items = listOf(
-                settingsCardScopeItem("import_builtin_templates") {
-                    SettingNavigationRow(
-                        title = "导入常用模板",
-                        subtitle = "一键添加常用站点的深链规则（自动识别已安装应用）",
-                        icon = { MiuixIcon(imageVector = Icons.Default.LibraryAdd, contentDescription = null) },
-                        onClick = { showBuiltinImportDialog = true },
-                    )
-                },
-                settingsCardScopeItem("exempt_domains") {
-                    SettingNavigationRow(
-                        title = "豁免域名",
-                        subtitle = if (exempts.isEmpty()) "这些域名不会被规则接管"
-                            else "这些域名不会被规则接管（当前 ${exempts.size} 项）",
-                        icon = { MiuixIcon(imageVector = Icons.Default.Block, contentDescription = null) },
-                        onClick = { showExemptsSheet = true },
-                    )
-                },
-                settingsCardScopeItem("extract_patterns") {
-                    SettingNavigationRow(
-                        title = "链接提取规则",
-                        subtitle = "从文本中找出链接的正则（当前 ${extracts.size} 项）",
-                        icon = { MiuixIcon(imageVector = Icons.Default.FindInPage, contentDescription = null) },
-                        onClick = { showExtractsSheet = true },
-                    )
-                },
-            ),
-        )
-
-        // 3. 分发行为区（链接雷达与小窗打开）
-        settingsLazySmallTitle(
-            key = "link_dispatch_behavior_header",
-            title = "分发行为",
-        )
-
-        groupedCardItems(
-            keyPrefix = "dispatch_behavior",
-            items = buildList {
-                add(
-                    settingsCardScopeItem("radar_pointer") {
-                        BasicComponent(
-                            modifier = Modifier.fillMaxWidth(),
-                            title = radarPointerTitle,
-                            summary = radarPointerDesc,
-                            onClick = {
-                                scope.launch { LinkRuleRepository.setRadarPointerEnabled(context, !radarPointer) }
-                            },
-                            endActions = {
-                                Switch(
-                                    checked = radarPointer,
-                                    onCheckedChange = { checked ->
-                                        scope.launch { LinkRuleRepository.setRadarPointerEnabled(context, checked) }
-                                    },
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(animationSpec = tween(250)),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                // 卡头
+                CardSegment(
+                    isFirst = true,
+                    isLast = !isRulesOpen,
+                    outerHorizontalPadding = 12.dp,
+                ) {
+                    BasicComponent(
+                        modifier = Modifier.fillMaxWidth(),
+                        title = "分发规则",
+                        summary = ruleHeaderSummary,
+                        onClick = { rulesExpanded = !rulesExpanded },
+                        endActions = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(
+                                    onClick = { onNavigateToEditRule(null) },
+                                    modifier = Modifier.size(36.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "新建规则",
+                                        tint = MiuixTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
+                                Icon(
+                                    imageVector = if (isRulesOpen) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                    contentDescription = null,
+                                    tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                 )
-                            },
-                        )
-                    }
-                )
-                if (radarPointer) {
-                    add(
-                        settingsCardScopeItem("radar_hover_hold_ms") {
-                            SettingDropdownRow(
-                                title = "雷达横幅停留时长",
-                                subtitle = "悬浮球指针停在链接上时保持显示打开横幅的时间（短链从解析完成后起算），超时未松手则切换为黄框取词",
-                                items = holdLabels,
-                                selectedIndex = currentHoldIndex,
-                                enabled = true,
-                                onSelectedIndexChange = { index ->
-                                    val targetMs = holdValues.getOrElse(index) { LinkRuleRepository.DEFAULT_RADAR_HOVER_HOLD_MS }
-                                    scope.launch { LinkRuleRepository.setRadarHoverHoldMs(context, targetMs) }
-                                },
-                            )
-                        }
+                            }
+                        },
                     )
                 }
-                add(
-                    settingsCardScopeItem("radar_screen") {
-                        BasicComponent(
-                            modifier = Modifier.fillMaxWidth(),
-                            title = radarScreenTitle,
-                            summary = radarScreenDesc,
-                            onClick = {
-                                scope.launch { LinkRuleRepository.setRadarScreenContentEnabled(context, !radarScreenContent) }
-                            },
-                            endActions = {
-                                Switch(
-                                    checked = radarScreenContent,
-                                    onCheckedChange = { checked ->
-                                        scope.launch { LinkRuleRepository.setRadarScreenContentEnabled(context, checked) }
-                                    },
-                                )
-                            },
-                        )
-                    }
-                )
-                add(
-                    settingsCardScopeItem("open_small_window") {
-                        BasicComponent(
-                            modifier = Modifier.fillMaxWidth(),
-                            title = openSmallWinTitle,
-                            summary = openSmallWinDesc,
-                            onClick = {
-                                scope.launch { LinkRuleRepository.setOpenInSmallWindowEnabled(context, !openInSmallWindow) }
-                            },
-                            endActions = {
-                                Switch(
-                                    checked = openInSmallWindow,
-                                    onCheckedChange = { checked ->
-                                        scope.launch { LinkRuleRepository.setOpenInSmallWindowEnabled(context, checked) }
-                                    },
-                                )
-                            },
-                        )
-                    }
-                )
-            },
-        )
 
-        // 4. 备份区（导出与导入，自动兼容备份 JSON 与 LinkGo JSON）
-        settingsLazySmallTitle(
-            key = "link_dispatch_backup_header",
-            title = "备份",
-        )
-
-        groupedCardItems(
-            keyPrefix = "dispatch_backup",
-            items = listOf(
-                settingsCardScopeItem("export_clipboard") {
-                    SettingNavigationRow(
-                        title = "导出规则到剪贴板",
-                        subtitle = "复制全部规则、豁免域名与提取规则 JSON 到剪贴板",
-                        icon = { MiuixIcon(imageVector = Icons.Default.FileUpload, contentDescription = null) },
-                        onClick = {
-                            scope.launch {
-                                val success = LinkConfigTransfer.exportToClipboard(context)
-                                if (success) {
-                                    Toast.makeText(context, exportSuccessMsg, Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        },
-                    )
-                },
-                settingsCardScopeItem("import_clipboard") {
-                    SettingNavigationRow(
-                        title = "从剪贴板导入规则",
-                        subtitle = "识别剪贴板中的备份或 LinkGo 规则 JSON 并勾选导入",
-                        icon = { MiuixIcon(imageVector = Icons.Default.Download, contentDescription = null) },
-                        onClick = {
-                            val parsed = LinkConfigTransfer.parseClipboardBackup(context)
-                            if (parsed == null) {
-                                Toast.makeText(context, importFailedMsg, Toast.LENGTH_SHORT).show()
-                            } else if (parsed.rules.isNotEmpty()) {
-                                clipboardParsedBackup = parsed
-                            } else {
-                                scope.launch {
-                                    val result = LinkRuleRepository.importConfig(context, parsed)
-                                    Toast.makeText(
-                                        context,
-                                        "导入完成：豁免 ${result.exemptsAdded} 条，提取 ${result.extractsAdded} 条",
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
-                                }
-                            }
-                        },
-                    )
-                },
-            ),
-        )
-
-        // 5. 规则匹配沙盒测试
-        settingsLazySmallTitle(
-            key = "link_dispatch_sandbox_header",
-            title = sandboxTitle,
-        )
-
-        item(key = "link_dispatch_sandbox_card") {
-            var testUrl by rememberSaveable { mutableStateOf("") }
-            var testTrace by remember { mutableStateOf<com.slideindex.app.link.LinkRouteTrace?>(null) }
-            var isTesting by remember { mutableStateOf(false) }
-
-            MiuixProgressCard {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                // 展开的规则内容
+                AnimatedVisibility(
+                    visible = isRulesOpen,
+                    enter = expandVertically(tween(250)) + fadeIn(),
+                    exit = shrinkVertically(tween(250)) + fadeOut(),
                 ) {
-                    MiuixLabeledTextField(
-                        value = testUrl,
-                        onValueChange = { testUrl = it },
-                        label = sandboxHint,
-                    )
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            MiuixTextButton(
-                                text = "b23.tv",
-                                onClick = { testUrl = "https://b23.tv/av170001" },
-                            )
-                            MiuixTextButton(
-                                text = "知乎",
-                                onClick = { testUrl = "https://www.zhihu.com/question/19550294" },
+                        // 新建规则引导行
+                        CardSegment(
+                            isFirst = false,
+                            isLast = filteredRules.isEmpty(),
+                            outerHorizontalPadding = 12.dp,
+                        ) {
+                            BasicComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                title = "新建自定义规则",
+                                summary = "添加匹配网址特征与指定打开目标应用",
+                                startAction = {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = null,
+                                            tint = MiuixTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp),
+                                        )
+                                    }
+                                },
+                                onClick = { onNavigateToEditRule(null) },
                             )
                         }
-                        MiuixTextButton(
-                            text = if (isTesting) "解析中…" else sandboxBtnText,
-                            onClick = {
-                                if (testUrl.isNotBlank() && !isTesting) {
-                                    isTesting = true
-                                    scope.launch {
-                                        val trace = LinkDispatcher.routeWithTrace(context, testUrl.trim())
-                                        testTrace = trace
-                                        isTesting = false
-                                    }
-                                }
-                            },
-                        )
-                    }
-                    testTrace?.let { trace ->
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 4.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp),
-                        ) {
-                            trace.steps.forEachIndexed { idx, step ->
-                                val resolvedInfo = step.resolvedUrl ?: "解析失败（保持原链接）"
+
+                        if (filteredRules.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 20.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
                                 MiuixText(
-                                    text = "步骤 ${idx + 1} [短链规则: ${step.ruleName}]\n${step.fromUrl}\n  ↳ $resolvedInfo",
-                                    style = MiuixTheme.textStyles.footnote2.copy(fontFamily = FontFamily.Monospace),
+                                    text = if (rules.isEmpty()) "暂无规则，点击上方添加或从工具导入模板" else "没有匹配的规则",
+                                    style = MiuixTheme.textStyles.body2,
                                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                 )
                             }
-                            when (val res = trace.finalResult) {
-                                is LinkDispatchResult.Routed -> {
+                        } else {
+                            // 1. 分发规则（短链重分发）
+                            if (dispatchRules.isNotEmpty()) {
+                                Box(modifier = Modifier.padding(start = 24.dp, top = 8.dp, bottom = 2.dp)) {
                                     MiuixText(
-                                        text = stringResource(
-                                            R.string.link_dispatch_sandbox_matched,
-                                            res.rule.name,
-                                            linkAppNameCache[res.rule.targetPackage] ?: res.rule.targetPackage,
-                                        ),
-                                        style = MiuixTheme.textStyles.body2,
+                                        text = "短链重分发规则 (${dispatchRules.size} 条)",
+                                        style = MiuixTheme.textStyles.footnote2,
+                                        fontWeight = FontWeight.Bold,
                                         color = MiuixTheme.colorScheme.primary,
                                     )
-                                    MiuixText(
-                                        text = "目标: ${res.url}",
-                                        style = MiuixTheme.textStyles.footnote2.copy(fontFamily = FontFamily.Monospace),
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                    )
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.End,
-                                    ) {
-                                        MiuixTextButton(
-                                            text = "立即打开测试",
-                                            onClick = {
-                                                scope.launch {
-                                                    LinkLauncher.launch(
-                                                        context = context,
-                                                        url = res.url,
-                                                        targetPackage = res.rule.targetPackage,
-                                                        excludeFromRecents = res.rule.excludeFromRecents,
-                                                        component = res.rule.component,
-                                                    )
+                                }
+                                dispatchRules.forEachIndexed { idx, rule ->
+                                    val appName = linkAppNameCache[rule.targetPackage].orEmpty()
+                                    LinkDispatchRuleItemRow(
+                                        rule = rule,
+                                        appName = appName,
+                                        isFirst = idx == 0 && redirectRules.isEmpty(),
+                                        isLast = idx == dispatchRules.size - 1 && redirectRules.isEmpty(),
+                                        onClick = { onNavigateToEditRule(rule.id) },
+                                        onToggleEnabled = { checked ->
+                                            scope.launch {
+                                                LinkRuleRepository.updateRules(context) { list ->
+                                                    list.map { if (it.id == rule.id) it.copy(isEnabled = checked) else it }
                                                 }
-                                            },
-                                        )
-                                    }
-                                }
-                                is LinkDispatchResult.SystemDefault -> {
-                                    MiuixText(
-                                        text = if (trace.steps.isNotEmpty()) {
-                                            "短链已解析，但解析后的目标网址未匹配其他规则，将交由系统默认浏览器打开：\n${res.url}"
-                                        } else {
-                                            sandboxNoMatchText
+                                            }
                                         },
-                                        style = MiuixTheme.textStyles.body2,
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                    )
-                                }
-                                is LinkDispatchResult.Exempted -> {
-                                    MiuixText(
-                                        text = "命中豁免域名 (${res.domain})，不接管：\n${res.url}",
-                                        style = MiuixTheme.textStyles.body2,
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                    )
-                                }
-                                else -> {
-                                    MiuixText(
-                                        text = sandboxNoMatchText,
-                                        style = MiuixTheme.textStyles.body2,
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                     )
                                 }
                             }
+
+                            // 2. 跳转规则（直达目标应用）
+                            if (redirectRules.isNotEmpty()) {
+                                Box(modifier = Modifier.padding(start = 24.dp, top = 8.dp, bottom = 2.dp)) {
+                                    MiuixText(
+                                        text = "应用直达跳转规则 (${redirectRules.size} 条)",
+                                        style = MiuixTheme.textStyles.footnote2,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MiuixTheme.colorScheme.primary,
+                                    )
+                                }
+                                redirectRules.forEachIndexed { idx, rule ->
+                                    val appName = linkAppNameCache[rule.targetPackage].orEmpty()
+                                    LinkDispatchRuleItemRow(
+                                        rule = rule,
+                                        appName = appName,
+                                        isFirst = idx == 0 && dispatchRules.isEmpty(),
+                                        isLast = idx == redirectRules.size - 1,
+                                        onClick = { onNavigateToEditRule(rule.id) },
+                                        onToggleEnabled = { checked ->
+                                            scope.launch {
+                                                LinkRuleRepository.updateRules(context) { list ->
+                                                    list.map { if (it.id == rule.id) it.copy(isEnabled = checked) else it }
+                                                }
+                                            }
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // 模块 2：【分发与雷达行为】（折叠控制台）
+        // ==========================================
+        item(key = "collapsible_block_behavior") {
+            val holdText = if (radarHoverHoldMs == 0) "始终保持" else "${radarHoverHoldMs}ms"
+            val behaviorSummary = "指针: ${if (radarPointer) "开" else "关"} · 屏幕: ${if (radarScreenContent) "开" else "关"} · 停留 $holdText · 小窗: ${if (openInSmallWindow) "开" else "关"}"
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+                    .animateContentSize(animationSpec = tween(250)),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                CardSegment(
+                    isFirst = true,
+                    isLast = !behaviorExpanded,
+                    outerHorizontalPadding = 12.dp,
+                ) {
+                    BasicComponent(
+                        modifier = Modifier.fillMaxWidth(),
+                        title = "分发与雷达行为",
+                        summary = behaviorSummary,
+                        onClick = { behaviorExpanded = !behaviorExpanded },
+                        endActions = {
+                            Icon(
+                                imageVector = if (behaviorExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = null,
+                                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                        },
+                    )
+                }
+
+                AnimatedVisibility(
+                    visible = behaviorExpanded,
+                    enter = expandVertically(tween(250)) + fadeIn(),
+                    exit = shrinkVertically(tween(250)) + fadeOut(),
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        CardSegment(
+                            isFirst = false,
+                            isLast = false,
+                            outerHorizontalPadding = 12.dp,
+                        ) {
+                            BasicComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                title = "悬浮指针链接雷达",
+                                summary = "指针靠近屏幕链接时高亮并显示打开气泡，点击或松手直接跳转",
+                                onClick = {
+                                    scope.launch { LinkRuleRepository.setRadarPointerEnabled(context, !radarPointer) }
+                                },
+                                endActions = {
+                                    Switch(
+                                        checked = radarPointer,
+                                        onCheckedChange = { checked ->
+                                            scope.launch { LinkRuleRepository.setRadarPointerEnabled(context, checked) }
+                                        },
+                                    )
+                                },
+                            )
+                        }
+
+                        CardSegment(
+                            isFirst = false,
+                            isLast = false,
+                            outerHorizontalPadding = 12.dp,
+                        ) {
+                            BasicComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                title = "雷达横幅停留时长",
+                                summary = "悬浮指针停在链接上保持显示横幅的时间，超时切换为取词（当前：${holdLabels[currentHoldIndex]}）",
+                                onClick = { showHoldPickerSheet = true },
+                                endActions = {
+                                    Icon(
+                                        imageVector = Icons.Default.ChevronRight,
+                                        contentDescription = null,
+                                        tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    )
+                                },
+                            )
+                        }
+
+                        CardSegment(
+                            isFirst = false,
+                            isLast = false,
+                            outerHorizontalPadding = 12.dp,
+                        ) {
+                            BasicComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                title = "屏幕内容链接雷达",
+                                summary = "全局复制或框选悬浮窗中扫描屏幕链接，轻点直达目标应用",
+                                onClick = {
+                                    scope.launch { LinkRuleRepository.setRadarScreenContentEnabled(context, !radarScreenContent) }
+                                },
+                                endActions = {
+                                    Switch(
+                                        checked = radarScreenContent,
+                                        onCheckedChange = { checked ->
+                                            scope.launch { LinkRuleRepository.setRadarScreenContentEnabled(context, checked) }
+                                        },
+                                    )
+                                },
+                            )
+                        }
+
+                        CardSegment(
+                            isFirst = false,
+                            isLast = true,
+                            outerHorizontalPadding = 12.dp,
+                        ) {
+                            BasicComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                title = "小窗打开",
+                                summary = "分发规则触发时优先用自由窗口小窗打开目标应用",
+                                onClick = {
+                                    scope.launch { LinkRuleRepository.setOpenInSmallWindowEnabled(context, !openInSmallWindow) }
+                                },
+                                endActions = {
+                                    Switch(
+                                        checked = openInSmallWindow,
+                                        onCheckedChange = { checked ->
+                                            scope.launch { LinkRuleRepository.setOpenInSmallWindowEnabled(context, checked) }
+                                        },
+                                    )
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // 模块 3：【系统默认与兜底设置】（折叠控制台）
+        // ==========================================
+        item(key = "collapsible_block_fallback") {
+            val fallbackSummary = if (fallbackBrowser.isNullOrBlank()) {
+                "未设兜底备选浏览器（未匹配时现场选择）"
+            } else {
+                "兜底备选: $fallbackAppDisplayName · $fallbackBrowser"
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+                    .animateContentSize(animationSpec = tween(250)),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                CardSegment(
+                    isFirst = true,
+                    isLast = !fallbackExpanded,
+                    outerHorizontalPadding = 12.dp,
+                ) {
+                    BasicComponent(
+                        modifier = Modifier.fillMaxWidth(),
+                        title = "系统默认与兜底设置",
+                        summary = fallbackSummary,
+                        onClick = { fallbackExpanded = !fallbackExpanded },
+                        endActions = {
+                            Icon(
+                                imageVector = if (fallbackExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = null,
+                                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                        },
+                    )
+                }
+
+                AnimatedVisibility(
+                    visible = fallbackExpanded,
+                    enter = expandVertically(tween(250)) + fadeIn(),
+                    exit = shrinkVertically(tween(250)) + fadeOut(),
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        CardSegment(
+                            isFirst = false,
+                            isLast = false,
+                            outerHorizontalPadding = 12.dp,
+                        ) {
+                            BasicComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                title = "设为系统默认浏览器",
+                                summary = "接管系统外部链接跳转，未匹配规则的网址交由备选浏览器打开",
+                                startAction = {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.OpenInBrowser,
+                                            contentDescription = null,
+                                            tint = MiuixTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp),
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    val intent = Intent(android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
+                                    runCatching { context.startActivity(intent) }.onFailure {
+                                        Toast.makeText(context, "请在系统设置中将本应用设为默认浏览器", Toast.LENGTH_LONG).show()
+                                    }
+                                },
+                            )
+                        }
+
+                        CardSegment(
+                            isFirst = false,
+                            isLast = true,
+                            outerHorizontalPadding = 12.dp,
+                        ) {
+                            BasicComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                title = "兜底备选浏览器",
+                                summary = if (fallbackBrowser.isNullOrBlank()) {
+                                    "点击选择（未匹配规则时直接由此浏览器打开）"
+                                } else {
+                                    "$fallbackAppDisplayName · $fallbackBrowser"
+                                },
+                                startAction = if (!fallbackBrowser.isNullOrBlank()) {
+                                    {
+                                        Box(modifier = Modifier.padding(end = 12.dp)) {
+                                            LinkAppIcon(packageName = fallbackBrowser!!, size = 36.dp)
+                                        }
+                                    }
+                                } else null,
+                                endActions = if (!fallbackBrowser.isNullOrBlank()) {
+                                    {
+                                        MiuixTextButton(
+                                            text = "清除",
+                                            onClick = {
+                                                scope.launch { LinkRuleRepository.setFallbackBrowser(context, null) }
+                                            },
+                                        )
+                                    }
+                                } else null,
+                                onClick = { showBrowserPickerSheet = true },
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // 模块 4：【规则匹配沙盒测试】（折叠控制台）
+        // ==========================================
+        item(key = "collapsible_block_sandbox") {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+                    .animateContentSize(animationSpec = tween(250)),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                CardSegment(
+                    isFirst = true,
+                    isLast = !sandboxExpanded,
+                    outerHorizontalPadding = 12.dp,
+                ) {
+                    BasicComponent(
+                        modifier = Modifier.fillMaxWidth(),
+                        title = "规则匹配沙盒",
+                        summary = "输入任意链接模拟规则命中、短链重定向与提取改写流程",
+                        onClick = { sandboxExpanded = !sandboxExpanded },
+                        endActions = {
+                            Icon(
+                                imageVector = if (sandboxExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = null,
+                                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                        },
+                    )
+                }
+
+                AnimatedVisibility(
+                    visible = sandboxExpanded,
+                    enter = expandVertically(tween(250)) + fadeIn(),
+                    exit = shrinkVertically(tween(250)) + fadeOut(),
+                ) {
+                    CardSegment(
+                        isFirst = false,
+                        isLast = true,
+                        outerHorizontalPadding = 12.dp,
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            // 输入框与粘贴
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    MiuixLabeledTextField(
+                                        value = sandboxUrl,
+                                        onValueChange = { sandboxUrl = it },
+                                        label = "输入测试链接或短链",
+                                        useLabelAsPlaceholder = false,
+                                        singleLine = true,
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(MiuixTheme.colorScheme.surface)
+                                        .clickable {
+                                            val text = clipboardManager.getText()?.text
+                                            if (!text.isNullOrBlank()) sandboxUrl = text.trim()
+                                        },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ContentPaste,
+                                        contentDescription = "粘贴",
+                                        tint = MiuixTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
+                            }
+
+                            // 快捷填充 Chips
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                val samples = listOf(
+                                    "哔哩哔哩 b23" to "https://b23.tv/av170001",
+                                    "知乎短链" to "https://link.zhihu.com/?target=https%3A%2F%2Fgithub.com",
+                                    "Twitter t.co" to "https://t.co/sample",
+                                )
+                                samples.forEach { (label, sample) ->
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(MiuixTheme.colorScheme.surface)
+                                            .clickable { sandboxUrl = sample }
+                                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                                    ) {
+                                        MiuixText(text = label, style = MiuixTheme.textStyles.footnote2)
+                                    }
+                                }
+                            }
+
+                            // 测试执行按钮
+                            MiuixTextButton(
+                                text = if (isSandboxSimulating) "正在推演..." else "模拟测试分发",
+                                colors = ButtonDefaults.textButtonColorsPrimary(),
+                                enabled = sandboxUrl.isNotBlank() && !isSandboxSimulating,
+                                onClick = {
+                                    scope.launch {
+                                        isSandboxSimulating = true
+                                        sandboxResult = withContext(Dispatchers.IO) {
+                                            LinkDispatcher.routeWithTrace(context, sandboxUrl.trim())
+                                        }
+                                        isSandboxSimulating = false
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+
+                            // 结果展示区域
+                            val trace = sandboxResult
+                            if (trace != null) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(MiuixTheme.colorScheme.surface)
+                                        .padding(12.dp),
+                                ) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        when (val res = trace.finalResult) {
+                                            is LinkDispatchResult.Routed -> {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    LinkAppIcon(packageName = res.rule.targetPackage, size = 32.dp)
+                                                    Spacer(Modifier.width(8.dp))
+                                                    Column {
+                                                        MiuixText(
+                                                            text = "命中: ${res.rule.name} ➔ ${linkAppNameCache[res.rule.targetPackage].orEmpty().ifBlank { res.rule.targetPackage }}",
+                                                            style = MiuixTheme.textStyles.body2,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = MiuixTheme.colorScheme.primary,
+                                                        )
+                                                        MiuixText(
+                                                            text = res.url,
+                                                            style = MiuixTheme.textStyles.footnote2,
+                                                            fontFamily = FontFamily.Monospace,
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            is LinkDispatchResult.Exempted -> {
+                                                MiuixText(text = "域名被豁免 (${res.domain})，将由系统默认方式打开", style = MiuixTheme.textStyles.body2)
+                                            }
+                                            is LinkDispatchResult.SystemDefault -> {
+                                                MiuixText(text = "重分发未匹配到后续规则，交由系统默认打开", style = MiuixTheme.textStyles.body2)
+                                            }
+                                            LinkDispatchResult.NoRule -> {
+                                                MiuixText(text = "未匹配到任何分发规则（交由备选浏览器打开）", style = MiuixTheme.textStyles.body2)
+                                            }
+                                            LinkDispatchResult.Failed -> {
+                                                MiuixText(text = "分发解析失败", style = MiuixTheme.textStyles.body2, color = MiuixTheme.colorScheme.error)
+                                            }
+                                        }
+
+                                        if (trace.steps.isNotEmpty()) {
+                                            trace.steps.forEachIndexed { i, step ->
+                                                MiuixText(
+                                                    text = "↳ [${i + 1}] ${step.ruleName}: ${step.fromUrl} ➔ ${step.resolvedUrl ?: "无法解析"}",
+                                                    style = MiuixTheme.textStyles.footnote2,
+                                                    fontFamily = FontFamily.Monospace,
+                                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                                )
+                                            }
+                                        }
+
+                                        val routedRes = trace.finalResult as? LinkDispatchResult.Routed
+                                        if (routedRes != null) {
+                                            MiuixTextButton(
+                                                text = "执行最终跳转验证",
+                                                onClick = {
+                                                    scope.launch {
+                                                        LinkLauncher.launch(
+                                                            context = context,
+                                                            url = routedRes.url,
+                                                            targetPackage = routedRes.rule.targetPackage,
+                                                            excludeFromRecents = routedRes.rule.excludeFromRecents,
+                                                            component = routedRes.rule.component,
+                                                        )
+                                                    }
+                                                },
+                                                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // 模块 5：【工具与数据管理】（折叠控制台）
+        // ==========================================
+        item(key = "collapsible_block_tools") {
+            val toolsSummary = "常用模板 · 豁免域名 (${exempts.size}) · 提取 (${extracts.size}) · 备份与还原"
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+                    .animateContentSize(animationSpec = tween(250)),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                CardSegment(
+                    isFirst = true,
+                    isLast = !toolsExpanded,
+                    outerHorizontalPadding = 12.dp,
+                ) {
+                    BasicComponent(
+                        modifier = Modifier.fillMaxWidth(),
+                        title = "工具与数据管理",
+                        summary = toolsSummary,
+                        onClick = { toolsExpanded = !toolsExpanded },
+                        endActions = {
+                            Icon(
+                                imageVector = if (toolsExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = null,
+                                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                        },
+                    )
+                }
+
+                AnimatedVisibility(
+                    visible = toolsExpanded,
+                    enter = expandVertically(tween(250)) + fadeIn(),
+                    exit = shrinkVertically(tween(250)) + fadeOut(),
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        CardSegment(isFirst = false, isLast = false, outerHorizontalPadding = 12.dp) {
+                            BasicComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                title = "导入常用模板",
+                                summary = "一键添加常用站点的深链规则（自动识别已安装应用）",
+                                startAction = {
+                                    Icon(
+                                        imageVector = Icons.Default.LibraryAdd,
+                                        contentDescription = null,
+                                        tint = MiuixTheme.colorScheme.primary,
+                                    )
+                                },
+                                endActions = {
+                                    Icon(
+                                        imageVector = Icons.Default.ChevronRight,
+                                        contentDescription = null,
+                                        tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    )
+                                },
+                                onClick = { showBuiltinImportDialog = true },
+                            )
+                        }
+
+                        CardSegment(isFirst = false, isLast = false, outerHorizontalPadding = 12.dp) {
+                            BasicComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                title = "豁免域名",
+                                summary = if (exempts.isEmpty()) "这些域名不会被规则接管" else "当前已配置 ${exempts.size} 项豁免域名",
+                                startAction = {
+                                    Icon(
+                                        imageVector = Icons.Default.Block,
+                                        contentDescription = null,
+                                        tint = MiuixTheme.colorScheme.primary,
+                                    )
+                                },
+                                endActions = {
+                                    Icon(
+                                        imageVector = Icons.Default.ChevronRight,
+                                        contentDescription = null,
+                                        tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    )
+                                },
+                                onClick = { showExemptsSheet = true },
+                            )
+                        }
+
+                        CardSegment(isFirst = false, isLast = false, outerHorizontalPadding = 12.dp) {
+                            BasicComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                title = "链接提取规则",
+                                summary = "从文本中找出链接的正则（当前 ${extracts.size} 项）",
+                                startAction = {
+                                    Icon(
+                                        imageVector = Icons.Default.FindInPage,
+                                        contentDescription = null,
+                                        tint = MiuixTheme.colorScheme.primary,
+                                    )
+                                },
+                                endActions = {
+                                    Icon(
+                                        imageVector = Icons.Default.ChevronRight,
+                                        contentDescription = null,
+                                        tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    )
+                                },
+                                onClick = { showExtractsSheet = true },
+                            )
+                        }
+
+                        CardSegment(isFirst = false, isLast = false, outerHorizontalPadding = 12.dp) {
+                            BasicComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                title = "导出配置到剪贴板",
+                                summary = "复制全部规则、豁免域名与提取规则 JSON 到剪贴板",
+                                startAction = {
+                                    Icon(
+                                        imageVector = Icons.Default.Share,
+                                        contentDescription = null,
+                                        tint = MiuixTheme.colorScheme.primary,
+                                    )
+                                },
+                                onClick = {
+                                    scope.launch {
+                                        val success = LinkConfigTransfer.exportToClipboard(context)
+                                        if (success) {
+                                            Toast.makeText(context, "配置已复制到剪贴板", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            Toast.makeText(context, "剪贴板服务不可用", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                },
+                            )
+                        }
+
+                        CardSegment(isFirst = false, isLast = true, outerHorizontalPadding = 12.dp) {
+                            BasicComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                title = "从剪贴板导入规则",
+                                summary = "识别剪贴板中的备份或 LinkGo 规则 JSON 并勾选导入",
+                                startAction = {
+                                    Icon(
+                                        imageVector = Icons.Default.ContentPaste,
+                                        contentDescription = null,
+                                        tint = MiuixTheme.colorScheme.primary,
+                                    )
+                                },
+                                onClick = {
+                                    val parsed = LinkConfigTransfer.parseClipboardBackup(context)
+                                    if (parsed == null || (parsed.rules.isEmpty() && parsed.exempts.isEmpty() && parsed.extracts.isEmpty())) {
+                                        Toast.makeText(context, "剪贴板中未找到有效的规则配置", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        clipboardParsedBackup = parsed
+                                    }
+                                },
+                            )
                         }
                     }
                 }
@@ -550,43 +1050,7 @@ fun LinkDispatchSettingsScreen(
         }
     }
 
-    LinkRuleEditDialog(
-        show = showEditDialog,
-        originalRule = editingRule,
-        onDismissRequest = { showEditDialog = false },
-        onSave = { savedRule ->
-            scope.launch {
-                LinkRuleRepository.updateRules(context) { list ->
-                    val idx = list.indexOfFirst { it.id == savedRule.id }
-                    if (idx >= 0) {
-                        list.toMutableList().apply {
-                            set(
-                                idx,
-                                savedRule.copy(
-                                    hitCount = list[idx].hitCount,
-                                    lastHitAt = list[idx].lastHitAt,
-                                    priority = list[idx].priority,
-                                ),
-                            )
-                        }
-                    } else {
-                        val nextPriority = (list.maxOfOrNull { it.priority } ?: -1) + 1
-                        list + savedRule.copy(priority = nextPriority)
-                    }
-                }
-                Toast.makeText(context, "规则已保存", Toast.LENGTH_SHORT).show()
-            }
-        },
-        onDelete = { ruleToDelete ->
-            scope.launch {
-                LinkRuleRepository.updateRules(context) { list ->
-                    list.filterNot { it.id == ruleToDelete.id }
-                }
-                Toast.makeText(context, context.getString(R.string.link_dispatch_rule_deleted, ruleToDelete.name), Toast.LENGTH_SHORT).show()
-            }
-        },
-    )
-
+    // 常用模板导入弹窗
     LinkTemplateImportDialog(
         show = showBuiltinImportDialog,
         existingRules = rules,
@@ -605,13 +1069,14 @@ fun LinkDispatchSettingsScreen(
         },
     )
 
+    // 剪贴板导入弹窗
     val activeClipboardBackup = clipboardParsedBackup
     LinkTemplateImportDialog(
         show = activeClipboardBackup != null,
         existingRules = rules,
         customCandidates = activeClipboardBackup?.rules,
         dialogTitle = "从剪贴板导入规则",
-        dialogDescription = "已从剪贴板解析出 ${activeClipboardBackup?.rules?.size ?: 0} 条规则，请勾选要导入的规则。",
+        dialogDescription = "已解析出 ${activeClipboardBackup?.rules?.size ?: 0} 条规则，请勾选要导入的规则。",
         preselectAllAvailable = true,
         onDismissRequest = { clipboardParsedBackup = null },
         onImport = { selectedRules ->
@@ -625,76 +1090,148 @@ fun LinkDispatchSettingsScreen(
         },
     )
 
+    // 豁免域名弹窗
     LinkExemptsBottomSheet(
         show = showExemptsSheet,
         exempts = exempts,
         onDismissRequest = { showExemptsSheet = false },
-        onAddExempt = { newExempt ->
+        onAdd = { newExempt ->
             scope.launch {
                 LinkRuleRepository.updateExemptDomains(context) { it + newExempt }
             }
         },
-        onToggleExempt = { target, enabled ->
+        onDelete = { toDelete ->
             scope.launch {
                 LinkRuleRepository.updateExemptDomains(context) { list ->
-                    list.map { if (it.id == target.id) it.copy(isEnabled = enabled) else it }
+                    list.filterNot { it.domain == toDelete.domain }
                 }
             }
         },
-        onDeleteExempt = { target ->
+        onToggle = { target, enabled ->
             scope.launch {
                 LinkRuleRepository.updateExemptDomains(context) { list ->
-                    list.filterNot { it.id == target.id }
+                    list.map { if (it.domain == target.domain) it.copy(isEnabled = enabled) else it }
                 }
             }
         },
     )
 
+    // 链接提取正则弹窗
     LinkExtractsBottomSheet(
         show = showExtractsSheet,
         extracts = extracts,
         onDismissRequest = { showExtractsSheet = false },
-        onAddExtract = { newExtract ->
+        onAdd = { newExtract ->
             scope.launch {
                 LinkRuleRepository.updateExtractPatterns(context) { it + newExtract }
             }
         },
-        onUpdateExtract = { updated ->
+        onDelete = { toDelete ->
             scope.launch {
                 LinkRuleRepository.updateExtractPatterns(context) { list ->
-                    list.map { if (it.id == updated.id) updated else it }
+                    list.filterNot { it.id == toDelete.id }
                 }
             }
         },
-        onToggleExtract = { target, enabled ->
+        onToggle = { target, enabled ->
             scope.launch {
                 LinkRuleRepository.updateExtractPatterns(context) { list ->
                     list.map { if (it.id == target.id) it.copy(isEnabled = enabled) else it }
                 }
             }
         },
-        onDeleteExtract = { target ->
+        onResetDefaults = {
             scope.launch {
-                LinkRuleRepository.updateExtractPatterns(context) { list ->
-                    list.filterNot { it.id == target.id }
-                }
+                LinkRuleRepository.updateExtractPatterns(context) { LinkExtractPattern.builtinDefaults() }
             }
         },
     )
+
+    // 雷达横幅停留时长选择弹窗
+    MiuixRadioSelectDialog(
+        show = showHoldPickerSheet,
+        onDismissRequest = { showHoldPickerSheet = false },
+        title = "雷达横幅停留时长",
+        options = holdValues,
+        selected = radarHoverHoldMs,
+        optionLabel = { ms -> holdLabels.getOrElse(holdValues.indexOf(ms)) { "${ms}毫秒" } },
+        onSelect = { targetMs ->
+            scope.launch { LinkRuleRepository.setRadarHoverHoldMs(context, targetMs) }
+        },
+    )
+
+    // 兜底备选浏览器选择弹窗
+    if (showBrowserPickerSheet) {
+        var installedBrowsers by remember { mutableStateOf<List<BrowserAppOption>>(emptyList()) }
+        LaunchedEffect(Unit) {
+            installedBrowsers = withContext(Dispatchers.IO) {
+                BrowserSelectorActivity.queryBrowsers(context)
+            }
+        }
+        MiuixBottomSheet(
+            show = true,
+            title = "选择兜底备选浏览器",
+            onDismissRequest = { showBrowserPickerSheet = false },
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                if (installedBrowsers.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
+                        MiuixText(text = "未检测到外部已安装的浏览器", style = MiuixTheme.textStyles.body2)
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        items(items = installedBrowsers, key = { it.packageName }) { browser ->
+                            CardSegment(isFirst = true, isLast = true, outerHorizontalPadding = 0.dp) {
+                                BasicComponent(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    title = browser.label,
+                                    summary = browser.packageName,
+                                    startAction = {
+                                        Box(modifier = Modifier.padding(end = 12.dp)) {
+                                            LinkAppIcon(packageName = browser.packageName, size = 36.dp)
+                                        }
+                                    },
+                                    onClick = {
+                                        scope.launch {
+                                            LinkRuleRepository.setFallbackBrowser(context, browser.packageName)
+                                            showBrowserPickerSheet = false
+                                        }
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /**
- * 单条链接分发规则展示行（对齐 gevo item_link_rule.xml：左侧 40dp 应用图标、名称、目标与策略详情、等宽 pattern、右侧 Switch）。
+ * 单条链接分发规则展示行（Miuix 风格高阶卡片：左侧 40dp 高清应用图标、标题加粗、等宽 Pattern 浅底小标签、状态徽章胶囊、右侧 Switch）。
  */
 @Composable
 private fun LinkDispatchRuleItemRow(
     rule: LinkDispatchRule,
     appName: String,
+    isFirst: Boolean,
+    isLast: Boolean,
     onClick: () -> Unit,
     onToggleEnabled: (Boolean) -> Unit,
 ) {
+    val context = LocalContext.current
+    val isAppInstalled = remember(rule.targetPackage) {
+        rule.targetPackage.isBlank() || runCatching { context.packageManager.getPackageInfo(rule.targetPackage, 0) }.isSuccess
+    }
+
     val targetLine = if (rule.resolveShortLink && rule.resolveStrategy == LinkResolveStrategy.REDISPATCH && rule.targetPackage.isBlank()) {
-        "解析后重新分发"
+        "短链重分发（重新匹配后续规则）"
     } else if (appName.isNotBlank() && appName != rule.targetPackage) {
         "$appName · ${rule.targetPackage}"
     } else {
@@ -706,31 +1243,326 @@ private fun LinkDispatchRuleItemRow(
         LinkMatchType.REGEX -> "正则"
         LinkMatchType.EXACT -> "精确"
     }
-    val badges = buildList {
-        add(matchLabel)
-        if (rule.resolveShortLink && rule.resolveStrategy != LinkResolveStrategy.NONE) {
-            add(if (rule.resolveStrategy == LinkResolveStrategy.REDISPATCH) "短链重分发" else "解析短链")
-        }
-        if (rule.excludeFromRecents) add("无痕")
-        if (!rule.template.isNullOrBlank()) add("改写")
-        add(if (rule.hitCount > 0) "命中 ${rule.hitCount} 次" else "从未命中")
-    }.joinToString(" · ")
 
-    BasicComponent(
-        modifier = Modifier.fillMaxWidth(),
-        title = rule.name.ifBlank { rule.pattern },
-        summary = "$targetLine\n${rule.pattern}\n$badges",
-        startAction = {
-            Box(modifier = Modifier.padding(end = 12.dp)) {
-                LinkAppIcon(packageName = rule.targetPackage, size = 40.dp)
+    CardSegment(
+        isFirst = isFirst,
+        isLast = isLast,
+        outerHorizontalPadding = 12.dp,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        ) {
+            // 第一行：40dp 图标 + 规则名称 + 目标说明 + Switch
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(modifier = Modifier.padding(end = 12.dp)) {
+                    LinkAppIcon(packageName = rule.targetPackage, size = 40.dp)
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        MiuixText(
+                            text = rule.name.ifBlank { rule.pattern },
+                            style = MiuixTheme.textStyles.body1,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        if (!isAppInstalled) {
+                            Spacer(Modifier.width(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(MiuixTheme.colorScheme.error.copy(alpha = 0.15f))
+                                    .padding(horizontal = 6.dp, vertical = 1.dp),
+                            ) {
+                                MiuixText(
+                                    text = "未安装",
+                                    style = MiuixTheme.textStyles.footnote2,
+                                    color = MiuixTheme.colorScheme.error,
+                                )
+                            }
+                        }
+                    }
+                    MiuixText(
+                        text = targetLine,
+                        style = MiuixTheme.textStyles.footnote2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Switch(
+                    checked = rule.isEnabled,
+                    onCheckedChange = onToggleEnabled,
+                )
             }
-        },
-        onClick = onClick,
-        endActions = {
-            Switch(
-                checked = rule.isEnabled,
-                onCheckedChange = onToggleEnabled,
+
+            // 第二行：Pattern 浅色等宽背景标签 + 状态胶囊徽章
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                // Pattern 标签
+                Box(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(MiuixTheme.colorScheme.surface)
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                ) {
+                    MiuixText(
+                        text = rule.pattern,
+                        style = MiuixTheme.textStyles.footnote2,
+                        fontFamily = FontFamily.Monospace,
+                        color = MiuixTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+
+                // 状态徽章
+                val badges = buildList {
+                    add(matchLabel)
+                    if (rule.resolveShortLink && rule.resolveStrategy != LinkResolveStrategy.NONE) {
+                        add(if (rule.resolveStrategy == LinkResolveStrategy.REDISPATCH) "重分发" else "短链")
+                    }
+                    if (rule.excludeFromRecents) add("无痕")
+                    if (!rule.template.isNullOrBlank()) add("改写")
+                    if (rule.hitCount > 0) add("${rule.hitCount}次")
+                }
+                badges.forEach { badge ->
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(MiuixTheme.colorScheme.surface)
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                    ) {
+                        MiuixText(
+                            text = badge,
+                            style = MiuixTheme.textStyles.footnote2,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LinkExemptsBottomSheet(
+    show: Boolean,
+    exempts: List<LinkExemptDomain>,
+    onDismissRequest: () -> Unit,
+    onAdd: (LinkExemptDomain) -> Unit,
+    onDelete: (LinkExemptDomain) -> Unit,
+    onToggle: (LinkExemptDomain, Boolean) -> Unit,
+) {
+    if (!show) return
+    var newDomain by remember { mutableStateOf("") }
+
+    MiuixBottomSheet(
+        show = true,
+        title = "豁免域名",
+        onDismissRequest = onDismissRequest,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            MiuixText(
+                text = "属于豁免域名的网址不会被规则接管，直接交由系统默认方式打开。",
+                style = MiuixTheme.textStyles.footnote2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             )
-        },
-    )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    MiuixLabeledTextField(
+                        value = newDomain,
+                        onValueChange = { newDomain = it },
+                        label = "添加豁免域名，例如 example.com",
+                        useLabelAsPlaceholder = false,
+                        singleLine = true,
+                    )
+                }
+                MiuixTextButton(
+                    text = "添加",
+                    colors = ButtonDefaults.textButtonColorsPrimary(),
+                    enabled = newDomain.trim().isNotBlank(),
+                    onClick = {
+                        val trimmed = newDomain.trim()
+                        if (trimmed.isNotEmpty()) {
+                            onAdd(LinkExemptDomain(domain = trimmed))
+                            newDomain = ""
+                        }
+                    },
+                )
+            }
+
+            if (exempts.isEmpty()) {
+                Box(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
+                    MiuixText(text = "暂无豁免域名", style = MiuixTheme.textStyles.body2, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    items(items = exempts, key = { it.domain }) { item ->
+                        CardSegment(isFirst = true, isLast = true, outerHorizontalPadding = 0.dp) {
+                            BasicComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                title = item.domain,
+                                endActions = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Switch(
+                                            checked = item.isEnabled,
+                                            onCheckedChange = { onToggle(item, it) },
+                                        )
+                                        IconButton(onClick = { onDelete(item) }) {
+                                            Icon(
+                                                imageVector = Icons.Default.Block,
+                                                contentDescription = "删除",
+                                                tint = MiuixTheme.colorScheme.error,
+                                                modifier = Modifier.size(20.dp),
+                                            )
+                                        }
+                                    }
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LinkExtractsBottomSheet(
+    show: Boolean,
+    extracts: List<LinkExtractPattern>,
+    onDismissRequest: () -> Unit,
+    onAdd: (LinkExtractPattern) -> Unit,
+    onDelete: (LinkExtractPattern) -> Unit,
+    onToggle: (LinkExtractPattern, Boolean) -> Unit,
+    onResetDefaults: () -> Unit,
+) {
+    if (!show) return
+    var newName by remember { mutableStateOf("") }
+    var newRegex by remember { mutableStateOf("") }
+
+    MiuixBottomSheet(
+        show = true,
+        title = "链接提取规则",
+        onDismissRequest = onDismissRequest,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            MiuixText(
+                text = "从复制的长文本或屏幕内容中提取出真实 URL 的正则表达式。",
+                style = MiuixTheme.textStyles.footnote2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    MiuixLabeledTextField(
+                        value = newName,
+                        onValueChange = { newName = it },
+                        label = "规则名称",
+                        useLabelAsPlaceholder = false,
+                        singleLine = true,
+                    )
+                }
+                Box(modifier = Modifier.weight(1.5f)) {
+                    MiuixLabeledTextField(
+                        value = newRegex,
+                        onValueChange = { newRegex = it },
+                        label = "正则表达式",
+                        useLabelAsPlaceholder = false,
+                        singleLine = true,
+                    )
+                }
+                MiuixTextButton(
+                    text = "添加",
+                    colors = ButtonDefaults.textButtonColorsPrimary(),
+                    enabled = newRegex.trim().isNotBlank(),
+                    onClick = {
+                        val trimmedRegex = newRegex.trim()
+                        val trimmedName = newName.trim().ifBlank { trimmedRegex }
+                        if (trimmedRegex.isNotEmpty()) {
+                            onAdd(LinkExtractPattern(name = trimmedName, pattern = trimmedRegex))
+                            newName = ""
+                            newRegex = ""
+                        }
+                    },
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                MiuixTextButton(
+                    text = "恢复默认提取规则",
+                    onClick = onResetDefaults,
+                )
+            }
+
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                items(items = extracts, key = { it.id }) { item ->
+                    CardSegment(isFirst = true, isLast = true, outerHorizontalPadding = 0.dp) {
+                        BasicComponent(
+                            modifier = Modifier.fillMaxWidth(),
+                            title = item.name,
+                            summary = item.pattern,
+                            endActions = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Switch(
+                                        checked = item.isEnabled,
+                                        onCheckedChange = { onToggle(item, it) },
+                                    )
+                                    IconButton(onClick = { onDelete(item) }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Block,
+                                            contentDescription = "删除",
+                                            tint = MiuixTheme.colorScheme.error,
+                                            modifier = Modifier.size(20.dp),
+                                        )
+                                    }
+                                }
+                            },
+                        )
+                    }
+                }
+            }
+        }
+    }
 }

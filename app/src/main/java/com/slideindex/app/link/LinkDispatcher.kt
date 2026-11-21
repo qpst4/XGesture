@@ -157,10 +157,39 @@ object LinkDispatcher {
         rawUrl: String,
         sourcePackage: String = "",
         sourceText: String? = null,
+    ): LinkRouteTrace = routeRulesWithTrace(
+        context = context,
+        rawUrl = rawUrl,
+        rules = LinkRuleRepository.loadRules(context),
+        exempts = LinkRuleRepository.loadExemptDomains(context),
+        sourcePackage = sourcePackage,
+        sourceText = sourceText,
+    )
+
+    suspend fun routeCandidateWithTrace(
+        context: Context,
+        rawUrl: String,
+        candidateRule: LinkDispatchRule,
+        sourcePackage: String = "",
+        sourceText: String? = null,
+    ): LinkRouteTrace = routeRulesWithTrace(
+        context = context,
+        rawUrl = rawUrl,
+        rules = listOf(candidateRule) + LinkRuleRepository.loadRules(context).filterNot { it.id == candidateRule.id },
+        exempts = LinkRuleRepository.loadExemptDomains(context),
+        sourcePackage = sourcePackage,
+        sourceText = sourceText,
+    )
+
+    private suspend fun routeRulesWithTrace(
+        context: Context,
+        rawUrl: String,
+        rules: List<LinkDispatchRule>,
+        exempts: List<LinkExemptDomain>,
+        sourcePackage: String = "",
+        sourceText: String? = null,
     ): LinkRouteTrace = withContext(Dispatchers.IO) {
         val normalized = PickResultUrl.normalizeOpenableUrl(rawUrl) ?: rawUrl
-        val rules = LinkRuleRepository.loadRules(context)
-        val exempts = LinkRuleRepository.loadExemptDomains(context)
         val steps = mutableListOf<LinkRouteStep>()
 
         var target = normalized

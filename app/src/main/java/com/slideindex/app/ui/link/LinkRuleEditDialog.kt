@@ -496,7 +496,7 @@ fun LinkRuleEditDialog(
 }
 
 @Composable
-private fun LinkTargetAppPickerBottomSheet(
+internal fun LinkTargetAppPickerBottomSheet(
     show: Boolean,
     selectedPackage: String,
     allowClearForRedispatch: Boolean = false,

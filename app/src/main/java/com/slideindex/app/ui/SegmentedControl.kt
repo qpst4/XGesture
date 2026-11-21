@@ -1,15 +1,20 @@
 package com.slideindex.app.ui
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,30 +22,31 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import kotlin.math.roundToInt
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
- * 通用分段选择器。
+ * 通用分段选择器（高质感物理阻尼动效 + 悬浮微阴影 + 动态分割线消隐）。
  *
  * 组件本身不决定选项顺序：调用方通过 [items] 传入的顺序就是显示顺序。
  * [labelRes] 把每个选项映射到字符串资源，[onSelect] 回传被点击的选项本身，
@@ -81,68 +87,144 @@ internal fun <T> SegmentedControl(
     containerColor: Color? = null,
     indicatorColor: Color? = null,
 ) {
+    if (items.isEmpty()) return
+
+    val isDark = isSystemInDarkTheme()
     val selectedIndex = items.indexOf(selected).coerceAtLeast(0)
+
+    val containerBg = containerColor ?: if (isDark) {
+        Color(0xFF1E2024)
+    } else {
+        MiuixTheme.colorScheme.surfaceContainerHigh
+    }
+    val containerBorderColor = if (isDark) {
+        Color(0x26FFFFFF)
+    } else {
+        MiuixTheme.colorScheme.dividerLine.copy(alpha = 0.45f)
+    }
 
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .height(40.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(containerColor ?: MiuixTheme.colorScheme.surfaceContainerHigh)
+            .height(42.dp)
             .border(
                 width = 1.dp,
-                color = MiuixTheme.colorScheme.dividerLine,
+                color = containerBorderColor,
                 shape = RoundedCornerShape(14.dp),
             )
-            .padding(3.dp),
+            .background(
+                color = containerBg,
+                shape = RoundedCornerShape(14.dp),
+            )
+            .padding(3.5.dp),
     ) {
-        val density = LocalDensity.current
         val haptic = LocalHapticFeedback.current
-        val dividerTotal = if (labels.isEmpty()) 0.dp else (labels.size - 1).dp
-        val segmentWidth = if (labels.isEmpty()) 0.dp else (maxWidth - dividerTotal) / labels.size
-        val indicatorOffset = remember { Animatable(0f) }
-        var firstLayout by remember { mutableStateOf(true) }
+        val totalWidth = maxWidth
+        val tabWidth = totalWidth / items.size
 
-        LaunchedEffect(selectedIndex, segmentWidth) {
-            val target = with(density) { (segmentWidth + 1.dp).toPx() } * selectedIndex
-            if (firstLayout) {
-                indicatorOffset.snapTo(target)
-                firstLayout = false
+        var isInitialized by remember(items) { mutableStateOf(false) }
+        var lastSelectedIndex by remember(items) { mutableIntStateOf(selectedIndex) }
+
+        val targetOffset = tabWidth * selectedIndex
+
+        // 1. 物理阻尼平滑滑动药丸 (首次渲染时瞬时 snap 定位，点击切换时触发细腻阻尼回弹)
+        val indicatorOffset by animateDpAsState(
+            targetValue = targetOffset,
+            animationSpec = if (!isInitialized || lastSelectedIndex == selectedIndex) {
+                snap()
             } else {
-                indicatorOffset.animateTo(
-                    targetValue = target,
-                    animationSpec = tween(200, easing = LinearEasing),
+                spring<Dp>(
+                    dampingRatio = 0.84f,
+                    stiffness = 420f,
                 )
+            },
+            label = "segmentedIndicatorOffset",
+        )
+
+        LaunchedEffect(selectedIndex) {
+            if (!isInitialized) {
+                isInitialized = true
+            }
+            lastSelectedIndex = selectedIndex
+        }
+
+        val pillBg = indicatorColor ?: if (isDark) Color(0xFF383A3F) else MiuixTheme.colorScheme.surface
+        val pillBorderColor = if (isDark) Color(0x28FFFFFF) else Color(0x12000000)
+
+        // 选中实体滑块 (带立体环境弥散微阴影与 0.5dp 精细描边)
+        Box(
+            modifier = Modifier
+                .offset(x = indicatorOffset)
+                .width(tabWidth)
+                .fillMaxHeight()
+                .shadow(
+                    elevation = if (isDark) 2.dp else 2.5.dp,
+                    shape = RoundedCornerShape(10.5.dp),
+                    spotColor = if (isDark) Color.Black.copy(alpha = 0.4f) else Color(0x28000000),
+                    ambientColor = if (isDark) Color.Black.copy(alpha = 0.2f) else Color(0x18000000),
+                )
+                .border(
+                    width = 0.5.dp,
+                    color = pillBorderColor,
+                    shape = RoundedCornerShape(10.5.dp),
+                )
+                .background(
+                    color = pillBg,
+                    shape = RoundedCornerShape(10.5.dp),
+                ),
+        )
+
+        // 2. 选项之间的微垂直分割线 (靠近选中药丸时平滑淡出消隐)
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            labels.forEachIndexed { index, _ ->
+                if (index > 0) {
+                    val isNearSelected = (index == selectedIndex) || (index - 1 == selectedIndex)
+                    val dividerAlpha by animateFloatAsState(
+                        targetValue = if (isNearSelected) 0f else 1f,
+                        animationSpec = if (!isInitialized) snap() else tween(150),
+                        label = "segmentedDividerAlpha",
+                    )
+                    Box(
+                        modifier = Modifier
+                            .offset(x = (-0.5).dp)
+                            .width(1.dp)
+                            .height(13.dp)
+                            .background(
+                                color = MiuixTheme.colorScheme.dividerLine.copy(
+                                    alpha = (if (isDark) 0.35f else 0.5f) * dividerAlpha,
+                                ),
+                                shape = CircleShape,
+                            ),
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
 
-        Box(
-            modifier = Modifier
-                .offset { IntOffset(indicatorOffset.value.roundToInt(), 0) }
-                .width(segmentWidth)
-                .fillMaxHeight()
-                .clip(RoundedCornerShape(11.dp))
-                .background(indicatorColor ?: MiuixTheme.colorScheme.surface),
-        )
+        // 3. 上层文字与交互点击层 (平滑文本变色 + 触觉震动反馈)
+        val selectedColor = MiuixTheme.colorScheme.primary
+        val unselectedColor = MiuixTheme.colorScheme.onSurfaceVariantSummary
 
         Row(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             labels.forEachIndexed { index, label ->
-                // 选中项两侧不画竖线：两个 tab 时中间自然没有线，三个以上也保持选中 pill 周围干净。
-                if (index > 0 && index != selectedIndex && index - 1 != selectedIndex) {
-                    Box(
-                        modifier = Modifier
-                            .width(1.dp)
-                            .height(18.dp)
-                            .background(MiuixTheme.colorScheme.dividerLine),
-                    )
-                }
+                val isSelected = index == selectedIndex
+                val textColor by animateColorAsState(
+                    targetValue = if (isSelected) selectedColor else unselectedColor,
+                    animationSpec = if (!isInitialized) snap() else tween(durationMillis = 200),
+                    label = "segmentedTextColor",
+                )
+
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
+                        .clip(RoundedCornerShape(10.5.dp))
                         .clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() },
@@ -157,16 +239,8 @@ internal fun <T> SegmentedControl(
                     MiuixText(
                         text = label,
                         style = MiuixTheme.textStyles.body2,
-                        fontWeight = if (index == selectedIndex) {
-                            FontWeight.Bold
-                        } else {
-                            FontWeight.Normal
-                        },
-                        color = if (index == selectedIndex) {
-                            MiuixTheme.colorScheme.primary
-                        } else {
-                            MiuixTheme.colorScheme.onSurfaceVariantSummary
-                        },
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = textColor,
                     )
                 }
             }

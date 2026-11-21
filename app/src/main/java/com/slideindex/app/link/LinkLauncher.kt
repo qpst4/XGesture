@@ -79,7 +79,36 @@ object LinkLauncher {
             }
         }
 
-        if (dispatched) recordRuleHit(context, result)
+        if (dispatched) {
+            recordRuleHit(context, result)
+            runCatching {
+                when (result) {
+                    is LinkDispatchResult.Routed -> LinkDispatchHistoryRepository.record(
+                        context = context,
+                        rawUrl = rawUrl,
+                        finalUrl = result.url,
+                        matchedRuleName = result.rule.name,
+                        targetPackage = result.rule.targetPackage,
+                        isSuccess = true,
+                        isReDispatch = result.rule.resolveStrategy == LinkResolveStrategy.REDISPATCH,
+                    )
+                    is LinkDispatchResult.Exempted -> LinkDispatchHistoryRepository.record(
+                        context = context,
+                        rawUrl = rawUrl,
+                        finalUrl = result.url,
+                        matchedRuleName = "豁免域名",
+                        isSuccess = true,
+                    )
+                    else -> LinkDispatchHistoryRepository.record(
+                        context = context,
+                        rawUrl = rawUrl,
+                        finalUrl = rawUrl,
+                        matchedRuleName = null,
+                        isSuccess = true,
+                    )
+                }
+            }
+        }
         return dispatched
     }
 

@@ -32,6 +32,7 @@ object LinkRuleRepository {
     val KEY_RADAR_POINTER = booleanPreferencesKey("link_radar_pointer")
     val KEY_OPEN_IN_SMALL_WINDOW = booleanPreferencesKey("link_open_in_small_window")
     val KEY_RADAR_HOVER_HOLD_MS = intPreferencesKey("link_radar_hover_hold_ms")
+    val KEY_FALLBACK_BROWSER = stringPreferencesKey("link_fallback_browser")
     const val DEFAULT_RADAR_HOVER_HOLD_MS = 1000
 
     private val dataStoreHolder = AtomicReference<DataStore<Preferences>>()
@@ -215,6 +216,22 @@ object LinkRuleRepository {
 
     suspend fun setRadarHoverHoldMs(context: Context, holdMs: Int) {
         context.linkDataStore.edit { it[KEY_RADAR_HOVER_HOLD_MS] = holdMs }
+    }
+
+    suspend fun getFallbackBrowser(context: Context): String? =
+        context.linkDataStore.data.first()[KEY_FALLBACK_BROWSER]?.takeIf { it.isNotBlank() }
+
+    fun observeFallbackBrowser(context: Context): Flow<String?> =
+        context.linkDataStore.data.map { it[KEY_FALLBACK_BROWSER]?.takeIf { pkg -> pkg.isNotBlank() } }
+
+    suspend fun setFallbackBrowser(context: Context, packageName: String?) {
+        context.linkDataStore.edit { prefs ->
+            if (packageName.isNullOrBlank()) {
+                prefs.remove(KEY_FALLBACK_BROWSER)
+            } else {
+                prefs[KEY_FALLBACK_BROWSER] = packageName
+            }
+        }
     }
 
     private suspend fun seedBuiltinExtractsIfNeeded(context: Context) {
