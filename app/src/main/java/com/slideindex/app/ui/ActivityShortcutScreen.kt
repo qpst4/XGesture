@@ -85,6 +85,7 @@ fun ActivityShortcutScreen(
     onAddShellCommand: () -> Unit,
     onAddImage: () -> Unit = {},
     onAddFile: () -> Unit = {},
+    onImportDynamicShortcuts: () -> Unit = {},
     onOpenPresets: () -> Unit,
     onEdit: (ActivityShortcut) -> Unit
 ) {
@@ -195,6 +196,10 @@ fun ActivityShortcutScreen(
         onAddFile = {
             showAddSheet = false
             onAddFile()
+        },
+        onImportDynamicShortcuts = {
+            showAddSheet = false
+            onImportDynamicShortcuts()
         }
     )
 
@@ -551,6 +556,7 @@ private fun ActivityShortcutAddBottomSheet(
     onAddShellCommand: () -> Unit,
     onAddImage: () -> Unit = {},
     onAddFile: () -> Unit = {},
+    onImportDynamicShortcuts: () -> Unit = {},
 ) {
     MiuixBottomSheet(
         show = show,
@@ -561,6 +567,7 @@ private fun ActivityShortcutAddBottomSheet(
             Triple(R.string.activity_shortcut_add_from_presets, R.string.activity_shortcut_add_from_presets_sub, onOpenPresets),
             Triple(R.string.activity_shortcut_browse_custom, R.string.activity_shortcut_browse_custom_sub, onBrowseActivity),
             Triple(R.string.activity_shortcut_add_from_shortcuts, R.string.activity_shortcut_add_from_shortcuts_sub, onAddAppShortcut),
+            Triple(R.string.activity_shortcut_add_from_dynamic, R.string.activity_shortcut_add_from_dynamic_sub, onImportDynamicShortcuts),
             Triple(R.string.activity_shortcut_add_from_shell, R.string.activity_shortcut_add_from_shell_sub, onAddShellCommand),
             Triple(R.string.activity_shortcut_add_image, R.string.activity_shortcut_add_image_sub, onAddImage),
             Triple(R.string.activity_shortcut_add_file, R.string.activity_shortcut_add_file_sub, onAddFile),

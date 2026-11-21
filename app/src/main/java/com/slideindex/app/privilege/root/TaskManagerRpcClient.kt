@@ -281,6 +281,20 @@ internal class TaskManagerRpcClient(
         val singlePressStr = singlePressKeyCodes?.joinToString(",") ?: ""
         runCatching { TaskManagerDaemonRpc.execute(port, 115, listOf(mappedStr, doublePressStr, singlePressStr)) }
     }
+
+    override fun openTouchStream(token: String?, owner: android.os.IBinder?): android.os.ParcelFileDescriptor? = null
+
+    override fun closeTouchStream(token: String?) = Unit
+
+    override fun interruptTouchForDrag(
+        token: String?,
+        sourcePackage: String?,
+        x: Float,
+        y: Float,
+        displayId: Int,
+        deadlineUptimeMs: Long,
+        guard: com.slideindex.app.shizuku.ITouchInterruptionGuard?
+    ): Boolean = false
 }
 
 

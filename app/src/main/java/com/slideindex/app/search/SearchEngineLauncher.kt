@@ -26,6 +26,7 @@ import com.slideindex.app.settings.shouldLaunchFullscreen
 import com.slideindex.app.util.FreeWindowLauncher
 import com.slideindex.app.util.PackageActivityResolver
 import com.slideindex.app.util.TaskManagerUtil
+import kotlinx.coroutines.launch
 
 object SearchEngineLauncher {
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -200,6 +201,25 @@ object SearchEngineLauncher {
         if (normalized.isBlank()) {
             Toast.makeText(context, R.string.search_engine_query_empty, Toast.LENGTH_SHORT).show()
             return false
+        }
+        if (!longPressTriggered) {
+            val handledByDispatch = runCatching {
+                kotlinx.coroutines.runBlocking(kotlinx.coroutines.Dispatchers.IO) {
+                    val rules = com.slideindex.app.link.LinkRuleRepository.loadRules(context)
+                    com.slideindex.app.link.LinkDispatcher.findRule(normalized, rules) != null
+                }
+            }.getOrDefault(false)
+
+            if (handledByDispatch) {
+                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                    com.slideindex.app.link.LinkLauncher.openUrl(
+                        context = context,
+                        rawUrl = normalized,
+                        bypassRules = false
+                    )
+                }
+                return true
+            }
         }
         val link = resolveLink(context, normalized) { candidate -> buildOpenableUriIntent(candidate) }
             ?: return launchFailed(context)

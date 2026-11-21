@@ -1814,7 +1814,15 @@ object FloatBallPickResultPanel {
                         }
                     },
                     screenRect = screenRect,
-                    layoutMeta = layoutMeta
+                    layoutMeta = layoutMeta,
+                    resolveLinkAppPreview = { url ->
+                        val preview = com.slideindex.app.link.previewLinkTarget(
+                            context = overlayContext.applicationContext,
+                            url = url,
+                            sourceText = textHolder.value
+                        )
+                        preview?.icon to preview?.label
+                    }
                 )
                 }
             }

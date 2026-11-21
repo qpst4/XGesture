@@ -748,6 +748,18 @@ data class DragDropFlowSettings(
      * 文件拖拽没有动作菜单，不受这个开关影响。
      */
     val dragDropFlowActionsInline: Boolean = true,
+    /** 全局长按触摸监听强行拖拽（需要 Shizuku 权限）。 */
+    val dragDropFlowGlobalPressEnabled: Boolean = false,
+    /** 全局长按确认阈值（毫秒）。 */
+    val dragDropFlowGlobalPressTimeoutMs: Int = 450,
+    /** 全局长按触发时是否轻微震动反馈。 */
+    val dragDropFlowGlobalPressVibrate: Boolean = true,
+    /** 全局长按超时后直接开始识别并展开流转栏（无需手指移动）。 */
+    val dragDropFlowGlobalPressImmediate: Boolean = false,
+    /** 提前读取应用长按文字。 */
+    val dragDropFlowGlobalPressEarlyText: Boolean = false,
+    /** 全局长按拖放白名单应用（空表示全部应用）。 */
+    val dragDropFlowGlobalPressWhitelist: String = "",
     /**
      * 拖拽流转栏里「文字」这一类目标。
      *

@@ -14,6 +14,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
@@ -53,6 +57,7 @@ fun PickResultActionMenuItem(
     icon: ImageVector,
     onClick: () -> Unit,
     iconModifier: Modifier = Modifier,
+    iconBitmap: ImageBitmap? = null,
 ) {
     val isDark = LocalAppDarkTheme.current
     val textColor = if (isDark) Color(0xFFECECED) else Color(0xFF1F1F1F)
@@ -68,12 +73,24 @@ fun PickResultActionMenuItem(
             )
         },
         leadingIcon = {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp).then(iconModifier),
-                tint = iconTint,
-            )
+            if (iconBitmap != null) {
+                Image(
+                    bitmap = iconBitmap,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .then(iconModifier),
+                    contentScale = ContentScale.Fit,
+                )
+            } else {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp).then(iconModifier),
+                    tint = iconTint,
+                )
+            }
         },
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
         onClick = onClick,

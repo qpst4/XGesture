@@ -17,6 +17,7 @@ import com.slideindex.app.launcher.QuickLauncherItemType
 import com.slideindex.app.overlay.TaskSwitcherMenuItem
 import com.slideindex.app.overlay.TaskSwitcherMenuItemType
 import com.slideindex.app.service.LaunchTrampolineActivity
+import com.slideindex.app.shortcuts.DynamicShortcutsManager
 import java.util.concurrent.ConcurrentHashMap
 
 object AppShortcutLoader {
@@ -153,6 +154,18 @@ object AppShortcutLoader {
         shortcutId: String,
         label: String,
     ): TaskSwitcherMenuItem {
+        val pinnedRecord = DynamicShortcutsManager.getPinnedRecords(context)
+            .firstOrNull { it.packageName == packageName && it.shortcutId == shortcutId }
+        if (pinnedRecord != null) {
+            return TaskSwitcherMenuItem(
+                label = pinnedRecord.label.ifBlank { label },
+                type = TaskSwitcherMenuItemType.SHORTCUT,
+                shortcutId = shortcutId,
+                intentUris = pinnedRecord.intentUris.takeIf { it.isNotEmpty() },
+                kind = ShortcutKind.PINNED,
+                isServiceShortcut = true,
+            )
+        }
         // C dynamic/pinned entries store the real ShortcutService id; refresh it now.
         ShortcutServiceResolver.resolve(context, packageName, shortcutId)?.let { return it }
         lookupRegisteredShortcut(context, packageName, shortcutId)?.let { return it }
@@ -370,10 +383,25 @@ object AppShortcutLoader {
             }
             return
         }
+        val shortcutId = item.shortcutId
+        if (!shortcutId.isNullOrBlank()) {
+            val pinnedRecord = DynamicShortcutsManager.getPinnedRecords(context)
+                .firstOrNull { it.packageName == packageName && it.shortcutId == shortcutId }
+            if (pinnedRecord != null) {
+                if (DynamicShortcutsManager.launchShortcut(context, packageName, shortcutId, userSerial = pinnedRecord.userSerial)) {
+                    return
+                }
+            }
+        }
         if (item.isServiceShortcut) {
             item.shortcutIntent?.let { intent ->
                 launchServiceShortcut(context, packageName, intent)
                 return
+            }
+            if (!shortcutId.isNullOrBlank()) {
+                if (DynamicShortcutsManager.launchShortcut(context, packageName, shortcutId)) {
+                    return
+                }
             }
         }
         val intentUris = item.intentUris
@@ -491,7 +519,7 @@ object AppShortcutLoader {
             val firstGroup = groupLists.flatMap { it }.firstOrNull { it.app.packageName == packageName }
             val app = firstGroup?.app ?: return@mapNotNull null
             AppShortcutGroup(app, shortcuts.values.toList())
-        }.sortedBy { PinyinHelper.sortKey(it.app.label) }
+        }
     }
 
     private fun resolveAppInfo(context: Context, packageName: String): AppInfo? {

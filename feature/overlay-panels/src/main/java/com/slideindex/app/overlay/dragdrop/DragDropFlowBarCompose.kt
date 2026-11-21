@@ -102,6 +102,7 @@ data class DragDropFlowItem(
     val iconBitmap: Bitmap? = null,
     val iconVector: ImageVector? = null,
     val iconPainter: Painter? = null,
+    val iconDrawableRes: Int? = null,
     val iconTintColor: Color? = null,
 )
 
@@ -950,6 +951,14 @@ private fun FlowItemCard(
                 item.iconPainter != null -> {
                     Icon(
                         painter = item.iconPainter,
+                        contentDescription = item.title,
+                        tint = item.iconTintColor ?: MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(34.dp),
+                    )
+                }
+                item.iconDrawableRes != null -> {
+                    Icon(
+                        painter = androidx.compose.ui.res.painterResource(item.iconDrawableRes),
                         contentDescription = item.title,
                         tint = item.iconTintColor ?: MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(34.dp),

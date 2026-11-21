@@ -105,7 +105,7 @@ fun FloatBallPickSettingsScreen(
     onOpenImageSearchEngineSettings: () -> Unit,
 
     onDefaultSearchEngineChange: (String?) -> Unit,
-
+    onOpenLinkDispatchSettings: () -> Unit = {},
     onBack: () -> Unit,
 
 ) {
@@ -267,6 +267,24 @@ fun FloatBallPickSettingsScreen(
                         enabled = true,
 
                         onClick = onOpenPickHandfeelSettings,
+
+                    )
+
+                },
+
+                settingsCardScopeItem("link-dispatch") {
+
+                    SettingNavigationRow(
+
+                        icon = { label -> SymbolsIcon("Link", contentDescription = label) },
+
+                        title = stringResource(R.string.link_dispatch_title),
+
+                        subtitle = stringResource(R.string.link_dispatch_import_linkgo_desc),
+
+                        enabled = true,
+
+                        onClick = onOpenLinkDispatchSettings,
 
                     )
 

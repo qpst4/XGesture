@@ -2162,4 +2162,28 @@ class OverlaySettingsMutator @Inject constructor(
     suspend fun setDragDropFlowActionsInline(enabled: Boolean) = editor.edit {
         it[SettingsPreferenceKeys.DRAG_DROP_FLOW_ACTIONS_INLINE] = enabled
     }
+
+    suspend fun setDragDropFlowGlobalPressEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.DRAG_DROP_FLOW_GLOBAL_PRESS_ENABLED] = enabled
+    }
+
+    suspend fun setDragDropFlowGlobalPressTimeout(timeoutMs: Int) = editor.edit {
+        it[SettingsPreferenceKeys.DRAG_DROP_FLOW_GLOBAL_PRESS_TIMEOUT] = timeoutMs
+    }
+
+    suspend fun setDragDropFlowGlobalPressVibrate(vibrate: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.DRAG_DROP_FLOW_GLOBAL_PRESS_VIBRATE] = vibrate
+    }
+
+    suspend fun setDragDropFlowGlobalPressImmediate(immediate: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.DRAG_DROP_FLOW_GLOBAL_PRESS_IMMEDIATE] = immediate
+    }
+
+    suspend fun setDragDropFlowGlobalPressEarlyText(earlyText: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.DRAG_DROP_FLOW_GLOBAL_PRESS_EARLY_TEXT] = earlyText
+    }
+
+    suspend fun setDragDropFlowGlobalPressWhitelist(whitelist: String) = editor.edit {
+        it[SettingsPreferenceKeys.DRAG_DROP_FLOW_GLOBAL_PRESS_WHITELIST] = whitelist
+    }
 }

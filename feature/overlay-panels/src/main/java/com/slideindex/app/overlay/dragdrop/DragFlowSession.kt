@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.dragdrop
 
+import android.content.ClipData
+import android.graphics.Bitmap
 import android.os.SystemClock
 
 /**
@@ -49,11 +51,36 @@ object DragFlowSession {
     private const val MAX_AGE_MS = 60_000L
 
     private var current: DragFlowSource? = null
+    private var currentClip: ClipData? = null
+    private var shadowUpdater: ((ClipData, Bitmap?) -> Unit)? = null
     private var begunAtMs = 0L
 
-    fun begin(source: DragFlowSource) {
+    fun begin(source: DragFlowSource, clipData: ClipData? = null) {
         current = source
+        currentClip = clipData
         begunAtMs = SystemClock.elapsedRealtime()
+    }
+
+    fun setClipData(clipData: ClipData?) {
+        currentClip = clipData
+        begunAtMs = SystemClock.elapsedRealtime()
+    }
+
+    fun setShadowUpdater(updater: ((ClipData, Bitmap?) -> Unit)?) {
+        shadowUpdater = updater
+    }
+
+    fun updateDragShadow(newClip: ClipData, bitmap: Bitmap?) {
+        currentClip = newClip
+        shadowUpdater?.invoke(newClip, bitmap)
+    }
+
+    fun peekClipData(): ClipData? {
+        if (SystemClock.elapsedRealtime() - begunAtMs > MAX_AGE_MS) {
+            currentClip = null
+            return null
+        }
+        return currentClip
     }
 
     /** 流转栏认领；返回 null = 这次拖拽不是本应用注册过的源。 */
@@ -61,6 +88,8 @@ object DragFlowSession {
         val source = current ?: return null
         if (SystemClock.elapsedRealtime() - begunAtMs > MAX_AGE_MS) {
             current = null
+            currentClip = null
+            shadowUpdater = null
             return null
         }
         source.claim()
@@ -70,6 +99,11 @@ object DragFlowSession {
     fun end(source: DragFlowSource?) {
         if (source != null && current === source) {
             current = null
+            currentClip = null
+            shadowUpdater = null
+        } else if (source == null) {
+            currentClip = null
+            shadowUpdater = null
         }
     }
 }

@@ -244,8 +244,27 @@ object HistoryEntryDragHelper {
         val shadow = dragShadow ?: EntryDragShadowBuilder(view, preview)
         // 必须在 startDragAndDrop 之前登记：流转栏的 ACTION_DRAG_STARTED 可能排在
         // 源视图的事件之前，晚一步登记就会被当成"没有源"。
-        dragFlowSource?.let(DragFlowSession::begin)
-        val started = view.startDragAndDrop(effectiveClip, shadow, null, flags)
+        if (dragFlowSource != null) {
+            DragFlowSession.begin(dragFlowSource, effectiveClip)
+        } else {
+            DragFlowSession.setClipData(effectiveClip)
+        }
+        DragFlowSession.setShadowUpdater { newClip, newBitmap ->
+            val convertedText = (0 until newClip.itemCount)
+                .mapNotNull { newClip.getItemAt(it).text?.toString() }
+                .joinToString("\n")
+            val newPreview = HistoryDragPreview(
+                text = convertedText,
+                bitmap = newBitmap,
+                snapshot = null,
+            )
+            view.post {
+                runCatching {
+                    view.updateDragShadow(EntryDragShadowBuilder(view, newPreview))
+                }
+            }
+        }
+        val started = view.startDragAndDrop(effectiveClip, shadow, effectiveClip, flags)
         if (!started) {
             DragFlowSession.end(dragFlowSource)
             // 起拖失败时把监听摘掉：否则这个 view 会一直挂着一个永远收不到事件的拖放监听。
@@ -298,23 +317,66 @@ private class EntryDragShadowBuilder(
     private val preview: HistoryDragPreview,
 ) : DragShadowBuilder(view) {
     private val density = view.resources.displayMetrics.density
-    private val hasBitmap = preview.bitmap != null
-    /** 有快照时，四周留一圈给投影（否则阴影会被拖影位图裁掉）。 */
+    /** 四周留一圈给柔和投影（否则阴影会被拖影位图裁掉）。 */
     private val shadowPad = (density * 14).toInt()
-    private val width = preview.snapshot?.let { it.width + shadowPad * 2 }
-        ?: (density * if (hasBitmap) 160 else 180).toInt()
-    private val height = preview.snapshot?.let { it.height + shadowPad * 2 }
-        ?: (density * if (hasBitmap) 108 else 72).toInt()
+    private val cardInnerPad = (density * 12).toInt()
+    private val maxBitmapContentW = (density * 224).toInt().coerceAtLeast(1)
+    private val maxBitmapContentH = (density * 280).toInt().coerceAtLeast(1)
+    private val minBitmapCardW = (density * 180).toInt()
+    private val minBitmapCardH = (density * 92).toInt()
 
     private val contentPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
         color = android.graphics.Color.rgb(17, 24, 39)
-        textSize = density * view.resources.configuration.fontScale * 14
+        textSize = density * view.resources.configuration.fontScale * 15f
     }
+
+    private val textCardContentW = (density * 212).toInt().coerceAtLeast(100)
+    private val textStaticLayout: android.text.StaticLayout? = if (preview.snapshot == null && preview.bitmap == null) {
+        val displayStr = preview.text.trim().take(240).ifBlank { " " }
+        android.text.StaticLayout.Builder
+            .obtain(displayStr, 0, displayStr.length, contentPaint, textCardContentW)
+            .setAlignment(android.text.Layout.Alignment.ALIGN_NORMAL)
+            .setIncludePad(true)
+            .setLineSpacing(density * 3f, 1f)
+            .setMaxLines(7)
+            .setEllipsize(android.text.TextUtils.TruncateAt.END)
+            .build()
+    } else null
+
+    private val scaledBitmapSize: Pair<Int, Int>? = preview.bitmap?.let { bmp ->
+        val bw = bmp.width.coerceAtLeast(1)
+        val bh = bmp.height.coerceAtLeast(1)
+        val scale = minOf(
+            maxBitmapContentW.toFloat() / bw.toFloat(),
+            maxBitmapContentH.toFloat() / bh.toFloat(),
+            1f,
+        )
+        val targetW = (bw * scale).toInt().coerceAtLeast(1)
+        val targetH = (bh * scale).toInt().coerceAtLeast(1)
+        targetW to targetH
+    }
+
+    private val cardWidth: Int = when {
+        preview.snapshot != null -> preview.snapshot.width
+        scaledBitmapSize != null -> (scaledBitmapSize.first + cardInnerPad * 2).coerceAtLeast(minBitmapCardW)
+        else -> textCardContentW + cardInnerPad * 2
+    }
+
+    private val cardHeight: Int = when {
+        preview.snapshot != null -> preview.snapshot.height
+        scaledBitmapSize != null -> (scaledBitmapSize.second + cardInnerPad * 2).coerceAtLeast(minBitmapCardH)
+        textStaticLayout != null -> (textStaticLayout.height + cardInnerPad * 2).coerceAtLeast((density * 68).toInt())
+        else -> (density * 96).toInt()
+    }
+
+    private val width = cardWidth + shadowPad * 2
+    private val height = cardHeight + shadowPad * 2
     private val imagePaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     /** 卡片轮廓：圆角 + 柔和投影（把整张卡"拿起来"的那层影子）。 */
     private val cardPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val snapshotPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private val cardCornerPx = density * 18f
+    private val innerCornerPx = density * 12f
 
     override fun onProvideShadowMetrics(outShadowSize: Point, outShadowTouchPoint: Point) {
         outShadowSize.set(width, height)
@@ -329,34 +391,71 @@ private class EntryDragShadowBuilder(
         }
 
         val bitmap = preview.bitmap
-        if (bitmap != null) {
-            val srcRatio = bitmap.width.toFloat() / bitmap.height.toFloat()
-            val dstRatio = width.toFloat() / height.toFloat()
-            val src = if (srcRatio > dstRatio) {
-                val srcWidth = (bitmap.height * dstRatio).toInt()
-                val left = (bitmap.width - srcWidth) / 2
-                android.graphics.Rect(left, 0, left + srcWidth, bitmap.height)
-            } else {
-                val srcHeight = (bitmap.width / dstRatio).toInt()
-                val top = (bitmap.height - srcHeight) / 2
-                android.graphics.Rect(0, top, bitmap.width, top + srcHeight)
-            }
-            canvas.drawBitmap(bitmap, src, RectF(0f, 0f, width.toFloat(), height.toFloat()), imagePaint)
+        if (bitmap != null && scaledBitmapSize != null) {
+            drawWrappedBitmapCard(canvas, bitmap, scaledBitmapSize.first, scaledBitmapSize.second)
             return
         }
 
-        val normalized = preview.text.replace(Regex("\\s+"), " ").take(84)
-        val firstLine = normalized.take(24)
-        val secondLine = normalized.drop(24).take(24)
-        val thirdLine = normalized.drop(48).take(24)
-        val baseY = contentPaint.textSize
-        canvas.drawText(firstLine, 0f, baseY, contentPaint)
-        if (secondLine.isNotBlank()) {
-            canvas.drawText(secondLine, 0f, baseY + contentPaint.textSize + 8, contentPaint)
+        drawWrappedTextCard(canvas, preview.text)
+    }
+
+    /**
+     * 转换后或普通图片的卡片包裹拖影：
+     * 外层圆角白底卡片 + 柔和投影，内部图片按原始比例 100% 完整等比居中渲染（绝不裁切文字或画面）。
+     */
+    private fun drawWrappedBitmapCard(
+        canvas: Canvas,
+        bitmap: Bitmap,
+        targetW: Int,
+        targetH: Int,
+    ) {
+        val left = shadowPad.toFloat()
+        val top = shadowPad.toFloat()
+        val right = left + cardWidth
+        val bottom = top + cardHeight
+
+        cardPaint.color = android.graphics.Color.WHITE
+        cardPaint.alpha = CARD_ALPHA
+        cardPaint.setShadowLayer(density * 10f, 0f, density * 5f, SHADOW_COLOR)
+        canvas.drawRoundRect(left, top, right, bottom, cardCornerPx, cardCornerPx, cardPaint)
+        cardPaint.clearShadowLayer()
+
+        val dstLeft = left + (cardWidth - targetW) / 2f
+        val dstTop = top + (cardHeight - targetH) / 2f
+        val dstRect = RectF(dstLeft, dstTop, dstLeft + targetW, dstTop + targetH)
+
+        val clipPath = android.graphics.Path().apply {
+            addRoundRect(dstRect, innerCornerPx, innerCornerPx, android.graphics.Path.Direction.CW)
         }
-        if (thirdLine.isNotBlank()) {
-            canvas.drawText(thirdLine, 0f, baseY + (contentPaint.textSize + 8) * 2, contentPaint)
-        }
+        imagePaint.alpha = CARD_ALPHA
+        canvas.save()
+        canvas.clipPath(clipPath)
+        canvas.drawBitmap(bitmap, null, dstRect, imagePaint)
+        canvas.restore()
+    }
+
+    /**
+     * 转换后或纯文本的卡片包裹拖影：外层圆角白底卡片 + 柔和投影 + StaticLayout 多行自动排版文本。
+     */
+    private fun drawWrappedTextCard(canvas: Canvas, rawText: String) {
+        val left = shadowPad.toFloat()
+        val top = shadowPad.toFloat()
+        val right = left + cardWidth
+        val bottom = top + cardHeight
+
+        cardPaint.color = android.graphics.Color.WHITE
+        cardPaint.alpha = CARD_ALPHA
+        cardPaint.setShadowLayer(density * 10f, 0f, density * 5f, SHADOW_COLOR)
+        canvas.drawRoundRect(left, top, right, bottom, cardCornerPx, cardCornerPx, cardPaint)
+        cardPaint.clearShadowLayer()
+
+        val layout = textStaticLayout ?: return
+        val textLeft = left + cardInnerPad
+        val textTop = top + (cardHeight - layout.height) / 2f
+        canvas.save()
+        canvas.translate(textLeft, textTop)
+        layout.draw(canvas)
+        canvas.restore()
     }
 
     /**

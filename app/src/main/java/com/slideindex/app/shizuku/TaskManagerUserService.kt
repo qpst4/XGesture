@@ -70,6 +70,8 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
     @Volatile
     private var physicalKeyDiagnostics: String = ""
 
+    private val touchStreams = com.slideindex.app.dragpress.TouchStreamHost()
+
     @Keep
     constructor(context: Context) : this() {
         appContext = context.applicationContext
@@ -80,6 +82,7 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
         stopMultiTouchPolling()
         stopPhysicalKeyObservation()
         stopPhysicalKeyPolling()
+        runCatching { touchStreams.close() }
         if (keyboardMonitorLazy.isInitialized()) {
             runCatching { keyboardMonitor.close() }
         }
@@ -484,6 +487,28 @@ class TaskManagerUserService() : ITaskManagerService.Stub() {
         right: Int,
         bottom: Int
     ): Boolean = freeWindow.moveTaskToFreeWindow(taskIdStr, windowingMode, left, top, right, bottom)
+
+    override fun openTouchStream(token: String?, owner: android.os.IBinder?): android.os.ParcelFileDescriptor? {
+        if (token == null || owner == null) return null
+        return touchStreams.open(token, owner)
+    }
+
+    override fun closeTouchStream(token: String?) {
+        if (token != null) touchStreams.close(token)
+    }
+
+    override fun interruptTouchForDrag(
+        token: String?,
+        sourcePackage: String?,
+        x: Float,
+        y: Float,
+        displayId: Int,
+        deadlineUptimeMs: Long,
+        guard: com.slideindex.app.shizuku.ITouchInterruptionGuard?,
+    ): Boolean {
+        if (token == null || sourcePackage == null || guard == null) return false
+        return touchStreams.interrupt(token, sourcePackage, x, y, displayId, deadlineUptimeMs, guard)
+    }
 
     companion object {
         /** 单条会话命令的超时：远大于正常 `settings put`（几毫秒），只兜底卡死。 */

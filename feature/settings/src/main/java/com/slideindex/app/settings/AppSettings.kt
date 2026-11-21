@@ -515,6 +515,12 @@ data class AppSettings(
     val dragDropFlowPosition: DragDropFlowPosition get() = DragDropFlowPosition.fromId(dragDropFlow.dragDropFlowPositionId)
     val dragDropFlowHapticEnabled get() = dragDropFlow.dragDropFlowHapticEnabled
     val dragDropFlowActionsInline get() = dragDropFlow.dragDropFlowActionsInline
+    val dragDropFlowGlobalPressEnabled get() = dragDropFlow.dragDropFlowGlobalPressEnabled
+    val dragDropFlowGlobalPressTimeoutMs get() = dragDropFlow.dragDropFlowGlobalPressTimeoutMs
+    val dragDropFlowGlobalPressVibrate get() = dragDropFlow.dragDropFlowGlobalPressVibrate
+    val dragDropFlowGlobalPressImmediate get() = dragDropFlow.dragDropFlowGlobalPressImmediate
+    val dragDropFlowGlobalPressEarlyText get() = dragDropFlow.dragDropFlowGlobalPressEarlyText
+    val dragDropFlowGlobalPressWhitelist get() = dragDropFlow.dragDropFlowGlobalPressWhitelist
     val dragFlowTextEngines: List<SearchEngineConfig> get() = dragDropFlow.dragFlowTextEngines
 
     // endregion

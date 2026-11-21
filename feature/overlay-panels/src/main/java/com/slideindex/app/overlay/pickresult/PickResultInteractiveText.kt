@@ -1,5 +1,6 @@
 package com.slideindex.app.overlay.pickresult
 
+import androidx.compose.ui.graphics.ImageBitmap
 import com.slideindex.app.ui.theme.LocalAppDarkTheme
 
 import android.os.Build
@@ -174,6 +175,7 @@ fun PickResultInteractiveTextSection(
     onSaveScreenshot: (() -> Unit)? = null,
     onShareScreenshot: (() -> Unit)? = null,
     onTextScrollableChange: ((Boolean) -> Unit)? = null,
+    resolveLinkAppPreview: (suspend (String) -> Pair<ImageBitmap?, String?>)? = null,
 ) {
     val ttsContext = LocalContext.current
     // ?? remember(text)???? onTextChange ????text?key ??????????0??
@@ -481,6 +483,22 @@ fun PickResultInteractiveTextSection(
             else -> emptyList()
         }
     }
+    var openLinkAppPreview by remember { mutableStateOf<Pair<ImageBitmap?, String?>?>(null) }
+    val primaryTargetUrl = remember(openLinkAction) {
+        when (openLinkAction) {
+            is PickResultOpenLinkAction.Open -> openLinkAction.url
+            is PickResultOpenLinkAction.Choose -> openLinkAction.urls.firstOrNull()
+            null -> null
+        }
+    }
+    LaunchedEffect(primaryTargetUrl) {
+        val target = primaryTargetUrl
+        if (target.isNullOrBlank() || resolveLinkAppPreview == null) {
+            openLinkAppPreview = null
+        } else {
+            openLinkAppPreview = resolveLinkAppPreview(target)
+        }
+    }
     LaunchedEffect(openLinkAction) {
         openLinkChooserExpanded = false
     }
@@ -499,6 +517,8 @@ fun PickResultInteractiveTextSection(
                     showOpenLink = openLinkAction != null,
                     openLinkChooserExpanded = openLinkChooserExpanded,
                     openLinkChoices = openLinkChoices,
+                    openLinkAppIcon = openLinkAppPreview?.first,
+                    openLinkAppLabel = openLinkAppPreview?.second,
                     onSearch = { runOnActiveText(onSearch) },
                     onOpenLink = {
                         when (val action = openLinkAction) {
@@ -510,6 +530,11 @@ fun PickResultInteractiveTextSection(
                                 openLinkChooserExpanded = true
                             }
                             null -> Unit
+                        }
+                    },
+                    onOpenLinkLongClick = {
+                        primaryTargetUrl?.let { url ->
+                            com.slideindex.app.overlay.panels.PanelRuntimeHooks.openUrlWithLongPress?.invoke(appContext, url, appSettings, true)
                         }
                     },
                     onOpenLinkChoice = { url ->

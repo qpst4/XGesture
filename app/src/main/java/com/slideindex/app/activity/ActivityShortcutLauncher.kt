@@ -17,6 +17,7 @@ import com.slideindex.app.shell.ShellCommandDisplayResolver
 import com.slideindex.app.shell.ShellCommandModeResolver
 import com.slideindex.app.shell.ShellCommandResultDelivery
 import com.slideindex.app.shell.ShellResultDisplay
+import com.slideindex.app.shortcuts.DynamicShortcutsManager
 import com.slideindex.app.util.AppShortcutLoader
 import com.slideindex.app.util.FreeWindowLauncher
 import com.slideindex.app.util.ShellCommandRunner
@@ -89,6 +90,23 @@ object ActivityShortcutLauncher {
         longPressTriggered: Boolean,
         showFailureToast: Boolean,
     ): Boolean {
+        if (shortcut.shortcutId.isNotBlank()) {
+            val pinnedRecord = DynamicShortcutsManager.getPinnedRecords(context)
+                .firstOrNull { it.packageName == shortcut.packageName && it.shortcutId == shortcut.shortcutId }
+            if (pinnedRecord != null) {
+                if (DynamicShortcutsManager.launchShortcut(
+                        context = context,
+                        packageName = shortcut.packageName,
+                        shortcutId = shortcut.shortcutId,
+                        userSerial = pinnedRecord.userSerial,
+                    )
+                ) {
+                    return true
+                }
+            } else if (DynamicShortcutsManager.launchShortcut(context, shortcut.packageName, shortcut.shortcutId)) {
+                return true
+            }
+        }
         val resolved = AppShortcutLoader.resolveShortcutForLaunch(
             context = context,
             packageName = shortcut.packageName,

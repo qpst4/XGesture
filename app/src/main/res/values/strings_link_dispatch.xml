@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_dispatch_title">Link Dispatch &amp; Radar</string>
+    <string name="link_dispatch_desc">Automatically identify links in text or on screen to open target apps directly or in small freeform windows. Compatible with LinkGo rules and Link Radar detection.</string>
+    <string name="link_dispatch_actions_title">Rule Management</string>
+    <string name="link_dispatch_import_linkgo">Import LinkGo Rules from Clipboard</string>
+    <string name="link_dispatch_import_linkgo_desc">Parse LinkGo format export text and append rules</string>
+    <string name="link_dispatch_import_clipboard">Import Backup from Clipboard</string>
+    <string name="link_dispatch_import_clipboard_desc">Import previously exported full dispatch configuration</string>
+    <string name="link_dispatch_export_clipboard">Export to Clipboard</string>
+    <string name="link_dispatch_export_clipboard_desc">Copy full rules and settings JSON to clipboard</string>
+    <string name="link_dispatch_reset_builtin">Restore Recommended Builtin Rules</string>
+    <string name="link_dispatch_reset_builtin_desc">Reload builtin selected app dispatch rules (40+ common apps)</string>
+
+    <string name="link_dispatch_preferences_title">Dispatch &amp; Radar Switches</string>
+    <string name="link_dispatch_open_in_small_window">Open in Freeform Window</string>
+    <string name="link_dispatch_open_in_small_window_desc">Prefer opening target apps in freeform small window when routed</string>
+    <string name="link_dispatch_radar_screen_content">Screen Content Link Radar</string>
+    <string name="link_dispatch_radar_screen_content_desc">Scan accessibility nodes on screen selection and display floating banner above links</string>
+    <string name="link_dispatch_radar_pointer">Floating Pointer Link Radar</string>
+    <string name="link_dispatch_radar_pointer_desc">Detect and highlight links under cursor while hovering, switch to selection when resting</string>
+
+    <string name="link_dispatch_rules_list_title">Configured Rules</string>
+    <string name="link_dispatch_rules_empty">No rules found. Click above to restore builtin rules or import from clipboard.</string>
+    <string name="link_dispatch_no_url_found">No valid link found</string>
+    <string name="link_dispatch_no_app">No application found to handle this link</string>
+    <string name="link_dispatch_import_success">Imported %1$d rules</string>
+    <string name="link_dispatch_import_failed">Import failed: Invalid clipboard format</string>
+    <string name="link_dispatch_export_success">Configuration copied to clipboard</string>
+    <string name="link_dispatch_reset_success">Restored %1$d recommended rules</string>
+    <string name="link_dispatch_rule_deleted">Deleted rule: %1$s</string>
+    <string name="link_dispatch_hub_subtitle">LinkGo rules and smart redirects with small window &amp; link radar</string>
+    <string name="link_dispatch_sandbox_title">Rule Matching Test Sandbox</string>
+    <string name="link_dispatch_sandbox_hint">Input test URL to verify rule matching…</string>
+    <string name="link_dispatch_sandbox_test_btn">Test Match</string>
+    <string name="link_dispatch_sandbox_matched">Matched: %1$s → Target App: %2$s</string>
+    <string name="link_dispatch_sandbox_no_match">No rule matched (opens with system default handler)</string>
+    <string name="link_dispatch_add_rule">Create Custom Rule</string>
+    <string name="link_dispatch_exempt_title">Exempt Applications</string>
+    <string name="link_dispatch_exempt_desc">Do not intercept links generated within selected apps (e.g. browsers)</string>
+    <string name="link_dispatch_rule_name">Rule Name</string>
+    <string name="link_dispatch_rule_pattern">Pattern (Regex or Substring)</string>
+    <string name="link_dispatch_rule_package">Target Package</string>
+    <string name="link_dispatch_rule_component">Target Component (Optional)</string>
+    <string name="link_dispatch_rule_template">URL Template (Optional, e.g. {url})</string>
+    <string name="link_dispatch_save">Save Rule</string>
+    <string name="link_rule_match_contains">Contains</string>
+    <string name="link_rule_match_regex">Regex</string>
+    <string name="link_rule_match_exact">Exact</string>
+    <string name="link_rule_resolve_direct">Resolve and execute this rule</string>
+    <string name="link_rule_resolve_redispatch">Resolve and re-dispatch</string>
+</resources>

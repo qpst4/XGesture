@@ -51,6 +51,12 @@
     <string name="drag_drop_flow_action_segment">分词</string>
     <string name="drag_drop_flow_action_search">搜索</string>
     <string name="drag_drop_flow_action_pin">钉住</string>
+    <string name="drag_drop_flow_action_text_to_image">转图片</string>
+    <string name="drag_drop_flow_action_convert_to_text">提取文字</string>
+    <string name="drag_drop_flow_converting_to_text">正在识别图片文字…</string>
+    <string name="drag_drop_flow_converting_to_image">正在转换为图片…</string>
+    <string name="drag_drop_flow_convert_failed">转换失败</string>
+    <string name="drag_drop_flow_convert_empty">没有提取到文字内容</string>
 
     <!-- 流转目标 -->
     <string name="drag_drop_flow_target_image_search">以图搜图</string>
@@ -75,4 +81,23 @@
     <string name="drag_drop_flow_toast_pinned">已钉到屏幕上</string>
     <string name="drag_drop_flow_toast_no_text">图片里没有识别到文字</string>
     <string name="drag_drop_flow_toast_ocr_unavailable">没有可用的 OCR 引擎</string>
+    <string name="drag_drop_flow_toast_image_generated">已生成长图并拉起分享</string>
+    <string name="drag_drop_flow_toast_image_generate_failed">文字转图片失败</string>
+
+    <!-- 全局长按触摸强行拖拽（Shizuku） -->
+    <string name="drag_drop_flow_section_global_press">全局长按强行拖拽 (Shizuku)</string>
+    <string name="drag_drop_flow_global_press_title">启用全局长按强行拖拽</string>
+    <string name="drag_drop_flow_global_press_summary">通过 Shizuku 监听全局触摸并在长按时掐断源应用，直接抓取文字唤出流转栏（解决大多数应用不支持原生拖拽的痛点）</string>
+    <string name="drag_drop_flow_global_press_timeout_title">长按触发时延</string>
+    <string name="drag_drop_flow_global_press_timeout_summary">长按不动达到此时间后锁定手势（当前：%1$d ms）</string>
+    <string name="drag_drop_flow_global_press_vibrate_title">长按触觉提示</string>
+    <string name="drag_drop_flow_global_press_vibrate_summary">手势锁定成功时提供轻微震动提示</string>
+    <string name="drag_drop_flow_global_press_immediate_title">长按超时直接开始</string>
+    <string name="drag_drop_flow_global_press_immediate_summary">按住达到预设时长直接识别并展开流转栏，无需手指位移；关闭需轻移才触发</string>
+    <string name="drag_drop_flow_global_press_early_text_title">提前读取长按文字</string>
+    <string name="drag_drop_flow_global_press_early_text_summary">在长按生效瞬间预存节点文字，有效减少底层应用弹出快捷菜单带来的焦点丢失</string>
+    <string name="drag_drop_flow_global_press_whitelist_title">长按拖放生效应用</string>
+    <string name="drag_drop_flow_global_press_whitelist_all">全部应用（未限制）</string>
+    <string name="drag_drop_flow_global_press_whitelist_summary">已指定 %1$d 个应用生效</string>
+    <string name="drag_drop_flow_global_press_need_shizuku">使用全局长按强行拖拽需要 Shizuku 授权运行</string>
 </resources>

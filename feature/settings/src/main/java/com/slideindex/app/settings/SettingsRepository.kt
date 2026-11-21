@@ -1379,5 +1379,11 @@ class SettingsRepository @Inject constructor(
     suspend fun setDragDropFlowPosition(position: DragDropFlowPosition) = overlay.setDragDropFlowPosition(position)
     suspend fun setDragDropFlowHapticEnabled(enabled: Boolean) = overlay.setDragDropFlowHapticEnabled(enabled)
     suspend fun setDragDropFlowActionsInline(enabled: Boolean) = overlay.setDragDropFlowActionsInline(enabled)
+    suspend fun setDragDropFlowGlobalPressEnabled(enabled: Boolean) = overlay.setDragDropFlowGlobalPressEnabled(enabled)
+    suspend fun setDragDropFlowGlobalPressTimeout(timeoutMs: Int) = overlay.setDragDropFlowGlobalPressTimeout(timeoutMs)
+    suspend fun setDragDropFlowGlobalPressVibrate(vibrate: Boolean) = overlay.setDragDropFlowGlobalPressVibrate(vibrate)
+    suspend fun setDragDropFlowGlobalPressImmediate(immediate: Boolean) = overlay.setDragDropFlowGlobalPressImmediate(immediate)
+    suspend fun setDragDropFlowGlobalPressEarlyText(earlyText: Boolean) = overlay.setDragDropFlowGlobalPressEarlyText(earlyText)
+    suspend fun setDragDropFlowGlobalPressWhitelist(whitelist: String) = overlay.setDragDropFlowGlobalPressWhitelist(whitelist)
     suspend fun setDragFlowTextEngines(engines: List<SearchEngineConfig>) = overlay.setDragFlowTextEngines(engines)
 }

@@ -1,6 +1,7 @@
 package com.slideindex.app.ui.picker
 
 import android.content.Context
+import android.content.Intent
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.overlay.TaskSwitcherMenuItem
 import com.slideindex.app.overlay.TaskSwitcherMenuItemType
@@ -9,6 +10,7 @@ import com.slideindex.app.shortcut.port.ShizukuShell
 import com.slideindex.app.shortcut.port.ShortCutManager
 import com.slideindex.app.shortcut.port.ShortcutRootBatchReader
 import com.slideindex.app.shortcut.port.toIntentUri
+import com.slideindex.app.shortcuts.DynamicShortcutsManager
 import com.slideindex.app.util.AppShortcutLoader
 import com.slideindex.app.util.PinyinHelper
 import com.slideindex.app.util.ShortcutKind
@@ -18,6 +20,63 @@ import kotlinx.coroutines.withContext
 enum class ActionPickerShortcutMode {
     ROOT,
     SHIZUKU,
+}
+
+fun invalidateActionPickerShortcutServiceCache() {
+    catalogCache = null
+}
+
+suspend fun loadActionPickerDynamicPinnedShortcuts(
+    context: Context,
+    apps: List<AppInfo>,
+): ActionPickerShortcutServiceResult = withContext(Dispatchers.IO) {
+    DynamicShortcutsManager.ensureInitialized(context)
+    // 如果当前恰好是默认桌面且本地还没有固化记录，顺带扫描并恢复系统已 Pin 项
+    if (DynamicShortcutsManager.hasPermission(context)) {
+        runCatching { DynamicShortcutsManager.queryDynamicShortcuts(context) }
+    }
+    val records = DynamicShortcutsManager.getPinnedRecords(context)
+    val appsByPackage = apps.associateBy { it.packageName }
+    val grouped = linkedMapOf<String, LinkedHashMap<String, TaskSwitcherMenuItem>>()
+
+    records.forEach { record ->
+        if (record.shortcutId.isBlank()) return@forEach
+        if (appsByPackage[record.packageName] == null) return@forEach
+        val bucket = grouped.getOrPut(record.packageName) { linkedMapOf() }
+        if (bucket.containsKey(record.shortcutId)) return@forEach
+        val parsedIntent = record.intentUris.firstOrNull()?.let { uri ->
+            runCatching {
+                Intent.parseUri(uri, Intent.URI_INTENT_SCHEME).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }.getOrNull()
+        }
+        bucket[record.shortcutId] = TaskSwitcherMenuItem(
+            label = record.label.ifBlank { record.shortcutId },
+            type = TaskSwitcherMenuItemType.SHORTCUT,
+            shortcutId = record.shortcutId,
+            shortcutIntent = parsedIntent,
+            intentUris = record.intentUris.takeIf { it.isNotEmpty() },
+            kind = ShortcutKind.PINNED,
+            isServiceShortcut = true,
+        )
+    }
+
+    val groups = grouped.mapNotNull { (packageName, shortcuts) ->
+        val app = appsByPackage[packageName] ?: return@mapNotNull null
+        val items = shortcuts.values.sortedBy { PinyinHelper.sortKey(it.label) }
+        if (items.isEmpty()) null else AppShortcutLoader.AppShortcutGroup(app, items)
+    }.sortedBy { PinyinHelper.sortKey(it.app.label) }
+
+    val createHosts = AppShortcutLoader.queryCreateShortcutActivities(context)
+    val catalog = AppShortcutLoader.ShortcutCatalog(
+        createHosts = createHosts,
+        staticGroups = groups,
+    )
+    ActionPickerShortcutServiceResult(
+        catalog = catalog,
+        source = "桌面固化",
+        total = groups.sumOf { it.shortcuts.size },
+        error = if (groups.isEmpty()) "尚未在「测试快捷方式 -> 桌面固化」中导入固化快捷方式" else null,
+    )
 }
 
 data class ActionPickerShortcutServiceResult(

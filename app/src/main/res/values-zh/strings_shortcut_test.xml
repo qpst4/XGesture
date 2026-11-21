@@ -18,7 +18,7 @@
     <string name="shortcut_test_command_failed">dumpsys shortcut 执行失败：%1$s</string>
     <string name="shortcut_test_empty_output">dumpsys shortcut 没有输出</string>
     <string name="shortcut_test_parse_empty">没有解析到 ShortcutInfo（%1$s）</string>
-    <string name="shortcut_test_kind_pinned">固定</string>
+    <string name="shortcut_test_kind_pinned">已固化</string>
     <string name="shortcut_test_kind_dynamic">动态</string>
     <string name="shortcut_test_kind_static">静态</string>
     <string name="shortcut_test_copy">复制 intent 命令</string>

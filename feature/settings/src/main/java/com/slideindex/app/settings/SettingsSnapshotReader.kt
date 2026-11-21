@@ -849,6 +849,12 @@ internal object SettingsSnapshotReader {
                     ?: DragDropFlowPosition.BOTTOM.id,
                 dragDropFlowHapticEnabled = prefs[SettingsPreferenceKeys.DRAG_DROP_FLOW_HAPTIC] ?: true,
                 dragDropFlowActionsInline = prefs[SettingsPreferenceKeys.DRAG_DROP_FLOW_ACTIONS_INLINE] ?: true,
+                dragDropFlowGlobalPressEnabled = prefs[SettingsPreferenceKeys.DRAG_DROP_FLOW_GLOBAL_PRESS_ENABLED] ?: false,
+                dragDropFlowGlobalPressTimeoutMs = prefs[SettingsPreferenceKeys.DRAG_DROP_FLOW_GLOBAL_PRESS_TIMEOUT] ?: 450,
+                dragDropFlowGlobalPressVibrate = prefs[SettingsPreferenceKeys.DRAG_DROP_FLOW_GLOBAL_PRESS_VIBRATE] ?: true,
+                dragDropFlowGlobalPressImmediate = prefs[SettingsPreferenceKeys.DRAG_DROP_FLOW_GLOBAL_PRESS_IMMEDIATE] ?: false,
+                dragDropFlowGlobalPressEarlyText = prefs[SettingsPreferenceKeys.DRAG_DROP_FLOW_GLOBAL_PRESS_EARLY_TEXT] ?: false,
+                dragDropFlowGlobalPressWhitelist = prefs[SettingsPreferenceKeys.DRAG_DROP_FLOW_GLOBAL_PRESS_WHITELIST] ?: "",
                 dragFlowTextEngines = SearchEngineStore.decodeOrEmpty(
                     prefs[SettingsPreferenceKeys.DRAG_FLOW_TEXT_ENGINES_JSON],
                 ),

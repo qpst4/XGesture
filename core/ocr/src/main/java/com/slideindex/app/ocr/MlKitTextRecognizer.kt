@@ -10,7 +10,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.suspendCancellableCoroutine
 
-internal object MlKitTextRecognizer {
+object MlKitTextRecognizer {
     private var recognizer: TextRecognizer? = null
 
     suspend fun recognize(bitmap: Bitmap): String? {

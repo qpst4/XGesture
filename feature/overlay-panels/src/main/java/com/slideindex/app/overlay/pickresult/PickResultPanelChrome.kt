@@ -1,4 +1,5 @@
 package com.slideindex.app.overlay.pickresult
+import androidx.compose.ui.graphics.ImageBitmap
 import com.slideindex.app.ui.theme.LocalAppDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -671,9 +672,12 @@ fun PickResultTextActionBar(
     showOpenLink: Boolean = false,
     openLinkChooserExpanded: Boolean = false,
     openLinkChoices: List<String> = emptyList(),
+    openLinkAppIcon: ImageBitmap? = null,
+    openLinkAppLabel: String? = null,
     onSearch: () -> Unit = {},
     searchQuickLaunch: PickResultSearchQuickLaunch? = null,
     onOpenLink: () -> Unit = {},
+    onOpenLinkLongClick: (() -> Unit)? = null,
     onOpenLinkChoice: (String) -> Unit = {},
     onDismissOpenLinkChooser: () -> Unit = {},
     onShare: () -> Unit,
@@ -820,12 +824,22 @@ fun PickResultTextActionBar(
                         .size(42.dp)
                         .clip(RoundedCornerShape(21.dp)),
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
-                        contentDescription = stringResource(R.string.pick_result_open_link),
-                        tint = iconBarTint,
-                        modifier = Modifier.size(22.dp),
-                    )
+                    if (openLinkAppIcon != null) {
+                        Image(
+                            bitmap = openLinkAppIcon,
+                            contentDescription = openLinkAppLabel ?: stringResource(R.string.pick_result_open_link),
+                            modifier = Modifier
+                                .size(22.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+                            contentDescription = stringResource(R.string.pick_result_open_link),
+                            tint = iconBarTint,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
                 }
 
                 if (openLinkChoices.isNotEmpty()) {
@@ -1206,12 +1220,22 @@ fun PickResultTextActionBar(
                                 .size(42.dp)
                                 .clip(RoundedCornerShape(21.dp))
                         ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
-                                contentDescription = stringResource(R.string.pick_result_open_link),
-                                tint = if (enabled) (if (isDark) androidx.compose.ui.graphics.Color(0xFFE0E0E6) else androidx.compose.ui.graphics.Color(0xFF333333)) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
-                                modifier = Modifier.size(22.dp)
-                            )
+                            if (openLinkAppIcon != null) {
+                                Image(
+                                    bitmap = openLinkAppIcon,
+                                    contentDescription = openLinkAppLabel ?: stringResource(R.string.pick_result_open_link),
+                                    modifier = Modifier
+                                        .size(22.dp)
+                                        .clip(RoundedCornerShape(4.dp))
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+                                    contentDescription = stringResource(R.string.pick_result_open_link),
+                                    tint = if (enabled) (if (isDark) androidx.compose.ui.graphics.Color(0xFFE0E0E6) else androidx.compose.ui.graphics.Color(0xFF333333)) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
                         }
 
                         if (openLinkChoices.isNotEmpty()) {
@@ -1745,8 +1769,9 @@ fun PickResultTextActionBar(
                     }
                     if (showOpenLink) {
                         PickResultActionMenuItem(
-                            label = stringResource(R.string.pick_result_open_link),
+                            label = openLinkAppLabel ?: stringResource(R.string.pick_result_open_link),
                             icon = Icons.AutoMirrored.Outlined.OpenInNew,
+                            iconBitmap = openLinkAppIcon,
                             onClick = {
                                 moreMenuExpanded = false
                                 onOpenLink()

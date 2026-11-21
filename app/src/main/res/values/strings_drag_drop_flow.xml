@@ -51,6 +51,12 @@
     <string name="drag_drop_flow_action_segment">Split words</string>
     <string name="drag_drop_flow_action_search">Search</string>
     <string name="drag_drop_flow_action_pin">Pin to screen</string>
+    <string name="drag_drop_flow_action_text_to_image">Convert to image</string>
+    <string name="drag_drop_flow_action_convert_to_text">Extract text</string>
+    <string name="drag_drop_flow_converting_to_text">Recognizing text from image…</string>
+    <string name="drag_drop_flow_converting_to_image">Converting to image…</string>
+    <string name="drag_drop_flow_convert_failed">Conversion failed</string>
+    <string name="drag_drop_flow_convert_empty">No text recognized</string>
 
     <!-- 流转目标 -->
     <string name="drag_drop_flow_target_image_search">Image search</string>
@@ -74,4 +80,23 @@
     <string name="drag_drop_flow_toast_pinned">Pinned to the screen</string>
     <string name="drag_drop_flow_toast_no_text">No text recognised in the image</string>
     <string name="drag_drop_flow_toast_ocr_unavailable">No OCR engine is available</string>
+    <string name="drag_drop_flow_toast_image_generated">Image generated and share opened</string>
+    <string name="drag_drop_flow_toast_image_generate_failed">Failed to convert text to image</string>
+
+    <!-- Global Press Forced Drag (Shizuku) -->
+    <string name="drag_drop_flow_section_global_press">Global Long-press Drag (Shizuku)</string>
+    <string name="drag_drop_flow_global_press_title">Enable global long-press drag</string>
+    <string name="drag_drop_flow_global_press_summary">Monitors global touch via Shizuku, interrupts the source app upon hold, captures text, and opens the flow bar</string>
+    <string name="drag_drop_flow_global_press_timeout_title">Long-press hold duration</string>
+    <string name="drag_drop_flow_global_press_timeout_summary">Duration required to lock the drag gesture (current: %1$d ms)</string>
+    <string name="drag_drop_flow_global_press_vibrate_title">Haptic feedback on lock</string>
+    <string name="drag_drop_flow_global_press_vibrate_summary">Provide subtle vibration when the gesture is locked</string>
+    <string name="drag_drop_flow_global_press_immediate_title">Trigger immediately on hold</string>
+    <string name="drag_drop_flow_global_press_immediate_summary">Directly start recognition and open the flow bar on hold timeout without requiring finger movement</string>
+    <string name="drag_drop_flow_global_press_early_text_title">Prefetch long-press text</string>
+    <string name="drag_drop_flow_global_press_early_text_summary">Prefetch text upon hold to reduce window focus loss from context menus</string>
+    <string name="drag_drop_flow_global_press_whitelist_title">Allowed applications</string>
+    <string name="drag_drop_flow_global_press_whitelist_all">All applications (unrestricted)</string>
+    <string name="drag_drop_flow_global_press_whitelist_summary">%1$d apps enabled</string>
+    <string name="drag_drop_flow_global_press_need_shizuku">Global long-press drag requires Shizuku permission</string>
 </resources>

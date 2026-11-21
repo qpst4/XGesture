@@ -623,6 +623,7 @@ fun PickResultPanelTextSlot(
     onSaveScreenshot: (() -> Unit)? = null,
     onShareScreenshot: (() -> Unit)? = null,
     onTextScrollableChange: ((Boolean) -> Unit)? = null,
+    resolveLinkAppPreview: (suspend (String) -> Pair<androidx.compose.ui.graphics.ImageBitmap?, String?>)? = null,
 ) {
     val isDark = com.slideindex.app.ui.theme.LocalAppDarkTheme.current
     val cardBg = if (isDark) Color(0x10FFFFFF) else Color(0xB2FFFFFF)
@@ -700,6 +701,7 @@ fun PickResultPanelTextSlot(
                 onPinToScreen = { onPinTextToScreen(activeText) },
                 onStash = { onStashText(activeText) },
                 onGenerateQr = onGenerateQr,
+                resolveLinkAppPreview = resolveLinkAppPreview,
                 actionBarBottomPadding = actionBarBottomPadding,
                 actionBarDragActive = actionBarDragActive,
                 autoSelectAll = autoSelectAll,
@@ -914,7 +916,8 @@ fun PickResultCollapsePanelColumn(
     freezeCollapseAnimation: Boolean = false,
     landscapeDualColumn: Boolean = false,
     searchQuickLaunch: PickResultSearchQuickLaunch? = null,
-    onToggleSearchGrid: () -> Unit = {}
+    onToggleSearchGrid: () -> Unit = {},
+    resolveLinkAppPreview: (suspend (String) -> Pair<androidx.compose.ui.graphics.ImageBitmap?, String?>)? = null,
 ) {
     val panelStyle = appSettings.floatBallPickPanelStyle
     val isTabPaged = panelStyle == com.slideindex.app.settings.PickResultPanelStyle.TAB_PAGED && !landscapeDualColumn
@@ -1329,6 +1332,7 @@ fun PickResultCollapsePanelColumn(
             onSaveScreenshot = null,
             onShareScreenshot = null,
             onTextScrollableChange = { isTextScrollable = it },
+            resolveLinkAppPreview = resolveLinkAppPreview,
         )
     }
 

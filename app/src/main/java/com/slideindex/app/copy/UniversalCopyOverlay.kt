@@ -89,6 +89,7 @@ object UniversalCopyOverlay {
     private var currentDragSource: DragFlowSource? = null
     private var dismissRunnable: Runnable? = null
     private var currentOcrJob: Job? = null
+    private var screenLinkRadar: com.slideindex.app.link.ScreenContentLinkRadar? = null
 
     private val currentBlocks = mutableListOf<SelectableBlock>()
     private val cachedA11yBlocks = mutableListOf<SelectableBlock>()
@@ -114,7 +115,11 @@ object UniversalCopyOverlay {
 
     val isShowing: Boolean get() = currentOverlay?.get()?.visibility == View.VISIBLE
 
-    fun show(context: Context, blocks: List<UniversalCopyBlock>) {
+    fun show(
+        context: Context,
+        blocks: List<UniversalCopyBlock>,
+        preScannedLinks: List<com.slideindex.app.link.LinkRegion>? = null,
+    ) {
         handler.post {
             dismiss(animated = false)
             val selectable = blocks.map { SelectableBlock(it.text, Rect(it.bounds)) }
@@ -122,16 +127,37 @@ object UniversalCopyOverlay {
             cachedA11yBlocks.addAll(selectable)
             cachedOcrBlocks.clear()
             currentMode = ExtractMode.A11Y
-            addOverlay(context, selectable)
+            val root = addOverlay(context, selectable)
+            val service = (context as? SlideIndexAccessibilityService)
+                ?: SlideIndexAccessibilityService.accessibilityInstance()
+            if (service != null) {
+                screenLinkRadar = com.slideindex.app.link.ScreenContentLinkRadar(
+                    service = service,
+                    hostContainer = root,
+                    insertIndex = 1,
+                    preScannedLinks = preScannedLinks,
+                ) {
+                    dismiss()
+                }.apply { start() }
+            }
         }
     }
 
     fun collectAndShow(service: SlideIndexAccessibilityService) {
         val blocks = UniversalCopyCollector.collectAllFromService(service)
-        show(service, blocks)
+        val preScannedLinks = runCatching {
+            if (kotlinx.coroutines.runBlocking { com.slideindex.app.link.LinkRuleRepository.isRadarScreenContentEnabled(service) }) {
+                com.slideindex.app.link.LinkRadarScanner.scan(service)
+            } else {
+                emptyList()
+            }
+        }.getOrNull()
+        show(service, blocks, preScannedLinks)
     }
 
     fun dismiss(animated: Boolean = true) {
+        screenLinkRadar?.stop()
+        screenLinkRadar = null
         // 拖拽会话到这里作废：无论它是正常结束还是被"取消"，
         // 都不能把恢复动作留给下一次拖拽。
         currentDragSource?.let(DragFlowSession::end)
@@ -223,7 +249,7 @@ object UniversalCopyOverlay {
 
     private class SelectableBlock(val text: String, val bounds: Rect, var selected: Boolean = false)
 
-    private fun addOverlay(context: Context, initialBlocks: List<SelectableBlock>) {
+    private fun addOverlay(context: Context, initialBlocks: List<SelectableBlock>): FrameLayout {
         currentBlocks.clear()
         currentBlocks.addAll(initialBlocks)
 
@@ -319,6 +345,7 @@ object UniversalCopyOverlay {
         val runnable = Runnable { dismiss() }
         dismissRunnable = runnable
         handler.postDelayed(runnable, AUTO_DISMISS_MS)
+        return root
     }
 
     private fun createStatusPill(context: Context, density: Float): View {
@@ -1024,10 +1051,10 @@ object UniversalCopyOverlay {
                 onDiscard = { dismiss() },
             )
             currentDragSource = source
-            DragFlowSession.begin(source)
+            DragFlowSession.begin(source, clipData)
             isDragAndDropping = true
             val started = runCatching {
-                startDragAndDrop(clipData, shadowBuilder, null, flags)
+                startDragAndDrop(clipData, shadowBuilder, clipData, flags)
             }.getOrDefault(false)
 
             if (started) {

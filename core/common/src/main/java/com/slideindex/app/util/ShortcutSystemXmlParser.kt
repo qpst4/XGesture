@@ -15,12 +15,12 @@ import java.io.StringReader
 object ShortcutSystemXmlParser {
     private const val TAG = "ShortcutSystemXmlParser"
 
-    // Keep in sync with android.content.pm.ShortcutInfo. The persisted flags
-    // are the same bit layout as dumpsys: dynamic=1, pinned=2, manifest=4, cached=8.
+    // Keep in sync with android.content.pm.ShortcutInfo:
+    // FLAG_DYNAMIC=1<<0 (0x01), FLAG_PINNED=1<<1 (0x02), FLAG_MANIFEST=1<<5 (0x20), FLAG_CACHED=1<<6 (0x40).
     private const val FLAG_DYNAMIC = 1 shl 0
     private const val FLAG_PINNED = 1 shl 1
-    private const val FLAG_MANIFEST = 1 shl 2
-    private const val FLAG_CACHED = 1 shl 3
+    private const val FLAG_MANIFEST = 1 shl 5
+    private const val FLAG_CACHED = 1 shl 6
 
     const val SHORTCUT_PACKAGES_DIR = "/data/system_ce/0/shortcut_service/packages"
 

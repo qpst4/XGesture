@@ -134,6 +134,7 @@ class SlideIndexAccessibilityService : AccessibilityService() {
     @SuppressLint("SwitchIntDef") // Only handle the event types this service cares about
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         event ?: return
+        edgeOverlayHost?.onAccessibilityEvent(event)
         when (event.eventType) {
             AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
                 // 真实前台切换（Activity 变化）才丢弃前台包名缓存。

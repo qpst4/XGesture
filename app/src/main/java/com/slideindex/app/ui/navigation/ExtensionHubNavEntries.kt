@@ -68,6 +68,7 @@ import com.slideindex.app.ui.viewmodel.HomeDetailSettingsViewModel
 import com.slideindex.app.ui.viewmodel.MultiTouchGestureViewModel
 import com.slideindex.app.ui.viewmodel.SettingsBackupViewModel
 import com.slideindex.app.settings.SearchEngineType
+import com.slideindex.app.settings.toMinimalAppSettings
 import com.slideindex.app.ui.viewmodel.SearchEngineSettingsViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -106,6 +107,7 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             onOpenNativeEnginePacks = { ctx.navigate(AppNavKey.NativeEnginePacks) },
             onOpenDiagnosticLogs = { ctx.navigate(AppNavKey.ExtensionDiagnosticLogs) },
             onOpenShortcutTest = { ctx.navigate(AppNavKey.ExtensionShortcutTest) },
+            onOpenLinkDispatch = { ctx.navigate(AppNavKey.LinkDispatchSettings) },
             onOpenIconLibrary = { ctx.navigate(AppNavKey.GlobalIconLibrary) },
             onOpenIconTheme = { ctx.navigate(AppNavKey.IconThemeSettings) },
             onOpenAbout = { ctx.navigate(AppNavKey.ExtensionAbout) },
@@ -173,6 +175,12 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             onPositionChange = viewModel::setDragDropFlowPosition,
             onHapticChange = viewModel::setDragDropFlowHapticEnabled,
             onActionsInlineChange = viewModel::setDragDropFlowActionsInline,
+            onGlobalPressEnabledChange = viewModel::setDragDropFlowGlobalPressEnabled,
+            onGlobalPressTimeoutChange = viewModel::setDragDropFlowGlobalPressTimeout,
+            onGlobalPressVibrateChange = viewModel::setDragDropFlowGlobalPressVibrate,
+            onGlobalPressImmediateChange = viewModel::setDragDropFlowGlobalPressImmediate,
+            onGlobalPressEarlyTextChange = viewModel::setDragDropFlowGlobalPressEarlyText,
+            onGlobalPressWhitelistChange = viewModel::setDragDropFlowGlobalPressWhitelist,
             onOpenTextSearchEngines = { ctx.navigate(AppNavKey.FloatBallSearchEngine) },
             onOpenImageSearchEngines = { ctx.navigate(AppNavKey.FloatBallImageSearchEngine) },
             onOpenFileShareEngines = { ctx.navigate(AppNavKey.FileShareEngineSettings) },
@@ -225,7 +233,12 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
     }
 
     hiltEntry<AppNavKey.ExtensionShortcutTest> {
+        val viewModel: ExtensionSettingsViewModel = hiltViewModel()
+        val gestureSettings by viewModel.gestureSettings.collectAsStateWithLifecycle()
+        val settings = gestureSettings.toMinimalAppSettings()
         ShortcutTestScreen(
+            shortcuts = settings.activityShortcuts,
+            onSaveShortcuts = viewModel::setActivityShortcuts,
             onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
         )
     }

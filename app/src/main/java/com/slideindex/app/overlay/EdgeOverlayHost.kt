@@ -49,6 +49,7 @@ class EdgeOverlayHost(
     private var floatBallController: FloatBallController? = null
     private var cornerGestureHost: CornerGestureHost? = null
     private var dragDropFlowController: DragDropFlowController? = null
+    private var globalPressDragSource: com.slideindex.app.dragpress.GlobalPressDragSource? = null
     private var settingsJob: Job? = null
     private var appsJob: Job? = null
     /** 冰箱冻结/解冻后强制重算索引列表的订阅。 */
@@ -170,6 +171,57 @@ class EdgeOverlayHost(
         }
         cornerGestureHost = CornerGestureHost(context, scope, deps.appRepository, cornerRunner).also { it.start() }
         dragDropFlowController = DragDropFlowController(context, scope, deps.settingsRepository).also { it.start() }
+        val service = context as? android.accessibilityservice.AccessibilityService
+        if (service != null) {
+            val dragTarget = object : com.slideindex.app.dragpress.ContentDragTarget {
+                override fun beginContentDrag(
+                    clip: android.content.ClipData,
+                    x: Float,
+                    y: Float,
+                    stillCurrent: () -> Boolean,
+                    onReady: () -> Unit,
+                    onFailed: (String) -> Unit
+                ): Boolean = dragDropFlowController?.beginContentDrag(clip, x, y, stillCurrent, onReady, onFailed) == true
+
+                override fun updateContentDrag(x: Float, y: Float, release: Boolean) {
+                    dragDropFlowController?.updateContentDrag(x, y, release)
+                }
+
+                override fun cancelContentDrag() {
+                    dragDropFlowController?.cancelContentDrag()
+                }
+
+                override fun setOnContentConvertedListener(listener: ((android.content.ClipData, android.graphics.Bitmap?) -> Unit)?) {
+                    dragDropFlowController?.onContentConverted = listener
+                }
+            }
+            globalPressDragSource = com.slideindex.app.dragpress.GlobalPressDragSource(
+                service = service,
+                scope = scope,
+                isEnabled = {
+                    val s = deps.settingsRepository.readSnapshot()
+                    s.dragDropFlowEnabled && s.dragDropFlowGlobalPressEnabled
+                },
+                getTimeoutMs = {
+                    deps.settingsRepository.readSnapshot().dragDropFlowGlobalPressTimeoutMs
+                },
+                isVibrateEnabled = {
+                    deps.settingsRepository.readSnapshot().dragDropFlowGlobalPressVibrate
+                },
+                isImmediateEnabled = {
+                    deps.settingsRepository.readSnapshot().dragDropFlowGlobalPressImmediate
+                },
+                isEarlyTextEnabled = {
+                    deps.settingsRepository.readSnapshot().dragDropFlowGlobalPressEarlyText
+                },
+                getWhitelist = {
+                    val raw = deps.settingsRepository.readSnapshot().dragDropFlowGlobalPressWhitelist
+                    if (raw.isBlank() || raw == "*") emptySet()
+                    else raw.split('|', ',').map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+                },
+                panel = { dragTarget }
+            ).also { it.start() }
+        }
         displayRotationMonitor = OverlayDisplayRotationMonitor(context) {
             overlayManager?.relayoutTriggersForDisplayRotation()
             refreshOverlaySuppression()
@@ -205,6 +257,7 @@ class EdgeOverlayHost(
         if (previewActive) {
             overlayManager?.setPreviewMode(true, previewContent, previewFocus)
         }
+        globalPressDragSource?.onSettingsChanged()
     }
 
     /** 一次性资源：设置/应用订阅与失联租约。窗口宿主拆掉后这些订阅仍需存活，用于触发重建。 */
@@ -409,6 +462,8 @@ class EdgeOverlayHost(
         cornerGestureHost = null
         runCatching { dragDropFlowController?.stop() }
         dragDropFlowController = null
+        runCatching { globalPressDragSource?.close() }
+        globalPressDragSource = null
         runCatching { displayRotationMonitor?.stop() }
         displayRotationMonitor = null
         runCatching { overlayManager?.destroy() }
@@ -747,6 +802,10 @@ class EdgeOverlayHost(
     private fun AppSettings.withGestureAnglesPreview(): AppSettings {
         val preview = GestureAnglesPreviewStore.current ?: return this
         return copy(edgeTrigger = edgeTrigger.copy(gestureAngles = preview))
+    }
+
+    fun onAccessibilityEvent(event: android.view.accessibility.AccessibilityEvent) {
+        globalPressDragSource?.onWindowEvent(event)
     }
 
     private companion object {

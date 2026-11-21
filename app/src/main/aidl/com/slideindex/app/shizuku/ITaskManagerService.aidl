@@ -2,6 +2,8 @@ package com.slideindex.app.shizuku;
 
 import com.slideindex.app.shizuku.IOnMultiTouchGesture;
 import com.slideindex.app.shizuku.IOnPhysicalKeyGesture;
+import com.slideindex.app.shizuku.ITouchInterruptionGuard;
+import android.os.ParcelFileDescriptor;
 
 interface ITaskManagerService {
     void destroy() = 16777114;
@@ -121,4 +123,16 @@ interface ITaskManagerService {
     void updatePhysicalKeyTargets(in int[] mappedKeyCodes, in int[] doublePressKeyCodes) = 40;
 
     void updatePhysicalKeyCustomTargets(in int[] mappedKeyCodes, in int[] doublePressKeyCodes, in int[] singlePressKeyCodes) = 41;
+
+    /**
+     * 全局长按触摸流（getevent 原始管道）。
+     */
+    ParcelFileDescriptor openTouchStream(String token, IBinder owner) = 42;
+
+    void closeTouchStream(String token) = 43;
+
+    /**
+     * 强行打断源应用触摸（注入 DOWN + CANCEL）。
+     */
+    boolean interruptTouchForDrag(String token, String sourcePackage, float x, float y, int displayId, long deadlineUptimeMs, in ITouchInterruptionGuard guard) = 44;
 }

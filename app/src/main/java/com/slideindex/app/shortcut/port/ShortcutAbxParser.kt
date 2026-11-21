@@ -209,7 +209,7 @@ object ShortcutAbxParser {
         val kinds = linkedSetOf<ShortcutKind>()
         if (flags and (1 shl 0) != 0) kinds += ShortcutKind.DYNAMIC
         if (flags and (1 shl 1) != 0) kinds += ShortcutKind.PINNED
-        if (flags and (1 shl 2) != 0) kinds += ShortcutKind.STATIC
+        if (flags and (1 shl 5) != 0) kinds += ShortcutKind.STATIC
         return kinds
     }
 }

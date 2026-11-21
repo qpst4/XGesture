@@ -960,4 +960,28 @@ class ExtensionSettingsViewModel @Inject constructor(
     fun setDragDropFlowActionsInline(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setDragDropFlowActionsInline(enabled)
     }
+
+    fun setDragDropFlowGlobalPressEnabled(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setDragDropFlowGlobalPressEnabled(enabled)
+    }
+
+    fun setDragDropFlowGlobalPressTimeout(timeoutMs: Int) = launchSettingsWrite {
+        settingsRepository.setDragDropFlowGlobalPressTimeout(timeoutMs)
+    }
+
+    fun setDragDropFlowGlobalPressVibrate(vibrate: Boolean) = launchSettingsWrite {
+        settingsRepository.setDragDropFlowGlobalPressVibrate(vibrate)
+    }
+
+    fun setDragDropFlowGlobalPressImmediate(immediate: Boolean) = launchSettingsWrite {
+        settingsRepository.setDragDropFlowGlobalPressImmediate(immediate)
+    }
+
+    fun setDragDropFlowGlobalPressEarlyText(earlyText: Boolean) = launchSettingsWrite {
+        settingsRepository.setDragDropFlowGlobalPressEarlyText(earlyText)
+    }
+
+    fun setDragDropFlowGlobalPressWhitelist(whitelist: String) = launchSettingsWrite {
+        settingsRepository.setDragDropFlowGlobalPressWhitelist(whitelist)
+    }
 }

@@ -554,6 +554,12 @@ object FloatingPointerOverlayWindow {
             mainHandler.post { runPointerTap(rawX, rawY) }
             return
         }
+        val pointerRadius = ((settingsState?.value?.floatingPointerPointerDiameterPx ?: 48f) / 2f)
+            .coerceAtLeast(18f * (session?.density ?: 1f))
+        if (com.slideindex.app.link.LinkRadarOverlay.onPointerTapRequested(rawX, rawY, pointerRadius)) {
+            dismiss()
+            return
+        }
         enqueuePointerInjection(rawX, rawY)
     }
 
@@ -561,6 +567,12 @@ object FloatingPointerOverlayWindow {
     internal fun runPointerTapThenDismiss(rawX: Float, rawY: Float) {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             mainHandler.post { runPointerTapThenDismiss(rawX, rawY) }
+            return
+        }
+        val pointerRadius = ((settingsState?.value?.floatingPointerPointerDiameterPx ?: 48f) / 2f)
+            .coerceAtLeast(18f * (session?.density ?: 1f))
+        if (com.slideindex.app.link.LinkRadarOverlay.onPointerTapRequested(rawX, rawY, pointerRadius)) {
+            dismissImmediate()
             return
         }
         // Detach before tap so radial/presence never flash while waiting for injection.

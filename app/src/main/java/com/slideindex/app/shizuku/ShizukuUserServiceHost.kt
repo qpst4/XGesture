@@ -28,6 +28,7 @@ object ShizukuUserServiceHost {
     /**
      * Bump when the remote service code/ABI changes; drives processNameSuffix.
      *
+     * 76：新增全局长按强行拖拽（openTouchStream / closeTouchStream / interruptTouchForDrag）。
      * 75：多指手势回调追加「起点」startU/startV（onGestureBatch / onPathGesture），root 轮询格式
      *     同步扩展为 `g:kind:fingers:u:v:su:sv` / `p:fingers:u:v:su:sv:strokes`。
      *     区域改成每个手势自己的属性、判定下沉到 app，service 只保留键盘门控。
@@ -85,7 +86,7 @@ object ShizukuUserServiceHost {
      *     16 次候选调用）。查询逻辑在用户服务进程里，必须换进程名才能让新包生效。
      * 升号后进程名变成 `task_manager_v65`，安装新包后不必重启手机/Shizuku 也能拿到新代码。
      */
-    const val SERVICE_BUILD = 75
+    const val SERVICE_BUILD = 76
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bindLock = Any()

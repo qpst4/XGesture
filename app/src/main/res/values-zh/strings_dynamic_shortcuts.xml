@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dynamic_shortcuts_home_label">XGesture 快捷方式助手</string>
+    <string name="dynamic_shortcuts_title">动态快捷方式导入</string>
+    <string name="dynamic_shortcuts_permission_card_title">系统桌面权限</string>
+    <string name="dynamic_shortcuts_permission_needed_desc">Android 系统限制：只有默认桌面才能读取其他应用的动态快捷方式（如微信扫一扫、付款码等）。请先临时设为桌面，扫描并锁定快捷方式后，再切回原本的桌面即可正常使用。</string>
+    <string name="dynamic_shortcuts_permission_granted_desc">已具备桌面权限！请点击下方「扫描快捷方式」读取所有已安装应用的动态快捷方式；勾选并导入后，系统会为本应用保持长期固定权限（Pin），切回原桌面仍可随时调用。</string>
+    <string name="dynamic_shortcuts_grant_home">临时设为桌面</string>
+    <string name="dynamic_shortcuts_restore_home">恢复系统默认桌面</string>
+    <string name="dynamic_shortcuts_scan">扫描动态快捷方式</string>
+    <string name="dynamic_shortcuts_scanning">正在枚举系统动态快捷方式…</string>
+    <string name="dynamic_shortcuts_import_selected">导入并锁定选中项 (%1$d)</string>
+    <string name="dynamic_shortcuts_import_success">已成功锁定并导入 %1$d 个快捷方式</string>
+    <string name="dynamic_shortcuts_no_selection">请勾选要导入的快捷方式</string>
+    <string name="dynamic_shortcuts_empty">未扫描到任何应用的动态快捷方式</string>
+    <string name="dynamic_shortcuts_already_imported">已导入</string>
+    <string name="dynamic_shortcuts_home_unavailable">系统桌面设置页无法打开</string>
+    <string name="activity_shortcut_add_from_dynamic">从动态快捷方式导入</string>
+    <string name="activity_shortcut_add_from_dynamic_sub">临时设为桌面以读取微信、支付宝等完整快捷方式</string>
+    <string name="shortcut_test_mode_static">免特权静态</string>
+    <string name="shortcut_test_mode_privilege">特权抓取</string>
+    <string name="shortcut_test_mode_dynamic">桌面固化</string>
+    <string name="shortcut_test_save_to_direct">保存至应用内直达</string>
+    <string name="shortcut_test_save_success">已保存至应用内直达</string>
+    <string name="shortcut_test_already_saved">已存在于应用内直达</string>
+    <string name="shortcut_test_dynamic_tip">通过临时成为系统默认桌面，读取所有应用动态与固定快捷方式。保存至应用内直达后将自动在底层锁定（Pin），切回原桌面亦可永久直接启动。</string>
+</resources>

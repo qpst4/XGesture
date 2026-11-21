@@ -1085,6 +1085,14 @@ object FloatBallOverlay {
 
             fun onCancel() {
                 if (dragOriginatedFromLine) return
+                val hadPauseIntent = cursorPausedState?.value == true || selectionStartState?.value != null
+                if (!hadPauseIntent && !regionalPickActive) {
+                    val anchor = currentPickAnchor()
+                    val density = displayView?.resources?.displayMetrics?.density ?: 1f
+                    if (anchor != null) {
+                        com.slideindex.app.link.LinkRadarOverlay.onPointerTapRequested(anchor.x, anchor.y, 22f * density)
+                    }
+                }
                 activeSideAtDragStart = null
                 dragOriginatedFromLine = false
                 lineDragEndedWithGesture = false
@@ -2900,6 +2908,24 @@ object FloatBallOverlay {
             lastPauseScheduleY = anchor.y
         }
         scheduleInitialPreviewBoundsCache()
+        val service = SlideIndexAccessibilityService.accessibilityInstance()
+        if (service != null) {
+            com.slideindex.app.link.LinkRadarOverlay.startSession(
+                service = service,
+                initialX = anchor?.x ?: Float.NaN,
+                initialY = anchor?.y ?: Float.NaN,
+                initialRadiusPx = 22f * metrics.density,
+            )
+            com.slideindex.app.link.LinkRadarOverlay.setOnTargetBannerReadyListener { holdMs ->
+                if (isDragging && cursorVisibleState?.value == true && cursorPausedState?.value != true) {
+                    if (holdMs <= 0) {
+                        cancelPauseTimer()
+                    } else {
+                        schedulePauseTimer(overrideDelayMs = holdMs.toLong())
+                    }
+                }
+            }
+        }
     }
 
     fun setBallTouchable(touchable: Boolean) {
@@ -2945,6 +2971,7 @@ object FloatBallOverlay {
         cursorPausedState?.value = false
         selectionStartState?.value = null
         setCursorLayersVisible(false)
+        com.slideindex.app.link.LinkRadarOverlay.stopSession()
     }
 
     internal fun hideCursor(restorePassive: Boolean = true) {
@@ -2982,6 +3009,7 @@ object FloatBallOverlay {
         }
         if (cursorPausedState?.value == true) {
             cursorPausedState?.value = false
+            com.slideindex.app.link.LinkRadarOverlay.setTargetSuppressed(false)
             syncCursorChromeAppearance()
         }
         schedulePauseTimerIfMoved()
@@ -3007,6 +3035,7 @@ object FloatBallOverlay {
 
     private fun enterRegionalPickMode() {
         regionalPickActive = true
+        com.slideindex.app.link.LinkRadarOverlay.setTargetSuppressed(true)
         boundsLookupGeneration++
         PickPrefetchCache.invalidate()
         lockedDragPasteEditableRect = null
@@ -3019,6 +3048,7 @@ object FloatBallOverlay {
     /** Screenshot mode: plus back at pause origin → red cross, resume normal drag. */
     private fun restoreActiveDragFromPauseOrigin() {
         regionalPickActive = false
+        com.slideindex.app.link.LinkRadarOverlay.setTargetSuppressed(false)
         cursorPausedState?.value = false
         selectionStartState?.value = null
         unlockActivePickGestureFromPause()
@@ -3052,11 +3082,21 @@ object FloatBallOverlay {
     }
 
     /** Yellow cross: finger held still long enough to lock regional pick start. */
-    private fun schedulePauseTimer() {
+    private fun schedulePauseTimer(overrideDelayMs: Long? = null) {
         cancelPauseTimer()
+        if (overrideDelayMs == null && com.slideindex.app.link.LinkRadarOverlay.hasTarget()) {
+            val radarHoldMs = com.slideindex.app.link.LinkRadarOverlay.currentRadarHoverHoldMs()
+            if (radarHoldMs <= 0) {
+                return
+            }
+            val runnable = Runnable { onCursorPaused() }
+            pauseRunnable = runnable
+            mainHandler.postDelayed(runnable, radarHoldMs.toLong())
+            return
+        }
         val runnable = Runnable { onCursorPaused() }
         pauseRunnable = runnable
-        val pauseMs = (settingsState?.value?.floatBallHoverPauseDelayMs ?: 400).toLong()
+        val pauseMs = overrideDelayMs ?: (settingsState?.value?.floatBallHoverPauseDelayMs ?: 400).toLong()
         mainHandler.postDelayed(runnable, pauseMs)
     }
 
@@ -3168,7 +3208,19 @@ object FloatBallOverlay {
     private fun onCursorPaused() {
         if (cursorVisibleState?.value != true) return
         if (cursorPausedState?.value == true) return
+        // 如果链接雷达正在后台联网解析短链或加载预览，挂起变黄，等横幅显示出最终目标应用后再按配置的停留时长计时。
+        if (com.slideindex.app.link.LinkRadarOverlay.isResolvingShortLinkNow()) {
+            schedulePauseTimer(overrideDelayMs = 250L)
+            return
+        }
+        if (com.slideindex.app.link.LinkRadarOverlay.hasTarget() &&
+            com.slideindex.app.link.LinkRadarOverlay.currentRadarHoverHoldMs() <= 0
+        ) {
+            return
+        }
         val anchor = currentPickAnchor() ?: return
+        // 对齐 GestureEVO：一旦进入悬停锁定（红框变黄框），链接雷达横幅立刻退场消失，把画面与松手权让给取词。
+        com.slideindex.app.link.LinkRadarOverlay.setTargetSuppressed(true)
         // 对齐 FV：手指停住后才做一次节点查询/预览缓存刷新（不在拖动热路径里查）。
         schedulePreviewCacheRefresh()
         cancelPauseTimer()
@@ -3376,6 +3428,13 @@ object FloatBallOverlay {
                 marginPx = marginPx
             )
             applyPickAnchor(pick)
+            if (settings.floatBallDragPickEnabled) {
+                com.slideindex.app.link.LinkRadarOverlay.onPointerPositionChanged(
+                    x = pick.x,
+                    y = pick.y,
+                    radiusPx = 22f * density,
+                )
+            }
         }
 
         if (!moveBallWindow) return

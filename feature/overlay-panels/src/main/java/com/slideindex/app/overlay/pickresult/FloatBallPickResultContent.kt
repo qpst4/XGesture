@@ -135,7 +135,8 @@ fun FloatBallPickResultContent(
     /** 图片区「编辑」动作（打开内置编辑器）；null 时不显示编辑按钮。 */
     onEditImage: (() -> Unit)? = null,
     screenRect: Rect?,
-    layoutMeta: ScreenshotLayoutMeta?
+    layoutMeta: ScreenshotLayoutMeta?,
+    resolveLinkAppPreview: (suspend (String) -> Pair<androidx.compose.ui.graphics.ImageBitmap?, String?>)? = null,
 ) {
     val context = LocalContext.current
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
@@ -667,7 +668,8 @@ fun FloatBallPickResultContent(
                         com.slideindex.app.overlay.panels.PanelRuntimeHooks
                             .setPickSearchGridExpanded?.invoke(next)
                     }
-                }
+                },
+                resolveLinkAppPreview = resolveLinkAppPreview
             )
             }
             }

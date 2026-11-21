@@ -61,6 +61,7 @@ fun ExtensionHubScreen(
     onOpenNativeEnginePacks: () -> Unit,
     onOpenDiagnosticLogs: () -> Unit,
     onOpenShortcutTest: () -> Unit = {},
+    onOpenLinkDispatch: () -> Unit = {},
     onOpenAbout: () -> Unit,
 ) {
     val listState = rememberLazyListState()
@@ -260,6 +261,16 @@ fun ExtensionHubScreen(
                             title = stringResource(R.string.share_sheet_settings_title),
                             subtitle = stringResource(R.string.share_sheet_hub_subtitle),
                             onClick = onOpenShareSheet,
+                        )
+                    }
+                )
+                add(
+                    settingsCardScopeItem("link-dispatch") {
+                        SettingNavigationRow(
+                            icon = { label -> SymbolsIcon("Link", contentDescription = label) },
+                            title = stringResource(R.string.link_dispatch_title),
+                            subtitle = stringResource(R.string.link_dispatch_hub_subtitle),
+                            onClick = onOpenLinkDispatch,
                         )
                     }
                 )

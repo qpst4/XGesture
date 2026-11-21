@@ -963,4 +963,11 @@ internal object SettingsPreferenceKeys {
 
     /** 内置动作是否直接平铺在流转栏上（关掉则收进「操作」枢纽）。 */
     val DRAG_DROP_FLOW_ACTIONS_INLINE = booleanPreferencesKey("drag_drop_flow_actions_inline")
+
+    val DRAG_DROP_FLOW_GLOBAL_PRESS_ENABLED = booleanPreferencesKey("drag_drop_flow_global_press_enabled")
+    val DRAG_DROP_FLOW_GLOBAL_PRESS_TIMEOUT = intPreferencesKey("drag_drop_flow_global_press_timeout")
+    val DRAG_DROP_FLOW_GLOBAL_PRESS_VIBRATE = booleanPreferencesKey("drag_drop_flow_global_press_vibrate")
+    val DRAG_DROP_FLOW_GLOBAL_PRESS_IMMEDIATE = booleanPreferencesKey("drag_drop_flow_global_press_immediate")
+    val DRAG_DROP_FLOW_GLOBAL_PRESS_EARLY_TEXT = booleanPreferencesKey("drag_drop_flow_global_press_early_text")
+    val DRAG_DROP_FLOW_GLOBAL_PRESS_WHITELIST = stringPreferencesKey("drag_drop_flow_global_press_whitelist")
 }

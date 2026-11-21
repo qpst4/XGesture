@@ -81,6 +81,14 @@ internal object FloatBallDragFinish {
     fun cancelDragWithoutPick() {
         if (!FloatBallOverlay.isDraggingNow()) return
         if (FloatBallOverlay.moveModeActive) FloatBallOverlay.exitMoveMode()
+        val hadPauseIntent = FloatBallOverlay.cursorPausedState?.value == true || FloatBallOverlay.selectionStartState?.value != null
+        if (!hadPauseIntent && !FloatBallOverlay.regionalPickActive) {
+            val anchor = FloatBallOverlay.currentPickAnchor()
+            val density = FloatBallOverlay.displayView?.resources?.displayMetrics?.density ?: 1f
+            if (anchor != null) {
+                com.slideindex.app.link.LinkRadarOverlay.onPointerTapRequested(anchor.x, anchor.y, 22f * density)
+            }
+        }
         FloatBallOverlay.cancelDragChromeLayoutFrame()
         FloatBallOverlay.cancelCursorCommitFrame()
         FloatBallOverlay.activeSideAtDragStart = null
@@ -148,6 +156,11 @@ internal object FloatBallDragFinish {
             }
             FloatBallOverlay.handlePickOnRelease(settings)
         } else {
+            val anchor = FloatBallOverlay.currentPickAnchor()
+            val density = FloatBallOverlay.displayView?.resources?.displayMetrics?.density ?: 1f
+            if (anchor != null) {
+                com.slideindex.app.link.LinkRadarOverlay.onPointerTapRequested(anchor.x, anchor.y, 22f * density)
+            }
             FloatBallOverlay.commitLineDragSideSwap()
         }
         FloatBallOverlay.dragActiveSideOverride = null

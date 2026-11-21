@@ -139,6 +139,8 @@ internal class FloatingPointerWindowLifecycle(
             },
             pointerPositionChanged = { pointerX, pointerY ->
                 syncPassthroughForPointerPosition(pointerX, pointerY)
+                val pointerRadius = (settingsHolder.value.floatingPointerPointerDiameterPx / 2f).coerceAtLeast(18f * dm.density)
+                com.slideindex.app.link.LinkRadarOverlay.onPointerPositionChanged(pointerX, pointerY, pointerRadius)
             },
             gestureEnd = { centerX, centerY, _ ->
                 window.touchCaptureUserCollapsed = true
@@ -262,6 +264,16 @@ internal class FloatingPointerWindowLifecycle(
         displayCompose.post {
             visible.value = true
             setTouchOverlayPassthrough(false)
+            val service = SlideIndexAccessibilityService.accessibilityInstance()
+            if (service != null) {
+                val pointerRadius = (settingsHolder.value.floatingPointerPointerDiameterPx / 2f).coerceAtLeast(18f * dm.density)
+                com.slideindex.app.link.LinkRadarOverlay.startSession(
+                    service = service,
+                    initialX = pointerSession.pointerX.floatValue,
+                    initialY = pointerSession.pointerY.floatValue,
+                    initialRadiusPx = pointerRadius,
+                )
+            }
         }
     }
 
@@ -323,6 +335,7 @@ internal class FloatingPointerWindowLifecycle(
     }
 
     fun cleanup() {
+        com.slideindex.app.link.LinkRadarOverlay.stopSession()
         OverlayPerformanceMonitorBinding.onOverlayHidden(window.appContext)
         cancelPendingCleanup()
         window.settingsSync.cancelSettingsSync()
