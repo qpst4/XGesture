@@ -105,6 +105,17 @@ fun ExtensionHubScreen(
                                 outlinedLeadingIcons = true,
                                 onClick = onOpenActivityShortcuts,
                             )
+                            SettingNavigationRow(
+                                icon = { label ->
+                                    Icon(
+                                        ThinActionIcons.Shortcut,
+                                        contentDescription = label,
+                                    )
+                                },
+                                title = stringResource(R.string.extension_shortcut_test_title),
+                                subtitle = stringResource(R.string.extension_shortcut_test_subtitle),
+                                onClick = onOpenShortcutTest,
+                            )
                         }
                         card.RenderRows()
                     }
@@ -213,6 +224,16 @@ fun ExtensionHubScreen(
                     }
                 )
                 add(
+                    settingsCardScopeItem("link-dispatch") {
+                        SettingNavigationRow(
+                            icon = { label -> SymbolsIcon("Link", contentDescription = label) },
+                            title = stringResource(R.string.link_dispatch_title),
+                            subtitle = stringResource(R.string.link_dispatch_hub_subtitle),
+                            onClick = onOpenLinkDispatch,
+                        )
+                    }
+                )
+                add(
                     settingsCardScopeItem("stash-clipboard") {
                         StashClipboardEntryCard(
                             settings = settings,
@@ -261,31 +282,6 @@ fun ExtensionHubScreen(
                             title = stringResource(R.string.share_sheet_settings_title),
                             subtitle = stringResource(R.string.share_sheet_hub_subtitle),
                             onClick = onOpenShareSheet,
-                        )
-                    }
-                )
-                add(
-                    settingsCardScopeItem("link-dispatch") {
-                        SettingNavigationRow(
-                            icon = { label -> SymbolsIcon("Link", contentDescription = label) },
-                            title = stringResource(R.string.link_dispatch_title),
-                            subtitle = stringResource(R.string.link_dispatch_hub_subtitle),
-                            onClick = onOpenLinkDispatch,
-                        )
-                    }
-                )
-                add(
-                    settingsCardScopeItem("shortcut-test") {
-                        SettingNavigationRow(
-                            icon = { label ->
-                                Icon(
-                                    ThinActionIcons.Shortcut,
-                                    contentDescription = label,
-                                )
-                            },
-                            title = stringResource(R.string.extension_shortcut_test_title),
-                            subtitle = stringResource(R.string.extension_shortcut_test_subtitle),
-                            onClick = onOpenShortcutTest,
                         )
                     }
                 )

@@ -1,5 +1,7 @@
 package com.slideindex.app.clipboardoverlay
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
@@ -16,10 +18,13 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,11 +46,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -68,6 +77,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import com.slideindex.app.R
 import com.slideindex.app.di.OverlayDependencyAccess
+import com.slideindex.app.link.LinkLauncher
+import com.slideindex.app.link.LinkRegion
+import com.slideindex.app.link.previewLinkTarget
 import com.slideindex.app.overlay.LocalFrostedGlassBackdrop
 import com.slideindex.app.overlay.MessageOverlayHost
 import com.slideindex.app.overlay.OverlayCompose
@@ -79,13 +91,27 @@ import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.ui.theme.LocalAppDarkTheme
 import com.slideindex.app.ui.theme.OverlayAwareModuleTheme
 import com.slideindex.app.util.resolveActivityCompat
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private const val PICKER_ANIM_MS = 280
+
+internal data class PickerLinkEntry(
+    val url: String,
+    val sourcePackage: String = "",
+    val sourceText: String? = null,
+    val useLinkLauncher: Boolean = false,
+)
 
 internal object ClipboardLinkPickerOverlay {
     private const val TAG = "ClipboardLinkPicker"
 
     private val mainHandler = Handler(Looper.getMainLooper())
+    private val launchScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var windowManager: WindowManager? = null
     private var composeView: ComposeView? = null
     private var owner: OverlayComposeOwner? = null
@@ -103,14 +129,39 @@ internal object ClipboardLinkPickerOverlay {
         get() = composeView?.isAttachedToWindow == true
 
     fun show(context: Context, urls: List<String>) {
+        val entries = urls.map { it.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .map { PickerLinkEntry(url = it, useLinkLauncher = false) }
+        showEntries(context, entries)
+    }
+
+    /**
+     * 供「指针链接雷达」与「全局复制/屏幕内容链接雷达」命中同节点多条链接时弹出选择。
+     */
+    fun showRadarLinks(context: Context, links: List<LinkRegion>) {
+        val entries = links
+            .filter { it.url.isNotBlank() }
+            .distinctBy { it.url.trim() }
+            .map {
+                PickerLinkEntry(
+                    url = it.url.trim(),
+                    sourcePackage = it.sourcePackage,
+                    sourceText = it.sourceText,
+                    useLinkLauncher = true,
+                )
+            }
+        showEntries(context, entries)
+    }
+
+    private fun showEntries(context: Context, entries: List<PickerLinkEntry>) {
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            mainHandler.post { show(context, urls) }
+            mainHandler.post { showEntries(context, entries) }
             return
         }
-        val distinct = urls.map { it.trim() }.filter { it.isNotBlank() }.distinct()
-        if (distinct.isEmpty()) return
+        if (entries.isEmpty()) return
         dismissImmediate()
-        val host = MessageOverlayHost.resolveHostContext(context) ?: return
+        val host = MessageOverlayHost.resolveHostContext(context) ?: context
         val overlayContext = OverlayCompose.themedContext(host)
         val wm = host.getSystemService(Context.WINDOW_SERVICE) as? WindowManager ?: return
         val dialogOwner = OverlayComposeOwner()
@@ -121,12 +172,31 @@ internal object ClipboardLinkPickerOverlay {
             OverlayAwareModuleTheme {
                 ClipboardLinkPickerContent(
                     visible = visibleState.value,
-                    urls = distinct,
-                    onOpen = { url ->
-                        dismiss { openUrl(host, url) }
+                    entries = entries,
+                    onOpen = { entry ->
+                        dismiss {
+                            if (entry.useLinkLauncher) {
+                                launchScope.launch {
+                                    LinkLauncher.openUrl(host, entry.url, entry.sourcePackage, entry.sourceText)
+                                }
+                            } else {
+                                openUrl(host, entry.url)
+                            }
+                        }
                     },
-                    onOpenAll = {
-                        dismiss { ClipboardLinkOpenAllActivity.start(host, distinct) }
+                    onOpenBatch = { batch ->
+                        dismiss {
+                            if (batch.any { it.useLinkLauncher }) {
+                                launchScope.launch {
+                                    batch.forEach { entry ->
+                                        LinkLauncher.openUrl(host, entry.url, entry.sourcePackage, entry.sourceText)
+                                        delay(100)
+                                    }
+                                }
+                            } else {
+                                ClipboardLinkOpenAllActivity.start(host, batch.map { it.url })
+                            }
+                        }
                     },
                     onDismiss = { dismiss() },
                 )
@@ -225,17 +295,39 @@ private data class LinkHandlerInfo(
 @Composable
 private fun ClipboardLinkPickerContent(
     visible: Boolean,
-    urls: List<String>,
-    onOpen: (String) -> Unit,
-    onOpenAll: () -> Unit,
+    entries: List<PickerLinkEntry>,
+    onOpen: (PickerLinkEntry) -> Unit,
+    onOpenBatch: (List<PickerLinkEntry>) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val density = LocalDensity.current
     val isDark = LocalAppDarkTheme.current
-    val handler = remember(urls.firstOrNull()) {
-        resolveHandler(context, urls.firstOrNull().orEmpty())
+    val handlers = remember(entries) { mutableStateMapOf<String, LinkHandlerInfo>() }
+    val selectedUrls = remember(entries) { mutableStateListOf<String>() }
+
+    LaunchedEffect(entries) {
+        for (entry in entries) {
+            val predicted = try {
+                previewLinkTarget(context, entry.url, entry.sourcePackage, entry.sourceText)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                null
+            }
+            if (predicted != null) {
+                val bitmap = runCatching {
+                    val drawable = predicted.rawIcon ?: return@runCatching null
+                    val size = drawable.intrinsicWidth.takeIf { it > 0 } ?: 96
+                    drawable.toBitmap(width = size, height = size).asImageBitmap()
+                }.getOrNull() ?: predicted.icon
+                handlers[entry.url] = LinkHandlerInfo(predicted.label, bitmap)
+            } else {
+                handlers[entry.url] = resolveHandler(context, entry.url)
+            }
+        }
     }
+
     val sheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
     val cornerPx = with(density) { 28.dp.toPx() }
     val sheetTint = if (isDark) 0x991C1C1E.toInt() else 0x99F5F5F7.toInt()
@@ -294,7 +386,11 @@ private fun ClipboardLinkPickerContent(
                             .fillMaxWidth()
                             .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 16.dp),
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        val allSelected = selectedUrls.size == entries.size && entries.isNotEmpty()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             Text(
                                 text = stringResource(R.string.clipboard_overlay_pick_links_title),
                                 style = MaterialTheme.typography.titleMedium,
@@ -303,9 +399,27 @@ private fun ClipboardLinkPickerContent(
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                text = stringResource(R.string.clipboard_overlay_pick_links_count, urls.size),
+                                text = stringResource(R.string.clipboard_overlay_pick_links_count, entries.size),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Spacer(Modifier.weight(1f))
+                            Text(
+                                text = if (allSelected) "取消全选" else "全选",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        if (allSelected) {
+                                            selectedUrls.clear()
+                                        } else {
+                                            selectedUrls.clear()
+                                            selectedUrls.addAll(entries.map { it.url })
+                                        }
+                                    }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
                             )
                         }
                         Spacer(Modifier.height(12.dp))
@@ -316,11 +430,28 @@ private fun ClipboardLinkPickerContent(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             contentPadding = PaddingValues(bottom = 8.dp),
                         ) {
-                            items(urls, key = { it }) { url ->
+                            items(entries, key = { it.url }) { entry ->
+                                val handler = handlers[entry.url] ?: remember(entry.url) {
+                                    resolveHandler(context, entry.url)
+                                }
+                                val isChecked = entry.url in selectedUrls
                                 LinkRow(
-                                    url = url,
+                                    url = entry.url,
                                     handler = handler,
-                                    onClick = { onOpen(url) },
+                                    checked = isChecked,
+                                    onClick = { onOpen(entry) },
+                                    onToggleCheck = {
+                                        if (isChecked) {
+                                            selectedUrls.remove(entry.url)
+                                        } else {
+                                            selectedUrls.add(entry.url)
+                                        }
+                                    },
+                                    onLongClick = {
+                                        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                                        cm?.setPrimaryClip(ClipData.newPlainText("url", entry.url))
+                                        Toast.makeText(context, "已复制链接", Toast.LENGTH_SHORT).show()
+                                    },
                                 )
                             }
                         }
@@ -340,11 +471,23 @@ private fun ClipboardLinkPickerContent(
                                 Text(stringResource(R.string.clipboard_overlay_pick_links_cancel))
                             }
                             Button(
-                                onClick = onOpenAll,
+                                onClick = {
+                                    val targetBatch = if (selectedUrls.isNotEmpty()) {
+                                        entries.filter { it.url in selectedUrls }
+                                    } else {
+                                        entries
+                                    }
+                                    onOpenBatch(targetBatch)
+                                },
                                 modifier = Modifier.weight(1f).height(48.dp),
                                 shape = CircleShape,
                             ) {
-                                Text(stringResource(R.string.clipboard_overlay_pick_links_open_all))
+                                val confirmLabel = if (selectedUrls.isNotEmpty()) {
+                                    "打开选中 (${selectedUrls.size})"
+                                } else {
+                                    stringResource(R.string.clipboard_overlay_pick_links_open_all)
+                                }
+                                Text(confirmLabel)
                             }
                         }
                     }
@@ -354,20 +497,38 @@ private fun ClipboardLinkPickerContent(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LinkRow(
     url: String,
     handler: LinkHandlerInfo,
+    checked: Boolean,
     onClick: () -> Unit,
+    onToggleCheck: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
     val shape = RoundedCornerShape(16.dp)
+    val bgColor = if (checked) {
+        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.85f)
+    } else {
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.72f)
+    }
+    val borderMod = if (checked) {
+        Modifier.border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.65f), shape)
+    } else {
+        Modifier
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.72f))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+            .then(borderMod)
+            .background(bgColor)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick,
+            )
+            .padding(start = 14.dp, end = 6.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val icon = handler.icon
@@ -386,12 +547,12 @@ private fun LinkRow(
                     .background(MaterialTheme.colorScheme.secondaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-            Image(
-                painter = painterResource(R.drawable.ic_clipboard_overlay_open),
-                contentDescription = null,
-                modifier = Modifier.size(22.dp),
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSecondaryContainer),
-            )
+                Image(
+                    painter = painterResource(R.drawable.ic_clipboard_overlay_open),
+                    contentDescription = null,
+                    modifier = Modifier.size(22.dp),
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSecondaryContainer),
+                )
             }
         }
         Spacer(Modifier.width(12.dp))
@@ -412,6 +573,10 @@ private fun LinkRow(
                 )
             }
         }
+        Checkbox(
+            checked = checked,
+            onCheckedChange = { onToggleCheck() },
+        )
     }
 }
 

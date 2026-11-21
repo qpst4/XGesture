@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="extension_shortcut_test_title">测试快捷方式</string>
-    <string name="extension_shortcut_test_subtitle">扫描系统动态/固定快捷方式（需要 Shizuku 或 Root）</string>
+    <string name="extension_shortcut_test_title">快捷方式</string>
+    <string name="extension_shortcut_test_subtitle">扫描系统静态/动态/已固化快捷方式，支持直接执行、添加到应用内直达或固化</string>
 
-    <string name="shortcut_test_title">快捷方式测试</string>
+    <string name="shortcut_test_title">快捷方式</string>
     <string name="shortcut_test_tip">本页只读扫描系统快捷方式服务（dumpsys shortcut），需要 Shizuku 或 Root。点击条目只会通过系统 API 启动该快捷方式。</string>
     <string name="shortcut_test_search_hint">搜索应用、包名或快捷方式</string>
     <string name="shortcut_test_status_loading">正在扫描…</string>

@@ -10,6 +10,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
@@ -1025,5 +1027,105 @@ private fun GlassCapsuleContainer(
             solidFallbackColor = scheme.surface.toArgb(),
         )
         content()
+    }
+}
+
+/**
+ * 独立于流转栏命中窗口的屏幕中上方「放大悬停预览气泡」（1:1 对齐 GestureEVO DragActionPreview）：
+ * - 当手指在左侧/右侧/底部流转栏的小图标上滑动时，手指会遮挡住底下的图标与文字；
+ * - 在独立 `FLAG_NOT_TOUCHABLE` 浮窗中同步展示当前命中的大图标与动作/应用名称，不参与任何拖拽命中测试。
+ */
+@Composable
+fun DragActionPreviewBubble(
+    item: DragDropFlowItem?,
+) {
+    var displayItem by remember { mutableStateOf(item) }
+    if (item != null) {
+        displayItem = item
+    }
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        AnimatedVisibility(
+            visible = item != null,
+            enter = fadeIn(tween(130)) + scaleIn(tween(130), initialScale = 0.82f),
+            exit = fadeOut(tween(120)) + scaleOut(tween(120), targetScale = 0.85f),
+        ) {
+            val current = displayItem
+            if (current != null) {
+                val iconShape = RoundedCornerShape(14.dp)
+                GlassCapsuleContainer(cornerRadius = 24.dp) {
+                    Column(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .padding(horizontal = 8.dp, vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(54.dp)
+                                .background(
+                                    if (current.iconBitmap == null) {
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+                                    } else {
+                                        Color.Transparent
+                                    },
+                                    shape = iconShape,
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            when {
+                                current.iconBitmap != null -> {
+                                    Image(
+                                        bitmap = current.iconBitmap.asImageBitmap(),
+                                        contentDescription = current.title,
+                                        modifier = Modifier
+                                            .size(50.dp)
+                                            .clip(iconShape),
+                                    )
+                                }
+                                current.iconVector != null -> {
+                                    Icon(
+                                        imageVector = current.iconVector,
+                                        contentDescription = current.title,
+                                        tint = current.iconTintColor ?: MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(36.dp),
+                                    )
+                                }
+                                current.iconPainter != null -> {
+                                    Icon(
+                                        painter = current.iconPainter,
+                                        contentDescription = current.title,
+                                        tint = current.iconTintColor ?: MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(36.dp),
+                                    )
+                                }
+                                current.iconDrawableRes != null -> {
+                                    Icon(
+                                        painter = androidx.compose.ui.res.painterResource(current.iconDrawableRes),
+                                        contentDescription = current.title,
+                                        tint = current.iconTintColor ?: MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(36.dp),
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = current.title,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            }
+        }
     }
 }

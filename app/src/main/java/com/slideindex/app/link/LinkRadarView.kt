@@ -1,5 +1,6 @@
 package com.slideindex.app.link
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Canvas
@@ -18,10 +19,13 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewOutlineProvider
+import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * 链接雷达 HUD 视觉视图（1:1 对齐 GestureEVO LinkRadarView + ViewLinkRadarTargetBinding）：
@@ -56,6 +60,7 @@ class LinkRadarView(context: Context) : FrameLayout(context) {
     private var actionLayoutKey: List<Int>? = null
 
     var onLinkClickListener: ((LinkRegion) -> Unit)? = null
+    var onLinksGroupClickListener: ((List<LinkRegion>) -> Unit)? = null
 
     val visibleActionKeys: Set<Int>
         get() = actionBounds.keys
@@ -105,9 +110,9 @@ class LinkRadarView(context: Context) : FrameLayout(context) {
         invalidate()
     }
 
-    fun updateActionPrompt(key: Int, label: String, icon: Drawable?) {
+    fun updateActionPrompt(key: Int, label: String, icon: Drawable?, loading: Boolean = false) {
         val banner = actionViews[key] ?: return
-        banner.bind(label, icon)
+        banner.bind(label, icon, loading)
         requestLayout()
         invalidate()
     }
@@ -131,13 +136,13 @@ class LinkRadarView(context: Context) : FrameLayout(context) {
     /**
      * 指针/取词十字光标模式：高亮命中链接并在其上方/下方显示目标应用胶囊横幅。
      */
-    fun show(regions: List<LinkRegion>, label: String, icon: Drawable? = null) {
+    fun show(regions: List<LinkRegion>, label: String, icon: Drawable? = null, loading: Boolean = false) {
         highlightedRegions = regions
         if (regions.isEmpty()) {
             targetBanner.visibility = GONE
         } else {
             targetBanner.visibility = VISIBLE
-            targetBanner.bind(label, icon)
+            targetBanner.bind(label, icon, loading)
             targetBanner.refreshTheme()
         }
         requestLayout()
@@ -227,7 +232,12 @@ class LinkRadarView(context: Context) : FrameLayout(context) {
                     bind(initialText, null)
                     refreshTheme()
                     setOnClickListener {
-                        onLinkClickListener?.invoke(groupLinks.first())
+                        val groupListener = onLinksGroupClickListener
+                        if (groupListener != null) {
+                            groupListener.invoke(groupLinks)
+                        } else {
+                            onLinkClickListener?.invoke(groupLinks.first())
+                        }
                     }
                 }
                 actionViews[id] = banner
@@ -355,15 +365,102 @@ class LinkRadarView(context: Context) : FrameLayout(context) {
     }
 
     /**
+     * 1:1 复刻 Miuix `InfiniteProgressIndicator` 视觉的轻量原生 View：
+     * 外层为空心圆环轨道（Track），内层有一颗实心小圆球（Orbiting Dot）贴着圆环内壁匀速滚动旋转。
+     */
+    inner class MiuixOrbitProgressView(context: Context) : View(context) {
+        private val ringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+        }
+        private val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
+        }
+        private var currentAngleDeg = 0f
+        private var animator: ValueAnimator? = null
+
+        fun setIndicatorColor(color: Int) {
+            ringPaint.color = color
+            dotPaint.color = color
+            invalidate()
+        }
+
+        override fun onAttachedToWindow() {
+            super.onAttachedToWindow()
+            if (visibility == VISIBLE) {
+                startOrbit()
+            }
+        }
+
+        override fun onDetachedFromWindow() {
+            stopOrbit()
+            super.onDetachedFromWindow()
+        }
+
+        override fun setVisibility(visibility: Int) {
+            super.setVisibility(visibility)
+            if (visibility == VISIBLE && isAttachedToWindow) {
+                startOrbit()
+            } else {
+                stopOrbit()
+            }
+        }
+
+        fun startOrbit() {
+            if (animator?.isRunning == true) return
+            animator = ValueAnimator.ofFloat(0f, 360f).apply {
+                duration = 950L
+                repeatCount = ValueAnimator.INFINITE
+                repeatMode = ValueAnimator.RESTART
+                interpolator = LinearInterpolator()
+                addUpdateListener { anim ->
+                    currentAngleDeg = anim.animatedValue as Float
+                    invalidate()
+                }
+                start()
+            }
+        }
+
+        fun stopOrbit() {
+            animator?.cancel()
+            animator = null
+        }
+
+        override fun onDraw(canvas: Canvas) {
+            super.onDraw(canvas)
+            val size = minOf(width, height).toFloat()
+            if (size <= 0f) return
+            val cx = width / 2f
+            val cy = height / 2f
+            // 留出一点内边距让 22dp 的圆环居中在 30dp 的槽位里
+            val indicatorRadius = (size * 0.37f).coerceAtLeast(4f * density)
+            val ringStroke = (indicatorRadius * 0.22f).coerceAtLeast(1.8f * density)
+            val dotRadius = (indicatorRadius * 0.24f).coerceAtLeast(2.0f * density)
+
+            ringPaint.strokeWidth = ringStroke
+            // 外层空心圆环
+            canvas.drawCircle(cx, cy, indicatorRadius - ringStroke / 2f, ringPaint)
+
+            // 内侧贴着圆环内壁滚动的小圆球（对齐 Miuix InfiniteProgressIndicator 几何比例）
+            val orbitRadius = (indicatorRadius - ringStroke - dotRadius * 0.85f).coerceAtLeast(dotRadius)
+            val rad = Math.toRadians(currentAngleDeg.toDouble())
+            val dotX = cx + (orbitRadius * cos(rad)).toFloat()
+            val dotY = cy + (orbitRadius * sin(rad)).toFloat()
+            canvas.drawCircle(dotX, dotY, dotRadius, dotPaint)
+        }
+    }
+
+    /**
      * 1:1 还原 GestureEVO `view_link_radar_target.xml`：
-     * 24dp 大圆角胶囊 + 2dp 主题色描边 + 左侧 30dp 圆角应用图标（无图标时显示主题色圆底链接矢量图标） + 右侧单行标签。
+     * 24dp 大圆角胶囊 + 2dp 主题色描边 + 左侧 30dp 圆角应用图标（解析短链时显示 Miuix 空心圆环滚动小球，无图标时显示 🔗） + 右侧单行标签。
      */
     inner class TargetBannerView(context: Context) : LinearLayout(context) {
         private val iconContainer = FrameLayout(context)
         private val iconView = ImageView(context)
+        private val loadingView = MiuixOrbitProgressView(context)
         private val fallbackLinkText = TextView(context)
         private val labelView = TextView(context)
         private var currentIcon: Drawable? = null
+        private var isLoadingState: Boolean = false
 
         init {
             orientation = HORIZONTAL
@@ -389,6 +486,12 @@ class LinkRadarView(context: Context) : FrameLayout(context) {
             )
             iconView.scaleType = ImageView.ScaleType.FIT_CENTER
 
+            loadingView.layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            loadingView.visibility = GONE
+
             fallbackLinkText.layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
@@ -398,6 +501,7 @@ class LinkRadarView(context: Context) : FrameLayout(context) {
             fallbackLinkText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
 
             iconContainer.addView(fallbackLinkText)
+            iconContainer.addView(loadingView)
             iconContainer.addView(iconView)
             addView(iconContainer)
 
@@ -420,19 +524,32 @@ class LinkRadarView(context: Context) : FrameLayout(context) {
             labelView.maxWidth = maxPx
         }
 
-        fun bind(label: String, icon: Drawable?) {
+        fun bind(label: String, icon: Drawable?, loading: Boolean = false) {
             labelView.text = label
             currentIcon = icon
-            if (icon != null) {
-                iconView.setImageDrawable(icon)
-                iconView.visibility = VISIBLE
-                fallbackLinkText.visibility = GONE
-                iconContainer.background = null
-            } else {
-                iconView.setImageDrawable(null)
-                iconView.visibility = GONE
-                fallbackLinkText.visibility = VISIBLE
-                styleFallbackIconBg()
+            isLoadingState = loading
+            when {
+                loading -> {
+                    iconView.setImageDrawable(null)
+                    iconView.visibility = GONE
+                    fallbackLinkText.visibility = GONE
+                    loadingView.visibility = VISIBLE
+                    iconContainer.background = null
+                }
+                icon != null -> {
+                    loadingView.visibility = GONE
+                    iconView.setImageDrawable(icon)
+                    iconView.visibility = VISIBLE
+                    fallbackLinkText.visibility = GONE
+                    iconContainer.background = null
+                }
+                else -> {
+                    loadingView.visibility = GONE
+                    iconView.setImageDrawable(null)
+                    iconView.visibility = GONE
+                    fallbackLinkText.visibility = VISIBLE
+                    styleFallbackIconBg()
+                }
             }
         }
 
@@ -440,13 +557,16 @@ class LinkRadarView(context: Context) : FrameLayout(context) {
             val bgColor = resolveSurfaceContainerColor()
             val strokeColor = resolvePrimaryColor()
             val textColor = resolveOnPrimaryContainerColor()
+            val night = isNightMode()
+            val indicatorGray = if (night) Color.parseColor("#A8AEB8") else Color.parseColor("#8C939E")
+            loadingView.setIndicatorColor(indicatorGray)
             background = GradientDrawable().apply {
                 cornerRadius = 24f * density
                 setColor(bgColor)
                 setStroke((2f * density).toInt().coerceAtLeast(1), strokeColor)
             }
             labelView.setTextColor(textColor)
-            if (currentIcon == null) {
+            if (currentIcon == null && !isLoadingState) {
                 styleFallbackIconBg()
             }
         }

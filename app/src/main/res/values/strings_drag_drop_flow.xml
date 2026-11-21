@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 全局拖拽流转（独立资源文件，避免改动现有 strings.xml）。 -->
 <resources>
-    <string name="drag_drop_flow_title">Global drag &amp; drop flow bar</string>
+    <string name="drag_drop_flow_title">Global drag &amp; drop flow</string>
 
     <!-- 设置页 -->
     <string name="drag_drop_flow_section_basic">Basics</string>
-    <string name="drag_drop_flow_enable_title">Enable the global drag &amp; drop flow bar</string>
+    <string name="drag_drop_flow_enable_title">Enable global drag &amp; drop flow</string>
     <string name="drag_drop_flow_enable_summary">Long-press an image or text in any app and start dragging: the flow bar slides in from the screen edge.</string>
     <string name="drag_drop_flow_section_layout">Appearance and position</string>
     <string name="drag_drop_flow_position_title">Flow bar position</string>

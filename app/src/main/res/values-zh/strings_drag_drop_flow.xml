@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 全局拖拽流转（独立资源文件，避免改动现有 strings.xml）。 -->
 <resources>
-    <string name="drag_drop_flow_title">全局拖拽流转栏</string>
+    <string name="drag_drop_flow_title">全局拖拽流转</string>
 
     <!-- 设置页 -->
     <string name="drag_drop_flow_section_basic">基础功能</string>
-    <string name="drag_drop_flow_enable_title">启用全局拖拽流转栏</string>
+    <string name="drag_drop_flow_enable_title">启用全局拖拽流转</string>
     <string name="drag_drop_flow_enable_summary">在任意应用长按图片或文字开始拖拽时，屏幕边缘自动滑出流转搜索栏</string>
     <string name="drag_drop_flow_section_layout">外观与位置</string>
     <string name="drag_drop_flow_position_title">流转栏显示位置</string>

@@ -55,11 +55,19 @@ class ScreenContentLinkRadar(
     private fun showRadarOverlay(links: List<LinkRegion>, jobScope: CoroutineScope) {
         val view = LinkRadarView(service).apply {
             showScreenContentLinks(links)
-            onLinkClickListener = { link ->
-                jobScope.launch {
-                    LinkLauncher.openUrl(service, link.url, link.sourcePackage, link.sourceText)
+            onLinksGroupClickListener = { groupLinks ->
+                val distinct = groupLinks.distinctBy { it.url }
+                if (distinct.size > 1) {
                     onLinkOpened()
                     stop()
+                    com.slideindex.app.clipboardoverlay.ClipboardLinkPickerOverlay.showRadarLinks(service, distinct)
+                } else if (distinct.isNotEmpty()) {
+                    val link = distinct.first()
+                    jobScope.launch {
+                        LinkLauncher.openUrl(service, link.url, link.sourcePackage, link.sourceText)
+                        onLinkOpened()
+                        stop()
+                    }
                 }
             }
         }
@@ -110,7 +118,7 @@ class ScreenContentLinkRadar(
                     }.getOrNull()
                     if (shortRuleName != null && scope === jobScope) {
                         view.post {
-                            view.updateActionPrompt(groupId, "正在解析 ($shortRuleName)…", null)
+                            view.updateActionPrompt(groupId, "正在解析 ($shortRuleName)…", null, loading = true)
                         }
                     }
                     val preview = previewLinkTarget(
@@ -122,7 +130,7 @@ class ScreenContentLinkRadar(
                     if (scope !== jobScope) return@launch
                     val label = if (preview != null) "在 ${preview.label} 中打开" else "打开链接"
                     view.post {
-                        view.updateActionPrompt(groupId, label, preview?.rawIcon)
+                        view.updateActionPrompt(groupId, label, preview?.rawIcon, loading = false)
                     }
                 } catch (cancelled: CancellationException) {
                     throw cancelled

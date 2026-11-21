@@ -246,7 +246,7 @@ object LinkRadarOverlay {
                 LinkDispatcher.pendingShortLinkRuleName(service, primary.url)
             }.getOrNull()
             if (shortRuleName != null && targets.isNotEmpty()) {
-                view.show(hits, "正在解析短链 ($shortRuleName)…")
+                view.show(hits, "正在解析短链 ($shortRuleName)…", icon = null, loading = true)
             }
             val preview = try {
                 predict(service, primary)
@@ -259,7 +259,7 @@ object LinkRadarOverlay {
             }
             isResolvingShortLink = false
             if (targets.isNotEmpty()) {
-                view.show(hits, preview.first, preview.second)
+                view.show(hits, preview.first, preview.second, loading = false)
                 onTargetBannerReady?.invoke(radarHoverHoldMs)
             }
         }
@@ -306,6 +306,10 @@ object LinkRadarOverlay {
         dispatched = true
         clearTarget()
         overlayView?.clear()
+        if (hits.size > 1) {
+            com.slideindex.app.clipboardoverlay.ClipboardLinkPickerOverlay.showRadarLinks(service, hits)
+            return true
+        }
         val link = hits.first()
         dispatchScope.launch {
             LinkLauncher.openUrl(service, link.url, link.sourcePackage, link.sourceText)

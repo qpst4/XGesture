@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="extension_shortcut_test_title">Test shortcuts</string>
-    <string name="extension_shortcut_test_subtitle">Scan published dynamic/pinned shortcuts (requires Shizuku or Root)</string>
+    <string name="extension_shortcut_test_title">Shortcuts</string>
+    <string name="extension_shortcut_test_subtitle">Scan static, dynamic and pinned shortcuts; launch, save or pin them</string>
 
-    <string name="shortcut_test_title">Shortcut test</string>
+    <string name="shortcut_test_title">Shortcuts</string>
     <string name="shortcut_test_tip">Read-only scan of the system shortcut service via dumpsys shortcut. Shizuku or Root is required. Tapping a shortcut only launches it through the system API.</string>
     <string name="shortcut_test_search_hint">Search app, package, or shortcut</string>
     <string name="shortcut_test_status_loading">Scanning…</string>
