@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -24,6 +25,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material3.Icon
+import androidx.compose.ui.res.painterResource
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -112,10 +114,10 @@ internal fun LinkAppIcon(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.Default.Apps,
+                painter = painterResource(id = R.drawable.ic_hub_primary),
                 contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                modifier = Modifier.size(size * 0.58f),
+                tint = MiuixTheme.colorScheme.primary,
             )
         }
     }
@@ -503,14 +505,13 @@ internal fun LinkTargetAppPickerBottomSheet(
     onDismissRequest: () -> Unit,
     onSelectApp: (packageName: String, label: String) -> Unit,
 ) {
-    if (!show) return
-
     val context = LocalContext.current
     var isLoading by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
     var apps by remember { mutableStateOf<List<InstalledAppOption>>(emptyList()) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(show) {
+        if (!show) return@LaunchedEffect
         isLoading = true
         withContext(Dispatchers.IO) {
             val pm = context.packageManager
@@ -540,7 +541,7 @@ internal fun LinkTargetAppPickerBottomSheet(
     }
 
     MiuixBottomSheet(
-        show = true,
+        show = show,
         title = "选择目标应用",
         onDismissRequest = onDismissRequest,
     ) {
@@ -584,7 +585,7 @@ internal fun LinkTargetAppPickerBottomSheet(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 380.dp),
+                            .fillMaxHeight(0.78f),
                     ) {
                         items(filteredApps, key = { it.packageName }) { app ->
                             val isCurrent = app.packageName == selectedPackage

@@ -92,23 +92,16 @@ internal fun <T> SegmentedControl(
     val isDark = isSystemInDarkTheme()
     val selectedIndex = items.indexOf(selected).coerceAtLeast(0)
 
-    val containerBg = containerColor ?: if (isDark) {
-        Color(0xFF1E2024)
-    } else {
-        MiuixTheme.colorScheme.surfaceContainerHigh
-    }
-    val containerBorderColor = if (isDark) {
-        Color(0x26FFFFFF)
-    } else {
-        MiuixTheme.colorScheme.dividerLine.copy(alpha = 0.45f)
-    }
+    // 对齐 Miuix TabRowContour 规范：底槽采用 surface，滑块采用 surfaceContainer
+    val containerBg = containerColor ?: MiuixTheme.colorScheme.surface
+    val containerBorderColor = MiuixTheme.colorScheme.dividerLine.copy(alpha = if (isDark) 0.5f else 0.7f)
 
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
             .height(42.dp)
             .border(
-                width = 1.dp,
+                width = 0.8.dp,
                 color = containerBorderColor,
                 shape = RoundedCornerShape(14.dp),
             )
@@ -148,20 +141,42 @@ internal fun <T> SegmentedControl(
             lastSelectedIndex = selectedIndex
         }
 
-        val pillBg = indicatorColor ?: if (isDark) Color(0xFF383A3F) else MiuixTheme.colorScheme.surface
-        val pillBorderColor = if (isDark) Color(0x28FFFFFF) else Color(0x12000000)
+        val pillBg = indicatorColor ?: MiuixTheme.colorScheme.surfaceContainer
+        val pillBorderColor = if (isDark) Color(0x28FFFFFF) else MiuixTheme.colorScheme.dividerLine.copy(alpha = 0.35f)
 
-        // 选中实体滑块 (带立体环境弥散微阴影与 0.5dp 精细描边)
+        // 2. 选项之间的微垂直分割线 (饱满 18dp 矩形，100% Miuix dividerLine，未选中项之间清晰可见)
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            labels.forEachIndexed { index, _ ->
+                if (index > 0) {
+                    val shouldShow = index != selectedIndex && (index - 1) != selectedIndex
+                    Box(
+                        modifier = Modifier
+                            .offset(x = (-0.5).dp)
+                            .width(1.dp)
+                            .height(18.dp)
+                            .background(
+                                color = if (shouldShow) MiuixTheme.colorScheme.dividerLine else Color.Transparent,
+                            ),
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+            }
+        }
+
+        // 3. 选中实体滑块 (带立体环境弥散微阴影与 0.5dp 精细描边)
         Box(
             modifier = Modifier
                 .offset(x = indicatorOffset)
                 .width(tabWidth)
                 .fillMaxHeight()
                 .shadow(
-                    elevation = if (isDark) 2.dp else 2.5.dp,
+                    elevation = if (isDark) 1.5.dp else 2.dp,
                     shape = RoundedCornerShape(10.5.dp),
-                    spotColor = if (isDark) Color.Black.copy(alpha = 0.4f) else Color(0x28000000),
-                    ambientColor = if (isDark) Color.Black.copy(alpha = 0.2f) else Color(0x18000000),
+                    spotColor = if (isDark) Color.Black.copy(alpha = 0.35f) else Color(0x22000000),
+                    ambientColor = if (isDark) Color.Black.copy(alpha = 0.2f) else Color(0x14000000),
                 )
                 .border(
                     width = 0.5.dp,
@@ -174,37 +189,7 @@ internal fun <T> SegmentedControl(
                 ),
         )
 
-        // 2. 选项之间的微垂直分割线 (靠近选中药丸时平滑淡出消隐)
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            labels.forEachIndexed { index, _ ->
-                if (index > 0) {
-                    val isNearSelected = (index == selectedIndex) || (index - 1 == selectedIndex)
-                    val dividerAlpha by animateFloatAsState(
-                        targetValue = if (isNearSelected) 0f else 1f,
-                        animationSpec = if (!isInitialized) snap() else tween(150),
-                        label = "segmentedDividerAlpha",
-                    )
-                    Box(
-                        modifier = Modifier
-                            .offset(x = (-0.5).dp)
-                            .width(1.dp)
-                            .height(13.dp)
-                            .background(
-                                color = MiuixTheme.colorScheme.dividerLine.copy(
-                                    alpha = (if (isDark) 0.35f else 0.5f) * dividerAlpha,
-                                ),
-                                shape = CircleShape,
-                            ),
-                    )
-                }
-                Spacer(modifier = Modifier.weight(1f))
-            }
-        }
-
-        // 3. 上层文字与交互点击层 (平滑文本变色 + 触觉震动反馈)
+        // 4. 上层文字与交互点击层 (平滑文本变色 + 触觉震动反馈)
         val selectedColor = MiuixTheme.colorScheme.primary
         val unselectedColor = MiuixTheme.colorScheme.onSurfaceVariantSummary
 

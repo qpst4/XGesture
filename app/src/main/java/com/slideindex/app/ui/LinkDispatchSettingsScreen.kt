@@ -360,11 +360,11 @@ fun LinkDispatchSettingsScreen(
                         } else {
                             // 1. 分发规则（短链重分发）
                             if (dispatchRules.isNotEmpty()) {
-                                Box(modifier = Modifier.padding(start = 24.dp, top = 8.dp, bottom = 2.dp)) {
+                                Box(modifier = Modifier.padding(start = 28.dp, top = 10.dp, bottom = 4.dp)) {
                                     MiuixText(
                                         text = "短链重分发规则 (${dispatchRules.size} 条)",
-                                        style = MiuixTheme.textStyles.footnote2,
-                                        fontWeight = FontWeight.Bold,
+                                        style = MiuixTheme.textStyles.title4,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = MiuixTheme.colorScheme.primary,
                                     )
                                 }
@@ -389,11 +389,11 @@ fun LinkDispatchSettingsScreen(
 
                             // 2. 跳转规则（直达目标应用）
                             if (redirectRules.isNotEmpty()) {
-                                Box(modifier = Modifier.padding(start = 24.dp, top = 8.dp, bottom = 2.dp)) {
+                                Box(modifier = Modifier.padding(start = 28.dp, top = 10.dp, bottom = 4.dp)) {
                                     MiuixText(
                                         text = "应用直达跳转规则 (${redirectRules.size} 条)",
-                                        style = MiuixTheme.textStyles.footnote2,
-                                        fontWeight = FontWeight.Bold,
+                                        style = MiuixTheme.textStyles.title4,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = MiuixTheme.colorScheme.primary,
                                     )
                                 }

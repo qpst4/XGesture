@@ -2,6 +2,7 @@ package com.slideindex.app.ui.link
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -356,39 +357,26 @@ fun EditLinkRuleScreen(
                     )
                 },
             )
-            add(
-                CardItem("template") {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 6.dp),
-                    ) {
-                        MiuixLabeledTextField(
-                            value = template,
-                            onValueChange = { template = it },
-                            label = "链接改写模板",
-                            useLabelAsPlaceholder = false,
-                            singleLine = true,
-                        )
-                        MiuixText(
-                            text = "留空则直接打开原链接；正则匹配时可用 \$0–\$9 引用分组，或使用 {url}、{1}",
-                            style = MiuixTheme.textStyles.footnote2,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            modifier = Modifier.padding(top = 4.dp),
-                        )
-                    }
-                },
-            )
-            if (extractPattern.isNotBlank() || template.contains("{1}")) {
+            if (targetPackage.isNotBlank()) {
                 add(
-                    CardItem("extract_pattern") {
-                        Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
+                    CardItem("target_component") {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 6.dp),
+                        ) {
                             MiuixLabeledTextField(
-                                value = extractPattern,
-                                onValueChange = { extractPattern = it },
-                                label = "参数提取正则（提取 {1} 分组）",
+                                value = component,
+                                onValueChange = { component = it },
+                                label = "目标活动 (Activity，可选)",
                                 useLabelAsPlaceholder = false,
                                 singleLine = true,
+                            )
+                            MiuixText(
+                                text = "留空则由系统默认路由；支持指定特定 Activity 类名",
+                                style = MiuixTheme.textStyles.footnote2,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                modifier = Modifier.padding(top = 4.dp),
                             )
                         }
                     },
@@ -401,7 +389,159 @@ fun EditLinkRuleScreen(
             items = targetCardItems,
         )
 
-        // 3. 处理方式与高级
+        // 3. 重构模板 (可选)
+        settingsLazySmallTitle(
+            key = "edit_rule_title_template",
+            title = "重构模板 (可选)",
+        )
+
+        val templateCardItems = buildList {
+            add(
+                CardItem("reconstruct_card") {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        // 1. 正则提取输入框
+                        MiuixLabeledTextField(
+                            value = extractPattern,
+                            onValueChange = { extractPattern = it },
+                            label = "正则提取 (留空提取整个)",
+                            useLabelAsPlaceholder = false,
+                            singleLine = true,
+                        )
+
+                        // 2. 重构链接输入框
+                        MiuixLabeledTextField(
+                            value = template,
+                            onValueChange = { template = it },
+                            label = "重构链接 (搭配变量使用)",
+                            useLabelAsPlaceholder = false,
+                            singleLine = true,
+                        )
+
+                        // 3. 变换工具选项
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            MiuixText(
+                                text = "变换选项",
+                                style = MiuixTheme.textStyles.footnote2,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                            val transforms = listOf(
+                                ":url_dec" to "URL解码",
+                                ":url_enc" to "URL编码",
+                                ":b64_dec" to "B64解码",
+                                ":b64_enc" to "B64编码",
+                            )
+                            transforms.forEach { (tag, label) ->
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(MiuixTheme.colorScheme.surface)
+                                        .border(
+                                            0.5.dp,
+                                            MiuixTheme.colorScheme.dividerLine.copy(alpha = 0.5f),
+                                            RoundedCornerShape(6.dp),
+                                        )
+                                        .clickable {
+                                            template = if (template.contains("{1}")) {
+                                                template.replace("{1}", "{1$tag}")
+                                            } else if (template.contains("{url}")) {
+                                                template.replace("{url}", "{url$tag}")
+                                            } else {
+                                                template + "{url$tag}"
+                                            }
+                                        }
+                                        .padding(horizontal = 7.dp, vertical = 3.dp),
+                                ) {
+                                    MiuixText(
+                                        text = label,
+                                        style = MiuixTheme.textStyles.footnote2,
+                                        color = MiuixTheme.colorScheme.primary,
+                                    )
+                                }
+                            }
+                        }
+
+                        // 4. 常用变量说明与点击快速插入
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            MiuixText(
+                                text = "常用变量 (点击插入)",
+                                style = MiuixTheme.textStyles.footnote2,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                val vars = listOf(
+                                    "{url}" to "完整链接",
+                                    "{1}" to "提取组1",
+                                    "{2}" to "提取组2",
+                                    "\$1" to "正则组1",
+                                    "\$2" to "正则组2",
+                                    "{host}" to "域名",
+                                    "{path}" to "路径",
+                                    "{query}" to "参数",
+                                )
+                                vars.forEach { (tag, desc) ->
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(MiuixTheme.colorScheme.surface)
+                                            .border(
+                                                0.5.dp,
+                                                MiuixTheme.colorScheme.dividerLine.copy(alpha = 0.5f),
+                                                RoundedCornerShape(6.dp),
+                                            )
+                                            .clickable { template += tag }
+                                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        ) {
+                                            MiuixText(
+                                                text = tag,
+                                                style = MiuixTheme.textStyles.footnote2,
+                                                fontFamily = FontFamily.Monospace,
+                                                color = MiuixTheme.colorScheme.primary,
+                                                fontWeight = FontWeight.Bold,
+                                            )
+                                            MiuixText(
+                                                text = desc,
+                                                style = MiuixTheme.textStyles.footnote2,
+                                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+            )
+        }
+
+        groupedCardItems(
+            keyPrefix = "edit_rule_template_group",
+            items = templateCardItems,
+        )
+
+        // 4. 处理方式与高级
         settingsLazySmallTitle(
             key = "edit_rule_title_advanced",
             title = "处理方式与高级",
@@ -525,12 +665,11 @@ fun EditLinkRuleScreen(
     )
 
     // 顶栏实时仿真测试弹窗
-    if (showTestBottomSheet) {
-        LinkRuleLiveTestBottomSheet(
-            candidateRule = currentCandidateRule,
-            onDismissRequest = { showTestBottomSheet = false },
-        )
-    }
+    LinkRuleLiveTestBottomSheet(
+        show = showTestBottomSheet,
+        candidateRule = currentCandidateRule,
+        onDismissRequest = { showTestBottomSheet = false },
+    )
 
     // 删除确认弹窗
     MiuixConfirmDialog(
@@ -560,6 +699,7 @@ fun EditLinkRuleScreen(
  */
 @Composable
 private fun LinkRuleLiveTestBottomSheet(
+    show: Boolean,
     candidateRule: LinkDispatchRule,
     onDismissRequest: () -> Unit,
 ) {
@@ -574,7 +714,8 @@ private fun LinkRuleLiveTestBottomSheet(
     var traceResult by remember { mutableStateOf<LinkRouteTrace?>(null) }
     var isSimulating by remember { mutableStateOf(false) }
 
-    LaunchedEffect(testUrl, candidateRule) {
+    LaunchedEffect(show, testUrl, candidateRule) {
+        if (!show) return@LaunchedEffect
         val trimmed = testUrl.trim()
         if (trimmed.isBlank()) {
             traceResult = null
@@ -588,7 +729,7 @@ private fun LinkRuleLiveTestBottomSheet(
     }
 
     MiuixBottomSheet(
-        show = true,
+        show = show,
         title = "规则实时仿真测试",
         onDismissRequest = onDismissRequest,
     ) {
