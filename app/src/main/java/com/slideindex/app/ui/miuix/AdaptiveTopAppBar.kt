@@ -37,7 +37,6 @@ fun AdaptiveTopAppBar(
     progressiveBlur: Boolean = LocalTopAppBarBlurStyle.current == TopAppBarBlurStyle.PROGRESSIVE,
     scrollBehavior: ScrollBehavior? = null,
     contentUnderBar: Boolean? = null,
-    visualContentOffset: (() -> Float)? = null,
     defaultWindowInsetsPadding: Boolean = true,
     titleAlpha: () -> Float = { 1f },
     navigationIcon: @Composable () -> Unit = {},
@@ -47,11 +46,18 @@ fun AdaptiveTopAppBar(
     val surfaceColor = MiuixTheme.colorScheme.surface
     val bandBrush = remember(surfaceColor) { GlassTopAppBarDefaults.bandBrush(surfaceColor) }
     // 显式 overlap 状态优先（对齐 miuix 示例 PageUtils / IconPage：用 listState.canScrollBackward）。
-    // 程序化滚动（如"跳转动作"页进页面自动定位到当前动作）不会产生 nestedScroll 事件，
-    // 只靠 contentOffset 会一直读到 0 → 顶栏永远透明；这里让页面能直接声明"正文已压在栏下"。
+    // 同时叠加 overscrollOffset < -1f，保证短页面/到顶越界向上拉动时顶栏材质与渐进模糊能正常浮起。
     val contentScrolled by remember(scrollBehavior, contentUnderBar) {
         derivedStateOf {
-            contentUnderBar ?: (scrollBehavior?.state?.contentOffset?.let { it < 0f } ?: true)
+            val state = scrollBehavior?.state
+            val isOverscrolled = state?.let { it.overscrollOffset < -1f } ?: false
+            if (contentUnderBar != null) {
+                contentUnderBar || isOverscrolled
+            } else if (state != null) {
+                state.contentOffset < -1f || isOverscrolled
+            } else {
+                true
+            }
         }
     }
 
@@ -66,7 +72,6 @@ fun AdaptiveTopAppBar(
         bandBrush = bandBrush,
         bandOverhang = GlassTopAppBarDefaults.BandOverhang,
         scrollBehavior = scrollBehavior,
-        visualContentOffset = visualContentOffset,
         defaultWindowInsetsPadding = defaultWindowInsetsPadding,
         titleAlpha = titleAlpha,
         navigationIcon = navigationIcon,

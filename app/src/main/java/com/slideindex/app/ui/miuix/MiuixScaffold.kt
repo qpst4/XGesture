@@ -83,7 +83,6 @@ internal fun MiuixGlassTopBar(
     actions: @Composable RowScope.() -> Unit,
     bottomContent: @Composable () -> Unit = {},
     contentUnderBar: Boolean? = null,
-    visualContentOffset: (() -> Float)? = null,
 ) {
     val contentStartInset = LocalMainNavContentStartInset.current
     Box(Modifier.fillMaxWidth()) {
@@ -95,45 +94,10 @@ internal fun MiuixGlassTopBar(
             titleAlpha = LocalMainNavTitleAlpha.current,
             scrollBehavior = scrollBehavior,
             contentUnderBar = contentUnderBar,
-            visualContentOffset = visualContentOffset,
             navigationIcon = navigationIcon,
             actions = actions,
             bottomContent = bottomContent,
         )
-    }
-}
-
-/**
- * 列表滚动位置 → 顶栏视觉偏移（对齐 miuix 示例 `IconPage` 的写法）。
- *
- * `scrollBehavior.state.contentOffset` 只由 nestedScroll 累加，**程序化 `scrollToItem`
- * 不产生事件**，所以"进页面自动定位到当前动作"这类页面背景带/渐进模糊恒为透明。
- * 这里改用列表真实位置合成连续负值（叠加弹性越界位移），让材质随内容位置出现。
- */
-@Composable
-internal fun rememberListVisualContentOffset(
-    listState: LazyListState,
-    scrollBehavior: ScrollBehavior,
-): () -> Float {
-    val density = LocalDensity.current
-    val saturatedDistancePx = remember(density) {
-        with(density) {
-            maxOf(
-                GlassTopAppBarDefaults.RampStart + GlassTopAppBarDefaults.RampDistance,
-                GlassTopAppBarDefaults.ProgressiveBlurRampDistance,
-            ).toPx()
-        }
-    }
-    return remember(listState, scrollBehavior, saturatedDistancePx) {
-        {
-            val baseOffset = if (listState.firstVisibleItemIndex == 0) {
-                -listState.firstVisibleItemScrollOffset.toFloat()
-            } else {
-                // 已有整项滚出屏幕，位移足够饱和（列表项高度远大于 ramp 距离）。
-                -saturatedDistancePx
-            }
-            baseOffset + scrollBehavior.state.overscrollOffset
-        }
     }
 }
 
@@ -203,7 +167,6 @@ fun MiuixListScaffold(
     val contentUnderBar = remember(resolvedListState) {
         derivedStateOf { resolvedListState.canScrollBackward }
     }
-    val visualContentOffset = rememberListVisualContentOffset(resolvedListState, scrollBehavior)
     // 让顶栏 actions 与列表项里的玻璃浮层都能取到页面背板（玻璃菜单采样用）。
     CompositionLocalProvider(
         LocalMiuixScreenBackdrop provides barBackdrop,
@@ -218,7 +181,6 @@ fun MiuixListScaffold(
                     scrollBehavior = scrollBehavior,
                     backdrop = barBackdrop,
                     contentUnderBar = contentUnderBar.value,
-                    visualContentOffset = visualContentOffset,
                     navigationIcon = { navigationIcon?.invoke() },
                     actions = actions,
                     bottomContent = bottomContent,
@@ -292,7 +254,6 @@ fun MiuixSettingsScreenScaffold(
     val contentUnderBar = remember(resolvedListState) {
         derivedStateOf { resolvedListState.canScrollBackward }
     }
-    val visualContentOffset = rememberListVisualContentOffset(resolvedListState, scrollBehavior)
     CompositionLocalProvider(
         LocalMiuixScreenBackdrop provides barBackdrop,
         LocalMiuixContentUnderBar provides contentUnderBar,
@@ -308,7 +269,6 @@ fun MiuixSettingsScreenScaffold(
                     scrollBehavior = scrollBehavior,
                     backdrop = if (overlayMode) null else barBackdrop,
                     contentUnderBar = contentUnderBar.value,
-                    visualContentOffset = visualContentOffset,
                     navigationIcon = {
                         if (onBack != null) {
                             MiuixGlassBackNavigationIcon(onBack)
