@@ -46,6 +46,12 @@
 [![Download Lite APK](https://img.shields.io/badge/下载%20Lite%20轻量包-体积小巧-0969DA?style=for-the-badge&logo=android&logoColor=white)](https://github.com/qpst4/XGesture/releases/latest)
 [![Get on Obtainium](https://img.shields.io/badge/Obtainium-自动更新订阅-6340E6?style=for-the-badge&logo=android&logoColor=white)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.slideindex.app%22%2C%22url%22%3A%22https%3A//github.com/qpst4/XGesture%22%2C%22author%22%3A%22qpst4%22%2C%22name%22%3A%22XGesture%22%7D)
 
+<br /><br />
+
+<a href="https://rookieenough.github.io/Orion-Data/app/?id=xgesture">
+  <img src="https://raw.githubusercontent.com/RookieEnough/Orion-Store/refs/heads/main/assets/orion-badge.png" alt="Get it on Orion Store" height="55">
+</a>
+
 </div>
 
 | 产物版本 | 适用场景 | 说明 |
@@ -57,7 +63,8 @@
 > 两个版本的 `applicationId` 均为 `com.slideindex.app`，支持直接相互覆盖安装，配置无缝保留。
 
 > [!NOTE]
-> **自动更新推荐**：手机安装 [Obtainium](https://github.com/ImranR98/Obtainium) 后，点击上方「Obtainium 自动更新订阅」按钮即可一键添加，无需应用商店也能在发布新版时自动检测并无缝升级。
+> - **Orion Store 应用市场**：已上架开源无追踪的 Material 3 市场 [Orion Store](https://rookieenough.github.io/Orion-Data/app/?id=xgesture)，支持一键安装与静默/通知更新。
+> - **Obtainium 自动更新订阅**：手机安装 [Obtainium](https://github.com/ImranR98/Obtainium) 后，点击上方「Obtainium 自动更新订阅」按钮即可一键添加，无需应用商店也能在发布新版时自动检测并无缝升级。
 
 ---
 

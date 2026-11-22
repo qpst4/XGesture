@@ -46,6 +46,12 @@
 [![Download Lite APK](https://img.shields.io/badge/Lite%20版をダウンロード-軽量パッケージ-0969DA?style=for-the-badge&logo=android&logoColor=white)](https://github.com/qpst4/XGesture/releases/latest)
 [![Get on Obtainium](https://img.shields.io/badge/Obtainium-自動更新サブスク-6340E6?style=for-the-badge&logo=android&logoColor=white)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.slideindex.app%22%2C%22url%22%3A%22https%3A//github.com/qpst4/XGesture%22%2C%22author%22%3A%22qpst4%22%2C%22name%22%3A%22XGesture%22%7D)
 
+<br /><br />
+
+<a href="https://rookieenough.github.io/Orion-Data/app/?id=xgesture">
+  <img src="https://raw.githubusercontent.com/RookieEnough/Orion-Store/refs/heads/main/assets/orion-badge.png" alt="Get it on Orion Store" height="55">
+</a>
+
 </div>
 
 | ビルド | 用途 | 説明 |
@@ -57,7 +63,8 @@
 > 両バージョンの `applicationId` は `com.slideindex.app` で共通。直接上書きインストールでき、設定は保持されます。
 
 > [!NOTE]
-> **Obtainium による自動更新**: スマートフォンに [Obtainium](https://github.com/ImranR98/Obtainium) をインストールしている場合、上記の「Obtainium」ボタンをタップするだけで追加でき、アプリストアを介さずに GitHub Releases からシームレスに自動更新できます。
+> - **Orion Store**: オープンソースでトラッカーのない Material 3 アプリストア [Orion Store](https://rookieenough.github.io/Orion-Data/app/?id=xgesture) からワンタップでインストールおよび自動更新できます。
+> - **Obtainium による自動更新**: スマートフォンに [Obtainium](https://github.com/ImranR98/Obtainium) をインストールしている場合、上記の「Obtainium」ボタンをタップするだけで追加でき、アプリストアを介さずに GitHub Releases からシームレスに自動更新できます。
 
 ---
 

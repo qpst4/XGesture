@@ -46,6 +46,12 @@ Easily trigger **50+ system actions** via customizable multi-angle screen-edge s
 [![Download Lite APK](https://img.shields.io/badge/Download%20Lite%20APK-Compact%20Size-0969DA?style=for-the-badge&logo=android&logoColor=white)](https://github.com/qpst4/XGesture/releases/latest)
 [![Get on Obtainium](https://img.shields.io/badge/Get%20on%20Obtainium-Auto_Update-6340E6?style=for-the-badge&logo=android&logoColor=white)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.slideindex.app%22%2C%22url%22%3A%22https%3A//github.com/qpst4/XGesture%22%2C%22author%22%3A%22qpst4%22%2C%22name%22%3A%22XGesture%22%7D)
 
+<br /><br />
+
+<a href="https://rookieenough.github.io/Orion-Data/app/?id=xgesture">
+  <img src="https://raw.githubusercontent.com/RookieEnough/Orion-Store/refs/heads/main/assets/orion-badge.png" alt="Get it on Orion Store" height="55">
+</a>
+
 </div>
 
 | Variant | Scenario | Description |
@@ -57,7 +63,8 @@ Easily trigger **50+ system actions** via customizable multi-angle screen-edge s
 > Both packages share the same `applicationId` (`com.slideindex.app`), allowing direct overwriting installation without losing configurations.
 
 > [!NOTE]
-> **Auto-Update via Obtainium**: If you have [Obtainium](https://github.com/ImranR98/Obtainium) installed on your phone, click the **Get on Obtainium** button above to subscribe and receive automatic update notifications directly from GitHub Releases.
+> - **Orion Store**: Install and update seamlessly via [Orion Store](https://rookieenough.github.io/Orion-Data/app/?id=xgesture), an open-source Material 3 Android app store.
+> - **Auto-Update via Obtainium**: If you have [Obtainium](https://github.com/ImranR98/Obtainium) installed on your phone, click the **Get on Obtainium** button above to subscribe and receive automatic update notifications directly from GitHub Releases.
 
 ---
 
