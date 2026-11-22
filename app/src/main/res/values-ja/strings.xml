@@ -413,7 +413,7 @@
     <string name="permissions_section_vendor">バックグラウンド常駐</string>
     <string name="permissions_section_optional">オンデマンド権限</string>
     <string name="permissions_section_manifest">マニフェスト権限</string>
-    <string name="permissions_manifest_hint">全アプリの照会と起動ブロードキャストはインストール時に宣言されるため、手動での許可は不要です。</string>
+    <string name="permissions_manifest_hint">起動ブロードキャストとフォアグラウンドサービスはインストール時に宣言されるため、手動での許可は不要です。アプリ一覧の照会は一部のシステムで手動許可が必要です。</string>
     <string name="permission_state_granted">許可済み</string>
     <string name="permission_state_missing">未許可</string>
     <string name="permissions_optional_hint">対応機能を使うときに許可してください。オフのままでもジェスチャーやパネルには影響しません。</string>

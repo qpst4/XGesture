@@ -454,7 +454,7 @@
     <string name="permissions_section_vendor">Background keep-alive</string>
     <string name="permissions_section_optional">On-demand permissions</string>
     <string name="permissions_section_manifest">Manifest permissions</string>
-    <string name="permissions_manifest_hint">Query-all-packages and boot broadcast are declared at install time; no manual grant needed.</string>
+    <string name="permissions_manifest_hint">Boot broadcast and foreground service are declared at install time; on some systems the app list permission needs a manual grant.</string>
     <string name="permission_state_granted">Granted</string>
     <string name="permission_state_missing">Not granted</string>
     <string name="permissions_optional_hint">Grant these when you use the related feature; leaving them off does not affect gestures or panels.</string>

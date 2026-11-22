@@ -413,7 +413,7 @@
     <string name="permissions_section_vendor">الإبقاء في الخلفية</string>
     <string name="permissions_section_optional">أذونات عند الطلب</string>
     <string name="permissions_section_manifest">أذونات البيان</string>
-    <string name="permissions_manifest_hint">يُعلَن استعلام جميع التطبيقات وبث بدء التشغيل عند التثبيت؛ لا حاجة إلى منحها يدويًا.</string>
+    <string name="permissions_manifest_hint">يُعلَن بث بدء التشغيل وخدمة الواجهة الأمامية عند التثبيت؛ لا حاجة إلى منحهما يدويًا. وفي بعض الأنظمة تحتاج قراءة قائمة التطبيقات إلى منح يدوي.</string>
     <string name="permission_state_granted">ممنوح</string>
     <string name="permission_state_missing">غير ممنوح</string>
     <string name="permissions_optional_hint">امنحها عند استخدام الميزة المقابلة؛ تركها معطلة لا يؤثر على الإيماءات أو اللوحات.</string>

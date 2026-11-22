@@ -83,8 +83,12 @@ private fun readOptionalStates(context: Context): OptionalPermissionStates = Opt
  * 「后台与权限」：由原「特权执行方式」与「App 保活」两页合并而来。
  *
  * 分组顺序按「怎么拿到这项授权」排，而不是按功能重要性：
- * 提权通道（选一条通道）→ 核心授权（缺少就跑不动的六项）→ 安全与调试（ADB / Shizuku 授予）
- * → 厂商后台限制（系统读不到状态，只给入口）→ 按需权限（用到才给）→ 扩展模块 → 清单声明。
+ * 提权通道（选一条通道）→ 核心授权（缺了就跑不动或功能残缺的七项）→ 安全与调试（ADB / Shizuku 授予）
+ * → 厂商后台限制（系统读不到状态，只给入口）→ 按需权限（用到才给）→ 清单声明。
+ *
+ * 「读取应用列表」在 AOSP 上是安装期普通权限，但小米系 ROM 把它做成用户可撤销的隐私开关
+ * （撤销后只能枚举到个位数应用，侧边栏 / 快速启动 / 应用索引一起残），所以它必须留在
+ * 核心授权里给状态与入口，不能只写进底部清单声明。
  *
  * 与首页红卡的分工：红卡只在缺东西时出现，负责催与一键修；本页常驻，负责看全貌。
  */
@@ -132,6 +136,10 @@ fun BackgroundPermissionsScreen(
     val optional = remember(refreshTick) { readOptionalStates(context) }
     val readLogsGranted = remember(refreshTick) {
         ClipboardPermissionHelper.hasReadLogsPermission(context)
+    }
+    // 包可见性没有权限码可查，只能实际枚举一次（与引导页 PermissionHelper.hasAppListPermission 同源）。
+    val appListGranted = remember(refreshTick) {
+        PermissionHelper.hasAppListPermission(context)
     }
 
     val channelSectionTitle = stringResource(R.string.permissions_section_channel)
@@ -237,6 +245,16 @@ fun BackgroundPermissionsScreen(
                             onClick = {
                                 context.startActivity(PermissionHelper.overlaySettingsIntent(context))
                             },
+                        )
+                    },
+                )
+                add(
+                    settingsCardScopeItem("core-app-list") {
+                        PermissionStatusRow(
+                            title = stringResource(R.string.onboarding_permission_app_list_title),
+                            detail = stringResource(R.string.onboarding_permission_app_list_short),
+                            granted = appListGranted,
+                            onClick = { PermissionHelper.requestAppListPermission(context) },
                         )
                     },
                 )

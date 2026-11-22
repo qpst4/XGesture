@@ -427,7 +427,7 @@
     <string name="permissions_section_vendor">后台保活</string>
     <string name="permissions_section_optional">按需权限</string>
     <string name="permissions_section_manifest">清单权限</string>
-    <string name="permissions_manifest_hint">查询所有应用、开机广播、前台服务随安装声明，无需手动授权。</string>
+    <string name="permissions_manifest_hint">开机广播、前台服务随安装声明，无需手动授权；读取应用列表在部分系统需手动允许。</string>
     <string name="permission_state_granted">已开启</string>
     <string name="permission_state_missing">未开启</string>
     <string name="permissions_optional_hint">用到对应功能时再开，不开启不影响手势与面板。</string>

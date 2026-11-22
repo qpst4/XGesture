@@ -440,7 +440,7 @@
     <string name="permissions_section_vendor">Поддержание работы в фоне</string>
     <string name="permissions_section_optional">Разрешения по требованию</string>
     <string name="permissions_section_manifest">Разрешения манифеста</string>
-    <string name="permissions_manifest_hint">Запрос всех приложений и широковещательное сообщение о загрузке объявляются при установке; вручную разрешать их не нужно.</string>
+    <string name="permissions_manifest_hint">Широковещательное сообщение о загрузке и служба переднего плана объявляются при установке; вручную разрешать их не нужно. В некоторых системах доступ к списку приложений нужно разрешать вручную.</string>
     <string name="permission_state_granted">Предоставлено</string>
     <string name="permission_state_missing">Не предоставлено</string>
     <string name="permissions_optional_hint">Предоставляйте их при использовании соответствующей функции; если они отключены, это не влияет на жесты и панели.</string>
