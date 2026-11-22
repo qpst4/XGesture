@@ -10,6 +10,7 @@ import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLDecoder
+import java.net.URLEncoder
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.coroutineContext
 
@@ -74,36 +75,51 @@ object LinkDispatcher {
         extractGroups: List<String> = emptyList()
     ): String {
         val template = rule.template?.takeIf { it.isNotBlank() } ?: return url
-        val captureMatch = if (rule.matchType == LinkMatchType.REGEX && BACK_REFERENCE.containsMatchIn(template)) {
-            val regex = compile(rule.pattern) ?: return url
-            regex.find(url) ?: return url
+
+        // 1. 若匹配类型是正则，预先解析主 pattern 捕获组（供 $1..$9 消费，并在 extractGroups 为空时回退给 {1}..{9}）
+        val rulePatternMatch = if (rule.matchType == LinkMatchType.REGEX) {
+            val regex = compile(rule.pattern)
+            regex?.find(url)
         } else null
+
+        // 2. 确定有效捕获组：优先独立正则提取；若无独立提取则自动回退主正则捕获组（完全对齐 LinkGo 规范）
+        val fallbackGroups = rulePatternMatch?.groupValues?.drop(1).orEmpty()
+        val effectiveGroups = if (extractGroups.isNotEmpty()) extractGroups else fallbackGroups
 
         return TEMPLATE_PLACEHOLDER.replace(template) { match ->
             val backReference = match.groupValues[1]
             if (backReference.isNotEmpty()) {
-                return@replace captureMatch?.groupValues?.getOrNull(backReference.toInt()) ?: match.value
+                val index = backReference.toIntOrNull() ?: return@replace match.value
+                return@replace rulePatternMatch?.groupValues?.getOrNull(index) ?: match.value
             }
             val key = match.groupValues[2]
-            val raw = if (key == "url") url else
-                key.toIntOrNull()?.takeIf { it > 0 }?.let { extractGroups.getOrNull(it - 1) } ?: return@replace ""
+            val raw = if (key == "url") {
+                url
+            } else {
+                val index = key.toIntOrNull()?.takeIf { it > 0 } ?: return@replace ""
+                effectiveGroups.getOrNull(index - 1) ?: return@replace ""
+            }
             applyTransform(raw, match.groupValues[3].ifEmpty { null })
         }
     }
 
-    private fun applyTransform(value: String, transform: String?): String = when (transform) {
-        "url_dec" -> runCatching { URLDecoder.decode(value, "UTF-8") }.getOrDefault(value)
-        "b64_enc" -> Base64.encodeToString(value.toByteArray(), Base64.NO_WRAP)
-        "b64_dec" -> runCatching {
-            String(Base64.decode(value, Base64.DEFAULT))
-        }.getOrDefault(value)
-
-        "url_dec_b64_dec" -> runCatching {
-            val decoded = URLDecoder.decode(value, "UTF-8")
-            String(Base64.decode(decoded, Base64.DEFAULT))
-        }.getOrDefault(value)
-
-        else -> value
+    private fun applyTransform(value: String, transformSuffix: String?): String {
+        if (transformSuffix.isNullOrBlank()) return value
+        var current = value
+        // 将形如 "_url_enc"、"_url_dec_b64_dec" 等后缀按 '_' 切割依次流水线执行
+        val ops = transformSuffix.split('_').filter { it.isNotBlank() }
+        for (op in ops) {
+            current = when (op.lowercase()) {
+                "url_enc" -> runCatching { URLEncoder.encode(current, "UTF-8") }.getOrDefault(current)
+                "url_dec" -> runCatching { URLDecoder.decode(current, "UTF-8") }.getOrDefault(current)
+                "b64_enc" -> Base64.encodeToString(current.toByteArray(), Base64.NO_WRAP)
+                "b64_dec" -> runCatching {
+                    String(Base64.decode(current, Base64.DEFAULT))
+                }.getOrDefault(current)
+                else -> current
+            }
+        }
+        return current
     }
 
     fun isExempt(url: String, sourcePackage: String, exempts: List<LinkExemptDomain>): String? {
@@ -374,5 +390,5 @@ object LinkDispatcher {
     private val INVALID_PATTERN = Regex("(?!)")
     private val BACK_REFERENCE = Regex("""\$(\d)""")
     private val TEMPLATE_PLACEHOLDER =
-        Regex("""\$(\d)|\{(url|\d+)(?:_(url_dec|b64_enc|b64_dec|url_dec_b64_dec))?\}""")
+        Regex("""\$(\d)|\{(url|\d+)((?:_[a-zA-Z0-9]+)*)\}""")
 }

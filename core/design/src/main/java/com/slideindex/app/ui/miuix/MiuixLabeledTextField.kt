@@ -2,6 +2,7 @@ package com.slideindex.app.ui.miuix
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,6 +58,39 @@ fun MiuixLabeledTextField(
             }
     }
 
+    val lineLimits = if (singleLine) {
+        TextFieldLineLimits.SingleLine
+    } else {
+        TextFieldLineLimits.MultiLine(
+            minHeightInLines = minLines.coerceAtLeast(1),
+            maxHeightInLines = maxLines.coerceAtLeast(minLines),
+        )
+    }
+
+    TextField(
+        state = state,
+        modifier = modifier.fillMaxWidth(),
+        label = label,
+        useLabelAsPlaceholder = useLabelAsPlaceholder,
+        lineLimits = lineLimits,
+        insideMargin = insideMargin,
+    )
+}
+
+/**
+ * 直接接收 [TextFieldState] 的 Miuix 表单输入框，支持精确光标控制与原子编辑操作。
+ */
+@Composable
+fun MiuixLabeledTextField(
+    state: TextFieldState,
+    label: String,
+    modifier: Modifier = Modifier,
+    insideMargin: DpSize = TextFieldDefaults.InsideMargin,
+    singleLine: Boolean = true,
+    minLines: Int = 1,
+    maxLines: Int = if (singleLine) 1 else 6,
+    useLabelAsPlaceholder: Boolean = true,
+) {
     val lineLimits = if (singleLine) {
         TextFieldLineLimits.SingleLine
     } else {

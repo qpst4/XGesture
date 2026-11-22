@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentPaste
@@ -43,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -113,7 +115,16 @@ fun EditLinkRuleScreen(
     var pattern by remember(originalRule) { mutableStateOf(originalRule?.pattern.orEmpty()) }
     var targetPackage by remember(originalRule) { mutableStateOf(originalRule?.targetPackage.orEmpty()) }
     var component by remember(originalRule) { mutableStateOf(originalRule?.component.orEmpty()) }
-    var template by remember(originalRule) { mutableStateOf(originalRule?.template.orEmpty()) }
+    val templateState = rememberTextFieldState(originalRule?.template.orEmpty())
+    LaunchedEffect(originalRule) {
+        val initialTemplate = originalRule?.template.orEmpty()
+        if (templateState.text.toString() != initialTemplate) {
+            templateState.edit {
+                replace(0, length, initialTemplate)
+            }
+        }
+    }
+    val template = templateState.text.toString()
     var extractPattern by remember(originalRule) { mutableStateOf(originalRule?.extractPattern.orEmpty()) }
     var matchType by remember(originalRule) { mutableStateOf(originalRule?.matchType ?: LinkMatchType.CONTAINS) }
     var excludeFromRecents by remember(originalRule) { mutableStateOf(originalRule?.excludeFromRecents ?: false) }
@@ -450,8 +461,7 @@ fun EditLinkRuleScreen(
 
                         // 2. 重构链接输入框
                         MiuixLabeledTextField(
-                            value = template,
-                            onValueChange = { template = it },
+                            state = templateState,
                             label = "重构链接 (搭配变量使用)",
                             useLabelAsPlaceholder = false,
                             singleLine = false,
@@ -465,7 +475,7 @@ fun EditLinkRuleScreen(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             MiuixText(
-                                text = "变换选项 (点击应用到当前变量)",
+                                text = "变换选项 (光标处原位追加)",
                                 style = MiuixTheme.textStyles.footnote2,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
@@ -477,10 +487,10 @@ fun EditLinkRuleScreen(
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                             ) {
                                 val transforms = listOf(
+                                    "_url_enc" to "URL编码",
                                     "_url_dec" to "URL解码",
                                     "_b64_enc" to "B64编码",
                                     "_b64_dec" to "B64解码",
-                                    "_url_dec_b64_dec" to "解码+B64解",
                                 )
                                 transforms.forEach { (tag, label) ->
                                     Box(
@@ -493,11 +503,10 @@ fun EditLinkRuleScreen(
                                                 RoundedCornerShape(6.dp),
                                             )
                                             .clickable {
-                                                template = when {
-                                                    template.contains("{1}") -> template.replace("{1}", "{1$tag}")
-                                                    template.contains("{url}") -> template.replace("{url}", "{url$tag}")
-                                                    template.contains("{2}") -> template.replace("{2}", "{2$tag}")
-                                                    else -> template + "{url$tag}"
+                                                templateState.edit {
+                                                    val sel = selection
+                                                    replace(sel.min, sel.max, tag)
+                                                    selection = TextRange(sel.min + tag.length)
                                                 }
                                             }
                                             .padding(horizontal = 8.dp, vertical = 4.dp),
@@ -530,7 +539,7 @@ fun EditLinkRuleScreen(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             MiuixText(
-                                text = "常用变量 (点击插入)",
+                                text = "常用变量 (点击插入并定位在括号内)",
                                 style = MiuixTheme.textStyles.footnote2,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
@@ -543,11 +552,7 @@ fun EditLinkRuleScreen(
                             ) {
                                 val vars = listOf(
                                     "{url}" to "完整链接",
-                                    "{url_dec}" to "原链解码",
-                                    "{url_b64_enc}" to "原链B64编",
                                     "{1}" to "提取组1",
-                                    "{1_url_dec}" to "组1解码",
-                                    "{1_url_dec_b64_dec}" to "组1解+B64解",
                                     "{2}" to "提取组2",
                                     "\$1" to "正则组1",
                                     "\$2" to "正则组2",
@@ -562,7 +567,18 @@ fun EditLinkRuleScreen(
                                                 MiuixTheme.colorScheme.dividerLine.copy(alpha = 0.5f),
                                                 RoundedCornerShape(6.dp),
                                             )
-                                            .clickable { template += tag }
+                                            .clickable {
+                                                templateState.edit {
+                                                    val sel = selection
+                                                    replace(sel.min, sel.max, tag)
+                                                    val cursor = if (tag.startsWith("{") && tag.endsWith("}")) {
+                                                        sel.min + tag.length - 1
+                                                    } else {
+                                                        sel.min + tag.length
+                                                    }
+                                                    selection = TextRange(cursor)
+                                                }
+                                            }
                                             .padding(horizontal = 8.dp, vertical = 4.dp),
                                     ) {
                                         Row(
@@ -596,7 +612,7 @@ fun EditLinkRuleScreen(
                                 .padding(horizontal = 10.dp, vertical = 6.dp),
                         ) {
                             MiuixText(
-                                text = "说明：{url} 代表原始链接，{1} 代表正则提取捕获组，\$1 代表匹配正则反向引用；花括号内支持下划线拼接变换后缀：_url_dec (URL解码)、_b64_enc (Base64编码)、_b64_dec (Base64解码)。",
+                                text = "说明：点击常用变量将在光标处插入并将光标留在花括号内，此时点击变换选项可直接追加后缀；支持多级链式管道：_url_enc (编码)、_url_dec (解码)、_b64_enc (Base64编)、_b64_dec (Base64解)。未指定提取正则时 {1} 自动匹配主正则捕获组。",
                                 style = MiuixTheme.textStyles.footnote2,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                 lineHeight = 16.sp,
