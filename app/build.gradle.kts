@@ -56,6 +56,20 @@ android {
         }
     }
 
+    androidResources {
+        localeFilters += listOf(
+            "en",
+            "zh",
+            "zh-rCN",
+            "zh-rTW",
+            "zh-rHK",
+            "ja",
+            "es",
+            "ar",
+            "ru",
+        )
+    }
+
     flavorDimensions += "bundle"
     productFlavors {
         create("full") {
@@ -137,7 +151,11 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             merges += "META-INF/xposed/*"
         }
+        dex {
+            useLegacyPackaging = true
+        }
         jniLibs {
+            useLegacyPackaging = true
             excludes += setOf(
                 "**/libopencv_java5.so",
                 "**/libonnxruntime.so",

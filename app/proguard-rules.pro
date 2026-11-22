@@ -18,7 +18,6 @@
 -keep class com.slideindex.app.xposed.** { *; }
 -keep class com.slideindex.app.autofill.** { *; }
 
--keep class kotlin.Metadata { *; }
 -dontwarn kotlin.**
 -dontwarn org.jetbrains.annotations.**
 
