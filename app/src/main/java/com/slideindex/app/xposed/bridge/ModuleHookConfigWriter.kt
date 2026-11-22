@@ -11,6 +11,7 @@ import com.slideindex.app.settings.interceptWindowWidthDp
 import com.slideindex.app.settings.maxEdgeTriggerWidthDp
 import com.slideindex.app.settings.triggerHandleEdgeWidthDp
 import com.slideindex.app.settings.triggerHandles
+import com.slideindex.app.settings.withRuntimeLandscapeSettings
 import com.slideindex.app.util.OverlaySuppression
 import java.io.File
 
@@ -38,15 +39,16 @@ object ModuleHookConfigWriter {
       File(dir, ModuleHookBridgeContract.SNAPSHOT_FILE_NAME)
     }
 
-  fun buildSnapshot(context: Context, settings: AppSettings): ModuleHookSnapshot =
-    ModuleHookSnapshot(
+  fun buildSnapshot(context: Context, settings: AppSettings): ModuleHookSnapshot {
+    val runtime = settings.withRuntimeLandscapeSettings(OverlaySuppression.isLandscape(context))
+    return ModuleHookSnapshot(
       version = ModuleHookBridgeContract.SNAPSHOT_VERSION,
       takeoverGroups = takeoverGroups(settings),
       interceptSystemBackGesture = settings.interceptSystemBackGesture,
       navigationMode = navigationMode(context),
       density = context.resources.displayMetrics.density,
       sides = listOf(PanelSide.LEFT, PanelSide.RIGHT, PanelSide.BOTTOM, PanelSide.TOP)
-        .map { side -> settings.toSideSnapshot(side) },
+        .map { side -> runtime.toSideSnapshot(side) },
       extraRects = extraRects(context, settings),
       clipboardWhitelist = settings.clipboardLsposedWhitelist.sorted(),
       otp = ModuleHookOtpPolicy(
@@ -59,6 +61,7 @@ object ModuleHookConfigWriter {
       ),
       updatedAtMs = System.currentTimeMillis(),
     )
+  }
 
   /** 触钮之外的接管矩形（角轮盘；悬浮球线条待下一步）。 */
   private fun extraRects(context: Context, settings: AppSettings): List<ModuleHookExtraRect> {
