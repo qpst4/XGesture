@@ -25,9 +25,14 @@ class ModuleGestureBridgeClient(
 
   @Volatile
   private var lastBindAttemptAtMs = 0L
+  @Volatile private var closed = false
 
   private val connection = object : ServiceConnection {
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+      if (closed) {
+        releaseDeadConnection()
+        return
+      }
       bridge = IModuleGestureBridge.Stub.asInterface(service)
       binding = false
       log("module gesture bridge connected")
@@ -66,8 +71,16 @@ class ModuleGestureBridgeClient(
 
   val isConnected: Boolean get() = bridge != null
 
+  fun close() {
+    closed = true
+    if (bridge != null || binding) releaseDeadConnection()
+    bridge = null
+    binding = false
+  }
+
   /** [force] 为 true 时忽略重试冷却（宿主就绪广播等"值得立刻重试"的时机）。 */
   fun ensureBound(force: Boolean = false) {
+    if (closed) return
     if (bridge != null) return
     val now = SystemClock.elapsedRealtime()
     if (!force && now - lastBindAttemptAtMs < BIND_RETRY_COOLDOWN_MS) return

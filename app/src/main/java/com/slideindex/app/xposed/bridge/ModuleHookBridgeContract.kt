@@ -81,10 +81,13 @@ object ModuleHookBridgeContract {
    * 模块代码版本：`xposed/` 目录下的模块代码有实质改动时 +1。
    *
    * app 侧把自己的这个常量与模块回传的 `code=` 比对：不一致说明 system_server 里跑的还是
-   * 覆盖安装前的旧模块代码（模块在开机时加载），必须重启手机新代码才会生效。
+   * 覆盖安装前的旧模块代码，需要完成热重载；框架不支持热重载时才需要重启。
    * 只是普通构建、模块代码没改时这个值不变，所以不会每次安装都误报。
    */
-  const val MODULE_CODE_VERSION = 4
+  const val MODULE_CODE_VERSION = 5
+
+  /** 模块所属 APK 的安装路径：区分同代码版本的不同安装代，支持热重载后免重启。 */
+  const val STATUS_DETAIL_APK_PREFIX = "apk="
 
   /** 状态串里模块代码版本字段：`code=<int>`。 */
   const val STATUS_DETAIL_CODE_PREFIX = "code="

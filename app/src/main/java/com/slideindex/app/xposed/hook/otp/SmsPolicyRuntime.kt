@@ -61,8 +61,21 @@ internal object SmsPolicyRuntime {
 
   @Volatile
   private var cachedKeywords: Pair<String, Regex?>? = null
+  private var registeredReceiver: BroadcastReceiver? = null
+  private var moduleApkPath: String? = null
+  @Volatile private var retired = false
 
-  fun register(channel: String) {
+  fun detach() {
+    retired = true
+    handler.removeCallbacksAndMessages(null)
+    registeredReceiver?.let { receiver -> runCatching { processContext?.unregisterReceiver(receiver) } }
+    registeredReceiver = null
+    receiverRegistered = false
+    channels.clear()
+  }
+
+  fun register(channel: String, apkPath: String? = null) {
+    moduleApkPath = apkPath
     channels.add(channel)
     attemptRegistration(attempt = 0)
   }
@@ -143,6 +156,7 @@ internal object SmsPolicyRuntime {
   }
 
   private fun attemptRegistration(attempt: Int) {
+    if (retired) return
     if (receiverRegistered) return
     val context = processContext ?: resolveProcessContext()?.also { processContext = it }
     if (context != null && tryRegister(context)) return
@@ -187,6 +201,7 @@ internal object SmsPolicyRuntime {
       addAction(ModuleHookBridgeContract.ACTION_RESTART_PROCESS)
     }
     ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_EXPORTED)
+    registeredReceiver = receiver
     receiverRegistered = true
     XposedLog.i(TAG, "status channel registered in ${currentChannels()} process")
     configReader.requestSnapshotIfNeeded(context)
@@ -213,6 +228,7 @@ internal object SmsPolicyRuntime {
       append(",hook=").append(if (hookInstalled) "ok" else "fail")
       append(",config=").append(if (policyLoaded) "ok" else "fail")
       append(",code=").append(ModuleHookBridgeContract.MODULE_CODE_VERSION)
+      moduleApkPath?.let { append(",apk=").append(it) }
       append(",capture=").append(if (effective.captureEnabled) "on" else "off")
       append(",block=").append(if (effective.blockCodeSmsEnabled) "on" else "off")
       append(",read=").append(if (effective.markAsReadEnabled) "on" else "off")

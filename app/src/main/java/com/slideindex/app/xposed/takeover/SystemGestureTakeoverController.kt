@@ -63,6 +63,11 @@ internal class SystemGestureTakeoverController(
     if (hasEnabledGroups()) bridge.ensureBound()
   }
 
+  fun close() {
+    endActiveSession(TakeoverSessionPolicy.REASON_RESET)
+    bridge.close()
+  }
+
   fun requestSnapshotIfNeeded() {
     configReader.requestSnapshotIfNeeded(context)
   }
