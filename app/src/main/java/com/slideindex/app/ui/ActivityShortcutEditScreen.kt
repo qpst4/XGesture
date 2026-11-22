@@ -25,10 +25,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Shortcut
+import androidx.compose.material.icons.filled.Adjust
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -470,54 +472,60 @@ fun ActivityShortcutEditScreen(
                             }
 
                             kind == ActivityShortcutKind.COMPONENT -> {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    MiuixLabeledTextField(
-                                        value = packageName,
-                                        onValueChange = { input ->
-                                            val split = ActivityShortcutParams.splitComponent(input)
-                                            if (split != null) {
-                                                packageName = split.first
-                                                activityClassName = split.second
-                                            } else {
-                                                packageName = ActivityShortcutParams.stripControlChars(input)
-                                            }
-                                        },
-                                        label = stringResource(R.string.activity_shortcut_field_package),
-                                        modifier = Modifier.weight(1f),
-                                    )
-                                    MiuixTextButton(
-                                        text = stringResource(R.string.activity_shortcut_pick_app),
-                                        onClick = onPickApp,
-                                    )
-                                }
+                                MiuixLabeledTextField(
+                                    value = packageName,
+                                    onValueChange = { input ->
+                                        val split = ActivityShortcutParams.splitComponent(input)
+                                        if (split != null) {
+                                            packageName = split.first
+                                            activityClassName = split.second
+                                        } else {
+                                            packageName = ActivityShortcutParams.stripControlChars(input)
+                                        }
+                                    },
+                                    label = stringResource(R.string.activity_shortcut_field_package),
+                                    singleLine = false,
+                                    minLines = 1,
+                                    maxLines = 4,
+                                    useLabelAsPlaceholder = false,
+                                    trailingIcon = {
+                                        IconButton(onClick = onPickApp) {
+                                            Icon(
+                                                imageVector = Icons.Default.Adjust,
+                                                contentDescription = stringResource(R.string.activity_shortcut_pick_app),
+                                                tint = MiuixTheme.colorScheme.primary,
+                                            )
+                                        }
+                                    },
+                                )
                                 if (packageInvalid) {
                                     FieldError(stringResource(R.string.activity_shortcut_error_package))
                                 }
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    MiuixLabeledTextField(
-                                        value = activityClassName,
-                                        onValueChange = {
-                                            activityClassName = ActivityShortcutParams.stripControlChars(it)
-                                        },
-                                        label = stringResource(R.string.activity_shortcut_field_activity_class),
-                                        singleLine = false,
-                                        minLines = 1,
-                                        maxLines = 3,
-                                        useLabelAsPlaceholder = false,
-                                        modifier = Modifier.weight(1f),
-                                    )
-                                    MiuixTextButton(
-                                        text = stringResource(R.string.activity_shortcut_pick_activity),
-                                        onClick = { onPickActivity(packageName.trim()) },
-                                        enabled = packageName.isNotBlank(),
-                                    )
-                                }
+                                MiuixLabeledTextField(
+                                    value = activityClassName,
+                                    onValueChange = {
+                                        activityClassName = ActivityShortcutParams.stripControlChars(it)
+                                    },
+                                    label = stringResource(R.string.activity_shortcut_field_activity_class),
+                                    singleLine = false,
+                                    minLines = 1,
+                                    maxLines = 4,
+                                    useLabelAsPlaceholder = false,
+                                    trailingIcon = {
+                                        IconButton(
+                                            onClick = {
+                                                if (packageName.isNotBlank()) onPickActivity(packageName.trim())
+                                                else onPickApp()
+                                            },
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Adjust,
+                                                contentDescription = stringResource(R.string.activity_shortcut_pick_activity),
+                                                tint = MiuixTheme.colorScheme.primary,
+                                            )
+                                        }
+                                    },
+                                )
                                 if (activityInvalid) {
                                     FieldError(stringResource(R.string.activity_shortcut_error_activity))
                                 }

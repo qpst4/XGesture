@@ -158,6 +158,7 @@ fun MiuixListScaffold(
     bottomContentPadding: Dp = 0.dp,
     /** 悬浮按钮需要预留的底部空间，见 [MiuixSettingsFabInset]；默认 0 = 不做任何预留。 */
     fabInset: Dp = 0.dp,
+    bottomBar: @Composable () -> Unit = {},
     content: LazyListScope.() -> Unit,
 ) {
     val resolvedListState = listState ?: rememberLazyListState()
@@ -187,6 +188,7 @@ fun MiuixListScaffold(
                 )
             },
             floatingActionButton = floatingActionButton,
+            bottomBar = bottomBar,
         ) { innerPadding ->
             val layoutDirection = LocalLayoutDirection.current
             LazyColumn(
@@ -239,12 +241,12 @@ fun MiuixSettingsScreenScaffold(
     scrollContent: Boolean = true,
     actions: @Composable RowScope.() -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
-    bottomBar: @Composable () -> Unit = {},
     /** 顶栏下方的附加内容（可展开搜索条等），与 [MiuixListScaffold] 的 `bottomContent` 一致。 */
     bottomContent: @Composable () -> Unit = {},
     bottomContentPadding: Dp = 0.dp,
     /** 悬浮按钮需要预留的底部空间，见 [MiuixSettingsFabInset]；默认 0 = 不做任何预留。 */
     fabInset: Dp = 0.dp,
+    bottomBar: @Composable () -> Unit = {},
     content: LazyListScope.() -> Unit,
 ) {
     val scrollBehavior = MiuixScrollBehavior()

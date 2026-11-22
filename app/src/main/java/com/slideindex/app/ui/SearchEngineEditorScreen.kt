@@ -67,6 +67,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Adjust
+import androidx.compose.material3.IconButton
 import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
@@ -619,21 +621,24 @@ private fun EditorTypeFields(
                 horizontalPadding = 0.dp,
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                MiuixLabeledTextField(
-                    value = targetPackage,
-                    onValueChange = onTargetPackageChange,
-                    label = stringResource(R.string.search_engine_target_package_hint),
-                    modifier = Modifier.weight(1f),
-                )
-                MiuixButton(onClick = onPickTargetApp) {
-                    Text(stringResource(R.string.search_engine_pick_app))
-                }
-            }
+            MiuixLabeledTextField(
+                value = targetPackage,
+                onValueChange = onTargetPackageChange,
+                label = stringResource(R.string.search_engine_target_package_hint),
+                singleLine = false,
+                minLines = 1,
+                maxLines = 4,
+                useLabelAsPlaceholder = false,
+                trailingIcon = {
+                    IconButton(onClick = onPickTargetApp) {
+                        Icon(
+                            imageVector = Icons.Default.Adjust,
+                            contentDescription = stringResource(R.string.search_engine_pick_app),
+                            tint = MiuixTheme.colorScheme.primary,
+                        )
+                    }
+                },
+            )
 
             MiuixSwitchRow(
                 title = stringResource(R.string.search_engine_auto_input_enter),
@@ -649,37 +654,48 @@ private fun EditorTypeFields(
         }
 
         SearchEngineType.JUMP_TO_ACTIVITY -> {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                MiuixLabeledTextField(
-                    value = targetPackage,
-                    onValueChange = onTargetPackageChange,
-                    label = stringResource(R.string.search_engine_target_package_hint),
-                    modifier = Modifier.weight(1f),
-                )
-                MiuixButton(onClick = onPickTargetApp) {
-                    Text(stringResource(R.string.search_engine_pick_app))
-                }
-            }
+            MiuixLabeledTextField(
+                value = targetPackage,
+                onValueChange = onTargetPackageChange,
+                label = stringResource(R.string.search_engine_target_package_hint),
+                singleLine = false,
+                minLines = 1,
+                maxLines = 4,
+                useLabelAsPlaceholder = false,
+                trailingIcon = {
+                    IconButton(onClick = onPickTargetApp) {
+                        Icon(
+                            imageVector = Icons.Default.Adjust,
+                            contentDescription = stringResource(R.string.search_engine_pick_app),
+                            tint = MiuixTheme.colorScheme.primary,
+                        )
+                    }
+                },
+            )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                MiuixLabeledTextField(
-                    value = targetActivity,
-                    onValueChange = onTargetActivityChange,
-                    label = stringResource(R.string.search_engine_target_activity_hint),
-                    modifier = Modifier.weight(1f),
-                )
-                MiuixButton(onClick = onPickActivity, enabled = targetPackage.isNotBlank()) {
-                    Text(stringResource(R.string.search_engine_pick_activity))
-                }
-            }
+            MiuixLabeledTextField(
+                value = targetActivity,
+                onValueChange = onTargetActivityChange,
+                label = stringResource(R.string.search_engine_target_activity_hint),
+                singleLine = false,
+                minLines = 1,
+                maxLines = 4,
+                useLabelAsPlaceholder = false,
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            if (targetPackage.isNotBlank()) onPickActivity()
+                            else onPickTargetApp()
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Adjust,
+                            contentDescription = stringResource(R.string.search_engine_pick_activity),
+                            tint = MiuixTheme.colorScheme.primary,
+                        )
+                    }
+                },
+            )
 
             MiuixSwitchRow(
                 title = stringResource(R.string.search_engine_auto_input_enter),

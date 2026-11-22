@@ -9,15 +9,19 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -62,6 +66,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,8 +77,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -298,6 +305,22 @@ fun LinkDispatchSettingsScreen(
         }
     }
 
+    val onMoveRule: (String, Int) -> Unit = { ruleId, delta ->
+        val fromIndex = rules.indexOfFirst { it.id == ruleId }
+        if (fromIndex >= 0) {
+            val toIndex = (fromIndex + delta).coerceIn(0, rules.size - 1)
+            if (fromIndex != toIndex) {
+                val mutable = rules.toMutableList()
+                val moved = mutable.removeAt(fromIndex)
+                mutable.add(toIndex, moved)
+                val reordered = mutable.mapIndexed { idx, r -> r.copy(priority = mutable.size - idx) }
+                scope.launch {
+                    LinkRuleRepository.updateRules(context) { reordered }
+                }
+            }
+        }
+    }
+
     SettingsLazyScreenScaffoldWithExpandableSearch(
         title = currentTitle,
         searchQuery = searchQuery,
@@ -315,18 +338,19 @@ fun LinkDispatchSettingsScreen(
             if (isSelectionMode) {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(8.dp))
                         .clickable {
                             isSelectionMode = false
                             selectedRuleIds.clear()
                         }
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                        .padding(horizontal = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     MiuixText(
                         text = "完成",
-                        style = MiuixTheme.textStyles.body2,
-                        fontWeight = FontWeight.Bold,
+                        style = MiuixTheme.textStyles.body1,
+                        fontWeight = FontWeight.SemiBold,
                         color = MiuixTheme.colorScheme.primary,
                     )
                 }
@@ -337,6 +361,28 @@ fun LinkDispatchSettingsScreen(
                         contentDescription = "跳转记录",
                     )
                 }
+            }
+        },
+        bottomBar = {
+            AnimatedVisibility(
+                visible = isSelectionMode,
+                enter = slideInVertically(animationSpec = tween(220, easing = FastOutSlowInEasing)) { it } + fadeIn(tween(150)),
+                exit = slideOutVertically(animationSpec = tween(180, easing = FastOutSlowInEasing)) { it } + fadeOut(tween(120)),
+            ) {
+                LinkRulesSelectionBottomBar(
+                    selectedCount = selectedRuleIds.size,
+                    totalCount = filteredRules.size,
+                    allSelected = selectedRuleIds.size == filteredRules.size && filteredRules.isNotEmpty(),
+                    onToggleSelectAll = { onToggleSelectAll() },
+                    onBatchToggleEnabled = { onBatchToggleEnabled() },
+                    onBatchShare = { onBatchShare() },
+                    onBatchDuplicate = { onBatchDuplicate() },
+                    onBatchDelete = { showBatchDeleteDialog = true },
+                    onExit = {
+                        isSelectionMode = false
+                        selectedRuleIds.clear()
+                    },
+                )
             }
         },
     ) {
@@ -471,8 +517,8 @@ fun LinkDispatchSettingsScreen(
                                     LinkDispatchRuleItemRow(
                                         rule = rule,
                                         appName = appName,
-                                        isFirst = idx == 0 && redirectRules.isEmpty(),
-                                        isLast = idx == dispatchRules.size - 1 && redirectRules.isEmpty() && !isSelectionMode,
+                                        isFirst = idx == 0,
+                                        isLast = idx == dispatchRules.size - 1,
                                         isSelectionMode = isSelectionMode,
                                         isSelected = isSelected,
                                         onClick = {
@@ -499,13 +545,14 @@ fun LinkDispatchSettingsScreen(
                                                 }
                                             }
                                         },
+                                        onMove = onMoveRule,
                                     )
                                 }
                             }
 
                             // 2. 跳转规则（直达目标应用）
                             if (redirectRules.isNotEmpty()) {
-                                Box(modifier = Modifier.padding(start = 28.dp, top = 10.dp, bottom = 4.dp)) {
+                                Box(modifier = Modifier.padding(start = 28.dp, top = 14.dp, bottom = 4.dp)) {
                                     MiuixText(
                                         text = "应用直达跳转规则 (${redirectRules.size} 条)",
                                         style = MiuixTheme.textStyles.subtitle,
@@ -519,8 +566,8 @@ fun LinkDispatchSettingsScreen(
                                     LinkDispatchRuleItemRow(
                                         rule = rule,
                                         appName = appName,
-                                        isFirst = idx == 0 && dispatchRules.isEmpty(),
-                                        isLast = idx == redirectRules.size - 1 && !isSelectionMode,
+                                        isFirst = idx == 0,
+                                        isLast = idx == redirectRules.size - 1,
                                         isSelectionMode = isSelectionMode,
                                         isSelected = isSelected,
                                         onClick = {
@@ -547,26 +594,14 @@ fun LinkDispatchSettingsScreen(
                                                 }
                                             }
                                         },
+                                        onMove = onMoveRule,
                                     )
                                 }
                             }
 
-                            // 多选模式底部操作工具栏 (对标 LinkGo 原版交互)
+                            // 多选模式下底部预留空间以防被吸底工具栏遮挡
                             if (isSelectionMode) {
-                                LinkRulesSelectionBottomBar(
-                                    selectedCount = selectedRuleIds.size,
-                                    totalCount = filteredRules.size,
-                                    allSelected = selectedRuleIds.size == filteredRules.size && filteredRules.isNotEmpty(),
-                                    onToggleSelectAll = { onToggleSelectAll() },
-                                    onBatchToggleEnabled = { onBatchToggleEnabled() },
-                                    onBatchShare = { onBatchShare() },
-                                    onBatchDuplicate = { onBatchDuplicate() },
-                                    onBatchDelete = { showBatchDeleteDialog = true },
-                                    onExit = {
-                                        isSelectionMode = false
-                                        selectedRuleIds.clear()
-                                    },
-                                )
+                                Spacer(modifier = Modifier.height(88.dp))
                             }
                         }
                     }
@@ -1473,6 +1508,7 @@ private fun LinkDispatchRuleItemRow(
     onClick: () -> Unit,
     onLongClick: () -> Unit = {},
     onToggleEnabled: (Boolean) -> Unit,
+    onMove: (String, Int) -> Unit = { _, _ -> },
 ) {
     val context = LocalContext.current
     val isAppInstalled = remember(rule.targetPackage) {
@@ -1561,11 +1597,32 @@ private fun LinkDispatchRuleItemRow(
                     )
                 }
                 if (isSelectionMode) {
+                    var dragAccumulator by remember(rule.id) { mutableFloatStateOf(0f) }
+                    val thresholdPx = with(LocalDensity.current) { 44.dp.toPx() }
+                    val haptic = LocalHapticFeedback.current
                     Box(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(MiuixTheme.colorScheme.surfaceContainerHigh),
+                            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+                            .pointerInput(rule.id) {
+                                detectVerticalDragGestures(
+                                    onDragStart = { dragAccumulator = 0f },
+                                    onVerticalDrag = { change, dragAmount ->
+                                        change.consume()
+                                        dragAccumulator += dragAmount
+                                        if (dragAccumulator > thresholdPx) {
+                                            onMove(rule.id, 1)
+                                            haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                                            dragAccumulator = 0f
+                                        } else if (dragAccumulator < -thresholdPx) {
+                                            onMove(rule.id, -1)
+                                            haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                                            dragAccumulator = 0f
+                                        }
+                                    },
+                                )
+                            },
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
