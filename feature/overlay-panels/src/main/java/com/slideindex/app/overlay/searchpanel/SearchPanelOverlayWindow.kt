@@ -24,9 +24,11 @@ import com.slideindex.app.overlay.OverlayCompose
 import com.slideindex.app.overlay.OverlayComposeOwner
 import com.slideindex.app.overlay.OverlayPanelSystemGestureExclusion
 import com.slideindex.app.overlay.OverlayTextToolbarProvider
+import com.slideindex.app.overlay.OverlayViewBackHandler
 import com.slideindex.app.overlay.OverlayWindowTypes
 import com.slideindex.app.settings.SearchPanelBackgroundStyle
 import com.slideindex.app.util.PermissionHelper
+import com.slideindex.app.util.PredictiveBackHelper
 import kotlin.math.roundToInt
 
 object SearchPanelOverlayWindow {
@@ -53,6 +55,10 @@ object SearchPanelOverlayWindow {
     private var bringAboveRunnableA: Runnable? = null
     private var bringAboveRunnableB: Runnable? = null
     private var dismissToken = 0
+    private var backHandlerRef = java.lang.ref.WeakReference<OverlayViewBackHandler>(null)
+    private var backHandler: OverlayViewBackHandler?
+        get() = backHandlerRef.get()
+        set(value) { backHandlerRef = java.lang.ref.WeakReference(value) }
 
     /**
      * Home / 最近任务已经关过面板：trampoline 回来的 [restore] 不再把它拉起来。
@@ -460,6 +466,8 @@ object SearchPanelOverlayWindow {
         view.isFocusableInTouchMode = true
         runCatching { wm.updateViewLayout(view, params) }
             .onFailure { Log.w(TAG, "updateViewLayout(active) failed", it) }
+        backHandler?.refresh()
+        backHandler?.attachKeyFallback()
         if (!view.isAttachedToWindow) {
             Log.w(TAG, "active: view not attached (window likely dropped), flags=0x${params.flags.toString(16)}")
         }
@@ -499,11 +507,14 @@ object SearchPanelOverlayWindow {
 
         composeView = object : FrameLayout(panelHostContext) {
             override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-                if (event.keyCode == KeyEvent.KEYCODE_BACK) {
-                    if (event.action == KeyEvent.ACTION_UP) {
-                        handleBack()
+                // 兼容按键先于焦点子控件处理；预测性返回只走系统回调，避免双重派发。
+                if (event.keyCode == KeyEvent.KEYCODE_BACK &&
+                    PredictiveBackHelper.resolveAppBackDispatch(context) != PredictiveBackHelper.AppBackDispatch.ON_BACK_INVOKED
+                ) {
+                    backHandler?.let { handler ->
+                        if (event.action == KeyEvent.ACTION_UP) handler.dispatchBack()
+                        return true
                     }
-                    return true
                 }
                 return super.dispatchKeyEvent(event)
             }
@@ -562,6 +573,11 @@ object SearchPanelOverlayWindow {
             destroyWindow()
             return
         }
+        // 按系统实际派发方式安装返回路由，并统一处理“先收键盘，再关预览/面板”。
+        backHandler = OverlayViewBackHandler(composeView!!) { handleBack() }.also {
+            it.attach(requestViewFocus = false)
+            it.attachKeyFallback()
+        }
         if (com.slideindex.app.overlay.panels.PanelFloatBallHooks.isShowing?.invoke() == true) {
             com.slideindex.app.overlay.panels.PanelFloatBallHooks.scheduleChromeAbovePanels?.invoke(0L)
         }
@@ -573,6 +589,8 @@ object SearchPanelOverlayWindow {
     private fun destroyWindow() {
         if (composeView == null) return
         cancelBringAboveRetries()
+        backHandler?.detach()
+        backHandler = null
         val frame = composeView
         val dialogOwner = owner
         val childCompose = frame?.let { parent ->
