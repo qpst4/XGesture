@@ -39,8 +39,16 @@ data class LinkDispatchRule(
     val iconPath: String? = null,
     val hitCount: Int = 0,
     val lastHitAt: Long = 0L,
-    val component: String? = null
-)
+    val component: String? = null,
+    val iconType: String = ICON_TYPE_DEFAULT,
+    val iconValue: String = "",
+) {
+    companion object {
+        const val ICON_TYPE_DEFAULT = "default"
+        const val ICON_TYPE_APP = "app"
+        const val ICON_TYPE_CUSTOM = "custom"
+    }
+}
 
 /**
  * 用于从长文本中抽取目标链接的正则模式。

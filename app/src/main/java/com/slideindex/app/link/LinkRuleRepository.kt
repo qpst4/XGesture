@@ -33,7 +33,12 @@ object LinkRuleRepository {
     val KEY_OPEN_IN_SMALL_WINDOW = booleanPreferencesKey("link_open_in_small_window")
     val KEY_RADAR_HOVER_HOLD_MS = intPreferencesKey("link_radar_hover_hold_ms")
     val KEY_FALLBACK_BROWSER = stringPreferencesKey("link_fallback_browser")
+    val KEY_SELECTOR_TIMER_ENABLED = booleanPreferencesKey("link_selector_timer_enabled")
+    val KEY_SELECTOR_TIMER_SECONDS = intPreferencesKey("link_selector_timer_seconds")
+    val KEY_BROWSER_ORDER_LIST = stringPreferencesKey("link_browser_order_list")
+    val KEY_BROWSER_HIDDEN_LIST = stringPreferencesKey("link_browser_hidden_list")
     const val DEFAULT_RADAR_HOVER_HOLD_MS = 1000
+    const val DEFAULT_SELECTOR_TIMER_SECONDS = 3
 
     private val dataStoreHolder = AtomicReference<DataStore<Preferences>>()
 
@@ -232,6 +237,44 @@ object LinkRuleRepository {
                 prefs[KEY_FALLBACK_BROWSER] = packageName
             }
         }
+    }
+
+    suspend fun isSelectorTimerEnabled(context: Context): Boolean =
+        context.linkDataStore.data.first()[KEY_SELECTOR_TIMER_ENABLED] ?: false
+
+    fun observeSelectorTimerEnabled(context: Context): Flow<Boolean> =
+        context.linkDataStore.data.map { it[KEY_SELECTOR_TIMER_ENABLED] ?: false }
+
+    suspend fun setSelectorTimerEnabled(context: Context, enabled: Boolean) {
+        context.linkDataStore.edit { it[KEY_SELECTOR_TIMER_ENABLED] = enabled }
+    }
+
+    suspend fun getSelectorTimerSeconds(context: Context): Int =
+        context.linkDataStore.data.first()[KEY_SELECTOR_TIMER_SECONDS] ?: DEFAULT_SELECTOR_TIMER_SECONDS
+
+    fun observeSelectorTimerSeconds(context: Context): Flow<Int> =
+        context.linkDataStore.data.map { it[KEY_SELECTOR_TIMER_SECONDS] ?: DEFAULT_SELECTOR_TIMER_SECONDS }
+
+    suspend fun setSelectorTimerSeconds(context: Context, seconds: Int) {
+        context.linkDataStore.edit { it[KEY_SELECTOR_TIMER_SECONDS] = seconds }
+    }
+
+    suspend fun getBrowserOrderList(context: Context): List<String> {
+        val json = context.linkDataStore.data.first()[KEY_BROWSER_ORDER_LIST].orEmpty()
+        return if (json.isEmpty()) emptyList() else runCatching { jsonSerializer.decodeFromString<List<String>>(json) }.getOrDefault(emptyList())
+    }
+
+    suspend fun setBrowserOrderList(context: Context, order: List<String>) {
+        context.linkDataStore.edit { it[KEY_BROWSER_ORDER_LIST] = jsonSerializer.encodeToString(order) }
+    }
+
+    suspend fun getBrowserHiddenList(context: Context): List<String> {
+        val json = context.linkDataStore.data.first()[KEY_BROWSER_HIDDEN_LIST].orEmpty()
+        return if (json.isEmpty()) emptyList() else runCatching { jsonSerializer.decodeFromString<List<String>>(json) }.getOrDefault(emptyList())
+    }
+
+    suspend fun setBrowserHiddenList(context: Context, hidden: List<String>) {
+        context.linkDataStore.edit { it[KEY_BROWSER_HIDDEN_LIST] = jsonSerializer.encodeToString(hidden) }
     }
 
     private suspend fun seedBuiltinExtractsIfNeeded(context: Context) {

@@ -282,6 +282,7 @@
             android:label="链接分发"
             android:launchMode="singleInstance"
             android:noHistory="true"
+            android:taskAffinity=".trampoline"
             android:theme="@style/Theme.SlideIndex.Transparent">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -309,7 +310,9 @@
             android:name=".link.BrowserSelectorActivity"
             android:excludeFromRecents="true"
             android:exported="false"
+            android:launchMode="singleTop"
             android:resizeableActivity="false"
+            android:taskAffinity=".browser_selector"
             android:theme="@style/Theme.SlideIndex.Transparent" />
 
         <activity

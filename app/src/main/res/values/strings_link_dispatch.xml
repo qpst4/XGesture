@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="link_dispatch_title">Link Dispatch &amp; Radar</string>
+    <string name="link_dispatch_title">Link Dispatch</string>
     <string name="link_dispatch_desc">Automatically identify links in text or on screen to open target apps directly or in small freeform windows. Compatible with LinkGo rules and Link Radar detection.</string>
     <string name="link_dispatch_actions_title">Rule Management</string>
     <string name="link_dispatch_import_linkgo">Import LinkGo Rules from Clipboard</string>
@@ -17,7 +17,7 @@
     <string name="link_dispatch_open_in_small_window_desc">Prefer opening target apps in freeform small window when routed</string>
     <string name="link_dispatch_radar_screen_content">Screen Content Link Radar</string>
     <string name="link_dispatch_radar_screen_content_desc">Scan accessibility nodes on screen selection and display floating banner above links</string>
-    <string name="link_dispatch_radar_pointer">Floating Pointer Link Radar</string>
+    <string name="link_dispatch_radar_pointer">Pointer Radar</string>
     <string name="link_dispatch_radar_pointer_desc">Detect and highlight links under cursor while hovering, switch to selection when resting</string>
 
     <string name="link_dispatch_rules_list_title">Configured Rules</string>

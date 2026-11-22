@@ -8,9 +8,11 @@ import android.widget.Toast
 import com.slideindex.app.R
 import com.slideindex.app.overlay.pickresult.PickResultUrl
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.settings.SettingsFlowHolder
 import com.slideindex.app.util.FreeWindowLauncher
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 
 /**
@@ -135,7 +137,8 @@ object LinkLauncher {
         url: String,
         targetPackage: String,
         excludeFromRecents: Boolean,
-        component: String? = null
+        component: String? = null,
+        forceWindowMode: Boolean? = null,
     ): Boolean = withContext(Dispatchers.Main) {
         val intent = buildLaunchIntent(url, targetPackage, excludeFromRecents, component)
             ?: run {
@@ -143,13 +146,18 @@ object LinkLauncher {
                 return@withContext false
             }
 
-        val openInSmallWindow = LinkRuleRepository.isOpenInSmallWindowEnabled(context)
+        val openInSmallWindow = forceWindowMode?.let { !it } ?: LinkRuleRepository.isOpenInSmallWindowEnabled(context)
+        val appSettings = runCatching {
+            SettingsFlowHolder.settingsFlow(context.applicationContext)?.firstOrNull()
+        }.getOrNull() ?: AppSettings(freeWindow = com.slideindex.app.settings.FreeWindowSettings(freeWindowEnabled = true))
+        val targetSettings = appSettings.copy(freeWindow = appSettings.freeWindow.copy(freeWindowEnabled = true))
+
         val success = runCatching {
             if (openInSmallWindow) {
                 FreeWindowLauncher.launch(
                     context = context,
                     intent = intent,
-                    settings = AppSettings(freeWindow = com.slideindex.app.settings.FreeWindowSettings(freeWindowEnabled = true)),
+                    settings = targetSettings,
                     fullscreen = false
                 )
             } else {
@@ -168,7 +176,7 @@ object LinkLauncher {
                     FreeWindowLauncher.launch(
                         context = context,
                         intent = unpinned,
-                        settings = AppSettings(freeWindow = com.slideindex.app.settings.FreeWindowSettings(freeWindowEnabled = true)),
+                        settings = targetSettings,
                         fullscreen = false
                     )
                 } else {

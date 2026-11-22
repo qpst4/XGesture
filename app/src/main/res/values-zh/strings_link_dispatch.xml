@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="link_dispatch_title">链接分发与雷达</string>
+    <string name="link_dispatch_title">链接分发</string>
     <string name="link_dispatch_desc">自动识别文本或屏幕中的链接，一键直达对应应用或以小窗打开。兼容 LinkGo 规则并支持链接雷达实时感知。</string>
     <string name="link_dispatch_actions_title">规则管理</string>
     <string name="link_dispatch_import_linkgo">从剪贴板导入 LinkGo 规则</string>
@@ -17,7 +17,7 @@
     <string name="link_dispatch_open_in_small_window_desc">命中规则分发时，优先以自由窗口小窗拉起目标应用</string>
     <string name="link_dispatch_radar_screen_content">全局复制/屏幕识别链接雷达</string>
     <string name="link_dispatch_radar_screen_content_desc">触发全局复制时扫描屏幕无障碍文本，在链接上方挂出目标 App 图标与横幅直达</string>
-    <string name="link_dispatch_radar_pointer">悬浮指针链接雷达</string>
+    <string name="link_dispatch_radar_pointer">指针雷达</string>
     <string name="link_dispatch_radar_pointer_desc">滑动悬浮指针时探测光标下方的链接并高亮圈出，静止不动自动切换为分词/框选</string>
 
     <string name="link_dispatch_rules_list_title">已启用规则列表</string>

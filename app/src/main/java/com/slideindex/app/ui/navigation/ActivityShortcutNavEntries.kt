@@ -26,6 +26,7 @@ import com.slideindex.app.ui.ActivityShortcutScreen
 import com.slideindex.app.ui.LinkDispatchSettingsScreen
 import com.slideindex.app.ui.link.EditLinkRuleScreen
 import com.slideindex.app.ui.link.LinkDispatchHistoryScreen
+import com.slideindex.app.ui.link.LinkRulesScreen
 import com.slideindex.app.ui.picker.ActivityShortcutPickActivityScreen
 import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
 import com.slideindex.app.ui.picker.ActivityShortcutPickAppShortcutScreen
@@ -382,6 +383,21 @@ fun NavEntryBuilder.activityShortcutNavEntries(ctx: MainNavContext) {
         val settings = gestureSettings.toMinimalAppSettings()
         LinkDispatchSettingsScreen(
             settings = settings,
+            onBack = { ctx.backStack.removeLastOrNull() },
+            onNavigateToRules = {
+                ctx.navigate(AppNavKey.LinkRules)
+            },
+            onNavigateToEditRule = { ruleId ->
+                ctx.navigate(AppNavKey.EditLinkRule(ruleId))
+            },
+            onNavigateToHistory = {
+                ctx.navigate(AppNavKey.LinkDispatchHistory)
+            },
+        )
+    }
+
+    hiltEntry<AppNavKey.LinkRules> {
+        LinkRulesScreen(
             onBack = { ctx.backStack.removeLastOrNull() },
             onNavigateToEditRule = { ruleId ->
                 ctx.navigate(AppNavKey.EditLinkRule(ruleId))

@@ -102,8 +102,7 @@ fun FreeWindowSettingsScreen(
                 add(
                     settingsCardScopeItem("launch-policy") {
                         SettingDropdownRow(
-                            icon = { label -> SymbolsIcon("Launch", contentDescription = label, mirrored = true)
-                            },
+                            icon = { label -> SymbolsIcon("Launch", contentDescription = label) },
                             title = stringResource(R.string.launch_policy_title),
                             subtitle = null,
                             items = launchPolicyEntries.map { stringResource(it.titleRes) },
