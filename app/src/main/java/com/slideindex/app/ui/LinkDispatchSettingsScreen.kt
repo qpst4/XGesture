@@ -37,6 +37,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import com.slideindex.app.ui.components.reorderable.ReorderableItem
+import com.slideindex.app.ui.components.reorderable.rememberReorderableLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -227,13 +230,30 @@ fun LinkDispatchSettingsScreen(
         }
     }
 
-    var isDraggingRule by remember { mutableStateOf(false) }
-    var draggingRuleId by remember { mutableStateOf<String?>(null) }
-    var dragAccumulatedOffset by remember { mutableFloatStateOf(0f) }
     var localRules by remember { mutableStateOf(rules) }
 
+    val lazyListState = rememberLazyListState()
+    val reorderableLazyListState = rememberReorderableLazyListState(lazyListState = lazyListState) { from, to ->
+        val fromKey = from.key as? String ?: return@rememberReorderableLazyListState
+        val toKey = to.key as? String ?: return@rememberReorderableLazyListState
+        val fromRule = localRules.firstOrNull { it.id == fromKey } ?: return@rememberReorderableLazyListState
+        val toRule = localRules.firstOrNull { it.id == toKey } ?: return@rememberReorderableLazyListState
+        val fromIsDispatch = fromRule.resolveStrategy == LinkResolveStrategy.REDISPATCH
+        val toIsDispatch = toRule.resolveStrategy == LinkResolveStrategy.REDISPATCH
+        if (fromIsDispatch != toIsDispatch) return@rememberReorderableLazyListState
+        val fromIdx = localRules.indexOfFirst { it.id == fromKey }
+        val toIdx = localRules.indexOfFirst { it.id == toKey }
+        if (fromIdx >= 0 && toIdx >= 0 && fromIdx != toIdx) {
+            val mutable = localRules.toMutableList()
+            val item = mutable.removeAt(fromIdx)
+            mutable.add(toIdx, item)
+            localRules = mutable
+            haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+        }
+    }
+
     LaunchedEffect(rules) {
-        if (!isDraggingRule) {
+        if (!reorderableLazyListState.isAnyItemDragging) {
             localRules = rules
         }
     }
@@ -319,57 +339,10 @@ fun LinkDispatchSettingsScreen(
         }
     }
 
-    val stepPx = with(LocalDensity.current) { 76.dp.toPx() }
-
-    val onDragStart: (String) -> Unit = { ruleId ->
-        isDraggingRule = true
-        draggingRuleId = ruleId
-        dragAccumulatedOffset = 0f
-        haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-    }
-
-    val onDragDelta: (String, Float, Boolean) -> Unit = { ruleId, delta, isDispatch ->
-        dragAccumulatedOffset += delta
-        val activeGroup = if (isDispatch) dispatchRules else redirectRules
-        val idxInGroup = activeGroup.indexOfFirst { it.id == ruleId }
-        if (idxInGroup >= 0) {
-            if (dragAccumulatedOffset > stepPx && idxInGroup < activeGroup.size - 1) {
-                val targetRule = activeGroup[idxInGroup + 1]
-                val fromIdx = localRules.indexOfFirst { it.id == ruleId }
-                val toIdx = localRules.indexOfFirst { it.id == targetRule.id }
-                if (fromIdx >= 0 && toIdx >= 0) {
-                    val mutable = localRules.toMutableList()
-                    val item = mutable.removeAt(fromIdx)
-                    mutable.add(toIdx, item)
-                    localRules = mutable
-                    dragAccumulatedOffset -= stepPx
-                    haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                }
-            } else if (dragAccumulatedOffset < -stepPx && idxInGroup > 0) {
-                val targetRule = activeGroup[idxInGroup - 1]
-                val fromIdx = localRules.indexOfFirst { it.id == ruleId }
-                val toIdx = localRules.indexOfFirst { it.id == targetRule.id }
-                if (fromIdx >= 0 && toIdx >= 0) {
-                    val mutable = localRules.toMutableList()
-                    val item = mutable.removeAt(fromIdx)
-                    mutable.add(toIdx, item)
-                    localRules = mutable
-                    dragAccumulatedOffset += stepPx
-                    haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                }
-            }
-        }
-    }
-
-    val onDragEnd: () -> Unit = {
-        if (isDraggingRule) {
-            isDraggingRule = false
-            draggingRuleId = null
-            dragAccumulatedOffset = 0f
-            val reordered = localRules.mapIndexed { idx, r -> r.copy(priority = idx) }
-            scope.launch {
-                LinkRuleRepository.updateRules(context) { reordered }
-            }
+    val onDragSave: () -> Unit = {
+        val reordered = localRules.mapIndexed { idx, r -> r.copy(priority = idx) }
+        scope.launch {
+            LinkRuleRepository.updateRules(context) { reordered }
         }
     }
 
@@ -377,6 +350,7 @@ fun LinkDispatchSettingsScreen(
         title = currentTitle,
         searchQuery = searchQuery,
         onSearchQueryChange = { searchQuery = it },
+        listState = lazyListState,
         onBack = {
             if (isSelectionMode) {
                 isSelectionMode = false
@@ -452,222 +426,229 @@ fun LinkDispatchSettingsScreen(
         // ==========================================
         // 模块 1：【分发规则】（折叠控制台）
         // ==========================================
-        item(key = "collapsible_block_rules") {
-            val ruleHeaderSummary = if (searchQuery.isBlank()) {
-                "共 ${rules.size} 条规则 · 已启用 $enabledCount 条"
-            } else {
-                "搜索找到 ${filteredRules.size} / ${rules.size} 条规则"
-            }
+        val ruleHeaderSummary = if (searchQuery.isBlank()) {
+            "共 ${rules.size} 条规则 · 已启用 $enabledCount 条"
+        } else {
+            "搜索找到 ${filteredRules.size} / ${rules.size} 条规则"
+        }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .animateContentSize(animationSpec = tween(250)),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+        // 卡头（独立大圆角卡片）
+        item(key = "rule_header_card") {
+            CardSegment(
+                isFirst = true,
+                isLast = true,
+                outerHorizontalPadding = 12.dp,
+                modifier = Modifier.padding(bottom = if (isRulesOpen) 4.dp else 0.dp),
             ) {
-                // 卡头（独立大圆角卡片）
+                BasicComponent(
+                    modifier = Modifier.fillMaxWidth(),
+                    title = "分发规则",
+                    summary = ruleHeaderSummary,
+                    onClick = { rulesExpanded = !rulesExpanded },
+                    endActions = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(
+                                onClick = { onNavigateToEditRule(null) },
+                                modifier = Modifier.size(36.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "新建规则",
+                                    tint = MiuixTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            }
+                            Icon(
+                                imageVector = if (isRulesOpen) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = null,
+                                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                        }
+                    },
+                )
+            }
+        }
+
+        if (isRulesOpen) {
+            // 新建规则引导行（独立大圆角卡片）
+            item(key = "rule_create_guide") {
                 CardSegment(
                     isFirst = true,
                     isLast = true,
                     outerHorizontalPadding = 12.dp,
+                    modifier = Modifier.padding(vertical = 4.dp),
                 ) {
                     BasicComponent(
                         modifier = Modifier.fillMaxWidth(),
-                        title = "分发规则",
-                        summary = ruleHeaderSummary,
-                        onClick = { rulesExpanded = !rulesExpanded },
-                        endActions = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                IconButton(
-                                    onClick = { onNavigateToEditRule(null) },
-                                    modifier = Modifier.size(36.dp),
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription = "新建规则",
-                                        tint = MiuixTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp),
-                                    )
-                                }
+                        title = "新建自定义规则",
+                        summary = "添加匹配网址特征与指定打开目标应用",
+                        startAction = {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                                contentAlignment = Alignment.Center,
+                            ) {
                                 Icon(
-                                    imageVector = if (isRulesOpen) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                    imageVector = Icons.Default.Add,
                                     contentDescription = null,
-                                    tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    tint = MiuixTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp),
                                 )
                             }
                         },
+                        onClick = { onNavigateToEditRule(null) },
                     )
                 }
+            }
 
-                // 展开的规则内容（方案 A：独立卡片流布局，每条规则均为 12dp 大圆角卡片）
-                AnimatedVisibility(
-                    visible = isRulesOpen,
-                    enter = expandVertically(tween(250)) + fadeIn(),
-                    exit = shrinkVertically(tween(250)) + fadeOut(),
-                ) {
-                    Column(
+            if (filteredRules.isEmpty()) {
+                item(key = "rule_empty_tip") {
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                            .padding(horizontal = 16.dp, vertical = 20.dp),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        // 新建规则引导行（独立大圆角卡片）
-                        CardSegment(
-                            isFirst = true,
-                            isLast = true,
-                            outerHorizontalPadding = 12.dp,
-                        ) {
-                            BasicComponent(
-                                modifier = Modifier.fillMaxWidth(),
-                                title = "新建自定义规则",
-                                summary = "添加匹配网址特征与指定打开目标应用",
-                                startAction = {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(CircleShape)
-                                            .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.12f)),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Add,
-                                            contentDescription = null,
-                                            tint = MiuixTheme.colorScheme.primary,
-                                            modifier = Modifier.size(20.dp),
-                                        )
-                                    }
-                                },
-                                onClick = { onNavigateToEditRule(null) },
+                        MiuixText(
+                            text = if (rules.isEmpty()) "暂无规则，点击上方添加或从工具导入模板" else "没有匹配的规则",
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        )
+                    }
+                }
+            } else {
+                // 1. 分发规则（短链重分发）
+                if (dispatchRules.isNotEmpty()) {
+                    item(key = "title_dispatch_rules") {
+                        Box(modifier = Modifier.padding(start = 24.dp, top = 8.dp, bottom = 4.dp)) {
+                            MiuixText(
+                                text = "短链重分发规则 (${dispatchRules.size} 条)",
+                                style = MiuixTheme.textStyles.footnote1,
+                                fontWeight = FontWeight.Medium,
+                                color = MiuixTheme.colorScheme.primary,
                             )
                         }
-
-                        if (filteredRules.isEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 20.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                MiuixText(
-                                    text = if (rules.isEmpty()) "暂无规则，点击上方添加或从工具导入模板" else "没有匹配的规则",
-                                    style = MiuixTheme.textStyles.body2,
-                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                )
-                            }
-                        } else {
-                            // 1. 分发规则（短链重分发）
-                            if (dispatchRules.isNotEmpty()) {
-                                Box(modifier = Modifier.padding(start = 24.dp, top = 4.dp, bottom = 0.dp)) {
-                                    MiuixText(
-                                        text = "短链重分发规则 (${dispatchRules.size} 条)",
-                                        style = MiuixTheme.textStyles.footnote1,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MiuixTheme.colorScheme.primary,
-                                    )
-                                }
-                                dispatchRules.forEach { rule ->
-                                    val appName = linkAppNameCache[rule.targetPackage].orEmpty()
-                                    val isSelected = rule.id in selectedRuleIds
-                                    val isDragging = rule.id == draggingRuleId
-                                    LinkDispatchRuleItemRow(
-                                        rule = rule,
-                                        appName = appName,
-                                        isFirst = true,
-                                        isLast = true,
-                                        isSelectionMode = isSelectionMode,
-                                        isSelected = isSelected,
-                                        isDragging = isDragging,
-                                        draggingOffsetY = if (isDragging) dragAccumulatedOffset else 0f,
-                                        onClick = {
-                                            if (isSelectionMode) {
-                                                if (isSelected) selectedRuleIds.remove(rule.id)
-                                                else selectedRuleIds.add(rule.id)
-                                            } else {
-                                                onNavigateToEditRule(rule.id)
-                                            }
-                                        },
-                                        onLongClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            if (!isSelectionMode) {
-                                                isSelectionMode = true
-                                                selectedRuleIds.clear()
-                                                selectedRuleIds.add(rule.id)
-                                                rulesExpanded = true
-                                            }
-                                        },
-                                        onToggleEnabled = { checked ->
-                                            scope.launch {
-                                                LinkRuleRepository.updateRules(context) { list ->
-                                                    list.map { if (it.id == rule.id) it.copy(isEnabled = checked) else it }
-                                                }
-                                            }
-                                        },
-                                        onDragStart = { onDragStart(rule.id) },
-                                        onDragDelta = { delta -> onDragDelta(rule.id, delta, true) },
-                                        onDragEnd = onDragEnd,
-                                    )
-                                }
-                            }
-
-                            // 2. 跳转规则（直达目标应用）
-                            if (redirectRules.isNotEmpty()) {
-                                Box(modifier = Modifier.padding(start = 24.dp, top = 6.dp, bottom = 0.dp)) {
-                                    MiuixText(
-                                        text = "应用直达跳转规则 (${redirectRules.size} 条)",
-                                        style = MiuixTheme.textStyles.footnote1,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MiuixTheme.colorScheme.primary,
-                                    )
-                                }
-                                redirectRules.forEach { rule ->
-                                    val appName = linkAppNameCache[rule.targetPackage].orEmpty()
-                                    val isSelected = rule.id in selectedRuleIds
-                                    val isDragging = rule.id == draggingRuleId
-                                    LinkDispatchRuleItemRow(
-                                        rule = rule,
-                                        appName = appName,
-                                        isFirst = true,
-                                        isLast = true,
-                                        isSelectionMode = isSelectionMode,
-                                        isSelected = isSelected,
-                                        isDragging = isDragging,
-                                        draggingOffsetY = if (isDragging) dragAccumulatedOffset else 0f,
-                                        onClick = {
-                                            if (isSelectionMode) {
-                                                if (isSelected) selectedRuleIds.remove(rule.id)
-                                                else selectedRuleIds.add(rule.id)
-                                            } else {
-                                                onNavigateToEditRule(rule.id)
-                                            }
-                                        },
-                                        onLongClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            if (!isSelectionMode) {
-                                                isSelectionMode = true
-                                                selectedRuleIds.clear()
-                                                selectedRuleIds.add(rule.id)
-                                                rulesExpanded = true
-                                            }
-                                        },
-                                        onToggleEnabled = { checked ->
-                                            scope.launch {
-                                                LinkRuleRepository.updateRules(context) { list ->
-                                                    list.map { if (it.id == rule.id) it.copy(isEnabled = checked) else it }
-                                                }
-                                            }
-                                        },
-                                        onDragStart = { onDragStart(rule.id) },
-                                        onDragDelta = { delta -> onDragDelta(rule.id, delta, false) },
-                                        onDragEnd = onDragEnd,
-                                    )
-                                }
-                            }
-
-                            // 多选模式下底部预留空间以防被吸底工具栏遮挡
-                            if (isSelectionMode) {
-                                Spacer(modifier = Modifier.height(88.dp))
-                            }
+                    }
+                    items(dispatchRules, key = { it.id }) { rule ->
+                        val appName = linkAppNameCache[rule.targetPackage].orEmpty()
+                        val isSelected = rule.id in selectedRuleIds
+                        ReorderableItem(
+                            state = reorderableLazyListState,
+                            key = rule.id,
+                        ) { isDragging ->
+                            LinkDispatchRuleItemRow(
+                                rule = rule,
+                                appName = appName,
+                                isFirst = true,
+                                isLast = true,
+                                isSelectionMode = isSelectionMode,
+                                isSelected = isSelected,
+                                isDragging = isDragging,
+                                handleModifier = Modifier.draggableHandle(
+                                    enabled = isSelectionMode,
+                                    onDragStarted = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                                    },
+                                    onDragStopped = onDragSave,
+                                ),
+                                onClick = {
+                                    if (isSelectionMode) {
+                                        if (isSelected) selectedRuleIds.remove(rule.id)
+                                        else selectedRuleIds.add(rule.id)
+                                    } else {
+                                        onNavigateToEditRule(rule.id)
+                                    }
+                                },
+                                onLongClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    if (!isSelectionMode) {
+                                        isSelectionMode = true
+                                        selectedRuleIds.clear()
+                                        selectedRuleIds.add(rule.id)
+                                        rulesExpanded = true
+                                    }
+                                },
+                                onToggleEnabled = { checked ->
+                                    scope.launch {
+                                        LinkRuleRepository.updateRules(context) { list ->
+                                            list.map { if (it.id == rule.id) it.copy(isEnabled = checked) else it }
+                                        }
+                                    }
+                                },
+                            )
                         }
+                    }
+                }
+
+                // 2. 跳转规则（直达目标应用）
+                if (redirectRules.isNotEmpty()) {
+                    item(key = "title_redirect_rules") {
+                        Box(modifier = Modifier.padding(start = 24.dp, top = 12.dp, bottom = 4.dp)) {
+                            MiuixText(
+                                text = "应用直达跳转规则 (${redirectRules.size} 条)",
+                                style = MiuixTheme.textStyles.footnote1,
+                                fontWeight = FontWeight.Medium,
+                                color = MiuixTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                    items(redirectRules, key = { it.id }) { rule ->
+                        val appName = linkAppNameCache[rule.targetPackage].orEmpty()
+                        val isSelected = rule.id in selectedRuleIds
+                        ReorderableItem(
+                            state = reorderableLazyListState,
+                            key = rule.id,
+                        ) { isDragging ->
+                            LinkDispatchRuleItemRow(
+                                rule = rule,
+                                appName = appName,
+                                isFirst = true,
+                                isLast = true,
+                                isSelectionMode = isSelectionMode,
+                                isSelected = isSelected,
+                                isDragging = isDragging,
+                                handleModifier = Modifier.draggableHandle(
+                                    enabled = isSelectionMode,
+                                    onDragStarted = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                                    },
+                                    onDragStopped = onDragSave,
+                                ),
+                                onClick = {
+                                    if (isSelectionMode) {
+                                        if (isSelected) selectedRuleIds.remove(rule.id)
+                                        else selectedRuleIds.add(rule.id)
+                                    } else {
+                                        onNavigateToEditRule(rule.id)
+                                    }
+                                },
+                                onLongClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    if (!isSelectionMode) {
+                                        isSelectionMode = true
+                                        selectedRuleIds.clear()
+                                        selectedRuleIds.add(rule.id)
+                                        rulesExpanded = true
+                                    }
+                                },
+                                onToggleEnabled = { checked ->
+                                    scope.launch {
+                                        LinkRuleRepository.updateRules(context) { list ->
+                                            list.map { if (it.id == rule.id) it.copy(isEnabled = checked) else it }
+                                        }
+                                    }
+                                },
+                            )
+                        }
+                    }
+                }
+
+                // 多选模式下底部预留空间以防被吸底工具栏遮挡
+                if (isSelectionMode) {
+                    item(key = "spacer_selection_bottom") {
+                        Spacer(modifier = Modifier.height(88.dp))
                     }
                 }
             }
@@ -1570,13 +1551,10 @@ private fun LinkDispatchRuleItemRow(
     isSelectionMode: Boolean = false,
     isSelected: Boolean = false,
     isDragging: Boolean = false,
-    draggingOffsetY: Float = 0f,
+    handleModifier: Modifier = Modifier,
     onClick: () -> Unit,
     onLongClick: () -> Unit = {},
     onToggleEnabled: (Boolean) -> Unit,
-    onDragStart: () -> Unit = {},
-    onDragDelta: (Float) -> Unit = {},
-    onDragEnd: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val isAppInstalled = remember(rule.targetPackage) {
@@ -1602,9 +1580,8 @@ private fun LinkDispatchRuleItemRow(
         isLast = isLast,
         outerHorizontalPadding = 12.dp,
         modifier = Modifier
-            .zIndex(if (isDragging) 10f else 0f)
+            .padding(vertical = 4.dp)
             .graphicsLayer {
-                translationY = if (isDragging) draggingOffsetY else 0f
                 scaleX = if (isDragging) 1.02f else 1f
                 scaleY = if (isDragging) 1.02f else 1f
             },
@@ -1680,17 +1657,7 @@ private fun LinkDispatchRuleItemRow(
                                 if (isDragging) MiuixTheme.colorScheme.primary.copy(alpha = 0.2f)
                                 else MiuixTheme.colorScheme.surfaceContainerHigh
                             )
-                            .pointerInput(rule.id) {
-                                detectVerticalDragGestures(
-                                    onDragStart = { onDragStart() },
-                                    onDragEnd = { onDragEnd() },
-                                    onDragCancel = { onDragEnd() },
-                                    onVerticalDrag = { change, dragAmount ->
-                                        change.consume()
-                                        onDragDelta(dragAmount)
-                                    },
-                                )
-                            },
+                            .then(handleModifier),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(

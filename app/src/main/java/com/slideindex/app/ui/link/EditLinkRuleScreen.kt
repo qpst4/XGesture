@@ -377,11 +377,9 @@ fun EditLinkRuleScreen(
                         MiuixLabeledTextField(
                             value = targetPackage,
                             onValueChange = { targetPackage = it },
-                            label = "目标应用包名 (留空为重分发或系统路由)",
+                            label = "目标应用包名",
                             useLabelAsPlaceholder = false,
-                            singleLine = false,
-                            minLines = 1,
-                            maxLines = 4,
+                            singleLine = true,
                             trailingIcon = {
                                 IconButton(onClick = { showAppPickerSheet = true }) {
                                     Icon(
@@ -391,6 +389,12 @@ fun EditLinkRuleScreen(
                                     )
                                 }
                             },
+                        )
+                        MiuixText(
+                            text = "留空为短链重分发或系统默认路由；点击右侧图标可选取应用",
+                            style = MiuixTheme.textStyles.footnote2,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            modifier = Modifier.padding(top = 2.dp),
                         )
                         if (targetPackage.isNotBlank()) {
                             Row(
