@@ -19,8 +19,12 @@ import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam
 import io.github.libxposed.api.XposedModuleInterface.SystemServerStartingParam
 
 class SlideIndexLibXposedModule : XposedModule() {
-  private var systemServerClassLoader: ClassLoader? = null
-  private val packageReadyParams = mutableMapOf<String, PackageReadyParam>()
+  private val reloadTargets = ModuleReloadTargets()
+  private val smsHandlerHook = SmsHandlerHook()
+  private val smsProviderHook = SmsProviderHook()
+  private val systemInputInjectorHook = SystemInputInjectorHook()
+  private val systemInputFilterHook = SystemInputFilterHook { moduleApplicationInfo.sourceDir }
+  private val permissionGranterHook = PermissionGranterHook()
 
   override fun onModuleLoaded(param: ModuleLoadedParam) {
     XposedLog.bind(this)
@@ -33,7 +37,7 @@ class SlideIndexLibXposedModule : XposedModule() {
   }
 
   override fun onSystemServerStarting(param: SystemServerStartingParam) {
-    systemServerClassLoader = param.classLoader
+    reloadTargets.remember(ModuleReloadTargets.SYSTEM, param.classLoader)
     log(Log.INFO, TAG, "onSystemServerStarting")
     installSystemServerHooks(param.classLoader)
   }
@@ -45,13 +49,14 @@ class SlideIndexLibXposedModule : XposedModule() {
   }
 
   override fun onPackageReady(param: PackageReadyParam) {
-    packageReadyParams[param.packageName] = param
     when (param.packageName) {
       PHONE_PACKAGE -> {
+        reloadTargets.remember(PHONE_PACKAGE, param.classLoader)
         log(Log.INFO, TAG, "onPackageReady phone")
         installPhoneHooks(param.classLoader)
       }
       TELEPHONY_PROVIDER_PACKAGE -> {
+        reloadTargets.remember(TELEPHONY_PROVIDER_PACKAGE, param.classLoader)
         log(Log.INFO, TAG, "onPackageReady telephony provider")
         installTelephonyProviderHooks(param.classLoader)
       }
@@ -60,15 +65,36 @@ class SlideIndexLibXposedModule : XposedModule() {
 
   override fun onHotReloading(param: HotReloadingParam): Boolean {
     log(Log.INFO, TAG, "onHotReloading")
+    param.setSavedInstanceState(reloadTargets.save())
+    systemInputFilterHook.detach()
+    systemInputInjectorHook.detach()
+    SmsPolicyRuntime.detach()
     return true
   }
 
   override fun onHotReloaded(param: HotReloadedParam) {
+    // 这是新模块实例；onModuleLoaded / onSystemServerStarting / onPackageReady 均不会重放。
+    XposedLog.bind(this)
+    reloadTargets.restore(param.savedInstanceState)
+    val systemLoader = if (param.isSystemServer) reloadTargets.systemLoader(param.oldHookHandles) else null
     super.onHotReloaded(param)
     log(Log.INFO, TAG, "onHotReloaded process=${param.processName}")
-    systemServerClassLoader?.let(::installSystemServerHooks)
-    packageReadyParams[PHONE_PACKAGE]?.let { installPhoneHooks(it.classLoader) }
-    packageReadyParams[TELEPHONY_PROVIDER_PACKAGE]?.let { installTelephonyProviderHooks(it.classLoader) }
+    if (param.isSystemServer) {
+      if (systemLoader == null) {
+        log(Log.ERROR, TAG, "hot reload: system class loader unavailable")
+      } else {
+        reloadTargets.remember(ModuleReloadTargets.SYSTEM, systemLoader)
+        installSystemServerHooks(systemLoader)
+      }
+    } else {
+      reloadTargets.packageLoaders(param.processName).forEach { (target, loader) ->
+        reloadTargets.remember(target, loader)
+        when (target) {
+          PHONE_PACKAGE -> installPhoneHooks(loader)
+          TELEPHONY_PROVIDER_PACKAGE -> installTelephonyProviderHooks(loader)
+        }
+      }
+    }
   }
 
   private fun installSystemServerHooks(classLoader: ClassLoader) {
@@ -92,12 +118,12 @@ class SlideIndexLibXposedModule : XposedModule() {
   }
 
   private fun installPhoneHooks(classLoader: ClassLoader) {
-    SmsPolicyRuntime.register(ModuleHookBridgeContract.CHANNEL_PHONE)
+    SmsPolicyRuntime.register(ModuleHookBridgeContract.CHANNEL_PHONE, moduleApplicationInfo.sourceDir)
     smsHandlerHook.install(this, classLoader)
   }
 
   private fun installTelephonyProviderHooks(classLoader: ClassLoader) {
-    SmsPolicyRuntime.register(ModuleHookBridgeContract.CHANNEL_TELEPHONY)
+    SmsPolicyRuntime.register(ModuleHookBridgeContract.CHANNEL_TELEPHONY, moduleApplicationInfo.sourceDir)
     smsProviderHook.install(this, classLoader)
   }
 
@@ -105,11 +131,6 @@ class SlideIndexLibXposedModule : XposedModule() {
     private const val TAG = "SlideIndexXposed"
     private const val PHONE_PACKAGE = "com.android.phone"
     private const val TELEPHONY_PROVIDER_PACKAGE = "com.android.providers.telephony"
-    private val smsHandlerHook = SmsHandlerHook()
-    private val smsProviderHook = SmsProviderHook()
-    private val systemInputInjectorHook = SystemInputInjectorHook()
-    private val systemInputFilterHook = SystemInputFilterHook()
-    private val permissionGranterHook = PermissionGranterHook()
     // 剪贴板白名单是单例：安装点和配置广播入口必须共用同一个 reader（见 ClipboardWhitelistHook）。
   }
 }

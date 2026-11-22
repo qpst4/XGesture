@@ -11,16 +11,8 @@ import android.os.SystemClock
  * 状态串形如 `ready:hook=ok,proxy=ok,enable=ok,start=ok,receiver=ok,controller=ready:4,...,code=2,clip=ok`，
  * 其中 `code=` 是模块侧编译时的 [ModuleHookBridgeContract.MODULE_CODE_VERSION]。
  *
- * 模块在开机时被加载进 system_server，覆盖安装 APK 不会换掉里面正在跑的实例，
- * 所以"模块有响应"不等于"跑的是新代码"。判定有两条，任一命中即为
- * [CodeState.Stale]（设置页显示「需重启手机」）：
- *
- * 1. 模块回传的 `code=` 与当前 APK 不一致（旧模块甚至不带该字段）；
- * 2. 当前 APK 是在**本次开机之后**才覆盖安装的。
- *
- * 第 2 条不可省略：`code=` 只在人工 +1 时才变，普通更新（哪怕改了 `xposed/` 代码忘了 bump）
- * 都会被漏掉，而覆盖安装同时还会让 system_server 里那份实例丢掉与 App 的事件桥，
- * 因此"更新过 APK 就必须重启"是这两处设置页要如实告诉用户的事。
+ * 新模块还回传其所属 APK 的路径：与已安装 APK 一致时，允许热重载后直接就绪。
+ * 旧模块不带该字段时，保留“本次开机后覆盖安装”的兼容判定。
  */
 object ModuleStatusFields {
     enum class CodeState {
@@ -63,7 +55,7 @@ object ModuleStatusFields {
      * 不该一律说成"需重启"。
      */
     fun codeStateOfDetail(context: Context, detail: String?): CodeState =
-        codeState(detail, apkInstalledAfterBoot(context))
+        codeState(detail, apkInstalledAfterBoot(context), context.applicationContext.applicationInfo.sourceDir)
 
     /** 状态缓存快照 → 代码新旧，含"本次开机后覆盖安装过 APK"判定。 */
     fun codeStateOf(context: Context, snapshot: ModuleBridgeStatusStore.Snapshot): CodeState {
@@ -73,11 +65,19 @@ object ModuleStatusFields {
     }
 
     /** 纯逻辑：字符串判定 + 覆盖安装判定。 */
-    fun codeState(detail: String?, apkInstalledAfterBoot: Boolean): CodeState =
+    fun codeState(detail: String?, apkInstalledAfterBoot: Boolean, installedApkPath: String? = null): CodeState =
         when (codeStateOfDetail(detail)) {
             CodeState.Unknown -> CodeState.Unknown
             CodeState.Stale -> CodeState.Stale
-            CodeState.Current -> if (apkInstalledAfterBoot) CodeState.Stale else CodeState.Current
+            CodeState.Current -> {
+                val reportedApk = field(detail.orEmpty(), ModuleHookBridgeContract.STATUS_DETAIL_APK_PREFIX)
+                when {
+                    reportedApk != null && installedApkPath != null ->
+                        if (reportedApk == installedApkPath) CodeState.Current else CodeState.Stale
+                    apkInstalledAfterBoot -> CodeState.Stale
+                    else -> CodeState.Current
+                }
+            }
         }
 
     /** 当前 APK 是否在本次开机之后才覆盖安装（含同码重装）。 */

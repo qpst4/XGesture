@@ -38,6 +38,18 @@ class SystemInputInjectorHook {
   private var inputManagerInstance: Any? = null
   private var injectMethod: Method? = null
   private var injectMethodParamCount = 0
+  private var receiverContext: Context? = null
+  private var registeredReceiver: BroadcastReceiver? = null
+  @Volatile private var retired = false
+
+  fun detach() {
+    retired = true
+    mainHandler.removeCallbacksAndMessages(null)
+    registeredReceiver?.let { receiver -> runCatching { receiverContext?.unregisterReceiver(receiver) } }
+    registeredReceiver = null
+    receiverContext = null
+    registered = false
+  }
 
   fun install(xposed: XposedInterface, classLoader: ClassLoader): List<XposedInterface.HookHandle> {
     return runCatching {
@@ -197,6 +209,7 @@ class SystemInputInjectorHook {
   }
 
   private fun scheduleRegister(context: Context, classLoader: ClassLoader) {
+    if (retired) return
     if (registered) return
     mainHandler.postDelayed({
       runCatching { registerReceiver(context, classLoader) }
@@ -210,6 +223,7 @@ class SystemInputInjectorHook {
   }
 
   private fun registerReceiver(context: Context, classLoader: ClassLoader) {
+    if (retired) return
     if (registered) return
     registerAttempts++
     if (!resolveInputInjector(classLoader)) {
@@ -299,6 +313,8 @@ class SystemInputInjectorHook {
       priority = OtpAutoInputBroadcastContract.RECEIVER_PRIORITY_SYSTEM
     }
     ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_EXPORTED)
+    receiverContext = context
+    registeredReceiver = receiver
     registered = true
     XposedLog.i(TAG, "SystemInputInjectorHook receiver registered in system_server (process ready)")
   }

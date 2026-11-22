@@ -9,7 +9,7 @@ import com.slideindex.app.xposed.bridge.ModuleStatusFields
 /**
  * LSPosed 通道「模块此刻能不能真的干活」的判定。
  *
- * 看三件事：模块回传的代码版本是否与当前 APK 一致（且当前 APK 不是本次开机后才覆盖安装的）、
+ * 看三件事：模块回传的代码版本与 APK 安装代是否和当前应用一致、
  * 剪贴板白名单 hook 是否装上、以及**模块手里那份名单和本地设置是否一致**。
  * 不看 [ModuleBridgeStatusStore.Snapshot.active]——那个是手势接管是否生效，和剪贴板无关。
  */

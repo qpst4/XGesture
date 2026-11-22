@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicLong
  * 状态通道（广播接收器）与 hook 安装完全解耦、优先建立：任何一步失败都能通过
  * 状态响应回传到 app，避免"看着装上了但没生效、又查不到原因"的黑盒。
  */
-class SystemInputFilterHook {
+class SystemInputFilterHook(private val moduleApkPath: () -> String? = { null }) {
   @Volatile
   private var systemContext: Context? = null
 
@@ -73,6 +73,31 @@ class SystemInputFilterHook {
   private val eventsPassed = AtomicLong()
   private var applyingEnable = false
   private val mainHandler = Handler(Looper.getMainLooper())
+  private var bridgeReceiver: BroadcastReceiver? = null
+  private var forwardingFilter: Any? = null
+  @Volatile private var retired = false
+
+  /** 热重载前断开旧代的系统回调，避免旧 receiver 继续回报已经卸载的 Hook。 */
+  fun detach() {
+    retired = true
+    mainHandler.removeCallbacksAndMessages(null)
+    bridgeReceiver?.let { receiver -> runCatching { systemContext?.unregisterReceiver(receiver) } }
+    bridgeReceiver = null
+    receiverRegistered = false
+    controller?.close()
+    controller = null
+    val ims = inputManagerService
+    val filter = forwardingFilter
+    if (ims != null && filter != null) {
+      runCatching {
+        if (LibXposedReflect.getObjectField(ims, "mInputFilter") === filter) {
+          LibXposedReflect.callMethod(ims, "setInputFilter", null)
+        }
+      }.onFailure { XposedLog.w(TAG, "release forwarding filter failed: ${it.message}") }
+    }
+    forwardingFilter = null
+    xposedInterface = null
+  }
 
   /**
    * 建立状态通道（广播接收器）。
@@ -87,6 +112,7 @@ class SystemInputFilterHook {
   }
 
   private fun attemptReceiverRegistration(classLoader: ClassLoader, attempt: Int) {
+    if (retired) return
     if (receiverRegistered) return
     runCatching {
       val context = systemContext ?: resolveSystemContext(classLoader)
@@ -121,6 +147,7 @@ class SystemInputFilterHook {
   }
 
   fun install(xposed: XposedInterface, classLoader: ClassLoader): List<XposedInterface.HookHandle> {
+    if (retired) return emptyList()
     xposedInterface = xposed
     currentClassLoader = classLoader
     if (!receiverRegistered) {
@@ -140,6 +167,14 @@ class SystemInputFilterHook {
     if (imsClass == null) {
       recordModuleError("ims: InputManagerService not found")
       return handles
+    }
+    // 热重载发生时 IMS.start 已执行过，不能再等启动回调提供实例。
+    if (inputManagerService == null) {
+      inputManagerService = runCatching {
+        val serviceManager = LibXposedReflect.findClass("android.os.ServiceManager", classLoader)
+        LibXposedReflect.callStaticMethod(serviceManager, "getService", "input")
+          ?.takeIf { imsClass.isInstance(it) }
+      }.getOrNull()
     }
     if (!enableHookInstalled) {
       runCatching { handles += hookFilterEnable(xposed, imsClass, classLoader, takeoverController) }
@@ -296,6 +331,7 @@ class SystemInputFilterHook {
   private fun registerBridgeReceiver(context: Context) {
     val receiver = object : BroadcastReceiver() {
       override fun onReceive(receiverContext: Context?, intent: Intent?) {
+        if (retired) return
         val takeoverController = controller
         when (intent?.action) {
           ModuleHookBridgeContract.ACTION_CONFIG_CHANGED -> {
@@ -338,6 +374,7 @@ class SystemInputFilterHook {
       addAction(Intent.ACTION_USER_PRESENT)
     }
     ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_EXPORTED)
+    bridgeReceiver = receiver
   }
 
   /**
@@ -411,6 +448,7 @@ class SystemInputFilterHook {
       append(",swallowed=").append(eventsSwallowed.get())
       // 模块代码版本 + 剪贴板白名单 hook 状态：app 侧据此判断"是不是覆盖安装后还没重启"。
       append(",code=").append(ModuleHookBridgeContract.MODULE_CODE_VERSION)
+      moduleApkPath()?.let { append(",apk=").append(it) }
       append(",clip=").append(ClipboardWhitelistHook.installStatus)
       // 模块当前生效的白名单大小：app 侧拿它和本地设置比对，不一致就是"配置没下发到 system_server"。
       append(",wl=").append(ClipboardWhitelistHook.activeWhitelist().size)
@@ -504,6 +542,7 @@ class SystemInputFilterHook {
     })
     runCatching {
       LibXposedReflect.callMethod(ims, "setInputFilter", proxy)
+      forwardingFilter = proxy
       forwardingFilterInstalled = true
       XposedLog.i(TAG, "Forwarding input filter installed")
     }.onFailure { recordModuleError(describe("forwardingFilter", it)) }
