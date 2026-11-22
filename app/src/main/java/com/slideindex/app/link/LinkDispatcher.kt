@@ -19,9 +19,9 @@ import kotlin.coroutines.coroutineContext
 
 /** 链接分发计算结果。 */
 sealed class LinkDispatchResult {
-    data class Routed(val rule: LinkDispatchRule, val url: String) : LinkDispatchResult()
+    data class Routed(val rule: LinkDispatchRule, val url: String, val inputUrl: String = url) : LinkDispatchResult()
     data class Exempted(val domain: String, val url: String) : LinkDispatchResult()
-    data class SystemDefault(val url: String) : LinkDispatchResult()
+    data class SystemDefault(val url: String, val inputUrl: String = url) : LinkDispatchResult()
     data object NoRule : LinkDispatchResult()
     data object Failed : LinkDispatchResult()
 }
@@ -247,7 +247,7 @@ object LinkDispatcher {
             )
             // 候选规则已命中；若后续规则库无接管者，应降级为系统默认打开流程，而非误判当前规则未命中
             val finalRes = when (subTrace.finalResult) {
-                is LinkDispatchResult.NoRule -> LinkDispatchResult.SystemDefault(finalCandidateUrl)
+                is LinkDispatchResult.NoRule -> LinkDispatchResult.SystemDefault(finalCandidateUrl, inputUrl = finalCandidateUrl)
                 else -> subTrace.finalResult
             }
             LinkRouteTrace(
@@ -261,13 +261,13 @@ object LinkDispatcher {
                 LinkRouteTrace(
                     inputUrl = normalized,
                     steps = steps,
-                    finalResult = LinkDispatchResult.SystemDefault(finalCandidateUrl),
+                    finalResult = LinkDispatchResult.SystemDefault(finalCandidateUrl, inputUrl = currentUrl),
                 )
             } else {
                 LinkRouteTrace(
                     inputUrl = normalized,
                     steps = steps,
-                    finalResult = LinkDispatchResult.Routed(candidateRule, finalCandidateUrl),
+                    finalResult = LinkDispatchResult.Routed(candidateRule, finalCandidateUrl, inputUrl = currentUrl),
                 )
             }
         }
@@ -326,7 +326,7 @@ object LinkDispatcher {
                 target = resolved ?: target
             }
             if (rule.targetPackage.isBlank()) {
-                finalResult = LinkDispatchResult.SystemDefault(target)
+                finalResult = LinkDispatchResult.SystemDefault(target, inputUrl = target)
                 finished = true
                 return@repeat
             }
@@ -336,7 +336,7 @@ object LinkDispatcher {
                 match?.groupValues?.drop(1)
             }.orEmpty()
             val finalUrl = applyTemplate(target, rule, groups)
-            finalResult = if (finalUrl.isBlank()) LinkDispatchResult.Failed else LinkDispatchResult.Routed(rule, finalUrl)
+            finalResult = if (finalUrl.isBlank()) LinkDispatchResult.Failed else LinkDispatchResult.Routed(rule, finalUrl, inputUrl = target)
             finished = true
         }
 

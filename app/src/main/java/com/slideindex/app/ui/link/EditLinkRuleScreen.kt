@@ -1138,8 +1138,16 @@ private fun LinkRuleLiveTestBottomSheet(
                                         )
                                     }
                                     val candidateOutputUrl = when (val res = trace.finalResult) {
-                                        is LinkDispatchResult.Routed -> res.url
-                                        is LinkDispatchResult.SystemDefault -> res.url
+                                        is LinkDispatchResult.Routed -> if (candidateRule.resolveStrategy == LinkResolveStrategy.REDISPATCH) {
+                                            res.inputUrl
+                                        } else {
+                                            res.url
+                                        }
+                                        is LinkDispatchResult.SystemDefault -> if (candidateRule.resolveStrategy == LinkResolveStrategy.REDISPATCH) {
+                                            res.inputUrl
+                                        } else {
+                                            res.url
+                                        }
                                         else -> firstStep?.resolvedUrl ?: testUrl
                                     }
                                     Box(
@@ -1192,7 +1200,7 @@ private fun LinkRuleLiveTestBottomSheet(
                                     // 原始链接
                                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                         MiuixText(text = "原始链接", style = MiuixTheme.textStyles.footnote2, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
-                                        MiuixText(text = testUrl, style = MiuixTheme.textStyles.footnote1, fontFamily = FontFamily.Monospace)
+                                        MiuixText(text = res.inputUrl, style = MiuixTheme.textStyles.footnote1, fontFamily = FontFamily.Monospace)
                                     }
 
                                     // 目标应用卡片行
@@ -1278,7 +1286,7 @@ private fun LinkRuleLiveTestBottomSheet(
                                     // 原始链接
                                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                         MiuixText(text = "原始链接", style = MiuixTheme.textStyles.footnote2, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
-                                        MiuixText(text = res.url, style = MiuixTheme.textStyles.footnote1, fontFamily = FontFamily.Monospace)
+                                        MiuixText(text = res.inputUrl, style = MiuixTheme.textStyles.footnote1, fontFamily = FontFamily.Monospace)
                                     }
 
                                     // 浅蓝卡片（1:1 还原 LinkGo 提示框）
