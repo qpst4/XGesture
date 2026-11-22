@@ -2835,7 +2835,7 @@
     <string name="trigger_copy_portrait">Copiar configuración del retrato</string>
     <string name="trigger_copy_portrait_open">Copiar configuración del retrato</string>
     <string name="trigger_copy_portrait_confirm_title">Copiar la configuración del retrato al paisaje?</string>
-    <string name="trigger_copy_portrait_confirm_message">Los gestos y gatillos de la manija del retrato serán copiados al paisaje. Mangos solo para el paisaje se mantienen. Las posiciones de la manija son re-laid hacia fuera para la pantalla del paisaje y no coincidirá con el retrato exactamente. Esto no puede ser deshecho.</string>
+    <string name="trigger_copy_portrait_confirm_message">Se sustituirán todos los ajustes de los controles horizontales por los verticales, incluidos apariencia, posición, tamaño, gestos y modos de activación. Se eliminarán los controles exclusivos del modo horizontal. La posición y la longitud se copian como proporciones de la pantalla. Esta acción no se puede deshacer.</string>
     <string name="trigger_collection_back_portrait">Vertical</string>
     <string name="hide_trigger_landscape">Horizontal</string>
     <string name="hide_trigger_lock_screen">Pantalla de bloqueo</string>
