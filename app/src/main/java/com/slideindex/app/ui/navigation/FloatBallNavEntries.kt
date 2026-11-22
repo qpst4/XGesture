@@ -51,6 +51,7 @@ import com.slideindex.app.ui.picker.ShareTargetBatchPickScreen
 import com.slideindex.app.ui.picker.TranslateAppPickScreen
 import com.slideindex.app.ui.picker.ShareTargetPickScreen
 import com.slideindex.app.ui.resolveImageSearchEngine
+import com.slideindex.app.ui.LinkDispatchSettingsScreen
 import com.slideindex.app.ui.viewmodel.ExtensionSettingsViewModel
 import com.slideindex.app.ui.viewmodel.FloatBallPickSettingsViewModel
 import com.slideindex.app.ui.viewmodel.CloudTranslateSettingsViewModel
@@ -61,6 +62,16 @@ import com.slideindex.app.ui.viewmodel.TranslateSettingsViewModel
 import kotlinx.coroutines.launch
 
 fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
+    hiltEntry<AppNavKey.LinkDispatchSettings> {
+        val viewModel: ExtensionSettingsViewModel = hiltViewModel()
+        val gestureSettings by viewModel.gestureSettings.collectAsStateWithLifecycle()
+        val settings = gestureSettings.toMinimalAppSettings()
+        LinkDispatchSettingsScreen(
+            settings = settings,
+            onBack = { ctx.backStack.removeLastOrNull() },
+        )
+    }
+
     nativeEnginePackNavEntry(ctx)
     hiltEntry<AppNavKey.FloatBall> {
         val viewModel: ExtensionSettingsViewModel = hiltViewModel()

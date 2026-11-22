@@ -24,7 +24,6 @@ import com.slideindex.app.ui.ActivityShortcutEditScreen
 import com.slideindex.app.ui.ActivityShortcutPresetsScreen
 import com.slideindex.app.ui.ActivityShortcutScreen
 import com.slideindex.app.ui.DynamicShortcutImportScreen
-import com.slideindex.app.ui.LinkDispatchSettingsScreen
 import com.slideindex.app.ui.picker.ActivityShortcutPickActivityScreen
 import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
 import com.slideindex.app.ui.picker.ActivityShortcutPickAppShortcutScreen
@@ -387,13 +386,5 @@ fun NavEntryBuilder.activityShortcutNavEntries(ctx: MainNavContext) {
         )
     }
 
-    hiltEntry<AppNavKey.LinkDispatchSettings> {
-        val viewModel: ExtensionSettingsViewModel = hiltViewModel()
-        val gestureSettings by viewModel.gestureSettings.collectAsStateWithLifecycle()
-        val settings = gestureSettings.toMinimalAppSettings()
-        LinkDispatchSettingsScreen(
-            settings = settings,
-            onBack = { ctx.backStack.removeLastOrNull() },
-        )
-    }
+
 }
