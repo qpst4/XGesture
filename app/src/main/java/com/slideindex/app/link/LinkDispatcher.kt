@@ -188,14 +188,82 @@ object LinkDispatcher {
         candidateRule: LinkDispatchRule,
         sourcePackage: String = "",
         sourceText: String? = null,
-    ): LinkRouteTrace = routeRulesWithTrace(
-        context = context,
-        rawUrl = rawUrl,
-        rules = listOf(candidateRule) + LinkRuleRepository.loadRules(context).filterNot { it.id == candidateRule.id },
-        exempts = LinkRuleRepository.loadExemptDomains(context),
-        sourcePackage = sourcePackage,
-        sourceText = sourceText,
-    )
+    ): LinkRouteTrace = withContext(Dispatchers.IO) {
+        val normalized = PickResultUrl.normalizeOpenableUrl(rawUrl) ?: rawUrl.trim()
+        val steps = mutableListOf<LinkRouteStep>()
+
+        // 1. 严格针对当前候选规则进行判定，不匹配则绝不跨规则去全库盲配
+        if (!matchRule(normalized, candidateRule)) {
+            return@withContext LinkRouteTrace(
+                inputUrl = normalized,
+                steps = emptyList(),
+                finalResult = LinkDispatchResult.NoRule,
+            )
+        }
+
+        var currentUrl = normalized
+        var resolvedUrl: String? = null
+
+        // 2. 如果开启短链解析
+        if (candidateRule.resolveShortLink && candidateRule.resolveStrategy != LinkResolveStrategy.NONE) {
+            val before = currentUrl
+            resolvedUrl = resolveShortLink(currentUrl)
+            steps.add(
+                LinkRouteStep(
+                    ruleName = candidateRule.name.ifBlank { "当前规则" },
+                    fromUrl = before,
+                    resolvedUrl = resolvedUrl,
+                )
+            )
+            if (resolvedUrl != null) {
+                currentUrl = resolvedUrl
+            }
+        }
+
+        // 3. 执行模板改写与正则捕获组提取
+        val groups = candidateRule.extractPattern?.let { pattern ->
+            val regex = compile(pattern)
+            val match = regex?.find(currentUrl) ?: sourceText?.let { regex?.find(it) }
+            match?.groupValues?.drop(1)
+        }.orEmpty()
+        val rewrittenUrl = applyTemplate(currentUrl, candidateRule, groups)
+        val finalCandidateUrl = if (rewrittenUrl.isNotBlank()) rewrittenUrl else currentUrl
+
+        // 4. 后续流向推演
+        if (candidateRule.resolveStrategy == LinkResolveStrategy.REDISPATCH) {
+            // 当前规则为短链重分发：以其产出结果继续去全库其余规则推演后续路由
+            val remainingRules = LinkRuleRepository.loadRules(context).filterNot { it.id == candidateRule.id }
+            val exempts = LinkRuleRepository.loadExemptDomains(context)
+            val subTrace = routeRulesWithTrace(
+                context = context,
+                rawUrl = finalCandidateUrl,
+                rules = remainingRules,
+                exempts = exempts,
+                sourcePackage = sourcePackage,
+                sourceText = sourceText,
+            )
+            LinkRouteTrace(
+                inputUrl = normalized,
+                steps = steps + subTrace.steps,
+                finalResult = subTrace.finalResult,
+            )
+        } else {
+            // 普通直达跳转规则
+            if (candidateRule.targetPackage.isBlank()) {
+                LinkRouteTrace(
+                    inputUrl = normalized,
+                    steps = steps,
+                    finalResult = LinkDispatchResult.SystemDefault(finalCandidateUrl),
+                )
+            } else {
+                LinkRouteTrace(
+                    inputUrl = normalized,
+                    steps = steps,
+                    finalResult = LinkDispatchResult.Routed(candidateRule, finalCandidateUrl),
+                )
+            }
+        }
+    }
 
     private suspend fun routeRulesWithTrace(
         context: Context,

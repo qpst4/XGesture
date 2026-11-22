@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
@@ -13,8 +14,10 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,8 +39,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FindInPage
@@ -45,13 +52,17 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LibraryAdd
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ToggleOff
+import androidx.compose.material.icons.filled.ToggleOn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -60,8 +71,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -69,9 +82,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.slideindex.app.R
+import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import com.slideindex.app.link.BrowserAppOption
 import com.slideindex.app.link.BrowserSelectorActivity
 import com.slideindex.app.link.LinkConfigBackup
+import com.slideindex.app.link.LinkConfigCodec
 import com.slideindex.app.link.LinkConfigTransfer
 import com.slideindex.app.link.LinkDispatchResult
 import com.slideindex.app.link.LinkDispatchRule
@@ -145,6 +160,16 @@ fun LinkDispatchSettingsScreen(
     val currentHoldIndex = holdValues.indexOf(radarHoverHoldMs).let { if (it < 0) 2 else it }
 
     var searchQuery by rememberSaveable { mutableStateOf("") }
+
+    val haptic = LocalHapticFeedback.current
+    var isSelectionMode by rememberSaveable { mutableStateOf(false) }
+    val selectedRuleIds = remember { mutableStateListOf<String>() }
+    var showBatchDeleteDialog by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = isSelectionMode) {
+        isSelectionMode = false
+        selectedRuleIds.clear()
+    }
 
     // Gevo 风格全折叠仪表盘状态（默认全部折叠）
     var rulesExpanded by rememberSaveable { mutableStateOf(false) }
@@ -222,18 +247,96 @@ fun LinkDispatchSettingsScreen(
     var sandboxResult by remember { mutableStateOf<LinkRouteTrace?>(null) }
     var isSandboxSimulating by remember { mutableStateOf(false) }
 
+    val currentTitle = if (isSelectionMode) "已选 ${selectedRuleIds.size} 项" else pageTitle
+
+    val onToggleSelectAll = {
+        if (selectedRuleIds.size == filteredRules.size) {
+            selectedRuleIds.clear()
+        } else {
+            selectedRuleIds.clear()
+            selectedRuleIds.addAll(filteredRules.map { it.id })
+        }
+    }
+
+    val onBatchToggleEnabled = {
+        val selected = rules.filter { it.id in selectedRuleIds }
+        val targetState = !selected.all { it.isEnabled }
+        scope.launch {
+            LinkRuleRepository.updateRules(context) { cur ->
+                cur.map { if (it.id in selectedRuleIds) it.copy(isEnabled = targetState) else it }
+            }
+            Toast.makeText(context, if (targetState) "已批量启用" else "已批量停用", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val onBatchShare = {
+        val toShare = rules.filter { it.id in selectedRuleIds }
+        val backup = LinkConfigBackup(rules = toShare)
+        val json = LinkConfigCodec.export(backup.rules, emptyList(), emptyList())
+        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        cm.setPrimaryClip(ClipData.newPlainText("LinkGoRules", json))
+        Toast.makeText(context, "已复制 ${toShare.size} 条规则到剪贴板", Toast.LENGTH_SHORT).show()
+    }
+
+    val onBatchDuplicate = {
+        val toDuplicate = rules.filter { it.id in selectedRuleIds }
+        scope.launch {
+            LinkRuleRepository.updateRules(context) { cur ->
+                val nextPrio = (cur.maxOfOrNull { it.priority } ?: -1) + 1
+                val copies = toDuplicate.mapIndexed { idx, orig ->
+                    orig.copy(
+                        id = java.util.UUID.randomUUID().toString(),
+                        name = "${orig.name} (副本)",
+                        priority = nextPrio + idx,
+                    )
+                }
+                cur + copies
+            }
+            Toast.makeText(context, "已复刻 ${toDuplicate.size} 条规则", Toast.LENGTH_SHORT).show()
+            selectedRuleIds.clear()
+            isSelectionMode = false
+        }
+    }
+
     SettingsLazyScreenScaffoldWithExpandableSearch(
-        title = pageTitle,
+        title = currentTitle,
         searchQuery = searchQuery,
         onSearchQueryChange = { searchQuery = it },
-        onBack = onBack,
+        onBack = {
+            if (isSelectionMode) {
+                isSelectionMode = false
+                selectedRuleIds.clear()
+            } else {
+                onBack()
+            }
+        },
         hintResId = R.string.shortcut_test_search_hint,
         extraActions = {
-            MiuixTopBarIconButton(onClick = onNavigateToHistory) {
-                Icon(
-                    imageVector = Icons.Default.History,
-                    contentDescription = "跳转记录",
-                )
+            if (isSelectionMode) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable {
+                            isSelectionMode = false
+                            selectedRuleIds.clear()
+                        }
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    MiuixText(
+                        text = "完成",
+                        style = MiuixTheme.textStyles.body2,
+                        fontWeight = FontWeight.Bold,
+                        color = MiuixTheme.colorScheme.primary,
+                    )
+                }
+            } else {
+                MiuixTopBarIconButton(onClick = onNavigateToHistory) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = "跳转记录",
+                    )
+                }
             }
         },
     ) {
@@ -364,12 +467,31 @@ fun LinkDispatchSettingsScreen(
                                 }
                                 dispatchRules.forEachIndexed { idx, rule ->
                                     val appName = linkAppNameCache[rule.targetPackage].orEmpty()
+                                    val isSelected = rule.id in selectedRuleIds
                                     LinkDispatchRuleItemRow(
                                         rule = rule,
                                         appName = appName,
                                         isFirst = idx == 0 && redirectRules.isEmpty(),
-                                        isLast = idx == dispatchRules.size - 1 && redirectRules.isEmpty(),
-                                        onClick = { onNavigateToEditRule(rule.id) },
+                                        isLast = idx == dispatchRules.size - 1 && redirectRules.isEmpty() && !isSelectionMode,
+                                        isSelectionMode = isSelectionMode,
+                                        isSelected = isSelected,
+                                        onClick = {
+                                            if (isSelectionMode) {
+                                                if (isSelected) selectedRuleIds.remove(rule.id)
+                                                else selectedRuleIds.add(rule.id)
+                                            } else {
+                                                onNavigateToEditRule(rule.id)
+                                            }
+                                        },
+                                        onLongClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            if (!isSelectionMode) {
+                                                isSelectionMode = true
+                                                selectedRuleIds.clear()
+                                                selectedRuleIds.add(rule.id)
+                                                rulesExpanded = true
+                                            }
+                                        },
                                         onToggleEnabled = { checked ->
                                             scope.launch {
                                                 LinkRuleRepository.updateRules(context) { list ->
@@ -393,12 +515,31 @@ fun LinkDispatchSettingsScreen(
                                 }
                                 redirectRules.forEachIndexed { idx, rule ->
                                     val appName = linkAppNameCache[rule.targetPackage].orEmpty()
+                                    val isSelected = rule.id in selectedRuleIds
                                     LinkDispatchRuleItemRow(
                                         rule = rule,
                                         appName = appName,
                                         isFirst = idx == 0 && dispatchRules.isEmpty(),
-                                        isLast = idx == redirectRules.size - 1,
-                                        onClick = { onNavigateToEditRule(rule.id) },
+                                        isLast = idx == redirectRules.size - 1 && !isSelectionMode,
+                                        isSelectionMode = isSelectionMode,
+                                        isSelected = isSelected,
+                                        onClick = {
+                                            if (isSelectionMode) {
+                                                if (isSelected) selectedRuleIds.remove(rule.id)
+                                                else selectedRuleIds.add(rule.id)
+                                            } else {
+                                                onNavigateToEditRule(rule.id)
+                                            }
+                                        },
+                                        onLongClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            if (!isSelectionMode) {
+                                                isSelectionMode = true
+                                                selectedRuleIds.clear()
+                                                selectedRuleIds.add(rule.id)
+                                                rulesExpanded = true
+                                            }
+                                        },
                                         onToggleEnabled = { checked ->
                                             scope.launch {
                                                 LinkRuleRepository.updateRules(context) { list ->
@@ -408,6 +549,24 @@ fun LinkDispatchSettingsScreen(
                                         },
                                     )
                                 }
+                            }
+
+                            // 多选模式底部操作工具栏 (对标 LinkGo 原版交互)
+                            if (isSelectionMode) {
+                                LinkRulesSelectionBottomBar(
+                                    selectedCount = selectedRuleIds.size,
+                                    totalCount = filteredRules.size,
+                                    allSelected = selectedRuleIds.size == filteredRules.size && filteredRules.isNotEmpty(),
+                                    onToggleSelectAll = { onToggleSelectAll() },
+                                    onBatchToggleEnabled = { onBatchToggleEnabled() },
+                                    onBatchShare = { onBatchShare() },
+                                    onBatchDuplicate = { onBatchDuplicate() },
+                                    onBatchDelete = { showBatchDeleteDialog = true },
+                                    onExit = {
+                                        isSelectionMode = false
+                                        selectedRuleIds.clear()
+                                    },
+                                )
                             }
                         }
                     }
@@ -1205,18 +1364,114 @@ fun LinkDispatchSettingsScreen(
             }
         }
     }
+    // 批量删除确认弹窗
+    MiuixConfirmDialog(
+        show = showBatchDeleteDialog,
+        title = "批量删除规则",
+        message = "确定要删除选中的 ${selectedRuleIds.size} 条规则吗？此操作无法撤销。",
+        onDismissRequest = { showBatchDeleteDialog = false },
+        confirmText = "删除",
+        dismissText = "取消",
+        onConfirm = {
+            showBatchDeleteDialog = false
+            val toDelete = selectedRuleIds.toSet()
+            scope.launch {
+                LinkRuleRepository.updateRules(context) { list ->
+                    list.filterNot { it.id in toDelete }
+                }
+                Toast.makeText(context, "已删除 ${toDelete.size} 条规则", Toast.LENGTH_SHORT).show()
+                selectedRuleIds.clear()
+                isSelectionMode = false
+            }
+        },
+    )
+}
+
+/**
+ * 规则多选模式底部工具条 (1:1 对标 LinkGo 原版交互：全选、批量启停、批量分享、批量复刻、批量删除红图标)。
+ */
+@Composable
+private fun LinkRulesSelectionBottomBar(
+    selectedCount: Int,
+    totalCount: Int,
+    allSelected: Boolean,
+    onToggleSelectAll: () -> Unit,
+    onBatchToggleEnabled: () -> Unit,
+    onBatchShare: () -> Unit,
+    onBatchDuplicate: () -> Unit,
+    onBatchDelete: () -> Unit,
+    onExit: () -> Unit,
+) {
+    CardSegment(
+        isFirst = false,
+        isLast = true,
+        outerHorizontalPadding = 12.dp,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceAround,
+        ) {
+            // 全选 / 取消全选
+            IconButton(onClick = onToggleSelectAll) {
+                Icon(
+                    imageVector = Icons.Default.SelectAll,
+                    contentDescription = if (allSelected) "取消全选" else "全选",
+                    tint = if (allSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurface,
+                )
+            }
+            // 批量开关
+            IconButton(onClick = onBatchToggleEnabled, enabled = selectedCount > 0) {
+                Icon(
+                    imageVector = Icons.Default.ToggleOn,
+                    contentDescription = "批量启停",
+                    tint = if (selectedCount > 0) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.4f),
+                )
+            }
+            // 分享/复制
+            IconButton(onClick = onBatchShare, enabled = selectedCount > 0) {
+                Icon(
+                    imageVector = Icons.Default.Share,
+                    contentDescription = "批量复制规则",
+                    tint = if (selectedCount > 0) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.4f),
+                )
+            }
+            // 批量复刻
+            IconButton(onClick = onBatchDuplicate, enabled = selectedCount > 0) {
+                Icon(
+                    imageVector = Icons.Default.ContentCopy,
+                    contentDescription = "批量复刻",
+                    tint = if (selectedCount > 0) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.4f),
+                )
+            }
+            // 批量删除 (红图标)
+            IconButton(onClick = onBatchDelete, enabled = selectedCount > 0) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "批量删除",
+                    tint = if (selectedCount > 0) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.4f),
+                )
+            }
+        }
+    }
 }
 
 /**
  * 单条链接分发规则展示行（Miuix 风格高阶卡片：左侧 40dp 高清应用图标、标题加粗、等宽 Pattern 浅底小标签、状态徽章胶囊、右侧 Switch）。
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LinkDispatchRuleItemRow(
     rule: LinkDispatchRule,
     appName: String,
     isFirst: Boolean,
     isLast: Boolean,
+    isSelectionMode: Boolean = false,
+    isSelected: Boolean = false,
     onClick: () -> Unit,
+    onLongClick: () -> Unit = {},
     onToggleEnabled: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
@@ -1246,14 +1501,29 @@ private fun LinkDispatchRuleItemRow(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onClick)
+                .background(
+                    if (isSelected) MiuixTheme.colorScheme.primary.copy(alpha = 0.08f)
+                    else MiuixTheme.colorScheme.surface
+                )
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = onLongClick,
+                )
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
-            // 第一行：40dp 图标 + 规则名称 + 目标说明 + Switch
+            // 第一行：40dp 图标 + 规则名称 + 目标说明 + (Switch 或 拖动把手)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                if (isSelectionMode) {
+                    Box(modifier = Modifier.padding(end = 10.dp)) {
+                        top.yukonga.miuix.kmp.basic.Checkbox(
+                            state = if (isSelected) androidx.compose.ui.state.ToggleableState.On else androidx.compose.ui.state.ToggleableState.Off,
+                            onClick = onClick,
+                        )
+                    }
+                }
                 Box(modifier = Modifier.padding(end = 12.dp)) {
                     LinkAppIcon(packageName = rule.targetPackage, size = 40.dp)
                 }
@@ -1290,10 +1560,27 @@ private fun LinkDispatchRuleItemRow(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                Switch(
-                    checked = rule.isEnabled,
-                    onCheckedChange = onToggleEnabled,
-                )
+                if (isSelectionMode) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(MiuixTheme.colorScheme.surfaceContainerHigh),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DragHandle,
+                            contentDescription = "拖动把手",
+                            tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                } else {
+                    Switch(
+                        checked = rule.isEnabled,
+                        onCheckedChange = onToggleEnabled,
+                    )
+                }
             }
 
             // 第二行：Pattern 浅色等宽背景标签 + 状态胶囊徽章

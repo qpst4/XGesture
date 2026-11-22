@@ -585,7 +585,7 @@ internal fun LinkTargetAppPickerBottomSheet(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .fillMaxHeight(0.78f),
+                            .fillMaxHeight(0.85f),
                     ) {
                         items(filteredApps, key = { it.packageName }) { app ->
                             val isCurrent = app.packageName == selectedPackage

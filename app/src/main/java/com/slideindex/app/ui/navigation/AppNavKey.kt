@@ -546,7 +546,6 @@ sealed interface AppNavKey : NavKey {
     @Serializable data object ActivityShortcutPickApp : AppNavKey
     @Serializable data class ActivityShortcutPickActivity(val packageName: String) : AppNavKey
     @Serializable data object ActivityShortcutPickAppShortcut : AppNavKey
-    @Serializable data object DynamicShortcutImport : AppNavKey
     @Serializable data object LinkDispatchSettings : AppNavKey
     @Serializable data object LinkDispatchHistory : AppNavKey
     @Serializable data class EditLinkRule(val ruleId: String? = null) : AppNavKey

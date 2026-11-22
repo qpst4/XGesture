@@ -609,6 +609,10 @@ private fun EditorTypeFields(
                 value = searchLink,
                 onValueChange = onSearchLinkChange,
                 label = stringResource(R.string.search_engine_url_link_hint),
+                singleLine = false,
+                minLines = 1,
+                maxLines = 5,
+                useLabelAsPlaceholder = false,
             )
             MiuixHintText(
                 stringResource(R.string.search_engine_search_link_support),
@@ -695,6 +699,10 @@ private fun EditorTypeFields(
                 value = externJumpLink,
                 onValueChange = onExternJumpLinkChange,
                 label = stringResource(R.string.search_engine_extern_link_hint),
+                singleLine = false,
+                minLines = 1,
+                maxLines = 5,
+                useLabelAsPlaceholder = false,
             )
             MiuixHintText(
                 stringResource(R.string.search_engine_url_link_support),

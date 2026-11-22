@@ -26,9 +26,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.FormatListBulleted
+import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -829,158 +832,332 @@ private fun LinkRuleLiveTestBottomSheet(
 
     MiuixBottomSheet(
         show = show,
-        title = "规则实时仿真测试",
+        title = "链接测试",
         onDismissRequest = onDismissRequest,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            // 输入区域与粘贴按钮
+            // 1. 输入待测试的链接（支持多行自动撑大展开）
+            MiuixLabeledTextField(
+                value = testUrl,
+                onValueChange = { testUrl = it },
+                label = "输入待测试的链接...",
+                useLabelAsPlaceholder = false,
+                singleLine = false,
+                minLines = 1,
+                maxLines = 5,
+            )
+
+            // 2. 双操作按钮（清空内容 / 粘贴最新）
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Box(modifier = Modifier.weight(1f)) {
-                    MiuixLabeledTextField(
-                        value = testUrl,
-                        onValueChange = { testUrl = it },
-                        label = "输入测试链接",
-                        useLabelAsPlaceholder = false,
-                        singleLine = true,
-                    )
-                }
+                // 清空内容
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
                         .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+                        .clickable { testUrl = "" }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DeleteOutline,
+                            contentDescription = "清空内容",
+                            tint = MiuixTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        MiuixText(
+                            text = "清空内容",
+                            style = MiuixTheme.textStyles.footnote1,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MiuixTheme.colorScheme.primary,
+                        )
+                    }
+                }
+
+                // 粘贴最新
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MiuixTheme.colorScheme.primary)
                         .clickable {
                             val clipText = clipboardManager.getText()?.text
                             if (!clipText.isNullOrBlank()) {
                                 testUrl = clipText.trim()
                             }
-                        },
+                        }
+                        .padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ContentPaste,
-                        contentDescription = "粘贴",
-                        tint = MiuixTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-            }
-
-            // 快捷填充 Chips
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                val chips = listOf(
-                    "模式" to (if (candidateRule.pattern.startsWith("http")) candidateRule.pattern else "https://${candidateRule.pattern.trimStart('^')}"),
-                    "哔哩哔哩" to "https://b23.tv/av170001",
-                    "知乎" to "https://link.zhihu.com/?target=https%3A%2F%2Fgithub.com",
-                    "Twitter" to "https://t.co/abcxyz",
-                )
-                chips.forEach { (label, url) ->
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
-                            .clickable { testUrl = url }
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
+                        Icon(
+                            imageVector = Icons.Default.ContentPaste,
+                            contentDescription = "粘贴最新",
+                            tint = MiuixTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(18.dp),
+                        )
                         MiuixText(
-                            text = label,
-                            style = MiuixTheme.textStyles.footnote2,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            text = "粘贴最新",
+                            style = MiuixTheme.textStyles.footnote1,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MiuixTheme.colorScheme.onPrimary,
                         )
                     }
                 }
             }
 
-            // 仿真结果卡片
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(MiuixTheme.colorScheme.surfaceContainerHigh)
-                    .padding(14.dp),
-            ) {
-                if (isSimulating) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
+            // 3. 仿真结果卡片流
+            if (isSimulating) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    MiuixText(text = "正在仿真推演...", style = MiuixTheme.textStyles.footnote1)
+                }
+            } else {
+                val trace = traceResult
+                if (trace == null || testUrl.isBlank()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(8.dp))
-                        MiuixText(text = "正在仿真推演...", style = MiuixTheme.textStyles.footnote1)
-                    }
-                } else {
-                    val trace = traceResult
-                    if (trace == null) {
                         MiuixText(
-                            text = "请输入测试链接查看推演结果",
+                            text = "请输入待测试的链接查看推演结果",
                             style = MiuixTheme.textStyles.body2,
                             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         )
-                    } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            // 1. 命中状态徽章
+                    }
+                } else if (trace.finalResult is LinkDispatchResult.NoRule) {
+                    // 未命中当前规则卡片
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+                            .padding(14.dp),
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(MiuixTheme.colorScheme.error.copy(alpha = 0.15f))
+                                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                                ) {
+                                    MiuixText(
+                                        text = "未命中",
+                                        style = MiuixTheme.textStyles.footnote2,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MiuixTheme.colorScheme.error,
+                                    )
+                                }
+                                MiuixText(
+                                    text = candidateRule.name.ifBlank { "当前规则" },
+                                    style = MiuixTheme.textStyles.body2,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                            MiuixText(
+                                text = "当前链接未匹配规则模式「${candidateRule.pattern}」，本条规则不会触发。",
+                                style = MiuixTheme.textStyles.footnote1,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                        }
+                    }
+                } else {
+                    // 命中：卡片流（卡片 1：当前规则推演过程）
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+                            .padding(14.dp),
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            // 头部：当前规则胶囊 + 规则名 + 行为标签
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(MiuixTheme.colorScheme.onSurface)
+                                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                                ) {
+                                    MiuixText(
+                                        text = "当前规则",
+                                        style = MiuixTheme.textStyles.footnote2,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MiuixTheme.colorScheme.surface,
+                                    )
+                                }
+                                MiuixText(
+                                    text = candidateRule.name.ifBlank { "当前规则" },
+                                    style = MiuixTheme.textStyles.body2,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                val actionTag = when {
+                                    candidateRule.resolveShortLink && candidateRule.resolveStrategy == LinkResolveStrategy.REDISPATCH -> "解析并重分发"
+                                    candidateRule.resolveShortLink -> "解析"
+                                    !candidateRule.template.isNullOrBlank() -> "改写"
+                                    else -> "直达"
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(MiuixTheme.colorScheme.surface)
+                                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                                ) {
+                                    MiuixText(
+                                        text = actionTag,
+                                        style = MiuixTheme.textStyles.footnote2,
+                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    )
+                                }
+                            }
+
+                            // 原始链接
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                MiuixText(text = "原始链接", style = MiuixTheme.textStyles.footnote2, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+                                MiuixText(text = testUrl, style = MiuixTheme.textStyles.footnote1, fontFamily = FontFamily.Monospace)
+                            }
+
+                            // HTTP 解析结果（若有）
+                            val firstStep = trace.steps.firstOrNull()
+                            if (firstStep?.resolvedUrl != null) {
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    MiuixText(text = "HTTP 解析结果", style = MiuixTheme.textStyles.footnote2, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.10f))
+                                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                                    ) {
+                                        MiuixText(
+                                            text = firstStep.resolvedUrl,
+                                            style = MiuixTheme.textStyles.footnote1,
+                                            fontFamily = FontFamily.Monospace,
+                                            color = MiuixTheme.colorScheme.primary,
+                                        )
+                                    }
+                                }
+                            }
+
+                            // 模板改写指示（若有）
+                            if (!candidateRule.template.isNullOrBlank()) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.12f))
+                                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                                    ) {
+                                        MiuixText(
+                                            text = "● ${candidateRule.template}",
+                                            style = MiuixTheme.textStyles.footnote2,
+                                            color = MiuixTheme.colorScheme.primary,
+                                            fontFamily = FontFamily.Monospace,
+                                        )
+                                    }
+                                }
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDownward,
+                                        contentDescription = null,
+                                        tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                    val candidateOutputUrl = when (val res = trace.finalResult) {
+                                        is LinkDispatchResult.Routed -> res.url
+                                        is LinkDispatchResult.SystemDefault -> res.url
+                                        else -> firstStep?.resolvedUrl ?: testUrl
+                                    }
+                                    MiuixText(text = candidateOutputUrl, style = MiuixTheme.textStyles.footnote1, fontFamily = FontFamily.Monospace)
+                                }
+                            }
+                        }
+                    }
+
+                    // 卡片 2：最终匹配 / 落地结果
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+                            .padding(14.dp),
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             when (val res = trace.finalResult) {
                                 is LinkDispatchResult.Routed -> {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Box(
                                             modifier = Modifier
-                                                .clip(CircleShape)
-                                                .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.15f))
-                                                .padding(horizontal = 8.dp, vertical = 3.dp),
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(MiuixTheme.colorScheme.onSurface)
+                                                .padding(horizontal = 6.dp, vertical = 2.dp),
                                         ) {
                                             MiuixText(
-                                                text = "命中: ${res.rule.name}",
+                                                text = "最终匹配",
                                                 style = MiuixTheme.textStyles.footnote2,
                                                 fontWeight = FontWeight.Bold,
-                                                color = MiuixTheme.colorScheme.primary,
+                                                color = MiuixTheme.colorScheme.surface,
                                             )
                                         }
-                                        if (res.rule.excludeFromRecents) {
-                                            Spacer(Modifier.width(6.dp))
-                                            Box(
-                                                modifier = Modifier
-                                                    .clip(CircleShape)
-                                                    .background(MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.12f))
-                                                .padding(horizontal = 8.dp, vertical = 3.dp),
-                                            ) {
-                                                MiuixText(
-                                                    text = "无痕打开",
-                                                    style = MiuixTheme.textStyles.footnote2,
-                                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                                )
-                                            }
-                                        }
+                                        val appName = linkAppNameCache[res.rule.targetPackage].orEmpty().ifBlank { res.rule.targetPackage }
+                                        MiuixText(text = appName, style = MiuixTheme.textStyles.body2, fontWeight = FontWeight.Bold)
                                     }
 
-                                    // 目标应用
+                                    // 目标应用卡片行
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.padding(top = 2.dp),
                                     ) {
-                                        LinkAppIcon(packageName = res.rule.targetPackage, size = 32.dp)
-                                        Spacer(Modifier.width(8.dp))
+                                        LinkAppIcon(packageName = res.rule.targetPackage, size = 38.dp)
+                                        Spacer(Modifier.width(10.dp))
                                         Column {
-                                            val displayName = linkAppNameCache[res.rule.targetPackage].orEmpty().ifBlank { res.rule.targetPackage }
-                                            MiuixText(
-                                                text = displayName,
-                                                style = MiuixTheme.textStyles.body2,
-                                                fontWeight = FontWeight.Bold,
-                                            )
+                                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                val displayName = linkAppNameCache[res.rule.targetPackage].orEmpty().ifBlank { res.rule.targetPackage }
+                                                MiuixText(
+                                                    text = displayName,
+                                                    style = MiuixTheme.textStyles.body1,
+                                                    fontWeight = FontWeight.Bold,
+                                                )
+                                                if (res.rule.excludeFromRecents) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .clip(RoundedCornerShape(4.dp))
+                                                            .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.12f))
+                                                            .padding(horizontal = 5.dp, vertical = 1.dp),
+                                                    ) {
+                                                        MiuixText(
+                                                            text = "无痕打开",
+                                                            style = MiuixTheme.textStyles.footnote2,
+                                                            color = MiuixTheme.colorScheme.primary,
+                                                        )
+                                                    }
+                                                }
+                                            }
                                             MiuixText(
                                                 text = res.rule.targetPackage,
                                                 style = MiuixTheme.textStyles.footnote2,
@@ -991,7 +1168,7 @@ private fun LinkRuleLiveTestBottomSheet(
                                     }
 
                                     // 最终跳转地址
-                                    Column(modifier = Modifier.padding(top = 4.dp)) {
+                                    Column(modifier = Modifier.padding(top = 2.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                         MiuixText(
                                             text = "最终跳转链接",
                                             style = MiuixTheme.textStyles.footnote2,
@@ -1013,23 +1190,57 @@ private fun LinkRuleLiveTestBottomSheet(
                                         }
                                     }
                                 }
+                                is LinkDispatchResult.SystemDefault -> {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(MiuixTheme.colorScheme.onSurface)
+                                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                                        ) {
+                                            MiuixText(
+                                                text = "最终匹配",
+                                                style = MiuixTheme.textStyles.footnote2,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MiuixTheme.colorScheme.surface,
+                                            )
+                                        }
+                                        MiuixText(text = "默认浏览器 / 系统处理", style = MiuixTheme.textStyles.body2, fontWeight = FontWeight.Bold)
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.08f))
+                                            .padding(10.dp),
+                                    ) {
+                                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Icon(
+                                                    imageVector = Icons.Default.HelpOutline,
+                                                    contentDescription = null,
+                                                    tint = MiuixTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(16.dp),
+                                                )
+                                                MiuixText(
+                                                    text = "后续路径未命中规则库",
+                                                    style = MiuixTheme.textStyles.footnote1,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MiuixTheme.colorScheme.primary,
+                                                )
+                                            }
+                                            MiuixText(
+                                                text = "分发链接在规则库中找不到后续接管者，将进入系统默认或备选浏览器打开流程。",
+                                                style = MiuixTheme.textStyles.footnote2,
+                                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                                lineHeight = 16.sp,
+                                            )
+                                        }
+                                    }
+                                }
                                 is LinkDispatchResult.Exempted -> {
                                     MiuixText(
                                         text = "域名在豁免名单中 (${res.domain})，将按系统默认方式打开",
-                                        style = MiuixTheme.textStyles.body2,
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                    )
-                                }
-                                is LinkDispatchResult.SystemDefault -> {
-                                    MiuixText(
-                                        text = "短链重分发未匹配到后续规则，将按系统默认方式打开",
-                                        style = MiuixTheme.textStyles.body2,
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                    )
-                                }
-                                LinkDispatchResult.NoRule -> {
-                                    MiuixText(
-                                        text = "未匹配到当前规则（无规则接管）",
                                         style = MiuixTheme.textStyles.body2,
                                         color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                     )
@@ -1041,37 +1252,14 @@ private fun LinkRuleLiveTestBottomSheet(
                                         color = MiuixTheme.colorScheme.error,
                                     )
                                 }
-                            }
-
-                            // 重定向步骤 Steps
-                            if (trace.steps.isNotEmpty()) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 6.dp),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                                ) {
-                                    MiuixText(
-                                        text = "短链追踪链路 (${trace.steps.size} 跳)",
-                                        style = MiuixTheme.textStyles.footnote2,
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                    )
-                                    trace.steps.forEachIndexed { i, step ->
-                                        MiuixText(
-                                            text = "↳ [${i + 1}] ${step.ruleName}: ${step.fromUrl} ➔ ${step.resolvedUrl ?: "无法解析"}",
-                                            style = MiuixTheme.textStyles.footnote2,
-                                            fontFamily = FontFamily.Monospace,
-                                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                        )
-                                    }
-                                }
+                                else -> {}
                             }
                         }
                     }
                 }
             }
 
-            // 执行真实跳转测试按钮
+            // 4. 执行最终跳转测试按钮
             val routedResult = traceResult?.finalResult as? LinkDispatchResult.Routed
             MiuixTextButton(
                 text = "执行最终跳转测试",
@@ -1179,7 +1367,7 @@ private fun LinkTargetActivityPickerBottomSheet(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 520.dp),
+                        .fillMaxHeight(0.85f),
                 ) {
                     items(filtered, key = { it.className }) { act ->
                         val isSelected = act.className == selectedClassName

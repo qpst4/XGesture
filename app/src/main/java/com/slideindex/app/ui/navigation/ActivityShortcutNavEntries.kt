@@ -23,7 +23,6 @@ import com.slideindex.app.ui.ActivityShortcutEditImageScreen
 import com.slideindex.app.ui.ActivityShortcutEditScreen
 import com.slideindex.app.ui.ActivityShortcutPresetsScreen
 import com.slideindex.app.ui.ActivityShortcutScreen
-import com.slideindex.app.ui.DynamicShortcutImportScreen
 import com.slideindex.app.ui.LinkDispatchSettingsScreen
 import com.slideindex.app.ui.link.EditLinkRuleScreen
 import com.slideindex.app.ui.link.LinkDispatchHistoryScreen
@@ -51,7 +50,6 @@ fun NavEntryBuilder.activityShortcutNavEntries(ctx: MainNavContext) {
             onAddShellCommand = { ctx.navigate(AppNavKey.ActivityShortcutPickShell) },
             onAddImage = { ctx.navigate(AppNavKey.ActivityShortcutAddImage) },
             onAddFile = { ctx.navigate(AppNavKey.ActivityShortcutAddFile) },
-            onImportDynamicShortcuts = { ctx.navigate(AppNavKey.DynamicShortcutImport) },
             onOpenPresets = { ctx.navigate(AppNavKey.ActivityShortcutPresets) },
             onEdit = { shortcut ->
                 pickerViewModel.consume()
@@ -375,17 +373,6 @@ fun NavEntryBuilder.activityShortcutNavEntries(ctx: MainNavContext) {
                 pickerViewModel.pickTargetApp(packageName, activityClassName, appLabel)
                 ctx.backStack.removeLastOrNull()
             },
-        )
-    }
-
-    hiltEntry<AppNavKey.DynamicShortcutImport> {
-        val viewModel: ExtensionSettingsViewModel = hiltViewModel()
-        val gestureSettings by viewModel.gestureSettings.collectAsStateWithLifecycle()
-        val settings = gestureSettings.toMinimalAppSettings()
-        DynamicShortcutImportScreen(
-            settings = settings,
-            onBack = { ctx.navigateBackTo(AppNavKey.ActivityShortcuts) },
-            onSaveShortcuts = viewModel::setActivityShortcuts,
         )
     }
 

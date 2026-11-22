@@ -309,20 +309,8 @@
             android:name=".link.BrowserSelectorActivity"
             android:excludeFromRecents="true"
             android:exported="false"
+            android:resizeableActivity="false"
             android:theme="@style/Theme.SlideIndex.Transparent" />
-
-        <activity
-            android:name=".settings.ShortcutImportHomeActivity"
-            android:exported="true"
-            android:excludeFromRecents="true"
-            android:label="@string/dynamic_shortcuts_home_label"
-            android:theme="@style/Theme.SlideIndex.Transparent">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.HOME" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
 
         <activity
             android:name=".imageeditor.SlideIndexImageEditorActivity"

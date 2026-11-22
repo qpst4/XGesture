@@ -506,6 +506,10 @@ fun ActivityShortcutEditScreen(
                                             activityClassName = ActivityShortcutParams.stripControlChars(it)
                                         },
                                         label = stringResource(R.string.activity_shortcut_field_activity_class),
+                                        singleLine = false,
+                                        minLines = 1,
+                                        maxLines = 3,
+                                        useLabelAsPlaceholder = false,
                                         modifier = Modifier.weight(1f),
                                     )
                                     MiuixTextButton(
