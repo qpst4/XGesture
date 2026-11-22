@@ -11,16 +11,23 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -38,6 +45,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
@@ -55,9 +63,12 @@ import com.slideindex.app.ui.miuix.CardSegment
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
+import com.slideindex.app.util.ExportedActivityInfo
+import com.slideindex.app.util.PackageActivityResolver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -116,6 +127,7 @@ fun EditLinkRuleScreen(
     var isEnabled by remember(originalRule) { mutableStateOf(originalRule?.isEnabled ?: true) }
 
     var showAppPickerSheet by remember { mutableStateOf(false) }
+    var showActivityPickerSheet by remember { mutableStateOf(false) }
     var showTestBottomSheet by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
 
@@ -311,7 +323,9 @@ fun EditLinkRuleScreen(
                             onValueChange = { pattern = it },
                             label = "匹配内容",
                             useLabelAsPlaceholder = false,
-                            singleLine = true,
+                            singleLine = false,
+                            minLines = 1,
+                            maxLines = 8,
                         )
                         MiuixText(
                             text = "填写域名、网址片段或正则表达式，例如 b23.tv 或 ^https?://...",
@@ -365,15 +379,34 @@ fun EditLinkRuleScreen(
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 6.dp),
                         ) {
-                            MiuixLabeledTextField(
-                                value = component,
-                                onValueChange = { component = it },
-                                label = "目标活动 (Activity，可选)",
-                                useLabelAsPlaceholder = false,
-                                singleLine = true,
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    MiuixLabeledTextField(
+                                        value = component,
+                                        onValueChange = { component = it },
+                                        label = "目标活动 (Activity，可选)",
+                                        useLabelAsPlaceholder = false,
+                                        singleLine = false,
+                                        minLines = 1,
+                                        maxLines = 4,
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                MiuixTopBarIconButton(
+                                    onClick = { showActivityPickerSheet = true },
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.FormatListBulleted,
+                                        contentDescription = "选择活动",
+                                        tint = MiuixTheme.colorScheme.primary,
+                                    )
+                                }
+                            }
                             MiuixText(
-                                text = "留空则由系统默认路由；支持指定特定 Activity 类名",
+                                text = "留空则由系统默认路由；点击右侧列表图标可选取特定 Activity（标注未导出状态）",
                                 style = MiuixTheme.textStyles.footnote2,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                 modifier = Modifier.padding(top = 4.dp),
@@ -410,7 +443,9 @@ fun EditLinkRuleScreen(
                             onValueChange = { extractPattern = it },
                             label = "正则提取 (留空提取整个)",
                             useLabelAsPlaceholder = false,
-                            singleLine = true,
+                            singleLine = false,
+                            minLines = 1,
+                            maxLines = 6,
                         )
 
                         // 2. 重构链接输入框
@@ -419,53 +454,72 @@ fun EditLinkRuleScreen(
                             onValueChange = { template = it },
                             label = "重构链接 (搭配变量使用)",
                             useLabelAsPlaceholder = false,
-                            singleLine = true,
+                            singleLine = false,
+                            minLines = 1,
+                            maxLines = 8,
                         )
 
-                        // 3. 变换工具选项
-                        Row(
+                        // 3. 变换后缀（LinkGo 原生规范）
+                        Column(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             MiuixText(
-                                text = "变换选项",
+                                text = "变换选项 (点击应用到当前变量)",
                                 style = MiuixTheme.textStyles.footnote2,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             )
-                            val transforms = listOf(
-                                ":url_dec" to "URL解码",
-                                ":url_enc" to "URL编码",
-                                ":b64_dec" to "B64解码",
-                                ":b64_enc" to "B64编码",
-                            )
-                            transforms.forEach { (tag, label) ->
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(MiuixTheme.colorScheme.surface)
-                                        .border(
-                                            0.5.dp,
-                                            MiuixTheme.colorScheme.dividerLine.copy(alpha = 0.5f),
-                                            RoundedCornerShape(6.dp),
-                                        )
-                                        .clickable {
-                                            template = if (template.contains("{1}")) {
-                                                template.replace("{1}", "{1$tag}")
-                                            } else if (template.contains("{url}")) {
-                                                template.replace("{url}", "{url$tag}")
-                                            } else {
-                                                template + "{url$tag}"
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                val transforms = listOf(
+                                    "_url_dec" to "URL解码",
+                                    "_b64_enc" to "B64编码",
+                                    "_b64_dec" to "B64解码",
+                                    "_url_dec_b64_dec" to "解码+B64解",
+                                )
+                                transforms.forEach { (tag, label) ->
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(MiuixTheme.colorScheme.surface)
+                                            .border(
+                                                0.5.dp,
+                                                MiuixTheme.colorScheme.dividerLine.copy(alpha = 0.5f),
+                                                RoundedCornerShape(6.dp),
+                                            )
+                                            .clickable {
+                                                template = when {
+                                                    template.contains("{1}") -> template.replace("{1}", "{1$tag}")
+                                                    template.contains("{url}") -> template.replace("{url}", "{url$tag}")
+                                                    template.contains("{2}") -> template.replace("{2}", "{2$tag}")
+                                                    else -> template + "{url$tag}"
+                                                }
                                             }
+                                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        ) {
+                                            MiuixText(
+                                                text = tag,
+                                                style = MiuixTheme.textStyles.footnote2,
+                                                fontFamily = FontFamily.Monospace,
+                                                color = MiuixTheme.colorScheme.primary,
+                                                fontWeight = FontWeight.Bold,
+                                            )
+                                            MiuixText(
+                                                text = label,
+                                                style = MiuixTheme.textStyles.footnote2,
+                                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                            )
                                         }
-                                        .padding(horizontal = 7.dp, vertical = 3.dp),
-                                ) {
-                                    MiuixText(
-                                        text = label,
-                                        style = MiuixTheme.textStyles.footnote2,
-                                        color = MiuixTheme.colorScheme.primary,
-                                    )
+                                    }
                                 }
                             }
                         }
@@ -489,13 +543,14 @@ fun EditLinkRuleScreen(
                             ) {
                                 val vars = listOf(
                                     "{url}" to "完整链接",
+                                    "{url_dec}" to "原链解码",
+                                    "{url_b64_enc}" to "原链B64编",
                                     "{1}" to "提取组1",
+                                    "{1_url_dec}" to "组1解码",
+                                    "{1_url_dec_b64_dec}" to "组1解+B64解",
                                     "{2}" to "提取组2",
                                     "\$1" to "正则组1",
                                     "\$2" to "正则组2",
-                                    "{host}" to "域名",
-                                    "{path}" to "路径",
-                                    "{query}" to "参数",
                                 )
                                 vars.forEach { (tag, desc) ->
                                     Box(
@@ -530,6 +585,22 @@ fun EditLinkRuleScreen(
                                     }
                                 }
                             }
+                        }
+
+                        // 5. 变量与变换详细说明面板
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MiuixTheme.colorScheme.surface.copy(alpha = 0.5f))
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                        ) {
+                            MiuixText(
+                                text = "说明：{url} 代表原始链接，{1} 代表正则提取捕获组，\$1 代表匹配正则反向引用；花括号内支持下划线拼接变换后缀：_url_dec (URL解码)、_b64_enc (Base64编码)、_b64_dec (Base64解码)。",
+                                style = MiuixTheme.textStyles.footnote2,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                lineHeight = 16.sp,
+                            )
                         }
                     }
                 },
@@ -661,6 +732,18 @@ fun EditLinkRuleScreen(
             targetPackage = pkg
             targetAppDisplayName = appLabel
             showAppPickerSheet = false
+        },
+    )
+
+    // 目标活动选择弹窗
+    LinkTargetActivityPickerBottomSheet(
+        show = showActivityPickerSheet,
+        packageName = targetPackage,
+        selectedClassName = component,
+        onDismissRequest = { showActivityPickerSheet = false },
+        onSelectActivity = { chosenClass ->
+            component = chosenClass
+            showActivityPickerSheet = false
         },
     )
 
@@ -993,6 +1076,171 @@ private fun LinkRuleLiveTestBottomSheet(
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
+        }
+    }
+}
+
+/**
+ * 目标 Activity (活动) 选择弹窗（带「未导出 / 需提权」警示胶囊）。
+ */
+@Composable
+private fun LinkTargetActivityPickerBottomSheet(
+    show: Boolean,
+    packageName: String,
+    selectedClassName: String,
+    onDismissRequest: () -> Unit,
+    onSelectActivity: (String) -> Unit,
+) {
+    val context = LocalContext.current
+    var activities by remember(packageName) { mutableStateOf<List<ExportedActivityInfo>>(emptyList()) }
+    var loading by remember(packageName) { mutableStateOf(true) }
+    var query by remember { mutableStateOf("") }
+
+    LaunchedEffect(packageName, show) {
+        if (show && packageName.isNotBlank()) {
+            loading = true
+            activities = withContext(Dispatchers.IO) {
+                PackageActivityResolver.listActivities(context, packageName)
+            }
+            loading = false
+        }
+    }
+
+    val filtered = remember(activities, query) {
+        if (query.isBlank()) activities
+        else PackageActivityResolver.searchActivities(activities, query)
+    }
+
+    MiuixBottomSheet(
+        show = show,
+        title = "选择目标活动",
+        onDismissRequest = onDismissRequest,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            // 搜索框
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+            ) {
+                MiuixLabeledTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    label = "搜索活动名称或完整类名",
+                    useLabelAsPlaceholder = false,
+                    singleLine = true,
+                )
+            }
+
+            if (loading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(28.dp))
+                }
+            } else if (filtered.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    MiuixText(
+                        text = if (activities.isEmpty()) "该应用未声明任何 Activity" else "没有找到匹配的 Activity",
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 520.dp),
+                ) {
+                    items(filtered, key = { it.className }) { act ->
+                        val isSelected = act.className == selectedClassName
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (isSelected) MiuixTheme.colorScheme.primary.copy(alpha = 0.08f)
+                                    else MiuixTheme.colorScheme.surface
+                                )
+                                .clickable {
+                                    onSelectActivity(act.className)
+                                }
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                ) {
+                                    MiuixText(
+                                        text = act.label.ifBlank { act.className.substringAfterLast('.') },
+                                        style = MiuixTheme.textStyles.body1,
+                                        fontWeight = FontWeight.Medium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    // 未导出标签（需 Shizuku/Root 提权）
+                                    if (!act.exported) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(MiuixTheme.colorScheme.error.copy(alpha = 0.12f))
+                                                .padding(horizontal = 5.dp, vertical = 1.dp),
+                                        ) {
+                                            MiuixText(
+                                                text = "未导出 / 需提权",
+                                                style = MiuixTheme.textStyles.footnote2,
+                                                color = MiuixTheme.colorScheme.error,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Medium,
+                                            )
+                                        }
+                                    } else if (act.launcherEntry) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.12f))
+                                                .padding(horizontal = 5.dp, vertical = 1.dp),
+                                        ) {
+                                            MiuixText(
+                                                text = "主入口",
+                                                style = MiuixTheme.textStyles.footnote2,
+                                                color = MiuixTheme.colorScheme.primary,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Medium,
+                                            )
+                                        }
+                                    }
+                                }
+                                MiuixText(
+                                    text = act.className,
+                                    style = MiuixTheme.textStyles.footnote2,
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    fontFamily = FontFamily.Monospace,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.padding(top = 2.dp),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

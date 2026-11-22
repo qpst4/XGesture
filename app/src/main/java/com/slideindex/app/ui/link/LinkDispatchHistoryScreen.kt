@@ -45,9 +45,12 @@ import com.slideindex.app.ui.miuix.CardSegment
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.glass.Delete
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
@@ -90,11 +93,11 @@ fun LinkDispatchHistoryScreen(
         onBack = onBack,
         actions = {
             if (historyList.isNotEmpty()) {
-                IconButton(onClick = { showClearDialog = true }) {
+                MiuixTopBarIconButton(onClick = { showClearDialog = true }) {
                     Icon(
-                        imageVector = Icons.Default.DeleteOutline,
+                        imageVector = MiuixIcons.Glass.Delete,
                         contentDescription = "清空记录",
-                        tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        tint = MiuixTheme.colorScheme.error,
                     )
                 }
             }

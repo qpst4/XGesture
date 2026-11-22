@@ -235,12 +235,6 @@ fun LinkDispatchSettingsScreen(
                     contentDescription = "跳转记录",
                 )
             }
-            MiuixTopBarIconButton(onClick = { onNavigateToEditRule(null) }) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "添加规则",
-                )
-            }
         },
     ) {
         // 页面简述
@@ -363,8 +357,8 @@ fun LinkDispatchSettingsScreen(
                                 Box(modifier = Modifier.padding(start = 28.dp, top = 10.dp, bottom = 4.dp)) {
                                     MiuixText(
                                         text = "短链重分发规则 (${dispatchRules.size} 条)",
-                                        style = MiuixTheme.textStyles.title4,
-                                        fontWeight = FontWeight.SemiBold,
+                                        style = MiuixTheme.textStyles.subtitle,
+                                        fontWeight = FontWeight.Medium,
                                         color = MiuixTheme.colorScheme.primary,
                                     )
                                 }
@@ -392,8 +386,8 @@ fun LinkDispatchSettingsScreen(
                                 Box(modifier = Modifier.padding(start = 28.dp, top = 10.dp, bottom = 4.dp)) {
                                     MiuixText(
                                         text = "应用直达跳转规则 (${redirectRules.size} 条)",
-                                        style = MiuixTheme.textStyles.title4,
-                                        fontWeight = FontWeight.SemiBold,
+                                        style = MiuixTheme.textStyles.subtitle,
+                                        fontWeight = FontWeight.Medium,
                                         color = MiuixTheme.colorScheme.primary,
                                     )
                                 }

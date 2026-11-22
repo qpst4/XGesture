@@ -20,6 +20,9 @@ object LinkRadarScanner {
         val patterns = kotlinx.coroutines.runBlocking {
             LinkRuleRepository.loadExtractPatterns(service)
         }
+        val rules = kotlinx.coroutines.runBlocking {
+            LinkRuleRepository.loadRules(service)
+        }
         val selfPackage = service.packageName
         val allowSelfApp = runCatching { SelfAppForeground.isForeground(service) }.getOrDefault(false)
         val roots = collectTargetRoots(service, selfPackage, allowSelfApp)
@@ -78,7 +81,8 @@ object LinkRadarScanner {
                     }
 
                     val extracted = LinkExtractor.findAll(candidateText, patterns)
-                    val matches = selectLinkTextMatches(spans, extracted)
+                    val allMatches = selectLinkTextMatches(spans, extracted)
+                    val matches = allMatches.filter { isEligibleRadarTarget(it, candidateText, pkg, rules) }
 
                     if (matches.isNotEmpty()) {
                         val characters = if (candidateText == primaryText) {
@@ -193,5 +197,47 @@ object LinkRadarScanner {
             }
         }
         return lines.map { Rect().also(it::roundOut) }
+    }
+
+    private fun isEligibleRadarTarget(
+        match: LinkTextMatch,
+        candidateText: String,
+        sourcePackage: String,
+        rules: List<LinkDispatchRule>,
+    ): Boolean {
+        val matchedText = runCatching {
+            candidateText.substring(match.start, match.end).trim()
+        }.getOrDefault("")
+
+        // 1. 话题/标签文本拦截：如 "#小米从小鹏挖来欧洲汽车负责人#"、"【#...#】"
+        val cleanTopic = matchedText.removePrefix("【").removeSuffix("】").trim()
+        if (cleanTopic.startsWith("#") && cleanTopic.endsWith("#") && cleanTopic.length > 2) {
+            val rawUrl = match.url.lowercase()
+            if (!rawUrl.startsWith("http://") && !rawUrl.startsWith("https://")) {
+                return false
+            }
+            if (rawUrl.contains("huati") || rawUrl.contains("topic") || rawUrl.contains("pageinfo")) {
+                return false
+            }
+        }
+
+        val url = match.url.trim()
+        if (url.isBlank()) return false
+        val lower = url.lowercase()
+
+        // 2. 宿主同源保护：微博自身内部协议不生成雷达热区抢占焦点
+        if (sourcePackage.contains("weibo", ignoreCase = true) &&
+            (lower.startsWith("sinaweibo://") || lower.startsWith("weibo://"))
+        ) {
+            return false
+        }
+
+        // 3. 通用标准公开协议直接放行
+        if (lower.startsWith("http://") || lower.startsWith("https://") || lower.startsWith("www.") || lower.startsWith("magnet:?")) {
+            return true
+        }
+
+        // 4. 应用内部私有协议（如 intent:、特定 scheme）：必须命中用户启用的分发规则才放行
+        return LinkDispatcher.findRule(url, rules) != null
     }
 }
