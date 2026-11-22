@@ -80,6 +80,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import com.slideindex.app.ui.components.reorderable.ReorderableItem
 import com.slideindex.app.ui.components.reorderable.rememberReorderableLazyGridState
 import com.slideindex.app.ui.link.LinkAppIcon
@@ -88,7 +89,12 @@ import com.slideindex.app.ui.miuix.MiuixBottomSheet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
@@ -100,22 +106,74 @@ class BrowserSelectorActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        val url = intent.getStringExtra("EXTRA_URL") ?: run {
+        val url = intent.getStringExtra(EXTRA_URL) ?: run {
             finish()
             return
         }
+        val bootstrap = intent.getStringExtra(EXTRA_BOOTSTRAP)
+            ?.let { encoded -> runCatching { Json.decodeFromString<BrowserSelectorBootstrap>(encoded) }.getOrNull() }
 
         setContent {
             MiuixTheme {
+                var sheetVisible by remember { mutableStateOf(true) }
+                var pendingLaunch by remember { mutableStateOf<PendingLaunch?>(null) }
+
                 BrowserSelectorSheet(
                     url = url,
-                    onDismiss = { finish() },
+                    bootstrap = bootstrap,
+                    show = sheetVisible,
+                    onDismiss = {
+                        pendingLaunch = null
+                        sheetVisible = false
+                    },
+                    onPick = { app, forceWindowMode, historyLabel ->
+                        if (pendingLaunch == null) {
+                            pendingLaunch = PendingLaunch(
+                                packageName = app.packageName,
+                                forceWindowMode = forceWindowMode,
+                                historyLabel = historyLabel,
+                            )
+                            sheetVisible = false
+                        }
+                    },
+                    onDismissFinished = {
+                        val pick = pendingLaunch
+                        pendingLaunch = null
+                        if (pick == null) {
+                            finish()
+                        } else {
+                            lifecycleScope.launch {
+                                LinkLauncher.launch(
+                                    context = this@BrowserSelectorActivity,
+                                    url = url,
+                                    targetPackage = pick.packageName,
+                                    excludeFromRecents = false,
+                                    forceWindowMode = pick.forceWindowMode,
+                                )
+                                LinkDispatchHistoryRepository.record(
+                                    context = this@BrowserSelectorActivity,
+                                    rawUrl = url,
+                                    finalUrl = url,
+                                    matchedRuleName = pick.historyLabel,
+                                    targetPackage = pick.packageName,
+                                    isSuccess = true,
+                                )
+                                finish()
+                            }
+                        }
+                    },
                 )
             }
         }
     }
 
     companion object {
+        const val EXTRA_URL = "EXTRA_URL"
+        const val EXTRA_BOOTSTRAP = "EXTRA_BOOTSTRAP"
+
+        fun encodeBootstrap(bootstrap: BrowserSelectorBootstrap): String =
+            Json.encodeToString(bootstrap)
+
         fun queryBrowsers(context: Context, url: String = "https://www.example.com"): List<BrowserAppOption> {
             val pm = context.packageManager
             val ownPkg = context.packageName
@@ -159,10 +217,31 @@ class BrowserSelectorActivity : ComponentActivity() {
     }
 }
 
+@Serializable
 data class BrowserAppOption(
     val packageName: String,
     val label: String,
     val isBrowser: Boolean = true,
+)
+
+/**
+ * 选择器首帧所需的全部数据。由 [LinkDispatcherActivity] 在跳板里一次查好带过来，
+ * 让 BottomSheet 一出现就是最终高度与最终内容，避免弹出动画播到一半被数据撑高。
+ */
+@Serializable
+data class BrowserSelectorBootstrap(
+    val apps: List<BrowserAppOption> = emptyList(),
+    val hidden: List<String> = emptyList(),
+    val timerEnabled: Boolean = false,
+    val timerSeconds: Int = LinkRuleRepository.DEFAULT_SELECTOR_TIMER_SECONDS,
+    val smallWindow: Boolean = false,
+)
+
+/** 动画播完后再执行的启动动作（先让面板滑下去，再拉目标应用）。 */
+private data class PendingLaunch(
+    val packageName: String,
+    val forceWindowMode: Boolean,
+    val historyLabel: String,
 )
 
 private sealed class SelectorGridItem {
@@ -174,51 +253,67 @@ private sealed class SelectorGridItem {
 @Composable
 private fun BrowserSelectorSheet(
     url: String,
+    bootstrap: BrowserSelectorBootstrap?,
+    show: Boolean,
     onDismiss: () -> Unit,
+    onPick: (app: BrowserAppOption, forceWindowMode: Boolean, historyLabel: String) -> Unit,
+    onDismissFinished: () -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var apps by remember { mutableStateOf<List<BrowserAppOption>>(emptyList()) }
-    var hiddenSet by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var apps by remember { mutableStateOf(bootstrap?.apps.orEmpty()) }
+    var hiddenSet by remember { mutableStateOf(bootstrap?.hidden?.toSet().orEmpty()) }
     var isEditing by remember { mutableStateOf(false) }
-    var timerEnabled by remember { mutableStateOf(false) }
-    var timerSeconds by remember { mutableStateOf(LinkRuleRepository.DEFAULT_SELECTOR_TIMER_SECONDS) }
-    var defaultSmallWindow by remember { mutableStateOf(false) }
-    var isTimerActive by remember { mutableStateOf(false) }
+    var timerEnabled by remember { mutableStateOf(bootstrap?.timerEnabled ?: false) }
+    var timerSeconds by remember {
+        mutableStateOf(bootstrap?.timerSeconds ?: LinkRuleRepository.DEFAULT_SELECTOR_TIMER_SECONDS)
+    }
+    var defaultSmallWindow by remember { mutableStateOf(bootstrap?.smallWindow ?: false) }
+    var isTimerActive by remember {
+        mutableStateOf(
+            bootstrap?.let { data ->
+                data.timerEnabled && data.timerSeconds > 0 &&
+                    data.apps.any { app -> app.packageName !in data.hidden }
+            } ?: false,
+        )
+    }
     var remainingProgress by remember { mutableFloatStateOf(0f) }
 
-    LaunchedEffect(url) {
-        val loadedApps = withContext(Dispatchers.IO) {
-            BrowserSelectorActivity.queryBrowsers(context, url)
-        }
-        val isEnabled = withContext(Dispatchers.IO) {
-            LinkRuleRepository.isSelectorTimerEnabled(context)
-        }
-        val seconds = withContext(Dispatchers.IO) {
-            LinkRuleRepository.getSelectorTimerSeconds(context)
-        }
-        val savedOrder = withContext(Dispatchers.IO) {
-            LinkRuleRepository.getBrowserOrderList(context)
-        }
-        val savedHidden = withContext(Dispatchers.IO) {
-            LinkRuleRepository.getBrowserHiddenList(context)
-        }
-        val isSmallWindow = withContext(Dispatchers.IO) {
-            LinkRuleRepository.isOpenInSmallWindowEnabled(context)
-        }
+    // 跳板带来完整数据时这里不再查询任何东西：首帧就是最终内容与最终高度。
+    LaunchedEffect(url, bootstrap) {
+        if (bootstrap == null) {
+            val loadedApps = withContext(Dispatchers.IO) {
+                BrowserSelectorActivity.queryBrowsers(context, url)
+            }
+            val isEnabled = withContext(Dispatchers.IO) {
+                LinkRuleRepository.isSelectorTimerEnabled(context)
+            }
+            val seconds = withContext(Dispatchers.IO) {
+                LinkRuleRepository.getSelectorTimerSeconds(context)
+            }
+            val savedOrder = withContext(Dispatchers.IO) {
+                LinkRuleRepository.getBrowserOrderList(context)
+            }
+            val savedHidden = withContext(Dispatchers.IO) {
+                LinkRuleRepository.getBrowserHiddenList(context)
+            }
+            val isSmallWindow = withContext(Dispatchers.IO) {
+                LinkRuleRepository.isOpenInSmallWindowEnabled(context)
+            }
 
-        // 依据用户自定义排序排列，若未自定义则保持默认探测顺序
-        val sortedApps = loadedApps.sortedBy { app ->
-            val idx = savedOrder.indexOf(app.packageName)
-            if (idx != -1) idx else 1000
+            // 依据用户自定义排序排列，若未自定义则保持默认探测顺序
+            val sortedApps = loadedApps.sortedBy { app ->
+                val idx = savedOrder.indexOf(app.packageName)
+                if (idx != -1) idx else 1000
+            }
+            apps = sortedApps
+            hiddenSet = savedHidden.toSet()
+            timerEnabled = isEnabled
+            timerSeconds = seconds
+            defaultSmallWindow = isSmallWindow
         }
-        apps = sortedApps
-        hiddenSet = savedHidden.toSet()
-        timerEnabled = isEnabled
-        timerSeconds = seconds
-        defaultSmallWindow = isSmallWindow
-        if (isEnabled && seconds > 0 && sortedApps.any { it.packageName !in savedHidden }) {
+        if (timerEnabled && timerSeconds > 0 && apps.any { it.packageName !in hiddenSet }) {
             isTimerActive = true
         }
     }
@@ -253,11 +348,11 @@ private fun BrowserSelectorSheet(
     }
 
     // 1:1 对标 LinkGo 的首位应用倒计时驱动
-    LaunchedEffect(isTimerActive, timerSeconds, visibleApps, isEditing) {
-        if (isTimerActive && timerSeconds > 0 && visibleApps.isNotEmpty() && !isEditing) {
+    LaunchedEffect(isTimerActive, timerSeconds, visibleApps, isEditing, show) {
+        if (show && isTimerActive && timerSeconds > 0 && visibleApps.isNotEmpty() && !isEditing) {
             val totalMillis = timerSeconds * 1000L
             val startTime = System.currentTimeMillis()
-            while (isTimerActive && !isEditing) {
+            while (show && isTimerActive && !isEditing) {
                 val elapsed = System.currentTimeMillis() - startTime
                 val progress = 1f - (elapsed.toFloat() / totalMillis).coerceIn(0f, 1f)
                 remainingProgress = progress
@@ -266,24 +361,13 @@ private fun BrowserSelectorSheet(
                 }
                 withFrameMillis { }
             }
-            if (isTimerActive && !isEditing && visibleApps.isNotEmpty()) {
+            if (show && isTimerActive && !isEditing && visibleApps.isNotEmpty()) {
                 val firstApp = visibleApps[0]
-                LinkLauncher.launch(
-                    context = context,
-                    url = url,
-                    targetPackage = firstApp.packageName,
-                    excludeFromRecents = false,
-                    forceWindowMode = !defaultSmallWindow,
+                onPick(
+                    firstApp,
+                    !defaultSmallWindow,
+                    "倒计时自动分发: ${firstApp.label}",
                 )
-                LinkDispatchHistoryRepository.record(
-                    context = context,
-                    rawUrl = url,
-                    finalUrl = url,
-                    matchedRuleName = "倒计时自动分发: ${firstApp.label}",
-                    targetPackage = firstApp.packageName,
-                    isSuccess = true,
-                )
-                onDismiss()
             }
         } else {
             remainingProgress = 0f
@@ -320,9 +404,25 @@ private fun BrowserSelectorSheet(
         }
     }
 
+    val requestClose = {
+        if (isEditing) {
+            saveOrderAndHidden()
+        }
+        onDismiss()
+    }
+
     MiuixBottomSheet(
-        show = true,
+        show = show,
         title = if (isEditing) "管理应用" else "选择应用打开",
+        startAction = {
+            IconButton(onClick = requestClose) {
+                Icon(
+                    imageVector = MiuixIcons.Medium.Close,
+                    contentDescription = "关闭",
+                    tint = MiuixTheme.colorScheme.onSurface,
+                )
+            }
+        },
         endAction = {
             IconButton(
                 onClick = {
@@ -342,12 +442,8 @@ private fun BrowserSelectorSheet(
                 )
             }
         },
-        onDismissRequest = {
-            if (isEditing) {
-                saveOrderAndHidden()
-            }
-            onDismiss()
-        },
+        onDismissRequest = requestClose,
+        onDismissFinished = onDismissFinished,
     ) {
         Column(
             modifier = Modifier
@@ -538,45 +634,31 @@ private fun BrowserSelectorSheet(
                                                     Modifier.combinedClickable(
                                                         onClick = {
                                                             isTimerActive = false
-                                                            scope.launch {
-                                                                LinkLauncher.launch(
-                                                                    context = context,
-                                                                    url = url,
-                                                                    targetPackage = app.packageName,
-                                                                    excludeFromRecents = false,
-                                                                    forceWindowMode = !defaultSmallWindow,
+                                                            if (show) {
+                                                                onPick(
+                                                                    app,
+                                                                    !defaultSmallWindow,
+                                                                    if (defaultSmallWindow) {
+                                                                        "小窗打开: ${app.label}"
+                                                                    } else {
+                                                                        "全屏打开: ${app.label}"
+                                                                    },
                                                                 )
-                                                                LinkDispatchHistoryRepository.record(
-                                                                    context = context,
-                                                                    rawUrl = url,
-                                                                    finalUrl = url,
-                                                                    matchedRuleName = if (defaultSmallWindow) "小窗打开: ${app.label}" else "全屏打开: ${app.label}",
-                                                                    targetPackage = app.packageName,
-                                                                    isSuccess = true,
-                                                                )
-                                                                onDismiss()
                                                             }
                                                         },
                                                         onLongClick = {
                                                             isTimerActive = false
-                                                            scope.launch {
+                                                            if (show) {
                                                                 val isSmallWindow = !defaultSmallWindow
-                                                                LinkLauncher.launch(
-                                                                    context = context,
-                                                                    url = url,
-                                                                    targetPackage = app.packageName,
-                                                                    excludeFromRecents = false,
-                                                                    forceWindowMode = !isSmallWindow,
+                                                                onPick(
+                                                                    app,
+                                                                    !isSmallWindow,
+                                                                    if (isSmallWindow) {
+                                                                        "长按反转小窗: ${app.label}"
+                                                                    } else {
+                                                                        "长按反转全屏: ${app.label}"
+                                                                    },
                                                                 )
-                                                                LinkDispatchHistoryRepository.record(
-                                                                    context = context,
-                                                                    rawUrl = url,
-                                                                    finalUrl = url,
-                                                                    matchedRuleName = if (isSmallWindow) "长按反转小窗: ${app.label}" else "长按反转全屏: ${app.label}",
-                                                                    targetPackage = app.packageName,
-                                                                    isSuccess = true,
-                                                                )
-                                                                onDismiss()
                                                             }
                                                         },
                                                     )

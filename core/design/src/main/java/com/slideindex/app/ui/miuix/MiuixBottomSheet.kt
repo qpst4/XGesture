@@ -18,6 +18,8 @@ fun MiuixBottomSheet(
     endAction: @Composable (() -> Unit)? = null,
     /** 内容区四边留白；null 用 miuix 默认。sheet 内放带自身外边距的行（如 settingsCardItems）时传小值避免双层缩进。 */
     insideMargin: DpSize? = null,
+    /** 关闭动画播完后回调；需先让 [show] 变 false 才会触发，关闭被中途取消时不触发。 */
+    onDismissFinished: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     val overlayBackdrop = LocalMiuixPageBackdrop.current
@@ -32,6 +34,7 @@ fun MiuixBottomSheet(
             startAction = startAction,
             endAction = endAction,
             insideMargin = insideMargin ?: BottomSheetDefaults.insideMargin,
+            onDismissFinished = onDismissFinished,
             content = content,
         )
         return
@@ -46,6 +49,7 @@ fun MiuixBottomSheet(
         endAction = endAction,
         onDismissRequest = onDismissRequest,
         insideMargin = insideMargin ?: BottomSheetDefaults.insideMargin,
+        onDismissFinished = onDismissFinished,
         content = content,
     )
 }

@@ -106,15 +106,15 @@ class LinkDispatcherActivity : ComponentActivity() {
             )
             finish()
         } else {
-            val browsers = withContext(Dispatchers.IO) {
-                BrowserSelectorActivity.queryBrowsers(this@LinkDispatcherActivity)
-            }
-            if (browsers.size == 1) {
-                val singleBrowser = browsers[0].packageName
+            // 选择器首帧所需数据（应用列表 + 排序/隐藏/倒计时/小窗偏好）在跳板里一次查好带过去：
+            // 弹层一出现就是最终内容与最终高度，不会在弹出动画中途被数据撑高。
+            val bootstrap = withContext(Dispatchers.IO) { buildSelectorBootstrap(url) }
+            val soleBrowser = bootstrap.apps.singleOrNull { it.isBrowser }
+            if (soleBrowser != null) {
                 LinkLauncher.launch(
                     context = this@LinkDispatcherActivity,
                     url = url,
-                    targetPackage = singleBrowser,
+                    targetPackage = soleBrowser.packageName,
                     excludeFromRecents = false,
                 )
                 LinkDispatchHistoryRepository.record(
@@ -122,18 +122,39 @@ class LinkDispatcherActivity : ComponentActivity() {
                     rawUrl = url,
                     finalUrl = url,
                     matchedRuleName = reason ?: "单浏览器直达",
-                    targetPackage = singleBrowser,
+                    targetPackage = soleBrowser.packageName,
                     isSuccess = true,
                 )
                 finish()
             } else {
                 val selectorIntent = Intent(this@LinkDispatcherActivity, BrowserSelectorActivity::class.java).apply {
-                    putExtra("EXTRA_URL", url)
+                    putExtra(BrowserSelectorActivity.EXTRA_URL, url)
+                    putExtra(BrowserSelectorActivity.EXTRA_BOOTSTRAP, BrowserSelectorActivity.encodeBootstrap(bootstrap))
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
                 startActivity(selectorIntent)
                 finish()
             }
         }
+    }
+
+    private suspend fun buildSelectorBootstrap(url: String): BrowserSelectorBootstrap {
+        val apps = BrowserSelectorActivity.queryBrowsers(this, url)
+        val savedOrder = LinkRuleRepository.getBrowserOrderList(this)
+        val savedHidden = LinkRuleRepository.getBrowserHiddenList(this)
+        val timerEnabled = LinkRuleRepository.isSelectorTimerEnabled(this)
+        val timerSeconds = LinkRuleRepository.getSelectorTimerSeconds(this)
+        val smallWindow = LinkRuleRepository.isOpenInSmallWindowEnabled(this)
+        val ordered = apps.sortedBy { app ->
+            val idx = savedOrder.indexOf(app.packageName)
+            if (idx != -1) idx else 1000
+        }
+        return BrowserSelectorBootstrap(
+            apps = ordered,
+            hidden = savedHidden,
+            timerEnabled = timerEnabled,
+            timerSeconds = timerSeconds,
+            smallWindow = smallWindow,
+        )
     }
 }
