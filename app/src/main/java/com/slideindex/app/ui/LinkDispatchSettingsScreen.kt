@@ -76,6 +76,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -225,10 +227,21 @@ fun LinkDispatchSettingsScreen(
         }
     }
 
-    val filteredRules = remember(rules, searchQuery, appNamesVersion) {
+    var isDraggingRule by remember { mutableStateOf(false) }
+    var draggingRuleId by remember { mutableStateOf<String?>(null) }
+    var dragAccumulatedOffset by remember { mutableFloatStateOf(0f) }
+    var localRules by remember { mutableStateOf(rules) }
+
+    LaunchedEffect(rules) {
+        if (!isDraggingRule) {
+            localRules = rules
+        }
+    }
+
+    val filteredRules = remember(localRules, searchQuery, appNamesVersion) {
         val q = searchQuery.trim()
-        if (q.isEmpty()) rules
-        else rules.filter { rule ->
+        if (q.isEmpty()) localRules
+        else localRules.filter { rule ->
             val appName = linkAppNameCache[rule.targetPackage].orEmpty()
             rule.name.contains(q, ignoreCase = true) ||
                 rule.pattern.contains(q, ignoreCase = true) ||
@@ -237,7 +250,7 @@ fun LinkDispatchSettingsScreen(
         }
     }
 
-    val enabledCount = remember(rules) { rules.count { it.isEnabled } }
+    val enabledCount = remember(localRules) { localRules.count { it.isEnabled } }
 
     // 搜索有输入时自动展开规则
     val isRulesOpen = rulesExpanded || searchQuery.isNotBlank()
@@ -267,7 +280,7 @@ fun LinkDispatchSettingsScreen(
     }
 
     val onBatchToggleEnabled = {
-        val selected = rules.filter { it.id in selectedRuleIds }
+        val selected = localRules.filter { it.id in selectedRuleIds }
         val targetState = !selected.all { it.isEnabled }
         scope.launch {
             LinkRuleRepository.updateRules(context) { cur ->
@@ -278,7 +291,7 @@ fun LinkDispatchSettingsScreen(
     }
 
     val onBatchShare = {
-        val toShare = rules.filter { it.id in selectedRuleIds }
+        val toShare = localRules.filter { it.id in selectedRuleIds }
         val backup = LinkConfigBackup(rules = toShare)
         val json = LinkConfigCodec.export(backup.rules, emptyList(), emptyList())
         val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -287,7 +300,7 @@ fun LinkDispatchSettingsScreen(
     }
 
     val onBatchDuplicate = {
-        val toDuplicate = rules.filter { it.id in selectedRuleIds }
+        val toDuplicate = localRules.filter { it.id in selectedRuleIds }
         scope.launch {
             LinkRuleRepository.updateRules(context) { cur ->
                 val nextPrio = (cur.maxOfOrNull { it.priority } ?: -1) + 1
@@ -306,18 +319,56 @@ fun LinkDispatchSettingsScreen(
         }
     }
 
-    val onMoveRule: (String, Int) -> Unit = { ruleId, delta ->
-        val fromIndex = rules.indexOfFirst { it.id == ruleId }
-        if (fromIndex >= 0) {
-            val toIndex = (fromIndex + delta).coerceIn(0, rules.size - 1)
-            if (fromIndex != toIndex) {
-                val mutable = rules.toMutableList()
-                val moved = mutable.removeAt(fromIndex)
-                mutable.add(toIndex, moved)
-                val reordered = mutable.mapIndexed { idx, r -> r.copy(priority = idx) }
-                scope.launch {
-                    LinkRuleRepository.updateRules(context) { reordered }
+    val stepPx = with(LocalDensity.current) { 76.dp.toPx() }
+
+    val onDragStart: (String) -> Unit = { ruleId ->
+        isDraggingRule = true
+        draggingRuleId = ruleId
+        dragAccumulatedOffset = 0f
+        haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+    }
+
+    val onDragDelta: (String, Float, Boolean) -> Unit = { ruleId, delta, isDispatch ->
+        dragAccumulatedOffset += delta
+        val activeGroup = if (isDispatch) dispatchRules else redirectRules
+        val idxInGroup = activeGroup.indexOfFirst { it.id == ruleId }
+        if (idxInGroup >= 0) {
+            if (dragAccumulatedOffset > stepPx && idxInGroup < activeGroup.size - 1) {
+                val targetRule = activeGroup[idxInGroup + 1]
+                val fromIdx = localRules.indexOfFirst { it.id == ruleId }
+                val toIdx = localRules.indexOfFirst { it.id == targetRule.id }
+                if (fromIdx >= 0 && toIdx >= 0) {
+                    val mutable = localRules.toMutableList()
+                    val item = mutable.removeAt(fromIdx)
+                    mutable.add(toIdx, item)
+                    localRules = mutable
+                    dragAccumulatedOffset -= stepPx
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
                 }
+            } else if (dragAccumulatedOffset < -stepPx && idxInGroup > 0) {
+                val targetRule = activeGroup[idxInGroup - 1]
+                val fromIdx = localRules.indexOfFirst { it.id == ruleId }
+                val toIdx = localRules.indexOfFirst { it.id == targetRule.id }
+                if (fromIdx >= 0 && toIdx >= 0) {
+                    val mutable = localRules.toMutableList()
+                    val item = mutable.removeAt(fromIdx)
+                    mutable.add(toIdx, item)
+                    localRules = mutable
+                    dragAccumulatedOffset += stepPx
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                }
+            }
+        }
+    }
+
+    val onDragEnd: () -> Unit = {
+        if (isDraggingRule) {
+            isDraggingRule = false
+            draggingRuleId = null
+            dragAccumulatedOffset = 0f
+            val reordered = localRules.mapIndexed { idx, r -> r.copy(priority = idx) }
+            scope.launch {
+                LinkRuleRepository.updateRules(context) { reordered }
             }
         }
     }
@@ -517,6 +568,7 @@ fun LinkDispatchSettingsScreen(
                                 dispatchRules.forEach { rule ->
                                     val appName = linkAppNameCache[rule.targetPackage].orEmpty()
                                     val isSelected = rule.id in selectedRuleIds
+                                    val isDragging = rule.id == draggingRuleId
                                     LinkDispatchRuleItemRow(
                                         rule = rule,
                                         appName = appName,
@@ -524,6 +576,8 @@ fun LinkDispatchSettingsScreen(
                                         isLast = true,
                                         isSelectionMode = isSelectionMode,
                                         isSelected = isSelected,
+                                        isDragging = isDragging,
+                                        draggingOffsetY = if (isDragging) dragAccumulatedOffset else 0f,
                                         onClick = {
                                             if (isSelectionMode) {
                                                 if (isSelected) selectedRuleIds.remove(rule.id)
@@ -548,7 +602,9 @@ fun LinkDispatchSettingsScreen(
                                                 }
                                             }
                                         },
-                                        onMove = onMoveRule,
+                                        onDragStart = { onDragStart(rule.id) },
+                                        onDragDelta = { delta -> onDragDelta(rule.id, delta, true) },
+                                        onDragEnd = onDragEnd,
                                     )
                                 }
                             }
@@ -566,6 +622,7 @@ fun LinkDispatchSettingsScreen(
                                 redirectRules.forEach { rule ->
                                     val appName = linkAppNameCache[rule.targetPackage].orEmpty()
                                     val isSelected = rule.id in selectedRuleIds
+                                    val isDragging = rule.id == draggingRuleId
                                     LinkDispatchRuleItemRow(
                                         rule = rule,
                                         appName = appName,
@@ -573,6 +630,8 @@ fun LinkDispatchSettingsScreen(
                                         isLast = true,
                                         isSelectionMode = isSelectionMode,
                                         isSelected = isSelected,
+                                        isDragging = isDragging,
+                                        draggingOffsetY = if (isDragging) dragAccumulatedOffset else 0f,
                                         onClick = {
                                             if (isSelectionMode) {
                                                 if (isSelected) selectedRuleIds.remove(rule.id)
@@ -597,7 +656,9 @@ fun LinkDispatchSettingsScreen(
                                                 }
                                             }
                                         },
-                                        onMove = onMoveRule,
+                                        onDragStart = { onDragStart(rule.id) },
+                                        onDragDelta = { delta -> onDragDelta(rule.id, delta, false) },
+                                        onDragEnd = onDragEnd,
                                     )
                                 }
                             }
@@ -1508,10 +1569,14 @@ private fun LinkDispatchRuleItemRow(
     isLast: Boolean,
     isSelectionMode: Boolean = false,
     isSelected: Boolean = false,
+    isDragging: Boolean = false,
+    draggingOffsetY: Float = 0f,
     onClick: () -> Unit,
     onLongClick: () -> Unit = {},
     onToggleEnabled: (Boolean) -> Unit,
-    onMove: (String, Int) -> Unit = { _, _ -> },
+    onDragStart: () -> Unit = {},
+    onDragDelta: (Float) -> Unit = {},
+    onDragEnd: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val isAppInstalled = remember(rule.targetPackage) {
@@ -1536,6 +1601,13 @@ private fun LinkDispatchRuleItemRow(
         isFirst = isFirst,
         isLast = isLast,
         outerHorizontalPadding = 12.dp,
+        modifier = Modifier
+            .zIndex(if (isDragging) 10f else 0f)
+            .graphicsLayer {
+                translationY = if (isDragging) draggingOffsetY else 0f
+                scaleX = if (isDragging) 1.02f else 1f
+                scaleY = if (isDragging) 1.02f else 1f
+            },
     ) {
         Column(
             modifier = Modifier
@@ -1600,29 +1672,22 @@ private fun LinkDispatchRuleItemRow(
                     )
                 }
                 if (isSelectionMode) {
-                    var dragAccumulator by remember(rule.id) { mutableFloatStateOf(0f) }
-                    val thresholdPx = with(LocalDensity.current) { 44.dp.toPx() }
-                    val haptic = LocalHapticFeedback.current
                     Box(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+                            .background(
+                                if (isDragging) MiuixTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                else MiuixTheme.colorScheme.surfaceContainerHigh
+                            )
                             .pointerInput(rule.id) {
                                 detectVerticalDragGestures(
-                                    onDragStart = { dragAccumulator = 0f },
+                                    onDragStart = { onDragStart() },
+                                    onDragEnd = { onDragEnd() },
+                                    onDragCancel = { onDragEnd() },
                                     onVerticalDrag = { change, dragAmount ->
                                         change.consume()
-                                        dragAccumulator += dragAmount
-                                        if (dragAccumulator > thresholdPx) {
-                                            onMove(rule.id, 1)
-                                            haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                                            dragAccumulator = 0f
-                                        } else if (dragAccumulator < -thresholdPx) {
-                                            onMove(rule.id, -1)
-                                            haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                                            dragAccumulator = 0f
-                                        }
+                                        onDragDelta(dragAmount)
                                     },
                                 )
                             },
@@ -1631,7 +1696,7 @@ private fun LinkDispatchRuleItemRow(
                         Icon(
                             imageVector = Icons.Default.DragHandle,
                             contentDescription = "拖动把手",
-                            tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            tint = if (isDragging) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             modifier = Modifier.size(20.dp),
                         )
                     }
