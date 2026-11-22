@@ -4,7 +4,6 @@
     <string name="link_dispatch_desc">自动识别文本或屏幕中的链接，一键直达对应应用或以小窗打开。兼容 LinkGo 规则并支持链接雷达实时感知。</string>
     <string name="link_dispatch_actions_title">规则管理</string>
     <string name="link_dispatch_import_linkgo">从剪贴板导入 LinkGo 规则</string>
-    <string name="link_dispatch_import_linkgo_desc">解析 LinkGo 格式的规则导出文本并追加合并</string>
     <string name="link_dispatch_import_clipboard">从剪贴板导入备份</string>
     <string name="link_dispatch_import_clipboard_desc">导入此前导出的完整分发与雷达配置</string>
     <string name="link_dispatch_export_clipboard">导出配置到剪贴板</string>

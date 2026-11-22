@@ -4,7 +4,6 @@
     <string name="link_dispatch_desc">Automatically identify links in text or on screen to open target apps directly or in small freeform windows. Compatible with LinkGo rules and Link Radar detection.</string>
     <string name="link_dispatch_actions_title">Rule Management</string>
     <string name="link_dispatch_import_linkgo">Import LinkGo Rules from Clipboard</string>
-    <string name="link_dispatch_import_linkgo_desc">Parse LinkGo format export text and append rules</string>
     <string name="link_dispatch_import_clipboard">Import Backup from Clipboard</string>
     <string name="link_dispatch_import_clipboard_desc">Import previously exported full dispatch configuration</string>
     <string name="link_dispatch_export_clipboard">Export to Clipboard</string>
