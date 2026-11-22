@@ -90,7 +90,7 @@ class HomeDetailSettingsViewModel @Inject constructor(
         }
     }
 
-    /** 「复制竖屏设置」：把竖屏当前的触钮与手势动作合并进横屏；失败会弹 snackbar。 */
+    /** 「复制竖屏设置」：用竖屏触钮配置全量覆盖横屏；失败会弹 snackbar。 */
     fun copyPortraitToLandscape() {
         viewModelScope.launch {
             landscapeInitMutex.withLock {

@@ -33,7 +33,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -337,12 +336,7 @@ class EdgeOverlayHost(
         }
         if (settingsJob == null) {
             settingsJob = scope.launch {
-                combine(
-                    deps.settingsRepository.gestureSettings,
-                    deps.settingsRepository.overlaySettings
-                ) { _, _ ->
-                    deps.settingsRepository.readSnapshot()
-                }.collectLatest { settings ->
+                deps.settingsRepository.settings.distinctOverlaySettings().collectLatest { settings ->
                     Log.d("XGStartup", "settings emission serviceEnabled=" +
                         settings.serviceEnabled + " manager=" + (overlayManager != null))
                     if (!PermissionHelper.isAccessibilityServiceEnabled(context)) {

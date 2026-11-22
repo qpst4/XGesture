@@ -90,6 +90,10 @@ internal object SettingsTriggerStore {
     }
 
     fun writeLandscapeTriggerHandles(prefs: MutablePreferences, settings: AppSettings) {
+        // 迁移标记由横竖屏共用：先转换旧竖屏记录，避免旧的“0 = 继承”变成显式零宽度。
+        if (prefs[SettingsPreferenceKeys.TRIGGER_EDGE_WIDTH_NULLABLE_MIGRATED] != true) {
+            writeTriggerHandles(prefs, readTriggerSettings(prefs))
+        }
         prefs[SettingsPreferenceKeys.LEFT_TRIGGER_HANDLES_LANDSCAPE] =
             TriggerHandleCodec.encodeAll(settings.leftTriggerHandlesLandscape)
         prefs[SettingsPreferenceKeys.RIGHT_TRIGGER_HANDLES_LANDSCAPE] =

@@ -2932,7 +2932,7 @@
     <string name="trigger_copy_portrait">Копировать настройки портретной ориентации</string>
     <string name="trigger_copy_portrait_open">Копировать настройки портретной ориентации</string>
     <string name="trigger_copy_portrait_confirm_title">Копировать настройки портретной ориентации в альбомную?</string>
-    <string name="trigger_copy_portrait_confirm_message">Жесты и триггеры портретных маркеров будут скопированы в альбомную ориентацию. Маркеры только для альбомной ориентации сохраняются. Положения маркеров будут перераспределены для альбомного экрана и не совпадут с портретными точно. Это действие нельзя отменить.</string>
+    <string name="trigger_copy_portrait_confirm_message">Все настройки маркеров в альбомной ориентации будут заменены настройками из портретной, включая внешний вид, положение, размер, жесты и режимы срабатывания. Маркеры, существующие только в альбомной ориентации, будут удалены. Положение и длина копируются пропорционально экрану. Это действие нельзя отменить.</string>
     <string name="trigger_collection_back_portrait">Портретная</string>
     <string name="hide_trigger_landscape">Альбомная ориентация</string>
     <string name="hide_trigger_lock_screen">Экран блокировки</string>

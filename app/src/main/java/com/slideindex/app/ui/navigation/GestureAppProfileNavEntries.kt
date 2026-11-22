@@ -23,7 +23,6 @@ import com.slideindex.app.settings.withAddedTopTriggerHandle
 import com.slideindex.app.settings.withAddedTriggerHandlePair
 import com.slideindex.app.settings.withLandscapeCopiedFromPortrait
 import com.slideindex.app.settings.withLandscapeGesturesMigratedIfNeeded
-import com.slideindex.app.settings.withPortraitCopiedToLandscape
 import com.slideindex.app.settings.withRemovedTriggerHandle
 import com.slideindex.app.settings.withRepairedLandscapeHandleLayoutIfOverlapping
 import com.slideindex.app.settings.withUpdatedTriggerHandleEnabled
@@ -184,8 +183,9 @@ private fun GestureAppProfileDetailRoute(ctx: MainNavContext, profileId: String)
             val updated = when {
                 !working.landscapeTriggersInitialized && !working.hasStoredLandscapeTriggerHandles() ->
                     working.withLandscapeCopiedFromPortrait()
-                else -> working.withLandscapeGesturesMigratedIfNeeded()
+                !working.landscapeTriggersInitialized -> working.withLandscapeGesturesMigratedIfNeeded()
                     .withRepairedLandscapeHandleLayoutIfOverlapping()
+                else -> working.withLandscapeGesturesMigratedIfNeeded()
             }
             if (updated != working) {
                 viewModel.setGestureProfileSnapshot(
@@ -195,28 +195,9 @@ private fun GestureAppProfileDetailRoute(ctx: MainNavContext, profileId: String)
             }
         },
         onCopyPortraitToLandscape = {
-            // 同全局 copyPortraitToLandscape：先把横屏初始化，再把竖屏的触钮与槽位动作合并进横屏。
+            // 与全局入口共用全量复制逻辑，来源是该档自己的竖屏配置。
             val working = globalSettings.materializeGestureProfile(profileId)
-            val current = if (working.landscapeTriggersInitialized) {
-                working
-            } else {
-                working.withLandscapeCopiedFromPortrait()
-            }
-            val merged = current.withPortraitCopiedToLandscape(current)
-            val next = current.copy(
-                edgeTrigger = current.edgeTrigger.copy(
-                    leftTriggerHandlesLandscape = merged.handles[PanelSide.LEFT]
-                        ?: current.leftTriggerHandlesLandscape,
-                    rightTriggerHandlesLandscape = merged.handles[PanelSide.RIGHT]
-                        ?: current.rightTriggerHandlesLandscape,
-                    bottomTriggerHandlesLandscape = merged.handles[PanelSide.BOTTOM]
-                        ?: current.bottomTriggerHandlesLandscape,
-                    topTriggerHandlesLandscape = merged.handles[PanelSide.TOP]
-                        ?: current.topTriggerHandlesLandscape,
-                    landscapeTriggersInitialized = true,
-                    gestureRulesLandscape = merged.rules,
-                ),
-            )
+            val next = working.withLandscapeCopiedFromPortrait()
             viewModel.setGestureProfileSnapshot(profileId, next.extractGestureProfileSnapshot())
         },
         onBack = {
@@ -274,4 +255,3 @@ private fun GestureAppProfileDetailRoute(ctx: MainNavContext, profileId: String)
         },
     )
 }
-
