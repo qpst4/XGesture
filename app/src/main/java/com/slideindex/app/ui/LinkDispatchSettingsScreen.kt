@@ -75,6 +75,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -313,7 +314,7 @@ fun LinkDispatchSettingsScreen(
                 val mutable = rules.toMutableList()
                 val moved = mutable.removeAt(fromIndex)
                 mutable.add(toIndex, moved)
-                val reordered = mutable.mapIndexed { idx, r -> r.copy(priority = mutable.size - idx) }
+                val reordered = mutable.mapIndexed { idx, r -> r.copy(priority = idx) }
                 scope.launch {
                     LinkRuleRepository.updateRules(context) { reordered }
                 }
@@ -413,10 +414,10 @@ fun LinkDispatchSettingsScreen(
                     .animateContentSize(animationSpec = tween(250)),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                // 卡头
+                // 卡头（独立大圆角卡片）
                 CardSegment(
                     isFirst = true,
-                    isLast = !isRulesOpen,
+                    isLast = true,
                     outerHorizontalPadding = 12.dp,
                 ) {
                     BasicComponent(
@@ -447,20 +448,22 @@ fun LinkDispatchSettingsScreen(
                     )
                 }
 
-                // 展开的规则内容
+                // 展开的规则内容（方案 A：独立卡片流布局，每条规则均为 12dp 大圆角卡片）
                 AnimatedVisibility(
                     visible = isRulesOpen,
                     enter = expandVertically(tween(250)) + fadeIn(),
                     exit = shrinkVertically(tween(250)) + fadeOut(),
                 ) {
                     Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        // 新建规则引导行
+                        // 新建规则引导行（独立大圆角卡片）
                         CardSegment(
-                            isFirst = false,
-                            isLast = filteredRules.isEmpty(),
+                            isFirst = true,
+                            isLast = true,
                             outerHorizontalPadding = 12.dp,
                         ) {
                             BasicComponent(
@@ -503,22 +506,22 @@ fun LinkDispatchSettingsScreen(
                         } else {
                             // 1. 分发规则（短链重分发）
                             if (dispatchRules.isNotEmpty()) {
-                                Box(modifier = Modifier.padding(start = 28.dp, top = 10.dp, bottom = 4.dp)) {
+                                Box(modifier = Modifier.padding(start = 24.dp, top = 4.dp, bottom = 0.dp)) {
                                     MiuixText(
                                         text = "短链重分发规则 (${dispatchRules.size} 条)",
-                                        style = MiuixTheme.textStyles.subtitle,
+                                        style = MiuixTheme.textStyles.footnote1,
                                         fontWeight = FontWeight.Medium,
                                         color = MiuixTheme.colorScheme.primary,
                                     )
                                 }
-                                dispatchRules.forEachIndexed { idx, rule ->
+                                dispatchRules.forEach { rule ->
                                     val appName = linkAppNameCache[rule.targetPackage].orEmpty()
                                     val isSelected = rule.id in selectedRuleIds
                                     LinkDispatchRuleItemRow(
                                         rule = rule,
                                         appName = appName,
-                                        isFirst = idx == 0,
-                                        isLast = idx == dispatchRules.size - 1,
+                                        isFirst = true,
+                                        isLast = true,
                                         isSelectionMode = isSelectionMode,
                                         isSelected = isSelected,
                                         onClick = {
@@ -552,22 +555,22 @@ fun LinkDispatchSettingsScreen(
 
                             // 2. 跳转规则（直达目标应用）
                             if (redirectRules.isNotEmpty()) {
-                                Box(modifier = Modifier.padding(start = 28.dp, top = 14.dp, bottom = 4.dp)) {
+                                Box(modifier = Modifier.padding(start = 24.dp, top = 6.dp, bottom = 0.dp)) {
                                     MiuixText(
                                         text = "应用直达跳转规则 (${redirectRules.size} 条)",
-                                        style = MiuixTheme.textStyles.subtitle,
+                                        style = MiuixTheme.textStyles.footnote1,
                                         fontWeight = FontWeight.Medium,
                                         color = MiuixTheme.colorScheme.primary,
                                     )
                                 }
-                                redirectRules.forEachIndexed { idx, rule ->
+                                redirectRules.forEach { rule ->
                                     val appName = linkAppNameCache[rule.targetPackage].orEmpty()
                                     val isSelected = rule.id in selectedRuleIds
                                     LinkDispatchRuleItemRow(
                                         rule = rule,
                                         appName = appName,
-                                        isFirst = idx == 0,
-                                        isLast = idx == redirectRules.size - 1,
+                                        isFirst = true,
+                                        isLast = true,
                                         isSelectionMode = isSelectionMode,
                                         isSelected = isSelected,
                                         onClick = {
@@ -1539,7 +1542,7 @@ private fun LinkDispatchRuleItemRow(
                 .fillMaxWidth()
                 .background(
                     if (isSelected) MiuixTheme.colorScheme.primary.copy(alpha = 0.08f)
-                    else MiuixTheme.colorScheme.surface
+                    else Color.Transparent
                 )
                 .combinedClickable(
                     onClick = onClick,

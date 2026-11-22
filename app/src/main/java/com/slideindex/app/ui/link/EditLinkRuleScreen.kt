@@ -862,7 +862,7 @@ private fun LinkRuleLiveTestBottomSheet(
 
     MiuixBottomSheet(
         show = show,
-        title = null,
+        title = "链接测试",
         onDismissRequest = onDismissRequest,
     ) {
         Column(
@@ -871,25 +871,6 @@ private fun LinkRuleLiveTestBottomSheet(
                 .padding(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // 顶部左对齐标题栏（漏斗/烧杯图标 + 大粗体标题，1:1 对标 LinkGo）
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.padding(bottom = 2.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Science,
-                    contentDescription = null,
-                    tint = MiuixTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(26.dp),
-                )
-                MiuixText(
-                    text = "链接测试",
-                    style = MiuixTheme.textStyles.title2,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-
             // 1. 输入待测试的链接（支持多行自动撑大展开）
             MiuixLabeledTextField(
                 value = testUrl,

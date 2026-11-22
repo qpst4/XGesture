@@ -245,10 +245,15 @@ object LinkDispatcher {
                 sourcePackage = sourcePackage,
                 sourceText = sourceText,
             )
+            // 候选规则已命中；若后续规则库无接管者，应降级为系统默认打开流程，而非误判当前规则未命中
+            val finalRes = when (subTrace.finalResult) {
+                is LinkDispatchResult.NoRule -> LinkDispatchResult.SystemDefault(finalCandidateUrl)
+                else -> subTrace.finalResult
+            }
             LinkRouteTrace(
                 inputUrl = normalized,
                 steps = steps + subTrace.steps,
-                finalResult = subTrace.finalResult,
+                finalResult = finalRes,
             )
         } else {
             // 普通直达跳转规则
