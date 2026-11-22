@@ -112,6 +112,8 @@ fun AppSettings.withLandscapeGesturesMigratedIfNeeded(): AppSettings {
 /** 若横屏触钮区间重叠，按数量等分短边后写回（保留 id/外观/手势相关字段）。 */
 fun AppSettings.withRepairedLandscapeHandleLayoutIfOverlapping(): AppSettings {
     fun repair(stored: List<TriggerHandle>, portrait: List<TriggerHandle>): List<TriggerHandle> {
+        // 已初始化后的空列表表示用户删空，不能用竖屏布局把它重新创建出来。
+        if (landscapeTriggersInitialized && stored.isEmpty()) return stored
         val source = stored.ifEmpty { portrait }
         if (source.size <= 1 || !source.hasOverlappingSpans()) return stored
         return redistributeLandscapeSideHandles(source)
