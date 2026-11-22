@@ -23,7 +23,14 @@ object ModuleBridgeStatusStore {
     channel: String = ModuleHookBridgeContract.CHANNEL_SYSTEM,
   ) {
     val suffix = keySuffix(channel)
-    prefs(context).edit()
+    val stored = prefs(context)
+    val apkPrefix = ModuleHookBridgeContract.STATUS_DETAIL_APK_PREFIX
+    val installedApk = context.applicationContext.applicationInfo.sourceDir
+    // 首次从旧实现升级时，滞留的旧 receiver 仍可能发回回执；不能覆盖已确认的新代状态。
+    if (ModuleStatusFields.field(stored.getString(KEY_DETAIL + suffix, "").orEmpty(), apkPrefix) == installedApk &&
+      ModuleStatusFields.field(detail, apkPrefix) != installedApk
+    ) return
+    stored.edit()
       .putBoolean(KEY_ACTIVE + suffix, active)
       .putString(KEY_STATE + suffix, state)
       .putString(KEY_DETAIL + suffix, detail)
