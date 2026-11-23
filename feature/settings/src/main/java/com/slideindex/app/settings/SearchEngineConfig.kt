@@ -11,6 +11,24 @@ enum class SearchEngineType {
     SHARE_FILE_TO_APP,
     JUMP_TO_ACTIVITY,
     EXTERN_JUMP_LINK,
+    SEARCH_GROUP,
+}
+
+/** 搜索组的成员类型：文字引擎或图片分享目标。 */
+@Serializable
+enum class SearchGroupKind {
+    TEXT,
+    IMAGE_SHARE,
+}
+
+/** 搜索组间隔的硬约束；UI 与校验共用。 */
+object SearchGroupDefaults {
+    const val DEFAULT_INTERVAL_MILLIS = 800
+    const val MIN_INTERVAL_MILLIS = 200
+    const val MAX_INTERVAL_MILLIS = 2000
+
+    /** 滑条显示步进；存储值仍按毫秒整数保存。 */
+    const val INTERVAL_STEP_MILLIS = 50
 }
 
 @Serializable
@@ -46,6 +64,10 @@ data class SearchEngineConfig(
     val autoInputEnter: Boolean = true,
     val showInPickPanel: Boolean = true,
     val sortOrder: Int = 0,
+    /** 仅 [SearchEngineType.SEARCH_GROUP] 使用。 */
+    val groupKind: SearchGroupKind = SearchGroupKind.TEXT,
+    val groupMemberIds: List<String> = emptyList(),
+    val groupIntervalMillis: Int = SearchGroupDefaults.DEFAULT_INTERVAL_MILLIS,
 ) {
     fun isTextSearchEngine(): Boolean = when (engineType) {
         SearchEngineType.DIRECT_LINK,
@@ -53,8 +75,12 @@ data class SearchEngineConfig(
         SearchEngineType.EXTERN_JUMP_LINK,
         SearchEngineType.SHARE_TO_APP,
         -> showInPickPanel
+        SearchEngineType.SEARCH_GROUP -> groupKind == SearchGroupKind.TEXT && showInPickPanel
         SearchEngineType.SHARE_IMAGE_TO_APP,
         SearchEngineType.SHARE_FILE_TO_APP,
         -> false
     }
+
+    fun isImageShareGroup(): Boolean =
+        engineType == SearchEngineType.SEARCH_GROUP && groupKind == SearchGroupKind.IMAGE_SHARE
 }

@@ -31,7 +31,15 @@ import kotlinx.coroutines.launch
 object SearchEngineLauncher {
     private val mainHandler = Handler(Looper.getMainLooper())
 
-    fun launchImageShare(context: Context, engine: SearchEngineConfig, bitmap: Bitmap): Boolean {
+    fun launchImageShare(
+        context: Context,
+        engine: SearchEngineConfig,
+        bitmap: Bitmap,
+        engines: List<SearchEngineConfig> = emptyList(),
+    ): Boolean {
+        if (engine.engineType == SearchEngineType.SEARCH_GROUP) {
+            return SearchGroupLauncher.launchImage(context, engine, bitmap, engines)
+        }
         if (engine.engineType != SearchEngineType.SHARE_IMAGE_TO_APP) return false
         val pkg = engine.targetPackage?.takeIf { it.isNotBlank() } ?: return false
         val activity = engine.targetActivity?.takeIf { it.isNotBlank() } ?: return false
@@ -82,6 +90,7 @@ object SearchEngineLauncher {
             SearchEngineType.SHARE_TO_APP,
             SearchEngineType.SHARE_IMAGE_TO_APP,
             SearchEngineType.SHARE_FILE_TO_APP,
+            SearchEngineType.SEARCH_GROUP,
             -> false
         }
     }
@@ -150,6 +159,13 @@ object SearchEngineLauncher {
         }
         return when (textLaunchKind(engine.engineType)) {
             TextLaunchKind.SHARE_TEXT -> launchTextShare(context, engine, value)
+            TextLaunchKind.GROUP -> SearchGroupLauncher.launchText(
+                context,
+                engine,
+                value,
+                settings,
+                longPressTriggered,
+            )
             TextLaunchKind.OPEN -> if (fullscreenOverride == null) {
                 launch(context, engine, value, settings, longPressTriggered)
             } else {
@@ -187,7 +203,8 @@ object SearchEngineLauncher {
             SearchEngineType.SHARE_TO_APP,
             SearchEngineType.SHARE_IMAGE_TO_APP,
             SearchEngineType.SHARE_FILE_TO_APP,
-            -> false // use launchTextShare / launchImageShare instead
+            SearchEngineType.SEARCH_GROUP,
+            -> false // use launchTextShare / launchImageShare / SearchGroupLauncher instead
         }
     }
 
@@ -581,7 +598,7 @@ object SearchEngineLauncher {
  * 单独抽成纯函数是为了能直接单测——漏掉一个分支的表现就是"点了/拖了没反应"，
  * 而这种错误编译器不会报（[SearchEngineLauncher.launch] 返回 Boolean，漏了也是合法返回）。
  */
-internal enum class TextLaunchKind { OPEN, SHARE_TEXT, UNSUPPORTED }
+internal enum class TextLaunchKind { OPEN, SHARE_TEXT, GROUP, UNSUPPORTED }
 
 internal fun textLaunchKind(type: SearchEngineType): TextLaunchKind = when (type) {
     SearchEngineType.SHARE_TO_APP -> TextLaunchKind.SHARE_TEXT
@@ -592,4 +609,5 @@ internal fun textLaunchKind(type: SearchEngineType): TextLaunchKind = when (type
     SearchEngineType.EXTERN_JUMP_LINK,
     SearchEngineType.JUMP_TO_ACTIVITY,
     -> TextLaunchKind.OPEN
+    SearchEngineType.SEARCH_GROUP -> TextLaunchKind.GROUP
 }

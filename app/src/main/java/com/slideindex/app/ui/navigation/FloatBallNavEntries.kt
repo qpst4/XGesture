@@ -1,10 +1,15 @@
 package com.slideindex.app.ui.navigation
 
+import android.app.Activity
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
 import com.slideindex.app.R
@@ -14,7 +19,9 @@ import com.slideindex.app.gesture.ActionPickerCatalogPolicy
 import com.slideindex.app.gesture.GestureTriggerType
 import com.slideindex.app.gesture.SlotPickerKind
 import com.slideindex.app.settings.SearchEngineType
+import com.slideindex.app.settings.SearchGroupKind
 import com.slideindex.app.settings.toMinimalAppSettings
+import com.slideindex.app.search.SearchEngineShare
 import com.slideindex.app.ui.FloatBallAppearanceSettingsScreen
 import com.slideindex.app.ui.FloatBallGestureSettingsScreen
 import com.slideindex.app.ui.FloatBallGestureTuningScreen
@@ -39,6 +46,8 @@ import com.slideindex.app.ui.SearchEngineEditorCategory
 import com.slideindex.app.ui.SearchEngineEditorScreen
 import com.slideindex.app.ui.SearchEnginePreviewSortScreen
 import com.slideindex.app.ui.SearchEngineSettingsScreen
+import com.slideindex.app.ui.SearchGroupEditorScreen
+import com.slideindex.app.ui.SearchGroupMemberPickerScreen
 import com.slideindex.app.ui.ShareImageOcrHistoryScreen
 import com.slideindex.app.ui.TranslateModelSettingsScreen
 import com.slideindex.app.ui.VlmOcrSettingsScreen
@@ -84,23 +93,34 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
         val viewModel: SearchEngineSettingsViewModel = hiltViewModel()
         val overlaySettings by viewModel.overlaySettings.collectAsStateWithLifecycle()
         val settings = overlaySettings.toMinimalAppSettings()
-        val importPreviewState by viewModel.importPreviewState.collectAsStateWithLifecycle()
         SearchEngineSettingsScreen(
             settings = settings,
-            importPreviewState = importPreviewState,
             onBack = { ctx.backStack.removeLastOrNull() },
             onOpenPresetPicker = { ctx.navigate(AppNavKey.FloatBallSearchEnginePresetPicker) },
-            onImport = viewModel::previewImport,
-            onDismissImportPreview = viewModel::dismissImportPreview,
-            onConfirmImport = viewModel::confirmImport,
             onUpsertEngine = viewModel::upsertEngine,
             onDeleteEngine = viewModel::deleteEngine,
             onMoveEngine = viewModel::moveEngine,
             onUpdateEngines = viewModel::updateTextEngines,
             onOpenPreviewSort = { ctx.navigate(AppNavKey.FloatBallSearchEnginePreviewSort) },
             onOpenEditor = { engineId ->
-                ctx.navigate(AppNavKey.FloatBallSearchEngineEditor(engineId.orEmpty()))
+                val engine = engineId?.let { id -> settings.searchEngines.find { it.id == id } }
+                if (engine?.engineType == SearchEngineType.SEARCH_GROUP) {
+                    ctx.navigate(
+                        AppNavKey.FloatBallSearchGroupEditor(
+                            groupId = engine.id,
+                            kind = engine.groupKind.name,
+                        ),
+                    )
+                } else {
+                    ctx.navigate(AppNavKey.FloatBallSearchEngineEditor(engineId.orEmpty()))
+                }
             },
+            onCreateGroup = {
+                ctx.navigate(
+                    AppNavKey.FloatBallSearchGroupEditor(kind = SearchGroupKind.TEXT.name),
+                )
+            },
+            onImportParsed = viewModel::importParsedJson,
             dragFlowTextEngines = settings.dragFlowTextEngines,
             onAddDragFlowTextEngine = viewModel::addDragFlowTextEngine,
             onRemoveDragFlowTextEngine = viewModel::removeDragFlowTextEngine,
@@ -120,11 +140,12 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
 
     hiltEntry<AppNavKey.FloatBallSearchEngineEditor> { key ->
         val viewModel: SearchEngineSettingsViewModel = hiltViewModel(ctx.activity)
+        ClearDraftOnEntryDestroy(ctx.activity) { viewModel.clearDraft() }
         val overlaySettings by viewModel.overlaySettings.collectAsStateWithLifecycle()
         val settings = overlaySettings.toMinimalAppSettings()
         val initialEngine = key.engineId.takeIf { it.isNotEmpty() }
             ?.let { id -> settings.searchEngines.find { it.id == id } }
-        LaunchedEffect(key.engineId) {
+        LaunchedEffect(key.engineId, initialEngine?.id) {
             viewModel.initDraft(initialEngine, SearchEngineEditorCategory.TEXT)
         }
         val draft by viewModel.editorDraft.collectAsStateWithLifecycle()
@@ -133,10 +154,15 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
                 initialEngine = initialEngine,
                 draft = currentDraft,
                 editorCategory = SearchEngineEditorCategory.TEXT,
-                onBack = { ctx.backStack.removeLastOrNull() },
+                onBack = {
+                    ctx.navigateBack()
+                },
                 onSave = { result ->
                     viewModel.upsertEngine(result)
-                    ctx.backStack.removeLastOrNull()
+                    ctx.navigateBack()
+                },
+                onShare = { engine ->
+                    SearchEngineShare.share(ctx.activity, engine, settings.searchEngines)
                 },
                 onUpdateDraft = viewModel::updateDraft,
                 onPickApp = { target, titleResId, pkg ->
@@ -568,8 +594,18 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
             onOpenAggregatedEngine = { engineId ->
                 ctx.navigate(AppNavKey.FloatBallImageSearchEngineDetail(engineId))
             },
-                onOpenEditor = { engineId ->
-                ctx.navigate(AppNavKey.FloatBallImageSearchEngineEditor(engineId.orEmpty()))
+            onOpenEditor = { engineId ->
+                val engine = engineId?.let { id -> settings.searchEngines.find { it.id == id } }
+                if (engine?.engineType == SearchEngineType.SEARCH_GROUP) {
+                    ctx.navigate(
+                        AppNavKey.FloatBallSearchGroupEditor(
+                            groupId = engine.id,
+                            kind = engine.groupKind.name,
+                        ),
+                    )
+                } else {
+                    ctx.navigate(AppNavKey.FloatBallImageSearchEngineEditor(engineId.orEmpty()))
+                }
             },
             onOpenBatchPicker = {
                 ctx.navigate(
@@ -581,17 +617,26 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
                     ),
                 )
             },
+            onCreateGroup = {
+                ctx.navigate(
+                    AppNavKey.FloatBallSearchGroupEditor(
+                        kind = SearchGroupKind.IMAGE_SHARE.name,
+                    ),
+                )
+            },
+            onImportParsed = viewModel::importParsedJson,
             onSetShowAggregatedImageEntry = viewModel::setSearchPanelShowAggregatedImageEntry,
         )
     }
 
     hiltEntry<AppNavKey.FloatBallImageSearchEngineEditor> { key ->
         val viewModel: SearchEngineSettingsViewModel = hiltViewModel(ctx.activity)
+        ClearDraftOnEntryDestroy(ctx.activity) { viewModel.clearDraft() }
         val overlaySettings by viewModel.overlaySettings.collectAsStateWithLifecycle()
         val settings = overlaySettings.toMinimalAppSettings()
         val initialEngine = key.engineId.takeIf { it.isNotEmpty() }
             ?.let { id -> settings.searchEngines.find { it.id == id } }
-        LaunchedEffect(key.engineId) {
+        LaunchedEffect(key.engineId, initialEngine?.id) {
             viewModel.initDraft(initialEngine, SearchEngineEditorCategory.IMAGE_SHARE)
         }
         val draft by viewModel.editorDraft.collectAsStateWithLifecycle()
@@ -600,10 +645,15 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
                 initialEngine = initialEngine,
                 draft = currentDraft,
                 editorCategory = SearchEngineEditorCategory.IMAGE_SHARE,
-                onBack = { ctx.backStack.removeLastOrNull() },
+                onBack = {
+                    ctx.navigateBack()
+                },
                 onSave = { result ->
                     viewModel.upsertEngine(result)
-                    ctx.backStack.removeLastOrNull()
+                    ctx.navigateBack()
+                },
+                onShare = { engine ->
+                    SearchEngineShare.share(ctx.activity, engine, settings.searchEngines)
                 },
                 onUpdateDraft = viewModel::updateDraft,
                 onPickApp = { target, titleResId, pkg ->
@@ -636,6 +686,96 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
                 },
             )
         }
+    }
+
+    hiltEntry<AppNavKey.FloatBallSearchGroupEditor> { key ->
+        val viewModel: SearchEngineSettingsViewModel = hiltViewModel(ctx.activity)
+        ClearDraftOnEntryDestroy(ctx.activity) { viewModel.clearGroupDraft() }
+        val overlaySettings by viewModel.overlaySettings.collectAsStateWithLifecycle()
+        val settings = overlaySettings.toMinimalAppSettings()
+        val kind = runCatching { SearchGroupKind.valueOf(key.kind) }
+            .getOrDefault(SearchGroupKind.TEXT)
+        val initialEngine = key.groupId.takeIf { it.isNotEmpty() }
+            ?.let { id -> settings.searchEngines.find { it.id == id } }
+        LaunchedEffect(key.groupId, kind, initialEngine?.id) {
+            viewModel.initGroupDraft(initialEngine, kind)
+        }
+        val draft by viewModel.groupDraft.collectAsStateWithLifecycle()
+        draft?.let { currentDraft ->
+            SearchGroupEditorScreen(
+                kind = kind,
+                draft = currentDraft,
+                allEngines = settings.searchEngines,
+                onBack = {
+                    ctx.navigateBack()
+                },
+                onSave = {
+                    viewModel.saveGroupDraft {
+                        ctx.navigateBack()
+                    }
+                },
+                onShare = { engine ->
+                    SearchEngineShare.share(ctx.activity, engine, settings.searchEngines)
+                },
+                onDelete = if (currentDraft.isNew) {
+                    null
+                } else {
+                    {
+                        viewModel.deleteGroup(currentDraft.groupId) {
+                            ctx.navigateBack()
+                        }
+                    }
+                },
+                onUpdateDraft = viewModel::updateGroupDraft,
+                onReorderMembers = viewModel::reorderGroupMembers,
+                onRemoveMember = viewModel::removeGroupMember,
+                onAddMember = {
+                    ctx.navigate(
+                        AppNavKey.FloatBallSearchGroupMemberPicker(kind = kind.name),
+                    )
+                },
+            )
+        }
+    }
+
+    hiltEntry<AppNavKey.FloatBallSearchGroupMemberPicker> { key ->
+        val viewModel: SearchEngineSettingsViewModel = hiltViewModel(ctx.activity)
+        val overlaySettings by viewModel.overlaySettings.collectAsStateWithLifecycle()
+        val settings = overlaySettings.toMinimalAppSettings()
+        val kind = runCatching { SearchGroupKind.valueOf(key.kind) }
+            .getOrDefault(SearchGroupKind.TEXT)
+        val draft by viewModel.groupDraft.collectAsStateWithLifecycle()
+        val candidates = remember(settings.searchEngines, kind, draft?.groupId) {
+            val all = settings.searchEngines
+            val currentGroupId = draft?.groupId.orEmpty()
+            when (kind) {
+                SearchGroupKind.TEXT -> all.filter {
+                    it.id != currentGroupId &&
+                        it.engineType != SearchEngineType.SEARCH_GROUP &&
+                        it.engineType in setOf(
+                            SearchEngineType.DIRECT_LINK,
+                            SearchEngineType.EXTERN_JUMP_LINK,
+                            SearchEngineType.JUMP_TO_ACTIVITY,
+                        )
+                }.sortedBy { it.sortOrder }
+                SearchGroupKind.IMAGE_SHARE -> all.filter {
+                    it.id != currentGroupId &&
+                        it.engineType == SearchEngineType.SHARE_IMAGE_TO_APP
+                }.sortedBy { it.sortOrder }
+            }
+        }
+        SearchGroupMemberPickerScreen(
+            kind = kind,
+            candidates = candidates,
+            selectedIds = draft?.memberIds?.toSet().orEmpty(),
+            onBack = { ctx.backStack.removeLastOrNull() },
+            onConfirm = { ids ->
+                viewModel.addGroupMembers(
+                    candidates.filter { it.id in ids }.map { it.id },
+                )
+                ctx.backStack.removeLastOrNull()
+            },
+        )
     }
 
     hiltEntry<AppNavKey.FloatBallImageSearchEngineDetail> { key ->
@@ -881,5 +1021,22 @@ fun NavEntryBuilder.floatBallNavEntries(ctx: MainNavContext) {
             },
             onNotifyWarning = viewModel::showWarning,
         )
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun ClearDraftOnEntryDestroy(
+    activity: Activity,
+    clear: () -> Unit,
+) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_DESTROY && !activity.isChangingConfigurations) {
+                clear()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 }

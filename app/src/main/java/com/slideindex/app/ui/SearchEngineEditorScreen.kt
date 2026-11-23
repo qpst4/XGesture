@@ -52,7 +52,8 @@ import com.slideindex.app.settings.SearchEngineType
 import com.slideindex.app.settings.SearchIconType
 import com.slideindex.app.overlay.pickresult.SearchEngineIcon
 import com.slideindex.app.overlay.searchpanel.SearchPanelAliasResolver
-import com.slideindex.app.ui.miuix.CardSegment
+import com.slideindex.app.ui.miuix.CardItem
+import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.miuix.MiuixHintText
 import com.slideindex.app.ui.miuix.MiuixInsetCardComponentMargin
@@ -82,8 +83,9 @@ import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.icon.extended.File
 import top.yukonga.miuix.kmp.icon.extended.GridView
 import top.yukonga.miuix.kmp.icon.extended.Image
+import top.yukonga.miuix.kmp.icon.glass.Ok
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.icon.extended.Ok
+import top.yukonga.miuix.kmp.icon.extended.Share
 
 enum class SearchEngineEditorCategory {
     TEXT,
@@ -103,6 +105,7 @@ fun SearchEngineEditorScreen(
     editorCategory: SearchEngineEditorCategory = SearchEngineEditorCategory.TEXT,
     onBack: () -> Unit,
     onSave: (SearchEngineEditorResult) -> Unit,
+    onShare: ((SearchEngineConfig) -> Unit)? = null,
     onUpdateDraft: ((SearchEngineDraft) -> SearchEngineDraft) -> Unit,
     onPickApp: (target: String, titleResId: Int, selectedPackageName: String) -> Unit,
     onPickActivity: (packageName: String, selectedClassName: String) -> Unit,
@@ -237,23 +240,72 @@ fun SearchEngineEditorScreen(
         ),
         onBack = onBack,
         actions = {
+            if (onShare != null) {
+                MiuixTopBarIconButton(
+                    onClick = {
+                        if (isNameMissing) {
+                            Toast.makeText(
+                                context,
+                                R.string.search_engine_name_required,
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        } else {
+                            val engine = buildEngine(
+                                initialEngine = initialEngine,
+                                name = name.trim(),
+                                aliasCode = aliasCode,
+                                engineType = engineType,
+                                searchLink = searchLink.trim(),
+                                externJumpLink = externJumpLink.trim(),
+                                externJumpPackage = externJumpPackage.trim(),
+                                targetPackage = targetPackage.trim(),
+                                targetActivity = targetActivity.trim(),
+                                autoInputEnter = autoInputEnter,
+                                hasPendingIcon = pendingIconUri != null || pendingIconPath != null,
+                                pendingIconPath = pendingIconPath,
+                                pendingTextIcon = pendingTextIcon,
+                                iconSourcePackage = pendingIconSourcePackage,
+                            ).let { candidate ->
+                                candidate.copy(
+                                    aliasCode = SearchPanelAliasResolver
+                                        .normalizeAliasCode(candidate.aliasCode.orEmpty())
+                                        .takeIf { it.isNotEmpty() },
+                                )
+                            }
+                            if (SearchEngineValidator.validate(engine)) {
+                                onShare(engine)
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    R.string.search_engine_validation_failed,
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                            }
+                        }
+                    },
+                ) {
+                    top.yukonga.miuix.kmp.basic.Icon(
+                        imageVector = MiuixIcons.Share,
+                        contentDescription = stringResource(R.string.search_engine_share_subject),
+                    )
+                }
+            }
             MiuixTopBarIconButton(onClick = saveAction) {
                 top.yukonga.miuix.kmp.basic.Icon(
-                    imageVector = MiuixIcons.Medium.Ok,
+                    imageVector = MiuixIcons.Glass.Normal.Ok,
                     contentDescription = stringResource(R.string.search_engine_save),
+                    tint = MiuixTheme.colorScheme.primary,
                 )
             }
         },
     ) {
-        item(key = "search-engine-editor-icon-card") {
-            CardSegment(
-                isFirst = true,
-                isLast = true,
-                insidePadding = PaddingValues(16.dp),
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
+        groupedCardItems(
+            keyPrefix = "search-engine-editor",
+            items = listOf(
+                CardItem(key = "icon") {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
                     SmallTitle(
                         text = stringResource(R.string.search_engine_pick_icon),
                         insideMargin = PaddingValues(bottom = 8.dp),
@@ -437,38 +489,42 @@ fun SearchEngineEditorScreen(
                         }
                     }
                 }
-            }
-        }
+            },
+            ),
+            insidePadding = PaddingValues(16.dp),
+            outerBottomPadding = 12.dp,
+        )
 
         if (isShareImageType) {
-            item(key = "search-engine-editor-share-image-target-card") {
-                CardSegment(
-                    isFirst = true,
-                    isLast = true,
-                    insidePadding = PaddingValues(16.dp),
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        SmallTitle(
-                            text = stringResource(R.string.search_engine_share_image_target_section),
-                            insideMargin = PaddingValues(bottom = 8.dp),
-                        )
-                        val targetSummary = when {
-                            targetPackage.isBlank() -> stringResource(R.string.search_engine_share_image_target_not_set)
-                            targetActivity.isBlank() -> targetPackage
-                            else -> "$targetPackage / ${targetActivity.substringAfterLast('.')}"
-                        }
-                        MiuixHintText(targetSummary, horizontalPadding = 0.dp)
-                        MiuixButton(
-                            onClick = { onPickShareTarget(targetPackage, targetActivity) },
-                            modifier = Modifier.fillMaxWidth(),
+            groupedCardItems(
+                keyPrefix = "search-engine-editor-share-target",
+                items = listOf(
+                    CardItem(key = "target") {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            Text(stringResource(R.string.search_engine_pick_share_image_target))
+                            SmallTitle(
+                                text = stringResource(R.string.search_engine_share_image_target_section),
+                                insideMargin = PaddingValues(bottom = 8.dp),
+                            )
+                            val targetSummary = when {
+                                targetPackage.isBlank() -> stringResource(R.string.search_engine_share_image_target_not_set)
+                                targetActivity.isBlank() -> targetPackage
+                                else -> "$targetPackage / ${targetActivity.substringAfterLast('.')}"
+                            }
+                            MiuixHintText(targetSummary, horizontalPadding = 0.dp)
+                            MiuixButton(
+                                onClick = { onPickShareTarget(targetPackage, targetActivity) },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(stringResource(R.string.search_engine_pick_share_image_target))
+                            }
                         }
-                    }
-                }
-            }
+                    },
+                ),
+                insidePadding = PaddingValues(16.dp),
+                outerBottomPadding = 12.dp,
+            )
         } else {
             item(key = "search-engine-editor-type-fields") {
                 EditorTypeFields(
@@ -774,7 +830,8 @@ private fun EditorTypeFields(
         }
 
         SearchEngineType.SHARE_IMAGE_TO_APP,
-        SearchEngineType.SHARE_FILE_TO_APP -> Unit
+        SearchEngineType.SHARE_FILE_TO_APP,
+        SearchEngineType.SEARCH_GROUP -> Unit
             }
         }
     }
@@ -959,6 +1016,7 @@ private fun engineTypeLabel(type: SearchEngineType): String {
         SearchEngineType.SHARE_TO_APP -> stringResource(R.string.search_engine_type_share)
         SearchEngineType.SHARE_IMAGE_TO_APP -> stringResource(R.string.search_engine_type_share_image)
         SearchEngineType.SHARE_FILE_TO_APP -> "文件分享"
+        SearchEngineType.SEARCH_GROUP -> stringResource(R.string.search_group_entry_title)
     }
 }
 
@@ -991,7 +1049,7 @@ private fun IconSourceButton(
 }
 
 @Composable
-private fun TextIconDialog(
+internal fun TextIconDialog(
     initialText: String,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
@@ -1002,11 +1060,33 @@ private fun TextIconDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.search_engine_text_icon_title),
         confirmEnabled = input.trim().isNotEmpty(),
-        onConfirm = { onConfirm(input.trim()) },
+        onConfirm = { onConfirm(searchTextIconGraphemes(input).joinToString("")) },
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(MiuixTheme.colorScheme.surfaceContainerHigh),
+                contentAlignment = Alignment.Center,
+            ) {
+                SearchTextIcon(
+                    text = input,
+                    iconSize = 72.dp,
+                    color = MiuixTheme.colorScheme.onSurface,
+                )
+            }
+        }
         MiuixLabeledTextField(
             value = input,
-            onValueChange = { if (it.length <= 8) input = it },
+            onValueChange = {
+                input = searchTextIconGraphemes(it).joinToString("")
+            },
             label = stringResource(R.string.search_engine_text_icon_hint),
         )
         Text(

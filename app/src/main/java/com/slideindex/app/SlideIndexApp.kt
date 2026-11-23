@@ -805,11 +805,12 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.showImageSearchPanel = { ctx, bmp ->
             com.slideindex.app.overlay.FloatBallImageSearchPanel.show(ctx, bmp)
         }
-        com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchImageShareSearch = { ctx, engine, bmp ->
+        com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchImageShareSearch = { ctx, engine, bmp, engines ->
             com.slideindex.app.search.SearchEngineLauncher.launchImageShare(
                 ctx,
                 engine as com.slideindex.app.settings.SearchEngineConfig,
                 bmp,
+                engines,
             )
         }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchTextSearch = { ctx, engine, text, settings ->

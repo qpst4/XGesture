@@ -3,6 +3,7 @@ package com.slideindex.app.overlay.panels
 import android.accessibilityservice.AccessibilityService
 import android.content.Context
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.settings.SearchEngineConfig
 
 /**
  * 面板模块（`:feature:overlay-panels`）与 `:app` 的接线点。
@@ -307,7 +308,7 @@ object PanelRuntimeHooks {
 
     /** 用搜索引擎打开图片。 */
     @Volatile
-    var launchImageShareSearch: ((Context, Any?, android.graphics.Bitmap) -> Boolean)? = null
+    var launchImageShareSearch: ((Context, SearchEngineConfig, android.graphics.Bitmap, List<SearchEngineConfig>) -> Boolean)? = null
 
     /** 用搜索引擎打开文本。 */
     @Volatile

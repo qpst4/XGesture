@@ -7,8 +7,6 @@ import com.slideindex.app.ui.miuix.CardSegment
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -86,17 +84,15 @@ import com.slideindex.app.ui.searchengine.AggregatedSearchEngineManager
 @Composable
 fun SearchEngineSettingsScreen(
     settings: AppSettings,
-    importPreviewState: SearchEngineImportPreviewState?,
     onBack: () -> Unit,
     onOpenPresetPicker: () -> Unit,
-    onImport: (android.net.Uri) -> Unit,
-    onDismissImportPreview: () -> Unit,
-    onConfirmImport: (replaceExisting: Boolean) -> Unit,
     onUpsertEngine: (SearchEngineEditorResult) -> Unit,
     onDeleteEngine: (String) -> Unit,
     onMoveEngine: (String, Int) -> Unit,
     onOpenPreviewSort: () -> Unit,
     onOpenEditor: (String?) -> Unit,
+    onCreateGroup: () -> Unit = {},
+    onImportParsed: (List<SearchEngineConfig>) -> Unit = {},
     onUpdateEngines: (List<SearchEngineConfig>) -> Unit = {},
     dragFlowTextEngines: List<SearchEngineConfig> = emptyList(),
     onAddDragFlowTextEngine: (SearchEngineConfig) -> Unit = {},
@@ -107,16 +103,9 @@ fun SearchEngineSettingsScreen(
     }
     var deletingEngine by remember { mutableStateOf<SearchEngineConfig?>(null) }
 
-    val importLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-    ) { uri ->
-        if (uri != null) {
-            onImport(uri)
-        }
-    }
-
     var isDraggingAny by remember { mutableStateOf(false) }
     var showAddSheet by remember { mutableStateOf(false) }
+    var showJsonImport by remember { mutableStateOf(false) }
     var flowCardBounds by remember { mutableStateOf(Rect.Zero) }
     val hintTip = stringResource(R.string.search_engine_settings_hint_tip)
 
@@ -214,19 +203,12 @@ fun SearchEngineSettingsScreen(
                         modifier = Modifier.size(22.dp),
                     )
                 },
-                title = stringResource(R.string.search_engine_settings_import),
-                subtitle = stringResource(R.string.search_engine_settings_import_subtitle),
+                title = stringResource(R.string.search_engine_import_paste_json),
+                subtitle = stringResource(R.string.search_engine_import_paste_json_subtitle),
                 backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
                 onClick = {
                     showAddSheet = false
-                    importLauncher.launch(
-                        arrayOf(
-                            "application/zip",
-                            "application/json",
-                            "application/octet-stream",
-                            "*/*",
-                        ),
-                    )
+                    showJsonImport = true
                 },
             )
             SettingNavigationRow(
@@ -246,6 +228,23 @@ fun SearchEngineSettingsScreen(
                     onOpenEditor(null)
                 },
             )
+            SettingNavigationRow(
+                icon = { label ->
+                    Icon(
+                        imageVector = Icons.Default.Widgets,
+                        contentDescription = label,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
+                    )
+                },
+                title = stringResource(R.string.search_group_entry_title),
+                subtitle = stringResource(R.string.search_group_entry_subtitle),
+                backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
+                onClick = {
+                    showAddSheet = false
+                    onCreateGroup()
+                },
+            )
         }
         Column(
             modifier = Modifier
@@ -256,14 +255,15 @@ fun SearchEngineSettingsScreen(
         }
     }
 
-    if (importPreviewState != null) {
-        SearchEngineImportPreviewDialog(
-            preview = importPreviewState,
-            onDismiss = onDismissImportPreview,
-            onConfirmMerge = { onConfirmImport(false) },
-            onConfirmReplace = { onConfirmImport(true) },
-        )
-    }
+    SearchEngineJsonImportHost(
+        show = showJsonImport,
+        existingEngines = settings.searchEngines,
+        onDismissRequest = { showJsonImport = false },
+        onImport = { imported ->
+            onImportParsed(imported)
+            showJsonImport = false
+        },
+    )
 
     val engineToDelete = deletingEngine
     MiuixConfirmDialog(
@@ -381,7 +381,7 @@ private fun DragFlowBarCard(
 }
 
 @Composable
-private fun SearchEngineImportPreviewDialog(
+internal fun SearchEngineImportPreviewDialog(
     preview: SearchEngineImportPreviewState,
     onDismiss: () -> Unit,
     onConfirmMerge: () -> Unit,

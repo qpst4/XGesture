@@ -59,7 +59,14 @@ object SearchEngineStore {
 
     fun imageSharePanelEngines(engines: List<SearchEngineConfig>): List<SearchEngineConfig> =
         engines.filter {
-            it.engineType == SearchEngineType.SHARE_IMAGE_TO_APP && it.showInPickPanel
+            it.showInPickPanel &&
+                (it.engineType == SearchEngineType.SHARE_IMAGE_TO_APP || it.isImageShareGroup())
+        }.sortedBy { it.sortOrder }
+
+    /** 图片分享设置页用：包含已隐藏的目标，避免关闭显示后再也找不到。 */
+    fun imageShareSettingsEngines(engines: List<SearchEngineConfig>): List<SearchEngineConfig> =
+        engines.filter {
+            it.engineType == SearchEngineType.SHARE_IMAGE_TO_APP || it.isImageShareGroup()
         }.sortedBy { it.sortOrder }
 
     /** 拖拽流转栏用的图片目标：所有「分享到 App」引擎，不看取词面板的隐藏开关。 */
@@ -108,7 +115,8 @@ object SearchEngineStore {
     fun textSettingsEngines(engines: List<SearchEngineConfig>): List<SearchEngineConfig> =
         engines.filter {
             it.engineType != SearchEngineType.SHARE_IMAGE_TO_APP &&
-                it.engineType != SearchEngineType.SHARE_FILE_TO_APP
+                it.engineType != SearchEngineType.SHARE_FILE_TO_APP &&
+                !it.isImageShareGroup()
         }.sortedBy { it.sortOrder }
 
     /**

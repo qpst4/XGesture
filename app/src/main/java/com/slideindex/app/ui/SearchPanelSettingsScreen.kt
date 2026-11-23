@@ -38,6 +38,7 @@ import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.searchengine.defaultSearchEngineCandidates
 import com.slideindex.app.ui.searchengine.defaultSearchEngineItemLabel
+import com.slideindex.app.ui.viewmodel.SearchEngineImportPreviewState
 import com.slideindex.app.ui.settings.components.SectionAliasCodeDisplay
 import com.slideindex.app.ui.settings.components.SettingDropdownRow
 import com.slideindex.app.ui.settings.components.SettingLinkRow
@@ -78,10 +79,20 @@ fun SearchPanelSettingsScreen(
     onOpenPresentationLayoutSettings: () -> Unit,
     onOpenTextSearchEngines: () -> Unit,
     onOpenImageSearchEngines: () -> Unit,
+    importPreviewState: SearchEngineImportPreviewState? = null,
+    onImportBackup: (android.net.Uri) -> Unit = {},
+    onDismissImportPreview: () -> Unit = {},
+    onConfirmImport: (Boolean) -> Unit = {},
     onSetDefaultEngineId: (String?) -> Unit,
 ) {
     val context = LocalContext.current
     var showClearHistoryDialog by remember { mutableStateOf(false) }
+
+    val importBackupLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) onImportBackup(uri)
+    }
 
     val engines = remember(settings.searchEngines) {
         SearchEngineStore.textSettingsEngines(settings.searchEngines)
@@ -189,6 +200,25 @@ fun SearchPanelSettingsScreen(
                             title = stringResource(R.string.image_search_engine_settings_title),
                             subtitle = stringResource(R.string.search_panel_image_engines_entry_desc),
                             onClick = onOpenImageSearchEngines,
+                        )
+                    },
+                )
+                add(
+                    settingsCardScopeItem("import-backup") {
+                        SettingNavigationRow(
+                            icon = { label -> Icon(MiuixIcons.File, contentDescription = label) },
+                            title = stringResource(R.string.search_engine_settings_import),
+                            subtitle = stringResource(R.string.search_engine_settings_import_subtitle),
+                            onClick = {
+                                importBackupLauncher.launch(
+                                    arrayOf(
+                                        "application/zip",
+                                        "application/json",
+                                        "application/octet-stream",
+                                        "*/*",
+                                    ),
+                                )
+                            },
                         )
                     },
                 )
@@ -444,6 +474,15 @@ fun SearchPanelSettingsScreen(
                     },
                 )
             },
+        )
+    }
+
+    if (importPreviewState != null) {
+        SearchEngineImportPreviewDialog(
+            preview = importPreviewState,
+            onDismiss = onDismissImportPreview,
+            onConfirmMerge = { onConfirmImport(false) },
+            onConfirmReplace = { onConfirmImport(true) },
         )
     }
 

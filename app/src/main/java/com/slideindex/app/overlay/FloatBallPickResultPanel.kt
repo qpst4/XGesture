@@ -1647,7 +1647,12 @@ object FloatBallPickResultPanel {
                     },
                     onImageShareEngineClick = { engine ->
                         val bitmap = screenshotHolder.value ?: return@FloatBallPickResultContent
-                        val launched = SearchEngineLauncher.launchImageShare(context, engine, bitmap)
+                        val launched = SearchEngineLauncher.launchImageShare(
+                            context,
+                            engine,
+                            bitmap,
+                            settings.searchEngines,
+                        )
                         if (launched) {
                             dismiss()
                         }

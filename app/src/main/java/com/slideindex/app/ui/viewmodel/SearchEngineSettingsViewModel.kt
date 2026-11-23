@@ -21,6 +21,8 @@ import com.slideindex.app.settings.SearchPanelInputBehavior
 import com.slideindex.app.settings.SearchEngineConfig
 import com.slideindex.app.settings.SearchEngineStore
 import com.slideindex.app.settings.SearchEngineType
+import com.slideindex.app.settings.SearchGroupDefaults
+import com.slideindex.app.settings.SearchGroupKind
 import com.slideindex.app.settings.SearchIconType
 import com.slideindex.app.settings.SettingsRepository
 import com.slideindex.app.ui.SearchEngineEditorCategory
@@ -66,6 +68,21 @@ data class SearchEngineImportPreviewState(
     val mergedEngines: List<SearchEngineConfig>,
 )
 
+data class SearchGroupDraft(
+    val groupId: String = "",
+    val kind: SearchGroupKind = SearchGroupKind.TEXT,
+    val name: String = "",
+    val enabled: Boolean = true,
+    val memberIds: List<String> = emptyList(),
+    val intervalMillis: Int = SearchGroupDefaults.DEFAULT_INTERVAL_MILLIS,
+    val iconType: SearchIconType = SearchIconType.OTHER,
+    val iconPath: String? = null,
+    val textIcon: String? = null,
+    val iconSourcePackage: String? = null,
+) {
+    val isNew: Boolean get() = groupId.isBlank()
+}
+
 @HiltViewModel
 class SearchEngineSettingsViewModel @Inject constructor(
     settingsRepository: SettingsRepository,
@@ -89,11 +106,12 @@ class SearchEngineSettingsViewModel @Inject constructor(
 
     fun initDraft(initialEngine: SearchEngineConfig?, category: SearchEngineEditorCategory) {
         val currentDraft = _editorDraft.value
-        if (currentDraft != null &&
-            currentDraft.engineId == initialEngine?.id.orEmpty() &&
-            draftCategory == category
-        ) {
-            return
+        if (currentDraft != null && draftCategory == category) {
+            val targetId = initialEngine?.id.orEmpty()
+            if (currentDraft.engineId == targetId) return
+            // settings 还没把新引擎推下来时，不要用 null 覆盖已有 draft；
+            // 等 initialEngine 到达后，这里会因 id 不同而重建。
+            if (initialEngine == null) return
         }
         val isLegacyExternalLink = initialEngine?.engineType == SearchEngineType.EXTERN_JUMP_LINK
         val normalizedEngineType = when {
@@ -135,6 +153,156 @@ class SearchEngineSettingsViewModel @Inject constructor(
         draftCategory = null
     }
 
+    private val _groupDraft = MutableStateFlow<SearchGroupDraft?>(null)
+    val groupDraft: StateFlow<SearchGroupDraft?> = _groupDraft.asStateFlow()
+    private var groupDraftKey: Pair<String, SearchGroupKind>? = null
+
+    fun initGroupDraft(initialEngine: SearchEngineConfig?, kind: SearchGroupKind) {
+        val key = initialEngine?.id.orEmpty() to kind
+        if (_groupDraft.value != null && groupDraftKey == key) return
+        val group = initialEngine?.takeIf {
+            it.engineType == SearchEngineType.SEARCH_GROUP && it.groupKind == kind
+        }
+        val defaultCountText = group?.groupMemberIds?.size?.toString()
+        val textIcon = group?.textIcon?.takeUnless {
+            group.iconType == SearchIconType.TEXT && it == defaultCountText
+        }
+        _groupDraft.value = SearchGroupDraft(
+            groupId = group?.id.orEmpty(),
+            kind = kind,
+            name = group?.name.orEmpty(),
+            enabled = group?.showInPickPanel ?: true,
+            memberIds = group?.groupMemberIds.orEmpty(),
+            intervalMillis = group?.groupIntervalMillis
+                ?: SearchGroupDefaults.DEFAULT_INTERVAL_MILLIS,
+            iconType = if (textIcon == null && group?.iconType == SearchIconType.TEXT) {
+                SearchIconType.OTHER
+            } else {
+                group?.iconType ?: SearchIconType.OTHER
+            },
+            iconPath = group?.iconPath,
+            textIcon = textIcon,
+            iconSourcePackage = group?.iconSourcePackage,
+        )
+        groupDraftKey = key
+    }
+
+    fun updateGroupDraft(transform: (SearchGroupDraft) -> SearchGroupDraft) {
+        _groupDraft.value = _groupDraft.value?.let(transform)
+    }
+
+    fun clearGroupDraft() {
+        _groupDraft.value = null
+        groupDraftKey = null
+    }
+
+    fun addGroupMembers(ids: List<String>) {
+        if (ids.isEmpty()) return
+        val current = _groupDraft.value ?: return
+        _groupDraft.value = current.copy(memberIds = (current.memberIds + ids).distinct())
+    }
+
+    fun removeGroupMember(id: String) {
+        val current = _groupDraft.value ?: return
+        _groupDraft.value = current.copy(memberIds = current.memberIds.filterNot { it == id })
+    }
+
+    fun reorderGroupMembers(orderedIds: List<String>) {
+        val current = _groupDraft.value ?: return
+        _groupDraft.value = current.copy(memberIds = orderedIds.distinct())
+    }
+
+    fun saveGroupDraft(onSaved: () -> Unit) {
+        val draft = _groupDraft.value ?: return
+        val name = draft.name.trim()
+        if (name.isBlank()) {
+            userMessageBus.showError(appContext.getString(R.string.search_group_name_required))
+            return
+        }
+        if (draft.memberIds.isEmpty()) {
+            userMessageBus.showError(
+                appContext.getString(
+                    if (draft.kind == SearchGroupKind.IMAGE_SHARE) {
+                        R.string.search_group_image_empty_subtitle
+                    } else {
+                        R.string.search_group_empty_subtitle
+                    },
+                ),
+            )
+            return
+        }
+        val previousIconPath = settings.value.searchEngines
+            .find { it.id == draft.groupId }
+            ?.iconPath
+        viewModelScope.launch {
+            var savedEngine: SearchEngineConfig? = null
+            settingsRepository.updateSearchEngines { current ->
+                val existing = current.find { it.id == draft.groupId }
+                val iconType = when {
+                    draft.iconSourcePackage != null -> SearchIconType.OTHER
+                    draft.iconPath != null -> SearchIconType.URI
+                    !draft.textIcon.isNullOrBlank() -> SearchIconType.TEXT
+                    else -> SearchIconType.OTHER
+                }
+                val engine = SearchEngineConfig(
+                    id = existing?.id ?: java.util.UUID.randomUUID().toString(),
+                    name = name,
+                    engineType = SearchEngineType.SEARCH_GROUP,
+                    iconType = iconType,
+                    iconPath = draft.iconPath.takeIf { iconType == SearchIconType.URI },
+                    textIcon = draft.textIcon.takeIf { iconType == SearchIconType.TEXT },
+                    iconSourcePackage = draft.iconSourcePackage.takeIf {
+                        iconType == SearchIconType.OTHER
+                    },
+                    showInPickPanel = draft.enabled,
+                    groupKind = draft.kind,
+                    groupMemberIds = draft.memberIds,
+                    groupIntervalMillis = draft.intervalMillis.coerceIn(
+                        SearchGroupDefaults.MIN_INTERVAL_MILLIS,
+                        SearchGroupDefaults.MAX_INTERVAL_MILLIS,
+                    ),
+                )
+                savedEngine = engine
+                val engines = current.toMutableList()
+                val index = engines.indexOfFirst { it.id == engine.id }
+                if (index >= 0) {
+                    engines[index] = engine.copy(sortOrder = engines[index].sortOrder)
+                } else {
+                    val order = (engines.maxOfOrNull { it.sortOrder } ?: -1) + 1
+                    engines += engine.copy(sortOrder = order)
+                }
+                engines.sortedBy { it.sortOrder }
+                    .mapIndexed { index, item -> item.copy(sortOrder = index) }
+            }.onSuccess {
+                savedEngine?.let { invalidateSearchEngineIconCache(it.id) }
+                if (previousIconPath != draft.iconPath) {
+                    SearchEngineIconStorage.deleteIconIfOwned(appContext, previousIconPath)
+                }
+                userMessageBus.showSuccess(appContext.getString(R.string.search_group_saved))
+                onSaved()
+            }.onFailure {
+                userMessageBus.showError(appContext.getString(R.string.settings_save_failed))
+            }
+        }
+    }
+
+    fun deleteGroup(id: String, onDeleted: () -> Unit) {
+        if (id.isBlank()) return
+        viewModelScope.launch {
+            settingsRepository.updateSearchEngines { current ->
+                current.filterNot { it.id == id }
+                    .sortedBy { it.sortOrder }
+                    .mapIndexed { index, engine -> engine.copy(sortOrder = index) }
+            }.onSuccess {
+                invalidateSearchEngineIconCache(id)
+                userMessageBus.showSuccess(appContext.getString(R.string.search_group_deleted))
+                onDeleted()
+            }.onFailure {
+                userMessageBus.showError(appContext.getString(R.string.settings_save_failed))
+            }
+        }
+    }
+
     private val _importPreviewState = MutableStateFlow<SearchEngineImportPreviewState?>(null)
     val importPreviewState: StateFlow<SearchEngineImportPreviewState?> = _importPreviewState.asStateFlow()
 
@@ -168,6 +336,80 @@ class SearchEngineSettingsViewModel @Inject constructor(
 
     fun dismissImportPreview() {
         _importPreviewState.value = null
+    }
+
+    fun importJsonText(raw: String) {
+        viewModelScope.launch {
+            runCatching { SearchEngineImporter.parseJsonText(raw) }
+                .onSuccess { imported ->
+                    importParsedJson(imported)
+                }
+                .onFailure { error ->
+                    userMessageBus.showError(
+                        appContext.getString(
+                            R.string.search_engine_import_failed,
+                            error.message.orEmpty(),
+                        ),
+                    )
+                }
+        }
+    }
+
+    fun importParsedJson(imported: List<SearchEngineConfig>) {
+        viewModelScope.launch {
+            SearchEngineImporter.importParsed(
+                context = appContext,
+                imported = imported,
+                existing = settings.value.searchEngines,
+                replaceExisting = false,
+            ).onSuccess { result ->
+                persistEngines(result.mergedEngines) {
+                    when {
+                        result.importedCount > 0 && result.skippedCount > 0 -> {
+                            userMessageBus.showSuccess(
+                                appContext.getString(
+                                    R.string.search_engine_import_json_success_skipped,
+                                    result.importedCount,
+                                    result.skippedCount,
+                                ),
+                            )
+                        }
+                        result.importedCount > 0 -> {
+                            userMessageBus.showSuccess(
+                                appContext.getString(
+                                    R.string.search_engine_import_json_success,
+                                    result.importedCount,
+                                ),
+                            )
+                        }
+                        result.skippedCount > 0 -> {
+                            userMessageBus.showError(
+                                appContext.getString(
+                                    R.string.search_engine_import_json_all_skipped,
+                                    result.skippedCount,
+                                ),
+                            )
+                        }
+                        else -> {
+                            userMessageBus.showError(
+                                appContext.getString(R.string.search_engine_import_json_invalid),
+                            )
+                        }
+                    }
+                }
+            }.onFailure { error ->
+                userMessageBus.showError(
+                    if (error.message == "no_search_engines") {
+                        appContext.getString(R.string.search_engine_import_json_no_engines)
+                    } else {
+                        appContext.getString(
+                            R.string.search_engine_import_failed,
+                            error.message.orEmpty(),
+                        )
+                    },
+                )
+            }
+        }
     }
 
     fun confirmImport(replaceExisting: Boolean) {
@@ -373,6 +615,13 @@ class SearchEngineSettingsViewModel @Inject constructor(
             val removed = engines.find { it.id == id } ?: return@launch
             val remaining = engines
                 .filter { it.id != id }
+                .map { engine ->
+                    if (engine.engineType == SearchEngineType.SEARCH_GROUP) {
+                        engine.copy(groupMemberIds = engine.groupMemberIds.filterNot { it == id })
+                    } else {
+                        engine
+                    }
+                }
                 .sortedBy { it.sortOrder }
                 .mapIndexed { index, engine -> engine.copy(sortOrder = index) }
             persistEngines(remaining) {
@@ -587,7 +836,9 @@ class SearchEngineSettingsViewModel @Inject constructor(
 
     fun updateTextEngines(updatedTextEngines: List<SearchEngineConfig>) {
         viewModelScope.launch {
-            val nonTextEngines = settings.value.searchEngines.filter { it.engineType == SearchEngineType.SHARE_IMAGE_TO_APP }
+            val nonTextEngines = settings.value.searchEngines.filter {
+                it.engineType == SearchEngineType.SHARE_IMAGE_TO_APP || it.isImageShareGroup()
+            }
             val merged = updatedTextEngines + nonTextEngines
             persistEngines(merged.mapIndexed { index, engine -> engine.copy(sortOrder = index) })
         }

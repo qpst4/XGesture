@@ -2,9 +2,12 @@
 
 package com.slideindex.app.ui
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.DpSize
+import com.slideindex.app.ui.miuix.MiuixBottomSheet
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,8 +35,11 @@ import com.slideindex.app.ui.settings.components.SettingsVerticalReorderList
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
+import com.slideindex.app.ui.settings.components.settingsCardItems
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Add
+import top.yukonga.miuix.kmp.icon.extended.Edit
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
@@ -51,10 +57,12 @@ fun ImageSearchEngineSettingsScreen(
     onOpenAggregatedEngine: (String) -> Unit,
     onOpenEditor: (String?) -> Unit,
     onOpenBatchPicker: () -> Unit,
+    onCreateGroup: () -> Unit = {},
+    onImportParsed: (List<SearchEngineConfig>) -> Unit = {},
     onSetShowAggregatedImageEntry: (Boolean) -> Unit,
 ) {
     val shareEngines = remember(settings.searchEngines) {
-        SearchEngineStore.imageSharePanelEngines(settings.searchEngines)
+        SearchEngineStore.imageShareSettingsEngines(settings.searchEngines)
     }
     val aggregatedConfigs = remember(settings.aggregatedImageSearchEngines) {
         settings.aggregatedImageSearchEngines.sortedBy { it.sortOrder }
@@ -63,6 +71,8 @@ fun ImageSearchEngineSettingsScreen(
         aggregatedConfigs.count { it.showInPanel }
     }
     var deletingEngine by remember { mutableStateOf<SearchEngineConfig?>(null) }
+    var showAddSheet by remember { mutableStateOf(false) }
+    var showJsonImport by remember { mutableStateOf(false) }
 
     val shareSectionTitle = stringResource(
         R.string.image_search_engine_share_section,
@@ -102,7 +112,7 @@ fun ImageSearchEngineSettingsScreen(
                         },
                         title = stringResource(R.string.image_search_engine_add_share_target),
                         subtitle = stringResource(R.string.image_search_engine_add_share_target_subtitle),
-                        onClick = onOpenBatchPicker,
+                        onClick = { showAddSheet = true },
                     )
                 },
             ),
@@ -176,6 +186,84 @@ fun ImageSearchEngineSettingsScreen(
             }
         }
     }
+
+    MiuixBottomSheet(
+        show = showAddSheet,
+        title = stringResource(R.string.search_group_add_sheet_title),
+        insideMargin = DpSize(0.dp, 12.dp),
+        onDismissRequest = { showAddSheet = false },
+    ) {
+        val addSheetRows = settingsCardItems("image-search-add-share-sheet") {
+            SettingNavigationRow(
+                icon = { label ->
+                    Icon(
+                        imageVector = MiuixIcons.Add,
+                        contentDescription = label,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
+                    )
+                },
+                title = stringResource(R.string.search_group_pick_existing),
+                subtitle = stringResource(R.string.search_group_pick_existing_subtitle),
+                backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
+                onClick = {
+                    showAddSheet = false
+                    onOpenBatchPicker()
+                },
+            )
+            SettingNavigationRow(
+                icon = { label ->
+                    Icon(
+                        imageVector = MiuixIcons.Edit,
+                        contentDescription = label,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
+                    )
+                },
+                title = stringResource(R.string.search_group_create_new),
+                subtitle = stringResource(R.string.search_group_create_new_subtitle),
+                backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
+                onClick = {
+                    showAddSheet = false
+                    onCreateGroup()
+                },
+            )
+            SettingNavigationRow(
+                icon = { label ->
+                    Icon(
+                        imageVector = MiuixIcons.Add,
+                        contentDescription = label,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
+                    )
+                },
+                title = stringResource(R.string.search_engine_import_paste_json),
+                subtitle = stringResource(R.string.search_engine_import_paste_json_subtitle),
+                backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
+                onClick = {
+                    showAddSheet = false
+                    showJsonImport = true
+                },
+            )
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+        ) {
+            addSheetRows.RenderRows()
+        }
+    }
+
+    SearchEngineJsonImportHost(
+        show = showJsonImport,
+        existingEngines = settings.searchEngines,
+        onDismissRequest = { showJsonImport = false },
+        onImport = { imported ->
+            onImportParsed(imported)
+            showJsonImport = false
+        },
+    )
 
     val engineToDelete = deletingEngine
     MiuixConfirmDialog(

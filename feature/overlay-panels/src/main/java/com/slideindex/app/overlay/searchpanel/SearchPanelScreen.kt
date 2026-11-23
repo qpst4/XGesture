@@ -844,7 +844,7 @@ fun SearchPanelScreen(
                     ?.invoke(context, imageBitmap!!)
             } else {
                 com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchImageShareSearch
-                    ?.invoke(context, engine, imageBitmap!!)
+                    ?.invoke(context, engine, imageBitmap!!, settings.searchEngines)
             }
             dismissPanel()
         }

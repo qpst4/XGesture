@@ -526,7 +526,12 @@ class SlideIndexImageEditorActivity : AppCompatActivity() {
             return
         }
         exportJob = lifecycleScope.launch {
-            SearchEngineLauncher.launchImageShare(this@SlideIndexImageEditorActivity, engine, bitmap)
+            SearchEngineLauncher.launchImageShare(
+                this@SlideIndexImageEditorActivity,
+                engine,
+                bitmap,
+                settingsRepository.readSnapshot().searchEngines,
+            )
         }
     }
 

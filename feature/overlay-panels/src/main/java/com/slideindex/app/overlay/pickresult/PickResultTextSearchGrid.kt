@@ -52,7 +52,9 @@ import androidx.core.graphics.drawable.toBitmap
 import com.slideindex.app.settings.SearchEngineConfig
 import com.slideindex.app.settings.SearchEngineIconShape
 import com.slideindex.app.settings.SearchEngineStore
+import com.slideindex.app.settings.SearchEngineType
 import com.slideindex.app.settings.SearchIconType
+import com.slideindex.app.ui.SearchTextIcon
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -383,6 +385,7 @@ fun SearchEngineIcon(
     }
 
     BoxWithConstraints(modifier = modifier) {
+        val iconSize = maxWidth
         val shape = if (iconShape == SearchEngineIconShape.CIRCLE) {
             CircleShape
         } else {
@@ -395,31 +398,38 @@ fun SearchEngineIcon(
                 .background(backgroundColor.copy(alpha = alpha * 0.6f)),
             contentAlignment = Alignment.Center,
         ) {
-            if (engine.iconType == SearchIconType.TEXT) {
-                Text(
-                    text = engine.textIcon?.take(2).orEmpty().ifBlank { engine.name.take(1) },
-                    style = MaterialTheme.typography.titleMedium,
+            val groupCount = if (engine.engineType == SearchEngineType.SEARCH_GROUP) {
+                engine.groupMemberIds.size
+            } else {
+                null
+            }
+            val customText = engine.textIcon?.takeIf { it.isNotBlank() }
+            val image = bitmap
+            when {
+                image != null -> Image(
+                    bitmap = image.asImageBitmap(),
+                    contentDescription = engine.name,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(shape),
+                    contentScale = ContentScale.Crop,
+                    alpha = alpha,
+                )
+                customText != null -> SearchTextIcon(
+                    text = customText,
+                    iconSize = iconSize,
                     color = fallbackContentColor.copy(alpha = alpha),
                 )
-            } else {
-                val image = bitmap
-                if (image != null) {
-                    Image(
-                        bitmap = image.asImageBitmap(),
-                        contentDescription = engine.name,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(shape),
-                        contentScale = ContentScale.Crop,
-                        alpha = alpha,
-                    )
-                } else {
-                    Text(
-                        text = engine.name.take(1),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = fallbackContentColor.copy(alpha = alpha),
-                    )
-                }
+                groupCount != null -> SearchTextIcon(
+                    text = groupCount.toString(),
+                    iconSize = iconSize,
+                    color = fallbackContentColor.copy(alpha = alpha),
+                )
+                else -> SearchTextIcon(
+                    text = engine.name.take(1),
+                    iconSize = iconSize,
+                    color = fallbackContentColor.copy(alpha = alpha),
+                )
             }
         }
     }

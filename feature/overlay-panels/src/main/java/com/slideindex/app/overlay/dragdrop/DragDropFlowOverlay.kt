@@ -1052,7 +1052,12 @@ class DragDropFlowController(
                             .find { it.id == engineId }
                         val bitmap = decodeBitmapFromUri(uri)
                         if (engine != null && bitmap != null) {
-                            val launched = com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchImageShareSearch?.invoke(context, engine, bitmap) == true
+                            val launched = com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchImageShareSearch?.invoke(
+                                context,
+                                engine,
+                                bitmap,
+                                latestSettings.searchEngines,
+                            ) == true
                             if (!launched) {
                                 Toast.makeText(context, context.getString(R.string.drag_drop_flow_toast_launch_failed), Toast.LENGTH_SHORT).show()
                             }

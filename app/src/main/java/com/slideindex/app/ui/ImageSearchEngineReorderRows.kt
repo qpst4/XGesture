@@ -11,6 +11,7 @@ import com.slideindex.app.R
 import com.slideindex.app.overlay.pickresult.SearchEngineIcon
 import com.slideindex.app.search.ImageSearchEngine
 import com.slideindex.app.settings.SearchEngineConfig
+import com.slideindex.app.settings.SearchEngineType
 import com.slideindex.app.ui.miuix.miuixGroupedCardItem
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
@@ -31,7 +32,11 @@ fun ImageShareEngineReorderRow(
     BasicComponent(
         modifier = modifier.miuixGroupedCardItem(segmentIndex, segmentCount),
         title = engine.name,
-        summary = stringResource(R.string.search_engine_type_share_image),
+        summary = if (engine.engineType == SearchEngineType.SEARCH_GROUP) {
+            stringResource(R.string.search_group_entry_title)
+        } else {
+            stringResource(R.string.search_engine_type_share_image)
+        },
         onClick = onClick,
         startAction = {
             SearchEngineIcon(engine = engine, modifier = Modifier.size(24.dp))

@@ -22,6 +22,7 @@ fun NavEntryBuilder.searchPanelNavEntries(ctx: MainNavContext) {
         val settings = overlaySettings.toMinimalAppSettings()
         val searchHistoryEntryCount by viewModel.searchHistoryEntryCount.collectAsStateWithLifecycle()
         val clipboardEntryCount by viewModel.clipboardHistoryEntryCount.collectAsStateWithLifecycle()
+        val importPreviewState by viewModel.importPreviewState.collectAsStateWithLifecycle()
         SearchPanelSettingsScreen(
             settings = settings,
             searchHistoryEntryCount = searchHistoryEntryCount,
@@ -47,6 +48,10 @@ fun NavEntryBuilder.searchPanelNavEntries(ctx: MainNavContext) {
             onOpenPresentationLayoutSettings = { ctx.navigate(AppNavKey.SearchPanelPresentationLayout) },
             onOpenTextSearchEngines = { ctx.navigate(AppNavKey.FloatBallSearchEngine) },
             onOpenImageSearchEngines = { ctx.navigate(AppNavKey.FloatBallImageSearchEngine) },
+            importPreviewState = importPreviewState,
+            onImportBackup = viewModel::previewImport,
+            onDismissImportPreview = viewModel::dismissImportPreview,
+            onConfirmImport = viewModel::confirmImport,
             onSetDefaultEngineId = viewModel::setDefaultEngineId,
         )
     }

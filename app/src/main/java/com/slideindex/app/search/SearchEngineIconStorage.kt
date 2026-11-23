@@ -43,6 +43,15 @@ object SearchEngineIconStorage {
         return "search_icons/$fileName"
     }
 
+    fun saveIconFromBitmap(context: Context, bitmap: Bitmap): String? {
+        if (bitmap.isRecycled) return null
+        val bytes = ByteArrayOutputStream().use { stream ->
+            if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)) return null
+            stream.toByteArray()
+        }
+        return saveIconFromBytes(context, bytes)
+    }
+
     fun deleteIconIfOwned(context: Context, iconPath: String?) {
         val relative = iconPath?.takeIf { it.startsWith("search_icons/") } ?: return
         val file = File(context.filesDir, relative)
