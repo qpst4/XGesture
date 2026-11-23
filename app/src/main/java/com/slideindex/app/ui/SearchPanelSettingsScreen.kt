@@ -3,14 +3,25 @@
 package com.slideindex.app.ui
 
 import android.Manifest
+import android.content.ClipboardManager
+import android.content.Context
+import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Backup
 import top.yukonga.miuix.kmp.icon.extended.Contacts
 import top.yukonga.miuix.kmp.icon.extended.File
 import top.yukonga.miuix.kmp.icon.extended.Image
 import top.yukonga.miuix.kmp.icon.extended.Search
 import top.yukonga.miuix.kmp.icon.extended.Settings
+import top.yukonga.miuix.kmp.glass.GlassIconButton
+import com.slideindex.app.search.SearchEngineImporter
+import com.slideindex.app.search.SearchEngineShareCodec
+import com.slideindex.app.settings.SearchEngineConfig
+import com.slideindex.app.ui.link.LinkDataManagementSheet
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -83,10 +94,39 @@ fun SearchPanelSettingsScreen(
     onImportBackup: (android.net.Uri) -> Unit = {},
     onDismissImportPreview: () -> Unit = {},
     onConfirmImport: (Boolean) -> Unit = {},
+    onImportParsed: (List<SearchEngineConfig>) -> Unit = {},
     onSetDefaultEngineId: (String?) -> Unit,
 ) {
     val context = LocalContext.current
     var showClearHistoryDialog by remember { mutableStateOf(false) }
+    var showDataManagementSheet by remember { mutableStateOf(false) }
+    var pendingSearchRaw by remember { mutableStateOf<String?>(null) }
+    var showJsonImport by remember { mutableStateOf(false) }
+
+    val openDataDocumentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            pendingSearchRaw = runCatching {
+                context.contentResolver.openInputStream(uri)?.use { it.readBytes().decodeToString() }
+            }.getOrNull()
+            if (pendingSearchRaw.isNullOrBlank()) {
+                Toast.makeText(context, "读取文件失败", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    val createDataDocumentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val json = SearchEngineShareCodec.encode(settings.searchEngines)
+            val ok = runCatching {
+                context.contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) } != null
+            }.getOrDefault(false)
+            Toast.makeText(context, if (ok) "备份已保存" else "保存失败", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     val importBackupLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
@@ -145,6 +185,15 @@ fun SearchPanelSettingsScreen(
         title = stringResource(R.string.search_panel_settings_title),
         subtitle = stringResource(R.string.search_panel_settings_subtitle),
         onBack = onBack,
+        actions = {
+            GlassIconButton(onClick = { showDataManagementSheet = true }) {
+                Icon(
+                    imageVector = MiuixIcons.Backup,
+                    contentDescription = "数据管理",
+                    tint = MiuixTheme.colorScheme.onSurface,
+                )
+            }
+        },
     ) {
         groupedCardItems(
             keyPrefix = "search_panel_presentation_layout",
@@ -200,25 +249,6 @@ fun SearchPanelSettingsScreen(
                             title = stringResource(R.string.image_search_engine_settings_title),
                             subtitle = stringResource(R.string.search_panel_image_engines_entry_desc),
                             onClick = onOpenImageSearchEngines,
-                        )
-                    },
-                )
-                add(
-                    settingsCardScopeItem("import-backup") {
-                        SettingNavigationRow(
-                            icon = { label -> Icon(MiuixIcons.File, contentDescription = label) },
-                            title = stringResource(R.string.search_engine_settings_import),
-                            subtitle = stringResource(R.string.search_engine_settings_import_subtitle),
-                            onClick = {
-                                importBackupLauncher.launch(
-                                    arrayOf(
-                                        "application/zip",
-                                        "application/json",
-                                        "application/octet-stream",
-                                        "*/*",
-                                    ),
-                                )
-                            },
                         )
                     },
                 )
@@ -476,6 +506,60 @@ fun SearchPanelSettingsScreen(
             },
         )
     }
+
+    LinkDataManagementSheet(
+        show = showDataManagementSheet,
+        onDismiss = { showDataManagementSheet = false },
+        onImportClipboard = {
+            showDataManagementSheet = false
+            val text = (context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)
+                ?.primaryClip?.getItemAt(0)?.text?.toString().orEmpty()
+            if (text.isBlank()) {
+                Toast.makeText(context, "剪贴板内容为空", Toast.LENGTH_SHORT).show()
+            } else {
+                pendingSearchRaw = text
+            }
+        },
+        onImportFile = {
+            showDataManagementSheet = false
+            openDataDocumentLauncher.launch(arrayOf("application/json", "text/plain"))
+        },
+        onManualImport = {
+            showDataManagementSheet = false
+            pendingSearchRaw = null
+            showJsonImport = true
+        },
+        onExportClipboard = {
+            showDataManagementSheet = false
+            val json = SearchEngineShareCodec.encode(settings.searchEngines)
+            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+            cm?.setPrimaryClip(android.content.ClipData.newPlainText("SearchEngines", json))
+            Toast.makeText(
+                context,
+                if (cm != null) "已导出到剪贴板" else "导出失败",
+                Toast.LENGTH_SHORT,
+            ).show()
+        },
+        onExportFile = {
+            showDataManagementSheet = false
+            createDataDocumentLauncher.launch("search_engines_backup.json")
+        },
+    )
+
+    SearchEngineJsonImportHost(
+        show = pendingSearchRaw != null || showJsonImport,
+        existingEngines = settings.searchEngines,
+        initialRaw = pendingSearchRaw,
+        onDismissRequest = {
+            pendingSearchRaw = null
+            showJsonImport = false
+        },
+        onImport = { imported ->
+            onImportParsed(imported)
+            pendingSearchRaw = null
+            showJsonImport = false
+        },
+    )
 
     if (importPreviewState != null) {
         SearchEngineImportPreviewDialog(

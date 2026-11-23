@@ -3,9 +3,23 @@
 package com.slideindex.app.ui
 
 import androidx.compose.ui.unit.DpSize
+import android.content.ClipboardManager
+import android.content.Context
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.Icon
+import androidx.compose.ui.res.painterResource
+import com.slideindex.app.search.SearchEngineImporter
+import com.slideindex.app.search.SearchEngineShareCodec
+import com.slideindex.app.ui.link.LinkDataManagementSheet
 import com.slideindex.app.ui.miuix.CardSegment
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.glass.GlassIconButton
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Backup
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -106,6 +120,45 @@ fun SearchEngineSettingsScreen(
     var isDraggingAny by remember { mutableStateOf(false) }
     var showAddSheet by remember { mutableStateOf(false) }
     var showJsonImport by remember { mutableStateOf(false) }
+    var showDataManagementSheet by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    val openDataDocumentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val raw = runCatching {
+                context.contentResolver.openInputStream(uri)?.use { it.readBytes().decodeToString() }
+            }.getOrNull()
+            if (raw.isNullOrBlank()) {
+                Toast.makeText(context, "读取文件失败", Toast.LENGTH_SHORT).show()
+            } else {
+                runCatching { SearchEngineImporter.parseJsonText(raw) }
+                    .onSuccess { onImportParsed(it) }
+                    .onFailure {
+                        Toast.makeText(context, "未找到可导入的搜索引擎", Toast.LENGTH_SHORT).show()
+                    }
+            }
+        }
+    }
+
+    val createDataDocumentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val json = SearchEngineShareCodec.encode(engines)
+            val ok = runCatching {
+                context.contentResolver.openOutputStream(uri)?.use {
+                    it.write(json.toByteArray())
+                } != null
+            }.getOrDefault(false)
+            Toast.makeText(
+                context,
+                if (ok) "备份已保存" else "保存失败",
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+    }
     var flowCardBounds by remember { mutableStateOf(Rect.Zero) }
     val hintTip = stringResource(R.string.search_engine_settings_hint_tip)
 

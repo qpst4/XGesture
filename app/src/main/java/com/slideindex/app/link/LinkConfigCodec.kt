@@ -2,6 +2,7 @@ package com.slideindex.app.link
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import java.util.UUID
 
 /**
@@ -14,6 +15,7 @@ object LinkConfigCodec {
         isLenient = true
         prettyPrint = true
         coerceInputValues = true
+        encodeDefaults = true
     }
 
     private val jsonNormal = Json {
@@ -36,6 +38,26 @@ object LinkConfigCodec {
     }
 
     fun decode(json: String): LinkConfigBackup? = runCatching {
+        val root = jsonNormal.parseToJsonElement(json).jsonObject
+        val firstRuleKeys = root["rules"]
+            ?.let { it as? kotlinx.serialization.json.JsonArray }
+            ?.firstOrNull()
+            ?.let { it as? kotlinx.serialization.json.JsonObject }
+            ?.keys
+            .orEmpty()
+        val looksLikeOwnBackup =
+            root["version"] != null ||
+                root["extracts"] != null ||
+                root["exempts"] != null ||
+                "targetPackage" in firstRuleKeys ||
+                "matchType" in firstRuleKeys ||
+                "resolveShortLink" in firstRuleKeys ||
+                "resolveStrategy" in firstRuleKeys
+        // 一墨的 rules 使用 snake_case，LinkGo 使用 linkgo_rules，不能误认。
+        if (!looksLikeOwnBackup) return null
+        if (root["rules"] == null && root["exempts"] == null && root["extracts"] == null) {
+            return null
+        }
         jsonNormal.decodeFromString<LinkConfigBackup>(json)
             .takeIf { it.version == LinkConfigBackup.CURRENT_VERSION }
     }.getOrNull()

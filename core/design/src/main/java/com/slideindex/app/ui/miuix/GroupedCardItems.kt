@@ -6,6 +6,7 @@ package com.slideindex.app.ui.miuix
  */
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -40,6 +42,8 @@ fun CardSegment(
     outerTopPadding: Dp = 0.dp,
     outerBottomPadding: Dp = 0.dp,
     insidePadding: PaddingValues = PaddingValues(0.dp),
+    borderColor: Color = Color.Transparent,
+    borderWidth: Dp = 0.dp,
     selectableGroup: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -61,6 +65,22 @@ fun CardSegment(
                     bottom = outerBottomPadding,
                 )
                 .then(background)
+                .then(
+                    if (borderWidth > 0.dp && borderColor != Color.Transparent) {
+                        Modifier.border(
+                            width = borderWidth,
+                            color = borderColor,
+                            shape = RoundedCornerShape(
+                                topStart = topCornerRadius,
+                                topEnd = topCornerRadius,
+                                bottomEnd = bottomCornerRadius,
+                                bottomStart = bottomCornerRadius,
+                            ),
+                        )
+                    } else {
+                        Modifier
+                    },
+                )
                 .then(if (selectableGroup) Modifier.selectableGroup() else Modifier)
                 .padding(insidePadding),
             content = content,

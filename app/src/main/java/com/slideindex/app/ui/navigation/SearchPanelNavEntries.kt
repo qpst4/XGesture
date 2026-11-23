@@ -52,6 +52,7 @@ fun NavEntryBuilder.searchPanelNavEntries(ctx: MainNavContext) {
             onImportBackup = viewModel::previewImport,
             onDismissImportPreview = viewModel::dismissImportPreview,
             onConfirmImport = viewModel::confirmImport,
+            onImportParsed = viewModel::importParsedJson,
             onSetDefaultEngineId = viewModel::setDefaultEngineId,
         )
     }

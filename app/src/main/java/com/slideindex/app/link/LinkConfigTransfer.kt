@@ -22,11 +22,26 @@ object LinkConfigTransfer {
         val clip = cm.primaryClip
         val text = clip?.getItemAt(0)?.text?.toString()?.trim().orEmpty()
         if (text.isEmpty()) return null
-        return LinkConfigCodec.decode(text)?.takeIf {
-            it.rules.isNotEmpty() || it.exempts.isNotEmpty() || it.extracts.isNotEmpty()
-        } ?: LinkGoRuleConverter.parse(text).takeIf { it.isNotEmpty() }?.let {
+        return parseText(text)
+    }
+
+    /** 统一解析：本应用格式、一墨格式、LinkGo 格式。 */
+    fun parseText(text: String): LinkConfigBackup? {
+        val cleaned = text.trim().removePrefix("\uFEFF")
+        if (cleaned.isBlank()) return null
+        LinkConfigCodec.decode(cleaned)?.takeIf { it.hasContent() }?.let { return it }
+        YimoLinkConfigAdapter.parse(cleaned)?.takeIf { it.hasContent() }?.let { return it }
+        return LinkGoRuleConverter.parse(cleaned).takeIf { it.isNotEmpty() }?.let {
             LinkConfigBackup(rules = it)
         }
+    }
+
+    private fun LinkConfigBackup.hasContent(): Boolean =
+        rules.isNotEmpty() || exempts.isNotEmpty() || extracts.isNotEmpty()
+
+    suspend fun importText(context: Context, text: String): LinkImportResult {
+        val backup = parseText(text) ?: return LinkImportResult(0, 0, 0, error = "invalid_json")
+        return LinkRuleRepository.importConfig(context, backup)
     }
 
     suspend fun importFromClipboard(context: Context): LinkImportResult {
@@ -37,12 +52,7 @@ object LinkConfigTransfer {
         if (text.isEmpty()) {
             return LinkImportResult(0, 0, 0, error = "clipboard_empty")
         }
-        val backup = LinkConfigCodec.decode(text)?.takeIf {
-            it.rules.isNotEmpty() || it.exempts.isNotEmpty() || it.extracts.isNotEmpty()
-        } ?: LinkGoRuleConverter.parse(text).takeIf { it.isNotEmpty() }?.let {
-            LinkConfigBackup(rules = it)
-        } ?: return LinkImportResult(0, 0, 0, error = "invalid_json")
-
+        val backup = parseText(text) ?: return LinkImportResult(0, 0, 0, error = "invalid_json")
         return LinkRuleRepository.importConfig(context, backup)
     }
 

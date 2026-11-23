@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -34,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -63,6 +65,7 @@ private data class BuiltinTemplateItem(
     val rule: LinkDispatchRule,
     val appName: String,
     val isInstalled: Boolean,
+    val isRedispatch: Boolean,
     val alreadyPresent: Boolean,
 )
 
@@ -74,33 +77,37 @@ fun LinkTemplateImportDialog(
     show: Boolean,
     existingRules: List<LinkDispatchRule>,
     customCandidates: List<LinkDispatchRule>? = null,
+    customExtracts: List<LinkExtractPattern> = emptyList(),
     dialogTitle: String = "常用链接模板",
     dialogDescription: String = "已为你勾选已安装应用的可用规则，可按需调整后导入。",
     preselectAllAvailable: Boolean = false,
     onDismissRequest: () -> Unit,
+    onDismissFinished: (() -> Unit)? = null,
     onImport: (List<LinkDispatchRule>) -> Unit,
+    onImportWithExtracts: ((List<LinkDispatchRule>, List<LinkExtractPattern>) -> Unit)? = null,
 ) {
-    if (!show) return
-
     val context = LocalContext.current
     val screenHeightDp = LocalConfiguration.current.screenHeightDp
     val listMaxHeight = (screenHeightDp * 0.56f).coerceIn(360f, 540f).dp
     var isLoading by remember { mutableStateOf(true) }
     var templateItems by remember { mutableStateOf<List<BuiltinTemplateItem>>(emptyList()) }
     val selectedRuleIds = remember { mutableStateListOf<String>() }
+    val selectedExtractIds = remember { mutableStateListOf<String>() }
 
-    LaunchedEffect(existingRules, customCandidates, preselectAllAvailable) {
+    LaunchedEffect(existingRules, customCandidates, customExtracts, preselectAllAvailable) {
         isLoading = true
         withContext(Dispatchers.IO) {
             val existingPatterns = existingRules.map { it.pattern }.toSet()
-            val sourceRules = customCandidates ?: LinkGoRuleConverter.loadBuiltin(context)
+            val sourceRules = (customCandidates ?: LinkGoRuleConverter.loadBuiltin(context))
+                .sortedByDescending { it.resolveStrategy == com.slideindex.app.link.LinkResolveStrategy.REDISPATCH }
             val items = sourceRules.map { rule ->
-                val isInstalled = rule.targetPackage.isNotBlank() && runCatching {
+                val isRedispatch = rule.resolveStrategy == com.slideindex.app.link.LinkResolveStrategy.REDISPATCH
+                val isInstalled = isRedispatch || (rule.targetPackage.isNotBlank() && runCatching {
                     context.packageManager.getPackageInfo(rule.targetPackage, 0)
-                }.isSuccess
+                }.isSuccess)
                 val already = rule.pattern in existingPatterns
                 val appName = if (rule.targetPackage.isBlank()) {
-                    "短链重分发"
+                    "重分发规则"
                 } else {
                     runCatching {
                         val pm = context.packageManager
@@ -114,6 +121,7 @@ fun LinkTemplateImportDialog(
                     rule = rule,
                     appName = appName,
                     isInstalled = isInstalled,
+                    isRedispatch = isRedispatch,
                     alreadyPresent = already,
                 )
             }.let { list ->
@@ -125,6 +133,8 @@ fun LinkTemplateImportDialog(
             }
             templateItems = items
             selectedRuleIds.clear()
+            selectedExtractIds.clear()
+            customExtracts.forEach { selectedExtractIds.add(it.id) }
             if (preselectAllAvailable) {
                 items.filter { !it.alreadyPresent }.forEach {
                     selectedRuleIds.add(it.rule.id)
@@ -140,9 +150,10 @@ fun LinkTemplateImportDialog(
     }
 
     MiuixBottomSheet(
-        show = true,
+        show = show,
         title = dialogTitle,
         onDismissRequest = onDismissRequest,
+        onDismissFinished = onDismissFinished,
     ) {
         Column(
             modifier = Modifier
@@ -172,8 +183,8 @@ fun LinkTemplateImportDialog(
                     )
                 }
             } else {
-                val availableCount = templateItems.count { !it.alreadyPresent }
-                val selectedCount = selectedRuleIds.size
+                val availableCount = templateItems.count { !it.alreadyPresent } + customExtracts.size
+                val selectedCount = selectedRuleIds.size + selectedExtractIds.size
                 val itemShape = RoundedCornerShape(16.dp)
                 val primaryColor = MiuixTheme.colorScheme.primary
 
@@ -184,10 +195,21 @@ fun LinkTemplateImportDialog(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(vertical = 4.dp),
                 ) {
-                    items(templateItems, key = { it.rule.id }) { item ->
+                    itemsIndexed(templateItems, key = { _, item -> item.rule.id }) { index, item ->
+                        if (index == 0 ||
+                            templateItems[index - 1].isRedispatch != item.isRedispatch
+                        ) {
+                            MiuixText(
+                                text = if (item.isRedispatch) "重分发规则" else "跳转规则",
+                                style = MiuixTheme.textStyles.footnote1.copy(fontWeight = FontWeight.Medium),
+                                color = MiuixTheme.colorScheme.primary,
+                                modifier = Modifier.padding(top = if (index == 0) 0.dp else 8.dp),
+                            )
+                        }
                         val isSelected = item.rule.id in selectedRuleIds
                         val statusText = when {
                             item.alreadyPresent -> "已存在"
+                            item.isRedispatch -> "重分发"
                             !item.isInstalled -> "未安装"
                             else -> ""
                         }
@@ -218,7 +240,13 @@ fun LinkTemplateImportDialog(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            LinkAppIcon(packageName = item.rule.targetPackage, size = 40.dp)
+                            LinkRuleIcon(
+                                iconType = item.rule.iconType,
+                                iconValue = item.rule.iconValue,
+                                targetPackage = item.rule.targetPackage,
+                                isRedispatch = item.isRedispatch,
+                                size = 40.dp,
+                            )
                             Column(
                                 modifier = Modifier.weight(1f),
                                 verticalArrangement = Arrangement.spacedBy(3.dp),
@@ -259,6 +287,83 @@ fun LinkTemplateImportDialog(
                             )
                         }
                     }
+
+                    if (customExtracts.isNotEmpty()) {
+                        item(key = "extract_rules_header") {
+                            MiuixText(
+                                text = "提取规则（${customExtracts.size} 条）",
+                                style = MiuixTheme.textStyles.footnote1.copy(fontWeight = FontWeight.Medium),
+                                color = MiuixTheme.colorScheme.primary,
+                                modifier = Modifier.padding(top = 8.dp),
+                            )
+                        }
+                        items(customExtracts, key = { "extract_${it.id}" }) { extract ->
+                            val isSelected = extract.id in selectedExtractIds
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(itemShape)
+                                    .background(
+                                        if (isSelected) primaryColor.copy(alpha = 0.12f)
+                                        else MiuixTheme.colorScheme.surfaceContainer
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        color = if (isSelected) primaryColor.copy(alpha = 0.55f)
+                                        else Color.Transparent,
+                                        shape = itemShape,
+                                    )
+                                    .clickable {
+                                        if (isSelected) selectedExtractIds.remove(extract.id)
+                                        else selectedExtractIds.add(extract.id)
+                                    }
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(MiuixTheme.colorScheme.surfaceContainerHigh),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    MiuixIcon(
+                                        painter = painterResource(com.slideindex.app.R.drawable.ic_iconoir_code),
+                                        contentDescription = "提取规则",
+                                        tint = MiuixTheme.colorScheme.primary,
+                                        modifier = Modifier.size(22.dp),
+                                    )
+                                }
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(3.dp),
+                                ) {
+                                    MiuixText(
+                                        text = extract.name.ifBlank { "提取规则" },
+                                        style = MiuixTheme.textStyles.body1.copy(fontWeight = FontWeight.Medium),
+                                        color = MiuixTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    MiuixText(
+                                        text = extract.pattern,
+                                        style = MiuixTheme.textStyles.footnote2.copy(fontFamily = FontFamily.Monospace),
+                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                                Checkbox(
+                                    state = if (isSelected) ToggleableState.On else ToggleableState.Off,
+                                    onClick = {
+                                        if (isSelected) selectedExtractIds.remove(extract.id)
+                                        else selectedExtractIds.add(extract.id)
+                                    },
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Row(
@@ -280,10 +385,15 @@ fun LinkTemplateImportDialog(
                             .clickable(enabled = availableCount > 0) {
                                 if (selectedCount == availableCount && availableCount > 0) {
                                     selectedRuleIds.clear()
+                                    selectedExtractIds.clear()
                                 } else {
                                     selectedRuleIds.clear()
+                                    selectedExtractIds.clear()
                                     templateItems.filter { !it.alreadyPresent }.forEach {
                                         selectedRuleIds.add(it.rule.id)
+                                    }
+                                    customExtracts.forEach {
+                                        selectedExtractIds.add(it.id)
                                     }
                                 }
                             }
@@ -302,21 +412,33 @@ fun LinkTemplateImportDialog(
                     thickness = 0.5.dp,
                 )
 
+                val hasSelection = selectedCount > 0 || selectedExtractIds.isNotEmpty()
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(24.dp))
                         .background(
-                            if (selectedCount > 0) primaryColor.copy(alpha = 0.16f)
+                            if (hasSelection) primaryColor.copy(alpha = 0.16f)
                             else MiuixTheme.colorScheme.surfaceContainer
                         )
-                        .clickable(enabled = selectedCount > 0) {
+                        .clickable(enabled = hasSelection) {
                             val selected = templateItems
                                 .filter { it.rule.id in selectedRuleIds }
                                 .map { it.rule }
-                            if (selected.isNotEmpty()) {
-                                onImport(selected)
-                                Toast.makeText(context, "已导入 ${selected.size} 条规则", Toast.LENGTH_SHORT).show()
+                            val selectedExtracts = customExtracts
+                                .filter { it.id in selectedExtractIds }
+                            if (selected.isNotEmpty() || selectedExtracts.isNotEmpty()) {
+                                if (onImportWithExtracts != null) {
+                                    onImportWithExtracts(selected, selectedExtracts)
+                                } else {
+                                    onImport(selected)
+                                }
+                                onDismissRequest()
+                                Toast.makeText(
+                                    context,
+                                    "已导入 ${selected.size} 条规则、${selectedExtracts.size} 条提取规则",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
                             }
                             onDismissRequest()
                         }

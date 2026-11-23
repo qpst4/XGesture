@@ -7,7 +7,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.DpSize
+import android.content.ClipboardManager
+import android.content.Context
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.res.painterResource
+import com.slideindex.app.search.SearchEngineImporter
+import com.slideindex.app.search.SearchEngineShareCodec
+import com.slideindex.app.ui.link.LinkDataManagementSheet
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
+import top.yukonga.miuix.kmp.glass.GlassIconButton
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Backup
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,7 +49,6 @@ import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
 import com.slideindex.app.ui.settings.components.settingsCardItems
-import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Add
 import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -73,6 +85,45 @@ fun ImageSearchEngineSettingsScreen(
     var deletingEngine by remember { mutableStateOf<SearchEngineConfig?>(null) }
     var showAddSheet by remember { mutableStateOf(false) }
     var showJsonImport by remember { mutableStateOf(false) }
+    var showDataManagementSheet by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    val openDataDocumentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val raw = runCatching {
+                context.contentResolver.openInputStream(uri)?.use { it.readBytes().decodeToString() }
+            }.getOrNull()
+            if (raw.isNullOrBlank()) {
+                Toast.makeText(context, "读取文件失败", Toast.LENGTH_SHORT).show()
+            } else {
+                runCatching { SearchEngineImporter.parseJsonText(raw) }
+                    .onSuccess { onImportParsed(it) }
+                    .onFailure {
+                        Toast.makeText(context, "未找到可导入的分享目标", Toast.LENGTH_SHORT).show()
+                    }
+            }
+        }
+    }
+
+    val createDataDocumentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val json = SearchEngineShareCodec.encode(shareEngines)
+            val ok = runCatching {
+                context.contentResolver.openOutputStream(uri)?.use {
+                    it.write(json.toByteArray())
+                } != null
+            }.getOrDefault(false)
+            Toast.makeText(
+                context,
+                if (ok) "备份已保存" else "保存失败",
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+    }
 
     val shareSectionTitle = stringResource(
         R.string.image_search_engine_share_section,
