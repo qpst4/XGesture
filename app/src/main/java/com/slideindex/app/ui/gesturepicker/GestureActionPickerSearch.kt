@@ -51,21 +51,36 @@ private fun launchAppActionLabel(context: Context, packageName: String, cloneUse
         )
     }
 
+/**
+ * 单条动作是否命中搜索词：只认「显示名称（含拼音）」和 [gestureActionSearchAliases]
+ * 里人工维护的同义词。
+ *
+ * **简介不参与匹配**：简介写的是动作的形态/载体（例如「冰箱」的简介里有「悬浮窗」），
+ * 搜「悬浮」会把名称里根本没有该词的动作带出来；而结果格只显示名称，命中理由对用户
+ * 不可见，看起来就像搜索坏了。想让某个词能搜到动作，请把它补进别名表（可控、可测）。
+ */
+fun gestureActionMatchesSearchQuery(
+    context: Context,
+    action: GestureAction,
+    query: String,
+): Boolean {
+    val q = query.trim().lowercase()
+    if (q.isEmpty()) return true
+    val label = gestureActionLabelText(context, action)
+    val aliases = gestureActionSearchAliases(context, action)
+    return label.lowercase().contains(q) ||
+        PinyinHelper.sortKey(label).contains(q) ||
+        aliases.any { it.contains(q) || PinyinHelper.sortKey(it).contains(q) }
+}
+
 fun filterGestureActions(
     context: Context,
     actions: List<GestureAction>,
     query: String,
 ): List<GestureAction> {
-    val q = query.trim().lowercase()
+    val q = query.trim()
     if (q.isEmpty()) return actions
-    return actions.filter { action ->
-        val label = gestureActionLabelText(context, action)
-        val aliases = gestureActionSearchAliases(context, action)
-        label.lowercase().contains(q) ||
-            PinyinHelper.sortKey(label).contains(q) ||
-            aliases.any { it.contains(q) || PinyinHelper.sortKey(it).contains(q) } ||
-            gestureActionDescriptionText(context, action)?.lowercase()?.contains(q) == true
-    }
+    return actions.filter { gestureActionMatchesSearchQuery(context, it, q) }
 }
 
 fun gestureActionSearchAliases(context: Context, action: GestureAction): List<String> = when (action.type) {
@@ -174,11 +189,12 @@ fun gestureActionSearchAliases(context: Context, action: GestureAction): List<St
         "alipay scan",
         "scan",
     )
+    // 刻意不收「悬浮便签」(gesture_search_pin_4)：名称是「钉到屏幕」，收进来会让搜「悬浮」
+    // 出现一个名称里没有该词、结果格又解释不了命中的条目；「屏幕便签 / 置顶」已覆盖同义需求。
     GestureActionType.PIN_TO_SCREEN -> listOf(
         context.getString(R.string.gesture_search_pin_1),
         context.getString(R.string.gesture_search_pin_2),
         context.getString(R.string.gesture_search_pin_3),
-        context.getString(R.string.gesture_search_pin_4),
         "pin",
         context.getString(R.string.gesture_search_pin_5),
     )

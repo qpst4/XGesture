@@ -41,12 +41,9 @@ import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.ui.gesturepicker.ACTION_GRID_COLUMNS
-import com.slideindex.app.ui.gesturepicker.gestureActionDescriptionText
-import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
-import com.slideindex.app.ui.gesturepicker.gestureActionSearchAliases
+import com.slideindex.app.ui.gesturepicker.gestureActionMatchesSearchQuery
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffoldWithExpandableSearch
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
-import com.slideindex.app.util.PinyinHelper
 import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
 import com.slideindex.app.ui.miuix.LocalMiuixScreenBackdrop
 import com.slideindex.app.ui.miuix.LocalMiuixContentUnderBar
@@ -66,19 +63,12 @@ fun ActionCenterScreen(
     val entries = ActionCenterCatalog.entries
     val filtered = remember(entries, filter, searchQuery, context) {
         val byFilter = entries.filter { ActionCenterCatalog.matches(it, filter) }
-        val q = searchQuery.trim().lowercase()
+        val q = searchQuery.trim()
         if (q.isEmpty()) {
             byFilter
         } else {
-            byFilter.filter { entry ->
-                val label = gestureActionLabelText(context, entry.sample)
-                val aliases = gestureActionSearchAliases(context, entry.sample)
-                val desc = gestureActionDescriptionText(context, entry.sample)
-                label.lowercase().contains(q) ||
-                    PinyinHelper.sortKey(label).contains(q) ||
-                    aliases.any { it.lowercase().contains(q) || PinyinHelper.sortKey(it).contains(q) } ||
-                    desc?.lowercase()?.contains(q) == true
-            }
+            // 与触钮 / 启动器 / 槽位的动作选择器共用同一条命中规则，避免两个入口结果不一致。
+            byFilter.filter { entry -> gestureActionMatchesSearchQuery(context, entry.sample, q) }
         }
     }
     val sections = remember(filtered) {
