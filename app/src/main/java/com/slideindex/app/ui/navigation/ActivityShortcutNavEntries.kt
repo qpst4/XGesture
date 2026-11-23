@@ -26,6 +26,7 @@ import com.slideindex.app.ui.ActivityShortcutScreen
 import com.slideindex.app.ui.LinkDispatchSettingsScreen
 import com.slideindex.app.ui.link.EditLinkRuleScreen
 import com.slideindex.app.ui.link.LinkDispatchHistoryScreen
+import com.slideindex.app.ui.link.LinkExtractionRulesScreen
 import com.slideindex.app.ui.link.LinkRulesScreen
 import com.slideindex.app.ui.picker.ActivityShortcutPickActivityScreen
 import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
@@ -396,6 +397,12 @@ fun NavEntryBuilder.activityShortcutNavEntries(ctx: MainNavContext) {
         )
     }
 
+    hiltEntry<AppNavKey.LinkExtractionRules> {
+        LinkExtractionRulesScreen(
+            onBack = { ctx.backStack.removeLastOrNull() },
+        )
+    }
+
     hiltEntry<AppNavKey.LinkRules> {
         LinkRulesScreen(
             onBack = { ctx.backStack.removeLastOrNull() },
@@ -404,6 +411,9 @@ fun NavEntryBuilder.activityShortcutNavEntries(ctx: MainNavContext) {
             },
             onNavigateToHistory = {
                 ctx.navigate(AppNavKey.LinkDispatchHistory)
+            },
+            onNavigateToExtractionRules = {
+                ctx.navigate(AppNavKey.LinkExtractionRules)
             },
         )
     }

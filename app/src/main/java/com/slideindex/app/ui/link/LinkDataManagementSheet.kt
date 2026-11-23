@@ -63,12 +63,11 @@ fun LinkDataManagementSheet(
                 .padding(bottom = 32.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
+                    .padding(bottom = 16.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "数据管理中心",
@@ -77,13 +76,6 @@ fun LinkDataManagementSheet(
                         letterSpacing = (-0.5).sp,
                     ),
                 )
-                IconButton(onClick = onDismiss) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_iconoir_xmark),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
             }
 
             DataSectionTitle("剪贴板")

@@ -953,7 +953,7 @@ internal fun LinkRuleLiveTestBottomSheet(
 
     MiuixBottomSheet(
         show = show,
-        title = if (candidateRule != null) "规则实时测试" else "全局仿真推演",
+        title = if (candidateRule != null) "规则实时测试" else "规则测试",
         onDismissRequest = onDismissRequest,
     ) {
         Column(
@@ -1057,7 +1057,7 @@ internal fun LinkRuleLiveTestBottomSheet(
                 ) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
-                    MiuixText(text = "正在仿真推演...", style = MiuixTheme.textStyles.footnote1)
+                    MiuixText(text = "正在测试...", style = MiuixTheme.textStyles.footnote1)
                 }
             } else {
                 val trace = traceResult

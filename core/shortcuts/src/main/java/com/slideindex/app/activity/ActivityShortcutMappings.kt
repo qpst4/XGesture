@@ -28,24 +28,46 @@ fun ActivityShortcut.toLaunchShortcut(): GestureAction.LaunchShortcut = when (ki
     }
 }
 
-fun ActivityShortcut.toQuickLauncherItem(): QuickLauncherItem = when (kind) {
-    ActivityShortcutKind.COMPONENT ->
-        QuickLauncherItem.shortcut(componentFlat(), label)
-    ActivityShortcutKind.DYNAMIC ->
-        QuickLauncherItem.dynamicShortcut(packageName, shortcutId, label)
-    ActivityShortcutKind.INTENT -> {
-        if (intentUris.size <= 1) {
-            QuickLauncherItem.intentShortcut(
-                intentUri = intentUris.firstOrNull().orEmpty(),
+fun ActivityShortcut.toQuickLauncherItem(): QuickLauncherItem {
+    if (ActivityShortcutImageSupport.isImageShortcut(this)) {
+        val config = ActivityShortcutImageSupport.configFrom(this)
+        if (config != null) {
+            val intent = Intent().apply {
+                setClassName(
+                    "com.slideindex.app",
+                    "com.slideindex.app.activity.ShortcutImagePreviewActivity",
+                )
+                putExtra("extra_image_uri", config.uri)
+                putExtra("extra_open_in_dialog", config.openInDialog)
+                putExtra("extra_click_to_dismiss", config.clickToDismiss)
+                putExtra("extra_orientation", config.orientation)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            return QuickLauncherItem.intentShortcut(
+                intentUri = intent.toUri(Intent.URI_INTENT_SCHEME),
                 label = label,
-                hostPackage = packageName
             )
-        } else {
-            QuickLauncherItem.intentShortcuts(
-                intentUris = intentUris,
-                label = label,
-                hostPackage = packageName
-            )
+        }
+    }
+    return when (kind) {
+        ActivityShortcutKind.COMPONENT ->
+            QuickLauncherItem.shortcut(componentFlat(), label)
+        ActivityShortcutKind.DYNAMIC ->
+            QuickLauncherItem.dynamicShortcut(packageName, shortcutId, label)
+        ActivityShortcutKind.INTENT -> {
+            if (intentUris.size <= 1) {
+                QuickLauncherItem.intentShortcut(
+                    intentUri = intentUris.firstOrNull().orEmpty(),
+                    label = label,
+                    hostPackage = packageName
+                )
+            } else {
+                QuickLauncherItem.intentShortcuts(
+                    intentUris = intentUris,
+                    label = label,
+                    hostPackage = packageName
+                )
+            }
         }
     }
 }

@@ -28,7 +28,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.icons.filled.FindInPage
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TextButton
@@ -99,12 +101,14 @@ fun LinkRulesScreen(
     onBack: () -> Unit,
     onNavigateToEditRule: (String?) -> Unit,
     onNavigateToHistory: () -> Unit = {},
+    onNavigateToExtractionRules: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
 
     val rules by LinkRuleRepository.observeRules(context).collectAsStateWithLifecycle(initialValue = emptyList())
+    val extracts by LinkRuleRepository.observeExtractPatterns(context).collectAsStateWithLifecycle(initialValue = emptyList())
     var isReorderMode by rememberSaveable { mutableStateOf(false) }
 
     // 规范化：短链重分发规则置顶，应用直达规则在后
@@ -338,11 +342,11 @@ fun LinkRulesScreen(
                         tint = MiuixTheme.colorScheme.onSurface,
                     )
                 }
-                // 2. 全局仿真推演测试（毛玻璃胶囊）
+                // 2. 规则测试（毛玻璃胶囊）
                 GlassIconButton(onClick = { showLiveTestSheet = true }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_science_lab),
-                        contentDescription = "仿真推演",
+                        contentDescription = "规则测试",
                         tint = MiuixTheme.colorScheme.onSurface,
                     )
                 }
@@ -447,6 +451,42 @@ fun LinkRulesScreen(
                     } else {
                         "找到 ${filteredRules.size} / ${rules.size} 条规则"
                     },
+                )
+            }
+        }
+
+        item(key = "extraction_rules_entry") {
+            CardSegment(
+                isFirst = true,
+                isLast = true,
+                outerHorizontalPadding = 12.dp,
+                modifier = Modifier.padding(bottom = 6.dp),
+            ) {
+                BasicComponent(
+                    modifier = Modifier.fillMaxWidth(),
+                    title = "链接提取规则",
+                    summary = "从文本中找出链接的正则（当前 ${extracts.size} 项）",
+                    startAction = {
+                        Box(
+                            modifier = Modifier.size(40.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FindInPage,
+                                contentDescription = null,
+                                tint = MiuixTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                    },
+                    endActions = {
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        )
+                    },
+                    onClick = onNavigateToExtractionRules,
                 )
             }
         }
@@ -620,7 +660,7 @@ fun LinkRulesScreen(
         },
     )
 
-    // 顶栏实时仿真推演弹窗（全局规则库沙盒）
+    // 顶栏规则测试弹窗（全局规则库沙盒）
     LinkRuleLiveTestBottomSheet(
         show = showLiveTestSheet,
         candidateRule = null,

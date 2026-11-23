@@ -751,29 +751,6 @@ fun LinkDispatchSettingsScreen(
                         CardSegment(isFirst = false, isLast = false, outerHorizontalPadding = 12.dp) {
                             BasicComponent(
                                 modifier = Modifier.fillMaxWidth(),
-                                title = "链接提取规则",
-                                summary = "从文本中找出链接的正则（当前 ${extracts.size} 项）",
-                                startAction = {
-                                    Icon(
-                                        imageVector = Icons.Default.FindInPage,
-                                        contentDescription = null,
-                                        tint = MiuixTheme.colorScheme.primary,
-                                    )
-                                },
-                                endActions = {
-                                    Icon(
-                                        imageVector = Icons.Default.ChevronRight,
-                                        contentDescription = null,
-                                        tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                    )
-                                },
-                                onClick = { showExtractsSheet = true },
-                            )
-                        }
-
-                        CardSegment(isFirst = false, isLast = false, outerHorizontalPadding = 12.dp) {
-                            BasicComponent(
-                                modifier = Modifier.fillMaxWidth(),
                                 title = "导出配置到剪贴板",
                                 summary = "复制全部规则、豁免域名与提取规则 JSON 到剪贴板",
                                 startAction = {

@@ -5,7 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Handler
 import android.util.Log
+import com.slideindex.app.activity.ActivityShortcutImageSupport
 import com.slideindex.app.activity.ActivityShortcutLauncher
+import com.slideindex.app.activity.ShortcutImagePreviewActivity
 import com.slideindex.app.activity.ActivityShortcutShellSupport
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.freezer.FreezerOperations
@@ -430,6 +432,14 @@ internal class ActionExecutorLaunch(
     ) {
         val intents = mutableListOf<Intent>()
         for (uri in intentUris) {
+            // 旧版快速启动器把图片快捷方式存成了裸 cebianimage: Intent；这里做一次兼容，
+            // 新数据在 ActivityShortcut.toQuickLauncherItem() 已改成显式 ShortcutImagePreviewActivity。
+            if (ActivityShortcutImageSupport.isImageUri(uri)) {
+                ActivityShortcutImageSupport.decodeConfig(uri)?.let { config ->
+                    ShortcutImagePreviewActivity.start(context, config)
+                }
+                continue
+            }
             if (ActivityShortcutShellSupport.isShellUri(uri)) {
                 val command = ActivityShortcutShellSupport.decodeCommand(uri)
                 if (command.isNotBlank()) {
