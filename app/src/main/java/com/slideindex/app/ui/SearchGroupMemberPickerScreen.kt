@@ -2,13 +2,9 @@
 
 package com.slideindex.app.ui
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,9 +24,10 @@ import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.glass.Ok
+import top.yukonga.miuix.kmp.preference.CheckboxLocation
+import top.yukonga.miuix.kmp.preference.CheckboxPreference
 
 @Composable
 fun SearchGroupMemberPickerScreen(
@@ -67,18 +64,11 @@ fun SearchGroupMemberPickerScreen(
             if (isImage) R.string.search_group_image_picker_title else R.string.search_group_picker_title,
         ),
         onBack = onBack,
-        actions = {
-            MiuixTextButton(
-                text = stringResource(R.string.search_group_picker_action, selected.size),
-                onClick = confirmAction,
-                enabled = selected.isNotEmpty(),
-            )
-        },
         floatingActionButton = {
             if (selected.isNotEmpty()) {
                 MiuixSettingsFab(
                     onClick = confirmAction,
-                    icon = Icons.Default.Check,
+                    icon = MiuixIcons.Glass.Normal.Ok,
                     contentDescription = stringResource(R.string.search_group_picker_action, selected.size),
                 )
             }
@@ -103,15 +93,15 @@ fun SearchGroupMemberPickerScreen(
                 keyPrefix = "search-group-picker",
                 items = filtered.map { engine ->
                     settingsCardItem("pick-${engine.id}") {
-                        BasicComponent(
-                            modifier = Modifier.fillMaxWidth(),
+                        CheckboxPreference(
                             title = engine.name,
                             summary = memberTypeLabel,
-                            onClick = {
-                                selected = if (engine.id in selected) {
-                                    selected - engine.id
-                                } else {
+                            checked = engine.id in selected,
+                            onCheckedChange = { checked ->
+                                selected = if (checked) {
                                     selected + engine.id
+                                } else {
+                                    selected - engine.id
                                 }
                             },
                             startAction = {
@@ -120,16 +110,7 @@ fun SearchGroupMemberPickerScreen(
                                     modifier = Modifier.size(28.dp),
                                 )
                             },
-                            endActions = {
-                                if (engine.id in selected) {
-                                    Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = null,
-                                        tint = MiuixTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp),
-                                    )
-                                }
-                            },
+                            checkboxLocation = CheckboxLocation.End,
                         )
                     }
                 },
