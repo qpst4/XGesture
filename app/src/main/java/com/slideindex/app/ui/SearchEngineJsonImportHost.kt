@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
@@ -60,6 +61,8 @@ fun SearchEngineJsonImportHost(
 ) {
     if (!show) return
     val context = LocalContext.current
+    // 资源查询必须走 LocalResources：LocalContext 在配置变化后可能拿到过期的 Resources。
+    val resources = LocalResources.current
     var dialogOpen by remember { mutableStateOf(true) }
     var candidates by remember { mutableStateOf<List<SearchEngineConfig>?>(null) }
     val selectedIds = remember { mutableStateListOf<String>() }
@@ -96,7 +99,7 @@ fun SearchEngineJsonImportHost(
                 .onFailure { error ->
                     Toast.makeText(
                         context,
-                        context.getString(
+                        resources.getString(
                             R.string.search_engine_import_failed,
                             error.message.orEmpty(),
                         ),

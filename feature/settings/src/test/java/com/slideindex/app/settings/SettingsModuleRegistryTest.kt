@@ -130,7 +130,9 @@ class SettingsModuleRegistryTest {
         // 707 = 706 + 1：宽屏玻璃侧栏展开态 `bottom_nav_rail_expanded`（THEME_UI）。
         // 709 = 707 + 2：应用切换器新增「列表来源」`app_carousel_list_source` 与
         //            「关闭行为」`app_carousel_close_mode`（均落 QUICK_LAUNCHER）。
-        const val EXPECTED_TOTAL_KEYS = 709
+        // 725 = 709 + 16：全局长按强行拖放 6 个键（`drag_drop_flow_global_press_*`，落 DRAG_DROP）
+        //            + 物理 dp 小窗 10 个 `free_window_*_v2` 键（落 FREE_WINDOW）。
+        const val EXPECTED_TOTAL_KEYS = 725
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
             SettingsModule.EDGE_GESTURE to 85,
@@ -145,10 +147,10 @@ class SettingsModuleRegistryTest {
             SettingsModule.OTP to 24,
             SettingsModule.SHAKE to 44,
             SettingsModule.CLIPBOARD to 63,
-            SettingsModule.DRAG_DROP to 5,
+            SettingsModule.DRAG_DROP to 11,
             SettingsModule.STASH to 5,
             SettingsModule.SEARCH to 41,
-            SettingsModule.FREE_WINDOW to 13,
+            SettingsModule.FREE_WINDOW to 23,
             SettingsModule.FREEZER to 6,
             SettingsModule.SHELL to 1,
             SettingsModule.ACTIVITY_SHORTCUTS to 3,

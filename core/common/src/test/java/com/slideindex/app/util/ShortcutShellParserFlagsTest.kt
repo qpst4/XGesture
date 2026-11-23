@@ -16,10 +16,13 @@ class ShortcutShellParserFlagsTest {
         val xml = """
             <shortcuts>
               <package name="com.example.xml">
-                <shortcut id="manifest" flags="4" title="Manifest" />
+                <!-- FLAG_MANIFEST = 0x20（1 shl 5），不是 0x4。 -->
+                <shortcut id="manifest" flags="32" title="Manifest" />
                 <shortcut id="dynamic" flags="1" title="Dynamic" />
                 <shortcut id="pinned" flags="2" title="Pinned" />
                 <shortcut id="both" flags="3" title="Both" />
+                <!-- 0x4 是 FLAG_HAS_ICON_RES：不含 kind 位，按既有约定回退为 DYNAMIC，不能当成 STATIC。 -->
+                <shortcut id="icon-res-only" flags="4" title="Icon res only" />
               </package>
             </shortcuts>
         """.trimIndent()
@@ -41,6 +44,10 @@ class ShortcutShellParserFlagsTest {
         assertEquals(
             setOf(ShortcutKind.DYNAMIC, ShortcutKind.PINNED),
             parsed.getValue("com.example.xml").first { it.id == "both" }.kinds,
+        )
+        assertEquals(
+            setOf(ShortcutKind.DYNAMIC),
+            parsed.getValue("com.example.xml").first { it.id == "icon-res-only" }.kinds,
         )
     }
 
