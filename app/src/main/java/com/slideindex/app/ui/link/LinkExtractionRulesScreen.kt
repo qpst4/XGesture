@@ -66,6 +66,7 @@ import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import top.yukonga.miuix.kmp.basic.Switch
+import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
@@ -378,55 +379,26 @@ private fun ExtractPatternCard(
         outerHorizontalPadding = 12.dp,
         modifier = Modifier.padding(bottom = 6.dp),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = !expanded }
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 64.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(9.dp))
-                        .background(MiuixTheme.colorScheme.surfaceContainerHigh),
-                    contentAlignment = Alignment.Center,
-                ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            BasicComponent(
+                modifier = Modifier.fillMaxWidth(),
+                title = pattern.name,
+                summary = pattern.pattern,
+                startAction = {
                     Icon(
                         painter = painterResource(R.drawable.ic_iconoir_code),
                         contentDescription = null,
                         tint = MiuixTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp),
                     )
-                }
-                Spacer(Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    MiuixText(
-                        text = pattern.name,
-                        style = MiuixTheme.textStyles.body1,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                },
+                endActions = {
+                    Switch(
+                        checked = pattern.isEnabled,
+                        onCheckedChange = onToggle,
                     )
-                    MiuixText(
-                        text = pattern.pattern,
-                        style = MiuixTheme.textStyles.footnote2.copy(fontFamily = FontFamily.Monospace),
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                Switch(
-                    checked = pattern.isEnabled,
-                    onCheckedChange = onToggle,
-                )
-            }
+                },
+                onClick = { expanded = !expanded },
+            )
 
             AnimatedVisibility(
                 visible = expanded,
@@ -434,7 +406,9 @@ private fun ExtractPatternCard(
                 exit = shrinkVertically(tween(180)) + fadeOut(tween(120)),
             ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     MiuixLabeledTextField(

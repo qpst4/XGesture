@@ -5,8 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Handler
 import android.util.Log
+import com.slideindex.app.activity.ActivityShortcutFileSupport
 import com.slideindex.app.activity.ActivityShortcutImageSupport
 import com.slideindex.app.activity.ActivityShortcutLauncher
+import com.slideindex.app.activity.ShortcutFileLaunchActivity
 import com.slideindex.app.activity.ShortcutImagePreviewActivity
 import com.slideindex.app.activity.ActivityShortcutShellSupport
 import com.slideindex.app.data.AppRepository
@@ -437,6 +439,12 @@ internal class ActionExecutorLaunch(
             if (ActivityShortcutImageSupport.isImageUri(uri)) {
                 ActivityShortcutImageSupport.decodeConfig(uri)?.let { config ->
                     ShortcutImagePreviewActivity.start(context, config)
+                }
+                continue
+            }
+            if (ActivityShortcutFileSupport.isFileUri(uri)) {
+                ActivityShortcutFileSupport.decodeConfig(uri)?.let { config ->
+                    context.startActivity(ShortcutFileLaunchActivity.createIntent(context, config))
                 }
                 continue
             }
