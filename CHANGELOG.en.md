@@ -12,7 +12,7 @@ Where the two files differ, `CHANGELOG.md` is authoritative.
 
 ### Added
 - Added link dispatch and Link Radar with short-link redispatch, direct app links, extraction rules, browser selection, simulation tests, and dispatch history
-- Added import support for Gevo, LinkGo, and Yimo dispatch and extraction rules, plus LinkGo and Yimo search engine configs, with a preview before choosing what to import
+- Added import support for Gevo, LinkGo, and Yimo dispatch and extraction rules, plus Yimo search engine configs, with a preview before choosing what to import
 - Moved search engine data management to the search panel, with JSON backup and restore for text engines, image engines, search groups, and members
 - Added search groups that combine multiple search engines and support custom group icons
 - Added dynamic shortcuts that pin activity shortcuts as system shortcuts
