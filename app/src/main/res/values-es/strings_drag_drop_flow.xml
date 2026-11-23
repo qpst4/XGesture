@@ -59,4 +59,28 @@
     <string name="drag_drop_flow_toast_pinned">Pinned a la pantalla</string>
     <string name="drag_drop_flow_toast_no_text">No hay texto reconocido en la imagen</string>
     <string name="drag_drop_flow_toast_ocr_unavailable">No hay motor OCR disponible</string>
+
+    <string name="drag_drop_flow_action_text_to_image">Convertir en imagen</string>
+    <string name="drag_drop_flow_action_convert_to_text">Extraer texto</string>
+    <string name="drag_drop_flow_converting_to_text">Reconociendo texto de la imagen…</string>
+    <string name="drag_drop_flow_converting_to_image">Convirtiendo en imagen…</string>
+    <string name="drag_drop_flow_convert_failed">Error de conversión</string>
+    <string name="drag_drop_flow_convert_empty">No se reconoció texto</string>
+    <string name="drag_drop_flow_toast_image_generated">Imagen generada; se abrió el menú de compartir</string>
+    <string name="drag_drop_flow_toast_image_generate_failed">No se pudo convertir el texto en imagen</string>
+    <string name="drag_drop_flow_section_global_press">Arrastre global con mantenimiento (Shizuku)</string>
+    <string name="drag_drop_flow_global_press_title">Activar arrastre global con mantenimiento</string>
+    <string name="drag_drop_flow_global_press_summary">Supervisa el tacto global mediante Shizuku, interrumpe la app de origen al mantener pulsado, captura el texto y abre la barra de flujo</string>
+    <string name="drag_drop_flow_global_press_timeout_title">Duración del mantenimiento</string>
+    <string name="drag_drop_flow_global_press_timeout_summary">Tiempo necesario para fijar el gesto de arrastre (actual: %1$d ms)</string>
+    <string name="drag_drop_flow_global_press_vibrate_title">Vibración al fijar</string>
+    <string name="drag_drop_flow_global_press_vibrate_summary">Vibración sutil al fijar el gesto</string>
+    <string name="drag_drop_flow_global_press_immediate_title">Activar al mantener pulsado</string>
+    <string name="drag_drop_flow_global_press_immediate_summary">Iniciar el reconocimiento y abrir la barra de flujo al alcanzar el tiempo sin necesidad de mover el dedo</string>
+    <string name="drag_drop_flow_global_press_early_text_title">Precargar el texto del mantenimiento</string>
+    <string name="drag_drop_flow_global_press_early_text_summary">Obtener el texto al mantener pulsado para reducir la pérdida de foco por los menús contextuales</string>
+    <string name="drag_drop_flow_global_press_whitelist_title">Aplicaciones permitidas</string>
+    <string name="drag_drop_flow_global_press_whitelist_all">Todas las aplicaciones (sin restricción)</string>
+    <string name="drag_drop_flow_global_press_whitelist_summary">%1$d apps activadas</string>
+    <string name="drag_drop_flow_global_press_need_shizuku">El arrastre global con mantenimiento requiere permiso de Shizuku</string>
 </resources>

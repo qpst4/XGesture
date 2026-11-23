@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dynamic_shortcuts_home_label">Asistente de atajos de XGesture</string>
+    <string name="dynamic_shortcuts_title">Importar atajos dinámicos</string>
+    <string name="dynamic_shortcuts_permission_card_title">Permiso de inicio predeterminado</string>
+    <string name="dynamic_shortcuts_permission_needed_desc">Limitación de Android: solo la app de inicio predeterminada puede descubrir los atajos dinámicos publicados por otras apps (como escanear/pagar de WeChat). Establece XGesture temporalmente como inicio predeterminado, fija los atajos que quieras y luego restaura tu lanzador original.</string>
+    <string name="dynamic_shortcuts_permission_granted_desc">¡Permiso de inicio activo! Pulsa \"Escanear atajos dinámicos\" abajo para descubrirlos. Una vez fijados, XGesture conserva el permiso para abrirlos aunque restaures tu inicio predeterminado.</string>
+    <string name="dynamic_shortcuts_grant_home">Establecer como inicio temporal</string>
+    <string name="dynamic_shortcuts_restore_home">Restaurar inicio predeterminado</string>
+    <string name="dynamic_shortcuts_scan">Escanear atajos dinámicos</string>
+    <string name="dynamic_shortcuts_scanning">Escaneando atajos dinámicos del sistema…</string>
+    <string name="dynamic_shortcuts_import_selected">Importar y fijar seleccionados (%1$d)</string>
+    <string name="dynamic_shortcuts_import_success">Se fijaron e importaron %1$d atajos correctamente</string>
+    <string name="dynamic_shortcuts_no_selection">Selecciona al menos un atajo</string>
+    <string name="dynamic_shortcuts_empty">No se encontraron atajos dinámicos</string>
+    <string name="dynamic_shortcuts_already_imported">Importado</string>
+    <string name="dynamic_shortcuts_home_unavailable">No se pueden abrir los ajustes de inicio del sistema</string>
+    <string name="activity_shortcut_add_from_dynamic">Importar atajos dinámicos</string>
+    <string name="activity_shortcut_add_from_dynamic_sub">Establece temporalmente como inicio para descubrir atajos de WeChat/Alipay</string>
+    <string name="shortcut_test_mode_static">Estático</string>
+    <string name="shortcut_test_mode_privilege">Con privilegios</string>
+    <string name="shortcut_test_mode_dynamic">Fijado en inicio</string>
+    <string name="shortcut_test_save_to_direct">Guardar en Directos</string>
+    <string name="shortcut_test_save_success">Guardado en atajos directos</string>
+    <string name="shortcut_test_already_saved">Ya existe en atajos directos</string>
+    <string name="shortcut_test_dynamic_tip">Obtén el rol de inicio para descubrir atajos dinámicos. Una vez guardados en Directos, quedan fijados de forma permanente y se pueden abrir aunque restaures tu lanzador.</string>
+</resources>

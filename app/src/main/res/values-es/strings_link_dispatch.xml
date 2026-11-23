@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_dispatch_title">Envío de enlaces</string>
+    <string name="link_dispatch_desc">Identifica automáticamente enlaces en el texto o en la pantalla para abrir las apps de destino directamente o en ventanas flotantes. Compatible con las reglas de LinkGo y la detección de Link Radar.</string>
+    <string name="link_dispatch_actions_title">Gestión de reglas</string>
+    <string name="link_dispatch_import_linkgo">Importar reglas de LinkGo desde el portapapeles</string>
+    <string name="link_dispatch_import_clipboard">Importar copia de seguridad desde el portapapeles</string>
+    <string name="link_dispatch_import_clipboard_desc">Importa una configuración completa de envío exportada anteriormente</string>
+    <string name="link_dispatch_export_clipboard">Exportar al portapapeles</string>
+    <string name="link_dispatch_export_clipboard_desc">Copia las reglas y los ajustes completos en JSON al portapapeles</string>
+    <string name="link_dispatch_reset_builtin">Restaurar reglas integradas recomendadas</string>
+    <string name="link_dispatch_reset_builtin_desc">Recarga las reglas de envío integradas para apps seleccionadas (más de 40 apps habituales)</string>
+
+    <string name="link_dispatch_preferences_title">Interruptores de envío y radar</string>
+    <string name="link_dispatch_open_in_small_window">Abrir en ventana flotante</string>
+    <string name="link_dispatch_open_in_small_window_desc">Preferir abrir las apps de destino en una ventana flotante al redirigir</string>
+    <string name="link_dispatch_radar_screen_content">Radar de enlaces del contenido de pantalla</string>
+    <string name="link_dispatch_radar_screen_content_desc">Analiza los nodos de accesibilidad al seleccionar en pantalla y muestra un aviso flotante sobre los enlaces</string>
+    <string name="link_dispatch_radar_pointer">Radar del puntero</string>
+    <string name="link_dispatch_radar_pointer_desc">Detecta y resalta los enlaces bajo el cursor al pasar por encima; cambia a selección al detenerse</string>
+
+    <string name="link_dispatch_rules_list_title">Reglas configuradas</string>
+    <string name="link_dispatch_rules_empty">No hay reglas. Usa una opción superior para restaurar las integradas o importar desde el portapapeles.</string>
+    <string name="link_dispatch_no_url_found">No se encontró ningún enlace válido</string>
+    <string name="link_dispatch_no_app">No hay ninguna aplicación para abrir este enlace</string>
+    <string name="link_dispatch_import_success">Se importaron %1$d reglas</string>
+    <string name="link_dispatch_import_failed">Error de importación: formato del portapapeles no válido</string>
+    <string name="link_dispatch_export_success">Configuración copiada al portapapeles</string>
+    <string name="link_dispatch_reset_success">Se restauraron %1$d reglas recomendadas</string>
+    <string name="link_dispatch_rule_deleted">Regla eliminada: %1$s</string>
+    <string name="link_dispatch_hub_subtitle">Reglas de LinkGo y redirecciones inteligentes con ventana flotante y radar de enlaces</string>
+    <string name="link_dispatch_sandbox_title">Banco de pruebas de coincidencia de reglas</string>
+    <string name="link_dispatch_sandbox_hint">Introduce una URL de prueba para verificar la regla…</string>
+    <string name="link_dispatch_sandbox_test_btn">Probar coincidencia</string>
+    <string name="link_dispatch_sandbox_matched">Coincide: %1$s → App de destino: %2$s</string>
+    <string name="link_dispatch_sandbox_no_match">Ninguna regla coincide (se abre con el manejador predeterminado del sistema)</string>
+    <string name="link_dispatch_add_rule">Crear regla personalizada</string>
+    <string name="link_dispatch_exempt_title">Aplicaciones excluidas</string>
+    <string name="link_dispatch_exempt_desc">No interceptar enlaces generados dentro de las apps seleccionadas (p. ej. navegadores)</string>
+    <string name="link_dispatch_rule_name">Nombre de la regla</string>
+    <string name="link_dispatch_rule_pattern">Patrón (regex o subcadena)</string>
+    <string name="link_dispatch_rule_package">Paquete de destino</string>
+    <string name="link_dispatch_rule_component">Componente de destino (opcional)</string>
+    <string name="link_dispatch_rule_template">Plantilla de URL (opcional, p. ej. {url})</string>
+    <string name="link_dispatch_save">Guardar regla</string>
+    <string name="link_rule_match_contains">Contiene</string>
+    <string name="link_rule_match_regex">Regex</string>
+    <string name="link_rule_match_exact">Exacto</string>
+    <string name="link_rule_resolve_direct">Resolver y ejecutar esta regla</string>
+    <string name="link_rule_resolve_redispatch">Resolver y reenviar</string>
+</resources>

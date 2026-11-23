@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_dispatch_title">リンクディスパッチ</string>
+    <string name="link_dispatch_desc">テキストや画面内のリンクを自動で判別し、対象アプリを直接またはフリーフォームウィンドウで開きます。LinkGo のルールとリンクレーダー検出に対応しています。</string>
+    <string name="link_dispatch_actions_title">ルール管理</string>
+    <string name="link_dispatch_import_linkgo">クリップボードから LinkGo ルールをインポート</string>
+    <string name="link_dispatch_import_clipboard">クリップボードからバックアップをインポート</string>
+    <string name="link_dispatch_import_clipboard_desc">以前にエクスポートしたディスパッチ設定一式をインポートします</string>
+    <string name="link_dispatch_export_clipboard">クリップボードにエクスポート</string>
+    <string name="link_dispatch_export_clipboard_desc">ルールと設定一式の JSON をクリップボードにコピーします</string>
+    <string name="link_dispatch_reset_builtin">推奨の内蔵ルールを復元</string>
+    <string name="link_dispatch_reset_builtin_desc">内蔵の対象アプリ向けディスパッチルールを再読み込みします（主要 40 以上のアプリ）</string>
+
+    <string name="link_dispatch_preferences_title">ディスパッチ／レーダーのスイッチ</string>
+    <string name="link_dispatch_open_in_small_window">フリーフォームウィンドウで開く</string>
+    <string name="link_dispatch_open_in_small_window_desc">転送時に対象アプリをフリーフォームの小ウィンドウで開くことを優先します</string>
+    <string name="link_dispatch_radar_screen_content">画面内容のリンクレーダー</string>
+    <string name="link_dispatch_radar_screen_content_desc">画面選択時にアクセシビリティノードを走査し、リンクの上にフローティングバナーを表示します</string>
+    <string name="link_dispatch_radar_pointer">ポインターレーダー</string>
+    <string name="link_dispatch_radar_pointer_desc">ホバー中にカーソル下のリンクを検出して強調表示し、停止すると選択に切り替えます</string>
+
+    <string name="link_dispatch_rules_list_title">設定済みのルール</string>
+    <string name="link_dispatch_rules_empty">ルールがありません。上の操作で内蔵ルールを復元するか、クリップボードからインポートしてください。</string>
+    <string name="link_dispatch_no_url_found">有効なリンクが見つかりません</string>
+    <string name="link_dispatch_no_app">このリンクを開けるアプリが見つかりません</string>
+    <string name="link_dispatch_import_success">%1$d 件のルールをインポートしました</string>
+    <string name="link_dispatch_import_failed">インポートに失敗しました: クリップボードの形式が正しくありません</string>
+    <string name="link_dispatch_export_success">設定をクリップボードにコピーしました</string>
+    <string name="link_dispatch_reset_success">推奨ルールを %1$d 件復元しました</string>
+    <string name="link_dispatch_rule_deleted">ルールを削除しました: %1$s</string>
+    <string name="link_dispatch_hub_subtitle">LinkGo ルールとスマート転送、小ウィンドウ＆リンクレーダー</string>
+    <string name="link_dispatch_sandbox_title">ルール一致テスト用サンドボックス</string>
+    <string name="link_dispatch_sandbox_hint">テスト用 URL を入力してルールの一致を確認…</string>
+    <string name="link_dispatch_sandbox_test_btn">一致をテスト</string>
+    <string name="link_dispatch_sandbox_matched">一致: %1$s → 対象アプリ: %2$s</string>
+    <string name="link_dispatch_sandbox_no_match">一致するルールがありません（システムの既定のアプリで開きます）</string>
+    <string name="link_dispatch_add_rule">カスタムルールを作成</string>
+    <string name="link_dispatch_exempt_title">除外するアプリ</string>
+    <string name="link_dispatch_exempt_desc">選択したアプリ内で生成されたリンクを傍受しません（例: ブラウザ）</string>
+    <string name="link_dispatch_rule_name">ルール名</string>
+    <string name="link_dispatch_rule_pattern">パターン（正規表現または部分文字列）</string>
+    <string name="link_dispatch_rule_package">対象パッケージ</string>
+    <string name="link_dispatch_rule_component">対象コンポーネント（任意）</string>
+    <string name="link_dispatch_rule_template">URL テンプレート（任意、例: {url}）</string>
+    <string name="link_dispatch_save">ルールを保存</string>
+    <string name="link_rule_match_contains">含む</string>
+    <string name="link_rule_match_regex">正規表現</string>
+    <string name="link_rule_match_exact">完全一致</string>
+    <string name="link_rule_resolve_direct">このルールを解決して実行</string>
+    <string name="link_rule_resolve_redispatch">解決して再ディスパッチ</string>
+</resources>

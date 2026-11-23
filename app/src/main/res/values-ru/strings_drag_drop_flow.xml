@@ -75,4 +75,28 @@
     <string name="drag_drop_flow_toast_pinned">Закреплено на экране</string>
     <string name="drag_drop_flow_toast_no_text">На изображении не распознан текст</string>
     <string name="drag_drop_flow_toast_ocr_unavailable">Нет доступных движков OCR</string>
+
+    <string name="drag_drop_flow_action_text_to_image">Преобразовать в изображение</string>
+    <string name="drag_drop_flow_action_convert_to_text">Извлечь текст</string>
+    <string name="drag_drop_flow_converting_to_text">Распознавание текста на изображении…</string>
+    <string name="drag_drop_flow_converting_to_image">Преобразование в изображение…</string>
+    <string name="drag_drop_flow_convert_failed">Не удалось преобразовать</string>
+    <string name="drag_drop_flow_convert_empty">Текст не распознан</string>
+    <string name="drag_drop_flow_toast_image_generated">Изображение создано, открыто окно отправки</string>
+    <string name="drag_drop_flow_toast_image_generate_failed">Не удалось преобразовать текст в изображение</string>
+    <string name="drag_drop_flow_section_global_press">Глобальное перетаскивание с удержанием (Shizuku)</string>
+    <string name="drag_drop_flow_global_press_title">Включить глобальное перетаскивание с удержанием</string>
+    <string name="drag_drop_flow_global_press_summary">Отслеживает глобальные касания через Shizuku, прерывает исходное приложение при удержании, считывает текст и открывает панель потока</string>
+    <string name="drag_drop_flow_global_press_timeout_title">Длительность удержания</string>
+    <string name="drag_drop_flow_global_press_timeout_summary">Время, необходимое для фиксации жеста перетаскивания (сейчас: %1$d мс)</string>
+    <string name="drag_drop_flow_global_press_vibrate_title">Вибрация при фиксации</string>
+    <string name="drag_drop_flow_global_press_vibrate_summary">Лёгкая вибрация при фиксации жеста</string>
+    <string name="drag_drop_flow_global_press_immediate_title">Запускать сразу при удержании</string>
+    <string name="drag_drop_flow_global_press_immediate_summary">Начинать распознавание и открывать панель потока по истечении времени удержания без движения пальца</string>
+    <string name="drag_drop_flow_global_press_early_text_title">Предварительно считывать текст удержания</string>
+    <string name="drag_drop_flow_global_press_early_text_summary">Считывать текст при удержании, чтобы контекстные меню реже забирали фокус окна</string>
+    <string name="drag_drop_flow_global_press_whitelist_title">Разрешённые приложения</string>
+    <string name="drag_drop_flow_global_press_whitelist_all">Все приложения (без ограничений)</string>
+    <string name="drag_drop_flow_global_press_whitelist_summary">Включено приложений: %1$d</string>
+    <string name="drag_drop_flow_global_press_need_shizuku">Для глобального перетаскивания с удержанием требуется разрешение Shizuku</string>
 </resources>

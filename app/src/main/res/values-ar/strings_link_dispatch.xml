@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_dispatch_title">إرسال الروابط</string>
+    <string name="link_dispatch_desc">يتعرّف تلقائيًا على الروابط في النص أو على الشاشة لفتح التطبيقات الهدف مباشرة أو في نافذة حرة. متوافق مع قواعد LinkGo واكتشاف رادار الروابط.</string>
+    <string name="link_dispatch_actions_title">إدارة القواعد</string>
+    <string name="link_dispatch_import_linkgo">استيراد قواعد LinkGo من الحافظة</string>
+    <string name="link_dispatch_import_clipboard">استيراد نسخة احتياطية من الحافظة</string>
+    <string name="link_dispatch_import_clipboard_desc">استيراد إعدادات الإرسال الكاملة المصدّرة سابقًا</string>
+    <string name="link_dispatch_export_clipboard">تصدير إلى الحافظة</string>
+    <string name="link_dispatch_export_clipboard_desc">نسخ القواعد والإعدادات الكاملة بصيغة JSON إلى الحافظة</string>
+    <string name="link_dispatch_reset_builtin">استعادة القواعد المدمجة الموصى بها</string>
+    <string name="link_dispatch_reset_builtin_desc">إعادة تحميل قواعد الإرسال المدمجة للتطبيقات المحددة (أكثر من 40 تطبيقًا شائعًا)</string>
+
+    <string name="link_dispatch_preferences_title">مفاتيح الإرسال والرادار</string>
+    <string name="link_dispatch_open_in_small_window">الفتح في نافذة حرة</string>
+    <string name="link_dispatch_open_in_small_window_desc">تفضيل فتح التطبيقات الهدف في نافذة حرة صغيرة عند التوجيه</string>
+    <string name="link_dispatch_radar_screen_content">رادار روابط محتوى الشاشة</string>
+    <string name="link_dispatch_radar_screen_content_desc">فحص عقد إمكانية الوصول عند التحديد على الشاشة وعرض لافتة عائمة فوق الروابط</string>
+    <string name="link_dispatch_radar_pointer">رادار المؤشر</string>
+    <string name="link_dispatch_radar_pointer_desc">اكتشاف وإبراز الروابط تحت المؤشر أثناء التحويم، والتحويل إلى التحديد عند التوقف</string>
+
+    <string name="link_dispatch_rules_list_title">القواعد المهيأة</string>
+    <string name="link_dispatch_rules_empty">لا توجد قواعد. استخدم الخيار أعلاه لاستعادة القواعد المدمجة أو الاستيراد من الحافظة.</string>
+    <string name="link_dispatch_no_url_found">لم يتم العثور على رابط صالح</string>
+    <string name="link_dispatch_no_app">لا يوجد تطبيق لفتح هذا الرابط</string>
+    <string name="link_dispatch_import_success">تم استيراد %1$d قاعدة</string>
+    <string name="link_dispatch_import_failed">فشل الاستيراد: تنسيق الحافظة غير صالح</string>
+    <string name="link_dispatch_export_success">تم نسخ الإعدادات إلى الحافظة</string>
+    <string name="link_dispatch_reset_success">تمت استعادة %1$d قاعدة موصى بها</string>
+    <string name="link_dispatch_rule_deleted">تم حذف القاعدة: %1$s</string>
+    <string name="link_dispatch_hub_subtitle">قواعد LinkGo وإعادة توجيه ذكية مع نافذة صغيرة ورادار روابط</string>
+    <string name="link_dispatch_sandbox_title">صندوق اختبار مطابقة القواعد</string>
+    <string name="link_dispatch_sandbox_hint">أدخل رابطًا تجريبيًا للتحقق من مطابقة القاعدة…</string>
+    <string name="link_dispatch_sandbox_test_btn">اختبار المطابقة</string>
+    <string name="link_dispatch_sandbox_matched">مطابقة: %1$s → التطبيق الهدف: %2$s</string>
+    <string name="link_dispatch_sandbox_no_match">لا توجد قاعدة مطابقة (سيُفتح بالمعالج الافتراضي للنظام)</string>
+    <string name="link_dispatch_add_rule">إنشاء قاعدة مخصصة</string>
+    <string name="link_dispatch_exempt_title">التطبيقات المستثناة</string>
+    <string name="link_dispatch_exempt_desc">عدم اعتراض الروابط الناتجة داخل التطبيقات المحددة (مثل المتصفحات)</string>
+    <string name="link_dispatch_rule_name">اسم القاعدة</string>
+    <string name="link_dispatch_rule_pattern">النمط (تعبير نمطي أو سلسلة فرعية)</string>
+    <string name="link_dispatch_rule_package">حزمة الهدف</string>
+    <string name="link_dispatch_rule_component">مكوّن الهدف (اختياري)</string>
+    <string name="link_dispatch_rule_template">قالب URL (اختياري، مثل {url})</string>
+    <string name="link_dispatch_save">حفظ القاعدة</string>
+    <string name="link_rule_match_contains">يحتوي على</string>
+    <string name="link_rule_match_regex">تعبير نمطي</string>
+    <string name="link_rule_match_exact">مطابقة تامة</string>
+    <string name="link_rule_resolve_direct">حل هذه القاعدة وتنفيذها</string>
+    <string name="link_rule_resolve_redispatch">حل وإعادة إرسال</string>
+</resources>
