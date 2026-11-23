@@ -41,7 +41,6 @@ import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.miuix.miuixGroupedCardItem
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
-import com.slideindex.app.ui.settings.components.SettingSwitchRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.SettingsVerticalReorderList
 import com.slideindex.app.ui.settings.components.settingsCardItem
@@ -216,17 +215,6 @@ fun SearchGroupEditorScreen(
         groupedCardItems(
             keyPrefix = "search-group-basic",
             items = listOf(
-                settingsCardScopeItem("search-group-enabled") {
-                    SettingSwitchRow(
-                        title = stringResource(R.string.search_group_enabled_title),
-                        subtitle = stringResource(R.string.search_group_enabled_subtitle),
-                        checked = draft.enabled,
-                        enabled = true,
-                        onCheckedChange = { enabled ->
-                            onUpdateDraft { it.copy(enabled = enabled) }
-                        },
-                    )
-                },
                 settingsCardItem("search-group-name") {
                     Row(
                         modifier = Modifier

@@ -118,10 +118,21 @@ fun SearchEngineJsonImportHost(
                 onDismissRequest()
             },
             onImport = { selected ->
+                // 组是“复合项”：成员即使已存在、未勾选，也要作为依赖一起参与合并，
+                // 否则 groupMemberIds 无法映射到本地已有引擎。
+                val payload = buildList {
+                    addAll(selected)
+                    selected.filter { it.engineType == SearchEngineType.SEARCH_GROUP }
+                        .forEach { group ->
+                            group.groupMemberIds.forEach { memberId ->
+                                items.firstOrNull { it.id == memberId }?.let { add(it) }
+                            }
+                        }
+                }.distinctBy { it.id }
                 candidates = null
                 selectedIds.clear()
                 onDismissRequest()
-                onImport(selected)
+                onImport(payload)
             },
         )
     }
