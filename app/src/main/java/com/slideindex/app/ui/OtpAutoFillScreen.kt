@@ -28,6 +28,7 @@ fun OtpAutoFillScreen(
     onDelayChange: (Int) -> Unit,
     onIntervalChange: (Int) -> Unit,
     onLsposedSystemInjectChange: (Boolean) -> Unit,
+    onLsposedSmsCaptureChange: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
     // 资源读取要跟随配置变化（切语言/改字号/转屏）：用配置感知的派生 Context。
@@ -103,6 +104,15 @@ fun OtpAutoFillScreen(
                 checked = settings.otpLsposedSystemInjectEnabled,
                 enabled = enabled,
                 onCheckedChange = onLsposedSystemInjectChange,
+            )
+        },
+        settingsCardScopeItem("lsposed-sms-capture") {
+            SettingSwitchRow(
+                title = stringResource(R.string.otp_lsposed_sms_title),
+                subtitle = stringResource(R.string.otp_lsposed_sms_desc_short),
+                checked = settings.otpLsposedSmsCaptureEnabled,
+                enabled = enabled,
+                onCheckedChange = onLsposedSmsCaptureChange,
             )
         },
     )

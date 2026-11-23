@@ -15,6 +15,10 @@ object OtpSmsSourcePackages {
         "com.vivo.mms",
         "com.meizu.flyme.mms",
         "com.meizu.mms",
+        // MIUI / HyperOS may surface carrier SMS under a vendor-specific package.
+        "com.miui.mms",
+        "com.miui.sms",
+        "com.xiaomi.mms",
     )
 
     fun isSystemSmsPackage(packageName: String): Boolean {
