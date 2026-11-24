@@ -32,3 +32,11 @@ fun shouldStartRingLauncherInEditMode(
     configuredSlotCount: Int,
     autoFillCandidateCount: Int,
 ): Boolean = configuredSlotCount == 0 && autoFillCandidateCount == 0
+
+internal fun <T> selectRingLauncherSlot(
+    settings: FvRingLauncherSettings,
+    index: Int,
+    explicit: T?,
+    autoFill: Boolean,
+    nextAutoFill: () -> T?,
+): T? = explicit ?: if (autoFill && !settings.isExplicitlyEmpty(index)) nextAutoFill() else null

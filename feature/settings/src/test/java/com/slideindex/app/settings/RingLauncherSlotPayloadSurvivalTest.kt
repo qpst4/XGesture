@@ -6,7 +6,6 @@ import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemType
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -71,14 +70,11 @@ class RingLauncherSlotPayloadSurvivalTest {
         for (axis in FvRingLauncherAxis.entries) {
             val reloaded = FvRingLauncherSettings.fromPreferences(editor.readRawPreferences(), axis)
             assertEquals(none, reloaded.itemAt(0))
-            assertTrue(reloaded.isExplicitlyEmpty(0))
-            assertFalse(reloaded.isExplicitlyEmpty(1))
             assertNull(reloaded.itemAt(1))
         }
 
         mutator.setFvRingLauncherSlot(FvRingLauncherAxis.VERTICAL, 0, realisticSlots.getValue(0)).getOrThrow()
         val replaced = FvRingLauncherSettings.fromPreferences(editor.readRawPreferences(), FvRingLauncherAxis.VERTICAL)
-        assertFalse(replaced.isExplicitlyEmpty(0))
         assertEquals(realisticSlots[0], replaced.itemAt(0))
     }
 

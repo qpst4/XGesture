@@ -769,9 +769,8 @@ object RingLauncherOverlayWindow {
         }
 
         return List(slotCount) { index ->
-            explicitSlots[index] ?: run {
-                if (!autoFill || fvSettings.isExplicitlyEmpty(index)) return@run null
-                val autoApp = autoFillQueue.removeFirstOrNull() ?: return@run null
+            selectRingLauncherSlot(fvSettings, index, explicitSlots[index], autoFill) {
+                val autoApp = autoFillQueue.removeFirstOrNull() ?: return@selectRingLauncherSlot null
                 val item = QuickLauncherItem(
                     type = QuickLauncherItemType.APP,
                     payload = autoApp.packageName,
