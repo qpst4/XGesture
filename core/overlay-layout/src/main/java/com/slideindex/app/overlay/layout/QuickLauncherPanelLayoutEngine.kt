@@ -25,7 +25,8 @@ object QuickLauncherPanelLayoutEngine {
         cellHeight: Float,
         gridPadding: Float,
         headerHeight: Float,
-    ): Float = rows * cellHeight + gridPadding * 2 + headerHeight
+        bottomPadding: Float = gridPadding * 2.25f,
+    ): Float = rows * cellHeight + (if (headerHeight > 0f) 0f else gridPadding) + bottomPadding + headerHeight
 
     /**
      * 单格行高。

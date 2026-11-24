@@ -45,14 +45,24 @@ internal class QuickLauncherPanelController(
         fun postDelayed(runnable: Runnable, delayMs: Long)
         fun removeCallbacks(runnable: Runnable)
         fun switchToNextPanel()
+        fun switchToPanel(panelId: String)
+        fun allPanels(): List<QuickLauncherPanel>
         fun hasMultiplePanels(): Boolean
         fun currentPanelName(): String
+        fun movePanelAnchor(deltaX: Float, deltaY: Float)
+        fun togglePinMode()
+        fun isPinned(): Boolean
         fun onFolderOpen(globalIndex: Int)
         fun onFolderItemsUpdated(globalIndex: Int, newChildren: List<QuickLauncherItem>)
     }
 
     typealias ToolbarAction = QuickLauncherPanelToolbar.ToolbarAction
     typealias ToolbarLayoutMetrics = QuickLauncherPanelToolbar.ToolbarLayoutMetrics
+
+    fun allPanels(): List<QuickLauncherPanel> = host.allPanels()
+    fun switchToPanel(panelId: String) = host.switchToPanel(panelId)
+    fun movePanelAnchor(deltaX: Float, deltaY: Float) = host.movePanelAnchor(deltaX, deltaY)
+    fun togglePinMode() = host.togglePinMode()
 
     private val toolbar = QuickLauncherPanelToolbar(this, host)
     private val management = QuickLauncherPanelManagementHandler(this, host, toolbar)
