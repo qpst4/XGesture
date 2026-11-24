@@ -19,6 +19,8 @@ import com.slideindex.app.overlay.layout.visualColumn
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.util.CloneBadge
 import com.slideindex.app.util.coerceSafe
+import com.slideindex.app.overlay.OverlayMaterialSpec
+import com.slideindex.app.overlay.OverlayPanelTheme
 
 internal class IndexPanelRenderer(
     private val host: Host
@@ -38,7 +40,12 @@ internal class IndexPanelRenderer(
         fun invalidatePanel(rect: RectF)
         fun iconFor(app: AppInfo): Bitmap
         fun onInitiatingEdgeGestureReleased()
+        fun overlayView(): android.view.View? = null
+        fun density(): Float = dp(1f)
     }
+
+    private val railFrostedGlass = LocalFrostedGlassDrawable { host.overlayView() }
+    private val popupFrostedGlass = LocalFrostedGlassDrawable { host.overlayView() }
 
     private val railBgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val panelBgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -110,9 +117,22 @@ internal class IndexPanelRenderer(
     }
 
     fun syncSettings(settings: AppSettings) {
-        cellHighlightPaint.color = Color.argb(70, 255, 255, 255)
+        val isDark = OverlayPanelTheme.isDarkTheme(host.context)
+        syncThemeColors(isDark)
         cellLongPressHighlightPaint.color = Color.argb(110, 66, 133, 244)
         appLabelPaint.textSize = host.sp(11f)
+    }
+
+    private fun syncThemeColors(isDark: Boolean) {
+        if (isDark) {
+            appLabelPaint.color = Color.argb(230, 255, 255, 255)
+            appLabelPaint.setShadowLayer(host.dp(1.2f), 0f, host.dp(0.6f), Color.argb(120, 0, 0, 0))
+            cellHighlightPaint.color = Color.argb(70, 255, 255, 255)
+        } else {
+            appLabelPaint.color = Color.argb(230, 28, 28, 30)
+            appLabelPaint.setShadowLayer(host.dp(1.2f), 0f, host.dp(0.6f), Color.argb(90, 255, 255, 255))
+            cellHighlightPaint.color = Color.argb(30, 0, 0, 0)
+        }
     }
 
     fun handleTouch(event: MotionEvent, localX: Float, localY: Float): Boolean {
@@ -218,12 +238,22 @@ internal class IndexPanelRenderer(
 
     fun drawLetterRail(canvas: Canvas) {
         val zoneLayout = host.zoneLayout()
-        val settings = host.settings()
         val rail = zoneLayout.indexRailRect()
-        // 0% = 底板全透明，100% = 实心：与设置页的 0–100% 一一对应。
-        val alphaScale = settings.panelOpacity.coerceIn(0f, 1f)
-        railBgPaint.color = Color.argb((255 * alphaScale).toInt(), 38, 38, 42)
-        canvas.drawRoundRect(rail, railCorner, railCorner, railBgPaint)
+        val spec = OverlayMaterialSpec.fromContext(host.context)
+        val isDark = OverlayPanelTheme.isDarkTheme(host.context)
+        val blurDrawn = railFrostedGlass.draw(
+            canvas = canvas,
+            bounds = rail,
+            spec = spec,
+            density = host.density(),
+            isDark = isDark,
+            cornerRadiusPx = railCorner,
+        )
+        if (!blurDrawn) {
+            val alphaScale = host.settings().panelOpacity.coerceIn(0f, 1f)
+            railBgPaint.color = Color.argb((255 * alphaScale).toInt(), 38, 38, 42)
+            canvas.drawRoundRect(rail, railCorner, railCorner, railBgPaint)
+        }
 
         val railLetters = host.indexSession().currentRailLetters()
         if (railLetters.isEmpty()) return
@@ -237,13 +267,13 @@ internal class IndexPanelRenderer(
             val centerX = rail.centerX()
             val selected = letter == selectedLetter
             if (selected) {
-                letterCirclePaint.color = Color.argb(90, 255, 255, 255)
+                letterCirclePaint.color = if (isDark) Color.argb(90, 255, 255, 255) else Color.argb(45, 0, 0, 0)
                 canvas.drawCircle(centerX, centerY - letterSize * 0.15f, letterSize * 0.85f, letterCirclePaint)
-                letterPaint.color = Color.WHITE
+                letterPaint.color = if (isDark) Color.WHITE else Color.BLACK
                 letterPaint.textSize = letterSize * 1.05f
                 letterPaint.typeface = Typeface.DEFAULT_BOLD
             } else {
-                letterPaint.color = Color.argb(200, 220, 220, 220)
+                letterPaint.color = if (isDark) Color.argb(200, 220, 220, 220) else Color.argb(235, 20, 20, 22)
                 letterPaint.textSize = letterSize
                 letterPaint.typeface = Typeface.DEFAULT
             }
@@ -255,13 +285,24 @@ internal class IndexPanelRenderer(
         val letter = host.indexSession().selectedLetter ?: return
         val center = bubbleCenter()
         val settings = host.settings()
-        bubblePaint.color = Color.argb(
-            (255 * settings.panelOpacity.coerceIn(0f, 1f)).toInt().coerceIn(0, 255),
-            52,
-            52,
-            56,
-        )
+        val isDark = OverlayPanelTheme.isDarkTheme(host.context)
+        bubblePaint.color = if (isDark) {
+            Color.argb(
+                (255 * settings.panelOpacity.coerceIn(0f, 1f)).toInt().coerceIn(0, 255),
+                52,
+                52,
+                56,
+            )
+        } else {
+            Color.argb(
+                (255 * settings.panelOpacity.coerceIn(0f, 1f)).toInt().coerceIn(0, 255),
+                228,
+                228,
+                232,
+            )
+        }
         canvas.drawCircle(center.x, center.y, bubbleRadius, bubblePaint)
+        bubbleLetterPaint.color = if (isDark) Color.WHITE else Color.argb(240, 28, 28, 30)
         bubbleLetterPaint.textSize = host.sp(22f)
         canvas.drawText(
             letter.toString(),
@@ -275,19 +316,27 @@ internal class IndexPanelRenderer(
         val indexSession = host.indexSession()
         val filteredApps = indexSession.filteredApps
         if (filteredApps.isEmpty()) return
+        val isDark = OverlayPanelTheme.isDarkTheme(host.context)
+        syncThemeColors(isDark)
         syncGridCellBounds()
         val appCount = filteredApps.size
         val layout = layoutInfo(appCount)
         val m = layout.appsPerRow
         val grid = gridPopupRect()
-        val settings = host.settings()
-        panelBgPaint.color = Color.argb(
-            (255 * settings.panelOpacity.coerceIn(0f, 1f)).toInt().coerceIn(0, 255),
-            48,
-            48,
-            52,
+        val spec = OverlayMaterialSpec.fromContext(host.context)
+        val corner = spec.cornerRadiusPx(host.density())
+        val blurDrawn = popupFrostedGlass.draw(
+            canvas = canvas,
+            bounds = grid,
+            spec = spec,
+            density = host.density(),
+            isDark = isDark,
+            cornerRadiusPx = corner,
         )
-        canvas.drawRoundRect(grid, panelCorner, panelCorner, panelBgPaint)
+        if (!blurDrawn) {
+            panelBgPaint.color = spec.solidFallbackColor(isDark)
+            canvas.drawRoundRect(grid, corner, corner, panelBgPaint)
+        }
 
         indexSession.gridCellBounds.forEach { (app, cell) ->
             if (app == indexSession.highlightedApp) {
@@ -434,5 +483,14 @@ internal class IndexPanelRenderer(
         var end = text.length
         while (end > 1 && appLabelPaint.measureText(text.substring(0, end) + "…") > maxWidth) end--
         return text.substring(0, end.coerceAtLeast(1)) + "…"
+    }
+
+    fun clearGridPopupBlur() {
+        popupFrostedGlass.clear()
+    }
+
+    fun clearAllBlur() {
+        railFrostedGlass.clear()
+        popupFrostedGlass.clear()
     }
 }

@@ -138,7 +138,7 @@ internal class QuickLauncherOverlayController(
             override fun activeQuickLauncherPanel(): QuickLauncherPanel = this@QuickLauncherOverlayController.activeQuickLauncherPanel()
             override fun side(): PanelSide = host.side()
             override fun apps(): List<AppInfo> = host.apps()
-            override fun isPanelReady(): Boolean = host.panelEnterProgress() >= 1f
+            override fun isPanelReady(): Boolean = true
             override fun isAddDialogShowing(): Boolean =
                 QuickLauncherAddTrampoline.isActive() || quickLauncherOverlayDialogHost.isShowing
             override fun dp(value: Float): Float = host.dp(value)

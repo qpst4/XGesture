@@ -31,6 +31,20 @@ internal class QuickLauncherPanelToolbar(
     private val toolbarRect = RectF()
     private val deleteBadgeRects = mutableListOf<RectF>()
 
+    private var cachedPanelLeft = 0f
+    private var cachedPanelTop = 0f
+    private var cachedPanelWidth = -1f
+    private var cachedPanelHeight = -1f
+    private var cachedPanelName = ""
+    private var cachedEditMode = false
+    private var cachedPinned = false
+    private var cachedHasMultiplePanels = false
+    private var cachedDisplayLabel = ""
+
+    fun invalidateLayoutCache() {
+        cachedPanelWidth = -1f
+    }
+
     private var capsuleDownX = 0f
     private var capsuleDownY = 0f
     var isDraggingPanel = false
@@ -85,6 +99,7 @@ internal class QuickLauncherPanelToolbar(
         cancelCapsuleLongPress()
         isDraggingPanel = false
         capsuleLongPressConsumed = false
+        invalidateLayoutCache()
     }
 
     fun onEditModeDisabled() {
@@ -93,6 +108,7 @@ internal class QuickLauncherPanelToolbar(
         cancelCapsuleLongPress()
         isDraggingPanel = false
         capsuleLongPressConsumed = false
+        invalidateLayoutCache()
     }
 
     fun isCapsuleTouch(localX: Float, localY: Float): Boolean {
@@ -262,8 +278,49 @@ internal class QuickLauncherPanelToolbar(
             switchButtonRect.setEmpty()
             editButtonRect.setEmpty()
             closeButtonRect.setEmpty()
+            pinButtonRect.setEmpty()
+            cachedPanelWidth = -1f
             return
         }
+        val panelWidth = panelRect.width()
+        val panelHeight = panelRect.height()
+        val currentName = host.currentPanelName()
+        val currentEditMode = controller.editMode
+        val currentPinned = controller.pinned
+        val currentMultiple = host.hasMultiplePanels()
+
+        val isLayoutValid = cachedPanelWidth == panelWidth &&
+            cachedPanelHeight == panelHeight &&
+            cachedPanelName == currentName &&
+            cachedEditMode == currentEditMode &&
+            cachedPinned == currentPinned &&
+            cachedHasMultiplePanels == currentMultiple
+
+        if (isLayoutValid) {
+            val dx = panelRect.left - cachedPanelLeft
+            val dy = panelRect.top - cachedPanelTop
+            if (dx != 0f || dy != 0f) {
+                toolbarRect.offset(dx, dy)
+                addButtonRect.offset(dx, dy)
+                switchButtonRect.offset(dx, dy)
+                editButtonRect.offset(dx, dy)
+                closeButtonRect.offset(dx, dy)
+                pinButtonRect.offset(dx, dy)
+                cachedPanelLeft = panelRect.left
+                cachedPanelTop = panelRect.top
+            }
+            return
+        }
+
+        cachedPanelLeft = panelRect.left
+        cachedPanelTop = panelRect.top
+        cachedPanelWidth = panelWidth
+        cachedPanelHeight = panelHeight
+        cachedPanelName = currentName
+        cachedEditMode = currentEditMode
+        cachedPinned = currentPinned
+        cachedHasMultiplePanels = currentMultiple
+
         val headerHeight = host.dp(44f)
         val buttonHeight = host.dp(28f)
         val buttonTop = panelRect.top + (headerHeight - buttonHeight) / 2f
@@ -271,11 +328,11 @@ internal class QuickLauncherPanelToolbar(
         val sidePadding = host.dp(12f)
         toolbarRect.set(panelRect.left, panelRect.top, panelRect.right, panelRect.top + headerHeight)
 
-        val pinned = controller.pinned
+        val pinned = currentPinned
         val btnSize = host.dp(28f)
         val gap = host.dp(8f)
 
-        if (controller.editMode) {
+        if (currentEditMode) {
             pinButtonRect.setEmpty()
             addButtonRect.set(panelRect.left + sidePadding, buttonTop, panelRect.left + sidePadding + btnSize, buttonBottom)
 
@@ -295,7 +352,7 @@ internal class QuickLauncherPanelToolbar(
 
             if (maxAllowedW >= host.dp(40f)) {
                 toolbarIconPaint.textSize = host.sp(12.5f)
-                val name = host.currentPanelName()
+                val name = currentName
                 val label = name
                 val textW = toolbarIconPaint.measureText(label)
                 val desiredCapsuleW = (textW + host.dp(22f)).coerceIn(host.dp(60f), host.dp(150f))
@@ -303,8 +360,18 @@ internal class QuickLauncherPanelToolbar(
                 val cx = panelRect.centerX()
                 val left = (cx - capsuleW / 2f).coerceIn(leftLimit, rightLimit - capsuleW)
                 switchButtonRect.set(left, buttonTop, left + capsuleW, buttonBottom)
+
+                val maxTextWidth = capsuleW - host.dp(12f)
+                cachedDisplayLabel = if (textW <= maxTextWidth) {
+                    label
+                } else {
+                    var end = name.length
+                    while (end > 1 && toolbarIconPaint.measureText(name.substring(0, end) + "…") > maxTextWidth) end--
+                    name.substring(0, end.coerceAtLeast(1)) + "…"
+                }
             } else {
                 switchButtonRect.setEmpty()
+                cachedDisplayLabel = ""
             }
         } else {
             addButtonRect.setEmpty()
@@ -320,9 +387,9 @@ internal class QuickLauncherPanelToolbar(
                 closeButtonRect.setEmpty()
             }
 
-            if (host.hasMultiplePanels()) {
+            if (currentMultiple) {
                 toolbarIconPaint.textSize = host.sp(12.5f)
-                val name = host.currentPanelName()
+                val name = currentName
                 val label = "$name ▾"
                 val textW = toolbarIconPaint.measureText(label)
                 val desiredCapsuleW = (textW + host.dp(22f)).coerceIn(host.dp(64f), host.dp(160f))
@@ -330,8 +397,19 @@ internal class QuickLauncherPanelToolbar(
                 val capsuleW = minOf(desiredCapsuleW, maxAllowedW)
                 val cx = panelRect.centerX()
                 switchButtonRect.set(cx - capsuleW / 2f, buttonTop, cx + capsuleW / 2f, buttonBottom)
+
+                val maxTextWidth = capsuleW - host.dp(12f)
+                cachedDisplayLabel = if (textW <= maxTextWidth) {
+                    label
+                } else {
+                    var end = name.length
+                    val suffix = "… ▾"
+                    while (end > 1 && toolbarIconPaint.measureText(name.substring(0, end) + suffix) > maxTextWidth) end--
+                    name.substring(0, end.coerceAtLeast(1)) + suffix
+                }
             } else {
                 switchButtonRect.setEmpty()
+                cachedDisplayLabel = ""
             }
         }
     }
@@ -507,21 +585,8 @@ internal class QuickLauncherPanelToolbar(
             ToolbarAction.SWITCH -> {
                 toolbarIconPaint.textSize = host.sp(12.5f)
                 toolbarIconPaint.isFakeBoldText = false
-                val name = host.currentPanelName()
-                val label = if (controller.editMode) name else "$name ▾"
-                val maxTextWidth = rect.width() - host.dp(12f)
-                val displayLabel = if (toolbarIconPaint.measureText(label) <= maxTextWidth) {
-                    label
-                } else {
-                    var end = name.length
-                    val suffix = if (controller.editMode) "…" else "… ▾"
-                    while (end > 1 && toolbarIconPaint.measureText(name.substring(0, end) + suffix) > maxTextWidth) {
-                        end--
-                    }
-                    name.substring(0, end.coerceAtLeast(1)) + suffix
-                }
                 canvas.drawText(
-                    displayLabel,
+                    cachedDisplayLabel,
                     rect.centerX(),
                     rect.centerY() - (toolbarIconPaint.descent() + toolbarIconPaint.ascent()) / 2f,
                     toolbarIconPaint
@@ -588,7 +653,8 @@ internal class QuickLauncherPanelToolbar(
         }
         val r = size / 2f
         canvas.save()
-        canvas.translate(cx, cy)
+        val opticalOffsetY = host.dp(1.8f)
+        canvas.translate(cx, cy - opticalOffsetY)
         canvas.rotate(if (isPinned) 0f else -35f)
         val path = android.graphics.Path()
         // 针尖
