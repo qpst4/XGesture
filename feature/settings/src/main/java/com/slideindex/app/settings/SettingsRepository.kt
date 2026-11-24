@@ -970,6 +970,30 @@ class SettingsRepository @Inject constructor(
     suspend fun setOverlayBlurEnabled(enabled: Boolean) =
         overlay.setOverlayBlurEnabled(enabled)
 
+    suspend fun setOverlayBlurRadiusDp(radiusDp: Int) =
+        overlay.setOverlayBlurRadiusDp(radiusDp)
+
+    suspend fun setOverlayOpacityPercent(percent: Int) =
+        overlay.setOverlayOpacityPercent(percent)
+
+    suspend fun setOverlayCornerRadiusDp(cornerRadiusDp: Int) =
+        overlay.setOverlayCornerRadiusDp(cornerRadiusDp)
+
+    suspend fun setOverlayBorderShimmerPercent(percent: Int) =
+        overlay.setOverlayBorderShimmerPercent(percent)
+
+    suspend fun setOverlayAdvancedShimmerEnabled(enabled: Boolean) =
+        overlay.setOverlayAdvancedShimmerEnabled(enabled)
+
+    suspend fun setOverlayBorderHighlightPercent(percent: Int) =
+        overlay.setOverlayBorderHighlightPercent(percent)
+
+    suspend fun setOverlayRadialGlossPercent(percent: Int) =
+        overlay.setOverlayRadialGlossPercent(percent)
+
+    suspend fun setOverlayVerticalGlossPercent(percent: Int) =
+        overlay.setOverlayVerticalGlossPercent(percent)
+
     suspend fun setDefaultImageViewerPackage(packageName: String?) = overlay.setDefaultImageViewerPackage(packageName)
     suspend fun setPickImageTapAction(action: PickImageTapAction) = overlay.setPickImageTapAction(action)
     suspend fun setImageEditorDelayDeleteEnabled(enabled: Boolean) = overlay.setImageEditorDelayDeleteEnabled(enabled)

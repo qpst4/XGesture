@@ -394,12 +394,6 @@ private fun BoxScope.ClipboardFloatGlassBackdrop(cornerRadiusDp: Int, radiusDp: 
     LocalFrostedGlassBackdrop(
         modifier = Modifier.matchParentSize(),
         cornerRadiusPx = with(density) { cornerRadiusDp.dp.toPx() },
-        blurRadiusPx = with(density) { radiusDp.dp.toPx() }.roundToInt(),
-        tintColor = if (isSystemInDarkTheme()) {
-            ClipboardFloatGlassTintDark
-        } else {
-            ClipboardFloatGlassTintLight
-        },
     )
 }
 

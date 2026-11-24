@@ -16,6 +16,9 @@ import android.view.ViewConfiguration
 import android.view.WindowManager
 import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.overlay.OverlayBlurGate
+import com.slideindex.app.overlay.OverlayGlassForegroundDrawable
+import com.slideindex.app.overlay.OverlayMaterialSpec
+import com.slideindex.app.overlay.OverlayPanelTheme
 import com.slideindex.app.overlay.OverlayWindowTypes
 import com.slideindex.app.overlay.setupBackgroundBlur
 import com.slideindex.app.service.SlideIndexAccessibilityService
@@ -168,17 +171,27 @@ internal class RecordingDock(
         val canBlur = OverlayBlurGate.canBlur(wm, userEnabled)
         view.setBlurred(canBlur)
         if (canBlur) {
+            val spec = OverlayMaterialSpec.fromContext(appContext)
+            val isDark = OverlayPanelTheme.isDarkTheme(appContext)
+            val corner = dp(HEIGHT_DP.toFloat(), densityScale) / 2f
             setupBackgroundBlur(
                 view = view,
-                cornerRadiusPx = dp(HEIGHT_DP.toFloat(), densityScale) / 2f,
-                blurRadiusPx = (BLUR_RADIUS_DP * densityScale).roundToInt().coerceIn(1, MAX_BLUR_PX),
-                tintColor = BLUR_TINT,
+                cornerRadiusPx = corner,
+                blurRadiusPx = spec.blurRadiusPx(densityScale),
+                tintColor = spec.tintColor(isDark),
+            )
+            view.foreground = OverlayGlassForegroundDrawable(
+                spec = spec,
+                isDark = isDark,
+                cornerRadiusPx = corner,
+                density = densityScale,
             )
             // 模糊区域要靠一次 surface 事务才会被合成器采纳；首帧画完可能再没有下一帧，
             // 这里主动补一帧（照抄项目里 LocalFrostedGlassBackdrop 的做法）。
             view.postInvalidateOnAnimation()
         } else {
             view.background = null
+            view.foreground = null
         }
     }
 

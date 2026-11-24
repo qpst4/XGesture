@@ -842,6 +842,14 @@ internal object SettingsSnapshotReader {
             ),
             overlayBlur = OverlayBlurSettings(
                 overlayBlurEnabled = prefs[SettingsPreferenceKeys.OVERLAY_BLUR_ENABLED] ?: true,
+                overlayBlurRadiusDp = prefs[SettingsPreferenceKeys.OVERLAY_BLUR_RADIUS_DP] ?: 40,
+                overlayOpacityPercent = prefs[SettingsPreferenceKeys.OVERLAY_OPACITY_PERCENT] ?: 30,
+                overlayCornerRadiusDp = prefs[SettingsPreferenceKeys.OVERLAY_CORNER_RADIUS_DP] ?: 18,
+                overlayBorderShimmerPercent = prefs[SettingsPreferenceKeys.OVERLAY_BORDER_SHIMMER_PERCENT] ?: 0,
+                overlayAdvancedShimmerEnabled = prefs[SettingsPreferenceKeys.OVERLAY_ADVANCED_SHIMMER_ENABLED] ?: false,
+                overlayBorderHighlightPercent = prefs[SettingsPreferenceKeys.OVERLAY_BORDER_HIGHLIGHT_PERCENT] ?: 100,
+                overlayRadialGlossPercent = prefs[SettingsPreferenceKeys.OVERLAY_RADIAL_GLOSS_PERCENT] ?: 50,
+                overlayVerticalGlossPercent = prefs[SettingsPreferenceKeys.OVERLAY_VERTICAL_GLOSS_PERCENT] ?: 0,
             ),
             dragDropFlow = DragDropFlowSettings(
                 dragDropFlowEnabled = prefs[SettingsPreferenceKeys.DRAG_DROP_FLOW_ENABLED] ?: false,

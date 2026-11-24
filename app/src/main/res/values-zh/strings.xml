@@ -2000,8 +2000,8 @@
     <string name="quick_launcher_blur_strength_value">%1$d dp</string>
     <string name="quick_launcher_show_labels">显示图标名称</string>
     <string name="quick_launcher_show_labels_desc">关闭后面板上只显示图标；应用名称仍用于无障碍朗读</string>
-    <string name="quick_launcher_show_toolbar">显示底部操作栏</string>
-    <string name="quick_launcher_show_toolbar_desc">关闭后普通使用态不再显示下方的 +、− 与面板切换；在面板空白处按住即可进入编辑模式</string>
+    <string name="quick_launcher_show_toolbar">显示顶部面板切换栏</string>
+    <string name="quick_launcher_show_toolbar_desc">多面板时在顶部显示当前面板胶囊，点击可下拉直达切换面板；长按面板空白处即可进入编辑模式。关闭后完全沉浸呈现纯图标。</string>
     <string name="quick_launcher_mirror_on_right_side">镜像右侧面板</string>
     <string name="quick_launcher_mirror_on_right_side_desc">开启时从右侧呼出的面板按从右往左排列，是左侧面板的镜像；关闭后不管从哪侧呼出都按从左往右排列，翻页方向也一并改变</string>
     <string name="quick_launcher_items_section">快捷项</string>
@@ -4275,6 +4275,15 @@
     <string name="stash_panel_background_blur_desc">Android 12+ 模糊面板后方窗口内容；顶栏在列表滚动时会模糊面板内内容</string>
     <string name="overlay_blur_enabled">悬浮窗模糊</string>
     <string name="overlay_blur_enabled_desc">悬浮面板的毛玻璃背景。关闭后改用实色面板：系统跨窗模糊与面板内模糊一并关闭。壁纸模糊不受影响</string>
+    <string name="overlay_blur_radius_title">全局模糊强度</string>
+    <string name="overlay_opacity_title">面板透光浓度</string>
+    <string name="overlay_corner_radius_title">全局卡片圆角</string>
+    <string name="overlay_border_shimmer_title">玻璃微光反光</string>
+    <string name="overlay_advanced_shimmer_toggle">高级光影独立微调</string>
+    <string name="overlay_advanced_shimmer_desc">接管全局反光，独立调控细边、聚光与微光</string>
+    <string name="overlay_border_highlight_title">外缘高光细边</string>
+    <string name="overlay_radial_gloss_title">角落定向聚光</string>
+    <string name="overlay_vertical_gloss_title">顶部垂直微光</string>
     <string name="clipboard_background_monitoring_section">后台监听</string>
     <string name="clipboard_background_monitoring_title">剪贴板后台监听</string>
     <string name="clipboard_background_monitoring_desc">在其他应用复制后自动记录到剪贴板历史（通过 Shizuku/Root 特权监听）</string>

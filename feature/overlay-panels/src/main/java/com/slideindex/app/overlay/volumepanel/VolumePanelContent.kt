@@ -285,9 +285,6 @@ private fun ExpandPanelFrostedSurface(
         LocalFrostedGlassBackdrop(
             modifier = Modifier.matchParentSize(),
             cornerRadiusPx = cornerPx,
-            blurRadiusPx = blurRadiusPx,
-            tintColor = frostedStyle.tintColor,
-            enabled = true,
         )
         if (frostedStyle.innerScrimAlpha > 0f) {
             Box(

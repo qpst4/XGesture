@@ -20,7 +20,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.InvertColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
@@ -41,6 +45,7 @@ import com.slideindex.app.ui.miuix.themeAppearanceSettingsCardItems
 import com.slideindex.app.ui.miuix.MiuixGlassDropdownPreference
 import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_100
 import com.slideindex.app.ui.settings.components.SettingExpandableDropdownRow
+import com.slideindex.app.ui.settings.components.SettingExpandableRow
 import com.slideindex.app.ui.settings.components.SettingExpandableSwitchRow
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
@@ -82,10 +87,25 @@ fun InteractionAppearanceSettingsScreen(
     onBottomNavBlurPreviewStop: () -> Unit = {},
     overlayBlurEnabled: Boolean = true,
     onOverlayBlurEnabledChange: (Boolean) -> Unit = {},
+    overlayBlurRadiusDp: Int = 40,
+    onOverlayBlurRadiusChange: (Int) -> Unit = {},
+    overlayOpacityPercent: Int = 85,
+    onOverlayOpacityPercentChange: (Int) -> Unit = {},
+    overlayCornerRadiusDp: Int = 20,
+    onOverlayCornerRadiusChange: (Int) -> Unit = {},
+    overlayBorderShimmerPercent: Int = 50,
+    onOverlayBorderShimmerPercentChange: (Int) -> Unit = {},
+    overlayAdvancedShimmerEnabled: Boolean = false,
+    onOverlayAdvancedShimmerEnabledChange: (Boolean) -> Unit = {},
+    overlayBorderHighlightPercent: Int = 50,
+    onOverlayBorderHighlightPercentChange: (Int) -> Unit = {},
+    overlayRadialGlossPercent: Int = 50,
+    onOverlayRadialGlossPercentChange: (Int) -> Unit = {},
+    overlayVerticalGlossPercent: Int = 50,
+    onOverlayVerticalGlossPercentChange: (Int) -> Unit = {},
     settingIconPlateEnabled: Boolean = false,
     onSettingIconPlateEnabledChange: (Boolean) -> Unit = {},
 ) {
-
     // LazyListScope 里不能调用 stringResource，先在这里取好
     val iconPlateSectionTitle = stringResource(R.string.icon_plate_mode_section)
     val iconPlateModeDescText = stringResource(R.string.icon_plate_mode_desc)
@@ -175,32 +195,130 @@ fun InteractionAppearanceSettingsScreen(
         }
         MiuixListSettingsCard(
             keyPrefix = "interaction-overlay-visual",
-            items = listOf(
-                settingsCardScopeItem("overlay-blur") {
-                    SettingSwitchRow(
-                        title = stringResource(R.string.overlay_blur_enabled),
-                        subtitle = stringResource(R.string.overlay_blur_enabled_desc),
-                        checked = overlayBlurEnabled,
-                        enabled = true,
-                        onCheckedChange = onOverlayBlurEnabledChange,
-                    )
-                },
-                settingsCardScopeItem("icon-plate") {
-                    MiuixGlassDropdownPreference(
-                        title = iconPlateSectionTitle,
-                        items = iconPlateTabLabels,
-                        selectedIndex = com.slideindex.app.settings.IconPlateMode
-                            .entries
-                            .indexOf(iconPlateMode)
-                            .coerceAtLeast(0),
-                        onSelectedIndexChange = { index ->
-                            onIconPlateModeChange(
-                                com.slideindex.app.settings.IconPlateMode.entries[index],
+            items = buildList {
+                add(
+                    settingsCardScopeItem("overlay-blur") {
+                        SettingSwitchRow(
+                            title = stringResource(R.string.overlay_blur_enabled),
+                            subtitle = stringResource(R.string.overlay_blur_enabled_desc),
+                            checked = overlayBlurEnabled,
+                            enabled = true,
+                            onCheckedChange = onOverlayBlurEnabledChange,
+                        )
+                    }
+                )
+                if (overlayBlurEnabled) {
+                    add(
+                        settingsCardScopeItem("overlay-blur-radius") {
+                            SettingsSliderRow(
+                                title = stringResource(R.string.overlay_blur_radius_title),
+                                value = overlayBlurRadiusDp.toFloat(),
+                                valueRange = 10f..80f,
+                                enabled = true,
+                                label = "${overlayBlurRadiusDp}dp",
+                                formatLabel = { "${it.roundToInt()}dp" },
+                                onValueChange = { onOverlayBlurRadiusChange(it.roundToInt()) },
                             )
-                        },
+                        }
                     )
-                },
-            ),
+                }
+                add(
+                    settingsCardScopeItem("overlay-opacity") {
+                        SettingsSliderRow(
+                            title = stringResource(R.string.overlay_opacity_title),
+                            value = overlayOpacityPercent.toFloat(),
+                            valueRange = 0f..100f,
+                            enabled = true,
+                            label = "${overlayOpacityPercent}%",
+                            formatLabel = { "${it.roundToInt()}%" },
+                            onValueChange = { onOverlayOpacityPercentChange(it.roundToInt()) },
+                        )
+                    }
+                )
+                add(
+                    settingsCardScopeItem("overlay-corner-radius") {
+                        SettingsSliderRow(
+                            title = stringResource(R.string.overlay_corner_radius_title),
+                            value = overlayCornerRadiusDp.toFloat(),
+                            valueRange = 12f..28f,
+                            enabled = true,
+                            label = "${overlayCornerRadiusDp}dp",
+                            formatLabel = { "${it.roundToInt()}dp" },
+                            onValueChange = { onOverlayCornerRadiusChange(it.roundToInt()) },
+                        )
+                    }
+                )
+                if (!overlayAdvancedShimmerEnabled) {
+                    add(
+                        settingsCardScopeItem("overlay-border-shimmer") {
+                            SettingsSliderRow(
+                                title = stringResource(R.string.overlay_border_shimmer_title),
+                                value = overlayBorderShimmerPercent.toFloat(),
+                                valueRange = 0f..100f,
+                                enabled = true,
+                                label = "${overlayBorderShimmerPercent}%",
+                                formatLabel = { "${it.roundToInt()}%" },
+                                onValueChange = { onOverlayBorderShimmerPercentChange(it.roundToInt()) },
+                            )
+                        }
+                    )
+                }
+                add(
+                    settingsCardScopeItem("overlay-advanced-shimmer") {
+                        SettingExpandableSwitchRow(
+                            title = stringResource(R.string.overlay_advanced_shimmer_toggle),
+                            subtitle = stringResource(R.string.overlay_advanced_shimmer_desc),
+                            checked = overlayAdvancedShimmerEnabled,
+                            onCheckedChange = onOverlayAdvancedShimmerEnabledChange,
+                        ) {
+                            SettingsSliderRow(
+                                title = stringResource(R.string.overlay_border_highlight_title),
+                                value = overlayBorderHighlightPercent.toFloat(),
+                                valueRange = 0f..100f,
+                                enabled = true,
+                                label = "${overlayBorderHighlightPercent}%",
+                                formatLabel = { "${it.roundToInt()}%" },
+                                onValueChange = { onOverlayBorderHighlightPercentChange(it.roundToInt()) },
+                            )
+                            SettingsSliderRow(
+                                title = stringResource(R.string.overlay_radial_gloss_title),
+                                value = overlayRadialGlossPercent.toFloat(),
+                                valueRange = 0f..100f,
+                                enabled = true,
+                                label = "${overlayRadialGlossPercent}%",
+                                formatLabel = { "${it.roundToInt()}%" },
+                                onValueChange = { onOverlayRadialGlossPercentChange(it.roundToInt()) },
+                            )
+                            SettingsSliderRow(
+                                title = stringResource(R.string.overlay_vertical_gloss_title),
+                                value = overlayVerticalGlossPercent.toFloat(),
+                                valueRange = 0f..100f,
+                                enabled = true,
+                                label = "${overlayVerticalGlossPercent}%",
+                                formatLabel = { "${it.roundToInt()}%" },
+                                onValueChange = { onOverlayVerticalGlossPercentChange(it.roundToInt()) },
+                            )
+                        }
+                    }
+                )
+                add(
+                    settingsCardScopeItem("icon-plate") {
+                        MiuixGlassDropdownPreference(
+                            title = iconPlateSectionTitle,
+                            items = iconPlateTabLabels,
+                            selectedIndex = com.slideindex.app.settings.IconPlateMode
+                                .entries
+                                .indexOf(iconPlateMode)
+                                .coerceAtLeast(0),
+                            onSelectedIndexChange = { index ->
+                                onIconPlateModeChange(
+                                    com.slideindex.app.settings.IconPlateMode.entries[index],
+                                )
+                            },
+                        )
+                    }
+                )
+            },
         )
 
         item(key = "interaction_feedback_section") {

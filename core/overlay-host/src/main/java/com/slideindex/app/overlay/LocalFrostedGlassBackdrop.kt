@@ -2,8 +2,15 @@ package com.slideindex.app.overlay
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.ColorFilter
+import android.graphics.LinearGradient
 import android.graphics.Outline
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.PixelFormat
+import android.graphics.RadialGradient
 import android.graphics.RectF
+import android.graphics.Shader
 import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.View
@@ -12,12 +19,16 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.annotation.ColorInt
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -28,57 +39,129 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 @Composable
 fun LocalFrostedGlassBackdrop(
     modifier: Modifier = Modifier,
-    cornerRadiusPx: Float = 0f,
-    blurRadiusPx: Int = 80,
-    @ColorInt tintColor: Int = 0x331C1C1E,
-    enabled: Boolean = true,
-    /**
-     * 不许糊时的实色降级底色。默认跟随主题，因为绝大多数调用点（取词 / 翻译 / 搜索 / 历史 /
-     * 音量 / 剪贴板 / 图片搜索）的前景色本身也跟随主题，浅色底 + 深色字自洽。
-     *
-     * ⚠️ 前景色**写死为白**的面板必须显式传深色（见 [com.slideindex.app.overlay.OhoQuickToolsPanel]），
-     * 否则浅色主题下会渲染成白底白字 —— 也就是用户报的「关闭悬浮窗模糊后快速工具面板毫无可读性」。
-     */
-    @ColorInt solidFallbackColor: Int? = null
+    spec: OverlayMaterialSpec = rememberOverlayMaterialSpec(),
+    isDark: Boolean = androidx.compose.foundation.isSystemInDarkTheme(),
+    cornerRadiusPx: Float? = null,
+    blurRadiusPx: Int? = null,
+    @ColorInt tintColor: Int? = null,
+    enabled: Boolean? = null,
+    @ColorInt solidFallbackColor: Int? = null,
+    drawBorder: Boolean = true
 ) {
-    if (!enabled) return
+    val density = LocalDensity.current.density
+    val finalCornerRadius = cornerRadiusPx ?: spec.cornerRadiusPx(density)
+    val finalBlurRadius = blurRadiusPx ?: spec.blurRadiusPx(density)
+    val finalTint = tintColor ?: spec.tintColor(isDark)
+    val finalEnabled = enabled ?: spec.blurEnabled
+    val finalFallback = solidFallbackColor ?: spec.solidFallbackColor(isDark)
 
-    if (!canBlurInOverlay()) {
-        SolidPanelBackdrop(
-            modifier = modifier,
-            cornerRadiusPx = cornerRadiusPx,
-            solidColor = solidFallbackColor
-        )
-        return
+    if (!finalEnabled) return
+
+    val strokeWidth = with(LocalDensity.current) { spec.innerBorderWidthPx(density).toDp() }
+    val strokeColor = Color(spec.innerBorderColor(isDark))
+    val corner = with(LocalDensity.current) { finalCornerRadius.toDp() }
+    val borderModifier = if (drawBorder && finalCornerRadius > 0f) {
+        Modifier.border(strokeWidth, strokeColor, RoundedCornerShape(corner))
+    } else {
+        Modifier
     }
 
-    AndroidView(
-        modifier = modifier,
-        factory = { ctx ->
-            FrameLayout(ctx).apply {
-                outlineProvider = object : ViewOutlineProvider() {
-                    override fun getOutline(v: View, outline: Outline) {
-                        outline.setRoundRect(0, 0, v.width, v.height, cornerRadiusPx)
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(corner))
+            .then(borderModifier)
+    ) {
+        if (!canBlurInOverlay()) {
+            SolidPanelBackdrop(
+                modifier = Modifier.matchParentSize(),
+                cornerRadiusPx = finalCornerRadius,
+                solidColor = finalFallback
+            )
+        } else {
+            AndroidView(
+                modifier = Modifier.matchParentSize(),
+                factory = { ctx ->
+                    FrameLayout(ctx).apply {
+                        outlineProvider = object : ViewOutlineProvider() {
+                            override fun getOutline(v: View, outline: Outline) {
+                                outline.setRoundRect(0, 0, v.width, v.height, finalCornerRadius)
+                            }
+                        }
+                        clipToOutline = true
+                        viewTreeObserver.addOnPreDrawListener(object : android.view.ViewTreeObserver.OnPreDrawListener {
+                            override fun onPreDraw(): Boolean {
+                                viewTreeObserver.removeOnPreDrawListener(this)
+                                setupBackgroundBlur(this@apply, finalCornerRadius, finalBlurRadius, finalTint)
+                                postInvalidateOnAnimation()
+                                return true
+                            }
+                        })
                     }
+                },
+                update = { view ->
+                    setupBackgroundBlur(view, finalCornerRadius, finalBlurRadius, finalTint)
                 }
-                clipToOutline = true
-                viewTreeObserver.addOnPreDrawListener(object : android.view.ViewTreeObserver.OnPreDrawListener {
-                    override fun onPreDraw(): Boolean {
-                        viewTreeObserver.removeOnPreDrawListener(this)
-                        setupBackgroundBlur(this@apply, cornerRadiusPx, blurRadiusPx, tintColor)
-                        // 模糊区域要随**一次 surface 事务**才会被合成器采纳。浮窗是冷启动窗口
-                        // （弹键盘 → 新建窗 + 新 Surface），首帧画完可能再也没有下一帧 ——
-                        // chip 就位后完全静止，观感就永远停在「只有半透明底色」上，直到用户
-                        // 碰一下窗口才补上那次事务。这里自己补一帧，不等用户。
-                        postInvalidateOnAnimation()
-                        return true
-                    }
-                })
-            }
-        },
-        update = { view ->
-            setupBackgroundBlur(view, cornerRadiusPx, blurRadiusPx, tintColor)
+            )
         }
+
+        val radialAlpha = spec.radialGlossAlpha(isDark)
+        val verticalAlpha = spec.verticalGlossAlpha(isDark)
+        if (radialAlpha > 0.001f || verticalAlpha > 0.001f) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .drawWithContent {
+                        // 1. 左上角定向高光（径向渐变）
+                        if (radialAlpha > 0.001f) {
+                            val gloss = Color.White.copy(alpha = radialAlpha)
+                            drawRect(
+                                brush = Brush.radialGradient(
+                                    colorStops = arrayOf(
+                                        0f to gloss,
+                                        0.56f to Color.Transparent,
+                                    ),
+                                    center = Offset(size.width * 0.16f, -size.height * 0.22f),
+                                    radius = size.width * 1.30f,
+                                ),
+                            )
+                        }
+                        // 2. 顶部垂直微光（线性渐变）
+                        if (verticalAlpha > 0.001f) {
+                            val gloss = Color.White.copy(alpha = verticalAlpha)
+                            drawRect(
+                                brush = Brush.verticalGradient(
+                                    colorStops = arrayOf(
+                                        0f to gloss,
+                                        0.38f to Color.Transparent,
+                                    ),
+                                ),
+                            )
+                        }
+                    }
+            )
+        }
+    }
+}
+
+@Composable
+fun LocalFrostedGlassBackdrop(
+    modifier: Modifier = Modifier,
+    cornerRadiusPx: Float? = null,
+    blurRadiusPx: Int? = null,
+    @ColorInt tintColor: Int? = null,
+    enabled: Boolean? = null,
+    @ColorInt solidFallbackColor: Int? = null,
+    drawBorder: Boolean = true
+) {
+    LocalFrostedGlassBackdrop(
+        modifier = modifier,
+        spec = rememberOverlayMaterialSpec(),
+        cornerRadiusPx = cornerRadiusPx,
+        blurRadiusPx = blurRadiusPx,
+        tintColor = tintColor,
+        enabled = enabled,
+        solidFallbackColor = solidFallbackColor,
+        drawBorder = drawBorder
     )
 }
 
@@ -190,6 +273,12 @@ class LocalFrostedGlassDrawable(private val viewProvider: () -> View?) {
     constructor(view: View) : this({ view })
     private var blurDrawable: Drawable? = null
     private var lastViewRootImpl: Any? = null
+    private val innerBorderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+    }
+    private val glossPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val clipPath = Path()
+    private val tmpBorderRect = RectF()
     fun reset() {
         blurDrawable = null
         lastViewRootImpl = null
@@ -264,6 +353,84 @@ class LocalFrostedGlassDrawable(private val viewProvider: () -> View?) {
         }.getOrDefault(false)
     }
 
+    fun draw(
+        canvas: Canvas,
+        bounds: RectF,
+        spec: OverlayMaterialSpec,
+        density: Float,
+        isDark: Boolean,
+        cornerRadiusPx: Float? = null,
+        blurRadiusPx: Int? = null,
+        @ColorInt tintColor: Int? = null,
+        alpha: Float = 1f,
+        enabled: Boolean? = null,
+        drawBorder: Boolean = true
+    ): Boolean {
+        val finalCornerRadius = cornerRadiusPx ?: spec.cornerRadiusPx(density)
+        val finalBlurRadius = blurRadiusPx ?: spec.blurRadiusPx(density)
+        val finalTint = tintColor ?: spec.tintColor(isDark)
+        val finalEnabled = enabled ?: spec.blurEnabled
+        val drawn = draw(
+            canvas = canvas,
+            bounds = bounds,
+            cornerRadiusPx = finalCornerRadius,
+            blurRadiusPx = finalBlurRadius,
+            tintColor = finalTint,
+            alpha = alpha,
+            enabled = finalEnabled
+        )
+        if (drawn && finalCornerRadius > 0f) {
+            val radialAlpha = spec.radialGlossAlpha(isDark) * alpha.coerceIn(0f, 1f)
+            val verticalAlpha = spec.verticalGlossAlpha(isDark) * alpha.coerceIn(0f, 1f)
+            if ((radialAlpha > 0.001f || verticalAlpha > 0.001f) && bounds.width() > 0f && bounds.height() > 0f) {
+                clipPath.reset()
+                clipPath.addRoundRect(bounds, finalCornerRadius, finalCornerRadius, Path.Direction.CW)
+                val saveCount = canvas.save()
+                canvas.clipPath(clipPath)
+                // 1. 左上角定向高光（径向渐变）
+                if (radialAlpha > 0.001f) {
+                    val glossColor = android.graphics.Color.argb((radialAlpha * 255).toInt(), 255, 255, 255)
+                    glossPaint.shader = RadialGradient(
+                        bounds.left + bounds.width() * 0.16f,
+                        bounds.top - bounds.height() * 0.22f,
+                        bounds.width() * 1.30f,
+                        intArrayOf(glossColor, android.graphics.Color.TRANSPARENT),
+                        floatArrayOf(0f, 0.56f),
+                        Shader.TileMode.CLAMP
+                    )
+                    canvas.drawRect(bounds, glossPaint)
+                }
+                // 2. 顶部垂直微光（线性渐变）
+                if (verticalAlpha > 0.001f) {
+                    val topGlossColor = android.graphics.Color.argb((verticalAlpha * 255).toInt(), 255, 255, 255)
+                    glossPaint.shader = LinearGradient(
+                        bounds.left, bounds.top, bounds.left, bounds.top + bounds.height() * 0.38f,
+                        topGlossColor, android.graphics.Color.TRANSPARENT,
+                        Shader.TileMode.CLAMP
+                    )
+                    canvas.drawRect(bounds, glossPaint)
+                }
+                canvas.restoreToCount(saveCount)
+            }
+            if (drawBorder) {
+                val strokeWidth = spec.innerBorderWidthPx(density)
+                innerBorderPaint.strokeWidth = strokeWidth
+                innerBorderPaint.color = spec.innerBorderColor(isDark)
+                val baseAlpha = (spec.innerBorderColor(isDark) ushr 24)
+                innerBorderPaint.alpha = (baseAlpha * alpha.coerceIn(0f, 1f)).toInt().coerceIn(0, 255)
+                val halfStroke = strokeWidth / 2f
+                tmpBorderRect.set(
+                    bounds.left + halfStroke,
+                    bounds.top + halfStroke,
+                    bounds.right - halfStroke,
+                    bounds.bottom - halfStroke
+                )
+                canvas.drawRoundRect(tmpBorderRect, finalCornerRadius, finalCornerRadius, innerBorderPaint)
+            }
+        }
+        return drawn
+    }
+
     companion object {
         fun createBlurDrawable(view: View): Drawable? {
             return runCatching {
@@ -275,4 +442,87 @@ class LocalFrostedGlassDrawable(private val viewProvider: () -> View?) {
             }.getOrNull()
         }
     }
+}
+
+/**
+ * 专为 Android 原生 View / FrameLayout 设计的玻璃高光与描边前景 Drawable。
+ *
+ * 自动渲染：
+ * 1. 左上角定向聚光（RadialGradient）
+ * 2. 顶部垂直微光（LinearGradient）
+ * 3. 0.75dp 透亮白描边
+ */
+class OverlayGlassForegroundDrawable(
+    private val spec: OverlayMaterialSpec,
+    private val isDark: Boolean,
+    private val cornerRadiusPx: Float,
+    private val density: Float = 1f,
+    private val drawBorder: Boolean = true,
+) : Drawable() {
+    private val glossPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+    }
+    private val clipPath = Path()
+    private val boundsRect = RectF()
+    private val borderRect = RectF()
+
+    override fun draw(canvas: Canvas) {
+        val b = bounds
+        if (b.isEmpty || cornerRadiusPx <= 0f) return
+        boundsRect.set(b)
+
+        val radialAlpha = spec.radialGlossAlpha(isDark)
+        val verticalAlpha = spec.verticalGlossAlpha(isDark)
+        if ((radialAlpha > 0.001f || verticalAlpha > 0.001f) && boundsRect.width() > 0f && boundsRect.height() > 0f) {
+            clipPath.reset()
+            clipPath.addRoundRect(boundsRect, cornerRadiusPx, cornerRadiusPx, Path.Direction.CW)
+            val saveCount = canvas.save()
+            canvas.clipPath(clipPath)
+
+            // 1. 左上角定向高光（径向渐变）
+            if (radialAlpha > 0.001f) {
+                val glossColor = android.graphics.Color.argb((radialAlpha * 255).toInt(), 255, 255, 255)
+                glossPaint.shader = RadialGradient(
+                    boundsRect.left + boundsRect.width() * 0.16f,
+                    boundsRect.top - boundsRect.height() * 0.22f,
+                    boundsRect.width() * 1.30f,
+                    intArrayOf(glossColor, android.graphics.Color.TRANSPARENT),
+                    floatArrayOf(0f, 0.56f),
+                    Shader.TileMode.CLAMP
+                )
+                canvas.drawRect(boundsRect, glossPaint)
+            }
+
+            // 2. 顶部垂直微光（线性渐变）
+            if (verticalAlpha > 0.001f) {
+                val topGlossColor = android.graphics.Color.argb((verticalAlpha * 255).toInt(), 255, 255, 255)
+                glossPaint.shader = LinearGradient(
+                    boundsRect.left, boundsRect.top, boundsRect.left, boundsRect.top + boundsRect.height() * 0.38f,
+                    topGlossColor, android.graphics.Color.TRANSPARENT,
+                    Shader.TileMode.CLAMP
+                )
+                canvas.drawRect(boundsRect, glossPaint)
+            }
+            canvas.restoreToCount(saveCount)
+        }
+
+        if (drawBorder) {
+            val strokeWidth = spec.innerBorderWidthPx(density)
+            borderPaint.strokeWidth = strokeWidth
+            borderPaint.color = spec.innerBorderColor(isDark)
+            val halfStroke = strokeWidth / 2f
+            borderRect.set(
+                boundsRect.left + halfStroke,
+                boundsRect.top + halfStroke,
+                boundsRect.right - halfStroke,
+                boundsRect.bottom - halfStroke
+            )
+            canvas.drawRoundRect(borderRect, cornerRadiusPx, cornerRadiusPx, borderPaint)
+        }
+    }
+
+    override fun setAlpha(alpha: Int) {}
+    override fun setColorFilter(colorFilter: ColorFilter?) {}
+    override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
 }

@@ -728,6 +728,22 @@ data class OtpSettings(
 data class OverlayBlurSettings(
     /** 悬浮窗模糊总开关；关闭时全部降级为实色底。 */
     val overlayBlurEnabled: Boolean = true,
+    /** 全局悬浮窗背景模糊半径（dp）；默认 40dp，区间 10..80。 */
+    val overlayBlurRadiusDp: Int = 40,
+    /** 全局悬浮窗面板不透明度百分比（%）；默认 30%，区间 0..100。 */
+    val overlayOpacityPercent: Int = 30,
+    /** 全局悬浮窗卡片圆角（dp）；默认 18dp，区间 12..28。 */
+    val overlayCornerRadiusDp: Int = 18,
+    /** 全局悬浮窗微光反光强度百分比（%）；默认 0%，区间 0..100。 */
+    val overlayBorderShimmerPercent: Int = 0,
+    /** 高级光影独立微调总开关；开启后接管主滑块，由独立 3 维参数控制。 */
+    val overlayAdvancedShimmerEnabled: Boolean = false,
+    /** 外缘高光细边百分比（%）；默认 100%，区间 0..100。 */
+    val overlayBorderHighlightPercent: Int = 100,
+    /** 角落定向聚光百分比（%）；默认 50%，区间 0..100。 */
+    val overlayRadialGlossPercent: Int = 50,
+    /** 顶部垂直微光百分比（%）；默认 0%，区间 0..100。 */
+    val overlayVerticalGlossPercent: Int = 0,
 )
 
 /**

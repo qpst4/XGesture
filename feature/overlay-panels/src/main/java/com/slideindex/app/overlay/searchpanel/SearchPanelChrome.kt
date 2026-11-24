@@ -138,9 +138,6 @@ fun SearchPanelFrostedCard(
             LocalFrostedGlassBackdrop(
                 modifier = Modifier.matchParentSize(),
                 cornerRadiusPx = cornerPx,
-                blurRadiusPx = blurRadiusPx,
-                tintColor = frostedTint,
-                enabled = true,
             )
         }
         Column(

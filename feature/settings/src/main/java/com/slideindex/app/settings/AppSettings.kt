@@ -509,6 +509,14 @@ data class AppSettings(
     val searchPanelShowAggregatedImageEntry get() = searchPanel.searchPanelShowAggregatedImageEntry
 
     val overlayBlurEnabled get() = overlayBlur.overlayBlurEnabled
+    val overlayBlurRadiusDp get() = overlayBlur.overlayBlurRadiusDp
+    val overlayOpacityPercent get() = overlayBlur.overlayOpacityPercent
+    val overlayCornerRadiusDp get() = overlayBlur.overlayCornerRadiusDp
+    val overlayBorderShimmerPercent get() = overlayBlur.overlayBorderShimmerPercent
+    val overlayAdvancedShimmerEnabled get() = overlayBlur.overlayAdvancedShimmerEnabled
+    val overlayBorderHighlightPercent get() = overlayBlur.overlayBorderHighlightPercent
+    val overlayRadialGlossPercent get() = overlayBlur.overlayRadialGlossPercent
+    val overlayVerticalGlossPercent get() = overlayBlur.overlayVerticalGlossPercent
 
     val dragDropFlowEnabled get() = dragDropFlow.dragDropFlowEnabled
     val dragDropFlowPositionId get() = dragDropFlow.dragDropFlowPositionId

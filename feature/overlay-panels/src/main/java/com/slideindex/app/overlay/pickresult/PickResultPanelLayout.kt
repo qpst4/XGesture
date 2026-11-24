@@ -817,9 +817,6 @@ fun PickResultPanelSlideHost(
         LocalFrostedGlassBackdrop(
             modifier = Modifier.matchParentSize(),
             cornerRadiusPx = cornerPx,
-            blurRadiusPx = blurRadiusPx,
-            tintColor = frostedTint,
-            enabled = true
         )
         content(isPanelSlideAnimating)
     }

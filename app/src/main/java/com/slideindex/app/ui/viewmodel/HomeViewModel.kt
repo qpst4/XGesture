@@ -189,6 +189,38 @@ class HomeViewModel @AssistedInject constructor(
         settingsRepository.setOverlayBlurEnabled(enabled)
     }
 
+    fun setOverlayBlurRadiusDp(radiusDp: Int) = launchSettingsWrite {
+        settingsRepository.setOverlayBlurRadiusDp(radiusDp)
+    }
+
+    fun setOverlayOpacityPercent(percent: Int) = launchSettingsWrite {
+        settingsRepository.setOverlayOpacityPercent(percent)
+    }
+
+    fun setOverlayCornerRadiusDp(radiusDp: Int) = launchSettingsWrite {
+        settingsRepository.setOverlayCornerRadiusDp(radiusDp)
+    }
+
+    fun setOverlayBorderShimmerPercent(percent: Int) = launchSettingsWrite {
+        settingsRepository.setOverlayBorderShimmerPercent(percent)
+    }
+
+    fun setOverlayAdvancedShimmerEnabled(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setOverlayAdvancedShimmerEnabled(enabled)
+    }
+
+    fun setOverlayBorderHighlightPercent(percent: Int) = launchSettingsWrite {
+        settingsRepository.setOverlayBorderHighlightPercent(percent)
+    }
+
+    fun setOverlayRadialGlossPercent(percent: Int) = launchSettingsWrite {
+        settingsRepository.setOverlayRadialGlossPercent(percent)
+    }
+
+    fun setOverlayVerticalGlossPercent(percent: Int) = launchSettingsWrite {
+        settingsRepository.setOverlayVerticalGlossPercent(percent)
+    }
+
     fun setTopAppBarBlurStyle(style: TopAppBarBlurStyle) = launchOptimisticSettingsWrite(
         optimisticUpdate = { settings -> settings.copy(topAppBarBlurStyleId = style.id) },
         block = { settingsRepository.setTopAppBarBlurStyle(style) },

@@ -2123,8 +2123,6 @@ private fun FileBrowserCard(
         LocalFrostedGlassBackdrop(
             modifier = Modifier.matchParentSize(),
             cornerRadiusPx = cornerPx,
-            blurRadiusPx = blurRadiusPx,
-            tintColor = if (isDark) 0x661C1C1E else 0x66F5F5F7,
             solidFallbackColor = fallback.toArgb(),
         )
         Box(modifier = Modifier.fillMaxSize(), content = content)

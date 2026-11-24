@@ -169,11 +169,8 @@ fun OhoQuickToolsPanel(
     ) {
         LocalFrostedGlassBackdrop(
             modifier = Modifier.matchParentSize(),
+            isDark = true,
             cornerRadiusPx = outerCornerPx,
-            blurRadiusPx = blurRadiusPx,
-            tintColor = frostedTint,
-            enabled = true,
-            // 前景色写死为白（见 OhoColors），降级底必须也写死深色，否则浅色主题下白底白字。
             solidFallbackColor = OhoColors.PanelSolidBackground.toArgb()
         )
         Column(

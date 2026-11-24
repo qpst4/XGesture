@@ -199,6 +199,48 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                 ?.settings
                 ?.let { flow -> flow.map { it.overlayBlurEnabled } }
         }
+        // 全局材质规范响应式流
+        com.slideindex.app.overlay.OverlayHostRuntime.overlayMaterialSpecFlow = { ctx ->
+            com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(ctx)
+                ?.settingsRepository
+                ?.settings
+                ?.let { flow ->
+                    flow.map {
+                        com.slideindex.app.overlay.OverlayMaterialSpec(
+                            blurEnabled = it.overlayBlurEnabled,
+                            blurRadiusDp = it.overlayBlurRadiusDp,
+                            opacityPercent = it.overlayOpacityPercent,
+                            cornerRadiusDp = it.overlayCornerRadiusDp,
+                            borderShimmerPercent = it.overlayBorderShimmerPercent,
+                            advancedShimmerEnabled = it.overlayAdvancedShimmerEnabled,
+                            borderHighlightPercent = it.overlayBorderHighlightPercent,
+                            radialGlossPercent = it.overlayRadialGlossPercent,
+                            verticalGlossPercent = it.overlayVerticalGlossPercent,
+                        )
+                    }
+                }
+        }
+        // 读取此刻的材质规范快照
+        com.slideindex.app.overlay.OverlayHostRuntime.currentOverlayMaterialSpec = { ctx ->
+            val settings = com.slideindex.app.di.OverlayDependencyAccess.overlayDependencies(ctx)
+                ?.settingsRepository
+                ?.readSnapshot()
+            if (settings != null) {
+                com.slideindex.app.overlay.OverlayMaterialSpec(
+                    blurEnabled = settings.overlayBlurEnabled,
+                    blurRadiusDp = settings.overlayBlurRadiusDp,
+                    opacityPercent = settings.overlayOpacityPercent,
+                    cornerRadiusDp = settings.overlayCornerRadiusDp,
+                    borderShimmerPercent = settings.overlayBorderShimmerPercent,
+                    advancedShimmerEnabled = settings.overlayAdvancedShimmerEnabled,
+                    borderHighlightPercent = settings.overlayBorderHighlightPercent,
+                    radialGlossPercent = settings.overlayRadialGlossPercent,
+                    verticalGlossPercent = settings.overlayVerticalGlossPercent,
+                )
+            } else {
+                com.slideindex.app.overlay.OverlayMaterialSpec.DEFAULT
+            }
+        }
         // 浮层内容主题包装：模块里的 OverlayToastWindow 等用它套 Miuix 主题。
         com.slideindex.app.overlay.OverlayHostRuntime.themeWrapper =
             object : com.slideindex.app.overlay.OverlayThemeWrapper {

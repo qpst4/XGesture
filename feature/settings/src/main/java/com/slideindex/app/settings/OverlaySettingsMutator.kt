@@ -1620,6 +1620,38 @@ class OverlaySettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.OVERLAY_BLUR_ENABLED] = enabled
     }
 
+    suspend fun setOverlayBlurRadiusDp(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_BLUR_RADIUS_DP] = value.coerceIn(10, 80)
+    }
+
+    suspend fun setOverlayOpacityPercent(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_OPACITY_PERCENT] = value.coerceIn(30, 100)
+    }
+
+    suspend fun setOverlayCornerRadiusDp(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_CORNER_RADIUS_DP] = value.coerceIn(12, 28)
+    }
+
+    suspend fun setOverlayBorderShimmerPercent(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_BORDER_SHIMMER_PERCENT] = value.coerceIn(0, 100)
+    }
+
+    suspend fun setOverlayAdvancedShimmerEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_ADVANCED_SHIMMER_ENABLED] = enabled
+    }
+
+    suspend fun setOverlayBorderHighlightPercent(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_BORDER_HIGHLIGHT_PERCENT] = value.coerceIn(0, 100)
+    }
+
+    suspend fun setOverlayRadialGlossPercent(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_RADIAL_GLOSS_PERCENT] = value.coerceIn(0, 100)
+    }
+
+    suspend fun setOverlayVerticalGlossPercent(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_VERTICAL_GLOSS_PERCENT] = value.coerceIn(0, 100)
+    }
+
     suspend fun setStashPanelBackgroundBlurRadiusDp(value: Int) = editor.edit {
         it[SettingsPreferenceKeys.STASH_PANEL_BACKGROUND_BLUR_RADIUS_DP] = value.coerceIn(
             AppSettings.STASH_PANEL_BLUR_RADIUS_MIN_DP,

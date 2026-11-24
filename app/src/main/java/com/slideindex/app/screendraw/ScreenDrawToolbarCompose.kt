@@ -726,8 +726,6 @@ private fun GlassCapsule(
         LocalFrostedGlassBackdrop(
             modifier = Modifier.matchParentSize(),
             cornerRadiusPx = with(LocalDensity.current) { 24.dp.toPx() },
-            blurRadiusPx = 28,
-            tintColor = containerColor.toArgb(),
             solidFallbackColor = MaterialTheme.colorScheme.surface.toArgb(),
         )
         // 柔光漫反射覆层
@@ -1204,8 +1202,6 @@ internal fun ScreenDrawMinimizedBallCompose(
         LocalFrostedGlassBackdrop(
             modifier = Modifier.matchParentSize(),
             cornerRadiusPx = with(LocalDensity.current) { 24.dp.toPx() },
-            blurRadiusPx = 28,
-            tintColor = containerColor.toArgb(),
             solidFallbackColor = MaterialTheme.colorScheme.surface.toArgb(),
         )
         Box(

@@ -540,7 +540,8 @@ public final class HoneycombOverlayView extends View {
         super.onDraw(canvas);
         float visible = (1f - dismissProgress) * (1f - confirmProgress * 0.18f);
         if (backgroundStyle == HoneycombDisplayConfig.BACKGROUND_BLUR) {
-            int blurPx = Math.round(blurDp * density);
+            OverlayMaterialSpec spec = OverlayMaterialSpec.Companion.fromContext(getContext());
+            int blurPx = spec.blurRadiusPx(density);
             int clampedBlurPx = Math.min(120, Math.max(1, blurPx));
             blurBounds.set(0, statusBarHeight, getWidth(), getHeight());
             frostedGlassDrawable.draw(canvas, blurBounds, 0f, clampedBlurPx, Color.TRANSPARENT, visible);
@@ -555,7 +556,9 @@ public final class HoneycombOverlayView extends View {
         }
         int maskAlpha = Math.round(resolvedMaskAlpha(visible));
         if (maskAlpha > 0) {
-            backgroundPaint.setColor(Color.BLACK);
+            OverlayMaterialSpec spec = OverlayMaterialSpec.Companion.fromContext(getContext());
+            boolean isDark = OverlayPanelTheme.INSTANCE.isDarkTheme(getContext());
+            backgroundPaint.setColor(spec.tintColor(isDark));
             backgroundPaint.setAlpha(maskAlpha);
             canvas.drawRect(0, statusBarHeight, getWidth(), getHeight(), backgroundPaint);
         }

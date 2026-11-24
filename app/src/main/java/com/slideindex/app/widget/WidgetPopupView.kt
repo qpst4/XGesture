@@ -24,6 +24,10 @@ import com.slideindex.app.di.OverlayDependencies
 import com.slideindex.app.service.WidgetConfigureTrampolineActivity
 import com.slideindex.app.service.WidgetPickerTrampoline
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.overlay.OverlayGlassForegroundDrawable
+import com.slideindex.app.overlay.OverlayMaterialSpec
+import com.slideindex.app.overlay.OverlayPanelTheme
+import com.slideindex.app.overlay.setupBackgroundBlur
 import kotlin.math.roundToInt
 
 @SuppressLint("ViewConstructor")
@@ -95,7 +99,7 @@ class WidgetPopupCardLayout(
     private val closeFab: ImageView
 
     private val density = resources.displayMetrics.density
-    private val cornerRadiusPx = 24f * density
+    private var cornerRadiusPx = OverlayMaterialSpec.DEFAULT.cornerRadiusPx(density)
 
     /**
      * 当前页几何变化（切页、列数/单元宽度/可见行数改动）时回调，
@@ -248,63 +252,62 @@ class WidgetPopupCardLayout(
     }
 
     fun applyCardBackground() {
-        val page = pages.getOrElse(currentPageIndex) { WidgetPanelPage() }
-        // 全局模糊总开关与单项开关取交集：任一关闭都走实色卡片。
-        // 还必须是硬件加速窗口：BackgroundBlurDrawable 在软件 Canvas 上绘制会抛
-        // IllegalArgumentException（见 LocalFrostedGlassBackdrop.setupBackgroundBlur 的同款守护）。
-        // 未 attach 时 isHardwareAccelerated 恒为 false → 先走实色，首帧 preDraw 会重算一次。
-        val blurActive = settings.overlayBlurEnabled &&
-            settings.widgetPanelBlurEnabled &&
-            isHardwareAccelerated
-        val surfaceColor = WidgetPanelUi.panelSurfaceColorInt(
-            overlayAlpha = page.overlayAlpha,
-            editMode = editMode,
-            blurEnabled = blurActive,
-        )
-        val strokeColor = if (blurActive) 0x29FFFFFF.toInt() else 0x14FFFFFF
+        val spec = OverlayMaterialSpec.fromContext(context)
+        val isDark = OverlayPanelTheme.isDarkTheme(context)
+        val blurActive = spec.blurEnabled && isHardwareAccelerated
+        val finalCornerRadius = spec.cornerRadiusPx(density)
+        cornerRadiusPx = finalCornerRadius
+        invalidateOutline()
+
+        val strokeColor = spec.innerBorderColor(isDark)
+        val strokeWidth = spec.innerBorderWidthPx(density).roundToInt().coerceAtLeast(1)
+
+        val surfaceColor = if (editMode) {
+            Color.argb(
+                (spec.opacityPercent.coerceIn(20, 100) * 255 / 100 * 0.9f).toInt(),
+                if (isDark) 20 else 235,
+                if (isDark) 20 else 235,
+                if (isDark) 22 else 237
+            )
+        } else {
+            spec.tintColor(isDark)
+        }
 
         if (blurActive) {
             setupBackgroundBlur(
-                cornerRadiusPx = cornerRadiusPx,
-                blurRadiusPx = (settings.widgetPanelBlurRadiusDp * density).roundToInt(),
+                view = this,
+                cornerRadiusPx = finalCornerRadius,
+                blurRadiusPx = spec.blurRadiusPx(density),
                 tintColor = surfaceColor,
             )
-            val borderDrawable = GradientDrawable().apply {
-                setColor(Color.TRANSPARENT)
-                cornerRadius = cornerRadiusPx
-                setStroke((1f * density).roundToInt().coerceAtLeast(1), strokeColor)
+            foreground = OverlayGlassForegroundDrawable(
+                spec = spec,
+                isDark = isDark,
+                cornerRadiusPx = finalCornerRadius,
+                density = density,
+            )
+            post {
+                val bg = background
+                if (bg == null || !bg.javaClass.name.contains("BackgroundBlurDrawable")) {
+                    background = GradientDrawable().apply {
+                        setColor(spec.solidFallbackColor(isDark))
+                        cornerRadius = finalCornerRadius
+                    }
+                }
             }
-            foreground = borderDrawable
         } else {
             val cardDrawable = GradientDrawable().apply {
-                setColor(surfaceColor)
-                cornerRadius = cornerRadiusPx
-                setStroke((1f * density).roundToInt().coerceAtLeast(1), strokeColor)
+                setColor(spec.solidFallbackColor(isDark))
+                cornerRadius = finalCornerRadius
             }
             background = cardDrawable
-            foreground = null
+            foreground = OverlayGlassForegroundDrawable(
+                spec = spec,
+                isDark = isDark,
+                cornerRadiusPx = finalCornerRadius,
+                density = density,
+            )
         }
-    }
-
-    private fun setupBackgroundBlur(cornerRadiusPx: Float, blurRadiusPx: Int, tintColor: Int) {
-        if (!isHardwareAccelerated) {
-            Log.w(TAG, "setupBackgroundBlur skipped: window is software-rendered")
-            return
-        }
-        runCatching {
-            val getViewRootImplMethod = View::class.java.getDeclaredMethod("getViewRootImpl")
-            getViewRootImplMethod.isAccessible = true
-            val viewRootImpl = getViewRootImplMethod.invoke(this) ?: return
-            val createMethod = viewRootImpl.javaClass.getMethod("createBackgroundBlurDrawable")
-            val blurDrawable = createMethod.invoke(viewRootImpl) as? android.graphics.drawable.Drawable ?: return
-            val setBlurRadius = blurDrawable.javaClass.getMethod("setBlurRadius", java.lang.Integer.TYPE)
-            val setCornerRadius = blurDrawable.javaClass.getMethod("setCornerRadius", java.lang.Float.TYPE)
-            val setColor = blurDrawable.javaClass.getMethod("setColor", java.lang.Integer.TYPE)
-            setBlurRadius.invoke(blurDrawable, blurRadiusPx)
-            setCornerRadius.invoke(blurDrawable, cornerRadiusPx)
-            setColor.invoke(blurDrawable, tintColor)
-            background = blurDrawable
-        }.onFailure { Log.w(TAG, "setupBackgroundBlur failed", it) }
     }
 
     fun ensureBackgroundBlurAttached() {

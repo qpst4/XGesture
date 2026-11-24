@@ -13,6 +13,7 @@ import android.media.AudioManager
 import android.os.SystemClock
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.DecelerateInterpolator
@@ -28,6 +29,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import com.slideindex.app.overlay.LocalFrostedGlassBackdrop
+import com.slideindex.app.overlay.LocalFrostedGlassDrawable
+import com.slideindex.app.overlay.OverlayMaterialSpec
+import com.slideindex.app.overlay.OverlayPanelTheme
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -168,6 +173,8 @@ class RingLauncherOverlayView(
     private var pendingEditDragStartY = 0f
     private var editDragLongPressRunnable: Runnable? = null
     private val dimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.BLACK }
+    private val frostedGlassDrawable = LocalFrostedGlassDrawable { this }
+    private val fullScreenBounds = RectF()
     private var menuVisualActive = false
 
     private companion object {
@@ -906,9 +913,23 @@ class RingLauncherOverlayView(
 
     private fun drawBackgroundMask(canvas: Canvas, progress: Float) {
         if (progress <= 0.01f) return
-        val alpha = (255f * 0.58f * progress).toInt().coerceIn(0, 255)
-        dimPaint.alpha = alpha
-        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), dimPaint)
+        fullScreenBounds.set(0f, 0f, width.toFloat(), height.toFloat())
+        val spec = OverlayMaterialSpec.fromContext(context)
+        val isDark = OverlayPanelTheme.isDarkTheme(context)
+        val blurDrawn = frostedGlassDrawable.draw(
+            canvas = canvas,
+            bounds = fullScreenBounds,
+            spec = spec,
+            density = density,
+            isDark = isDark,
+            cornerRadiusPx = 0f,
+            alpha = progress,
+        )
+        if (!blurDrawn) {
+            val alpha = (255f * 0.58f * progress).toInt().coerceIn(0, 255)
+            dimPaint.alpha = alpha
+            canvas.drawRect(fullScreenBounds, dimPaint)
+        }
     }
 
     override fun onDetachedFromWindow() {
@@ -1376,7 +1397,6 @@ private fun FvRingLauncherLinkMergeOverlay(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ComposeColor.Black.copy(alpha = 0.45f))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -1384,6 +1404,7 @@ private fun FvRingLauncherLinkMergeOverlay(
             ),
         contentAlignment = Alignment.Center,
     ) {
+        LocalFrostedGlassBackdrop(modifier = Modifier.matchParentSize())
         Surface(
             modifier = Modifier
                 .widthIn(max = 340.dp)

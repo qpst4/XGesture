@@ -9,7 +9,6 @@ import com.slideindex.app.ui.SettingsSliderRow
 import com.slideindex.app.ui.miuix.CardItem
 import com.slideindex.app.ui.miuix.MiuixSwitchRow
 import com.slideindex.app.ui.miuix.groupedCardItems
-import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_100
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import kotlin.math.roundToInt
 
@@ -100,49 +99,6 @@ fun quickLauncherAppearanceCardItems(
                     enabled = enabled,
                     onCheckedChange = { checked ->
                         onDisplayChange(display.copy(showLabels = checked))
-                    },
-                )
-            },
-        )
-        add(
-            settingsCardScopeItem("background-opacity") {
-                SettingsSliderRow(
-                    title = stringResource(R.string.quick_launcher_background_opacity),
-                    value = display.backgroundOpacityPercent.toFloat(),
-                    valueRange = QuickLauncherDisplaySettings.MIN_BACKGROUND_OPACITY_PERCENT.toFloat()..
-                        QuickLauncherDisplaySettings.MAX_BACKGROUND_OPACITY_PERCENT.toFloat(),
-                    enabled = enabled,
-                    label = stringResource(
-                        R.string.quick_launcher_background_opacity_value,
-                        display.backgroundOpacityPercent,
-                    ),
-                    formatLabel = { "${it.roundToInt()}%" },
-                    keyPoints = SETTINGS_SLIDER_PERCENT_KEY_POINTS_100,
-                    onValueChange = { value ->
-                        onDisplayChange(
-                            display.copy(backgroundOpacityPercent = value.roundToInt()),
-                        )
-                    },
-                )
-            },
-        )
-        add(
-            settingsCardScopeItem("blur-strength") {
-                SettingsSliderRow(
-                    title = stringResource(R.string.quick_launcher_blur_strength),
-                    value = display.blurRadiusDp.toFloat(),
-                    valueRange = QuickLauncherDisplaySettings.MIN_BLUR_RADIUS_DP.toFloat()..
-                        QuickLauncherDisplaySettings.MAX_BLUR_RADIUS_DP.toFloat(),
-                    steps = QuickLauncherDisplaySettings.MAX_BLUR_RADIUS_DP -
-                        QuickLauncherDisplaySettings.MIN_BLUR_RADIUS_DP - 1,
-                    enabled = enabled,
-                    label = stringResource(
-                        R.string.quick_launcher_blur_strength_value,
-                        display.blurRadiusDp,
-                    ),
-                    formatLabel = { "${it.roundToInt()} dp" },
-                    onValueChange = { value ->
-                        onDisplayChange(display.copy(blurRadiusDp = value.roundToInt()))
                     },
                 )
             },

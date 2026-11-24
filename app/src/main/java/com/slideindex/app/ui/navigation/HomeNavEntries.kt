@@ -301,6 +301,22 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             onBottomNavBlurPreviewStop = ctx.onBottomNavBlurPreviewStop,
             overlayBlurEnabled = settings.overlayBlurEnabled,
             onOverlayBlurEnabledChange = viewModel::setOverlayBlurEnabled,
+            overlayBlurRadiusDp = settings.overlayBlurRadiusDp,
+            onOverlayBlurRadiusChange = viewModel::setOverlayBlurRadiusDp,
+            overlayOpacityPercent = settings.overlayOpacityPercent,
+            onOverlayOpacityPercentChange = viewModel::setOverlayOpacityPercent,
+            overlayCornerRadiusDp = settings.overlayCornerRadiusDp,
+            onOverlayCornerRadiusChange = viewModel::setOverlayCornerRadiusDp,
+            overlayBorderShimmerPercent = settings.overlayBorderShimmerPercent,
+            onOverlayBorderShimmerPercentChange = viewModel::setOverlayBorderShimmerPercent,
+            overlayAdvancedShimmerEnabled = settings.overlayAdvancedShimmerEnabled,
+            onOverlayAdvancedShimmerEnabledChange = viewModel::setOverlayAdvancedShimmerEnabled,
+            overlayBorderHighlightPercent = settings.overlayBorderHighlightPercent,
+            onOverlayBorderHighlightPercentChange = viewModel::setOverlayBorderHighlightPercent,
+            overlayRadialGlossPercent = settings.overlayRadialGlossPercent,
+            onOverlayRadialGlossPercentChange = viewModel::setOverlayRadialGlossPercent,
+            overlayVerticalGlossPercent = settings.overlayVerticalGlossPercent,
+            onOverlayVerticalGlossPercentChange = viewModel::setOverlayVerticalGlossPercent,
         )
     }
 

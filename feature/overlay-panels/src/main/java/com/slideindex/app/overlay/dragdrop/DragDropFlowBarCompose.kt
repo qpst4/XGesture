@@ -746,8 +746,6 @@ private fun RingFlowContent(
                     LocalFrostedGlassBackdrop(
                         modifier = Modifier.matchParentSize(),
                         cornerRadiusPx = with(density) { 18.dp.toPx() },
-                        blurRadiusPx = 26,
-                        tintColor = scheme.surface.copy(alpha = 0.50f).toArgb(),
                         solidFallbackColor = scheme.surface.toArgb(),
                     )
                 }
@@ -859,8 +857,6 @@ private fun PillActionCapsule(
         LocalFrostedGlassBackdrop(
             modifier = Modifier.matchParentSize(),
             cornerRadiusPx = with(density) { 20.dp.toPx() },
-            blurRadiusPx = 25,
-            tintColor = tintColor.toArgb(),
             solidFallbackColor = scheme.surface.toArgb(),
         )
         Text(
@@ -1022,8 +1018,6 @@ private fun GlassCapsuleContainer(
         LocalFrostedGlassBackdrop(
             modifier = Modifier.matchParentSize(),
             cornerRadiusPx = with(LocalDensity.current) { cornerRadius.toPx() },
-            blurRadiusPx = 36,
-            tintColor = containerColor.toArgb(),
             solidFallbackColor = scheme.surface.toArgb(),
         )
         content()

@@ -10,6 +10,8 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import com.slideindex.app.overlay.LocalFrostedGlassDrawable
+import com.slideindex.app.overlay.OverlayMaterialSpec
+import com.slideindex.app.overlay.OverlayPanelTheme
 import com.slideindex.app.overlay.SystemWallpaperBlurHelper
 import com.slideindex.app.settings.HolographicLauncherSettings
 
@@ -132,7 +134,8 @@ internal class HolographicLauncherBackgroundView @JvmOverloads constructor(
         super.onDraw(canvas)
         fullBounds.set(0f, 0f, width.toFloat(), height.toFloat())
         if (backgroundStyle == HolographicLauncherSettings.BACKGROUND_BLUR) {
-            val blurPx = (blurDp * density).toInt().coerceIn(1, 120)
+            val spec = OverlayMaterialSpec.fromContext(context)
+            val blurPx = spec.blurRadiusPx(density)
             val drewFrosted = frostedGlassDrawable.draw(
                 canvas = canvas,
                 bounds = fullBounds,
@@ -159,7 +162,9 @@ internal class HolographicLauncherBackgroundView @JvmOverloads constructor(
         }
         val maskAlpha = resolvedMaskAlpha()
         if (maskAlpha > 0) {
-            backgroundPaint.color = Color.BLACK
+            val spec = OverlayMaterialSpec.fromContext(context)
+            val isDark = OverlayPanelTheme.isDarkTheme(context)
+            backgroundPaint.color = spec.tintColor(isDark)
             backgroundPaint.alpha = maskAlpha
             canvas.drawRect(fullBounds, backgroundPaint)
         }

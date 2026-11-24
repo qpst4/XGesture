@@ -59,6 +59,14 @@ data class HomeMainSettings(
     val settingIconPlateEnabled: Boolean = false,
     /** 悬浮窗模糊总开关：关闭后所有浮层窗口/面板降级为实色底。 */
     val overlayBlurEnabled: Boolean = true,
+    val overlayBlurRadiusDp: Int = 40,
+    val overlayOpacityPercent: Int = 30,
+    val overlayCornerRadiusDp: Int = 18,
+    val overlayBorderShimmerPercent: Int = 0,
+    val overlayAdvancedShimmerEnabled: Boolean = false,
+    val overlayBorderHighlightPercent: Int = 100,
+    val overlayRadialGlossPercent: Int = 50,
+    val overlayVerticalGlossPercent: Int = 0,
 ) {
     val bottomNavBlurRadiusDp: Float
         get() = when (BottomNavStyle.fromId(bottomNavStyleId)) {
@@ -117,6 +125,14 @@ data class HomeMainSettings(
             swipeDismissEnabled = settings.swipeDismissEnabled,
             settingIconPlateEnabled = settings.settingIconPlateEnabled,
             overlayBlurEnabled = settings.overlayBlurEnabled,
+            overlayBlurRadiusDp = settings.overlayBlurRadiusDp,
+            overlayOpacityPercent = settings.overlayOpacityPercent,
+            overlayCornerRadiusDp = settings.overlayCornerRadiusDp,
+            overlayBorderShimmerPercent = settings.overlayBorderShimmerPercent,
+            overlayAdvancedShimmerEnabled = settings.overlayAdvancedShimmerEnabled,
+            overlayBorderHighlightPercent = settings.overlayBorderHighlightPercent,
+            overlayRadialGlossPercent = settings.overlayRadialGlossPercent,
+            overlayVerticalGlossPercent = settings.overlayVerticalGlossPercent,
         )
     }
 }
