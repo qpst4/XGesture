@@ -56,6 +56,18 @@ class RingLauncherSlotPayloadSurvivalTest {
     }
 
     @Test
+    fun slotCodecKeepsOnlyBlankAppAsTheExplicitNoneMarker() {
+        val none = QuickLauncherItem(QuickLauncherItemType.APP, "", "")
+        val invalidAction = QuickLauncherItem(QuickLauncherItemType.ACTION, "", "")
+        val invalidShortcut = QuickLauncherItem(QuickLauncherItemType.SHORTCUT, "", "")
+        val slots = mapOf(0 to none, 1 to invalidAction, 2 to invalidShortcut)
+
+        assertEquals(mapOf(0 to none), FvRingLauncherSlotCodec.decodeAll(FvRingLauncherSlotCodec.encodeAll(slots)))
+        val legacyEntries = slots.map { (index, item) -> FvRingLauncherSlotCodec.encode(index, item) }.toSet()
+        assertEquals(mapOf(0 to none), FvRingLauncherSlotCodec.decodeAll(legacyEntries))
+    }
+
+    @Test
     fun selectingNonePersistsWithoutDisablingUntouchedSlots() = runBlocking {
         val editor = SettingsPreferencesEditor(context)
         val mutator = OverlaySettingsMutator(editor)

@@ -4,6 +4,7 @@ import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemCodec
+import com.slideindex.app.launcher.QuickLauncherItemType
 import com.slideindex.app.overlay.layout.FvRingLauncherSide
 import com.slideindex.app.overlay.layout.FvCircleLayoutEngine
 import com.slideindex.app.overlay.layout.FvIconShape
@@ -81,7 +82,7 @@ data class FvRingLauncherSettings(
     fun itemAt(index: Int): QuickLauncherItem? = slots[index]
 
     // A stored blank item is an explicit choice of None; a missing key can still auto-fill.
-    fun isExplicitlyEmpty(index: Int): Boolean = slots[index]?.payload?.isBlank() == true
+    fun isExplicitlyEmpty(index: Int): Boolean = slots[index]?.isRingLauncherEmptyMarker() == true
 
     fun iconOverrideAt(index: Int): FvRingLauncherSlotIconOverride? = slotIconOverrides[index]
 
@@ -314,6 +315,9 @@ fun MutableMap<Int, FvRingLauncherSlotIconOverride>.moveFvRingLauncherSlotIconOv
     return true
 }
 
+private fun QuickLauncherItem.isRingLauncherEmptyMarker(): Boolean =
+    type == QuickLauncherItemType.APP && payload.isBlank()
+
 object FvRingLauncherSlotCodec {
     private const val INDEX_SEP = "\u001D"
 
@@ -329,9 +333,12 @@ object FvRingLauncherSlotCodec {
     }
 
     fun encodeAll(slots: Map<Int, QuickLauncherItem>): Set<String> =
-        slots.map { (index, item) -> encode(index, item) }
+        slots.filterValues { it.payload.isNotBlank() || it.isRingLauncherEmptyMarker() }
+            .map { (index, item) -> encode(index, item) }
             .toSet()
 
     fun decodeAll(raw: Set<String>): Map<Int, QuickLauncherItem> =
-        raw.mapNotNull { decode(it) }.toMap()
+        raw.mapNotNull { decode(it) }
+            .filter { (_, item) -> item.payload.isNotBlank() || item.isRingLauncherEmptyMarker() }
+            .toMap()
 }
