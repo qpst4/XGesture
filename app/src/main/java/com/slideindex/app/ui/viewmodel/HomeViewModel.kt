@@ -221,6 +221,18 @@ class HomeViewModel @AssistedInject constructor(
         settingsRepository.setOverlayVerticalGlossPercent(percent)
     }
 
+    fun setBackdropBlurEnabled(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setBackdropBlurEnabled(enabled)
+    }
+
+    fun setBackdropBlurRadiusDp(radiusDp: Int) = launchSettingsWrite {
+        settingsRepository.setBackdropBlurRadiusDp(radiusDp)
+    }
+
+    fun setBackdropDimPercent(percent: Int) = launchSettingsWrite {
+        settingsRepository.setBackdropDimPercent(percent)
+    }
+
     fun setTopAppBarBlurStyle(style: TopAppBarBlurStyle) = launchOptimisticSettingsWrite(
         optimisticUpdate = { settings -> settings.copy(topAppBarBlurStyleId = style.id) },
         block = { settingsRepository.setTopAppBarBlurStyle(style) },

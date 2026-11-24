@@ -1621,11 +1621,11 @@ class OverlaySettingsMutator @Inject constructor(
     }
 
     suspend fun setOverlayBlurRadiusDp(value: Int) = editor.edit {
-        it[SettingsPreferenceKeys.OVERLAY_BLUR_RADIUS_DP] = value.coerceIn(10, 80)
+        it[SettingsPreferenceKeys.OVERLAY_BLUR_RADIUS_DP] = value.coerceIn(0, 100)
     }
 
     suspend fun setOverlayOpacityPercent(value: Int) = editor.edit {
-        it[SettingsPreferenceKeys.OVERLAY_OPACITY_PERCENT] = value.coerceIn(30, 100)
+        it[SettingsPreferenceKeys.OVERLAY_OPACITY_PERCENT] = value.coerceIn(0, 100)
     }
 
     suspend fun setOverlayCornerRadiusDp(value: Int) = editor.edit {
@@ -1650,6 +1650,18 @@ class OverlaySettingsMutator @Inject constructor(
 
     suspend fun setOverlayVerticalGlossPercent(value: Int) = editor.edit {
         it[SettingsPreferenceKeys.OVERLAY_VERTICAL_GLOSS_PERCENT] = value.coerceIn(0, 100)
+    }
+
+    suspend fun setBackdropBlurEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.BACKDROP_BLUR_ENABLED] = enabled
+    }
+
+    suspend fun setBackdropBlurRadiusDp(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.BACKDROP_BLUR_RADIUS_DP] = value.coerceIn(0, 100)
+    }
+
+    suspend fun setBackdropDimPercent(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.BACKDROP_DIM_PERCENT] = value.coerceIn(0, 100)
     }
 
     suspend fun setStashPanelBackgroundBlurRadiusDp(value: Int) = editor.edit {

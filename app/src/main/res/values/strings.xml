@@ -4244,7 +4244,7 @@ Questions: open a GitHub Issue on the project repository.</string>
     <string name="stash_panel_background_blur_desc">Android 12+ blurs content behind the panel; the header blurs in-panel content while scrolling</string>
     <string name="overlay_blur_enabled">Panel blur</string>
     <string name="overlay_blur_enabled_desc">Frosted glass behind floating panels. Turn off to use solid panels: system cross-window blur and in-panel blur are both disabled. Wallpaper blur is not affected</string>
-    <string name="overlay_blur_radius_title">Global blur radius</string>
+    <string name="overlay_blur_radius_title">Panel blur radius</string>
     <string name="overlay_opacity_title">Panel opacity</string>
     <string name="overlay_corner_radius_title">Global corner radius</string>
     <string name="overlay_border_shimmer_title">Glass shimmer highlight</string>
@@ -4253,6 +4253,11 @@ Questions: open a GitHub Issue on the project repository.</string>
     <string name="overlay_border_highlight_title">Border highlight</string>
     <string name="overlay_radial_gloss_title">Corner directional gloss</string>
     <string name="overlay_vertical_gloss_title">Top vertical sheen</string>
+    <string name="settings_section_backdrop_visual">Backdrop &amp; launcher mask</string>
+    <string name="backdrop_blur_enabled">Radial launcher backdrop blur</string>
+    <string name="backdrop_blur_enabled_desc">Blur the entire screen behind Ring Launcher and Corner Wheel. When disabled, only dims the background</string>
+    <string name="backdrop_blur_radius_title">Backdrop blur radius</string>
+    <string name="backdrop_dim_title">Backdrop dim mask</string>
     <string name="clipboard_background_monitoring_section">Background monitoring</string>
     <string name="clipboard_background_monitoring_title">Clipboard background monitoring</string>
     <string name="clipboard_background_monitoring_desc">Automatically record copies from other apps (via Shizuku/Root privileged listener)</string>

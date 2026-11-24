@@ -517,6 +517,9 @@ data class AppSettings(
     val overlayBorderHighlightPercent get() = overlayBlur.overlayBorderHighlightPercent
     val overlayRadialGlossPercent get() = overlayBlur.overlayRadialGlossPercent
     val overlayVerticalGlossPercent get() = overlayBlur.overlayVerticalGlossPercent
+    val backdropBlurEnabled get() = overlayBlur.backdropBlurEnabled
+    val backdropBlurRadiusDp get() = overlayBlur.backdropBlurRadiusDp
+    val backdropDimPercent get() = overlayBlur.backdropDimPercent
 
     val dragDropFlowEnabled get() = dragDropFlow.dragDropFlowEnabled
     val dragDropFlowPositionId get() = dragDropFlow.dragDropFlowPositionId

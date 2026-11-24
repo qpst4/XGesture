@@ -602,17 +602,20 @@ class CornerGestureController(
         val corner = settings.cornerGestureSettings
         val spec = OverlayMaterialSpec.fromContext(context)
         val wantsBlur = active &&
-            corner.backgroundStyle == CornerGestureSettings.BACKGROUND_BLUR
+            corner.backgroundStyle == CornerGestureSettings.BACKGROUND_BLUR &&
+            spec.backdropBlurEnabled
         val canNativeBlur = wantsBlur &&
-            OverlayBlurGate.canBlur(windowManager, userEnabled = spec.blurEnabled)
+            OverlayBlurGate.canBlur(windowManager, userEnabled = spec.backdropBlurEnabled)
         if (canNativeBlur) {
             params.flags = params.flags or WindowManager.LayoutParams.FLAG_BLUR_BEHIND
-            val rawBlurPx = if (corner.blurDp > 0) {
+            val rawBlurPx = if (spec.backdropBlurRadiusDp > 0) {
+                (spec.backdropBlurRadiusDp * density).roundToInt()
+            } else if (corner.blurDp > 0) {
                 (corner.blurDp * density).roundToInt()
             } else {
                 spec.blurRadiusPx(density)
             }
-            params.setBlurBehindRadius(rawBlurPx.coerceIn(1, 80))
+            params.setBlurBehindRadius(rawBlurPx.coerceIn(1, 100))
         } else {
             params.flags = params.flags and WindowManager.LayoutParams.FLAG_BLUR_BEHIND.inv()
             params.setBlurBehindRadius(0)

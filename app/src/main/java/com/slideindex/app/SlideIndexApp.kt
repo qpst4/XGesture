@@ -216,6 +216,9 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                             borderHighlightPercent = it.overlayBorderHighlightPercent,
                             radialGlossPercent = it.overlayRadialGlossPercent,
                             verticalGlossPercent = it.overlayVerticalGlossPercent,
+                            backdropBlurEnabled = it.backdropBlurEnabled,
+                            backdropBlurRadiusDp = it.backdropBlurRadiusDp,
+                            backdropDimPercent = it.backdropDimPercent,
                         )
                     }
                 }
@@ -236,6 +239,9 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     borderHighlightPercent = settings.overlayBorderHighlightPercent,
                     radialGlossPercent = settings.overlayRadialGlossPercent,
                     verticalGlossPercent = settings.overlayVerticalGlossPercent,
+                    backdropBlurEnabled = settings.backdropBlurEnabled,
+                    backdropBlurRadiusDp = settings.backdropBlurRadiusDp,
+                    backdropDimPercent = settings.backdropDimPercent,
                 )
             } else {
                 com.slideindex.app.overlay.OverlayMaterialSpec.DEFAULT

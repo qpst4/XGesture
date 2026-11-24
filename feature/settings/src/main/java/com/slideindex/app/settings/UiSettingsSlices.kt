@@ -67,6 +67,9 @@ data class HomeMainSettings(
     val overlayBorderHighlightPercent: Int = 100,
     val overlayRadialGlossPercent: Int = 50,
     val overlayVerticalGlossPercent: Int = 0,
+    val backdropBlurEnabled: Boolean = true,
+    val backdropBlurRadiusDp: Int = 80,
+    val backdropDimPercent: Int = 35,
 ) {
     val bottomNavBlurRadiusDp: Float
         get() = when (BottomNavStyle.fromId(bottomNavStyleId)) {
@@ -133,6 +136,9 @@ data class HomeMainSettings(
             overlayBorderHighlightPercent = settings.overlayBorderHighlightPercent,
             overlayRadialGlossPercent = settings.overlayRadialGlossPercent,
             overlayVerticalGlossPercent = settings.overlayVerticalGlossPercent,
+            backdropBlurEnabled = settings.backdropBlurEnabled,
+            backdropBlurRadiusDp = settings.backdropBlurRadiusDp,
+            backdropDimPercent = settings.backdropDimPercent,
         )
     }
 }

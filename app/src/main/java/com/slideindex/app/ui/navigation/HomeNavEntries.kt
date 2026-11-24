@@ -317,6 +317,12 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             onOverlayRadialGlossPercentChange = viewModel::setOverlayRadialGlossPercent,
             overlayVerticalGlossPercent = settings.overlayVerticalGlossPercent,
             onOverlayVerticalGlossPercentChange = viewModel::setOverlayVerticalGlossPercent,
+            backdropBlurEnabled = settings.backdropBlurEnabled,
+            onBackdropBlurEnabledChange = viewModel::setBackdropBlurEnabled,
+            backdropBlurRadiusDp = settings.backdropBlurRadiusDp,
+            onBackdropBlurRadiusChange = viewModel::setBackdropBlurRadiusDp,
+            backdropDimPercent = settings.backdropDimPercent,
+            onBackdropDimPercentChange = viewModel::setBackdropDimPercent,
         )
     }
 

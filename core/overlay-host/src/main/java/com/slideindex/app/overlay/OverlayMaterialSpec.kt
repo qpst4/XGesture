@@ -29,9 +29,21 @@ data class OverlayMaterialSpec(
     val borderHighlightPercent: Int = 100,
     val radialGlossPercent: Int = 50,
     val verticalGlossPercent: Int = 0,
+    val backdropBlurEnabled: Boolean = true,
+    val backdropBlurRadiusDp: Int = 80,
+    val backdropDimPercent: Int = 35,
 ) {
     fun blurRadiusPx(density: Float): Int =
         if (blurEnabled) (blurRadiusDp * density).toInt().coerceIn(0, 120) else 0
+
+    fun backdropBlurRadiusPx(density: Float): Int =
+        if (backdropBlurEnabled) (backdropBlurRadiusDp * density).toInt().coerceIn(0, 160) else 0
+
+    @ColorInt
+    fun backdropDimColor(alphaScale: Float = 1f): Int {
+        val alpha = (backdropDimPercent.coerceIn(0, 100) * 255 / 100 * alphaScale).toInt().coerceIn(0, 255)
+        return Color.argb(alpha, 0, 0, 0)
+    }
 
     fun cornerRadiusPx(density: Float): Float =
         (cornerRadiusDp * density).coerceAtLeast(0f)

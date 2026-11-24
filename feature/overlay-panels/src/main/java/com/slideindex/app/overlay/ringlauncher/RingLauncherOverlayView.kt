@@ -916,6 +916,8 @@ class RingLauncherOverlayView(
         fullScreenBounds.set(0f, 0f, width.toFloat(), height.toFloat())
         val spec = OverlayMaterialSpec.fromContext(context)
         val isDark = OverlayPanelTheme.isDarkTheme(context)
+        val blurRadiusPx = spec.backdropBlurRadiusPx(density)
+        val tintColor = spec.backdropDimColor(alphaScale = 1f)
         val blurDrawn = frostedGlassDrawable.draw(
             canvas = canvas,
             bounds = fullScreenBounds,
@@ -923,11 +925,13 @@ class RingLauncherOverlayView(
             density = density,
             isDark = isDark,
             cornerRadiusPx = 0f,
+            blurRadiusPx = blurRadiusPx,
+            tintColor = tintColor,
             alpha = progress,
+            enabled = spec.backdropBlurEnabled,
         )
         if (!blurDrawn) {
-            val alpha = (255f * 0.58f * progress).toInt().coerceIn(0, 255)
-            dimPaint.alpha = alpha
+            dimPaint.color = spec.backdropDimColor(alphaScale = progress)
             canvas.drawRect(fullScreenBounds, dimPaint)
         }
     }

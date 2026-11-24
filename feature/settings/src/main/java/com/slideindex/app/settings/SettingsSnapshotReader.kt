@@ -850,6 +850,9 @@ internal object SettingsSnapshotReader {
                 overlayBorderHighlightPercent = prefs[SettingsPreferenceKeys.OVERLAY_BORDER_HIGHLIGHT_PERCENT] ?: 100,
                 overlayRadialGlossPercent = prefs[SettingsPreferenceKeys.OVERLAY_RADIAL_GLOSS_PERCENT] ?: 50,
                 overlayVerticalGlossPercent = prefs[SettingsPreferenceKeys.OVERLAY_VERTICAL_GLOSS_PERCENT] ?: 0,
+                backdropBlurEnabled = prefs[SettingsPreferenceKeys.BACKDROP_BLUR_ENABLED] ?: true,
+                backdropBlurRadiusDp = prefs[SettingsPreferenceKeys.BACKDROP_BLUR_RADIUS_DP] ?: 80,
+                backdropDimPercent = prefs[SettingsPreferenceKeys.BACKDROP_DIM_PERCENT] ?: 35,
             ),
             dragDropFlow = DragDropFlowSettings(
                 dragDropFlowEnabled = prefs[SettingsPreferenceKeys.DRAG_DROP_FLOW_ENABLED] ?: false,
