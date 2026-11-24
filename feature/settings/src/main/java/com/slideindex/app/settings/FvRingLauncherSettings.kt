@@ -80,6 +80,9 @@ data class FvRingLauncherSettings(
 
     fun itemAt(index: Int): QuickLauncherItem? = slots[index]
 
+    // A stored blank item is an explicit choice of None; a missing key can still auto-fill.
+    fun isExplicitlyEmpty(index: Int): Boolean = slots[index]?.payload?.isBlank() == true
+
     fun iconOverrideAt(index: Int): FvRingLauncherSlotIconOverride? = slotIconOverrides[index]
 
     fun configuredCount(): Int = slots.values.count { it.payload.isNotBlank() }
@@ -326,12 +329,9 @@ object FvRingLauncherSlotCodec {
     }
 
     fun encodeAll(slots: Map<Int, QuickLauncherItem>): Set<String> =
-        slots.filterValues { it.payload.isNotBlank() }
-            .map { (index, item) -> encode(index, item) }
+        slots.map { (index, item) -> encode(index, item) }
             .toSet()
 
     fun decodeAll(raw: Set<String>): Map<Int, QuickLauncherItem> =
-        raw.mapNotNull { decode(it) }
-            .filter { (_, item) -> item.payload.isNotBlank() }
-            .toMap()
+        raw.mapNotNull { decode(it) }.toMap()
 }

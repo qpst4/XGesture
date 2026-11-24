@@ -690,11 +690,9 @@ class OverlaySettingsMutator @Inject constructor(
             val currentSettings = FvRingLauncherSettings.fromPreferences(prefs, targetAxis)
             val current = currentSettings.slots.toMutableMap()
             val overrides = currentSettings.slotIconOverrides.toMutableMap()
+            current[index] = resolvedItem
             if (resolvedItem.payload.isBlank()) {
-                current.remove(index)
                 overrides.remove(index)
-            } else {
-                current[index] = resolvedItem
             }
             FvRingLauncherSettings.writeSlotsAxis(
                 prefs,
