@@ -37,6 +37,24 @@
 | `app/.../timeddnd/TempDndRestoreWorker.kt` | `utils/TempDndRestoreWorker.kt` |
 | `app/.../timeddnd/TempDndNotificationReceiver.kt` | `utils/TempDndRestoreWorker.kt` |
 | `app/.../timeddnd/TempDndLimits.kt` | `utils/TempDndRestoreWorker.kt`（`DEFAULT_MINUTES` / `MAX_MINUTES` 时长范围） |
+| `app/.../dragpress/BackgroundTouchBlocker.kt` | `drop/BackgroundTouchBlocker.kt` |
+| `app/.../dragpress/ContentDragTarget.kt` | `drop/ContentDragTarget.kt` |
+| `app/.../dragpress/DragContentPreview.kt` | `drop/DragContentPreview.kt` |
+| `app/.../dragpress/DragContentPreviewPolicy.kt` | `drop/DragContentPreviewPolicy.kt` |
+| `app/.../dragpress/EvdevTouchParser.java` | `drop/EvdevTouchParser.java` |
+| `app/.../dragpress/GlobalPressDragSource.kt` | `drop/GlobalPressDragSource.kt` |
+| `app/.../dragpress/PressContentCapture.kt` | `drop/PressContentCapture.kt` |
+| `app/.../dragpress/PressTriggerDetector.java` | `drop/PressTriggerDetector.java` |
+| `app/.../dragpress/ProcessCommandRunner.kt` | `utils/process/ProcessCommandRunner.kt` |
+| `app/.../dragpress/ProcessOutputLines.kt` | `utils/process/ProcessOutputLines.kt` |
+| `app/.../dragpress/ProcessStreamRelay.kt` | `utils/process/ProcessStreamRelay.kt` |
+| `app/.../dragpress/ShizukuTouchConnection.kt` | `drop/ShizukuTouchConnection.kt` |
+| `app/.../dragpress/ShizukuTouchInterrupter.kt` | `drop/ShizukuTouchInterrupter.kt` |
+| `app/.../dragpress/TouchInputProtocol.kt` | `drop/TouchInputProtocol.kt` |
+| `app/.../dragpress/TouchInputSource.kt` | `drop/TouchInputSource.kt` |
+| `app/.../dragpress/TouchInterruptionSequence.kt` | `drop/TouchInterruptionSequence.kt` |
+| `app/.../dragpress/TouchStreamHost.kt` | `drop/TouchStreamHost.kt` |
+| `app/.../dragpress/TouchStreamProcess.kt` | `drop/TouchStreamProcess.kt` |
 
 | 本仓库路径 | 来源项目 | 关系 | 许可证 |
 |-----------|---------|------|--------|
@@ -67,6 +85,7 @@
 | `app/.../service/SlideIndexAccessibilityGestureInjector.kt`（滚动观感） | 同上 | 行为对齐 | GPL-3.0 |
 | `app/.../imageeditor/*`（图片编辑器，26 个文件） | 同上 | **移植+改写**（`model/{EditAction,EditorMode}`、`state/EditorSession`、`ui/{BrushSizePreviewView,ShapeTypePreviewView,ImageEditorView}`、`utils/{EditorExportEngine,EditorRenderUtils}` 对应其 `inspire/imageeditor/*`；`ImageEditorView` 与其 `InspireImageEditorView` **71 个同名方法**，`SlideIndexImageEditorActivity` 与其 Activity **18 个同名方法**。其余（快捷工具、素材取色、钉图、共享拖拽、序号标注等）为本项目自研） | GPL-3.0 |
 | `app/.../timeddnd/*`（临时免打扰，6 个文件） | 同上 | **移植+改写**（`TempDndManager` 对应其 `utils/TempDndRestoreWorker.kt` 内的同名 object：`hasUsableDndPolicyAccess` 签名一致，`enableTempDnd`/`restoreDnd`/`scheduleRestore`/`showCountdownNotification`/`createNotificationChannelIfNeeded` 同名；本仓库拆为 6 个文件，新增 `cancelActive`、规则记录，并把时长范围独立为 `TempDndLimits`（1..1440 分钟，与其取值一致；原先借用提醒模块的 1..120）） | GPL-3.0 |
+| `app/.../dragpress/*`（全局长按强行拖放源端，18 个文件） | [GestureEVO](https://github.com/LumiaGG/GestureEVO) | **移植+改写**（`GlobalPressDragSource`/`TouchInputSource`/`TouchStreamHost`/`ShizukuTouchInterrupter`/`ShizukuTouchConnection`/`PressContentCapture`/`DragContentPreview`/`PressTriggerDetector`/`EvdevTouchParser` 等与 `drop/` 同名类一一对应，`ProcessCommandRunner`/`ProcessOutputLines`/`ProcessStreamRelay` 对应 `utils/process/`；三个 Shizuku 触摸方法的 AIDL 签名与其 `IUserService` 一致，`ITouchInterruptionGuard` 除包名外逐字相同；设置改由 lambda 注入，目标端改接本项目流转栏 `DragDropFlowController`；`EvdevTouchParser`/`PressTriggerDetector` 上游另标注转写自 MMGG） | GPL-3.0 |
 | `app/.../barcode/QrPayloadParser.kt` | [QuickDash](https://github.com/balajitechlabs/quickdash) | 行为规格参考（无代码移植） | GPL-3.0（仓库自述） |
 | `app/.../barcode/QrCodeGenerator.kt` | 同上 | 行为规格参考（无代码移植） | 同上 |
 | `app/.../quickmenu/UnitConversionEngine.kt` | 同上 | 行为规格参考（无代码移植） | 同上 |
