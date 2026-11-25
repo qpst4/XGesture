@@ -113,6 +113,7 @@ fun GestureSettings.toMinimalAppSettings(): AppSettings = AppSettings(
 /** 将浮层域设置投影为 [AppSettings]，供仍接受全量类型的 UI 层桥接。 */
 fun OverlaySettings.toMinimalAppSettings(): AppSettings = AppSettings(
     iconPlateModeId = iconPlateModeId,
+    globalIconShape = globalIconShape,
     themeColorArgb = themeColorArgb,
     dynamicColorEnabled = dynamicColorEnabled,
     themePaletteStyleId = themePaletteStyleId,
@@ -328,6 +329,7 @@ fun OverlaySettings.toMinimalAppSettings(): AppSettings = AppSettings(
         dragFlowTextEngines = dragFlowTextEngines,
     ),
     searchPanel = SearchPanelSettings(
+        iconShape = searchPanel.iconShape,
         searchEngines = searchEngines,
         searchEngineGridColumns = searchEngineGridColumns,
         searchEngineGridRows = searchEngineGridRows,

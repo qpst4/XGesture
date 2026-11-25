@@ -600,8 +600,8 @@ data class SearchPanelSettings(
     val searchEngineShowLabels: Boolean = true,
     /** 应用图标裁切形状规范；默认跟随全局。 */
     val iconShape: PanelIconShape = PanelIconShape.FOLLOW_GLOBAL,
-    /** 引擎区图标的裁切形状；[SearchEngineIconShape.DEFAULT] 保持历史观感。 */
-    val searchEngineIconShape: SearchEngineIconShape = SearchEngineIconShape.DEFAULT,
+    /** 引擎区图标的裁切形状；默认跟随全局。 */
+    val searchEngineIconShape: SearchEngineIconShape = SearchEngineIconShape.FOLLOW_GLOBAL,
     val searchPanelDefaultEngineId: String? = null,
     val searchPanelInputBehavior: SearchPanelInputBehavior = SearchPanelInputBehavior.KEEP,
     val searchPanelEnterAction: SearchPanelEnterAction = SearchPanelEnterAction.SEARCH_ENGINE,

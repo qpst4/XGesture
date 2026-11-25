@@ -22,9 +22,9 @@ class SearchEngineIconShapeSnapshotTest {
     private val context get() = RuntimeEnvironment.getApplication()
 
     @Test
-    fun freshInstall_defaultsToHistoricalShape() {
+    fun freshInstall_defaultsToFollowGlobal() {
         val settings = SettingsSnapshotReader.read(emptyPreferences(), context)
-        assertEquals(SearchEngineIconShape.DEFAULT, settings.searchEngineIconShape)
+        assertEquals(SearchEngineIconShape.FOLLOW_GLOBAL, settings.searchEngineIconShape)
     }
 
     @Test
@@ -37,12 +37,12 @@ class SearchEngineIconShapeSnapshotTest {
     }
 
     @Test
-    fun unknownStoredShape_fallsBackToDefault() {
+    fun unknownStoredShape_fallsBackToFollowGlobal() {
         val prefs = mutablePreferencesOf(
             SettingsPreferenceKeys.SEARCH_ENGINE_ICON_SHAPE to "LEGACY_ROUNDED",
         )
         val settings = SettingsSnapshotReader.read(prefs, context)
-        assertEquals(SearchEngineIconShape.DEFAULT, settings.searchEngineIconShape)
+        assertEquals(SearchEngineIconShape.FOLLOW_GLOBAL, settings.searchEngineIconShape)
     }
 
     @Test

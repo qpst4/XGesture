@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.overlay.pickresult.SearchEngineIcon
 import com.slideindex.app.overlay.pickresult.searchIconSizeForColumns
@@ -69,10 +70,11 @@ fun SearchPanelPresentationLayoutSettingsScreen(
     val listOrders = SearchPanelListOrder.entries
     val appDisplayStyles = SearchPanelAppDisplayStyle.entries
     val iconShapes = listOf(
-        SearchEngineIconShape.DEFAULT,
-        SearchEngineIconShape.CIRCLE,
+        SearchEngineIconShape.FOLLOW_GLOBAL,
         SearchEngineIconShape.SQUIRCLE,
-        SearchEngineIconShape.SQUARE,
+        SearchEngineIconShape.CIRCLE,
+        SearchEngineIconShape.ROUNDED_RECT,
+        SearchEngineIconShape.ORIGINAL,
     )
     val enginePreview = remember(settings.searchEngines) {
         SearchEngineStore.textPickPanelEngines(settings.searchEngines)
@@ -172,6 +174,7 @@ fun SearchPanelPresentationLayoutSettingsScreen(
                         rows = settings.searchEngineGridRows,
                         showLabels = settings.searchEngineShowLabels,
                         iconShape = settings.searchEngineIconShape,
+                        globalIconShape = settings.globalIconShape,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                     )
                 }
@@ -276,10 +279,13 @@ fun SearchPanelPresentationLayoutSettingsScreen(
 
 @Composable
 private fun searchEngineIconShapeLabel(shape: SearchEngineIconShape): String = when (shape) {
-    SearchEngineIconShape.DEFAULT -> stringResource(R.string.quick_launcher_icon_shape_default)
-    SearchEngineIconShape.CIRCLE -> stringResource(R.string.fv_icon_shape_circle)
+    SearchEngineIconShape.FOLLOW_GLOBAL -> stringResource(R.string.icon_shape_follow_global)
     SearchEngineIconShape.SQUIRCLE -> stringResource(R.string.fv_icon_shape_squircle)
-    SearchEngineIconShape.SQUARE -> stringResource(R.string.fv_icon_shape_square)
+    SearchEngineIconShape.CIRCLE -> stringResource(R.string.fv_icon_shape_circle)
+    SearchEngineIconShape.ROUNDED_RECT -> stringResource(R.string.fv_icon_shape_rounded_rect)
+    SearchEngineIconShape.ORIGINAL -> stringResource(R.string.fv_icon_shape_original)
+    SearchEngineIconShape.DEFAULT -> stringResource(R.string.icon_shape_follow_global)
+    SearchEngineIconShape.SQUARE -> stringResource(R.string.fv_icon_shape_squircle)
 }
 
 /**
@@ -293,6 +299,7 @@ private fun SearchEngineDockPreview(
     rows: Int,
     showLabels: Boolean,
     iconShape: SearchEngineIconShape,
+    globalIconShape: FvIconShape = FvIconShape.SQUIRCLE,
     modifier: Modifier = Modifier,
 ) {
     if (engines.isEmpty()) return
@@ -319,6 +326,7 @@ private fun SearchEngineDockPreview(
                             engine = engine,
                             modifier = Modifier.size(iconSize),
                             iconShape = iconShape,
+                            globalIconShape = globalIconShape,
                         )
                         if (showLabels) {
                             Text(

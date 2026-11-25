@@ -567,6 +567,7 @@ fun PickResultAuxiliarySearchBlock(
             longPressEnabled = appSettings.launchPolicyLongPressEligible(),
             onEngineClick = onSearchEngineClick,
             iconShape = appSettings.searchEngineIconShape,
+            globalIconShape = appSettings.globalIconShape,
         )
     }
 }

@@ -1606,6 +1606,7 @@ fun SearchPanelScreen(
                                                         },
                                                         onLaunchShortcut = ::launchShortcutCandidate,
                                                         longPressEnabled = longPressEnabled,
+                                                        settings = settings,
                                                     )
                                                 }
                                                 "file_permission" -> {
@@ -1773,6 +1774,7 @@ fun SearchPanelScreen(
                                         pageIndicatorTopPadding = SearchPanelPageIndicatorTopPadding,
                                         pageIndicatorBottomPadding = SearchPanelPageIndicatorBottomPadding,
                                         iconShape = settings.searchEngineIconShape,
+                                        globalIconShape = settings.globalIconShape,
                                         onEngineClick = { engine, longPressTriggered ->
                                             launchSearchEngine(engine, longPressTriggered)
                                         },
