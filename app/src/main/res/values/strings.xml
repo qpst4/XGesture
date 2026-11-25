@@ -3503,6 +3503,7 @@
     <string name="shell_panel_no_output">(no output)</string>
     <string name="shell_panel_copy">Copy output</string>
     <string name="shell_panel_close">Close</string>
+    <string name="pin_rotate">Rotate</string>
     <string name="shell_panel_overlay_empty">No commands yet — tap “Add command” below</string>
     <string name="shell_panel_result_section_output">Output</string>
     <string name="shell_panel_copied">Copied to clipboard</string>

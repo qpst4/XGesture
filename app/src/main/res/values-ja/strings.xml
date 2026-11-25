@@ -3037,6 +3037,7 @@
     <string name="shell_panel_no_output">（出力なし）</string>
     <string name="shell_panel_copy">出力をコピー</string>
     <string name="shell_panel_close">閉じる</string>
+    <string name="pin_rotate">回転</string>
     <string name="shell_panel_overlay_empty">コマンドがありません — 下の「コマンドを追加」をタップ</string>
     <string name="shell_panel_result_section_output">出力</string>
     <string name="shell_panel_copied">クリップボードにコピーしました</string>

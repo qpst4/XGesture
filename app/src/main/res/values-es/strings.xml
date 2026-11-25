@@ -3334,6 +3334,7 @@
     <string name="shell_panel_no_output">(sin salida)</string>
     <string name="shell_panel_copy">Reproducción</string>
     <string name="shell_panel_close">Cerrar</string>
+    <string name="pin_rotate">Girar</string>
     <string name="shell_panel_overlay_empty">Aún no hay comandos: pulsa “Añadir comando” abajo</string>
     <string name="shell_panel_result_section_output">Producto</string>
     <string name="shell_panel_copied">Copiado para el portapapeles</string>

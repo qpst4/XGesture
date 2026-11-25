@@ -3044,6 +3044,7 @@
     <string name="shell_panel_no_output">(لا توجد مخرجات)</string>
     <string name="shell_panel_copy">نسخ المخرجات</string>
     <string name="shell_panel_close">إغلاق</string>
+    <string name="pin_rotate">تدوير</string>
     <string name="shell_panel_overlay_empty">لا توجد أوامر، انقر على «إضافة أمر» أدناه</string>
     <string name="shell_panel_result_section_output">المخرجات</string>
     <string name="shell_panel_copied">تم النسخ إلى الحافظة</string>

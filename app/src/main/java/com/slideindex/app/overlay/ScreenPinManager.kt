@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.text.Layout
@@ -52,6 +53,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Rotate90DegreesCw
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -251,14 +253,22 @@ private fun PinContent.fitForDisplay(): PinContent = when (this) {
 
 private class PinInstance(
     val id: String,
-    val content: PinContent,
+    content: PinContent,
     val composeView: ComposeView,
     val owner: OverlayComposeOwner,
     val params: WindowManager.LayoutParams,
     val uiState: PinUiState,
     var offsetX: Int,
     var offsetY: Int
-)
+) {
+    /**
+     * 内容可替换（反馈 #392：钉图旋转）。
+     *
+     * 用 Compose 状态持有：换图后 `ScreenPinContent` 会自己重组，
+     * 不需要销毁重建整个浮窗（重建会丢位置、拖拽态与淡入动画）。
+     */
+    var content: PinContent by mutableStateOf(content)
+}
 
 /**
  * 钉文字面板：按内容实际占用测量面板尺寸。
@@ -776,14 +786,51 @@ object ScreenPinManager {
                     },
                     onClose = { removePin(instance.id) },
                     onAlphaChange = { instance.uiState.contentAlpha.floatValue = it },
+                    canRotate = instance.content is PinContent.Image,
+                    onRotate = { rotatePinImage(instance.id) },
                     snapshot = dragSnapshot,
                 )
             }
         }
     }
 
-    private fun zoomPin(pinId: String, zoomFactor: Float) {
+    /**
+     * 钉图旋转（反馈 #392）：把图片顺时针转 90°，并把窗口宽高一起换过来。
+     *
+     * 不销毁重建浮窗：重建会丢位置、拖拽态和淡入动画；内容是可观察状态，
+     * 换图后 `ScreenPinContent` 自己重组，窗口尺寸由 [applyPinWindowLayout] 重算。
+     */
+    private fun rotatePinImage(pinId: String) {
         val instance = pins[pinId] ?: return
+        val content = instance.content as? PinContent.Image ?: return
+        val rotated = runCatching {
+            val matrix = Matrix().apply { postRotate(90f) }
+            Bitmap.createBitmap(
+                content.bitmap,
+                0,
+                0,
+                content.bitmap.width,
+                content.bitmap.height,
+                matrix,
+                true,
+            )
+        }.getOrNull() ?: return
+        instance.content = content.copy(bitmap = rotated)
+        // 宽高互换：显示尺寸、初始尺寸、展开尺寸三处都换，否则缩放/贴边按旧比例算。
+        val w = instance.uiState.displayWidthPx.intValue
+        instance.uiState.displayWidthPx.intValue = instance.uiState.displayHeightPx.intValue
+        instance.uiState.displayHeightPx.intValue = w
+        val initialW = instance.uiState.initialWidthPx
+        instance.uiState.initialWidthPx = instance.uiState.initialHeightPx
+        instance.uiState.initialHeightPx = initialW
+        val expandedW = instance.uiState.expandedWidthPx
+        instance.uiState.expandedWidthPx = instance.uiState.expandedHeightPx
+        instance.uiState.expandedHeightPx = expandedW
+        applyPinWindowLayout(instance)
+        runCatching { windowManager?.updateViewLayout(instance.composeView, instance.params) }
+    }
+
+    private fun zoomPin(pinId: String, zoomFactor: Float) {        val instance = pins[pinId] ?: return
         if (instance.uiState.isEdgeDocked.value) return
         val context = appContext ?: return
         val metrics = context.resources.displayMetrics
@@ -1630,6 +1677,9 @@ private fun ScreenPinContent(
     onDragEnd: (localX: Float, localY: Float) -> Unit,
     onClose: () -> Unit,
     onAlphaChange: (Float) -> Unit,
+    /** 当前是图片内容时才显示旋转按钮（反馈 #392）。 */
+    canRotate: Boolean = false,
+    onRotate: () -> Unit = {},
     /** 长按拖拽用的"钉图本身"快照入口；null = 拖影退回旧画法（手绘文字/缩略图）。 */
     snapshot: HistoryCardSnapshot? = null
 ) {
@@ -1811,6 +1861,8 @@ private fun ScreenPinContent(
                         alpha = alpha,
                         onAlphaChange = onAlphaChange,
                         onClose = onClose,
+                        canRotate = canRotate,
+                        onRotate = onRotate,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -1824,6 +1876,8 @@ private fun PinControlBar(
     alpha: Float,
     onAlphaChange: (Float) -> Unit,
     onClose: () -> Unit,
+    canRotate: Boolean = false,
+    onRotate: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val pillShape = RoundedCornerShape(20.dp)
@@ -1852,6 +1906,25 @@ private fun PinControlBar(
             )
         )
         Spacer(modifier = Modifier.width(6.dp))
+        if (canRotate) {
+            // 反馈 #392：钉在屏幕上的图片支持旋转（每次顺时针 90°，直接转位图）。
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.92f))
+                    .clickable(onClick = onRotate),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Rotate90DegreesCw,
+                    contentDescription = stringResource(R.string.pin_rotate),
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.width(6.dp))
+        }
         Box(
             modifier = Modifier
                 .size(34.dp)
