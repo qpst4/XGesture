@@ -742,12 +742,12 @@ data class OverlayBlurSettings(
     val overlayCornerRadiusDp: Int = 18,
     /** 全局悬浮窗微光反光强度百分比（%）；默认 0%，区间 0..100。 */
     val overlayBorderShimmerPercent: Int = 0,
-    /** 高级光影独立微调总开关；开启后接管主滑块，由独立 3 维参数控制。 */
-    val overlayAdvancedShimmerEnabled: Boolean = false,
+    /** 高级光影独立微调总开关；开启后接管主滑块，由独立 3 维参数控制。默认开。 */
+    val overlayAdvancedShimmerEnabled: Boolean = true,
     /** 外缘高光细边百分比（%）；默认 100%，区间 0..100。 */
     val overlayBorderHighlightPercent: Int = 100,
-    /** 角落定向聚光百分比（%）；默认 50%，区间 0..100。 */
-    val overlayRadialGlossPercent: Int = 50,
+    /** 角落定向聚光百分比（%）；默认 30%，区间 0..100。 */
+    val overlayRadialGlossPercent: Int = 30,
     /** 顶部垂直微光百分比（%）；默认 0%，区间 0..100。 */
     val overlayVerticalGlossPercent: Int = 0,
     /** 轮盘与圆环全屏背景虚化总开关；开启时在圆环/边角呼出时全屏高斯模糊，关闭时仅暗化背景。默认开。 */
