@@ -56,6 +56,14 @@ object OverlayHostRuntime {
     @Volatile
     var overlayBlurEnabledFlow: ((Context) -> kotlinx.coroutines.flow.Flow<Boolean>?)? = null
 
+    /** 全局材质规范的响应式流（`:app` 从设置仓库取）。 */
+    @Volatile
+    var overlayMaterialSpecFlow: ((Context) -> kotlinx.coroutines.flow.Flow<OverlayMaterialSpec>?)? = null
+
+    /** 读取此刻的材质快照（供原生 View / Canvas 启动时读取）。 */
+    @Volatile
+    var currentOverlayMaterialSpec: ((Context) -> OverlayMaterialSpec)? = null
+
     /**
      * 浮层内容的主题包装（`:app` 注入 `OverlayAwareModuleTheme`）。
      *

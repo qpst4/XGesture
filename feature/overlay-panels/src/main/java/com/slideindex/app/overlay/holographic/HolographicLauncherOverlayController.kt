@@ -28,11 +28,14 @@ class HolographicLauncherOverlayController(
 
         val usesNativeWindowBlur = resolveNativeWindowBlur(settings)
         val overlayView = HolographicLauncherOverlayView(context, mainHandler)
+        val globalShape = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot?.invoke(context)?.globalIconShape
+            ?: com.slideindex.app.overlay.layout.FvIconShape.SQUIRCLE
         overlayView.bind(
             apps = apps,
             settings = settings,
             usesNativeWindowBlur = usesNativeWindowBlur,
             listener = listener,
+            globalIconShape = globalShape,
         )
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,

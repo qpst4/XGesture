@@ -79,6 +79,11 @@ internal class QuickLauncherPanelManagementHandler(
         tapGesture: Boolean = false,
         toolbarCommitAllowed: Boolean = true
     ): Boolean {
+        if (toolbar.panelMenuShowing) {
+            if (toolbar.handleMenuTouch(localX, localY, event.actionMasked)) {
+                return true
+            }
+        }
         if (!toolbar.shouldShowToolbar()) return false
 
         toolbar.layoutToolbar(panelRect)
@@ -95,6 +100,13 @@ internal class QuickLauncherPanelManagementHandler(
                     toolbarAction != null ||
                     (controller.editMode && toolbar.deleteBadgeIndexAt(localX, localY) >= 0) ||
                     (controller.editMode && indexAt(localX, localY, quickCells) >= 0)
+
+                if (toolbarAction == QuickLauncherPanelToolbar.ToolbarAction.SWITCH) {
+                    toolbar.onCapsuleDown(localX, localY)
+                    cancelPendingDrag()
+                    cancelHoverDwell()
+                    return true
+                }
 
                 if (toolbarAction != null) {
                     cancelPendingDrag()
@@ -165,6 +177,12 @@ internal class QuickLauncherPanelManagementHandler(
                         managementTouchActive = false
                     }
                 }
+                if (toolbar.armedToolbarAction == QuickLauncherPanelToolbar.ToolbarAction.SWITCH) {
+                    if (toolbar.onCapsuleMove(localX, localY)) {
+                        host.invalidate()
+                        return true
+                    }
+                }
                 if (toolbar.toolbarContains(localX, localY) || toolbar.armedToolbarAction != null) {
                     return true
                 }
@@ -172,6 +190,13 @@ internal class QuickLauncherPanelManagementHandler(
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 cancelPendingDrag()
+                if (toolbar.armedToolbarAction == QuickLauncherPanelToolbar.ToolbarAction.SWITCH) {
+                    toolbar.onCapsuleUp()
+                    toolbar.setArmedToolbarAction(null)
+                    managementTouchActive = false
+                    host.invalidate()
+                    return true
+                }
                 var handled = false
                 if (toolbar.commitToolbarAtRelease(
                         localX = localX,

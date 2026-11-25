@@ -12,8 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
-import com.slideindex.app.overlay.SystemWallpaperBlurHelper
-import com.slideindex.app.overlay.WallpaperPermissionLauncher
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.settings.HolographicAppMode
 import com.slideindex.app.settings.HolographicLauncherSettings
 import com.slideindex.app.ui.miuix.groupedCardItems
@@ -34,21 +33,18 @@ fun HolographicLauncherSettingsScreen(
     onTimeoutSecondsChange: (Int) -> Unit,
     onRotationSensitivityChange: (Float) -> Unit,
     onHapticLevelChange: (Int) -> Unit,
-    onBackgroundStyleChange: (Int) -> Unit,
-    onBlurDpChange: (Int) -> Unit,
-    onDimPercentChange: (Int) -> Unit,
+    onIconShapeChange: (PanelIconShape) -> Unit = {},
+    onBackgroundStyleChange: (Int) -> Unit = {},
+    onBlurDpChange: (Int) -> Unit = {},
+    onDimPercentChange: (Int) -> Unit = {},
     onAppModeChange: (HolographicAppMode) -> Unit,
     onOpenApps: () -> Unit
 ) {
     val context = LocalContext.current
     var localSettings by remember { mutableStateOf(settings) }
     LaunchedEffect(settings) { localSettings = settings }
-    fun ensureWallpaperPermission() {
-        SystemWallpaperBlurHelper.requestWallpaperPermission(context)
-    }
 
     val interactionSectionTitle = stringResource(R.string.holographic_settings_section_interaction)
-    val backgroundSectionTitle = stringResource(R.string.holographic_settings_section_background)
     val appsSectionTitle = stringResource(R.string.holographic_settings_section_apps)
     val sensitivityRange = HolographicLauncherSettings.MIN_ROTATION_SENSITIVITY..
         HolographicLauncherSettings.MAX_ROTATION_SENSITIVITY
@@ -59,12 +55,6 @@ fun HolographicLauncherSettingsScreen(
         stringResource(R.string.holographic_settings_haptic_medium),
         stringResource(R.string.holographic_settings_haptic_strong)
     )
-    val backgroundStyles = listOf(
-        HolographicLauncherSettings.BACKGROUND_BLUR,
-        HolographicLauncherSettings.BACKGROUND_WALLPAPER_BLUR,
-        HolographicLauncherSettings.BACKGROUND_BLACK
-    )
-    val blurEnabled = localSettings.backgroundStyle != HolographicLauncherSettings.BACKGROUND_BLACK
 
     SettingsScreenScaffold(
         title = stringResource(R.string.holographic_launcher_entry_title),
@@ -131,73 +121,29 @@ fun HolographicLauncherSettingsScreen(
                         )
                     }
                 )
-            }
-        )
-        settingsLazySmallTitle(
-            key = "section-background",
-            title = backgroundSectionTitle
-        )
-        groupedCardItems(
-            keyPrefix = "holographic-background",
-            items = buildList {
+                val panelShapes = listOf(
+                    PanelIconShape.FOLLOW_GLOBAL,
+                    PanelIconShape.SQUIRCLE,
+                    PanelIconShape.CIRCLE,
+                    PanelIconShape.ROUNDED_RECT,
+                    PanelIconShape.ORIGINAL,
+                )
                 add(
-                    settingsCardScopeItem("background-style") {
+                    settingsCardScopeItem("icon-shape") {
                         SettingDropdownRow(
-                            title = stringResource(R.string.holographic_settings_background_style),
+                            title = stringResource(R.string.quick_launcher_icon_shape_section),
                             items = listOf(
-                                stringResource(R.string.honeycomb_background_blur),
-                                stringResource(R.string.honeycomb_background_wallpaper_blur),
-                                stringResource(R.string.honeycomb_background_black)
+                                stringResource(R.string.icon_shape_follow_global),
+                                stringResource(R.string.fv_icon_shape_squircle),
+                                stringResource(R.string.fv_icon_shape_circle),
+                                stringResource(R.string.fv_icon_shape_rounded_rect),
+                                stringResource(R.string.fv_icon_shape_original),
                             ),
-                            selectedIndex = backgroundStyles.indexOf(localSettings.backgroundStyle).coerceAtLeast(0),
+                            selectedIndex = panelShapes.indexOf(localSettings.iconShape).coerceAtLeast(0),
                             onSelectedIndexChange = { index ->
-                                val style = backgroundStyles[index]
-                                localSettings = localSettings.copy(backgroundStyle = style)
-                                onBackgroundStyleChange(style)
-                                if (style == HolographicLauncherSettings.BACKGROUND_WALLPAPER_BLUR &&
-                                    !SystemWallpaperBlurHelper.hasWallpaperAccessPermission(context)
-                                ) {
-                                    ensureWallpaperPermission()
-                                }
-                            }
-                        )
-                    }
-                )
-                add(
-                    settingsCardScopeItem("blur-strength") {
-                        SettingsSliderRow(
-                            title = stringResource(R.string.honeycomb_blur_strength),
-                            value = localSettings.blurDp.toFloat(),
-                            valueRange = HolographicLauncherSettings.MIN_BLUR_DP.toFloat()..
-                                HolographicLauncherSettings.MAX_BLUR_DP.toFloat(),
-                            steps = 16,
-                            enabled = blurEnabled,
-                            label = stringResource(R.string.corner_gesture_zone_dp_value, localSettings.blurDp),
-                            onValueChange = { value ->
-                                val next = value.roundToInt()
-                                localSettings = localSettings.copy(blurDp = next)
-                                onBlurDpChange(next)
-                            }
-                        )
-                    }
-                )
-                add(
-                    settingsCardScopeItem("dim-percent") {
-                        SettingsSliderRow(
-                            title = stringResource(R.string.honeycomb_dim_percent),
-                            value = localSettings.dimPercent.toFloat(),
-                            valueRange = HolographicLauncherSettings.MIN_DIM_PERCENT.toFloat()..
-                                HolographicLauncherSettings.MAX_DIM_PERCENT.toFloat(),
-                            steps = 12,
-                            enabled = true,
-                            label = stringResource(
-                                R.string.floating_pointer_percent_value,
-                                localSettings.dimPercent
-                            ),
-                            onValueChange = { value ->
-                                val next = value.roundToInt()
-                                localSettings = localSettings.copy(dimPercent = next)
-                                onDimPercentChange(next)
+                                val selected = panelShapes[index]
+                                localSettings = localSettings.copy(iconShape = selected)
+                                onIconShapeChange(selected)
                             }
                         )
                     }

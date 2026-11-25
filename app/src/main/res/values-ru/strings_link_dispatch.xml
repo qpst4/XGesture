@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_dispatch_title">Рассылка ссылок</string>
+    <string name="link_dispatch_desc">Автоматически распознаёт ссылки в тексте или на экране и открывает целевые приложения напрямую или в свободном окне. Поддерживаются правила LinkGo и обнаружение радаром ссылок.</string>
+    <string name="link_dispatch_actions_title">Управление правилами</string>
+    <string name="link_dispatch_import_linkgo">Импортировать правила LinkGo из буфера обмена</string>
+    <string name="link_dispatch_import_clipboard">Импортировать резервную копию из буфера обмена</string>
+    <string name="link_dispatch_import_clipboard_desc">Импорт ранее экспортированной полной конфигурации рассылки</string>
+    <string name="link_dispatch_export_clipboard">Экспортировать в буфер обмена</string>
+    <string name="link_dispatch_export_clipboard_desc">Скопировать полные правила и настройки в формате JSON в буфер обмена</string>
+    <string name="link_dispatch_reset_builtin">Восстановить рекомендуемые встроенные правила</string>
+    <string name="link_dispatch_reset_builtin_desc">Перезагрузить встроенные правила для выбранных приложений (более 40 популярных приложений)</string>
+
+    <string name="link_dispatch_preferences_title">Переключатели рассылки и радара</string>
+    <string name="link_dispatch_open_in_small_window">Открывать в свободном окне</string>
+    <string name="link_dispatch_open_in_small_window_desc">Предпочитать открытие целевых приложений в свободном окне при перенаправлении</string>
+    <string name="link_dispatch_radar_screen_content">Радар ссылок на экране</string>
+    <string name="link_dispatch_radar_screen_content_desc">Сканировать узлы доступности при выделении на экране и показывать плавающий баннер над ссылками</string>
+    <string name="link_dispatch_radar_pointer">Радар указателя</string>
+    <string name="link_dispatch_radar_pointer_desc">Обнаруживать и подсвечивать ссылки под курсором при наведении, переключаться на выделение при остановке</string>
+
+    <string name="link_dispatch_rules_list_title">Настроенные правила</string>
+    <string name="link_dispatch_rules_empty">Правил нет. Восстановите встроенные правила выше или импортируйте их из буфера обмена.</string>
+    <string name="link_dispatch_no_url_found">Допустимая ссылка не найдена</string>
+    <string name="link_dispatch_no_app">Не найдено приложение для открытия этой ссылки</string>
+    <string name="link_dispatch_import_success">Импортировано правил: %1$d</string>
+    <string name="link_dispatch_import_failed">Ошибка импорта: неверный формат буфера обмена</string>
+    <string name="link_dispatch_export_success">Конфигурация скопирована в буфер обмена</string>
+    <string name="link_dispatch_reset_success">Восстановлено рекомендуемых правил: %1$d</string>
+    <string name="link_dispatch_rule_deleted">Правило удалено: %1$s</string>
+    <string name="link_dispatch_hub_subtitle">Правила LinkGo и умные перенаправления со свободным окном и радаром ссылок</string>
+    <string name="link_dispatch_sandbox_title">Песочница проверки совпадения правил</string>
+    <string name="link_dispatch_sandbox_hint">Введите тестовый URL для проверки правила…</string>
+    <string name="link_dispatch_sandbox_test_btn">Проверить совпадение</string>
+    <string name="link_dispatch_sandbox_matched">Совпадение: %1$s → целевое приложение: %2$s</string>
+    <string name="link_dispatch_sandbox_no_match">Правило не совпало (откроется системным обработчиком по умолчанию)</string>
+    <string name="link_dispatch_add_rule">Создать своё правило</string>
+    <string name="link_dispatch_exempt_title">Исключённые приложения</string>
+    <string name="link_dispatch_exempt_desc">Не перехватывать ссылки, созданные в выбранных приложениях (например, в браузерах)</string>
+    <string name="link_dispatch_rule_name">Название правила</string>
+    <string name="link_dispatch_rule_pattern">Шаблон (регулярное выражение или подстрока)</string>
+    <string name="link_dispatch_rule_package">Целевой пакет</string>
+    <string name="link_dispatch_rule_component">Целевой компонент (необязательно)</string>
+    <string name="link_dispatch_rule_template">Шаблон URL (необязательно, например {url})</string>
+    <string name="link_dispatch_save">Сохранить правило</string>
+    <string name="link_rule_match_contains">Содержит</string>
+    <string name="link_rule_match_regex">Регулярное выражение</string>
+    <string name="link_rule_match_exact">Точное совпадение</string>
+    <string name="link_rule_resolve_direct">Разрешить и выполнить это правило</string>
+    <string name="link_rule_resolve_redispatch">Разрешить и перенаправить</string>
+</resources>

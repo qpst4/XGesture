@@ -10,6 +10,7 @@ import com.slideindex.app.gesture.TriggerRectanglePresetLogic
 import com.slideindex.app.gesture.TriggerHandleDesign
 import com.slideindex.app.overlay.PanelSide
 import com.slideindex.app.overlay.layout.FvIconShape
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.gesture.GestureAngles
 import com.slideindex.app.settings.BubbleStyle
 import com.slideindex.app.settings.CapsuleStyle
@@ -489,7 +490,7 @@ class HomeDetailSettingsViewModel @Inject constructor(
         settingsRepository.setCornerGestureBubbleSizeDp(value)
     }
 
-    fun setCornerGestureSlotIconShape(shape: FvIconShape) = launchSettingsWrite {
+    fun setCornerGestureSlotIconShape(shape: PanelIconShape) = launchSettingsWrite {
         settingsRepository.setCornerGestureSlotIconShape(shape)
     }
 

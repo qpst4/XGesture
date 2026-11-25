@@ -7,6 +7,7 @@ import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.overlay.layout.FvRingLauncherSide
 import com.slideindex.app.overlay.layout.FvCircleLayoutEngine
 import com.slideindex.app.overlay.layout.FvIconShape
+import com.slideindex.app.overlay.layout.PanelIconShape
 
 enum class FvRingLauncherAxis {
     VERTICAL,
@@ -68,7 +69,7 @@ fun AppSettings.fvRingLauncherFor(axis: FvRingLauncherAxis): FvRingLauncherSetti
 data class FvRingLauncherSettings(
     val circleCount: Int = DEFAULT_CIRCLE_COUNT,
     val iconSizeDp: Float = DEFAULT_ICON_SIZE_DP,
-    val iconShape: FvIconShape = FvIconShape.ROUNDED_RECT,
+    val iconShape: PanelIconShape = PanelIconShape.FOLLOW_GLOBAL,
     val baseRadiusDp: Float = DEFAULT_BASE_RADIUS_DP,
     val layerGapDp: Float = DEFAULT_LAYER_GAP_DP,
     val endMarginDeg: Float = DEFAULT_END_MARGIN_DEG,
@@ -205,7 +206,7 @@ data class FvRingLauncherSettings(
             val keys = keysFor(axis)
             val circleCount = prefs[keys.circleCount] ?: DEFAULT_CIRCLE_COUNT
             val iconSizeDp = prefs[keys.iconSizeDp] ?: DEFAULT_ICON_SIZE_DP
-            val iconShape = FvIconShape.fromName(prefs[keys.iconShape])
+            val iconShape = PanelIconShape.fromName(prefs[keys.iconShape])
             val baseRadiusDp = prefs[keys.baseRadiusDp] ?: DEFAULT_BASE_RADIUS_DP
             val layerGapDp = prefs[keys.layerGapDp] ?: DEFAULT_LAYER_GAP_DP
             val endMarginDeg = prefs[keys.endMarginDeg] ?: DEFAULT_END_MARGIN_DEG

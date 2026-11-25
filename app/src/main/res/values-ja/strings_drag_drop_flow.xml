@@ -74,4 +74,28 @@
     <string name="drag_drop_flow_toast_pinned">画面に固定しました</string>
     <string name="drag_drop_flow_toast_no_text">画像からテキストを認識できませんでした</string>
     <string name="drag_drop_flow_toast_ocr_unavailable">利用できる OCR エンジンがありません</string>
+
+    <string name="drag_drop_flow_action_text_to_image">画像に変換</string>
+    <string name="drag_drop_flow_action_convert_to_text">テキストを抽出</string>
+    <string name="drag_drop_flow_converting_to_text">画像からテキストを認識しています…</string>
+    <string name="drag_drop_flow_converting_to_image">画像に変換しています…</string>
+    <string name="drag_drop_flow_convert_failed">変換に失敗しました</string>
+    <string name="drag_drop_flow_convert_empty">テキストを認識できませんでした</string>
+    <string name="drag_drop_flow_toast_image_generated">画像を生成し、共有画面を開きました</string>
+    <string name="drag_drop_flow_toast_image_generate_failed">テキストを画像に変換できませんでした</string>
+    <string name="drag_drop_flow_section_global_press">グローバル長押しドラッグ（Shizuku）</string>
+    <string name="drag_drop_flow_global_press_title">グローバル長押しドラッグを有効化</string>
+    <string name="drag_drop_flow_global_press_summary">Shizuku 経由でグローバルタッチを監視し、長押しで元のアプリを中断してテキストを取得し、フローバーを開きます</string>
+    <string name="drag_drop_flow_global_press_timeout_title">長押しの保持時間</string>
+    <string name="drag_drop_flow_global_press_timeout_summary">ドラッグ操作を確定するまでの時間（現在: %1$d ms）</string>
+    <string name="drag_drop_flow_global_press_vibrate_title">確定時の触覚フィードバック</string>
+    <string name="drag_drop_flow_global_press_vibrate_summary">操作が確定したときに微振動で通知します</string>
+    <string name="drag_drop_flow_global_press_immediate_title">長押しで即座に実行</string>
+    <string name="drag_drop_flow_global_press_immediate_summary">指を動かさなくても、長押し時間の経過で認識を開始してフローバーを開きます</string>
+    <string name="drag_drop_flow_global_press_early_text_title">長押しテキストを先読み</string>
+    <string name="drag_drop_flow_global_press_early_text_summary">長押し時にテキストを先読みして、コンテキストメニューによるウィンドウフォーカス喪失を減らします</string>
+    <string name="drag_drop_flow_global_press_whitelist_title">許可するアプリ</string>
+    <string name="drag_drop_flow_global_press_whitelist_all">すべてのアプリ（制限なし）</string>
+    <string name="drag_drop_flow_global_press_whitelist_summary">%1$d 個のアプリを有効化</string>
+    <string name="drag_drop_flow_global_press_need_shizuku">グローバル長押しドラッグには Shizuku の権限が必要です</string>
 </resources>

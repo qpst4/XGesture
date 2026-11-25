@@ -13,6 +13,7 @@ import android.media.AudioManager
 import android.os.SystemClock
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.DecelerateInterpolator
@@ -28,6 +29,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import com.slideindex.app.overlay.LocalFrostedGlassBackdrop
+import com.slideindex.app.overlay.LocalFrostedGlassDrawable
+import com.slideindex.app.overlay.OverlayMaterialSpec
+import com.slideindex.app.overlay.OverlayPanelTheme
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -71,6 +76,7 @@ import com.slideindex.app.overlay.OverlayComposeDialogHost
 import com.slideindex.app.overlay.layout.FvRingLauncherSide
 import com.slideindex.app.overlay.layout.FvCircleLayoutEngine
 import com.slideindex.app.overlay.layout.FvIconShape
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.overlay.layout.FvPanelLayout
 import com.slideindex.app.overlay.layout.FvToolbarButton
 import com.slideindex.app.settings.AppSettings
@@ -168,6 +174,8 @@ class RingLauncherOverlayView(
     private var pendingEditDragStartY = 0f
     private var editDragLongPressRunnable: Runnable? = null
     private val dimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.BLACK }
+    private val frostedGlassDrawable = LocalFrostedGlassDrawable { this }
+    private val fullScreenBounds = RectF()
     private var menuVisualActive = false
 
     private companion object {
@@ -358,7 +366,7 @@ class RingLauncherOverlayView(
             screenWidth = screenWidth,
             density = density,
             iconSizeDp = fvSettings.iconSizeDp,
-            iconShape = fvSettings.iconShape,
+            iconShape = fvSettings.iconShape.resolve(settings.globalIconShape),
             baseRadiusDp = fvSettings.baseRadiusDp,
             layerGapDp = fvSettings.layerGapDp,
             endMarginDeg = fvSettings.endMarginDeg,
@@ -906,9 +914,27 @@ class RingLauncherOverlayView(
 
     private fun drawBackgroundMask(canvas: Canvas, progress: Float) {
         if (progress <= 0.01f) return
-        val alpha = (255f * 0.58f * progress).toInt().coerceIn(0, 255)
-        dimPaint.alpha = alpha
-        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), dimPaint)
+        fullScreenBounds.set(0f, 0f, width.toFloat(), height.toFloat())
+        val spec = OverlayMaterialSpec.fromContext(context)
+        val isDark = OverlayPanelTheme.isDarkTheme(context)
+        val blurRadiusPx = spec.backdropBlurRadiusPx(density)
+        val tintColor = spec.backdropDimColor(alphaScale = 1f)
+        val blurDrawn = frostedGlassDrawable.draw(
+            canvas = canvas,
+            bounds = fullScreenBounds,
+            spec = spec,
+            density = density,
+            isDark = isDark,
+            cornerRadiusPx = 0f,
+            blurRadiusPx = blurRadiusPx,
+            tintColor = tintColor,
+            alpha = progress,
+            enabled = spec.backdropBlurEnabled,
+        )
+        if (!blurDrawn) {
+            dimPaint.color = spec.backdropDimColor(alphaScale = progress)
+            canvas.drawRect(fullScreenBounds, dimPaint)
+        }
     }
 
     override fun onDetachedFromWindow() {
@@ -1094,23 +1120,26 @@ fun RingLauncherAppearanceDialogContent(
                     FvRingLauncherAppearanceChipGrid(
                         isLandscape = isLandscape,
                         labels = listOf(
-                            stringResource(R.string.fv_icon_shape_rounded_rect),
-                            stringResource(R.string.fv_icon_shape_circle),
+                            stringResource(R.string.icon_shape_follow_global),
                             stringResource(R.string.fv_icon_shape_squircle),
-                            stringResource(R.string.fv_icon_shape_square),
+                            stringResource(R.string.fv_icon_shape_circle),
+                            stringResource(R.string.fv_icon_shape_rounded_rect),
+                            stringResource(R.string.fv_icon_shape_original),
                         ),
                         selectedIndex = listOf(
-                            FvIconShape.ROUNDED_RECT,
-                            FvIconShape.CIRCLE,
-                            FvIconShape.SQUIRCLE,
-                            FvIconShape.SQUARE,
+                            PanelIconShape.FOLLOW_GLOBAL,
+                            PanelIconShape.SQUIRCLE,
+                            PanelIconShape.CIRCLE,
+                            PanelIconShape.ROUNDED_RECT,
+                            PanelIconShape.ORIGINAL,
                         ).indexOf(settingsState.iconShape).coerceAtLeast(0),
                         onSelected = { index ->
                             val shape = listOf(
-                                FvIconShape.ROUNDED_RECT,
-                                FvIconShape.CIRCLE,
-                                FvIconShape.SQUIRCLE,
-                                FvIconShape.SQUARE,
+                                PanelIconShape.FOLLOW_GLOBAL,
+                                PanelIconShape.SQUIRCLE,
+                                PanelIconShape.CIRCLE,
+                                PanelIconShape.ROUNDED_RECT,
+                                PanelIconShape.ORIGINAL,
                             )[index]
                             update { it.copy(iconShape = shape) }
                         },
@@ -1376,7 +1405,6 @@ private fun FvRingLauncherLinkMergeOverlay(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ComposeColor.Black.copy(alpha = 0.45f))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -1384,6 +1412,7 @@ private fun FvRingLauncherLinkMergeOverlay(
             ),
         contentAlignment = Alignment.Center,
     ) {
+        LocalFrostedGlassBackdrop(modifier = Modifier.matchParentSize())
         Surface(
             modifier = Modifier
                 .widthIn(max = 340.dp)

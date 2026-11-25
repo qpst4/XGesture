@@ -13,6 +13,7 @@ import android.widget.FrameLayout
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.overlay.ModuleForwardedTouchGate
 import com.slideindex.app.overlay.OverlayBlurGate
+import com.slideindex.app.overlay.OverlayMaterialSpec
 import com.slideindex.app.overlay.OverlayPassthrough
 import com.slideindex.app.overlay.OverlayScreenMetrics
 import com.slideindex.app.overlay.OverlayWindowGuard
@@ -599,15 +600,22 @@ class CornerGestureController(
         active: Boolean,
     ) {
         val corner = settings.cornerGestureSettings
+        val spec = OverlayMaterialSpec.fromContext(context)
         val wantsBlur = active &&
             corner.backgroundStyle == CornerGestureSettings.BACKGROUND_BLUR &&
-            corner.blurDp > 0
+            spec.backdropBlurEnabled
         val canNativeBlur = wantsBlur &&
-            OverlayBlurGate.canBlur(windowManager, userEnabled = settings.overlayBlurEnabled)
+            OverlayBlurGate.canBlur(windowManager, userEnabled = spec.backdropBlurEnabled)
         if (canNativeBlur) {
             params.flags = params.flags or WindowManager.LayoutParams.FLAG_BLUR_BEHIND
-            val rawBlurPx = (corner.blurDp * density).roundToInt()
-            params.setBlurBehindRadius(rawBlurPx.coerceIn(1, 80))
+            val rawBlurPx = if (spec.backdropBlurRadiusDp > 0) {
+                (spec.backdropBlurRadiusDp * density).roundToInt()
+            } else if (corner.blurDp > 0) {
+                (corner.blurDp * density).roundToInt()
+            } else {
+                spec.blurRadiusPx(density)
+            }
+            params.setBlurBehindRadius(rawBlurPx.coerceIn(1, 100))
         } else {
             params.flags = params.flags and WindowManager.LayoutParams.FLAG_BLUR_BEHIND.inv()
             params.setBlurBehindRadius(0)

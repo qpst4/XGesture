@@ -60,6 +60,9 @@ import com.slideindex.app.overlay.pickresult.PickResultTextMode
 import com.slideindex.app.overlay.searchpanel.SearchPanelOverlayWindow
 import com.slideindex.app.overlay.searchpanel.SearchPanelQueryBridge
 import com.slideindex.app.overlay.setupBackgroundBlur
+import com.slideindex.app.overlay.OverlayGlassForegroundDrawable
+import com.slideindex.app.overlay.OverlayMaterialSpec
+import com.slideindex.app.overlay.OverlayPanelTheme
 import com.slideindex.app.service.RegionalScreenshotOcr
 import com.slideindex.app.service.SlideIndexAccessibilityService
 import java.lang.ref.WeakReference
@@ -446,12 +449,15 @@ object UniversalCopyOverlay {
             viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {
                     viewTreeObserver.removeOnPreDrawListener(this)
-                    setupBackgroundBlur(this@apply, cornerRadiusPx, dp(28), 0x80FFFFFF.toInt())
-                    foreground = GradientDrawable().apply {
-                        setColor(Color.TRANSPARENT)
-                        cornerRadius = cornerRadiusPx
-                        setStroke(strokeWidthPx, 0xB0FFFFFF.toInt())
-                    }
+                    val spec = OverlayMaterialSpec.fromContext(context)
+                    val isDark = OverlayPanelTheme.isDarkTheme(context)
+                    setupBackgroundBlur(this@apply, cornerRadiusPx, spec.blurRadiusPx(density), spec.tintColor(isDark))
+                    foreground = OverlayGlassForegroundDrawable(
+                        spec = spec,
+                        isDark = isDark,
+                        cornerRadiusPx = cornerRadiusPx,
+                        density = density,
+                    )
                     postInvalidateOnAnimation()
                     return true
                 }

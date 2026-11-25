@@ -1,5 +1,7 @@
 package com.slideindex.app.shizuku
 
+import android.os.IBinder
+import android.os.ParcelFileDescriptor
 import com.slideindex.app.util.TaskManagerTaskQueries
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -271,6 +273,21 @@ class TaskManagerTaskOperationsTest {
         override fun getTouchDevices(): Array<String> = emptyArray()
 
         override fun setMultiTouchTrigger(area: Int, keyboardBehavior: Int, borderPx: Int) = Unit
+
+        // 全局触控输入流（全局长按强行拖拽）：本测试只覆盖任务操作，桩里一律当"不可用"处理。
+        override fun openTouchStream(token: String?, owner: IBinder?): ParcelFileDescriptor? = null
+
+        override fun closeTouchStream(token: String?) = Unit
+
+        override fun interruptTouchForDrag(
+            token: String?,
+            sourcePackage: String?,
+            x: Float,
+            y: Float,
+            displayId: Int,
+            deadlineUptimeMs: Long,
+            guard: ITouchInterruptionGuard?,
+        ): Boolean = false
 
         // 热点：本测试只覆盖任务操作，桩里一律当"不支持"处理。
         override fun getTetheringState(): Int = -1

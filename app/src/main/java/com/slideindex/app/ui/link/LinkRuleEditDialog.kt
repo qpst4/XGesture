@@ -23,6 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material3.Icon
 import androidx.compose.ui.res.painterResource
@@ -117,10 +118,10 @@ internal fun LinkAppIcon(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.ic_hub_primary),
+                imageVector = MiuixIcons.Glass.ImageOutline,
                 contentDescription = null,
-                modifier = Modifier.size(size),
-                tint = MiuixTheme.colorScheme.primary,
+                modifier = Modifier.size(size * 0.55f),
+                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             )
         }
     }
@@ -137,6 +138,7 @@ internal fun LinkRuleIcon(
     iconType: String = LinkDispatchRule.ICON_TYPE_DEFAULT,
     iconValue: String = "",
     targetPackage: String = "",
+    isRedispatch: Boolean = false,
     size: Dp = 56.dp,
     shape: Shape = RoundedCornerShape(14.dp),
     modifier: Modifier = Modifier,
@@ -174,27 +176,48 @@ internal fun LinkRuleIcon(
     }
 
     val resolvedPackage = when {
+        isRedispatch -> ""
         iconType == LinkDispatchRule.ICON_TYPE_APP && iconValue.isNotBlank() -> iconValue
         else -> targetPackage
     }
+    val isInstalled = remember(resolvedPackage) {
+        resolvedPackage.isNotBlank() && runCatching {
+            context.packageManager.getPackageInfo(resolvedPackage.substringBefore('/'), 0)
+        }.isSuccess
+    }
 
-    if (resolvedPackage.isNotBlank()) {
+    if (resolvedPackage.isNotBlank() && isInstalled) {
         LinkAppIcon(
             packageName = resolvedPackage,
             size = size,
             shape = shape,
             modifier = modifier,
         )
-    } else {
+    } else if (isRedispatch) {
         Box(
             modifier = modifier.size(size),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_hub_primary),
-                contentDescription = "规则默认图标",
-                tint = MiuixTheme.colorScheme.primary,
-                modifier = Modifier.size(size),
+                contentDescription = "重分发规则图标",
+                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                modifier = Modifier.size(size * 0.72f),
+            )
+        }
+    } else {
+        Box(
+            modifier = modifier
+                .size(size)
+                .clip(shape)
+                .background(MiuixTheme.colorScheme.surfaceContainerHigh),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Default.Android,
+                contentDescription = "未安装应用",
+                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.4f),
+                modifier = Modifier.padding(size / 5),
             )
         }
     }

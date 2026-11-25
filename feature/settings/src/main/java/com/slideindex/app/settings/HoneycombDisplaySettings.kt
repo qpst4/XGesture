@@ -7,10 +7,12 @@ package com.slideindex.app.settings
 
 import androidx.datastore.preferences.core.Preferences
 import com.slideindex.app.gesture.SelectedHintMetrics
+import com.slideindex.app.overlay.layout.PanelIconShape
 
 data class HoneycombDisplaySettings(
     val mode: Int = MODE_HOLD,
     val iconSizeDp: Int = DEFAULT_ICON_SIZE_DP,
+    val iconShape: PanelIconShape = PanelIconShape.FOLLOW_GLOBAL,
     val spacingDp: Int = DEFAULT_SPACING_DP,
     val animationSpeed: Int = DEFAULT_ANIMATION_SPEED,
     val inertia: Int = DEFAULT_INERTIA,
@@ -83,6 +85,7 @@ data class HoneycombDisplaySettings(
             HoneycombDisplaySettings(
                 mode = prefs[SettingsPreferenceKeys.HONEYCOMB_MODE] ?: MODE_HOLD,
                 iconSizeDp = prefs[SettingsPreferenceKeys.HONEYCOMB_ICON_SIZE_DP] ?: DEFAULT_ICON_SIZE_DP,
+                iconShape = PanelIconShape.fromName(prefs[SettingsPreferenceKeys.HONEYCOMB_ICON_SHAPE]),
                 spacingDp = prefs[SettingsPreferenceKeys.HONEYCOMB_SPACING_DP] ?: DEFAULT_SPACING_DP,
                 animationSpeed = prefs[SettingsPreferenceKeys.HONEYCOMB_ANIMATION_SPEED] ?: DEFAULT_ANIMATION_SPEED,
                 inertia = prefs[SettingsPreferenceKeys.HONEYCOMB_INERTIA] ?: DEFAULT_INERTIA,

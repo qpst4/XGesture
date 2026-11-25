@@ -2,6 +2,7 @@ package com.slideindex.app.search
 
 import android.content.Context
 import android.net.Uri
+import com.slideindex.app.link.LinkGoRuleConverter
 import com.slideindex.app.settings.SearchEngineConfig
 import com.slideindex.app.settings.SearchEngineStore
 import com.slideindex.app.settings.SearchEngineType
@@ -161,26 +162,89 @@ object SearchEngineImporter {
         return LinkGoGroupConfig(members = members, intervalMillis = interval)
     }
 
+    private data class YimoEngineConfig(
+        val autoEnter: Boolean = true,
+        val className: String = "",
+        val link: String = "",
+        val target: String = "",
+    )
+
+    private fun parseYimoConfig(raw: String?): YimoEngineConfig? {
+        if (raw.isNullOrBlank()) return null
+        val obj = runCatching { json.parseToJsonElement(raw).jsonObject }.getOrNull() ?: return null
+        return YimoEngineConfig(
+            autoEnter = obj.booleanValue("autoEnter") ?: true,
+            className = obj.stringValue("className").orEmpty(),
+            link = obj.stringValue("link").orEmpty(),
+            target = obj.stringValue("target").orEmpty(),
+        )
+    }
+
     private fun mapLinkGoEngine(obj: JsonObject, index: Int): SearchEngineConfig? {
         val name = obj.stringValue("name").orEmpty()
         val url = obj.stringValue("urlTemplate").orEmpty()
         val pkg = obj.stringValue("packageName").orEmpty()
-        val className = obj.stringValue("className").orEmpty()
+        val topClassName = obj.stringValue("className").orEmpty()
         val externUrl = obj.stringValue("externJumpLink").orEmpty()
+        val type = obj.stringValue("type")?.toIntOrNull() ?: 0
+        val scheme = obj.stringValue("scheme")?.toIntOrNull() ?: 0
+        val cfg = parseYimoConfig(obj.stringValue("configJson"))
+        val targetPair = cfg?.target?.takeIf { it.isNotBlank() }?.let(LinkGoRuleConverter::splitTarget)
+        val classPair = (cfg?.className?.takeIf { it.isNotBlank() } ?: topClassName.takeIf { it.isNotBlank() })
+            ?.let(LinkGoRuleConverter::splitTarget)
         val engineType = when {
+            type == 2 && scheme == 1 && targetPair?.first?.isNotBlank() == true ->
+                SearchEngineType.SHARE_IMAGE_TO_APP
+            scheme == 1 && targetPair?.first?.isNotBlank() == true ->
+                SearchEngineType.SHARE_TO_APP
+            scheme == 2 && classPair?.first?.isNotBlank() == true ->
+                SearchEngineType.JUMP_TO_ACTIVITY
+            scheme == 3 && !cfg?.link.isNullOrBlank() ->
+                SearchEngineType.EXTERN_JUMP_LINK
             url.isNotBlank() -> SearchEngineType.DIRECT_LINK
             externUrl.isNotBlank() -> SearchEngineType.EXTERN_JUMP_LINK
-            pkg.isNotBlank() && className.isNotBlank() -> SearchEngineType.JUMP_TO_ACTIVITY
+            classPair?.first?.isNotBlank() == true -> SearchEngineType.JUMP_TO_ACTIVITY
             else -> return null
+        }
+        val targetPackage = when (engineType) {
+            SearchEngineType.SHARE_TO_APP,
+            SearchEngineType.SHARE_IMAGE_TO_APP,
+            -> targetPair?.first.orEmpty()
+            SearchEngineType.JUMP_TO_ACTIVITY -> classPair?.first.orEmpty()
+            else -> pkg
+        }
+        val targetActivity = when (engineType) {
+            SearchEngineType.SHARE_TO_APP,
+            SearchEngineType.SHARE_IMAGE_TO_APP,
+            -> targetPair?.second.orEmpty()
+            SearchEngineType.JUMP_TO_ACTIVITY -> classPair?.second.orEmpty()
+            else -> ""
+        }
+        if (engineType in setOf(
+                SearchEngineType.SHARE_TO_APP,
+                SearchEngineType.SHARE_IMAGE_TO_APP,
+                SearchEngineType.JUMP_TO_ACTIVITY,
+            ) && (targetPackage.isBlank() || targetActivity.isBlank())
+        ) {
+            return null
+        }
+        val externLink = when {
+            engineType == SearchEngineType.EXTERN_JUMP_LINK -> cfg?.link?.takeIf { it.isNotBlank() }
+                ?: url.takeIf { it.isNotBlank() }
+            else -> externUrl.takeIf { it.isNotBlank() }
         }
         return SearchEngineConfig(
             id = UUID.randomUUID().toString(),
             name = name.ifBlank { "未命名引擎" },
             engineType = engineType,
-            searchLink = url.takeIf { it.isNotBlank() },
-            externJumpLink = externUrl.takeIf { it.isNotBlank() },
-            targetPackage = pkg.takeIf { it.isNotBlank() },
-            targetActivity = className.takeIf { it.isNotBlank() },
+            searchLink = url.takeIf { engineType == SearchEngineType.DIRECT_LINK && it.isNotBlank() },
+            externJumpLink = externLink,
+            externJumpPackage = pkg.takeIf {
+                engineType == SearchEngineType.EXTERN_JUMP_LINK && it.isNotBlank()
+            },
+            targetPackage = targetPackage.takeIf { it.isNotBlank() },
+            targetActivity = targetActivity.takeIf { it.isNotBlank() },
+            autoInputEnter = cfg?.autoEnter ?: true,
             showInPickPanel = obj.booleanValue("enabled") ?: true,
             sortOrder = obj.stringValue("sortOrder")?.toIntOrNull() ?: index,
         )

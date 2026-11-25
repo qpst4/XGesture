@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dynamic_shortcuts_home_label">XGesture ショートカットアシスタント</string>
+    <string name="dynamic_shortcuts_title">動的ショートカットをインポート</string>
+    <string name="dynamic_shortcuts_permission_card_title">既定のホームの権限</string>
+    <string name="dynamic_shortcuts_permission_needed_desc">Android の制限により、他のアプリが公開する動的ショートカット（WeChat のスキャン／支払いなど）を検出できるのは既定のホームアプリのみです。一時的に XGesture を既定のホームに設定し、必要なショートカットをピン留めしてから元のランチャーに戻してください。</string>
+    <string name="dynamic_shortcuts_permission_granted_desc">ホーム権限が有効です。下の「動的ショートカットをスキャン」をタップして検出してください。ピン留めすれば、既定のホームを戻した後も XGesture が起動権限を保持します。</string>
+    <string name="dynamic_shortcuts_grant_home">一時的なホームに設定</string>
+    <string name="dynamic_shortcuts_restore_home">既定のホームに戻す</string>
+    <string name="dynamic_shortcuts_scan">動的ショートカットをスキャン</string>
+    <string name="dynamic_shortcuts_scanning">システムの動的ショートカットをスキャンしています…</string>
+    <string name="dynamic_shortcuts_import_selected">選択項目をインポートしてピン留め (%1$d)</string>
+    <string name="dynamic_shortcuts_import_success">%1$d 件のショートカットをピン留めしてインポートしました</string>
+    <string name="dynamic_shortcuts_no_selection">ショートカットを 1 つ以上選択してください</string>
+    <string name="dynamic_shortcuts_empty">動的ショートカットが見つかりません</string>
+    <string name="dynamic_shortcuts_already_imported">インポート済み</string>
+    <string name="dynamic_shortcuts_home_unavailable">システムのホーム設定を開けません</string>
+    <string name="activity_shortcut_add_from_dynamic">動的ショートカットをインポート</string>
+    <string name="activity_shortcut_add_from_dynamic_sub">一時的にホームに設定して WeChat／Alipay のショートカットを検出</string>
+    <string name="shortcut_test_mode_static">静的</string>
+    <string name="shortcut_test_mode_privilege">特権</string>
+    <string name="shortcut_test_mode_dynamic">ホームでピン留め</string>
+    <string name="shortcut_test_save_to_direct">ダイレクトに保存</string>
+    <string name="shortcut_test_save_success">ダイレクトショートカットに保存しました</string>
+    <string name="shortcut_test_already_saved">ダイレクトショートカットに既に存在します</string>
+    <string name="shortcut_test_dynamic_tip">ホームの役割を取得すると動的ショートカットを検出できます。ダイレクトに保存すると永続的にピン留めされ、ランチャーを戻した後も起動できます。</string>
+</resources>

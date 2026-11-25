@@ -51,6 +51,7 @@ fun SearchEnginePreviewSortScreen(
                     onOrderChange = onReorder,
                     modifier = Modifier.padding(vertical = 8.dp),
                     iconShape = settings.searchEngineIconShape,
+                    globalIconShape = settings.globalIconShape,
                 )
             }
         }

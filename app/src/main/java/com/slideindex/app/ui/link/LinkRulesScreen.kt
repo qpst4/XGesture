@@ -3,8 +3,11 @@ package com.slideindex.app.ui.link
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,12 +28,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.icons.filled.FindInPage
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -60,7 +67,9 @@ import com.slideindex.app.ui.components.reorderable.ReorderableCollectionItemSco
 import com.slideindex.app.ui.components.reorderable.ReorderableItem
 import com.slideindex.app.ui.components.reorderable.rememberReorderableLazyListState
 import com.slideindex.app.ui.miuix.CardSegment
+import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.miuix.MiuixGlassIconDropdown
+import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixSettingsFab
 import com.slideindex.app.ui.miuix.MiuixSettingsFabInset
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffoldWithExpandableSearch
@@ -74,6 +83,8 @@ import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.glass.GlassIconButton
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Backup
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
@@ -90,12 +101,14 @@ fun LinkRulesScreen(
     onBack: () -> Unit,
     onNavigateToEditRule: (String?) -> Unit,
     onNavigateToHistory: () -> Unit = {},
+    onNavigateToExtractionRules: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
 
     val rules by LinkRuleRepository.observeRules(context).collectAsStateWithLifecycle(initialValue = emptyList())
+    val extracts by LinkRuleRepository.observeExtractPatterns(context).collectAsStateWithLifecycle(initialValue = emptyList())
     var isReorderMode by rememberSaveable { mutableStateOf(false) }
 
     // 规范化：短链重分发规则置顶，应用直达规则在后
@@ -145,11 +158,83 @@ fun LinkRulesScreen(
 
     var showBuiltinImportDialog by remember { mutableStateOf(false) }
     var clipboardParsedBackup by remember { mutableStateOf<LinkConfigBackup?>(null) }
+    var clipboardPreviewVisible by remember { mutableStateOf(false) }
     var showLiveTestSheet by remember { mutableStateOf(false) }
+    var showDataManagementSheet by remember { mutableStateOf(false) }
+    var showManualImportDialog by remember { mutableStateOf(false) }
+    var manualImportText by remember { mutableStateOf("") }
+    var showDeleteSelectedDialog by remember { mutableStateOf(false) }
+    var pendingExportRules by remember { mutableStateOf<List<LinkDispatchRule>?>(null) }
+    var pendingLinkBackup by remember { mutableStateOf<LinkConfigBackup?>(null) }
+    var previewVisible by remember { mutableStateOf(false) }
+    val selectedIds = remember { mutableStateListOf<String>() }
+
+    fun exitSelectionMode(saveOrder: Boolean = true) {
+        isReorderMode = false
+        selectedIds.clear()
+        if (saveOrder) onDragSave()
+    }
+
+    fun importText(text: String) {
+        val backup = LinkConfigTransfer.parseText(text)
+        if (backup == null) {
+            Toast.makeText(context, "未找到可导入的规则", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (backup.rules.isEmpty() && backup.extracts.isEmpty() && backup.exempts.isEmpty()) {
+            Toast.makeText(context, "未找到可导入的规则", Toast.LENGTH_SHORT).show()
+            return
+        }
+        pendingLinkBackup = backup
+        previewVisible = true
+    }
+
+    val openDocumentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            scope.launch {
+                val text = withContext(Dispatchers.IO) {
+                    runCatching {
+                        context.contentResolver.openInputStream(uri)?.use { it.readBytes().decodeToString() }
+                    }.getOrNull()
+                }
+                if (text.isNullOrBlank()) {
+                    Toast.makeText(context, "读取文件失败", Toast.LENGTH_SHORT).show()
+                } else {
+                    importText(text)
+                }
+            }
+        }
+    }
+
+    val createDocumentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            scope.launch {
+                val snapshot = LinkRuleRepository.snapshot(context)
+                val rulesToExport = pendingExportRules ?: snapshot.rules
+                pendingExportRules = null
+                val json = LinkConfigCodec.export(rulesToExport, snapshot.exempts, snapshot.extracts)
+                val ok = withContext(Dispatchers.IO) {
+                    runCatching {
+                        context.contentResolver.openOutputStream(uri)?.use {
+                            it.write(json.toByteArray())
+                        } != null
+                    }.getOrDefault(false)
+                }
+                Toast.makeText(
+                    context,
+                    if (ok) "备份已保存" else "保存失败",
+                    Toast.LENGTH_SHORT,
+                ).show()
+            }
+        }
+    }
 
     BackHandler(enabled = isReorderMode) {
-        isReorderMode = false
-        onDragSave()
+        exitSelectionMode()
     }
 
     val filteredRules = remember(localRules, searchQuery) {
@@ -179,6 +264,7 @@ fun LinkRulesScreen(
                         val parsed = LinkConfigTransfer.parseClipboardBackup(context)
                         if (parsed != null && parsed.rules.isNotEmpty()) {
                             clipboardParsedBackup = parsed
+                            clipboardPreviewVisible = true
                         } else {
                             scope.launch {
                                 val res = LinkConfigTransfer.importFromClipboard(context)
@@ -208,7 +294,7 @@ fun LinkRulesScreen(
         )
     }
 
-    val pageTitle = if (isReorderMode) "调整规则顺序" else "分发规则"
+    val pageTitle = if (isReorderMode) "已选 ${selectedIds.size}" else "分发规则"
 
     SettingsLazyScreenScaffoldWithExpandableSearch(
         title = pageTitle,
@@ -217,8 +303,7 @@ fun LinkRulesScreen(
         listState = lazyListState,
         onBack = {
             if (isReorderMode) {
-                isReorderMode = false
-                onDragSave()
+                exitSelectionMode()
             } else {
                 onBack()
             }
@@ -230,12 +315,7 @@ fun LinkRulesScreen(
                     modifier = Modifier
                         .height(48.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .combinedClickable(
-                            onClick = {
-                                isReorderMode = false
-                                onDragSave()
-                            },
-                        )
+                        .combinedClickable(onClick = { exitSelectionMode() })
                         .padding(horizontal = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -246,22 +326,30 @@ fun LinkRulesScreen(
                         color = MiuixTheme.colorScheme.primary,
                     )
                 }
-            } else {
-                // 1. 全局仿真推演测试（毛玻璃胶囊）
-                GlassIconButton(onClick = { showLiveTestSheet = true }) {
+                GlassIconButton(onClick = { showDataManagementSheet = true }) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_science_lab),
-                        contentDescription = "仿真推演",
+                        imageVector = MiuixIcons.Backup,
+                        contentDescription = "数据管理",
                         tint = MiuixTheme.colorScheme.onSurface,
                     )
                 }
-                // 2. 更多选项（使用专为顶栏设计的毛玻璃下拉菜单组件，带毛玻璃胶囊包裹）
-                MiuixGlassIconDropdown(
-                    entries = listOf(moreMenuEntry),
-                    icon = Icons.Default.MoreVert,
-                    contentDescription = "更多选项",
-                    capsule = true,
-                )
+            } else {
+                // 1. 数据管理
+                GlassIconButton(onClick = { showDataManagementSheet = true }) {
+                    Icon(
+                        imageVector = MiuixIcons.Backup,
+                        contentDescription = "数据管理",
+                        tint = MiuixTheme.colorScheme.onSurface,
+                    )
+                }
+                // 2. 规则测试（毛玻璃胶囊）
+                GlassIconButton(onClick = { showLiveTestSheet = true }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_science_lab),
+                        contentDescription = "规则测试",
+                        tint = MiuixTheme.colorScheme.onSurface,
+                    )
+                }
             }
         },
         floatingActionButton = {
@@ -274,6 +362,77 @@ fun LinkRulesScreen(
             }
         },
         fabInset = if (!isReorderMode) MiuixSettingsFabInset else 0.dp,
+        bottomBar = {
+            if (isReorderMode) {
+                val selectedRules = localRules.filter { it.id in selectedIds }
+                val allEnabled = selectedIds.isNotEmpty() &&
+                    selectedRules.all { it.isEnabled }
+                LinkSelectionBottomBar(
+                    onToggleSelectAll = {
+                        if (selectedIds.size == filteredRules.size && filteredRules.isNotEmpty()) {
+                            selectedIds.clear()
+                        } else {
+                            selectedIds.clear()
+                            selectedIds.addAll(filteredRules.map { it.id })
+                        }
+                    },
+                    allSelected = selectedIds.size == filteredRules.size && filteredRules.isNotEmpty(),
+                    onToggleEnabled = {
+                        val target = !allEnabled
+                        val ids = selectedIds.toSet()
+                        scope.launch {
+                            LinkRuleRepository.updateRules(context) { cur ->
+                                cur.map {
+                                    if (it.id in ids) it.copy(isEnabled = target) else it
+                                }
+                            }
+                            localRules = localRules.map {
+                                if (it.id in ids) it.copy(isEnabled = target) else it
+                            }
+                        }
+                    },
+                    allEnabled = allEnabled,
+                    onShare = {
+                        val json = LinkConfigCodec.export(
+                            selectedRules,
+                            emptyList(),
+                            emptyList(),
+                        )
+                        val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(android.content.Intent.EXTRA_TEXT, json)
+                        }
+                        context.startActivity(
+                            android.content.Intent.createChooser(send, "分享选中的规则")
+                                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+                        )
+                    },
+                    onSaveToFile = {
+                        pendingExportRules = selectedRules
+                        createDocumentLauncher.launch("link_rules_selected.json")
+                    },
+                    onDuplicate = {
+                        val source = selectedRules
+                        scope.launch {
+                            val copies = source.mapIndexed { index, rule ->
+                                rule.copy(
+                                    id = java.util.UUID.randomUUID().toString(),
+                                    name = "${rule.name} 副本",
+                                    priority = localRules.size + index,
+                                    hitCount = 0,
+                                    lastHitAt = 0L,
+                                )
+                            }
+                            LinkRuleRepository.updateRules(context) { cur -> cur + copies }
+                            localRules = localRules + copies
+                            exitSelectionMode(saveOrder = false)
+                        }
+                    },
+                    onDelete = { showDeleteSelectedDialog = true },
+                    anySelected = selectedIds.isNotEmpty(),
+                )
+            }
+        },
     ) {
         // 顶部简述卡片
         item(key = "rule_summary_card") {
@@ -287,11 +446,47 @@ fun LinkRulesScreen(
                     modifier = Modifier.fillMaxWidth(),
                     title = if (searchQuery.isBlank()) "规则概览" else "搜索结果",
                     summary = if (searchQuery.isBlank()) {
-                        if (isReorderMode) "已进入排序模式：按住右侧三道杠手柄可直接拖动换位，点击右上角「完成」保存"
-                        else "共 ${rules.size} 条规则 · 短链分发 ${dispatchRules.size} 条 · 应用直达 ${redirectRules.size} 条 · 长按卡片进入排序"
+                        if (isReorderMode) "已进入选择模式：点击卡片可多选，底部工具栏可批量操作，点击右上角「完成」退出"
+                        else "共 ${rules.size} 条规则 · 短链分发 ${dispatchRules.size} 条 · 应用直达 ${redirectRules.size} 条 · 长按卡片进入多选"
                     } else {
                         "找到 ${filteredRules.size} / ${rules.size} 条规则"
                     },
+                )
+            }
+        }
+
+        item(key = "extraction_rules_entry") {
+            CardSegment(
+                isFirst = true,
+                isLast = true,
+                outerHorizontalPadding = 12.dp,
+                modifier = Modifier.padding(bottom = 6.dp),
+            ) {
+                BasicComponent(
+                    modifier = Modifier.fillMaxWidth(),
+                    title = "链接提取规则",
+                    summary = "从文本中找出链接的正则（当前 ${extracts.size} 项）",
+                    startAction = {
+                        Box(
+                            modifier = Modifier.size(40.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FindInPage,
+                                contentDescription = null,
+                                tint = MiuixTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                    },
+                    endActions = {
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        )
+                    },
+                    onClick = onNavigateToExtractionRules,
                 )
             }
         }
@@ -322,7 +517,7 @@ fun LinkRulesScreen(
             if (dispatchRules.isNotEmpty()) {
                 item(key = "header_dispatch_rules") {
                     SmallTitle(
-                        text = "短链重分发规则 (${dispatchRules.size} 条)",
+                        text = "重分发规则",
                         textColor = MiuixTheme.colorScheme.primary,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -343,10 +538,14 @@ fun LinkRulesScreen(
                             isFirst = true,
                             isLast = true,
                             isReorderMode = isReorderMode,
+                            isSelected = rule.id in selectedIds,
                             isDragging = isDragging,
                             reorderItemScope = this,
                             onClick = {
-                                if (!isReorderMode) {
+                                if (isReorderMode) {
+                                    if (rule.id in selectedIds) selectedIds.remove(rule.id)
+                                    else selectedIds.add(rule.id)
+                                } else {
                                     onNavigateToEditRule(rule.id)
                                 }
                             },
@@ -354,6 +553,8 @@ fun LinkRulesScreen(
                                 if (!isReorderMode) {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     isReorderMode = true
+                                    selectedIds.clear()
+                                    selectedIds.add(rule.id)
                                 }
                             },
                             onToggleEnabled = { enabled ->
@@ -372,7 +573,7 @@ fun LinkRulesScreen(
             if (redirectRules.isNotEmpty()) {
                 item(key = "header_redirect_rules") {
                     SmallTitle(
-                        text = "应用直达跳转规则 (${redirectRules.size} 条)",
+                        text = "跳转规则",
                         textColor = MiuixTheme.colorScheme.primary,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -393,10 +594,14 @@ fun LinkRulesScreen(
                             isFirst = true,
                             isLast = true,
                             isReorderMode = isReorderMode,
+                            isSelected = rule.id in selectedIds,
                             isDragging = isDragging,
                             reorderItemScope = this,
                             onClick = {
-                                if (!isReorderMode) {
+                                if (isReorderMode) {
+                                    if (rule.id in selectedIds) selectedIds.remove(rule.id)
+                                    else selectedIds.add(rule.id)
+                                } else {
                                     onNavigateToEditRule(rule.id)
                                 }
                             },
@@ -404,6 +609,8 @@ fun LinkRulesScreen(
                                 if (!isReorderMode) {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     isReorderMode = true
+                                    selectedIds.clear()
+                                    selectedIds.add(rule.id)
                                 }
                             },
                             onToggleEnabled = { enabled ->
@@ -421,49 +628,169 @@ fun LinkRulesScreen(
     }
 
     // 内置模板导入选择弹窗
-    if (showBuiltinImportDialog) {
-        LinkTemplateImportDialog(
-            show = true,
-            existingRules = rules,
-            dialogTitle = "导入内置推荐规则",
-            dialogDescription = "精选各主流 App（微信、B站、知乎、小红书、微博、京东等）的高速分发规则",
-            onDismissRequest = { showBuiltinImportDialog = false },
-            onImport = { chosen ->
-                showBuiltinImportDialog = false
-                scope.launch {
-                    val res = LinkRuleRepository.importConfig(context, LinkConfigBackup(rules = chosen))
-                    Toast.makeText(context, "成功导入 ${res.rulesAdded} 条规则", Toast.LENGTH_SHORT).show()
-                }
-            },
-        )
-    }
+    LinkTemplateImportDialog(
+        show = showBuiltinImportDialog,
+        existingRules = rules,
+        dialogTitle = "导入内置推荐规则",
+        dialogDescription = "精选各主流 App（微信、B站、知乎、小红书、微博、京东等）的高速分发规则",
+        onDismissRequest = { showBuiltinImportDialog = false },
+        onImport = { chosen ->
+            scope.launch {
+                val res = LinkRuleRepository.importConfig(context, LinkConfigBackup(rules = chosen))
+                Toast.makeText(context, "成功导入 ${res.rulesAdded} 条规则", Toast.LENGTH_SHORT).show()
+            }
+        },
+    )
 
     // 剪贴板冲突/覆盖导入选择弹窗
-    clipboardParsedBackup?.let { backup ->
-        LinkTemplateImportDialog(
-            show = true,
-            existingRules = rules,
-            customCandidates = backup.rules,
-            dialogTitle = "导入剪贴板规则",
-            dialogDescription = "从剪贴板解析到 ${backup.rules.size} 条规则，请勾选您需要导入的项目",
-            onDismissRequest = { clipboardParsedBackup = null },
-            onImport = { chosen ->
-                clipboardParsedBackup = null
-                scope.launch {
-                    val res = LinkRuleRepository.importConfig(context, LinkConfigBackup(rules = chosen))
-                    Toast.makeText(context, "成功导入 ${res.rulesAdded} 条规则", Toast.LENGTH_SHORT).show()
+    val clipboardPreviewBackup = clipboardParsedBackup ?: LinkConfigBackup()
+    LinkTemplateImportDialog(
+        show = clipboardPreviewVisible,
+        existingRules = rules,
+        customCandidates = clipboardPreviewBackup.rules,
+        dialogTitle = "导入剪贴板规则",
+        dialogDescription = "从剪贴板解析到 ${clipboardPreviewBackup.rules.size} 条规则，请勾选您需要导入的项目",
+        onDismissRequest = { clipboardPreviewVisible = false },
+        onDismissFinished = { clipboardParsedBackup = null },
+        onImport = { chosen ->
+            scope.launch {
+                val res = LinkRuleRepository.importConfig(context, LinkConfigBackup(rules = chosen))
+                Toast.makeText(context, "成功导入 ${res.rulesAdded} 条规则", Toast.LENGTH_SHORT).show()
+            }
+        },
+    )
+
+    // 顶栏规则测试弹窗（全局规则库沙盒）
+    LinkRuleLiveTestBottomSheet(
+        show = showLiveTestSheet,
+        candidateRule = null,
+        onDismissRequest = { showLiveTestSheet = false },
+    )
+
+    LinkDataManagementSheet(
+        show = showDataManagementSheet,
+        onDismiss = { showDataManagementSheet = false },
+            onImportClipboard = {
+                showDataManagementSheet = false
+                val text = (context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)
+                    ?.primaryClip?.getItemAt(0)?.text?.toString().orEmpty()
+                if (text.isBlank()) {
+                    Toast.makeText(context, "剪贴板内容为空", Toast.LENGTH_SHORT).show()
+                } else {
+                    importText(text)
                 }
             },
-        )
+            onImportFile = {
+                showDataManagementSheet = false
+                openDocumentLauncher.launch(arrayOf("application/json", "text/plain"))
+            },
+            onManualImport = {
+                showDataManagementSheet = false
+                manualImportText = ""
+                showManualImportDialog = true
+            },
+            onOpenBuiltinRules = {
+                showDataManagementSheet = false
+                showBuiltinImportDialog = true
+            },
+            onExportClipboard = {
+                showDataManagementSheet = false
+                scope.launch {
+                    val ok = LinkConfigTransfer.exportToClipboard(context)
+                    Toast.makeText(
+                        context,
+                        if (ok) "已导出到剪贴板" else "导出失败",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }
+            },
+            onExportFile = {
+                showDataManagementSheet = false
+                pendingExportRules = null
+                createDocumentLauncher.launch("link_rules_backup.json")
+            },
+    )
+
+    val previewBackup = pendingLinkBackup ?: LinkConfigBackup()
+    LinkTemplateImportDialog(
+        show = previewVisible,
+        existingRules = localRules,
+        customCandidates = previewBackup.rules,
+        customExtracts = previewBackup.extracts,
+        dialogTitle = "导入预览",
+        dialogDescription = buildString {
+            val redispatch = previewBackup.rules.count {
+                it.resolveStrategy == LinkResolveStrategy.REDISPATCH
+            }
+            append("重分发规则 ${redispatch} 条 · 跳转规则 ${previewBackup.rules.size - redispatch} 条")
+            if (previewBackup.extracts.isNotEmpty()) {
+                append(" · 提取规则 ${previewBackup.extracts.size} 条")
+            }
+            append("，请选择要导入的项目。")
+        },
+        onDismissRequest = { previewVisible = false },
+        onDismissFinished = { pendingLinkBackup = null },
+        onImport = {},
+        onImportWithExtracts = { selected, selectedExtracts ->
+            scope.launch {
+                val result = LinkRuleRepository.importConfig(
+                    context,
+                    previewBackup.copy(rules = selected, extracts = selectedExtracts),
+                )
+                isReorderMode = false
+                selectedIds.clear()
+                localRules = normalizeRuleOrder(LinkRuleRepository.loadRules(context))
+                Toast.makeText(
+                    context,
+                    "新增 ${result.rulesAdded} 条规则 · ${result.extractsAdded} 条提取规则",
+                    Toast.LENGTH_SHORT,
+                ).show()
+            }
+        },
+    )
+
+    if (showManualImportDialog) {
+        MiuixFormDialog(
+            show = true,
+            onDismissRequest = { showManualImportDialog = false },
+            title = "手动输入识别",
+            confirmEnabled = manualImportText.isNotBlank(),
+            onConfirm = {
+                showManualImportDialog = false
+                importText(manualImportText)
+            },
+        ) {
+            MiuixLabeledTextField(
+                value = manualImportText,
+                onValueChange = { manualImportText = it },
+                label = "粘贴规则 JSON",
+                singleLine = false,
+                minLines = 6,
+                maxLines = 12,
+            )
+        }
     }
 
-    // 顶栏实时仿真推演弹窗（全局规则库沙盒）
-    if (showLiveTestSheet) {
-        LinkRuleLiveTestBottomSheet(
+    if (showDeleteSelectedDialog) {
+        MiuixFormDialog(
             show = true,
-            candidateRule = null,
-            onDismissRequest = { showLiveTestSheet = false },
-        )
+            onDismissRequest = { showDeleteSelectedDialog = false },
+            title = "删除确认",
+            confirmText = "彻底删除",
+            onConfirm = {
+                showDeleteSelectedDialog = false
+                val ids = selectedIds.toSet()
+                scope.launch {
+                    LinkRuleRepository.updateRules(context) { cur ->
+                        cur.filterNot { it.id in ids }
+                    }
+                    localRules = localRules.filterNot { it.id in ids }
+                    exitSelectionMode(saveOrder = false)
+                }
+            },
+        ) {
+            MiuixText(text = "确定要删除选中的 ${selectedIds.size} 条规则吗？此操作无法撤销。")
+        }
     }
 }
 
@@ -481,6 +808,7 @@ private fun LinkDispatchRuleItemRow(
     isFirst: Boolean,
     isLast: Boolean,
     isReorderMode: Boolean,
+    isSelected: Boolean,
     isDragging: Boolean,
     reorderItemScope: ReorderableCollectionItemScope,
     modifier: Modifier = Modifier,
@@ -509,6 +837,7 @@ private fun LinkDispatchRuleItemRow(
 
     val itemColor = when {
         isDragging -> MiuixTheme.colorScheme.surfaceContainerHigh
+        isSelected -> MiuixTheme.colorScheme.primary.copy(alpha = 0.08f)
         else -> MiuixTheme.colorScheme.surfaceContainer
     }
 
@@ -517,6 +846,12 @@ private fun LinkDispatchRuleItemRow(
         isLast = isLast,
         color = itemColor,
         outerHorizontalPadding = 12.dp,
+        borderColor = if (isSelected) {
+            MiuixTheme.colorScheme.primary
+        } else {
+            androidx.compose.ui.graphics.Color.Transparent
+        },
+        borderWidth = if (isSelected) 2.dp else 0.dp,
         modifier = modifier.padding(bottom = 6.dp),
     ) {
         Column(
@@ -537,6 +872,7 @@ private fun LinkDispatchRuleItemRow(
                     iconType = rule.iconType,
                     iconValue = rule.iconValue,
                     targetPackage = rule.targetPackage,
+                    isRedispatch = rule.resolveStrategy == LinkResolveStrategy.REDISPATCH,
                     size = 40.dp,
                     shape = RoundedCornerShape(10.dp),
                 )
@@ -585,9 +921,7 @@ private fun LinkDispatchRuleItemRow(
                     )
                 }
 
-                // 3. 右侧状态操作区：
-                // 排序模式：开关直接变为 LinkGo 风格三道杠拖拽手柄 [Icons.Default.DragHandle]，按住直接拖动；
-                // 常规模式：Switch 启停开关
+                // 3. 右侧状态操作区：选择模式为 LinkGo 三道杠拖拽手柄，常规模式为启停开关
                 if (isReorderMode) {
                     with(reorderItemScope) {
                         Box(
@@ -597,8 +931,8 @@ private fun LinkDispatchRuleItemRow(
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
-                                imageVector = Icons.Default.DragHandle,
-                                contentDescription = "拖拽排序手柄",
+                                painter = painterResource(R.drawable.ic_iconoir_menu),
+                                contentDescription = "拖拽排序",
                                 tint = MiuixTheme.colorScheme.primary,
                                 modifier = Modifier.size(24.dp),
                             )

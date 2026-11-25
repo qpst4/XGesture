@@ -8,6 +8,49 @@ identical to the Chinese file so that the release pipeline can line up both lang
 
 Where the two files differ, `CHANGELOG.md` is authoritative.
 
+## [1.80.0] - 2026-11-23
+
+### Added
+- Added link dispatch and Link Radar with short-link redispatch, direct app links, extraction rules, browser selection, simulation tests, and dispatch history
+- Added import support for Gevo, LinkGo, and Yimo dispatch and extraction rules, plus Yimo search engine configs, with a preview before choosing what to import
+- Moved search engine data management to the search panel, with JSON backup and restore for text engines, image engines, search groups, and members
+- Added search groups that combine multiple search engines and support custom group icons
+- Added dynamic shortcuts that pin activity shortcuts as system shortcuts
+- Added global long-press drag and drop for images and text
+- Added text-to-image and image-to-text actions
+- Added a dedicated link extraction rules page with live testing, copy, and open result actions
+- Added physical-dp free windows with compensation for Xiaomi system scaling so window sizes stay consistent across devices
+- Added an "Installed apps" access entry to the Background & Permissions page
+- Unified Miuix cards, glass containers, and elastic overscroll effects
+
+### Changed
+- Rule editor now uses a glass top bar and shows the rule icon beside its name
+- Action search now matches action names and keywords only, not descriptions
+- Sound mode is split into separate toggle, ring, vibrate, and silent actions
+- Multi-touch trigger areas are now configured per gesture
+- Ring launcher synchronizes recent apps on the first frame to reduce list jumps
+- Alternative browser picker supports long-press to reverse the free window
+- Action and slot pickers now use Miuix large cards with adaptive columns
+- Reduced APK size by compressing DEX and native libraries and trimming unused resources
+- Ring launcher auto-fill now uses system usage records to improve suggestions without elevated privileges
+- Notification card menus and quick launcher icon selection now use glass popups
+- Link dispatch rules are grouped into redispatch and jump sections, with long-press multi-select and drag reordering
+- Extraction rule cards now use the standard card style
+
+### Fixed
+- Fixed activity image and file shortcuts failing with an operation error when launched from the quick launcher
+- Fixed extraction tests still finding ordinary URLs when all extraction rules were disabled
+- Fixed link redispatch simulation not showing the resolved link
+- Fixed landscape trigger duplication, reappearing buttons, and delayed refreshes (thanks @Nihility)
+- Fixed clipboard monitoring and module state detection after Xposed module hot reloads (thanks @Nihility)
+- Fixed the search overlay back gesture not closing the panel or hiding the keyboard first (thanks @Nihility)
+- Fixed search group imports creating duplicate members
+- Fixed deleted or duplicated dispatch rules being restored by an old list snapshot
+- Fixed ring launcher slots failing to unbind or losing the None action
+- Fixed double indentation in activity shortcut sheets and misaligned margins on image and file editors
+- Fixed top-level panels still using a light background in dark mode
+- Fixed inconsistent card, tab bar, and background colors in the AMOLED black theme
+
 ## [1.70.0] - 2026-11-19
 
 ### Added

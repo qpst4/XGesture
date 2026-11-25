@@ -40,10 +40,10 @@ internal class TaskSwitcherRenderer(
     private fun localizedContext() = AppLocaleApplier.wrapOverlayContext(host.context)
 
     private val elevatedCardPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val elevatedShadowPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val iconBitmapPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private val highlightPath = Path()
     private val tmpRect = RectF()
+    private val frostedGlassDrawable = LocalFrostedGlassDrawable { host.overlayView() }
 
     fun drawPanelContent(
         canvas: Canvas,
@@ -70,10 +70,21 @@ internal class TaskSwitcherRenderer(
         val gripPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = theme.grip }
 
         val panel = layout.panelRect
-        val panelCorner = host.dp(13f)
-        drawElevationShadow(canvas, panel, panelCorner)
-        elevatedCardPaint.color = theme.cardBackground
-        canvas.drawRoundRect(panel, panelCorner, panelCorner, elevatedCardPaint)
+        val spec = OverlayMaterialSpec.fromContext(host.context)
+        val isDark = OverlayPanelTheme.isDarkTheme(host.context)
+        val panelCorner = spec.cornerRadiusPx(host.density())
+        val blurDrawn = frostedGlassDrawable.draw(
+            canvas = canvas,
+            bounds = panel,
+            spec = spec,
+            density = host.density(),
+            isDark = isDark,
+            cornerRadiusPx = panelCorner,
+        )
+        if (!blurDrawn) {
+            elevatedCardPaint.color = spec.solidFallbackColor(isDark)
+            canvas.drawRoundRect(panel, panelCorner, panelCorner, elevatedCardPaint)
+        }
 
         if (layout.rows.isEmpty()) {
             val hintPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -181,9 +192,6 @@ internal class TaskSwitcherRenderer(
                         )
                     }
                 }
-            }
-            if (layout.listScrollPeekHeight > 0f && layout.scrollOffset < layout.maxScrollOffset - 0.5f) {
-                drawListBottomScrollFade(this, layout, theme.cardBackground)
             }
         }
 
@@ -304,28 +312,6 @@ internal class TaskSwitcherRenderer(
         )
     }
 
-    private fun drawListBottomScrollFade(
-        canvas: Canvas,
-        layout: TaskSwitcherPanelLayout,
-        cardBackground: Int,
-    ) {
-        val fadeHeight = layout.listScrollPeekHeight.coerceAtLeast(1f)
-        val bottom = layout.listRect.bottom
-        val top = bottom - fadeHeight
-        val fadePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            shader = LinearGradient(
-                0f,
-                top,
-                0f,
-                bottom,
-                cardBackground and 0x00FFFFFF,
-                cardBackground,
-                Shader.TileMode.CLAMP,
-            )
-        }
-        canvas.drawRect(layout.listRect.left, top, layout.listRect.right, bottom, fadePaint)
-    }
-
     private fun drawListHighlight(
         canvas: Canvas,
         rect: RectF,
@@ -387,38 +373,12 @@ internal class TaskSwitcherRenderer(
         canvas.drawPath(highlightPath, paint)
     }
 
-    private fun drawElevationShadow(
-        canvas: Canvas,
-        rect: RectF,
-        cornerRadius: Float
-    ) {
-        val shadowBlur = host.dp(3f)
-        val shadowLayers = 3
-        val shadowAlpha = 34
-        for (layer in shadowLayers downTo 1) {
-            val fraction = layer / shadowLayers.toFloat()
-            val spread = shadowBlur * fraction * 0.8f
-            val alpha = (shadowAlpha * fraction * fraction / shadowLayers).toInt().coerceIn(1, 255)
-            elevatedShadowPaint.color = Color.argb(alpha, 0, 0, 0)
-            canvas.drawRoundRect(
-                rect.left - spread,
-                rect.top - spread,
-                rect.right + spread,
-                rect.bottom + spread,
-                cornerRadius + spread * 0.2f,
-                cornerRadius + spread * 0.2f,
-                elevatedShadowPaint
-            )
-        }
-    }
-
     private fun drawElevatedRoundRect(
         canvas: Canvas,
         rect: RectF,
         cornerRadius: Float,
         fillColor: Int
     ) {
-        drawElevationShadow(canvas, rect, cornerRadius)
         elevatedCardPaint.color = fillColor
         canvas.drawRoundRect(rect, cornerRadius, cornerRadius, elevatedCardPaint)
     }

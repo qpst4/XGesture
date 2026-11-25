@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.slideindex.app.launcher.QuickLauncherGridLogic
 import com.slideindex.app.launcher.QuickLauncherGridLogic.moveIndex
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.overlay.pickresult.SearchEngineIcon
 import com.slideindex.app.settings.SearchEngineConfig
 import com.slideindex.app.settings.SearchEngineIconShape
@@ -85,6 +86,7 @@ fun SearchEngineSortableGrid(
     onOrderChange: (List<SearchEngineConfig>) -> Unit,
     modifier: Modifier = Modifier,
     iconShape: SearchEngineIconShape = SearchEngineIconShape.DEFAULT,
+    globalIconShape: FvIconShape = FvIconShape.SQUIRCLE,
 ) {
     if (engines.isEmpty()) return
 
@@ -272,6 +274,7 @@ fun SearchEngineSortableGrid(
                             showLabels = showLabels,
                             iconSize = iconSize,
                             iconShape = iconShape,
+                            globalIconShape = globalIconShape,
                             dragFromGlobal = dragFromGlobal,
                             dragSlotGlobal = dragSlotGlobal,
                         )
@@ -399,6 +402,7 @@ fun SearchEngineSortableGrid(
                             showLabel = showLabels,
                             iconSize = iconSize,
                             iconShape = iconShape,
+                            globalIconShape = globalIconShape,
                             modifier = Modifier
                                 .zIndex(2f)
                                 .offset {
@@ -432,6 +436,7 @@ private fun SearchEngineSortableGridPage(
     showLabels: Boolean,
     iconSize: Dp,
     iconShape: SearchEngineIconShape,
+    globalIconShape: FvIconShape = FvIconShape.SQUIRCLE,
     dragFromGlobal: Int,
     dragSlotGlobal: Int,
 ) {
@@ -467,6 +472,7 @@ private fun SearchEngineSortableGridPage(
                                 showLabel = showLabels,
                                 iconSize = iconSize,
                                 iconShape = iconShape,
+                                globalIconShape = globalIconShape,
                             )
                         }
                     }
@@ -482,6 +488,7 @@ private fun SearchEngineSortableGridCell(
     showLabel: Boolean,
     iconSize: Dp,
     iconShape: SearchEngineIconShape = SearchEngineIconShape.DEFAULT,
+    globalIconShape: FvIconShape = FvIconShape.SQUIRCLE,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -493,6 +500,7 @@ private fun SearchEngineSortableGridCell(
             engine = engine,
             modifier = Modifier.size(iconSize),
             iconShape = iconShape,
+            globalIconShape = globalIconShape,
         )
         if (showLabel) {
             Text(

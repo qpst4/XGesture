@@ -55,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
@@ -121,6 +122,8 @@ fun EditLinkRuleScreen(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
+    // 资源查询必须走 LocalResources：LocalContext 在配置变化后可能拿到过期的 Resources。
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
 
     var rules by remember { mutableStateOf<List<LinkDispatchRule>>(emptyList()) }
@@ -262,7 +265,7 @@ fun EditLinkRuleScreen(
             matchType = matchType,
             excludeFromRecents = excludeFromRecents,
             resolveShortLink = resolveShortLink,
-            resolveStrategy = if (resolveShortLink) resolveStrategy else LinkResolveStrategy.NONE,
+            resolveStrategy = effectiveStrategyFor(resolveShortLink, resolveStrategy),
             isEnabled = isEnabled,
             iconType = iconType,
             iconValue = iconValue,
@@ -276,11 +279,7 @@ fun EditLinkRuleScreen(
             return
         }
         val trimmedPkg = targetPackage.trim()
-        val effectiveStrategy = if (resolveShortLink) {
-            if (resolveStrategy == LinkResolveStrategy.NONE) LinkResolveStrategy.DIRECT else resolveStrategy
-        } else {
-            LinkResolveStrategy.NONE
-        }
+        val effectiveStrategy = effectiveStrategyFor(resolveShortLink, resolveStrategy)
         if (trimmedPkg.isEmpty() && effectiveStrategy != LinkResolveStrategy.REDISPATCH) {
             Toast.makeText(context, "请选择目标应用", Toast.LENGTH_SHORT).show()
             return
@@ -438,6 +437,7 @@ fun EditLinkRuleScreen(
         )
 
         // 2. 打开目标
+        if (resolveStrategy != LinkResolveStrategy.REDISPATCH) {
         settingsLazySmallTitle(
             key = "edit_rule_title_target",
             title = "打开目标",
@@ -530,8 +530,32 @@ fun EditLinkRuleScreen(
             keyPrefix = "edit_rule_target",
             items = targetCardItems,
         )
+        }
 
         // 3. 重构模板 (可选)
+
+        if (resolveStrategy == LinkResolveStrategy.REDISPATCH) {
+            settingsLazySmallTitle(
+                key = "edit_rule_title_bridge",
+                title = "桥接分发",
+            )
+            item(key = "edit_rule_bridge_note") {
+                CardSegment(
+                    isFirst = true,
+                    isLast = true,
+                    outerHorizontalPadding = 12.dp,
+                    color = MiuixTheme.colorScheme.surfaceContainer,
+                ) {
+                    MiuixText(
+                        text = "桥接模式：解析后将根据得到的新链接重新匹配库中规则，因此无需在此设置目标应用。",
+                        style = MiuixTheme.textStyles.footnote1,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        modifier = Modifier.padding(16.dp),
+                    )
+                }
+            }
+        }
+
         settingsLazySmallTitle(
             key = "edit_rule_title_template",
             title = "重构模板 (可选)",
@@ -729,7 +753,7 @@ fun EditLinkRuleScreen(
         // 4. 处理方式与高级
         settingsLazySmallTitle(
             key = "edit_rule_title_advanced",
-            title = "处理方式与高级",
+            title = "解析、命中与高级",
         )
 
         val advancedCardItems = buildList {
@@ -760,40 +784,36 @@ fun EditLinkRuleScreen(
                     )
                 },
             )
-            if (resolveShortLink) {
-                add(
-                    CardItem("resolve_strategy") {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp),
-                        ) {
-                            MiuixText(
-                                text = "解析策略",
-                                style = MiuixTheme.textStyles.footnote1,
-                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            )
-                            SegmentedControl(
-                                items = listOf(LinkResolveStrategy.DIRECT, LinkResolveStrategy.REDISPATCH),
-                                selected = if (resolveStrategy == LinkResolveStrategy.REDISPATCH) {
-                                    LinkResolveStrategy.REDISPATCH
-                                } else {
-                                    LinkResolveStrategy.DIRECT
-                                },
-                                labelRes = { strat ->
-                                    when (strat) {
-                                        LinkResolveStrategy.DIRECT -> R.string.link_rule_resolve_direct
-                                        LinkResolveStrategy.REDISPATCH -> R.string.link_rule_resolve_redispatch
-                                        else -> R.string.link_rule_resolve_direct
+            add(
+                CardItem("redispatch") {
+                    BasicComponent(
+                        modifier = Modifier.fillMaxWidth(),
+                        title = "二次规则分发",
+                        summary = "将改写后的产物作为新链接重新匹配全库规则",
+                        onClick = {
+                            resolveStrategy = if (resolveStrategy == LinkResolveStrategy.REDISPATCH) {
+                                if (resolveShortLink) LinkResolveStrategy.DIRECT else LinkResolveStrategy.NONE
+                            } else {
+                                LinkResolveStrategy.REDISPATCH
+                            }
+                        },
+                        endActions = {
+                            Switch(
+                                checked = resolveStrategy == LinkResolveStrategy.REDISPATCH,
+                                onCheckedChange = { checked ->
+                                    resolveStrategy = if (checked) {
+                                        LinkResolveStrategy.REDISPATCH
+                                    } else if (resolveShortLink) {
+                                        LinkResolveStrategy.DIRECT
+                                    } else {
+                                        LinkResolveStrategy.NONE
                                     }
                                 },
-                                onSelect = { resolveStrategy = it },
                             )
-                        }
-                    },
-                )
-            }
+                        },
+                    )
+                },
+            )
             add(
                 CardItem("exclude_from_recents") {
                     BasicComponent(
@@ -805,21 +825,6 @@ fun EditLinkRuleScreen(
                             Switch(
                                 checked = excludeFromRecents,
                                 onCheckedChange = { excludeFromRecents = it },
-                            )
-                        },
-                    )
-                },
-            )
-            add(
-                CardItem("is_enabled") {
-                    BasicComponent(
-                        modifier = Modifier.fillMaxWidth(),
-                        title = "启用此规则",
-                        onClick = { isEnabled = !isEnabled },
-                        endActions = {
-                            Switch(
-                                checked = isEnabled,
-                                onCheckedChange = { isEnabled = it },
                             )
                         },
                     )
@@ -837,7 +842,7 @@ fun EditLinkRuleScreen(
     LinkTargetAppPickerBottomSheet(
         show = showAppPickerSheet,
         selectedPackage = targetPackage,
-        allowClearForRedispatch = resolveShortLink && resolveStrategy == LinkResolveStrategy.REDISPATCH,
+        allowClearForRedispatch = resolveStrategy == LinkResolveStrategy.REDISPATCH,
         onDismissRequest = { showAppPickerSheet = false },
         onSelectApp = { pkg, appLabel ->
             if (pkg != targetPackage) {
@@ -896,7 +901,7 @@ fun EditLinkRuleScreen(
                     LinkRuleRepository.updateRules(context) { list ->
                         list.filterNot { it.id == rule.id }
                     }
-                    Toast.makeText(context, context.getString(R.string.link_dispatch_rule_deleted, rule.name), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, resources.getString(R.string.link_dispatch_rule_deleted, rule.name), Toast.LENGTH_SHORT).show()
                     onBack()
                 }
             }
@@ -948,7 +953,7 @@ internal fun LinkRuleLiveTestBottomSheet(
 
     MiuixBottomSheet(
         show = show,
-        title = if (candidateRule != null) "规则实时测试" else "全局仿真推演",
+        title = if (candidateRule != null) "规则实时测试" else "规则测试",
         onDismissRequest = onDismissRequest,
     ) {
         Column(
@@ -1052,7 +1057,7 @@ internal fun LinkRuleLiveTestBottomSheet(
                 ) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
-                    MiuixText(text = "正在仿真推演...", style = MiuixTheme.textStyles.footnote1)
+                    MiuixText(text = "正在测试...", style = MiuixTheme.textStyles.footnote1)
                 }
             } else {
                 val trace = traceResult
@@ -1672,4 +1677,14 @@ private fun LinkTargetActivityPickerBottomSheet(
             }
         }
     }
+}
+
+private fun effectiveStrategyFor(
+    resolveShortLink: Boolean,
+    strategy: LinkResolveStrategy,
+): LinkResolveStrategy = when {
+    strategy == LinkResolveStrategy.REDISPATCH -> LinkResolveStrategy.REDISPATCH
+    resolveShortLink && strategy == LinkResolveStrategy.NONE -> LinkResolveStrategy.DIRECT
+    resolveShortLink -> strategy
+    else -> LinkResolveStrategy.NONE
 }

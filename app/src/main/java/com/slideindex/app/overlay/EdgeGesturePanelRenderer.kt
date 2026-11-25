@@ -59,6 +59,8 @@ internal class EdgeGesturePanelRenderer(
                     if (indexSession.selectedLetter != null) {
                         indexPanelRenderer.drawAppGrid(canvas)
                         indexPanelRenderer.drawLetterBubble(canvas)
+                    } else {
+                        indexPanelRenderer.clearGridPopupBlur()
                     }
                 }
             }

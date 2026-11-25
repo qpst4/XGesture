@@ -52,6 +52,7 @@ fun NavEntryBuilder.searchPanelNavEntries(ctx: MainNavContext) {
             onImportBackup = viewModel::previewImport,
             onDismissImportPreview = viewModel::dismissImportPreview,
             onConfirmImport = viewModel::confirmImport,
+            onImportParsed = viewModel::importParsedJson,
             onSetDefaultEngineId = viewModel::setDefaultEngineId,
         )
     }
@@ -65,6 +66,7 @@ fun NavEntryBuilder.searchPanelNavEntries(ctx: MainNavContext) {
             onSetSearchPanelBarPosition = viewModel::setSearchPanelBarPosition,
             onSetSearchPanelListOrder = viewModel::setSearchPanelListOrder,
             onSetSearchPanelAppDisplayStyle = viewModel::setSearchPanelAppDisplayStyle,
+            onSetSearchPanelIconShape = viewModel::setSearchPanelIconShape,
             onSetSearchEngineGridColumns = viewModel::setGridColumns,
             onSetSearchEngineGridRows = viewModel::setGridRows,
             onSetSearchEngineShowLabels = viewModel::setShowLabels,

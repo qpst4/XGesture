@@ -10,6 +10,7 @@ import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -25,6 +26,9 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.slideindex.app.R
+import com.slideindex.app.overlay.LocalFrostedGlassDrawable
+import com.slideindex.app.overlay.OverlayGlassForegroundDrawable
+import com.slideindex.app.overlay.OverlayMaterialSpec
 import com.slideindex.app.overlay.OverlayWindowTypes
 import kotlin.math.abs
 import kotlin.math.max
@@ -190,6 +194,7 @@ internal class PageScrollControlBar(
         container = bar
         params = layoutParams
         isShowing = true
+        applyBarLocalBlur(bar)
         playAppearMorph(bar)
         refresh(settings, paused = false, directionDown = true)
         scheduleDim()
@@ -201,6 +206,7 @@ internal class PageScrollControlBar(
         container = null
         params = null
         isShowing = false
+        currentBlurDrawable = null
         directionIcon = null
         pauseIcon = null
         pauseButton = null
@@ -344,6 +350,8 @@ internal class PageScrollControlBar(
         repeatTask = null
     }
 
+    private var currentBlurDrawable: android.graphics.drawable.Drawable? = null
+
     private fun scheduleDim() {
         dimTask?.let { handler.removeCallbacks(it) }
         val task = Runnable {
@@ -351,6 +359,12 @@ internal class PageScrollControlBar(
                 PageScrollSettings.MIN_CONTROL_BAR_IDLE_ALPHA,
                 PageScrollSettings.MAX_CONTROL_BAR_IDLE_ALPHA,
             )
+            // 闲置时取消模糊（将 blurRadius 设为 0），仅保留轻透半透明
+            currentBlurDrawable?.let { bd ->
+                runCatching {
+                    bd.javaClass.getMethod("setBlurRadius", Int::class.javaPrimitiveType).invoke(bd, 0)
+                }
+            }
             container?.animate()?.alpha(alpha)?.setDuration(DIM_ANIM_MS)?.start()
         }
         dimTask = task
@@ -360,6 +374,12 @@ internal class PageScrollControlBar(
     private fun wakeUp() {
         dimTask?.let { handler.removeCallbacks(it) }
         dimTask = null
+        // 唤醒时恢复 16dp 局部毛玻璃
+        currentBlurDrawable?.let { bd ->
+            runCatching {
+                bd.javaClass.getMethod("setBlurRadius", Int::class.javaPrimitiveType).invoke(bd, dp(16))
+            }
+        }
         // 直接恢复满不透明：220ms 的淡入会让刚点亮的高亮"迟到"，看起来像点了没反应。
         container?.animate()?.cancel()
         container?.alpha = 1f
@@ -393,19 +413,66 @@ internal class PageScrollControlBar(
             .start()
     }
 
-    /** M3 语言：tonal 平面 + 软阴影，不用渐变和描边。 */
+    /** 轻量胶囊磨砂质感：高透半透明底 + 细腻微描边，与音量亮度调节胶囊呼应。 */
     private fun buildBarBackground(): GradientDrawable {
-        val surface = if (night) NIGHT_SURFACE else DAY_SURFACE
+        val surface = if (night) {
+            Color.argb(204, 29, 32, 36)
+        } else {
+            Color.argb(225, 248, 249, 250)
+        }
+        val strokeColor = if (night) {
+            Color.argb(38, 255, 255, 255)
+        } else {
+            Color.argb(26, 0, 0, 0)
+        }
         return GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             cornerRadius = BAR_RADIUS_DP * density
             setColor(surface)
+            setStroke(dp(1), strokeColor)
+        }
+    }
+
+    /**
+     * 局部胶囊毛玻璃磨砂（API 31+）：
+     * 仅在胶囊区域内部产生高斯模糊，避免全屏 FLAG_BLUR_BEHIND 糊掉整屏。
+     */
+    private fun applyBarLocalBlur(bar: View) {
+        val wm = windowManager ?: return
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        if (!com.slideindex.app.overlay.OverlayBlurGate.canBlur(wm, true)) return
+        bar.post {
+            if (!bar.isAttachedToWindow) return@post
+            val corner = dp(BAR_RADIUS_DP).toFloat()
+            val blurRadiusPx = dp(16)
+            val blurDrawable = LocalFrostedGlassDrawable.createBlurDrawable(bar) ?: return@post
+            currentBlurDrawable = blurDrawable
+            runCatching {
+                blurDrawable.javaClass.getMethod("setCornerRadius", Float::class.javaPrimitiveType)
+                    .invoke(blurDrawable, corner)
+                blurDrawable.javaClass.getMethod("setBlurRadius", Int::class.javaPrimitiveType)
+                    .invoke(blurDrawable, blurRadiusPx)
+            }
+            val baseBackground = buildBarBackground()
+            bar.background = android.graphics.drawable.LayerDrawable(
+                arrayOf(blurDrawable, baseBackground)
+            )
+            val spec = OverlayMaterialSpec.fromContext(context)
+            bar.foreground = OverlayGlassForegroundDrawable(
+                spec = spec,
+                isDark = night,
+                cornerRadiusPx = corner,
+                density = density,
+            )
+            bar.postInvalidateOnAnimation()
         }
     }
 
     /** 出现时的"形变"：从接近圆角胶囊收拢成工具条（M3E 的容器形变）。 */
     private fun playAppearMorph(view: View) {
-        val drawable = view.background as? GradientDrawable
+        val drawable = (view.background as? android.graphics.drawable.LayerDrawable)?.let {
+            it.getDrawable(1) as? GradientDrawable
+        } ?: (view.background as? GradientDrawable)
         val from = dp(BAR_RADIUS_MORPH_FROM_DP).toFloat()
         val to = BAR_RADIUS_DP * density
         view.alpha = 0f

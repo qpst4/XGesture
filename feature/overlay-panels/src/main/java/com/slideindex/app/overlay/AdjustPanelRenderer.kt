@@ -130,6 +130,7 @@ class AdjustPanelRenderer(
         ctrl.adjustIndicatorLayout = null
         ctrl.adjustIndicatorFrozenLayout = null
         ctrl.adjustIndicatorReceding = false
+        AdjustLevelIndicator.clear()
     }
 
     fun animateAdjustIndicatorTo(
@@ -273,7 +274,8 @@ class AdjustPanelRenderer(
             recede = ctrl.adjustIndicatorReceding,
             volumePanel = volumePanel,
             brightnessPanel = brightnessPanel,
-            context = host.context
+            context = host.context,
+            overlayView = host.overlayView(),
         )
     }
 

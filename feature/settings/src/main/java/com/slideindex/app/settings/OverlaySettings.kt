@@ -4,6 +4,7 @@ import com.slideindex.app.floatball.FloatBallGestureCodec
 import com.slideindex.app.floatball.FloatBallGestureType
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureTriggerMode
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.translate.TranslateTargetLanguages
 
 /** 浮层、悬浮球、主题与 App 内外观相关设置子集（窄 Flow 订阅用）。 */
@@ -21,6 +22,7 @@ enum class IconPlateMode(val id: Int) {
 
 data class OverlaySettings(
     val iconPlateModeId: Int = IconPlateMode.SYSTEM_DARK.id,
+    val globalIconShape: FvIconShape = FvIconShape.SQUIRCLE,
     val themeColorArgb: Int = 0xFF6750A4.toInt(),
     val dynamicColorEnabled: Boolean = true,
     val themePaletteStyleId: Int = ThemePaletteStyle.TONAL_SPOT.id,
@@ -295,6 +297,7 @@ data class OverlaySettings(
 
     companion object {
         fun from(settings: AppSettings): OverlaySettings = OverlaySettings(
+            globalIconShape = settings.globalIconShape,
             themeColorArgb = settings.themeColorArgb,
             dynamicColorEnabled = settings.dynamicColorEnabled,
             themePaletteStyleId = settings.themePaletteStyleId,

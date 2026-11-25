@@ -77,11 +77,12 @@ class HolographicLauncherOverlayView(
         settings: HolographicLauncherSettings,
         usesNativeWindowBlur: Boolean,
         listener: Listener,
+        globalIconShape: com.slideindex.app.overlay.layout.FvIconShape = com.slideindex.app.overlay.layout.FvIconShape.SQUIRCLE,
     ) {
         this.listener = listener
         timeoutSeconds = settings.timeoutSeconds
         backgroundView.applySettings(settings, usesNativeWindowBlur)
-        ballView.applySettings(settings)
+        ballView.applySettings(settings, globalIconShape)
         ballView.setApps(apps)
         resetAutoClose()
     }

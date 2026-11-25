@@ -168,6 +168,13 @@ class HomeViewModel @AssistedInject constructor(
         settingsRepository.setIconPlateMode(mode)
     }
 
+    fun setGlobalIconShape(shape: com.slideindex.app.overlay.layout.FvIconShape) = launchSettingsWrite {
+        runCatching { com.slideindex.app.util.GestureActionIconBitmap.clear() }
+        runCatching { com.slideindex.app.util.QuickLauncherIconResolver.clear() }
+        runCatching { com.slideindex.app.overlay.ringlauncher.RingLauncherOverlayWindow.refreshFromSettings() }
+        settingsRepository.setGlobalIconShape(shape)
+    }
+
     fun setThemeColorSpec(spec: AppColorSpec) = launchSettingsWrite {
         settingsRepository.setThemeColorSpec(spec)
     }
@@ -187,6 +194,66 @@ class HomeViewModel @AssistedInject constructor(
 
     fun setOverlayBlurEnabled(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setOverlayBlurEnabled(enabled)
+    }
+
+    fun setOverlayBlurRadiusDp(radiusDp: Int) = launchSettingsWrite {
+        settingsRepository.setOverlayBlurRadiusDp(radiusDp)
+    }
+
+    fun setOverlayOpacityPercent(percent: Int) = launchSettingsWrite {
+        settingsRepository.setOverlayOpacityPercent(percent)
+    }
+
+    fun setOverlayCornerRadiusDp(radiusDp: Int) = launchSettingsWrite {
+        settingsRepository.setOverlayCornerRadiusDp(radiusDp)
+    }
+
+    fun setOverlayBorderShimmerPercent(percent: Int) = launchSettingsWrite {
+        settingsRepository.setOverlayBorderShimmerPercent(percent)
+    }
+
+    fun setOverlayAdvancedShimmerEnabled(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setOverlayAdvancedShimmerEnabled(enabled)
+    }
+
+    fun setOverlayBorderHighlightPercent(percent: Int) = launchSettingsWrite {
+        settingsRepository.setOverlayBorderHighlightPercent(percent)
+    }
+
+    fun setOverlayRadialGlossPercent(percent: Int) = launchSettingsWrite {
+        settingsRepository.setOverlayRadialGlossPercent(percent)
+    }
+
+    fun setOverlayVerticalGlossPercent(percent: Int) = launchSettingsWrite {
+        settingsRepository.setOverlayVerticalGlossPercent(percent)
+    }
+
+    fun setBackdropBlurEnabled(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setBackdropBlurEnabled(enabled)
+    }
+
+    fun setBackdropBlurRadiusDp(radiusDp: Int) = launchSettingsWrite {
+        settingsRepository.setBackdropBlurRadiusDp(radiusDp)
+    }
+
+    fun setBackdropDimPercent(percent: Int) = launchSettingsWrite {
+        settingsRepository.setBackdropDimPercent(percent)
+    }
+
+    fun setSearchPanelBlurMode(mode: com.slideindex.app.settings.OverlayBlurMode) = launchSettingsWrite {
+        settingsRepository.setSearchPanelBlurModeId(mode.id)
+    }
+
+    fun setExpandPanelBlurMode(mode: com.slideindex.app.settings.OverlayBlurMode) = launchSettingsWrite {
+        settingsRepository.setExpandPanelBlurModeId(mode.id)
+    }
+
+    fun setPickResultBlurMode(mode: com.slideindex.app.settings.OverlayBlurMode) = launchSettingsWrite {
+        settingsRepository.setPickResultBlurModeId(mode.id)
+    }
+
+    fun setWidgetPanelBlurMode(mode: com.slideindex.app.settings.OverlayBlurMode) = launchSettingsWrite {
+        settingsRepository.setWidgetPanelBlurModeId(mode.id)
     }
 
     fun setTopAppBarBlurStyle(style: TopAppBarBlurStyle) = launchOptimisticSettingsWrite(

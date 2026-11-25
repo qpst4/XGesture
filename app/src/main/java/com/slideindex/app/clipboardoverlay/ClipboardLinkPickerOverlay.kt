@@ -377,9 +377,6 @@ private fun ClipboardLinkPickerContent(
                     LocalFrostedGlassBackdrop(
                         modifier = Modifier.matchParentSize(),
                         cornerRadiusPx = cornerPx,
-                        blurRadiusPx = 24,
-                        tintColor = sheetTint,
-                        enabled = true,
                     )
                     Column(
                         modifier = Modifier

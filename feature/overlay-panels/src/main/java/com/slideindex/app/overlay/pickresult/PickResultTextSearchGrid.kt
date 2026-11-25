@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.BoxWithConstraints
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.overlay.overlayIsLandscape
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -155,6 +156,7 @@ fun PickResultTextSearchGrid(
     pageIndicatorTopPadding: Dp = 8.dp,
     pageIndicatorBottomPadding: Dp = 6.dp,
     iconShape: SearchEngineIconShape = SearchEngineIconShape.DEFAULT,
+    globalIconShape: FvIconShape = FvIconShape.SQUIRCLE,
 ) {
     if (engines.isEmpty()) return
     val isLandscape = overlayIsLandscape()
@@ -219,6 +221,7 @@ fun PickResultTextSearchGrid(
                     longPressEnabled = longPressEnabled,
                     onEngineClick = onEngineClick,
                     iconShape = iconShape,
+                    globalIconShape = globalIconShape,
                 )
             }
             if (showPageIndicator && pages.size > 1) {
@@ -284,6 +287,7 @@ private fun PickResultSearchEngineGridPage(
     longPressEnabled: Boolean,
     onEngineClick: (SearchEngineConfig, Boolean) -> Unit,
     iconShape: SearchEngineIconShape,
+    globalIconShape: FvIconShape = FvIconShape.SQUIRCLE,
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -306,6 +310,7 @@ private fun PickResultSearchEngineGridPage(
                         },
                         modifier = Modifier.weight(1f),
                         iconShape = iconShape,
+                        globalIconShape = globalIconShape,
                     )
                 }
                 repeat(columnCount - rowEngines.size) {
@@ -327,6 +332,7 @@ fun PickResultSearchEngineItem(
     modifier: Modifier = Modifier,
     longPressEnabled: Boolean = false,
     iconShape: SearchEngineIconShape = SearchEngineIconShape.DEFAULT,
+    globalIconShape: FvIconShape = FvIconShape.SQUIRCLE,
 ) {
     val clickModifier = if (longPressEnabled && enabled) {
         Modifier.combinedClickable(
@@ -346,6 +352,7 @@ fun PickResultSearchEngineItem(
             modifier = Modifier.size(iconSize),
             alpha = if (enabled) 1f else 0.45f,
             iconShape = iconShape,
+            globalIconShape = globalIconShape,
         )
         if (showLabel) {
             Text(
@@ -369,6 +376,7 @@ fun SearchEngineIcon(
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
     fallbackContentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     iconShape: SearchEngineIconShape = SearchEngineIconShape.DEFAULT,
+    globalIconShape: FvIconShape = FvIconShape.SQUIRCLE,
 ) {
     val context = LocalContext.current
     val cacheKey = searchEngineIconCacheKey(engine)
@@ -386,16 +394,28 @@ fun SearchEngineIcon(
 
     BoxWithConstraints(modifier = modifier) {
         val iconSize = maxWidth
-        val shape = if (iconShape == SearchEngineIconShape.CIRCLE) {
-            CircleShape
-        } else {
-            RoundedCornerShape(maxWidth * iconShape.cornerFraction)
+        val resolved = iconShape.resolve(globalIconShape)
+        val shape = when (resolved) {
+            FvIconShape.CIRCLE -> CircleShape
+            FvIconShape.SQUIRCLE -> RoundedCornerShape(maxWidth * 0.35f)
+            FvIconShape.ROUNDED_RECT -> RoundedCornerShape(maxWidth * 0.22f)
+            FvIconShape.SQUARE -> RoundedCornerShape(maxWidth * 0.08f)
+            FvIconShape.ORIGINAL -> RoundedCornerShape(maxWidth * 0.22f)
         }
+        val isOriginal = resolved == FvIconShape.ORIGINAL
+        val image = bitmap
+        val containerModifier = Modifier
+            .fillMaxSize()
+            .then(if (isOriginal && image != null) Modifier else Modifier.clip(shape))
+            .then(
+                if (image == null) {
+                    Modifier.background(backgroundColor.copy(alpha = alpha * 0.6f))
+                } else {
+                    Modifier
+                }
+            )
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(shape)
-                .background(backgroundColor.copy(alpha = alpha * 0.6f)),
+            modifier = containerModifier,
             contentAlignment = Alignment.Center,
         ) {
             val groupCount = if (engine.engineType == SearchEngineType.SEARCH_GROUP) {
@@ -404,14 +424,13 @@ fun SearchEngineIcon(
                 null
             }
             val customText = engine.textIcon?.takeIf { it.isNotBlank() }
-            val image = bitmap
             when {
                 image != null -> Image(
                     bitmap = image.asImageBitmap(),
                     contentDescription = engine.name,
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(shape),
+                        .then(if (isOriginal) Modifier else Modifier.clip(shape)),
                     contentScale = ContentScale.Crop,
                     alpha = alpha,
                 )

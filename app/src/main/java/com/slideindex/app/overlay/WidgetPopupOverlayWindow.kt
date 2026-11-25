@@ -408,10 +408,16 @@ object WidgetPopupOverlayWindow {
   }
 
   private fun buildLayoutParams(context: Context): WindowManager.LayoutParams {
-    val flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+    var flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
       WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
       WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
       WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
+    val spec = com.slideindex.app.overlay.OverlayMaterialSpec.fromContext(context)
+    val backdropBlurActive = spec.isWidgetPanelBackdropBlurEnabled &&
+      android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
+    if (backdropBlurActive) {
+      flags = flags or WindowManager.LayoutParams.FLAG_BLUR_BEHIND
+    }
     return WindowManager.LayoutParams(
       WindowManager.LayoutParams.MATCH_PARENT,
       WindowManager.LayoutParams.MATCH_PARENT,
@@ -423,6 +429,9 @@ object WidgetPopupOverlayWindow {
       windowAnimations = android.R.style.Animation_Dialog
       layoutInDisplayCutoutMode =
         WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+      if (backdropBlurActive) {
+        blurBehindRadius = spec.backdropBlurRadiusPx(context.resources.displayMetrics.density)
+      }
       OverlayWindowTypes.ensureNoBrightnessOverride(this)
     }
   }

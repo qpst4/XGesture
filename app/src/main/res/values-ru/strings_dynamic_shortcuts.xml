@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dynamic_shortcuts_home_label">Помощник ярлыков XGesture</string>
+    <string name="dynamic_shortcuts_title">Импорт динамических ярлыков</string>
+    <string name="dynamic_shortcuts_permission_card_title">Разрешение домашнего экрана по умолчанию</string>
+    <string name="dynamic_shortcuts_permission_needed_desc">Ограничение Android: только приложение домашнего экрана по умолчанию может обнаруживать динамические ярлыки других приложений (например, сканер/оплату WeChat). Временно назначьте XGesture домашним приложением, закрепите нужные ярлыки, а затем верните исходный лаунчер.</string>
+    <string name="dynamic_shortcuts_permission_granted_desc">Разрешение домашнего экрана активно! Нажмите «Сканировать динамические ярлыки» ниже. После закрепления XGesture сохранит право запускать их даже после возврата лаунчера по умолчанию.</string>
+    <string name="dynamic_shortcuts_grant_home">Сделать временным домашним экраном</string>
+    <string name="dynamic_shortcuts_restore_home">Вернуть домашний экран по умолчанию</string>
+    <string name="dynamic_shortcuts_scan">Сканировать динамические ярлыки</string>
+    <string name="dynamic_shortcuts_scanning">Сканирование системных динамических ярлыков…</string>
+    <string name="dynamic_shortcuts_import_selected">Импортировать и закрепить выбранные (%1$d)</string>
+    <string name="dynamic_shortcuts_import_success">Закреплено и импортировано ярлыков: %1$d</string>
+    <string name="dynamic_shortcuts_no_selection">Выберите хотя бы один ярлык</string>
+    <string name="dynamic_shortcuts_empty">Динамические ярлыки не найдены</string>
+    <string name="dynamic_shortcuts_already_imported">Импортировано</string>
+    <string name="dynamic_shortcuts_home_unavailable">Не удаётся открыть системные настройки домашнего экрана</string>
+    <string name="activity_shortcut_add_from_dynamic">Импортировать динамические ярлыки</string>
+    <string name="activity_shortcut_add_from_dynamic_sub">Временно сделать домашним экраном, чтобы найти ярлыки WeChat/Alipay</string>
+    <string name="shortcut_test_mode_static">Статический</string>
+    <string name="shortcut_test_mode_privilege">Привилегированный</string>
+    <string name="shortcut_test_mode_dynamic">Закреплён на домашнем экране</string>
+    <string name="shortcut_test_save_to_direct">Сохранить в прямые</string>
+    <string name="shortcut_test_save_success">Сохранено в прямые ярлыки</string>
+    <string name="shortcut_test_already_saved">Уже есть в прямых ярлыках</string>
+    <string name="shortcut_test_dynamic_tip">Получите роль домашнего приложения, чтобы находить динамические ярлыки. После сохранения в прямые они закрепляются навсегда и запускаются даже после возврата лаунчера.</string>
+</resources>

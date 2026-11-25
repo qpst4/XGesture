@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.overlay.LocalFrostedGlassBackdrop
+import com.slideindex.app.overlay.rememberOverlayMaterialSpec
 import com.slideindex.app.overlay.pickresult.PickResultPanelCardCorner
 import com.slideindex.app.overlay.pickresult.PickResultPanelCardElevation
 import com.slideindex.app.overlay.pickresult.PickResultPanelCardShape
@@ -100,17 +101,17 @@ fun SearchPanelFrostedCard(
     contentVerticalPadding: Dp = 4.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val spec = rememberOverlayMaterialSpec()
     val isDark = LocalAppDarkTheme.current
     val density = LocalDensity.current
     val cornerPx = with(density) { SearchPanelCardCorner.toPx() }
-    val blurRadiusPx = (57f * density.density).toInt()
-    val frostedTint = if (isDark) 0x661C1C1E.toInt() else 0x66F5F5F7.toInt()
-    val fallbackColor = if (isDark) {
-        MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
+    val cardBlurActive = spec.isSearchPanelCardBlurEnabled
+    val fallbackColor = if (cardBlurActive) {
+        Color(spec.tintColor(isDark))
     } else {
-        MaterialTheme.colorScheme.surface.copy(alpha = 0.78f)
+        if (isDark) Color(0xFF1C1C1E) else Color(0xFFF5F5F7)
     }
-    val borderColor = if (isDark) Color(0x28FFFFFF) else Color(0x18000000)
+    val borderColor = if (cardBlurActive) Color(spec.innerBorderColor(isDark)) else Color.Transparent
 
     Box(
         modifier = modifier
@@ -135,13 +136,12 @@ fun SearchPanelFrostedCard(
                     .matchParentSize()
                     .background(fallbackColor),
             )
-            LocalFrostedGlassBackdrop(
-                modifier = Modifier.matchParentSize(),
-                cornerRadiusPx = cornerPx,
-                blurRadiusPx = blurRadiusPx,
-                tintColor = frostedTint,
-                enabled = true,
-            )
+            if (cardBlurActive) {
+                LocalFrostedGlassBackdrop(
+                    modifier = Modifier.matchParentSize(),
+                    cornerRadiusPx = cornerPx,
+                )
+            }
         }
         Column(
             modifier = Modifier

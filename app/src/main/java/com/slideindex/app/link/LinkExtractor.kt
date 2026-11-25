@@ -41,6 +41,10 @@ object LinkExtractor {
         return selectLinkTextMatches(selected, detected)
     }
 
+    /** 只使用启用的配置规则，不附加内置 URL 识别兜底。测试页必须用这个。 */
+    fun findAllConfigured(text: String, patterns: List<LinkExtractPattern>): List<LinkTextMatch> =
+        selectLinkTextMatches(emptyList(), configuredMatches(text, patterns).toList())
+
     private fun configuredMatches(text: String, patterns: List<LinkExtractPattern>): Sequence<LinkTextMatch> =
         patterns.asSequence().filter { it.isEnabled && it.pattern.isNotBlank() }.flatMap { pattern ->
             compile(pattern.pattern)?.findAll(text)?.mapNotNull { match ->

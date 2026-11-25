@@ -98,6 +98,9 @@ internal object HomeLeadingIcons {
 
     @Suppress("UNUSED_PARAMETER")
     fun themeColorSpec(outlined: Boolean) = symbol("Contrast")
+
+    @Suppress("UNUSED_PARAMETER")
+    fun overlayMaterial(outlined: Boolean) = symbol("Layers")
 }
 
 private fun symbol(name: String): ImageVector =

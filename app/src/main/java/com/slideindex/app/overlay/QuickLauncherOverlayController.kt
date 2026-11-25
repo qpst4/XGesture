@@ -104,6 +104,7 @@ internal class QuickLauncherOverlayController(
         fun sp(value: Float): Float
         fun viewLocationOnScreen(): IntArray
         fun overlayView(): android.view.View? = null
+        fun density(): Float = dp(1f)
         fun invalidate()
         fun invalidatePartial(left: Int, top: Int, right: Int, bottom: Int)
         fun post(action: () -> Unit)
@@ -137,7 +138,7 @@ internal class QuickLauncherOverlayController(
             override fun activeQuickLauncherPanel(): QuickLauncherPanel = this@QuickLauncherOverlayController.activeQuickLauncherPanel()
             override fun side(): PanelSide = host.side()
             override fun apps(): List<AppInfo> = host.apps()
-            override fun isPanelReady(): Boolean = host.panelEnterProgress() >= 1f
+            override fun isPanelReady(): Boolean = true
             override fun isAddDialogShowing(): Boolean =
                 QuickLauncherAddTrampoline.isActive() || quickLauncherOverlayDialogHost.isShowing
             override fun dp(value: Float): Float = host.dp(value)
@@ -225,10 +226,20 @@ internal class QuickLauncherOverlayController(
                 host.removeCallbacks(runnable)
             override fun switchToNextPanel() =
                 this@QuickLauncherOverlayController.switchToNextPanel()
+            override fun switchToPanel(panelId: String) =
+                this@QuickLauncherOverlayController.switchToPanel(panelId)
+            override fun allPanels(): List<QuickLauncherPanel> =
+                QuickLauncherPanelDefaults.effectivePanels(host.settings().quickLauncherPanels)
             override fun hasMultiplePanels(): Boolean =
                 this@QuickLauncherOverlayController.hasMultiplePanels()
             override fun currentPanelName(): String =
                 this@QuickLauncherOverlayController.currentPanelName()
+            override fun movePanelAnchor(deltaX: Float, deltaY: Float) =
+                this@QuickLauncherOverlayController.movePanelAnchor(deltaX, deltaY)
+            override fun togglePinMode() =
+                this@QuickLauncherOverlayController.togglePinMode()
+            override fun isPinned(): Boolean =
+                host.gestureSession().quickLauncherPinned()
             override fun onFolderOpen(globalIndex: Int) {
                 openFolder(globalIndex)
             }
@@ -273,6 +284,7 @@ internal class QuickLauncherOverlayController(
 
     /** 下一次会话是不是「添加流程结束后的重开」；只有这种会话才消费页索引。 */
     private var restorePageOnNextSession = false
+    internal var panelDragOffsetX: Float = 0f
     internal var quickLauncherOpeningGestureActive = false
     internal var quickLauncherToolbarTouchActive = false
     /** 「长按面板空白处进入编辑态」的按下时刻；<= 0 表示当前没有按住空白区。 */
@@ -439,17 +451,22 @@ internal class QuickLauncherOverlayController(
     }
 
     /**
-     * 行高：显示名称时保留 64dp 的标签空间；关掉名称后收到与列宽一致，
-     * 让图标的纵向间隙等于横向间隙（见 [QuickLauncherPanelLayoutEngine.cellHeight]）。
+     * 行高与列宽：图标放大时格子尺寸等比放大，间距按比例舒展。
+     * 显示名称时保留标签空间；关掉名称后行高收到与列宽一致。
      */
     internal val quickLauncherCellHeight get() = QuickLauncherPanelLayoutEngine.cellHeight(
         showLabels = host.settings().quickLauncherDisplay.showLabels,
         cellWidth = quickLauncherCellWidth,
-        labeledCellHeight = host.dp(64f),
+        labeledCellHeight = quickLauncherCellWidth + if (host.settings().quickLauncherDisplay.showLabels) host.dp(12f) else 0f,
     )
-    internal val quickLauncherCellWidth get() = host.dp(56f)
+    internal val quickLauncherCellWidth get() = run {
+        val iconSizeDp = host.settings().quickLauncherDisplay.iconSizeDp
+        val scaledCellDp = (iconSizeDp * 1.473f).coerceAtLeast(40f)
+        host.dp(scaledCellDp)
+    }
     internal val quickLauncherGridPadding get() = host.dp(8f)
-    internal val quickLauncherHeaderHeight get() = 0f
+    internal val quickLauncherHeaderHeight get() =
+        if (quickLauncherPanelController.shouldShowToolbar(host.settings())) host.dp(44f) else 0f
 
     fun handleTouch(event: MotionEvent, localX: Float, localY: Float): Boolean =
         touchHandler.handleTouch(event, localX, localY)
@@ -917,6 +934,7 @@ internal class QuickLauncherOverlayController(
         pinnedLayoutSnapshot = null
         lastPinnedWindowRect = null
         lastLoggedPanelRect = null
+        panelDragOffsetX = 0f
     }
 
     /**
@@ -1011,6 +1029,7 @@ internal class QuickLauncherOverlayController(
         pinnedLayoutSnapshot = null
         lastPinnedWindowRect = null
         lastLoggedPanelRect = null
+        panelDragOffsetX = 0f
         if (!hiddenByAppSwitch) {
             hiddenPanelId = ""
             pinnedOwnerPackage = ""
@@ -1137,6 +1156,20 @@ internal class QuickLauncherOverlayController(
             }
         }
 
+    fun switchToPanel(panelId: String) {
+        val panels = QuickLauncherPanelDefaults.effectivePanels(host.settings().quickLauncherPanels)
+        val target = panels.firstOrNull { it.id == panelId } ?: return
+        if (target.id == activePanelId) return
+        host.gestureSession().setQuickLauncherPanelId(target.id)
+        activePanelId = target.id
+        closeFolder()
+        invalidateQuickLauncherDerivedCaches()
+        quickLauncherPageIndex = 0
+        quickLauncherPanelController.onActivePanelChanged()
+        host.hapticTick()
+        host.invalidate()
+    }
+
     fun switchToNextPanel() {
         val panels = QuickLauncherPanelDefaults.effectivePanels(host.settings().quickLauncherPanels)
         if (panels.size <= 1) return
@@ -1150,6 +1183,45 @@ internal class QuickLauncherOverlayController(
         quickLauncherPageIndex = 0
         quickLauncherPanelController.onActivePanelChanged()
         host.hapticTick()
+        host.invalidate()
+    }
+
+    fun movePanelAnchor(deltaX: Float, deltaY: Float) {
+        val current = quickLauncherAnchorLocalY()
+        val minAnchor = host.dp(60f)
+        val maxAnchor = host.viewHeight().toFloat() - host.dp(60f)
+        val newAnchor = (current + deltaY).coerceIn(minAnchor, maxAnchor)
+        quickLauncherFrozenAnchorLocalY = newAnchor
+        if (pinnedIdleAnchorLocalY != null) {
+            pinnedIdleAnchorLocalY = newAnchor
+        }
+        panelDragOffsetX += deltaX
+        pinnedIdlePanelRect?.let { panel ->
+            val screenW = host.viewWidth().toFloat()
+            val screenH = host.viewHeight().toFloat()
+            val w = panel.width()
+            val h = panel.height()
+            val newLeft = (panel.left + deltaX).coerceIn(host.dp(8f), screenW - w - host.dp(8f))
+            val newTop = (panel.top + deltaY).coerceIn(host.dp(20f), screenH - h - host.dp(20f))
+            panel.set(newLeft, newTop, newLeft + w, newTop + h)
+        }
+        host.notifyPresentationTouchRequirementChanged()
+        host.invalidate()
+    }
+
+    fun togglePinMode() {
+        val currentPinned = host.gestureSession().quickLauncherPinned()
+        val nextPinned = !currentPinned
+        host.gestureSession().setQuickLauncherPinned(nextPinned)
+        if (nextPinned) {
+            pinnedIdleAnchorLocalY = quickLauncherAnchorLocalY()
+            host.setPanelPresentationFocus(false)
+        } else {
+            pinnedIdleAnchorLocalY = null
+            host.setPanelPresentationFocus(true)
+        }
+        host.hapticTick()
+        host.notifyPresentationTouchRequirementChanged()
         host.invalidate()
     }
 
@@ -1308,7 +1380,8 @@ internal class QuickLauncherOverlayController(
         val visualCol = ((xInPage - panelRect.left - quickLauncherGridPadding) / quickLauncherCellWidth)
             .toInt()
             .coerceIn(0, columns - 1)
-        val row = ((localY - panelRect.top - quickLauncherHeaderHeight - quickLauncherGridPadding) /
+        val rowTopOffset = if (quickLauncherHeaderHeight > 0f) quickLauncherHeaderHeight else (quickLauncherHeaderHeight + quickLauncherGridPadding)
+        val row = ((localY - panelRect.top - rowTopOffset) /
             quickLauncherCellHeight)
             .toInt()
             .coerceIn(0, rows - 1)
@@ -1371,6 +1444,12 @@ internal class QuickLauncherOverlayController(
             // 手指在哪个高度呼出就出现在哪个高度；触钮自己触发的路径保持贴条行为。
             clampAnchorToTrigger = !quickLauncherExternalAnchor,
         )
+        if (panelDragOffsetX != 0f) {
+            val screenW = host.viewWidth().toFloat()
+            val panelW = rect.width()
+            val newLeft = (rect.left + panelDragOffsetX).coerceIn(host.dp(8f), screenW - panelW - host.dp(8f))
+            rect.offsetTo(newLeft, rect.top)
+        }
         // 真机排查「面板自己挪位置」：面板矩形一变就记一笔，附上触发带与状态。
         if (rect != lastLoggedPanelRect) {
             lastLoggedPanelRect = rect

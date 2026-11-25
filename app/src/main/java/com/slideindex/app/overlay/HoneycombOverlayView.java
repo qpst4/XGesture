@@ -29,6 +29,8 @@ import android.view.ViewConfiguration;
 import android.view.animation.DecelerateInterpolator;
 
 import com.slideindex.app.gesture.SelectedHintMetrics;
+import com.slideindex.app.overlay.layout.FvIconShape;
+import com.slideindex.app.overlay.layout.IconShapeNormalizer;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,8 +55,6 @@ public final class HoneycombOverlayView extends View {
     private final TextPaint namePaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private final TextPaint placeholderPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private final Paint namePillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint wallpaperPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
-    private final RectF wallpaperBounds = new RectF();
     private final RectF blurBounds = new RectF();
     private final Rect iconOldBounds = new Rect();
     private final Path clipPath = new Path();
@@ -79,6 +79,7 @@ public final class HoneycombOverlayView extends View {
     private boolean emptyTapClose;
     private boolean showSelectedName;
     private int hintIconSizeDp = SelectedHintMetrics.DEFAULT_ICON_SIZE_DP;
+    private FvIconShape iconShape = FvIconShape.SQUIRCLE;
     private boolean forceCircularIcons = true;
     private boolean interactionPaused;
     private boolean closing;
@@ -95,7 +96,6 @@ public final class HoneycombOverlayView extends View {
     private boolean followFingerPosition;
     private int fixedXPercent;
     private int fixedYPercent;
-    private Bitmap wallpaper;
     private boolean usesNativeWindowBlur;
     private int backgroundStyle;
     private int dimPercent;
@@ -156,27 +156,6 @@ public final class HoneycombOverlayView extends View {
     private float externalVelocityY;
     private long externalLastTime;
     private long lastHoldPanFrameMs;
-    private final BlurredWallpaperCache.Callback wallpaperCallback = bitmap -> post(() -> {
-        if (released || backgroundStyle != HoneycombDisplayConfig.BACKGROUND_BLUR || usesNativeWindowBlur) return;
-        if (bitmap != null && bitmap.isRecycled()) return;
-        wallpaper = bitmap;
-        invalidate();
-    });
-    private final Runnable systemWallpaperLoad = () -> {
-        if (released || backgroundStyle != HoneycombDisplayConfig.BACKGROUND_WALLPAPER_BLUR) return;
-        final int blur = blurDp;
-        final Context app = getContext().getApplicationContext();
-        new Thread(() -> {
-            Bitmap blurred = SystemWallpaperBlurHelper.loadBlurredSync(app, blur);
-            post(() -> {
-                if (released || backgroundStyle != HoneycombDisplayConfig.BACKGROUND_WALLPAPER_BLUR) {
-                    return;
-                }
-                wallpaper = blurred;
-                invalidate();
-            });
-        }, "honeycomb-wallpaper").start();
-    };
     private final Runnable holdSelectionUpdate = () -> {
         if (!browseMode && pointerValid && !interactionPaused && !closing) {
             selectAt(pointerX, pointerY, true);
@@ -247,6 +226,7 @@ public final class HoneycombOverlayView extends View {
         fittedNameTarget = null;
         fittedNameMaxWidth = -1f;
         fittedHintIconSizeDp = -1;
+        iconShape = config.getIconShape();
         forceCircularIcons = config.getForceCircularIcons();
         nameTarget = null;
         speedIndex = config.getHoneycombAnimationSpeed();
@@ -277,20 +257,6 @@ public final class HoneycombOverlayView extends View {
         selectionSettledUptimeMs = 0L;
         selectionTouchDownUptimeMs = 0L;
         cancelSelectionLongPressCheck();
-        if (backgroundStyle == HoneycombDisplayConfig.BACKGROUND_BLUR && !usesNativeWindowBlur) {
-            loadWallpaper();
-        } else if (backgroundStyle == HoneycombDisplayConfig.BACKGROUND_WALLPAPER_BLUR) {
-            // 主线程只读缓存；解码放后台。失败时仅靠 dim，不漆纯黑、不回退截屏缓存。
-            removeCallbacks(systemWallpaperLoad);
-            wallpaper = SystemWallpaperBlurHelper.peekCachedBlurred(
-                    getContext().getApplicationContext(), blurDp);
-            if (wallpaper == null || wallpaper.isRecycled()) {
-                wallpaper = null;
-                post(systemWallpaperLoad);
-            }
-        } else {
-            wallpaper = null;
-        }
         basePoints = HoneycombGeometry.compactPoints(targets.size(), pitch);
         baseMaximumX = 0f;
         baseMaximumY = 0f;
@@ -327,22 +293,6 @@ public final class HoneycombOverlayView extends View {
                 + " fixed=" + fixedXPercent + "," + fixedYPercent);
     }
 
-    private void loadWallpaper() {
-        Context hostContext = getContext();
-        if (!(hostContext instanceof AccessibilityService service)) {
-            android.util.Log.w(TAG, "Cannot capture honeycomb background: accessibility unavailable");
-            return;
-        }
-        Context appContext = hostContext.getApplicationContext();
-        if (appContext == null) appContext = hostContext;
-        wallpaper = BlurredWallpaperCache.captureFromDisplay(
-                service,
-                appContext,
-                blurDp,
-                wallpaperCallback);
-        if (wallpaper != null && wallpaper.isRecycled()) wallpaper = null;
-    }
-
     void releaseResources() {
         if (released) return;
         released = true;
@@ -352,11 +302,9 @@ public final class HoneycombOverlayView extends View {
         selectionAnimator.cancel();
         removeCallbacks(holdSelectionUpdate);
         cancelSelectionLongPressCheck();
-        removeCallbacks(systemWallpaperLoad);
         recycleVelocityTracker();
         targets = Collections.emptyList();
         basePoints = Collections.emptyList();
-        wallpaper = null;
     }
 
     void playEntry() {
@@ -539,24 +487,16 @@ public final class HoneycombOverlayView extends View {
     @Override protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         float visible = (1f - dismissProgress) * (1f - confirmProgress * 0.18f);
-        if (backgroundStyle == HoneycombDisplayConfig.BACKGROUND_BLUR) {
-            int blurPx = Math.round(blurDp * density);
+        OverlayMaterialSpec spec = OverlayMaterialSpec.Companion.fromContext(getContext());
+        if (spec.getBackdropBlurEnabled()) {
+            int blurPx = spec.backdropBlurRadiusPx(density);
             int clampedBlurPx = Math.min(120, Math.max(1, blurPx));
             blurBounds.set(0, statusBarHeight, getWidth(), getHeight());
             frostedGlassDrawable.draw(canvas, blurBounds, 0f, clampedBlurPx, Color.TRANSPARENT, visible);
         }
-        boolean drawWallpaperBitmap = wallpaper != null && !wallpaper.isRecycled()
-                && (backgroundStyle == HoneycombDisplayConfig.BACKGROUND_WALLPAPER_BLUR
-                || (backgroundStyle == HoneycombDisplayConfig.BACKGROUND_BLUR && !usesNativeWindowBlur));
-        if (drawWallpaperBitmap) {
-            wallpaperPaint.setAlpha(Math.round(255f * visible));
-            wallpaperBounds.set(0, statusBarHeight, getWidth(), getHeight());
-            canvas.drawBitmap(wallpaper, null, wallpaperBounds, wallpaperPaint);
-        }
-        int maskAlpha = Math.round(resolvedMaskAlpha(visible));
-        if (maskAlpha > 0) {
-            backgroundPaint.setColor(Color.BLACK);
-            backgroundPaint.setAlpha(maskAlpha);
+        int dimColor = spec.backdropDimColor(visible);
+        if (Color.alpha(dimColor) > 0) {
+            backgroundPaint.setColor(dimColor);
             canvas.drawRect(0, statusBarHeight, getWidth(), getHeight(), backgroundPaint);
         }
         updateLensFocus();
@@ -780,19 +720,18 @@ public final class HoneycombOverlayView extends View {
             return;
         }
         int save = canvas.save();
-        if (forceCircularIcons) {
+        Path path = IconShapeNormalizer.createClipPath(iconShape, new RectF(x - radius, y - radius, x + radius, y + radius), clipPath);
+        if (path != null) {
             iconPlatePaint.setColor(Color.WHITE);
             iconPlatePaint.setAlpha(Math.round(255 * alpha));
-            canvas.drawCircle(x, y, radius, iconPlatePaint);
-            clipPath.reset();
-            clipPath.addCircle(x, y, radius, Path.Direction.CW);
-            canvas.clipPath(clipPath);
+            canvas.drawPath(path, iconPlatePaint);
+            canvas.clipPath(path);
         }
         icon.copyBounds(iconOldBounds);
         int intrinsicWidth = Math.max(1, icon.getIntrinsicWidth());
         int intrinsicHeight = Math.max(1, icon.getIntrinsicHeight());
-        float targetSize = forceCircularIcons ? diameter : diameter * 0.94f;
-        float scale = forceCircularIcons
+        float targetSize = (iconShape != FvIconShape.ORIGINAL) ? diameter : diameter * 0.94f;
+        float scale = (iconShape != FvIconShape.ORIGINAL)
                 ? Math.max(targetSize / intrinsicWidth, targetSize / intrinsicHeight)
                 : Math.min(targetSize / intrinsicWidth, targetSize / intrinsicHeight);
         int drawWidth = Math.round(intrinsicWidth * scale);
@@ -1137,12 +1076,6 @@ public final class HoneycombOverlayView extends View {
             }
         }
         return best;
-    }
-
-    private float resolvedMaskAlpha(float visible) {
-        int clampedDim = Math.max(HoneycombDisplayConfig.MIN_DIM_PERCENT,
-                Math.min(HoneycombDisplayConfig.MAX_DIM_PERCENT, dimPercent));
-        return 255f * clampedDim / 100f * visible;
     }
 
     private float viewportRadius() {

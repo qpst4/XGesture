@@ -20,11 +20,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.InvertColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.HomeMainSettings
 import com.slideindex.app.settings.KeyboardTriggerBehavior
@@ -41,6 +46,7 @@ import com.slideindex.app.ui.miuix.themeAppearanceSettingsCardItems
 import com.slideindex.app.ui.miuix.MiuixGlassDropdownPreference
 import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_100
 import com.slideindex.app.ui.settings.components.SettingExpandableDropdownRow
+import com.slideindex.app.ui.settings.components.SettingExpandableRow
 import com.slideindex.app.ui.settings.components.SettingExpandableSwitchRow
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
@@ -60,6 +66,7 @@ fun InteractionAppearanceSettingsScreen(
     onKeyboardTriggerNarrowPercentChange: (Int) -> Unit,
     onBack: () -> Unit,
     onIconPlateModeChange: (com.slideindex.app.settings.IconPlateMode) -> Unit = {},
+    onGlobalIconShapeChange: (FvIconShape) -> Unit = {},
     iconPlateMode: com.slideindex.app.settings.IconPlateMode = com.slideindex.app.settings.IconPlateMode.SYSTEM_DARK,
     onOpenHapticSettings: () -> Unit,
     onSwipeDismissEnabledChange: (Boolean) -> Unit,
@@ -80,12 +87,10 @@ fun InteractionAppearanceSettingsScreen(
     onAppUiLanguageChange: (com.slideindex.app.settings.AppUiLanguage) -> Unit,
     onBottomNavBlurPreviewChange: (Float) -> Unit = {},
     onBottomNavBlurPreviewStop: () -> Unit = {},
-    overlayBlurEnabled: Boolean = true,
-    onOverlayBlurEnabledChange: (Boolean) -> Unit = {},
+    onOpenOverlayMaterialSettings: () -> Unit = {},
     settingIconPlateEnabled: Boolean = false,
     onSettingIconPlateEnabledChange: (Boolean) -> Unit = {},
 ) {
-
     // LazyListScope 里不能调用 stringResource，先在这里取好
     val iconPlateSectionTitle = stringResource(R.string.icon_plate_mode_section)
     val iconPlateModeDescText = stringResource(R.string.icon_plate_mode_desc)
@@ -94,6 +99,26 @@ fun InteractionAppearanceSettingsScreen(
         stringResource(R.string.icon_plate_mode_light),
         stringResource(R.string.icon_plate_mode_system),
     )
+
+    val globalIconShapeTitle = stringResource(R.string.global_icon_shape_title)
+    val globalIconShapeOptions = remember {
+        listOf(
+            FvIconShape.SQUIRCLE,
+            FvIconShape.CIRCLE,
+            FvIconShape.ROUNDED_RECT,
+            FvIconShape.ORIGINAL,
+        )
+    }
+    val globalIconShapeLabels = listOf(
+        stringResource(R.string.fv_icon_shape_squircle),
+        stringResource(R.string.fv_icon_shape_circle),
+        stringResource(R.string.fv_icon_shape_rounded_rect),
+        stringResource(R.string.fv_icon_shape_original),
+    )
+
+    val overlayVisualSectionTitle = stringResource(R.string.settings_section_overlay_visual)
+    val overlayMaterialSettingsTitle = stringResource(R.string.overlay_material_settings_title)
+    val overlayMaterialSettingsDesc = stringResource(R.string.overlay_material_settings_desc)
 
 
     val themeAppearanceItems = themeAppearanceSettingsCardItems(
@@ -169,39 +194,55 @@ fun InteractionAppearanceSettingsScreen(
 
         item(key = "overlay_visual_section") {
             SmallTitle(
-                text = stringResource(R.string.settings_section_overlay_visual),
+                text = overlayVisualSectionTitle,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
         MiuixListSettingsCard(
-            keyPrefix = "interaction-overlay-visual",
-            items = listOf(
-                settingsCardScopeItem("overlay-blur") {
-                    SettingSwitchRow(
-                        title = stringResource(R.string.overlay_blur_enabled),
-                        subtitle = stringResource(R.string.overlay_blur_enabled_desc),
-                        checked = overlayBlurEnabled,
-                        enabled = true,
-                        onCheckedChange = onOverlayBlurEnabledChange,
-                    )
-                },
-                settingsCardScopeItem("icon-plate") {
-                    MiuixGlassDropdownPreference(
-                        title = iconPlateSectionTitle,
-                        items = iconPlateTabLabels,
-                        selectedIndex = com.slideindex.app.settings.IconPlateMode
-                            .entries
-                            .indexOf(iconPlateMode)
-                            .coerceAtLeast(0),
-                        onSelectedIndexChange = { index ->
-                            onIconPlateModeChange(
-                                com.slideindex.app.settings.IconPlateMode.entries[index],
-                            )
-                        },
-                    )
-                },
-            ),
+            keyPrefix = "interaction-overlay-material-entry",
+            items = buildList {
+                add(
+                    settingsCardScopeItem("overlay-material-entry") {
+                        SettingNavigationRow(
+                            icon = { label -> Icon(HomeLeadingIcons.overlayMaterial(true), contentDescription = label) },
+                            title = overlayMaterialSettingsTitle,
+                            subtitle = overlayMaterialSettingsDesc,
+                            onClick = onOpenOverlayMaterialSettings,
+                        )
+                    }
+                )
+                add(
+                    settingsCardScopeItem("icon-plate") {
+                        MiuixGlassDropdownPreference(
+                            title = iconPlateSectionTitle,
+                            items = iconPlateTabLabels,
+                            selectedIndex = com.slideindex.app.settings.IconPlateMode
+                                .entries
+                                .indexOf(iconPlateMode)
+                                .coerceAtLeast(0),
+                            onSelectedIndexChange = { index ->
+                                onIconPlateModeChange(
+                                    com.slideindex.app.settings.IconPlateMode.entries[index],
+                                )
+                            },
+                        )
+                    }
+                )
+                add(
+                    settingsCardScopeItem("global-icon-shape") {
+                        MiuixGlassDropdownPreference(
+                            title = globalIconShapeTitle,
+                            items = globalIconShapeLabels,
+                            selectedIndex = globalIconShapeOptions.indexOf(settings.globalIconShape).coerceAtLeast(0),
+                            onSelectedIndexChange = { index ->
+                                onGlobalIconShapeChange(globalIconShapeOptions[index])
+                            },
+                        )
+                    }
+                )
+            },
         )
+
 
         item(key = "interaction_feedback_section") {
             SmallTitle(

@@ -783,6 +783,11 @@ class SearchEngineSettingsViewModel @Inject constructor(
             settingsRepository.setSearchPanelAppDisplayStyle(style)
         }
 
+    fun setSearchPanelIconShape(shape: com.slideindex.app.overlay.layout.PanelIconShape) =
+        launchSettingsWrite {
+            settingsRepository.setSearchPanelIconShape(shape)
+        }
+
     fun setSearchPanelCalculatorEnabled(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setSearchPanelCalculatorEnabled(enabled)
     }

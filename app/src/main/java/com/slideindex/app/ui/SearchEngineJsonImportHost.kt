@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
@@ -55,14 +57,55 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 fun SearchEngineJsonImportHost(
     show: Boolean,
     existingEngines: List<SearchEngineConfig>,
+    initialRaw: String? = null,
     onDismissRequest: () -> Unit,
     onImport: (List<SearchEngineConfig>) -> Unit,
 ) {
     if (!show) return
     val context = LocalContext.current
-    var dialogOpen by remember { mutableStateOf(true) }
+    // 资源查询必须走 LocalResources：LocalContext 在配置变化后可能拿到过期的 Resources。
+    val resources = LocalResources.current
+    var dialogOpen by remember { mutableStateOf(initialRaw == null) }
     var candidates by remember { mutableStateOf<List<SearchEngineConfig>?>(null) }
     val selectedIds = remember { mutableStateListOf<String>() }
+
+    LaunchedEffect(show, initialRaw) {
+        if (show && initialRaw != null && candidates == null) {
+            runCatching { SearchEngineImporter.parseJsonText(initialRaw) }
+                .onSuccess { parsed ->
+                    if (parsed.isEmpty()) {
+                        Toast.makeText(
+                            context,
+                            R.string.search_engine_import_json_no_engines,
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                        onDismissRequest()
+                    } else {
+                        candidates = parsed
+                        selectedIds.clear()
+                        val candidateIds = parsed.map { it.id }.toSet()
+                        val existingNames = existingEngines.map { it.name.lowercase() }.toSet()
+                        parsed.filter { engine ->
+                            engine.name.lowercase() !in existingNames &&
+                                (engine.engineType != SearchEngineType.SEARCH_GROUP ||
+                                    engine.groupMemberIds.all { it in candidateIds })
+                        }.forEach { selectedIds.add(it.id) }
+                        dialogOpen = false
+                    }
+                }
+                .onFailure { error ->
+                    Toast.makeText(
+                        context,
+                        resources.getString(
+                            R.string.search_engine_import_failed,
+                            error.message.orEmpty(),
+                        ),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                    onDismissRequest()
+                }
+        }
+    }
 
     SearchEngineImportJsonDialog(
         show = dialogOpen,
@@ -96,7 +139,7 @@ fun SearchEngineJsonImportHost(
                 .onFailure { error ->
                     Toast.makeText(
                         context,
-                        context.getString(
+                        resources.getString(
                             R.string.search_engine_import_failed,
                             error.message.orEmpty(),
                         ),

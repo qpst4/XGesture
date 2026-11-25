@@ -285,6 +285,9 @@ internal class QuickLauncherTouchHandler(
                         val panelModeBeforeAction = host.gestureSession().panelMode()
                         val launchedApp = host.panelGridSession().highlightedIndex >= 0 &&
                             pickResolver.performUpAction(event, touchX, localX, localY)
+                        val isHeaderArea = ctrl.quickLauncherHeaderHeight > 0f &&
+                            localY >= panelRect.top && localY <= panelRect.top + ctrl.quickLauncherHeaderHeight &&
+                            localX >= panelRect.left && localX <= panelRect.right
                         if (launchedApp) {
                             endQuickLauncherAfterLaunch(ctrl.quickLauncherLaunchEndDeferMs)
                             ctrl.quickLauncherLaunchEndDeferMs = 0L
@@ -292,6 +295,7 @@ internal class QuickLauncherTouchHandler(
                             !ctrl.quickLauncherOverlayDialogHost.isShowing &&
                             host.panelGridSession().highlightedIndex < 0 &&
                             !toolbarTouchThisGesture &&
+                            !isHeaderArea &&
                             host.gestureSession().panelMode() == panelModeBeforeAction
                         ) {
                             endQuickLauncherSessionAnimated()
@@ -331,6 +335,9 @@ internal class QuickLauncherTouchHandler(
                 } else {
                     pickResolver.clearHighlight()
                 }
+                val isHeaderArea = ctrl.quickLauncherHeaderHeight > 0f &&
+                    localY >= panelRect.top && localY <= panelRect.top + ctrl.quickLauncherHeaderHeight &&
+                    localX >= panelRect.left && localX <= panelRect.right
                 val panelModeBeforeAction = host.gestureSession().panelMode()
                 val launchedApp = !ctrl.quickLauncherPageChangedThisGesture &&
                     pickResolver.performUpAction(event, touchX, localX, localY)
@@ -342,6 +349,7 @@ internal class QuickLauncherTouchHandler(
                     host.panelGridSession().highlightedIndex < 0 &&
                     !ctrl.quickLauncherPageChangedThisGesture &&
                     !toolbarTouchThisGesture &&
+                    !isHeaderArea &&
                     host.gestureSession().panelMode() == panelModeBeforeAction
                 ) {
                     endQuickLauncherSessionAnimated()

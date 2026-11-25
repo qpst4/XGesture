@@ -68,6 +68,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Shape
+import com.slideindex.app.overlay.layout.FvIconShape
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -122,6 +124,14 @@ private val ContactActionIconSize = 20.dp
 private val AppIconCandidateSize = 48.dp
 private val AppIconCandidateItemWidth = 64.dp
 private val AppIconCandidateCorner = RoundedCornerShape(12.dp)
+
+private fun searchPanelAppIconCorner(size: Dp, shape: FvIconShape): Shape = when (shape) {
+    FvIconShape.CIRCLE -> CircleShape
+    FvIconShape.SQUIRCLE -> RoundedCornerShape(size * 0.35f)
+    FvIconShape.ROUNDED_RECT -> RoundedCornerShape(size * 0.22f)
+    FvIconShape.SQUARE -> RoundedCornerShape(size * 0.08f)
+    FvIconShape.ORIGINAL -> RoundedCornerShape(0.dp)
+}
 private const val THUMBNAIL_LOAD_SIZE_PX = 256
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -398,6 +408,9 @@ private fun SearchPanelAppIconStrip(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.Top,
         ) {
+            val resolvedShape = settings.searchPanel.iconShape.resolve(settings.globalIconShape)
+            val corner = searchPanelAppIconCorner(AppIconCandidateSize, resolvedShape)
+            val isOriginal = resolvedShape == FvIconShape.ORIGINAL
             apps.forEach { app ->
                 val context = LocalContext.current
                 val appState = com.slideindex.app.overlay.searchpanel.SearchPanelHostAccess.host?.freezerState(context, app)
@@ -419,7 +432,8 @@ private fun SearchPanelAppIconStrip(
                             packageName = app.packageName,
                             contentDescription = app.label,
                             size = AppIconCandidateSize,
-                            corner = AppIconCandidateCorner,
+                            corner = corner,
+                            isOriginal = isOriginal,
                             dimmed = !appState.isActive,
                             state = appState,
                             isClone = app.isClone,
@@ -457,6 +471,9 @@ private fun SearchPanelAppListCards(
     longPressEnabled: Boolean = false,
 ) {
     val displayApps = if (expanded) apps else apps.take(APP_LIST_INITIAL_VISIBLE_COUNT)
+    val resolvedShape = settings.searchPanel.iconShape.resolve(settings.globalIconShape)
+    val corner = searchPanelAppIconCorner(LeadingSlotSize, resolvedShape)
+    val isOriginal = resolvedShape == FvIconShape.ORIGINAL
 
     SearchPanelGroupedResultCard(
         modifier = modifier,
@@ -496,7 +513,8 @@ private fun SearchPanelAppListCards(
                             packageName = app.packageName,
                             contentDescription = app.label,
                             size = LeadingSlotSize,
-                            corner = RoundedCornerShape(8.dp),
+                            corner = corner,
+                            isOriginal = isOriginal,
                             dimmed = !appState.isActive,
                             state = appState,
                             isClone = app.isClone,
@@ -522,7 +540,8 @@ private fun SearchPanelAppIcon(
     packageName: String,
     contentDescription: String,
     size: Dp,
-    corner: RoundedCornerShape,
+    corner: Shape,
+    isOriginal: Boolean = false,
     dimmed: Boolean = false,
     state: com.slideindex.app.freezer.FreezerAppState = com.slideindex.app.freezer.FreezerAppState.ACTIVE,
     isClone: Boolean = false,
@@ -551,7 +570,7 @@ private fun SearchPanelAppIcon(
                 contentDescription = contentDescription,
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(corner),
+                    .then(if (isOriginal) Modifier else Modifier.clip(corner)),
                 contentScale = ContentScale.Crop,
                 colorFilter = grayscale,
             )
@@ -561,9 +580,10 @@ private fun SearchPanelAppIcon(
                 contentDescription = contentDescription,
                 modifier = Modifier
                     .fillMaxSize()
+                    .then(if (isOriginal) Modifier else Modifier.clip(corner))
                     .background(
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                        corner,
+                        if (isOriginal) CircleShape else corner,
                     )
                     .padding(8.dp)
                     .then(if (dimmed) Modifier.alpha(0.38f) else Modifier),
@@ -1140,9 +1160,13 @@ fun SearchPanelShortcutResultCards(
     onLaunchShortcut: (ShortcutSearchEntry, longPressTriggered: Boolean) -> Unit,
     modifier: Modifier = Modifier,
     longPressEnabled: Boolean = false,
+    settings: AppSettings? = null,
 ) {
     if (shortcuts.isEmpty()) return
     val displayShortcuts = if (expanded) shortcuts else shortcuts.take(INITIAL_VISIBLE_COUNT)
+    val resolvedShape = settings?.let { it.searchPanel.iconShape.resolve(it.globalIconShape) } ?: FvIconShape.SQUIRCLE
+    val corner = searchPanelAppIconCorner(LeadingSlotSize, resolvedShape)
+    val isOriginal = resolvedShape == FvIconShape.ORIGINAL
 
     SearchPanelGroupedResultCard(
         modifier = modifier,
@@ -1167,7 +1191,8 @@ fun SearchPanelShortcutResultCards(
                         packageName = shortcut.packageName,
                         contentDescription = shortcut.appLabel,
                         size = LeadingSlotSize,
-                        corner = RoundedCornerShape(8.dp),
+                        corner = corner,
+                        isOriginal = isOriginal,
                     )
                 },
                 longPressEnabled = longPressEnabled,

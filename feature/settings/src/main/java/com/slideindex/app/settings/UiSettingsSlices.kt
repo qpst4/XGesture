@@ -1,6 +1,7 @@
 package com.slideindex.app.settings
 
 import com.slideindex.app.otp.OtpKeywords
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.otp.OtpCodeAlertPolicy
 import com.slideindex.app.otp.OtpRecordLimits
 import com.slideindex.app.otp.SmsBlacklistRuleSet
@@ -11,6 +12,7 @@ import com.slideindex.app.widget.WidgetPanelPage
 /** 首页主屏展示所需设置子集。 */
 data class HomeMainSettings(
     val iconPlateModeId: Int = IconPlateMode.SYSTEM_DARK.id,
+    val globalIconShape: FvIconShape = FvIconShape.SQUIRCLE,
     val serviceEnabled: Boolean = false,
     val hideFromRecents: Boolean = false,
     val accessibilityKeepAliveEnabled: Boolean = false,
@@ -59,6 +61,21 @@ data class HomeMainSettings(
     val settingIconPlateEnabled: Boolean = false,
     /** 悬浮窗模糊总开关：关闭后所有浮层窗口/面板降级为实色底。 */
     val overlayBlurEnabled: Boolean = true,
+    val overlayBlurRadiusDp: Int = 40,
+    val overlayOpacityPercent: Int = 30,
+    val overlayCornerRadiusDp: Int = 18,
+    val overlayBorderShimmerPercent: Int = 0,
+    val overlayAdvancedShimmerEnabled: Boolean = true,
+    val overlayBorderHighlightPercent: Int = 100,
+    val overlayRadialGlossPercent: Int = 30,
+    val overlayVerticalGlossPercent: Int = 0,
+    val backdropBlurEnabled: Boolean = true,
+    val backdropBlurRadiusDp: Int = 80,
+    val backdropDimPercent: Int = 35,
+    val searchPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
+    val expandPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
+    val pickResultBlurModeId: Int = OverlayBlurMode.DISABLED.id,
+    val widgetPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
 ) {
     val bottomNavBlurRadiusDp: Float
         get() = when (BottomNavStyle.fromId(bottomNavStyleId)) {
@@ -70,6 +87,7 @@ data class HomeMainSettings(
     companion object {
         fun from(settings: AppSettings): HomeMainSettings = HomeMainSettings(
         iconPlateModeId = settings.iconPlateModeId,
+        globalIconShape = settings.globalIconShape,
             serviceEnabled = settings.serviceEnabled,
             hideFromRecents = settings.hideFromRecents,
             accessibilityKeepAliveEnabled = settings.accessibilityKeepAliveEnabled,
@@ -117,6 +135,21 @@ data class HomeMainSettings(
             swipeDismissEnabled = settings.swipeDismissEnabled,
             settingIconPlateEnabled = settings.settingIconPlateEnabled,
             overlayBlurEnabled = settings.overlayBlurEnabled,
+            overlayBlurRadiusDp = settings.overlayBlurRadiusDp,
+            overlayOpacityPercent = settings.overlayOpacityPercent,
+            overlayCornerRadiusDp = settings.overlayCornerRadiusDp,
+            overlayBorderShimmerPercent = settings.overlayBorderShimmerPercent,
+            overlayAdvancedShimmerEnabled = settings.overlayAdvancedShimmerEnabled,
+            overlayBorderHighlightPercent = settings.overlayBorderHighlightPercent,
+            overlayRadialGlossPercent = settings.overlayRadialGlossPercent,
+            overlayVerticalGlossPercent = settings.overlayVerticalGlossPercent,
+            backdropBlurEnabled = settings.backdropBlurEnabled,
+            backdropBlurRadiusDp = settings.backdropBlurRadiusDp,
+            backdropDimPercent = settings.backdropDimPercent,
+            searchPanelBlurModeId = settings.searchPanelBlurModeId,
+            expandPanelBlurModeId = settings.expandPanelBlurModeId,
+            pickResultBlurModeId = settings.pickResultBlurModeId,
+            widgetPanelBlurModeId = settings.widgetPanelBlurModeId,
         )
     }
 }

@@ -152,6 +152,7 @@ object CornerSlotIconBitmap {
         FvIconShape.CIRCLE -> 1
         FvIconShape.SQUIRCLE -> 2
         FvIconShape.SQUARE -> 3
+        FvIconShape.ORIGINAL -> 1
     }
 
     private fun resolveAppIconBitmap(

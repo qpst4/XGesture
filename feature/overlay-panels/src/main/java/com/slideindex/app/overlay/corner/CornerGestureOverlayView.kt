@@ -12,6 +12,7 @@ import android.media.AudioManager
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
 import android.os.SystemClock
 import android.text.TextPaint
 import android.text.TextUtils
@@ -25,6 +26,9 @@ import com.slideindex.app.gesture.isEffective
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.CornerGestureSettings
 import com.slideindex.app.settings.CornerRadialMenuCodec
+import com.slideindex.app.overlay.LocalFrostedGlassDrawable
+import com.slideindex.app.overlay.OverlayMaterialSpec
+import com.slideindex.app.overlay.OverlayPanelTheme
 import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.settings.effectiveLongPressDurationMs
 import com.slideindex.app.settings.shouldLaunchFullscreen
@@ -83,6 +87,8 @@ class CornerGestureOverlayView(
     private var shortcutSubMenuRevealProgress = 0f
     private var subMenuRevealAnimator: ValueAnimator? = null
     private val dimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.BLACK }
+    private val frostedGlassDrawable = LocalFrostedGlassDrawable { this }
+    private val fullScreenBounds = RectF()
     private var menuVisualActive = false
 
     init {
@@ -838,16 +844,36 @@ class CornerGestureOverlayView(
     }
 
     private fun drawBackgroundMask(canvas: Canvas, progress: Float) {
-        if (cornerSettings.backgroundStyle == CornerGestureSettings.BACKGROUND_NONE) return
         if (progress <= 0.01f) return
-        val dim = cornerSettings.dimPercent.coerceIn(
-            CornerGestureSettings.MIN_DIM_PERCENT,
-            CornerGestureSettings.MAX_DIM_PERCENT,
-        )
-        val alpha = (255f * dim / 100f * progress).toInt().coerceIn(0, 255)
-        if (alpha <= 0) return
-        dimPaint.alpha = alpha
-        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), dimPaint)
+        val spec = OverlayMaterialSpec.fromContext(context)
+        val isDark = OverlayPanelTheme.isDarkTheme(context)
+        fullScreenBounds.set(0f, 0f, width.toFloat(), height.toFloat())
+        val blurRadiusPx = spec.backdropBlurRadiusPx(density)
+        val tintColor = spec.backdropDimColor(alphaScale = 1f)
+        val blurDrawn = if (spec.backdropBlurEnabled) {
+            frostedGlassDrawable.draw(
+                canvas = canvas,
+                bounds = fullScreenBounds,
+                spec = spec,
+                density = density,
+                isDark = isDark,
+                cornerRadiusPx = 0f,
+                blurRadiusPx = blurRadiusPx,
+                tintColor = tintColor,
+                alpha = progress,
+                enabled = true,
+            )
+        } else {
+            false
+        }
+        if (!blurDrawn) {
+            val dimPercent = spec.backdropDimPercent
+            val alpha = (255f * dimPercent / 100f * progress).toInt().coerceIn(0, 255)
+            if (alpha <= 0) return
+            dimPaint.color = Color.BLACK
+            dimPaint.alpha = alpha
+            canvas.drawRect(fullScreenBounds, dimPaint)
+        }
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -883,6 +909,7 @@ class CornerGestureOverlayView(
             ),
             density = density,
             revealProgress = menuRevealProgress,
+            globalIconShape = settings.globalIconShape,
             hintIconSizeDp = cornerSettings.selectedHintIconSizeDp,
             activityShortcuts = settings.activityShortcuts,
             shellCommands = settings.shellCommands,

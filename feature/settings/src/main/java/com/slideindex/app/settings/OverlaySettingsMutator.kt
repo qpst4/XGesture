@@ -9,6 +9,7 @@ import com.slideindex.app.gesture.SelectedHintMetrics
 import com.slideindex.app.gesture.WidgetPanelActionRefs
 import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.overlay.layout.FvIconShape
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.shell.ShellCommand
 import com.slideindex.app.shell.ShellCommandCodec
 import com.slideindex.app.activity.ActivityShortcutCodec
@@ -43,6 +44,30 @@ class OverlaySettingsMutator @Inject constructor(
 
     suspend fun setIconPlateMode(mode: IconPlateMode) = editor.edit {
         it[SettingsPreferenceKeys.ICON_PLATE_MODE] = mode.id
+    }
+
+    suspend fun setGlobalIconShape(shape: FvIconShape) = editor.edit {
+        it[SettingsPreferenceKeys.GLOBAL_ICON_SHAPE] = shape.name
+    }
+
+    suspend fun setSearchPanelIconShape(shape: PanelIconShape) = editor.edit {
+        it[SettingsPreferenceKeys.SEARCH_PANEL_ICON_SHAPE] = shape.name
+    }
+
+    suspend fun setQuickLauncherIconShape(shape: PanelIconShape) = editor.edit {
+        it[SettingsPreferenceKeys.QUICK_LAUNCHER_ICON_SHAPE_NAME] = shape.name
+    }
+
+    suspend fun setWidgetPanelIconShape(shape: PanelIconShape) = editor.edit {
+        it[SettingsPreferenceKeys.WIDGET_PANEL_ICON_SHAPE] = shape.name
+    }
+
+    suspend fun setHoneycombIconShape(shape: PanelIconShape) = editor.edit {
+        it[SettingsPreferenceKeys.HONEYCOMB_ICON_SHAPE] = shape.name
+    }
+
+    suspend fun setHolographicLauncherIconShape(shape: PanelIconShape) = editor.edit {
+        it[SettingsPreferenceKeys.HOLOGRAPHIC_ICON_SHAPE] = shape.name
     }
 
     suspend fun setThemeColorSpec(spec: AppColorSpec) = editor.edit {
@@ -809,6 +834,7 @@ class OverlaySettingsMutator @Inject constructor(
             )
         prefs[SettingsPreferenceKeys.QUICK_LAUNCHER_ICON_SHAPE] =
             QuickLauncherDisplaySettings.coerceIconShape(settings.iconShape)
+        prefs[SettingsPreferenceKeys.QUICK_LAUNCHER_ICON_SHAPE_NAME] = settings.panelIconShape.name
         prefs[SettingsPreferenceKeys.QUICK_LAUNCHER_BLUR_RADIUS_DP] =
             settings.blurRadiusDp.coerceIn(
                 QuickLauncherDisplaySettings.MIN_BLUR_RADIUS_DP,
@@ -828,6 +854,7 @@ class OverlaySettingsMutator @Inject constructor(
             settings.mode.coerceIn(HoneycombDisplaySettings.MODE_BROWSE, HoneycombDisplaySettings.MODE_HOLD)
         prefs[SettingsPreferenceKeys.HONEYCOMB_ICON_SIZE_DP] =
             settings.iconSizeDp.coerceIn(HoneycombDisplaySettings.MIN_ICON_SIZE_DP, HoneycombDisplaySettings.MAX_ICON_SIZE_DP)
+        prefs[SettingsPreferenceKeys.HONEYCOMB_ICON_SHAPE] = settings.iconShape.name
         prefs[SettingsPreferenceKeys.HONEYCOMB_SPACING_DP] =
             settings.spacingDp.coerceIn(HoneycombDisplaySettings.MIN_SPACING_DP, HoneycombDisplaySettings.MAX_SPACING_DP)
         prefs[SettingsPreferenceKeys.HONEYCOMB_ANIMATION_SPEED] =
@@ -1620,6 +1647,66 @@ class OverlaySettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.OVERLAY_BLUR_ENABLED] = enabled
     }
 
+    suspend fun setOverlayBlurRadiusDp(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_BLUR_RADIUS_DP] = value.coerceIn(0, 100)
+    }
+
+    suspend fun setOverlayOpacityPercent(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_OPACITY_PERCENT] = value.coerceIn(0, 100)
+    }
+
+    suspend fun setOverlayCornerRadiusDp(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_CORNER_RADIUS_DP] = value.coerceIn(12, 28)
+    }
+
+    suspend fun setOverlayBorderShimmerPercent(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_BORDER_SHIMMER_PERCENT] = value.coerceIn(0, 100)
+    }
+
+    suspend fun setOverlayAdvancedShimmerEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_ADVANCED_SHIMMER_ENABLED] = enabled
+    }
+
+    suspend fun setOverlayBorderHighlightPercent(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_BORDER_HIGHLIGHT_PERCENT] = value.coerceIn(0, 100)
+    }
+
+    suspend fun setOverlayRadialGlossPercent(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_RADIAL_GLOSS_PERCENT] = value.coerceIn(0, 100)
+    }
+
+    suspend fun setOverlayVerticalGlossPercent(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.OVERLAY_VERTICAL_GLOSS_PERCENT] = value.coerceIn(0, 100)
+    }
+
+    suspend fun setBackdropBlurEnabled(enabled: Boolean) = editor.edit {
+        it[SettingsPreferenceKeys.BACKDROP_BLUR_ENABLED] = enabled
+    }
+
+    suspend fun setBackdropBlurRadiusDp(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.BACKDROP_BLUR_RADIUS_DP] = value.coerceIn(0, 100)
+    }
+
+    suspend fun setBackdropDimPercent(value: Int) = editor.edit {
+        it[SettingsPreferenceKeys.BACKDROP_DIM_PERCENT] = value.coerceIn(0, 100)
+    }
+
+    suspend fun setSearchPanelBlurModeId(modeId: Int) = editor.edit {
+        it[SettingsPreferenceKeys.SEARCH_PANEL_BLUR_MODE_ID] = modeId
+    }
+
+    suspend fun setExpandPanelBlurModeId(modeId: Int) = editor.edit {
+        it[SettingsPreferenceKeys.EXPAND_PANEL_BLUR_MODE_ID] = modeId
+    }
+
+    suspend fun setPickResultBlurModeId(modeId: Int) = editor.edit {
+        it[SettingsPreferenceKeys.PICK_RESULT_BLUR_MODE_ID] = modeId
+    }
+
+    suspend fun setWidgetPanelBlurModeId(modeId: Int) = editor.edit {
+        it[SettingsPreferenceKeys.WIDGET_PANEL_BLUR_MODE_ID] = modeId
+    }
+
     suspend fun setStashPanelBackgroundBlurRadiusDp(value: Int) = editor.edit {
         it[SettingsPreferenceKeys.STASH_PANEL_BACKGROUND_BLUR_RADIUS_DP] = value.coerceIn(
             AppSettings.STASH_PANEL_BLUR_RADIUS_MIN_DP,
@@ -1903,7 +1990,7 @@ class OverlaySettingsMutator @Inject constructor(
             CornerGestureSettings.clampWheelLayerCount(value)
     }
 
-    suspend fun setCornerGestureSlotIconShape(shape: FvIconShape) = editor.edit {
+    suspend fun setCornerGestureSlotIconShape(shape: PanelIconShape) = editor.edit {
         it[SettingsPreferenceKeys.CORNER_GESTURE_SLOT_ICON_SHAPE] = shape.name
     }
 

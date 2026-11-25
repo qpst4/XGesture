@@ -7,6 +7,8 @@ import com.slideindex.app.gesture.GestureAngles
 import com.slideindex.app.gesture.GestureRule
 import com.slideindex.app.gesture.GestureTriggerMode
 import com.slideindex.app.gesture.SideGestureDefaults
+import com.slideindex.app.overlay.layout.FvIconShape
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.translate.TranslateTargetLanguages
 
 /**
@@ -596,8 +598,10 @@ data class SearchPanelSettings(
     val searchEngineGridColumns: Int = 5,
     val searchEngineGridRows: Int = 2,
     val searchEngineShowLabels: Boolean = true,
-    /** 引擎区图标的裁切形状；[SearchEngineIconShape.DEFAULT] 保持历史观感。 */
-    val searchEngineIconShape: SearchEngineIconShape = SearchEngineIconShape.DEFAULT,
+    /** 应用图标裁切形状规范；默认跟随全局。 */
+    val iconShape: PanelIconShape = PanelIconShape.FOLLOW_GLOBAL,
+    /** 引擎区图标的裁切形状；默认跟随全局。 */
+    val searchEngineIconShape: SearchEngineIconShape = SearchEngineIconShape.FOLLOW_GLOBAL,
     val searchPanelDefaultEngineId: String? = null,
     val searchPanelInputBehavior: SearchPanelInputBehavior = SearchPanelInputBehavior.KEEP,
     val searchPanelEnterAction: SearchPanelEnterAction = SearchPanelEnterAction.SEARCH_ENGINE,
@@ -676,6 +680,8 @@ data class WidgetPanelSettings(
     val widgetPanelTopFraction: Float = 0.15f,
     val widgetPanelBlurEnabled: Boolean = true,
     val widgetPanelBlurRadiusDp: Int = AppSettings.WIDGET_PANEL_BLUR_RADIUS_DEFAULT_DP,
+    /** 图标裁切形状规范；默认跟随全局。 */
+    val widgetPanelIconShape: PanelIconShape = PanelIconShape.FOLLOW_GLOBAL,
     /** 点击小组件后收起面板的策略：0=仅外部 Activity，1=总是，2=从不。 */
     val widgetPanelCloseOnClickMode: Int = 0,
     /**
@@ -728,6 +734,36 @@ data class OtpSettings(
 data class OverlayBlurSettings(
     /** 悬浮窗模糊总开关；关闭时全部降级为实色底。 */
     val overlayBlurEnabled: Boolean = true,
+    /** 全局悬浮窗背景模糊半径（dp）；默认 40dp，区间 0..100。 */
+    val overlayBlurRadiusDp: Int = 40,
+    /** 全局悬浮窗面板不透明度百分比（%）；默认 30%，区间 0..100。 */
+    val overlayOpacityPercent: Int = 30,
+    /** 全局悬浮窗卡片圆角（dp）；默认 18dp，区间 12..28。 */
+    val overlayCornerRadiusDp: Int = 18,
+    /** 全局悬浮窗微光反光强度百分比（%）；默认 0%，区间 0..100。 */
+    val overlayBorderShimmerPercent: Int = 0,
+    /** 高级光影独立微调总开关；开启后接管主滑块，由独立 3 维参数控制。默认开。 */
+    val overlayAdvancedShimmerEnabled: Boolean = true,
+    /** 外缘高光细边百分比（%）；默认 100%，区间 0..100。 */
+    val overlayBorderHighlightPercent: Int = 100,
+    /** 角落定向聚光百分比（%）；默认 30%，区间 0..100。 */
+    val overlayRadialGlossPercent: Int = 30,
+    /** 顶部垂直微光百分比（%）；默认 0%，区间 0..100。 */
+    val overlayVerticalGlossPercent: Int = 0,
+    /** 轮盘与圆环全屏背景虚化总开关；开启时在圆环/边角呼出时全屏高斯模糊，关闭时仅暗化背景。默认开。 */
+    val backdropBlurEnabled: Boolean = true,
+    /** 全屏背景模糊半径（dp）；默认 80dp，区间 0..100。 */
+    val backdropBlurRadiusDp: Int = 80,
+    /** 全屏背景暗化百分比（%）；默认 35%，区间 0..100。 */
+    val backdropDimPercent: Int = 35,
+    /** 搜索面板模糊模式：0=关闭, 1=仅背景, 2=仅面板。默认仅背景(1)。 */
+    val searchPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
+    /** 扩展面板模糊模式：0=关闭, 1=仅背景, 2=仅面板。默认仅背景(1)。 */
+    val expandPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
+    /** 分词浮层模糊模式：0=关闭, 1=仅背景, 2=仅面板。默认关闭(0)。 */
+    val pickResultBlurModeId: Int = OverlayBlurMode.DISABLED.id,
+    /** 小组件面板模糊模式：0=关闭, 1=仅背景, 2=仅面板。默认仅背景(1)。 */
+    val widgetPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
 )
 
 /**

@@ -96,7 +96,7 @@ object LinkDispatcher {
                 return@replace rulePatternMatch?.groupValues?.getOrNull(index) ?: match.value
             }
             val key = match.groupValues[2]
-            val raw = if (key == "url") {
+            val raw = if (key == "url" || key == "0") {
                 url
             } else {
                 val index = key.toIntOrNull()?.takeIf { it > 0 } ?: return@replace ""
@@ -142,17 +142,24 @@ object LinkDispatcher {
     fun findRule(
         url: String,
         rules: List<LinkDispatchRule>,
-    ): LinkDispatchRule? = rules
-        .asSequence()
-        .filter { it.isEnabled }
-        .filter { rule ->
+    ): LinkDispatchRule? {
+        val enabled = rules.filter { rule ->
+            if (!rule.isEnabled) return@filter false
             if (rule.targetPackage.isBlank() &&
-                !(rule.resolveShortLink && rule.resolveStrategy == LinkResolveStrategy.REDISPATCH)) {
+                !(rule.resolveStrategy == LinkResolveStrategy.REDISPATCH &&
+                    (rule.resolveShortLink ||
+                        !rule.template.isNullOrBlank() ||
+                        !rule.extractPattern.isNullOrBlank()))
+            ) {
                 return@filter false
             }
-            matchRule(url, rule)
+            true
         }
-        .minByOrNull { it.priority }
+        // 对齐 LinkGo：先找命中的重分发规则，找不到再找普通跳转规则。
+        return enabled.firstOrNull {
+            it.resolveStrategy == LinkResolveStrategy.REDISPATCH && matchRule(url, it)
+        } ?: enabled.firstOrNull { matchRule(url, it) }
+    }
 
     /**
      * 检查给定的 URL 是否会命中一条尚未缓存的短链解析规则（即需要发起网络探测）。
@@ -191,87 +198,16 @@ object LinkDispatcher {
         candidateRule: LinkDispatchRule,
         sourcePackage: String = "",
         sourceText: String? = null,
-    ): LinkRouteTrace = withContext(Dispatchers.IO) {
-        val normalized = PickResultUrl.normalizeOpenableUrl(rawUrl) ?: rawUrl.trim()
-        val steps = mutableListOf<LinkRouteStep>()
-
-        // 1. 严格针对当前候选规则进行判定，不匹配则绝不跨规则去全库盲配
-        if (!matchRule(normalized, candidateRule)) {
-            return@withContext LinkRouteTrace(
-                inputUrl = normalized,
-                steps = emptyList(),
-                finalResult = LinkDispatchResult.NoRule,
-            )
-        }
-
-        var currentUrl = normalized
-        var resolvedUrl: String? = null
-
-        // 2. 如果开启短链解析
-        if (candidateRule.resolveShortLink && candidateRule.resolveStrategy != LinkResolveStrategy.NONE) {
-            val before = currentUrl
-            resolvedUrl = resolveShortLink(currentUrl)
-            steps.add(
-                LinkRouteStep(
-                    ruleName = candidateRule.name.ifBlank { "当前规则" },
-                    fromUrl = before,
-                    resolvedUrl = resolvedUrl,
-                )
-            )
-            if (resolvedUrl != null) {
-                currentUrl = resolvedUrl
-            }
-        }
-
-        // 3. 执行模板改写与正则捕获组提取
-        val groups = candidateRule.extractPattern?.let { pattern ->
-            val regex = compile(pattern)
-            val match = regex?.find(currentUrl) ?: sourceText?.let { regex?.find(it) }
-            match?.groupValues?.drop(1)
-        }.orEmpty()
-        val rewrittenUrl = applyTemplate(currentUrl, candidateRule, groups)
-        val finalCandidateUrl = if (rewrittenUrl.isNotBlank()) rewrittenUrl else currentUrl
-
-        // 4. 后续流向推演
-        if (candidateRule.resolveStrategy == LinkResolveStrategy.REDISPATCH) {
-            // 当前规则为短链重分发：以其产出结果继续去全库其余规则推演后续路由
-            val remainingRules = LinkRuleRepository.loadRules(context).filterNot { it.id == candidateRule.id }
-            val exempts = LinkRuleRepository.loadExemptDomains(context)
-            val subTrace = routeRulesWithTrace(
-                context = context,
-                rawUrl = finalCandidateUrl,
-                rules = remainingRules,
-                exempts = exempts,
-                sourcePackage = sourcePackage,
-                sourceText = sourceText,
-            )
-            // 候选规则已命中；若后续规则库无接管者，应降级为系统默认打开流程，而非误判当前规则未命中
-            val finalRes = when (subTrace.finalResult) {
-                is LinkDispatchResult.NoRule -> LinkDispatchResult.SystemDefault(finalCandidateUrl, inputUrl = finalCandidateUrl)
-                else -> subTrace.finalResult
-            }
-            LinkRouteTrace(
-                inputUrl = normalized,
-                steps = steps + subTrace.steps,
-                finalResult = finalRes,
-            )
-        } else {
-            // 普通直达跳转规则
-            if (candidateRule.targetPackage.isBlank()) {
-                LinkRouteTrace(
-                    inputUrl = normalized,
-                    steps = steps,
-                    finalResult = LinkDispatchResult.SystemDefault(finalCandidateUrl, inputUrl = currentUrl),
-                )
-            } else {
-                LinkRouteTrace(
-                    inputUrl = normalized,
-                    steps = steps,
-                    finalResult = LinkDispatchResult.Routed(candidateRule, finalCandidateUrl, inputUrl = currentUrl),
-                )
-            }
-        }
-    }
+    ): LinkRouteTrace = routeRulesWithTrace(
+        context = context,
+        rawUrl = rawUrl,
+        rules = LinkRuleRepository.loadRules(context),
+        exempts = LinkRuleRepository.loadExemptDomains(context),
+        sourcePackage = sourcePackage,
+        sourceText = sourceText,
+        preferredRule = candidateRule,
+        strictPreferred = true,
+    )
 
     private suspend fun routeRulesWithTrace(
         context: Context,
@@ -280,7 +216,10 @@ object LinkDispatcher {
         exempts: List<LinkExemptDomain>,
         sourcePackage: String = "",
         sourceText: String? = null,
+        preferredRule: LinkDispatchRule? = null,
+        strictPreferred: Boolean = false,
     ): LinkRouteTrace = withContext(Dispatchers.IO) {
+        var preferred = preferredRule
         val normalized = PickResultUrl.normalizeOpenableUrl(rawUrl) ?: rawUrl
         val steps = mutableListOf<LinkRouteStep>()
 
@@ -303,7 +242,21 @@ object LinkDispatcher {
                 finished = true
                 return@repeat
             }
-            val rule = findRule(target, rules)
+            val rule = if (preferred != null) {
+                val fixed = preferred
+                preferred = null
+                if (matchRule(target, fixed)) {
+                    fixed
+                } else if (strictPreferred) {
+                    finalResult = LinkDispatchResult.NoRule
+                    finished = true
+                    return@repeat
+                } else {
+                    findRule(target, rules)
+                }
+            } else {
+                findRule(target, rules)
+            }
             if (rule == null) {
                 finalResult = if (target == normalized) LinkDispatchResult.NoRule else LinkDispatchResult.SystemDefault(target)
                 finished = true
@@ -319,24 +272,33 @@ object LinkDispatcher {
                         resolvedUrl = resolved,
                     )
                 )
-                if (resolved != null && resolved != target && rule.resolveStrategy == LinkResolveStrategy.REDISPATCH) {
-                    target = resolved
-                    return@repeat
-                }
                 target = resolved ?: target
-            }
-            if (rule.targetPackage.isBlank()) {
-                finalResult = LinkDispatchResult.SystemDefault(target, inputUrl = target)
-                finished = true
-                return@repeat
             }
             val groups = rule.extractPattern?.let { pattern ->
                 val regex = compile(pattern)
                 val match = regex?.find(target) ?: sourceText?.let { regex?.find(it) }
                 match?.groupValues?.drop(1)
             }.orEmpty()
-            val finalUrl = applyTemplate(target, rule, groups)
-            finalResult = if (finalUrl.isBlank()) LinkDispatchResult.Failed else LinkDispatchResult.Routed(rule, finalUrl, inputUrl = target)
+            val finalUrl = applyTemplate(target, rule, groups).ifBlank { target }
+
+            // RE_DISPATCH：先改写，再用改写后的 URL 重新匹配；不要求先解析短链。
+            if (rule.resolveStrategy == LinkResolveStrategy.REDISPATCH) {
+                if (finalUrl != target) {
+                    target = finalUrl
+                    return@repeat
+                }
+                // 对齐 LinkGo：重分发改写无变化时停止，不把 RE_DISPATCH 当普通直达。
+                finalResult = LinkDispatchResult.SystemDefault(finalUrl, inputUrl = target)
+                finished = true
+                return@repeat
+            }
+
+            if (rule.targetPackage.isBlank()) {
+                finalResult = LinkDispatchResult.SystemDefault(finalUrl, inputUrl = target)
+                finished = true
+                return@repeat
+            }
+            finalResult = LinkDispatchResult.Routed(rule, finalUrl, inputUrl = target)
             finished = true
         }
 

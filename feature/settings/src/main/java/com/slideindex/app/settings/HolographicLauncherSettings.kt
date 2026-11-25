@@ -1,6 +1,7 @@
 package com.slideindex.app.settings
 
 import androidx.datastore.preferences.core.Preferences
+import com.slideindex.app.overlay.layout.PanelIconShape
 
 /**
  * 全息启动器「球面上显示哪些应用」的三档模式。
@@ -41,6 +42,7 @@ data class HolographicLauncherSettings(
      */
     val selectedAppPackages: List<String> = emptyList(),
     val backgroundStyle: Int = DEFAULT_BACKGROUND_STYLE,
+    val iconShape: PanelIconShape = PanelIconShape.FOLLOW_GLOBAL,
     val blurDp: Int = DEFAULT_BLUR_DP,
     val dimPercent: Int = DEFAULT_DIM_PERCENT,
 ) {
@@ -88,6 +90,7 @@ data class HolographicLauncherSettings(
                 ?: DEFAULT_BACKGROUND_STYLE
             val blurDp = prefs[SettingsPreferenceKeys.HOLOGRAPHIC_BLUR_DP] ?: DEFAULT_BLUR_DP
             val dimPercent = prefs[SettingsPreferenceKeys.HOLOGRAPHIC_DIM_PERCENT] ?: DEFAULT_DIM_PERCENT
+            val iconShape = PanelIconShape.fromName(prefs[SettingsPreferenceKeys.HOLOGRAPHIC_ICON_SHAPE])
             return HolographicLauncherSettings(
                 timeoutSeconds = timeout.coerceIn(MIN_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS),
                 rotationSensitivity = sensitivity.coerceIn(MIN_ROTATION_SENSITIVITY, MAX_ROTATION_SENSITIVITY),
@@ -95,6 +98,7 @@ data class HolographicLauncherSettings(
                 appMode = appMode,
                 selectedAppPackages = selected,
                 backgroundStyle = backgroundStyle.coerceIn(BACKGROUND_BLUR, BACKGROUND_WALLPAPER_BLUR),
+                iconShape = iconShape,
                 blurDp = blurDp.coerceIn(MIN_BLUR_DP, MAX_BLUR_DP),
                 dimPercent = dimPercent.coerceIn(MIN_DIM_PERCENT, MAX_DIM_PERCENT),
             )

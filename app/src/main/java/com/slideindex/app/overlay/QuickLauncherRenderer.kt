@@ -23,6 +23,7 @@ import com.slideindex.app.launcher.isCloneTarget
 import com.slideindex.app.launcher.showsMacroBadge
 import com.slideindex.app.launcher.showsShellCommandBadge
 import com.slideindex.app.launcher.showsShortcutBadge
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.overlay.layout.visualColumn
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.QuickLauncherDisplaySettings
@@ -31,6 +32,8 @@ import com.slideindex.app.util.AppShortcutLoader
 import com.slideindex.app.util.AppLocaleApplier
 import com.slideindex.app.util.GestureActionIconBitmap
 import com.slideindex.app.util.QuickLauncherIconResolver
+import com.slideindex.app.overlay.OverlayMaterialSpec
+import com.slideindex.app.overlay.OverlayPanelTheme
 
 internal class QuickLauncherRenderer(
     private val ctrl: QuickLauncherOverlayController
@@ -72,16 +75,39 @@ internal class QuickLauncherRenderer(
     private val quickLauncherDisplay get() = host.settings().quickLauncherDisplay
     private val quickLauncherGridIconSize get() =
         host.dp(quickLauncherDisplay.iconSizeDp.toFloat())
+    private val quickLauncherEffectiveShape: FvIconShape
+        get() = quickLauncherDisplay.panelIconShape.resolve(host.settings().globalIconShape)
     private val quickLauncherIconShape get() = quickLauncherDisplay.iconShape
     private val quickLauncherGridIconTopInset get() = host.dp(4f)
     private val quickLauncherGridIconLabelGap get() = host.dp(4f)
     private val gridCellInset get() = host.dp(4f)
-    private val panelCorner get() = host.dp(18f)
+    private val panelCorner get() = OverlayMaterialSpec.fromContext(host.context).cornerRadiusPx(host.density())
 
     fun syncSettings(@Suppress("UNUSED_PARAMETER") settings: AppSettings) {
-        cellHighlightPaint.color = Color.argb(70, 255, 255, 255)
+        val isDark = OverlayPanelTheme.isDarkTheme(host.context)
+        syncThemeColors(isDark)
         cellLongPressHighlightPaint.color = Color.argb(110, 66, 133, 244)
         appLabelPaint.textSize = host.sp(11f)
+    }
+
+    private fun syncThemeColors(isDark: Boolean) {
+        if (isDark) {
+            appLabelPaint.color = Color.argb(230, 255, 255, 255)
+            appLabelPaint.setShadowLayer(host.dp(1.2f), 0f, host.dp(0.6f), Color.argb(120, 0, 0, 0))
+            cellHighlightPaint.color = Color.argb(70, 255, 255, 255)
+            folderTitlePaint.color = Color.WHITE
+            folderSubtitlePaint.color = Color.argb(170, 255, 255, 255)
+            folderButtonPaint.color = Color.WHITE
+            folderEmptyPaint.color = Color.argb(160, 255, 255, 255)
+        } else {
+            appLabelPaint.color = Color.argb(230, 28, 28, 30)
+            appLabelPaint.setShadowLayer(host.dp(1.2f), 0f, host.dp(0.6f), Color.argb(90, 255, 255, 255))
+            cellHighlightPaint.color = Color.argb(30, 0, 0, 0)
+            folderTitlePaint.color = Color.argb(230, 28, 28, 30)
+            folderSubtitlePaint.color = Color.argb(150, 60, 60, 67)
+            folderButtonPaint.color = Color.argb(230, 28, 28, 30)
+            folderEmptyPaint.color = Color.argb(140, 60, 60, 67)
+        }
     }
 
     /**
@@ -100,6 +126,7 @@ internal class QuickLauncherRenderer(
     fun draw(canvas: Canvas, drawToolbar: Boolean = true) {
         val panelRect = ctrl.quickLauncherPanelRect()
         if (panelRect.isEmpty) return
+        syncThemeColors(OverlayPanelTheme.isDarkTheme(host.context))
         ctrl.quickLauncherPagination()
         host.panelGridSession().cellBounds.clear()
         host.panelContentRect().set(panelRect)
@@ -326,8 +353,8 @@ internal class QuickLauncherRenderer(
     }
 
     private fun quickLauncherIconKey(item: QuickLauncherItem, size: Int): String =
-        "${ctrl.quickLauncherItemCacheKey(item)}\u0000$size\u0000$quickLauncherIconShape" +
-            "\u0000v35\u0000${quickLauncherIconCatalogStamp()}\u0000${ctrl.quickLauncherAppsRevision}" +
+        "${ctrl.quickLauncherItemCacheKey(item)}\u0000$size\u0000${quickLauncherEffectiveShape.name}" +
+            "\u0000v36\u0000${quickLauncherIconCatalogStamp()}\u0000${ctrl.quickLauncherAppsRevision}" +
             "\u0000${com.slideindex.app.ui.GlobalIconStore.revision}" +
             "\u0000${com.slideindex.app.macro.MacroStore.revision}" +
             "\u0000${com.slideindex.app.ui.IconPlateModeState.mode}" +
@@ -379,30 +406,20 @@ internal class QuickLauncherRenderer(
     private val frostedGlassDrawable = LocalFrostedGlassDrawable { host.overlayView() }
 
     private fun drawQuickLauncherPanelChrome(canvas: Canvas, grid: RectF) {
-        val alpha = QuickLauncherDisplaySettings.backgroundAlphaArgb(
-            host.settings().quickLauncherDisplay.backgroundOpacityPercent
+        val spec = OverlayMaterialSpec.fromContext(host.context)
+        val isDark = OverlayPanelTheme.isDarkTheme(host.context)
+        val corner = spec.cornerRadiusPx(host.density())
+        val blurDrawn = frostedGlassDrawable.draw(
+            canvas = canvas,
+            bounds = grid,
+            spec = spec,
+            density = host.density(),
+            isDark = isDark,
+            cornerRadiusPx = corner,
         )
-        val blurRadiusDp = if (host.settings().overlayBlurEnabled) {
-            host.settings().quickLauncherDisplay.blurRadiusDp
-        } else {
-            // 全局模糊总开关关闭：半径为 0，下面自然走实色绘制兜底。
-            0
-        }
-        val blurDrawn = if (blurRadiusDp <= 0) {
-            false
-        } else {
-            frostedGlassDrawable.draw(
-                canvas = canvas,
-                bounds = grid,
-                cornerRadiusPx = panelCorner,
-                blurRadiusPx = host.dp(blurRadiusDp.toFloat()).toInt(),
-                tintColor = Color.argb(alpha, 48, 48, 52),
-                enabled = host.settings().overlayBlurEnabled,
-            )
-        }
         if (!blurDrawn) {
-            panelBgPaint.color = Color.argb(alpha, 48, 48, 52)
-            canvas.drawRoundRect(grid, panelCorner, panelCorner, panelBgPaint)
+            panelBgPaint.color = spec.solidFallbackColor(isDark)
+            canvas.drawRoundRect(grid, corner, corner, panelBgPaint)
         }
     }
 
@@ -474,8 +491,8 @@ internal class QuickLauncherRenderer(
             val row = index / m
             val visualCol = visualColumn(col, m, m, layoutSide)
             val left = panelRect.left + ctrl.quickLauncherGridPadding + visualCol * ctrl.quickLauncherCellWidth
-            val top = panelRect.top + ctrl.quickLauncherHeaderHeight + ctrl.quickLauncherGridPadding +
-                row * ctrl.quickLauncherCellHeight
+            val topOffset = if (ctrl.quickLauncherHeaderHeight > 0f) ctrl.quickLauncherHeaderHeight else (ctrl.quickLauncherHeaderHeight + ctrl.quickLauncherGridPadding)
+            val top = panelRect.top + topOffset + row * ctrl.quickLauncherCellHeight
             val cell = RectF(left, top, left + ctrl.quickLauncherCellWidth, top + ctrl.quickLauncherCellHeight)
             val (offsetX, offsetY) = 0f to 0f
             if (offsetX != 0f || offsetY != 0f) {
@@ -589,12 +606,24 @@ internal class QuickLauncherRenderer(
     }
 
     private fun drawQuickLauncherPageIndicator(canvas: Canvas, grid: RectF) {
+        val topOffset = if (ctrl.quickLauncherHeaderHeight > 0f) ctrl.quickLauncherHeaderHeight else (ctrl.quickLauncherHeaderHeight + ctrl.quickLauncherGridPadding)
+        val rows = ctrl.quickLauncherRowsPerPage()
+        val lastRowCellTop = grid.top + topOffset + (rows - 1).coerceAtLeast(0) * ctrl.quickLauncherCellHeight
+        val visualContentBottom = if (quickLauncherDisplay.showLabels) {
+            val iconTop = lastRowCellTop + quickLauncherGridIconTopInset
+            val fontMetrics = appLabelPaint.fontMetrics
+            iconTop + quickLauncherGridIconSize + quickLauncherGridIconLabelGap - fontMetrics.ascent + fontMetrics.descent
+        } else {
+            val iconTop = lastRowCellTop + (ctrl.quickLauncherCellHeight - quickLauncherGridIconSize) / 2f
+            iconTop + quickLauncherGridIconSize
+        }
         drawPageIndicator(
             canvas = canvas,
             rect = grid,
             pageIndex = ctrl.quickLauncherPageIndex,
             pageCount = ctrl.quickLauncherPageCount,
-            bottomInset = host.dp(10f)
+            bottomInset = host.dp(10f),
+            contentBottom = visualContentBottom
         )
     }
 
@@ -603,13 +632,18 @@ internal class QuickLauncherRenderer(
         rect: RectF,
         pageIndex: Int,
         pageCount: Int,
-        bottomInset: Float
+        bottomInset: Float,
+        contentBottom: Float? = null,
     ) {
         if (pageCount <= 1 || rect.isEmpty) return
         val dotRadius = host.dp(2.5f)
         val dotGap = host.dp(6f)
         val totalWidth = pageCount * dotRadius * 2f + (pageCount - 1) * dotGap
-        val cy = rect.bottom - bottomInset
+        val cy = if (contentBottom != null && contentBottom < rect.bottom) {
+            (contentBottom + rect.bottom) / 2f
+        } else {
+            rect.bottom - bottomInset
+        }
         // 页码圆点也按排版侧排：镜像时从右往左，不镜像时一律从左往右。
         val layoutSide = ctrl.quickLauncherLayoutSide()
         var cx = when (layoutSide) {
@@ -621,11 +655,12 @@ internal class QuickLauncherRenderer(
         } else {
             dotRadius * 2f + dotGap
         }
+        val isDark = OverlayPanelTheme.isDarkTheme(host.context)
         for (page in 0 until pageCount) {
             pageIndicatorPaint.color = if (page == pageIndex) {
-                Color.argb(230, 255, 255, 255)
+                if (isDark) Color.argb(230, 255, 255, 255) else Color.argb(220, 28, 28, 30)
             } else {
-                Color.argb(90, 255, 255, 255)
+                if (isDark) Color.argb(90, 255, 255, 255) else Color.argb(80, 28, 28, 30)
             }
             canvas.drawCircle(cx, cy, dotRadius, pageIndicatorPaint)
             cx += step
@@ -676,26 +711,31 @@ internal class QuickLauncherRenderer(
             iconCenterX + iconSize / 2f,
             iconTop + iconSize
         )
-        QuickLauncherIconMask.pathFor(
-            shape = quickLauncherIconShape,
+        val effectiveShape = quickLauncherEffectiveShape
+        val clipPath = QuickLauncherIconMask.pathFor(
+            shape = effectiveShape,
             bounds = tmpRect,
             out = iconClipPath
         )
         if (icon != null) {
-            if (quickLauncherIconShape == QuickLauncherDisplaySettings.ICON_SHAPE_DEFAULT) {
-                canvas.drawBitmap(icon, null, tmpRect, iconBitmapPaint)
-            } else {
-                canvas.withClip(iconClipPath) {
+            if (clipPath != null) {
+                canvas.withClip(clipPath) {
                     drawBitmap(icon, null, tmpRect, iconBitmapPaint)
                 }
+            } else {
+                canvas.drawBitmap(icon, null, tmpRect, iconBitmapPaint)
             }
         } else {
+            val drawPath = clipPath ?: iconClipPath.apply {
+                rewind()
+                addRoundRect(tmpRect, iconSize * 0.22f, iconSize * 0.22f, Path.Direction.CW)
+            }
             cellHighlightPaint.color = Color.argb(130, 48, 48, 52)
-            canvas.drawPath(iconClipPath, cellHighlightPaint)
+            canvas.drawPath(drawPath, cellHighlightPaint)
             cellHighlightPaint.color = Color.argb(90, 255, 255, 255)
             cellHighlightPaint.style = Paint.Style.STROKE
             cellHighlightPaint.strokeWidth = host.dp(1f)
-            canvas.drawPath(iconClipPath, cellHighlightPaint)
+            canvas.drawPath(drawPath, cellHighlightPaint)
             cellHighlightPaint.style = Paint.Style.FILL
 
             val initial = displayLabel.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "•"
@@ -746,7 +786,7 @@ internal class QuickLauncherRenderer(
                 iconCenterY,
                 iconSize,
                 1f,
-                circular = quickLauncherIconShape == QuickLauncherDisplaySettings.ICON_SHAPE_CIRCLE,
+                circular = quickLauncherEffectiveShape == FvIconShape.CIRCLE,
             )
         }
         if (showLabels) {
@@ -769,26 +809,18 @@ internal class QuickLauncherRenderer(
         val folderRight = folderLayout.rect.right
         val folderTop = folderLayout.rect.top
         val folderCorner = host.dp(20f)
-        val blurRadiusDp = if (host.settings().overlayBlurEnabled) {
-            host.settings().quickLauncherDisplay.blurRadiusDp
-        } else {
-            // 全局模糊总开关关闭：半径为 0，下面自然走实色绘制兜底。
-            0
-        }
-        val blurDrawn = if (blurRadiusDp <= 0) {
-            false
-        } else {
-            frostedGlassDrawable.draw(
-                canvas = canvas,
-                bounds = ctrl.folderRect,
-                cornerRadiusPx = folderCorner,
-                blurRadiusPx = host.dp(blurRadiusDp.toFloat()).toInt(),
-                tintColor = Color.argb(235, 34, 34, 38),
-                enabled = host.settings().overlayBlurEnabled,
-            )
-        }
+        val spec = OverlayMaterialSpec.fromContext(host.context)
+        val isDark = OverlayPanelTheme.isDarkTheme(host.context)
+        val blurDrawn = frostedGlassDrawable.draw(
+            canvas = canvas,
+            bounds = ctrl.folderRect,
+            spec = spec,
+            density = host.density(),
+            isDark = isDark,
+            cornerRadiusPx = folderCorner,
+        )
         if (!blurDrawn) {
-            panelBgPaint.color = Color.argb(235, 34, 34, 38)
+            panelBgPaint.color = spec.solidFallbackColor(isDark)
             canvas.drawRoundRect(ctrl.folderRect, folderCorner, folderCorner, panelBgPaint)
         }
         cellHighlightPaint.color = Color.argb(45, 255, 255, 255)

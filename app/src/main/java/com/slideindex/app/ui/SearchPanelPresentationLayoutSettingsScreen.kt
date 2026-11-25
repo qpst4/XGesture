@@ -24,8 +24,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
-import com.slideindex.app.overlay.SystemWallpaperBlurHelper
-import com.slideindex.app.overlay.WallpaperPermissionLauncher
+import com.slideindex.app.overlay.layout.FvIconShape
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.overlay.pickresult.SearchEngineIcon
 import com.slideindex.app.overlay.pickresult.searchIconSizeForColumns
 import com.slideindex.app.settings.AppSettings
@@ -54,13 +54,14 @@ fun SearchPanelPresentationLayoutSettingsScreen(
     onSetSearchPanelBarPosition: (SearchPanelBarPosition) -> Unit,
     onSetSearchPanelListOrder: (SearchPanelListOrder) -> Unit,
     onSetSearchPanelAppDisplayStyle: (SearchPanelAppDisplayStyle) -> Unit,
+    onSetSearchPanelIconShape: (PanelIconShape) -> Unit = {},
     onSetSearchEngineGridColumns: (Int) -> Unit,
     onSetSearchEngineGridRows: (Int) -> Unit,
     onSetSearchEngineShowLabels: (Boolean) -> Unit,
     onSetSearchEngineIconShape: (SearchEngineIconShape) -> Unit,
-    onSetSearchPanelBackgroundStyle: (Int) -> Unit,
-    onSetSearchPanelBlurRadiusDp: (Int) -> Unit,
-    onSetSearchPanelDimPercent: (Int) -> Unit,
+    onSetSearchPanelBackgroundStyle: (Int) -> Unit = {},
+    onSetSearchPanelBlurRadiusDp: (Int) -> Unit = {},
+    onSetSearchPanelDimPercent: (Int) -> Unit = {},
     onSetSearchPanelInputBehavior: (SearchPanelInputBehavior) -> Unit,
     onSetSearchPanelEnterAction: (SearchPanelEnterAction) -> Unit,
 ) {
@@ -69,22 +70,17 @@ fun SearchPanelPresentationLayoutSettingsScreen(
     val listOrders = SearchPanelListOrder.entries
     val appDisplayStyles = SearchPanelAppDisplayStyle.entries
     val iconShapes = listOf(
-        SearchEngineIconShape.DEFAULT,
-        SearchEngineIconShape.CIRCLE,
+        SearchEngineIconShape.FOLLOW_GLOBAL,
         SearchEngineIconShape.SQUIRCLE,
-        SearchEngineIconShape.SQUARE,
+        SearchEngineIconShape.CIRCLE,
+        SearchEngineIconShape.ROUNDED_RECT,
+        SearchEngineIconShape.ORIGINAL,
     )
     val enginePreview = remember(settings.searchEngines) {
         SearchEngineStore.textPickPanelEngines(settings.searchEngines)
     }
     val inputBehaviorEntries = SearchPanelInputBehavior.entries
     val enterActionEntries = SearchPanelEnterAction.entries
-    val backgroundStyles = listOf(
-        SearchPanelBackgroundStyle.BLUR,
-        SearchPanelBackgroundStyle.WALLPAPER_BLUR,
-        SearchPanelBackgroundStyle.BLACK,
-    )
-    val backgroundSectionTitle = stringResource(R.string.honeycomb_display_section_background)
     val engineSectionTitle = stringResource(R.string.search_panel_settings_section_engines)
     val behaviorSectionTitle = stringResource(R.string.search_panel_settings_section_behavior)
 
@@ -97,10 +93,6 @@ fun SearchPanelPresentationLayoutSettingsScreen(
         resolved?.name
     } else {
         null
-    }
-
-    fun ensureWallpaperPermission() {
-        SystemWallpaperBlurHelper.requestWallpaperPermission(context)
     }
 
     SettingsScreenScaffold(
@@ -141,6 +133,25 @@ fun SearchPanelPresentationLayoutSettingsScreen(
                         )
                     },
                 )
+                add(
+                    settingsCardScopeItem("app-icon-shape") {
+                        val shapes = listOf(
+                            PanelIconShape.FOLLOW_GLOBAL to R.string.icon_shape_follow_global,
+                            PanelIconShape.SQUIRCLE to R.string.fv_icon_shape_squircle,
+                            PanelIconShape.CIRCLE to R.string.fv_icon_shape_circle,
+                            PanelIconShape.ROUNDED_RECT to R.string.fv_icon_shape_rounded_rect,
+                            PanelIconShape.ORIGINAL to R.string.fv_icon_shape_original,
+                        )
+                        val selectedIndex = shapes.indexOfFirst { it.first == settings.searchPanel.iconShape }
+                            .coerceAtLeast(0)
+                        SettingDropdownRow(
+                            title = stringResource(R.string.search_panel_app_icon_shape_title),
+                            items = shapes.map { stringResource(it.second) },
+                            selectedIndex = selectedIndex,
+                            onSelectedIndexChange = { onSetSearchPanelIconShape(shapes[it].first) },
+                        )
+                    },
+                )
             },
         )
 
@@ -163,6 +174,7 @@ fun SearchPanelPresentationLayoutSettingsScreen(
                         rows = settings.searchEngineGridRows,
                         showLabels = settings.searchEngineShowLabels,
                         iconShape = settings.searchEngineIconShape,
+                        globalIconShape = settings.globalIconShape,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                     )
                 }
@@ -229,76 +241,6 @@ fun SearchPanelPresentationLayoutSettingsScreen(
         )
 
         settingsLazySmallTitle(
-            key = "background_section",
-            title = backgroundSectionTitle,
-        )
-        groupedCardItems(
-            keyPrefix = "search_panel_appearance",
-            items = buildList {
-                add(
-                    settingsCardScopeItem("background-style") {
-                        SettingDropdownRow(
-                            title = stringResource(R.string.honeycomb_display_section_background),
-                            items = listOf(
-                                stringResource(R.string.honeycomb_background_blur),
-                                stringResource(R.string.honeycomb_background_wallpaper_blur),
-                                stringResource(R.string.honeycomb_background_black),
-                            ),
-                            selectedIndex = backgroundStyles.indexOf(settings.searchPanelBackgroundStyle).coerceAtLeast(0),
-                            onSelectedIndexChange = {
-                                val style = backgroundStyles[it]
-                                onSetSearchPanelBackgroundStyle(style)
-                                if (style == SearchPanelBackgroundStyle.WALLPAPER_BLUR &&
-                                    !SystemWallpaperBlurHelper.hasWallpaperAccessPermission(context)
-                                ) {
-                                    ensureWallpaperPermission()
-                                }
-                            },
-                        )
-                    },
-                )
-                if (settings.searchPanelBackgroundStyle == SearchPanelBackgroundStyle.BLUR ||
-                    settings.searchPanelBackgroundStyle == SearchPanelBackgroundStyle.WALLPAPER_BLUR
-                ) {
-                    add(
-                        settingsCardScopeItem("blur-strength") {
-                            SettingsSliderRow(
-                                title = stringResource(R.string.honeycomb_blur_strength),
-                                value = settings.searchPanelBlurRadiusDp.toFloat(),
-                                valueRange = AppSettings.SEARCH_PANEL_BLUR_RADIUS_MIN_DP.toFloat()..
-                                    AppSettings.SEARCH_PANEL_BLUR_RADIUS_MAX_DP.toFloat(),
-                                steps = 16,
-                                enabled = true,
-                                label = stringResource(
-                                    R.string.corner_gesture_zone_dp_value,
-                                    settings.searchPanelBlurRadiusDp,
-                                ),
-                                onValueChange = { onSetSearchPanelBlurRadiusDp(it.roundToInt()) },
-                            )
-                        },
-                    )
-                }
-                add(
-                    settingsCardScopeItem("dim-percent") {
-                        SettingsSliderRow(
-                            title = stringResource(R.string.honeycomb_dim_percent),
-                            value = settings.searchPanelDimPercent.toFloat(),
-                            valueRange = AppSettings.SEARCH_PANEL_DIM_MIN_PERCENT.toFloat()..
-                                AppSettings.SEARCH_PANEL_DIM_MAX_PERCENT.toFloat(),
-                            steps = 12,
-                            enabled = true,
-                            label = stringResource(
-                                R.string.floating_pointer_percent_value,
-                                settings.searchPanelDimPercent,
-                            ),
-                            onValueChange = { onSetSearchPanelDimPercent(it.roundToInt()) },
-                        )
-                    },
-                )
-            },
-        )
-
-        settingsLazySmallTitle(
             key = "behavior_section",
             title = behaviorSectionTitle,
         )
@@ -337,10 +279,13 @@ fun SearchPanelPresentationLayoutSettingsScreen(
 
 @Composable
 private fun searchEngineIconShapeLabel(shape: SearchEngineIconShape): String = when (shape) {
-    SearchEngineIconShape.DEFAULT -> stringResource(R.string.quick_launcher_icon_shape_default)
-    SearchEngineIconShape.CIRCLE -> stringResource(R.string.fv_icon_shape_circle)
+    SearchEngineIconShape.FOLLOW_GLOBAL -> stringResource(R.string.icon_shape_follow_global)
     SearchEngineIconShape.SQUIRCLE -> stringResource(R.string.fv_icon_shape_squircle)
-    SearchEngineIconShape.SQUARE -> stringResource(R.string.fv_icon_shape_square)
+    SearchEngineIconShape.CIRCLE -> stringResource(R.string.fv_icon_shape_circle)
+    SearchEngineIconShape.ROUNDED_RECT -> stringResource(R.string.fv_icon_shape_rounded_rect)
+    SearchEngineIconShape.ORIGINAL -> stringResource(R.string.fv_icon_shape_original)
+    SearchEngineIconShape.DEFAULT -> stringResource(R.string.icon_shape_follow_global)
+    SearchEngineIconShape.SQUARE -> stringResource(R.string.fv_icon_shape_squircle)
 }
 
 /**
@@ -354,6 +299,7 @@ private fun SearchEngineDockPreview(
     rows: Int,
     showLabels: Boolean,
     iconShape: SearchEngineIconShape,
+    globalIconShape: FvIconShape = FvIconShape.SQUIRCLE,
     modifier: Modifier = Modifier,
 ) {
     if (engines.isEmpty()) return
@@ -380,6 +326,7 @@ private fun SearchEngineDockPreview(
                             engine = engine,
                             modifier = Modifier.size(iconSize),
                             iconShape = iconShape,
+                            globalIconShape = globalIconShape,
                         )
                         if (showLabels) {
                             Text(

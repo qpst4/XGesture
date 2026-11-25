@@ -9,7 +9,9 @@ sealed interface AppNavKey : NavKey {
     // Home tab
     @Serializable data object HomeMain : AppNavKey
     @Serializable data object HomeInteractionAppearance : AppNavKey
-@Serializable data object HomeHapticSettings : AppNavKey
+    @Serializable data object HomeOverlayMaterial : AppNavKey
+    @Serializable data object HomeOverlayAdvancedShimmer : AppNavKey
+    @Serializable data object HomeHapticSettings : AppNavKey
     @Serializable data object HomeBackgroundPermissions : AppNavKey
     @Serializable data object HomeLayout : AppNavKey
     @Serializable data object HomeHiddenApps : AppNavKey
@@ -547,6 +549,7 @@ sealed interface AppNavKey : NavKey {
     @Serializable data class ActivityShortcutPickActivity(val packageName: String) : AppNavKey
     @Serializable data object ActivityShortcutPickAppShortcut : AppNavKey
     @Serializable data object LinkDispatchSettings : AppNavKey
+    @Serializable data object LinkExtractionRules : AppNavKey
     @Serializable data object LinkRules : AppNavKey
     @Serializable data object LinkDispatchHistory : AppNavKey
     @Serializable data class EditLinkRule(val ruleId: String? = null) : AppNavKey

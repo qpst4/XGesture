@@ -74,4 +74,28 @@
     <string name="drag_drop_flow_toast_pinned">تم التثبيت على الشاشة</string>
     <string name="drag_drop_flow_toast_no_text">لم يتم التعرف على نص في الصورة</string>
     <string name="drag_drop_flow_toast_ocr_unavailable">لا يتوفر محرك OCR</string>
+
+    <string name="drag_drop_flow_action_text_to_image">تحويل إلى صورة</string>
+    <string name="drag_drop_flow_action_convert_to_text">استخراج النص</string>
+    <string name="drag_drop_flow_converting_to_text">جارٍ التعرف على النص من الصورة…</string>
+    <string name="drag_drop_flow_converting_to_image">جارٍ التحويل إلى صورة…</string>
+    <string name="drag_drop_flow_convert_failed">فشل التحويل</string>
+    <string name="drag_drop_flow_convert_empty">لم يتم التعرف على أي نص</string>
+    <string name="drag_drop_flow_toast_image_generated">تم إنشاء الصورة وفتح المشاركة</string>
+    <string name="drag_drop_flow_toast_image_generate_failed">فشل تحويل النص إلى صورة</string>
+    <string name="drag_drop_flow_section_global_press">السحب العام بالضغط المطول (Shizuku)</string>
+    <string name="drag_drop_flow_global_press_title">تفعيل السحب العام بالضغط المطول</string>
+    <string name="drag_drop_flow_global_press_summary">يراقب اللمس العام عبر Shizuku، ويقاطع التطبيق المصدر عند الضغط المطول، ويلتقط النص، ويفتح شريط التدفق</string>
+    <string name="drag_drop_flow_global_press_timeout_title">مدة الضغط المطول</string>
+    <string name="drag_drop_flow_global_press_timeout_summary">المدة اللازمة لتثبيت إيماءة السحب (الحالي: %1$d مللي ثانية)</string>
+    <string name="drag_drop_flow_global_press_vibrate_title">اهتزاز عند التثبيت</string>
+    <string name="drag_drop_flow_global_press_vibrate_summary">اهتزاز خفيف عند تثبيت الإيماءة</string>
+    <string name="drag_drop_flow_global_press_immediate_title">التشغيل فورًا عند الضغط</string>
+    <string name="drag_drop_flow_global_press_immediate_summary">بدء التعرف وفتح شريط التدفق عند انتهاء مدة الضغط دون الحاجة لتحريك الإصبع</string>
+    <string name="drag_drop_flow_global_press_early_text_title">قراءة نص الضغط المطول مسبقًا</string>
+    <string name="drag_drop_flow_global_press_early_text_summary">قراءة النص مسبقًا عند الضغط المطول لتقليل فقدان تركيز النافذة بسبب قوائم السياق</string>
+    <string name="drag_drop_flow_global_press_whitelist_title">التطبيقات المسموح بها</string>
+    <string name="drag_drop_flow_global_press_whitelist_all">كل التطبيقات (بلا قيود)</string>
+    <string name="drag_drop_flow_global_press_whitelist_summary">تم تفعيل %1$d تطبيقًا</string>
+    <string name="drag_drop_flow_global_press_need_shizuku">يتطلب السحب العام بالضغط المطول إذن Shizuku</string>
 </resources>

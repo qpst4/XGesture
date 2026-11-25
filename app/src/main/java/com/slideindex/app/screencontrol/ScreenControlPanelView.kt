@@ -27,6 +27,8 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.slideindex.app.R
+import com.slideindex.app.overlay.OverlayGlassForegroundDrawable
+import com.slideindex.app.overlay.OverlayMaterialSpec
 import com.slideindex.app.overlay.OverlayPanelTheme
 import com.slideindex.app.overlay.setupBackgroundBlur
 import kotlin.math.hypot
@@ -208,9 +210,12 @@ internal class ScreenControlPanelView(
     }
 
     private fun applyPanelBackground() {
+        val spec = OverlayMaterialSpec.fromContext(context)
+        val isDark = OverlayPanelTheme.isDarkTheme(context)
         if (minimized) {
             if (!blurEnabled) {
                 background = ballBackground()
+                foreground = null
                 return
             }
             background = null
@@ -221,8 +226,14 @@ internal class ScreenControlPanelView(
             setupBackgroundBlur(
                 view = this,
                 cornerRadiusPx = rad,
-                blurRadiusPx = (28f * density).roundToInt(),
-                tintColor = Color.argb(120, 235, 244, 255),
+                blurRadiusPx = spec.blurRadiusPx(density),
+                tintColor = spec.tintColor(isDark),
+            )
+            foreground = OverlayGlassForegroundDrawable(
+                spec = spec,
+                isDark = isDark,
+                cornerRadiusPx = rad,
+                density = density,
             )
             post {
                 val bg = background
@@ -235,14 +246,22 @@ internal class ScreenControlPanelView(
 
         if (!blurEnabled) {
             background = panelBackground()
+            foreground = null
             return
         }
         background = null
+        val corner = spec.cornerRadiusPx(density)
         setupBackgroundBlur(
             view = this,
-            cornerRadiusPx = 18f * density,
-            blurRadiusPx = (32f * density).roundToInt(),
-            tintColor = Color.argb(170, 248, 250, 255),
+            cornerRadiusPx = corner,
+            blurRadiusPx = spec.blurRadiusPx(density),
+            tintColor = spec.tintColor(isDark),
+        )
+        foreground = OverlayGlassForegroundDrawable(
+            spec = spec,
+            isDark = isDark,
+            cornerRadiusPx = corner,
+            density = density,
         )
         post {
             val bg = background

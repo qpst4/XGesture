@@ -1346,9 +1346,6 @@ fun HistoryPanelScreen(
                 com.slideindex.app.overlay.LocalFrostedGlassBackdrop(
                     modifier = Modifier.matchParentSize(),
                     cornerRadiusPx = cornerPx,
-                    blurRadiusPx = blurRadiusPx,
-                    tintColor = frostedTint,
-                    enabled = true,
                 )
             }
             val density = LocalDensity.current

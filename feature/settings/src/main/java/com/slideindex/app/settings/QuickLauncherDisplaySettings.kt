@@ -1,12 +1,14 @@
 package com.slideindex.app.settings
 
 import androidx.datastore.preferences.core.Preferences
+import com.slideindex.app.overlay.layout.PanelIconShape
 import kotlin.math.roundToInt
 
 data class QuickLauncherDisplaySettings(
     val backgroundOpacityPercent: Int = DEFAULT_BACKGROUND_OPACITY_PERCENT,
     val iconSizeDp: Int = DEFAULT_ICON_SIZE_DP,
     val iconShape: Int = ICON_SHAPE_DEFAULT,
+    val panelIconShape: PanelIconShape = PanelIconShape.FOLLOW_GLOBAL,
     /**
      * 是否在面板图标下方显示名称。
      *
@@ -86,6 +88,9 @@ data class QuickLauncherDisplaySettings(
                     .coerceIn(MIN_ICON_SIZE_DP, MAX_ICON_SIZE_DP),
                 iconShape = coerceIconShape(
                     prefs[SettingsPreferenceKeys.QUICK_LAUNCHER_ICON_SHAPE] ?: ICON_SHAPE_DEFAULT,
+                ),
+                panelIconShape = PanelIconShape.fromName(
+                    prefs[SettingsPreferenceKeys.QUICK_LAUNCHER_ICON_SHAPE_NAME]
                 ),
                 showLabels = prefs[SettingsPreferenceKeys.QUICK_LAUNCHER_SHOW_LABELS] ?: true,
                 blurRadiusDp = (prefs[SettingsPreferenceKeys.QUICK_LAUNCHER_BLUR_RADIUS_DP]

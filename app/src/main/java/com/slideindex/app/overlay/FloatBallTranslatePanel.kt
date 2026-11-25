@@ -454,9 +454,6 @@ private fun FloatBallTranslatePanelContent(
                 LocalFrostedGlassBackdrop(
                     modifier = Modifier.matchParentSize(),
                     cornerRadiusPx = cornerPx,
-                    blurRadiusPx = blurRadiusPx,
-                    tintColor = frostedTint,
-                    enabled = true
                 )
                 Column(
                     modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),

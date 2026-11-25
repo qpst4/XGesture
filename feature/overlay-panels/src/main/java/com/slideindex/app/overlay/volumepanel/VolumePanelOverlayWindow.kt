@@ -193,6 +193,14 @@ object VolumePanelOverlayWindow {
             title = TAG
             layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+
+            val spec = com.slideindex.app.overlay.OverlayMaterialSpec.fromContext(context)
+            if (spec.isExpandPanelBackdropBlurEnabled) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    flags = flags or WindowManager.LayoutParams.FLAG_BLUR_BEHIND
+                    blurBehindRadius = spec.backdropBlurRadiusPx(context.resources.displayMetrics.density)
+                }
+            }
         }
         backHandler = OverlayViewBackHandler(view) { handleBack() }.also { it.attach() }
         wm.addView(view, params)

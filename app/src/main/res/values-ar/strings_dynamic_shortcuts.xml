@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dynamic_shortcuts_home_label">مساعد اختصارات XGesture</string>
+    <string name="dynamic_shortcuts_title">استيراد الاختصارات الديناميكية</string>
+    <string name="dynamic_shortcuts_permission_card_title">إذن الشاشة الرئيسية الافتراضية</string>
+    <string name="dynamic_shortcuts_permission_needed_desc">قيد في Android: لا يمكن إلا لتطبيق الشاشة الرئيسية الافتراضي اكتشاف الاختصارات الديناميكية التي تنشرها التطبيقات الأخرى (مثل مسح/دفع WeChat). عيّن XGesture مؤقتًا كشاشة رئيسية، وثبّت الاختصارات المطلوبة، ثم أعد المشغّل الأصلي.</string>
+    <string name="dynamic_shortcuts_permission_granted_desc">إذن الشاشة الرئيسية مفعّل! اضغط «فحص الاختصارات الديناميكية» أدناه لاكتشافها. بعد التثبيت، يحتفظ XGesture بإذن تشغيلها حتى بعد استعادة الشاشة الرئيسية الافتراضية.</string>
+    <string name="dynamic_shortcuts_grant_home">تعيين كشاشة رئيسية مؤقتة</string>
+    <string name="dynamic_shortcuts_restore_home">استعادة الشاشة الرئيسية الافتراضية</string>
+    <string name="dynamic_shortcuts_scan">فحص الاختصارات الديناميكية</string>
+    <string name="dynamic_shortcuts_scanning">جارٍ فحص اختصارات النظام الديناميكية…</string>
+    <string name="dynamic_shortcuts_import_selected">استيراد وتثبيت المحدد (%1$d)</string>
+    <string name="dynamic_shortcuts_import_success">تم تثبيت واستيراد %1$d اختصارًا</string>
+    <string name="dynamic_shortcuts_no_selection">اختر اختصارًا واحدًا على الأقل</string>
+    <string name="dynamic_shortcuts_empty">لم يتم العثور على اختصارات ديناميكية</string>
+    <string name="dynamic_shortcuts_already_imported">مستورد</string>
+    <string name="dynamic_shortcuts_home_unavailable">تعذّر فتح إعدادات الشاشة الرئيسية للنظام</string>
+    <string name="activity_shortcut_add_from_dynamic">استيراد الاختصارات الديناميكية</string>
+    <string name="activity_shortcut_add_from_dynamic_sub">عيّن مؤقتًا كشاشة رئيسية لاكتشاف اختصارات WeChat/Alipay</string>
+    <string name="shortcut_test_mode_static">ثابت</string>
+    <string name="shortcut_test_mode_privilege">مميز</string>
+    <string name="shortcut_test_mode_dynamic">مثبّت على الشاشة الرئيسية</string>
+    <string name="shortcut_test_save_to_direct">حفظ في المباشرة</string>
+    <string name="shortcut_test_save_success">تم الحفظ في الاختصارات المباشرة</string>
+    <string name="shortcut_test_already_saved">موجود بالفعل في الاختصارات المباشرة</string>
+    <string name="shortcut_test_dynamic_tip">احصل على دور الشاشة الرئيسية لاكتشاف الاختصارات الديناميكية. بعد حفظها في المباشرة، تُثبّت نهائيًا ويمكن تشغيلها حتى بعد استعادة المشغّل.</string>
+</resources>

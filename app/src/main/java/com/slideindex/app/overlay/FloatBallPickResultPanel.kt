@@ -31,6 +31,7 @@ import com.slideindex.app.barcode.BarcodeScanResult
 import com.slideindex.app.barcode.joinDisplayText
 import com.slideindex.app.di.OverlayDependencyAccess
 import com.slideindex.app.ocr.OcrDependencyAccess
+import com.slideindex.app.overlay.OverlayMaterialSpec
 import com.slideindex.app.overlay.compositor.OverlayCompositor
 import com.slideindex.app.overlay.compositor.OverlaySceneController
 import com.slideindex.app.imageeditor.ImageEditorPickReturnContext
@@ -1860,8 +1861,19 @@ object FloatBallPickResultPanel {
         applyPanelShellPassive()
     }
 
-    private fun buildLayoutParams(context: Context): WindowManager.LayoutParams =
-        OverlayPanelLayoutParams.pickResultPanel(context)
+    private fun buildLayoutParams(context: Context): WindowManager.LayoutParams {
+        val params = OverlayPanelLayoutParams.pickResultPanel(context)
+        val spec = OverlayMaterialSpec.fromContext(context)
+        if (spec.isPickResultBackdropBlurEnabled) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                params.flags = params.flags or WindowManager.LayoutParams.FLAG_BLUR_BEHIND
+                params.setBlurBehindRadius(spec.backdropBlurRadiusPx(context.resources.displayMetrics.density))
+            }
+            params.flags = params.flags or WindowManager.LayoutParams.FLAG_DIM_BEHIND
+            params.dimAmount = (spec.backdropDimPercent.coerceIn(0, 100) / 100f).coerceIn(0f, 1f)
+        }
+        return params
+    }
 
     private fun registerScreenOffReceiver(context: Context) {
         if (screenOffReceiver != null) return
