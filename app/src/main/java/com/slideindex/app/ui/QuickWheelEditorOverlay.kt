@@ -65,6 +65,7 @@ import com.slideindex.app.overlay.layout.QuickWheelEditorChromePlacement
 import com.slideindex.app.overlay.layout.QuickWheelLayout
 import com.slideindex.app.overlay.layout.QuickWheelLayoutEngine
 import com.slideindex.app.overlay.quickwheel.QuickWheelAddContainer
+import com.slideindex.app.overlay.quickwheel.QuickWheelHintPrefs
 import com.slideindex.app.settings.QuickWheel
 import com.slideindex.app.settings.QuickWheelCodec
 import com.slideindex.app.settings.withGapInserted
@@ -733,21 +734,23 @@ fun QuickWheelEditorOverlay(
             )
         }
 
-        QuickWheelHintPill(
-            text = stringResource(
-                if (editingSecondary) {
-                    R.string.quick_wheel_hint_secondary
-                } else {
-                    R.string.quick_wheel_hint_canvas
-                },
-            ),
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset { IntOffset(0, chromePlacement.hintTop.roundToInt()) }
-                .onSizeChanged { hintSize = it }
-                // 找不到空档时允许压在容器上：半透明表示"这是提示、不挡操作"。
-                .alpha(if (chromePlacement.hintOverlapping) CHROME_HINT_OVERLAP_ALPHA else 1f),
-        )
+        if (QuickWheelHintPrefs.isEnabled(context)) {
+            QuickWheelHintPill(
+                text = stringResource(
+                    if (editingSecondary) {
+                        R.string.quick_wheel_hint_secondary
+                    } else {
+                        R.string.quick_wheel_hint_canvas
+                    },
+                ),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset { IntOffset(0, chromePlacement.hintTop.roundToInt()) }
+                    .onSizeChanged { hintSize = it }
+                    // 找不到空档时允许压在容器上：半透明表示"这是提示、不挡操作"。
+                    .alpha(if (chromePlacement.hintOverlapping) CHROME_HINT_OVERLAP_ALPHA else 1f),
+            )
+        }
 
         Row(
             modifier = Modifier

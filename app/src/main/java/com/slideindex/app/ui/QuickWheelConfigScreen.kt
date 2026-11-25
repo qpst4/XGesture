@@ -72,6 +72,7 @@ import com.slideindex.app.overlay.layout.QuickWheelOpenAnimation
 import com.slideindex.app.overlay.layout.QuickWheelShape
 import com.slideindex.app.overlay.layout.QuickWheelStyleSpec
 import com.slideindex.app.overlay.quickwheel.QuickWheelBackdropDim
+import com.slideindex.app.overlay.quickwheel.QuickWheelHintPrefs
 import com.slideindex.app.overlay.quickwheel.QuickWheelOverlayWindow
 import com.slideindex.app.overlay.quickwheel.QUICK_WHEEL_BACKDROP_PADDING_DP
 import com.slideindex.app.overlay.quickwheel.backdropRegion
@@ -253,6 +254,8 @@ fun QuickWheelConfigScreen(
     BackHandler { handleBack() }
 
     val context = LocalContext.current
+    // 反馈 #380：轮盘「上方提示」总开关（运行时动作提示条 + 配置页提示胶囊），改完立即生效。
+    var wheelHintEnabled by remember { mutableStateOf(QuickWheelHintPrefs.isEnabled(context)) }
     val metrics = context.resources.displayMetrics
     val density = if (metrics.density > 0f) metrics.density else 1f
     val screenWidthPx = metrics.widthPixels.toFloat()
@@ -662,6 +665,22 @@ fun QuickWheelConfigScreen(
                                     // 开关类改了立即保存，不需要再按「保存」。
                                     onCheckedChange = { value ->
                                         updateStyleAndPersist { it.copy(showLabels = value) }
+                                    },
+                                )
+                            }
+                        )
+                        add(
+                            settingsCardScopeItem("show-hint") {
+                                QuickWheelSwitchRow(
+                                    title = stringResource(R.string.quick_wheel_hint_switch_title),
+                                    description = stringResource(
+                                        R.string.quick_wheel_hint_switch_desc,
+                                    ),
+                                    checked = wheelHintEnabled,
+                                    // 全局开关，立即落盘，不参与本页草稿 / 「保存」。
+                                    onCheckedChange = { value ->
+                                        wheelHintEnabled = value
+                                        QuickWheelHintPrefs.setEnabled(context, value)
                                     },
                                 )
                             }

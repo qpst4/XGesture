@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.IntOffset
@@ -641,7 +642,7 @@ fun QuickWheelOverlayContent(
             !slot.isConfigured &&
                 (slot.placeholder || hudHit.kind == QuickWheelHitKind.CENTER)
         }
-        if (hudSlot != null) {
+        if (hudSlot != null && QuickWheelHintPrefs.isEnabled(LocalContext.current)) {
             // 二级展开时命中父容器 → 松手执行的是父容器长按（与 handleRelease 一致）。
             val isParentWhileExpanded = expandedPrimary >= 0 &&
                 hudHit.kind == QuickWheelHitKind.PRIMARY &&
