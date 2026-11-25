@@ -22,6 +22,8 @@
     <string name="physical_key_section_power">电源键手势</string>
     <string name="physical_key_section_volume">音量键手势</string>
     <string name="physical_key_section_advanced">高级选项与灵敏度</string>
+    <string name="physical_key_section_screen_off_actions">熄屏时动作</string>
+    <string name="physical_key_follow_screen_on">沿用亮屏动作</string>
 
     <string name="physical_key_gesture_power_single">电源键单击</string>
     <string name="physical_key_gesture_power_long">电源键长按</string>

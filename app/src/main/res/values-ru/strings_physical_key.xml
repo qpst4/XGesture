@@ -22,6 +22,8 @@
     <string name="physical_key_section_power">Клавиша питания</string>
     <string name="physical_key_section_volume">Клавиши громкости</string>
     <string name="physical_key_section_advanced">Дополнительно и чувствительность</string>
+    <string name="physical_key_section_screen_off_actions">Действия при выключенном экране</string>
+    <string name="physical_key_follow_screen_on">Как при включённом экране</string>
 
     <string name="physical_key_gesture_power_single">Короткое нажатие питания</string>
     <string name="physical_key_gesture_power_long">Долгое нажатие питания</string>

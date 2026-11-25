@@ -22,6 +22,8 @@
     <string name="physical_key_section_power">Tecla de encendido</string>
     <string name="physical_key_section_volume">Teclas de volumen</string>
     <string name="physical_key_section_advanced">Opciones avanzadas y sensibilidad</string>
+    <string name="physical_key_section_screen_off_actions">Acciones con la pantalla apagada</string>
+    <string name="physical_key_follow_screen_on">Usar la acción de pantalla encendida</string>
 
     <string name="physical_key_gesture_power_single">Pulsación corta de encendido</string>
     <string name="physical_key_gesture_power_long">Pulsación larga de encendido</string>

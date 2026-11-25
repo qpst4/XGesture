@@ -392,17 +392,33 @@ sealed interface AppNavKey : NavKey {
     ) : AppNavKey
     /** 实体按键助手设置页。 */
     @Serializable data object PhysicalKeySettings : AppNavKey
-    @Serializable data class PhysicalKeyActionPick(val gestureOrdinal: Int) : AppNavKey
-    @Serializable data class PhysicalKeyActionMyShortcuts(val gestureOrdinal: Int) : AppNavKey
-    @Serializable data class PhysicalKeyActionPresetShortcuts(val gestureOrdinal: Int) : AppNavKey
-    @Serializable data class PhysicalKeyActionPickApp(val gestureOrdinal: Int) : AppNavKey
+    // screenOff：本次动作选择写的是「熄屏时动作」还是「亮屏动作」（反馈 #395），
+    // 选择页内部的二级路由都要把它一路带下去，否则选完会写回亮屏那套。
+    @Serializable data class PhysicalKeyActionPick(
+        val gestureOrdinal: Int,
+        val screenOff: Boolean = false,
+    ) : AppNavKey
+    @Serializable data class PhysicalKeyActionMyShortcuts(
+        val gestureOrdinal: Int,
+        val screenOff: Boolean = false,
+    ) : AppNavKey
+    @Serializable data class PhysicalKeyActionPresetShortcuts(
+        val gestureOrdinal: Int,
+        val screenOff: Boolean = false,
+    ) : AppNavKey
+    @Serializable data class PhysicalKeyActionPickApp(
+        val gestureOrdinal: Int,
+        val screenOff: Boolean = false,
+    ) : AppNavKey
     @Serializable data class PhysicalKeyActionPickActivity(
         val gestureOrdinal: Int,
         val appPackageName: String = "",
+        val screenOff: Boolean = false,
     ) : AppNavKey
     @Serializable data class PhysicalKeyActionShellCommand(
         val gestureOrdinal: Int,
         val initialCommand: String = "",
+        val screenOff: Boolean = false,
     ) : AppNavKey
     // 手势宏（宏列表 / 新建-编辑 / 目标 App 选择）
     @Serializable data object MacroList : AppNavKey

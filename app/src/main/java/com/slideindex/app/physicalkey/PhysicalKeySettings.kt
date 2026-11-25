@@ -17,7 +17,22 @@ data class PhysicalKeyEntry(
     val gesture: PhysicalKeyGesture,
     val enabled: Boolean = true,
     val action: GestureAction = GestureAction.None,
-)
+    /**
+     * 熄屏时的动作（反馈 #395）。
+     *
+     * [GestureAction.None] = 沿用 [action]（老数据即如此，行为不变）；
+     * 只有用户显式配了"熄屏专用动作"才会在屏幕熄灭时改跑这一个。
+     */
+    val screenOffAction: GestureAction = GestureAction.None,
+) {
+    /** 亮屏或熄屏任一动作有效，就算这个按键"有映射"（注册/拦截判定用）。 */
+    val hasAnyAction: Boolean
+        get() = action !is GestureAction.None || screenOffAction !is GestureAction.None
+
+    /** 按当前屏幕状态取实际要执行的动作。 */
+    fun actionFor(screenInteractive: Boolean): GestureAction =
+        if (!screenInteractive && screenOffAction !is GestureAction.None) screenOffAction else action
+}
 
 data class PhysicalKeySettings(
     val enabled: Boolean = false,
@@ -133,14 +148,25 @@ class PhysicalKeySettingsStore @Inject constructor(
         _state.value = _state.value.copy(screenOffTriggerEnabled = enabled)
     }
 
-    fun updateEntry(gesture: PhysicalKeyGesture, enabled: Boolean, action: GestureAction) {
+    fun updateEntry(
+        gesture: PhysicalKeyGesture,
+        enabled: Boolean,
+        action: GestureAction,
+        /** true = 写「熄屏时动作」，false = 写「亮屏动作」。 */
+        screenOff: Boolean = false,
+    ) {
         val currentEntries = _state.value.entries.toMutableMap()
-        val isEffectiveEnabled = action !is GestureAction.None
-        currentEntries[gesture] = PhysicalKeyEntry(
-            gesture = gesture,
-            enabled = isEffectiveEnabled,
-            action = action,
-        )
+        val existing = currentEntries[gesture]
+            ?: PhysicalKeyEntry(gesture = gesture, enabled = false)
+        val updated = if (screenOff) {
+            existing.copy(screenOffAction = action)
+        } else {
+            existing.copy(action = action)
+        }.let { entry ->
+            // 只要有任一侧配了动作就算"启用"，否则停用（与历史语义一致）。
+            entry.copy(enabled = entry.hasAnyAction)
+        }
+        currentEntries[gesture] = updated
         val serialized = serialize(currentEntries)
         prefs.edit().putString(KEY_ENTRIES, serialized).apply()
         _state.value = _state.value.copy(entries = currentEntries)
@@ -184,6 +210,9 @@ class PhysicalKeySettingsStore @Inject constructor(
             obj.put("gesture", entry.gesture.name)
             obj.put("enabled", entry.enabled)
             obj.put("action", encodeAction(entry.action))
+            if (entry.screenOffAction !is GestureAction.None) {
+                obj.put("screenOffAction", encodeAction(entry.screenOffAction))
+            }
             array.put(obj)
         }
         return array.toString()
@@ -197,11 +226,15 @@ class PhysicalKeySettingsStore @Inject constructor(
             val gestureName = obj.optString("gesture")
             val gesture = runCatching { PhysicalKeyGesture.valueOf(gestureName) }.getOrNull() ?: continue
             val action = decodeAction(obj.optString("action").ifBlank { null }) ?: GestureAction.None
-            val enabled = action !is GestureAction.None
+            val screenOffAction = decodeAction(
+                obj.optString("screenOffAction").ifBlank { null },
+            ) ?: GestureAction.None
+            val enabled = action !is GestureAction.None || screenOffAction !is GestureAction.None
             map[gesture] = PhysicalKeyEntry(
                 gesture = gesture,
                 enabled = enabled,
                 action = action,
+                screenOffAction = screenOffAction,
             )
         }
         map

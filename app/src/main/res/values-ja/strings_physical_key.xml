@@ -22,6 +22,8 @@
     <string name="physical_key_section_power">電源キー</string>
     <string name="physical_key_section_volume">音量キー</string>
     <string name="physical_key_section_advanced">詳細設定と感度</string>
+    <string name="physical_key_section_screen_off_actions">画面オフ時の動作</string>
+    <string name="physical_key_follow_screen_on">画面オン時の動作を使用</string>
 
     <string name="physical_key_gesture_power_single">電源キー単押し</string>
     <string name="physical_key_gesture_power_long">電源キー長押し</string>

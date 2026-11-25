@@ -110,7 +110,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
     private fun updateScreenOffWakeLock() {
         val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return
         val state = settingsStore.state.value
-        val hasActiveGestures = state.entries.values.any { it.enabled && it.action !is GestureAction.None }
+        val hasActiveGestures = state.entries.values.any { it.enabled }
         val shouldHold = state.enabled && state.screenOffTriggerEnabled && !pm.isInteractive && hasActiveGestures
 
         if (shouldHold) {
@@ -442,7 +442,10 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
 
     private fun dispatchGesture(gesture: PhysicalKeyGesture) {
         val entry = settingsStore.state.value.entries[gesture] ?: return
-        if (entry.action == GestureAction.None) {
+        // 反馈 #395：亮屏 / 熄屏各一套动作（没配熄屏动作时沿用亮屏动作）。
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        val entryAction = entry.actionFor(powerManager?.isInteractive ?: true)
+        if (entryAction == GestureAction.None) {
             return
         }
 
@@ -460,10 +463,10 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
             when (gesture) {
                 PhysicalKeyGesture.VOLUME_UP_LONG_PRESS -> GestureAction.MediaNext
                 PhysicalKeyGesture.VOLUME_DOWN_LONG_PRESS -> GestureAction.MediaPrevious
-                else -> entry.action
+                else -> entryAction
             }
         } else {
-            entry.action
+            entryAction
         }
 
         Log.i(TAG, "dispatch physical key gesture $gesture -> $targetAction")
@@ -475,9 +478,9 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
     private fun applyPowerKeySuppression(suppress: Boolean) {
         val service = observingService ?: rootService ?: return
         val state = settingsStore.state.value
-        val hasPowerMapping = state.entries[PhysicalKeyGesture.POWER_LONG_PRESS]?.action != GestureAction.None ||
-            state.entries[PhysicalKeyGesture.POWER_DOUBLE_PRESS]?.action != GestureAction.None ||
-            state.entries[PhysicalKeyGesture.POWER_SINGLE_PRESS]?.action != GestureAction.None
+        val hasPowerMapping = state.entries[PhysicalKeyGesture.POWER_LONG_PRESS]?.hasAnyAction == true ||
+            state.entries[PhysicalKeyGesture.POWER_DOUBLE_PRESS]?.hasAnyAction == true ||
+            state.entries[PhysicalKeyGesture.POWER_SINGLE_PRESS]?.hasAnyAction == true
         val shouldSuppress = suppress && state.enabled && state.interceptNativeEvents && hasPowerMapping
 
         runCatching {
@@ -503,55 +506,55 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
 
         // 电源键相关手势
         val powerLong = state.entries[PhysicalKeyGesture.POWER_LONG_PRESS]
-        if (powerLong != null && powerLong.enabled && powerLong.action !is GestureAction.None) {
+        if (powerLong != null && powerLong.enabled) {
             mappedKeys.add(EvdevPhysicalKeyObserver.KEY_POWER)
         }
 
         val powerSingle = state.entries[PhysicalKeyGesture.POWER_SINGLE_PRESS]
-        if (powerSingle != null && powerSingle.enabled && powerSingle.action !is GestureAction.None) {
+        if (powerSingle != null && powerSingle.enabled) {
             mappedKeys.add(EvdevPhysicalKeyObserver.KEY_POWER)
             singlePressKeys.add(EvdevPhysicalKeyObserver.KEY_POWER)
         }
 
         val powerDouble = state.entries[PhysicalKeyGesture.POWER_DOUBLE_PRESS]
-        if (powerDouble != null && powerDouble.enabled && powerDouble.action !is GestureAction.None) {
+        if (powerDouble != null && powerDouble.enabled) {
             mappedKeys.add(EvdevPhysicalKeyObserver.KEY_POWER)
             doublePressKeys.add(EvdevPhysicalKeyObserver.KEY_POWER)
         }
 
         // 音量键手势注册：无论是否独占拦截驱动，都必须注册给底层识别器以侦测对应的时序
         val volUpSingle = state.entries[PhysicalKeyGesture.VOLUME_UP_SINGLE_PRESS]
-        val hasVolUpSingle = volUpSingle != null && volUpSingle.enabled && volUpSingle.action !is GestureAction.None
+        val hasVolUpSingle = volUpSingle != null && volUpSingle.enabled
         if (hasVolUpSingle) {
             singlePressKeys.add(EvdevPhysicalKeyObserver.KEY_VOLUMEUP)
         }
 
         val volDownSingle = state.entries[PhysicalKeyGesture.VOLUME_DOWN_SINGLE_PRESS]
-        val hasVolDownSingle = volDownSingle != null && volDownSingle.enabled && volDownSingle.action !is GestureAction.None
+        val hasVolDownSingle = volDownSingle != null && volDownSingle.enabled
         if (hasVolDownSingle) {
             singlePressKeys.add(EvdevPhysicalKeyObserver.KEY_VOLUMEDOWN)
         }
 
         val volUpDouble = state.entries[PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS]
-        val hasVolUpDouble = volUpDouble != null && volUpDouble.enabled && volUpDouble.action !is GestureAction.None
+        val hasVolUpDouble = volUpDouble != null && volUpDouble.enabled
         if (hasVolUpDouble) {
             doublePressKeys.add(EvdevPhysicalKeyObserver.KEY_VOLUMEUP)
         }
 
         val volDownDouble = state.entries[PhysicalKeyGesture.VOLUME_DOWN_DOUBLE_PRESS]
-        val hasVolDownDouble = volDownDouble != null && volDownDouble.enabled && volDownDouble.action !is GestureAction.None
+        val hasVolDownDouble = volDownDouble != null && volDownDouble.enabled
         if (hasVolDownDouble) {
             doublePressKeys.add(EvdevPhysicalKeyObserver.KEY_VOLUMEDOWN)
         }
 
         val volUpLong = state.entries[PhysicalKeyGesture.VOLUME_UP_LONG_PRESS]
-        val hasVolUpLong = volUpLong != null && volUpLong.enabled && volUpLong.action !is GestureAction.None
+        val hasVolUpLong = volUpLong != null && volUpLong.enabled
 
         val volDownLong = state.entries[PhysicalKeyGesture.VOLUME_DOWN_LONG_PRESS]
-        val hasVolDownLong = volDownLong != null && volDownLong.enabled && volDownLong.action !is GestureAction.None
+        val hasVolDownLong = volDownLong != null && volDownLong.enabled
 
         val bothPress = state.entries[PhysicalKeyGesture.VOLUME_BOTH_PRESS]
-        val hasBothPress = bothPress != null && bothPress.enabled && bothPress.action !is GestureAction.None
+        val hasBothPress = bothPress != null && bothPress.enabled
 
         // 音量键是否独占拦截驱动（加入 mappedKeys）：
         // 彻底取决于用户是否开启了“拦截原生按键响应”（interceptNativeEvents）。
@@ -611,7 +614,7 @@ class PhysicalKeyGestureCoordinator @Inject constructor(
         }
 
         val hasMappedGesture = state.entries.any { (gesture, entry) ->
-            entry.action != GestureAction.None && when (gesture) {
+            entry.hasAnyAction && when (gesture) {
                 PhysicalKeyGesture.VOLUME_UP_LONG_PRESS,
                 PhysicalKeyGesture.VOLUME_UP_DOUBLE_PRESS,
                 PhysicalKeyGesture.VOLUME_UP_SINGLE_PRESS -> isVolumeUp

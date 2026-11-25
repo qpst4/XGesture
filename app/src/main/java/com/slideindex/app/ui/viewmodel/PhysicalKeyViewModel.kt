@@ -34,9 +34,18 @@ class PhysicalKeyViewModel @Inject constructor(
         settingsStore.setEnabled(enabled)
     }
 
-    fun setGestureAction(gesture: PhysicalKeyGesture, action: GestureAction) {
+    /**
+     * 写某个按键手势的动作。
+     *
+     * @param screenOff true = 写「熄屏时动作」，false = 写「亮屏动作」（反馈 #395）。
+     */
+    fun setGestureAction(
+        gesture: PhysicalKeyGesture,
+        action: GestureAction,
+        screenOff: Boolean = false,
+    ) {
         val enabled = action !is GestureAction.None
-        settingsStore.updateEntry(gesture, enabled = enabled, action = action)
+        settingsStore.updateEntry(gesture, enabled = enabled, action = action, screenOff = screenOff)
     }
 
     fun setMediaPlaybackPrioritized(prioritized: Boolean) {

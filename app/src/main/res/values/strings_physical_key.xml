@@ -22,6 +22,8 @@
     <string name="physical_key_section_power">Power Key</string>
     <string name="physical_key_section_volume">Volume Keys</string>
     <string name="physical_key_section_advanced">Advanced &amp; Sensitivity</string>
+    <string name="physical_key_section_screen_off_actions">Screen-off actions</string>
+    <string name="physical_key_follow_screen_on">Follow screen-on action</string>
 
     <string name="physical_key_gesture_power_single">Power Single Press</string>
     <string name="physical_key_gesture_power_long">Power Long Press</string>
