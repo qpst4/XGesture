@@ -11,7 +11,13 @@ data class QuickLauncherPanel(
 )
 
 object QuickLauncherPanelDefaults {
-    const val MAX_PANELS = 12
+    /**
+     * 面板总数上限（快速启动器与小组件面板分页共用）。
+     *
+     * 2026-11 用户反馈上限 12 不够用，放宽到 30；数据结构是 List + 运行时索引，
+     * 没有按 12 定长的数组或位掩码，因此只需改这个常量（新增/复制入口都读它）。
+     */
+    const val MAX_PANELS = 30
     const val DEFAULT_PANEL_ID = "default"
 
     fun defaultPanel(

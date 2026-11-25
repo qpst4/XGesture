@@ -1,5 +1,6 @@
 package com.slideindex.app.ui.quicklauncher
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -213,13 +214,24 @@ fun QuickLauncherPanelManagementSection(
                     overflow = TextOverflow.Ellipsis,
                 )
                 IconButton(
-                    enabled = panels.size < QuickLauncherPanelDefaults.MAX_PANELS,
+                    // 到上限时不再置灰：点一下给「已达上限」提示，比一个没反应的灰按钮好懂。
                     onClick = {
                         val added = QuickLauncherPanelMutator.addPanel(
                             panels = latestPanels,
                             defaultColumns = defaultColumns,
                             defaultRows = defaultRows,
-                        ) ?: return@IconButton
+                        )
+                        if (added == null) {
+                            Toast.makeText(
+                                context,
+                                context.getString(
+                                    R.string.quick_launcher_panel_limit_reached,
+                                    QuickLauncherPanelDefaults.MAX_PANELS,
+                                ),
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                            return@IconButton
+                        }
                         onPanelsChange(added)
                         onSelectedIndexChange(added.lastIndex)
                     },
