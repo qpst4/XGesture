@@ -120,6 +120,9 @@ fun ActionDetailScreen(
     var isLongPress by rememberSaveable(action.type) { mutableStateOf(false) }
     var remindMinutes by rememberSaveable(action.type) { mutableIntStateOf(5) }
     var pageScroll by remember(context) { mutableStateOf(PageScrollPrefs.read(context)) }
+    var screenDrawDefaultTool by remember(context) {
+        mutableStateOf(com.slideindex.app.screendraw.ScreenDrawPrefs.readDefaultTool(context))
+    }
     var magnifierFullscreenScale by remember(context) {
         mutableFloatStateOf(MagnifierPrefs.readFullscreenScale(context))
     }
@@ -585,6 +588,53 @@ fun ActionDetailScreen(
                             local = appCarouselSwitcher,
                             onUpdate = onAppCarouselSwitcherChange,
                         ),
+                    )
+                    entry.type == GestureActionType.SCREEN_DRAW -> add(
+                        settingsCardScopeItem("screen-draw-default-tool") {
+                            val toolValues = listOf(
+                                com.slideindex.app.screendraw.ScreenDrawTool.PEN.name,
+                                com.slideindex.app.screendraw.ScreenDrawTool.SHAPE.name,
+                                com.slideindex.app.screendraw.ScreenDrawTool.TEXT.name,
+                                com.slideindex.app.screendraw.ScreenDrawTool.MOSAIC.name,
+                                com.slideindex.app.screendraw.ScreenDrawTool.NUMBER.name,
+                                com.slideindex.app.screendraw.ScreenDrawTool.BOX_SELECT.name,
+                                com.slideindex.app.screendraw.ScreenDrawPrefs.MEMORY,
+                            )
+                            val toolLabels = listOf(
+                                stringResource(R.string.inspire_image_edit_mode_doodle),
+                                stringResource(R.string.inspire_image_edit_mode_shape),
+                                stringResource(R.string.inspire_image_edit_mode_text),
+                                stringResource(R.string.inspire_image_edit_mode_mosaic),
+                                stringResource(R.string.inspire_image_edit_mode_number),
+                                stringResource(R.string.inspire_image_edit_mode_crop),
+                                stringResource(R.string.screen_draw_tool_memory),
+                            )
+                            val toolDescs = listOf(
+                                stringResource(R.string.screen_draw_tool_desc_doodle),
+                                stringResource(R.string.screen_draw_tool_desc_shape),
+                                stringResource(R.string.screen_draw_tool_desc_text),
+                                stringResource(R.string.screen_draw_tool_desc_mosaic),
+                                stringResource(R.string.screen_draw_tool_desc_number),
+                                stringResource(R.string.screen_draw_tool_desc_crop),
+                                stringResource(R.string.screen_draw_tool_desc_memory),
+                            )
+                            val selectedIndex = toolValues.indexOf(screenDrawDefaultTool)
+                                .coerceIn(0, toolValues.lastIndex)
+                            SettingDropdownRow(
+                                title = stringResource(R.string.screen_draw_default_tool_title),
+                                subtitle = toolDescs[selectedIndex],
+                                items = toolLabels,
+                                selectedIndex = selectedIndex,
+                                enabled = true,
+                                onSelectedIndexChange = { index ->
+                                    toolValues.getOrNull(index)?.let { value ->
+                                        screenDrawDefaultTool = value
+                                        com.slideindex.app.screendraw.ScreenDrawPrefs
+                                            .writeDefaultTool(context, value)
+                                    }
+                                },
+                            )
+                        },
                     )
                     openSettings != null -> add(
                         settingsCardScopeItem("settings") {

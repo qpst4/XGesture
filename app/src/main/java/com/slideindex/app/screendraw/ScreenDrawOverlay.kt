@@ -162,7 +162,7 @@ object ScreenDrawOverlay {
         canRedoState.value = false
         minimized = false
         orientationState.value = ScreenDrawOrientation.HORIZONTAL
-        currentToolState.value = ScreenDrawTool.PEN
+        currentToolState.value = ScreenDrawPrefs.resolveInitialTool(host)
         popupOptionsToolState.value = null
         isOptionsPopupShowing = false
         strokeWidthState.value = 3f
@@ -176,6 +176,7 @@ object ScreenDrawOverlay {
         eraserModeState.value = ScreenDrawEraserMode.STROKE
 
         val drawCanvas = ScreenDrawCanvasView(host) { dismiss() }
+        drawCanvas.tool = currentToolState.value
         drawCanvas.onTouchDown = {
             hideOptionsPopup()
         }
@@ -403,6 +404,8 @@ object ScreenDrawOverlay {
         val canvasView = canvas ?: return
         canvasView.tool = target
         currentToolState.value = target
+        // 「记忆」选项要读到"上次实际用过的工具"，所以每次切换都落盘。
+        hostContext?.let { ScreenDrawPrefs.writeLastTool(it, target) }
 
         if (isFinishActionsShowingState.value) {
             hideOptionsPopup()
