@@ -34,9 +34,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
+import com.slideindex.app.macro.MacroScope
 import com.slideindex.app.settings.macro.MacroValidation
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
+import com.slideindex.app.ui.settings.components.SettingSwitchRow
 import com.slideindex.app.ui.settings.components.SettingsLabeledTextFieldRow
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
@@ -106,10 +108,13 @@ fun MacroEditScreen(
     titleResId: Int,
     name: String,
     targetPackage: String,
+    /** 作用域：全局宏不绑定应用（反馈 #394）。 */
+    scope: MacroScope = MacroScope.APP,
     recording: Boolean,
     /** 有没有真的改动过；没改动时「保存」是灰的（避免凭空存出一条空宏）。 */
     saveEnabled: Boolean = true,
     onNameChange: (String) -> Unit,
+    onScopeChange: (MacroScope) -> Unit = {},
     onPickTargetApp: () -> Unit,
     onStartRecording: () -> Unit,
     onTestRun: () -> Unit,
@@ -152,27 +157,47 @@ fun MacroEditScreen(
         settingsLazySmallTitle(key = "macro-section-basic", title = nameSectionTitle)
         groupedCardItems(
             keyPrefix = "macro-basic",
-            items = listOf(
-                settingsCardScopeItem("macro-name") {
-                    SettingsLabeledTextFieldRow(
-                        key = "macro-name-field",
-                        label = stringResource(R.string.macro_name_label),
-                        value = name,
-                        onValueChange = { text ->
-                            errorResId = null
-                            onNameChange(text)
+            items = buildList {
+                add(
+                    settingsCardScopeItem("macro-name") {
+                        SettingsLabeledTextFieldRow(
+                            key = "macro-name-field",
+                            label = stringResource(R.string.macro_name_label),
+                            value = name,
+                            onValueChange = { text ->
+                                errorResId = null
+                                onNameChange(text)
+                            },
+                        )
+                    },
+                )
+                add(
+                    settingsCardScopeItem("macro-target") {
+                        SettingSwitchRow(
+                            title = stringResource(R.string.macro_scope_global_title),
+                            subtitle = stringResource(R.string.macro_scope_global_desc),
+                            checked = scope == MacroScope.GLOBAL,
+                            enabled = !recording,
+                            onCheckedChange = { global ->
+                                onScopeChange(if (global) MacroScope.GLOBAL else MacroScope.APP)
+                            },
+                        )
+                    },
+                )
+                // 全局宏不绑定应用：这一行直接隐藏，避免"看起来还要选目标"的误解。
+                if (scope != MacroScope.GLOBAL) {
+                    add(
+                        settingsCardScopeItem("macro-target-app") {
+                            SettingNavigationRow(
+                                icon = { label -> MacroTargetAppIcon(targetPackage, label) },
+                                title = stringResource(R.string.macro_target_label),
+                                subtitle = targetSummary,
+                                onClick = onPickTargetApp,
+                            )
                         },
                     )
-                },
-                settingsCardScopeItem("macro-target") {
-                    SettingNavigationRow(
-                        icon = { label -> MacroTargetAppIcon(targetPackage, label) },
-                        title = stringResource(R.string.macro_target_label),
-                        subtitle = targetSummary,
-                        onClick = onPickTargetApp,
-                    )
-                },
-            ),
+                }
+            },
         )
 
         settingsLazySmallTitle(key = "macro-section-record", title = recordSectionTitle)

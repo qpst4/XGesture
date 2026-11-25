@@ -24,6 +24,8 @@
     <string name="macro_section_record">Recording</string>
     <string name="macro_name_label">Macro name</string>
     <string name="macro_target_label">Target app</string>
+    <string name="macro_scope_global_title">Global macro (no app binding)</string>
+    <string name="macro_scope_global_desc">Launches no app and replays right where you are; coordinates are absolute, best for stable layouts</string>
     <string name="macro_target_none">Not selected</string>
     <string name="macro_target_value">%1$s · %2$s</string>
     <string name="macro_start_recording">Start recording</string>

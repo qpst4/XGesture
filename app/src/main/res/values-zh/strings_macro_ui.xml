@@ -24,6 +24,8 @@
     <string name="macro_section_record">录制</string>
     <string name="macro_name_label">宏名称</string>
     <string name="macro_target_label">目标应用</string>
+    <string name="macro_scope_global_title">全局宏（不绑定应用）</string>
+    <string name="macro_scope_global_desc">开启后不拉起任何应用，直接在当前界面回放；坐标是绝对位置，适合界面固定的场景</string>
     <string name="macro_target_none">尚未选择</string>
     <string name="macro_target_value">%1$s · %2$s</string>
     <string name="macro_start_recording">开始录制</string>

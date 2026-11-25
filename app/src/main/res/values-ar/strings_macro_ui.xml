@@ -24,6 +24,8 @@
     <string name="macro_section_record">التسجيل</string>
     <string name="macro_name_label">اسم الماكرو</string>
     <string name="macro_target_label">التطبيق الهدف</string>
+    <string name="macro_scope_global_title">ماكرو عام (بدون ربط تطبيق)</string>
+    <string name="macro_scope_global_desc">لا يفتح أي تطبيق ويعيد التشغيل في الشاشة الحالية؛ الإحداثيات مطلقة وتناسب الشاشات الثابتة</string>
     <string name="macro_target_none">لم يتم الاختيار</string>
     <string name="macro_target_value">%1$s · %2$s</string>
     <string name="macro_start_recording">بدء التسجيل</string>

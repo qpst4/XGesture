@@ -17,6 +17,8 @@
     <string name="macro_section_record">Grabación</string>
     <string name="macro_name_label">Nombre de Macro</string>
     <string name="macro_target_label">Aplicación de objetivos</string>
+    <string name="macro_scope_global_title">Macro global (sin vinculación)</string>
+    <string name="macro_scope_global_desc">No abre ninguna app y se reproduce en la pantalla actual; las coordenadas son absolutas, ideal para pantallas fijas</string>
     <string name="macro_target_none">No seleccionado</string>
     <string name="macro_target_value">%1$s·%2$s</string>
     <string name="macro_start_recording">Grabación inicial</string>

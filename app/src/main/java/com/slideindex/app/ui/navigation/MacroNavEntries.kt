@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.slideindex.app.R
 import com.slideindex.app.macro.Macro
 import com.slideindex.app.macro.MacroEngine
+import com.slideindex.app.macro.MacroScope
 import com.slideindex.app.macro.MacroStore
 import com.slideindex.app.settings.macro.MacroRecordingLauncher
 import com.slideindex.app.settings.macro.MacroRecordingStart
@@ -42,14 +43,17 @@ private class MacroDraft(
     val createdAtMs: Long,
     name: String,
     targetPackage: String,
+    scope: MacroScope,
     /** 磁盘上原本的值（用于判断"到底改了没有"）；新建草稿传空串。 */
     private val initialName: String,
     private val initialTargetPackage: String,
+    private val initialScope: MacroScope,
     /** 是不是「+」新建出来的（磁盘上还没有这条宏）。 */
     val isNew: Boolean,
 ) {
     var name by mutableStateOf(name)
     var targetPackage by mutableStateOf(targetPackage)
+    var scope by mutableStateOf(scope)
 
     /** 是否已经真的写进过磁盘（保存过 / 开始录制过）。 */
     var persisted by mutableStateOf(false)
@@ -61,9 +65,10 @@ private class MacroDraft(
      * 或者把 `updatedAtMs` 白白刷新一遍。
      */
     fun hasEdits(): Boolean = if (isNew) {
-        targetPackage.isNotBlank() || (name.isNotBlank() && name != Macro.FALLBACK_NAME)
+        targetPackage.isNotBlank() || scope != MacroScope.APP ||
+            (name.isNotBlank() && name != Macro.FALLBACK_NAME)
     } else {
-        name != initialName || targetPackage != initialTargetPackage
+        name != initialName || targetPackage != initialTargetPackage || scope != initialScope
     }
 
     fun toMacro(): Macro = Macro(
@@ -72,6 +77,7 @@ private class MacroDraft(
         targetPackage = targetPackage,
         createdAtMs = createdAtMs,
         updatedAtMs = System.currentTimeMillis(),
+        scope = scope,
     )
 }
 
@@ -134,8 +140,10 @@ fun NavEntryBuilder.macroNavEntries(ctx: MainNavContext) {
                         createdAtMs = existing.createdAtMs,
                         name = existing.name,
                         targetPackage = existing.targetPackage,
+                        scope = existing.scope,
                         initialName = existing.name,
                         initialTargetPackage = existing.targetPackage,
+                        initialScope = existing.scope,
                         isNew = false,
                     ).also { it.persisted = true }
                 } else {
@@ -145,8 +153,10 @@ fun NavEntryBuilder.macroNavEntries(ctx: MainNavContext) {
                         createdAtMs = System.currentTimeMillis(),
                         name = Macro.FALLBACK_NAME,
                         targetPackage = "",
+                        scope = MacroScope.APP,
                         initialName = "",
                         initialTargetPackage = "",
+                        initialScope = MacroScope.APP,
                         isNew = true,
                     )
                 }
@@ -161,9 +171,11 @@ fun NavEntryBuilder.macroNavEntries(ctx: MainNavContext) {
             titleResId = R.string.macro_editor_title,
             name = current.name,
             targetPackage = current.targetPackage,
+            scope = current.scope,
             recording = macroRecording,
             saveEnabled = current.hasEdits(),
             onNameChange = { text -> current.name = text },
+            onScopeChange = { scope -> current.scope = scope },
             onPickTargetApp = { ctx.navigate(AppNavKey.MacroTargetApp(current.id)) },
             onStartRecording = { startMacroRecording(ctx, context, current) },
             onTestRun = {
@@ -198,8 +210,10 @@ private fun createMacroDraftAndOpen(ctx: MainNavContext) {
         createdAtMs = System.currentTimeMillis(),
         name = Macro.FALLBACK_NAME,
         targetPackage = "",
+        scope = MacroScope.APP,
         initialName = "",
         initialTargetPackage = "",
+        initialScope = MacroScope.APP,
         isNew = true,
     )
     ctx.navigate(AppNavKey.MacroEdit(macroDraft!!.id))
@@ -239,6 +253,7 @@ private fun persistDraft(context: Context, draft: MacroDraft) {
         base.copy(
             name = MacroValidation.normalizeName(draft.name).ifBlank { Macro.FALLBACK_NAME },
             targetPackage = draft.targetPackage,
+            scope = draft.scope,
             updatedAtMs = System.currentTimeMillis(),
         ),
     )

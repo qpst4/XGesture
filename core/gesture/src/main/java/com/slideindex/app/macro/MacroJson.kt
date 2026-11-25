@@ -24,6 +24,7 @@ object MacroJson {
     private const val KEY_ID = "id"
     private const val KEY_NAME = "name"
     private const val KEY_TARGET_PACKAGE = "targetPackage"
+    private const val KEY_SCOPE = "scope"
     private const val KEY_CREATED_AT = "createdAtMs"
     private const val KEY_UPDATED_AT = "updatedAtMs"
     private const val KEY_STEPS = "steps"
@@ -77,6 +78,7 @@ object MacroJson {
                     .put(KEY_ID, macro.id)
                     .put(KEY_NAME, macro.name)
                     .put(KEY_TARGET_PACKAGE, macro.targetPackage)
+                    .put(KEY_SCOPE, macro.scope.name)
                     .put(KEY_CREATED_AT, macro.createdAtMs)
                     .put(KEY_UPDATED_AT, macro.updatedAtMs)
                     .put(KEY_STEPS, steps),
@@ -98,6 +100,7 @@ object MacroJson {
             updatedAtMs = item.optLong(KEY_UPDATED_AT, now),
             schemaVersion = item.optInt(KEY_SCHEMA_VERSION, Macro.CURRENT_SCHEMA_VERSION),
             steps = decodeSteps(item.optJSONArray(KEY_STEPS)),
+            scope = MacroScope.fromName(item.optString(KEY_SCOPE).takeIf { it.isNotBlank() }),
         )
     }
 

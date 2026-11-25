@@ -24,6 +24,8 @@
     <string name="macro_section_record">記録</string>
     <string name="macro_name_label">マクロ名</string>
     <string name="macro_target_label">対象アプリ</string>
+    <string name="macro_scope_global_title">グローバルマクロ（アプリ非依存）</string>
+    <string name="macro_scope_global_desc">アプリを起動せず、現在の画面でそのまま再生します。座標は絶対位置なので画面が固定の場面向けです</string>
     <string name="macro_target_none">未選択</string>
     <string name="macro_target_value">%1$s · %2$s</string>
     <string name="macro_start_recording">記録を開始</string>

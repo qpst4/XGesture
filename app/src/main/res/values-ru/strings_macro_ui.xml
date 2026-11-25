@@ -24,6 +24,8 @@
     <string name="macro_section_record">Запись</string>
     <string name="macro_name_label">Имя макроса</string>
     <string name="macro_target_label">Целевое приложение</string>
+    <string name="macro_scope_global_title">Глобальный макрос (без привязки)</string>
+    <string name="macro_scope_global_desc">Не запускает приложение и воспроизводится на текущем экране; координаты абсолютные, подходит для фиксированных экранов</string>
     <string name="macro_target_none">Не выбрано</string>
     <string name="macro_target_value">%1$s · %2$s</string>
     <string name="macro_start_recording">Начать запись</string>
