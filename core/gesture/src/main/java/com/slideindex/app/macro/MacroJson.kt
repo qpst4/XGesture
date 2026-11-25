@@ -78,7 +78,10 @@ object MacroJson {
                     .put(KEY_ID, macro.id)
                     .put(KEY_NAME, macro.name)
                     .put(KEY_TARGET_PACKAGE, macro.targetPackage)
-                    .put(KEY_SCOPE, macro.scope.name)
+                    // 只给非默认作用域写字段：APP 宏的旧格式保持逐字节不变（含单测里的期望串）。
+                    .apply {
+                        if (macro.scope != MacroScope.APP) put(KEY_SCOPE, macro.scope.name)
+                    }
                     .put(KEY_CREATED_AT, macro.createdAtMs)
                     .put(KEY_UPDATED_AT, macro.updatedAtMs)
                     .put(KEY_STEPS, steps),
