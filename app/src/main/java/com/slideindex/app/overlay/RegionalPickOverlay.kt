@@ -56,6 +56,7 @@ object RegionalPickOverlay {
 
     private var windowManager: WindowManager? = null
     private var displayHost: FrameLayout? = null
+    private var displayWindowGeneration = -1
     private var cursorPreviewView: FloatBallCursorPreviewView? = null
     private var ballDragVisualView: FloatBallDragVisualView? = null
     private val screenOffDismissReceiver = ScreenOffDismissReceiver { dismiss() }
@@ -243,9 +244,13 @@ object RegionalPickOverlay {
 
     private fun ensureDisplayWindow(hostContext: Context, appSettings: AppSettings): Boolean {
         settings = appSettings
-        if (displayHost != null) {
-            refreshScreenMetrics(hostContext)
-            return true
+        val hostGeneration = SlideIndexAccessibilityService.overlayHostGeneration()
+        displayHost?.let { existing ->
+            if (canReuseRegionalPickWindow(existing.isAttachedToWindow, displayWindowGeneration, hostGeneration)) {
+                refreshScreenMetrics(hostContext)
+                return true
+            }
+            discardDisplayWindow(existing)
         }
 
         val wm = hostContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager ?: return false
@@ -292,11 +297,24 @@ object RegionalPickOverlay {
 
         windowManager = wm
         displayHost = display
+        displayWindowGeneration = hostGeneration
         cursorPreviewView = preview
         ballDragVisualView = ballVisual
         appContext = hostContext
         screenOffDismissReceiver.register(hostContext)
         return true
+    }
+
+    private fun discardDisplayWindow(display: FrameLayout) {
+        runCatching { windowManager?.removeViewImmediate(display) }
+        ballDragVisualView?.release()
+        screenOffDismissReceiver.unregister()
+        windowManager = null
+        displayHost = null
+        displayWindowGeneration = -1
+        cursorPreviewView = null
+        ballDragVisualView = null
+        appContext = null
     }
 
     private fun handleTouch(rawX: Float, rawY: Float, action: Int) {
