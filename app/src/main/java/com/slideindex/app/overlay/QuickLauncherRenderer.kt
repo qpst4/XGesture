@@ -607,14 +607,23 @@ internal class QuickLauncherRenderer(
 
     private fun drawQuickLauncherPageIndicator(canvas: Canvas, grid: RectF) {
         val topOffset = if (ctrl.quickLauncherHeaderHeight > 0f) ctrl.quickLauncherHeaderHeight else (ctrl.quickLauncherHeaderHeight + ctrl.quickLauncherGridPadding)
-        val lastRowBottom = grid.top + topOffset + ctrl.quickLauncherRowsPerPage() * ctrl.quickLauncherCellHeight
+        val rows = ctrl.quickLauncherRowsPerPage()
+        val lastRowCellTop = grid.top + topOffset + (rows - 1).coerceAtLeast(0) * ctrl.quickLauncherCellHeight
+        val visualContentBottom = if (quickLauncherDisplay.showLabels) {
+            val iconTop = lastRowCellTop + quickLauncherGridIconTopInset
+            val fontMetrics = appLabelPaint.fontMetrics
+            iconTop + quickLauncherGridIconSize + quickLauncherGridIconLabelGap - fontMetrics.ascent + fontMetrics.descent
+        } else {
+            val iconTop = lastRowCellTop + (ctrl.quickLauncherCellHeight - quickLauncherGridIconSize) / 2f
+            iconTop + quickLauncherGridIconSize
+        }
         drawPageIndicator(
             canvas = canvas,
             rect = grid,
             pageIndex = ctrl.quickLauncherPageIndex,
             pageCount = ctrl.quickLauncherPageCount,
             bottomInset = host.dp(10f),
-            contentBottom = lastRowBottom
+            contentBottom = visualContentBottom
         )
     }
 
