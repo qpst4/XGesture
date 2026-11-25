@@ -168,6 +168,13 @@ class HomeViewModel @AssistedInject constructor(
         settingsRepository.setIconPlateMode(mode)
     }
 
+    fun setGlobalIconShape(shape: com.slideindex.app.overlay.layout.FvIconShape) = launchSettingsWrite {
+        runCatching { com.slideindex.app.util.GestureActionIconBitmap.clear() }
+        runCatching { com.slideindex.app.util.QuickLauncherIconResolver.clear() }
+        runCatching { com.slideindex.app.overlay.ringlauncher.RingLauncherOverlayWindow.refreshFromSettings() }
+        settingsRepository.setGlobalIconShape(shape)
+    }
+
     fun setThemeColorSpec(spec: AppColorSpec) = launchSettingsWrite {
         settingsRepository.setThemeColorSpec(spec)
     }
@@ -243,6 +250,10 @@ class HomeViewModel @AssistedInject constructor(
 
     fun setPickResultBlurMode(mode: com.slideindex.app.settings.OverlayBlurMode) = launchSettingsWrite {
         settingsRepository.setPickResultBlurModeId(mode.id)
+    }
+
+    fun setWidgetPanelBlurMode(mode: com.slideindex.app.settings.OverlayBlurMode) = launchSettingsWrite {
+        settingsRepository.setWidgetPanelBlurModeId(mode.id)
     }
 
     fun setTopAppBarBlurStyle(style: TopAppBarBlurStyle) = launchOptimisticSettingsWrite(

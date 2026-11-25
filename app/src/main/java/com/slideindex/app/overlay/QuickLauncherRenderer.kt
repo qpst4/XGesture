@@ -23,6 +23,7 @@ import com.slideindex.app.launcher.isCloneTarget
 import com.slideindex.app.launcher.showsMacroBadge
 import com.slideindex.app.launcher.showsShellCommandBadge
 import com.slideindex.app.launcher.showsShortcutBadge
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.overlay.layout.visualColumn
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.QuickLauncherDisplaySettings
@@ -74,6 +75,8 @@ internal class QuickLauncherRenderer(
     private val quickLauncherDisplay get() = host.settings().quickLauncherDisplay
     private val quickLauncherGridIconSize get() =
         host.dp(quickLauncherDisplay.iconSizeDp.toFloat())
+    private val quickLauncherEffectiveShape: FvIconShape
+        get() = quickLauncherDisplay.panelIconShape.resolve(host.settings().globalIconShape)
     private val quickLauncherIconShape get() = quickLauncherDisplay.iconShape
     private val quickLauncherGridIconTopInset get() = host.dp(4f)
     private val quickLauncherGridIconLabelGap get() = host.dp(4f)
@@ -350,8 +353,8 @@ internal class QuickLauncherRenderer(
     }
 
     private fun quickLauncherIconKey(item: QuickLauncherItem, size: Int): String =
-        "${ctrl.quickLauncherItemCacheKey(item)}\u0000$size\u0000$quickLauncherIconShape" +
-            "\u0000v35\u0000${quickLauncherIconCatalogStamp()}\u0000${ctrl.quickLauncherAppsRevision}" +
+        "${ctrl.quickLauncherItemCacheKey(item)}\u0000$size\u0000${quickLauncherEffectiveShape.name}" +
+            "\u0000v36\u0000${quickLauncherIconCatalogStamp()}\u0000${ctrl.quickLauncherAppsRevision}" +
             "\u0000${com.slideindex.app.ui.GlobalIconStore.revision}" +
             "\u0000${com.slideindex.app.macro.MacroStore.revision}" +
             "\u0000${com.slideindex.app.ui.IconPlateModeState.mode}" +
@@ -699,26 +702,31 @@ internal class QuickLauncherRenderer(
             iconCenterX + iconSize / 2f,
             iconTop + iconSize
         )
-        QuickLauncherIconMask.pathFor(
-            shape = quickLauncherIconShape,
+        val effectiveShape = quickLauncherEffectiveShape
+        val clipPath = QuickLauncherIconMask.pathFor(
+            shape = effectiveShape,
             bounds = tmpRect,
             out = iconClipPath
         )
         if (icon != null) {
-            if (quickLauncherIconShape == QuickLauncherDisplaySettings.ICON_SHAPE_DEFAULT) {
-                canvas.drawBitmap(icon, null, tmpRect, iconBitmapPaint)
-            } else {
-                canvas.withClip(iconClipPath) {
+            if (clipPath != null) {
+                canvas.withClip(clipPath) {
                     drawBitmap(icon, null, tmpRect, iconBitmapPaint)
                 }
+            } else {
+                canvas.drawBitmap(icon, null, tmpRect, iconBitmapPaint)
             }
         } else {
+            val drawPath = clipPath ?: iconClipPath.apply {
+                rewind()
+                addRoundRect(tmpRect, iconSize * 0.22f, iconSize * 0.22f, Path.Direction.CW)
+            }
             cellHighlightPaint.color = Color.argb(130, 48, 48, 52)
-            canvas.drawPath(iconClipPath, cellHighlightPaint)
+            canvas.drawPath(drawPath, cellHighlightPaint)
             cellHighlightPaint.color = Color.argb(90, 255, 255, 255)
             cellHighlightPaint.style = Paint.Style.STROKE
             cellHighlightPaint.strokeWidth = host.dp(1f)
-            canvas.drawPath(iconClipPath, cellHighlightPaint)
+            canvas.drawPath(drawPath, cellHighlightPaint)
             cellHighlightPaint.style = Paint.Style.FILL
 
             val initial = displayLabel.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "•"
@@ -769,7 +777,7 @@ internal class QuickLauncherRenderer(
                 iconCenterY,
                 iconSize,
                 1f,
-                circular = quickLauncherIconShape == QuickLauncherDisplaySettings.ICON_SHAPE_CIRCLE,
+                circular = quickLauncherEffectiveShape == FvIconShape.CIRCLE,
             )
         }
         if (showLabels) {

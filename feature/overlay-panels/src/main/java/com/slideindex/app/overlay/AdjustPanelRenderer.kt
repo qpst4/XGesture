@@ -273,7 +273,8 @@ class AdjustPanelRenderer(
             recede = ctrl.adjustIndicatorReceding,
             volumePanel = volumePanel,
             brightnessPanel = brightnessPanel,
-            context = host.context
+            context = host.context,
+            overlayView = host.overlayView(),
         )
     }
 

@@ -3,6 +3,7 @@ package com.slideindex.app.ui.quicklauncher
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.settings.QuickLauncherDisplaySettings
 import com.slideindex.app.ui.SettingDropdownRow
 import com.slideindex.app.ui.SettingsSliderRow
@@ -45,26 +46,29 @@ fun quickLauncherAppearanceCardItems(
                 )
             },
         )
-        val shapes = listOf(
-            QuickLauncherDisplaySettings.ICON_SHAPE_DEFAULT,
-            QuickLauncherDisplaySettings.ICON_SHAPE_CIRCLE,
-            QuickLauncherDisplaySettings.ICON_SHAPE_ADAPTIVE,
+        val panelShapes = listOf(
+            PanelIconShape.FOLLOW_GLOBAL,
+            PanelIconShape.SQUIRCLE,
+            PanelIconShape.CIRCLE,
+            PanelIconShape.ROUNDED_RECT,
+            PanelIconShape.ORIGINAL,
         )
         add(
             settingsCardScopeItem("icon-shape") {
                 SettingDropdownRow(
                     title = stringResource(R.string.quick_launcher_icon_shape_section),
                     items = listOf(
-                        stringResource(R.string.quick_launcher_icon_shape_default),
-                        stringResource(R.string.quick_launcher_icon_shape_circle),
-                        stringResource(R.string.quick_launcher_icon_shape_adaptive),
+                        stringResource(R.string.icon_shape_follow_global),
+                        stringResource(R.string.fv_icon_shape_squircle),
+                        stringResource(R.string.fv_icon_shape_circle),
+                        stringResource(R.string.fv_icon_shape_rounded_rect),
+                        stringResource(R.string.fv_icon_shape_original),
                     ),
-                    selectedIndex = shapes.indexOf(
-                        QuickLauncherDisplaySettings.coerceIconShape(display.iconShape),
-                    ).coerceAtLeast(0),
+                    selectedIndex = panelShapes.indexOf(display.panelIconShape).coerceAtLeast(0),
                     enabled = enabled,
                     onSelectedIndexChange = { index ->
-                        onDisplayChange(display.copy(iconShape = shapes[index]))
+                        val selected = panelShapes[index]
+                        onDisplayChange(display.copy(panelIconShape = selected))
                     },
                 )
             },

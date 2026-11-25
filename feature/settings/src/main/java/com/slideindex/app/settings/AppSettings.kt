@@ -2,6 +2,8 @@ package com.slideindex.app.settings
 
 import com.slideindex.app.message.MessageSettings
 import com.slideindex.app.otp.OtpKeywords
+import com.slideindex.app.overlay.layout.FvIconShape
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.shake.FaceDownGestureSettings
 import com.slideindex.app.shake.ShakeGestureSettings
 import com.slideindex.app.backtap.BackTapSettings
@@ -84,6 +86,7 @@ data class AppSettings(
     val freeWindow: FreeWindowSettings = FreeWindowSettings(),
     val launcher: LauncherSettings = LauncherSettings(),
     val iconPlateModeId: Int = IconPlateMode.SYSTEM_DARK.id,
+    val globalIconShape: FvIconShape = FvIconShape.SQUIRCLE,
     val themeColorArgb: Int = 0xFF6750A4.toInt(),
     val themePaletteStyleId: Int = ThemePaletteStyle.TONAL_SPOT.id,
     val themeModeId: Int = AppThemeMode.SYSTEM.id,
@@ -173,6 +176,7 @@ data class AppSettings(
     val widgetPanelBlurRadiusDp get() = widgetPanel.widgetPanelBlurRadiusDp
     val widgetPanelCloseOnClickMode get() = widgetPanel.widgetPanelCloseOnClickMode
     val widgetPanelShowLabels get() = widgetPanel.widgetPanelShowLabels
+    val widgetPanelIconShape get() = widgetPanel.widgetPanelIconShape
 
     val otpCopyToClipboard get() = otp.otpCopyToClipboard
     val otpKeywordsRegex get() = otp.otpKeywordsRegex
@@ -526,6 +530,8 @@ data class AppSettings(
     val expandPanelBlurMode get() = OverlayBlurMode.fromId(overlayBlur.expandPanelBlurModeId)
     val pickResultBlurModeId get() = overlayBlur.pickResultBlurModeId
     val pickResultBlurMode get() = OverlayBlurMode.fromId(overlayBlur.pickResultBlurModeId)
+    val widgetPanelBlurModeId get() = overlayBlur.widgetPanelBlurModeId
+    val widgetPanelBlurMode get() = OverlayBlurMode.fromId(overlayBlur.widgetPanelBlurModeId)
 
     val dragDropFlowEnabled get() = dragDropFlow.dragDropFlowEnabled
     val dragDropFlowPositionId get() = dragDropFlow.dragDropFlowPositionId

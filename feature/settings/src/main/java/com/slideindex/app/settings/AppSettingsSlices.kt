@@ -7,6 +7,8 @@ import com.slideindex.app.gesture.GestureAngles
 import com.slideindex.app.gesture.GestureRule
 import com.slideindex.app.gesture.GestureTriggerMode
 import com.slideindex.app.gesture.SideGestureDefaults
+import com.slideindex.app.overlay.layout.FvIconShape
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.translate.TranslateTargetLanguages
 
 /**
@@ -596,6 +598,8 @@ data class SearchPanelSettings(
     val searchEngineGridColumns: Int = 5,
     val searchEngineGridRows: Int = 2,
     val searchEngineShowLabels: Boolean = true,
+    /** 应用图标裁切形状规范；默认跟随全局。 */
+    val iconShape: PanelIconShape = PanelIconShape.FOLLOW_GLOBAL,
     /** 引擎区图标的裁切形状；[SearchEngineIconShape.DEFAULT] 保持历史观感。 */
     val searchEngineIconShape: SearchEngineIconShape = SearchEngineIconShape.DEFAULT,
     val searchPanelDefaultEngineId: String? = null,
@@ -676,6 +680,8 @@ data class WidgetPanelSettings(
     val widgetPanelTopFraction: Float = 0.15f,
     val widgetPanelBlurEnabled: Boolean = true,
     val widgetPanelBlurRadiusDp: Int = AppSettings.WIDGET_PANEL_BLUR_RADIUS_DEFAULT_DP,
+    /** 图标裁切形状规范；默认跟随全局。 */
+    val widgetPanelIconShape: PanelIconShape = PanelIconShape.FOLLOW_GLOBAL,
     /** 点击小组件后收起面板的策略：0=仅外部 Activity，1=总是，2=从不。 */
     val widgetPanelCloseOnClickMode: Int = 0,
     /**
@@ -756,6 +762,8 @@ data class OverlayBlurSettings(
     val expandPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
     /** 分词浮层模糊模式：0=关闭, 1=仅背景, 2=仅面板。默认关闭(0)。 */
     val pickResultBlurModeId: Int = OverlayBlurMode.DISABLED.id,
+    /** 小组件面板模糊模式：0=关闭, 1=仅背景, 2=仅面板。默认仅背景(1)。 */
+    val widgetPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
 )
 
 /**

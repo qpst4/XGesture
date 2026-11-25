@@ -158,6 +158,22 @@ object WidgetPanelMutator {
     return effective.toMutableList().also { it[index] = updatedPage }
   }
 
+  fun removeActionFromPage(
+    pages: List<WidgetPanelPage>,
+    pageIndex: Int,
+    actionPayload: String,
+  ): List<WidgetPanelPage> {
+    val effective = WidgetPanelDefaults.effectivePages(pages).toMutableList()
+    val index = pageIndex.coerceIn(0, effective.lastIndex)
+    val page = effective[index]
+    val updatedItems = page.items.filterNot {
+      it.itemType == ITEM_TYPE_ACTION && it.intentUri == actionPayload
+    }
+    val updatedPage = page.copy(items = updatedItems)
+    effective[index] = updatedPage.copy(rowCount = WidgetPanelGridLogic.computeContentRowCount(updatedPage))
+    return effective
+  }
+
   fun removeAppFromPage(
     pages: List<WidgetPanelPage>,
     pageIndex: Int,

@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
@@ -16,6 +18,9 @@ import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewParent
 import androidx.core.view.ViewCompat
+import com.slideindex.app.overlay.layout.FvIconShape
+import com.slideindex.app.overlay.layout.IconShapeNormalizer
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.overlay.panels.R
 import com.slideindex.app.settings.HolographicLauncherSettings
 import com.slideindex.app.util.CloneBadge
@@ -91,6 +96,11 @@ class Ball3DView @JvmOverloads constructor(
     var onBlankClick: (() -> Unit)? = null
     var onRotationStateChange: ((Boolean) -> Unit)? = null
 
+    var iconShape: PanelIconShape = PanelIconShape.FOLLOW_GLOBAL
+    var globalIconShape: FvIconShape = FvIconShape.SQUIRCLE
+    private val nodeBoundsRect = RectF()
+    private val nodeClipPath = Path()
+
     init {
         setBackgroundColor(Color.TRANSPARENT)
         val dm = resources.displayMetrics
@@ -134,12 +144,14 @@ class Ball3DView @JvmOverloads constructor(
         invalidate()
     }
 
-    fun applySettings(settings: HolographicLauncherSettings) {
+    fun applySettings(settings: HolographicLauncherSettings, globalShape: FvIconShape = FvIconShape.SQUIRCLE) {
         sensitivity = settings.rotationSensitivity.coerceIn(
             HolographicLauncherSettings.MIN_ROTATION_SENSITIVITY,
             HolographicLauncherSettings.MAX_ROTATION_SENSITIVITY,
         )
         hapticLevel = settings.hapticLevel.coerceIn(0, 3)
+        iconShape = settings.iconShape
+        globalIconShape = globalShape
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -190,7 +202,24 @@ class Ball3DView @JvmOverloads constructor(
         icon.setBounds(left, top, left + size, top + size)
         val savedAlpha = icon.alpha
         icon.alpha = node.alpha
+
+        val effectiveShape = iconShape.resolve(globalIconShape)
+        val clipPath = if (effectiveShape != FvIconShape.ORIGINAL) {
+            nodeBoundsRect.set(left.toFloat(), top.toFloat(), (left + size).toFloat(), (top + size).toFloat())
+            IconShapeNormalizer.createClipPath(effectiveShape, nodeBoundsRect, nodeClipPath)
+        } else null
+
+        val checkpoint = if (clipPath != null) {
+            val count = canvas.save()
+            canvas.clipPath(clipPath)
+            count
+        } else null
+
         icon.draw(canvas)
+
+        if (checkpoint != null) {
+            canvas.restoreToCount(checkpoint)
+        }
         icon.alpha = savedAlpha
         if (node.app.cloneUserId > 0) {
             CloneBadge.draw(

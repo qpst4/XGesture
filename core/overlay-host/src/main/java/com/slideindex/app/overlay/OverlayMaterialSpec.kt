@@ -35,24 +35,31 @@ data class OverlayMaterialSpec(
     val searchPanelBlurModeId: Int = 1,
     val expandPanelBlurModeId: Int = 1,
     val pickResultBlurModeId: Int = 0,
+    val widgetPanelBlurModeId: Int = 1,
 ) {
     val isSearchPanelCardBlurEnabled: Boolean
-        get() = blurEnabled && searchPanelBlurModeId == 2
+        get() = blurEnabled && (searchPanelBlurModeId == 2 || searchPanelBlurModeId == 3)
 
     val isSearchPanelBackdropBlurEnabled: Boolean
-        get() = backdropBlurEnabled && searchPanelBlurModeId == 1
+        get() = backdropBlurEnabled && (searchPanelBlurModeId == 1 || searchPanelBlurModeId == 3)
 
     val isExpandPanelCardBlurEnabled: Boolean
-        get() = blurEnabled && expandPanelBlurModeId == 2
+        get() = blurEnabled && (expandPanelBlurModeId == 2 || expandPanelBlurModeId == 3)
 
     val isExpandPanelBackdropBlurEnabled: Boolean
-        get() = backdropBlurEnabled && expandPanelBlurModeId == 1
+        get() = backdropBlurEnabled && (expandPanelBlurModeId == 1 || expandPanelBlurModeId == 3)
 
     val isPickResultCardBlurEnabled: Boolean
-        get() = blurEnabled && pickResultBlurModeId == 2
+        get() = blurEnabled && (pickResultBlurModeId == 2 || pickResultBlurModeId == 3)
 
     val isPickResultBackdropBlurEnabled: Boolean
-        get() = backdropBlurEnabled && pickResultBlurModeId == 1
+        get() = backdropBlurEnabled && (pickResultBlurModeId == 1 || pickResultBlurModeId == 3)
+
+    val isWidgetPanelCardBlurEnabled: Boolean
+        get() = blurEnabled && (widgetPanelBlurModeId == 2 || widgetPanelBlurModeId == 3)
+
+    val isWidgetPanelBackdropBlurEnabled: Boolean
+        get() = backdropBlurEnabled && (widgetPanelBlurModeId == 1 || widgetPanelBlurModeId == 3)
     fun blurRadiusPx(density: Float): Int =
         if (blurEnabled) (blurRadiusDp * density).toInt().coerceIn(0, 120) else 0
 

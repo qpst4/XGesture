@@ -49,6 +49,7 @@ class AdjustPanelOverlayController(
         fun onSessionStart()
         fun notifyOverlayLayoutIfNeeded()
         fun notifyPresentationTouchRequirementChanged()
+        fun overlayView(): android.view.View? = null
     }
 
     data class AdjustIndicatorVisual(

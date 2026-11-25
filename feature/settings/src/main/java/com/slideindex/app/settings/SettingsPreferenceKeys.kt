@@ -869,6 +869,7 @@ internal object SettingsPreferenceKeys {
     val SEARCH_PANEL_BLUR_MODE_ID = intPreferencesKey("search_panel_blur_mode_id")
     val EXPAND_PANEL_BLUR_MODE_ID = intPreferencesKey("expand_panel_blur_mode_id")
     val PICK_RESULT_BLUR_MODE_ID = intPreferencesKey("pick_result_blur_mode_id")
+    val WIDGET_PANEL_BLUR_MODE_ID = intPreferencesKey("widget_panel_blur_mode_id")
     val DEFAULT_IMAGE_VIEWER_PACKAGE = stringPreferencesKey("default_image_viewer_package")
     val PICK_IMAGE_TAP_ACTION = stringPreferencesKey("pick_image_tap_action")
     val IMAGE_EDITOR_DELAY_DELETE_ENABLED = booleanPreferencesKey("image_editor_delay_delete_enabled")
@@ -984,4 +985,12 @@ internal object SettingsPreferenceKeys {
     val DRAG_DROP_FLOW_GLOBAL_PRESS_IMMEDIATE = booleanPreferencesKey("drag_drop_flow_global_press_immediate")
     val DRAG_DROP_FLOW_GLOBAL_PRESS_EARLY_TEXT = booleanPreferencesKey("drag_drop_flow_global_press_early_text")
     val DRAG_DROP_FLOW_GLOBAL_PRESS_WHITELIST = stringPreferencesKey("drag_drop_flow_global_press_whitelist")
+
+    /** 全局图标形状（FvIconShape.name），默认 SQUIRCLE。 */
+    val GLOBAL_ICON_SHAPE = stringPreferencesKey("global_icon_shape")
+    val SEARCH_PANEL_ICON_SHAPE = stringPreferencesKey("search_panel_icon_shape")
+    val QUICK_LAUNCHER_ICON_SHAPE_NAME = stringPreferencesKey("quick_launcher_icon_shape_name")
+    val WIDGET_PANEL_ICON_SHAPE = stringPreferencesKey("widget_panel_icon_shape")
+    val HONEYCOMB_ICON_SHAPE = stringPreferencesKey("honeycomb_icon_shape")
+    val HOLOGRAPHIC_ICON_SHAPE = stringPreferencesKey("holographic_icon_shape")
 }

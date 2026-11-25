@@ -66,6 +66,8 @@
     <string name="fv_icon_shape_circle">Circle</string>
     <string name="fv_icon_shape_squircle">Squircle</string>
     <string name="fv_icon_shape_square">Square</string>
+    <string name="fv_icon_shape_original">Original Adaptive</string>
+    <string name="icon_shape_follow_global">Follow Global</string>
     <string name="fv_ring_launcher_base_radius_title">Inner Ring Radius</string>
     <string name="fv_ring_launcher_layer_gap_title">Ring Layer Gap</string>
     <string name="fv_ring_launcher_end_margin_title">Arc End Margin &amp; Spacing</string>

@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.overlay.ringlauncher.RingLauncherOverlayWindow
 import com.slideindex.app.overlay.layout.FvIconShape
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.FvRingLauncherAxis
 import com.slideindex.app.settings.FvRingLauncherAxisMergeDirection
@@ -35,6 +36,7 @@ import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingLinkRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
+import com.slideindex.app.ui.SettingDropdownRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.SettingsSliderRow
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
@@ -245,43 +247,22 @@ fun RingLauncherSettingsScreen(
                 // 图标形状
                 add(
                     settingsCardScopeItem("icon-shape") {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                        ) {
-                            Text(
-                                text = stringResource(R.string.fv_ring_launcher_icon_shape_title),
-                                fontWeight = FontWeight.Medium,
-                            )
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                val shapes = listOf(
-                                    FvIconShape.ROUNDED_RECT to stringResource(R.string.fv_icon_shape_rounded_rect),
-                                    FvIconShape.CIRCLE to stringResource(R.string.fv_icon_shape_circle),
-                                    FvIconShape.SQUIRCLE to stringResource(R.string.fv_icon_shape_squircle),
-                                    FvIconShape.SQUARE to stringResource(R.string.fv_icon_shape_square),
-                                )
-                                shapes.forEach { (shape, label) ->
-                                    val isSelected = currentAxisSettings.iconShape == shape
-                                    FilterChip(
-                                        selected = isSelected,
-                                        onClick = { updateCurrentAxisSettings { it.copy(iconShape = shape) } },
-                                        label = {
-                                            Text(
-                                                text = label,
-                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                            )
-                                        },
-                                        modifier = Modifier.weight(1f),
-                                    )
-                                }
-                            }
-                        }
+                        val shapes = listOf(
+                            PanelIconShape.FOLLOW_GLOBAL to stringResource(R.string.icon_shape_follow_global),
+                            PanelIconShape.SQUIRCLE to stringResource(R.string.fv_icon_shape_squircle),
+                            PanelIconShape.CIRCLE to stringResource(R.string.fv_icon_shape_circle),
+                            PanelIconShape.ROUNDED_RECT to stringResource(R.string.fv_icon_shape_rounded_rect),
+                            PanelIconShape.ORIGINAL to stringResource(R.string.fv_icon_shape_original),
+                        )
+                        SettingDropdownRow(
+                            title = stringResource(R.string.fv_ring_launcher_icon_shape_title),
+                            items = shapes.map { it.second },
+                            selectedIndex = shapes.indexOfFirst { it.first == currentAxisSettings.iconShape }.coerceAtLeast(0),
+                            onSelectedIndexChange = { index ->
+                                val selected = shapes[index].first
+                                updateCurrentAxisSettings { it.copy(iconShape = selected) }
+                            },
+                        )
                     },
                 )
 

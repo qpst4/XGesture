@@ -254,7 +254,7 @@ class WidgetPopupCardLayout(
     fun applyCardBackground() {
         val spec = OverlayMaterialSpec.fromContext(context)
         val isDark = OverlayPanelTheme.isDarkTheme(context)
-        val blurActive = spec.blurEnabled && isHardwareAccelerated
+        val blurActive = spec.isWidgetPanelCardBlurEnabled && isHardwareAccelerated
         val finalCornerRadius = spec.cornerRadiusPx(density)
         cornerRadiusPx = finalCornerRadius
         invalidateOutline()

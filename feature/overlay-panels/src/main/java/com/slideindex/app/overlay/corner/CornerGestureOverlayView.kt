@@ -909,6 +909,7 @@ class CornerGestureOverlayView(
             ),
             density = density,
             revealProgress = menuRevealProgress,
+            globalIconShape = settings.globalIconShape,
             hintIconSizeDp = cornerSettings.selectedHintIconSizeDp,
             activityShortcuts = settings.activityShortcuts,
             shellCommands = settings.shellCommands,

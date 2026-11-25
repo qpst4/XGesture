@@ -15,6 +15,7 @@ import com.slideindex.app.R
 import com.slideindex.app.gesture.SelectedHintMetrics
 import com.slideindex.app.overlay.corner.CornerWheelLayout
 import com.slideindex.app.overlay.layout.FvIconShape
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.CornerGestureSettings
 import com.slideindex.app.ui.miuix.groupedCardItems
@@ -51,7 +52,7 @@ fun CornerGestureInteractionScreen(
     onInnerDiameterChange: (Float) -> Unit,
     onRingSpacingChange: (Float) -> Unit,
     onBubbleSizeChange: (Float) -> Unit,
-    onSlotIconShapeChange: (FvIconShape) -> Unit,
+    onSlotIconShapeChange: (PanelIconShape) -> Unit,
     onCancelOutsideWheelChange: (Boolean) -> Unit,
     onProgressiveLayersChange: (Boolean) -> Unit,
     onSlotHapticChange: (Boolean) -> Unit = {},
@@ -343,17 +344,18 @@ fun CornerGestureInteractionScreen(
                     settingsCardScopeItem("slot-icon-shape") {
                         val shapes = remember {
                             listOf(
-                                FvIconShape.ROUNDED_RECT to R.string.fv_icon_shape_rounded_rect,
-                                FvIconShape.CIRCLE to R.string.fv_icon_shape_circle,
-                                FvIconShape.SQUIRCLE to R.string.fv_icon_shape_squircle,
-                                FvIconShape.SQUARE to R.string.fv_icon_shape_square,
+                                PanelIconShape.FOLLOW_GLOBAL to R.string.icon_shape_follow_global,
+                                PanelIconShape.SQUIRCLE to R.string.fv_icon_shape_squircle,
+                                PanelIconShape.CIRCLE to R.string.fv_icon_shape_circle,
+                                PanelIconShape.ROUNDED_RECT to R.string.fv_icon_shape_rounded_rect,
+                                PanelIconShape.ORIGINAL to R.string.fv_icon_shape_original,
                             )
                         }
                         SettingSpinnerRow(
                             title = stringResource(R.string.corner_gesture_slot_icon_shape),
                             subtitle = stringResource(
                                 shapes.firstOrNull { it.first == corner.slotIconShape }?.second
-                                    ?: R.string.fv_icon_shape_circle,
+                                    ?: R.string.icon_shape_follow_global,
                             ),
                             dialogButtonText = stringResource(R.string.cancel),
                             items = shapes.map { DropdownItem(text = stringResource(it.second)) },

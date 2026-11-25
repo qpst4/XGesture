@@ -267,6 +267,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             },
             onBack = { ctx.navigateBackTo(AppNavKey.HomeMain) },
             onIconPlateModeChange = viewModel::setIconPlateMode,
+            onGlobalIconShapeChange = viewModel::setGlobalIconShape,
             iconPlateMode = com.slideindex.app.settings.IconPlateMode.fromId(settings.iconPlateModeId),
             onOpenHapticSettings = { ctx.navigate(AppNavKey.HomeHapticSettings) },
             onSwipeDismissEnabledChange = viewModel::setSwipeDismissEnabled,
@@ -336,6 +337,8 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             onExpandPanelBlurModeChange = viewModel::setExpandPanelBlurMode,
             pickResultBlurModeId = settings.pickResultBlurModeId,
             onPickResultBlurModeChange = viewModel::setPickResultBlurMode,
+            widgetPanelBlurModeId = settings.widgetPanelBlurModeId,
+            onWidgetPanelBlurModeChange = viewModel::setWidgetPanelBlurMode,
         )
     }
 

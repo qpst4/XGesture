@@ -20,6 +20,7 @@ import com.slideindex.app.gesture.TriggerHandle
 import com.slideindex.app.gesture.TriggerHandleCodec
 import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.overlay.layout.FvIconShape
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.message.MessageSettings
 import com.slideindex.app.message.MessageSettingsCodec
 import com.slideindex.app.message.MessageStyle
@@ -366,6 +367,9 @@ internal object SettingsSnapshotReader {
             iconPlateModeId = IconPlateMode.fromId(
                 prefs[SettingsPreferenceKeys.ICON_PLATE_MODE] ?: IconPlateMode.SYSTEM_DARK.id,
             ).id,
+            globalIconShape = prefs[SettingsPreferenceKeys.GLOBAL_ICON_SHAPE]
+                ?.let { name -> runCatching { FvIconShape.valueOf(name) }.getOrNull() }
+                ?: FvIconShape.SQUIRCLE,
             uiDensityScale = UiDensityScaleLimits.normalize(
                 prefs[SettingsPreferenceKeys.UI_DENSITY_SCALE] ?: UiDensityScaleLimits.DEFAULT_SCALE,
             ),
@@ -398,6 +402,7 @@ internal object SettingsSnapshotReader {
                     ?: AppSettings.WIDGET_PANEL_BLUR_RADIUS_DEFAULT_DP,
                 widgetPanelCloseOnClickMode = prefs[SettingsPreferenceKeys.WIDGET_PANEL_CLOSE_ON_CLICK] ?: 0,
                 widgetPanelShowLabels = prefs[SettingsPreferenceKeys.WIDGET_PANEL_SHOW_LABELS] ?: true,
+                widgetPanelIconShape = PanelIconShape.fromName(prefs[SettingsPreferenceKeys.WIDGET_PANEL_ICON_SHAPE]),
             ),
             floatingPointer = FloatingPointerSettings(
             floatingPointerSensitivityFraction = readFloatingPointerSensitivityFraction(prefs),
@@ -856,6 +861,7 @@ internal object SettingsSnapshotReader {
                 searchPanelBlurModeId = prefs[SettingsPreferenceKeys.SEARCH_PANEL_BLUR_MODE_ID] ?: OverlayBlurMode.BACKDROP_ONLY.id,
                 expandPanelBlurModeId = prefs[SettingsPreferenceKeys.EXPAND_PANEL_BLUR_MODE_ID] ?: OverlayBlurMode.BACKDROP_ONLY.id,
                 pickResultBlurModeId = prefs[SettingsPreferenceKeys.PICK_RESULT_BLUR_MODE_ID] ?: OverlayBlurMode.DISABLED.id,
+                widgetPanelBlurModeId = prefs[SettingsPreferenceKeys.WIDGET_PANEL_BLUR_MODE_ID] ?: OverlayBlurMode.BACKDROP_ONLY.id,
             ),
             dragDropFlow = DragDropFlowSettings(
                 dragDropFlowEnabled = prefs[SettingsPreferenceKeys.DRAG_DROP_FLOW_ENABLED] ?: false,
@@ -885,6 +891,7 @@ internal object SettingsSnapshotReader {
             searchEngineGridColumns = prefs[SettingsPreferenceKeys.SEARCH_ENGINE_GRID_COLUMNS]?.coerceIn(3, 8) ?: 5,
             searchEngineGridRows = prefs[SettingsPreferenceKeys.SEARCH_ENGINE_GRID_ROWS]?.coerceIn(1, 4) ?: 2,
             searchEngineShowLabels = prefs[SettingsPreferenceKeys.SEARCH_ENGINE_SHOW_LABELS] ?: true,
+            iconShape = PanelIconShape.fromName(prefs[SettingsPreferenceKeys.SEARCH_PANEL_ICON_SHAPE]),
             searchEngineIconShape = SearchEngineIconShape.fromId(
                 prefs[SettingsPreferenceKeys.SEARCH_ENGINE_ICON_SHAPE],
             ),
@@ -1146,12 +1153,12 @@ internal object SettingsSnapshotReader {
             innerDiameterDp = CornerGestureSettings.clampInnerDiameterDp(inner),
             ringSpacingDp = ringSpacingDp,
             bubbleSizeDp = bubbleSizeDp,
-            slotIconShape = FvIconShape.entries.firstOrNull {
+            slotIconShape = PanelIconShape.entries.firstOrNull {
                 it.name.equals(
                     prefs[SettingsPreferenceKeys.CORNER_GESTURE_SLOT_ICON_SHAPE],
                     ignoreCase = true,
                 )
-            } ?: FvIconShape.CIRCLE,
+            } ?: PanelIconShape.FOLLOW_GLOBAL,
             wheelLayerCount = wheelLayerCount,
             cancelOutsideWheel = prefs[SettingsPreferenceKeys.CORNER_GESTURE_CANCEL_OUTSIDE_WHEEL] ?: true,
             progressiveLayers = prefs[SettingsPreferenceKeys.CORNER_GESTURE_PROGRESSIVE_LAYERS] ?: false,

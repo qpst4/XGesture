@@ -3077,7 +3077,11 @@
     <string name="fv_icon_shape_rounded_rect">Rounded Rectangle</string>
     <string name="fv_icon_shape_circle">Circle</string>
     <string name="fv_icon_shape_squircle">Squircle</string>
+    <string name="fv_icon_shape_original">Original Adaptive</string>
     <string name="fv_icon_shape_square">Square</string>
+    <string name="icon_shape_follow_global">Follow Global</string>
+    <string name="global_icon_shape_title">Global Icon Shape</string>
+    <string name="global_icon_shape_desc">Normalize icon silhouettes across 7 launchers; squircle by default, overrides supported</string>
     <string name="fv_ring_launcher_base_radius_title">Inner Ring Radius</string>
     <string name="fv_ring_launcher_layer_gap_title">Ring Layer Gap</string>
     <string name="fv_ring_launcher_end_margin_title">Arc End Margin &amp; Spacing</string>
@@ -3251,9 +3255,9 @@
     <string name="quick_launcher_show_labels">Show icon labels</string>
     <string name="quick_launcher_show_labels_desc">When off, the panel shows icons only; names are still read by screen readers.</string>
     <string name="quick_launcher_show_toolbar">Show top panel switcher</string>
-    <string name="quick_launcher_show_toolbar_desc">Shows a panel capsule at the top when multiple panels exist. Tap to switch panels; long press blank space to edit. When off, pure icons are displayed.</string>
+    <string name="quick_launcher_show_toolbar_desc">Shows a panel capsule at the top when multiple panels exist. When off, pure icons are displayed.</string>
     <string name="quick_launcher_mirror_on_right_side">Mirror layout on right side</string>
-    <string name="quick_launcher_mirror_on_right_side_desc">On: a panel opened from the right edge lays items out from right to left, mirroring the left panel. Off: every panel lays items out from left to right, and page turning follows the same direction.</string>
+    <string name="quick_launcher_mirror_on_right_side_desc">Mirror layout from right to left when opened from the right side.</string>
     <string name="quick_launcher_add">Add shortcut</string>
     <string name="quick_launcher_shell_shortcuts_section">Shell panel shortcuts</string>
     <string name="quick_launcher_shell_shortcuts_empty">Add shortcuts in Extension → Shell command panel first</string>
@@ -3989,6 +3993,7 @@ Questions: open a GitHub Issue on the project repository.</string>
     <string name="search_panel_list_order_top_down">Top to bottom</string>
     <string name="search_panel_list_order_bottom_up">Bottom to top</string>
     <string name="search_panel_app_display_style_title">App display style</string>
+    <string name="search_panel_app_icon_shape_title">App icon shape</string>
     <string name="search_panel_app_display_style_icons">Icons</string>
     <string name="search_panel_app_display_style_list">List</string>
     <string name="search_panel_expand_more_apps">Show more apps</string>
@@ -4269,7 +4274,10 @@ Questions: open a GitHub Issue on the project repository.</string>
     <string name="expand_panel_blur_mode_desc">Adjusts blur mode for the side expansion panel</string>
     <string name="pick_result_blur_mode_title">Word segmentation overlay blur</string>
     <string name="pick_result_blur_mode_desc">Adjusts blur mode for text selection and OCR overlays</string>
+    <string name="widget_panel_blur_mode_title">Widget panel blur</string>
+    <string name="widget_panel_blur_mode_desc">Adjusts blur mode for widget popup card and backdrop</string>
     <string name="overlay_blur_mode_disabled">Off</string>
+    <string name="overlay_blur_mode_all">All</string>
     <string name="overlay_blur_mode_backdrop_only">Backdrop only</string>
     <string name="overlay_blur_mode_panel_only">Panel only</string>
     <string name="clipboard_background_monitoring_section">Background monitoring</string>

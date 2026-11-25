@@ -95,6 +95,9 @@ import com.slideindex.app.widget.WidgetAppGroup
 import com.slideindex.app.widget.WidgetCatalog
 import com.slideindex.app.widget.WidgetPreviewLoader
 import com.slideindex.app.widget.WidgetProviderEntry
+import com.slideindex.app.gesture.GestureAction
+import com.slideindex.app.ui.quicklauncher.quickLauncherAddPickerActionItems
+import com.slideindex.app.ui.quicklauncher.rememberQuickLauncherFilteredActions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -117,10 +120,13 @@ fun WidgetPickerScreen(
   onWidgetSelected: ((WidgetProviderEntry) -> Unit)? = null,
   configuredAppPackages: Set<String> = emptySet(),
   configuredShortcutKeys: Set<String> = emptySet(),
+  configuredActionKeys: Set<String> = emptySet(),
   onToggleApp: ((InstalledAppEntry, Boolean) -> Unit)? = null,
   onToggleShortcut: ((ShortcutEntry, Boolean) -> Unit)? = null,
+  onToggleAction: ((GestureAction, Boolean) -> Unit)? = null,
   onAppSelected: ((InstalledAppEntry) -> Unit)? = null,
   onShortcutSelected: ((ShortcutEntry) -> Unit)? = null,
+  onActionSelected: ((GestureAction) -> Unit)? = null,
   launchCreateShortcut: ((AppShortcutLoader.CreateShortcutHost) -> Unit)? = null,
   enableBackHandler: Boolean = true,
   overlayMode: Boolean = false,
@@ -130,6 +136,7 @@ fun WidgetPickerScreen(
   // 勾选态按目标（包名 + user）记：主实例与分身在面板里是两个条目，互相独立。
   var addedAppPackages by remember(configuredAppPackages) { mutableStateOf(configuredAppPackages) }
   var addedShortcutKeys by remember(configuredShortcutKeys) { mutableStateOf(configuredShortcutKeys) }
+  var addedActionKeys by remember(configuredActionKeys) { mutableStateOf(configuredActionKeys) }
   val initialGroups = WidgetCatalog.cachedGroups ?: emptyList()
   val initialInstalledApps = WidgetCatalog.cachedInstalledApps ?: emptyList()
   var groups by remember { mutableStateOf(initialGroups) }
@@ -385,6 +392,7 @@ fun WidgetPickerScreen(
   val filteredCatalog = remember(loadedCatalog.catalog, searchQuery) {
     filterShortcutCatalog(loadedCatalog.catalog, searchQuery)
   }
+  val filteredActions = rememberQuickLauncherFilteredActions(searchQuery)
   val appsByPackage = remember(allApps) { allApps.associateBy { it.packageName } }
 
   val handleBack: () -> Unit = {
@@ -430,6 +438,7 @@ fun WidgetPickerScreen(
               stringResource(R.string.widget_picker_title),
               stringResource(R.string.widget_tab_apps),
               stringResource(R.string.widget_tab_shortcuts),
+              stringResource(R.string.action_picker_tab_actions),
             ),
             selectedTabIndex = selectedTab,
             onTabSelected = { selectedTab = it },
@@ -620,6 +629,28 @@ fun WidgetPickerScreen(
               trailingChip = shortcutKindChip(shortcut.kind),
             )
           },
+        )
+      }
+      selectedTab == 3 -> {
+        quickLauncherAddPickerActionItems(
+          filtered = filteredActions,
+          configuredActionKeys = addedActionKeys,
+          onToggleItem = { item, added ->
+            val action = QuickLauncherItemCodec.parseActionPayload(item.payload)
+            if (action != null) {
+              val key = QuickLauncherItemCodec.actionKey(action)
+              addedActionKeys = if (added) addedActionKeys - key else addedActionKeys + key
+              if (onToggleAction != null) {
+                onToggleAction(action, added)
+              } else if (onActionSelected != null) {
+                onActionSelected(action)
+              }
+            }
+          },
+          onOpenExecuteShellCommand = {},
+          onOpenOpenLink = {},
+          onOpenSimulateKeyEvent = {},
+          searchQuery = searchQuery,
         )
       }
     }

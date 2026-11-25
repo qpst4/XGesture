@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.settings.HolographicAppMode
 import com.slideindex.app.settings.HolographicLauncherSettings
 import com.slideindex.app.ui.miuix.groupedCardItems
@@ -32,6 +33,7 @@ fun HolographicLauncherSettingsScreen(
     onTimeoutSecondsChange: (Int) -> Unit,
     onRotationSensitivityChange: (Float) -> Unit,
     onHapticLevelChange: (Int) -> Unit,
+    onIconShapeChange: (PanelIconShape) -> Unit = {},
     onBackgroundStyleChange: (Int) -> Unit = {},
     onBlurDpChange: (Int) -> Unit = {},
     onDimPercentChange: (Int) -> Unit = {},
@@ -115,6 +117,33 @@ fun HolographicLauncherSettingsScreen(
                             onSelectedIndexChange = { index ->
                                 localSettings = localSettings.copy(hapticLevel = index)
                                 onHapticLevelChange(index)
+                            }
+                        )
+                    }
+                )
+                val panelShapes = listOf(
+                    PanelIconShape.FOLLOW_GLOBAL,
+                    PanelIconShape.SQUIRCLE,
+                    PanelIconShape.CIRCLE,
+                    PanelIconShape.ROUNDED_RECT,
+                    PanelIconShape.ORIGINAL,
+                )
+                add(
+                    settingsCardScopeItem("icon-shape") {
+                        SettingDropdownRow(
+                            title = stringResource(R.string.quick_launcher_icon_shape_section),
+                            items = listOf(
+                                stringResource(R.string.icon_shape_follow_global),
+                                stringResource(R.string.fv_icon_shape_squircle),
+                                stringResource(R.string.fv_icon_shape_circle),
+                                stringResource(R.string.fv_icon_shape_rounded_rect),
+                                stringResource(R.string.fv_icon_shape_original),
+                            ),
+                            selectedIndex = panelShapes.indexOf(localSettings.iconShape).coerceAtLeast(0),
+                            onSelectedIndexChange = { index ->
+                                val selected = panelShapes[index]
+                                localSettings = localSettings.copy(iconShape = selected)
+                                onIconShapeChange(selected)
                             }
                         )
                     }

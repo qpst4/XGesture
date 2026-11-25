@@ -55,6 +55,8 @@ fun OverlayMaterialSettingsScreen(
     onExpandPanelBlurModeChange: (OverlayBlurMode) -> Unit,
     pickResultBlurModeId: Int,
     onPickResultBlurModeChange: (OverlayBlurMode) -> Unit,
+    widgetPanelBlurModeId: Int,
+    onWidgetPanelBlurModeChange: (OverlayBlurMode) -> Unit,
 ) {
     // 顶层提取所有文本资源，不在 buildList 内部触发 @Composable
     val pageTitle = stringResource(R.string.overlay_material_settings_title)
@@ -82,8 +84,11 @@ fun OverlayMaterialSettingsScreen(
     val expandPanelBlurModeDesc = stringResource(R.string.expand_panel_blur_mode_desc)
     val pickResultBlurModeTitle = stringResource(R.string.pick_result_blur_mode_title)
     val pickResultBlurModeDesc = stringResource(R.string.pick_result_blur_mode_desc)
+    val widgetPanelBlurModeTitle = stringResource(R.string.widget_panel_blur_mode_title)
+    val widgetPanelBlurModeDesc = stringResource(R.string.widget_panel_blur_mode_desc)
     val blurModeLabels = listOf(
         stringResource(R.string.overlay_blur_mode_disabled),
+        stringResource(R.string.overlay_blur_mode_all),
         stringResource(R.string.overlay_blur_mode_backdrop_only),
         stringResource(R.string.overlay_blur_mode_panel_only),
     )
@@ -235,6 +240,7 @@ fun OverlayMaterialSettingsScreen(
             items = buildList {
                 val blurModeOptions = listOf(
                     OverlayBlurMode.DISABLED,
+                    OverlayBlurMode.ALL,
                     OverlayBlurMode.BACKDROP_ONLY,
                     OverlayBlurMode.PANEL_ONLY,
                 )
@@ -284,6 +290,23 @@ fun OverlayMaterialSettingsScreen(
                             selectedIndex = selectedPickIndex,
                             onSelectedIndexChange = { index ->
                                 onPickResultBlurModeChange(blurModeOptions[index])
+                            },
+                        )
+                    }
+                )
+
+                // 4. 小组件面板模糊
+                val currentWidgetMode = OverlayBlurMode.fromId(widgetPanelBlurModeId)
+                val selectedWidgetIndex = blurModeOptions.indexOf(currentWidgetMode).coerceAtLeast(0)
+                add(
+                    settingsCardScopeItem("widget-panel-blur-mode") {
+                        SettingDropdownRow(
+                            title = widgetPanelBlurModeTitle,
+                            subtitle = widgetPanelBlurModeDesc,
+                            items = blurModeLabels,
+                            selectedIndex = selectedWidgetIndex,
+                            onSelectedIndexChange = { index ->
+                                onWidgetPanelBlurModeChange(blurModeOptions[index])
                             },
                         )
                     }

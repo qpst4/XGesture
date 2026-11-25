@@ -16,6 +16,8 @@ import com.slideindex.app.overlay.panels.R
 import kotlin.math.roundToInt
 
 object AdjustLevelIndicatorRenderer {
+    private var frostedGlassDrawable: LocalFrostedGlassDrawable? = null
+
     fun draw(
         canvas: Canvas,
         layout: AdjustLevelIndicatorLayout,
@@ -27,7 +29,8 @@ object AdjustLevelIndicatorRenderer {
         recede: Boolean = false,
         volumePanel: VolumePanelVisual? = null,
         brightnessPanel: BrightnessPanelVisual? = null,
-        context: Context? = null
+        context: Context? = null,
+        overlayView: android.view.View? = null,
     ) {
         if (enterProgress <= 0f) return
         val t = enterProgress.coerceIn(0f, 1f)
@@ -38,6 +41,10 @@ object AdjustLevelIndicatorRenderer {
         val slideX = when (side) {
             PanelSide.LEFT, PanelSide.BOTTOM, PanelSide.TOP -> -slideDistance * slideRemaining
             PanelSide.RIGHT -> slideDistance * slideRemaining
+        }
+
+        if (overlayView != null && frostedGlassDrawable == null) {
+            frostedGlassDrawable = LocalFrostedGlassDrawable { overlayView }
         }
 
         canvas.withTranslation(slideX, 0f) {
@@ -164,30 +171,59 @@ object AdjustLevelIndicatorRenderer {
 
     private fun drawShadow(canvas: Canvas, bounds: RectF, corner: Float, alphaScale: Float) {
         val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.argb((55 * alphaScale).roundToInt(), 0, 0, 0)
+            color = Color.argb((40 * alphaScale).roundToInt(), 0, 0, 0)
         }
-        val spread = 6f
+        val spread = 4f
         canvas.drawRoundRect(
             bounds.left - spread,
-            bounds.top - spread + 2f,
+            bounds.top - spread + 1.5f,
             bounds.right + spread,
-            bounds.bottom + spread + 4f,
-            corner + 4f,
-            corner + 4f,
+            bounds.bottom + spread + 3f,
+            corner + 3f,
+            corner + 3f,
             shadowPaint
         )
     }
 
     private fun drawPillBackground(canvas: Canvas, bounds: RectF, corner: Float, alphaScale: Float) {
-        val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.argb((210 * alphaScale).roundToInt(), 22, 24, 30)
-        }
-        canvas.drawRoundRect(bounds, corner, corner, fillPaint)
+        // 尝试局部系统毛玻璃（API 31+，BackgroundBlurDrawable）
+        val blurDrawn = frostedGlassDrawable?.draw(
+            canvas = canvas,
+            bounds = bounds,
+            cornerRadiusPx = corner,
+            blurRadiusPx = 45, // 16~18dp 相当的像素模糊半径
+            tintColor = Color.argb((160 * alphaScale).roundToInt(), 20, 22, 28),
+            alpha = alphaScale,
+            enabled = true,
+        ) == true
 
+        if (!blurDrawn) {
+            // 兜底高透深色漫反射基底
+            val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.argb((185 * alphaScale).roundToInt(), 20, 22, 28)
+            }
+            canvas.drawRoundRect(bounds, corner, corner, fillPaint)
+        }
+
+        // 顶部微光渐变层，增强玻璃采光通透度（Frosted Glass Sheen）
+        val sheenPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            shader = LinearGradient(
+                bounds.left,
+                bounds.top,
+                bounds.left,
+                bounds.top + bounds.height() * 0.45f,
+                Color.argb((45 * alphaScale).roundToInt(), 255, 255, 255),
+                Color.TRANSPARENT,
+                Shader.TileMode.CLAMP
+            )
+        }
+        canvas.drawRoundRect(bounds, corner, corner, sheenPaint)
+
+        // 细腻的高光外微描边，呈现边缘毛玻璃反射效果
         val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = 1.2f
-            color = Color.argb((70 * alphaScale).roundToInt(), 255, 255, 255)
+            color = Color.argb((58 * alphaScale).roundToInt(), 255, 255, 255)
         }
         canvas.drawRoundRect(bounds, corner, corner, strokePaint)
     }

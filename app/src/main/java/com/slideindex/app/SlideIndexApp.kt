@@ -222,6 +222,7 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                             searchPanelBlurModeId = it.searchPanelBlurModeId,
                             expandPanelBlurModeId = it.expandPanelBlurModeId,
                             pickResultBlurModeId = it.pickResultBlurModeId,
+                            widgetPanelBlurModeId = it.widgetPanelBlurModeId,
                         )
                     }
                 }
@@ -248,6 +249,7 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     searchPanelBlurModeId = settings.searchPanelBlurModeId,
                     expandPanelBlurModeId = settings.expandPanelBlurModeId,
                     pickResultBlurModeId = settings.pickResultBlurModeId,
+                    widgetPanelBlurModeId = settings.widgetPanelBlurModeId,
                 )
             } else {
                 com.slideindex.app.overlay.OverlayMaterialSpec.DEFAULT

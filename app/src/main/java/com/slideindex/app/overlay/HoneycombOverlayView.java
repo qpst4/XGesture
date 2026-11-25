@@ -29,6 +29,8 @@ import android.view.ViewConfiguration;
 import android.view.animation.DecelerateInterpolator;
 
 import com.slideindex.app.gesture.SelectedHintMetrics;
+import com.slideindex.app.overlay.layout.FvIconShape;
+import com.slideindex.app.overlay.layout.IconShapeNormalizer;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,6 +79,7 @@ public final class HoneycombOverlayView extends View {
     private boolean emptyTapClose;
     private boolean showSelectedName;
     private int hintIconSizeDp = SelectedHintMetrics.DEFAULT_ICON_SIZE_DP;
+    private FvIconShape iconShape = FvIconShape.SQUIRCLE;
     private boolean forceCircularIcons = true;
     private boolean interactionPaused;
     private boolean closing;
@@ -223,6 +226,7 @@ public final class HoneycombOverlayView extends View {
         fittedNameTarget = null;
         fittedNameMaxWidth = -1f;
         fittedHintIconSizeDp = -1;
+        iconShape = config.getIconShape();
         forceCircularIcons = config.getForceCircularIcons();
         nameTarget = null;
         speedIndex = config.getHoneycombAnimationSpeed();
@@ -716,19 +720,18 @@ public final class HoneycombOverlayView extends View {
             return;
         }
         int save = canvas.save();
-        if (forceCircularIcons) {
+        Path path = IconShapeNormalizer.createClipPath(iconShape, new RectF(x - radius, y - radius, x + radius, y + radius), clipPath);
+        if (path != null) {
             iconPlatePaint.setColor(Color.WHITE);
             iconPlatePaint.setAlpha(Math.round(255 * alpha));
-            canvas.drawCircle(x, y, radius, iconPlatePaint);
-            clipPath.reset();
-            clipPath.addCircle(x, y, radius, Path.Direction.CW);
-            canvas.clipPath(clipPath);
+            canvas.drawPath(path, iconPlatePaint);
+            canvas.clipPath(path);
         }
         icon.copyBounds(iconOldBounds);
         int intrinsicWidth = Math.max(1, icon.getIntrinsicWidth());
         int intrinsicHeight = Math.max(1, icon.getIntrinsicHeight());
-        float targetSize = forceCircularIcons ? diameter : diameter * 0.94f;
-        float scale = forceCircularIcons
+        float targetSize = (iconShape != FvIconShape.ORIGINAL) ? diameter : diameter * 0.94f;
+        float scale = (iconShape != FvIconShape.ORIGINAL)
                 ? Math.max(targetSize / intrinsicWidth, targetSize / intrinsicHeight)
                 : Math.min(targetSize / intrinsicWidth, targetSize / intrinsicHeight);
         int drawWidth = Math.round(intrinsicWidth * scale);

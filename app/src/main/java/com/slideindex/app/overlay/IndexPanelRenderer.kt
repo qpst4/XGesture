@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.Typeface
@@ -13,7 +14,9 @@ import com.slideindex.app.data.AppInfo
 import com.slideindex.app.gesture.GestureSession
 import com.slideindex.app.gesture.GestureZoneLayout
 import com.slideindex.app.gesture.SlideAlongRailSession
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.overlay.layout.GridLayoutInfo
+import com.slideindex.app.overlay.layout.IconShapeNormalizer
 import com.slideindex.app.overlay.layout.gridLayoutInfo
 import com.slideindex.app.overlay.layout.visualColumn
 import com.slideindex.app.settings.AppSettings
@@ -46,6 +49,9 @@ internal class IndexPanelRenderer(
 
     private val railFrostedGlass = LocalFrostedGlassDrawable { host.overlayView() }
     private val popupFrostedGlass = LocalFrostedGlassDrawable { host.overlayView() }
+
+    private val iconBoundsRect = RectF()
+    private val iconClipPath = Path()
 
     private val railBgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val panelBgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -354,12 +360,31 @@ internal class IndexPanelRenderer(
             val label = ellipsize(app.label, cellWidth - gridCellInset * 2)
             val labelBaseline = iconTop + gridIconSize + gridIconLabelGap - appLabelPaint.fontMetrics.ascent
             val iconCenterX = cell.centerX()
-            canvas.drawBitmap(
-                icon,
-                iconCenterX - gridIconSize / 2f,
-                iconTop,
-                if (app.isFrozen || app.isPaused) frozenIconPaint else null,
-            )
+            val iconLeft = iconCenterX - gridIconSize / 2f
+            val shape = host.settings().searchPanel.iconShape.resolve(host.settings().globalIconShape)
+            val clipPath = if (shape != FvIconShape.ORIGINAL) {
+                iconBoundsRect.set(iconLeft, iconTop, iconLeft + gridIconSize, iconTop + gridIconSize)
+                IconShapeNormalizer.createClipPath(shape, iconBoundsRect, iconClipPath)
+            } else null
+
+            if (clipPath != null) {
+                val checkpoint = canvas.save()
+                canvas.clipPath(clipPath)
+                canvas.drawBitmap(
+                    icon,
+                    iconLeft,
+                    iconTop,
+                    if (app.isFrozen || app.isPaused) frozenIconPaint else null,
+                )
+                canvas.restoreToCount(checkpoint)
+            } else {
+                canvas.drawBitmap(
+                    icon,
+                    iconLeft,
+                    iconTop,
+                    if (app.isFrozen || app.isPaused) frozenIconPaint else null,
+                )
+            }
             when {
                 app.isFrozen -> drawFrozenBadge(canvas, iconCenterX, iconTop)
                 app.isPaused -> drawPausedBadge(canvas, iconCenterX, iconTop)

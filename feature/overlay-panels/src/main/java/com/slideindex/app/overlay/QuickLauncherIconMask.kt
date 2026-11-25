@@ -7,6 +7,8 @@ import android.graphics.RectF
 import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.ColorDrawable
 import androidx.core.graphics.drawable.toDrawable
+import com.slideindex.app.overlay.layout.FvIconShape
+import com.slideindex.app.overlay.layout.IconShapeNormalizer
 import com.slideindex.app.settings.QuickLauncherDisplaySettings
 
 /**
@@ -17,6 +19,14 @@ object QuickLauncherIconMask {
     private val tmpUnitBounds = RectF(0f, 0f, 1f, 1f)
     private val tmpMatrix = Matrix()
     private var cachedAdaptiveUnitPath: Path? = null
+
+    fun pathFor(
+        shape: FvIconShape,
+        bounds: RectF,
+        out: Path
+    ): Path? {
+        return IconShapeNormalizer.createClipPath(shape, bounds, out)
+    }
 
     fun pathFor(
         shape: Int,

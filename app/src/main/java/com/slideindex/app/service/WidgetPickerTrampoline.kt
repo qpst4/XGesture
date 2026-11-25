@@ -12,6 +12,7 @@ import com.slideindex.app.overlay.WidgetPopupOverlayWindow
 import com.slideindex.app.util.PermissionHelper
 import com.slideindex.app.widget.ITEM_TYPE_APP
 import com.slideindex.app.widget.ITEM_TYPE_SHORTCUT
+import com.slideindex.app.widget.ITEM_TYPE_ACTION
 import com.slideindex.app.widget.WidgetPanelDefaults
 import com.slideindex.app.widget.WidgetPanelMutator
 import com.slideindex.app.widget.WidgetPanelPage
@@ -199,6 +200,11 @@ object WidgetPickerTrampoline {
     }
   }
 
+  fun deliverActionSuccess(action: com.slideindex.app.gesture.GestureAction, label: String) {
+    val payload = com.slideindex.app.launcher.QuickLauncherItemCodec.encodeActionPayload(action)
+    deliverActionSuccess(payload, label)
+  }
+
   fun deliverActionSuccess(actionPayload: String, label: String) {
     Log.d(TAG, "deliverActionSuccess: action=$actionPayload")
     persistActionAdd(actionPayload, label)
@@ -208,8 +214,8 @@ object WidgetPickerTrampoline {
     callback?.invoke(actionPayload, label)
   }
 
-  fun getCurrentPageConfiguredItems(): Pair<Set<String>, Set<String>> {
-    val ctx = panelAddContext ?: return emptySet<String>() to emptySet<String>()
+  fun getCurrentPageConfiguredItems(): Triple<Set<String>, Set<String>, Set<String>> {
+    val ctx = panelAddContext ?: return Triple(emptySet(), emptySet(), emptySet())
     val effective = WidgetPanelDefaults.effectivePages(ctx.pagesProvider())
     val index = ctx.pageIndex.coerceIn(0, effective.lastIndex)
     val page = effective[index]
@@ -221,7 +227,11 @@ object WidgetPickerTrampoline {
     val shortcutKeys = page.items.filter { it.itemType == ITEM_TYPE_SHORTCUT }.map {
       it.packageName + "/" + (it.shortcutId.ifBlank { it.intentUri })
     }.toSet()
-    return appPkgs to shortcutKeys
+    val actionKeys = page.items.filter { it.itemType == ITEM_TYPE_ACTION }.mapNotNull {
+      val action = com.slideindex.app.launcher.QuickLauncherItemCodec.parseActionPayload(it.intentUri)
+      if (action != null) com.slideindex.app.launcher.QuickLauncherItemCodec.actionKey(action) else it.intentUri
+    }.toSet()
+    return Triple(appPkgs, shortcutKeys, actionKeys)
   }
 
   fun toggleApp(packageName: String, className: String, label: String, cloneUserId: Int = 0): Boolean {
@@ -260,6 +270,31 @@ object WidgetPickerTrampoline {
       WidgetPanelMutator.removeShortcutFromPage(currentPages, ctx.pageIndex, packageName, shortcutId, intentUri)
     } else {
       WidgetPanelMutator.addShortcutToPage(ctx.appContext, currentPages, ctx.pageIndex, packageName, shortcutId, label, intentUri)
+    }
+    if (nextPages != null) {
+      schedulePersist(ctx.appContext, nextPages)
+      onPagesChanged?.invoke(nextPages)
+      return !exists
+    }
+    return exists
+  }
+
+  fun toggleAction(action: com.slideindex.app.gesture.GestureAction, label: String): Boolean {
+    val ctx = panelAddContext ?: return false
+    val currentPages = ctx.pagesProvider()
+    val index = ctx.pageIndex.coerceIn(0, currentPages.lastIndex)
+    val page = currentPages[index]
+    val payload = com.slideindex.app.launcher.QuickLauncherItemCodec.encodeActionPayload(action)
+    val key = com.slideindex.app.launcher.QuickLauncherItemCodec.actionKey(action)
+    val exists = page.items.any {
+      if (it.itemType != ITEM_TYPE_ACTION) return@any false
+      val a = com.slideindex.app.launcher.QuickLauncherItemCodec.parseActionPayload(it.intentUri)
+      (a != null && com.slideindex.app.launcher.QuickLauncherItemCodec.actionKey(a) == key) || it.intentUri == payload
+    }
+    val nextPages = if (exists) {
+      WidgetPanelMutator.removeActionFromPage(currentPages, ctx.pageIndex, payload)
+    } else {
+      WidgetPanelMutator.addActionToPage(ctx.appContext, currentPages, ctx.pageIndex, payload, label)
     }
     if (nextPages != null) {
       schedulePersist(ctx.appContext, nextPages)

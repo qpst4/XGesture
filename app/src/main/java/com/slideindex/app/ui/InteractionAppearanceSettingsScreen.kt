@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.HomeMainSettings
 import com.slideindex.app.settings.KeyboardTriggerBehavior
@@ -65,6 +66,7 @@ fun InteractionAppearanceSettingsScreen(
     onKeyboardTriggerNarrowPercentChange: (Int) -> Unit,
     onBack: () -> Unit,
     onIconPlateModeChange: (com.slideindex.app.settings.IconPlateMode) -> Unit = {},
+    onGlobalIconShapeChange: (FvIconShape) -> Unit = {},
     iconPlateMode: com.slideindex.app.settings.IconPlateMode = com.slideindex.app.settings.IconPlateMode.SYSTEM_DARK,
     onOpenHapticSettings: () -> Unit,
     onSwipeDismissEnabledChange: (Boolean) -> Unit,
@@ -96,6 +98,22 @@ fun InteractionAppearanceSettingsScreen(
         stringResource(R.string.icon_plate_mode_dark),
         stringResource(R.string.icon_plate_mode_light),
         stringResource(R.string.icon_plate_mode_system),
+    )
+
+    val globalIconShapeTitle = stringResource(R.string.global_icon_shape_title)
+    val globalIconShapeOptions = remember {
+        listOf(
+            FvIconShape.SQUIRCLE,
+            FvIconShape.CIRCLE,
+            FvIconShape.ROUNDED_RECT,
+            FvIconShape.ORIGINAL,
+        )
+    }
+    val globalIconShapeLabels = listOf(
+        stringResource(R.string.fv_icon_shape_squircle),
+        stringResource(R.string.fv_icon_shape_circle),
+        stringResource(R.string.fv_icon_shape_rounded_rect),
+        stringResource(R.string.fv_icon_shape_original),
     )
 
     val overlayVisualSectionTitle = stringResource(R.string.settings_section_overlay_visual)
@@ -206,6 +224,18 @@ fun InteractionAppearanceSettingsScreen(
                                 onIconPlateModeChange(
                                     com.slideindex.app.settings.IconPlateMode.entries[index],
                                 )
+                            },
+                        )
+                    }
+                )
+                add(
+                    settingsCardScopeItem("global-icon-shape") {
+                        MiuixGlassDropdownPreference(
+                            title = globalIconShapeTitle,
+                            items = globalIconShapeLabels,
+                            selectedIndex = globalIconShapeOptions.indexOf(settings.globalIconShape).coerceAtLeast(0),
+                            onSelectedIndexChange = { index ->
+                                onGlobalIconShapeChange(globalIconShapeOptions[index])
                             },
                         )
                     }

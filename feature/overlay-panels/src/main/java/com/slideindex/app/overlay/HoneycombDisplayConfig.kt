@@ -17,6 +17,7 @@ import com.slideindex.app.gesture.SelectedHintMetrics
 data class HoneycombDisplayConfig(
     val hapticEnabled: Boolean = true,
     val forceCircularIcons: Boolean = true,
+    val iconShape: com.slideindex.app.overlay.layout.FvIconShape = com.slideindex.app.overlay.layout.FvIconShape.SQUIRCLE,
     val honeycombMode: Int = HoneycombDisplaySettings.MODE_HOLD,
     val honeycombIconSizeDp: Int = HoneycombDisplaySettings.DEFAULT_ICON_SIZE_DP,
     val honeycombSpacingDp: Int = HoneycombDisplaySettings.DEFAULT_SPACING_DP,
@@ -51,8 +52,11 @@ data class HoneycombDisplayConfig(
 
         fun from(settings: AppSettings): HoneycombDisplayConfig {
             val display = settings.honeycombDisplay
+            val resolvedShape = display.iconShape.resolve(settings.globalIconShape)
             return HoneycombDisplayConfig(
                 hapticEnabled = settings.hapticEnabled,
+                forceCircularIcons = resolvedShape == com.slideindex.app.overlay.layout.FvIconShape.CIRCLE,
+                iconShape = resolvedShape,
                 honeycombMode = display.mode,
                 honeycombIconSizeDp = display.iconSizeDp,
                 honeycombSpacingDp = display.spacingDp,

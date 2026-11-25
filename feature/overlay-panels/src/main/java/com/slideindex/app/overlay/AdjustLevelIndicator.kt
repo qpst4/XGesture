@@ -85,7 +85,8 @@ object AdjustLevelIndicator {
         recede: Boolean = false,
         volumePanel: VolumePanelVisual? = null,
         brightnessPanel: BrightnessPanelVisual? = null,
-        context: Context? = null
+        context: Context? = null,
+        overlayView: android.view.View? = null,
     ) = AdjustLevelIndicatorRenderer.draw(
         canvas = canvas,
         layout = layout,
@@ -97,6 +98,7 @@ object AdjustLevelIndicator {
         recede = recede,
         volumePanel = volumePanel,
         brightnessPanel = brightnessPanel,
-        context = context
+        context = context,
+        overlayView = overlayView,
     )
 }

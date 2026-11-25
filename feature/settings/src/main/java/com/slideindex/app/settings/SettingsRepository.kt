@@ -15,6 +15,7 @@ import com.slideindex.app.message.MessageAppFilterRule
 import com.slideindex.app.message.MessageSettings
 import com.slideindex.app.overlay.PanelSide
 import com.slideindex.app.overlay.layout.FvIconShape
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.shake.ShakeGestureType
 import com.slideindex.app.shake.ShakeWorkMode
 import com.slideindex.app.shell.ShellCommand
@@ -384,6 +385,12 @@ class SettingsRepository @Inject constructor(
     suspend fun setCustomColorEnabled(enabled: Boolean) = overlay.setCustomColorEnabled(enabled)
     suspend fun setDarkBackgroundStyle(style: DarkBackgroundStyle) = overlay.setDarkBackgroundStyle(style)
     suspend fun setIconPlateMode(mode: IconPlateMode) = overlay.setIconPlateMode(mode)
+    suspend fun setGlobalIconShape(shape: FvIconShape) = overlay.setGlobalIconShape(shape)
+    suspend fun setSearchPanelIconShape(shape: PanelIconShape) = overlay.setSearchPanelIconShape(shape)
+    suspend fun setQuickLauncherIconShape(shape: PanelIconShape) = overlay.setQuickLauncherIconShape(shape)
+    suspend fun setWidgetPanelIconShape(shape: PanelIconShape) = overlay.setWidgetPanelIconShape(shape)
+    suspend fun setHoneycombIconShape(shape: PanelIconShape) = overlay.setHoneycombIconShape(shape)
+    suspend fun setHolographicLauncherIconShape(shape: PanelIconShape) = overlay.setHolographicLauncherIconShape(shape)
     suspend fun setThemeColorSpec(spec: AppColorSpec) = overlay.setThemeColorSpec(spec)
     suspend fun setBottomNavStyle(style: BottomNavStyle) = overlay.setBottomNavStyle(style)
 
@@ -1012,6 +1019,9 @@ class SettingsRepository @Inject constructor(
     suspend fun setPickResultBlurModeId(modeId: Int) =
         overlay.setPickResultBlurModeId(modeId)
 
+    suspend fun setWidgetPanelBlurModeId(modeId: Int) =
+        overlay.setWidgetPanelBlurModeId(modeId)
+
     suspend fun setDefaultImageViewerPackage(packageName: String?) = overlay.setDefaultImageViewerPackage(packageName)
     suspend fun setPickImageTapAction(action: PickImageTapAction) = overlay.setPickImageTapAction(action)
     suspend fun setImageEditorDelayDeleteEnabled(enabled: Boolean) = overlay.setImageEditorDelayDeleteEnabled(enabled)
@@ -1274,7 +1284,7 @@ class SettingsRepository @Inject constructor(
     suspend fun setCornerGestureInnerDiameterDp(value: Float) = overlay.setCornerGestureInnerDiameterDp(value)
     suspend fun setCornerGestureRingSpacingDp(value: Float) = overlay.setCornerGestureRingSpacingDp(value)
     suspend fun setCornerGestureBubbleSizeDp(value: Float) = overlay.setCornerGestureBubbleSizeDp(value)
-    suspend fun setCornerGestureSlotIconShape(shape: FvIconShape) =
+    suspend fun setCornerGestureSlotIconShape(shape: PanelIconShape) =
         overlay.setCornerGestureSlotIconShape(shape)
     suspend fun setCornerGestureWheelLayerCount(value: Int) =
         overlay.setCornerGestureWheelLayerCount(value)

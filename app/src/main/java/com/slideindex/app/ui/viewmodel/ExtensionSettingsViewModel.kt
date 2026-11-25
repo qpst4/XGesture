@@ -141,6 +141,10 @@ class ExtensionSettingsViewModel @Inject constructor(
         settingsRepository.setHolographicLauncherTimeoutSeconds(value)
     }
 
+    fun setHolographicLauncherIconShape(shape: com.slideindex.app.overlay.layout.PanelIconShape) = launchSettingsWrite {
+        settingsRepository.setHolographicLauncherIconShape(shape)
+    }
+
     fun setHolographicRotationSensitivity(value: Float) = launchSettingsWrite {
         settingsRepository.setHolographicRotationSensitivity(value)
     }

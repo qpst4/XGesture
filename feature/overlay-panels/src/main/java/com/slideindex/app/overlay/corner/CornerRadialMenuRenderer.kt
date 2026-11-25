@@ -74,6 +74,7 @@ object CornerRadialMenuRenderer {
         activeLayerCount: Int,
         density: Float,
         revealProgress: Float,
+        globalIconShape: FvIconShape = FvIconShape.SQUIRCLE,
         activityShortcuts: List<ActivityShortcut> = emptyList(),
         shellCommands: List<ShellCommand> = emptyList(),
         appRepository: AppRepository? = null,
@@ -93,6 +94,7 @@ object CornerRadialMenuRenderer {
     ) {
         val progress = revealProgress.coerceIn(0f, 1f)
         if (progress <= 0.01f) return
+        val effectiveShape = settings.slotIconShape.resolve(globalIconShape)
 
         val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = SHADOW_COLOR }
         val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -142,7 +144,7 @@ object CornerRadialMenuRenderer {
                     shadowPaint = shadowPaint,
                     fillPaint = fillPaint,
                     strokePaint = strokePaint,
-                    shape = settings.slotIconShape,
+                    shape = effectiveShape,
                 )
                 plusPaint.color = if (highlighted) PLUS_COLOR_HIGHLIGHT else PLUS_COLOR
                 plusPaint.textSize = radius * 1.1f
@@ -165,13 +167,14 @@ object CornerRadialMenuRenderer {
                     activityShortcuts = activityShortcuts,
                     shellCommands = shellCommands,
                     appRepository = appRepository,
-                    shape = settings.slotIconShape,
+                    shape = effectiveShape,
                 )
             }
         }
 
         if (settings.showEditButton) {
             drawEditButton(
+                context = context,
                 canvas = canvas,
                 anchor = anchor,
                 anchorX = anchorX,
@@ -180,7 +183,6 @@ object CornerRadialMenuRenderer {
                 highlighted = highlightedEditButton,
                 density = density,
                 progress = progress,
-                shadowPaint = shadowPaint,
                 fillPaint = fillPaint,
                 strokePaint = strokePaint,
             )
@@ -201,7 +203,7 @@ object CornerRadialMenuRenderer {
                     activityShortcuts = activityShortcuts,
                     shellCommands = shellCommands,
                     appRepository = appRepository,
-                    shape = settings.slotIconShape,
+                    shape = effectiveShape,
                     longPressRingProgress = longPressRingProgress,
                     hintLabelSuffix = hintLabelSuffix,
                     hintPipArmed = hintPipArmed,
@@ -545,7 +547,7 @@ object CornerRadialMenuRenderer {
         path: Path,
     ) {
         path.rewind()
-        if (shape == FvIconShape.CIRCLE) {
+        if (shape == FvIconShape.CIRCLE || shape == FvIconShape.ORIGINAL) {
             path.addCircle(centerX, centerY, radius, Path.Direction.CW)
             return
         }
@@ -572,16 +574,6 @@ object CornerRadialMenuRenderer {
         appRepository: AppRepository?,
         shape: FvIconShape,
     ) {
-        val shadowOffset = 3f * density * progress
-        drawSlotShape(
-            canvas = canvas,
-            centerX = centerX + shadowOffset,
-            centerY = centerY + shadowOffset,
-            radius = radius,
-            shape = shape,
-            paint = shadowPaint,
-        )
-
         val diameterPx = (radius * 2f).toInt().coerceAtLeast(12)
         val bitmap = CornerSlotIconBitmap.get(
             context = context,
@@ -592,25 +584,32 @@ object CornerRadialMenuRenderer {
             shellCommands = shellCommands,
             appRepository = appRepository,
             shape = shape,
+            plateFallback = true,
         )
         val drawSize = radius * 2f
         val left = centerX - drawSize / 2f
         val top = centerY - drawSize / 2f
-        slotIconClipPath.rewind()
-        buildSlotShapePath(centerX, centerY, radius, shape, slotIconClipPath)
-        canvas.withClip(slotIconClipPath) {
+        if (shape != FvIconShape.ORIGINAL) {
+            slotIconClipPath.rewind()
+            buildSlotShapePath(centerX, centerY, radius, shape, slotIconClipPath)
+            canvas.withClip(slotIconClipPath) {
+                canvas.drawBitmap(bitmap, left, top, iconPaint)
+            }
+        } else {
             canvas.drawBitmap(bitmap, left, top, iconPaint)
         }
 
-        strokePaint.color = if (highlighted) BUBBLE_STROKE_HIGHLIGHT else BUBBLE_STROKE
-        drawSlotShape(
-            canvas = canvas,
-            centerX = centerX,
-            centerY = centerY,
-            radius = radius,
-            shape = shape,
-            paint = strokePaint,
-        )
+        if (highlighted) {
+            strokePaint.color = BUBBLE_STROKE_HIGHLIGHT
+            drawSlotShape(
+                canvas = canvas,
+                centerX = centerX,
+                centerY = centerY,
+                radius = radius,
+                shape = shape,
+                paint = strokePaint,
+            )
+        }
 
         if (action is GestureAction.LaunchShortcut) {
             when {
@@ -705,7 +704,10 @@ object CornerRadialMenuRenderer {
         drawSlotShape(canvas, centerX, centerY, radius, shape, strokePaint)
     }
 
+    private var editPencilDrawable: android.graphics.drawable.Drawable? = null
+
     private fun drawEditButton(
+        context: Context,
         canvas: Canvas,
         anchor: CornerAnchor,
         anchorX: Float,
@@ -714,7 +716,6 @@ object CornerRadialMenuRenderer {
         highlighted: Boolean,
         density: Float,
         progress: Float,
-        shadowPaint: Paint,
         fillPaint: Paint,
         strokePaint: Paint,
     ) {
@@ -722,21 +723,28 @@ object CornerRadialMenuRenderer {
         val centerX = anchorX + (target.x - anchorX) * progress
         val centerY = anchorY + (target.y - anchorY) * progress
         val radius = CornerWheelLayout.editButtonRadius(density) * (0.85f + 0.15f * progress)
-        val shadowOffset = 3f * density * progress
-        canvas.drawCircle(centerX + shadowOffset, centerY + shadowOffset, radius, shadowPaint)
+
         fillPaint.color = if (highlighted) EDIT_FILL_HIGHLIGHT else EDIT_FILL
         canvas.drawCircle(centerX, centerY, radius, fillPaint)
         strokePaint.color = if (highlighted) EDIT_STROKE_HIGHLIGHT else EDIT_STROKE
         canvas.drawCircle(centerX, centerY, radius, strokePaint)
 
-        val iconPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = if (highlighted) ICON_TINT_HIGHLIGHT else ICON_TINT
-            textAlign = Paint.Align.CENTER
-            typeface = Typeface.DEFAULT_BOLD
-            textSize = radius * 0.9f
+        val drawable = editPencilDrawable ?: androidx.core.content.ContextCompat.getDrawable(
+            context,
+            com.slideindex.app.overlay.panels.R.drawable.ic_corner_edit_pencil
+        )?.mutate()?.also { editPencilDrawable = it }
+
+        if (drawable != null) {
+            val tint = if (highlighted) ICON_TINT_HIGHLIGHT else ICON_TINT
+            drawable.setTint(tint)
+            val iconSize = radius * 1.05f
+            val left = (centerX - iconSize / 2f).toInt()
+            val top = (centerY - iconSize / 2f).toInt()
+            val right = (centerX + iconSize / 2f).toInt()
+            val bottom = (centerY + iconSize / 2f).toInt()
+            drawable.setBounds(left, top, right, bottom)
+            drawable.draw(canvas)
         }
-        val textY = centerY - (iconPaint.descent() + iconPaint.ascent()) / 2f
-        canvas.drawText("✎", centerX, textY, iconPaint)
     }
 
     /**

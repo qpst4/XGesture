@@ -1826,7 +1826,11 @@
     <string name="fv_icon_shape_rounded_rect">圆角矩形</string>
     <string name="fv_icon_shape_circle">圆形</string>
     <string name="fv_icon_shape_squircle">平滑方圆</string>
+    <string name="fv_icon_shape_original">原始自适应</string>
     <string name="fv_icon_shape_square">微圆角方形</string>
+    <string name="icon_shape_follow_global">跟随全局</string>
+    <string name="global_icon_shape_title">全局图标形状</string>
+    <string name="global_icon_shape_desc">规范 7 大面板的应用图标轮廓，默认方圆，支持面板独立覆盖</string>
     <string name="fv_ring_launcher_base_radius_title">内圈起始半径</string>
     <string name="fv_ring_launcher_layer_gap_title">同心圆环间距</string>
     <string name="fv_ring_launcher_end_margin_title">扇区边距（间距）</string>
@@ -2001,9 +2005,9 @@
     <string name="quick_launcher_show_labels">显示图标名称</string>
     <string name="quick_launcher_show_labels_desc">关闭后面板上只显示图标；应用名称仍用于无障碍朗读</string>
     <string name="quick_launcher_show_toolbar">显示顶部面板切换栏</string>
-    <string name="quick_launcher_show_toolbar_desc">多面板时在顶部显示当前面板胶囊，点击可下拉直达切换面板；长按面板空白处即可进入编辑模式。关闭后完全沉浸呈现纯图标。</string>
+    <string name="quick_launcher_show_toolbar_desc">多面板时在顶部显示切换胶囊，关闭后沉浸呈现纯图标</string>
     <string name="quick_launcher_mirror_on_right_side">镜像右侧面板</string>
-    <string name="quick_launcher_mirror_on_right_side_desc">开启时从右侧呼出的面板按从右往左排列，是左侧面板的镜像；关闭后不管从哪侧呼出都按从左往右排列，翻页方向也一并改变</string>
+    <string name="quick_launcher_mirror_on_right_side_desc">右侧呼出时从右向左镜像排列</string>
     <string name="quick_launcher_items_section">快捷项</string>
     <string name="quick_launcher_page_indicator">第 %1$d / %2$d 页</string>
     <string name="quick_launcher_page_previous">上一页</string>
@@ -4024,6 +4028,7 @@
     <string name="search_panel_list_order_top_down">自上而下</string>
     <string name="search_panel_list_order_bottom_up">自下而上</string>
     <string name="search_panel_app_display_style_title">应用展示样式</string>
+    <string name="search_panel_app_icon_shape_title">应用图标形状</string>
     <string name="search_panel_app_display_style_icons">图标</string>
     <string name="search_panel_app_display_style_list">列表</string>
     <string name="search_panel_expand_more_apps">展开更多应用</string>
@@ -4300,7 +4305,10 @@
     <string name="expand_panel_blur_mode_desc">调节侧边扩展面板的模糊渲染模式</string>
     <string name="pick_result_blur_mode_title">分词浮层模糊</string>
     <string name="pick_result_blur_mode_desc">调节分词及取词浮层的模糊模式</string>
+    <string name="widget_panel_blur_mode_title">小组件面板模糊</string>
+    <string name="widget_panel_blur_mode_desc">调节小组件弹窗卡片与背景的模糊模式</string>
     <string name="overlay_blur_mode_disabled">关闭</string>
+    <string name="overlay_blur_mode_all">全部开启</string>
     <string name="overlay_blur_mode_backdrop_only">仅背景</string>
     <string name="overlay_blur_mode_panel_only">仅面板</string>
     <string name="clipboard_background_monitoring_section">后台监听</string>

@@ -76,6 +76,7 @@ import com.slideindex.app.overlay.OverlayComposeDialogHost
 import com.slideindex.app.overlay.layout.FvRingLauncherSide
 import com.slideindex.app.overlay.layout.FvCircleLayoutEngine
 import com.slideindex.app.overlay.layout.FvIconShape
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.overlay.layout.FvPanelLayout
 import com.slideindex.app.overlay.layout.FvToolbarButton
 import com.slideindex.app.settings.AppSettings
@@ -365,7 +366,7 @@ class RingLauncherOverlayView(
             screenWidth = screenWidth,
             density = density,
             iconSizeDp = fvSettings.iconSizeDp,
-            iconShape = fvSettings.iconShape,
+            iconShape = fvSettings.iconShape.resolve(settings.globalIconShape),
             baseRadiusDp = fvSettings.baseRadiusDp,
             layerGapDp = fvSettings.layerGapDp,
             endMarginDeg = fvSettings.endMarginDeg,
@@ -1119,23 +1120,26 @@ fun RingLauncherAppearanceDialogContent(
                     FvRingLauncherAppearanceChipGrid(
                         isLandscape = isLandscape,
                         labels = listOf(
-                            stringResource(R.string.fv_icon_shape_rounded_rect),
-                            stringResource(R.string.fv_icon_shape_circle),
+                            stringResource(R.string.icon_shape_follow_global),
                             stringResource(R.string.fv_icon_shape_squircle),
-                            stringResource(R.string.fv_icon_shape_square),
+                            stringResource(R.string.fv_icon_shape_circle),
+                            stringResource(R.string.fv_icon_shape_rounded_rect),
+                            stringResource(R.string.fv_icon_shape_original),
                         ),
                         selectedIndex = listOf(
-                            FvIconShape.ROUNDED_RECT,
-                            FvIconShape.CIRCLE,
-                            FvIconShape.SQUIRCLE,
-                            FvIconShape.SQUARE,
+                            PanelIconShape.FOLLOW_GLOBAL,
+                            PanelIconShape.SQUIRCLE,
+                            PanelIconShape.CIRCLE,
+                            PanelIconShape.ROUNDED_RECT,
+                            PanelIconShape.ORIGINAL,
                         ).indexOf(settingsState.iconShape).coerceAtLeast(0),
                         onSelected = { index ->
                             val shape = listOf(
-                                FvIconShape.ROUNDED_RECT,
-                                FvIconShape.CIRCLE,
-                                FvIconShape.SQUIRCLE,
-                                FvIconShape.SQUARE,
+                                PanelIconShape.FOLLOW_GLOBAL,
+                                PanelIconShape.SQUIRCLE,
+                                PanelIconShape.CIRCLE,
+                                PanelIconShape.ROUNDED_RECT,
+                                PanelIconShape.ORIGINAL,
                             )[index]
                             update { it.copy(iconShape = shape) }
                         },

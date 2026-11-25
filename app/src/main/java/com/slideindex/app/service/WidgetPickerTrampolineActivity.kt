@@ -62,6 +62,12 @@ class WidgetPickerTrampolineActivity : ComponentActivity() {
                   WidgetPickerTrampoline.deliverShortcutSuccess(sc.packageName, sc.shortcutId, sc.label, sc.intentUri)
                   finish()
                 },
+                onActionSelected = { action ->
+                  delivered = true
+                  val label = com.slideindex.app.ui.gesturepicker.gestureActionLabelText(this@WidgetPickerTrampolineActivity, action)
+                  WidgetPickerTrampoline.deliverActionSuccess(action, label)
+                  finish()
+                },
                 enableBackHandler = true
               )
             }

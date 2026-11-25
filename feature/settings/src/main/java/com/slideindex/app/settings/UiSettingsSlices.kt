@@ -1,6 +1,7 @@
 package com.slideindex.app.settings
 
 import com.slideindex.app.otp.OtpKeywords
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.otp.OtpCodeAlertPolicy
 import com.slideindex.app.otp.OtpRecordLimits
 import com.slideindex.app.otp.SmsBlacklistRuleSet
@@ -11,6 +12,7 @@ import com.slideindex.app.widget.WidgetPanelPage
 /** 首页主屏展示所需设置子集。 */
 data class HomeMainSettings(
     val iconPlateModeId: Int = IconPlateMode.SYSTEM_DARK.id,
+    val globalIconShape: FvIconShape = FvIconShape.SQUIRCLE,
     val serviceEnabled: Boolean = false,
     val hideFromRecents: Boolean = false,
     val accessibilityKeepAliveEnabled: Boolean = false,
@@ -73,6 +75,7 @@ data class HomeMainSettings(
     val searchPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
     val expandPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
     val pickResultBlurModeId: Int = OverlayBlurMode.DISABLED.id,
+    val widgetPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
 ) {
     val bottomNavBlurRadiusDp: Float
         get() = when (BottomNavStyle.fromId(bottomNavStyleId)) {
@@ -84,6 +87,7 @@ data class HomeMainSettings(
     companion object {
         fun from(settings: AppSettings): HomeMainSettings = HomeMainSettings(
         iconPlateModeId = settings.iconPlateModeId,
+        globalIconShape = settings.globalIconShape,
             serviceEnabled = settings.serviceEnabled,
             hideFromRecents = settings.hideFromRecents,
             accessibilityKeepAliveEnabled = settings.accessibilityKeepAliveEnabled,
@@ -145,6 +149,7 @@ data class HomeMainSettings(
             searchPanelBlurModeId = settings.searchPanelBlurModeId,
             expandPanelBlurModeId = settings.expandPanelBlurModeId,
             pickResultBlurModeId = settings.pickResultBlurModeId,
+            widgetPanelBlurModeId = settings.widgetPanelBlurModeId,
         )
     }
 }

@@ -102,15 +102,33 @@ class WidgetCardContainer(
         }.apply {
           val icon = if (item.itemType == ITEM_TYPE_ACTION) {
             val action = com.slideindex.app.launcher.QuickLauncherItemCodec.parseActionPayload(item.intentUri)
+              ?: item.intentUri.toIntOrNull()?.let { id ->
+                runCatching {
+                  com.slideindex.app.gesture.GestureAction.from(
+                    com.slideindex.app.gesture.GestureActionType.fromId(id),
+                    ""
+                  )
+                }.getOrNull()
+              }
             val iconSizePx = (44 * density).roundToInt()
             if (action != null) {
-              com.slideindex.app.util.GestureActionIconBitmap.get(
+              val appSettings = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot?.invoke(context)
+                ?: com.slideindex.app.settings.AppSettings()
+              val shape = appSettings.widgetPanelIconShape.resolve(appSettings.globalIconShape)
+              val plateShape = when (shape) {
+                com.slideindex.app.overlay.layout.FvIconShape.CIRCLE -> com.slideindex.app.util.GestureActionPlateShape.CIRCLE
+                else -> com.slideindex.app.util.GestureActionPlateShape.ROUNDED_RECT
+              }
+              val rawBitmap = com.slideindex.app.util.GestureActionIconBitmap.get(
                 action = action,
                 sizePx = iconSizePx,
                 tintArgb = Color.WHITE,
                 outlined = true,
                 withPlate = true,
-              ).toDrawable(resources)
+                plateShape = plateShape,
+              )
+              val normalizedBitmap = com.slideindex.app.overlay.layout.IconShapeNormalizer.normalizeBitmap(rawBitmap, shape)
+              normalizedBitmap.toDrawable(resources)
             } else null
           } else if (item.itemType == ITEM_TYPE_SHORTCUT && item.shortcutId.isNotEmpty()) {
             runCatching {
@@ -138,7 +156,11 @@ class WidgetCardContainer(
             tag = iconPackage
             WidgetAppIconCache.load(context, iconPackage) { bitmap ->
               if (tag == iconPackage) {
-                setImageDrawable(bitmap.toDrawable(resources))
+                val appSettings = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot?.invoke(context)
+                  ?: com.slideindex.app.settings.AppSettings()
+                val shape = appSettings.widgetPanelIconShape.resolve(appSettings.globalIconShape)
+                val normalizedBitmap = com.slideindex.app.overlay.layout.IconShapeNormalizer.normalizeBitmap(bitmap, shape)
+                setImageDrawable(normalizedBitmap.toDrawable(resources))
               }
             }
           }
@@ -146,9 +168,23 @@ class WidgetCardContainer(
         val iconSize = (44 * density).roundToInt()
         addView(iconView, LayoutParams(iconSize, iconSize))
 
+        val isDark = com.slideindex.app.overlay.OverlayPanelTheme.isDarkTheme(context)
         val labelView = android.widget.TextView(context).apply {
-          text = item.label
-          setTextColor(Color.WHITE)
+          text = item.label.ifBlank {
+            if (item.itemType == ITEM_TYPE_ACTION) {
+              val action = com.slideindex.app.launcher.QuickLauncherItemCodec.parseActionPayload(item.intentUri)
+              if (action != null) {
+                com.slideindex.app.ui.gesturepicker.gestureActionLabelText(context, action)
+              } else ""
+            } else ""
+          }
+          setTextColor(if (isDark) 0xFFEDEDED.toInt() else 0xFF1F1F1F.toInt())
+          setShadowLayer(
+            2f * density,
+            0f,
+            1f * density,
+            if (isDark) 0x99000000.toInt() else 0x33FFFFFF.toInt()
+          )
           setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 11f)
           gravity = Gravity.CENTER
           maxLines = 1
@@ -174,7 +210,21 @@ class WidgetCardContainer(
             val action = com.slideindex.app.launcher.QuickLauncherItemCodec.parseActionPayload(item.intentUri)
             if (action != null) {
               com.slideindex.app.overlay.WidgetPopupOverlayWindow.dismiss()
-              com.slideindex.app.service.SlideIndexAccessibilityService.perform(action)
+              val runner = com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionRunner
+              if (runner != null) {
+                val settings = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot?.invoke(context)
+                  ?: com.slideindex.app.settings.AppSettings()
+                runner.run(
+                  action = action,
+                  settings = settings,
+                  longPressArmed = false,
+                  anchorRawX = null,
+                  anchorRawY = null,
+                  panelSide = null,
+                )
+              } else {
+                com.slideindex.app.service.SlideIndexAccessibilityService.perform(action)
+              }
             }
           } else if (item.itemType == ITEM_TYPE_SHORTCUT) {
             com.slideindex.app.overlay.WidgetPopupOverlayWindow.dismiss()
@@ -418,7 +468,7 @@ class WidgetCardContainer(
     editModeEnabled = enabled
     if (!enabled) clearResizePreview()
     deleteButton.visibility = if (enabled) VISIBLE else GONE
-    if (item.itemType == ITEM_TYPE_APP || item.itemType == ITEM_TYPE_SHORTCUT) {
+    if (item.itemType == ITEM_TYPE_APP || item.itemType == ITEM_TYPE_SHORTCUT || item.itemType == ITEM_TYPE_ACTION) {
       resizeHandle.visibility = GONE
       configureButton.visibility = GONE
     } else {

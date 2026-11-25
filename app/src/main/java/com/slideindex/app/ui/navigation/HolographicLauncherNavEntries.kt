@@ -24,6 +24,7 @@ fun NavEntryBuilder.holographicLauncherNavEntries(ctx: MainNavContext) {
             onTimeoutSecondsChange = viewModel::setHolographicLauncherTimeoutSeconds,
             onRotationSensitivityChange = viewModel::setHolographicRotationSensitivity,
             onHapticLevelChange = viewModel::setHolographicHapticLevel,
+            onIconShapeChange = viewModel::setHolographicLauncherIconShape,
             onAppModeChange = viewModel::setHolographicAppMode,
             onOpenApps = { ctx.navigate(AppNavKey.HolographicLauncherApps) },
         )

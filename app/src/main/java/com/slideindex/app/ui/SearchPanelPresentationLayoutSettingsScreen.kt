@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.overlay.pickresult.SearchEngineIcon
 import com.slideindex.app.overlay.pickresult.searchIconSizeForColumns
 import com.slideindex.app.settings.AppSettings
@@ -52,6 +53,7 @@ fun SearchPanelPresentationLayoutSettingsScreen(
     onSetSearchPanelBarPosition: (SearchPanelBarPosition) -> Unit,
     onSetSearchPanelListOrder: (SearchPanelListOrder) -> Unit,
     onSetSearchPanelAppDisplayStyle: (SearchPanelAppDisplayStyle) -> Unit,
+    onSetSearchPanelIconShape: (PanelIconShape) -> Unit = {},
     onSetSearchEngineGridColumns: (Int) -> Unit,
     onSetSearchEngineGridRows: (Int) -> Unit,
     onSetSearchEngineShowLabels: (Boolean) -> Unit,
@@ -126,6 +128,25 @@ fun SearchPanelPresentationLayoutSettingsScreen(
                             items = appDisplayStyles.map { searchPanelAppDisplayStyleLabel(it) },
                             selectedIndex = appDisplayStyles.indexOf(settings.searchPanelAppDisplayStyle).coerceAtLeast(0),
                             onSelectedIndexChange = { onSetSearchPanelAppDisplayStyle(appDisplayStyles[it]) },
+                        )
+                    },
+                )
+                add(
+                    settingsCardScopeItem("app-icon-shape") {
+                        val shapes = listOf(
+                            PanelIconShape.FOLLOW_GLOBAL to R.string.icon_shape_follow_global,
+                            PanelIconShape.SQUIRCLE to R.string.fv_icon_shape_squircle,
+                            PanelIconShape.CIRCLE to R.string.fv_icon_shape_circle,
+                            PanelIconShape.ROUNDED_RECT to R.string.fv_icon_shape_rounded_rect,
+                            PanelIconShape.ORIGINAL to R.string.fv_icon_shape_original,
+                        )
+                        val selectedIndex = shapes.indexOfFirst { it.first == settings.searchPanel.iconShape }
+                            .coerceAtLeast(0)
+                        SettingDropdownRow(
+                            title = stringResource(R.string.search_panel_app_icon_shape_title),
+                            items = shapes.map { stringResource(it.second) },
+                            selectedIndex = selectedIndex,
+                            onSelectedIndexChange = { onSetSearchPanelIconShape(shapes[it].first) },
                         )
                     },
                 )
