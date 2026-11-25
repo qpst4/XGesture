@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
+import androidx.core.content.IntentCompat
 import androidx.core.graphics.drawable.toDrawable
 import android.graphics.drawable.Drawable
 import android.os.Process
@@ -147,6 +148,9 @@ object ManagedShortcutIconResolver {
         val intent = runCatching {
             Intent.parseUri(uri, Intent.URI_INTENT_SCHEME)
         }.getOrNull() ?: return null
+        // 反馈 #390：有些 App 自己就有"给快捷方式设图标"的环节，图标存在快捷方式自带的
+        // extra 里。以前这里只取目标 Activity / 宿主 App 的图标，所以永远显示成宿主图标。
+        intentShortcutIcon(context, intent)?.let { return it }
         val component = intent.component
         if (component != null) {
             activityIcon(context, component.packageName, component.className)?.let { return it }
@@ -154,6 +158,38 @@ object ManagedShortcutIconResolver {
         val resolved = context.packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
             ?: return null
         return runCatching { resolved.loadIcon(context.packageManager) }.getOrNull()
+    }
+
+    /**
+     * 快捷方式自带的图标（老式 `INSTALL_SHORTCUT` 语义）。
+     *
+     * 优先位图 extra，其次资源 extra —— 两者都是"用户/App 自己挑过的图标"，
+     * 必须压过目标 Activity 与宿主 App 的图标；都没有才让调用方回退。
+     */
+    private fun intentShortcutIcon(context: Context, intent: Intent): Drawable? {
+        runCatching {
+            IntentCompat.getParcelableExtra(
+                intent,
+                Intent.EXTRA_SHORTCUT_ICON,
+                Bitmap::class.java,
+            )
+        }.getOrNull()?.let { bitmap ->
+            return bitmap.toDrawable(context.resources)
+        }
+        val iconResource = runCatching {
+            IntentCompat.getParcelableExtra(
+                intent,
+                Intent.EXTRA_SHORTCUT_ICON_RESOURCE,
+                Intent.ShortcutIconResource::class.java,
+            )
+        }.getOrNull() ?: return null
+        return runCatching {
+            val res = context.packageManager.getResourcesForApplication(iconResource.packageName)
+            val id = res.getIdentifier(iconResource.resourceName, null, iconResource.packageName)
+            if (id == 0) return@runCatching null
+            @Suppress("DEPRECATION")
+            res.getDrawable(id, context.theme)
+        }.getOrNull()
     }
 
     private fun appIcon(context: Context, packageName: String): Drawable? {
