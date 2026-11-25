@@ -20,12 +20,14 @@ object DndIconRenderer {
         cy: Float,
         sizePx: Float,
         dndEnabled: Boolean,
-        alphaScale: Float
+        alphaScale: Float,
+        isDark: Boolean = true
     ) {
         ensure(context)
         val drawable = (if (dndEnabled) on else off) ?: return
         val alpha = (235f * alphaScale.coerceIn(0f, 1f)).roundToInt()
-        DrawableCompat.setTint(drawable, Color.argb(alpha, 255, 255, 255))
+        val tint = if (isDark) Color.argb(alpha, 255, 255, 255) else Color.argb(alpha, 35, 35, 38)
+        DrawableCompat.setTint(drawable, tint)
         val half = (sizePx / 2f).roundToInt()
         val left = (cx - half).roundToInt()
         val top = (cy - half).roundToInt()

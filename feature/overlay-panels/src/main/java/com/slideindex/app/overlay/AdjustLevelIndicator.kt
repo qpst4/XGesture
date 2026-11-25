@@ -101,4 +101,6 @@ object AdjustLevelIndicator {
         context = context,
         overlayView = overlayView,
     )
+
+    fun clear() = AdjustLevelIndicatorRenderer.clear()
 }

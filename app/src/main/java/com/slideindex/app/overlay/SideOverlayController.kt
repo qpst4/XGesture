@@ -552,6 +552,8 @@ class SideOverlayController(
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
         )
+        windowManager.presentationView = presentation
+        windowManager.presentationContainer = container
         attachHintOverlays(container)
 
         val params = windowManager.createPresentationLayoutParams().apply {
@@ -563,8 +565,6 @@ class SideOverlayController(
 
         runCatching {
             windowManager.attachCaptureWindows(presentation)
-            windowManager.presentationView = presentation
-            windowManager.presentationContainer = container
             windowManager.presentationParams = params
             windowManager.detachPresentationUnlessRequired()
             TaskManagerUtil.ensureServiceBound()

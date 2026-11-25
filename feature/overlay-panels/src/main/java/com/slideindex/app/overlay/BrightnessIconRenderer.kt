@@ -23,7 +23,8 @@ object BrightnessIconRenderer {
         cy: Float,
         sizePx: Float,
         enabled: Boolean,
-        alphaScale: Float
+        alphaScale: Float,
+        isDark: Boolean = true
     ) {
         drawAutoSunIcon(
             canvas = canvas,
@@ -31,7 +32,8 @@ object BrightnessIconRenderer {
             cy = cy,
             sizePx = sizePx,
             enabled = enabled,
-            alphaScale = alphaScale
+            alphaScale = alphaScale,
+            isDark = isDark
         )
     }
 
@@ -41,7 +43,8 @@ object BrightnessIconRenderer {
         cy: Float,
         sizePx: Float,
         enabled: Boolean,
-        alphaScale: Float
+        alphaScale: Float,
+        isDark: Boolean = true
     ) {
         val alpha = alphaScale.coerceIn(0f, 1f)
         val iconAlpha = (255f * alpha).roundToInt()
@@ -54,11 +57,14 @@ object BrightnessIconRenderer {
         val rayCorner = rayWidth * 0.42f
         val rayMidRadius = coreRadius + rayGap + rayLength / 2f
 
+        val baseColor = if (isDark) Color.WHITE else Color.rgb(35, 35, 38)
+        val mutedColor = if (isDark) Color.rgb(210, 214, 222) else Color.rgb(120, 120, 125)
+
         val rayPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = if (enabled) {
-                Color.argb(iconAlpha, 255, 255, 255)
+                Color.argb(iconAlpha, Color.red(baseColor), Color.green(baseColor), Color.blue(baseColor))
             } else {
-                Color.argb(mutedAlpha, 210, 214, 222)
+                Color.argb(mutedAlpha, Color.red(mutedColor), Color.green(mutedColor), Color.blue(mutedColor))
             }
             style = Paint.Style.FILL
         }
@@ -80,9 +86,9 @@ object BrightnessIconRenderer {
 
         val corePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = if (enabled) {
-                Color.argb(iconAlpha, 255, 255, 255)
+                Color.argb(iconAlpha, Color.red(baseColor), Color.green(baseColor), Color.blue(baseColor))
             } else {
-                Color.argb(mutedAlpha, 210, 214, 222)
+                Color.argb(mutedAlpha, Color.red(mutedColor), Color.green(mutedColor), Color.blue(mutedColor))
             }
         }
         canvas.drawCircle(cx, cy, coreRadius, corePaint)
@@ -92,9 +98,9 @@ object BrightnessIconRenderer {
             typeface = Typeface.create("sans-serif", Typeface.BOLD)
             textSize = coreRadius * 1.08f
             color = if (enabled) {
-                Color.argb(iconAlpha, 255, 184, 0)
+                if (isDark) Color.argb(iconAlpha, 255, 184, 0) else Color.WHITE
             } else {
-                Color.argb(mutedAlpha, 245, 247, 250)
+                if (isDark) Color.argb(mutedAlpha, 245, 247, 250) else Color.argb(mutedAlpha, 240, 240, 242)
             }
             isFakeBoldText = true
         }
@@ -110,7 +116,8 @@ object BrightnessIconRenderer {
         cy: Float,
         sizePx: Float,
         darkModeEnabled: Boolean,
-        alphaScale: Float
+        alphaScale: Float,
+        isDark: Boolean = true
     ) {
         ensureDarkIcons(context)
         drawIcon(
@@ -119,7 +126,8 @@ object BrightnessIconRenderer {
             cx = cx,
             cy = cy,
             sizePx = sizePx,
-            alphaScale = alphaScale
+            alphaScale = alphaScale,
+            isDark = isDark
         )
     }
 
@@ -129,11 +137,13 @@ object BrightnessIconRenderer {
         cx: Float,
         cy: Float,
         sizePx: Float,
-        alphaScale: Float
+        alphaScale: Float,
+        isDark: Boolean = true
     ) {
         val icon = drawable ?: return
         val alpha = (235f * alphaScale.coerceIn(0f, 1f)).roundToInt()
-        DrawableCompat.setTint(icon, Color.argb(alpha, 255, 255, 255))
+        val tint = if (isDark) Color.argb(alpha, 255, 255, 255) else Color.argb(alpha, 35, 35, 38)
+        DrawableCompat.setTint(icon, tint)
         val half = (sizePx / 2f).roundToInt()
         val left = (cx - half).roundToInt()
         val top = (cy - half).roundToInt()

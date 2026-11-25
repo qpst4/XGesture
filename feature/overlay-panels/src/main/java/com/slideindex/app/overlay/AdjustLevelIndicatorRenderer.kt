@@ -16,7 +16,23 @@ import com.slideindex.app.overlay.panels.R
 import kotlin.math.roundToInt
 
 object AdjustLevelIndicatorRenderer {
-    private var frostedGlassDrawable: LocalFrostedGlassDrawable? = null
+    private var mainPillFrostedGlass: LocalFrostedGlassDrawable? = null
+    private var topPillFrostedGlass: LocalFrostedGlassDrawable? = null
+    private var bottomPillFrostedGlass: LocalFrostedGlassDrawable? = null
+    private var ringPillFrostedGlass: LocalFrostedGlassDrawable? = null
+    private var notificationPillFrostedGlass: LocalFrostedGlassDrawable? = null
+
+    private var activeContext: Context? = null
+    private var activeDensity: Float = 1f
+    private var activeOverlayView: android.view.View? = null
+
+    fun clear() {
+        mainPillFrostedGlass?.clear()
+        topPillFrostedGlass?.clear()
+        bottomPillFrostedGlass?.clear()
+        ringPillFrostedGlass?.clear()
+        notificationPillFrostedGlass?.clear()
+    }
 
     fun draw(
         canvas: Canvas,
@@ -32,7 +48,10 @@ object AdjustLevelIndicatorRenderer {
         context: Context? = null,
         overlayView: android.view.View? = null,
     ) {
-        if (enterProgress <= 0f) return
+        if (enterProgress <= 0f) {
+            clear()
+            return
+        }
         val t = enterProgress.coerceIn(0f, 1f)
         val travel = if (recede) easeInCubic(t) else t
         val alphaScale = if (recede) t else t
@@ -43,15 +62,29 @@ object AdjustLevelIndicatorRenderer {
             PanelSide.RIGHT -> slideDistance * slideRemaining
         }
 
-        if (overlayView != null && frostedGlassDrawable == null) {
-            frostedGlassDrawable = LocalFrostedGlassDrawable { overlayView }
+        if (overlayView != null) {
+            activeOverlayView = overlayView
+            if (mainPillFrostedGlass == null) {
+                mainPillFrostedGlass = LocalFrostedGlassDrawable { activeOverlayView }
+                topPillFrostedGlass = LocalFrostedGlassDrawable { activeOverlayView }
+                bottomPillFrostedGlass = LocalFrostedGlassDrawable { activeOverlayView }
+                ringPillFrostedGlass = LocalFrostedGlassDrawable { activeOverlayView }
+                notificationPillFrostedGlass = LocalFrostedGlassDrawable { activeOverlayView }
+            }
         }
+
+        activeContext = context
+        activeDensity = density
+        val isDark = context?.let { OverlayPanelTheme.isDarkTheme(it) }
+            ?: activeContext?.let { OverlayPanelTheme.isDarkTheme(it) }
+            ?: false
 
         canvas.withTranslation(slideX, 0f) {
             val shadowAlphaScale = if (recede) alphaScale * alphaScale else alphaScale
             val corner = AdjustLevelIndicator.PILL_CORNER_DP * density
             if (mode == com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME) {
-                layout.topPill?.let { topPill ->
+                val topPill = layout.topPill
+                if (topPill != null) {
                     drawTopDndPill(
                         canvas = this,
                         bounds = topPill,
@@ -60,12 +93,17 @@ object AdjustLevelIndicatorRenderer {
                         alphaScale = alphaScale,
                         shadowAlphaScale = shadowAlphaScale,
                         dndEnabled = volumePanel?.dndEnabled == true,
-                        context = context
+                        context = context,
+                        glass = topPillFrostedGlass,
+                        isDark = isDark
                     )
+                } else {
+                    topPillFrostedGlass?.clear()
                 }
             }
             if (mode == com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS) {
-                layout.topPill?.let { topPill ->
+                val topPill = layout.topPill
+                if (topPill != null) {
                     drawTopAutoBrightnessPill(
                         canvas = this,
                         bounds = topPill,
@@ -73,13 +111,17 @@ object AdjustLevelIndicatorRenderer {
                         density = density,
                         alphaScale = alphaScale,
                         shadowAlphaScale = shadowAlphaScale,
-                        enabled = brightnessPanel?.autoBrightnessEnabled == true
+                        enabled = brightnessPanel?.autoBrightnessEnabled == true,
+                        glass = topPillFrostedGlass,
+                        isDark = isDark
                     )
+                } else {
+                    topPillFrostedGlass?.clear()
                 }
             }
             drawShadow(this, layout.bounds, corner, shadowAlphaScale)
-            drawPillBackground(this, layout.bounds, corner, alphaScale)
-            drawTrack(this, layout.track, mode, fraction.coerceIn(0f, 1f), density, alphaScale)
+            drawPillBackground(this, layout.bounds, corner, alphaScale, mainPillFrostedGlass)
+            drawTrack(this, layout.track, mode, fraction.coerceIn(0f, 1f), density, alphaScale, isDark = isDark)
             drawIcon(
                 canvas = this,
                 bounds = layout.bounds,
@@ -87,49 +129,56 @@ object AdjustLevelIndicatorRenderer {
                 mode = mode,
                 fraction = fraction.coerceIn(0f, 1f),
                 density = density,
-                alphaScale = alphaScale
+                alphaScale = alphaScale,
+                isDark = isDark
             )
-            drawPercentLabel(this, layout.bounds, fraction.coerceIn(0f, 1f), density, alphaScale)
+            drawPercentLabel(this, layout.bounds, fraction.coerceIn(0f, 1f), density, alphaScale, isDark = isDark)
             if (mode == com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME) {
-                volumePanel?.let { panel ->
-                    if (panel.expanded) {
-                        layout.ringPill?.let { pill ->
-                            layout.ringTrack?.let { track ->
-                                drawSecondaryVolumePill(
-                                    canvas = this,
-                                    pill = pill,
-                                    track = track,
-                                    fraction = panel.ringFraction,
-                                    label = context?.getString(R.string.adjust_volume_ring_label) ?: "Ring",
-                                    accentStart = Color.argb((230 * alphaScale).roundToInt(), 126, 87, 194),
-                                    accentEnd = Color.argb((255 * alphaScale).roundToInt(), 186, 150, 255),
-                                    corner = corner,
-                                    density = density,
-                                    alphaScale = alphaScale,
-                                    shadowAlphaScale = shadowAlphaScale
-                                )
-                            }
+                if (volumePanel?.expanded == true) {
+                    layout.ringPill?.let { pill ->
+                        layout.ringTrack?.let { track ->
+                            drawSecondaryVolumePill(
+                                canvas = this,
+                                pill = pill,
+                                track = track,
+                                fraction = volumePanel.ringFraction,
+                                label = context?.getString(R.string.adjust_volume_ring_label) ?: "Ring",
+                                accentStart = Color.argb((230 * alphaScale).roundToInt(), 126, 87, 194),
+                                accentEnd = Color.argb((255 * alphaScale).roundToInt(), 186, 150, 255),
+                                corner = corner,
+                                density = density,
+                                alphaScale = alphaScale,
+                                shadowAlphaScale = shadowAlphaScale,
+                                glass = ringPillFrostedGlass,
+                                isDark = isDark
+                            )
                         }
-                        layout.notificationPill?.let { pill ->
-                            layout.notificationTrack?.let { track ->
-                                drawSecondaryVolumePill(
-                                    canvas = this,
-                                    pill = pill,
-                                    track = track,
-                                    fraction = panel.notificationFraction,
-                                    label = context?.getString(R.string.adjust_volume_notification_label) ?: "Notif",
-                                    accentStart = Color.argb((230 * alphaScale).roundToInt(), 38, 166, 154),
-                                    accentEnd = Color.argb((255 * alphaScale).roundToInt(), 128, 223, 208),
-                                    corner = corner,
-                                    density = density,
-                                    alphaScale = alphaScale,
-                                    shadowAlphaScale = shadowAlphaScale
-                                )
-                            }
+                    } ?: ringPillFrostedGlass?.clear()
+                    layout.notificationPill?.let { pill ->
+                        layout.notificationTrack?.let { track ->
+                            drawSecondaryVolumePill(
+                                canvas = this,
+                                pill = pill,
+                                track = track,
+                                fraction = volumePanel.notificationFraction,
+                                label = context?.getString(R.string.adjust_volume_notification_label) ?: "Notif",
+                                accentStart = Color.argb((230 * alphaScale).roundToInt(), 38, 166, 154),
+                                accentEnd = Color.argb((255 * alphaScale).roundToInt(), 128, 223, 208),
+                                corner = corner,
+                                density = density,
+                                alphaScale = alphaScale,
+                                shadowAlphaScale = shadowAlphaScale,
+                                glass = notificationPillFrostedGlass,
+                                isDark = isDark
+                            )
                         }
-                    }
+                    } ?: notificationPillFrostedGlass?.clear()
+                } else {
+                    ringPillFrostedGlass?.clear()
+                    notificationPillFrostedGlass?.clear()
                 }
-                layout.bottomPill?.let { bottomPill ->
+                val bottomPill = layout.bottomPill
+                if (bottomPill != null) {
                     drawBottomPill(
                         canvas = this,
                         bounds = bottomPill,
@@ -139,12 +188,19 @@ object AdjustLevelIndicatorRenderer {
                         shadowAlphaScale = shadowAlphaScale,
                         ringerMode = volumePanel?.ringerMode ?: AudioManager.RINGER_MODE_NORMAL,
                         expanded = volumePanel?.expanded == true,
-                        context = context
+                        context = context,
+                        glass = bottomPillFrostedGlass,
+                        isDark = isDark
                     )
+                } else {
+                    bottomPillFrostedGlass?.clear()
                 }
             }
             if (mode == com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS) {
-                layout.bottomPill?.let { bottomPill ->
+                ringPillFrostedGlass?.clear()
+                notificationPillFrostedGlass?.clear()
+                val bottomPill = layout.bottomPill
+                if (bottomPill != null) {
                     drawCompactChromePill(
                         canvas = this,
                         bounds = bottomPill,
@@ -152,7 +208,9 @@ object AdjustLevelIndicatorRenderer {
                         density = density,
                         alphaScale = alphaScale,
                         shadowAlphaScale = shadowAlphaScale,
-                        context = context
+                        context = context,
+                        glass = bottomPillFrostedGlass,
+                        isDark = isDark
                     ) {
                         BrightnessIconRenderer.drawDarkMode(
                             context = it,
@@ -161,9 +219,12 @@ object AdjustLevelIndicatorRenderer {
                             cy = bottomPill.centerY(),
                             sizePx = minOf(bottomPill.width() * 0.38f, bottomPill.height() * 0.46f),
                             darkModeEnabled = brightnessPanel?.darkModeEnabled == true,
-                            alphaScale = alphaScale
+                            alphaScale = alphaScale,
+                            isDark = isDark
                         )
                     }
+                } else {
+                    bottomPillFrostedGlass?.clear()
                 }
             }
         }
@@ -185,47 +246,50 @@ object AdjustLevelIndicatorRenderer {
         )
     }
 
-    private fun drawPillBackground(canvas: Canvas, bounds: RectF, corner: Float, alphaScale: Float) {
-        // 尝试局部系统毛玻璃（API 31+，BackgroundBlurDrawable）
-        val blurDrawn = frostedGlassDrawable?.draw(
+    private fun drawPillBackground(
+        canvas: Canvas,
+        bounds: RectF,
+        corner: Float,
+        alphaScale: Float,
+        glass: LocalFrostedGlassDrawable?
+    ) {
+        val ctx = activeContext ?: return
+        val density = activeDensity
+        val spec = OverlayMaterialSpec.fromContext(ctx)
+        val isDark = OverlayPanelTheme.isDarkTheme(ctx)
+
+        val blurDrawn = glass?.draw(
             canvas = canvas,
             bounds = bounds,
+            spec = spec,
+            density = density,
+            isDark = isDark,
             cornerRadiusPx = corner,
-            blurRadiusPx = 45, // 16~18dp 相当的像素模糊半径
-            tintColor = Color.argb((160 * alphaScale).roundToInt(), 20, 22, 28),
-            alpha = alphaScale,
-            enabled = true,
+            alpha = alphaScale
         ) == true
 
         if (!blurDrawn) {
-            // 兜底高透深色漫反射基底
             val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.argb((185 * alphaScale).roundToInt(), 20, 22, 28)
+                color = if (spec.blurEnabled) {
+                    val tint = spec.tintColor(isDark)
+                    Color.argb(
+                        (Color.alpha(tint) * alphaScale).roundToInt().coerceIn(0, 255),
+                        Color.red(tint),
+                        Color.green(tint),
+                        Color.blue(tint)
+                    )
+                } else {
+                    val solid = spec.solidFallbackColor(isDark)
+                    Color.argb(
+                        (Color.alpha(solid) * alphaScale).roundToInt().coerceIn(0, 255),
+                        Color.red(solid),
+                        Color.green(solid),
+                        Color.blue(solid)
+                    )
+                }
             }
             canvas.drawRoundRect(bounds, corner, corner, fillPaint)
         }
-
-        // 顶部微光渐变层，增强玻璃采光通透度（Frosted Glass Sheen）
-        val sheenPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            shader = LinearGradient(
-                bounds.left,
-                bounds.top,
-                bounds.left,
-                bounds.top + bounds.height() * 0.45f,
-                Color.argb((45 * alphaScale).roundToInt(), 255, 255, 255),
-                Color.TRANSPARENT,
-                Shader.TileMode.CLAMP
-            )
-        }
-        canvas.drawRoundRect(bounds, corner, corner, sheenPaint)
-
-        // 细腻的高光外微描边，呈现边缘毛玻璃反射效果
-        val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.STROKE
-            strokeWidth = 1.2f
-            color = Color.argb((58 * alphaScale).roundToInt(), 255, 255, 255)
-        }
-        canvas.drawRoundRect(bounds, corner, corner, strokePaint)
     }
 
     private fun drawTrack(
@@ -234,11 +298,13 @@ object AdjustLevelIndicatorRenderer {
         mode: com.slideindex.app.overlay.panels.PanelAdjustMode,
         fraction: Float,
         density: Float,
-        alphaScale: Float
+        alphaScale: Float,
+        isDark: Boolean = true
     ) {
         val corner = 8f * density
         val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.argb((45 * alphaScale).roundToInt(), 255, 255, 255)
+            color = if (isDark) Color.argb((45 * alphaScale).roundToInt(), 255, 255, 255)
+                    else Color.argb((30 * alphaScale).roundToInt(), 0, 0, 0)
         }
         canvas.drawRoundRect(track, corner, corner, trackPaint)
 
@@ -291,19 +357,39 @@ object AdjustLevelIndicatorRenderer {
         val glow: Int
     )
 
-    private fun iconAccent(mode: com.slideindex.app.overlay.panels.PanelAdjustMode, level: Float, alphaScale: Float): IconAccent {
+    private fun iconAccent(mode: com.slideindex.app.overlay.panels.PanelAdjustMode, level: Float, alphaScale: Float, isDark: Boolean = true): IconAccent {
         val a = alphaScale.coerceIn(0f, 1f)
         return when (mode) {
-            com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME -> IconAccent(
-                primary = scaledColor(160, 210, 255, a),
-                secondary = scaledColor(90, 165, 255, a),
-                glow = scaledColor(66, 133, 244, a * (0.35f + 0.65f * level))
-            )
-            com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS -> IconAccent(
-                primary = scaledColor(255, 236, 170, a),
-                secondary = scaledColor(255, 196, 90, a),
-                glow = scaledColor(255, 183, 77, a * (0.30f + 0.70f * level))
-            )
+            com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME -> {
+                if (isDark) {
+                    IconAccent(
+                        primary = scaledColor(160, 210, 255, a),
+                        secondary = scaledColor(90, 165, 255, a),
+                        glow = scaledColor(66, 133, 244, a * (0.35f + 0.65f * level))
+                    )
+                } else {
+                    IconAccent(
+                        primary = scaledColor(25, 118, 210, a),
+                        secondary = scaledColor(21, 101, 192, a),
+                        glow = scaledColor(33, 150, 243, a * (0.35f + 0.65f * level))
+                    )
+                }
+            }
+            com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS -> {
+                if (isDark) {
+                    IconAccent(
+                        primary = scaledColor(255, 236, 170, a),
+                        secondary = scaledColor(255, 196, 90, a),
+                        glow = scaledColor(255, 183, 77, a * (0.30f + 0.70f * level))
+                    )
+                } else {
+                    IconAccent(
+                        primary = scaledColor(230, 110, 0, a),
+                        secondary = scaledColor(245, 124, 0, a),
+                        glow = scaledColor(255, 160, 0, a * (0.30f + 0.70f * level))
+                    )
+                }
+            }
         }
     }
 
@@ -314,18 +400,19 @@ object AdjustLevelIndicatorRenderer {
         mode: com.slideindex.app.overlay.panels.PanelAdjustMode,
         fraction: Float,
         density: Float,
-        alphaScale: Float
+        alphaScale: Float,
+        isDark: Boolean = true
     ) {
         val level = fraction.coerceIn(0f, 1f)
         val iconSize = 19f * density
         val cx = bounds.centerX()
         val cy = bounds.top + (trackTop - bounds.top) / 2f
-        val accent = iconAccent(mode, level, alphaScale)
+        val accent = iconAccent(mode, level, alphaScale, isDark)
 
         drawIconHeaderGlow(canvas, cx, cy, bounds.width(), trackTop - bounds.top, accent, level, density, alphaScale)
         when (mode) {
-            com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME -> drawVolumeIcon(canvas, cx, cy, iconSize, level, accent, density, alphaScale)
-            com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS -> drawBrightnessIcon(canvas, cx, cy, iconSize, level, accent, density)
+            com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME -> drawVolumeIcon(canvas, cx, cy, iconSize, level, accent, density, alphaScale, isDark)
+            com.slideindex.app.overlay.panels.PanelAdjustMode.BRIGHTNESS -> drawBrightnessIcon(canvas, cx, cy, iconSize, level, accent, density, isDark)
         }
     }
 
@@ -342,6 +429,7 @@ object AdjustLevelIndicatorRenderer {
     ) {
         if (level <= 0.02f) return
         val radius = (width.coerceAtMost(headerHeight) * 0.62f) * (0.85f + 0.15f * level)
+        if (radius <= 0.001f) return
         val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             shader = RadialGradient(
                 cx,
@@ -363,7 +451,8 @@ object AdjustLevelIndicatorRenderer {
         level: Float,
         accent: IconAccent,
         density: Float,
-        alphaScale: Float
+        alphaScale: Float,
+        isDark: Boolean = true
     ) {
         val halfH = size * 0.36f
         val bodyInset = size * 0.04f
@@ -390,7 +479,7 @@ object AdjustLevelIndicatorRenderer {
             strokeWidth = 1.65f * density
             strokeCap = Paint.Cap.ROUND
             strokeJoin = Paint.Join.ROUND
-            color = Color.argb(iconAlpha, 245, 247, 250)
+            color = if (isDark) Color.argb(iconAlpha, 245, 247, 250) else Color.argb(iconAlpha, 33, 33, 36)
         }
 
         val speakerPath = Path().apply {
@@ -406,7 +495,8 @@ object AdjustLevelIndicatorRenderer {
 
         if (level <= 0.02f) {
             val mutePaint = Paint(strokePaint).apply {
-                color = Color.argb((150f * alphaScale).roundToInt(), 190, 194, 202)
+                color = if (isDark) Color.argb((150f * alphaScale).roundToInt(), 190, 194, 202)
+                        else Color.argb((150f * alphaScale).roundToInt(), 110, 110, 115)
                 strokeWidth = 1.5f * density
             }
             val slashPad = size * 0.14f
@@ -462,25 +552,29 @@ object AdjustLevelIndicatorRenderer {
         size: Float,
         level: Float,
         accent: IconAccent,
-        density: Float
+        density: Float,
+        isDark: Boolean = true
     ) {
         val coreRadius = size * (0.22f + 0.08f * level)
+        if (coreRadius <= 0.001f) return
+        val innerLight = if (isDark) scaledColor(255, 255, 245, 1f) else scaledColor(255, 240, 160, 1f)
         val corePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             shader = RadialGradient(
                 cx - coreRadius * 0.2f,
                 cy - coreRadius * 0.2f,
                 coreRadius * 1.2f,
-                blendColors(scaledColor(255, 255, 245, 1f), accent.primary, 0.25f + 0.55f * level),
+                blendColors(innerLight, accent.primary, 0.25f + 0.55f * level),
                 accent.secondary,
                 Shader.TileMode.CLAMP
             )
         }
         canvas.drawCircle(cx, cy, coreRadius, corePaint)
 
+        val ringWhite = if (isDark) scaledColor(255, 255, 255, 1f) else scaledColor(245, 124, 0, 1f)
         val coreRing = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = 1.55f * density
-            color = blendColors(accent.primary, scaledColor(255, 255, 255, 1f), 0.35f + 0.45f * level)
+            color = blendColors(accent.primary, ringWhite, 0.35f + 0.45f * level)
             alpha = (140 + 80 * level).roundToInt()
         }
         canvas.drawCircle(cx, cy, coreRadius, coreRing)
@@ -538,13 +632,15 @@ object AdjustLevelIndicatorRenderer {
         corner: Float,
         density: Float,
         alphaScale: Float,
-        shadowAlphaScale: Float
+        shadowAlphaScale: Float,
+        glass: LocalFrostedGlassDrawable?,
+        isDark: Boolean = true
     ) {
         drawShadow(canvas, pill, corner, shadowAlphaScale)
-        drawPillBackground(canvas, pill, corner, alphaScale)
-        drawColoredTrack(canvas, track, fraction.coerceIn(0f, 1f), accentStart, accentEnd, density, alphaScale)
-        drawMiniLabel(canvas, pill.centerX(), pill.top + 14f * density, label, density, alphaScale)
-        drawPercentLabel(canvas, pill, fraction.coerceIn(0f, 1f), density, alphaScale, textSizeDp = 10f)
+        drawPillBackground(canvas, pill, corner, alphaScale, glass)
+        drawColoredTrack(canvas, track, fraction.coerceIn(0f, 1f), accentStart, accentEnd, density, alphaScale, isDark = isDark)
+        drawMiniLabel(canvas, pill.centerX(), pill.top + 14f * density, label, density, alphaScale, isDark = isDark)
+        drawPercentLabel(canvas, pill, fraction.coerceIn(0f, 1f), density, alphaScale, isDark = isDark, textSizeDp = 10f)
     }
 
     private fun drawColoredTrack(
@@ -554,11 +650,13 @@ object AdjustLevelIndicatorRenderer {
         startColor: Int,
         endColor: Int,
         density: Float,
-        alphaScale: Float
+        alphaScale: Float,
+        isDark: Boolean = true
     ) {
         val corner = 7f * density
         val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.argb((45 * alphaScale).roundToInt(), 255, 255, 255)
+            color = if (isDark) Color.argb((45 * alphaScale).roundToInt(), 255, 255, 255)
+                    else Color.argb((30 * alphaScale).roundToInt(), 0, 0, 0)
         }
         canvas.drawRoundRect(track, corner, corner, trackPaint)
         if (fraction <= 0f) return
@@ -585,13 +683,15 @@ object AdjustLevelIndicatorRenderer {
         baselineY: Float,
         text: String,
         density: Float,
-        alphaScale: Float
+        alphaScale: Float,
+        isDark: Boolean = true
     ) {
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             textAlign = Paint.Align.CENTER
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             textSize = 10f * density
-            color = Color.argb((180 * alphaScale).roundToInt(), 255, 255, 255)
+            color = if (isDark) Color.argb((180 * alphaScale).roundToInt(), 255, 255, 255)
+                    else Color.argb((190 * alphaScale).roundToInt(), 33, 33, 36)
         }
         canvas.drawText(text, cx, baselineY, textPaint)
     }
@@ -604,10 +704,12 @@ object AdjustLevelIndicatorRenderer {
         alphaScale: Float,
         shadowAlphaScale: Float,
         context: Context?,
+        glass: LocalFrostedGlassDrawable?,
+        isDark: Boolean = true,
         drawIcon: (Context) -> Unit
     ) {
         drawShadow(canvas, bounds, corner, shadowAlphaScale)
-        drawPillBackground(canvas, bounds, corner, alphaScale)
+        drawPillBackground(canvas, bounds, corner, alphaScale, glass)
         context?.let(drawIcon)
     }
 
@@ -618,10 +720,12 @@ object AdjustLevelIndicatorRenderer {
         density: Float,
         alphaScale: Float,
         shadowAlphaScale: Float,
-        enabled: Boolean
+        enabled: Boolean,
+        glass: LocalFrostedGlassDrawable?,
+        isDark: Boolean = true
     ) {
         drawShadow(canvas, bounds, corner, shadowAlphaScale)
-        drawPillBackground(canvas, bounds, corner, alphaScale)
+        drawPillBackground(canvas, bounds, corner, alphaScale, glass)
         if (enabled) {
             val accentStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.STROKE
@@ -637,7 +741,8 @@ object AdjustLevelIndicatorRenderer {
             cy = bounds.centerY(),
             sizePx = iconSize,
             enabled = enabled,
-            alphaScale = alphaScale
+            alphaScale = alphaScale,
+            isDark = isDark
         )
     }
 
@@ -649,7 +754,9 @@ object AdjustLevelIndicatorRenderer {
         alphaScale: Float,
         shadowAlphaScale: Float,
         dndEnabled: Boolean,
-        context: Context?
+        context: Context?,
+        glass: LocalFrostedGlassDrawable?,
+        isDark: Boolean = true
     ) {
         val iconSize = minOf(bounds.width() * 0.38f, bounds.height() * 0.46f)
         drawCompactChromePill(
@@ -659,7 +766,9 @@ object AdjustLevelIndicatorRenderer {
             density = density,
             alphaScale = alphaScale,
             shadowAlphaScale = shadowAlphaScale,
-            context = context
+            context = context,
+            glass = glass,
+            isDark = isDark
         ) {
             DndIconRenderer.draw(
                 context = it,
@@ -668,7 +777,8 @@ object AdjustLevelIndicatorRenderer {
                 cy = bounds.centerY(),
                 sizePx = iconSize,
                 dndEnabled = dndEnabled,
-                alphaScale = alphaScale
+                alphaScale = alphaScale,
+                isDark = isDark
             )
         }
     }
@@ -682,14 +792,17 @@ object AdjustLevelIndicatorRenderer {
         shadowAlphaScale: Float,
         ringerMode: Int,
         expanded: Boolean,
-        context: Context?
+        context: Context?,
+        glass: LocalFrostedGlassDrawable?,
+        isDark: Boolean = true
     ) {
         drawShadow(canvas, bounds, corner, shadowAlphaScale)
-        drawPillBackground(canvas, bounds, corner, alphaScale)
+        drawPillBackground(canvas, bounds, corner, alphaScale, glass)
 
         val dividerY = bounds.centerY()
         val dividerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.argb((32 * alphaScale).roundToInt(), 255, 255, 255)
+            color = if (isDark) Color.argb((32 * alphaScale).roundToInt(), 255, 255, 255)
+                    else Color.argb((28 * alphaScale).roundToInt(), 0, 0, 0)
             strokeWidth = 0.8f * density
         }
         canvas.drawLine(
@@ -706,9 +819,9 @@ object AdjustLevelIndicatorRenderer {
         val topCy = bounds.top + halfHeight / 2f
         val bottomCy = bounds.top + halfHeight + halfHeight / 2f
         context?.let {
-            RingerModeIconRenderer.draw(it, canvas, cx, topCy, iconSize, ringerMode, alphaScale)
+            RingerModeIconRenderer.draw(it, canvas, cx, topCy, iconSize, ringerMode, alphaScale, isDark = isDark)
         }
-        drawExpandPanelIcon(canvas, cx, bottomCy, iconSize, expanded, density, alphaScale)
+        drawExpandPanelIcon(canvas, cx, bottomCy, iconSize, expanded, density, alphaScale, isDark = isDark)
     }
 
     private fun drawExpandPanelIcon(
@@ -718,13 +831,15 @@ object AdjustLevelIndicatorRenderer {
         size: Float,
         expanded: Boolean,
         density: Float,
-        alphaScale: Float
+        alphaScale: Float,
+        isDark: Boolean = true
     ) {
         val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = 1.55f * density
             strokeCap = Paint.Cap.ROUND
-            color = Color.argb((210f * alphaScale).roundToInt(), 245, 247, 250)
+            color = if (isDark) Color.argb((210f * alphaScale).roundToInt(), 245, 247, 250)
+                    else Color.argb((210f * alphaScale).roundToInt(), 35, 35, 38)
         }
         if (expanded) {
             val arm = size * 0.22f
@@ -739,7 +854,8 @@ object AdjustLevelIndicatorRenderer {
             canvas.drawLine(cx - lineHalf, y, cx + lineHalf, y, strokePaint)
             val knobRadius = 1.35f * density
             val knobPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.argb((210f * alphaScale).roundToInt(), 245, 247, 250)
+                color = if (isDark) Color.argb((210f * alphaScale).roundToInt(), 245, 247, 250)
+                        else Color.argb((210f * alphaScale).roundToInt(), 35, 35, 38)
             }
             val knobX = when (i) {
                 -1 -> cx + lineHalf * 0.35f
@@ -756,13 +872,15 @@ object AdjustLevelIndicatorRenderer {
         fraction: Float,
         density: Float,
         alphaScale: Float,
+        isDark: Boolean = true,
         textSizeDp: Float = 11f
     ) {
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             textAlign = Paint.Align.CENTER
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             textSize = textSizeDp * density
-            color = Color.argb((200 * alphaScale).roundToInt(), 255, 255, 255)
+            color = if (isDark) Color.argb((200 * alphaScale).roundToInt(), 255, 255, 255)
+                    else Color.argb((210 * alphaScale).roundToInt(), 33, 33, 36)
         }
         val label = "${(fraction * 100f).roundToInt()}%"
         val baseline = bounds.bottom - 8f * density

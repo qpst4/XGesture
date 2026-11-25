@@ -14,9 +14,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
 import com.slideindex.app.gesture.SelectedHintMetrics
+import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.settings.HoneycombDisplaySettings
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_100
+import com.slideindex.app.ui.settings.components.SettingDropdownRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
@@ -204,6 +206,31 @@ fun HoneycombDisplaySettingsScreen(
         groupedCardItems(
             keyPrefix = "honeycomb-layout",
             items = buildList {
+                val panelShapes = listOf(
+                    PanelIconShape.FOLLOW_GLOBAL,
+                    PanelIconShape.SQUIRCLE,
+                    PanelIconShape.CIRCLE,
+                    PanelIconShape.ROUNDED_RECT,
+                    PanelIconShape.ORIGINAL,
+                )
+                add(
+                    settingsCardScopeItem("icon-shape") {
+                        SettingDropdownRow(
+                            title = stringResource(R.string.quick_launcher_icon_shape_section),
+                            items = listOf(
+                                stringResource(R.string.icon_shape_follow_global),
+                                stringResource(R.string.fv_icon_shape_squircle),
+                                stringResource(R.string.fv_icon_shape_circle),
+                                stringResource(R.string.fv_icon_shape_rounded_rect),
+                                stringResource(R.string.fv_icon_shape_original),
+                            ),
+                            selectedIndex = panelShapes.indexOf(localDisplay.iconShape).coerceAtLeast(0),
+                            onSelectedIndexChange = { index ->
+                                updateDisplay(localDisplay.copy(iconShape = panelShapes[index]))
+                            }
+                        )
+                    }
+                )
                 add(
                     settingsCardScopeItem("icon-size") {
                         SettingsSliderRow(

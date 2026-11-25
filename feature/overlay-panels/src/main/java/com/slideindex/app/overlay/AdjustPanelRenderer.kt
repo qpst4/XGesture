@@ -130,6 +130,7 @@ class AdjustPanelRenderer(
         ctrl.adjustIndicatorLayout = null
         ctrl.adjustIndicatorFrozenLayout = null
         ctrl.adjustIndicatorReceding = false
+        AdjustLevelIndicator.clear()
     }
 
     fun animateAdjustIndicatorTo(
