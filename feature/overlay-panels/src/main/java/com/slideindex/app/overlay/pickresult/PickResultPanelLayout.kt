@@ -456,7 +456,9 @@ fun PickResultTextImageDividerBlock(
     alphaFactor: Float,
     hasAuxiliaryCollapse: Boolean,
     onDragEnd: () -> Unit,
-    applyDrag: (Float) -> Unit
+    applyDrag: (Float) -> Unit,
+    /** 平铺模式：两段之间画一条细线，替代原来的卡片边界（反馈 #401）。 */
+    showHairline: Boolean = false
 ) {
     if (dividerHeight <= 0.dp) return
 
@@ -479,7 +481,19 @@ fun PickResultTextImageDividerBlock(
                     Modifier
                 }
             )
-    )
+    ) {
+        if (showHairline) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f * alphaFactor),
+                    ),
+            )
+        }
+    }
 }
 
 @Composable
@@ -749,6 +763,9 @@ fun PickResultPanelSlideHost(
         label = "pickPanelSlide"
     )
     val isPanelSlideAnimating = panelSlideOffset > 0.5.dp
+    // 反馈 #401：平铺模式 —— 不套卡片底板/阴影/模糊，只留一条细线分隔文字区与图片区。
+    val flatModeContext = LocalContext.current
+    val flatPanel = remember(flatModeContext) { PickResultFlatPrefs.isEnabled(flatModeContext) }
     val cornerPx = with(density) { PickResultPanelCardCorner.toPx() }
     val blurRadiusPx = (57f * density.density).roundToInt()
     val isDark = LocalAppDarkTheme.current
@@ -782,7 +799,7 @@ fun PickResultPanelSlideHost(
         modifier = Modifier
             .drawBehind {
                 val shadow = panelShadow
-                if (shadow != null && panelRevealed && !isPanelSlideAnimating) {
+                if (!flatPanel && shadow != null && panelRevealed && !isPanelSlideAnimating) {
                     val pad = shadowPaddingPx.roundToInt()
                     drawImage(
                         image = shadow,
@@ -804,10 +821,10 @@ fun PickResultPanelSlideHost(
                 }
             }
             .then(
-                if (centered) {
-                    Modifier.pickResultPanelCard()
-                } else {
-                    Modifier.pickResultBottomPanelCard(suppressShadow = isPanelSlideAnimating)
+                when {
+                    flatPanel -> Modifier
+                    centered -> Modifier.pickResultPanelCard()
+                    else -> Modifier.pickResultBottomPanelCard(suppressShadow = isPanelSlideAnimating)
                 }
             )
             .onSizeChanged { cardSize = it }
@@ -818,7 +835,14 @@ fun PickResultPanelSlideHost(
             }
     ) {
         val spec = rememberOverlayMaterialSpec()
-        if (spec.isPickResultCardBlurEnabled) {
+        if (flatPanel) {
+            // 平铺：整块直接铺开，不要模糊/底板，但仍保留可读的实色底。
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(androidx.compose.ui.graphics.Color(spec.solidFallbackColor(isDark))),
+            )
+        } else if (spec.isPickResultCardBlurEnabled) {
             LocalFrostedGlassBackdrop(
                 modifier = Modifier.matchParentSize(),
                 cornerRadiusPx = cornerPx,
@@ -1573,7 +1597,8 @@ fun PickResultCollapsePanelColumn(
                         alphaFactor = normalLayoutFactor,
                         hasAuxiliaryCollapse = auxiliaryDragEnabled,
                         onDragEnd = onDragEnd,
-                        applyDrag = wrappedApplyDrag
+                        applyDrag = wrappedApplyDrag,
+                        showHairline = PickResultFlatPrefs.isEnabled(LocalContext.current),
                     )
                     Box(
                         modifier = (if (useWeightedTextLayout) {

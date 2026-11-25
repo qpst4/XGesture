@@ -4325,6 +4325,8 @@
     <string name="expand_panel_blur_mode_desc">调节侧边扩展面板的模糊渲染模式</string>
     <string name="pick_result_blur_mode_title">分词浮层模糊</string>
     <string name="pick_result_blur_mode_desc">调节分词及取词浮层的模糊模式</string>
+    <string name="pick_result_flat_title">取词面板平铺</string>
+    <string name="pick_result_flat_desc">文字区与图片区不再套卡片底板，只用一条细线分隔</string>
     <string name="widget_panel_blur_mode_title">小组件面板模糊</string>
     <string name="widget_panel_blur_mode_desc">调节小组件弹窗卡片与背景的模糊模式</string>
     <string name="overlay_blur_mode_disabled">关闭</string>

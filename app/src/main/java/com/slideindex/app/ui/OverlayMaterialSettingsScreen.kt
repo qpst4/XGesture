@@ -3,6 +3,12 @@ package com.slideindex.app.ui
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import com.slideindex.app.overlay.pickresult.PickResultFlatPrefs
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
@@ -61,6 +67,11 @@ fun OverlayMaterialSettingsScreen(
     // 顶层提取所有文本资源，不在 buildList 内部触发 @Composable
     val pageTitle = stringResource(R.string.overlay_material_settings_title)
     val pageHint = stringResource(R.string.overlay_material_settings_desc)
+    val context = LocalContext.current
+    // 取词面板平铺（反馈 #401）：独立偏好，改完立即生效。
+    var pickResultFlat by remember { mutableStateOf(PickResultFlatPrefs.isEnabled(context)) }
+    val pickResultFlatTitle = stringResource(R.string.pick_result_flat_title)
+    val pickResultFlatDesc = stringResource(R.string.pick_result_flat_desc)
 
     val backdropSectionTitle = stringResource(R.string.settings_section_backdrop_visual)
     val backdropBlurTitle = stringResource(R.string.backdrop_blur_enabled)
@@ -290,6 +301,21 @@ fun OverlayMaterialSettingsScreen(
                             selectedIndex = selectedPickIndex,
                             onSelectedIndexChange = { index ->
                                 onPickResultBlurModeChange(blurModeOptions[index])
+                            },
+                        )
+                    }
+                )
+                // 取词面板平铺（反馈 #401）：去掉文字区/图片区的卡片底板与模糊，只留细线分隔。
+                add(
+                    settingsCardScopeItem("pick-result-flat") {
+                        SettingSwitchRow(
+                            title = pickResultFlatTitle,
+                            subtitle = pickResultFlatDesc,
+                            checked = pickResultFlat,
+                            enabled = true,
+                            onCheckedChange = { value ->
+                                pickResultFlat = value
+                                PickResultFlatPrefs.setEnabled(context, value)
                             },
                         )
                     }
