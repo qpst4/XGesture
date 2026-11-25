@@ -7,6 +7,7 @@ import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -58,6 +59,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.draw.rotate
@@ -1353,6 +1356,10 @@ fun PickResultTextBody(
                     )
                 },
             )
+            // 反馈 #402：编辑态面板会被撑到近乎全屏，而 BasicTextField 的高度只包住文字行，
+            // 所以最后一行下面的空白没有焦点命中区 —— 点上去不出光标（必须点到文字才有）。
+            // 这里在文本区容器上补一次"点空白 → 聚焦 + 光标移到末尾"，点文字本身仍由输入框处理。
+            val editFocusRequester = remember { FocusRequester() }
             Box(
                 modifier = editOuterModifier
                     .clip(RoundedCornerShape(0.dp))
@@ -1367,13 +1374,25 @@ fun PickResultTextBody(
                             } else {
                                 Modifier
                             },
-                        ),
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
+                            editFocusRequester.requestFocus()
+                            onTextFieldValueChange(
+                                textFieldValue.copy(
+                                    selection = TextRange(textFieldValue.text.length),
+                                ),
+                            )
+                        },
                 ) {
                     BasicTextField(
                         value = textFieldValue,
                         onValueChange = onTextFieldValueChange,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .focusRequester(editFocusRequester)
                             .suppressSystemTextContextMenu()
                             .then(Modifier.fieldModifier(toolbarState)),
                         onTextLayout = { toolbarState.textLayoutResult = it },
