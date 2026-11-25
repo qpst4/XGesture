@@ -92,7 +92,6 @@ object LinkRadarScanner {
                         }
                         val locations = characters.bounds
                         val currentGroupId = groupIdSequence++
-
                         for (match in matches) {
                             val rects = locations?.let { characterRegions(it, match.start, match.end, nodeBounds) }
                             val clippedNodeBounds = Rect(nodeBounds).apply { intersect(screenRect) }
@@ -124,10 +123,47 @@ object LinkRadarScanner {
             enqueueChildren(node, queue)
         }
 
-        return regions
+        return dropContainedDuplicateRegions(regions)
             .distinctBy { Triple(it.url, it.rects, it.sourcePackage) }
             .sortedWith(compareBy({ it.rects.first().top }, { it.rects.first().left }, { it.textOffset }))
     }
+
+    /**
+     * 剔除「同一 URL 被上级聚合节点重复上报」的区域。
+     *
+     * 现象：某些页面（Chrome/WebView）既在外层容器节点上暴露了整块文本（text 覆盖了子节点内容），
+     * 又给每个链接单独建了子节点。扫描会把同一链接产出两次：一次是**整块大框**（无字符坐标），
+     * 一次是**贴合文字的小框**。大框在命中时会走「整组全返回」的降级分支，
+     * 于是指针压住任意一条都会同时命中多条 → 只能弹「释放以选择链接」。
+     *
+     * 处理：同一 (url, 来源包名) 下，若某个区域的矩形被另一个**面积更小**的同 URL 区域完全包含，
+     * 说明它是粗粒度的重复上报，丢弃它、保留更贴合的那份几何。
+     */
+    private fun dropContainedDuplicateRegions(regions: List<LinkRegion>): List<LinkRegion> {
+        if (regions.size < 2) return regions
+        val result = ArrayList<LinkRegion>(regions.size)
+        regions.groupBy { it.url to it.sourcePackage }.values.forEach { group ->
+            if (group.size == 1) {
+                result += group[0]
+                return@forEach
+            }
+            // 面积小的优先保留；后面的（更大的）若被已保留的完全包住，就视为重复。
+            val kept = ArrayList<LinkRegion>(group.size)
+            group.sortedBy(::regionArea).forEach { candidate ->
+                val duplicated = kept.any { small ->
+                    small.rects.isNotEmpty() && small.rects.all { inner ->
+                        candidate.rects.any { outer -> outer.contains(inner) }
+                    }
+                }
+                if (!duplicated) kept += candidate
+            }
+            result += kept
+        }
+        return result
+    }
+
+    private fun regionArea(region: LinkRegion): Long =
+        region.rects.sumOf { it.width().toLong() * it.height().toLong() }
 
     private fun collectTargetRoots(
         service: AccessibilityService,
