@@ -1843,6 +1843,7 @@
     <string name="quick_launcher_entry_desc">クイックランチャー項目を編集</string>
     <string name="quick_launcher_panels_section">ランチャーパネル</string>
     <string name="quick_launcher_panel_add">新規パネル</string>
+    <string name="quick_launcher_panel_limit_reached">パネルは最大 %1$d 個までです</string>
     <string name="quick_launcher_panel_rename">名前を変更</string>
     <string name="quick_launcher_panel_duplicate">複製</string>
     <string name="quick_launcher_panel_delete">パネルを削除</string>
@@ -4887,6 +4888,8 @@
     <string name="quick_wheel_section_slots">コンテナ</string>
     <string name="quick_wheel_show_labels">テキストラベルを表示</string>
     <string name="quick_wheel_show_labels_desc">アイコンの下に名前を表示</string>
+    <string name="quick_wheel_hint_switch_title">上部のヒントを表示</string>
+    <string name="quick_wheel_hint_switch_desc">オフにすると、ホイール表示時の動作ヒントと設定ページ上部のヒントが表示されません</string>
     <string name="quick_wheel_transparent_container">コンテナ背景を完全透明に</string>
     <string name="quick_wheel_transparent_container_desc">アプリのアイコンとギャラリー画像は背景なし・切り抜きなし</string>
     <string name="quick_wheel_transparent_builtin">内蔵アイコン透明</string>
@@ -5039,6 +5042,15 @@
     <string name="screen_draw_save_failed">描画の保存に失敗しました</string>
     <string name="screen_draw_copied">描画をクリップボードにコピーしました</string>
     <string name="screen_draw_shared">共有シートを開きました</string>
+    <string name="screen_draw_default_tool_title">既定のツール</string>
+    <string name="screen_draw_tool_memory">記憶</string>
+    <string name="screen_draw_tool_desc_doodle">ドラッグで連続して手描きできます</string>
+    <string name="screen_draw_tool_desc_shape">ドラッグで図形を作成し、選択後にサイズを調整できます</string>
+    <string name="screen_draw_tool_desc_text">位置をタップして文字を入力します</string>
+    <string name="screen_draw_tool_desc_mosaic">隠したい範囲をドラッグで塗ります</string>
+    <string name="screen_draw_tool_desc_number">タップして連番を配置します</string>
+    <string name="screen_draw_tool_desc_crop">範囲をドラッグで選択して切り抜きます</string>
+    <string name="screen_draw_tool_desc_memory">前回使用したツールで開きます</string>
     <string name="quick_launcher_label_fallback">ランチャーパネル</string>
     <string name="quick_launcher_pinned_close">ピン留めパネルを閉じる</string>
     <string name="quick_launcher_action_config_title">クイックランチャー</string>

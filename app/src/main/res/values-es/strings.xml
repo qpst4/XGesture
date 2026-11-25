@@ -1918,6 +1918,15 @@
     <string name="screen_draw_save_failed">No se pudo guardar el dibujo</string>
     <string name="screen_draw_copied">Dibujo copiado a portapapeles</string>
     <string name="screen_draw_shared">Compartir hoja abierta</string>
+    <string name="screen_draw_default_tool_title">Herramienta predeterminada</string>
+    <string name="screen_draw_tool_memory">Recordar</string>
+    <string name="screen_draw_tool_desc_doodle">Arrastra para dibujar trazos continuos</string>
+    <string name="screen_draw_tool_desc_shape">Arrastra para crear una figura y luego ajustar su tamaño</string>
+    <string name="screen_draw_tool_desc_text">Toca un punto y escribe el texto</string>
+    <string name="screen_draw_tool_desc_mosaic">Arrastra sobre la zona que quieras ocultar</string>
+    <string name="screen_draw_tool_desc_number">Toca para colocar números consecutivos</string>
+    <string name="screen_draw_tool_desc_crop">Arrastra para seleccionar la zona y recortar</string>
+    <string name="screen_draw_tool_desc_memory">Abre con la herramienta que usaste la última vez</string>
     <string name="gesture_search_touch_block_1">Toque bloque</string>
     <string name="gesture_search_touch_block_2">Evitar el contacto accidental</string>
     <string name="touch_block_hint_title">Toque bloqueado</string>
@@ -2984,6 +2993,7 @@
     <string name="honeycomb_layout_editor_empty">Pulsa + abajo para añadir aplicaciones o atajos</string>
     <string name="quick_launcher_panels_section">Paneles de lanzamiento</string>
     <string name="quick_launcher_panel_add">Nuevo panel</string>
+    <string name="quick_launcher_panel_limit_reached">Máximo %1$d paneles</string>
     <string name="quick_launcher_panel_rename">Renombrar</string>
     <string name="quick_launcher_panel_duplicate">Duplicar</string>
     <string name="quick_launcher_panel_delete">Suprímase el panel</string>
@@ -4886,6 +4896,8 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="quick_wheel_section_slots">Containers</string>
     <string name="quick_wheel_show_labels">Mostrar etiquetas de texto</string>
     <string name="quick_wheel_show_labels_desc">Muestra el nombre bajo el icono</string>
+    <string name="quick_wheel_hint_switch_title">Mostrar sugerencia superior</string>
+    <string name="quick_wheel_hint_switch_desc">Al desactivarlo no se muestran ni la sugerencia de acción de la rueda ni la de la página de configuración</string>
     <string name="quick_wheel_transparent_container">Fondo de contenedor transparente</string>
     <string name="quick_wheel_transparent_container_desc">Sin fondo ni recorte para los iconos de apps y las imágenes de la galería</string>
     <string name="quick_wheel_transparent_builtin">Iconos integrados transparentes</string>

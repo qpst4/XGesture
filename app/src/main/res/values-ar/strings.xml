@@ -1832,6 +1832,7 @@
     <string name="quick_launcher_entry_desc">تحرير محتوى العناصر السريعة</string>
     <string name="quick_launcher_panels_section">لوحات التشغيل</string>
     <string name="quick_launcher_panel_add">لوحة جديدة</string>
+    <string name="quick_launcher_panel_limit_reached">الحد الأقصى %1$d لوحات</string>
     <string name="quick_launcher_panel_rename">إعادة التسمية</string>
     <string name="quick_launcher_panel_duplicate">نسخ</string>
     <string name="quick_launcher_panel_delete">حذف اللوحة</string>
@@ -4891,6 +4892,8 @@
     <string name="quick_wheel_section_slots">الحاويات</string>
     <string name="quick_wheel_show_labels">إظهار التسميات النصية</string>
     <string name="quick_wheel_show_labels_desc">إظهار الاسم أسفل الأيقونة</string>
+    <string name="quick_wheel_hint_switch_title">إظهار التلميح العلوي</string>
+    <string name="quick_wheel_hint_switch_desc">عند الإيقاف لا يظهر تلميح الإجراء أثناء فتح العجلة ولا تلميح صفحة الإعدادات</string>
     <string name="quick_wheel_transparent_container">خلفية شفافة للحاويات</string>
     <string name="quick_wheel_transparent_container_desc">أيقونات التطبيقات وصور المعرض دون خلفية ودون قص</string>
     <string name="quick_wheel_transparent_builtin">أيقونات مدمجة شفافة</string>
@@ -5043,6 +5046,15 @@
     <string name="screen_draw_save_failed">فشل حفظ الرسم</string>
     <string name="screen_draw_copied">تم نسخ الرسم إلى الحافظة</string>
     <string name="screen_draw_shared">تم فتح ورقة المشاركة</string>
+    <string name="screen_draw_default_tool_title">الأداة الافتراضية</string>
+    <string name="screen_draw_tool_memory">التذكّر</string>
+    <string name="screen_draw_tool_desc_doodle">اسحب للرسم الحر المتواصل</string>
+    <string name="screen_draw_tool_desc_shape">اسحب لإنشاء شكل ثم عدّل حجمه</string>
+    <string name="screen_draw_tool_desc_text">انقر على موضع ثم اكتب النص</string>
+    <string name="screen_draw_tool_desc_mosaic">اسحب على المنطقة المراد إخفاؤها</string>
+    <string name="screen_draw_tool_desc_number">انقر لإضافة أرقام متسلسلة</string>
+    <string name="screen_draw_tool_desc_crop">اسحب لتحديد المنطقة ثم الاقتصاص</string>
+    <string name="screen_draw_tool_desc_memory">افتح بالأداة المستخدمة آخر مرة</string>
     <string name="quick_launcher_label_fallback">لوحة المشغل السريع</string>
     <string name="quick_launcher_pinned_close">إغلاق اللوحة المثبتة</string>
     <string name="quick_launcher_action_config_title">المشغل السريع</string>

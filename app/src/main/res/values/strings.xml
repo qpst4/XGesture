@@ -2025,6 +2025,15 @@
     <string name="screen_draw_save_failed">Failed to save drawing</string>
     <string name="screen_draw_copied">Drawing copied to clipboard</string>
     <string name="screen_draw_shared">Share sheet opened</string>
+    <string name="screen_draw_default_tool_title">Default tool</string>
+    <string name="screen_draw_tool_memory">Remember</string>
+    <string name="screen_draw_tool_desc_doodle">Drag to draw freehand strokes</string>
+    <string name="screen_draw_tool_desc_shape">Drag to create a shape, resize it after selecting</string>
+    <string name="screen_draw_tool_desc_text">Tap a spot, then type</string>
+    <string name="screen_draw_tool_desc_mosaic">Drag over the area you want to hide</string>
+    <string name="screen_draw_tool_desc_number">Tap to place incrementing numbers</string>
+    <string name="screen_draw_tool_desc_crop">Drag to select an area, then crop</string>
+    <string name="screen_draw_tool_desc_memory">Start with the tool you used last</string>
     <string name="gesture_search_touch_block_1">Block touch</string>
     <string name="gesture_search_touch_block_2">Prevent accidental touch</string>
     <string name="touch_block_hint_title">Touch blocked</string>
@@ -3152,6 +3161,7 @@
     <string name="honeycomb_layout_editor_empty">Tap + below to add apps or shortcuts</string>
     <string name="quick_launcher_panels_section">Launcher panels</string>
     <string name="quick_launcher_panel_add">New panel</string>
+    <string name="quick_launcher_panel_limit_reached">At most %1$d panels</string>
     <string name="quick_launcher_panel_rename">Rename</string>
     <string name="quick_launcher_panel_duplicate">Duplicate</string>
     <string name="quick_launcher_panel_delete">Delete panel</string>
@@ -5095,6 +5105,8 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="quick_wheel_section_slots">Containers</string>
     <string name="quick_wheel_show_labels">Show text labels</string>
     <string name="quick_wheel_show_labels_desc">Show the name below the icon</string>
+    <string name="quick_wheel_hint_switch_title">Show top hint</string>
+    <string name="quick_wheel_hint_switch_desc">When off, neither the action hint at the wheel nor the hint in the config page is shown</string>
     <string name="quick_wheel_transparent_container">Transparent container background</string>
     <string name="quick_wheel_transparent_container_desc">No background and no clipping for app icons and gallery images</string>
     <string name="quick_wheel_transparent_builtin">Built-in icons transparent</string>

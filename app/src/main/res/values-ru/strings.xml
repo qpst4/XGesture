@@ -1968,6 +1968,15 @@
     <string name="screen_draw_save_failed">Не удалось сохранить рисунок</string>
     <string name="screen_draw_copied">Рисунок скопирован в буфер обмена</string>
     <string name="screen_draw_shared">Открыто меню отправки</string>
+    <string name="screen_draw_default_tool_title">Инструмент по умолчанию</string>
+    <string name="screen_draw_tool_memory">Запоминать</string>
+    <string name="screen_draw_tool_desc_doodle">Перетаскивайте, чтобы рисовать от руки</string>
+    <string name="screen_draw_tool_desc_shape">Перетащите, чтобы создать фигуру, затем измените размер</string>
+    <string name="screen_draw_tool_desc_text">Коснитесь места и введите текст</string>
+    <string name="screen_draw_tool_desc_mosaic">Перетаскивайте по области, которую нужно скрыть</string>
+    <string name="screen_draw_tool_desc_number">Коснитесь, чтобы поставить очередной номер</string>
+    <string name="screen_draw_tool_desc_crop">Перетащите, чтобы выделить область и обрезать</string>
+    <string name="screen_draw_tool_desc_memory">Открывать с последним использованным инструментом</string>
     <string name="gesture_search_touch_block_1">Блокировка касаний</string>
     <string name="gesture_search_touch_block_2">Защита от случайных касаний</string>
     <string name="touch_block_hint_title">Касания заблокированы</string>
@@ -3081,6 +3090,7 @@
     <string name="honeycomb_layout_editor_empty">Нажмите + ниже, чтобы добавить приложения или ярлыки</string>
     <string name="quick_launcher_panels_section">Панели лаунчера</string>
     <string name="quick_launcher_panel_add">Новая панель</string>
+    <string name="quick_launcher_panel_limit_reached">Не более %1$d панелей</string>
     <string name="quick_launcher_panel_rename">Переименовать</string>
     <string name="quick_launcher_panel_duplicate">Дублировать</string>
     <string name="quick_launcher_panel_delete">Удалить панель</string>
@@ -5004,6 +5014,8 @@
     <string name="quick_wheel_section_slots">Контейнеры</string>
     <string name="quick_wheel_show_labels">Показывать текстовые подписи</string>
     <string name="quick_wheel_show_labels_desc">Показывать название под значком</string>
+    <string name="quick_wheel_hint_switch_title">Показывать подсказку сверху</string>
+    <string name="quick_wheel_hint_switch_desc">Если выключено, подсказка действия на колесе и подсказка на странице настроек не показываются</string>
     <string name="quick_wheel_transparent_container">Прозрачный фон контейнера</string>
     <string name="quick_wheel_transparent_container_desc">Значки приложений и картинки из галереи без подложки и без обрезки</string>
     <string name="quick_wheel_transparent_builtin">Прозрачные встроенные значки</string>
