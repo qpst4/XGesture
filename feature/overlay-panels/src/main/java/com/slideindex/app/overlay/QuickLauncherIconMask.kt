@@ -28,6 +28,45 @@ object QuickLauncherIconMask {
         return IconShapeNormalizer.createClipPath(shape, bounds, out)
     }
 
+    @Synchronized
+    fun outlinePathFor(
+        shape: FvIconShape,
+        bounds: RectF,
+        out: Path
+    ): Path {
+        out.rewind()
+        when (shape) {
+            FvIconShape.CIRCLE -> {
+                out.addOval(bounds, Path.Direction.CW)
+            }
+            FvIconShape.SQUIRCLE -> {
+                val cr = bounds.width() * 0.35f
+                out.addRoundRect(bounds, cr, cr, Path.Direction.CW)
+            }
+            FvIconShape.ROUNDED_RECT -> {
+                val cr = bounds.width() * 0.22f
+                out.addRoundRect(bounds, cr, cr, Path.Direction.CW)
+            }
+            FvIconShape.SQUARE -> {
+                val cr = bounds.width() * 0.08f
+                out.addRoundRect(bounds, cr, cr, Path.Direction.CW)
+            }
+            FvIconShape.ORIGINAL -> {
+                val unit = adaptiveUnitPath()
+                if (unit != null) {
+                    out.set(unit)
+                    tmpMatrix.reset()
+                    tmpMatrix.setRectToRect(tmpUnitBounds, bounds, Matrix.ScaleToFit.FILL)
+                    out.transform(tmpMatrix)
+                } else {
+                    val cr = bounds.width() * 0.22f
+                    out.addRoundRect(bounds, cr, cr, Path.Direction.CW)
+                }
+            }
+        }
+        return out
+    }
+
     fun pathFor(
         shape: Int,
         bounds: RectF,

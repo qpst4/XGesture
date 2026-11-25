@@ -890,42 +890,42 @@ private fun FlowItemCard(
     }
 
     val scale by animateFloatAsState(
-        targetValue = if (isHovered) 1.18f else 1.0f,
+        targetValue = if (isHovered) 1.15f else 1.0f,
         animationSpec = tween(120),
         label = "itemScale",
     )
-    val iconShape = RoundedCornerShape(12.dp)
+    val buttonShape = RoundedCornerShape(14.dp)
+    val iconClipShape = RoundedCornerShape(10.dp)
 
     Column(
         modifier = Modifier
             .scale(scale)
             .width(56.dp)
             .onGloballyPositioned { onPositioned(it.boundsInWindow()) }
-            .padding(vertical = 4.dp),
+            .background(
+                if (isHovered) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                } else {
+                    Color.Transparent
+                },
+                shape = buttonShape,
+            )
+            .border(
+                BorderStroke(
+                    width = if (isHovered) 2.dp else 0.dp,
+                    color = if (isHovered) MaterialTheme.colorScheme.primary else Color.Transparent,
+                ),
+                shape = buttonShape,
+            )
+            .padding(horizontal = 2.dp, vertical = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        // 图标圆角容器：震动热区只绑定在此 48dp 区域，杜绝边缘虚假震动
+        // 图标圆角容器：震动热区只绑定在此 44dp 区域，杜绝边缘虚假震动
         Box(
             modifier = Modifier
-                .size(48.dp)
-                .onGloballyPositioned { onIconPositioned(it.boundsInWindow()) }
-                .background(
-                    if (isHovered) {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
-                    } else {
-                        Color.Transparent
-                    },
-                    shape = iconShape,
-                )
-                .border(
-                    BorderStroke(
-                        width = if (isHovered) 2.5.dp else 0.dp,
-                        color = if (isHovered) MaterialTheme.colorScheme.primary else Color.Transparent,
-                    ),
-                    shape = iconShape,
-                )
-                .padding(if (isHovered) 2.dp else 0.dp),
+                .size(44.dp)
+                .onGloballyPositioned { onIconPositioned(it.boundsInWindow()) },
             contentAlignment = Alignment.Center,
         ) {
             when {
@@ -934,8 +934,8 @@ private fun FlowItemCard(
                         bitmap = item.iconBitmap.asImageBitmap(),
                         contentDescription = item.title,
                         modifier = Modifier
-                            .size(42.dp)
-                            .clip(iconShape),
+                            .size(38.dp)
+                            .clip(iconClipShape),
                     )
                 }
                 item.iconVector != null -> {
@@ -943,7 +943,7 @@ private fun FlowItemCard(
                         imageVector = item.iconVector,
                         contentDescription = item.title,
                         tint = item.iconTintColor ?: MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(34.dp),
+                        modifier = Modifier.size(32.dp),
                     )
                 }
                 item.iconPainter != null -> {
@@ -951,7 +951,7 @@ private fun FlowItemCard(
                         painter = item.iconPainter,
                         contentDescription = item.title,
                         tint = item.iconTintColor ?: MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(34.dp),
+                        modifier = Modifier.size(32.dp),
                     )
                 }
                 item.iconDrawableRes != null -> {
@@ -959,7 +959,7 @@ private fun FlowItemCard(
                         painter = androidx.compose.ui.res.painterResource(item.iconDrawableRes),
                         contentDescription = item.title,
                         tint = item.iconTintColor ?: MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(34.dp),
+                        modifier = Modifier.size(32.dp),
                     )
                 }
             }
@@ -974,6 +974,7 @@ private fun FlowItemCard(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 2.dp),
         )
     }
 }

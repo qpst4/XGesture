@@ -19,9 +19,11 @@ import com.slideindex.app.overlay.HoneycombRuntimeTarget
 import com.slideindex.app.overlay.ShellCommandBadgeRenderer
 import com.slideindex.app.overlay.HintRingRenderer
 import com.slideindex.app.overlay.MacroBadgeRenderer
+import com.slideindex.app.overlay.QuickLauncherIconMask
 import com.slideindex.app.overlay.ShortcutBadgeRenderer
 import com.slideindex.app.overlay.layout.FvRingLauncherSide
 import com.slideindex.app.overlay.layout.FvCircleLayoutEngine
+import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.overlay.layout.FvPanelLayout
 import com.slideindex.app.overlay.layout.FvToolbarButton
 import com.slideindex.app.settings.FvRingLauncherSlotIconOverride
@@ -146,6 +148,7 @@ object RingLauncherRenderer {
                         fillPaint = fillPaint,
                         strokePaint = strokePaint,
                         plusPaint = plusPaint,
+                        iconShape = layout.iconShape,
                     )
                 } else if (target != null) {
                     val iconSizePx = (radius * 2f).toInt().coerceAtLeast(12)
@@ -174,6 +177,7 @@ object RingLauncherRenderer {
                         strokePaint = strokePaint,
                         iconPaint = iconPaint,
                         isClone = target.isClone,
+                        iconShape = layout.iconShape,
                     )
                     val drawSize = min(bitmap.width.toFloat(), radius * 2f)
                     if (target.isShortcut) {
@@ -236,6 +240,7 @@ object RingLauncherRenderer {
                     shadowPaint = shadowPaint,
                     strokePaint = strokePaint,
                     iconPaint = iconPaint,
+                    iconShape = layout.iconShape,
                 )
             }
         }
@@ -267,6 +272,7 @@ object RingLauncherRenderer {
                     hintRingProgress = hintRingProgress,
                     hintPipArmed = hintPipArmed,
                     isClone = target.isClone,
+                    iconShape = layout.iconShape,
                 )
                 if (previewBadgeInfo != null) {
                     val (badgeCx, badgeCy, badgeSize) = previewBadgeInfo
@@ -306,6 +312,7 @@ object RingLauncherRenderer {
         strokePaint: Paint,
         iconPaint: Paint,
         isClone: Boolean,
+        iconShape: FvIconShape = FvIconShape.ROUNDED_RECT,
     ) {
         val diameter = radius * 2f
         val left = centerX - radius
@@ -313,16 +320,15 @@ object RingLauncherRenderer {
         val right = left + diameter
         val bottom = top + diameter
         iconDstRect.set(left, top, right, bottom)
-        val cornerRadius = diameter * cornerRadiusRatio
 
         iconClipPath.reset()
-        if (cornerRadiusRatio >= 0.49f) {
-            iconClipPath.addCircle(centerX, centerY, radius, Path.Direction.CW)
-        } else {
-            iconClipPath.addRoundRect(iconDstRect, cornerRadius, cornerRadius, Path.Direction.CW)
+        if (iconShape != FvIconShape.ORIGINAL) {
+            QuickLauncherIconMask.outlinePathFor(iconShape, iconDstRect, iconClipPath)
         }
         val iconClipSaveCount = canvas.save()
-        canvas.clipPath(iconClipPath)
+        if (iconShape != FvIconShape.ORIGINAL) {
+            canvas.clipPath(iconClipPath)
+        }
         iconPaint.isFilterBitmap = true
         iconPaint.alpha = 255
         canvas.drawBitmap(bitmap, null, iconDstRect, iconPaint)
@@ -336,7 +342,7 @@ object RingLauncherRenderer {
                 centerY,
                 diameter,
                 progress,
-                circular = cornerRadiusRatio >= 0.49f,
+                circular = iconShape == FvIconShape.CIRCLE,
             )
         }
 
@@ -352,12 +358,9 @@ object RingLauncherRenderer {
                 right + strokeOffset,
                 bottom + strokeOffset,
             )
-            val highlightCorner = cornerRadius + strokeOffset
-            if (cornerRadiusRatio >= 0.49f) {
-                canvas.drawCircle(centerX, centerY, radius + strokeOffset, strokePaint)
-            } else {
-                canvas.drawRoundRect(iconHighlightRect, highlightCorner, highlightCorner, strokePaint)
-            }
+            iconClipPath.reset()
+            QuickLauncherIconMask.outlinePathFor(iconShape, iconHighlightRect, iconClipPath)
+            canvas.drawPath(iconClipPath, strokePaint)
         }
     }
 
@@ -374,6 +377,7 @@ object RingLauncherRenderer {
         fillPaint: Paint,
         strokePaint: Paint,
         plusPaint: Paint,
+        iconShape: FvIconShape = FvIconShape.ROUNDED_RECT,
     ) {
         val shadowOffset = 2f * density * progress
         val diameter = radius * 2f
@@ -381,7 +385,6 @@ object RingLauncherRenderer {
         val top = centerY - radius
         val right = left + diameter
         val bottom = top + diameter
-        val cornerRadius = diameter * cornerRadiusRatio
 
         fillPaint.color = if (highlighted) EMPTY_FILL_HIGHLIGHT else EMPTY_FILL
         strokePaint.style = Paint.Style.STROKE
@@ -389,17 +392,16 @@ object RingLauncherRenderer {
         strokePaint.color = if (highlighted) EMPTY_STROKE_HIGHLIGHT else EMPTY_STROKE
         strokePaint.strokeWidth = 1.75f * density
 
-        if (cornerRadiusRatio >= 0.49f) {
-            canvas.drawCircle(centerX, centerY + shadowOffset, radius * 1.02f, shadowPaint)
-            canvas.drawCircle(centerX, centerY, radius, fillPaint)
-            canvas.drawCircle(centerX, centerY, radius, strokePaint)
-        } else {
-            iconShadowRect.set(left, top + shadowOffset, right, bottom + shadowOffset)
-            canvas.drawRoundRect(iconShadowRect, cornerRadius, cornerRadius, shadowPaint)
-            iconDstRect.set(left, top, right, bottom)
-            canvas.drawRoundRect(iconDstRect, cornerRadius, cornerRadius, fillPaint)
-            canvas.drawRoundRect(iconDstRect, cornerRadius, cornerRadius, strokePaint)
-        }
+        iconShadowRect.set(left, top + shadowOffset, right, bottom + shadowOffset)
+        iconClipPath.reset()
+        QuickLauncherIconMask.outlinePathFor(iconShape, iconShadowRect, iconClipPath)
+        canvas.drawPath(iconClipPath, shadowPaint)
+
+        iconDstRect.set(left, top, right, bottom)
+        iconClipPath.reset()
+        QuickLauncherIconMask.outlinePathFor(iconShape, iconDstRect, iconClipPath)
+        canvas.drawPath(iconClipPath, fillPaint)
+        canvas.drawPath(iconClipPath, strokePaint)
 
         plusPaint.color = if (highlighted) PLUS_COLOR_HIGHLIGHT else PLUS_COLOR
         plusPaint.textSize = radius * 0.82f
@@ -470,6 +472,7 @@ object RingLauncherRenderer {
         hintPipArmed: Boolean = false,
         /** 分身条目：图标右上角补黄点（画在形状裁剪之外）。 */
         isClone: Boolean = false,
+        iconShape: FvIconShape = FvIconShape.ROUNDED_RECT,
     ): Triple<Float, Float, Float>? {
         val centerX = canvas.width * 0.5f
         val iconSizePx = 54f * density
@@ -490,47 +493,15 @@ object RingLauncherRenderer {
             centerX + iconRadius,
             iconCenterY + iconRadius,
         )
-        val previewCornerRadius = iconSizePx * cornerRadiusRatio
-
-        val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = 0x55000000
-            this.alpha = (0x55 * progress).toInt().coerceIn(0, 255)
-        }
-        if (cornerRadiusRatio >= 0.49f) {
-            canvas.drawCircle(centerX, iconCenterY + 3f * density, iconRadius, shadowPaint)
-        } else {
-            canvas.drawRoundRect(
-                iconRect.left,
-                iconRect.top + 3f * density,
-                iconRect.right,
-                iconRect.bottom + 3f * density,
-                previewCornerRadius,
-                previewCornerRadius,
-                shadowPaint,
-            )
-        }
-
-        // 浅色模式下底板也要跟着变浅
-        iconPlatePaint.color = if (com.slideindex.app.overlay.panels.PanelRuntimeHooks.iconPlateCurrentDark?.invoke() == true) {
-            ICON_PLATE
-        } else {
-            0xFFF1F3F7.toInt()
-        }
-        iconPlatePaint.alpha = 255
-        if (cornerRadiusRatio >= 0.49f) {
-            canvas.drawCircle(centerX, iconCenterY, iconRadius, iconPlatePaint)
-        } else {
-            canvas.drawRoundRect(iconRect, previewCornerRadius, previewCornerRadius, iconPlatePaint)
-        }
 
         iconClipPath.reset()
-        if (cornerRadiusRatio >= 0.49f) {
-            iconClipPath.addCircle(centerX, iconCenterY, iconRadius, Path.Direction.CW)
-        } else {
-            iconClipPath.addRoundRect(iconRect, previewCornerRadius, previewCornerRadius, Path.Direction.CW)
+        if (iconShape != FvIconShape.ORIGINAL) {
+            QuickLauncherIconMask.outlinePathFor(iconShape, iconRect, iconClipPath)
         }
         val previewClipSaveCount = canvas.save()
-        canvas.clipPath(iconClipPath)
+        if (iconShape != FvIconShape.ORIGINAL) {
+            canvas.clipPath(iconClipPath)
+        }
         val previewIconPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
             this.alpha = alpha
         }
@@ -544,7 +515,7 @@ object RingLauncherRenderer {
                 iconCenterY,
                 iconSizePx,
                 alpha / 255f,
-                circular = cornerRadiusRatio >= 0.49f,
+                circular = iconShape == FvIconShape.CIRCLE,
             )
         }
 

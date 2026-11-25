@@ -30,6 +30,7 @@ data class FvPanelLayout(
     val toolbarButtonCenters: List<Pair<Float, Float>>,
     val outerRadiusPx: Float = 0f,
     val cornerRadiusRatio: Float = 0.22f,
+    val iconShape: FvIconShape = FvIconShape.ROUNDED_RECT,
 )
 
 /** 按 FV CircleAppContainer 几何移植的半圆槽位布局（支持动态外观与半径自定义）。 */
@@ -149,6 +150,7 @@ object FvCircleLayoutEngine {
             toolbarButtonCenters = toolbar.second,
             outerRadiusPx = outerRadius,
             cornerRadiusRatio = iconShape.cornerRadiusRatio,
+            iconShape = iconShape,
         )
     }
 

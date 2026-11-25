@@ -20,6 +20,7 @@ import com.slideindex.app.launcher.showsShellActivityShortcutBadge
 import com.slideindex.app.launcher.showsShellCommandBadge
 import com.slideindex.app.overlay.HintRingRenderer
 import com.slideindex.app.overlay.MacroBadgeRenderer
+import com.slideindex.app.overlay.QuickLauncherIconMask
 import com.slideindex.app.overlay.ShellCommandBadgeRenderer
 import com.slideindex.app.overlay.ShortcutBadgeRenderer
 import com.slideindex.app.overlay.layout.FvIconShape
@@ -530,12 +531,9 @@ object CornerRadialMenuRenderer {
         shape: FvIconShape,
         paint: Paint,
     ) {
-        if (shape == FvIconShape.CIRCLE) {
-            canvas.drawCircle(centerX, centerY, radius, paint)
-            return
-        }
         slotShapePath.rewind()
-        buildSlotShapePath(centerX, centerY, radius, shape, slotShapePath)
+        slotShapeRect.set(centerX - radius, centerY - radius, centerX + radius, centerY + radius)
+        QuickLauncherIconMask.outlinePathFor(shape, slotShapeRect, slotShapePath)
         canvas.drawPath(slotShapePath, paint)
     }
 
@@ -547,13 +545,8 @@ object CornerRadialMenuRenderer {
         path: Path,
     ) {
         path.rewind()
-        if (shape == FvIconShape.CIRCLE || shape == FvIconShape.ORIGINAL) {
-            path.addCircle(centerX, centerY, radius, Path.Direction.CW)
-            return
-        }
         slotShapeRect.set(centerX - radius, centerY - radius, centerX + radius, centerY + radius)
-        val corner = radius * 2f * shape.cornerRadiusRatio
-        path.addRoundRect(slotShapeRect, corner, corner, Path.Direction.CW)
+        QuickLauncherIconMask.outlinePathFor(shape, slotShapeRect, path)
     }
 
     private fun drawFilledSlotIcon(
@@ -601,11 +594,12 @@ object CornerRadialMenuRenderer {
 
         if (highlighted) {
             strokePaint.color = BUBBLE_STROKE_HIGHLIGHT
+            val strokeOffset = 1.5f * density
             drawSlotShape(
                 canvas = canvas,
                 centerX = centerX,
                 centerY = centerY,
-                radius = radius,
+                radius = radius + strokeOffset,
                 shape = shape,
                 paint = strokePaint,
             )
