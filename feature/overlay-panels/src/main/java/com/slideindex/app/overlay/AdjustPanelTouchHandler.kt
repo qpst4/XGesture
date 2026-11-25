@@ -76,6 +76,10 @@ class AdjustPanelTouchHandler(
                             host.hapticConfirmLaunch()
                             ctrl.scheduleAutoDismiss()
                             host.invalidate()
+                            for (frame in 1..3) {
+                                host.overlayView()?.postDelayed({ host.invalidate() }, frame * 16L)
+                                    ?: host.post { host.invalidate() }
+                            }
                             return true
                         }
                         VolumeHitTarget.MEDIA -> {

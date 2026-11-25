@@ -296,6 +296,9 @@ class LocalFrostedGlassDrawable(private val viewProvider: () -> View?) {
         runCatching { blurDrawable?.alpha = 0 }
     }
 
+    /** 提前获取并向当前宿主 ViewRootImpl 注册系统 BackgroundBlurDrawable，未调用 draw 前保持 alpha = 0。 */
+    fun warmup(): Boolean = ensureDrawable() != null
+
     // 反射取 ViewRootImpl：拿系统私有字段做模糊背景，失败已用 runCatching 兜住。
     @android.annotation.SuppressLint("PrivateApi")
     private fun ensureDrawable(): Drawable? {

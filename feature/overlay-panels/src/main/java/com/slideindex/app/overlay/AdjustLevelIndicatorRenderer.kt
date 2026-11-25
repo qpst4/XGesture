@@ -71,6 +71,10 @@ object AdjustLevelIndicatorRenderer {
                 ringPillFrostedGlass = LocalFrostedGlassDrawable { activeOverlayView }
                 notificationPillFrostedGlass = LocalFrostedGlassDrawable { activeOverlayView }
             }
+            if (mode == com.slideindex.app.overlay.panels.PanelAdjustMode.VOLUME) {
+                ringPillFrostedGlass?.warmup()
+                notificationPillFrostedGlass?.warmup()
+            }
         }
 
         activeContext = context
