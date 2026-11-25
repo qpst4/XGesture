@@ -233,6 +233,18 @@ class HomeViewModel @AssistedInject constructor(
         settingsRepository.setBackdropDimPercent(percent)
     }
 
+    fun setSearchPanelBlurMode(mode: com.slideindex.app.settings.OverlayBlurMode) = launchSettingsWrite {
+        settingsRepository.setSearchPanelBlurModeId(mode.id)
+    }
+
+    fun setExpandPanelBlurMode(mode: com.slideindex.app.settings.OverlayBlurMode) = launchSettingsWrite {
+        settingsRepository.setExpandPanelBlurModeId(mode.id)
+    }
+
+    fun setPickResultBlurMode(mode: com.slideindex.app.settings.OverlayBlurMode) = launchSettingsWrite {
+        settingsRepository.setPickResultBlurModeId(mode.id)
+    }
+
     fun setTopAppBarBlurStyle(style: TopAppBarBlurStyle) = launchOptimisticSettingsWrite(
         optimisticUpdate = { settings -> settings.copy(topAppBarBlurStyleId = style.id) },
         block = { settingsRepository.setTopAppBarBlurStyle(style) },

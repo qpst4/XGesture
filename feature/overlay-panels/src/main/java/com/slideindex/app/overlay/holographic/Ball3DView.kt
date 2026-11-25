@@ -187,13 +187,6 @@ class Ball3DView @JvmOverloads constructor(
         val half = size / 2f
         val left = (node.screenX - half).toInt()
         val top = (node.screenY - half).toInt()
-        canvas.drawOval(
-            left - 6f,
-            top - 6f,
-            left + size + 6f,
-            top + size + 6f,
-            shadowPaint,
-        )
         icon.setBounds(left, top, left + size, top + size)
         val savedAlpha = icon.alpha
         icon.alpha = node.alpha

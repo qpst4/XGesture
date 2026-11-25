@@ -324,12 +324,12 @@ object SearchPanelOverlayWindow {
     }
 
     /** Applies cross-window blur when BLUR mode is active (matches honeycomb overlay). */
-    fun updateBackgroundBlur(context: Context, backgroundStyle: Int, blurRadiusDp: Int): Boolean {
+    fun updateBackgroundBlur(context: Context, blurEnabled: Boolean, blurRadiusDp: Int): Boolean {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             var result = false
             val latch = java.util.concurrent.CountDownLatch(1)
             mainHandler.post {
-                result = updateBackgroundBlur(context, backgroundStyle, blurRadiusDp)
+                result = updateBackgroundBlur(context, blurEnabled, blurRadiusDp)
                 latch.countDown()
             }
             runCatching { latch.await(500, java.util.concurrent.TimeUnit.MILLISECONDS) }
@@ -339,8 +339,7 @@ object SearchPanelOverlayWindow {
         val view = composeView ?: return false
         val params = layoutParams ?: return false
 
-        val wantsNativeBlur = backgroundStyle == SearchPanelBackgroundStyle.BLUR &&
-            blurRadiusDp > 0
+        val wantsNativeBlur = blurEnabled && blurRadiusDp > 0
         val canNativeBlur = wantsNativeBlur && OverlayBlurGate.isSystemBlurEnabled(wm)
         nativeBlurActive = canNativeBlur
 
@@ -348,7 +347,7 @@ object SearchPanelOverlayWindow {
             params.flags = params.flags or WindowManager.LayoutParams.FLAG_BLUR_BEHIND
             val density = context.resources.displayMetrics.density
             val rawBlurPx = (blurRadiusDp * density).roundToInt()
-            val clampedBlurPx = rawBlurPx.coerceIn(1, 80)
+            val clampedBlurPx = rawBlurPx.coerceIn(1, 100)
             params.setBlurBehindRadius(clampedBlurPx)
         } else {
             params.flags = params.flags and WindowManager.LayoutParams.FLAG_BLUR_BEHIND.inv()

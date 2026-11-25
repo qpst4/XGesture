@@ -750,6 +750,12 @@ data class OverlayBlurSettings(
     val backdropBlurRadiusDp: Int = 80,
     /** 全屏背景暗化百分比（%）；默认 35%，区间 0..100。 */
     val backdropDimPercent: Int = 35,
+    /** 搜索面板模糊模式：0=关闭, 1=仅背景, 2=仅面板。默认仅背景(1)。 */
+    val searchPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
+    /** 扩展面板模糊模式：0=关闭, 1=仅背景, 2=仅面板。默认仅背景(1)。 */
+    val expandPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
+    /** 分词浮层模糊模式：0=关闭, 1=仅背景, 2=仅面板。默认关闭(0)。 */
+    val pickResultBlurModeId: Int = OverlayBlurMode.DISABLED.id,
 )
 
 /**

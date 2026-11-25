@@ -844,7 +844,6 @@ class CornerGestureOverlayView(
     }
 
     private fun drawBackgroundMask(canvas: Canvas, progress: Float) {
-        if (cornerSettings.backgroundStyle == CornerGestureSettings.BACKGROUND_NONE) return
         if (progress <= 0.01f) return
         val spec = OverlayMaterialSpec.fromContext(context)
         val isDark = OverlayPanelTheme.isDarkTheme(context)
@@ -868,14 +867,7 @@ class CornerGestureOverlayView(
             false
         }
         if (!blurDrawn) {
-            val dimPercent = if (spec.backdropDimPercent > 0) {
-                spec.backdropDimPercent
-            } else {
-                cornerSettings.dimPercent.coerceIn(
-                    CornerGestureSettings.MIN_DIM_PERCENT,
-                    CornerGestureSettings.MAX_DIM_PERCENT,
-                )
-            }
+            val dimPercent = spec.backdropDimPercent
             val alpha = (255f * dimPercent / 100f * progress).toInt().coerceIn(0, 255)
             if (alpha <= 0) return
             dimPaint.color = Color.BLACK

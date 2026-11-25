@@ -1664,6 +1664,18 @@ class OverlaySettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.BACKDROP_DIM_PERCENT] = value.coerceIn(0, 100)
     }
 
+    suspend fun setSearchPanelBlurModeId(modeId: Int) = editor.edit {
+        it[SettingsPreferenceKeys.SEARCH_PANEL_BLUR_MODE_ID] = modeId
+    }
+
+    suspend fun setExpandPanelBlurModeId(modeId: Int) = editor.edit {
+        it[SettingsPreferenceKeys.EXPAND_PANEL_BLUR_MODE_ID] = modeId
+    }
+
+    suspend fun setPickResultBlurModeId(modeId: Int) = editor.edit {
+        it[SettingsPreferenceKeys.PICK_RESULT_BLUR_MODE_ID] = modeId
+    }
+
     suspend fun setStashPanelBackgroundBlurRadiusDp(value: Int) = editor.edit {
         it[SettingsPreferenceKeys.STASH_PANEL_BACKGROUND_BLUR_RADIUS_DP] = value.coerceIn(
             AppSettings.STASH_PANEL_BLUR_RADIUS_MIN_DP,

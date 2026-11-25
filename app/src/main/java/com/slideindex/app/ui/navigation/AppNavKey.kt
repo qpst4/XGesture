@@ -9,7 +9,9 @@ sealed interface AppNavKey : NavKey {
     // Home tab
     @Serializable data object HomeMain : AppNavKey
     @Serializable data object HomeInteractionAppearance : AppNavKey
-@Serializable data object HomeHapticSettings : AppNavKey
+    @Serializable data object HomeOverlayMaterial : AppNavKey
+    @Serializable data object HomeOverlayAdvancedShimmer : AppNavKey
+    @Serializable data object HomeHapticSettings : AppNavKey
     @Serializable data object HomeBackgroundPermissions : AppNavKey
     @Serializable data object HomeLayout : AppNavKey
     @Serializable data object HomeHiddenApps : AppNavKey

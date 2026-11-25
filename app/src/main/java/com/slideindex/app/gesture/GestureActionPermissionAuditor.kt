@@ -15,11 +15,6 @@ import com.slideindex.app.ui.gesturepicker.gestureActionLabelText
 import com.slideindex.app.ui.gesturepicker.gestureActionPermissionHintText
 import com.slideindex.app.ui.gesturepicker.isGestureActionEnabledOnDevice
 import com.slideindex.app.ui.gesturepicker.requestPermissionForAdjustAction
-import com.slideindex.app.overlay.SystemWallpaperBlurHelper
-import com.slideindex.app.overlay.WallpaperPermissionLauncher
-import com.slideindex.app.settings.HoneycombDisplaySettings
-import com.slideindex.app.settings.HolographicLauncherSettings
-import com.slideindex.app.settings.SearchPanelBackgroundStyle
 import com.slideindex.app.R
 
 data class MissingGesturePermission(
@@ -119,22 +114,6 @@ object GestureActionPermissionAuditor {
                 )
             }
 
-            val usesWallpaperBlur = settings.honeycombDisplay.backgroundStyle == HoneycombDisplaySettings.BACKGROUND_WALLPAPER_BLUR ||
-                settings.holographicLauncher.backgroundStyle == HolographicLauncherSettings.BACKGROUND_WALLPAPER_BLUR ||
-                settings.searchPanelBackgroundStyle == SearchPanelBackgroundStyle.WALLPAPER_BLUR
-
-            if (usesWallpaperBlur && !SystemWallpaperBlurHelper.hasWallpaperAccessPermission(context)) {
-                add(
-                    MissingGesturePermission(
-                        action = GestureAction.None,
-                        actionLabel = context.getString(R.string.wallpaper_blur_permission_title),
-                        actionDescription = context.getString(R.string.honeycomb_background_wallpaper_blur),
-                        permissionHint = context.getString(R.string.wallpaper_blur_permission_missing),
-                        requestTag = REQUEST_WALLPAPER_BLUR_ALL_FILES
-                    )
-                )
-            }
-
             if (settings.messageReminderSettings.enabled &&
                 !com.slideindex.app.util.MediaSessionHelper.isNotificationListenerEnabled(context)
             ) {
@@ -163,9 +142,6 @@ object GestureActionPermissionAuditor {
                         Uri.fromParts("package", context.packageName, null)
                     ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
-            }
-            REQUEST_WALLPAPER_BLUR_ALL_FILES -> {
-                SystemWallpaperBlurHelper.requestWallpaperPermission(context)
             }
             REQUEST_NOTIFICATION_LISTENER -> {
                 com.slideindex.app.util.MediaSessionHelper.openNotificationListenerSettings(context)

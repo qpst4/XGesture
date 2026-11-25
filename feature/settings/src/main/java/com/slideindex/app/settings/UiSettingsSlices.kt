@@ -70,6 +70,9 @@ data class HomeMainSettings(
     val backdropBlurEnabled: Boolean = true,
     val backdropBlurRadiusDp: Int = 80,
     val backdropDimPercent: Int = 35,
+    val searchPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
+    val expandPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
+    val pickResultBlurModeId: Int = OverlayBlurMode.DISABLED.id,
 ) {
     val bottomNavBlurRadiusDp: Float
         get() = when (BottomNavStyle.fromId(bottomNavStyleId)) {
@@ -139,6 +142,9 @@ data class HomeMainSettings(
             backdropBlurEnabled = settings.backdropBlurEnabled,
             backdropBlurRadiusDp = settings.backdropBlurRadiusDp,
             backdropDimPercent = settings.backdropDimPercent,
+            searchPanelBlurModeId = settings.searchPanelBlurModeId,
+            expandPanelBlurModeId = settings.expandPanelBlurModeId,
+            pickResultBlurModeId = settings.pickResultBlurModeId,
         )
     }
 }

@@ -24,8 +24,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
-import com.slideindex.app.overlay.SystemWallpaperBlurHelper
-import com.slideindex.app.overlay.WallpaperPermissionLauncher
 import com.slideindex.app.overlay.pickresult.SearchEngineIcon
 import com.slideindex.app.overlay.pickresult.searchIconSizeForColumns
 import com.slideindex.app.settings.AppSettings
@@ -58,9 +56,9 @@ fun SearchPanelPresentationLayoutSettingsScreen(
     onSetSearchEngineGridRows: (Int) -> Unit,
     onSetSearchEngineShowLabels: (Boolean) -> Unit,
     onSetSearchEngineIconShape: (SearchEngineIconShape) -> Unit,
-    onSetSearchPanelBackgroundStyle: (Int) -> Unit,
-    onSetSearchPanelBlurRadiusDp: (Int) -> Unit,
-    onSetSearchPanelDimPercent: (Int) -> Unit,
+    onSetSearchPanelBackgroundStyle: (Int) -> Unit = {},
+    onSetSearchPanelBlurRadiusDp: (Int) -> Unit = {},
+    onSetSearchPanelDimPercent: (Int) -> Unit = {},
     onSetSearchPanelInputBehavior: (SearchPanelInputBehavior) -> Unit,
     onSetSearchPanelEnterAction: (SearchPanelEnterAction) -> Unit,
 ) {
@@ -79,12 +77,6 @@ fun SearchPanelPresentationLayoutSettingsScreen(
     }
     val inputBehaviorEntries = SearchPanelInputBehavior.entries
     val enterActionEntries = SearchPanelEnterAction.entries
-    val backgroundStyles = listOf(
-        SearchPanelBackgroundStyle.BLUR,
-        SearchPanelBackgroundStyle.WALLPAPER_BLUR,
-        SearchPanelBackgroundStyle.BLACK,
-    )
-    val backgroundSectionTitle = stringResource(R.string.honeycomb_display_section_background)
     val engineSectionTitle = stringResource(R.string.search_panel_settings_section_engines)
     val behaviorSectionTitle = stringResource(R.string.search_panel_settings_section_behavior)
 
@@ -97,10 +89,6 @@ fun SearchPanelPresentationLayoutSettingsScreen(
         resolved?.name
     } else {
         null
-    }
-
-    fun ensureWallpaperPermission() {
-        SystemWallpaperBlurHelper.requestWallpaperPermission(context)
     }
 
     SettingsScreenScaffold(
@@ -222,76 +210,6 @@ fun SearchPanelPresentationLayoutSettingsScreen(
                             checked = settings.searchEngineShowLabels,
                             enabled = true,
                             onCheckedChange = onSetSearchEngineShowLabels,
-                        )
-                    },
-                )
-            },
-        )
-
-        settingsLazySmallTitle(
-            key = "background_section",
-            title = backgroundSectionTitle,
-        )
-        groupedCardItems(
-            keyPrefix = "search_panel_appearance",
-            items = buildList {
-                add(
-                    settingsCardScopeItem("background-style") {
-                        SettingDropdownRow(
-                            title = stringResource(R.string.honeycomb_display_section_background),
-                            items = listOf(
-                                stringResource(R.string.honeycomb_background_blur),
-                                stringResource(R.string.honeycomb_background_wallpaper_blur),
-                                stringResource(R.string.honeycomb_background_black),
-                            ),
-                            selectedIndex = backgroundStyles.indexOf(settings.searchPanelBackgroundStyle).coerceAtLeast(0),
-                            onSelectedIndexChange = {
-                                val style = backgroundStyles[it]
-                                onSetSearchPanelBackgroundStyle(style)
-                                if (style == SearchPanelBackgroundStyle.WALLPAPER_BLUR &&
-                                    !SystemWallpaperBlurHelper.hasWallpaperAccessPermission(context)
-                                ) {
-                                    ensureWallpaperPermission()
-                                }
-                            },
-                        )
-                    },
-                )
-                if (settings.searchPanelBackgroundStyle == SearchPanelBackgroundStyle.BLUR ||
-                    settings.searchPanelBackgroundStyle == SearchPanelBackgroundStyle.WALLPAPER_BLUR
-                ) {
-                    add(
-                        settingsCardScopeItem("blur-strength") {
-                            SettingsSliderRow(
-                                title = stringResource(R.string.honeycomb_blur_strength),
-                                value = settings.searchPanelBlurRadiusDp.toFloat(),
-                                valueRange = AppSettings.SEARCH_PANEL_BLUR_RADIUS_MIN_DP.toFloat()..
-                                    AppSettings.SEARCH_PANEL_BLUR_RADIUS_MAX_DP.toFloat(),
-                                steps = 16,
-                                enabled = true,
-                                label = stringResource(
-                                    R.string.corner_gesture_zone_dp_value,
-                                    settings.searchPanelBlurRadiusDp,
-                                ),
-                                onValueChange = { onSetSearchPanelBlurRadiusDp(it.roundToInt()) },
-                            )
-                        },
-                    )
-                }
-                add(
-                    settingsCardScopeItem("dim-percent") {
-                        SettingsSliderRow(
-                            title = stringResource(R.string.honeycomb_dim_percent),
-                            value = settings.searchPanelDimPercent.toFloat(),
-                            valueRange = AppSettings.SEARCH_PANEL_DIM_MIN_PERCENT.toFloat()..
-                                AppSettings.SEARCH_PANEL_DIM_MAX_PERCENT.toFloat(),
-                            steps = 12,
-                            enabled = true,
-                            label = stringResource(
-                                R.string.floating_pointer_percent_value,
-                                settings.searchPanelDimPercent,
-                            ),
-                            onValueChange = { onSetSearchPanelDimPercent(it.roundToInt()) },
                         )
                     },
                 )

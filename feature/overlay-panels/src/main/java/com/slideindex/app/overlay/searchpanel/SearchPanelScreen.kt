@@ -118,7 +118,7 @@ import com.slideindex.app.overlay.OverlayBlurGate
 import com.slideindex.app.overlay.OverlaySelectionToolbarActions
 import com.slideindex.app.overlay.OverlaySelectionToolbarPopup
 import com.slideindex.app.overlay.OverlayToastWindow
-import com.slideindex.app.overlay.SystemWallpaperBlurHelper
+import com.slideindex.app.overlay.rememberOverlayMaterialSpec
 import com.slideindex.app.overlay.cutTextFieldValue
 import com.slideindex.app.overlay.fieldModifier
 import com.slideindex.app.overlay.overlayIsLandscape
@@ -224,10 +224,7 @@ fun SearchPanelScreen(
     // 呈现方式固定为全屏（原「呈现方式」设置项已移除）。
     val barAtBottom = settings.searchPanelBarPosition == SearchPanelBarPosition.BOTTOM
     val bottomUpListOrder = settings.searchPanelListOrder == SearchPanelListOrder.BOTTOM_UP
-    val backgroundStyle = settings.searchPanelBackgroundStyle
-    val blurRadiusDp = settings.searchPanelBlurRadiusDp
-    val dimPercent = settings.searchPanelDimPercent
-    val overlayBlurEnabled = settings.overlayBlurEnabled
+    val materialSpec = rememberOverlayMaterialSpec()
 
     // 外部带图进来（拖拽动作 / 系统分享）：面板窗口保活、组合不重建，只能观察状态，不能用 remember 初值。
     val pendingImage by SearchPanelSessionState.pendingImage
@@ -277,7 +274,6 @@ fun SearchPanelScreen(
     var clipboardExpanded by remember { mutableStateOf(false) }
     var historyExpanded by remember { mutableStateOf(false) }
     var manuallySwitchedToNumberKeyboard by remember { mutableStateOf(false) }
-    var backgroundBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var usesNativeWindowBlur by remember { mutableStateOf(false) }
     var previewFile by remember { mutableStateOf<DeviceFileEntry?>(null) }
     val previewVisibilityState = remember { MutableTransitionState(false) }
@@ -402,50 +398,21 @@ fun SearchPanelScreen(
         }
     }
 
-    LaunchedEffect(backgroundStyle, blurRadiusDp, overlayBlurEnabled, visibilityState.targetState) {
+    val wantsBackdropBlur = materialSpec.isSearchPanelBackdropBlurEnabled
+    LaunchedEffect(wantsBackdropBlur, materialSpec.backdropBlurRadiusDp, visibilityState.targetState) {
         if (!visibilityState.targetState) {
-            backgroundBitmap = null
             usesNativeWindowBlur = SearchPanelOverlayWindow.updateBackgroundBlur(
                 context,
-                SearchPanelBackgroundStyle.BLACK,
+                false,
                 0,
             )
             return@LaunchedEffect
         }
         usesNativeWindowBlur = SearchPanelOverlayWindow.updateBackgroundBlur(
             context,
-            backgroundStyle,
-            // 总开关只作用于跨窗模糊：壁纸模糊（WALLPAPER_BLUR）仍用原始半径。
-            OverlayBlurGate.effectiveBlurRadiusDp(overlayBlurEnabled, blurRadiusDp),
+            wantsBackdropBlur,
+            materialSpec.backdropBlurRadiusDp,
         )
-        when (backgroundStyle) {
-            SearchPanelBackgroundStyle.WALLPAPER_BLUR -> {
-                backgroundBitmap = SystemWallpaperBlurHelper.loadBlurred(context, blurRadiusDp)
-            }
-            SearchPanelBackgroundStyle.BLUR -> {
-                // 总开关关闭：跨窗模糊与截图兜底都不走，由卡片自身的实色底承担。
-                if (!overlayBlurEnabled || usesNativeWindowBlur || blurRadiusDp <= 0) {
-                    backgroundBitmap = null
-                    return@LaunchedEffect
-                }
-                val service = com.slideindex.app.overlay.panels.PanelRuntimeHooks.overlayHostContext
-            ?.invoke() as? AccessibilityService
-                if (service == null) {
-                    backgroundBitmap = null
-                    return@LaunchedEffect
-                }
-                val deferred = CompletableDeferred<Bitmap?>()
-                val cached = com.slideindex.app.overlay.panels.PanelRuntimeHooks
-                    .captureBlurredWallpaper
-                    ?.invoke(service, context, blurRadiusDp) { bitmap ->
-                        deferred.complete(bitmap)
-                    }
-                backgroundBitmap = cached ?: deferred.await()
-            }
-            else -> {
-                backgroundBitmap = null
-            }
-        }
     }
 
     LaunchedEffect(textQuery, showSearchHistory) {
@@ -1151,16 +1118,8 @@ fun SearchPanelScreen(
     val dismissInteraction = remember { MutableInteractionSource() }
     val isLandscape = overlayIsLandscape()
     val landscapeImagePreviewMaxHeight = 160.dp
-    val dimAlpha = (dimPercent.coerceIn(
-        AppSettings.SEARCH_PANEL_DIM_MIN_PERCENT,
-        AppSettings.SEARCH_PANEL_DIM_MAX_PERCENT,
-    ) / 100f)
-    // Blur follows background mode; dim only controls the black veil.
-    val showBitmapBackground = backgroundBitmap != null &&
-        (backgroundStyle == SearchPanelBackgroundStyle.BLUR
-            || backgroundStyle == SearchPanelBackgroundStyle.WALLPAPER_BLUR)
-    val hasBlurBackground = showBitmapBackground || usesNativeWindowBlur
-    val showDimMask = dimAlpha > 0f
+    val backdropDimColor = Color(materialSpec.backdropDimColor(alphaScale = 1f))
+    val showDimMask = materialSpec.backdropDimPercent > 0
     val panelAnimSpec = tween<Float>(SEARCH_PANEL_ANIM_MS, easing = FastOutSlowInEasing)
     val panelSlideSpec = tween<IntOffset>(SEARCH_PANEL_ANIM_MS, easing = FastOutSlowInEasing)
     val enterTransition = fadeIn(panelAnimSpec) + slideInVertically(panelSlideSpec) { it / 8 }
@@ -1186,7 +1145,7 @@ fun SearchPanelScreen(
                     .fillMaxSize()
                     .then(
                         if (showDimMask) {
-                            Modifier.background(Color.Black.copy(alpha = dimAlpha))
+                            Modifier.background(backdropDimColor)
                         } else {
                             Modifier
                         },
@@ -1196,16 +1155,7 @@ fun SearchPanelScreen(
                         indication = null,
                         onClick = ::dismissPanel,
                     ),
-            ) {
-                if (showBitmapBackground) {
-                    Image(
-                        bitmap = backgroundBitmap!!.asImageBitmap(),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
-            }
+            )
         }
         AnimatedVisibility(
             visibleState = visibilityState,

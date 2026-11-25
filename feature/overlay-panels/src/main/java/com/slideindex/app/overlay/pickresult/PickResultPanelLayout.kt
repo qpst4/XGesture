@@ -1,5 +1,7 @@
 package com.slideindex.app.overlay.pickresult
 
+import com.slideindex.app.overlay.rememberOverlayMaterialSpec
+
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -814,10 +816,22 @@ fun PickResultPanelSlideHost(
                 }
             }
     ) {
-        LocalFrostedGlassBackdrop(
-            modifier = Modifier.matchParentSize(),
-            cornerRadiusPx = cornerPx,
-        )
+        val spec = rememberOverlayMaterialSpec()
+        if (spec.isPickResultCardBlurEnabled) {
+            LocalFrostedGlassBackdrop(
+                modifier = Modifier.matchParentSize(),
+                cornerRadiusPx = cornerPx,
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        androidx.compose.ui.graphics.Color(spec.solidFallbackColor(isDark)),
+                        shape = if (centered) PickResultPanelCardShape else PickResultBottomPanelShape,
+                    )
+            )
+        }
         content(isPanelSlideAnimating)
     }
 }

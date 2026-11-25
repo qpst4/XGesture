@@ -58,18 +58,11 @@ fun CornerGestureInteractionScreen(
     onShowSelectedNameChange: (Boolean) -> Unit,
     onShowEditButtonChange: (Boolean) -> Unit = {},
     onSelectedHintIconSizeChange: (Int) -> Unit,
-    onBackgroundStyleChange: (Int) -> Unit,
-    onBlurDpChange: (Int) -> Unit,
-    onDimPercentChange: (Int) -> Unit
+    onBackgroundStyleChange: (Int) -> Unit = {},
+    onBlurDpChange: (Int) -> Unit = {},
+    onDimPercentChange: (Int) -> Unit = {},
 ) {
     val corner = settings.cornerGestureSettings
-
-    // 下拉切换背景时立刻驱动条件滑条，避免等 DataStore 回流。
-    var localBackgroundStyle by remember(corner.backgroundStyle) {
-        mutableIntStateOf(corner.backgroundStyle)
-    }
-    var localBlurDp by remember(corner.blurDp) { mutableIntStateOf(corner.blurDp) }
-    var localDimPercent by remember(corner.dimPercent) { mutableIntStateOf(corner.dimPercent) }
 
     val zoneControlsEnabled = serviceEnabled && corner.enabled
 
@@ -418,69 +411,6 @@ fun CornerGestureInteractionScreen(
                             checked = corner.showEditButton,
                             enabled = serviceEnabled && corner.enabled,
                             onCheckedChange = onShowEditButtonChange,
-                        )
-                    }
-                )
-                val backgroundStyles = listOf(
-                    CornerGestureSettings.BACKGROUND_NONE,
-                    CornerGestureSettings.BACKGROUND_BLUR,
-                    CornerGestureSettings.BACKGROUND_BLACK
-                )
-                add(
-                    settingsCardScopeItem("background-style") {
-                        SettingDropdownRow(
-                            title = stringResource(R.string.corner_gesture_background_style),
-                            items = listOf(
-                                stringResource(R.string.corner_gesture_background_none),
-                                stringResource(R.string.honeycomb_background_blur),
-                                stringResource(R.string.honeycomb_background_black)
-                            ),
-                            selectedIndex = backgroundStyles.indexOf(localBackgroundStyle).coerceAtLeast(0),
-                            enabled = serviceEnabled && corner.enabled,
-                            onSelectedIndexChange = { index ->
-                                val style = backgroundStyles[index]
-                                localBackgroundStyle = style
-                                onBackgroundStyleChange(style)
-                            }
-                        )
-                    }
-                )
-                // 始终注册行，避免 Lazy 条件增减导致切背景后滑条不出现。
-                add(
-                    settingsCardScopeItem("blur-strength") {
-                        SettingsSliderRow(
-                            title = stringResource(R.string.honeycomb_blur_strength),
-                            value = localBlurDp.toFloat(),
-                            valueRange = CornerGestureSettings.MIN_BLUR_DP.toFloat()..
-                                CornerGestureSettings.MAX_BLUR_DP.toFloat(),
-                            steps = 16,
-                            enabled = serviceEnabled && corner.enabled
-                                && localBackgroundStyle == CornerGestureSettings.BACKGROUND_BLUR,
-                            label = stringResource(R.string.corner_gesture_zone_dp_value, localBlurDp),
-                            onValueChange = {
-                                val v = it.roundToInt()
-                                localBlurDp = v
-                                onBlurDpChange(v)
-                            }
-                        )
-                    }
-                )
-                add(
-                    settingsCardScopeItem("dim-percent") {
-                        SettingsSliderRow(
-                            title = stringResource(R.string.honeycomb_dim_percent),
-                            value = localDimPercent.toFloat(),
-                            valueRange = CornerGestureSettings.MIN_DIM_PERCENT.toFloat()..
-                                CornerGestureSettings.MAX_DIM_PERCENT.toFloat(),
-                            steps = 12,
-                            enabled = serviceEnabled && corner.enabled
-                                && localBackgroundStyle != CornerGestureSettings.BACKGROUND_NONE,
-                            label = stringResource(R.string.floating_pointer_percent_value, localDimPercent),
-                            onValueChange = {
-                                val v = it.roundToInt()
-                                localDimPercent = v
-                                onDimPercentChange(v)
-                            }
                         )
                     }
                 )

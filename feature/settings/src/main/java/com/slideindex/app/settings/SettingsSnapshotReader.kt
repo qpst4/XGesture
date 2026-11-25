@@ -853,6 +853,9 @@ internal object SettingsSnapshotReader {
                 backdropBlurEnabled = prefs[SettingsPreferenceKeys.BACKDROP_BLUR_ENABLED] ?: true,
                 backdropBlurRadiusDp = prefs[SettingsPreferenceKeys.BACKDROP_BLUR_RADIUS_DP] ?: 80,
                 backdropDimPercent = prefs[SettingsPreferenceKeys.BACKDROP_DIM_PERCENT] ?: 35,
+                searchPanelBlurModeId = prefs[SettingsPreferenceKeys.SEARCH_PANEL_BLUR_MODE_ID] ?: OverlayBlurMode.BACKDROP_ONLY.id,
+                expandPanelBlurModeId = prefs[SettingsPreferenceKeys.EXPAND_PANEL_BLUR_MODE_ID] ?: OverlayBlurMode.BACKDROP_ONLY.id,
+                pickResultBlurModeId = prefs[SettingsPreferenceKeys.PICK_RESULT_BLUR_MODE_ID] ?: OverlayBlurMode.DISABLED.id,
             ),
             dragDropFlow = DragDropFlowSettings(
                 dragDropFlowEnabled = prefs[SettingsPreferenceKeys.DRAG_DROP_FLOW_ENABLED] ?: false,

@@ -105,12 +105,13 @@ fun SearchPanelFrostedCard(
     val isDark = LocalAppDarkTheme.current
     val density = LocalDensity.current
     val cornerPx = with(density) { SearchPanelCardCorner.toPx() }
-    val fallbackColor = if (spec.blurEnabled) {
+    val cardBlurActive = spec.isSearchPanelCardBlurEnabled
+    val fallbackColor = if (cardBlurActive) {
         Color(spec.tintColor(isDark))
     } else {
         if (isDark) Color(0xFF1C1C1E) else Color(0xFFF5F5F7)
     }
-    val borderColor = if (spec.blurEnabled) Color(spec.innerBorderColor(isDark)) else Color.Transparent
+    val borderColor = if (cardBlurActive) Color(spec.innerBorderColor(isDark)) else Color.Transparent
 
     Box(
         modifier = modifier
@@ -135,10 +136,12 @@ fun SearchPanelFrostedCard(
                     .matchParentSize()
                     .background(fallbackColor),
             )
-            LocalFrostedGlassBackdrop(
-                modifier = Modifier.matchParentSize(),
-                cornerRadiusPx = cornerPx,
-            )
+            if (cardBlurActive) {
+                LocalFrostedGlassBackdrop(
+                    modifier = Modifier.matchParentSize(),
+                    cornerRadiusPx = cornerPx,
+                )
+            }
         }
         Column(
             modifier = Modifier

@@ -14,8 +14,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.slideindex.app.R
 import com.slideindex.app.gesture.SelectedHintMetrics
-import com.slideindex.app.overlay.SystemWallpaperBlurHelper
-import com.slideindex.app.overlay.WallpaperPermissionLauncher
 import com.slideindex.app.settings.HoneycombDisplaySettings
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_100
@@ -38,22 +36,11 @@ fun HoneycombDisplaySettingsScreen(
         localDisplay = next
         onDisplayChange(next)
     }
-    fun ensureWallpaperPermission() {
-        SystemWallpaperBlurHelper.requestWallpaperPermission(context)
-    }
 
     val modeSectionTitle = stringResource(R.string.honeycomb_display_section_mode)
     val positionSectionTitle = stringResource(R.string.honeycomb_display_section_position)
     val layoutSectionTitle = stringResource(R.string.honeycomb_display_section_layout)
-    val backgroundSectionTitle = stringResource(R.string.honeycomb_display_section_background)
     val animationSectionTitle = stringResource(R.string.honeycomb_display_section_animation)
-    val backgroundStyles = listOf(
-        HoneycombDisplaySettings.BACKGROUND_BLUR,
-        HoneycombDisplaySettings.BACKGROUND_WALLPAPER_BLUR,
-        HoneycombDisplaySettings.BACKGROUND_BLACK
-    )
-    val blurEnabled = localDisplay.backgroundStyle == HoneycombDisplaySettings.BACKGROUND_BLUR
-        || localDisplay.backgroundStyle == HoneycombDisplaySettings.BACKGROUND_WALLPAPER_BLUR
     val speedLabels = listOf(
         stringResource(R.string.honeycomb_speed_very_fast),
         stringResource(R.string.honeycomb_speed_fast),
@@ -259,68 +246,6 @@ fun HoneycombDisplaySettingsScreen(
                                 localDisplay.discSizePercent
                             ),
                             onValueChange = { updateDisplay(localDisplay.copy(discSizePercent = it.roundToInt())) }
-                        )
-                    }
-                )
-            }
-        )
-        settingsLazySmallTitle(
-            key = "section-background",
-            title = backgroundSectionTitle
-        )
-        groupedCardItems(
-            keyPrefix = "honeycomb-background",
-            items = buildList {
-                add(
-                    settingsCardScopeItem("background-style") {
-                        SettingDropdownRow(
-                            title = stringResource(R.string.honeycomb_display_section_background),
-                            items = listOf(
-                                stringResource(R.string.honeycomb_background_blur),
-                                stringResource(R.string.honeycomb_background_wallpaper_blur),
-                                stringResource(R.string.honeycomb_background_black)
-                            ),
-                            selectedIndex = backgroundStyles.indexOf(localDisplay.backgroundStyle).coerceAtLeast(0),
-                            onSelectedIndexChange = { index ->
-                                val style = backgroundStyles[index]
-                                updateDisplay(localDisplay.copy(backgroundStyle = style))
-                                if (style == HoneycombDisplaySettings.BACKGROUND_WALLPAPER_BLUR &&
-                                    !SystemWallpaperBlurHelper.hasWallpaperAccessPermission(context)
-                                ) {
-                                    ensureWallpaperPermission()
-                                }
-                            }
-                        )
-                    }
-                )
-                add(
-                    settingsCardScopeItem("blur-strength") {
-                        SettingsSliderRow(
-                            title = stringResource(R.string.honeycomb_blur_strength),
-                            value = localDisplay.blurDp.toFloat(),
-                            valueRange = HoneycombDisplaySettings.MIN_BLUR_DP.toFloat()..
-                                HoneycombDisplaySettings.MAX_BLUR_DP.toFloat(),
-                            steps = 16,
-                            enabled = blurEnabled,
-                            label = stringResource(R.string.corner_gesture_zone_dp_value, localDisplay.blurDp),
-                            onValueChange = { updateDisplay(localDisplay.copy(blurDp = it.roundToInt())) }
-                        )
-                    }
-                )
-                add(
-                    settingsCardScopeItem("dim-percent") {
-                        SettingsSliderRow(
-                            title = stringResource(R.string.honeycomb_dim_percent),
-                            value = localDisplay.dimPercent.toFloat(),
-                            valueRange = HoneycombDisplaySettings.MIN_DIM_PERCENT.toFloat()..
-                                HoneycombDisplaySettings.MAX_DIM_PERCENT.toFloat(),
-                            steps = 12,
-                            enabled = true,
-                            label = stringResource(
-                                R.string.floating_pointer_percent_value,
-                                localDisplay.dimPercent
-                            ),
-                            onValueChange = { updateDisplay(localDisplay.copy(dimPercent = it.roundToInt())) }
                         )
                     }
                 )

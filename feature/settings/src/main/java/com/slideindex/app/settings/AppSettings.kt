@@ -520,6 +520,12 @@ data class AppSettings(
     val backdropBlurEnabled get() = overlayBlur.backdropBlurEnabled
     val backdropBlurRadiusDp get() = overlayBlur.backdropBlurRadiusDp
     val backdropDimPercent get() = overlayBlur.backdropDimPercent
+    val searchPanelBlurModeId get() = overlayBlur.searchPanelBlurModeId
+    val searchPanelBlurMode get() = OverlayBlurMode.fromId(overlayBlur.searchPanelBlurModeId)
+    val expandPanelBlurModeId get() = overlayBlur.expandPanelBlurModeId
+    val expandPanelBlurMode get() = OverlayBlurMode.fromId(overlayBlur.expandPanelBlurModeId)
+    val pickResultBlurModeId get() = overlayBlur.pickResultBlurModeId
+    val pickResultBlurMode get() = OverlayBlurMode.fromId(overlayBlur.pickResultBlurModeId)
 
     val dragDropFlowEnabled get() = dragDropFlow.dragDropFlowEnabled
     val dragDropFlowPositionId get() = dragDropFlow.dragDropFlowPositionId

@@ -110,7 +110,7 @@ fun WidgetPanelSettingsScreen(
   settings: AppSettings,
   onBack: () -> Unit,
   onSavePages: (List<WidgetPanelPage>) -> Unit,
-  onBlurEnabledChange: (Boolean) -> Unit,
+  onBlurEnabledChange: (Boolean) -> Unit = {},
   onBlurRadiusChange: (Int) -> Unit = {},
   onCloseOnClickModeChange: (Int) -> Unit = {},
   onShowLabelsChange: (Boolean) -> Unit = {},
@@ -159,17 +159,8 @@ fun WidgetPanelSettingsContent(
   onGridInteractionActiveChange: (Boolean) -> Unit = {},
 ) {
   val settingsDesc = stringResource(R.string.widget_panel_settings_desc)
-  val blurTitle = stringResource(R.string.widget_panel_blur)
-  val blurDesc = stringResource(R.string.widget_panel_blur_desc)
-  val closeOnClickTitle = stringResource(R.string.widget_panel_close_on_click)
-  val closeOnClickDesc = stringResource(R.string.widget_panel_close_on_click_desc)
   val showLabelsTitle = stringResource(R.string.widget_panel_show_labels)
   val showLabelsDesc = stringResource(R.string.widget_panel_show_labels_desc)
-  val closeOnClickItems = listOf(
-    stringResource(R.string.widget_panel_close_on_click_activity),
-    stringResource(R.string.widget_panel_close_on_click_always),
-    stringResource(R.string.widget_panel_close_on_click_never),
-  )
   val previewTitle = stringResource(R.string.widget_panel_preview_title)
   val previewDesc = stringResource(R.string.widget_panel_preview_desc)
 
@@ -194,49 +185,6 @@ fun WidgetPanelSettingsContent(
             title = previewTitle,
             summary = previewDesc,
             onClick = onPreviewWidget,
-          )
-        },
-      ),
-    )
-    groupedCardItems(
-      keyPrefix = "widget-panel-blur",
-      items = listOf(
-        settingsCardScopeItem("widget-panel-blur-enabled") {
-          SettingExpandableSwitchRow(
-            title = blurTitle,
-            subtitle = blurDesc,
-            checked = uiState.blurEnabled,
-            enabled = true,
-            onCheckedChange = onBlurEnabledChange,
-          ) {
-            SettingsSliderRow(
-              title = stringResource(R.string.honeycomb_blur_strength),
-              value = uiState.blurRadiusDp.toFloat(),
-              valueRange = AppSettings.WIDGET_PANEL_BLUR_RADIUS_MIN_DP.toFloat()..
-                AppSettings.WIDGET_PANEL_BLUR_RADIUS_MAX_DP.toFloat(),
-              steps = AppSettings.WIDGET_PANEL_BLUR_RADIUS_MAX_DP -
-                AppSettings.WIDGET_PANEL_BLUR_RADIUS_MIN_DP - 1,
-              enabled = true,
-              label = stringResource(
-                R.string.corner_gesture_zone_dp_value,
-                uiState.blurRadiusDp,
-              ),
-              onValueChange = { onBlurRadiusChange(it.roundToInt()) },
-            )
-          }
-        },
-      ),
-    )
-    groupedCardItems(
-      keyPrefix = "widget-panel-click",
-      items = listOf(
-        settingsCardScopeItem("widget-panel-close-on-click") {
-          SettingDropdownRow(
-            title = closeOnClickTitle,
-            subtitle = closeOnClickDesc,
-            items = closeOnClickItems,
-            selectedIndex = uiState.closeOnClickMode,
-            onSelectedIndexChange = onCloseOnClickModeChange,
           )
         },
       ),
@@ -374,18 +322,6 @@ private fun WidgetPanelGridEditor(
   }
 
   val pageSettingsCard = settingsCardItems(page) {
-    SettingsSliderRow(
-      title = stringResource(R.string.widget_panel_opacity),
-      value = page.overlayAlpha,
-      valueRange = 0f..1f,
-      enabled = true,
-      label = "${(page.overlayAlpha * 100).toInt()}%",
-      formatLabel = { "${(it * 100).toInt()}%" },
-      keyPoints = SETTINGS_SLIDER_PERCENT_KEY_POINTS_01,
-      onValueChange = { alpha ->
-        updatePage(latestPages[pageIndex].copy(overlayAlpha = alpha))
-      },
-    )
     SettingsSliderRow(
       title = stringResource(R.string.widget_panel_columns_title, page.columnCount),
       value = page.columnCount.toFloat(),

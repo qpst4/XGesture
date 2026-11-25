@@ -31,6 +31,8 @@ import com.slideindex.app.gesture.TriggerRectanglePresetLogic
 import com.slideindex.app.gesture.preferredTriggerMode
 import com.slideindex.app.multitouch.encodePathStrokes
 import com.slideindex.app.ui.MultiTouchGestureSettingsScreen
+import com.slideindex.app.ui.OverlayAdvancedShimmerSettingsScreen
+import com.slideindex.app.ui.OverlayMaterialSettingsScreen
 import com.slideindex.app.ui.viewmodel.MultiTouchGestureViewModel
 import com.slideindex.app.gesture.supportsAction
 import com.slideindex.app.launcher.QuickLauncherPanelDefaults
@@ -299,6 +301,24 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             onBottomNavBlurRadiusChange = viewModel::setBottomNavBlurRadiusDp,
             onBottomNavBlurPreviewChange = ctx.onBottomNavBlurPreviewChange,
             onBottomNavBlurPreviewStop = ctx.onBottomNavBlurPreviewStop,
+            onOpenOverlayMaterialSettings = { ctx.navigate(AppNavKey.HomeOverlayMaterial) },
+        )
+    }
+
+    hiltEntry<AppNavKey.HomeOverlayMaterial> {
+        val homeEffects = remember(ctx) { MainNavHomeEffects(ctx) }
+        val viewModel: HomeViewModel = hiltViewModel<HomeViewModel, HomeViewModel.Factory> { factory ->
+            factory.create(homeEffects)
+        }
+        val settings by viewModel.homeMainSettings.collectAsStateWithLifecycle()
+        OverlayMaterialSettingsScreen(
+            onBack = { ctx.navigateBackTo(AppNavKey.HomeInteractionAppearance) },
+            backdropBlurEnabled = settings.backdropBlurEnabled,
+            onBackdropBlurEnabledChange = viewModel::setBackdropBlurEnabled,
+            backdropBlurRadiusDp = settings.backdropBlurRadiusDp,
+            onBackdropBlurRadiusChange = viewModel::setBackdropBlurRadiusDp,
+            backdropDimPercent = settings.backdropDimPercent,
+            onBackdropDimPercentChange = viewModel::setBackdropDimPercent,
             overlayBlurEnabled = settings.overlayBlurEnabled,
             onOverlayBlurEnabledChange = viewModel::setOverlayBlurEnabled,
             overlayBlurRadiusDp = settings.overlayBlurRadiusDp,
@@ -307,22 +327,32 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             onOverlayOpacityPercentChange = viewModel::setOverlayOpacityPercent,
             overlayCornerRadiusDp = settings.overlayCornerRadiusDp,
             onOverlayCornerRadiusChange = viewModel::setOverlayCornerRadiusDp,
-            overlayBorderShimmerPercent = settings.overlayBorderShimmerPercent,
-            onOverlayBorderShimmerPercentChange = viewModel::setOverlayBorderShimmerPercent,
             overlayAdvancedShimmerEnabled = settings.overlayAdvancedShimmerEnabled,
             onOverlayAdvancedShimmerEnabledChange = viewModel::setOverlayAdvancedShimmerEnabled,
+            onOpenAdvancedShimmerSettings = { ctx.navigate(AppNavKey.HomeOverlayAdvancedShimmer) },
+            searchPanelBlurModeId = settings.searchPanelBlurModeId,
+            onSearchPanelBlurModeChange = viewModel::setSearchPanelBlurMode,
+            expandPanelBlurModeId = settings.expandPanelBlurModeId,
+            onExpandPanelBlurModeChange = viewModel::setExpandPanelBlurMode,
+            pickResultBlurModeId = settings.pickResultBlurModeId,
+            onPickResultBlurModeChange = viewModel::setPickResultBlurMode,
+        )
+    }
+
+    hiltEntry<AppNavKey.HomeOverlayAdvancedShimmer> {
+        val homeEffects = remember(ctx) { MainNavHomeEffects(ctx) }
+        val viewModel: HomeViewModel = hiltViewModel<HomeViewModel, HomeViewModel.Factory> { factory ->
+            factory.create(homeEffects)
+        }
+        val settings by viewModel.homeMainSettings.collectAsStateWithLifecycle()
+        OverlayAdvancedShimmerSettingsScreen(
+            onBack = { ctx.navigateBackTo(AppNavKey.HomeOverlayMaterial) },
             overlayBorderHighlightPercent = settings.overlayBorderHighlightPercent,
             onOverlayBorderHighlightPercentChange = viewModel::setOverlayBorderHighlightPercent,
             overlayRadialGlossPercent = settings.overlayRadialGlossPercent,
             onOverlayRadialGlossPercentChange = viewModel::setOverlayRadialGlossPercent,
             overlayVerticalGlossPercent = settings.overlayVerticalGlossPercent,
             onOverlayVerticalGlossPercentChange = viewModel::setOverlayVerticalGlossPercent,
-            backdropBlurEnabled = settings.backdropBlurEnabled,
-            onBackdropBlurEnabledChange = viewModel::setBackdropBlurEnabled,
-            backdropBlurRadiusDp = settings.backdropBlurRadiusDp,
-            onBackdropBlurRadiusChange = viewModel::setBackdropBlurRadiusDp,
-            backdropDimPercent = settings.backdropDimPercent,
-            onBackdropDimPercentChange = viewModel::setBackdropDimPercent,
         )
     }
 
@@ -541,9 +571,6 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             onShowSelectedNameChange = viewModel::setCornerGestureShowSelectedName,
             onShowEditButtonChange = viewModel::setCornerGestureShowEditButton,
             onSelectedHintIconSizeChange = viewModel::setCornerGestureSelectedHintIconSizeDp,
-            onBackgroundStyleChange = viewModel::setCornerGestureBackgroundStyle,
-            onBlurDpChange = viewModel::setCornerGestureBlurDp,
-            onDimPercentChange = viewModel::setCornerGestureDimPercent,
         )
     }
 

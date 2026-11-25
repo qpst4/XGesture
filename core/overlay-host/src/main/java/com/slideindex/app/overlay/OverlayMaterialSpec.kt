@@ -32,7 +32,27 @@ data class OverlayMaterialSpec(
     val backdropBlurEnabled: Boolean = true,
     val backdropBlurRadiusDp: Int = 80,
     val backdropDimPercent: Int = 35,
+    val searchPanelBlurModeId: Int = 1,
+    val expandPanelBlurModeId: Int = 1,
+    val pickResultBlurModeId: Int = 0,
 ) {
+    val isSearchPanelCardBlurEnabled: Boolean
+        get() = blurEnabled && searchPanelBlurModeId == 2
+
+    val isSearchPanelBackdropBlurEnabled: Boolean
+        get() = backdropBlurEnabled && searchPanelBlurModeId == 1
+
+    val isExpandPanelCardBlurEnabled: Boolean
+        get() = blurEnabled && expandPanelBlurModeId == 2
+
+    val isExpandPanelBackdropBlurEnabled: Boolean
+        get() = backdropBlurEnabled && expandPanelBlurModeId == 1
+
+    val isPickResultCardBlurEnabled: Boolean
+        get() = blurEnabled && pickResultBlurModeId == 2
+
+    val isPickResultBackdropBlurEnabled: Boolean
+        get() = backdropBlurEnabled && pickResultBlurModeId == 1
     fun blurRadiusPx(density: Float): Int =
         if (blurEnabled) (blurRadiusDp * density).toInt().coerceIn(0, 120) else 0
 

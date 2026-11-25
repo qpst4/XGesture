@@ -85,30 +85,7 @@ fun InteractionAppearanceSettingsScreen(
     onAppUiLanguageChange: (com.slideindex.app.settings.AppUiLanguage) -> Unit,
     onBottomNavBlurPreviewChange: (Float) -> Unit = {},
     onBottomNavBlurPreviewStop: () -> Unit = {},
-    overlayBlurEnabled: Boolean = true,
-    onOverlayBlurEnabledChange: (Boolean) -> Unit = {},
-    overlayBlurRadiusDp: Int = 40,
-    onOverlayBlurRadiusChange: (Int) -> Unit = {},
-    overlayOpacityPercent: Int = 85,
-    onOverlayOpacityPercentChange: (Int) -> Unit = {},
-    overlayCornerRadiusDp: Int = 20,
-    onOverlayCornerRadiusChange: (Int) -> Unit = {},
-    overlayBorderShimmerPercent: Int = 50,
-    onOverlayBorderShimmerPercentChange: (Int) -> Unit = {},
-    overlayAdvancedShimmerEnabled: Boolean = false,
-    onOverlayAdvancedShimmerEnabledChange: (Boolean) -> Unit = {},
-    overlayBorderHighlightPercent: Int = 50,
-    onOverlayBorderHighlightPercentChange: (Int) -> Unit = {},
-    overlayRadialGlossPercent: Int = 50,
-    onOverlayRadialGlossPercentChange: (Int) -> Unit = {},
-    overlayVerticalGlossPercent: Int = 50,
-    onOverlayVerticalGlossPercentChange: (Int) -> Unit = {},
-    backdropBlurEnabled: Boolean = true,
-    onBackdropBlurEnabledChange: (Boolean) -> Unit = {},
-    backdropBlurRadiusDp: Int = 80,
-    onBackdropBlurRadiusChange: (Int) -> Unit = {},
-    backdropDimPercent: Int = 35,
-    onBackdropDimPercentChange: (Int) -> Unit = {},
+    onOpenOverlayMaterialSettings: () -> Unit = {},
     settingIconPlateEnabled: Boolean = false,
     onSettingIconPlateEnabledChange: (Boolean) -> Unit = {},
 ) {
@@ -120,6 +97,10 @@ fun InteractionAppearanceSettingsScreen(
         stringResource(R.string.icon_plate_mode_light),
         stringResource(R.string.icon_plate_mode_system),
     )
+
+    val overlayVisualSectionTitle = stringResource(R.string.settings_section_overlay_visual)
+    val overlayMaterialSettingsTitle = stringResource(R.string.overlay_material_settings_title)
+    val overlayMaterialSettingsDesc = stringResource(R.string.overlay_material_settings_desc)
 
 
     val themeAppearanceItems = themeAppearanceSettingsCardItems(
@@ -195,115 +176,20 @@ fun InteractionAppearanceSettingsScreen(
 
         item(key = "overlay_visual_section") {
             SmallTitle(
-                text = stringResource(R.string.settings_section_overlay_visual),
+                text = overlayVisualSectionTitle,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
         MiuixListSettingsCard(
-            keyPrefix = "interaction-overlay-visual",
+            keyPrefix = "interaction-overlay-material-entry",
             items = buildList {
                 add(
-                    settingsCardScopeItem("overlay-blur") {
-                        SettingSwitchRow(
-                            title = stringResource(R.string.overlay_blur_enabled),
-                            subtitle = stringResource(R.string.overlay_blur_enabled_desc),
-                            checked = overlayBlurEnabled,
-                            enabled = true,
-                            onCheckedChange = onOverlayBlurEnabledChange,
-                        )
-                    }
-                )
-                if (overlayBlurEnabled) {
-                    add(
-                        settingsCardScopeItem("overlay-blur-radius") {
-                            SettingsSliderRow(
-                                title = stringResource(R.string.overlay_blur_radius_title),
-                                value = overlayBlurRadiusDp.toFloat(),
-                                valueRange = 0f..100f,
-                                enabled = true,
-                                label = "${overlayBlurRadiusDp}dp",
-                                formatLabel = { "${it.roundToInt()}dp" },
-                                onValueChange = { onOverlayBlurRadiusChange(it.roundToInt()) },
-                            )
-                        }
-                    )
-                    add(
-                        settingsCardScopeItem("overlay-opacity") {
-                            SettingsSliderRow(
-                                title = stringResource(R.string.overlay_opacity_title),
-                                value = overlayOpacityPercent.toFloat(),
-                                valueRange = 0f..100f,
-                                enabled = true,
-                                label = "${overlayOpacityPercent}%",
-                                formatLabel = { "${it.roundToInt()}%" },
-                                onValueChange = { onOverlayOpacityPercentChange(it.roundToInt()) },
-                            )
-                        }
-                    )
-                    if (!overlayAdvancedShimmerEnabled) {
-                        add(
-                            settingsCardScopeItem("overlay-border-shimmer") {
-                                SettingsSliderRow(
-                                    title = stringResource(R.string.overlay_border_shimmer_title),
-                                    value = overlayBorderShimmerPercent.toFloat(),
-                                    valueRange = 0f..100f,
-                                    enabled = true,
-                                    label = "${overlayBorderShimmerPercent}%",
-                                    formatLabel = { "${it.roundToInt()}%" },
-                                    onValueChange = { onOverlayBorderShimmerPercentChange(it.roundToInt()) },
-                                )
-                            }
-                        )
-                    }
-                    add(
-                        settingsCardScopeItem("overlay-advanced-shimmer") {
-                            SettingExpandableSwitchRow(
-                                title = stringResource(R.string.overlay_advanced_shimmer_toggle),
-                                subtitle = stringResource(R.string.overlay_advanced_shimmer_desc),
-                                checked = overlayAdvancedShimmerEnabled,
-                                onCheckedChange = onOverlayAdvancedShimmerEnabledChange,
-                            ) {
-                                SettingsSliderRow(
-                                    title = stringResource(R.string.overlay_border_highlight_title),
-                                    value = overlayBorderHighlightPercent.toFloat(),
-                                    valueRange = 0f..100f,
-                                    enabled = true,
-                                    label = "${overlayBorderHighlightPercent}%",
-                                    formatLabel = { "${it.roundToInt()}%" },
-                                    onValueChange = { onOverlayBorderHighlightPercentChange(it.roundToInt()) },
-                                )
-                                SettingsSliderRow(
-                                    title = stringResource(R.string.overlay_radial_gloss_title),
-                                    value = overlayRadialGlossPercent.toFloat(),
-                                    valueRange = 0f..100f,
-                                    enabled = true,
-                                    label = "${overlayRadialGlossPercent}%",
-                                    formatLabel = { "${it.roundToInt()}%" },
-                                    onValueChange = { onOverlayRadialGlossPercentChange(it.roundToInt()) },
-                                )
-                                SettingsSliderRow(
-                                    title = stringResource(R.string.overlay_vertical_gloss_title),
-                                    value = overlayVerticalGlossPercent.toFloat(),
-                                    valueRange = 0f..100f,
-                                    enabled = true,
-                                    label = "${overlayVerticalGlossPercent}%",
-                                    formatLabel = { "${it.roundToInt()}%" },
-                                    onValueChange = { onOverlayVerticalGlossPercentChange(it.roundToInt()) },
-                                )
-                            }
-                        }
-                    )
-                }
-                add(
-                    settingsCardScopeItem("overlay-corner-radius") {
-                        SettingsSliderRow(
-                            title = stringResource(R.string.overlay_corner_radius_title),
-                            value = overlayCornerRadiusDp.toFloat(),
-                            valueRange = 12f..28f,
-                            enabled = true,
-                            label = "${overlayCornerRadiusDp}dp",
-                            formatLabel = { "${it.roundToInt()}dp" },
-                            onValueChange = { onOverlayCornerRadiusChange(it.roundToInt()) },
+                    settingsCardScopeItem("overlay-material-entry") {
+                        SettingNavigationRow(
+                            icon = { label -> Icon(HomeLeadingIcons.overlayMaterial(true), contentDescription = label) },
+                            title = overlayMaterialSettingsTitle,
+                            subtitle = overlayMaterialSettingsDesc,
+                            onClick = onOpenOverlayMaterialSettings,
                         )
                     }
                 )
@@ -327,56 +213,6 @@ fun InteractionAppearanceSettingsScreen(
             },
         )
 
-        item(key = "backdrop_visual_section") {
-            SmallTitle(
-                text = stringResource(R.string.settings_section_backdrop_visual),
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-        MiuixListSettingsCard(
-            keyPrefix = "interaction-backdrop-visual",
-            items = buildList {
-                add(
-                    settingsCardScopeItem("backdrop-blur") {
-                        SettingSwitchRow(
-                            title = stringResource(R.string.backdrop_blur_enabled),
-                            subtitle = stringResource(R.string.backdrop_blur_enabled_desc),
-                            checked = backdropBlurEnabled,
-                            enabled = true,
-                            onCheckedChange = onBackdropBlurEnabledChange,
-                        )
-                    }
-                )
-                if (backdropBlurEnabled) {
-                    add(
-                        settingsCardScopeItem("backdrop-blur-radius") {
-                            SettingsSliderRow(
-                                title = stringResource(R.string.backdrop_blur_radius_title),
-                                value = backdropBlurRadiusDp.toFloat(),
-                                valueRange = 0f..100f,
-                                enabled = true,
-                                label = "${backdropBlurRadiusDp}dp",
-                                formatLabel = { "${it.roundToInt()}dp" },
-                                onValueChange = { onBackdropBlurRadiusChange(it.roundToInt()) },
-                            )
-                        }
-                    )
-                }
-                add(
-                    settingsCardScopeItem("backdrop-dim") {
-                        SettingsSliderRow(
-                            title = stringResource(R.string.backdrop_dim_title),
-                            value = backdropDimPercent.toFloat(),
-                            valueRange = 0f..100f,
-                            enabled = true,
-                            label = "${backdropDimPercent}%",
-                            formatLabel = { "${it.roundToInt()}%" },
-                            onValueChange = { onBackdropDimPercentChange(it.roundToInt()) },
-                        )
-                    }
-                )
-            },
-        )
 
         item(key = "interaction_feedback_section") {
             SmallTitle(

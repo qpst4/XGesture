@@ -219,6 +219,9 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                             backdropBlurEnabled = it.backdropBlurEnabled,
                             backdropBlurRadiusDp = it.backdropBlurRadiusDp,
                             backdropDimPercent = it.backdropDimPercent,
+                            searchPanelBlurModeId = it.searchPanelBlurModeId,
+                            expandPanelBlurModeId = it.expandPanelBlurModeId,
+                            pickResultBlurModeId = it.pickResultBlurModeId,
                         )
                     }
                 }
@@ -242,6 +245,9 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     backdropBlurEnabled = settings.backdropBlurEnabled,
                     backdropBlurRadiusDp = settings.backdropBlurRadiusDp,
                     backdropDimPercent = settings.backdropDimPercent,
+                    searchPanelBlurModeId = settings.searchPanelBlurModeId,
+                    expandPanelBlurModeId = settings.expandPanelBlurModeId,
+                    pickResultBlurModeId = settings.pickResultBlurModeId,
                 )
             } else {
                 com.slideindex.app.overlay.OverlayMaterialSpec.DEFAULT

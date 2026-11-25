@@ -1,6 +1,8 @@
 package com.slideindex.app.overlay.volumepanel
 
 import com.slideindex.app.overlay.overlayHostContext
+import com.slideindex.app.overlay.rememberOverlayMaterialSpec
+import com.slideindex.app.ui.theme.LocalAppDarkTheme
 
 /**
  * Portions derived from EdgeGesture (https://github.com/evilgodxu/EdgeGesture)
@@ -282,15 +284,25 @@ private fun ExpandPanelFrostedSurface(
             .clip(shape)
             .border(1.dp, frostedStyle.borderColor, shape),
     ) {
-        LocalFrostedGlassBackdrop(
-            modifier = Modifier.matchParentSize(),
-            cornerRadiusPx = cornerPx,
-        )
-        if (frostedStyle.innerScrimAlpha > 0f) {
+        val spec = rememberOverlayMaterialSpec()
+        val isDark = LocalAppDarkTheme.current
+        if (spec.isExpandPanelCardBlurEnabled) {
+            LocalFrostedGlassBackdrop(
+                modifier = Modifier.matchParentSize(),
+                cornerRadiusPx = cornerPx,
+            )
+            if (frostedStyle.innerScrimAlpha > 0f) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(Color.Black.copy(alpha = frostedStyle.innerScrimAlpha)),
+                )
+            }
+        } else {
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .background(Color.Black.copy(alpha = frostedStyle.innerScrimAlpha)),
+                    .background(Color(spec.solidFallbackColor(isDark)), shape = shape),
             )
         }
         content()
