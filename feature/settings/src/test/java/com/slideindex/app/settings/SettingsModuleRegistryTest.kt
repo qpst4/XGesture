@@ -132,7 +132,7 @@ class SettingsModuleRegistryTest {
         //            「关闭行为」`app_carousel_close_mode`（均落 QUICK_LAUNCHER）。
         // 725 = 709 + 16：全局长按强行拖放 6 个键（`drag_drop_flow_global_press_*`，落 DRAG_DROP）
         //            + 物理 dp 小窗 10 个 `free_window_*_v2` 键（落 FREE_WINDOW）。
-        const val EXPECTED_TOTAL_KEYS = 725
+        const val EXPECTED_TOTAL_KEYS = 746
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
             SettingsModule.EDGE_GESTURE to 85,
@@ -141,21 +141,21 @@ class SettingsModuleRegistryTest {
             SettingsModule.FLOAT_BALL to 79,
             SettingsModule.FLOATING_POINTER to 54,
             SettingsModule.FINGERTIP_RING to 13,
-            SettingsModule.QUICK_LAUNCHER to 95,
-            SettingsModule.WIDGET_PANEL to 8,
+            SettingsModule.QUICK_LAUNCHER to 98,
+            SettingsModule.WIDGET_PANEL to 10,
             SettingsModule.MESSAGE to 76,
             SettingsModule.OTP to 24,
             SettingsModule.SHAKE to 44,
             SettingsModule.CLIPBOARD to 63,
             SettingsModule.DRAG_DROP to 11,
             SettingsModule.STASH to 5,
-            SettingsModule.SEARCH to 41,
+            SettingsModule.SEARCH to 43,
             SettingsModule.FREE_WINDOW to 23,
             SettingsModule.FREEZER to 6,
             SettingsModule.SHELL to 1,
             SettingsModule.ACTIVITY_SHORTCUTS to 3,
-            SettingsModule.THEME_UI to 20,
-            SettingsModule.GENERAL to 37,
+            SettingsModule.THEME_UI to 21,
+            SettingsModule.GENERAL to 50,
         )
     }
 }

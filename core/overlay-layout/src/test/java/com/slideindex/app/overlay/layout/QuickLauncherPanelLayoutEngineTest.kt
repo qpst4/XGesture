@@ -28,14 +28,14 @@ class QuickLauncherPanelLayoutEngineTest {
     }
 
     @Test
-    fun contentHeight_includesHeaderAndPadding() {
+    fun contentHeight_withHeaderIncludesOnlyBottomPadding() {
         val height = QuickLauncherPanelLayoutEngine.contentHeight(
             rows = 4,
             cellHeight = 120f,
             gridPadding = 8f,
             headerHeight = 48f,
         )
-        assertEquals(4 * 120f + 16f + 48f, height, 0.01f)
+        assertEquals(4 * 120f + 18f + 48f, height, 0.01f)
     }
 
     @Test
