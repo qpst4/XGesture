@@ -254,7 +254,8 @@ class MultiTouchGestureCoordinator @Inject constructor(
         if (strokes.isEmpty()) return
         val candidates = settingsStore.state.value.entries
             .filter {
-                it.isPath && it.fingerCount == fingerCount && it.pathStrokes.isNotEmpty() &&
+                it.isPath && it.enabled && it.fingerCount == fingerCount &&
+                    it.pathStrokes.isNotEmpty() &&
                     areaAllowsPath(it, strokes, start)
             }
         if (candidates.isEmpty()) return
@@ -268,9 +269,17 @@ class MultiTouchGestureCoordinator @Inject constructor(
         }
         val match = PathGestureMatcher.bestMatch(strokes, templates) ?: return
         if (match.action == GestureAction.None) return
+        val matchedEntry = candidates.firstOrNull { it.id == match.id }
         Log.i(TAG, "path gesture -> ${match.id}")
         mainHandler.post {
-            performAction(match.action, MultiPointerGesture.PATH, fingerCount, anchor)
+            performAction(
+                match.action,
+                MultiPointerGesture.PATH,
+                fingerCount,
+                anchor,
+                name = matchedEntry?.name.orEmpty(),
+                showHint = matchedEntry?.showHint ?: true,
+            )
         }
     }
 
@@ -700,6 +709,8 @@ class MultiTouchGestureCoordinator @Inject constructor(
         kind: MultiPointerGesture,
         fingerCount: Int,
         anchor: TouchAnchor?,
+        name: String = "",
+        showHint: Boolean = true,
     ) {
         val hostContext = SlideIndexAccessibilityService.overlayHostContext() ?: context
         val appSettings = runCatching { settingsRepository.readSnapshot() }.getOrNull()
@@ -717,10 +728,12 @@ class MultiTouchGestureCoordinator @Inject constructor(
         lastActionAtMs = now
         runCatching { ShakeVibrationHelper.vibrate(context) }
         // 抓屏类动作不弹提示胶囊：它是 ACCESSIBILITY_OVERLAY，会被自己的截图拍进去（issue #60）。
-        if (!action.capturesScreen) {
+        // 每个手势还能单独关掉提示（反馈 #397）。
+        if (showHint && !action.capturesScreen) {
             MultiTouchGestureFeedback.show(
                 context = SlideIndexAccessibilityService.overlayHostContext() ?: context,
-                text = context.getString(
+                // 用户给手势起了名字就显示名字，否则沿用「3 指 · 上滑」（反馈 #396）。
+                text = name.takeIf { it.isNotBlank() } ?: context.getString(
                     R.string.multitouch_entry_label,
                     fingerCount,
                     context.getString(gestureKindLabelRes(kind)),
@@ -802,6 +815,7 @@ class MultiTouchGestureCoordinator @Inject constructor(
         val kind = if (serviceHandlesRotation) panelKind else panelKind.forDisplayRotation(rotation)
         val entry = settingsStore.state.value.entries.firstOrNull {
             it.kind == kind && it.fingerCount == fingerCount &&
+                it.enabled &&
                 it.action != GestureAction.None &&
                 areaAllowsEntry(it, start)
         } ?: run {
@@ -817,7 +831,16 @@ class MultiTouchGestureCoordinator @Inject constructor(
             "gesture ${kind.name} x$fingerCount（panel=${panelKind.name} rot=$rotation " +
                 "mode=${if (serviceHandlesRotation) "screen-space" else "legacy-remap"}）-> ${entry.action}",
         )
-        mainHandler.post { performAction(entry.action, kind, fingerCount, anchor) }
+        mainHandler.post {
+            performAction(
+                entry.action,
+                kind,
+                fingerCount,
+                anchor,
+                name = entry.name,
+                showHint = entry.showHint,
+            )
+        }
         return true
     }
 

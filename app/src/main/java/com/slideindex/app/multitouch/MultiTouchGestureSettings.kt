@@ -203,6 +203,8 @@ class MultiTouchGestureSettingsStore @Inject constructor(
                 fingerCount = fingerCount,
                 action = action,
                 pathStrokes = strokes,
+                // 新条目排在末尾：老数据的 order 全为 0，用 size 起步才不会插到最前面。
+                order = (current.entries.maxOfOrNull { it.order } ?: 0) + 1,
             )
         }
         val updated = if (existing != null) {
@@ -242,7 +244,49 @@ class MultiTouchGestureSettingsStore @Inject constructor(
 
     /** 按接触点数升序；同数量按类型固定顺序。 */
     private fun sortEntries(entries: List<MultiTouchGestureEntry>): List<MultiTouchGestureEntry> =
-        entries.sortedWith(compareBy({ it.fingerCount }, { kindOrder(it.kind) }))
+        entries.sortedWith(
+            compareBy({ it.order }, { it.fingerCount }, { kindOrder(it.kind) }),
+        )
+
+    /** 重排：把 [entryId] 挪到 [toId] 所在位置，并把整张列表重写成 0..n-1 的顺序。 */
+    fun moveEntry(entryId: String, toId: String) {
+        val current = _state.value
+        val from = current.entries.indexOfFirst { it.id == entryId }
+        val to = current.entries.indexOfFirst { it.id == toId }
+        if (from < 0 || to < 0 || from == to) return
+        val reordered = current.entries.toMutableList()
+        val moved = reordered.removeAt(from)
+        reordered.add(to.coerceIn(0, reordered.size), moved)
+        val ordered = reordered.mapIndexed { index, entry -> entry.copy(order = index) }
+        persist(ordered)
+        _state.value = current.copy(entries = ordered)
+    }
+
+    /** 重命名（空串 = 恢复自动名称）。 */
+    fun setEntryName(entryId: String, name: String) {
+        updateEntry(entryId) { it.copy(name = name.trim()) }
+    }
+
+    /** 单条启用/停用。 */
+    fun setEntryEnabled(entryId: String, enabled: Boolean) {
+        updateEntry(entryId) { it.copy(enabled = enabled) }
+    }
+
+    /** 单条是否弹文字提示胶囊。 */
+    fun setEntryShowHint(entryId: String, showHint: Boolean) {
+        updateEntry(entryId) { it.copy(showHint = showHint) }
+    }
+
+    private fun updateEntry(entryId: String, transform: (MultiTouchGestureEntry) -> MultiTouchGestureEntry) {
+        val current = _state.value
+        if (current.entries.none { it.id == entryId }) return
+        val updated = current.entries.map { entry ->
+            if (entry.id == entryId) transform(entry) else entry
+        }
+        if (updated == current.entries) return
+        persist(updated)
+        _state.value = current.copy(entries = updated)
+    }
 
     private fun kindOrder(kind: MultiPointerGesture): Int = when (kind) {
         MultiPointerGesture.PINCH -> 0
@@ -392,6 +436,10 @@ class MultiTouchGestureSettingsStore @Inject constructor(
             obj.put("fingers", entry.fingerCount)
             obj.put("action", encodeAction(entry.action))
             obj.put("area", entry.triggerArea.key)
+            if (entry.name.isNotBlank()) obj.put("name", entry.name)
+            if (!entry.enabled) obj.put("enabled", false)
+            if (!entry.showHint) obj.put("hint", false)
+            if (entry.order != 0) obj.put("order", entry.order)
             if (entry.pathStrokes.isNotEmpty()) {
                 obj.put("strokes", encodePathStrokes(entry.pathStrokes))
             }
@@ -416,6 +464,10 @@ class MultiTouchGestureSettingsStore @Inject constructor(
                 action = action,
                 pathStrokes = strokes,
                 triggerArea = MultiTouchTriggerArea.fromKey(obj.optString("area")),
+                name = obj.optString("name").orEmpty().trim(),
+                enabled = obj.optBoolean("enabled", true),
+                showHint = obj.optBoolean("hint", true),
+                order = obj.optInt("order", 0),
             )
         }
     }.getOrDefault(emptyList())

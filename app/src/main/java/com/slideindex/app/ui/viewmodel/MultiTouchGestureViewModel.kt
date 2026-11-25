@@ -48,6 +48,26 @@ class MultiTouchGestureViewModel @Inject constructor(
         settingsStore.setEntryArea(entryId, MultiTouchTriggerArea.fromKey(areaKey))
     }
 
+    /** 重命名单个手势（空串 = 恢复「手指数 + 类型」自动名称）。 */
+    fun setEntryName(entryId: String, name: String) {
+        settingsStore.setEntryName(entryId, name)
+    }
+
+    /** 单条启用/停用。 */
+    fun setEntryEnabled(entryId: String, enabled: Boolean) {
+        settingsStore.setEntryEnabled(entryId, enabled)
+    }
+
+    /** 单条是否弹文字提示胶囊。 */
+    fun setEntryShowHint(entryId: String, showHint: Boolean) {
+        settingsStore.setEntryShowHint(entryId, showHint)
+    }
+
+    /** 拖动排序：把 [entryId] 挪到 [toId] 位置。 */
+    fun moveEntry(entryId: String, toId: String) {
+        settingsStore.moveEntry(entryId, toId)
+    }
+
     /** 键盘可见时的策略：blocked / above / everywhere（对齐 GMD）。 */
     fun setKeyboardBehavior(behavior: String) {
         settingsStore.setKeyboardBehavior(behavior)

@@ -28,6 +28,11 @@
     <string name="multitouch_entry_label">Пальцев: %1$d · %2$s</string>
     <string name="multitouch_entry_label_area">Пальцев: %1$d · %2$s · %3$s</string>
     <string name="multitouch_delete">Удалить</string>
+    <string name="multitouch_entry_name_label">Название</string>
+    <string name="multitouch_entry_enabled_label">Включить жест</string>
+    <string name="multitouch_entry_hint_label">Показывать подсказку</string>
+    <string name="multitouch_entry_hint_desc">Показывать текст вверху экрана при срабатывании</string>
+    <string name="multitouch_entry_disabled_label">Отключён</string>
     <string name="multitouch_done">Готово</string>
     <string name="multitouch_hint">Режим наблюдения не перехватывает события: при срабатывании жеста приложение всё равно получит тот же жест.\nПосле перезапуска Shizuku нужна повторная авторизация и запуск; жесты с малым числом пальцев часто конфликтуют с жестами самого приложения.</string>
 

@@ -68,6 +68,24 @@ data class MultiTouchGestureEntry(
     val action: GestureAction,
     val pathStrokes: List<PathStroke> = emptyList(),
     val triggerArea: MultiTouchTriggerArea = MultiTouchTriggerArea.ANYWHERE,
+    /**
+     * 用户自定义名称。
+     *
+     * 空串 = 不命名，列表与提示胶囊按「手指数 + 手势类型」自动拼（历史行为）；
+     * 非空时优先显示这个名字 —— 多个「绘制手势」不再都是「1 指 · 绘制手势」。
+     */
+    val name: String = "",
+    /** 是否启用。停用后识别到该手势也不会执行动作（列表里保留条目）。 */
+    val enabled: Boolean = true,
+    /** 触发时是否弹「文字提示胶囊」。 */
+    val showHint: Boolean = true,
+    /**
+     * 列表中的显示顺序。
+     *
+     * 老数据没有这个字段（全 0），此时按「手指数 + 类型」的固定顺序兜底；
+     * 用户拖动排序后会把整张列表重排成 0..n-1。
+     */
+    val order: Int = 0,
 ) {
     val isPath: Boolean get() = kind == MultiPointerGesture.PATH
 }

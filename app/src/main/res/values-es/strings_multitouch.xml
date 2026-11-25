@@ -21,6 +21,11 @@
     <string name="multitouch_entry_label">Dedos %1$d·%2$s</string>
     <string name="multitouch_entry_label_area">Dedos %1$d·%2$s·%3$s</string>
     <string name="multitouch_delete">Eliminar</string>
+    <string name="multitouch_entry_name_label">Nombre</string>
+    <string name="multitouch_entry_enabled_label">Activar este gesto</string>
+    <string name="multitouch_entry_hint_label">Mostrar sugerencia al activar</string>
+    <string name="multitouch_entry_hint_desc">Muestra un texto en la parte superior al activarse</string>
+    <string name="multitouch_entry_disabled_label">Desactivado</string>
     <string name="multitouch_done">Listo</string>
     <string name="multitouch_hint">El modo de observador nunca intercepta eventos: la aplicación todavía recibe el mismo gesto cuando se dispara.\nShizuku debe ser autorizado y comenzar de nuevo después de un reinicio; gestos con pocos dedos fácilmente conflicto con los propios gestos de la aplicación.</string>
     <string name="multitouch_detail_disabled">El interruptor está apagado</string>

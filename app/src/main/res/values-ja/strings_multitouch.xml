@@ -28,6 +28,11 @@
     <string name="multitouch_entry_label">%1$d 本の指 · %2$s</string>
     <string name="multitouch_entry_label_area">%1$d 本の指 · %2$s · %3$s</string>
     <string name="multitouch_delete">削除</string>
+    <string name="multitouch_entry_name_label">名前</string>
+    <string name="multitouch_entry_enabled_label">このジェスチャーを有効化</string>
+    <string name="multitouch_entry_hint_label">発動時のヒントを表示</string>
+    <string name="multitouch_entry_hint_desc">発動時に画面上部へテキストのヒントを表示します</string>
+    <string name="multitouch_entry_disabled_label">無効</string>
     <string name="multitouch_done">完了</string>
     <string name="multitouch_hint">観察モードはイベントを遮断しません。ジェスチャーの実行時もアプリは同じジェスチャーを受け取ります。\nShizuku は再起動後に再認証／再起動が必要です。指の数が少ないジェスチャーはアプリ自身のジェスチャーと競合しやすくなります。</string>
 

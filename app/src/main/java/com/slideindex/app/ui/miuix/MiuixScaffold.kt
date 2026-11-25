@@ -247,11 +247,13 @@ fun MiuixSettingsScreenScaffold(
     /** 悬浮按钮需要预留的底部空间，见 [MiuixSettingsFabInset]；默认 0 = 不做任何预留。 */
     fabInset: Dp = 0.dp,
     bottomBar: @Composable () -> Unit = {},
+    /** 外部持有的滚动状态（可拖拽排序的卡片段需要它来定位 from/to 项）。 */
+    listState: LazyListState? = null,
     content: LazyListScope.() -> Unit,
 ) {
     val scrollBehavior = MiuixScrollBehavior()
     val barBackdrop = rememberMiuixBlurBackdrop(enabled = !overlayMode)
-    val resolvedListState = rememberLazyListState()
+    val resolvedListState = listState ?: rememberLazyListState()
     // 供顶栏 bottomContent 里的玻璃组件（如 GlassSegmentedTabRow）决定 surfaceAlpha。
     val contentUnderBar = remember(resolvedListState) {
         derivedStateOf { resolvedListState.canScrollBackward }

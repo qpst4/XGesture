@@ -28,6 +28,11 @@
     <string name="multitouch_entry_label">%1$d أصابع · %2$s</string>
     <string name="multitouch_entry_label_area">%1$d أصابع · %2$s · %3$s</string>
     <string name="multitouch_delete">حذف</string>
+    <string name="multitouch_entry_name_label">الاسم</string>
+    <string name="multitouch_entry_enabled_label">تفعيل هذه الإيماءة</string>
+    <string name="multitouch_entry_hint_label">إظهار تلميح التشغيل</string>
+    <string name="multitouch_entry_hint_desc">إظهار نص في أعلى الشاشة عند التشغيل</string>
+    <string name="multitouch_entry_disabled_label">معطّلة</string>
     <string name="multitouch_done">تم</string>
     <string name="multitouch_hint">لا يعترض وضع المراقبة الأحداث: سيظل التطبيق يتلقى الإيماءة نفسها عند تنفيذها.\nيلزم إعادة تفويض Shizuku وتشغيله بعد إعادة التشغيل؛ الإيماءات بعدد أصابع قليل تتعارض عادةً مع إيماءات التطبيق نفسه.</string>
 

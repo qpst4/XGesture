@@ -70,6 +70,8 @@ fun SettingsScreenScaffold(
     embeddedContentPadding: PaddingValues = PaddingValues(start = 12.dp, top = 4.dp, end = 12.dp, bottom = 12.dp),
     /** 悬浮按钮需要预留的底部空间，见 [com.slideindex.app.ui.miuix.MiuixSettingsFabInset]。 */
     fabInset: androidx.compose.ui.unit.Dp = 0.dp,
+    /** 外部持有的滚动状态（可拖拽排序的卡片段需要）。 */
+    listState: androidx.compose.foundation.lazy.LazyListState? = null,
     content: LazyListScope.() -> Unit,
 ) {
     if (embedded) {
@@ -89,6 +91,7 @@ fun SettingsScreenScaffold(
         bottomBar = bottomBar,
         bottomContent = bottomContent,
         fabInset = fabInset,
+        listState = listState,
         content = content,
     )
 }
