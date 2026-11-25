@@ -2435,6 +2435,15 @@
     <string name="search_panel_section_alias_conflict">エイリアスは既に使用中です</string>
     <string name="search_panel_section_alias_invalid">無効なエイリアス（スペース不可、最大 16 文字）</string>
     <string name="search_panel_app_search_desc">検索パネルでインストール済みアプリを名前で検索</string>
+    <string name="search_app_settings_alias_section">アプリの別名と検索からの非表示</string>
+    <string name="search_app_settings_alias_title">別名を設定</string>
+    <string name="search_app_settings_alias_label">別名（空欄で解除）</string>
+    <string name="search_app_settings_alias_saved">「%1$s」の別名を更新しました</string>
+    <string name="search_app_settings_alias_summary">別名：%1$s</string>
+    <string name="search_app_settings_hidden_summary">検索から非表示</string>
+    <string name="search_app_settings_hide">非表示</string>
+    <string name="search_app_settings_show">再表示</string>
+    <string name="search_app_settings_empty">一致するアプリがありません</string>
     <string name="search_panel_settings_search_desc">システム設定を検索して開く（システムインデックス優先、Settings マニフェストにフォールバック）</string>
     <string name="search_panel_settings_search_title">システム設定検索</string>
     <string name="search_panel_settings_index_title">設定インデックス</string>

@@ -490,7 +490,20 @@ class AppRepository @Inject constructor(
         apps: List<AppInfo>,
         query: String,
         limit: Int = Int.MAX_VALUE,
-    ): List<AppInfo> = AppSearchMatcher.search(apps, query, limit)
+    ): List<AppInfo> {
+        // #375：搜索结果里可以隐藏某个应用，并且能按用户起的别名搜到它。
+        val hidden = SearchAppPrefs.hiddenTargets(context)
+        val aliases = SearchAppPrefs.aliases(context)
+        val visible = if (hidden.isEmpty()) {
+            apps
+        } else {
+            apps.filter { AppTarget.encode(it.packageName, it.cloneUserId) !in hidden }
+        }
+        if (aliases.isEmpty()) return AppSearchMatcher.search(visible, query, limit)
+        return AppSearchMatcher.search(visible, query, limit) { app ->
+            aliases[AppTarget.encode(app.packageName, app.cloneUserId)]
+        }
+    }
 
     fun availableLetters(items: List<AppListItem>): List<Char> =
         items.filterIsInstance<AppListItem.Header>().map { it.letter }

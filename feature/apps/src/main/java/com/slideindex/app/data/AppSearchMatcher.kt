@@ -7,6 +7,8 @@ object AppSearchMatcher {
         apps: List<AppInfo>,
         query: String,
         limit: Int = Int.MAX_VALUE,
+        /** 应用别名（反馈 #375）：非空时既能按标签搜到，也能按别名搜到。 */
+        aliasOf: (AppInfo) -> String? = { null },
     ): List<AppInfo> {
         val normalized = query.trim().lowercase()
         if (normalized.isEmpty()) return apps
@@ -14,11 +16,12 @@ object AppSearchMatcher {
         val pinyinQuery = PinyinHelper.sortKey(query)
         return apps
             .mapNotNull { app ->
-                score(app, normalized, pinyinQuery)?.let { app to it }
+                val alias = aliasOf(app)?.takeIf { it.isNotBlank() }
+                score(app, normalized, pinyinQuery, alias)?.let { app to it }
             }
             .sortedWith(
                 compareByDescending<Pair<AppInfo, Int>> { it.second }
-                    .thenBy { matchIndex(it.first, normalized, pinyinQuery) }
+                    .thenBy { matchIndex(it.first, normalized, pinyinQuery, aliasOf(it.first)) }
                     .thenBy { it.first.label.length }
                     .thenBy { it.first.pinyinKey },
             )
@@ -30,6 +33,7 @@ object AppSearchMatcher {
         app: AppInfo,
         normalizedQuery: String,
         pinyinQuery: String,
+        alias: String? = null,
     ): Int? {
         val labelLower = app.label.trim().lowercase()
         if (labelLower.isEmpty()) return null
@@ -44,6 +48,20 @@ object AppSearchMatcher {
             pinyinQuery = pinyinQuery,
             titleBoost = 100,
         )
+        if (!alias.isNullOrBlank()) {
+            // 别名比标签更像"用户自己起的名字"，命中时给更高权重。
+            best = maxOf(
+                best,
+                textScore(
+                    lowerText = alias.trim().lowercase(),
+                    pinyinText = PinyinHelper.sortKey(alias),
+                    initialText = PinyinHelper.initialKey(alias),
+                    normalizedQuery = normalizedQuery,
+                    pinyinQuery = pinyinQuery,
+                    titleBoost = 130,
+                ),
+            )
+        }
         if (app.packageName.lowercase().contains(normalizedQuery)) {
             best = maxOf(best, 20)
         }
@@ -72,10 +90,17 @@ object AppSearchMatcher {
         app: AppInfo,
         normalizedQuery: String,
         pinyinQuery: String,
+        alias: String? = null,
     ): Int {
         val labelLower = app.label.lowercase()
         val labelIndex = labelLower.indexOf(normalizedQuery)
         if (labelIndex >= 0) return labelIndex
+        if (!alias.isNullOrBlank()) {
+            val aliasIndex = alias.trim().lowercase().indexOf(normalizedQuery)
+            if (aliasIndex >= 0) return aliasIndex
+            val aliasPinyinIndex = PinyinHelper.sortKey(alias).indexOf(pinyinQuery)
+            if (aliasPinyinIndex >= 0) return aliasPinyinIndex + 500
+        }
         val pinyinIndex = app.pinyinKey.indexOf(pinyinQuery)
         if (pinyinIndex >= 0) return pinyinIndex + 1_000
         val initialIndex = PinyinHelper.initialKey(app.label).indexOf(normalizedQuery)

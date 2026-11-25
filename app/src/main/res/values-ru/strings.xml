@@ -926,6 +926,15 @@
     <string name="search_panel_section_alias_conflict">Псевдоним уже используется</string>
     <string name="search_panel_section_alias_invalid">Недопустимый псевдоним (без пробелов, не более 16 символов)</string>
     <string name="search_panel_app_search_desc">Поиск установленных приложений по имени в панели поиска</string>
+    <string name="search_app_settings_alias_section">Псевдонимы и скрытые приложения</string>
+    <string name="search_app_settings_alias_title">Задать псевдоним</string>
+    <string name="search_app_settings_alias_label">Псевдоним (пусто — очистить)</string>
+    <string name="search_app_settings_alias_saved">Псевдоним для «%1$s» обновлён</string>
+    <string name="search_app_settings_alias_summary">Псевдоним: %1$s</string>
+    <string name="search_app_settings_hidden_summary">Скрыто из поиска</string>
+    <string name="search_app_settings_hide">Скрыть</string>
+    <string name="search_app_settings_show">Показать</string>
+    <string name="search_app_settings_empty">Нет подходящих приложений</string>
     <string name="search_panel_settings_search_desc">Поиск системных настроек с открытием (сначала системный индекс; затем манифест «Настроек»)</string>
     <string name="search_panel_settings_search_title">Поиск системных настроек</string>
     <string name="search_panel_settings_index_title">Индекс настроек</string>

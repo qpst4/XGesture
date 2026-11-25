@@ -2697,6 +2697,15 @@
     <string name="search_panel_section_alias_conflict">别名已被占用</string>
     <string name="search_panel_section_alias_invalid">别名无效（勿含空格，最长 16 字符）</string>
     <string name="search_panel_app_search_desc">在搜索面板中按应用名检索已安装应用</string>
+    <string name="search_app_settings_alias_section">应用别名与搜索隐藏</string>
+    <string name="search_app_settings_alias_title">设置别名</string>
+    <string name="search_app_settings_alias_label">别名（留空则清除）</string>
+    <string name="search_app_settings_alias_saved">已更新「%1$s」的别名</string>
+    <string name="search_app_settings_alias_summary">别名：%1$s</string>
+    <string name="search_app_settings_hidden_summary">已从搜索中隐藏</string>
+    <string name="search_app_settings_hide">隐藏</string>
+    <string name="search_app_settings_show">恢复</string>
+    <string name="search_app_settings_empty">没有匹配的应用</string>
     <string name="search_panel_settings_search_desc">搜索系统设置项并一键跳转（优先系统索引，不可用时解析 Settings 清单）</string>
     <string name="search_panel_settings_search_title">系统设置搜索</string>
     <string name="search_panel_settings_index_title">设置索引</string>

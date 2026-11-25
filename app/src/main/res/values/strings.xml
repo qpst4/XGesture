@@ -963,6 +963,15 @@
     <string name="search_panel_section_alias_conflict">Alias already in use</string>
     <string name="search_panel_section_alias_invalid">Invalid alias (no spaces, max 16 characters)</string>
     <string name="search_panel_app_search_desc">Search installed apps by name in the search panel</string>
+    <string name="search_app_settings_alias_section">Aliases and hidden apps</string>
+    <string name="search_app_settings_alias_title">Set alias</string>
+    <string name="search_app_settings_alias_label">Alias (empty to clear)</string>
+    <string name="search_app_settings_alias_saved">Alias updated for “%1$s”</string>
+    <string name="search_app_settings_alias_summary">Alias: %1$s</string>
+    <string name="search_app_settings_hidden_summary">Hidden from search</string>
+    <string name="search_app_settings_hide">Hide</string>
+    <string name="search_app_settings_show">Restore</string>
+    <string name="search_app_settings_empty">No matching apps</string>
     <string name="search_panel_settings_search_desc">Search system settings and open them (system index first; falls back to Settings manifest)</string>
     <string name="search_panel_settings_search_title">System settings search</string>
     <string name="search_panel_settings_index_title">Settings index</string>

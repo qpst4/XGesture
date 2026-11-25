@@ -37,20 +37,6 @@ import top.yukonga.miuix.kmp.icon.extended.Settings
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun SearchPanelAppSearchSettingsScreen(
-    onBack: () -> Unit,
-) {
-    val desc = stringResource(R.string.search_panel_app_search_desc)
-    SettingsScreenScaffold(
-        title = stringResource(R.string.search_panel_section_apps),
-        subtitle = desc,
-        onBack = onBack,
-    ) {
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
 fun SearchPanelContactSearchSettingsScreen(
     onBack: () -> Unit,
 ) {
