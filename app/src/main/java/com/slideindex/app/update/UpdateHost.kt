@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -83,19 +84,21 @@ fun UpdateDialog(
             }
         },
     ) {
-        if (isUpToDate) {
-            UpToDateContent(
-                currentVersion = UpdateChecker.displayVersion(BuildConfig.VERSION_NAME),
-                onDismiss = onDismissRequest,
-            )
-        } else {
-            NewUpdateContent(
-                state = state,
-                onIgnore = onIgnore,
-                onConfirm = onConfirm,
-                onInstall = onInstall,
-                onMoveToBackground = onMoveToBackground,
-            )
+        Box(Modifier.navigationBarsPadding()) {
+            if (isUpToDate) {
+                UpToDateContent(
+                    currentVersion = UpdateChecker.displayVersion(BuildConfig.VERSION_NAME),
+                    onDismiss = onDismissRequest,
+                )
+            } else {
+                NewUpdateContent(
+                    state = state,
+                    onIgnore = onIgnore,
+                    onConfirm = onConfirm,
+                    onInstall = onInstall,
+                    onMoveToBackground = onMoveToBackground,
+                )
+            }
         }
     }
 }
@@ -336,11 +339,12 @@ private fun ActionRow(onIgnore: () -> Unit, onConfirm: () -> Unit) {
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         TextButton(
             modifier = Modifier
                 .weight(1f)
-                .height(44.dp),
+                .heightIn(min = 44.dp),
             shape = RoundedCornerShape(12.dp),
             onClick = onIgnore,
         ) {
@@ -352,7 +356,7 @@ private fun ActionRow(onIgnore: () -> Unit, onConfirm: () -> Unit) {
         Button(
             modifier = Modifier
                 .weight(1f)
-                .height(44.dp),
+                .heightIn(min = 44.dp),
             shape = RoundedCornerShape(12.dp),
             onClick = onConfirm,
         ) {
