@@ -663,6 +663,13 @@
     <string name="corner_gesture_slot_submenu_remove_item">Remove shortcut</string>
     <string name="corner_gesture_slot_submenu_add">Add shortcut</string>
     <string name="corner_gesture_slot_submenu_add_desc">Pick from the system shortcut list</string>
+    <string name="corner_gesture_slot_submenu_add_action">Add action</string>
+    <string name="corner_gesture_slot_submenu_add_action_desc">Pick any action or app</string>
+    <string name="corner_gesture_slot_order_section">Slot order</string>
+    <string name="corner_gesture_slot_order_prev">Swap with previous slot</string>
+    <string name="corner_gesture_slot_order_prev_desc">Exchange actions with the slot before this one</string>
+    <string name="corner_gesture_slot_order_next">Swap with next slot</string>
+    <string name="corner_gesture_slot_order_next_desc">Exchange actions with the slot after this one</string>
     <string name="corner_gesture_slot_submenu_import">Import from app</string>
     <string name="corner_gesture_slot_submenu_import_desc">Fill shortcuts from the slot\'s linked app</string>
     <string name="corner_gesture_slot_corner_left">Bottom-left radial menu</string>

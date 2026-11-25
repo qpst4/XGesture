@@ -378,11 +378,10 @@ fun launchShortcutDisplayLabel(action: GestureAction.LaunchShortcut): String =
 private fun gestureActionBaseLabelText(context: Context, action: GestureAction): String = when (action) {
     is GestureAction.LaunchApp -> launchAppActionLabel(context, action.packageName, action.cloneUserId)
     is GestureAction.LaunchShortcut -> {
-        val shortcutLabel = launchShortcutDisplayLabel(action)
-        if (shortcutLabel.isBlank()) {
+        // 反馈 #385：命中名称只显示快捷方式自己的名字，不再拼「启动快捷方式：」前缀
+        //（前缀在小尺寸文字里占位太多，图标已经把类型说清楚了）。
+        launchShortcutDisplayLabel(action).ifBlank {
             context.getString(R.string.gesture_action_launch_shortcut)
-        } else {
-            context.getString(R.string.gesture_action_launch_shortcut_named, shortcutLabel)
         }
     }
     is GestureAction.ExecuteShellCommand -> {

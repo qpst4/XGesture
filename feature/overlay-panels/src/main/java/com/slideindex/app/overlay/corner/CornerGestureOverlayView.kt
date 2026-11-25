@@ -390,7 +390,7 @@ class CornerGestureOverlayView(
         anchor: CornerAnchor,
         rawX: Float,
         rawY: Float,
-    ): GestureAction.LaunchShortcut? {
+    ): GestureAction? {
         if (!shortcutSubMenuVisible || shortcutSubMenuSlot < 0) return null
         val layout = shortcutSubMenuLayout ?: return null
         val index = layout.indexAt(rawX, rawY, fingerSubMenuSlopPx())
@@ -651,10 +651,9 @@ class CornerGestureOverlayView(
         }
         val (anchorX, anchorY) = anchorCenter(anchor)
         val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 13f * density }
-        val textWidths = items.map { shortcut ->
-            val label = (com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchShortcutLabel?.invoke(shortcut).orEmpty()).ifBlank {
-                com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel?.invoke(context, shortcut).orEmpty()
-            }
+        val textWidths = items.map { action ->
+            val label = com.slideindex.app.overlay.panels.PanelRuntimeHooks.gestureActionLabel
+                ?.invoke(context, action).orEmpty()
             textPaint.measureText(label)
         }
         shortcutSubMenuLayout = CornerShortcutSubMenuLayoutCalculator.build(

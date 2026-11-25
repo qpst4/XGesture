@@ -656,6 +656,13 @@
     <string name="corner_gesture_slot_submenu_remove_item">Quitar atajo</string>
     <string name="corner_gesture_slot_submenu_add">Añadir acceso directo</string>
     <string name="corner_gesture_slot_submenu_add_desc">Elija de la lista de acceso directo del sistema</string>
+    <string name="corner_gesture_slot_submenu_add_action">Añadir acción</string>
+    <string name="corner_gesture_slot_submenu_add_action_desc">Elige cualquier acción o app</string>
+    <string name="corner_gesture_slot_order_section">Orden de ranuras</string>
+    <string name="corner_gesture_slot_order_prev">Intercambiar con la anterior</string>
+    <string name="corner_gesture_slot_order_prev_desc">Intercambia la acción con la ranura anterior sin rehacer todo</string>
+    <string name="corner_gesture_slot_order_next">Intercambiar con la siguiente</string>
+    <string name="corner_gesture_slot_order_next_desc">Intercambia la acción con la ranura siguiente sin rehacer todo</string>
     <string name="corner_gesture_slot_submenu_import">Importación de la aplicación</string>
     <string name="corner_gesture_slot_submenu_import_desc">Llenar atajos de la aplicación vinculada de la ranura</string>
     <string name="corner_gesture_slot_corner_left">Menú radial inferior izquierdo</string>

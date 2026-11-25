@@ -81,7 +81,7 @@ object CornerRadialMenuRenderer {
         appRepository: AppRepository? = null,
         hintIconSizeDp: Int = SelectedHintMetrics.DEFAULT_ICON_SIZE_DP,
         shortcutSubMenuLayout: CornerShortcutSubMenuLayout? = null,
-        shortcutSubMenuItems: List<GestureAction.LaunchShortcut> = emptyList(),
+        shortcutSubMenuItems: List<GestureAction> = emptyList(),
         highlightedShortcutIndex: Int = -1,
         shortcutSubMenuRevealProgress: Float = 1f,
         /**
@@ -232,7 +232,7 @@ object CornerRadialMenuRenderer {
     private fun drawShortcutSubMenu(
         context: Context,
         canvas: Canvas,
-        items: List<GestureAction.LaunchShortcut>,
+        items: List<GestureAction>,
         layout: CornerShortcutSubMenuLayout,
         highlightedIndex: Int,
         density: Float,
@@ -327,33 +327,33 @@ object CornerRadialMenuRenderer {
                     iconPaint.apply { alpha = itemAlpha },
                 )
             }
-            when {
-                shortcut.showsShellActivityShortcutBadge(activityShortcuts) -> {
-                    ShellCommandBadgeRenderer.draw(
-                        canvas,
-                        iconCenterX,
-                        iconCenterY,
-                        iconSize,
-                        itemAlpha / 255f,
-                        density,
-                    )
-                }
-                !shortcut.isShellActivityShortcut(activityShortcuts) -> {
-                    ShortcutBadgeRenderer.draw(
-                        canvas,
-                        iconCenterX,
-                        iconCenterY,
-                        iconSize,
-                        itemAlpha / 255f,
-                        density,
-                    )
+            // 角标只对「快捷方式」有意义（反馈 #385 之后二级菜单也能放应用/内置动作）。
+            if (shortcut is GestureAction.LaunchShortcut) {
+                when {
+                    shortcut.showsShellActivityShortcutBadge(activityShortcuts) -> {
+                        ShellCommandBadgeRenderer.draw(
+                            canvas,
+                            iconCenterX,
+                            iconCenterY,
+                            iconSize,
+                            itemAlpha / 255f,
+                            density,
+                        )
+                    }
+                    !shortcut.isShellActivityShortcut(activityShortcuts) -> {
+                        ShortcutBadgeRenderer.draw(
+                            canvas,
+                            iconCenterX,
+                            iconCenterY,
+                            iconSize,
+                            itemAlpha / 255f,
+                            density,
+                        )
+                    }
                 }
             }
 
-            val label = (com.slideindex.app.overlay.panels.PanelRuntimeHooks.launchShortcutLabel
-                ?.invoke(shortcut).orEmpty()).ifBlank {
-                actionLabel(context, shortcut, shellCommands)
-            }
+            val label = actionLabel(context, shortcut, shellCommands)
             val textStart = drawRect.left + iconContentWidth
             val textMaxWidth = (drawRect.right - paddingRight - textStart).coerceAtLeast(0f)
             val fitted = TextUtils.ellipsize(label, textPaint, textMaxWidth, TextUtils.TruncateAt.END)

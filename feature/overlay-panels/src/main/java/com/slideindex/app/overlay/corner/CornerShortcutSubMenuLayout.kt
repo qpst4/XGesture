@@ -51,7 +51,7 @@ object CornerShortcutSubMenuLayoutCalculator {
         settings: CornerGestureSettings,
         density: Float,
         revealProgress: Float,
-        items: List<GestureAction.LaunchShortcut>,
+        items: List<GestureAction>,
         textWidthsPx: List<Float>,
         screenWidth: Float,
     ): CornerShortcutSubMenuLayout {

@@ -201,7 +201,7 @@ fun NavEntryBuilder.cornerGestureSlotNavEntries(ctx: MainNavContext) {
         val cornerSettings = overlaySettings.cornerGestureSettings
         val subMenuConfig = cornerSlotSubMenuConfig(key.corner, key.slotIndex, cornerSettings)
         val editorKey = cornerSlotEditorKey(key.corner, key.slotIndex)
-        val existingPayloadKeys = subMenuConfig.items.map { it.payloadKey }.toSet()
+        val existingPayloadKeys = subMenuConfig.items.filterIsInstance<GestureAction.LaunchShortcut>().map { it.payloadKey }.toSet()
         CornerSlotSubMenuShortcutPickScreen(
             appSettings = appSettings,
             existingPayloadKeys = existingPayloadKeys,
@@ -236,8 +236,8 @@ fun NavEntryBuilder.cornerGestureSlotNavEntries(ctx: MainNavContext) {
         val appSettings by viewModel.settings.collectAsStateWithLifecycle()
         val cornerSettings = overlaySettings.cornerGestureSettings
         val subMenuConfig = cornerSlotSubMenuConfig(key.corner, key.slotIndex, cornerSettings)
-        val existingPayloadKeys = subMenuConfig.items.map { it.payloadKey }.toSet()
-        val configuredKeys = subMenuConfig.items.mapNotNull { GestureShortcutPayload.shortcutToggleKey(it.payloadKey) }.toSet()
+        val existingPayloadKeys = subMenuConfig.items.filterIsInstance<GestureAction.LaunchShortcut>().map { it.payloadKey }.toSet()
+        val configuredKeys = subMenuConfig.items.filterIsInstance<GestureAction.LaunchShortcut>().mapNotNull { GestureShortcutPayload.shortcutToggleKey(it.payloadKey) }.toSet()
         val returnKey = AppNavKey.HomeCornerGestureSlotSubMenuPick(key.corner, key.slotIndex)
         MyShortcutsFolderScreen(
             activityShortcuts = appSettings.activityShortcuts,
@@ -269,8 +269,8 @@ fun NavEntryBuilder.cornerGestureSlotNavEntries(ctx: MainNavContext) {
         val overlaySettings by viewModel.overlaySettings.collectAsStateWithLifecycle()
         val cornerSettings = overlaySettings.cornerGestureSettings
         val subMenuConfig = cornerSlotSubMenuConfig(key.corner, key.slotIndex, cornerSettings)
-        val existingPayloadKeys = subMenuConfig.items.map { it.payloadKey }.toSet()
-        val configuredKeys = subMenuConfig.items.mapNotNull { GestureShortcutPayload.shortcutToggleKey(it.payloadKey) }.toSet()
+        val existingPayloadKeys = subMenuConfig.items.filterIsInstance<GestureAction.LaunchShortcut>().map { it.payloadKey }.toSet()
+        val configuredKeys = subMenuConfig.items.filterIsInstance<GestureAction.LaunchShortcut>().mapNotNull { GestureShortcutPayload.shortcutToggleKey(it.payloadKey) }.toSet()
         val returnKey = AppNavKey.HomeCornerGestureSlotSubMenuPick(key.corner, key.slotIndex)
         PresetShortcutsFolderScreen(
             onBack = { ctx.navigateBackTo(returnKey) },
@@ -319,7 +319,7 @@ fun NavEntryBuilder.cornerGestureSlotNavEntries(ctx: MainNavContext) {
         val overlaySettings by viewModel.overlaySettings.collectAsStateWithLifecycle()
         val cornerSettings = overlaySettings.cornerGestureSettings
         val subMenuConfig = cornerSlotSubMenuConfig(key.corner, key.slotIndex, cornerSettings)
-        val existingPayloadKeys = subMenuConfig.items.map { it.payloadKey }.toSet()
+        val existingPayloadKeys = subMenuConfig.items.filterIsInstance<GestureAction.LaunchShortcut>().map { it.payloadKey }.toSet()
         val returnKey = AppNavKey.HomeCornerGestureSlotSubMenuPick(key.corner, key.slotIndex)
         ActivityShortcutPickActivityScreen(
             packageName = key.packageName,

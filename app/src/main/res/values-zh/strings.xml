@@ -560,6 +560,13 @@
     <string name="corner_gesture_slot_submenu_remove_item">移除快捷项</string>
     <string name="corner_gesture_slot_submenu_add">添加快捷项</string>
     <string name="corner_gesture_slot_submenu_add_desc">从系统快捷方式列表中选择</string>
+    <string name="corner_gesture_slot_submenu_add_action">添加动作</string>
+    <string name="corner_gesture_slot_submenu_add_action_desc">从动作列表中选择（应用 / 内置动作）</string>
+    <string name="corner_gesture_slot_order_section">槽位排序</string>
+    <string name="corner_gesture_slot_order_prev">与上一个槽位交换</string>
+    <string name="corner_gesture_slot_order_prev_desc">与上一个槽位的动作互换，不用删了重建</string>
+    <string name="corner_gesture_slot_order_next">与下一个槽位交换</string>
+    <string name="corner_gesture_slot_order_next_desc">与下一个槽位的动作互换，不用删了重建</string>
     <string name="corner_gesture_slot_submenu_import">从应用导入</string>
     <string name="corner_gesture_slot_submenu_import_desc">根据槽位关联应用填充快捷项</string>
     <string name="corner_gesture_slot_corner_left">左下角轮盘</string>

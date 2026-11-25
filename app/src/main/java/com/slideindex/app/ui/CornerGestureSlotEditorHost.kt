@@ -26,6 +26,7 @@ import com.slideindex.app.overlay.corner.resolveHostPackageName
 import com.slideindex.app.service.CornerGestureSlotPickTrampolineActivity
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.CornerGestureSettings
+import com.slideindex.app.settings.CornerRadialMenuCodec
 import com.slideindex.app.settings.CornerSlotSubMenuConfig
 import com.slideindex.app.settings.SettingsRepository
 import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
@@ -47,6 +48,8 @@ internal sealed interface CornerSlotEditorPage {
     data object ActionPickPickApp : CornerSlotEditorPage
     data class ActionPickPickActivity(val packageName: String) : CornerSlotEditorPage
     data object SubMenuShortcutPick : CornerSlotEditorPage
+    /** 反馈 #385：从二级菜单里挑一个任意动作（应用 / 内置动作）。 */
+    data object SubMenuActionPick : CornerSlotEditorPage
     data object SubMenuMyShortcuts : CornerSlotEditorPage
     data object SubMenuPresetShortcuts : CornerSlotEditorPage
     data object SubMenuPickApp : CornerSlotEditorPage
@@ -56,7 +59,9 @@ internal sealed interface CornerSlotEditorPage {
 
 internal fun CornerSlotEditorPage.navDepth(): Int = when (this) {
     CornerSlotEditorPage.SlotSettings -> 0
-    CornerSlotEditorPage.ActionPick, CornerSlotEditorPage.SubMenuShortcutPick -> 1
+    CornerSlotEditorPage.ActionPick,
+    CornerSlotEditorPage.SubMenuShortcutPick,
+    CornerSlotEditorPage.SubMenuActionPick -> 1
     CornerSlotEditorPage.ActionPickMyShortcuts,
     CornerSlotEditorPage.ActionPickPresetShortcuts,
     is CornerSlotEditorPage.ShellCommand,
@@ -75,6 +80,7 @@ private fun CornerSlotEditorPage.contentKey(): Any = when (this) {
     CornerSlotEditorPage.ActionPickPickApp -> "actionPickPickApp"
     is CornerSlotEditorPage.ActionPickPickActivity -> "actionPickPickActivity:$packageName"
     CornerSlotEditorPage.SubMenuShortcutPick -> "subMenuShortcutPick"
+    CornerSlotEditorPage.SubMenuActionPick -> "subMenuActionPick"
     CornerSlotEditorPage.SubMenuMyShortcuts -> "subMenuMyShortcuts"
     CornerSlotEditorPage.SubMenuPresetShortcuts -> "subMenuPresetShortcuts"
     CornerSlotEditorPage.SubMenuPickApp -> "subMenuPickApp"
@@ -127,24 +133,67 @@ fun CornerGestureSlotEditorHost(
         }
     }
 
-    val appendSubMenuShortcut: (GestureAction.LaunchShortcut) -> Unit = { shortcut ->
-        if (!draftSubMenu.items.any { it.payloadKey == shortcut.payloadKey }) {
+    // 反馈 #385：二级菜单现在能放任意动作（应用 / 内置动作 / 快捷方式），统一按动作载荷去重。
+    val appendSubMenuItem: (GestureAction) -> Unit = { action ->
+        val payload = QuickLauncherItemCodec.encodeActionPayload(action)
+        val existing = draftSubMenu.items.map { QuickLauncherItemCodec.encodeActionPayload(it) }
+        if (payload !in existing) {
             updateDraftSubMenu(
                 draftSubMenu.copy(
                     enabled = true,
-                    items = draftSubMenu.items + shortcut,
+                    items = draftSubMenu.items + action,
                 ),
             )
+        }
+    }
+
+    /**
+     * 与相邻槽位交换动作（反馈 #385 ①）。
+     *
+     * 槽位是按固定几何位置编号的，所以"排序"就是交换两个位置上的动作；
+     * 先把当前草稿落盘，再交换，避免用户刚改的动作被覆盖。
+     */
+    val swapWithNeighbor: (Int) -> Unit = { delta ->
+        scope.launch {
+            persistCornerSlotDraft(
+                settingsRepository = settingsRepository,
+                corner = corner,
+                slotIndex = slotIndex,
+                action = draftAction,
+                subMenuConfig = draftSubMenu,
+            )
+            val overlay = settingsRepository.overlaySettings.first()
+            val cornerSettings = overlay.cornerGestureSettings
+            val unified = cornerSettings.unifiedSlots
+            val isLeft = unified || corner != "right"
+            val slots = if (isLeft) cornerSettings.leftSlots else cornerSettings.rightSlots
+            val neighborIndex = slotIndex + delta
+            if (neighborIndex in slots.indices) {
+                val mine = slots.getOrElse(slotIndex) { GestureAction.None }
+                val theirs = slots[neighborIndex]
+                if (isLeft) {
+                    settingsRepository.setCornerGestureLeftSlotAction(slotIndex, theirs)
+                    settingsRepository.setCornerGestureLeftSlotAction(neighborIndex, mine)
+                } else {
+                    settingsRepository.setCornerGestureRightSlotAction(slotIndex, theirs)
+                    settingsRepository.setCornerGestureRightSlotAction(neighborIndex, mine)
+                }
+            }
+            onExit()
         }
     }
 
     val hostPackage = draftAction.resolveHostPackageName()
 
     val existingPayloadKeys = remember(draftSubMenu.items) {
-        draftSubMenu.items.map { it.payloadKey }.toSet()
+        draftSubMenu.items.filterIsInstance<GestureAction.LaunchShortcut>()
+            .map { it.payloadKey }
+            .toSet()
     }
     val configuredSubMenuShortcutKeys = remember(draftSubMenu.items) {
-        draftSubMenu.items.mapNotNull { GestureShortcutPayload.shortcutToggleKey(it.payloadKey) }.toSet()
+        draftSubMenu.items.filterIsInstance<GestureAction.LaunchShortcut>()
+            .mapNotNull { GestureShortcutPayload.shortcutToggleKey(it.payloadKey) }
+            .toSet()
     }
 
     BackHandler {
@@ -156,6 +205,7 @@ fun CornerGestureSlotEditorHost(
             CornerSlotEditorPage.ActionPickPickApp -> page = CornerSlotEditorPage.ActionPick
             is CornerSlotEditorPage.ActionPickPickActivity -> page = CornerSlotEditorPage.ActionPickPickApp
             CornerSlotEditorPage.SubMenuShortcutPick -> page = CornerSlotEditorPage.SlotSettings
+            CornerSlotEditorPage.SubMenuActionPick -> page = CornerSlotEditorPage.SubMenuShortcutPick
             CornerSlotEditorPage.SubMenuMyShortcuts -> page = CornerSlotEditorPage.SubMenuShortcutPick
             CornerSlotEditorPage.SubMenuPresetShortcuts -> page = CornerSlotEditorPage.SubMenuShortcutPick
             CornerSlotEditorPage.SubMenuPickApp -> page = CornerSlotEditorPage.SubMenuShortcutPick
@@ -195,13 +245,20 @@ fun CornerGestureSlotEditorHost(
                     }
                 },
                 onAddSubMenuShortcut = { page = CornerSlotEditorPage.SubMenuShortcutPick },
+                onAddSubMenuAction = { page = CornerSlotEditorPage.SubMenuActionPick },
+                onSwapWithPrevious = { swapWithNeighbor(-1) },
+                onSwapWithNext = { swapWithNeighbor(1) },
+                canSwapWithPrevious = slotIndex > 0,
+                canSwapWithNext = slotIndex < CornerRadialMenuCodec.SLOT_COUNT - 1,
                 onImportFromApp = {
                     scope.launch {
                         val pkg = draftAction.resolveHostPackageName() ?: return@launch
                         val loaded = withContext(Dispatchers.IO) {
                             AppShortcutLoader.loadFastShortcuts(context, pkg)
                         }
-                        val existing = draftSubMenu.items.map { it.payloadKey }
+                        val existing = draftSubMenu.items
+                            .filterIsInstance<GestureAction.LaunchShortcut>()
+                            .map { it.payloadKey }
                         val shortcuts = loaded.map { item ->
                             taskSwitcherItemToLaunchShortcut(item, pkg)
                         }.filter { it.payloadKey !in existing }
@@ -286,10 +343,31 @@ fun CornerGestureSlotEditorHost(
                 appSettings = appSettings,
                 existingPayloadKeys = existingPayloadKeys,
                 onBack = { page = CornerSlotEditorPage.SlotSettings },
-                onAddShortcut = appendSubMenuShortcut,
+                onAddShortcut = appendSubMenuItem,
                 onOpenMyShortcuts = { page = CornerSlotEditorPage.SubMenuMyShortcuts },
                 onOpenPresetShortcuts = { page = CornerSlotEditorPage.SubMenuPresetShortcuts },
                 onBrowseActivityShortcut = { page = CornerSlotEditorPage.SubMenuPickApp },
+            )
+        }
+
+        CornerSlotEditorPage.SubMenuActionPick -> {
+            // 反馈 #385：二级菜单也能放应用/内置动作（任意 GestureAction）。
+            GestureActionPickerScreen(
+                trigger = GestureTriggerType.SHORT_SWIPE_IN,
+                current = GestureAction.None,
+                catalogPolicy = ActionPickerCatalogPolicy.Slot(SlotPickerKind.CornerWheel),
+                onDismiss = { page = CornerSlotEditorPage.SubMenuShortcutPick },
+                onSelect = { action ->
+                    appendSubMenuItem(action)
+                    page = CornerSlotEditorPage.SubMenuShortcutPick
+                },
+                onOpenMyShortcuts = { page = CornerSlotEditorPage.SubMenuMyShortcuts },
+                onOpenPresetShortcuts = { page = CornerSlotEditorPage.SubMenuPresetShortcuts },
+                onOpenPickApp = { page = CornerSlotEditorPage.SubMenuPickApp },
+                onOpenExecuteShellCommand = { command ->
+                    appendSubMenuItem(GestureAction.ExecuteShellCommand(command))
+                    page = CornerSlotEditorPage.SubMenuShortcutPick
+                },
             )
         }
 
@@ -302,8 +380,8 @@ fun CornerGestureSlotEditorHost(
                 onToggle = { item, added ->
                     if (!added && item.type == QuickLauncherItemType.SHORTCUT) {
                         val action = activityShortcutFromQuickLauncherItem(item)?.toLaunchShortcut()
-                        if (action != null && action.payloadKey !in existingPayloadKeys) {
-                            appendSubMenuShortcut(action)
+                        if (action != null) {
+                            appendSubMenuItem(action)
                         }
                     }
                 },
@@ -328,7 +406,7 @@ fun CornerGestureSlotEditorHost(
                                 }
                             }
                         if (action != null && action.payloadKey !in existingPayloadKeys) {
-                            appendSubMenuShortcut(action)
+                            appendSubMenuItem(action)
                         }
                     }
                 },
@@ -351,7 +429,7 @@ fun CornerGestureSlotEditorHost(
                 onBack = { page = CornerSlotEditorPage.SubMenuPickApp },
                 onSelectActivity = { activity ->
                     val component = "${activity.packageName}/${activity.className}"
-                    appendSubMenuShortcut(
+                    appendSubMenuItem(
                         GestureAction.LaunchShortcut.component(component, activity.label),
                     )
                 },

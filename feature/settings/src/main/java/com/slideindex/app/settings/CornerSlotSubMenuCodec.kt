@@ -43,8 +43,9 @@ object CornerSlotSubMenuCodec {
             else -> decodeLegacyPayloads(parts.drop(3), count)
         }
         val items = payloads.mapNotNull { payload ->
-            val action = QuickLauncherItemCodec.parseActionPayload(payload)
-            action as? GestureAction.LaunchShortcut
+            // 反馈 #385：二级菜单现在可以放任意动作（应用 / 内置动作 / 快捷方式），
+            // 老数据里的快捷方式同样是 GestureAction，统一按动作解析。
+            QuickLauncherItemCodec.parseActionPayload(payload)
         }
         return index to CornerSlotSubMenuConfig(enabled = enabled, items = items)
     }
