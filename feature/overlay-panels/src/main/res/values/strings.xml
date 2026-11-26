@@ -754,4 +754,9 @@
     <string name="drag_drop_flow_convert_empty">No text recognized</string>
     <string name="pick_word_granularity_word">分词</string>
     <string name="pick_word_granularity_character">按字</string>
+    <string name="clipboard_float_multi_select">多选</string>
+    <string name="clipboard_float_selected_count">已选 %1$d 条</string>
+    <string name="clipboard_float_select_all">全选</string>
+    <string name="clipboard_float_delete_selected">删除</string>
+    <string name="clipboard_float_selection_done">完成</string>
 </resources>

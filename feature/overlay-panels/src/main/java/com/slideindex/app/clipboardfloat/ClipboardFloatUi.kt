@@ -43,6 +43,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -426,6 +427,25 @@ private fun ClipboardFloatExpandedChrome(
     val searchQuery by listController.searchQuery.collectAsState()
     var searchExpanded by remember { mutableStateOf(false) }
     var showAlphaSlider by remember { mutableStateOf(false) }
+    // 剪贴板多选：列表行点按改为勾选，底部出现批量操作条。
+    val clipboardEntries by listController.filteredEntries.collectAsState()
+    var selectionActive by remember { mutableStateOf(false) }
+    var selectedIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    val selectionState = ClipboardFloatSelectionState(
+        active = selectionActive,
+        ids = selectedIds,
+        allIds = clipboardEntries.map { it.id }.toSet(),
+        onToggle = { id ->
+            selectedIds = if (id in selectedIds) selectedIds - id else selectedIds + id
+        },
+        onSelectAll = { selectedIds = clipboardEntries.map { it.id }.toSet() },
+        onClearAll = { selectedIds = emptySet() },
+        onDeleteSelected = {
+            listController.deleteEntries(selectedIds)
+            selectionActive = false
+            selectedIds = emptySet()
+        },
+    )
     val searchFocusRequester = remember { FocusRequester() }
 
     LaunchedEffect(searchExpanded) {
@@ -465,6 +485,7 @@ private fun ClipboardFloatExpandedChrome(
                     radiusDp = glass.radiusDp,
                 )
             }
+            CompositionLocalProvider(LocalClipboardFloatSelection provides selectionState) {
             Column(modifier = Modifier.fillMaxSize()) {
             Row(
                 modifier = Modifier
@@ -510,6 +531,20 @@ private fun ClipboardFloatExpandedChrome(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                IconButton(
+                    onClick = {
+                        selectionActive = !selectionActive
+                        if (!selectionActive) selectedIds = emptySet()
+                    },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = stringResource(R.string.clipboard_float_multi_select),
+                        tint = if (selectionActive) scheme.primary else scheme.onSurface,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
                 IconButton(
                     onClick = {
                         if (searchExpanded) {
@@ -617,6 +652,57 @@ private fun ClipboardFloatExpandedChrome(
                     onEntryDragStart = onEntryDragStart,
                     onEntryDragEnd = onEntryDragEnd,
                 )
+            }
+            if (selectionActive) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.clipboard_float_selected_count,
+                            selectedIds.size,
+                        ),
+                        style = MiuixTheme.textStyles.body2,
+                        color = scheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = stringResource(R.string.clipboard_float_select_all),
+                        style = MiuixTheme.textStyles.body2,
+                        color = scheme.primary,
+                        modifier = Modifier.clickable {
+                            selectedIds = clipboardEntries.map { it.id }.toSet()
+                        }
+                    )
+                    Text(
+                        text = stringResource(R.string.clipboard_float_delete_selected),
+                        style = MiuixTheme.textStyles.body2,
+                        color = if (selectedIds.isEmpty()) {
+                            scheme.onSurfaceVariantSummary
+                        } else {
+                            scheme.error
+                        },
+                        modifier = Modifier.clickable(enabled = selectedIds.isNotEmpty()) {
+                            listController.deleteEntries(selectedIds)
+                            selectionActive = false
+                            selectedIds = emptySet()
+                        }
+                    )
+                    Text(
+                        text = stringResource(R.string.clipboard_float_selection_done),
+                        style = MiuixTheme.textStyles.body2,
+                        color = scheme.primary,
+                        modifier = Modifier.clickable {
+                            selectionActive = false
+                            selectedIds = emptySet()
+                        }
+                    )
+                }
+            }
             }
             }
             ClipboardFloatResizeCornerHandle(
@@ -747,10 +833,15 @@ private fun ClipboardFloatSingleLineList(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         items(entries, key = { it.id }) { entry ->
+            val selection = LocalClipboardFloatSelection.current
+            val selecting = selection?.active == true
             ClipboardFloatSingleLineRow(
                 entry = entry,
+                selected = selecting && entry.id in (selection?.ids ?: emptySet()),
                 entryLongPressAction = entryLongPressAction,
-                onClick = { onEntryClick(entry) },
+                onClick = {
+                    if (selecting) selection?.onToggle(entry.id) else onEntryClick(entry)
+                },
                 onWordTapLongClick = { onEntryLongClick(entry) },
                 onEntryDragStart = onEntryDragStart,
                 onEntryDragEnd = onEntryDragEnd,
@@ -763,6 +854,7 @@ private fun ClipboardFloatSingleLineList(
 @Composable
 private fun ClipboardFloatSingleLineRow(
     entry: ClipboardEntry,
+    selected: Boolean = false,
     entryLongPressAction: ClipboardFloatEntryLongPressAction,
     onClick: () -> Unit,
     onWordTapLongClick: () -> Unit,
@@ -824,7 +916,10 @@ private fun ClipboardFloatSingleLineRow(
             ),
         shape = RoundedCornerShape(8.dp),
         color = clipboardFloatCardColor(LocalClipboardFloatGlass.current.active),
-        border = androidx.compose.foundation.BorderStroke(1.dp, scheme.onSurface.copy(alpha = 0.05f))
+        border = androidx.compose.foundation.BorderStroke(
+            if (selected) 1.5.dp else 1.dp,
+            if (selected) scheme.primary else scheme.onSurface.copy(alpha = 0.05f),
+        )
     ) {
         Column(
             modifier = Modifier
@@ -913,12 +1008,17 @@ private fun ClipboardFloatGrid(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(entries, key = { it.id }) { entry ->
+            val selection = LocalClipboardFloatSelection.current
+            val selecting = selection?.active == true
             ClipboardFloatEntryCard(
                 entry = entry,
+                selected = selecting && entry.id in (selection?.ids ?: emptySet()),
                 columnCount = columnCount,
                 windowWidthDp = windowWidthDp,
                 entryLongPressAction = entryLongPressAction,
-                onClick = { onEntryClick(entry) },
+                onClick = {
+                    if (selecting) selection?.onToggle(entry.id) else onEntryClick(entry)
+                },
                 onWordTapLongClick = { onEntryLongClick(entry) },
                 onEntryDragStart = onEntryDragStart,
                 onEntryDragEnd = onEntryDragEnd,
@@ -931,6 +1031,7 @@ private fun ClipboardFloatGrid(
 @Composable
 private fun ClipboardFloatEntryCard(
     entry: ClipboardEntry,
+    selected: Boolean = false,
     columnCount: Int,
     windowWidthDp: Int,
     entryLongPressAction: ClipboardFloatEntryLongPressAction,
@@ -996,7 +1097,10 @@ private fun ClipboardFloatEntryCard(
             ),
         shape = RoundedCornerShape(12.dp),
         color = clipboardFloatCardColor(LocalClipboardFloatGlass.current.active),
-        border = androidx.compose.foundation.BorderStroke(1.dp, scheme.onSurface.copy(alpha = 0.06f))
+        border = androidx.compose.foundation.BorderStroke(
+            if (selected) 1.5.dp else 1.dp,
+            if (selected) scheme.primary else scheme.onSurface.copy(alpha = 0.06f),
+        )
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),

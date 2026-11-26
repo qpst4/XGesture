@@ -18,6 +18,9 @@ interface ClipboardFloatHistorySource {
 
     /** 搜索历史。 */
     suspend fun search(query: String): List<ClipboardEntry>
+
+    /** 删除一条（多选批量删除用）。 */
+    suspend fun delete(id: String)
 }
 
 /** 模块内服务定位点：`:app` 启动时注入。 */

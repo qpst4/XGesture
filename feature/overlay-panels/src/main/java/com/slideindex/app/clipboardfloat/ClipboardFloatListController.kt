@@ -90,6 +90,19 @@ class ClipboardFloatListController(
         }
     }
 
+    /** 批量删除（多选）。删完由 revision 触发刷新。 */
+    fun deleteEntries(ids: Set<String>) {
+        val repo = repository ?: return
+        if (ids.isEmpty()) return
+        loadJob?.cancel()
+        loadJob = scope.launch {
+            withContext(Dispatchers.IO) {
+                ids.forEach { id -> runCatching { repo.delete(id) } }
+            }
+            reload()
+        }
+    }
+
     private fun runSearch(query: String) {
         val repo = repository ?: return
         val trimmed = query.trim()
