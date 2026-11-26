@@ -235,6 +235,10 @@ class MacroEngine(private val context: Context) {
             latch.countDown()
         }
         latch.await(KEY_ACTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        android.util.Log.i(
+            "MacroEngine",
+            "system key: key=$key globalAction=$globalAction ok=${ok.get()}",
+        )
         return ok.get()
     }
 

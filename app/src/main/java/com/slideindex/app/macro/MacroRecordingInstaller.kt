@@ -145,7 +145,29 @@ object MacroRecordingInstaller {
                         // 拖动控制条时让捕获层跟着挪"洞"，否则条会被捕获窗盖住、拖不动。
                         onMoved = { capture?.updateHole() },
                         // 反馈 #4：工具条上插入「返回 / 主屏 / 最近任务」步骤。
-                        onKeyStep = { key -> recorder.addSystemKey(key) },
+                        onKeyStep = { key ->
+                            // 反馈：三个导航键原来只"记录"不"执行"，点了页面不动。
+                            // 现在先记一步，再真的执行一次，用户才能顺着录下去。
+                            recorder.addSystemKey(key)
+                            val service = SlideIndexAccessibilityService.accessibilityInstance()
+                            val globalAction = when (key) {
+                                com.slideindex.app.macro.MacroStep.SystemKey.BACK ->
+                                    android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK
+
+                                com.slideindex.app.macro.MacroStep.SystemKey.HOME ->
+                                    android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_HOME
+
+                                com.slideindex.app.macro.MacroStep.SystemKey.RECENTS ->
+                                    android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_RECENTS
+                            }
+                            val ok = runCatching {
+                                service?.performGlobalAction(globalAction)
+                            }.getOrDefault(false)
+                            Log.i(
+                                TAG,
+                                "key step executed: key=$key service=${service != null} ok=$ok",
+                            )
+                        },
                     )
 
                     Log.i(TAG, "recording start: macro=$macroId target=$targetPackage")
