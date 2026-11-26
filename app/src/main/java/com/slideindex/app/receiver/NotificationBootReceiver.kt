@@ -11,6 +11,7 @@ import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * On boot, user unlock, or package replace:
@@ -44,10 +45,19 @@ class NotificationBootReceiver : BroadcastReceiver() {
                 com.slideindex.app.service.OverlayWatchdogJobService.schedule(appContext)
                 if (action == Intent.ACTION_MY_PACKAGE_REPLACED) {
                     val settings = deps.settingsRepository.readSnapshot()
-                    OverlayServiceLifecycle.recoverAccessibilityBindingWithRetries(
-                        appContext,
-                        settings,
-                    )
+                    // 覆盖安装后无障碍大概率被系统解绑，这里要重试；但**不能**在广播里
+                    // 长等（超过广播时限 = ANR，实测每次 install -r 都会弹）。
+                    // 给整段重试一个 8s 上限：正常设备上 0.8+2+5s 的重试刚好能跑完，
+                    // 跑不完就结束广播，交给看门狗 / 下次启动继续恢复。
+                    val recovered = withTimeoutOrNull(REBIND_BUDGET_MS) {
+                        OverlayServiceLifecycle.recoverAccessibilityBindingWithRetries(
+                            appContext,
+                            settings,
+                        )
+                    }
+                    if (recovered == null) {
+                        Log.w(TAG, "Accessibility rebind exceeded ${'$'}REBIND_BUDGET_MS ms, deferred")
+                    }
                 }
                 Log.i(TAG, "Gesture boot recovery completed after $action")
             } catch (error: Exception) {
@@ -60,5 +70,6 @@ class NotificationBootReceiver : BroadcastReceiver() {
 
     private companion object {
         const val TAG = "NotificationBootReceiver"
+        const val REBIND_BUDGET_MS = 8_000L
     }
 }
