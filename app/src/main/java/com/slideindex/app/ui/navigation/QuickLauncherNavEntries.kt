@@ -29,10 +29,59 @@ import com.slideindex.app.ui.viewmodel.QuickLauncherEditorViewModel
 
 fun NavEntryBuilder.quickLauncherNavEntries(ctx: MainNavContext) {
     hiltEntry<AppNavKey.QuickLauncher> {
+        val viewModel: ExtensionSettingsViewModel = hiltViewModel(ctx.activity)
+        val gestureSettings by viewModel.gestureSettings.collectAsStateWithLifecycle()
+        val settings = gestureSettings.toMinimalAppSettings()
+        val panels = QuickLauncherPanelDefaults.effectivePanels(settings.quickLauncherPanels)
+        com.slideindex.app.ui.quicklauncher.QuickLauncherListScreen(
+            panels = panels,
+            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
+            onCreate = {
+                val updated = com.slideindex.app.launcher.QuickLauncherPanelMutator.addPanel(
+                    panels = panels,
+                    defaultColumns = settings.quickLauncherColumnsPerPage,
+                    defaultRows = settings.quickLauncherRowsPerPage,
+                )
+                val newPanel = updated?.lastOrNull()
+                if (newPanel != null) {
+                    viewModel.setQuickLauncherPanels(updated)
+                    ctx.navigate(AppNavKey.QuickLauncherEdit(newPanel.id))
+                }
+            },
+            onOpen = { panelId -> ctx.navigate(AppNavKey.QuickLauncherEdit(panelId)) },
+            onRename = { panelId, name ->
+                val panel = panels.firstOrNull { it.id == panelId } ?: return@QuickLauncherListScreen
+                viewModel.setQuickLauncherPanels(
+                    com.slideindex.app.launcher.QuickLauncherPanelMutator.replacePanel(
+                        panels,
+                        panelId,
+                        panel.copy(name = name),
+                    ),
+                )
+            },
+            onDelete = { panelId ->
+                com.slideindex.app.launcher.QuickLauncherPanelMutator.removePanel(panels, panelId)
+                    ?.let(viewModel::setQuickLauncherPanels)
+            },
+            onMove = { panelId, delta ->
+                val current = panels.toMutableList()
+                val index = current.indexOfFirst { it.id == panelId }
+                val target = index + delta
+                if (index >= 0 && target in current.indices) {
+                    val panel = current.removeAt(index)
+                    current.add(target, panel)
+                    viewModel.setQuickLauncherPanels(current)
+                }
+            },
+        )
+    }
+
+    hiltEntry<AppNavKey.QuickLauncherEdit> { key ->
         val viewModel: QuickLauncherEditorViewModel = hiltViewModel()
         QuickLauncherEditorScreen(
             viewModel = viewModel,
-            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
+            panelId = key.panelId,
+            onBack = { ctx.navigateBackTo(AppNavKey.QuickLauncherEdit(key.panelId)) },
             onAdd = { panelId, folderIndex ->
                 ctx.navigate(AppNavKey.QuickLauncherAdd(panelId, folderIndex))
             },
@@ -47,7 +96,7 @@ fun NavEntryBuilder.quickLauncherNavEntries(ctx: MainNavContext) {
             panelId = key.panelId,
             folderIndex = key.folderIndex,
             settings = settings,
-            onBack = { ctx.navigateBackTo(AppNavKey.QuickLauncher) },
+            onBack = { ctx.navigateBackTo(AppNavKey.QuickLauncherEdit(key.panelId)) },
             onToggleItem = { item, added ->
                 viewModel.toggleQuickLauncherPanelItem(key.panelId, item, added, key.folderIndex)
             },
@@ -273,7 +322,7 @@ fun NavEntryBuilder.quickLauncherNavEntries(ctx: MainNavContext) {
             },
             onConfirmCreateFolder = { folderName, _ ->
                 viewModel.commitFolderDraft(folderName)
-                ctx.navigateBackTo(AppNavKey.QuickLauncher)
+                ctx.navigateBackTo(AppNavKey.QuickLauncherEdit(key.panelId))
             },
             onOpenExecuteShellCommand = { cmd ->
                 ctx.navigate(

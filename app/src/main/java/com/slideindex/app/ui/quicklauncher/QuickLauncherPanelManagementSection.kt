@@ -69,6 +69,9 @@ fun QuickLauncherPanelManagementSection(
     onPanelsChange: (List<QuickLauncherPanel>) -> Unit,
     onSelectedIndexChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    /** 编辑器里由列表页负责面板切换/新建，这里只显示当前面板（不再用 TabRow）。 */
+    showPanelSwitcher: Boolean = true,
+    allowAddPanel: Boolean = true,
 ) {
     val latestPanels by rememberUpdatedState(panels)
     val safeIndex = selectedIndex.coerceIn(0, (panels.size - 1).coerceAtLeast(0))
@@ -164,7 +167,7 @@ fun QuickLauncherPanelManagementSection(
         }
 
         MiuixTabSettingsCard(
-            tabs = if (panels.size > 1) {
+            tabs = if (showPanelSwitcher && panels.size > 1) {
                 panels.mapIndexed { index, panel ->
                     panel.name.ifBlank {
                         stringResource(R.string.quick_launcher_panel_default_name, index + 1)
@@ -173,7 +176,7 @@ fun QuickLauncherPanelManagementSection(
             } else {
                 null
             },
-            selectedTabIndex = safeIndex,
+            selectedTabIndex = if (showPanelSwitcher) safeIndex else 0,
             onTabSelected = onSelectedIndexChange,
         ) {
             Row(
@@ -213,34 +216,36 @@ fun QuickLauncherPanelManagementSection(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                IconButton(
-                    // 到上限时不再置灰：点一下给「已达上限」提示，比一个没反应的灰按钮好懂。
-                    onClick = {
-                        val added = QuickLauncherPanelMutator.addPanel(
-                            panels = latestPanels,
-                            defaultColumns = defaultColumns,
-                            defaultRows = defaultRows,
+                if (allowAddPanel) {
+                    IconButton(
+                        // 到上限时不再置灰：点一下给「已达上限」提示，比一个没反应的灰按钮好懂。
+                        onClick = {
+                            val added = QuickLauncherPanelMutator.addPanel(
+                                panels = latestPanels,
+                                defaultColumns = defaultColumns,
+                                defaultRows = defaultRows,
+                            )
+                            if (added == null) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(
+                                        R.string.quick_launcher_panel_limit_reached,
+                                        QuickLauncherPanelDefaults.MAX_PANELS,
+                                    ),
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                                return@IconButton
+                            }
+                            onPanelsChange(added)
+                            onSelectedIndexChange(added.lastIndex)
+                        },
+                    ) {
+                        Icon(
+                            MiuixIcons.Medium.Add,
+                            contentDescription = stringResource(R.string.quick_launcher_panel_add),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        if (added == null) {
-                            Toast.makeText(
-                                context,
-                                context.getString(
-                                    R.string.quick_launcher_panel_limit_reached,
-                                    QuickLauncherPanelDefaults.MAX_PANELS,
-                                ),
-                                Toast.LENGTH_SHORT,
-                            ).show()
-                            return@IconButton
-                        }
-                        onPanelsChange(added)
-                        onSelectedIndexChange(added.lastIndex)
-                    },
-                ) {
-                    Icon(
-                        MiuixIcons.Medium.Add,
-                        contentDescription = stringResource(R.string.quick_launcher_panel_add),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    }
                 }
                 MiuixGlassIconDropdown(
                     entries = listOf(panelMenuEntry),

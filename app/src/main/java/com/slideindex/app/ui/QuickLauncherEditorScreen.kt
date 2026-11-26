@@ -36,8 +36,12 @@ fun QuickLauncherEditorScreen(
     viewModel: QuickLauncherEditorViewModel,
     onBack: () -> Unit,
     onAdd: (panelId: String, folderIndex: Int) -> Unit,
+    panelId: String? = null,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    androidx.compose.runtime.LaunchedEffect(panelId) {
+        if (panelId != null) viewModel.selectPanelById(panelId)
+    }
     QuickLauncherEditorContent(
         uiState = uiState,
         onBack = onBack,
@@ -130,6 +134,9 @@ fun QuickLauncherEditorContent(
                     onPanelsChange = onSavePanels,
                     onSelectedIndexChange = onSelectPanel,
                     modifier = Modifier.fillMaxWidth(),
+                    // 面板切换/新建都在列表页，配置卡片里不再出现 TabRow。
+                    showPanelSwitcher = false,
+                    allowAddPanel = false,
                 )
                 SmallTitle(
                     stringResource(R.string.quick_launcher_items_section),

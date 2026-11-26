@@ -131,6 +131,13 @@ class QuickLauncherEditorViewModel @Inject constructor(
         _selectedPanelIndex.value = index
     }
 
+    /** 从列表页按 panelId 进入：找到对应下标再选中。 */
+    fun selectPanelById(panelId: String) {
+        val panels = uiState.value.panels
+        val index = panels.indexOfFirst { it.id == panelId }
+        if (index >= 0) selectPanel(index)
+    }
+
     fun setGridInteractionActive(active: Boolean) {
         _isGridInteractionActive.value = active
     }
