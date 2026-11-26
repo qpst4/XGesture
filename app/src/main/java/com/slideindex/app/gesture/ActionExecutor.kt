@@ -192,6 +192,17 @@ class ActionExecutor(
             rawX = overlayAnchorX ?: anchorRawX ?: gestureTouchDownRawX,
         )
         return when (action) {
+            is GestureAction.Composite -> executeComposite(
+                action = action,
+                settings = settings,
+                longPressArmed = longPressArmed,
+                anchorRawX = anchorRawX,
+                anchorRawY = anchorRawY,
+                continueTouch = continueTouch,
+                panelSide = panelSide,
+                gestureTouchDownRawX = gestureTouchDownRawX,
+                gestureTouchDownRawY = gestureTouchDownRawY,
+            )
             GestureAction.OpenIndex,
             GestureAction.TaskSwitcher,
             -> overlayPanels.showEdgeHostedPanel(action, anchorRawY, resolvedSide)
@@ -798,6 +809,47 @@ class ActionExecutor(
      * 立刻返回失败（见 `runPrivilegedOpsBlocking`）。这类动作在 root 模式下改到 IO 线程执行，
      * 返回 true 表示"已派发"，与 NFC 的处理一致。
      */
+    /**
+     * 组合动作：按顺序执行子动作。
+     *
+     * 第一项立即执行，其余每项延后 180ms（避免连续打开面板/启动 Activity 互相打断）；
+     * 不递归嵌套（解析和选择器都已过滤 Composite）。
+     */
+    private fun executeComposite(
+        action: GestureAction.Composite,
+        settings: AppSettings,
+        longPressArmed: Boolean,
+        anchorRawX: Float?,
+        anchorRawY: Float?,
+        continueTouch: Boolean,
+        panelSide: PanelSide?,
+        gestureTouchDownRawX: Float?,
+        gestureTouchDownRawY: Float?,
+    ): Boolean {
+        val children = action.actions.filter {
+            it.type != GestureActionType.NONE && it !is GestureAction.Composite
+        }
+        if (children.isEmpty()) return false
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
+        children.forEachIndexed { index, child ->
+            val run = Runnable {
+                execute(
+                    action = child,
+                    settings = settings,
+                    longPressArmed = longPressArmed,
+                    anchorRawX = anchorRawX,
+                    anchorRawY = anchorRawY,
+                    continueTouch = continueTouch,
+                    panelSide = panelSide,
+                    gestureTouchDownRawX = gestureTouchDownRawX,
+                    gestureTouchDownRawY = gestureTouchDownRawY,
+                )
+            }
+            if (index == 0) run.run() else handler.postDelayed(run, 180L * index)
+        }
+        return true
+    }
+
     private inline fun executeRootAsync(crossinline block: () -> Unit): Boolean {
         CoroutineScope(Dispatchers.IO).launch { block() }
         return true

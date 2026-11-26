@@ -6,6 +6,17 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.DragInteraction
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.window.Dialog
@@ -135,6 +146,9 @@ fun GestureActionPickerScreen(
         )
     }
     var quickWheelConfigVisible by remember { mutableStateOf(false) }
+    // 「组合动作」编辑弹窗：按顺序勾选要执行的动作。
+    var compositeVisible by remember { mutableStateOf(false) }
+    var compositeDraft by remember { mutableStateOf<List<GestureAction>>(emptyList()) }
     val quickLauncherInitial = remember(current) {
         val ql = current as? GestureAction.QuickLauncher
         Triple(ql?.panelId.orEmpty(), ql?.pinned == true, ql?.pinCurrentApp == true)
@@ -328,7 +342,15 @@ fun GestureActionPickerScreen(
                     actionPickerActionItems(
                         filtered = filteredActions,
                         current = current,
-                        onSelect = safeSelect,
+                        onSelect = { picked ->
+                            if (picked is GestureAction.Composite) {
+                                compositeDraft = (current as? GestureAction.Composite)
+                                    ?.actions.orEmpty()
+                                compositeVisible = true
+                            } else {
+                                safeSelect(picked)
+                            }
+                        },
                         onOpenExecuteShellCommand = {
                             onOpenExecuteShellCommand(shellConfigInitialCommand)
                         },
@@ -415,7 +437,96 @@ fun GestureActionPickerScreen(
             }
         }
 
-        if (quickWheelConfigVisible) {
+        if (compositeVisible) {
+        Dialog(
+            onDismissRequest = { compositeVisible = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            androidx.compose.material3.Surface(
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 6.dp,
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .padding(16.dp),
+            ) {
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    Text(
+                        text = stringResource(R.string.gesture_action_composite),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.gesture_action_composite_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                    )
+                    androidx.compose.foundation.lazy.LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 360.dp),
+                    ) {
+                        val candidates = filteredActions.filter {
+                            it.type != GestureActionType.NONE && it !is GestureAction.Composite
+                        }
+                        items(candidates.size, key = { candidates[it].payload.ifBlank { candidates[it].type.id.toString() } }) { index ->
+                            val candidate = candidates[index]
+                            val selectedIndex = compositeDraft.indexOfFirst {
+                                it.type == candidate.type && it.payload == candidate.payload
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        compositeDraft = if (selectedIndex >= 0) {
+                                            compositeDraft.toMutableList().also { it.removeAt(selectedIndex) }
+                                        } else {
+                                            compositeDraft + candidate
+                                        }
+                                    }
+                                    .padding(horizontal = 20.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = gestureActionLabel(candidate, appSettings),
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                                if (selectedIndex >= 0) {
+                                    Text(
+                                        text = (selectedIndex + 1).toString(),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        androidx.compose.material3.TextButton(onClick = { compositeVisible = false }) {
+                            Text(stringResource(android.R.string.cancel))
+                        }
+                        androidx.compose.material3.TextButton(
+                            onClick = {
+                                compositeVisible = false
+                                safeSelect(GestureAction.Composite(compositeDraft))
+                            },
+                        ) {
+                            Text(stringResource(R.string.gesture_action_composite_save))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (quickWheelConfigVisible) {
             Dialog(
                 onDismissRequest = { quickWheelConfigVisible = false },
                 properties = DialogProperties(usePlatformDefaultWidth = false),

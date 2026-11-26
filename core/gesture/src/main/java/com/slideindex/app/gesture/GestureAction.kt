@@ -136,6 +136,9 @@ enum class GestureActionType(val id: Int) {
     /** 「运行宏」：把一条录制好的宏重放到它自己的目标 App 里；payload 是宏 id。 */
     RUN_MACRO(96),
 
+    /** 「组合动作」：按顺序执行一串动作（不嵌套）；payload 是子动作的编码串。 */
+    COMPOSITE(131),
+
     /**
      * 「页面滚动」：打开一个竖排控制条，并用**被持续续接的划动手势**让页面平滑滚动。
      *
@@ -831,6 +834,51 @@ sealed class GestureAction {
      * 松手后继续滚（用控制条改方向 / 调速 / 暂停 / 关闭）；速度 7 档，默认第 3 档。
      * 运行时实现见 `com.slideindex.app.pagescroll`。
      */
+    /**
+     * 「组合动作」：按顺序执行多个动作。
+     *
+     * 不允许嵌套（编码/解码和选择器都会过滤 Composite）；空组合等价于无动作。
+     * payload 采用「typeId + 长度 + 正文」拼接，避免子动作正文里的分隔符歧义。
+     */
+    data class Composite(
+        val actions: List<GestureAction> = emptyList(),
+    ) : GestureAction() {
+        override val type = GestureActionType.COMPOSITE
+        override val payload: String = encodeChildren(actions)
+
+        companion object {
+            private const val CHILD_SEP = '\u001F'
+            private const val FIELD_SEP = '\u001E'
+
+            fun encodeChildren(actions: List<GestureAction>): String =
+                actions
+                    .filter { it.type != GestureActionType.NONE && it !is Composite }
+                    .joinToString(CHILD_SEP.toString()) { child ->
+                        val body = child.payload
+                        "${child.type.id}$FIELD_SEP${body.length}$FIELD_SEP$body"
+                    }
+
+            fun parse(payload: String): Composite {
+                if (payload.isBlank()) return Composite()
+                val children = payload.split(CHILD_SEP).mapNotNull { part ->
+                    val first = part.indexOf(FIELD_SEP)
+                    if (first <= 0) return@mapNotNull null
+                    val second = part.indexOf(FIELD_SEP, first + 1)
+                    if (second <= first) return@mapNotNull null
+                    val typeId = part.substring(0, first).toIntOrNull() ?: return@mapNotNull null
+                    val length = part.substring(first + 1, second).toIntOrNull() ?: return@mapNotNull null
+                    val body = part.substring(second + 1)
+                    if (body.length != length) return@mapNotNull null
+                    val childType = GestureActionType.entries.firstOrNull { it.id == typeId }
+                        ?: return@mapNotNull null
+                    if (childType == GestureActionType.COMPOSITE) return@mapNotNull null
+                    from(childType, body)
+                }
+                return Composite(children)
+            }
+        }
+    }
+
     data object PageScroll : GestureAction() {
         override val type = GestureActionType.PAGE_SCROLL
         override val payload = ""
@@ -1553,6 +1601,7 @@ sealed class GestureAction {
                 GestureActionType.SHELL_COMMAND_PANEL -> ShellCommandPanel
                 GestureActionType.EXECUTE_SHELL_COMMAND -> ExecuteShellCommand(payload)
                 GestureActionType.RUN_MACRO -> RunMacro(payload)
+                GestureActionType.COMPOSITE -> Composite.parse(payload)
                 GestureActionType.PAGE_SCROLL -> PageScroll
                 GestureActionType.MAGNIFIER -> Magnifier
                 GestureActionType.REALTIME_PINCH -> PointerPinchZoom

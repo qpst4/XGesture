@@ -5450,4 +5450,7 @@ adb 模式应返回 uid=2000。
     <string name="search_group_pick_existing_subtitle">从已安装的分享目标里挑选</string>
     <string name="search_group_create_new">创建分享组</string>
     <string name="search_group_create_new_subtitle">把多个图片分享目标组合成一个入口</string>
+    <string name="gesture_action_composite">组合动作</string>
+    <string name="gesture_action_composite_desc">按顺序执行多个动作，可自行添加与排序</string>
+    <string name="gesture_action_composite_save">保存组合</string>
 </resources>

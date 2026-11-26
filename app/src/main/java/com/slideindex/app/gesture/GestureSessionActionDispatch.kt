@@ -289,6 +289,10 @@ internal fun GestureSession.handleClassifiedGesture(
             }
         }
 
+        // 组合动作：交给执行器顺序执行。
+        is GestureAction.Composite ->
+            sessionActionExecutor.execute(action, sessionSettings, anchorRawX = rawX, anchorRawY = rawY)
+
         // 指针专属动作：只有悬浮指针能执行；从边缘手势走到这里直接忽略。
         GestureAction.PointerPinchZoom, GestureAction.PointerRealtimeScroll -> Unit
 

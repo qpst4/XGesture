@@ -433,6 +433,8 @@ private fun gestureActionBaseLabelText(context: Context, action: GestureAction):
         }
     }
     else -> when (action.type) {
+        GestureActionType.COMPOSITE ->
+            context.getString(R.string.gesture_action_composite)
         GestureActionType.RUN_MACRO -> {
             // 显示"运行宏：<宏名>"；宏被删掉时给一个明确的失效文案，而不是空字符串。
             val macroId = (action as? GestureAction.RunMacro)?.macroId.orEmpty()
@@ -676,6 +678,7 @@ private fun gestureActionBaseLabel(action: GestureAction, settings: AppSettings?
         }
     }
     else -> when (action.type) {
+        GestureActionType.COMPOSITE -> stringResource(R.string.gesture_action_composite)
         GestureActionType.RUN_MACRO -> stringResource(R.string.macro_action_run_macro)
         GestureActionType.PAGE_SCROLL -> stringResource(R.string.page_scroll_action_name)
         GestureActionType.NONE -> stringResource(R.string.gesture_action_none)

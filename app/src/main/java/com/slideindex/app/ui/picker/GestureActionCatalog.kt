@@ -324,6 +324,9 @@ object GestureActionCatalog {
         GestureAction.ScrollToBottom,
         GestureAction.PageScroll,
 
+        // 「组合动作」：按顺序执行多个动作（自由组合）。
+        GestureAction.Composite(),
+
         // 2. 开关与调节 (Controls & Media)
         GestureAction.ToggleWifi(),
         GestureAction.ToggleMobileData(),

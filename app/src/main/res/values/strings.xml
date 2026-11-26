@@ -5431,4 +5431,7 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="search_group_pick_existing_subtitle">Choose from installed share targets</string>
     <string name="search_group_create_new">Create share group</string>
     <string name="search_group_create_new_subtitle">Combine multiple image share targets into one entry</string>
+    <string name="gesture_action_composite">组合动作</string>
+    <string name="gesture_action_composite_desc">按顺序执行多个动作，可自行添加与排序</string>
+    <string name="gesture_action_composite_save">保存组合</string>
 </resources>
