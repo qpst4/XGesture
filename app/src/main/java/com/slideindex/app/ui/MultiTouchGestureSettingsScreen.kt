@@ -43,6 +43,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -310,8 +312,14 @@ fun MultiTouchGestureSettingsScreen(
             // 反馈 #1：拖拽手柄不能包住整行 —— 行自己带 clickable，会把 down/up 吃掉，
             // 父级的 longPressDraggableHandle 永远收不到事件。手柄只挂在左侧图标上。
             item(key = entryKey) {
+                val haptic = LocalHapticFeedback.current
                 ReorderableItem(state = entryReorderState, key = entryKey) { _ ->
-                    val dragHandle = Modifier.longPressDraggableHandle()
+                    // 反馈：长按图标开始拖动时要有一声震动（库本身不带触感）。
+                    val dragHandle = Modifier.longPressDraggableHandle(
+                        onDragStarted = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        },
+                    )
                     CardSegment(
                         isFirst = false,
                         isLast = index == lastEntryIndex,
@@ -594,6 +602,19 @@ fun MultiTouchGestureSettingsScreen(
                     )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
+                // 自定义名称：放最上面、用「标题 + 输入框」样式（useLabelAsPlaceholder=false）。
+                MiuixLabeledTextField(
+                    value = nameText,
+                    onValueChange = { value ->
+                        nameText = value
+                        onEntryNameChange(editing.id, value)
+                    },
+                    label = stringResource(R.string.multitouch_entry_name_label),
+                    singleLine = true,
+                    useLabelAsPlaceholder = false,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(modifier = Modifier.height(12.dp))
                 MiuixArrowRow(
                     title = stringResource(
                         R.string.multitouch_entry_label,
@@ -610,18 +631,6 @@ fun MultiTouchGestureSettingsScreen(
                             editing.id,
                         )
                     },
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                // 自定义名称：多条「绘制手势」默认都叫「1 指 · 绘制手势」，改名后才能区分（反馈 #396）。
-                MiuixLabeledTextField(
-                    value = nameText,
-                    onValueChange = { value ->
-                        nameText = value
-                        onEntryNameChange(editing.id, value)
-                    },
-                    label = stringResource(R.string.multitouch_entry_name_label),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 // 反馈 #2：这两行原来用 Material 的 bodyMedium，比页面其它行小一号、字体也不统一；

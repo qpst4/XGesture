@@ -1067,6 +1067,10 @@ class CornerGestureOverlayView(
             longPressRingProgress = hintRing,
             hintLabelSuffix = modeSuffix,
             hintPipArmed = modePip,
+            // 反馈 #9：命中提示卡片按日夜换配色（日间浅底深字）。
+            isDark = (resources.configuration.uiMode and
+                android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+                android.content.res.Configuration.UI_MODE_NIGHT_YES,
         )
         drawSlotDragOverlay(canvas, anchor, anchorX, anchorY)
     }

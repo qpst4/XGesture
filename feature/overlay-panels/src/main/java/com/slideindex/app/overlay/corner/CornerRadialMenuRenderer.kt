@@ -53,6 +53,8 @@ object CornerRadialMenuRenderer {
     private const val PLUS_COLOR_HIGHLIGHT = 0xFF0D9488.toInt()
     private const val NAME_PILL_FILL = 0xDD20263F.toInt()
     private const val NAME_TEXT = 0xFFFFFFFF.toInt()
+private const val NAME_PILL_FILL_LIGHT = 0xE6FFFFFF.toInt()
+private const val NAME_TEXT_LIGHT = 0xFF1E293B.toInt()
     private const val SUBMENU_PILL_FILL = 0xFFFDFDFD.toInt()
     private const val SUBMENU_PILL_FILL_HIGHLIGHT = 0xFFEFFCF9.toInt()
     private const val SUBMENU_TEXT = 0xFF1E293B.toInt()
@@ -92,6 +94,8 @@ object CornerRadialMenuRenderer {
         hintLabelSuffix: String = "",
         /** 长按到时间后是否在图标右下角画"小窗"（画中画）角标。 */
         hintPipArmed: Boolean = false,
+        /** 当前是否深色主题：命中提示卡片在日间要用浅色底（反馈 #9）。 */
+        isDark: Boolean = true,
     ) {
         val progress = revealProgress.coerceIn(0f, 1f)
         if (progress <= 0.01f) return
@@ -208,6 +212,7 @@ object CornerRadialMenuRenderer {
                     longPressRingProgress = longPressRingProgress,
                     hintLabelSuffix = hintLabelSuffix,
                     hintPipArmed = hintPipArmed,
+                    isDark = isDark,
                 )
             }
         }
@@ -383,6 +388,8 @@ object CornerRadialMenuRenderer {
         hintLabelSuffix: String = "",
         /** 长按到时间后是否在图标右下角画"小窗"（画中画）角标。 */
         hintPipArmed: Boolean = false,
+        /** 当前是否深色主题：命中提示卡片在日间要用浅色底（反馈 #9）。 */
+        isDark: Boolean = true,
     ) {
         // 长按到时间 → 名字后面拼上目标形态（-小窗 / -全屏）
         val label = actionLabel(context, action, shellCommands) +
@@ -390,15 +397,20 @@ object CornerRadialMenuRenderer {
         if (label.isBlank()) return
 
         val iconSizeDp = SelectedHintMetrics.clampIconSizeDp(hintIconSizeDp)
+        // 日间：浅色底 + 深色字；夜间：深藏青底 + 白字（反馈 #9）。
+        val pillFill = if (isDark) NAME_PILL_FILL else NAME_PILL_FILL_LIGHT
+        val labelColor = if (isDark) NAME_TEXT else NAME_TEXT_LIGHT
         val namePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = NAME_TEXT
+            color = labelColor
             textSize = SelectedHintMetrics.textSizePx(iconSizeDp, density)
             textAlign = Paint.Align.LEFT
             alpha = (255f * progress).toInt().coerceIn(0, 255)
         }
         val pillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = NAME_PILL_FILL
-            alpha = (221f * progress).toInt().coerceIn(0, 255)
+            color = pillFill
+            // 日间底色本来就浅，用更高的不透明度才压得住背景。
+            val baseAlpha = if (isDark) 221f else 240f
+            alpha = (baseAlpha * progress).toInt().coerceIn(0, 255)
         }
         val iconPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             alpha = (255f * progress).toInt().coerceIn(0, 255)

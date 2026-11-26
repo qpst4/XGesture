@@ -67,6 +67,12 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     onPickPanelEnterAnimationMsChange: (Int) -> Unit,
     onPickPanelExitAnimationMsChange: (Int) -> Unit,
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var pickResultFlat by androidx.compose.runtime.remember {
+        androidx.compose.runtime.mutableStateOf(
+            com.slideindex.app.overlay.pickresult.PickResultFlatPrefs.isEnabled(context),
+        )
+    }
     val appearanceSectionTitle = stringResource(R.string.pick_settings_section_panel_appearance)
     val selectCopySectionTitle = stringResource(R.string.pick_settings_section_panel_select_copy)
     val feedbackSectionTitle = stringResource(R.string.pick_settings_section_panel_feedback)
@@ -141,6 +147,22 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                             onSelect = { style ->
                                 localPanelStyle = style
                                 onPickPanelStyleChange(style)
+                            },
+                        )
+                    },
+                )
+                add(
+                    settingsCardScopeItem("panel-flat") {
+                        // 反馈 #4：平铺属于「取词面板的版式」，不该放在悬浮窗材质里。
+                        SettingSwitchRow(
+                            title = stringResource(R.string.pick_result_flat_title),
+                            subtitle = stringResource(R.string.pick_result_flat_desc),
+                            checked = pickResultFlat,
+                            enabled = true,
+                            onCheckedChange = { value ->
+                                pickResultFlat = value
+                                com.slideindex.app.overlay.pickresult.PickResultFlatPrefs
+                                    .setEnabled(context, value)
                             },
                         )
                     },

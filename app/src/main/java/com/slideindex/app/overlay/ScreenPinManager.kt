@@ -951,8 +951,8 @@ object ScreenPinManager {
         val owner = OverlayComposeOwner()
         val view = OverlayCompose.createComposeView(host, owner)
         val metrics = host.resources.displayMetrics
-        val width = (metrics.widthPixels * 0.82f).toInt()
-            .coerceAtLeast((240 * metrics.density).toInt())
+        val width = (metrics.widthPixels * 0.72f).toInt()
+            .coerceAtLeast((220 * metrics.density).toInt())
         val params = WindowManager.LayoutParams(
             width,
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -1958,17 +1958,17 @@ private fun PinBottomToolbar(
     onRotate: () -> Unit,
     onClose: () -> Unit,
 ) {
-    val pillShape = RoundedCornerShape(24.dp)
-    val surfaceColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
+    val pillShape = RoundedCornerShape(18.dp)
+    val surfaceColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)
     val outlineColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(8.dp, pillShape, clip = false)
+            .shadow(4.dp, pillShape, clip = false)
             .clip(pillShape)
             .border(0.5.dp, outlineColor, pillShape)
             .background(surfaceColor)
-            .padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+            .padding(start = 12.dp, end = 6.dp, top = 2.dp, bottom = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Slider(
@@ -1977,18 +1977,18 @@ private fun PinBottomToolbar(
             valueRange = PIN_CONTROL_ALPHA_MIN..1f,
             modifier = Modifier
                 .weight(1f)
-                .height(36.dp),
+                .height(28.dp),
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.primary,
                 activeTrackColor = MaterialTheme.colorScheme.primary,
                 inactiveTrackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
             )
         )
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(6.dp))
         if (canRotate) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(32.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.92f))
                     .clickable(onClick = onRotate),
@@ -1997,15 +1997,15 @@ private fun PinBottomToolbar(
                 Icon(
                     imageVector = Icons.Default.Rotate90DegreesCw,
                     contentDescription = stringResource(R.string.pin_rotate),
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(6.dp))
         }
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(32.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.92f))
                 .clickable(onClick = onClose),
@@ -2014,7 +2014,7 @@ private fun PinBottomToolbar(
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = stringResource(R.string.shell_panel_close),
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(18.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
