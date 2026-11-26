@@ -336,11 +336,12 @@ private fun ActionRow(onIgnore: () -> Unit, onConfirm: () -> Unit) {
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         TextButton(
             modifier = Modifier
                 .weight(1f)
-                .height(44.dp),
+                .heightIn(min = 44.dp),
             shape = RoundedCornerShape(12.dp),
             onClick = onIgnore,
         ) {
@@ -352,7 +353,7 @@ private fun ActionRow(onIgnore: () -> Unit, onConfirm: () -> Unit) {
         Button(
             modifier = Modifier
                 .weight(1f)
-                .height(44.dp),
+                .heightIn(min = 44.dp),
             shape = RoundedCornerShape(12.dp),
             onClick = onConfirm,
         ) {
