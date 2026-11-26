@@ -633,28 +633,7 @@ fun MultiTouchGestureSettingsScreen(
                     },
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                // 反馈 #2：这两行原来用 Material 的 bodyMedium，比页面其它行小一号、字体也不统一；
-                // 统一成 Miuix 文本体系，并给到 48dp 行高（开关更好点）。
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 48.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(R.string.multitouch_entry_enabled_label),
-                        style = MiuixTheme.textStyles.title4,
-                        color = MiuixTheme.colorScheme.onSurfaceContainer,
-                        modifier = Modifier.weight(1f),
-                    )
-                    MiuixSwitch(
-                        checked = editing.enabled,
-                        onCheckedChange = { value ->
-                            editingEntry = editing.copy(enabled = value)
-                            onEntryEnabledChange(editing.id, value)
-                        },
-                    )
-                }
+                // 「启用」只在列表行提供开关，弹窗不再重复（反馈）。
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(
                     modifier = Modifier

@@ -1130,7 +1130,9 @@ class CornerGestureOverlayView(
                 return true
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                if (dragSlot >= 0 || dragging) {
+                // 只有长按成立（dragging）才当拖动收尾；短按必须回到 handleRelease，
+                // 否则编辑模式下点槽位永远进不去选择页（反馈回归）。
+                if (dragging) {
                     if (event.actionMasked == MotionEvent.ACTION_CANCEL) {
                         cancelSlotDrag(clearHighlight = true)
                     } else {
@@ -1138,6 +1140,7 @@ class CornerGestureOverlayView(
                     }
                     return true
                 }
+                if (dragSlot >= 0) cancelSlotDrag(clearHighlight = true)
                 return handleRelease(anchor, event, fromPinned = true)
             }
         }

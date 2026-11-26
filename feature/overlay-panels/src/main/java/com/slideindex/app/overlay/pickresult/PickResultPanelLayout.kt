@@ -113,6 +113,9 @@ val PANEL_MIN_IMAGE_HEIGHT = 48.dp
 val PANEL_VERTICAL_PADDING = 12.dp
 val PANEL_ACTION_BAR_BOTTOM_GAP = 20.dp
 val TEXT_IMAGE_DIVIDER_HEIGHT = 10.dp
+
+/** 编辑态在正文高度之外额外留的高度（工具条 + 动作栏）。 */
+val EDIT_MODE_EXTRA_HEIGHT = 132.dp
 const val LANDSCAPE_DUAL_COLUMN_TEXT_WEIGHT = 0.52f
 const val LANDSCAPE_DUAL_COLUMN_AUX_WEIGHT = 0.48f
 const val AUXILIARY_COLLAPSE_ANIMATION_MS = 280
@@ -1123,7 +1126,10 @@ fun PickResultCollapsePanelColumn(
         }
 
     val fixedPanelHeight = when {
-        isEditMode -> panelContentHeight + innerImeBottom
+        // 编辑态不再强行铺满整块容器（否则面板顶到屏幕顶端，正文看起来"跑到最上面"）。
+        // 只按正文需要的高度撑开，最多到容器高度；键盘让位只让一次。
+        isEditMode -> (idealTextBodyHeight + EDIT_MODE_EXTRA_HEIGHT + innerImeBottom)
+            .coerceIn(minTextBodyHeight, panelContentHeight + innerImeBottom)
         else -> null
     }
 

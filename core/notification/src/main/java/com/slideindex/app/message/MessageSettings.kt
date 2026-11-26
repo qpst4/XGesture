@@ -124,9 +124,15 @@ data class MessageSettings(
     @Suppress("DEPRECATION")
     val style: MessageStyle get() = MessageStyle.fromId(styleId)
 
+    /**
+     * 是否允许该应用进入消息提醒。
+     *
+     * 与「允许的应用」界面保持一致：**空列表 = 不允许**（不是"全允许"）。
+     * 旧行为把空列表当全允许，导致没配过应用的用户也会被拦截所有通知
+     * （例如小米互联的传输通知被撤掉，文件发送失败）。
+     */
     fun isPackageAllowed(packageName: String): Boolean {
         if (packageName in disabledPackages) return false
-        if (enabledPackages.isEmpty()) return true
         return packageName in enabledPackages
     }
 

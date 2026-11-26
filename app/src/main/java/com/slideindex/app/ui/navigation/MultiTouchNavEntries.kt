@@ -143,13 +143,13 @@ fun NavEntryBuilder.multiTouchNavEntries(ctx: MainNavContext, backKey: AppNavKey
         val viewModel: MultiTouchGestureViewModel = hiltViewModel()
         val settings by viewModel.settings.collectAsStateWithLifecycle()
         val kind = MultiPointerGesture.entries.getOrNull(key.kind) ?: MultiPointerGesture.SWIPE_LEFT
-        val current = settings.entries.firstOrNull {
-            if (key.entryId.isNotBlank()) {
-                it.id == key.entryId
-            } else {
-                it.kind == kind && it.fingerCount == key.fingerCount
-            }
-        }?.action ?: GestureAction.None
+        // 只有"编辑已有条目"才带出原动作；新建（entryId 为空）必须是 None，
+        // 否则同类型/同手指数的上一条会被自动预选中（反馈）。
+        val current = if (key.entryId.isNotBlank()) {
+            settings.entries.firstOrNull { it.id == key.entryId }?.action ?: GestureAction.None
+        } else {
+            GestureAction.None
+        }
         GestureActionPickerScreen(
             trigger = GestureTriggerType.SHORT_SINGLE_TAP,
             current = current,
