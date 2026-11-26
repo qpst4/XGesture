@@ -21,6 +21,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.activity.ActivityShortcut
+import com.slideindex.app.activity.ShortcutIconCapture
+import com.slideindex.app.activity.ShortcutIconOverrideStore
 import com.slideindex.app.activity.activityShortcutFromQuickLauncherItem
 import com.slideindex.app.activity.toActivityShortcutOrNull
 import com.slideindex.app.activity.toLaunchShortcut
@@ -54,9 +56,7 @@ fun CornerSlotSubMenuShortcutPickScreen(
     onAddShortcut: (GestureAction.LaunchShortcut) -> Unit,
     onOpenMyShortcuts: () -> Unit,
     onOpenPresetShortcuts: () -> Unit,
-    onBrowseActivityShortcut: () -> Unit,
-    /** 创建快捷方式后把它登记进应用内直达目录（图标解析依赖这个目录）。 */
-    onRegisterShortcut: ((com.slideindex.app.activity.ActivityShortcut) -> Unit)? = null
+    onBrowseActivityShortcut: () -> Unit
 ) {
     val context = LocalContext.current
     val appRepository = rememberAppRepository()
@@ -118,8 +118,12 @@ fun CornerSlotSubMenuShortcutPickScreen(
         val managed = created.toActivityShortcutOrNull()?.let { base ->
             if (iconPath != null) base.copy(iconPath = iconPath) else base
         }
-        if (managed != null) onRegisterShortcut?.invoke(managed)
         val shortcut = launchShortcutFromCreated(created)
+        // 图标跟着这条快捷方式走：按身份 key 存，不写「应用内直达」目录。
+        ShortcutIconOverrideStore.put(context, shortcut.payloadKey, iconPath)
+        managed?.let {
+            ShortcutIconOverrideStore.put(context, it.identityKey(), iconPath)
+        }
         if (shortcut.payloadKey !in existingPayloadKeys) {
             onAddShortcut(shortcut)
         }

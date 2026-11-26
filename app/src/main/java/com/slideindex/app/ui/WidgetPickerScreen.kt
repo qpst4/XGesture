@@ -622,6 +622,18 @@ fun WidgetPickerScreen(
                       ?.getParcelableExtra<android.graphics.Bitmap>(android.content.Intent.EXTRA_SHORTCUT_ICON)
                       ?: created.shortcutIntent
                         ?.getParcelableExtra<android.graphics.Bitmap>(android.content.Intent.EXTRA_SHORTCUT_ICON)
+                    val overrideKey = created.intentUri
+                      ?.takeIf { it.isNotBlank() }
+                      ?.let { "intent:$it" }
+                      ?: created.componentFlat?.takeIf { it.isNotBlank() }
+                    com.slideindex.app.activity.ShortcutIconOverrideStore.put(
+                      context,
+                      overrideKey,
+                      com.slideindex.app.activity.ShortcutIconCapture.captureFromIntent(
+                        context,
+                        created.iconProviderIntent ?: created.shortcutIntent,
+                      ),
+                    )
                     val entry = ShortcutEntry(
                       packageName = created.hostPackageName,
                       shortcutId = "created_${created.label.hashCode()}",

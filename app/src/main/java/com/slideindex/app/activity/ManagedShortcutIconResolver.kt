@@ -16,6 +16,7 @@ import androidx.core.graphics.createBitmap
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureShortcutPayload
 import com.slideindex.app.launcher.QuickLauncherItem
+import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.shell.ShellCommandIconResolver
 import com.slideindex.app.launcher.QuickLauncherItemType
 
@@ -30,6 +31,9 @@ object ManagedShortcutIconResolver {
         catalog: List<ActivityShortcut>
     ): Drawable? {
         if (item.type != QuickLauncherItemType.SHORTCUT) return null
+        val itemKey = QuickLauncherItemCodec.shortcutItemKey(item)
+        drawableForIconPath(context, ShortcutIconOverrideStore.iconPath(context, itemKey))
+            ?.let { return it }
         val managed = catalog.findForQuickLauncherItem(item) ?: return null
         return drawableForManaged(context, managed)
     }
@@ -39,6 +43,10 @@ object ManagedShortcutIconResolver {
         action: GestureAction.LaunchShortcut,
         catalog: List<ActivityShortcut>
     ): Drawable? {
+        drawableForIconPath(
+            context,
+            ShortcutIconOverrideStore.iconPath(context, action.payloadKey),
+        )?.let { return it }
         val managed = catalog.findForLaunchShortcut(action.payloadKey) ?: return null
         return drawableForManaged(context, managed)
     }
@@ -71,6 +79,11 @@ object ManagedShortcutIconResolver {
                 decoded.intentUris.firstNotNullOfOrNull { packageFromIntentUri(it) }
             null -> null
         }
+    }
+
+    private fun drawableForIconPath(context: Context, path: String?): Drawable? {
+        if (path.isNullOrBlank()) return null
+        return ShortcutIconStorage.loadBitmap(context, path)?.toDrawable(context.resources)
     }
 
     fun drawableForManaged(context: Context, shortcut: ActivityShortcut): Drawable? {

@@ -218,11 +218,6 @@ fun NavEntryBuilder.cornerGestureSlotNavEntries(ctx: MainNavContext) {
                     )
                 }
             },
-            onRegisterShortcut = { managed ->
-                if (appSettings.activityShortcuts.none { it.identityKey() == managed.identityKey() }) {
-                    viewModel.setActivityShortcuts(appSettings.activityShortcuts + managed)
-                }
-            },
             onOpenMyShortcuts = {
                 ctx.navigate(AppNavKey.HomeCornerGestureSlotSubMenuMyShortcuts(key.corner, key.slotIndex))
             },
