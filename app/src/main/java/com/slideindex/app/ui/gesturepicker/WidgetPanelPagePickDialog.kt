@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +30,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.widget.WidgetPanelPage
+import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.window.WindowDialog
 
 /**
@@ -65,13 +65,15 @@ fun WidgetPanelPagePickDialog(
 
             Spacer(Modifier.height(16.dp))
             TextButton(
+                text = stringResource(R.string.cancel),
                 onClick = onDismissRequest,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 44.dp),
-            ) {
-                Text(stringResource(R.string.cancel))
-            }
+                modifier = Modifier.defaultMinSize(minHeight = 44.dp),
+                minHeight = 44.dp,
+                insideMargin = androidx.compose.foundation.layout.PaddingValues(
+                    horizontal = 16.dp,
+                    vertical = 10.dp,
+                ),
+            )
         }
     }
 }
@@ -109,9 +111,10 @@ fun WidgetPanelPagePickOverlay(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            TextButton(onClick = onBack) {
-                Text(stringResource(R.string.cancel))
-            }
+            TextButton(
+                text = stringResource(R.string.cancel),
+                onClick = onBack,
+            )
         }
         WidgetPanelPagePickList(
             pages = pages,

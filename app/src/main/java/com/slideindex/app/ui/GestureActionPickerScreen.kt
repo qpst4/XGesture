@@ -72,6 +72,7 @@ import com.slideindex.app.ui.gesturepicker.rememberActionPickerFilteredActions
 import com.slideindex.app.ui.gesturepicker.rememberActionPickerFilteredApps
 import com.slideindex.app.ui.picker.AppPickerTabRow
 import com.slideindex.app.ui.miuix.MiuixExpandableSearchIconAction
+import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixScaffoldSearchTabBottomContent
 import com.slideindex.app.ui.miuix.consumeExpandableSearchBack
 import com.slideindex.app.ui.picker.filterShortcutCatalog
@@ -423,21 +424,15 @@ fun GestureActionPickerScreen(
         }
 
         if (openLinkConfigVisible) {
-            Dialog(
+            OpenLinkMiuixDialog(
+                initialUrl = openLinkInitial.first,
+                initialLabel = openLinkInitial.second,
                 onDismissRequest = { openLinkConfigVisible = false },
-                properties = DialogProperties(usePlatformDefaultWidth = false),
-            ) {
-                GestureOpenLinkScreen(
-                    initialUrl = openLinkInitial.first,
-                    initialLabel = openLinkInitial.second,
-                    onBack = { openLinkConfigVisible = false },
-                    onConfirm = { url, label ->
-                        openLinkConfigVisible = false
-                        safeSelect(GestureAction.OpenLink(url = url, label = label))
-                    },
-                    overlayMode = true,
-                )
-            }
+                onConfirm = { url, label ->
+                    openLinkConfigVisible = false
+                    safeSelect(GestureAction.OpenLink(url = url, label = label))
+                },
+            )
         }
 
         if (compositePickVisible) {
@@ -613,6 +608,59 @@ fun GestureActionPickerScreen(
                     shakeMenuPickVisible = false
                     safeSelect(GestureAction.OpenShakeMenu(menu.id))
                 },
+            )
+        }
+    }
+}
+
+
+/** 「打开链接」的 Miuix 弹窗：链接 + 名称两个输入框。 */
+@Composable
+private fun OpenLinkMiuixDialog(
+    initialUrl: String,
+    initialLabel: String,
+    onDismissRequest: () -> Unit,
+    onConfirm: (url: String, label: String) -> Unit,
+) {
+    var url by remember(initialUrl) { mutableStateOf(initialUrl) }
+    var label by remember(initialLabel) { mutableStateOf(initialLabel) }
+    val canSave = url.trim().isNotBlank()
+
+    WindowDialog(
+        show = true,
+        title = stringResource(R.string.gesture_action_open_link),
+        onDismissRequest = onDismissRequest,
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            MiuixLabeledTextField(
+                value = url,
+                onValueChange = { url = it },
+                label = stringResource(R.string.gesture_open_link_url_field),
+                singleLine = false,
+                minLines = 2,
+                maxLines = 4,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            MiuixLabeledTextField(
+                value = label,
+                onValueChange = { label = it },
+                label = stringResource(R.string.gesture_open_link_label_field),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            top.yukonga.miuix.kmp.basic.TextButton(
+                text = stringResource(R.string.composite_library_save),
+                onClick = { onConfirm(url.trim(), label.trim()) },
+                enabled = canSave,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            top.yukonga.miuix.kmp.basic.TextButton(
+                text = stringResource(android.R.string.cancel),
+                onClick = onDismissRequest,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
