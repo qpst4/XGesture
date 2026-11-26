@@ -46,6 +46,9 @@ private const val SLOT_DRAG_LONG_PRESS_MS = 300L
 /** 拖动换位时其它槽位让位的动画时长。 */
 private const val DISPLACE_ANIM_MS = 140L
 
+/** 松手后等新顺序回流的最长时间；超时就直接收掉让位画面，避免卡住。 */
+private const val COMMIT_TIMEOUT_MS = 400L
+
 class CornerGestureOverlayView(
     context: Context,
     private val appRepository: AppRepository,
@@ -141,6 +144,10 @@ class CornerGestureOverlayView(
         this.settings = settings
         this.cornerSettings = settings.cornerGestureSettings
         this.density = density
+        if (pendingCommit) {
+            // 新顺序已回流：把拖动时的临时让位收掉。
+            clearDragVisuals()
+        }
         if (menuVisualActive) {
             onMenuVisualActiveChange(true)
         }
@@ -261,6 +268,9 @@ class CornerGestureOverlayView(
     private var dragX = 0f
     private var dragY = 0f
     private var dragLongPress: Runnable? = null
+    /** 已松手、正在等新顺序回流：此时仍保持让位画面，避免先退回旧顺序。 */
+    private var pendingCommit = false
+    private var commitTimeout: Runnable? = null
     private val slotOffsets = HashMap<Int, Offset>()
     private var displaceAnimator: ValueAnimator? = null
 
@@ -314,14 +324,33 @@ class CornerGestureOverlayView(
         val from = dragSlot
         val to = liveTargetSlot
         val wasDragging = dragging
-        cancelSlotDrag(clearHighlight = false)
-        highlightedSlot = -1
-        invalidate()
-        if (!wasDragging || from < 0 || to < 0 || from == to) return
+        if (!wasDragging || from < 0 || to < 0) {
+            cancelSlotDrag(clearHighlight = true)
+            return
+        }
+        dragging = false
+        dragLongPress?.let { removeCallbacks(it) }
+        dragLongPress = null
+        if (from == to) {
+            clearDragVisuals()
+            return
+        }
+        // 松手后先**保持**拖动时的让位画面，等新顺序回流（applySettings）再收，
+        // 否则会先退回旧顺序、再被写入过程中的中间态一点点纠正（图标"一个一个挪"）。
+        pendingCommit = true
+        highlightedSlot = to
         onMoveSlots(anchor, from, to)
+        commitTimeout?.let { removeCallbacks(it) }
+        val timeout = Runnable { clearDragVisuals() }
+        commitTimeout = timeout
+        postDelayed(timeout, COMMIT_TIMEOUT_MS)
+        invalidate()
     }
 
-    private fun cancelSlotDrag(clearHighlight: Boolean) {
+    /** 结束拖动/提交，把临时让位与跟手图标一并收掉。 */
+    private fun clearDragVisuals() {
+        commitTimeout?.let { removeCallbacks(it) }
+        commitTimeout = null
         dragLongPress?.let { removeCallbacks(it) }
         dragLongPress = null
         displaceAnimator?.cancel()
@@ -329,9 +358,14 @@ class CornerGestureOverlayView(
         slotOffsets.clear()
         dragSlot = -1
         liveTargetSlot = -1
+        pendingCommit = false
         dragging = false
-        if (clearHighlight) highlightedSlot = -1
+        highlightedSlot = -1
         invalidate()
+    }
+
+    private fun cancelSlotDrag(@Suppress("UNUSED_PARAMETER") clearHighlight: Boolean) {
+        clearDragVisuals()
     }
 
     /** 离手指最近的槽位（拖动时用它算插入位置，比精确命中宽容）。 */
@@ -1131,7 +1165,7 @@ class CornerGestureOverlayView(
             hintLabelSuffix = modeSuffix,
             hintPipArmed = modePip,
             slotOffsetPx = { slot -> slotOffsets[slot] ?: Offset.Zero },
-            hiddenSlot = if (dragging) dragSlot else -1,
+            hiddenSlot = if (dragging || pendingCommit) dragSlot else -1,
             // 反馈 #9：命中提示卡片按日夜换配色（日间浅底深字）。
             isDark = (resources.configuration.uiMode and
                 android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
@@ -1147,7 +1181,7 @@ class CornerGestureOverlayView(
         anchorX: Float,
         anchorY: Float,
     ) {
-        if (!dragging || dragSlot < 0) return
+        if ((!dragging && !pendingCommit) || dragSlot < 0) return
         val action = cornerSettings.slotsFor(anchor).getOrElse(dragSlot) { GestureAction.None }
         drawFloatingSlotIcon(
             canvas = canvas,

@@ -1,11 +1,9 @@
 package com.slideindex.app.activity
 
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.Log
-import java.io.File
 
 /**
  * 快捷方式图标的"快照仓库"。
@@ -45,22 +43,13 @@ object ShortcutIconSnapshotStore {
 
     fun drawable(context: Context, identityKey: String?, sizePx: Int = 128): Drawable? {
         val path = iconPath(context, identityKey) ?: return null
-        val file = File(path)
-        if (!file.isFile) {
+        // 落盘用的是相对 filesDir 的路径（shortcut_icons/xxx.png），
+        // 必须走 ShortcutIconStorage 自己的解析入口，不能直接 File(path)。
+        val bitmap = ShortcutIconStorage.loadBitmap(context, path, sizePx)
+        if (bitmap == null) {
             Log.w(TAG, "snapshot file missing key=$identityKey path=$path")
             return null
         }
-        val options = BitmapFactory.Options().apply {
-            inJustDecodeBounds = true
-        }
-        BitmapFactory.decodeFile(path, options)
-        val longest = maxOf(options.outWidth, options.outHeight).coerceAtLeast(1)
-        var sample = 1
-        while (longest / (sample * 2) >= sizePx) sample *= 2
-        val bitmap = BitmapFactory.decodeFile(
-            path,
-            BitmapFactory.Options().apply { inSampleSize = sample },
-        ) ?: return null
         Log.i(TAG, "snapshot hit key=$identityKey size=${bitmap.width}x${bitmap.height}")
         return BitmapDrawable(context.resources, bitmap)
     }

@@ -1315,6 +1315,8 @@ class SettingsRepository @Inject constructor(
         overlay.setCornerGestureLeftSlotAction(index, action)
     suspend fun setCornerGestureRightSlotAction(index: Int, action: GestureAction) =
         overlay.setCornerGestureRightSlotAction(index, action)
+    suspend fun setCornerGestureSlots(isLeft: Boolean, actions: List<GestureAction>) =
+        overlay.setCornerGestureSlots(isLeft, actions)
     suspend fun setCornerSlotSubMenu(isLeft: Boolean, index: Int, config: CornerSlotSubMenuConfig) =
         overlay.setCornerSlotSubMenu(isLeft, index, config)
 

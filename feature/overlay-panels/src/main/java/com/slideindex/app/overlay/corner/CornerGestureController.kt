@@ -180,18 +180,9 @@ class CornerGestureController(
         if (from !in slots.indices || to !in slots.indices) return
         val moved = slots.removeAt(from)
         slots.add(to, moved)
-        val range = if (from < to) from..to else to..from
+        // 一次事务写完整组槽位：逐槽位写会让轮盘把中间顺序也画出来（图标一个一个挪）。
         scope.launch {
-            runCatching {
-                range.forEach { index ->
-                    val action = slots[index]
-                    if (isLeft) {
-                        repository.setCornerGestureLeftSlotAction(index, action)
-                    } else {
-                        repository.setCornerGestureRightSlotAction(index, action)
-                    }
-                }
-            }
+            runCatching { repository.setCornerGestureSlots(isLeft, slots) }
         }
     }
     fun resumeAfterSlotPicker() {        if (!suspendedForExternalActivity) return
