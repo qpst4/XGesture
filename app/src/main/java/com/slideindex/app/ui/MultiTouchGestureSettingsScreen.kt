@@ -579,7 +579,12 @@ fun MultiTouchGestureSettingsScreen(
             title = stringResource(R.string.multitouch_edit_title),
             onDismissRequest = { editingEntry = null },
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    // 弹窗内容统一 16dp 水平内边距：预览框、输入框、行卡片左边缘对齐。
+                    .padding(horizontal = 16.dp),
+            ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -615,26 +620,32 @@ fun MultiTouchGestureSettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                MiuixArrowRow(
-                    title = stringResource(
-                        R.string.multitouch_entry_label,
-                        editing.fingerCount,
-                        editing.kind.displayName(),
-                    ),
-                    summary = gestureActionLabel(editing.action),
-                    onClick = {
-                        editingEntry = null
-                        onOpenActionPick(
-                            editing.kind,
+                // 与列表其它行一样放进卡片，行内 16dp 内边距与上面的输入框对齐。
+                CardSegment(
+                    isFirst = true,
+                    isLast = true,
+                    outerHorizontalPadding = 0.dp,
+                ) {
+                    MiuixArrowRow(
+                        title = stringResource(
+                            R.string.multitouch_entry_label,
                             editing.fingerCount,
-                            encodePathStrokes(editing.pathStrokes),
-                            editing.id,
-                        )
-                    },
-                )
+                            editing.kind.displayName(),
+                        ),
+                        summary = gestureActionLabel(editing.action),
+                        onClick = {
+                            editingEntry = null
+                            onOpenActionPick(
+                                editing.kind,
+                                editing.fingerCount,
+                                encodePathStrokes(editing.pathStrokes),
+                                editing.id,
+                            )
+                        },
+                    )
+                }
                 Spacer(modifier = Modifier.height(12.dp))
                 // 「启用」只在列表行提供开关，弹窗不再重复（反馈）。
-                Spacer(modifier = Modifier.height(4.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

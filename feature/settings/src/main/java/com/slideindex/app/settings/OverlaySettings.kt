@@ -43,6 +43,9 @@ data class OverlaySettings(
     val floatingPointer: FloatingPointerSettings = FloatingPointerSettings(),
     val floatBallEnabled: Boolean = false,
     val floatBallSizeDp: Float = 48f,
+
+    /** 悬浮球距边缘距离（dp，负值往屏幕外挪）；外观页读写它。 */
+    val floatBallEdgeInsetDp: Int = 0,
     val floatBallPickCrossArmDp: Float = 7.5f,
     val floatBallOpacity: Float = 0.88f,
     val floatBallHideWhenIdle: Boolean = true,
@@ -318,6 +321,7 @@ data class OverlaySettings(
             floatingPointer = settings.floatingPointer,
             floatBallEnabled = settings.floatBallEnabled,
             floatBallSizeDp = settings.floatBallSizeDp,
+        floatBallEdgeInsetDp = settings.floatBallEdgeInsetDp,
             floatBallPickCrossArmDp = settings.floatBallPickCrossArmDp,
             floatBallOpacity = settings.floatBallOpacity,
             floatBallHideWhenIdle = settings.floatBallHideWhenIdle,

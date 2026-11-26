@@ -80,7 +80,9 @@ internal object SettingsSnapshotReader {
         } else {
             360f
         }
-        val min = FloatBallPositionFractions.minInsetDp(ballSizeDp)
+        // 旧规则只允许露出半个球（-球径/2），但用户可以把球挪得更外；这里放宽到「整球移出屏幕」为止。
+        val min = (-ballSizeDp.toInt())
+            .coerceIn(FloatBallPositionFractions.MIN_EDGE_INSET_DP, 0)
         val max = FloatBallPositionFractions.maxInsetDp(screenWidthDp, ballSizeDp)
         val raw = prefs[SettingsPreferenceKeys.FLOAT_BALL_EDGE_INSET_DP] ?: run {
             val fraction = (prefs[SettingsPreferenceKeys.FLOAT_BALL_VISIBLE_FRACTION] ?: 1f)

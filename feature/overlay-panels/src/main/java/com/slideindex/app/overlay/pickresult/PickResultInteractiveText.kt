@@ -211,7 +211,7 @@ fun PickResultInteractiveTextSection(
         } else {
             com.slideindex.app.settings.PickResultWordTapGranularity.CHARACTER
         }
-        HapticHelper.appTick(view, appSettings)
+        // combinedClickable 的长按本身已触发系统触感，这里不再重复震动。
         val labelRes = if (next == com.slideindex.app.settings.PickResultWordTapGranularity.WORD) {
             R.string.pick_word_granularity_word
         } else {

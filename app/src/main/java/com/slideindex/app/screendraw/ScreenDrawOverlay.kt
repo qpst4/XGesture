@@ -26,6 +26,9 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.ComposeView
 import com.slideindex.app.R
 import com.slideindex.app.imageeditor.ImageEditorSavedImageDeleteScheduler
@@ -338,6 +341,11 @@ object ScreenDrawOverlay {
         val drawToolbar = OverlayCompose.createComposeView(host, toolbarOwner).apply {
             setContent {
                 OverlayAwareModuleTheme {
+                    androidx.compose.foundation.layout.Box(
+                        modifier = androidx.compose.ui.Modifier
+                            .fillMaxSize()
+                            .padding(SHADOW_MARGIN_DP.dp),
+                    ) {
                     ScreenDrawMainToolbarCompose(
                         orientation = orientationState.value,
                         passthrough = passthroughState.value,
@@ -361,6 +369,7 @@ object ScreenDrawOverlay {
                         onMoveBy = { dx, dy -> moveToolbarBy(dx, dy) },
                         onMoveFinished = {},
                     )
+                    }
                 }
             }
         }
@@ -593,12 +602,16 @@ object ScreenDrawOverlay {
         runCatching { wm.updateViewLayout(view, params) }
     }
 
-    private fun toolbarSizePx(orientation: ScreenDrawOrientation): Pair<Int, Int> =
-        if (orientation == ScreenDrawOrientation.VERTICAL) {
-            scaledDp(86f) to scaledDp(316f)
+    private fun toolbarSizePx(orientation: ScreenDrawOrientation): Pair<Int, Int> {
+        // 窗口比胶囊大一圈：GlassCapsule 的阴影画在内容外，窗口正好等于内容时
+        // 底部阴影会被窗口边缘裁掉，底部两角露成直角（反馈）。
+        val margin = SHADOW_MARGIN_DP * 2f
+        return if (orientation == ScreenDrawOrientation.VERTICAL) {
+            scaledDp(86f + margin) to scaledDp(316f + margin)
         } else {
-            scaledDp(316f) to scaledDp(86f)
+            scaledDp(316f + margin) to scaledDp(86f + margin)
         }
+    }
 
     /** 窗口尺寸要用「界面缩放后」的 dp：Compose 内容跟 uiScale 走，窗口不跟就会靠左留白。 */
     private fun scaledDp(value: Float): Int = dp(value * uiScale)
@@ -1346,6 +1359,9 @@ object ScreenDrawOverlay {
             Toast.makeText(context.applicationContext, text, Toast.LENGTH_SHORT).show()
         }
     }
+
+    /** 工具条窗口给阴影留的外扩（dp，单边）。 */
+    private val SHADOW_MARGIN_DP = 20f
 
     private fun dp(value: Float): Int = (value * density).roundToInt()
 

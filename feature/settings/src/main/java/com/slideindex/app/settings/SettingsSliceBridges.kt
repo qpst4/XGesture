@@ -192,6 +192,7 @@ fun OverlaySettings.toMinimalAppSettings(): AppSettings = AppSettings(
         floatingPointerEdgeVisualColorArgb = floatingPointerEdgeVisualColorArgb,
         floatingPointerEdgeActionsConfig = floatingPointerEdgeActionsConfig,
     ),
+    floatBallEdgeInsetDp = floatBallEdgeInsetDp,
     floatBall = FloatBallSettings(
         floatBallEnabled = floatBallEnabled,
         floatBallSizeDp = floatBallSizeDp,
