@@ -13,6 +13,7 @@ import androidx.core.graphics.withScale
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.data.AppRepository
 import com.slideindex.app.gesture.GestureAction
+import androidx.compose.ui.geometry.Offset
 import com.slideindex.app.gesture.SelectedHintMetrics
 import com.slideindex.app.launcher.isCloneTarget
 import com.slideindex.app.launcher.isShellActivityShortcut
@@ -96,6 +97,10 @@ private const val NAME_TEXT_LIGHT = 0xFF1E293B.toInt()
         hintPipArmed: Boolean = false,
         /** 当前是否深色主题：命中提示卡片在日间要用浅色底（反馈 #9）。 */
         isDark: Boolean = true,
+        /** 每个槽位的额外绘制偏移（拖动换位时的实时让位动画）。 */
+        slotOffsetPx: (Int) -> Offset = { Offset.Zero },
+        /** 拖动中的槽位不按固定位置绘制（由浮层画跟手图标）；-1 = 全部正常绘制。 */
+        hiddenSlot: Int = -1,
     ) {
         val progress = revealProgress.coerceIn(0f, 1f)
         if (progress <= 0.01f) return
@@ -117,6 +122,7 @@ private const val NAME_TEXT_LIGHT = 0xFF1E293B.toInt()
         val lastSlot = CornerRadialMenuGeometry.lastVisibleSlotIndex(activeLayerCount)
 
         for (slot in 0..lastSlot) {
+            if (slot == hiddenSlot) continue
             val action = slots.getOrElse(slot) { GestureAction.None }
             val isEmpty = action is GestureAction.None
             if (!editMode && isEmpty) continue
@@ -129,8 +135,9 @@ private const val NAME_TEXT_LIGHT = 0xFF1E293B.toInt()
                 settings = settings,
                 density = density,
             )
-            val centerX = anchorX + (target.x - anchorX) * progress
-            val centerY = anchorY + (target.y - anchorY) * progress
+            val slotOffset = slotOffsetPx(slot)
+            val centerX = anchorX + (target.x - anchorX) * progress + slotOffset.x
+            val centerY = anchorY + (target.y - anchorY) * progress + slotOffset.y
             val highlighted = slot == highlightedSlot
             val bubbleRadius = CornerRadialMenuGeometry.bubbleRadiusPx(settings, density, slot)
             val scale = if (highlighted) 1.06f else 1f

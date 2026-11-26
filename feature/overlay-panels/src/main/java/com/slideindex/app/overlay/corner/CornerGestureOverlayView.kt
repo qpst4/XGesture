@@ -13,6 +13,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
+import androidx.compose.ui.geometry.Offset
 import android.os.SystemClock
 import android.text.TextPaint
 import android.text.TextUtils
@@ -42,8 +43,8 @@ import kotlin.math.hypot
 /** 长按多久进入「拖动换位」（反馈 #9）。 */
 private const val SLOT_DRAG_LONG_PRESS_MS = 300L
 
-/** 换位后两枚图标对飞的时长。 */
-private const val SWAP_ANIM_MS = 220L
+/** 拖动换位时其它槽位让位的动画时长。 */
+private const val DISPLACE_ANIM_MS = 140L
 
 class CornerGestureOverlayView(
     context: Context,
@@ -52,7 +53,7 @@ class CornerGestureOverlayView(
     private val onReleaseCapture: () -> Unit = {},
     private val onOpenSlotPicker: (CornerAnchor, Int) -> Unit = { _, _ -> },
     /** 编辑模式下长按拖动换位后回写（反馈 #9）。 */
-    private val onSwapSlots: (CornerAnchor, Int, Int) -> Unit = { _, _, _ -> },
+    private val onMoveSlots: (CornerAnchor, Int, Int) -> Unit = { _, _, _ -> },
     private val onShellCommandsPersist: (List<ShellCommand>) -> Unit,
     private val gestureRunner: com.slideindex.app.overlay.panels.GestureActionRunner,
     private val onMenuVisualActiveChange: (Boolean) -> Unit = {},
@@ -246,25 +247,22 @@ class CornerGestureOverlayView(
         clearSessionState()
     }
 
-    // ---- 编辑模式：长按槽位拖动换位（反馈 #9） --------------------------------
+    // ---- 编辑模式：长按槽位拖动换位（反馈 #9 / #4） ---------------------------
     //
-    // 槽位按固定几何位置编号，"换序"就是把两个位置上的动作互换；
-    // 交互参考快捷轮盘「轮盘功能设置」的长按拖动：按住→跟手→目标高亮→松手交换，
-    // 松手后再补一段 200ms 的"两枚图标对飞"动画，作为换位结果的可见反馈。
+    // 参考快捷轮盘：拖动中实时算「插入位置」，区间内的槽位动画让位；
+    // 松手按插入语义落库（不是交换）。让位动画 = 140ms 插值，逐帧改
+    // slotOffsets 后 invalidate，所以拖动时能一直看到其它槽位在挪。
 
     private var dragSlot = -1
     private var dragging = false
-    private var dragTargetSlot = -1
+    private var liveTargetSlot = -1
     private var dragStartX = 0f
     private var dragStartY = 0f
     private var dragX = 0f
     private var dragY = 0f
     private var dragLongPress: Runnable? = null
-
-    private var swapAnimator: ValueAnimator? = null
-    private var swapFromSlot = -1
-    private var swapToSlot = -1
-    private var swapProgress = 1f
+    private val slotOffsets = HashMap<Int, Offset>()
+    private var displaceAnimator: ValueAnimator? = null
 
     private fun scheduleSlotDrag(anchor: CornerAnchor, rawX: Float, rawY: Float) {
         cancelSlotDrag(clearHighlight = false)
@@ -283,8 +281,8 @@ class CornerGestureOverlayView(
         val runnable = Runnable {
             if (dragSlot < 0) return@Runnable
             dragging = true
+            liveTargetSlot = dragSlot
             highlightedSlot = dragSlot
-            dragTargetSlot = dragSlot
             HapticHelper.longThreshold(this, settings)
             invalidate()
         }
@@ -302,16 +300,11 @@ class CornerGestureOverlayView(
         }
         dragX = rawX
         dragY = rawY
-        val target = resolveSlotAtFinger(
-            anchor = anchor,
-            rawX = rawX,
-            rawY = rawY,
-            editMode = true,
-            slots = cornerSettings.slotsFor(anchor),
-        )
-        if (target != null && target != dragTargetSlot) {
-            dragTargetSlot = target
+        val target = nearestSlot(anchor, rawX, rawY) ?: liveTargetSlot
+        if (target >= 0 && target != liveTargetSlot) {
+            liveTargetSlot = target
             highlightedSlot = target
+            animateSlotOffsets(offsetsForInsert(dragSlot, target))
             HapticHelper.appTick(this, settings)
         }
         invalidate()
@@ -319,51 +312,103 @@ class CornerGestureOverlayView(
 
     private fun finishSlotDrag(anchor: CornerAnchor) {
         val from = dragSlot
-        val to = dragTargetSlot
+        val to = liveTargetSlot
         val wasDragging = dragging
         cancelSlotDrag(clearHighlight = false)
         highlightedSlot = -1
-        if (!wasDragging || from < 0 || to < 0 || from == to) {
-            invalidate()
-            return
-        }
-        playSwapAnimation(from, to)
-        onSwapSlots(anchor, from, to)
         invalidate()
+        if (!wasDragging || from < 0 || to < 0 || from == to) return
+        onMoveSlots(anchor, from, to)
     }
 
     private fun cancelSlotDrag(clearHighlight: Boolean) {
         dragLongPress?.let { removeCallbacks(it) }
         dragLongPress = null
+        displaceAnimator?.cancel()
+        displaceAnimator = null
+        slotOffsets.clear()
         dragSlot = -1
-        dragTargetSlot = -1
+        liveTargetSlot = -1
         dragging = false
         if (clearHighlight) highlightedSlot = -1
+        invalidate()
     }
 
-    private fun playSwapAnimation(from: Int, to: Int) {
-        swapAnimator?.cancel()
-        swapFromSlot = from
-        swapToSlot = to
-        swapProgress = 0f
-        val animator = ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = SWAP_ANIM_MS
-            addUpdateListener { anim ->
-                swapProgress = anim.animatedValue as Float
+    /** 离手指最近的槽位（拖动时用它算插入位置，比精确命中宽容）。 */
+    private fun nearestSlot(anchor: CornerAnchor, rawX: Float, rawY: Float): Int? {
+        val (anchorX, anchorY) = anchorCenter(anchor)
+        val last = CornerRadialMenuGeometry.lastVisibleSlotIndex(cornerSettings.enabledLayerCount)
+        val bubbleRadius = CornerRadialMenuGeometry.bubbleRadiusPx(cornerSettings, density, 0)
+        var best = -1
+        var bestDistance = Float.MAX_VALUE
+        for (slot in 0..last) {
+            val center = CornerRadialMenuGeometry.bubbleCenterForSlot(
+                anchor = anchor,
+                anchorX = anchorX,
+                anchorY = anchorY,
+                slotIndex = slot,
+                settings = cornerSettings,
+                density = density,
+            )
+            val distance = hypot(rawX - center.x, rawY - center.y)
+            if (distance < bestDistance) {
+                bestDistance = distance
+                best = slot
+            }
+        }
+        return if (best >= 0 && bestDistance <= bubbleRadius * 2.4f) best else null
+    }
+
+    /**
+     * 插入语义的让位偏移：从 [from] 拖到 [to] 时，
+     * 中间经过的每个槽位朝"空出来的那个位置"挪一格。
+     */
+    private fun offsetsForInsert(from: Int, to: Int): Map<Int, Offset> {
+        if (from < 0 || to < 0 || from == to) return emptyMap()
+        val anchor = activeAnchor ?: return emptyMap()
+        val (anchorX, anchorY) = anchorCenter(anchor)
+        val last = CornerRadialMenuGeometry.lastVisibleSlotIndex(cornerSettings.enabledLayerCount)
+        val centers = (0..last).map { slot ->
+            CornerRadialMenuGeometry.bubbleCenterForSlot(
+                anchor = anchor,
+                anchorX = anchorX,
+                anchorY = anchorY,
+                slotIndex = slot,
+                settings = cornerSettings,
+                density = density,
+            )
+        }
+        val result = HashMap<Int, Offset>()
+        if (from < to) {
+            for (slot in (from + 1)..to) {
+                result[slot] = centers[slot - 1] - centers[slot]
+            }
+        } else {
+            for (slot in to until from) {
+                result[slot] = centers[slot + 1] - centers[slot]
+            }
+        }
+        return result
+    }
+
+    private fun animateSlotOffsets(target: Map<Int, Offset>) {
+        displaceAnimator?.cancel()
+        val start = HashMap(slotOffsets)
+        val keys = start.keys + target.keys
+        displaceAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = DISPLACE_ANIM_MS
+            addUpdateListener { animator ->
+                val t = animator.animatedValue as Float
+                keys.forEach { key ->
+                    val from = start[key] ?: Offset.Zero
+                    val to = target[key] ?: Offset.Zero
+                    slotOffsets[key] = from + (to - from) * t
+                }
                 invalidate()
             }
-            addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    swapProgress = 1f
-                    swapFromSlot = -1
-                    swapToSlot = -1
-                    invalidate()
-                }
-            })
-        }
-        swapAnimator = animator
-        animator.start()
+        }.also { it.start() }
     }
+
 
     private fun handleRelease(anchor: CornerAnchor, event: MotionEvent, fromPinned: Boolean): Boolean {
         val rawX = event.rawX
@@ -1085,6 +1130,8 @@ class CornerGestureOverlayView(
             longPressRingProgress = hintRing,
             hintLabelSuffix = modeSuffix,
             hintPipArmed = modePip,
+            slotOffsetPx = { slot -> slotOffsets[slot] ?: Offset.Zero },
+            hiddenSlot = if (dragging) dragSlot else -1,
             // 反馈 #9：命中提示卡片按日夜换配色（日间浅底深字）。
             isDark = (resources.configuration.uiMode and
                 android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
@@ -1093,62 +1140,24 @@ class CornerGestureOverlayView(
         drawSlotDragOverlay(canvas, anchor, anchorX, anchorY)
     }
 
-    /** 拖动中的"跟手图标"与换位后的"对飞"动画（反馈 #9）。 */
+    /** 拖动中的"跟手图标"（反馈 #9 / #4）：位置偏移由渲染器负责。 */
     private fun drawSlotDragOverlay(
         canvas: Canvas,
         anchor: CornerAnchor,
         anchorX: Float,
         anchorY: Float,
     ) {
-        val slots = cornerSettings.slotsFor(anchor)
-        if (dragging && dragSlot >= 0) {
-            drawFloatingSlotIcon(
-                canvas = canvas,
-                action = slots.getOrElse(dragSlot) { GestureAction.None },
-                centerX = dragX,
-                centerY = dragY,
-                alpha = 255,
-                scale = 1.12f,
-            )
-        }
-        if (swapProgress < 1f && swapFromSlot >= 0 && swapToSlot >= 0) {
-            val fromCenter = CornerRadialMenuGeometry.bubbleCenterForSlot(
-                anchor = anchor,
-                anchorX = anchorX,
-                anchorY = anchorY,
-                slotIndex = swapFromSlot,
-                settings = cornerSettings,
-                density = density,
-            )
-            val toCenter = CornerRadialMenuGeometry.bubbleCenterForSlot(
-                anchor = anchor,
-                anchorX = anchorX,
-                anchorY = anchorY,
-                slotIndex = swapToSlot,
-                settings = cornerSettings,
-                density = density,
-            )
-            val t = swapProgress.coerceIn(0f, 1f)
-            val fade = ((1f - t) * 255f).toInt().coerceIn(0, 255)
-            drawFloatingSlotIcon(
-                canvas = canvas,
-                action = slots.getOrElse(swapToSlot) { GestureAction.None },
-                centerX = fromCenter.x + (toCenter.x - fromCenter.x) * t,
-                centerY = fromCenter.y + (toCenter.y - fromCenter.y) * t,
-                alpha = fade,
-                scale = 1f,
-            )
-            drawFloatingSlotIcon(
-                canvas = canvas,
-                action = slots.getOrElse(swapFromSlot) { GestureAction.None },
-                centerX = toCenter.x + (fromCenter.x - toCenter.x) * t,
-                centerY = toCenter.y + (fromCenter.y - toCenter.y) * t,
-                alpha = fade,
-                scale = 1f,
-            )
-        }
+        if (!dragging || dragSlot < 0) return
+        val action = cornerSettings.slotsFor(anchor).getOrElse(dragSlot) { GestureAction.None }
+        drawFloatingSlotIcon(
+            canvas = canvas,
+            action = action,
+            centerX = dragX,
+            centerY = dragY,
+            alpha = 255,
+            scale = 1.12f,
+        )
     }
-
     private fun drawFloatingSlotIcon(
         canvas: Canvas,
         action: GestureAction,

@@ -164,34 +164,36 @@ class CornerGestureController(
     }
 
     /**
-     * 编辑模式长按拖动换位后写回（反馈 #9）。
+     * 编辑模式长按拖动换位后写回（反馈 #9 / #4）。
      *
-     * 槽位是固定几何位置，"换序"= 交换两个位置上的动作。设置仓库从既有钩子拿，
-     * 不新增静态入口；写入后 AppSettings 流程会回流到 [applySettings]，画面自然更新。
+     * 采用**插入**语义（与快捷轮盘一致）：把 from 的动作取出来插到 to，
+     * 区间内其它槽位整体平移一格，而不是两个位置直接交换。
+     * 仓库从既有钩子拿，不新增静态入口；写完由 AppSettings 回流刷新。
      */
-    private fun swapCornerSlots(anchor: CornerAnchor, from: Int, to: Int) {
+    private fun moveCornerSlot(anchor: CornerAnchor, from: Int, to: Int) {
         if (from == to) return
         val repository = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsRepository
             ?.invoke(context) ?: return
         val cornerSettings = settings.cornerGestureSettings
         val isLeft = cornerSettings.unifiedSlots || anchor == CornerAnchor.LEFT
-        val slots = if (isLeft) cornerSettings.leftSlots else cornerSettings.rightSlots
+        val slots = (if (isLeft) cornerSettings.leftSlots else cornerSettings.rightSlots).toMutableList()
         if (from !in slots.indices || to !in slots.indices) return
-        val fromAction = slots[from]
-        val toAction = slots[to]
+        val moved = slots.removeAt(from)
+        slots.add(to, moved)
+        val range = if (from < to) from..to else to..from
         scope.launch {
             runCatching {
-                if (isLeft) {
-                    repository.setCornerGestureLeftSlotAction(from, toAction)
-                    repository.setCornerGestureLeftSlotAction(to, fromAction)
-                } else {
-                    repository.setCornerGestureRightSlotAction(from, toAction)
-                    repository.setCornerGestureRightSlotAction(to, fromAction)
+                range.forEach { index ->
+                    val action = slots[index]
+                    if (isLeft) {
+                        repository.setCornerGestureLeftSlotAction(index, action)
+                    } else {
+                        repository.setCornerGestureRightSlotAction(index, action)
+                    }
                 }
             }
         }
     }
-
     fun resumeAfterSlotPicker() {        if (!suspendedForExternalActivity) return
         resumeOverlayAfterExternalActivity()
     }
@@ -322,7 +324,7 @@ class CornerGestureController(
                 },
                 onReleaseCapture = ::restoreCaptureSize,
                 onOpenSlotPicker = ::openSlotPicker,
-                onSwapSlots = ::swapCornerSlots,
+                onMoveSlots = ::moveCornerSlot,
                 onShellCommandsPersist = onShellCommandsPersist,
                 gestureRunner = gestureRunner,
                 onMenuVisualActiveChange = ::syncOverlayBackgroundBlur,
