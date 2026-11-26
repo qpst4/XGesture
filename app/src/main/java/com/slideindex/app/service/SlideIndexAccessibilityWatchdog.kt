@@ -12,8 +12,10 @@ import com.slideindex.app.overlay.FloatBallOverlay
 import com.slideindex.app.overlay.FloatBallPickResultPanel
 import com.slideindex.app.overlay.FloatingPointerOverlayWindow
 import com.slideindex.app.overlay.GlobalOverlayDismissHelper
+import com.slideindex.app.overlay.history.HistoryHandleCaptureVisibility
 import com.slideindex.app.util.LockScreenState
 import com.slideindex.app.util.TriggerEnvironmentState
+import java.util.concurrent.atomic.AtomicInteger
 
 internal class SlideIndexAccessibilityWatchdog(
     private val service: SlideIndexAccessibilityService,
@@ -21,6 +23,9 @@ internal class SlideIndexAccessibilityWatchdog(
 ) {
     private var wakeLock: PowerManager.WakeLock? = null
     private var screenLockReceiverRegistered = false
+
+    /** 截屏请求序号：每次 [takeScreenshotDelayed] 递增；旧请求的截图与恢复都会被丢弃。 */
+    private val screenshotRequestSeq = AtomicInteger(0)
 
     private val screenLockReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -104,20 +109,33 @@ internal class SlideIndexAccessibilityWatchdog(
     }
 
     fun takeScreenshotDelayed(mainHandler: Handler) {
+        // 连点 / 多入口并发时，只有最后一次请求有权恢复浮层：否则前一次的到点恢复会把浮层放出来，
+        // 正好被后一次的系统截图拍到 —— 本函数修的就是"拍到自家浮层"，不能在这里再留一个口子。
+        val requestId = screenshotRequestSeq.incrementAndGet()
         val hideOverlays = Runnable {
             FloatingPointerOverlayWindow.suppressForScreenshotCapture()
             FloatBallOverlay.suppressForScreenshotCapture()
             FloatBallPickResultPanel.suppressForScreenshotCapture()
+            // 边缘触钮与贴边收纳把手是另外两个常驻窗：只藏球和指针不够，它们照样会被拍进去。
+            SlideIndexAccessibilityService.suppressEdgeChromeForCapture()
+            HistoryHandleCaptureVisibility.suppress()
+        }
+        val restoreOverlays = Runnable {
+            FloatingPointerOverlayWindow.restoreAfterScreenshotCapture()
+            FloatBallOverlay.restoreAfterScreenshotCapture()
+            FloatBallPickResultPanel.restoreAfterScreenshotCapture()
+            SlideIndexAccessibilityService.restoreEdgeChromeAfterCapture()
+            HistoryHandleCaptureVisibility.restore()
         }
         val scheduleCapture = Runnable {
             mainHandler.postDelayed({
+                if (requestId != screenshotRequestSeq.get()) return@postDelayed
                 service.performGlobalAction(
                     android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_TAKE_SCREENSHOT
                 )
                 mainHandler.postDelayed({
-                    FloatingPointerOverlayWindow.restoreAfterScreenshotCapture()
-                    FloatBallOverlay.restoreAfterScreenshotCapture()
-                    FloatBallPickResultPanel.restoreAfterScreenshotCapture()
+                    if (requestId != screenshotRequestSeq.get()) return@postDelayed
+                    restoreOverlays.run()
                 }, SCREENSHOT_RESTORE_DELAY_MS)
             }, SCREENSHOT_DELAY_MS)
         }

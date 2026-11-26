@@ -478,11 +478,14 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
             com.slideindex.app.overlay.FloatingPointerOverlayWindow.suppressForScreenshotCapture()
             com.slideindex.app.overlay.FloatBallOverlay.suppressForScreenshotCapture()
             com.slideindex.app.service.SlideIndexAccessibilityService.suppressEdgeChromeForCapture()
+            // 贴边收纳把手是 HistoryFloatService 的常驻窗，漏了它冻结帧里就会多一条把手。
+            com.slideindex.app.overlay.history.HistoryHandleCaptureVisibility.suppress()
         }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.restoreChromeAfterCapture = {
             com.slideindex.app.service.SlideIndexAccessibilityService.restoreEdgeChromeAfterCapture()
             com.slideindex.app.overlay.FloatBallOverlay.restoreAfterScreenshotCapture()
             com.slideindex.app.overlay.FloatingPointerOverlayWindow.restoreAfterScreenshotCapture()
+            com.slideindex.app.overlay.history.HistoryHandleCaptureVisibility.restore()
         }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.showFileBrowser = { ctx, settings, initialPath ->
             com.slideindex.app.overlay.filebrowser.FileBrowserOverlayWindow.show(

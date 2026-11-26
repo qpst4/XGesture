@@ -45,6 +45,7 @@ import com.slideindex.app.overlay.animation.GestureAnimationOverlayRegistry
 import com.slideindex.app.overlay.backpanel.BackPanelOverlayRegistry
 import com.slideindex.app.overlay.corner.CornerAnchor
 import com.slideindex.app.overlay.corner.CornerGestureHost
+import com.slideindex.app.overlay.history.HistoryHandleCaptureVisibility
 import com.slideindex.app.xposed.bridge.ModuleHookBridgeContract
 import com.slideindex.app.otp.OtpAutoFillController
 import com.slideindex.app.settings.AppSettings
@@ -506,6 +507,9 @@ class SlideIndexAccessibilityService : AccessibilityService() {
                 FloatingPointerOverlayWindow.suppressForScreenshotCapture()
                 FloatBallOverlay.suppressForScreenshotCapture()
                 FloatBallPickResultPanel.suppressForScreenshotCapture()
+                // 边缘触钮与贴边收纳把手是另外两个常驻窗，不藏一样会进截图。
+                SlideIndexAccessibilityService.suppressEdgeChromeForCapture()
+                HistoryHandleCaptureVisibility.suppress()
 
                 Choreographer.getInstance().postFrameCallback {
                     mainHandler.postDelayed({
@@ -532,6 +536,8 @@ class SlideIndexAccessibilityService : AccessibilityService() {
                                             FloatingPointerOverlayWindow.restoreAfterScreenshotCapture()
                                             FloatBallOverlay.restoreAfterScreenshotCapture()
                                             FloatBallPickResultPanel.restoreAfterScreenshotCapture()
+                                            SlideIndexAccessibilityService.restoreEdgeChromeAfterCapture()
+                                            HistoryHandleCaptureVisibility.restore()
                                         }
                                     }
                                 }
@@ -542,6 +548,8 @@ class SlideIndexAccessibilityService : AccessibilityService() {
                                         FloatingPointerOverlayWindow.restoreAfterScreenshotCapture()
                                         FloatBallOverlay.restoreAfterScreenshotCapture()
                                         FloatBallPickResultPanel.restoreAfterScreenshotCapture()
+                                        SlideIndexAccessibilityService.restoreEdgeChromeAfterCapture()
+                                        HistoryHandleCaptureVisibility.restore()
                                     }
                                 }
                             }
