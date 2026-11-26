@@ -154,6 +154,29 @@ fun CornerGestureSlotsSettingsScreen(
                 }
             },
         )
+        groupedCardItems(
+            keyPrefix = "corner-inner-zone",
+            items = buildList {
+                add(
+                    settingsCardScopeItem("inner-zone-action") {
+                        SettingNavigationRow(
+                            icon = { label ->
+                                GestureSlotActionIcon(
+                                    action = corner.innerZoneAction,
+                                    settings = settings,
+                                    contentDescription = label,
+                                )
+                            },
+                            title = stringResource(R.string.corner_gesture_inner_zone_action),
+                            subtitle = gestureActionLabel(corner.innerZoneAction),
+                            enabled = serviceEnabled && corner.enabled,
+                            onClick = onOpenInnerZoneActionPick
+                        )
+                    }
+                )
+            }
+        )
+
         if (corner.unifiedSlots) {
             emitCornerLayerSlots(
                 keyPrefix = "corner-unified",
@@ -180,28 +203,6 @@ fun CornerGestureSlotsSettingsScreen(
                 layerItems = rightLayerItems
             )
         }
-        groupedCardItems(
-            keyPrefix = "corner-inner-zone",
-            items = buildList {
-                add(
-                    settingsCardScopeItem("inner-zone-action") {
-                        SettingNavigationRow(
-                            icon = { label ->
-                                GestureSlotActionIcon(
-                                    action = corner.innerZoneAction,
-                                    settings = settings,
-                                    contentDescription = label,
-                                )
-                            },
-                            title = stringResource(R.string.corner_gesture_inner_zone_action),
-                            subtitle = gestureActionLabel(corner.innerZoneAction),
-                            enabled = serviceEnabled && corner.enabled,
-                            onClick = onOpenInnerZoneActionPick
-                        )
-                    }
-                )
-            }
-        )
     }
 }
 
