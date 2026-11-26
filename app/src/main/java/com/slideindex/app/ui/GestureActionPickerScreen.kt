@@ -442,11 +442,9 @@ fun GestureActionPickerScreen(
 
         if (compositePickVisible) {
             val pickContext = LocalContext.current
-            var presetsRevision by remember { mutableStateOf(0) }
-            val presets = remember(compositePickVisible, presetsRevision) {
+            val presets = remember(compositePickVisible) {
                 com.slideindex.app.ui.composite.CompositeActionPresetStore.load(pickContext)
             }
-            var createVisible by remember { mutableStateOf(false) }
 
             WindowDialog(
                 show = true,
@@ -502,12 +500,6 @@ fun GestureActionPickerScreen(
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     top.yukonga.miuix.kmp.basic.TextButton(
-                        text = stringResource(R.string.composite_library_add),
-                        onClick = { createVisible = true },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    top.yukonga.miuix.kmp.basic.TextButton(
                         text = stringResource(android.R.string.cancel),
                         onClick = { compositePickVisible = false },
                         modifier = Modifier.fillMaxWidth(),
@@ -515,27 +507,6 @@ fun GestureActionPickerScreen(
                 }
             }
 
-            if (createVisible) {
-                com.slideindex.app.ui.composite.CompositePresetEditorDialog(
-                    initial = null,
-                    onDismiss = { createVisible = false },
-                    onSave = { name, actions ->
-                        val id = com.slideindex.app.ui.composite.CompositeActionPresetStore.newId()
-                        com.slideindex.app.ui.composite.CompositeActionPresetStore.upsert(
-                            pickContext,
-                            com.slideindex.app.ui.composite.CompositeActionPreset(
-                                id = id,
-                                name = name,
-                                actions = actions,
-                            ),
-                        )
-                        createVisible = false
-                        compositePickVisible = false
-                        presetsRevision++
-                        safeSelect(GestureAction.CompositeRef(id))
-                    },
-                )
-            }
         }
 
     if (quickWheelConfigVisible) {
