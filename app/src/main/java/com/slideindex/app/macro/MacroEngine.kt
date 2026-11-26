@@ -202,6 +202,7 @@ class MacroEngine(private val context: Context) {
                     }
                     dispatched
                 }
+                is MacroStep.Key -> performSystemKey(service, step.key)
             }
 
             if (!ok) {
@@ -213,6 +214,28 @@ class MacroEngine(private val context: Context) {
 
         Log.i(TAG, "宏执行完成：${macro.name}")
         toast(R.string.macro_run_completed, macro.name)
+    }
+
+    /**
+     * 执行一步系统按键（反馈 #4）。
+     *
+     * 用无障碍的 `performGlobalAction`：不需要 root / Shizuku，也不依赖输入法壳，
+     * 是"回桌面 / 切最近任务 / 返回"最稳的一条路。
+     */
+    private fun performSystemKey(service: AccessibilityService, key: MacroStep.SystemKey): Boolean {
+        val globalAction = when (key) {
+            MacroStep.SystemKey.BACK -> AccessibilityService.GLOBAL_ACTION_BACK
+            MacroStep.SystemKey.HOME -> AccessibilityService.GLOBAL_ACTION_HOME
+            MacroStep.SystemKey.RECENTS -> AccessibilityService.GLOBAL_ACTION_RECENTS
+        }
+        val latch = CountDownLatch(1)
+        val ok = AtomicBoolean(false)
+        mainHandler.post {
+            ok.set(runCatching { service.performGlobalAction(globalAction) }.getOrDefault(false))
+            latch.countDown()
+        }
+        latch.await(KEY_ACTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        return ok.get()
     }
 
     /** 注入一条手势路径并等它结束；取消或超时都算失败。 */
@@ -287,6 +310,7 @@ class MacroEngine(private val context: Context) {
             is MacroStep.Wait -> R.string.macro_step_wait
             is MacroStep.Tap -> R.string.macro_step_tap
             is MacroStep.Swipe -> R.string.macro_step_swipe
+            is MacroStep.Key -> R.string.macro_step_key
         },
     )
 
@@ -312,6 +336,9 @@ class MacroEngine(private val context: Context) {
 
         /** 触摸指示器在步骤结束后停留的时长。 */
         private const val INDICATOR_LINGER_MS = 320L
+
+    /** 系统按键步骤的执行上限（performGlobalAction 是异步的）。 */
+    private const val KEY_ACTION_TIMEOUT_MS = 800L
 
         private val LOCK = Any()
         private val mainHandler = Handler(Looper.getMainLooper())

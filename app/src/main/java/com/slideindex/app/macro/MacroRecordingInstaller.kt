@@ -144,6 +144,8 @@ object MacroRecordingInstaller {
                         },
                         // 拖动控制条时让捕获层跟着挪"洞"，否则条会被捕获窗盖住、拖不动。
                         onMoved = { capture?.updateHole() },
+                        // 反馈 #4：工具条上插入「返回 / 主屏 / 最近任务」步骤。
+                        onKeyStep = { key -> recorder.addSystemKey(key) },
                     )
 
                     capture = captureLayer

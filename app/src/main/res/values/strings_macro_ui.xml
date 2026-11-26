@@ -24,8 +24,12 @@
     <string name="macro_section_record">Recording</string>
     <string name="macro_name_label">Macro name</string>
     <string name="macro_target_label">Target app</string>
-    <string name="macro_scope_global_title">Global macro (no app binding)</string>
-    <string name="macro_scope_global_desc">Launches no app and replays right where you are; coordinates are absolute, best for stable layouts</string>
+    <string name="macro_step_key">Key press</string>
+    <string name="macro_key_step_back">Back</string>
+    <string name="macro_key_step_home">Home</string>
+    <string name="macro_key_step_recents">Recents</string>
+    <string name="macro_scope_global_title">Global macro (starts where you are)</string>
+    <string name="macro_scope_global_desc">No app is launched; playback starts on the current screen. Add Back/Home/Recents steps while recording to move across apps.</string>
     <string name="macro_target_none">Not selected</string>
     <string name="macro_target_value">%1$s · %2$s</string>
     <string name="macro_start_recording">Start recording</string>

@@ -96,6 +96,11 @@ fun PhysicalKeySettingsScreen(
 
     val screenOffActionsTitle = stringResource(R.string.physical_key_section_screen_off_actions)
     val followScreenOnLabel = stringResource(R.string.physical_key_follow_screen_on)
+    // 反馈 #3：熄屏动作默认折叠；这里只数「显式配了熄屏动作」的按键。
+    var screenOffExpanded by remember { mutableStateOf(false) }
+    val screenOffConfiguredCount = settings.entries.values.count {
+        it.screenOffAction !is GestureAction.None
+    }
     // 熄屏专用动作跟亮屏动作同一批按键，标题复用，顺序也保持一致。
     val screenOffGestureRows = listOf(
         PhysicalKeyGesture.POWER_SINGLE_PRESS to powerSingleTitle,
@@ -305,29 +310,52 @@ fun PhysicalKeySettingsScreen(
         )
 
         // 熄屏专用动作（反馈 #395）：不配就是"沿用亮屏动作"，配了则在屏幕熄灭时改跑这一套。
+        // 反馈 #3：10 行摊开太长，默认折叠成一行，点开再选。
         settingsLazySmallTitle(
             key = "section-screen-off-actions",
             title = screenOffActionsTitle,
         )
         groupedCardItems(
-            keyPrefix = "physicalkey-screen-off",
-            items = screenOffGestureRows.map { (gesture, title) ->
-                settingsCardScopeItem("screen-off-${gesture.name}") {
-                    val entry = settings.entries[gesture]
-                    val screenOffAction = entry?.screenOffAction ?: GestureAction.None
+            keyPrefix = "physicalkey-screen-off-toggle",
+            items = listOf(
+                settingsCardScopeItem("screen-off-toggle") {
                     MiuixNavigationRow(
-                        title = title,
-                        summary = if (screenOffAction is GestureAction.None) {
-                            followScreenOnLabel
+                        title = if (screenOffExpanded) {
+                            stringResource(R.string.physical_key_screen_off_collapse)
                         } else {
-                            gestureActionLabel(screenOffAction)
+                            stringResource(R.string.physical_key_screen_off_expand)
                         },
-                        enabled = settings.enabled,
-                        onClick = { onOpenActionPick(gesture, true) },
+                        summary = stringResource(
+                            R.string.physical_key_screen_off_configured,
+                            screenOffConfiguredCount,
+                        ),
+                        enabled = true,
+                        onClick = { screenOffExpanded = !screenOffExpanded },
                     )
-                }
-            },
+                },
+            ),
         )
+        if (screenOffExpanded) {
+            groupedCardItems(
+                keyPrefix = "physicalkey-screen-off",
+                items = screenOffGestureRows.map { (gesture, title) ->
+                    settingsCardScopeItem("screen-off-${gesture.name}") {
+                        val entry = settings.entries[gesture]
+                        val screenOffAction = entry?.screenOffAction ?: GestureAction.None
+                        MiuixNavigationRow(
+                            title = title,
+                            summary = if (screenOffAction is GestureAction.None) {
+                                followScreenOnLabel
+                            } else {
+                                gestureActionLabel(screenOffAction)
+                            },
+                            enabled = settings.enabled,
+                            onClick = { onOpenActionPick(gesture, true) },
+                        )
+                    }
+                },
+            )
+        }
 
         // 高级与灵敏度
         settingsLazySmallTitle(

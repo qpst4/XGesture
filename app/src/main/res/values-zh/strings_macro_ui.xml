@@ -24,8 +24,12 @@
     <string name="macro_section_record">录制</string>
     <string name="macro_name_label">宏名称</string>
     <string name="macro_target_label">目标应用</string>
-    <string name="macro_scope_global_title">全局宏（不绑定应用）</string>
-    <string name="macro_scope_global_desc">开启后不拉起任何应用，直接在当前界面回放；坐标是绝对位置，适合界面固定的场景</string>
+    <string name="macro_step_key">按键</string>
+    <string name="macro_key_step_back">返回</string>
+    <string name="macro_key_step_home">主屏</string>
+    <string name="macro_key_step_recents">最近任务</string>
+    <string name="macro_scope_global_title">不绑定应用（从当前界面开始）</string>
+    <string name="macro_scope_global_desc">执行时不拉起任何应用，直接从当前界面开始回放。录制时可用工具条的返回 / 主屏 / 最近任务按钮插入系统按键步骤，宏就能跨界面、跨应用。</string>
     <string name="macro_target_none">尚未选择</string>
     <string name="macro_target_value">%1$s · %2$s</string>
     <string name="macro_start_recording">开始录制</string>

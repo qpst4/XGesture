@@ -41,6 +41,8 @@ object MacroJson {
     private const val TYPE_DELAY = "delay"
     private const val TYPE_TAP = "tap"
     private const val TYPE_SWIPE = "swipe"
+    private const val TYPE_KEY = "key"
+    private const val KEY_SYSTEM_KEY = "key"
 
     /** 早期版本用过 `holdMs` 表示点击时长，读的时候兼容一下。 */
     private const val KEY_TAP_DURATION_LEGACY = "holdMs"
@@ -137,6 +139,10 @@ object MacroJson {
             points = decodePoints(item.optJSONArray(KEY_POINTS)),
         )
 
+        TYPE_KEY -> MacroStep.Key(
+            key = MacroStep.SystemKey.fromName(item.optString(KEY_SYSTEM_KEY)),
+        )
+
         // 不认识的类型：跳过这一步，不影响同一宏里其它步骤
         else -> null
     }
@@ -188,5 +194,9 @@ object MacroJson {
                 .put(KEY_DURATION_MS, step.durationMs)
                 .put(KEY_POINTS, points)
         }
+
+        is MacroStep.Key -> JSONObject()
+            .put(KEY_TYPE, TYPE_KEY)
+            .put(KEY_SYSTEM_KEY, step.key.name)
     }
 }

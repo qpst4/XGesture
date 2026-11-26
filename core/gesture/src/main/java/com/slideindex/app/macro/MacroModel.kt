@@ -40,6 +40,30 @@ sealed interface MacroStep {
         data class PathPoint(val x: Float = 0.5f, val y: Float = 0.5f)
     }
 
+    /**
+     * 系统按键（反馈 #4）：返回 / 主屏 / 最近任务。
+     *
+     * 只有点击与滑动时，宏永远无法"离开当前界面"；加上这一种步骤后，
+     * 录制工具条上的三个按键按钮就能把"回桌面 / 切最近任务 / 返回"录进宏里，
+     * 于是宏可以跨界面、跨应用走完整流程。
+     */
+    data class Key(
+        val key: SystemKey = SystemKey.BACK,
+    ) : MacroStep
+
+    /** 宏里支持的三种系统按键。 */
+    enum class SystemKey {
+        BACK,
+        HOME,
+        RECENTS,
+        ;
+
+        companion object {
+            fun fromName(raw: String?): SystemKey =
+                entries.firstOrNull { it.name == raw } ?: BACK
+        }
+    }
+
     companion object {
         const val DEFAULT_WAIT_MS = 200L
         const val DEFAULT_TAP_MS = 80L

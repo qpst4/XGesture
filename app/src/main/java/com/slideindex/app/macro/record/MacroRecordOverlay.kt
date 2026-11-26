@@ -69,6 +69,8 @@ class MacroRecordOverlay(
     private val onDiscarded: () -> Unit = {},
     /** 控制条被拖到新位置后回调（捕获层要跟着重算"洞"）。 */
     private val onMoved: (() -> Unit)? = null,
+    /** 插一步系统按键（返回 / 主屏 / 最近任务）。 */
+    private val onKeyStep: (MacroStep.SystemKey) -> Unit = {},
 ) {
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -248,6 +250,27 @@ class MacroRecordOverlay(
         }
         countView = count
         card.addView(count)
+
+        // 反馈 #4：录制期间可以插入「返回 / 主屏 / 最近任务」三个系统按键步骤，
+        // 宏才可能走出当前界面（否则只能记点击与滑动）。
+        val keyRow = LinearLayout(hostContext).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(8f) }
+        }
+        listOf(
+            MacroStep.SystemKey.BACK to R.string.macro_key_step_back,
+            MacroStep.SystemKey.HOME to R.string.macro_key_step_home,
+            MacroStep.SystemKey.RECENTS to R.string.macro_key_step_recents,
+        ).forEachIndexed { index, (key, labelRes) ->
+            val button = createButton { onKeyStep(key) }.apply {
+                text = hostContext.getString(labelRes)
+            }
+            keyRow.addView(button, buttonParams(isFirst = index == 0))
+        }
+        card.addView(keyRow)
 
         val buttonRow = LinearLayout(hostContext).apply {
             orientation = LinearLayout.HORIZONTAL

@@ -169,6 +169,24 @@ class MacroRecorder(
     /** 已录步骤的快照。 */
     fun steps(): List<MacroStep> = recorded.toList()
 
+    /**
+     * 追加一步系统按键（反馈 #4）：返回 / 主屏 / 最近任务。
+     *
+     * 工具条上的按钮不是触摸事件，所以这里手动补一段"距上次输入的等待"，
+     * 回放节奏才和用户实际操作的间隔一致（与 onUp 里的补等待同一口径）。
+     */
+    fun addSystemKey(key: MacroStep.SystemKey) {
+        if (paused) return
+        val now = clock()
+        val gapMs = (now - lastInputAtMs).coerceIn(0L, MacroRecordThresholds.WAIT_MAX_GAP_MS)
+        if (gapMs > MacroRecordThresholds.WAIT_MIN_GAP_MS) {
+            recorded.add(MacroStep.Wait(gapMs))
+        }
+        recorded.add(MacroStep.Key(key))
+        lastInputAtMs = now
+        notifyStepsChanged()
+    }
+
     /** 按下：记录按下点与时间，并清空本次手势的采样表（按下点本身写进采样表）。 */
     fun onDown(x: Float, y: Float, eventTimeMs: Long) {
         if (paused) return

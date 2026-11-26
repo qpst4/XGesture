@@ -24,6 +24,9 @@
     <string name="physical_key_section_advanced">خيارات متقدمة والحساسية</string>
     <string name="physical_key_section_screen_off_actions">إجراءات عند إطفاء الشاشة</string>
     <string name="physical_key_follow_screen_on">استخدام إجراء الشاشة المضاءة</string>
+    <string name="physical_key_screen_off_expand">توسيع إجراءات إطفاء الشاشة</string>
+    <string name="physical_key_screen_off_collapse">طي إجراءات إطفاء الشاشة</string>
+    <string name="physical_key_screen_off_configured">تم ضبط %1$d</string>
 
     <string name="physical_key_gesture_power_single">نقر مفتاح الطاقة</string>
     <string name="physical_key_gesture_power_long">ضغط طويل على مفتاح الطاقة</string>
