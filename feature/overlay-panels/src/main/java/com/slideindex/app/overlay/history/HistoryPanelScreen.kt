@@ -367,6 +367,8 @@ fun HistoryPanelScreen(
     // 剪贴板页多选：批量删除用（闪念页不动）。
     var clipboardSelectionActive by remember { mutableStateOf(false) }
     var selectedClipboardIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var stashSelectionActive by remember { mutableStateOf(false) }
+    var selectedStashIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     /** 深链带 query 进来时把光标请进搜索框（现在搜索框是常驻的，不再有"展开"这回事）。 */
     val searchFocusRequester = remember { FocusRequester() }
     val searchFocusScope = rememberCoroutineScope()
@@ -1449,6 +1451,34 @@ fun HistoryPanelScreen(
                                 onShowMessage = showPanelMessage,
                                 onDismissPanel = onDismiss,
                                 onListScrolledChange = { listScrolled = it },
+                                selectionActive = stashSelectionActive,
+                                selectedIds = selectedStashIds,
+                                onEnterSelection = { id ->
+                                    stashSelectionActive = true
+                                    selectedStashIds = setOf(id)
+                                },
+                                onToggleSelection = { id ->
+                                    selectedStashIds = if (id in selectedStashIds) {
+                                        selectedStashIds - id
+                                    } else {
+                                        selectedStashIds + id
+                                    }
+                                },
+                                onSelectAll = {
+                                    selectedStashIds = filteredStashEntries.mapTo(HashSet()) { it.id }
+                                },
+                                onDeleteSelected = { ids ->
+                                    ids.forEach { id ->
+                                        filteredStashEntries.firstOrNull { it.id == id }
+                                            ?.let(deleteEntry)
+                                    }
+                                    stashSelectionActive = false
+                                    selectedStashIds = emptySet()
+                                },
+                                onExitSelection = {
+                                    stashSelectionActive = false
+                                    selectedStashIds = emptySet()
+                                },
                             )
                             HistoryPanelTab.Clipboard -> HistoryClipboardTabBody(
                                 totalCount = clipboardViewCount,
@@ -1493,6 +1523,10 @@ fun HistoryPanelScreen(
                                         clipboardSelectionActive = false
                                         selectedClipboardIds = emptySet()
                                     }
+                                },
+                                onExitSelection = {
+                                    clipboardSelectionActive = false
+                                    selectedClipboardIds = emptySet()
                                 },
                             )
                         }
@@ -2109,6 +2143,14 @@ private fun HistoryStashTabBody(
     onDismissPanel: () -> Unit,
     /** 列表滑离顶部 → 上报给宿主决定头部收不收（§0.16.5）。 */
     onListScrolledChange: (Boolean) -> Unit,
+    /** 多选态：为 true 时点击卡片改为勾选。 */
+    selectionActive: Boolean = false,
+    selectedIds: Set<String> = emptySet(),
+    onEnterSelection: (String) -> Unit = {},
+    onToggleSelection: (String) -> Unit = {},
+    onExitSelection: () -> Unit = {},
+    onSelectAll: () -> Unit = {},
+    onDeleteSelected: (Set<String>) -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -2221,10 +2263,55 @@ private fun HistoryStashTabBody(
             val scheme = MiuixTheme.colorScheme
             // 时间轴槽：分组表头 + 条目平铺成同一条 Lazy 列表（见 HistoryTimelineGrouping.kt）。
             val timelineRows = remember(filteredEntries) { buildHistoryTimelineRows(filteredEntries) }
+            Column(modifier = Modifier.fillMaxSize()) {
+            if (selectionActive) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.clipboard_float_selected_count,
+                            selectedIds.size,
+                        ),
+                        style = MiuixTheme.textStyles.body2,
+                        color = scheme.onSurface,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = stringResource(R.string.clipboard_float_select_all),
+                        style = MiuixTheme.textStyles.body2,
+                        color = scheme.primary,
+                        modifier = Modifier.clickable { onSelectAll() },
+                    )
+                    Text(
+                        text = stringResource(R.string.clipboard_float_delete_selected),
+                        style = MiuixTheme.textStyles.body2,
+                        color = if (selectedIds.isEmpty()) {
+                            scheme.onSurfaceVariantSummary
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        },
+                        modifier = Modifier.clickable(enabled = selectedIds.isNotEmpty()) {
+                            onDeleteSelected(selectedIds)
+                        },
+                    )
+                    Text(
+                        text = stringResource(R.string.clipboard_float_selection_done),
+                        style = MiuixTheme.textStyles.body2,
+                        color = scheme.primary,
+                        modifier = Modifier.clickable { onExitSelection() },
+                    )
+                }
+            }
             LazyColumn(
                 state = listState,
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxWidth()
+                    .weight(1f),
                 contentPadding = PaddingValues(
                     // 左侧不留白：时间轴槽自己就是左边距（设计稿 `.stream .scroll{padding-left:0}`
                     // + `.grp{padding-left:62px}`）。
@@ -2271,6 +2358,7 @@ private fun HistoryStashTabBody(
                                 reminderAtMs = reminder?.atMs,
                                 reminderOverdue = reminder?.overdue == true,
                             ) {
+                                Box {
                                 HistoryStashEntryCard(
                                     entry = entry,
                                     expanded = expanded,
@@ -2331,7 +2419,46 @@ private fun HistoryStashTabBody(
                                     },
                                     onToggleStar = { onToggleStar(entry) },
                                     onDelete = { onDeleteEntry(entry) },
+                                    onEnterSelection = { onEnterSelection(entry.id) },
                                 )
+                                if (selectionActive) {
+                                    val entrySelected = entry.id in selectedIds
+                                    Box(
+                                        modifier = Modifier
+                                            .matchParentSize()
+                                            .clip(RoundedCornerShape(HistoryRadii.lg))
+                                            .then(
+                                                if (entrySelected) {
+                                                    Modifier.border(
+                                                        1.5.dp,
+                                                        scheme.primary,
+                                                        RoundedCornerShape(HistoryRadii.lg),
+                                                    )
+                                                } else {
+                                                    Modifier
+                                                },
+                                            )
+                                            .clickable(
+                                                interactionSource = remember {
+                                                    MutableInteractionSource()
+                                                },
+                                                indication = null,
+                                            ) { onToggleSelection(entry.id) },
+                                    ) {
+                                        if (entrySelected) {
+                                            Icon(
+                                                imageVector = Icons.Default.Check,
+                                                contentDescription = null,
+                                                tint = scheme.primary,
+                                                modifier = Modifier
+                                                    .align(Alignment.TopEnd)
+                                                    .padding(10.dp)
+                                                    .size(20.dp),
+                                            )
+                                        }
+                                    }
+                                }
+                                }
                             }
                         }
                     }
@@ -2339,6 +2466,7 @@ private fun HistoryStashTabBody(
                 item(key = "stash_list_footer") {
                     Spacer(modifier = Modifier.height(HistoryListFooterPadding))
                 }
+            }
             }
         }
     }
@@ -2373,6 +2501,7 @@ private fun HistoryClipboardTabBody(
     selectedIds: Set<String> = emptySet(),
     onEnterSelection: (String) -> Unit = {},
     onToggleSelection: (String) -> Unit = {},
+    onExitSelection: () -> Unit = {},
     onSelectAll: () -> Unit = {},
     onDeleteSelected: (Set<String>) -> Unit = {},
 ) {
@@ -2502,6 +2631,12 @@ private fun HistoryClipboardTabBody(
                         modifier = Modifier.clickable(enabled = selectedIds.isNotEmpty()) {
                             onDeleteSelected(selectedIds)
                         },
+                    )
+                    Text(
+                        text = stringResource(R.string.clipboard_float_selection_done),
+                        style = MiuixTheme.textStyles.body2,
+                        color = scheme.primary,
+                        modifier = Modifier.clickable { onExitSelection() },
                     )
                 }
             }

@@ -347,6 +347,8 @@ fun HistoryStashEntryCard(
     onShare: () -> Unit,
     onToggleStar: () -> Unit,
     onDelete: () -> Unit,
+    /** 从这张卡的 ⋮ 进入多选态（预选这张卡）。 */
+    onEnterSelection: (() -> Unit)? = null,
     /** 内置分享面板发出去之前要先收起历史面板，否则目标 App 会被面板盖住。 */
     onDismissPanel: () -> Unit = {},
     /** 打开就地编辑条（设计稿 `.editbar`）。 */
@@ -646,6 +648,15 @@ fun HistoryStashEntryCard(
             HistoryCardOverflowMenu(
                 contentDescription = moreLabel,
                 actions = buildList {
+                    if (onEnterSelection != null) {
+                        add(
+                            HistoryCardMenuAction(
+                                label = stringResource(R.string.clipboard_float_multi_select),
+                                icon = Icons.Outlined.CheckCircle,
+                                onClick = onEnterSelection,
+                            ),
+                        )
+                    }
                     // 设计稿的 ⋮：加星标 / 进入取词 / 钉在屏幕 / 分享 / 保存图片 / —— / 删除。
                     // 我们多一项「编辑」：设计稿是从卡片本体点开编辑条，那和"点卡片展开/收起"
                     // 冲突（App 既有行为），所以搬到 ⋮ 里更稳妥。
