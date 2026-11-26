@@ -45,7 +45,10 @@ object CornerWheelLayout {
         settings: CornerGestureSettings,
         density: Float,
     ): Offset {
-        val topOuterSlotIndex = CornerRadialMenuCodec.layerStartIndex(outermostLayer(settings))
+        val topOuterSlotIndex = CornerRadialMenuCodec.layerStartIndex(
+            outermostLayer(settings),
+            settings.normalizedLayerSlotCounts,
+        )
         val topSlot = bubbleCenterForSlot(
             anchor = anchor,
             anchorX = anchorX,
@@ -130,9 +133,10 @@ object CornerWheelLayout {
         settings: CornerGestureSettings,
         density: Float,
     ): Offset {
-        val layer = CornerRadialMenuCodec.layerOf(globalIndex)
-        val localIndex = CornerRadialMenuCodec.layerLocalIndex(globalIndex)
-        val slotCount = CornerRadialMenuCodec.slotCountInLayer(layer)
+        val slotCounts = settings.normalizedLayerSlotCounts
+        val layer = CornerRadialMenuCodec.layerOf(globalIndex, slotCounts)
+        val localIndex = CornerRadialMenuCodec.layerLocalIndex(globalIndex, slotCounts)
+        val slotCount = CornerRadialMenuCodec.slotCountInLayer(layer, slotCounts)
         val radius = layerRadiusPx(settings, density, layer)
         val usableArc = ARC_DEGREES - EDGE_PADDING_DEG * 2f
         val sweep = usableArc / slotCount

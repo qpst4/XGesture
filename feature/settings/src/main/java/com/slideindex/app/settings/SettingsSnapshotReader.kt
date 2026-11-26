@@ -1110,6 +1110,12 @@ internal object SettingsSnapshotReader {
             prefs[SettingsPreferenceKeys.CORNER_GESTURE_WHEEL_LAYER_COUNT]
                 ?: CornerRadialMenuCodec.BASE_LAYER_COUNT,
         )
+        val layerSlotCounts = CornerRadialMenuCodec.normalizeLayerSlotCounts(
+            prefs[SettingsPreferenceKeys.CORNER_GESTURE_LAYER_SLOT_COUNTS]
+                ?.split(',')
+                ?.mapNotNull { it.trim().toIntOrNull() }
+                .orEmpty(),
+        )
         val bubbleSizeDp = CornerGestureSettings.clampBubbleSizeDp(
             prefs[SettingsPreferenceKeys.CORNER_GESTURE_BUBBLE_SIZE_DP] ?: 24f,
         )
@@ -1160,6 +1166,7 @@ internal object SettingsSnapshotReader {
                 )
             } ?: PanelIconShape.FOLLOW_GLOBAL,
             wheelLayerCount = wheelLayerCount,
+            layerSlotCounts = layerSlotCounts,
             cancelOutsideWheel = prefs[SettingsPreferenceKeys.CORNER_GESTURE_CANCEL_OUTSIDE_WHEEL] ?: true,
             progressiveLayers = prefs[SettingsPreferenceKeys.CORNER_GESTURE_PROGRESSIVE_LAYERS] ?: false,
             slotHapticEnabled = prefs[SettingsPreferenceKeys.CORNER_GESTURE_SLOT_HAPTIC] ?: true,

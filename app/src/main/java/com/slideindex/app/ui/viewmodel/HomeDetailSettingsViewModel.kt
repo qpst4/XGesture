@@ -498,6 +498,10 @@ class HomeDetailSettingsViewModel @Inject constructor(
         settingsRepository.setCornerGestureWheelLayerCount(value)
     }
 
+    fun setCornerLayerSlotCounts(counts: List<Int>) = launchSettingsWrite {
+        settingsRepository.setCornerLayerSlotCounts(counts)
+    }
+
     fun setCornerGestureCancelOutsideWheel(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setCornerGestureCancelOutsideWheel(enabled)
     }

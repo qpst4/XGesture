@@ -941,6 +941,10 @@ internal object SettingsPreferenceKeys {
     /** 层与层之间的环间距（dp）。取代未发布的 corner_gesture_outer_diameter_dp。 */
     val CORNER_GESTURE_RING_SPACING_DP = floatPreferencesKey("corner_gesture_ring_spacing_dp")
     val CORNER_GESTURE_BUBBLE_SIZE_DP = floatPreferencesKey("corner_gesture_bubble_size_dp")
+
+    /** 每圈槽位数量：逗号分隔的 5 个数（总和恒为 35）。 */
+    val CORNER_GESTURE_LAYER_SLOT_COUNTS =
+        stringPreferencesKey("corner_gesture_layer_slot_counts")
     /** 槽位气泡/图标形状（FvIconShape.name）；缺省按圆形处理，保持历史观感。 */
     val CORNER_GESTURE_SLOT_ICON_SHAPE = stringPreferencesKey("corner_gesture_slot_icon_shape")
     /** 轮盘层数（3/4/5）。取代未发布的 corner_gesture_layer4_enabled / layer5_enabled 两个布尔键。 */

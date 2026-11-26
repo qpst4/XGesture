@@ -132,11 +132,12 @@ class SettingsModuleRegistryTest {
         //            「关闭行为」`app_carousel_close_mode`（均落 QUICK_LAUNCHER）。
         // 725 = 709 + 16：全局长按强行拖放 6 个键（`drag_drop_flow_global_press_*`，落 DRAG_DROP）
         //            + 物理 dp 小窗 10 个 `free_window_*_v2` 键（落 FREE_WINDOW）。
-        const val EXPECTED_TOTAL_KEYS = 746
+        // 747 = 746 + 1：边角轮盘「每圈数量」`corner_gesture_layer_slot_counts`（CORNER_WHEEL）。
+        const val EXPECTED_TOTAL_KEYS = 747
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
             SettingsModule.EDGE_GESTURE to 85,
-            SettingsModule.CORNER_WHEEL to 35,
+            SettingsModule.CORNER_WHEEL to 36,
             SettingsModule.QUICK_WHEEL to 2,
             SettingsModule.FLOAT_BALL to 79,
             SettingsModule.FLOATING_POINTER to 54,

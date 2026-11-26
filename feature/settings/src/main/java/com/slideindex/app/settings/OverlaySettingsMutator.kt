@@ -1990,6 +1990,12 @@ class OverlaySettingsMutator @Inject constructor(
             CornerGestureSettings.clampWheelLayerCount(value)
     }
 
+    /** 每圈槽位数量（总和恒为 35，越界/坏值在这里收敛）。 */
+    suspend fun setCornerLayerSlotCounts(counts: List<Int>) = editor.edit {
+        it[SettingsPreferenceKeys.CORNER_GESTURE_LAYER_SLOT_COUNTS] =
+            CornerRadialMenuCodec.normalizeLayerSlotCounts(counts).joinToString(",")
+    }
+
     suspend fun setCornerGestureSlotIconShape(shape: PanelIconShape) = editor.edit {
         it[SettingsPreferenceKeys.CORNER_GESTURE_SLOT_ICON_SHAPE] = shape.name
     }

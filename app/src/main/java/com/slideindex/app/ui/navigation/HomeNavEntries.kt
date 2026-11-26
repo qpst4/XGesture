@@ -567,6 +567,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             onInnerDiameterChange = viewModel::setCornerGestureInnerDiameterDp,
             onRingSpacingChange = viewModel::setCornerGestureRingSpacingDp,
             onBubbleSizeChange = viewModel::setCornerGestureBubbleSizeDp,
+            onLayerSlotCountsChange = viewModel::setCornerLayerSlotCounts,
             onSlotIconShapeChange = viewModel::setCornerGestureSlotIconShape,
             onCancelOutsideWheelChange = viewModel::setCornerGestureCancelOutsideWheel,
             onProgressiveLayersChange = viewModel::setCornerGestureProgressiveLayers,

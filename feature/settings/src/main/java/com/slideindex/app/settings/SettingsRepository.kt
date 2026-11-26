@@ -1288,6 +1288,8 @@ class SettingsRepository @Inject constructor(
         overlay.setCornerGestureSlotIconShape(shape)
     suspend fun setCornerGestureWheelLayerCount(value: Int) =
         overlay.setCornerGestureWheelLayerCount(value)
+    suspend fun setCornerLayerSlotCounts(counts: List<Int>) =
+        overlay.setCornerLayerSlotCounts(counts)
     suspend fun setCornerGestureCancelOutsideWheel(enabled: Boolean) =
         overlay.setCornerGestureCancelOutsideWheel(enabled)
     suspend fun setCornerGestureProgressiveLayers(enabled: Boolean) =

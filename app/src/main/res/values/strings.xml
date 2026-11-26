@@ -5434,4 +5434,6 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="gesture_action_composite">组合动作</string>
     <string name="gesture_action_composite_desc">按顺序执行多个动作，可自行添加与排序</string>
     <string name="gesture_action_composite_save">保存组合</string>
+    <string name="corner_gesture_layer_slot_count">第 %1$d 圈数量</string>
+    <string name="corner_gesture_layer_slot_count_value">%1$d 个 · 共 %2$d</string>
 </resources>

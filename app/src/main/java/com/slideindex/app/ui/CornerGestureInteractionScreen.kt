@@ -18,6 +18,7 @@ import com.slideindex.app.overlay.layout.FvIconShape
 import com.slideindex.app.overlay.layout.PanelIconShape
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.CornerGestureSettings
+import com.slideindex.app.settings.CornerRadialMenuCodec
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingExpandableSwitchRow
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
@@ -52,6 +53,8 @@ fun CornerGestureInteractionScreen(
     onInnerDiameterChange: (Float) -> Unit,
     onRingSpacingChange: (Float) -> Unit,
     onBubbleSizeChange: (Float) -> Unit,
+    /** 每圈槽位数量（5 个数、总和恒为 35）。 */
+    onLayerSlotCountsChange: (List<Int>) -> Unit = {},
     onSlotIconShapeChange: (PanelIconShape) -> Unit,
     onCancelOutsideWheelChange: (Boolean) -> Unit,
     onProgressiveLayersChange: (Boolean) -> Unit,
@@ -278,6 +281,36 @@ fun CornerGestureInteractionScreen(
                         )
                     }
                 )
+                // 每圈数量：重点项——内圈太少不够用时可自己分配（总数恒为 35）。
+                val layerCounts = corner.normalizedLayerSlotCounts
+                layerCounts.indices.forEach { layer ->
+                    add(
+                        settingsCardScopeItem("layer-slot-count-$layer") {
+                            SettingsSliderRow(
+                                title = stringResource(
+                                    R.string.corner_gesture_layer_slot_count,
+                                    layer + 1,
+                                ),
+                                value = layerCounts[layer].toFloat(),
+                                valueRange = 1f..15f,
+                                steps = 13,
+                                enabled = serviceEnabled && corner.enabled,
+                                label = stringResource(
+                                    R.string.corner_gesture_layer_slot_count_value,
+                                    layerCounts[layer],
+                                    layerCounts.sum(),
+                                ),
+                                onValueChange = { value ->
+                                    val updated = layerCounts.toMutableList()
+                                    updated[layer] = value.roundToInt()
+                                    onLayerSlotCountsChange(
+                                        CornerRadialMenuCodec.normalizeLayerSlotCounts(updated),
+                                    )
+                                },
+                            )
+                        },
+                    )
+                }
             }
         )
         settingsLazySmallTitle(

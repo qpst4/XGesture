@@ -119,7 +119,10 @@ private const val NAME_TEXT_LIGHT = 0xFF1E293B.toInt()
         }
 
         // 编辑模式由调用方把 activeLayerCount 传成"已启用的层数"，因此空槽位只在启用层内渲染。
-        val lastSlot = CornerRadialMenuGeometry.lastVisibleSlotIndex(activeLayerCount)
+        val lastSlot = CornerRadialMenuGeometry.lastVisibleSlotIndex(
+            activeLayerCount,
+            settings.normalizedLayerSlotCounts,
+        )
 
         for (slot in 0..lastSlot) {
             if (slot == hiddenSlot) continue

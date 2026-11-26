@@ -15,38 +15,87 @@ object CornerRadialMenuCodec {
 
     /** 始终启用的层数，第 4 层起需要用户显式开启。 */
     const val BASE_LAYER_COUNT = 3
-    val LAYER_SLOT_COUNTS = intArrayOf(3, 5, 7, 9, 11)
 
-    private val LAYER_START_INDICES = IntArray(LAYER_SLOT_COUNTS.size).also { starts ->
-        var acc = 0
-        LAYER_SLOT_COUNTS.forEachIndexed { index, count ->
-            starts[index] = acc
-            acc += count
-        }
-    }
+    /** 默认每圈数量：内 3 / 5 / 7 / 9 / 11。 */
+    val DEFAULT_LAYER_SLOT_COUNTS = intArrayOf(3, 5, 7, 9, 11)
+
+    /** 兼容旧代码的默认值引用。 */
+    val LAYER_SLOT_COUNTS = DEFAULT_LAYER_SLOT_COUNTS
 
     private const val SEP = "\u001D"
 
-    fun layerCount(): Int = LAYER_SLOT_COUNTS.size
+    fun layerCount(): Int = DEFAULT_LAYER_SLOT_COUNTS.size
 
-    fun layerOf(globalIndex: Int): Int {
+    /**
+     * 把用户配置的每圈数量收敛到合法状态：
+     * 固定 5 圈、每圈至少 1、总数必须等于 [SLOT_COUNT]（多退少补，从外圈开始调）。
+     */
+    fun normalizeLayerSlotCounts(raw: List<Int>): List<Int> {
+        val size = DEFAULT_LAYER_SLOT_COUNTS.size
+        val result = MutableList(size) { index ->
+            (raw.getOrNull(index) ?: DEFAULT_LAYER_SLOT_COUNTS[index]).coerceIn(1, SLOT_COUNT)
+        }
+        var diff = SLOT_COUNT - result.sum()
+        var index = size - 1
+        while (diff != 0 && index >= 0) {
+            if (diff > 0) {
+                val capacity = SLOT_COUNT - result[index]
+                if (capacity <= 0) {
+                    index--
+                    continue
+                }
+                val add = minOf(diff, capacity)
+                result[index] += add
+                diff -= add
+            } else {
+                val capacity = result[index] - 1
+                if (capacity <= 0) {
+                    index--
+                    continue
+                }
+                val remove = minOf(-diff, capacity)
+                result[index] -= remove
+                diff += remove
+            }
+        }
+        return result
+    }
+
+    fun layerStartIndex(layer: Int, counts: List<Int> = DEFAULT_LAYER_SLOT_COUNTS.toList()): Int {
+        if (layer <= 0) return 0
+        var start = 0
+        for (i in 0 until minOf(layer, counts.size)) start += counts[i]
+        return start
+    }
+
+    fun slotCountInLayer(layer: Int, counts: List<Int> = DEFAULT_LAYER_SLOT_COUNTS.toList()): Int =
+        counts.getOrElse(layer) { 0 }
+
+    fun layerOf(globalIndex: Int, counts: List<Int> = DEFAULT_LAYER_SLOT_COUNTS.toList()): Int {
         if (globalIndex !in 0 until SLOT_COUNT) return -1
-        return LAYER_START_INDICES.indexOfLast { it <= globalIndex }
+        var start = 0
+        counts.forEachIndexed { layer, count ->
+            if (globalIndex < start + count) return layer
+            start += count
+        }
+        return counts.lastIndex
     }
 
-    fun layerLocalIndex(globalIndex: Int): Int {
-        val layer = layerOf(globalIndex)
-        return if (layer < 0) -1 else globalIndex - LAYER_START_INDICES[layer]
+    fun layerLocalIndex(
+        globalIndex: Int,
+        counts: List<Int> = DEFAULT_LAYER_SLOT_COUNTS.toList(),
+    ): Int {
+        val layer = layerOf(globalIndex, counts)
+        return if (layer < 0) -1 else globalIndex - layerStartIndex(layer, counts)
     }
-
-    fun layerStartIndex(layer: Int): Int = LAYER_START_INDICES.getOrElse(layer) { 0 }
-
-    fun slotCountInLayer(layer: Int): Int = LAYER_SLOT_COUNTS.getOrElse(layer) { 0 }
 
     /** [layerCount] 层（含）以内的最后一个槽位下标。 */
-    fun lastSlotIndexInLayerCount(layerCount: Int): Int {
-        val layer = (layerCount - 1).coerceIn(0, LAYER_SLOT_COUNTS.size - 1)
-        return layerStartIndex(layer) + slotCountInLayer(layer) - 1
+    fun lastSlotIndexInLayerCount(
+        layerCount: Int,
+        counts: List<Int> = DEFAULT_LAYER_SLOT_COUNTS.toList(),
+    ): Int {
+        val layer = (layerCount - 1).coerceIn(0, counts.size - 1)
+        return layerStartIndex(layer, counts) + slotCountInLayer(layer, counts) - 1
     }
 
     fun defaultLeftSlots(): List<GestureAction> = listOf(

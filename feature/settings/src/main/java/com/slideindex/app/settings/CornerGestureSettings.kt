@@ -39,6 +39,13 @@ data class CornerGestureSettings(
      * 层数只决定"画几圈"，不改变任何已有环的半径与间距（见 CornerWheelLayout.layerRadiusPx）。
      */
     val wheelLayerCount: Int = CornerRadialMenuCodec.BASE_LAYER_COUNT,
+    /**
+     * 每圈槽位数量（固定 5 圈、总数恒为 35）。
+     *
+     * 默认 3/5/7/9/11；用户可以把内圈调多、外圈调少（例如 5/6/7/8/9），
+     * 槽位动作仍按全局下标存储，改数量只是重新分配「哪个动作在第几圈」。
+     */
+    val layerSlotCounts: List<Int> = CornerRadialMenuCodec.DEFAULT_LAYER_SLOT_COUNTS.toList(),
     val cancelOutsideWheel: Boolean = true,
     val progressiveLayers: Boolean = false,
     /** 手指移到新槽位时是否震动（仍受全局触感反馈总开关约束） */
@@ -71,6 +78,10 @@ data class CornerGestureSettings(
      */
     val enabledLayerCount: Int
         get() = clampWheelLayerCount(wheelLayerCount)
+
+    /** 合法化后的每圈数量（总数恒为 35）。 */
+    val normalizedLayerSlotCounts: List<Int>
+        get() = CornerRadialMenuCodec.normalizeLayerSlotCounts(layerSlotCounts)
 
     fun hasActiveTriggerZone(): Boolean =
         (verticalEdgeWidthDp > 0f && verticalEdgeHeightDp > 0f) ||

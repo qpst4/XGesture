@@ -98,4 +98,23 @@ class CornerRadialMenuCodecTest {
         assertEquals(GestureAction.Back, normalized[0])
         assertTrue(normalized.drop(1).all { it is GestureAction.None })
     }
+
+    @Test
+    fun customCounts_mapSlotsToLayers() {
+        val counts = CornerRadialMenuCodec.normalizeLayerSlotCounts(listOf(5, 6, 7, 8, 9))
+        assertEquals(35, counts.sum())
+        assertEquals(0, CornerRadialMenuCodec.layerOf(0, counts))
+        assertEquals(0, CornerRadialMenuCodec.layerOf(4, counts))
+        assertEquals(0, CornerRadialMenuCodec.layerOf(5, counts) - 1)
+        assertEquals(1, CornerRadialMenuCodec.layerOf(5, counts))
+        assertEquals(4, CornerRadialMenuCodec.lastSlotIndexInLayerCount(1, counts))
+        assertEquals(34, CornerRadialMenuCodec.lastSlotIndexInLayerCount(5, counts))
+    }
+
+    @Test
+    fun customCounts_areNormalizedTo35Slots() {
+        assertEquals(listOf(3, 5, 7, 9, 11), CornerRadialMenuCodec.normalizeLayerSlotCounts(emptyList()))
+        assertEquals(35, CornerRadialMenuCodec.normalizeLayerSlotCounts(listOf(99, 99, 99, 99, 99)).sum())
+        assertEquals(35, CornerRadialMenuCodec.normalizeLayerSlotCounts(listOf(0, 0, 0, 0, 0)).sum())
+    }
 }

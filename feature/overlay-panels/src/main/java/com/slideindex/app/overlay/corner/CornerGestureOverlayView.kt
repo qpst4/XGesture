@@ -434,7 +434,10 @@ class CornerGestureOverlayView(
 
     private fun nearestSlot(anchor: CornerAnchor, rawX: Float, rawY: Float): Int? {
         val (anchorX, anchorY) = anchorCenter(anchor)
-        val last = CornerRadialMenuGeometry.lastVisibleSlotIndex(cornerSettings.enabledLayerCount)
+        val last = CornerRadialMenuGeometry.lastVisibleSlotIndex(
+            cornerSettings.enabledLayerCount,
+            cornerSettings.normalizedLayerSlotCounts,
+        )
         val bubbleRadius = CornerRadialMenuGeometry.bubbleRadiusPx(cornerSettings, density, 0)
         var best = -1
         var bestDistance = Float.MAX_VALUE
@@ -464,7 +467,10 @@ class CornerGestureOverlayView(
         if (from < 0 || to < 0 || from == to) return emptyMap()
         val anchor = activeAnchor ?: return emptyMap()
         val (anchorX, anchorY) = anchorCenter(anchor)
-        val last = CornerRadialMenuGeometry.lastVisibleSlotIndex(cornerSettings.enabledLayerCount)
+        val last = CornerRadialMenuGeometry.lastVisibleSlotIndex(
+            cornerSettings.enabledLayerCount,
+            cornerSettings.normalizedLayerSlotCounts,
+        )
         val centers = (0..last).map { slot ->
             CornerRadialMenuGeometry.bubbleCenterForSlot(
                 anchor = anchor,
@@ -911,7 +917,13 @@ class CornerGestureOverlayView(
     private fun releaseLayerCount(): Int {
         var count = menuActiveLayerCount()
         if (isProgressiveReveal() && highlightedSlot >= 0) {
-            count = maxOf(count, CornerRadialMenuCodec.layerOf(highlightedSlot) + 1)
+            count = maxOf(
+                count,
+                CornerRadialMenuCodec.layerOf(
+                    highlightedSlot,
+                    cornerSettings.normalizedLayerSlotCounts,
+                ) + 1,
+            )
         }
         return count
     }
@@ -1215,6 +1227,7 @@ class CornerGestureOverlayView(
                 activeLayerCount = menuActiveLayerCount(),
                 highlightedSlot = highlightedSlot,
                 maxLayerCount = cornerSettings.enabledLayerCount,
+                slotCounts = cornerSettings.normalizedLayerSlotCounts,
             ),
             density = density,
             revealProgress = menuRevealProgress,
