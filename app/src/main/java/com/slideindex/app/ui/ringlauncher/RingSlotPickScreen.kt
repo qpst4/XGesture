@@ -42,7 +42,7 @@ import com.slideindex.app.ui.Md3PickerIconLeading
 import com.slideindex.app.ui.Md3PickerListRow
 import com.slideindex.app.ui.displayLabelForExecuteShellCommand
 import com.slideindex.app.ui.gestureActionLabel
-import com.slideindex.app.ui.gesturepicker.MacroPickOverlay
+import com.slideindex.app.ui.gesturepicker.MacroPickDialog
 import com.slideindex.app.ui.miuix.MiuixExpandableSearchIconAction
 import com.slideindex.app.ui.miuix.MiuixScaffoldSearchTabBottomContent
 import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
@@ -104,6 +104,8 @@ fun RingSlotPickScreen(
     val listState = rememberLazyListState()
     var page by remember { mutableStateOf<RingSlotPage>(RingSlotPage.Main) }
     var pendingMacroPick by remember { mutableStateOf<((GestureAction) -> Unit)?>(null) }
+    val requestComposite = com.slideindex.app.ui.composite.rememberCompositePickRequester()
+    val requestOpenLink = com.slideindex.app.ui.composite.rememberOpenLinkRequester()
     var pendingPanelPick by remember { mutableStateOf<QuickLauncherItem?>(null) }
     var pendingCreateHost by remember {
         mutableStateOf<AppShortcutLoader.CreateShortcutHost?>(null)
@@ -297,6 +299,8 @@ fun RingSlotPickScreen(
                             onOpenOpenLink = { page = RingSlotPage.OpenLink },
                             onOpenSimulateKeyEvent = { page = RingSlotPage.SimulateKeyEvent },
                             onRequestRunMacro = { onPicked -> pendingMacroPick = onPicked },
+                            onRequestComposite = requestComposite,
+                            onRequestOpenLink = requestOpenLink,
                             singleSelect = true,
                             noneSelected = currentItem == null,
                             onSelectNone = { onSelectItem(null) },
@@ -468,7 +472,8 @@ fun RingSlotPickScreen(
 
     val macroPick = pendingMacroPick
     if (macroPick != null) {
-        MacroPickOverlay(
+        MacroPickDialog(
+            show = true,
             onDismissRequest = { pendingMacroPick = null },
             onPick = { macro ->
                 pendingMacroPick = null
