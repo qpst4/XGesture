@@ -159,6 +159,10 @@ class MainActivity : ComponentActivity() {
             }
         )
         enableEdgeToEdge()
+        // 三键导航下系统默认会给导航栏铺一层 80% 不透明的“对比度保护”底色（isNavigationBarContrastEnforced
+        // 默认 true），关掉后才是纯透明；手势导航不受该开关影响。minSdk 31，无需 API 判断。
+        // 注意：之后任何一次重新 enableEdgeToEdge() 都会把它写回 true，所以必须紧跟在本调用之后。
+        window.isNavigationBarContrastEnforced = false
         refreshPermissionState()
         // 预测性返回 flag 由 SlideIndexApp.onCreate 恒定写成 true（建窗之前），这里**不再写**：
         // 写 `false` 会让系统退回注入 KEYCODE_BACK，而那条路到不了 Activity 的返回分发器，
