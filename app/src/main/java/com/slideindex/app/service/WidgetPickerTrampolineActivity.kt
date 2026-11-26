@@ -68,6 +68,11 @@ class WidgetPickerTrampolineActivity : ComponentActivity() {
                   WidgetPickerTrampoline.deliverActionSuccess(action, label)
                   finish()
                 },
+                onActionSelectedWithLabel = { action, label ->
+                  delivered = true
+                  WidgetPickerTrampoline.deliverActionSuccess(action, label)
+                  finish()
+                },
                 enableBackHandler = true
               )
             }

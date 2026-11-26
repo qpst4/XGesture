@@ -127,6 +127,8 @@ fun WidgetPickerScreen(
   onAppSelected: ((InstalledAppEntry) -> Unit)? = null,
   onShortcutSelected: ((ShortcutEntry) -> Unit)? = null,
   onActionSelected: ((GestureAction) -> Unit)? = null,
+  /** 带名称的动作选择（Shell 命令等需要自定义显示名）。 */
+  onActionSelectedWithLabel: ((GestureAction, String) -> Unit)? = null,
   launchCreateShortcut: ((AppShortcutLoader.CreateShortcutHost) -> Unit)? = null,
   enableBackHandler: Boolean = true,
   overlayMode: Boolean = false,
@@ -152,11 +154,16 @@ fun WidgetPickerScreen(
   val requestComposite = com.slideindex.app.ui.composite.rememberCompositePickRequester()
   val requestOpenLink = com.slideindex.app.ui.composite.rememberOpenLinkRequester()
   var pendingMacroPick by remember { mutableStateOf<((GestureAction) -> Unit)?>(null) }
-  var shellDialogVisible by remember { mutableStateOf(false) }
-  val submitConfiguredAction: (GestureAction) -> Unit = { action ->
+  var shellPageVisible by remember { mutableStateOf(false) }
+  val submitConfiguredAction: (GestureAction, String?) -> Unit = { action, label ->
     val key = QuickLauncherItemCodec.actionKey(action)
     addedActionKeys = addedActionKeys + key
-    if (onToggleAction != null) onToggleAction(action, false) else onActionSelected?.invoke(action)
+    when {
+      onActionSelectedWithLabel != null && !label.isNullOrBlank() ->
+        onActionSelectedWithLabel(action, label)
+      onToggleAction != null -> onToggleAction(action, false)
+      else -> onActionSelected?.invoke(action)
+    }
   }
   val macroPick = pendingMacroPick
   if (macroPick != null) {
@@ -169,19 +176,26 @@ fun WidgetPickerScreen(
       },
     )
   }
-  if (shellDialogVisible) {
-    com.slideindex.app.ui.composite.ShellCommandActionDialog(
-      onDismissRequest = { shellDialogVisible = false },
-      onConfirm = { command ->
-        shellDialogVisible = false
-        submitConfiguredAction(GestureAction.ExecuteShellCommand(command))
-      },
-    )
-  }
 
 
   val settingsRepository = com.slideindex.app.ui.compose.rememberSettingsRepository()
   val appSettings by settingsRepository.settings.collectAsStateWithLifecycle(initialValue = com.slideindex.app.settings.AppSettings())
+  if (shellPageVisible) {
+    com.slideindex.app.ui.GestureExecuteShellCommandScreen(
+      initialCommand = "",
+      shellCommands = appSettings.shellCommands,
+      onBack = { shellPageVisible = false },
+      onConfirm = { command ->
+        val name = appSettings.shellCommands
+          .firstOrNull { it.command.trim() == command.trim() }
+          ?.label
+        shellPageVisible = false
+        submitConfiguredAction(GestureAction.ExecuteShellCommand(command), name)
+      },
+    )
+    return
+  }
+
   val activityShortcuts = appSettings.activityShortcuts
   val appRepository = rememberAppRepository()
 
@@ -677,7 +691,7 @@ fun WidgetPickerScreen(
               }
             }
           },
-          onOpenExecuteShellCommand = { shellDialogVisible = true },
+          onOpenExecuteShellCommand = { shellPageVisible = true },
           onRequestOpenLink = requestOpenLink,
           onRequestComposite = requestComposite,
           onRequestRunMacro = { onPicked -> pendingMacroPick = onPicked },
