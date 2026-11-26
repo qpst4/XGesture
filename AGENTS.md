@@ -108,3 +108,10 @@ overlay 迁移已完成到"可维护"的程度，**不再启动项目级重构**
 2. **弹窗脱外边距**：在 `MiuixBottomSheet` / 底部弹窗内使用 `CardSegment` 时，由于 Sheet 自身已内置 `insideMargin`，必须显式指定 `outerHorizontalPadding = 0.dp`，**严禁双重缩进**。
 3. **卡片行内部边距**：卡片行自身的 `insideMargin` 必须用 `BasicComponentDefaults.InsideMargin`（左右 16dp，水波纹撑满切角），**严禁**使用横向为 0 的 `MiuixInsetCardComponentMargin`。
 4. **交付前必须截图自检**：`adb shell screencap` 拉图，确认整页在同一条垂线上对齐、左右 ≥16dp、卡片圆角/背景与同页一致。截图随交付一起给用户，不截图不算完成。
+
+## 六、多入口功能排查（硬规则）
+
+> 起因：修小组件面板图标时，只凭 grep 命中的 `launchCreateShortcut` 就当成入口改了两轮，实际执行的是页面内 `createLauncher`，改动一次都没跑过。
+
+1. **入口先枚举，再动手**：同一功能在多个入口表现不一致时，先把所有入口列成清单（每个调用点、触发条件、哪条实际会执行），写不出清单不许改代码。**禁止**把 grep 命中的某个调用点直接当成入口。
+2. **先证明“别的入口为什么能行”，再谈系统限制**：判断某能力“系统不允许 / 无解”之前，必须先解释其它入口是怎么做到的；如果别的入口正常，那就是本入口没接上，不是限制。
