@@ -154,6 +154,10 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
                     }
                     val added = if (isNone) {
                         noneSelected
+                    } else if (action.type == GestureActionType.COMPOSITE) {
+                        // 组合动作的落库形态是 CompositeRef(id)，和占位动作的 key 对不上；
+                        // 这里按产品要求不显示勾选（否则每次都会亮）。
+                        false
                     } else if (modeOptions != null) {
                         bound != null
                     } else {
