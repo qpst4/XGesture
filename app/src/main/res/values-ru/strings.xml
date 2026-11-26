@@ -940,6 +940,10 @@
     <string name="search_app_settings_search_label">Поиск приложений</string>
     <string name="search_app_settings_only_hidden">Только скрытые</string>
     <string name="search_app_settings_hidden_count">Скрыто из поиска: %1$d</string>
+    <string name="search_app_settings_filter_all">Все</string>
+    <string name="search_app_settings_filter_hidden">Скрытые %1$d</string>
+    <string name="search_app_settings_hidden_tag">Скрыто</string>
+    <string name="search_app_settings_restore_all">Восстановить все скрытые (%1$d)</string>
     <string name="search_panel_settings_search_desc">Поиск системных настроек с открытием (сначала системный индекс; затем манифест «Настроек»)</string>
     <string name="search_panel_settings_search_title">Поиск системных настроек</string>
     <string name="search_panel_settings_index_title">Индекс настроек</string>

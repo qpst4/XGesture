@@ -24,6 +24,10 @@
     <string name="physical_key_section_advanced">詳細設定と感度</string>
     <string name="physical_key_section_screen_off_actions">画面オフ時の動作</string>
     <string name="physical_key_follow_screen_on">画面オン時の動作を使用</string>
+    <string name="physical_key_gesture_detail_title">キーのオプション · %1$s</string>
+    <string name="physical_key_screen_on_action">画面オンの動作</string>
+    <string name="physical_key_screen_off_action">画面オフの動作</string>
+    <string name="physical_key_action_unset">未設定</string>
     <string name="physical_key_screen_off_expand">画面オフ時の動作を展開</string>
     <string name="physical_key_screen_off_collapse">画面オフ時の動作を折りたたむ</string>
     <string name="physical_key_screen_off_configured">%1$d 件設定済み</string>

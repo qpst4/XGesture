@@ -24,6 +24,10 @@
     <string name="physical_key_section_advanced">Advanced &amp; Sensitivity</string>
     <string name="physical_key_section_screen_off_actions">Screen-off actions</string>
     <string name="physical_key_follow_screen_on">Follow screen-on action</string>
+    <string name="physical_key_gesture_detail_title">Physical key options · %1$s</string>
+    <string name="physical_key_screen_on_action">Screen-on action</string>
+    <string name="physical_key_screen_off_action">Screen-off action</string>
+    <string name="physical_key_action_unset">Not set</string>
     <string name="physical_key_screen_off_expand">Expand screen-off actions</string>
     <string name="physical_key_screen_off_collapse">Collapse screen-off actions</string>
     <string name="physical_key_screen_off_configured">%1$d configured</string>

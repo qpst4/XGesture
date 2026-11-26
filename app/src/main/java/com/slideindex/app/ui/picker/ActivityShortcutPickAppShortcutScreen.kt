@@ -73,9 +73,10 @@ fun ActivityShortcutPickAppShortcutScreen(
                 host = host,
                 onPrepare = {},
                 onResult = { created ->
+                    // 反馈 #6：图标 extra 在回传的**外层** Intent 上，不在快捷方式的启动 Intent 上。
                     val capturedIconPath = ShortcutIconCapture.captureFromIntent(
                         context,
-                        created?.shortcutIntent,
+                        created?.iconProviderIntent ?: created?.shortcutIntent,
                     )
                     val base = created?.toActivityShortcutOrNull()
                     val shortcut = if (base != null && capturedIconPath != null) {

@@ -947,6 +947,10 @@
     <string name="search_app_settings_search_label">Buscar apps</string>
     <string name="search_app_settings_only_hidden">Solo ocultas</string>
     <string name="search_app_settings_hidden_count">%1$d app(s) ocultas de la búsqueda</string>
+    <string name="search_app_settings_filter_all">Todas</string>
+    <string name="search_app_settings_filter_hidden">Ocultas %1$d</string>
+    <string name="search_app_settings_hidden_tag">Oculta</string>
+    <string name="search_app_settings_restore_all">Restaurar todas las ocultas (%1$d)</string>
     <string name="search_panel_settings_search_desc">Configuración del sistema de búsqueda y abrirlos (índice del sistema primero; vuelve a Configuración manifiesto)</string>
     <string name="search_panel_settings_search_title">Búsqueda de configuración del sistema</string>
     <string name="search_panel_settings_index_title">Índice de configuración</string>

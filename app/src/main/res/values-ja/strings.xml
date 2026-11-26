@@ -2449,6 +2449,10 @@
     <string name="search_app_settings_search_label">アプリを検索</string>
     <string name="search_app_settings_only_hidden">非表示のみ</string>
     <string name="search_app_settings_hidden_count">%1$d 件を検索から非表示中</string>
+    <string name="search_app_settings_filter_all">すべて</string>
+    <string name="search_app_settings_filter_hidden">非表示 %1$d</string>
+    <string name="search_app_settings_hidden_tag">非表示</string>
+    <string name="search_app_settings_restore_all">非表示をすべて復元（%1$d）</string>
     <string name="search_panel_settings_search_desc">システム設定を検索して開く（システムインデックス優先、Settings マニフェストにフォールバック）</string>
     <string name="search_panel_settings_search_title">システム設定検索</string>
     <string name="search_panel_settings_index_title">設定インデックス</string>

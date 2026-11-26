@@ -24,6 +24,10 @@
     <string name="physical_key_section_advanced">Opciones avanzadas y sensibilidad</string>
     <string name="physical_key_section_screen_off_actions">Acciones con la pantalla apagada</string>
     <string name="physical_key_follow_screen_on">Usar la acción de pantalla encendida</string>
+    <string name="physical_key_gesture_detail_title">Opciones de la tecla · %1$s</string>
+    <string name="physical_key_screen_on_action">Acción con pantalla encendida</string>
+    <string name="physical_key_screen_off_action">Acción con pantalla apagada</string>
+    <string name="physical_key_action_unset">Sin configurar</string>
     <string name="physical_key_screen_off_expand">Expandir acciones con pantalla apagada</string>
     <string name="physical_key_screen_off_collapse">Contraer acciones con pantalla apagada</string>
     <string name="physical_key_screen_off_configured">%1$d configuradas</string>

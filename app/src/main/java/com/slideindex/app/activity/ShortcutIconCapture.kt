@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.util.Log
 import androidx.core.content.IntentCompat
 import androidx.core.graphics.drawable.toBitmap
 import java.io.ByteArrayOutputStream
@@ -21,13 +22,20 @@ import java.io.ByteArrayOutputStream
  */
 object ShortcutIconCapture {
 
+    private const val TAG = "ShortcutIconCapture"
+
     fun captureFromIntent(context: Context, intent: Intent?): String? {
-        if (intent == null) return null
+        if (intent == null) {
+            Log.i(TAG, "capture skip: intent=null")
+            return null
+        }
         val bitmap = runCatching {
             IntentCompat.getParcelableExtra(intent, Intent.EXTRA_SHORTCUT_ICON, Bitmap::class.java)
         }.getOrNull()
         if (bitmap != null) {
-            return saveBitmap(context, bitmap)
+            val path = saveBitmap(context, bitmap)
+            Log.i(TAG, "capture from EXTRA_SHORTCUT_ICON: ${bitmap.width}x${bitmap.height} -> $path")
+            return path
         }
         val iconResource = runCatching {
             IntentCompat.getParcelableExtra(
@@ -35,15 +43,34 @@ object ShortcutIconCapture {
                 Intent.EXTRA_SHORTCUT_ICON_RESOURCE,
                 Intent.ShortcutIconResource::class.java,
             )
-        }.getOrNull() ?: return null
+        }.getOrNull()
+        if (iconResource == null) {
+            Log.i(
+                TAG,
+                "capture miss: no ICON / ICON_RESOURCE extra (extras=${intent.extras?.keySet()})",
+            )
+            return null
+        }
         val drawable = runCatching {
             val res = context.packageManager.getResourcesForApplication(iconResource.packageName)
             val id = res.getIdentifier(iconResource.resourceName, null, iconResource.packageName)
             if (id == 0) return@runCatching null
             @Suppress("DEPRECATION")
             res.getDrawable(id, context.theme)
-        }.getOrNull() ?: return null
-        return saveDrawable(context, drawable)
+        }.getOrNull()
+        if (drawable == null) {
+            Log.i(
+                TAG,
+                "capture miss: ICON_RESOURCE ${iconResource.packageName}/${iconResource.resourceName} 解析失败",
+            )
+            return null
+        }
+        val path = saveDrawable(context, drawable)
+        Log.i(
+            TAG,
+            "capture from ICON_RESOURCE ${iconResource.packageName}/${iconResource.resourceName} -> $path",
+        )
+        return path
     }
 
     private fun saveDrawable(context: Context, drawable: Drawable): String? = runCatching {

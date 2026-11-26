@@ -35,6 +35,16 @@ import com.slideindex.app.data.SearchAppPrefs
 import com.slideindex.app.launcher.AppTarget
 import com.slideindex.app.ui.compose.rememberAppRepository
 import com.slideindex.app.ui.link.LinkAppIcon
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import com.slideindex.app.ui.miuix.MiuixGlassIconDropdown
+import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffoldWithExpandableSearch
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.More
 import com.slideindex.app.ui.settings.components.MiuixNavigationRow
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
@@ -97,47 +107,27 @@ fun SearchPanelAppSearchSettingsScreen(
         }
     }
 
-    SettingsScreenScaffold(
+    SettingsLazyScreenScaffoldWithExpandableSearch(
         title = stringResource(R.string.search_panel_section_apps),
-        subtitle = stringResource(R.string.search_panel_app_search_desc),
+        searchQuery = query,
+        onSearchQueryChange = { query = it },
         onBack = onBack,
+        pageHint = stringResource(R.string.search_panel_app_search_desc),
+        hintResId = R.string.search_app_settings_search_label,
     ) {
-        item(key = "app-search-field") {
-            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-                MiuixLabeledTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    label = stringResource(R.string.search_app_settings_search_label),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
+        item(key = "app-search-filter") {
+            // 反馈 #5：分类筛选（全部 / 已隐藏）+ 计数，不再靠一行开关。
+            SearchAppFilterTabs(
+                onlyHidden = onlyHidden,
+                hiddenCount = hidden.size,
+                onSelect = { onlyHidden = it },
+            )
         }
-        groupedCardItems(
-            keyPrefix = "search-app-filter",
-            items = listOf(
-                settingsCardScopeItem("filter-hidden") {
-                    SettingSwitchRow(
-                        title = stringResource(R.string.search_app_settings_only_hidden),
-                        subtitle = stringResource(
-                            R.string.search_app_settings_hidden_count,
-                            hidden.size,
-                        ),
-                        checked = onlyHidden,
-                        enabled = true,
-                        onCheckedChange = { onlyHidden = it },
-                    )
-                },
-            ),
-        )
         if (visibleApps.isEmpty()) {
             item(key = "app-search-empty") {
                 SmallTitle(stringResource(R.string.search_app_settings_empty))
             }
         } else {
-            item(key = "app-search-title") {
-                SmallTitle(stringResource(R.string.search_app_settings_alias_section))
-            }
             groupedCardItems(
                 keyPrefix = "search-app-settings",
                 items = visibleApps.map { app ->
@@ -160,14 +150,29 @@ fun SearchPanelAppSearchSettingsScreen(
                                 )
                                 revision++
                             },
-                            onClick = {
-                                aliasTarget = app
-                                aliasText = aliases[target].orEmpty()
-                            },
                         )
                     }
                 },
             )
+        }
+        if (hidden.isNotEmpty()) {
+            item(key = "app-search-restore-all") {
+                SearchAppRestoreAllRow(
+                    count = hidden.size,
+                    onRestoreAll = {
+                        hidden.forEach { target ->
+                            val parsed = AppTarget.parse(target)
+                            SearchAppPrefs.setHidden(
+                                context,
+                                parsed.packageName,
+                                parsed.cloneUserId,
+                                false,
+                            )
+                        }
+                        revision++
+                    },
+                )
+            }
         }
     }
 
@@ -216,28 +221,39 @@ private fun SearchAppPrefRow(
     hidden: Boolean,
     onEditAlias: () -> Unit,
     onToggleHidden: (Boolean) -> Unit,
-    onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         LinkAppIcon(packageName = app.packageName, size = 36.dp)
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = app.label,
-                style = MiuixTheme.textStyles.title4,
-                color = MiuixTheme.colorScheme.onSurfaceContainer,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = app.label,
+                    style = MiuixTheme.textStyles.title4,
+                    color = if (hidden) {
+                        MiuixTheme.colorScheme.onSurfaceVariantSummary
+                    } else {
+                        MiuixTheme.colorScheme.onSurfaceContainer
+                    },
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (hidden) {
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.search_app_settings_hidden_tag),
+                        style = MiuixTheme.textStyles.footnote1,
+                        color = MiuixTheme.colorScheme.primary,
+                    )
+                }
+            }
             Text(
                 text = when {
-                    hidden -> stringResource(R.string.search_app_settings_hidden_summary)
                     alias.isNotBlank() -> stringResource(
                         R.string.search_app_settings_alias_summary,
                         alias,
@@ -251,14 +267,107 @@ private fun SearchAppPrefRow(
             )
         }
         Spacer(Modifier.width(8.dp))
-        TextButton(
-            text = if (hidden) {
-                stringResource(R.string.search_app_settings_show)
+        // 行尾统一收进「…」菜单：设别名 / 隐藏或恢复，不再并排两个入口。
+        MiuixGlassIconDropdown(
+            entries = listOf(
+                DropdownEntry(
+                    items = listOf(
+                        DropdownItem(
+                            text = stringResource(R.string.search_app_settings_alias_title),
+                            onClick = onEditAlias,
+                        ),
+                        DropdownItem(
+                            text = if (hidden) {
+                                stringResource(R.string.search_app_settings_show)
+                            } else {
+                                stringResource(R.string.search_app_settings_hide)
+                            },
+                            onClick = { onToggleHidden(!hidden) },
+                        ),
+                    ),
+                ),
+            ),
+            icon = MiuixIcons.Medium.More,
+            contentDescription = app.label,
+            capsule = false,
+        )
+    }
+}
+
+@Composable
+private fun SearchAppFilterTabs(
+    onlyHidden: Boolean,
+    hiddenCount: Int,
+    onSelect: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        SearchAppFilterPill(
+            label = stringResource(R.string.search_app_settings_filter_all),
+            selected = !onlyHidden,
+            onClick = { onSelect(false) },
+        )
+        SearchAppFilterPill(
+            label = stringResource(
+                R.string.search_app_settings_filter_hidden,
+                hiddenCount,
+            ),
+            selected = onlyHidden,
+            onClick = { onSelect(true) },
+        )
+    }
+}
+
+@Composable
+private fun SearchAppFilterPill(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(
+                if (selected) {
+                    MiuixTheme.colorScheme.primary
+                } else {
+                    MiuixTheme.colorScheme.surfaceContainer
+                },
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 6.dp),
+    ) {
+        Text(
+            text = label,
+            style = MiuixTheme.textStyles.body2,
+            color = if (selected) {
+                MiuixTheme.colorScheme.onPrimary
             } else {
-                stringResource(R.string.search_app_settings_hide)
+                MiuixTheme.colorScheme.onSurfaceContainer
             },
-            onClick = { onToggleHidden(!hidden) },
-            minHeight = 36.dp,
+        )
+    }
+}
+
+@Composable
+private fun SearchAppRestoreAllRow(
+    count: Int,
+    onRestoreAll: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.End,
+    ) {
+        TextButton(
+            text = stringResource(R.string.search_app_settings_restore_all, count),
+            onClick = onRestoreAll,
+            minHeight = 40.dp,
         )
     }
 }

@@ -24,6 +24,10 @@
     <string name="physical_key_section_advanced">高级选项与灵敏度</string>
     <string name="physical_key_section_screen_off_actions">熄屏时动作</string>
     <string name="physical_key_follow_screen_on">沿用亮屏动作</string>
+    <string name="physical_key_gesture_detail_title">按键选项 · %1$s</string>
+    <string name="physical_key_screen_on_action">亮屏时动作</string>
+    <string name="physical_key_screen_off_action">熄屏时动作</string>
+    <string name="physical_key_action_unset">未设置</string>
     <string name="physical_key_screen_off_expand">展开熄屏时动作</string>
     <string name="physical_key_screen_off_collapse">收起熄屏时动作</string>
     <string name="physical_key_screen_off_configured">已配置 %1$d 个</string>

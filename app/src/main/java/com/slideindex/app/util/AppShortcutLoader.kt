@@ -287,6 +287,8 @@ object AppShortcutLoader {
         val componentFlat: String? = null,
         val intentUri: String? = null,
         val shortcutIntent: Intent? = null,
+        /** 回传的外层 Intent：图标 extra（EXTRA_SHORTCUT_ICON / ICON_RESOURCE）在它身上。 */
+        val iconProviderIntent: Intent? = null,
     )
 
     fun queryCreateShortcutActivities(context: Context): List<CreateShortcutHost> {
@@ -338,6 +340,7 @@ object AppShortcutLoader {
             componentFlat = componentFlat,
             intentUri = intentUri,
             shortcutIntent = launchIntent,
+            iconProviderIntent = data,
         )
     }
 

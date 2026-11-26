@@ -24,6 +24,10 @@
     <string name="physical_key_section_advanced">Дополнительно и чувствительность</string>
     <string name="physical_key_section_screen_off_actions">Действия при выключенном экране</string>
     <string name="physical_key_follow_screen_on">Как при включённом экране</string>
+    <string name="physical_key_gesture_detail_title">Параметры клавиши · %1$s</string>
+    <string name="physical_key_screen_on_action">Действие при включённом экране</string>
+    <string name="physical_key_screen_off_action">Действие при выключенном экране</string>
+    <string name="physical_key_action_unset">Не задано</string>
     <string name="physical_key_screen_off_expand">Развернуть действия при выключенном экране</string>
     <string name="physical_key_screen_off_collapse">Свернуть действия при выключенном экране</string>
     <string name="physical_key_screen_off_configured">Настроено: %1$d</string>
