@@ -31,13 +31,14 @@
     <string name="macro_scope_global_title">Без привязки к приложению (с текущего экрана)</string>
     <string name="macro_scope_global_desc">Приложение не запускается, воспроизведение начинается с текущего экрана. При записи можно вставлять нажатия «Назад/Домой/Недавние».</string>
     <string name="macro_target_none">Не выбрано</string>
+    <string name="macro_target_none_optional">Не выбрано (с текущего экрана)</string>
     <string name="macro_target_value">%1$s · %2$s</string>
     <string name="macro_start_recording">Начать запись</string>
     <string name="macro_recording">Запись</string>
-    <string name="macro_start_recording_desc">Открывает целевое приложение и записывает ваши действия в нём.</string>
+    <string name="macro_start_recording_desc">Сначала открывает выбранное приложение; если не выбрано — запись с текущего экрана.</string>
     <string name="macro_save">Сохранить</string>
-    <string name="macro_help_idle">При начале записи откроется целевое приложение. Пользуйтесь им как обычно; когда закончите, нажмите «Сохранить» на плавающей панели.</string>
-    <string name="macro_help_recording">Идёт запись: пользуйтесь целевым приложением, затем нажмите «Сохранить» на плавающей панели, чтобы вернуться сюда.</string>
+    <string name="macro_help_idle">Нажмите «Начать запись»: если выбрано целевое приложение, оно сначала откроется; если нет — запись начнётся с текущего экрана. По завершении нажмите «Сохранить» на плашке.</string>
+    <string name="macro_help_recording">Запись: работайте на любом экране; по завершении нажмите «Сохранить» на плашке.</string>
     <string name="macro_error_name_required">Введите имя макроса</string>
 
     <!-- 目标 App 选择页 -->

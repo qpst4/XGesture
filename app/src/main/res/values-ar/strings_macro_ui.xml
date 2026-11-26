@@ -31,13 +31,14 @@
     <string name="macro_scope_global_title">بدون ربط تطبيق (يبدأ من الشاشة الحالية)</string>
     <string name="macro_scope_global_desc">لا يفتح أي تطبيق ويبدأ من الشاشة الحالية. أثناء التسجيل يمكن إدراج رجوع/الرئيسية/الأخيرة للتنقل بين التطبيقات.</string>
     <string name="macro_target_none">لم يتم الاختيار</string>
+    <string name="macro_target_none_optional">غير محدد (يبدأ من الشاشة الحالية)</string>
     <string name="macro_target_value">%1$s · %2$s</string>
     <string name="macro_start_recording">بدء التسجيل</string>
     <string name="macro_recording">جارٍ التسجيل</string>
-    <string name="macro_start_recording_desc">يفتح التطبيق الهدف ويسجّل ما تفعله فيه.</string>
+    <string name="macro_start_recording_desc">يفتح التطبيق المستهدف أولًا إن تم اختياره، وإلا يبدأ من الشاشة الحالية.</string>
     <string name="macro_save">حفظ</string>
-    <string name="macro_help_idle">يؤدي بدء التسجيل إلى فتح التطبيق الهدف. استخدمه كالمعتاد، وعند الانتهاء انقر على حفظ في الشريط العائم.</string>
-    <string name="macro_help_recording">جارٍ التسجيل: استخدم التطبيق الهدف، ثم انقر على حفظ في الشريط العائم للعودة إلى هنا.</string>
+    <string name="macro_help_idle">اضغط بدء التسجيل: إذا اخترت تطبيقًا مستهدفًا فسيُفتح أولًا، وإلا يبدأ التسجيل من هذه الشاشة. عند الانتهاء اضغط حفظ في الشريط العائم.</string>
+    <string name="macro_help_recording">جارٍ التسجيل: اعمل في أي شاشة، وعند الانتهاء اضغط حفظ في الشريط.</string>
     <string name="macro_error_name_required">أدخل اسم الماكرو</string>
 
     <!-- 目标 App 选择页 -->

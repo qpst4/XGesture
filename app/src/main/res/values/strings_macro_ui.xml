@@ -31,13 +31,14 @@
     <string name="macro_scope_global_title">Global macro (starts where you are)</string>
     <string name="macro_scope_global_desc">No app is launched; playback starts on the current screen. Add Back/Home/Recents steps while recording to move across apps.</string>
     <string name="macro_target_none">Not selected</string>
+    <string name="macro_target_none_optional">Not selected (starts from current screen)</string>
     <string name="macro_target_value">%1$s · %2$s</string>
     <string name="macro_start_recording">Start recording</string>
     <string name="macro_recording">Recording</string>
-    <string name="macro_start_recording_desc">Opens the target app and records what you do there.</string>
+    <string name="macro_start_recording_desc">Opens the target app first if selected; otherwise starts from the current screen.</string>
     <string name="macro_save">Save</string>
-    <string name="macro_help_idle">Starting a recording opens the target app. Use it normally; when you are done, tap save on the floating bar.</string>
-    <string name="macro_help_recording">Recording: use the target app, then tap save on the floating bar to come back here.</string>
+    <string name="macro_help_idle">Tap Start recording: if you picked a target app it opens first; otherwise recording starts right here. Tap Save on the floating bar when done.</string>
+    <string name="macro_help_recording">Recording: operate on any screen; tap Save on the floating bar when done.</string>
     <string name="macro_error_name_required">Please enter a macro name</string>
 
     <!-- 目标 App 选择页 -->

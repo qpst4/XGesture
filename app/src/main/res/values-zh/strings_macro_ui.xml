@@ -31,13 +31,14 @@
     <string name="macro_scope_global_title">不绑定应用（从当前界面开始）</string>
     <string name="macro_scope_global_desc">执行时不拉起任何应用，直接从当前界面开始回放。录制时可用工具条的返回 / 主屏 / 最近任务按钮插入系统按键步骤，宏就能跨界面、跨应用。</string>
     <string name="macro_target_none">尚未选择</string>
+    <string name="macro_target_none_optional">未选择（从当前界面开始）</string>
     <string name="macro_target_value">%1$s · %2$s</string>
     <string name="macro_start_recording">开始录制</string>
     <string name="macro_recording">录制中</string>
-    <string name="macro_start_recording_desc">会启动目标应用，并记录你在里面的操作。</string>
+    <string name="macro_start_recording_desc">选了目标应用会先启动它；没选则从当前界面开始录制。</string>
     <string name="macro_save">保存</string>
-    <string name="macro_help_idle">点开始录制会启动目标应用；在里面正常操作，完成后点悬浮条上的保存。</string>
-    <string name="macro_help_recording">录制中：在目标应用里操作，完成后点悬浮条上的保存返回这里。</string>
+    <string name="macro_help_idle">点开始录制：选了目标应用会先启动它；没选则直接从当前界面开始。录完点悬浮条上的保存。</string>
+    <string name="macro_help_recording">录制中：在任意界面操作；完成后点悬浮条上的保存返回这里。</string>
     <string name="macro_error_name_required">请填写宏名称</string>
 
     <!-- 目标 App 选择页 -->

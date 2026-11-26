@@ -34,7 +34,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
-import com.slideindex.app.macro.MacroScope
 import com.slideindex.app.settings.macro.MacroValidation
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
@@ -108,13 +107,10 @@ fun MacroEditScreen(
     titleResId: Int,
     name: String,
     targetPackage: String,
-    /** 作用域：全局宏不绑定应用（反馈 #394）。 */
-    scope: MacroScope = MacroScope.APP,
     recording: Boolean,
     /** 有没有真的改动过；没改动时「保存」是灰的（避免凭空存出一条空宏）。 */
     saveEnabled: Boolean = true,
     onNameChange: (String) -> Unit,
-    onScopeChange: (MacroScope) -> Unit = {},
     onPickTargetApp: () -> Unit,
     onStartRecording: () -> Unit,
     onTestRun: () -> Unit,
@@ -130,7 +126,7 @@ fun MacroEditScreen(
         if (recording) R.string.macro_help_recording else R.string.macro_help_idle,
     )
     val targetSummary = if (targetPackage.isBlank()) {
-        stringResource(R.string.macro_target_none)
+        stringResource(R.string.macro_target_none_optional)
     } else {
         stringResource(R.string.macro_target_value, appLabel.ifBlank { targetPackage }, targetPackage)
     }
@@ -171,32 +167,17 @@ fun MacroEditScreen(
                         )
                     },
                 )
+                // 目标应用可选：不选 = 全局宏（从当前界面开始），选了 = 应用内宏。
                 add(
-                    settingsCardScopeItem("macro-target") {
-                        SettingSwitchRow(
-                            title = stringResource(R.string.macro_scope_global_title),
-                            subtitle = stringResource(R.string.macro_scope_global_desc),
-                            checked = scope == MacroScope.GLOBAL,
-                            enabled = !recording,
-                            onCheckedChange = { global ->
-                                onScopeChange(if (global) MacroScope.GLOBAL else MacroScope.APP)
-                            },
+                    settingsCardScopeItem("macro-target-app") {
+                        SettingNavigationRow(
+                            icon = { label -> MacroTargetAppIcon(targetPackage, label) },
+                            title = stringResource(R.string.macro_target_label),
+                            subtitle = targetSummary,
+                            onClick = onPickTargetApp,
                         )
                     },
                 )
-                // 全局宏不绑定应用：这一行直接隐藏，避免"看起来还要选目标"的误解。
-                if (scope != MacroScope.GLOBAL) {
-                    add(
-                        settingsCardScopeItem("macro-target-app") {
-                            SettingNavigationRow(
-                                icon = { label -> MacroTargetAppIcon(targetPackage, label) },
-                                title = stringResource(R.string.macro_target_label),
-                                subtitle = targetSummary,
-                                onClick = onPickTargetApp,
-                            )
-                        },
-                    )
-                }
             },
         )
 

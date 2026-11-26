@@ -17,6 +17,7 @@ import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -270,19 +271,19 @@ class MacroRecordOverlay(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).apply { topMargin = dp(8f) }
         }
+        // 反馈：文字按钮在 196dp 的条里太挤，三个键改成图标（contentDescription 保留语义）。
         listOf(
-            MacroStep.SystemKey.BACK to R.string.macro_key_step_back,
-            MacroStep.SystemKey.HOME to R.string.macro_key_step_home,
-            MacroStep.SystemKey.RECENTS to R.string.macro_key_step_recents,
-        ).forEachIndexed { index, (key, labelRes) ->
-            val button = createButton {
-                // 反馈：三键"点了没反应"——先把点击打点，再防御性刷新一次计数，
-                // 这样即使 onStepsChanged 还没挂上也能看到变化。
+            Triple(MacroStep.SystemKey.BACK, R.drawable.ic_macro_key_back, R.string.macro_key_step_back),
+            Triple(MacroStep.SystemKey.HOME, R.drawable.ic_macro_key_home, R.string.macro_key_step_home),
+            Triple(MacroStep.SystemKey.RECENTS, R.drawable.ic_macro_key_recents, R.string.macro_key_step_recents),
+        ).forEachIndexed { index, (key, iconRes, descRes) ->
+            val button = createIconButton(
+                iconRes = iconRes,
+                description = hostContext.getString(descRes),
+            ) {
                 Log.i(TAG, "key step button clicked: $key")
                 onKeyStep(key)
                 refresh()
-            }.apply {
-                text = hostContext.getString(labelRes)
             }
             keyRow.addView(button, buttonParams(isFirst = index == 0))
         }
@@ -370,6 +371,22 @@ class MacroRecordOverlay(
         setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
         typeface = Typeface.DEFAULT_BOLD
         setPadding(dp(6f), 0, dp(6f), dp(1f))
+        isClickable = true
+        setOnClickListener { onClick() }
+    }
+
+    /** 图标按钮：与文字按钮同底色/描边，只是内容换成 24dp 矢量图。 */
+    private fun createIconButton(
+        iconRes: Int,
+        description: String,
+        onClick: () -> Unit,
+    ): ImageView = ImageView(hostContext).apply {
+        setImageResource(iconRes)
+        contentDescription = description
+        scaleType = ImageView.ScaleType.CENTER_INSIDE
+        setPadding(dp(7f), dp(7f), dp(7f), dp(7f))
+        background = pill(BarColors.pauseFill, BarColors.cardStroke, cornerDp = 14f)
+        imageTintList = android.content.res.ColorStateList.valueOf(BarColors.primaryText)
         isClickable = true
         setOnClickListener { onClick() }
     }

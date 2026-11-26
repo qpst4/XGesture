@@ -171,11 +171,9 @@ fun NavEntryBuilder.macroNavEntries(ctx: MainNavContext) {
             titleResId = R.string.macro_editor_title,
             name = current.name,
             targetPackage = current.targetPackage,
-            scope = current.scope,
             recording = macroRecording,
             saveEnabled = current.hasEdits(),
             onNameChange = { text -> current.name = text },
-            onScopeChange = { scope -> current.scope = scope },
             onPickTargetApp = { ctx.navigate(AppNavKey.MacroTargetApp(current.id)) },
             onStartRecording = { startMacroRecording(ctx, context, current) },
             onTestRun = {
@@ -246,6 +244,12 @@ private fun applyMacroTargetApp(
 
 /** 把草稿写进磁盘（保存 / 开始录制时调用）。 */
 private fun persistDraft(context: Context, draft: MacroDraft) {
+    // 作用域不再让用户手选：不指定目标应用 = 全局宏（从当前界面开始）。
+    draft.scope = if (draft.targetPackage.isBlank()) {
+        MacroScope.GLOBAL
+    } else {
+        MacroScope.APP
+    }
     val existing = MacroStore.byId(context, draft.id)
     val base = existing ?: draft.toMacro()
     MacroStore.upsert(

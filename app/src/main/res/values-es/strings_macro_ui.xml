@@ -24,13 +24,14 @@
     <string name="macro_scope_global_title">Sin app vinculada (empieza donde estás)</string>
     <string name="macro_scope_global_desc">No abre ninguna app y empieza en la pantalla actual. Durante la grabación puedes insertar pulsaciones Atrás/Inicio/Recientes para moverte entre apps.</string>
     <string name="macro_target_none">No seleccionado</string>
+    <string name="macro_target_none_optional">Sin seleccionar (empieza en la pantalla actual)</string>
     <string name="macro_target_value">%1$s·%2$s</string>
     <string name="macro_start_recording">Grabación inicial</string>
     <string name="macro_recording">Grabación</string>
-    <string name="macro_start_recording_desc">Abre la aplicación de destino y registra lo que haces allí.</string>
+    <string name="macro_start_recording_desc">Abre primero la app destino si está seleccionada; si no, empieza en la pantalla actual.</string>
     <string name="macro_save">Guardar</string>
-    <string name="macro_help_idle">Iniciar una grabación abre la aplicación de destino. Usarlo normalmente; cuando hayas terminado, pulsar ahorre en la barra flotante.</string>
-    <string name="macro_help_recording">Grabación: utilizar la aplicación de destino, luego pulsar ahorre en la barra flotante para volver aquí.</string>
+    <string name="macro_help_idle">Pulsa Iniciar grabación: si elegiste una app destino se abrirá primero; si no, empieza en esta pantalla. Al terminar, pulsa Guardar en la barra flotante.</string>
+    <string name="macro_help_recording">Grabando: opera en cualquier pantalla; al terminar pulsa Guardar en la barra.</string>
     <string name="macro_error_name_required">Por favor, introduzca un nombre macro</string>
     <string name="macro_target_pick_title">Aplicación de objetivos</string>
     <string name="macro_target_pick_subtitle">Sólo se enumeran las aplicaciones que se pueden lanzar desde elpantalla de inicio.</string>

@@ -155,16 +155,12 @@ class MacroEngine(private val context: Context) {
         val screenHeight = screen.y.toFloat()
 
         macro.steps.forEachIndexed { index, step ->
-            val foreground = currentForegroundPackage()
+            // 用户切到哪个应用是用户自己的操作：执行器只负责精确回放录下来的步骤，
+            // 不做前台校验、也不中途终止（反馈）。
             Log.i(
                 TAG,
-                "step[$index/${macro.steps.size}] ${step.javaClass.simpleName} 开始 foreground=$foreground target=$targetPackage",
+                "step[$index/${macro.steps.size}] ${step.javaClass.simpleName} 开始",
             )
-            // 全局宏不校验前台（跨界面回放正是它的用途）；应用内宏仍然离开就中止。
-            if (!global && foreground != null && foreground != targetPackage) {
-                toast(R.string.macro_run_foreground_changed)
-                return
-            }
 
             val ok = when (step) {
                 is MacroStep.Wait -> {

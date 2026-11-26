@@ -31,13 +31,14 @@
     <string name="macro_scope_global_title">アプリ非依存（現在の画面から開始）</string>
     <string name="macro_scope_global_desc">アプリを起動せず、現在の画面から再生します。録画中に戻る／ホーム／履歴のボタンでキー操作を挿入でき、画面をまたげます。</string>
     <string name="macro_target_none">未選択</string>
+    <string name="macro_target_none_optional">未選択（現在の画面から開始）</string>
     <string name="macro_target_value">%1$s · %2$s</string>
     <string name="macro_start_recording">記録を開始</string>
     <string name="macro_recording">記録中</string>
-    <string name="macro_start_recording_desc">対象アプリを開き、そこでの操作を記録します。</string>
+    <string name="macro_start_recording_desc">対象アプリを選ぶと先に起動します。未選択なら現在の画面から録画します。</string>
     <string name="macro_save">保存</string>
-    <string name="macro_help_idle">記録を開始すると対象アプリが開きます。普段どおり操作し、終わったらフローティングバーの保存をタップしてください。</string>
-    <string name="macro_help_recording">記録中：対象アプリを操作し、フローティングバーの保存をタップするとここに戻ります。</string>
+    <string name="macro_help_idle">録画を開始：対象アプリを選んでいれば先に起動します。未選択ならこの画面から開始します。終わったらフローティングバーの保存をタップ。</string>
+    <string name="macro_help_recording">録画中：どの画面でも操作できます。終わったらバーの保存をタップ。</string>
     <string name="macro_error_name_required">マクロ名を入力してください</string>
 
     <!-- 目标 App 选择页 -->
