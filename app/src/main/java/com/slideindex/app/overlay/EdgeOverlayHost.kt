@@ -245,6 +245,7 @@ class EdgeOverlayHost(
             .withGestureAnglesPreview()
             .withOverlayLayoutPreview()
         floatBallController?.apply(effectiveSettings)
+        com.slideindex.app.overlay.floatnav.FloatNavOverlayWindow.onSettingsChanged(effectiveSettings)
         updatePerformanceMonitor(effectiveSettings.debugPerformanceMonitorEnabled)
         overlayManager?.applySettings(effectiveSettings)
         settingsApplied = true

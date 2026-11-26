@@ -23,7 +23,6 @@ class FloatNavViewCollapseTest {
         override fun onDragStart() = Unit
         override fun onDragBy(dx: Float, dy: Float) = Unit
         override fun onDragEnd() = Unit
-        override fun onBarSizeChanged(oldW: Int, oldH: Int, newW: Int, newH: Int) = Unit
     }
 
     @Test

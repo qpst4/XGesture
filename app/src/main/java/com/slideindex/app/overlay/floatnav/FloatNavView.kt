@@ -2,6 +2,7 @@ package com.slideindex.app.overlay.floatnav
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Outline
@@ -23,6 +24,7 @@ import com.slideindex.app.overlay.OverlayMaterialSpec
 import com.slideindex.app.overlay.OverlayPanelTheme
 import com.slideindex.app.overlay.setupBackgroundBlur
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.settings.AppThemeMode
 import com.slideindex.app.util.HapticHelper
 import kotlin.math.hypot
 import kotlin.math.min
@@ -36,10 +38,10 @@ import kotlin.math.roundToInt
  * `把手 + 返回 + 主屏 + 最近 + 关闭`，展开方向朝屏幕中心；右侧/右半边整体镜像，
  * 让把手始终在展开方向的起点。
  */
-@SuppressLint("ViewConstructor")
+@SuppressLint("ViewConstructor", "RtlHardcoded")
 internal class FloatNavView(
     context: Context,
-    private val appSettings: AppSettings,
+    private var appSettings: AppSettings,
     expandRight: Boolean,
     private val listener: Listener,
 ) : LinearLayout(context) {
@@ -51,22 +53,26 @@ internal class FloatNavView(
         fun onDragStart()
         fun onDragBy(dx: Float, dy: Float)
         fun onDragEnd()
-        fun onBarSizeChanged(oldW: Int, oldH: Int, newW: Int, newH: Int)
     }
 
     private val density = resources.displayMetrics.density
-    private val themeColors = OverlayPanelTheme.colors(context)
+    private var themeColors = OverlayPanelTheme.colors(resolveIsDark())
     private val keyViews = LinkedHashMap<FloatNavKey, FloatNavKeyView>()
     private var cornerRadiusPx = 0f
     private var hovered = FloatNavKey.NONE
     private var collapsed = false
+    private var animating = false
+    private var reordering = false
     private var expandRightDirection = expandRight
+    private val reorderRunnable = Runnable { applyChildOrder() }
 
     val isCollapsed: Boolean get() = collapsed
 
     init {
         orientation = HORIZONTAL
-        gravity = Gravity.CENTER_VERTICAL
+        // 这是物理侧边导航条，阿拉伯语等 RTL 语言下也不能把左右顺序翻过来。
+        layoutDirection = LAYOUT_DIRECTION_LTR
+        gravity = Gravity.CENTER_VERTICAL or if (expandRight) Gravity.LEFT else Gravity.RIGHT
         setPadding(dp(6), dp(6), dp(6), dp(6))
         minimumHeight = dp(56)
         isClickable = false
@@ -111,7 +117,7 @@ internal class FloatNavView(
     fun applyMaterial() {
         if (width <= 0 || height <= 0) return
         val spec = OverlayMaterialSpec.fromContext(context)
-        val isDark = OverlayPanelTheme.isDarkTheme(context)
+        val isDark = resolveIsDark()
         val corner = min(spec.cornerRadiusPx(density), height / 2f).coerceAtLeast(0f)
         cornerRadiusPx = corner
 
@@ -183,6 +189,32 @@ internal class FloatNavView(
         setHoveredKey(FloatNavKey.NONE)
     }
 
+    /** 宽度动画期间不要每帧重挂模糊背景，结束时统一 apply 一次。 */
+    fun setAnimating(value: Boolean) {
+        animating = value
+    }
+
+    fun collapsedWidthPx(): Int = dp(56)
+
+    /** 设置回流时实时刷新主题，不能继续用构造时的浅色 colors 快照。 */
+    fun updateSettings(settings: AppSettings) {
+        appSettings = settings
+        applyTheme()
+    }
+
+    fun applyTheme() {
+        themeColors = OverlayPanelTheme.colors(resolveIsDark())
+        keyViews.values.forEach { it.setColors(themeColors) }
+        applyMaterial()
+    }
+
+    private fun resolveIsDark(): Boolean {
+        val systemDark =
+            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+                Configuration.UI_MODE_NIGHT_YES
+        return AppThemeMode.fromId(appSettings.themeModeId).resolveIsDark(systemDark)
+    }
+
     fun toggleCollapsed() {
         setCollapsed(!collapsed)
     }
@@ -191,15 +223,33 @@ internal class FloatNavView(
     fun setExpandRight(value: Boolean) {
         if (expandRightDirection == value) return
         expandRightDirection = value
+        gravity = Gravity.CENTER_VERTICAL or if (value) Gravity.LEFT else Gravity.RIGHT
         clearHighlight()
-        val params = keyViews.mapValues { it.value.layoutParams }
-        removeAllViews()
-        orderKeys().forEach { key ->
-            val view = keyViews[key] ?: return@forEach
-            addView(view, params[key] ?: generateDefaultLayoutParams())
+        // 这个方法可能在把柄自己的 onTouch 里被调用；同步 removeAllViews 会重入
+        // cancelTouchTarget，先 post 到下一帧再重排。
+        if (isAttachedToWindow) {
+            removeCallbacks(reorderRunnable)
+            post(reorderRunnable)
+        } else {
+            applyChildOrder()
         }
-        requestLayout()
-        invalidate()
+    }
+
+    private fun applyChildOrder() {
+        if (reordering || keyViews.isEmpty()) return
+        reordering = true
+        try {
+            val params = keyViews.mapValues { it.value.layoutParams }
+            removeAllViews()
+            orderKeys().forEach { key ->
+                val view = keyViews[key] ?: return@forEach
+                addView(view, params[key] ?: generateDefaultLayoutParams())
+            }
+            requestLayout()
+            invalidate()
+        } finally {
+            reordering = false
+        }
     }
 
     private fun orderKeys(): List<FloatNavKey> = if (expandRightDirection) {
@@ -249,12 +299,14 @@ internal class FloatNavView(
         post { applyMaterial() }
     }
 
+    override fun onDetachedFromWindow() {
+        removeCallbacks(reorderRunnable)
+        super.onDetachedFromWindow()
+    }
+
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        applyMaterial()
-        if (oldw > 0 && oldh > 0 && (w != oldw || h != oldh)) {
-            listener.onBarSizeChanged(oldw, oldh, w, h)
-        }
+        if (!animating) applyMaterial()
     }
 
     private fun solidBackground(
@@ -338,7 +390,7 @@ internal class FloatNavView(
                     return true
                 }
                 MotionEvent.ACTION_CANCEL -> {
-                    if (moved) listener.onDragEnd()
+                    if (moved && !reordering) listener.onDragEnd()
                     moved = false
                     return true
                 }
@@ -355,7 +407,7 @@ internal class FloatNavView(
 private class FloatNavKeyView(
     context: Context,
     private val key: FloatNavKey,
-    private val colors: OverlayPanelTheme.Colors,
+    private var colors: OverlayPanelTheme.Colors,
 ) : View(context) {
 
     private val density = resources.displayMetrics.density
@@ -385,6 +437,12 @@ private class FloatNavKeyView(
     fun setHighlighted(value: Boolean) {
         if (highlighted == value) return
         highlighted = value
+        invalidate()
+    }
+
+    fun setColors(value: OverlayPanelTheme.Colors) {
+        if (colors == value) return
+        colors = value
         invalidate()
     }
 

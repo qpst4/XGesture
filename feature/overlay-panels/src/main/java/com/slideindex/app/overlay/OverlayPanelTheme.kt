@@ -35,7 +35,10 @@ object OverlayPanelTheme {
     }
 
     fun colors(context: Context): Colors =
-        if (isDarkTheme(context)) dark() else light()
+        colors(isDarkTheme(context))
+
+    fun colors(isDark: Boolean): Colors =
+        if (isDark) dark() else light()
 
     private fun light() = Colors(
         panelBackground = Color.rgb(248, 249, 252),
