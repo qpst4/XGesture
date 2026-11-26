@@ -13,9 +13,11 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewTreeObserver
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isNotEmpty
 import android.view.animation.DecelerateInterpolator
+import com.slideindex.app.activity.findByIntentUri
 import android.widget.FrameLayout
 import android.graphics.Path
 import androidx.core.view.isNotEmpty
@@ -115,6 +117,18 @@ class WidgetCardContainer(
               val appSettings = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsSnapshot?.invoke(context)
                 ?: com.slideindex.app.settings.AppSettings()
               val shape = appSettings.widgetPanelIconShape.resolve(appSettings.globalIconShape)
+              // 「我的直达」/图片类直达的图标在应用内直达目录里：先按目录解析，
+              // 否则会按启动 Intent 的包名（我们自己的预览 Activity）取成 XGesture 图标。
+              if (action is com.slideindex.app.gesture.GestureAction.LaunchShortcut) {
+                com.slideindex.app.activity.ManagedShortcutIconResolver
+                  .drawableForLaunchShortcut(context, action, appSettings.activityShortcuts)
+                  ?.let { drawable ->
+                    val bitmap = drawable.toBitmap(iconSizePx, iconSizePx)
+                    val normalized = com.slideindex.app.overlay.layout.IconShapeNormalizer
+                      .normalizeBitmap(bitmap, shape)
+                    return@apply setImageDrawable(normalized.toDrawable(resources))
+                  }
+              }
               val plateShape = when (shape) {
                 com.slideindex.app.overlay.layout.FvIconShape.CIRCLE -> com.slideindex.app.util.GestureActionPlateShape.CIRCLE
                 else -> com.slideindex.app.util.GestureActionPlateShape.ROUNDED_RECT
@@ -130,8 +144,51 @@ class WidgetCardContainer(
               val normalizedBitmap = com.slideindex.app.overlay.layout.IconShapeNormalizer.normalizeBitmap(rawBitmap, shape)
               normalizedBitmap.toDrawable(resources)
             } else null
-          } else if (item.itemType == ITEM_TYPE_SHORTCUT && item.shortcutId.isNotEmpty()) {
-            runCatching {
+          } else if (item.itemType == ITEM_TYPE_SHORTCUT) {
+            // 「创建快捷方式」不在应用内直达目录里：先查按身份存的图标覆盖表。
+            val overrideKey = item.intentUri.takeIf { it.isNotBlank() }?.let { "intent:$it" }
+              ?: "{item.packageName}/{item.className}"
+            com.slideindex.app.activity.ShortcutIconOverrideStore.iconPath(context, overrideKey)
+              ?.let { path ->
+                com.slideindex.app.activity.ShortcutIconStorage.loadBitmap(context, path)?.let { bitmap ->
+                  val iconSizePx = (44 * density).roundToInt()
+                  val shape = (com.slideindex.app.overlay.panels.PanelRuntimeHooks
+                    .settingsSnapshot?.invoke(context)
+                    ?: com.slideindex.app.settings.AppSettings())
+                    .widgetPanelIconShape
+                    .resolve((com.slideindex.app.overlay.panels.PanelRuntimeHooks
+                      .settingsSnapshot?.invoke(context)
+                      ?: com.slideindex.app.settings.AppSettings()).globalIconShape)
+                  val normalized = com.slideindex.app.overlay.layout.IconShapeNormalizer
+                    .normalizeBitmap(bitmap, shape)
+                  return@apply setImageDrawable(normalized.toDrawable(resources))
+                }
+              }
+            val appSettings = com.slideindex.app.overlay.panels.PanelRuntimeHooks
+              .settingsSnapshot?.invoke(context)
+              ?: com.slideindex.app.settings.AppSettings()
+            val managed = appSettings.activityShortcuts
+              .findByIntentUri(item.intentUri)
+              ?: appSettings.activityShortcuts.firstOrNull {
+                it.packageName == item.packageName &&
+                  it.shortcutId == item.shortcutId &&
+                  item.shortcutId.isNotBlank()
+              }
+            if (managed != null) {
+              com.slideindex.app.activity.ManagedShortcutIconResolver
+                .drawableForManaged(context, managed)
+                ?.let { drawable ->
+                  val iconSizePx = (44 * density).roundToInt()
+                  val shape = appSettings.widgetPanelIconShape.resolve(appSettings.globalIconShape)
+                  val bitmap = drawable.toBitmap(iconSizePx, iconSizePx)
+                  val normalized = com.slideindex.app.overlay.layout.IconShapeNormalizer
+                    .normalizeBitmap(bitmap, shape)
+                  return@apply setImageDrawable(normalized.toDrawable(resources))
+                }
+            }
+            if (item.shortcutId.isEmpty()) {
+              null
+            } else runCatching {
               val launcherApps = context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as? android.content.pm.LauncherApps
               val query = android.content.pm.LauncherApps.ShortcutQuery().apply {
                 setPackage(item.packageName)

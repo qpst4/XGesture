@@ -198,6 +198,10 @@ fun List<ActivityShortcut>.findForQuickLauncherItem(item: QuickLauncherItem): Ac
     return findByIntentEquivalence(rawIntent)
 }
 
+/** 按 intent URI（规范化后）在目录里找快捷方式；图片/文件直达的 extras 编码差异也能命中。 */
+fun List<ActivityShortcut>.findByIntentUri(rawIntentUri: String?): ActivityShortcut? =
+    findByIntentEquivalence(rawIntentUri)
+
 fun activityShortcutFromQuickLauncherItem(item: QuickLauncherItem): ActivityShortcut? {
     if (item.type != QuickLauncherItemType.SHORTCUT) return null
     QuickLauncherItemCodec.parseIntentListPayload(item.payload)?.let { uris ->
