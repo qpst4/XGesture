@@ -153,7 +153,11 @@ internal class SlideIndexAccessibilityWatchdog(
 
     companion object {
         private const val SCREENSHOT_DELAY_MS = 400L
-        /** Keep overlays hidden until the system capture finishes. */
-        private const val SCREENSHOT_RESTORE_DELAY_MS = 800L
+        /**
+         * 系统截图没有完成回调，只能按"最慢的取帧"兜底：800ms 在慢 ROM 上会早于真正拍摄，
+         * 恢复出来的悬浮球会被拍进图里，因此放宽到 2s。
+         * 隐藏总时长 = [SCREENSHOT_DELAY_MS] + 本值（约 2.4s）。
+         */
+        private const val SCREENSHOT_RESTORE_DELAY_MS = 2_000L
     }
 }
