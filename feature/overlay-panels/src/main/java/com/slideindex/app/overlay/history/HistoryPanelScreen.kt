@@ -1392,40 +1392,10 @@ fun HistoryPanelScreen(
                                 onManageTags = openTagManager,
                                 onStarredToggled = viewModel::toggleStarredFilter,
                             )
-                            HistoryPanelTab.Clipboard -> Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Box(modifier = Modifier.weight(1f)) {
-                                    HistoryClipboardFilterChips(
-                                        selected = clipboardFilter,
-                                        onSelected = viewModel::setClipboardFilter,
-                                    )
-                                }
-                                Text(
-                                    text = stringResource(
-                                        if (clipboardSelectionActive) {
-                                            R.string.clipboard_float_selection_done
-                                        } else {
-                                            R.string.clipboard_float_multi_select
-                                        },
-                                    ),
-                                    style = MiuixTheme.textStyles.body2,
-                                    color = scheme.primary,
-                                    modifier = Modifier
-                                        .clickable(
-                                            interactionSource = remember {
-                                                MutableInteractionSource()
-                                            },
-                                            indication = null,
-                                        ) {
-                                            clipboardSelectionActive = !clipboardSelectionActive
-                                            if (!clipboardSelectionActive) {
-                                                selectedClipboardIds = emptySet()
-                                            }
-                                        }
-                                        .padding(start = 8.dp),
-                                )
-                            }
+                            HistoryPanelTab.Clipboard -> HistoryClipboardFilterChips(
+                                selected = clipboardFilter,
+                                onSelected = viewModel::setClipboardFilter,
+                            )
                         }
                     },
                 )
@@ -1501,6 +1471,10 @@ fun HistoryPanelScreen(
                                 onListScrolledChange = { listScrolled = it },
                                 selectionActive = clipboardSelectionActive,
                                 selectedIds = selectedClipboardIds,
+                                onEnterSelection = { id ->
+                                    clipboardSelectionActive = true
+                                    selectedClipboardIds = setOf(id)
+                                },
                                 onToggleSelection = { id ->
                                     selectedClipboardIds = if (id in selectedClipboardIds) {
                                         selectedClipboardIds - id
@@ -2397,6 +2371,7 @@ private fun HistoryClipboardTabBody(
     /** 多选态：为 true 时点击卡片改为勾选。 */
     selectionActive: Boolean = false,
     selectedIds: Set<String> = emptySet(),
+    onEnterSelection: (String) -> Unit = {},
     onToggleSelection: (String) -> Unit = {},
     onSelectAll: () -> Unit = {},
     onDeleteSelected: (Set<String>) -> Unit = {},
@@ -2581,6 +2556,7 @@ private fun HistoryClipboardTabBody(
                             ClipboardThumbnailCache.evictEntry(entry)
                             scope.launch { clipboardRepo?.delete(entry.id) }
                         },
+                        onEnterSelection = { onEnterSelection(entry.id) },
                     )
                     if (selectionActive) {
                         Box(
