@@ -21,7 +21,6 @@ import com.slideindex.app.overlay.OverlayBlurGate
 import com.slideindex.app.overlay.OverlayGlassForegroundDrawable
 import com.slideindex.app.overlay.OverlayMaterialSpec
 import com.slideindex.app.overlay.OverlayPanelTheme
-import com.slideindex.app.overlay.PanelSide
 import com.slideindex.app.overlay.setupBackgroundBlur
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.util.HapticHelper
@@ -34,13 +33,14 @@ import kotlin.math.roundToInt
  *
  * 视觉上是一块和项目其他悬浮面板同材质的胶囊：系统局部模糊 + 全局不透明度 + 圆角 +
  * 高光/描边；模糊不可用时退化为实色底 + 细描边。布局固定为
- * `把手 + 返回 + 主屏 + 最近 + 关闭`，右侧边缘整体镜像，让返回键始终最靠近拇指。
+ * `把手 + 返回 + 主屏 + 最近 + 关闭`，展开方向朝屏幕中心；右侧/右半边整体镜像，
+ * 让把手始终在展开方向的起点。
  */
 @SuppressLint("ViewConstructor")
 internal class FloatNavView(
     context: Context,
     private val appSettings: AppSettings,
-    side: PanelSide,
+    expandRight: Boolean,
     private val listener: Listener,
 ) : LinearLayout(context) {
 
@@ -57,10 +57,10 @@ internal class FloatNavView(
     private val density = resources.displayMetrics.density
     private val themeColors = OverlayPanelTheme.colors(context)
     private val keyViews = LinkedHashMap<FloatNavKey, FloatNavKeyView>()
-    private val chevronRight = side != PanelSide.RIGHT
     private var cornerRadiusPx = 0f
     private var hovered = FloatNavKey.NONE
     private var collapsed = false
+    private var expandRightDirection = expandRight
 
     val isCollapsed: Boolean get() = collapsed
 
@@ -79,25 +79,8 @@ internal class FloatNavView(
             }
         }
 
-        // 右侧边缘：从右往左依次是 把手 / 返回 / 主屏 / 最近 / 关闭。
-        val order = if (side == PanelSide.RIGHT) {
-            listOf(
-                FloatNavKey.CLOSE,
-                FloatNavKey.RECENTS,
-                FloatNavKey.HOME,
-                FloatNavKey.BACK,
-                FloatNavKey.GRIP,
-            )
-        } else {
-            listOf(
-                FloatNavKey.GRIP,
-                FloatNavKey.BACK,
-                FloatNavKey.HOME,
-                FloatNavKey.RECENTS,
-                FloatNavKey.CLOSE,
-            )
-        }
-        order.forEach { key ->
+        // 展开方向朝屏幕中心：左侧/左半边把柄在左端，右侧/右半边把柄在右端。
+        orderKeys().forEach { key ->
             val keyView = FloatNavKeyView(context, key, themeColors).apply {
                 contentDescription = descriptionFor(key)
                 if (key == FloatNavKey.GRIP) {
@@ -204,6 +187,39 @@ internal class FloatNavView(
         setCollapsed(!collapsed)
     }
 
+    /** 动态换展开方向：不重建 View，只把现有子 View 按新顺序挂回去。 */
+    fun setExpandRight(value: Boolean) {
+        if (expandRightDirection == value) return
+        expandRightDirection = value
+        clearHighlight()
+        val params = keyViews.mapValues { it.value.layoutParams }
+        removeAllViews()
+        orderKeys().forEach { key ->
+            val view = keyViews[key] ?: return@forEach
+            addView(view, params[key] ?: generateDefaultLayoutParams())
+        }
+        requestLayout()
+        invalidate()
+    }
+
+    private fun orderKeys(): List<FloatNavKey> = if (expandRightDirection) {
+        listOf(
+            FloatNavKey.GRIP,
+            FloatNavKey.BACK,
+            FloatNavKey.HOME,
+            FloatNavKey.RECENTS,
+            FloatNavKey.CLOSE,
+        )
+    } else {
+        listOf(
+            FloatNavKey.CLOSE,
+            FloatNavKey.RECENTS,
+            FloatNavKey.HOME,
+            FloatNavKey.BACK,
+            FloatNavKey.GRIP,
+        )
+    }
+
     /**
      * 收起时只留把柄，并把把柄加宽成一个 56×56dp 的圆角方块；展开时恢复完整按钮条。
      * 收起/展开不改变高度，窗口只需按把柄所在边重新贴边。
@@ -220,7 +236,6 @@ internal class FloatNavView(
                 view.contentDescription = context.getString(
                     if (value) R.string.float_nav_expand else R.string.float_nav_drag,
                 )
-                view.setCollapsedIndicator(value, chevronRight)
             } else {
                 view.visibility = if (value) GONE else VISIBLE
             }
@@ -357,8 +372,6 @@ private class FloatNavKeyView(
     private val highlightRect = RectF()
     private val gripColumns = intArrayOf(-1, 1)
     private val gripRows = intArrayOf(-1, 0, 1)
-    private var collapsedIndicator = false
-    private var indicatorRight = true
 
     var highlighted = false
         private set
@@ -372,13 +385,6 @@ private class FloatNavKeyView(
     fun setHighlighted(value: Boolean) {
         if (highlighted == value) return
         highlighted = value
-        invalidate()
-    }
-
-    fun setCollapsedIndicator(collapsed: Boolean, chevronRight: Boolean) {
-        if (collapsedIndicator == collapsed && indicatorRight == chevronRight) return
-        collapsedIndicator = collapsed
-        indicatorRight = chevronRight
         invalidate()
     }
 
@@ -447,16 +453,6 @@ private class FloatNavKeyView(
                             fillPaint,
                         )
                     }
-                }
-                if (collapsedIndicator) {
-                    // 收起态给一个朝展开方向的细箭头，提示“点一下会展开”。
-                    val x = cx + if (indicatorRight) 13f * density else -13f * density
-                    val direction = if (indicatorRight) 1f else -1f
-                    path.reset()
-                    path.moveTo(x - direction * 2f * density, cy - 3.5f * density)
-                    path.lineTo(x + direction * 1.6f * density, cy)
-                    path.lineTo(x - direction * 2f * density, cy + 3.5f * density)
-                    canvas.drawPath(path, strokePaint)
                 }
             }
             FloatNavKey.NONE -> Unit

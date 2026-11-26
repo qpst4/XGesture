@@ -46,6 +46,7 @@ object FloatNavOverlayWindow {
     private var hostContext: Context? = null
     private var settings: AppSettings? = null
     private var side: PanelSide = PanelSide.RIGHT
+    private var expandRight = true
 
     private var tracking = false
     private var armed = false
@@ -86,6 +87,11 @@ object FloatNavOverlayWindow {
             this.settings = settings
             this.side = side ?: this.side
             if (continuousTracking) {
+                val desiredExpandRight = computeExpandRight(this.side, anchorRawX)
+                if (desiredExpandRight != expandRight) {
+                    expandRight = desiredExpandRight
+                    root?.setExpandRight(desiredExpandRight)
+                }
                 moveToAnchor(anchorRawX, anchorRawY)
                 startTracking(anchorRawX, anchorRawY)
                 return true
@@ -107,36 +113,35 @@ object FloatNavOverlayWindow {
         screenHeight = metrics.second.coerceAtLeast(1)
         val density = host.resources.displayMetrics.density
         val resolvedSide = side ?: inferSide(anchorRawX, anchorRawY)
+        val resolvedExpandRight = computeExpandRight(resolvedSide, anchorRawX)
         val edgeInset = computeEdgeInset(settings, resolvedSide, density)
         val systemInsets = computeSystemInsets(wm, density, resolvedSide, edgeInset)
         edgeInsetPx = edgeInset
         topInsetPx = systemInsets.first
         bottomInsetPx = systemInsets.second
         this.side = resolvedSide
+        this.expandRight = resolvedExpandRight
         this.settings = settings
         hostContext = host
 
         val view = FloatNavView(
             context = host,
             appSettings = settings,
-            side = resolvedSide,
+            expandRight = resolvedExpandRight,
             listener = viewListener,
         )
         val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         view.measure(unspecified, unspecified)
         val barWidth = view.measuredWidth.coerceAtLeast(1)
         val barHeight = view.measuredHeight.coerceAtLeast(1)
-        val position = FloatNavGeometry.computePosition(
-            screenWidthPx = screenWidth,
-            screenHeightPx = screenHeight,
-            barWidthPx = barWidth,
-            barHeightPx = barHeight,
+        val position = positionFor(
             side = resolvedSide,
             anchorX = anchorRawX ?: (screenWidth / 2f),
             anchorY = anchorRawY ?: (screenHeight / 2f),
-            edgeInsetPx = edgeInsetPx,
-            topInsetPx = topInsetPx,
-            bottomInsetPx = bottomInsetPx,
+            barWidth = barWidth,
+            barHeight = barHeight,
+            density = density,
+            collapsed = false,
         )
         val lp = buildLayoutParams(host, position)
         return runCatching {
@@ -294,23 +299,63 @@ object FloatNavOverlayWindow {
         edgeInsetPx = edgeInset
         topInsetPx = systemInsets.first
         bottomInsetPx = systemInsets.second
-        val position = FloatNavGeometry.computePosition(
-            screenWidthPx = screenWidth,
-            screenHeightPx = screenHeight,
-            barWidthPx = view.width.coerceAtLeast(1),
-            barHeightPx = view.height.coerceAtLeast(1),
+        val gripOffset = gripOffsetPx(density, view.isCollapsed)
+        val gripCenterX = if (expandRight) {
+            lp.x + gripOffset
+        } else {
+            lp.x + view.width.coerceAtLeast(1) - gripOffset
+        }
+        val position = positionFor(
             side = resolvedSide,
-            anchorX = lp.x + view.width / 2f,
-            anchorY = lp.y + view.height / 2f,
-            edgeInsetPx = edgeInsetPx,
-            topInsetPx = topInsetPx,
-            bottomInsetPx = bottomInsetPx,
+            anchorX = gripCenterX,
+            anchorY = lp.y + view.height.coerceAtLeast(1) / 2f,
+            barWidth = view.width.coerceAtLeast(1),
+            barHeight = view.height.coerceAtLeast(1),
+            density = density,
+            collapsed = view.isCollapsed,
         )
         lp.x = position.x
         lp.y = position.y
         runCatching { wm.updateViewLayout(view, lp) }
         view.applyMaterial()
     }
+
+    /**
+     * 底/顶边：把把柄中心放到触发点 X，按钮条朝屏幕中心展开。
+     * 左/右边缘仍由 [FloatNavGeometry.computePosition] 贴边，X 不参与。
+     */
+    private fun positionFor(
+        side: PanelSide,
+        anchorX: Float,
+        anchorY: Float,
+        barWidth: Int,
+        barHeight: Int,
+        density: Float,
+        collapsed: Boolean,
+    ): FloatNavPosition {
+        val base = FloatNavGeometry.computePosition(
+            screenWidthPx = screenWidth,
+            screenHeightPx = screenHeight,
+            barWidthPx = barWidth,
+            barHeightPx = barHeight,
+            side = side,
+            anchorX = anchorX,
+            anchorY = anchorY,
+            edgeInsetPx = edgeInsetPx,
+            topInsetPx = topInsetPx,
+            bottomInsetPx = bottomInsetPx,
+        )
+        if (side != PanelSide.BOTTOM && side != PanelSide.TOP) return base
+        val offset = gripOffsetPx(density, collapsed)
+        val rawX = if (expandRight) anchorX - offset else anchorX - barWidth + offset
+        val minX = edgeInsetPx
+        val maxX = (screenWidth - barWidth - edgeInsetPx).coerceAtLeast(minX)
+        return base.copy(x = rawX.roundToInt().coerceIn(minX, maxX))
+    }
+
+    /** 把柄中心到窗口展开侧边缘的距离：展开时 22dp，收起时 28dp。 */
+    private fun gripOffsetPx(density: Float, collapsed: Boolean): Float =
+        (if (collapsed) 28f else 22f) * density
 
     private fun startTracking(anchorRawX: Float?, anchorRawY: Float?) {
         val host = hostContext ?: return
@@ -351,17 +396,14 @@ object FloatNavOverlayWindow {
         edgeInsetPx = edgeInset
         topInsetPx = systemInsets.first
         bottomInsetPx = systemInsets.second
-        val position = FloatNavGeometry.computePosition(
-            screenWidthPx = screenWidth,
-            screenHeightPx = screenHeight,
-            barWidthPx = view.width.coerceAtLeast(1),
-            barHeightPx = view.height.coerceAtLeast(1),
+        val position = positionFor(
             side = side,
             anchorX = anchorRawX ?: lp.x + view.width / 2f,
             anchorY = anchorRawY ?: lp.y + view.height / 2f,
-            edgeInsetPx = edgeInsetPx,
-            topInsetPx = topInsetPx,
-            bottomInsetPx = bottomInsetPx,
+            barWidth = view.width.coerceAtLeast(1),
+            barHeight = view.height.coerceAtLeast(1),
+            density = density,
+            collapsed = view.isCollapsed,
         )
         lp.x = position.x
         lp.y = position.y
@@ -419,8 +461,8 @@ object FloatNavOverlayWindow {
             val lp = layoutParams ?: return
             view.post {
                 if (root !== view || layoutParams !== lp) return@post
-                // 右侧边缘的把柄在最右边：收起/展开时固定窗右边，别让把柄横跳。
-                if (side == PanelSide.RIGHT) {
+                // 把柄在展开方向的起点：展开向右时固定左边，向左时固定右边。
+                if (!expandRight) {
                     lp.x += oldW - newW
                 }
                 // 把柄在条内垂直居中；高度变化时保持把柄中心不动。
@@ -478,6 +520,16 @@ object FloatNavOverlayWindow {
             anchorRawY < screenHeight * 0.22f -> PanelSide.TOP
             anchorRawX < screenWidth / 2f -> PanelSide.LEFT
             else -> PanelSide.RIGHT
+        }
+    }
+
+    /** 展开方向朝屏幕中心：左侧→右，右侧→左；上/下按触发点 X 落在哪半边。 */
+    private fun computeExpandRight(side: PanelSide, anchorRawX: Float?): Boolean = when (side) {
+        PanelSide.LEFT -> true
+        PanelSide.RIGHT -> false
+        PanelSide.TOP, PanelSide.BOTTOM -> {
+            val x = anchorRawX ?: (screenWidth / 2f)
+            x < screenWidth / 2f
         }
     }
 

@@ -1,7 +1,7 @@
 package com.slideindex.app.overlay.floatnav
 
 import android.view.View
-import com.slideindex.app.overlay.PanelSide
+import com.slideindex.app.R
 import com.slideindex.app.settings.AppSettings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -31,7 +31,7 @@ class FloatNavViewCollapseTest {
         val view = FloatNavView(
             context = RuntimeEnvironment.getApplication(),
             appSettings = AppSettings(),
-            side = PanelSide.LEFT,
+            expandRight = true,
             listener = listener,
         )
         val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -53,5 +53,47 @@ class FloatNavViewCollapseTest {
         assertFalse(view.isCollapsed)
         assertEquals(expandedWidth, view.measuredWidth)
         assertEquals(View.VISIBLE, view.getChildAt(1).visibility)
+    }
+
+    @Test
+    fun expandLeft_putsGripAtRightEnd() {
+        val context = RuntimeEnvironment.getApplication()
+        val view = FloatNavView(
+            context = context,
+            appSettings = AppSettings(),
+            expandRight = false,
+            listener = listener,
+        )
+        val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        view.measure(unspecified, unspecified)
+
+        assertEquals(context.getString(R.string.float_nav_close), view.getChildAt(0).contentDescription)
+        assertEquals(
+            context.getString(R.string.float_nav_drag),
+            view.getChildAt(view.childCount - 1).contentDescription,
+        )
+    }
+
+    @Test
+    fun setExpandRight_reordersLiveView() {
+        val context = RuntimeEnvironment.getApplication()
+        val view = FloatNavView(
+            context = context,
+            appSettings = AppSettings(),
+            expandRight = true,
+            listener = listener,
+        )
+        val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        view.measure(unspecified, unspecified)
+        assertEquals(context.getString(R.string.float_nav_drag), view.getChildAt(0).contentDescription)
+
+        view.setExpandRight(false)
+        view.measure(unspecified, unspecified)
+
+        assertEquals(context.getString(R.string.float_nav_close), view.getChildAt(0).contentDescription)
+        assertEquals(
+            context.getString(R.string.float_nav_drag),
+            view.getChildAt(view.childCount - 1).contentDescription,
+        )
     }
 }
