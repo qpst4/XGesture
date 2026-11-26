@@ -97,4 +97,14 @@
     <string name="magnifier_fullscreen_scale_summary">スティック操作や長押しジェスチャーで継続的にビューを動かすときの全画面倍率</string>
     <string name="magnifier_window_scale_title">部分拡大倍率（ウィンドウモード）</string>
     <string name="magnifier_window_scale_summary">タップや指を離したときに起動するフローティングウィンドウ拡大鏡の倍率</string>
+    <string name="input_method_target_all">すべて</string>
+    <string name="cycle_input_method_target_title">対象の入力メソッド</string>
+    <string name="cycle_input_method_target_summary_all">すべて：有効な入力メソッドを順に切り替えます</string>
+    <string name="cycle_input_method_target_summary">現在の入力メソッドと交互に切り替え：%1$s</string>
+    <string name="switch_input_method_target_title">対象の入力メソッド</string>
+    <string name="switch_input_method_target_picker">選択ダイアログを表示</string>
+    <string name="switch_input_method_target_summary_picker">システムの入力メソッド選択ダイアログを表示します</string>
+    <string name="switch_input_method_target_summary">直接切り替え：%1$s</string>
+    <string name="cycle_input_method_rotation_title">ローテーション対象の入力メソッド</string>
+    <string name="cycle_input_method_rotation_tip">対象が「すべて」のときのみ有効です。チェックを外すと切り替え時にその入力メソッドをスキップします。</string>
 </resources>

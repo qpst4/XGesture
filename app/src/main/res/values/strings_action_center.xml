@@ -97,4 +97,14 @@
     <string name="magnifier_fullscreen_scale_summary">Magnification scale used for continuous panning with joysticks or held gestures</string>
     <string name="magnifier_window_scale_title">Window Zoom Scale (Windowed mode)</string>
     <string name="magnifier_window_scale_summary">Magnification scale used for floating window magnifier triggered by taps</string>
+    <string name="input_method_target_all">All</string>
+    <string name="cycle_input_method_target_title">Target input method</string>
+    <string name="cycle_input_method_target_summary_all">All: cycle through enabled input methods</string>
+    <string name="cycle_input_method_target_summary">Toggle with the current input method: %1$s</string>
+    <string name="switch_input_method_target_title">Target input method</string>
+    <string name="switch_input_method_target_picker">Show picker</string>
+    <string name="switch_input_method_target_summary_picker">Show the system input method picker</string>
+    <string name="switch_input_method_target_summary">Switch directly to: %1$s</string>
+    <string name="cycle_input_method_rotation_title">Input methods in rotation</string>
+    <string name="cycle_input_method_rotation_tip">Only applies when the target is All. Uncheck an input method to skip it while cycling.</string>
 </resources>

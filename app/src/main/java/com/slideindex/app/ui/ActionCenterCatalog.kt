@@ -125,6 +125,9 @@ object ActionCenterCatalog {
         GestureActionType.PAGE_SCROLL,
         GestureActionType.REMIND,
         GestureActionType.MAGNIFIER,
+        // 目标输入法（循环切换 / 直切）在详情页内联配置，没有独立导航入口。
+        GestureActionType.CYCLE_INPUT_METHOD,
+        GestureActionType.SWITCH_INPUT_METHOD,
     )
 
     /** 只在特定入口里有意义的动作。 */

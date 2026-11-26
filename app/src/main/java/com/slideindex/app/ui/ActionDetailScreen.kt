@@ -52,7 +52,11 @@ import com.slideindex.app.pagescroll.PageScrollPrefs
 import com.slideindex.app.pagescroll.PageScrollSettings
 import com.slideindex.app.settings.AppCarouselSwitcherSettings
 import com.slideindex.app.settings.TaskSwitcherCloseMode
+import com.slideindex.app.util.InputMethodActionPrefs
+import com.slideindex.app.util.InputMethodCatalog
 import com.slideindex.app.ui.settings.components.SettingDropdownRow
+import com.slideindex.app.ui.settings.components.SettingCheckboxRow
+import com.slideindex.app.ui.settings.components.settingsLazyTipCard
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_01
 import com.slideindex.app.ui.settings.components.SettingsSliderRow
@@ -108,6 +112,8 @@ fun ActionDetailScreen(
     val infoTitle = stringResource(R.string.action_center_info)
     val introTitle = stringResource(R.string.action_center_intro)
     val settingsTitle = stringResource(R.string.action_center_settings)
+    val cycleRotationTitle = stringResource(R.string.cycle_input_method_rotation_title)
+    val cycleRotationTip = stringResource(R.string.cycle_input_method_rotation_tip)
     val openSettingsTitle = stringResource(R.string.action_center_open_settings)
     val settingsDesc = stringResource(R.string.action_center_settings_desc)
     val deeplinkTitle = stringResource(R.string.action_center_deeplink)
@@ -137,6 +143,25 @@ fun ActionDetailScreen(
     }
     var magnifierWindowScale by remember(context) {
         mutableFloatStateOf(MagnifierPrefs.readWindowScale(context))
+    }
+    // 输入法动作的配置：只在对应详情页查询，其它动作不白跑系统查询。
+    val enabledInputMethods = remember(context, entry.type) {
+        if (entry.type == GestureActionType.CYCLE_INPUT_METHOD ||
+            entry.type == GestureActionType.SWITCH_INPUT_METHOD
+        ) {
+            InputMethodCatalog.enabled(context)
+        } else {
+            emptyList()
+        }
+    }
+    var cycleTargetIme by remember(context) {
+        mutableStateOf(InputMethodActionPrefs.readCycleTarget(context))
+    }
+    var switchTargetIme by remember(context) {
+        mutableStateOf(InputMethodActionPrefs.readSwitchTarget(context))
+    }
+    var cycleExcludedImeIds by remember(context) {
+        mutableStateOf(InputMethodActionPrefs.readCycleExcluded(context))
     }
     val taskWidth = taskSwitcherWidthDp ?: 226
 
@@ -700,6 +725,72 @@ fun ActionDetailScreen(
                             },
                         )
                     }
+                    entry.type == GestureActionType.CYCLE_INPUT_METHOD -> add(
+                        settingsCardScopeItem("cycle-input-method-target") {
+                            val targetIndex = enabledInputMethods.indexOfFirst { it.id == cycleTargetIme }
+                            val selectedIndex = if (targetIndex >= 0) targetIndex + 1 else 0
+                            val targetLabel = enabledInputMethods.getOrNull(targetIndex)?.label
+                            SettingDropdownRow(
+                                title = stringResource(R.string.cycle_input_method_target_title),
+                                subtitle = if (targetLabel == null) {
+                                    stringResource(R.string.cycle_input_method_target_summary_all)
+                                } else {
+                                    stringResource(
+                                        R.string.cycle_input_method_target_summary,
+                                        targetLabel,
+                                    )
+                                },
+                                items = listOf(stringResource(R.string.input_method_target_all)) +
+                                    enabledInputMethods.map { it.label },
+                                selectedIndex = selectedIndex,
+                                enabled = enabledInputMethods.isNotEmpty(),
+                                onSelectedIndexChange = { index ->
+                                    val newTarget = if (index <= 0) {
+                                        ""
+                                    } else {
+                                        enabledInputMethods.getOrNull(index - 1)?.id.orEmpty()
+                                    }
+                                    if (newTarget != cycleTargetIme) {
+                                        cycleTargetIme = newTarget
+                                        InputMethodActionPrefs.writeCycleTarget(context, newTarget)
+                                    }
+                                },
+                            )
+                        },
+                    )
+                    entry.type == GestureActionType.SWITCH_INPUT_METHOD -> add(
+                        settingsCardScopeItem("switch-input-method-target") {
+                            val targetIndex = enabledInputMethods.indexOfFirst { it.id == switchTargetIme }
+                            val selectedIndex = if (targetIndex >= 0) targetIndex + 1 else 0
+                            val targetLabel = enabledInputMethods.getOrNull(targetIndex)?.label
+                            SettingDropdownRow(
+                                title = stringResource(R.string.switch_input_method_target_title),
+                                subtitle = if (targetLabel == null) {
+                                    stringResource(R.string.switch_input_method_target_summary_picker)
+                                } else {
+                                    stringResource(
+                                        R.string.switch_input_method_target_summary,
+                                        targetLabel,
+                                    )
+                                },
+                                items = listOf(
+                                    stringResource(R.string.switch_input_method_target_picker),
+                                ) + enabledInputMethods.map { it.label },
+                                selectedIndex = selectedIndex,
+                                onSelectedIndexChange = { index ->
+                                    val newTarget = if (index <= 0) {
+                                        ""
+                                    } else {
+                                        enabledInputMethods.getOrNull(index - 1)?.id.orEmpty()
+                                    }
+                                    if (newTarget != switchTargetIme) {
+                                        switchTargetIme = newTarget
+                                        InputMethodActionPrefs.writeSwitchTarget(context, newTarget)
+                                    }
+                                },
+                            )
+                        },
+                    )
                     openSettings != null -> add(
                         settingsCardScopeItem("settings") {
                             SettingNavigationRow(
@@ -729,6 +820,38 @@ fun ActionDetailScreen(
                 }
             },
         )
+
+        // 「全部」轮换的排除列表：只影响轮换；明确指定目标输入法时不受影响。
+        if (entry.type == GestureActionType.CYCLE_INPUT_METHOD && enabledInputMethods.size > 1) {
+            settingsLazySmallTitle(
+                key = "cycle-input-method-rotation-title",
+                title = cycleRotationTitle,
+            )
+            settingsLazyTipCard(
+                key = "cycle-input-method-rotation-tip",
+                text = cycleRotationTip,
+            )
+            groupedCardItems(
+                keyPrefix = "cycle-input-method-rotation",
+                items = enabledInputMethods.map { ime ->
+                    settingsCardScopeItem("cycle-input-method-rotation-${ime.id}") {
+                        SettingCheckboxRow(
+                            title = ime.label,
+                            checked = ime.id !in cycleExcludedImeIds,
+                            onCheckedChange = { checked ->
+                                val updated = if (checked) {
+                                    cycleExcludedImeIds - ime.id
+                                } else {
+                                    cycleExcludedImeIds + ime.id
+                                }
+                                cycleExcludedImeIds = updated
+                                InputMethodActionPrefs.writeCycleExcluded(context, updated)
+                            },
+                        )
+                    }
+                },
+            )
+        }
     }
 }
 

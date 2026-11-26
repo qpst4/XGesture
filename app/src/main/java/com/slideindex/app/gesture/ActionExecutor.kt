@@ -533,7 +533,15 @@ class ActionExecutor(
                 com.slideindex.app.util.BrightnessControlHelper
                     .applyAutoBrightness(context, action.mode) != null
             }
-            GestureAction.SwitchInputMethod -> InputMethodHelper.switchInputMethod(context)
+            GestureAction.SwitchInputMethod -> {
+                // 配置了具体输入法就直切；没配置（或目标已卸载）时保持原来的「弹系统选择器」。
+                val targetImeId = com.slideindex.app.util.InputMethodActionPrefs.readSwitchTarget(context)
+                if (targetImeId.isBlank()) {
+                    InputMethodHelper.switchInputMethod(context)
+                } else {
+                    com.slideindex.app.util.CycleKeyboardHelper.switchToInputMethod(context, targetImeId)
+                }
+            }
             GestureAction.CycleInputMethod -> com.slideindex.app.util.CycleKeyboardHelper.cycleKeyboard(context)
             GestureAction.MicrophoneMenu -> {
                 com.slideindex.app.overlay.MicrophoneControlOverlay.show(context)

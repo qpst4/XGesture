@@ -97,4 +97,14 @@
     <string name="magnifier_fullscreen_scale_summary">Escala de ampliación a pantalla completa al desplazar la vista de forma continua con el joystick o gestos mantenidos</string>
     <string name="magnifier_window_scale_title">Escala de ampliación local (modo ventana)</string>
     <string name="magnifier_window_scale_summary">Escala de la lupa en ventana flotante que se activa al tocar o al levantar el dedo</string>
+    <string name="input_method_target_all">Todos</string>
+    <string name="cycle_input_method_target_title">Método de entrada de destino</string>
+    <string name="cycle_input_method_target_summary_all">Todos: alterna entre los métodos de entrada activados</string>
+    <string name="cycle_input_method_target_summary">Alternar con el método de entrada actual: %1$s</string>
+    <string name="switch_input_method_target_title">Método de entrada de destino</string>
+    <string name="switch_input_method_target_picker">Mostrar selector</string>
+    <string name="switch_input_method_target_summary_picker">Mostrar el selector de métodos de entrada del sistema</string>
+    <string name="switch_input_method_target_summary">Cambiar directamente a: %1$s</string>
+    <string name="cycle_input_method_rotation_title">Métodos de entrada en la rotación</string>
+    <string name="cycle_input_method_rotation_tip">Solo se aplica cuando el destino es «Todos». Desmarca un método para omitirlo al alternar.</string>
 </resources>

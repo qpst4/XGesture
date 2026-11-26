@@ -97,4 +97,14 @@
     <string name="magnifier_fullscreen_scale_summary">نسبة تكبير ملء الشاشة عند التحريك المستمر للعرض بالعصا أو بالإيماءات المطوّلة</string>
     <string name="magnifier_window_scale_title">نسبة التكبير الموضعي (الوضع النافذي)</string>
     <string name="magnifier_window_scale_summary">نسبة تكبير مكبّر النافذة العائمة الذي يظهر عند النقر أو رفع الإصبع</string>
+    <string name="input_method_target_all">الكل</string>
+    <string name="cycle_input_method_target_title">طريقة الإدخال المستهدفة</string>
+    <string name="cycle_input_method_target_summary_all">الكل: التدوير بين طرق الإدخال المفعّلة</string>
+    <string name="cycle_input_method_target_summary">التبديل مع طريقة الإدخال الحالية: %1$s</string>
+    <string name="switch_input_method_target_title">طريقة الإدخال المستهدفة</string>
+    <string name="switch_input_method_target_picker">إظهار قائمة الاختيار</string>
+    <string name="switch_input_method_target_summary_picker">إظهار قائمة اختيار طريقة الإدخال في النظام</string>
+    <string name="switch_input_method_target_summary">التبديل مباشرة إلى: %1$s</string>
+    <string name="cycle_input_method_rotation_title">طرق الإدخال في التدوير</string>
+    <string name="cycle_input_method_rotation_tip">ينطبق فقط عندما يكون الهدف «الكل». أزل التحديد لتخطي طريقة الإدخال أثناء التدوير.</string>
 </resources>

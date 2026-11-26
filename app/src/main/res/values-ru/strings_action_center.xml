@@ -97,4 +97,14 @@
     <string name="magnifier_fullscreen_scale_summary">Масштаб для полноэкранного режима при непрерывном панорамировании стиком или удержанием жеста</string>
     <string name="magnifier_window_scale_title">Масштаб лупы в окне (оконный режим)</string>
     <string name="magnifier_window_scale_summary">Масштаб плавающей лупы-окна, вызываемой нажатием или отпусканием пальца</string>
+    <string name="input_method_target_all">Все</string>
+    <string name="cycle_input_method_target_title">Целевой метод ввода</string>
+    <string name="cycle_input_method_target_summary_all">Все: переключение по включённым методам ввода</string>
+    <string name="cycle_input_method_target_summary">Переключение с текущим методом ввода: %1$s</string>
+    <string name="switch_input_method_target_title">Целевой метод ввода</string>
+    <string name="switch_input_method_target_picker">Показать выбор</string>
+    <string name="switch_input_method_target_summary_picker">Показать системный выбор метода ввода</string>
+    <string name="switch_input_method_target_summary">Переключиться сразу на: %1$s</string>
+    <string name="cycle_input_method_rotation_title">Методы ввода в ротации</string>
+    <string name="cycle_input_method_rotation_tip">Действует только при цели «Все». Снимите флажок, чтобы пропускать метод при переключении.</string>
 </resources>

@@ -97,4 +97,14 @@
     <string name="magnifier_fullscreen_scale_summary">推摇杆或长按手势持续漫游推视野时的全屏放大倍数</string>
     <string name="magnifier_window_scale_title">局部放大倍率（视窗模式）</string>
     <string name="magnifier_window_scale_summary">单次点击或松手触发的悬浮视窗放大镜倍数</string>
+    <string name="input_method_target_all">全部</string>
+    <string name="cycle_input_method_target_title">目标输入法</string>
+    <string name="cycle_input_method_target_summary_all">全部：在已启用的输入法之间依次轮换</string>
+    <string name="cycle_input_method_target_summary">与当前输入法来回切换：%1$s</string>
+    <string name="switch_input_method_target_title">目标输入法</string>
+    <string name="switch_input_method_target_picker">弹出选择框</string>
+    <string name="switch_input_method_target_summary_picker">弹出系统输入法选择框</string>
+    <string name="switch_input_method_target_summary">直接切换到：%1$s</string>
+    <string name="cycle_input_method_rotation_title">参与轮换的输入法</string>
+    <string name="cycle_input_method_rotation_tip">仅当目标输入法为「全部」时生效；取消勾选即可在轮换时跳过该输入法。</string>
 </resources>
