@@ -2517,6 +2517,7 @@
     <string name="gesture_action_float_nav_permission">Requiere el servicio de accesibilidad</string>
     <string name="float_nav_close">Cerrar navegación flotante</string>
     <string name="float_nav_drag">Arrastrar navegación flotante</string>
+    <string name="float_nav_expand">Expandir navegación flotante</string>
     <string name="gesture_action_close_current_app">Aplicación actual</string>
     <string name="gesture_action_force_stop_current_app">Aplicación actual para detener la fuerza</string>
     <string name="gesture_action_force_stop_current_app_desc">Matar el proceso de aplicación de primer plano (requiere Shizuku o root)</string>

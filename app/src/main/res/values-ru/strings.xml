@@ -2591,6 +2591,7 @@
     <string name="gesture_action_float_nav_permission">Требуется служба доступности</string>
     <string name="float_nav_close">Закрыть плавающую навигацию</string>
     <string name="float_nav_drag">Перетащить плавающую навигацию</string>
+    <string name="float_nav_expand">Развернуть плавающую навигацию</string>
     <string name="gesture_action_close_current_app">Закрыть текущее приложение</string>
     <string name="gesture_action_force_stop_current_app">Принудительно остановить текущее приложение</string>
     <string name="gesture_action_force_stop_current_app_desc">Полностью завершить процесс приложения на переднем плане (требуется Shizuku или root)</string>

@@ -1048,6 +1048,7 @@
     <string name="gesture_action_float_nav_permission">ユーザー補助サービスが必要です</string>
     <string name="float_nav_close">フローティングナビを閉じる</string>
     <string name="float_nav_drag">フローティングナビをドラッグ</string>
+    <string name="float_nav_expand">フローティングナビを展開</string>
     <string name="gesture_action_close_current_app">現在のアプリを閉じる</string>
     <string name="gesture_action_force_stop_current_app">現在のアプリを強制停止</string>
     <string name="gesture_action_force_stop_current_app_desc">前面のアプリのプロセスを強制終了します（Shizuku または root が必要）</string>

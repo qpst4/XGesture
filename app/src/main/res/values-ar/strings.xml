@@ -1028,6 +1028,7 @@
     <string name="gesture_action_float_nav_permission">يتطلب خدمة إمكانية الوصول</string>
     <string name="float_nav_close">إغلاق التنقل العائم</string>
     <string name="float_nav_drag">سحب التنقل العائم</string>
+    <string name="float_nav_expand">توسيع التنقل العائم</string>
     <string name="gesture_action_close_current_app">إغلاق التطبيق الحالي</string>
     <string name="gesture_action_force_stop_current_app">إيقاف التطبيق الحالي قسريًا</string>
     <string name="gesture_action_force_stop_current_app_desc">إنهاء عملية التطبيق في المقدمة نهائيًا (يتطلب Shizuku أو root)</string>

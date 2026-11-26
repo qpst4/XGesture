@@ -2657,6 +2657,7 @@
     <string name="gesture_action_float_nav_permission">Requires accessibility service</string>
     <string name="float_nav_close">Close floating navigation</string>
     <string name="float_nav_drag">Drag floating navigation</string>
+    <string name="float_nav_expand">Expand floating navigation</string>
     <string name="gesture_action_close_current_app">Close current app</string>
     <string name="gesture_action_force_stop_current_app">Force stop current app</string>
     <string name="gesture_action_force_stop_current_app_desc">Kill the foreground app process outright (requires Shizuku or root)</string>

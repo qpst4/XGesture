@@ -12,6 +12,7 @@ import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.ViewOutlineProvider
 import android.view.WindowManager
 import android.widget.LinearLayout
@@ -24,6 +25,7 @@ import com.slideindex.app.overlay.PanelSide
 import com.slideindex.app.overlay.setupBackgroundBlur
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.util.HapticHelper
+import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -45,16 +47,22 @@ internal class FloatNavView(
     interface Listener {
         fun onKey(key: FloatNavKey)
         fun onClose()
+        fun onGripClick()
         fun onDragStart()
         fun onDragBy(dx: Float, dy: Float)
         fun onDragEnd()
+        fun onBarSizeChanged(oldW: Int, oldH: Int, newW: Int, newH: Int)
     }
 
     private val density = resources.displayMetrics.density
     private val themeColors = OverlayPanelTheme.colors(context)
     private val keyViews = LinkedHashMap<FloatNavKey, FloatNavKeyView>()
+    private val chevronRight = side != PanelSide.RIGHT
     private var cornerRadiusPx = 0f
     private var hovered = FloatNavKey.NONE
+    private var collapsed = false
+
+    val isCollapsed: Boolean get() = collapsed
 
     init {
         orientation = HORIZONTAL
@@ -93,9 +101,10 @@ internal class FloatNavView(
             val keyView = FloatNavKeyView(context, key, themeColors).apply {
                 contentDescription = descriptionFor(key)
                 if (key == FloatNavKey.GRIP) {
-                    isClickable = false
-                    isFocusable = false
+                    isClickable = true
+                    isFocusable = true
                     setOnTouchListener(GripTouchListener())
+                    setOnClickListener { listener.onGripClick() }
                 } else {
                     setOnClickListener {
                         HapticHelper.confirmLaunch(this, appSettings)
@@ -162,7 +171,8 @@ internal class FloatNavView(
         getLocationOnScreen(location)
         val localX = rawX - location[0]
         val localY = rawY - location[1]
-        val bounds = keyViews.map { (key, view) ->
+        val bounds = keyViews.mapNotNull { (key, view) ->
+            if (view.visibility != VISIBLE) return@mapNotNull null
             FloatNavKeyBounds(
                 key = key,
                 left = view.left.toFloat(),
@@ -190,6 +200,35 @@ internal class FloatNavView(
         setHoveredKey(FloatNavKey.NONE)
     }
 
+    fun toggleCollapsed() {
+        setCollapsed(!collapsed)
+    }
+
+    /**
+     * 收起时只留把柄，并把把柄加宽成一个 56×56dp 的圆角方块；展开时恢复完整按钮条。
+     * 收起/展开不改变高度，窗口只需按把柄所在边重新贴边。
+     */
+    fun setCollapsed(value: Boolean) {
+        if (collapsed == value) return
+        collapsed = value
+        clearHighlight()
+        keyViews.forEach { (key, view) ->
+            val params = view.layoutParams as? LayoutParams ?: return@forEach
+            if (key == FloatNavKey.GRIP) {
+                params.width = widthFor(key)
+                view.layoutParams = params
+                view.contentDescription = context.getString(
+                    if (value) R.string.float_nav_expand else R.string.float_nav_drag,
+                )
+                view.setCollapsedIndicator(value, chevronRight)
+            } else {
+                view.visibility = if (value) GONE else VISIBLE
+            }
+        }
+        requestLayout()
+        invalidate()
+    }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         post { applyMaterial() }
@@ -198,6 +237,9 @@ internal class FloatNavView(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         applyMaterial()
+        if (oldw > 0 && oldh > 0 && (w != oldw || h != oldh)) {
+            listener.onBarSizeChanged(oldw, oldh, w, h)
+        }
     }
 
     private fun solidBackground(
@@ -218,7 +260,7 @@ internal class FloatNavView(
     }
 
     private fun widthFor(key: FloatNavKey): Int = when (key) {
-        FloatNavKey.GRIP -> dp(32)
+        FloatNavKey.GRIP -> if (collapsed) dp(44) else dp(32)
         FloatNavKey.CLOSE -> dp(40)
         else -> dp(48)
     }
@@ -235,26 +277,54 @@ internal class FloatNavView(
     private fun dp(value: Int): Int = (value * density).roundToInt().coerceAtLeast(0)
 
     private inner class GripTouchListener : OnTouchListener {
+        private val slop = ViewConfiguration.get(context).scaledTouchSlop.toFloat()
+        private var downRawX = 0f
+        private var downRawY = 0f
         private var lastRawX = 0f
         private var lastRawY = 0f
+        private var moved = false
 
         override fun onTouch(v: View, event: MotionEvent): Boolean {
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
+                    downRawX = event.rawX
+                    downRawY = event.rawY
                     lastRawX = event.rawX
                     lastRawY = event.rawY
-                    listener.onDragStart()
+                    moved = false
                     return true
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    listener.onDragBy(event.rawX - lastRawX, event.rawY - lastRawY)
-                    lastRawX = event.rawX
-                    lastRawY = event.rawY
+                    if (!moved) {
+                        val totalDx = event.rawX - downRawX
+                        val totalDy = event.rawY - downRawY
+                        if (hypot(totalDx, totalDy) >= slop) {
+                            moved = true
+                            listener.onDragStart()
+                            listener.onDragBy(totalDx, totalDy)
+                            lastRawX = event.rawX
+                            lastRawY = event.rawY
+                        }
+                    } else {
+                        listener.onDragBy(event.rawX - lastRawX, event.rawY - lastRawY)
+                        lastRawX = event.rawX
+                        lastRawY = event.rawY
+                    }
                     return true
                 }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    listener.onDragEnd()
-                    if (event.actionMasked == MotionEvent.ACTION_UP) v.performClick()
+                MotionEvent.ACTION_UP -> {
+                    if (moved) {
+                        listener.onDragEnd()
+                    } else {
+                        // 没有超过 slop：按点击处理，展开 / 收起浮条。
+                        v.performClick()
+                    }
+                    moved = false
+                    return true
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    if (moved) listener.onDragEnd()
+                    moved = false
                     return true
                 }
             }
@@ -287,6 +357,8 @@ private class FloatNavKeyView(
     private val highlightRect = RectF()
     private val gripColumns = intArrayOf(-1, 1)
     private val gripRows = intArrayOf(-1, 0, 1)
+    private var collapsedIndicator = false
+    private var indicatorRight = true
 
     var highlighted = false
         private set
@@ -300,6 +372,13 @@ private class FloatNavKeyView(
     fun setHighlighted(value: Boolean) {
         if (highlighted == value) return
         highlighted = value
+        invalidate()
+    }
+
+    fun setCollapsedIndicator(collapsed: Boolean, chevronRight: Boolean) {
+        if (collapsedIndicator == collapsed && indicatorRight == chevronRight) return
+        collapsedIndicator = collapsed
+        indicatorRight = chevronRight
         invalidate()
     }
 
@@ -368,6 +447,16 @@ private class FloatNavKeyView(
                             fillPaint,
                         )
                     }
+                }
+                if (collapsedIndicator) {
+                    // 收起态给一个朝展开方向的细箭头，提示“点一下会展开”。
+                    val x = cx + if (indicatorRight) 13f * density else -13f * density
+                    val direction = if (indicatorRight) 1f else -1f
+                    path.reset()
+                    path.moveTo(x - direction * 2f * density, cy - 3.5f * density)
+                    path.lineTo(x + direction * 1.6f * density, cy)
+                    path.lineTo(x - direction * 2f * density, cy + 3.5f * density)
+                    canvas.drawPath(path, strokePaint)
                 }
             }
             FloatNavKey.NONE -> Unit

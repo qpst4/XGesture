@@ -1080,6 +1080,7 @@
     <string name="gesture_action_float_nav_permission">需要无障碍服务</string>
     <string name="float_nav_close">关闭浮动导航</string>
     <string name="float_nav_drag">拖动浮动导航</string>
+    <string name="float_nav_expand">展开浮动导航</string>
     <string name="gesture_action_close_current_app">关闭当前应用</string>
     <string name="gesture_action_force_stop_current_app">强行停止当前应用</string>
     <string name="gesture_action_force_stop_current_app_desc">彻底结束前台应用进程（需 Shizuku 或 root）</string>

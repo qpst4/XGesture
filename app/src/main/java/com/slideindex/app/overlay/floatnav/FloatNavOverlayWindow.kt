@@ -49,6 +49,7 @@ object FloatNavOverlayWindow {
 
     private var tracking = false
     private var armed = false
+    private var restoreCollapsedAfterSession = false
     private var showRawX = 0f
     private var showRawY = 0f
     private var armSlopPx = 24f
@@ -97,6 +98,7 @@ object FloatNavOverlayWindow {
             return true
         }
 
+        restoreCollapsedAfterSession = false
         val host = overlayHostContext() ?: return false
         if (!PermissionHelper.isAccessibilityServiceEnabledForOverlays(host)) return false
         val wm = host.getSystemService(WindowManager::class.java) ?: return false
@@ -230,7 +232,7 @@ object FloatNavOverlayWindow {
         }
     }
 
-    /** 会话结束：只清跟手态，浮条常驻。 */
+    /** 会话结束：只清跟手态，浮条常驻；若本次是为了选择而临时展开，恢复收起态。 */
     fun onGestureSessionEnd() {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             mainHandler.post { onGestureSessionEnd() }
@@ -239,6 +241,10 @@ object FloatNavOverlayWindow {
         tracking = false
         armed = false
         root?.clearHighlight()
+        if (restoreCollapsedAfterSession) {
+            restoreCollapsedAfterSession = false
+            root?.setCollapsed(true)
+        }
     }
 
     /** 取消/丢失 UP：只清跟手态，不执行、不收起。 */
@@ -260,6 +266,7 @@ object FloatNavOverlayWindow {
         settings = null
         tracking = false
         armed = false
+        restoreCollapsedAfterSession = false
         if (view != null && wm != null) {
             runCatching { wm.removeViewImmediate(view) }
         }
@@ -307,6 +314,13 @@ object FloatNavOverlayWindow {
 
     private fun startTracking(anchorRawX: Float?, anchorRawY: Float?) {
         val host = hostContext ?: return
+        // 收起态没有导航键可落；持续触发先自动展开，会话结束后再恢复收起。
+        root?.let { view ->
+            if (view.isCollapsed) {
+                restoreCollapsedAfterSession = true
+                view.setCollapsed(false)
+            }
+        }
         tracking = true
         armed = false
         showRawX = anchorRawX ?: (screenWidth / 2f)
@@ -389,6 +403,38 @@ object FloatNavOverlayWindow {
         override fun onClose() {
             if (tracking) return
             dismiss()
+        }
+
+        override fun onGripClick() {
+            if (tracking) return
+            val view = root ?: return
+            view.toggleCollapsed()
+            settings?.let { HapticHelper.confirmLaunch(view, it) }
+        }
+
+        override fun onBarSizeChanged(oldW: Int, oldH: Int, newW: Int, newH: Int) {
+            if (oldW <= 0 || oldH <= 0) return
+            val view = root ?: return
+            val wm = windowManager ?: return
+            val lp = layoutParams ?: return
+            view.post {
+                if (root !== view || layoutParams !== lp) return@post
+                // 右侧边缘的把柄在最右边：收起/展开时固定窗右边，别让把柄横跳。
+                if (side == PanelSide.RIGHT) {
+                    lp.x += oldW - newW
+                }
+                // 把柄在条内垂直居中；高度变化时保持把柄中心不动。
+                if (oldH != newH) {
+                    lp.y += (oldH - newH) / 2
+                }
+                val minX = edgeInsetPx
+                val maxX = (screenWidth - newW - edgeInsetPx).coerceAtLeast(minX)
+                val minY = topInsetPx
+                val maxY = (screenHeight - newH - bottomInsetPx).coerceAtLeast(minY)
+                lp.x = lp.x.coerceIn(minX, maxX)
+                lp.y = lp.y.coerceIn(minY, maxY)
+                runCatching { wm.updateViewLayout(view, lp) }
+            }
         }
 
         override fun onDragStart() = Unit
