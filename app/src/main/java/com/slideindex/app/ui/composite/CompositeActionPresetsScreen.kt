@@ -161,26 +161,18 @@ fun CompositeActionPresetsScreen(
     }
 
     deleteTarget?.let { target ->
-        androidx.compose.material3.AlertDialog(
+        com.slideindex.app.ui.miuix.MiuixConfirmDialog(
+            show = true,
             onDismissRequest = { deleteTarget = null },
-            title = { Text(stringResource(R.string.composite_library_delete)) },
-            text = { Text(stringResource(R.string.composite_library_delete_confirm)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        CompositeActionPresetStore.delete(context, target.id)
-                        deleteTarget = null
-                        revision++
-                    },
-                ) {
-                    Text(stringResource(R.string.composite_library_delete))
-                }
+            title = stringResource(R.string.composite_library_delete),
+            message = stringResource(R.string.composite_library_delete_confirm),
+            confirmText = stringResource(R.string.composite_library_delete),
+            onConfirm = {
+                CompositeActionPresetStore.delete(context, target.id)
+                deleteTarget = null
+                revision++
             },
-            dismissButton = {
-                TextButton(onClick = { deleteTarget = null }) {
-                    Text(stringResource(android.R.string.cancel))
-                }
-            },
+            dismissText = stringResource(android.R.string.cancel),
         )
     }
 }

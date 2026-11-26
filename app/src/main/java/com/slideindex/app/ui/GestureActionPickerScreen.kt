@@ -43,6 +43,12 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.width
+import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.glass.GlassDialog
 import top.yukonga.miuix.kmp.window.WindowDialog
 import com.slideindex.app.R
 import com.slideindex.app.data.AppInfo
@@ -441,11 +447,8 @@ fun GestureActionPickerScreen(
                 com.slideindex.app.ui.composite.CompositeActionPresetStore.load(pickContext)
             }
 
-            WindowDialog(
-                show = true,
-                title = stringResource(R.string.gesture_action_composite),
-                onDismissRequest = { compositePickVisible = false },
-            ) {
+            val dialogTitle = stringResource(R.string.gesture_action_composite)
+            val body: @Composable () -> Unit = {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     if (presets.isEmpty()) {
                         Text(
@@ -501,7 +504,24 @@ fun GestureActionPickerScreen(
                     )
                 }
             }
-
+            val compositeBackdrop = LocalMiuixPageBackdrop.current
+            if (compositeBackdrop != null) {
+                GlassDialog(
+                    onDismissRequest = { compositePickVisible = false },
+                    show = true,
+                    backdrop = compositeBackdrop,
+                    title = dialogTitle,
+                    content = body,
+                )
+            } else {
+                WindowDialog(
+                    show = true,
+                    title = dialogTitle,
+                    onDismissRequest = { compositePickVisible = false },
+                ) {
+                    body()
+                }
+            }
         }
 
     if (quickWheelConfigVisible) {
@@ -625,12 +645,9 @@ private fun OpenLinkMiuixDialog(
     var url by remember(initialUrl) { mutableStateOf(initialUrl) }
     var label by remember(initialLabel) { mutableStateOf(initialLabel) }
     val canSave = url.trim().isNotBlank()
+    val dialogTitle = stringResource(R.string.gesture_action_open_link)
 
-    WindowDialog(
-        show = true,
-        title = stringResource(R.string.gesture_action_open_link),
-        onDismissRequest = onDismissRequest,
-    ) {
+    val body: @Composable () -> Unit = {
         Column(modifier = Modifier.fillMaxWidth()) {
             MiuixLabeledTextField(
                 value = url,
@@ -650,18 +667,51 @@ private fun OpenLinkMiuixDialog(
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(modifier = Modifier.height(12.dp))
-            top.yukonga.miuix.kmp.basic.TextButton(
-                text = stringResource(R.string.composite_library_save),
-                onClick = { onConfirm(url.trim(), label.trim()) },
-                enabled = canSave,
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            top.yukonga.miuix.kmp.basic.TextButton(
-                text = stringResource(android.R.string.cancel),
-                onClick = onDismissRequest,
-                modifier = Modifier.fillMaxWidth(),
-            )
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                top.yukonga.miuix.kmp.basic.TextButton(
+                    text = stringResource(android.R.string.cancel),
+                    onClick = onDismissRequest,
+                    modifier = Modifier
+                        .weight(1f)
+                        .defaultMinSize(minHeight = 44.dp),
+                    minHeight = 44.dp,
+                    insideMargin = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+                )
+                Spacer(modifier = Modifier.width(20.dp))
+                top.yukonga.miuix.kmp.basic.TextButton(
+                    text = stringResource(R.string.composite_library_save),
+                    onClick = { onConfirm(url.trim(), label.trim()) },
+                    enabled = canSave,
+                    modifier = Modifier
+                        .weight(1f)
+                        .defaultMinSize(minHeight = 44.dp),
+                    minHeight = 44.dp,
+                    insideMargin = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+                    colors = ButtonDefaults.textButtonColorsPrimary(),
+                )
+            }
+        }
+    }
+
+    val backdrop = LocalMiuixPageBackdrop.current
+    if (backdrop != null) {
+        GlassDialog(
+            onDismissRequest = onDismissRequest,
+            show = true,
+            backdrop = backdrop,
+            title = dialogTitle,
+            content = body,
+        )
+    } else {
+        WindowDialog(
+            show = true,
+            title = dialogTitle,
+            onDismissRequest = onDismissRequest,
+        ) {
+            body()
         }
     }
 }

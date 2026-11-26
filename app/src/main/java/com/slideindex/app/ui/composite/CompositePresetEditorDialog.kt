@@ -22,7 +22,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,8 +40,14 @@ import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.gesture.GestureTriggerType
 import com.slideindex.app.ui.gesturepicker.gestureActionLabel
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
+import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
 import com.slideindex.app.ui.picker.GestureActionCatalog
 import com.slideindex.app.ui.picker.GestureActionCatalogScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.defaultMinSize
+import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.glass.GlassDialog
 import top.yukonga.miuix.kmp.window.WindowDialog
 
 /** 内置模板：新建组合时一键生成步骤。 */
@@ -93,17 +98,14 @@ internal fun CompositePresetEditorDialog(
         }
     }
 
-    WindowDialog(
-        show = true,
-        title = stringResource(
-            when {
-                picking -> R.string.composite_library_pick_action
-                isNew -> R.string.composite_library_new_title
-                else -> R.string.composite_library_edit_title
-            },
-        ),
-        onDismissRequest = onDismiss,
-    ) {
+    val dialogTitle = stringResource(
+        when {
+            picking -> R.string.composite_library_pick_action
+            isNew -> R.string.composite_library_new_title
+            else -> R.string.composite_library_edit_title
+        },
+    )
+    val body: @Composable () -> Unit = {
         Column(modifier = Modifier.fillMaxWidth()) {
             if (picking) {
                 MiuixLabeledTextField(
@@ -147,9 +149,10 @@ internal fun CompositePresetEditorDialog(
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.End,
                 ) {
-                    TextButton(onClick = { picking = false; query = "" }) {
-                        Text(stringResource(R.string.composite_library_back))
-                    }
+                    TextButton(
+                        text = stringResource(R.string.composite_library_back),
+                        onClick = { picking = false; query = "" },
+                    )
                 }
             } else {
                 MiuixLabeledTextField(
@@ -254,9 +257,10 @@ internal fun CompositePresetEditorDialog(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         COMPOSITE_TEMPLATES.forEach { (titleRes, actions) ->
-                            TextButton(onClick = { steps = actions }) {
-                                Text(stringResource(titleRes))
-                            }
+                            TextButton(
+                                text = stringResource(titleRes),
+                                onClick = { steps = actions },
+                            )
                         }
                     }
                 }
@@ -264,20 +268,49 @@ internal fun CompositePresetEditorDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.End,
+                    horizontalArrangement = Arrangement.Center,
                 ) {
-                    TextButton(onClick = onDismiss) {
-                        Text(stringResource(android.R.string.cancel))
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
                     TextButton(
+                        text = stringResource(android.R.string.cancel),
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 44.dp),
+                        minHeight = 44.dp,
+                        insideMargin = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+                    )
+                    Spacer(modifier = Modifier.width(20.dp))
+                    TextButton(
+                        text = stringResource(R.string.composite_library_save),
                         onClick = { onSave(name.trim(), steps) },
                         enabled = name.isNotBlank() && steps.isNotEmpty(),
-                    ) {
-                        Text(stringResource(R.string.composite_library_save))
-                    }
+                        modifier = Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 44.dp),
+                        minHeight = 44.dp,
+                        insideMargin = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+                        colors = ButtonDefaults.textButtonColorsPrimary(),
+                    )
                 }
             }
+        }
+    }
+    val backdrop = LocalMiuixPageBackdrop.current
+    if (backdrop != null) {
+        GlassDialog(
+            onDismissRequest = onDismiss,
+            show = true,
+            backdrop = backdrop,
+            title = dialogTitle,
+            content = body,
+        )
+    } else {
+        WindowDialog(
+            show = true,
+            title = dialogTitle,
+            onDismissRequest = onDismiss,
+        ) {
+            body()
         }
     }
 }
