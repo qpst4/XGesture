@@ -5436,4 +5436,5 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="gesture_action_composite_save">保存组合</string>
     <string name="corner_gesture_layer_slot_count">第 %1$d 圈数量</string>
     <string name="corner_gesture_layer_slot_count_value">%1$d 个 · 共 %2$d</string>
+    <string name="corner_gesture_layer_title">第 %1$d 圈</string>
 </resources>

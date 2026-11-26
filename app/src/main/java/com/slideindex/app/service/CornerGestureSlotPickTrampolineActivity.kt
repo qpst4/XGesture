@@ -45,7 +45,7 @@ class CornerGestureSlotPickTrampolineActivity : ComponentActivity() {
 
         val corner = intent.getStringExtra(EXTRA_CORNER).orEmpty()
         val slotIndex = intent.getIntExtra(EXTRA_SLOT_INDEX, -1)
-        if (slotIndex !in 0 until CornerRadialMenuCodec.SLOT_COUNT) {
+        if (slotIndex !in 0 until CornerRadialMenuCodec.MAX_SLOT_COUNT) {
             finish()
             return
         }

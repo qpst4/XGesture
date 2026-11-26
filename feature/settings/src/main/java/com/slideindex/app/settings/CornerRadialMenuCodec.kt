@@ -7,10 +7,18 @@ import com.slideindex.app.launcher.QuickLauncherItemCodec
 
 object CornerRadialMenuCodec {
     /**
-     * 五层槽位：内 3 / 5 / 7 / 9 / 11，共 35。
-     * 前三层始终启用；第 4、5 层由设置开关决定（见 [CornerGestureSettings.enabledLayerCount]）。
+     * 默认五层槽位：3 / 5 / 7 / 9 / 11，共 35（旧存档的形状）。
+     *
+     * 现在每圈数量可自由设置、总数可变，[SLOT_COUNT] 只作为默认/兼容值；
+     * 真正的容量是 [MAX_SLOT_COUNT]（5 圈 × 每圈最多 15）。
      */
     const val SLOT_COUNT = 35
+
+    /** 单圈最多多少个槽位。 */
+    const val MAX_LAYER_SLOT_COUNT = 15
+
+    /** 整盘最大槽位数：5 圈 × 15。 */
+    const val MAX_SLOT_COUNT = 75
     const val LEGACY_SLOT_COUNT = 8
 
     /** 始终启用的层数，第 4 层起需要用户显式开启。 */
@@ -30,35 +38,18 @@ object CornerRadialMenuCodec {
      * 把用户配置的每圈数量收敛到合法状态：
      * 固定 5 圈、每圈至少 1、总数必须等于 [SLOT_COUNT]（多退少补，从外圈开始调）。
      */
+    /**
+     * 合法化每圈数量：固定 5 圈、每圈 1..[MAX_LAYER_SLOT_COUNT]，**不再强制总和**。
+     *
+     * B 方案：每圈独立配置，总数 = 各圈之和；槽位存储按全局下标保存，
+     * 隐藏的槽位不会丢（改小再改大会回来）。
+     */
     fun normalizeLayerSlotCounts(raw: List<Int>): List<Int> {
         val size = DEFAULT_LAYER_SLOT_COUNTS.size
-        val result = MutableList(size) { index ->
-            (raw.getOrNull(index) ?: DEFAULT_LAYER_SLOT_COUNTS[index]).coerceIn(1, SLOT_COUNT)
+        return List(size) { index ->
+            (raw.getOrNull(index) ?: DEFAULT_LAYER_SLOT_COUNTS[index])
+                .coerceIn(1, MAX_LAYER_SLOT_COUNT)
         }
-        var diff = SLOT_COUNT - result.sum()
-        var index = size - 1
-        while (diff != 0 && index >= 0) {
-            if (diff > 0) {
-                val capacity = SLOT_COUNT - result[index]
-                if (capacity <= 0) {
-                    index--
-                    continue
-                }
-                val add = minOf(diff, capacity)
-                result[index] += add
-                diff -= add
-            } else {
-                val capacity = result[index] - 1
-                if (capacity <= 0) {
-                    index--
-                    continue
-                }
-                val remove = minOf(-diff, capacity)
-                result[index] -= remove
-                diff += remove
-            }
-        }
-        return result
     }
 
     fun layerStartIndex(layer: Int, counts: List<Int> = DEFAULT_LAYER_SLOT_COUNTS.toList()): Int {
@@ -72,7 +63,7 @@ object CornerRadialMenuCodec {
         counts.getOrElse(layer) { 0 }
 
     fun layerOf(globalIndex: Int, counts: List<Int> = DEFAULT_LAYER_SLOT_COUNTS.toList()): Int {
-        if (globalIndex !in 0 until SLOT_COUNT) return -1
+        if (globalIndex !in 0 until MAX_SLOT_COUNT) return -1
         var start = 0
         counts.forEachIndexed { layer, count ->
             if (globalIndex < start + count) return layer
@@ -148,7 +139,7 @@ object CornerRadialMenuCodec {
             index to sanitizeSlotAction(action)
         }.toMap()
         val base = normalizeSlots(defaults)
-        return List(SLOT_COUNT) { index ->
+        return List(MAX_SLOT_COUNT) { index ->
             byIndex[index] ?: base.getOrElse(index) { GestureAction.None }
         }
     }
@@ -159,7 +150,7 @@ object CornerRadialMenuCodec {
         }.toSet()
 
     fun normalizeSlots(slots: List<GestureAction>): List<GestureAction> =
-        List(SLOT_COUNT) { index -> slots.getOrElse(index) { GestureAction.None } }
+        List(MAX_SLOT_COUNT) { index -> slots.getOrElse(index) { GestureAction.None } }
 
     fun layerTitleResLayer(layer: Int): Int = layer + 1
 

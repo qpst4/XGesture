@@ -29,6 +29,8 @@ fun CornerGestureSlotsSettingsScreen(
     onBack: () -> Unit,
     onUnifiedSlotsChange: (Boolean) -> Unit,
     onLayerCountChange: (Int) -> Unit,
+    /** 每圈槽位数量（5 个数，各自独立、总数可变）。 */
+    onLayerSlotCountsChange: (List<Int>) -> Unit = {},
     onOpenInnerZoneActionPick: () -> Unit,
     onOpenLeftSlotActionPick: (Int) -> Unit,
     onOpenRightSlotActionPick: (Int) -> Unit
@@ -45,15 +47,38 @@ fun CornerGestureSlotsSettingsScreen(
 
     // 只展示已启用的层；层数由卡片里的档位决定。
     val layerCount = corner.enabledLayerCount
-    val layerTitles = (0 until layerCount).map { cornerLayerTitle(it) }
+    val layerTitles = (0 until layerCount).map {
+        stringResource(R.string.corner_gesture_layer_title, it + 1)
+    }
     val unifiedLayerItems = (0 until layerCount).map {
-        cornerLayerCardItems(it, corner.leftSlots, settings, slotsEnabled, onOpenLeftSlotActionPick)
+        cornerLayerCardItems(
+            it,
+            corner.leftSlots,
+            corner.normalizedLayerSlotCounts,
+            settings,
+            slotsEnabled,
+            onOpenLeftSlotActionPick,
+        )
     }
     val leftLayerItems = (0 until layerCount).map {
-        cornerLayerCardItems(it, corner.leftSlots, settings, slotsEnabledLeft, onOpenLeftSlotActionPick)
+        cornerLayerCardItems(
+            it,
+            corner.leftSlots,
+            corner.normalizedLayerSlotCounts,
+            settings,
+            slotsEnabledLeft,
+            onOpenLeftSlotActionPick,
+        )
     }
     val rightLayerItems = (0 until layerCount).map {
-        cornerLayerCardItems(it, corner.rightSlots, settings, slotsEnabledRight, onOpenRightSlotActionPick)
+        cornerLayerCardItems(
+            it,
+            corner.rightSlots,
+            corner.normalizedLayerSlotCounts,
+            settings,
+            slotsEnabledRight,
+            onOpenRightSlotActionPick,
+        )
     }
 
     SettingsScreenScaffold(
@@ -98,6 +123,36 @@ fun CornerGestureSlotsSettingsScreen(
                     }
                 )
             }
+        )
+        val layerCounts = corner.normalizedLayerSlotCounts
+        groupedCardItems(
+            keyPrefix = "corner-layer-slot-counts",
+            items = layerCounts.indices.map { layer ->
+                settingsCardScopeItem("layer-slot-count-$layer") {
+                    SettingsSliderRow(
+                        title = stringResource(
+                            R.string.corner_gesture_layer_slot_count,
+                            layer + 1,
+                        ),
+                        value = layerCounts[layer].toFloat(),
+                        valueRange = 1f..CornerRadialMenuCodec.MAX_LAYER_SLOT_COUNT.toFloat(),
+                        steps = CornerRadialMenuCodec.MAX_LAYER_SLOT_COUNT - 2,
+                        enabled = serviceEnabled && corner.enabled,
+                        label = stringResource(
+                            R.string.corner_gesture_layer_slot_count_value,
+                            layerCounts[layer],
+                            layerCounts.sum(),
+                        ),
+                        onValueChange = { value ->
+                            val updated = layerCounts.toMutableList()
+                            updated[layer] = value.roundToInt()
+                            onLayerSlotCountsChange(
+                                CornerRadialMenuCodec.normalizeLayerSlotCounts(updated),
+                            )
+                        },
+                    )
+                }
+            },
         )
         if (corner.unifiedSlots) {
             emitCornerLayerSlots(
@@ -151,24 +206,16 @@ fun CornerGestureSlotsSettingsScreen(
 }
 
 @Composable
-private fun cornerLayerTitle(layer: Int): String = when (layer) {
-    0 -> stringResource(R.string.corner_gesture_layer_inner)
-    1 -> stringResource(R.string.corner_gesture_layer_middle)
-    2 -> stringResource(R.string.corner_gesture_layer_outer)
-    3 -> stringResource(R.string.corner_gesture_layer_4)
-    else -> stringResource(R.string.corner_gesture_layer_5)
-}
-
-@Composable
 private fun cornerLayerCardItems(
     layer: Int,
     slots: List<GestureAction>,
+    layerSlotCounts: List<Int>,
     settings: AppSettings,
     enabled: Boolean,
     onOpenSlotActionPick: (Int) -> Unit,
 ): List<CardItem> {
-    val start = CornerRadialMenuCodec.layerStartIndex(layer)
-    val count = CornerRadialMenuCodec.slotCountInLayer(layer)
+    val start = CornerRadialMenuCodec.layerStartIndex(layer, layerSlotCounts)
+    val count = CornerRadialMenuCodec.slotCountInLayer(layer, layerSlotCounts)
     return buildList {
         repeat(count) { offset ->
             val index = start + offset
@@ -203,11 +250,11 @@ private fun LazyListScope.emitCornerLayerSlots(
     layerTitles: List<String>,
     layerItems: List<List<CardItem>>
 ) {
-    layerTitles.forEachIndexed { index, title ->
+    layerItems.forEachIndexed { index, items ->
         settingsLazySmallTitle(
             key = "$keyPrefix-layer-$index-title",
-            title = title
+            title = layerTitles.getOrElse(index) { "" },
         )
-        groupedCardItems("$keyPrefix-layer-$index", layerItems[index])
+        groupedCardItems("$keyPrefix-layer-$index", items)
     }
 }

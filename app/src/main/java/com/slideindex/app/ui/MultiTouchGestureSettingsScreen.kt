@@ -579,12 +579,8 @@ fun MultiTouchGestureSettingsScreen(
             title = stringResource(R.string.multitouch_edit_title),
             onDismissRequest = { editingEntry = null },
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    // 弹窗内容统一 16dp 水平内边距：预览框、输入框、行卡片左边缘对齐。
-                    .padding(horizontal = 16.dp),
-            ) {
+            // WindowDialog 自带内容内边距，这里不再叠加；行卡片自带行内边距就够了。
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()

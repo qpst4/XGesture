@@ -10,6 +10,7 @@ class CornerRadialMenuCodecTest {
     @Test
     fun layerMapping_matchesFiveLayerLayout() {
         assertEquals(35, CornerRadialMenuCodec.SLOT_COUNT)
+        assertEquals(75, CornerRadialMenuCodec.MAX_SLOT_COUNT)
         assertEquals(listOf(3, 5, 7, 9, 11), CornerRadialMenuCodec.LAYER_SLOT_COUNTS.toList())
         val starts = listOf(0, 3, 8, 15, 24)
         starts.forEachIndexed { layer, start ->
@@ -33,8 +34,8 @@ class CornerRadialMenuCodecTest {
             assertEquals(index - CornerRadialMenuCodec.layerStartIndex(layer), CornerRadialMenuCodec.layerLocalIndex(index))
         }
         assertEquals(-1, CornerRadialMenuCodec.layerOf(-1))
-        assertEquals(-1, CornerRadialMenuCodec.layerOf(CornerRadialMenuCodec.SLOT_COUNT))
-        assertEquals(-1, CornerRadialMenuCodec.layerLocalIndex(CornerRadialMenuCodec.SLOT_COUNT))
+        assertEquals(-1, CornerRadialMenuCodec.layerOf(CornerRadialMenuCodec.MAX_SLOT_COUNT))
+        assertEquals(-1, CornerRadialMenuCodec.layerLocalIndex(CornerRadialMenuCodec.MAX_SLOT_COUNT))
     }
 
     @Test
@@ -58,7 +59,7 @@ class CornerRadialMenuCodecTest {
         assertEquals(15, legacyArchive.size)
 
         val decoded = CornerRadialMenuCodec.decode(legacyArchive, defaults)
-        assertEquals(CornerRadialMenuCodec.SLOT_COUNT, decoded.size)
+        assertEquals(CornerRadialMenuCodec.MAX_SLOT_COUNT, decoded.size)
         assertEquals(
             legacyArchive,
             CornerRadialMenuCodec.encode(decoded)
@@ -72,7 +73,7 @@ class CornerRadialMenuCodecTest {
     fun decode_emptyFallsBackToDefaultsAndPadsToFullRange() {
         val defaults = CornerRadialMenuCodec.defaultRightSlots()
         val decoded = CornerRadialMenuCodec.decode(emptySet(), defaults)
-        assertEquals(CornerRadialMenuCodec.SLOT_COUNT, decoded.size)
+        assertEquals(CornerRadialMenuCodec.MAX_SLOT_COUNT, decoded.size)
         defaults.forEachIndexed { index, action -> assertEquals(action, decoded[index]) }
         assertTrue(decoded.drop(defaults.size).all { it is GestureAction.None })
     }
@@ -94,7 +95,7 @@ class CornerRadialMenuCodecTest {
     @Test
     fun normalizeSlots_padsShortListToFiveLayers() {
         val normalized = CornerRadialMenuCodec.normalizeSlots(listOf(GestureAction.Back))
-        assertEquals(CornerRadialMenuCodec.SLOT_COUNT, normalized.size)
+        assertEquals(CornerRadialMenuCodec.MAX_SLOT_COUNT, normalized.size)
         assertEquals(GestureAction.Back, normalized[0])
         assertTrue(normalized.drop(1).all { it is GestureAction.None })
     }
@@ -114,7 +115,7 @@ class CornerRadialMenuCodecTest {
     @Test
     fun customCounts_areNormalizedTo35Slots() {
         assertEquals(listOf(3, 5, 7, 9, 11), CornerRadialMenuCodec.normalizeLayerSlotCounts(emptyList()))
-        assertEquals(35, CornerRadialMenuCodec.normalizeLayerSlotCounts(listOf(99, 99, 99, 99, 99)).sum())
-        assertEquals(35, CornerRadialMenuCodec.normalizeLayerSlotCounts(listOf(0, 0, 0, 0, 0)).sum())
+        assertEquals(75, CornerRadialMenuCodec.normalizeLayerSlotCounts(listOf(99, 99, 99, 99, 99)).sum())
+        assertEquals(5, CornerRadialMenuCodec.normalizeLayerSlotCounts(listOf(0, 0, 0, 0, 0)).sum())
     }
 }

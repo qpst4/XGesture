@@ -8,13 +8,13 @@ object CornerSlotSubMenuCodec {
     private const val ITEM_SEP = "\u001B"
 
     fun defaultSlotSubMenus(): List<CornerSlotSubMenuConfig> =
-        List(CornerRadialMenuCodec.SLOT_COUNT) { CornerSlotSubMenuConfig() }
+        List(CornerRadialMenuCodec.MAX_SLOT_COUNT) { CornerSlotSubMenuConfig() }
 
     fun decode(encoded: Set<String>, defaults: List<CornerSlotSubMenuConfig>): List<CornerSlotSubMenuConfig> {
         if (encoded.isEmpty()) return normalizeSlotSubMenus(defaults)
         val byIndex = encoded.mapNotNull { entry -> decodeEntry(entry) }.toMap()
         val base = normalizeSlotSubMenus(defaults)
-        return List(CornerRadialMenuCodec.SLOT_COUNT) { index ->
+        return List(CornerRadialMenuCodec.MAX_SLOT_COUNT) { index ->
             byIndex[index] ?: base.getOrElse(index) { CornerSlotSubMenuConfig() }
         }
     }
@@ -26,7 +26,7 @@ object CornerSlotSubMenuCodec {
         }.toSet()
 
     fun normalizeSlotSubMenus(slots: List<CornerSlotSubMenuConfig>): List<CornerSlotSubMenuConfig> =
-        List(CornerRadialMenuCodec.SLOT_COUNT) { index ->
+        List(CornerRadialMenuCodec.MAX_SLOT_COUNT) { index ->
             slots.getOrElse(index) { CornerSlotSubMenuConfig() }
         }
 
