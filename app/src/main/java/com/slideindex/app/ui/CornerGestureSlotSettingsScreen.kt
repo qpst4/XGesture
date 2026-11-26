@@ -42,10 +42,6 @@ fun CornerGestureSlotSettingsScreen(
     onSubMenuEnabledChange: (Boolean) -> Unit,
     onRemoveSubMenuItem: (Int) -> Unit,
     onAddSubMenuAction: () -> Unit,
-    onSwapWithPrevious: () -> Unit = {},
-    onSwapWithNext: () -> Unit = {},
-    canSwapWithPrevious: Boolean = false,
-    canSwapWithNext: Boolean = false,
     onImportFromApp: () -> Unit,
     canImportFromHost: Boolean
 ) {
@@ -57,11 +53,6 @@ fun CornerGestureSlotSettingsScreen(
     val subMenuEnabledDesc = stringResource(R.string.corner_gesture_slot_submenu_enabled_desc)
     val subMenuAddActionTitle = stringResource(R.string.corner_gesture_slot_submenu_add_action)
     val subMenuAddActionDesc = stringResource(R.string.corner_gesture_slot_submenu_add_action_desc)
-    val swapSectionTitle = stringResource(R.string.corner_gesture_slot_order_section)
-    val swapPrevTitle = stringResource(R.string.corner_gesture_slot_order_prev)
-    val swapPrevDesc = stringResource(R.string.corner_gesture_slot_order_prev_desc)
-    val swapNextTitle = stringResource(R.string.corner_gesture_slot_order_next)
-    val swapNextDesc = stringResource(R.string.corner_gesture_slot_order_next_desc)
     val subMenuImportTitle = stringResource(R.string.corner_gesture_slot_submenu_import)
     val subMenuImportDesc = stringResource(R.string.corner_gesture_slot_submenu_import_desc)
     val subMenuRemoveItem = stringResource(R.string.corner_gesture_slot_submenu_remove_item)
@@ -104,35 +95,6 @@ fun CornerGestureSlotSettingsScreen(
                     }
                 )
             }
-        )
-
-        // 反馈 #385 ①：槽位位置固定，"排序" = 与相邻槽位交换动作，不用删了重建。
-        settingsLazySmallTitle(
-            key = "corner-slot-order-section",
-            title = swapSectionTitle
-        )
-        groupedCardItems(
-            keyPrefix = "corner-slot-order",
-            items = listOf(
-                settingsCardScopeItem("swap-prev") {
-                    SettingNavigationRow(
-                        icon = { label -> SymbolsIcon("ArrowUpward", contentDescription = label) },
-                        title = swapPrevTitle,
-                        subtitle = swapPrevDesc,
-                        enabled = canSwapWithPrevious,
-                        onClick = onSwapWithPrevious,
-                    )
-                },
-                settingsCardScopeItem("swap-next") {
-                    SettingNavigationRow(
-                        icon = { label -> SymbolsIcon("ArrowDownward", contentDescription = label) },
-                        title = swapNextTitle,
-                        subtitle = swapNextDesc,
-                        enabled = canSwapWithNext,
-                        onClick = onSwapWithNext,
-                    )
-                },
-            ),
         )
 
         settingsLazySmallTitle(

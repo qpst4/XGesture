@@ -23,6 +23,7 @@ import com.slideindex.app.settings.CornerGestureSettings
 import com.slideindex.app.shell.ShellCommand
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 class CornerGestureController(
     private val context: Context,
@@ -162,8 +163,36 @@ class CornerGestureController(
         runCatching { context.startActivity(intent) }
     }
 
-    fun resumeAfterSlotPicker() {
-        if (!suspendedForExternalActivity) return
+    /**
+     * 编辑模式长按拖动换位后写回（反馈 #9）。
+     *
+     * 槽位是固定几何位置，"换序"= 交换两个位置上的动作。设置仓库从既有钩子拿，
+     * 不新增静态入口；写入后 AppSettings 流程会回流到 [applySettings]，画面自然更新。
+     */
+    private fun swapCornerSlots(anchor: CornerAnchor, from: Int, to: Int) {
+        if (from == to) return
+        val repository = com.slideindex.app.overlay.panels.PanelRuntimeHooks.settingsRepository
+            ?.invoke(context) ?: return
+        val cornerSettings = settings.cornerGestureSettings
+        val isLeft = cornerSettings.unifiedSlots || anchor == CornerAnchor.LEFT
+        val slots = if (isLeft) cornerSettings.leftSlots else cornerSettings.rightSlots
+        if (from !in slots.indices || to !in slots.indices) return
+        val fromAction = slots[from]
+        val toAction = slots[to]
+        scope.launch {
+            runCatching {
+                if (isLeft) {
+                    repository.setCornerGestureLeftSlotAction(from, toAction)
+                    repository.setCornerGestureLeftSlotAction(to, fromAction)
+                } else {
+                    repository.setCornerGestureRightSlotAction(from, toAction)
+                    repository.setCornerGestureRightSlotAction(to, fromAction)
+                }
+            }
+        }
+    }
+
+    fun resumeAfterSlotPicker() {        if (!suspendedForExternalActivity) return
         resumeOverlayAfterExternalActivity()
     }
 
@@ -293,6 +322,7 @@ class CornerGestureController(
                 },
                 onReleaseCapture = ::restoreCaptureSize,
                 onOpenSlotPicker = ::openSlotPicker,
+                onSwapSlots = ::swapCornerSlots,
                 onShellCommandsPersist = onShellCommandsPersist,
                 gestureRunner = gestureRunner,
                 onMenuVisualActiveChange = ::syncOverlayBackgroundBlur,

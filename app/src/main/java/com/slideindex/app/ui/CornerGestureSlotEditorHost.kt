@@ -26,7 +26,6 @@ import com.slideindex.app.overlay.corner.resolveHostPackageName
 import com.slideindex.app.service.CornerGestureSlotPickTrampolineActivity
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.CornerGestureSettings
-import com.slideindex.app.settings.CornerRadialMenuCodec
 import com.slideindex.app.settings.CornerSlotSubMenuConfig
 import com.slideindex.app.settings.SettingsRepository
 import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
@@ -144,42 +143,6 @@ fun CornerGestureSlotEditorHost(
         }
     }
 
-    /**
-     * 与相邻槽位交换动作（反馈 #385 ①）。
-     *
-     * 槽位是按固定几何位置编号的，所以"排序"就是交换两个位置上的动作；
-     * 先把当前草稿落盘，再交换，避免用户刚改的动作被覆盖。
-     */
-    val swapWithNeighbor: (Int) -> Unit = { delta ->
-        scope.launch {
-            persistCornerSlotDraft(
-                settingsRepository = settingsRepository,
-                corner = corner,
-                slotIndex = slotIndex,
-                action = draftAction,
-                subMenuConfig = draftSubMenu,
-            )
-            val overlay = settingsRepository.overlaySettings.first()
-            val cornerSettings = overlay.cornerGestureSettings
-            val unified = cornerSettings.unifiedSlots
-            val isLeft = unified || corner != "right"
-            val slots = if (isLeft) cornerSettings.leftSlots else cornerSettings.rightSlots
-            val neighborIndex = slotIndex + delta
-            if (neighborIndex in slots.indices) {
-                val mine = slots.getOrElse(slotIndex) { GestureAction.None }
-                val theirs = slots[neighborIndex]
-                if (isLeft) {
-                    settingsRepository.setCornerGestureLeftSlotAction(slotIndex, theirs)
-                    settingsRepository.setCornerGestureLeftSlotAction(neighborIndex, mine)
-                } else {
-                    settingsRepository.setCornerGestureRightSlotAction(slotIndex, theirs)
-                    settingsRepository.setCornerGestureRightSlotAction(neighborIndex, mine)
-                }
-            }
-            onExit()
-        }
-    }
-
     val hostPackage = draftAction.resolveHostPackageName()
 
     val existingPayloadKeys = remember(draftSubMenu.items) {
@@ -241,10 +204,6 @@ fun CornerGestureSlotEditorHost(
                     }
                 },
                 onAddSubMenuAction = { page = CornerSlotEditorPage.SubMenuActionPick },
-                onSwapWithPrevious = { swapWithNeighbor(-1) },
-                onSwapWithNext = { swapWithNeighbor(1) },
-                canSwapWithPrevious = slotIndex > 0,
-                canSwapWithNext = slotIndex < CornerRadialMenuCodec.SLOT_COUNT - 1,
                 onImportFromApp = {
                     scope.launch {
                         val pkg = draftAction.resolveHostPackageName() ?: return@launch

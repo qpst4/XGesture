@@ -547,11 +547,6 @@
     <string name="corner_gesture_slot_submenu_add_desc">システムショートカット一覧から選択</string>
     <string name="corner_gesture_slot_submenu_add_action">項目を追加</string>
     <string name="corner_gesture_slot_submenu_add_action_desc">操作選択ページからアクション・アプリ・ショートカットを選びます</string>
-    <string name="corner_gesture_slot_order_section">スロットの並び順</string>
-    <string name="corner_gesture_slot_order_prev">前のスロットと入れ替え</string>
-    <string name="corner_gesture_slot_order_prev_desc">前のスロットと動作を交換します（作り直し不要）</string>
-    <string name="corner_gesture_slot_order_next">次のスロットと入れ替え</string>
-    <string name="corner_gesture_slot_order_next_desc">次のスロットと動作を交換します（作り直し不要）</string>
     <string name="corner_gesture_slot_submenu_import">アプリからインポート</string>
     <string name="corner_gesture_slot_submenu_import_desc">スロットにリンクしたアプリからショートカットを入力</string>
     <string name="corner_gesture_slot_corner_left">左下放射状メニュー</string>

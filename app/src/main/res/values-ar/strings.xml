@@ -547,11 +547,6 @@
     <string name="corner_gesture_slot_submenu_add_desc">اختر من قائمة اختصارات النظام</string>
     <string name="corner_gesture_slot_submenu_add_action">إضافة عنصر</string>
     <string name="corner_gesture_slot_submenu_add_action_desc">اختر إجراءً أو تطبيقًا أو اختصارًا من صفحة اختيار الإجراء</string>
-    <string name="corner_gesture_slot_order_section">ترتيب الفتحات</string>
-    <string name="corner_gesture_slot_order_prev">التبديل مع السابق</string>
-    <string name="corner_gesture_slot_order_prev_desc">تبديل الإجراء مع الفتحة السابقة دون إعادة الإنشاء</string>
-    <string name="corner_gesture_slot_order_next">التبديل مع التالي</string>
-    <string name="corner_gesture_slot_order_next_desc">تبديل الإجراء مع الفتحة التالية دون إعادة الإنشاء</string>
     <string name="corner_gesture_slot_submenu_import">استيراد من التطبيق</string>
     <string name="corner_gesture_slot_submenu_import_desc">ملء عناصر الاختصار بناءً على التطبيق المرتبط بالفتحة</string>
     <string name="corner_gesture_slot_corner_left">عجلة الزاوية اليسرى السفلية</string>
