@@ -145,6 +145,8 @@ class MacroRecordingTouchCapture(
             return
         }
         if (panes.isEmpty()) return
+        // 注入期间不要动窗口：装载 injector 的时候反复 updateViewLayout 更容易超时。
+        if (injecting) return
         val manager = windowManager ?: return
         val rects = computePaneRects()
         Log.i(TAG, "updateHole rects=$rects")
@@ -386,8 +388,20 @@ class MacroRecordingTouchCapture(
                         }
 
                         override fun onCancelled(gestureDescription: GestureDescription?) {
-                            Log.w(TAG, "注入被取消 moved=$moved dur=${durationMs}ms")
+                            Log.w(
+                                TAG,
+                                "注入被取消 moved=$moved dur=${durationMs}ms" +
+                                    "（系统 MotionEventInjector 装不上时就会这样）",
+                            )
+                            injectionFailures++
                             endInjection(generation)
+                            if (injectionFailures >= MAX_INJECTION_FAILURES) {
+                                Log.w(
+                                    TAG,
+                                    "注入连续失败 $injectionFailures 次，结束录制以恢复触摸",
+                                )
+                                onInjectionUnavailable()
+                            }
                         }
                     },
                     null,
@@ -422,31 +436,36 @@ class MacroRecordingTouchCapture(
         drainForwards()
     }
 
-    /** 注入期间把四块窗都摘掉：注入的事件不会落回我们自己。 */
+    /**
+     * 注入期间把四块窗改成"不可触摸"（原地改标志，**不增删窗口**）。
+     *
+     * 之前是 removeView/addView：无障碍窗口反复增删会让系统装不上 `MotionEventInjector`
+     * （logcat 里 `MotionEventInjector installation timed out`），手势注入被取消 →
+     * 录制时滑动"没反应"。改标志只触发一次 updateViewLayout，窗口本身一直在。
+     */
     private fun detachForInjection() {
         if (!attached) return
         val manager = windowManager ?: return
-        attached = false
-        panes.forEach { pane -> runCatching { manager.removeView(pane.view) } }
-        Log.i(TAG, "捕获层已摘除（准备注入）")
+        panes.forEach { pane ->
+            pane.params.flags = pane.params.flags or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+            runCatching { manager.updateViewLayout(pane.view, pane.params) }
+                .onFailure { Log.w(TAG, "注入期改不可触摸失败", it) }
+        }
+        Log.i(TAG, "捕获层改为不可触摸（准备注入）")
     }
 
-    /** 注入结束后装回。四块窗都不覆盖控制条，所以装回顺序不再影响按钮点击。 */
+    /** 注入结束后恢复可触摸（同样是原地改标志）。 */
     private fun reattachAfterInjection() {
-        if (attached) return
         if (panes.isEmpty()) return
         val manager = windowManager ?: return
-        attached = true
-        var failed = false
         panes.forEach { pane ->
-            runCatching { manager.addView(pane.view, pane.params) }
-                .onFailure {
-                    Log.w(TAG, "装回捕获窗失败", it)
-                    failed = true
-                }
+            pane.params.flags = pane.params.flags and
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+            runCatching { manager.updateViewLayout(pane.view, pane.params) }
+                .onFailure { Log.w(TAG, "恢复可触摸失败", it) }
         }
-        if (failed) attached = false
-        Log.i(TAG, "捕获层已装回")
+        Log.i(TAG, "捕获层恢复可触摸")
     }
 
     private companion object {

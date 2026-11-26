@@ -494,10 +494,21 @@ class AppRepository @Inject constructor(
         // #375：搜索结果里可以隐藏某个应用，并且能按用户起的别名搜到它。
         val hidden = SearchAppPrefs.hiddenTargets(context)
         val aliases = SearchAppPrefs.aliases(context)
+        val normalized = query.trim().lowercase()
         val visible = if (hidden.isEmpty()) {
             apps
         } else {
-            apps.filter { AppTarget.encode(it.packageName, it.cloneUserId) !in hidden }
+            apps.filter { app ->
+                val target = AppTarget.encode(app.packageName, app.cloneUserId)
+                if (target !in hidden) return@filter true
+                // 别名优先于隐藏：用户给隐藏应用起了别名，就是希望"能按别名找回来"。
+                val alias = aliases[target].orEmpty().trim()
+                normalized.isNotEmpty() && alias.isNotEmpty() &&
+                    (alias.lowercase().contains(normalized) ||
+                        com.slideindex.app.util.PinyinHelper.sortKey(alias).contains(
+                            com.slideindex.app.util.PinyinHelper.sortKey(query),
+                        ))
+            }
         }
         if (aliases.isEmpty()) return AppSearchMatcher.search(visible, query, limit)
         return AppSearchMatcher.search(visible, query, limit) { app ->

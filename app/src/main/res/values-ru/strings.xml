@@ -5400,4 +5400,8 @@
     <string name="search_group_pick_existing_subtitle">Выберите из установленных целей отправки</string>
     <string name="search_group_create_new">Создать группу для отправки</string>
     <string name="search_group_create_new_subtitle">Объедините несколько целей отправки изображений в одну запись</string>
+    <string name="pick_result_flat_title">Плоская панель извлечения</string>
+    <string name="pick_result_flat_desc">Убирает карточки у текста и изображения, оставляя тонкую линию</string>
+    <string name="pick_result_flat_style_card">Карточка</string>
+    <string name="pick_result_flat_style_flat">Плоский</string>
 </resources>

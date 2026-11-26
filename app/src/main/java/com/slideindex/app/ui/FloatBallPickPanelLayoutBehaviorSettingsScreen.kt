@@ -153,16 +153,22 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                 )
                 add(
                     settingsCardScopeItem("panel-flat") {
-                        // 反馈 #4：平铺属于「取词面板的版式」，不该放在悬浮窗材质里。
-                        SettingSwitchRow(
+                        // 反馈：平铺是「版式二选一」，用 segmented 比开关更准确。
+                        SettingSegmentedRow(
                             title = stringResource(R.string.pick_result_flat_title),
-                            subtitle = stringResource(R.string.pick_result_flat_desc),
-                            checked = pickResultFlat,
-                            enabled = true,
-                            onCheckedChange = { value ->
-                                pickResultFlat = value
+                            items = listOf(false, true),
+                            selected = pickResultFlat,
+                            labelRes = { flat ->
+                                if (flat) {
+                                    R.string.pick_result_flat_style_flat
+                                } else {
+                                    R.string.pick_result_flat_style_card
+                                }
+                            },
+                            onSelect = { flat ->
+                                pickResultFlat = flat
                                 com.slideindex.app.overlay.pickresult.PickResultFlatPrefs
-                                    .setEnabled(context, value)
+                                    .setEnabled(context, flat)
                             },
                         )
                     },

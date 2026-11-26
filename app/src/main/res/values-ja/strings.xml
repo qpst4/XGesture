@@ -5368,4 +5368,8 @@
     <string name="search_group_pick_existing_subtitle">インストール済みの共有先から選択</string>
     <string name="search_group_create_new">共有グループを作成</string>
     <string name="search_group_create_new_subtitle">複数の画像共有先を 1 つの項目にまとめます</string>
+    <string name="pick_result_flat_title">取词パネルのフラット表示</string>
+    <string name="pick_result_flat_desc">テキスト領域と画像領域のカードを外し、細い区切り線だけにします</string>
+    <string name="pick_result_flat_style_card">カード</string>
+    <string name="pick_result_flat_style_flat">フラット</string>
 </resources>

@@ -5372,4 +5372,8 @@
     <string name="search_group_pick_existing_subtitle">اختر من أهداف المشاركة المثبتة</string>
     <string name="search_group_create_new">إنشاء مجموعة مشاركة</string>
     <string name="search_group_create_new_subtitle">دمج عدة أهداف لمشاركة الصور في إدخال واحد</string>
+    <string name="pick_result_flat_title">لوحة استخراج نص مسطحة</string>
+    <string name="pick_result_flat_desc">يزيل بطاقة قسمي النص والصورة ويترك خطًا رفيعًا</string>
+    <string name="pick_result_flat_style_card">بطاقة</string>
+    <string name="pick_result_flat_style_flat">مسطح</string>
 </resources>
