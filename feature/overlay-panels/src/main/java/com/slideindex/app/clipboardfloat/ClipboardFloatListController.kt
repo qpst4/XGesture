@@ -76,7 +76,12 @@ class ClipboardFloatListController(
             if (showLoading) _loading.value = true
             try {
                 val page = withContext(Dispatchers.IO) {
-                    repository.loadPage(limit = ClipboardFloatWindowMetrics.PAGE_SIZE)
+                    repository.loadPage(
+                        limit = maxOf(
+                            ClipboardFloatWindowMetrics.PAGE_SIZE,
+                            ClipboardFloatWindowMetrics.INITIAL_PAGE_SIZE,
+                        ),
+                    )
                 }
                 _entries.value = page
             } finally {

@@ -110,6 +110,8 @@ object ScreenDrawOverlay {
     private var textCallback: ((String) -> Unit)? = null
 
     private var density = 1f
+    /** App 的「界面缩放」系数（1f = 100%）。Compose 内容按它缩放，窗口尺寸也要跟着乘。 */
+    private var uiScale = 1f
     private var screenWidth = 1
     private var screenHeight = 1
     private var saving = false
@@ -150,6 +152,13 @@ object ScreenDrawOverlay {
         if (wm == null) return false
 
         val metrics = OverlayScreenMetrics.sizePx(host)
+        uiScale = runCatching {
+            com.slideindex.app.di.OverlayDependencyAccess
+                .overlayDependencies(context)
+                ?.settingsRepository
+                ?.readSnapshot()
+                ?.uiDensityScale
+        }.getOrNull()?.takeIf { it > 0f } ?: 1f
         screenWidth = metrics.first.coerceAtLeast(1)
         screenHeight = metrics.second.coerceAtLeast(1)
         density = host.resources.displayMetrics.density
@@ -438,7 +447,7 @@ object ScreenDrawOverlay {
         val isVertical = orientationState.value == ScreenDrawOrientation.VERTICAL
         val tbWidth = tbParams.width
         val tbHeight = tbParams.height
-        val panelWidth = if (isVertical) dp(148f) else dp(316f)
+        val panelWidth = if (isVertical) scaledDp(148f) else scaledDp(316f)
         val panelHeight = dp(getOptionsPanelHeightDp(orientationState.value, tool, false))
         val gap = dp(8f)
 
@@ -498,7 +507,7 @@ object ScreenDrawOverlay {
         val isVertical = orientationState.value == ScreenDrawOrientation.VERTICAL
         val tbWidth = tbParams.width
         val tbHeight = tbParams.height
-        val panelWidth = if (isVertical) dp(52f) else dp(264f)
+        val panelWidth = if (isVertical) scaledDp(52f) else scaledDp(264f)
         val panelHeight = if (isVertical) dp(264f) else dp(52f)
         val gap = dp(8f)
 
@@ -586,10 +595,13 @@ object ScreenDrawOverlay {
 
     private fun toolbarSizePx(orientation: ScreenDrawOrientation): Pair<Int, Int> =
         if (orientation == ScreenDrawOrientation.VERTICAL) {
-            dp(86f) to dp(316f)
+            scaledDp(86f) to scaledDp(316f)
         } else {
-            dp(316f) to dp(86f)
+            scaledDp(316f) to scaledDp(86f)
         }
+
+    /** 窗口尺寸要用「界面缩放后」的 dp：Compose 内容跟 uiScale 走，窗口不跟就会靠左留白。 */
+    private fun scaledDp(value: Float): Int = dp(value * uiScale)
 
     private fun initialToolbarPosition(
         orientation: ScreenDrawOrientation,

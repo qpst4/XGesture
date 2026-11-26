@@ -16,7 +16,11 @@ object ClipboardFloatWindowMetrics {
     const val COLUMN_ONE_MAX_CONTENT_DP = 260
     const val COLUMN_TWO_MAX_CONTENT_DP = 420
 
+    /** 单页加载条数；滚到底再加载下一页，不再一次只给 40 条。 */
     const val PAGE_SIZE = 40
+
+    /** 浮窗首屏加载条数：原来只给 40 条，用户以为"只能显示 40 条"。 */
+    const val INITIAL_PAGE_SIZE = 200
 
     /** 浮窗贴边留白 */
     const val EDGE_MARGIN_DP = 12

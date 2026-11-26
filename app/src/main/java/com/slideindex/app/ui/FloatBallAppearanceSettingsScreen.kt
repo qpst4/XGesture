@@ -113,6 +113,18 @@ fun FloatBallAppearanceSettingsScreen(
         ballSizeDp = settings.floatBallSizeDp,
     )
     val minEdgeInsetDp = FloatBallPositionFractions.minInsetDp(settings.floatBallSizeDp)
+    // 存储值可能超出「按球径算出来」的滑条范围（旧版/手动写入）：范围要把它包进来，
+    // 否则进页面时滑条与标签会显示被夹取后的值（反馈 -33dp 显示成 -1/+2dp）。
+    val storedEdgeInsetDp = settings.floatBallEdgeInsetDp
+    val sliderMinEdgeInsetDp = minOf(minEdgeInsetDp, storedEdgeInsetDp)
+    val sliderMaxEdgeInsetDp = maxOf(maxEdgeInsetDp, storedEdgeInsetDp)
+    androidx.compose.runtime.LaunchedEffect(storedEdgeInsetDp, minEdgeInsetDp, maxEdgeInsetDp) {
+        android.util.Log.i(
+            "FloatBallEdgeInset",
+            "appearance opened stored=${storedEdgeInsetDp}dp ball=${settings.floatBallSizeDp}dp " +
+                "min=$minEdgeInsetDp max=$maxEdgeInsetDp screenW=$screenWidthDp",
+        )
+    }
 
     SettingsScreenScaffold(
         title = stringResource(R.string.float_ball_appearance_settings_title),
@@ -273,9 +285,11 @@ fun FloatBallAppearanceSettingsScreen(
                             SettingsSliderRow(
                                 title = stringResource(R.string.float_ball_edge_inset),
                                 value = settings.floatBallEdgeInsetDp.toFloat(),
-                                valueRange = minEdgeInsetDp.toFloat()..maxEdgeInsetDp.toFloat(),
+                                valueRange = sliderMinEdgeInsetDp.toFloat()..
+                                    sliderMaxEdgeInsetDp.toFloat(),
                                 // 约 4dp 一格；范围随屏幕宽度变化，格数也要跟着算。
-                                steps = (((maxEdgeInsetDp - minEdgeInsetDp) / 4) - 1).coerceAtLeast(1),
+                                steps = (((sliderMaxEdgeInsetDp - sliderMinEdgeInsetDp) / 4) - 1)
+                                    .coerceAtLeast(1),
                                 enabled = true,
                                 label = edgeInsetLabel(settings.floatBallEdgeInsetDp.toFloat()),
                                 formatLabel = ::edgeInsetLabel,
