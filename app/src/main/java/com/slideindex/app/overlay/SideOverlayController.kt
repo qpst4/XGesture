@@ -472,7 +472,7 @@ class SideOverlayController(
                 }
             },
             onGestureTrackingStartCallback = {
-                if (previewMode) {
+                if (previewMode && previewFocus?.showPairedGroup != true) {
                     windowManager.presentationView?.setPreviewMode(false)
                 }
                 windowManager.syncPresentationTouchState()
