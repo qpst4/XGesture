@@ -133,11 +133,8 @@ fun MacroPickDialog(
     val context = LocalContext.current
     val macros = remember(show) { MacroStore.all(context) }
 
-    WindowDialog(
-        show = true,
-        title = stringResource(R.string.macro_action_run_macro),
-        onDismissRequest = onDismissRequest,
-    ) {
+    val dialogTitle = stringResource(R.string.macro_action_run_macro)
+    val body: @Composable () -> Unit = {
         Column {
             if (macros.isEmpty()) {
                 Text(
@@ -173,6 +170,24 @@ fun MacroPickDialog(
                 minHeight = 44.dp,
                 insideMargin = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
             )
+        }
+    }
+    val backdrop = com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop.current
+    if (backdrop != null) {
+        top.yukonga.miuix.kmp.glass.GlassDialog(
+            onDismissRequest = onDismissRequest,
+            show = true,
+            backdrop = backdrop,
+            title = dialogTitle,
+            content = body,
+        )
+    } else {
+        WindowDialog(
+            show = true,
+            title = dialogTitle,
+            onDismissRequest = onDismissRequest,
+        ) {
+            body()
         }
     }
 }
