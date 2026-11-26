@@ -599,6 +599,7 @@ object ScreenPinManager {
             return
         }
         pins.keys.toList().forEach { removePin(it) }
+        hidePinToolbar()
         destroyDropOverlay()
     }
 
@@ -909,6 +910,90 @@ object ScreenPinManager {
             return
         }
         instance.uiState.showControls.value = !instance.uiState.showControls.value
+        // 反馈 #8：控制条改成屏幕底部的固定横条（比卡片里那条更好按，也不改变卡片尺寸）。
+        if (instance.uiState.showControls.value) {
+            showPinToolbar(instance)
+        } else {
+            hidePinToolbar()
+        }
+    }
+
+    // ---- 底部常驻工具条（反馈 #8） -------------------------------------------
+
+    private var toolbarView: ComposeView? = null
+    private var toolbarOwner: OverlayComposeOwner? = null
+    private var toolbarParams: WindowManager.LayoutParams? = null
+    private val toolbarPinId = mutableStateOf<String?>(null)
+    private val toolbarAlphaState = mutableFloatStateOf(1f)
+    private val toolbarCanRotateState = mutableStateOf(false)
+
+    private fun showPinToolbar(instance: PinInstance) {
+        toolbarPinId.value = instance.id
+        toolbarAlphaState.floatValue = instance.uiState.contentAlpha.floatValue
+        toolbarCanRotateState.value = instance.content is PinContent.Image
+        ensureToolbarWindow()
+    }
+
+    private fun hidePinToolbar() {
+        toolbarPinId.value = null
+        val view = toolbarView ?: return
+        runCatching { windowManager?.removeView(view) }
+        toolbarOwner?.destroy()
+        toolbarView = null
+        toolbarOwner = null
+        toolbarParams = null
+    }
+
+    private fun ensureToolbarWindow() {
+        val wm = windowManager ?: return
+        val host = appContext ?: return
+        if (toolbarView != null) return
+        val owner = OverlayComposeOwner()
+        val view = OverlayCompose.createComposeView(host, owner)
+        val metrics = host.resources.displayMetrics
+        val width = (metrics.widthPixels * 0.82f).toInt()
+            .coerceAtLeast((240 * metrics.density).toInt())
+        val params = WindowManager.LayoutParams(
+            width,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            OverlayWindowTypes.overlayWindowType(host),
+            pinOverlayFlags(),
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+            y = (96 * metrics.density).toInt()
+        }
+        view.setContent {
+            OverlayAwareModuleTheme {
+                PinBottomToolbar(
+                    alpha = toolbarAlphaState.floatValue,
+                    canRotate = toolbarCanRotateState.value,
+                    onAlphaChange = { value ->
+                        toolbarAlphaState.floatValue = value
+                        toolbarPinId.value?.let { id ->
+                            pins[id]?.uiState?.contentAlpha?.floatValue = value
+                        }
+                    },
+                    onRotate = {
+                        val id = toolbarPinId.value ?: return@PinBottomToolbar
+                        rotatePinImage(id)
+                        toolbarCanRotateState.value = pins[id]?.content is PinContent.Image
+                    },
+                    onClose = {
+                        val id = toolbarPinId.value
+                        hidePinToolbar()
+                        if (id != null) removePin(id)
+                    },
+                )
+            }
+        }
+        if (runCatching { wm.addView(view, params) }.isSuccess) {
+            toolbarView = view
+            toolbarOwner = owner
+            toolbarParams = params
+        } else {
+            owner.destroy()
+        }
     }
 
     /**
@@ -923,6 +1008,7 @@ object ScreenPinManager {
         // 先给触感反馈，再做内容落盘，避免长按判定被编码耗时拖后。
         instance.composeView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         instance.uiState.showControls.value = false
+        if (toolbarPinId.value == instance.id) hidePinToolbar()
         val items = PinDragHelper.itemsOf(instance.content, instance.id)
         val clip = PinDragHelper.buildClip(context, items) ?: return
         PinDragHelper.startDrag(
@@ -934,6 +1020,7 @@ object ScreenPinManager {
     }
 
     private fun removePin(pinId: String) {
+        if (toolbarPinId.value == pinId) hidePinToolbar()
         val instance = pins.remove(pinId) ?: return
         instance.uiState.animator?.cancel()
         val wm = windowManager
@@ -1849,6 +1936,8 @@ private fun ScreenPinContent(
             }
         }
         if (!isDocked) {
+            // 反馈 #8：控制条已挪到屏幕底部的固定横条（独立窗口），这里只保留原高度占位，
+            // 避免卡片尺寸/贴边逻辑整体改动。
             Box(
                 modifier = Modifier
                     .widthIn(min = barMinWidth)
@@ -1856,41 +1945,31 @@ private fun ScreenPinContent(
                     .padding(top = 6.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if (showControls) {
-                    PinControlBar(
-                        alpha = alpha,
-                        onAlphaChange = onAlphaChange,
-                        onClose = onClose,
-                        canRotate = canRotate,
-                        onRotate = onRotate,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
             }
         }
     }
 }
 
 @Composable
-private fun PinControlBar(
+private fun PinBottomToolbar(
     alpha: Float,
+    canRotate: Boolean,
     onAlphaChange: (Float) -> Unit,
+    onRotate: () -> Unit,
     onClose: () -> Unit,
-    canRotate: Boolean = false,
-    onRotate: () -> Unit = {},
-    modifier: Modifier = Modifier
 ) {
-    val pillShape = RoundedCornerShape(20.dp)
-    val surfaceColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)
+    val pillShape = RoundedCornerShape(24.dp)
+    val surfaceColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
     val outlineColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
     Row(
-        modifier = modifier
-            .shadow(6.dp, pillShape, clip = false)
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(8.dp, pillShape, clip = false)
             .clip(pillShape)
             .border(0.5.dp, outlineColor, pillShape)
             .background(surfaceColor)
-            .padding(start = 14.dp, end = 6.dp, top = 2.dp, bottom = 2.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Slider(
             value = alpha,
@@ -1898,19 +1977,18 @@ private fun PinControlBar(
             valueRange = PIN_CONTROL_ALPHA_MIN..1f,
             modifier = Modifier
                 .weight(1f)
-                .height(32.dp),
+                .height(36.dp),
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.primary,
                 activeTrackColor = MaterialTheme.colorScheme.primary,
                 inactiveTrackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
             )
         )
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.width(8.dp))
         if (canRotate) {
-            // 反馈 #392：钉在屏幕上的图片支持旋转（每次顺时针 90°，直接转位图）。
             Box(
                 modifier = Modifier
-                    .size(34.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.92f))
                     .clickable(onClick = onRotate),
@@ -1919,15 +1997,15 @@ private fun PinControlBar(
                 Icon(
                     imageVector = Icons.Default.Rotate90DegreesCw,
                     contentDescription = stringResource(R.string.pin_rotate),
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(20.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.width(8.dp))
         }
         Box(
             modifier = Modifier
-                .size(34.dp)
+                .size(40.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.92f))
                 .clickable(onClick = onClose),
@@ -1936,7 +2014,7 @@ private fun PinControlBar(
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = stringResource(R.string.shell_panel_close),
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(20.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
