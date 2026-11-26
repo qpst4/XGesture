@@ -140,6 +140,14 @@ enum class GestureActionType(val id: Int) {
     COMPOSITE(131),
 
     /**
+     * 「组合动作（引用）」：payload = 组合库里的组合 id。
+     *
+     * 与 [COMPOSITE]（内联快照）不同，它**不保存步骤**：执行时实时读库，
+     * 所以改库会同步到所有绑定手势；库里的组合被删掉时按“无动作”处理。
+     */
+    COMPOSITE_REF(132),
+
+    /**
      * 「页面滚动」：打开一个竖排控制条，并用**被持续续接的划动手势**让页面平滑滚动。
      *
      * 松手后继续滚（用控制条改方向 / 调速 / 暂停 / 关闭）；速度 7 档，默认第 3 档。
@@ -887,6 +895,18 @@ sealed class GestureAction {
         }
     }
 
+    /**
+     * 引用组合库里的组合：payload = 组合 id。
+     *
+     * 执行时按 id 去库里取步骤（改库全局生效）；找不到时按无动作处理。
+     */
+    data class CompositeRef(
+        val presetId: String,
+    ) : GestureAction() {
+        override val type = GestureActionType.COMPOSITE_REF
+        override val payload = presetId
+    }
+
     data object PageScroll : GestureAction() {
         override val type = GestureActionType.PAGE_SCROLL
         override val payload = ""
@@ -1610,6 +1630,7 @@ sealed class GestureAction {
                 GestureActionType.EXECUTE_SHELL_COMMAND -> ExecuteShellCommand(payload)
                 GestureActionType.RUN_MACRO -> RunMacro(payload)
                 GestureActionType.COMPOSITE -> Composite.parse(payload)
+                GestureActionType.COMPOSITE_REF -> CompositeRef(payload)
                 GestureActionType.PAGE_SCROLL -> PageScroll
                 GestureActionType.MAGNIFIER -> Magnifier
                 GestureActionType.REALTIME_PINCH -> PointerPinchZoom

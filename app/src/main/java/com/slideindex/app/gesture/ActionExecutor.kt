@@ -192,6 +192,17 @@ class ActionExecutor(
             rawX = overlayAnchorX ?: anchorRawX ?: gestureTouchDownRawX,
         )
         return when (action) {
+            is GestureAction.CompositeRef -> executeCompositeRef(
+                action = action,
+                settings = settings,
+                longPressArmed = longPressArmed,
+                anchorRawX = anchorRawX,
+                anchorRawY = anchorRawY,
+                continueTouch = continueTouch,
+                panelSide = panelSide,
+                gestureTouchDownRawX = gestureTouchDownRawX,
+                gestureTouchDownRawY = gestureTouchDownRawY,
+            )
             is GestureAction.Composite -> executeComposite(
                 action = action,
                 settings = settings,
@@ -823,6 +834,42 @@ class ActionExecutor(
      * 第一项立即执行，其余每项延后 180ms（避免连续打开面板/启动 Activity 互相打断）；
      * 不递归嵌套（解析和选择器都已过滤 Composite）。
      */
+    /**
+     * 组合动作（引用）：按 id 去组合库取步骤再执行。
+     *
+     * 库里的组合被删掉时按“无动作”处理（不崩、不误执行别的动作）。
+     */
+    private fun executeCompositeRef(
+        action: GestureAction.CompositeRef,
+        settings: AppSettings,
+        longPressArmed: Boolean,
+        anchorRawX: Float?,
+        anchorRawY: Float?,
+        continueTouch: Boolean,
+        panelSide: PanelSide?,
+        gestureTouchDownRawX: Float?,
+        gestureTouchDownRawY: Float?,
+    ): Boolean {
+        val preset = com.slideindex.app.ui.composite.CompositeActionPresetStore
+            .load(context)
+            .firstOrNull { it.id == action.presetId }
+        if (preset == null) {
+            android.util.Log.w("ActionExecutor", "composite preset missing: ${'$'}{action.presetId}")
+            return false
+        }
+        return executeComposite(
+            action = GestureAction.Composite(preset.actions),
+            settings = settings,
+            longPressArmed = longPressArmed,
+            anchorRawX = anchorRawX,
+            anchorRawY = anchorRawY,
+            continueTouch = continueTouch,
+            panelSide = panelSide,
+            gestureTouchDownRawX = gestureTouchDownRawX,
+            gestureTouchDownRawY = gestureTouchDownRawY,
+        )
+    }
+
     private fun executeComposite(
         action: GestureAction.Composite,
         settings: AppSettings,

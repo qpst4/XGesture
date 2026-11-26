@@ -67,4 +67,12 @@ class GestureActionCompositeTest {
         assertTrue(decoded is GestureAction.Composite)
         assertTrue((decoded as GestureAction.Composite).actions.isEmpty())
     }
+
+    @Test
+    fun compositeRef_roundTrip() {
+        val ref = GestureAction.CompositeRef("preset-uuid")
+        val decoded = GestureAction.from(GestureActionType.COMPOSITE_REF, ref.payload)
+        assertEquals(ref, decoded)
+        assertEquals("preset-uuid", decoded.payload)
+    }
 }

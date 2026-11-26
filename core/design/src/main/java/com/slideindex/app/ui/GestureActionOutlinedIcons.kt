@@ -154,7 +154,7 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.ALIPAY_PAY_CODE -> PayQrActionIcons.AlipayPayCode
     GestureActionType.ALIPAY_SCAN -> PayQrActionIcons.AlipayScan
     GestureActionType.QUICK_WHEEL -> ThinActionIcons.QuickWheel
-    GestureActionType.COMPOSITE -> ThinActionIcons.Inventory
+    GestureActionType.COMPOSITE, GestureActionType.COMPOSITE_REF -> ThinActionIcons.Inventory
 }
 
 @Suppress("DEPRECATION")
@@ -288,5 +288,5 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.ALIPAY_PAY_CODE -> PayQrActionIcons.AlipayPayCode
     GestureActionType.ALIPAY_SCAN -> PayQrActionIcons.AlipayScan
     GestureActionType.QUICK_WHEEL -> ThinActionIcons.QuickWheel
-    GestureActionType.COMPOSITE -> ThinActionIcons.Inventory
+    GestureActionType.COMPOSITE, GestureActionType.COMPOSITE_REF -> ThinActionIcons.Inventory
 }

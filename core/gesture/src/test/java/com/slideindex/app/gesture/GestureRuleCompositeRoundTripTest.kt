@@ -64,4 +64,11 @@ class GestureRuleCompositeRoundTripTest {
         assertEquals("legacy", decoded!!.id)
         assertEquals(GestureAction.Home, decoded.action)
     }
+    @Test
+    fun compositeRefSurvivesRuleCodec() {
+        val action = GestureAction.CompositeRef("preset-uuid-1")
+        val decoded = GestureRuleCodec.decode(GestureRuleCodec.encode(rule(action)))
+        assertNotNull(decoded)
+        assertEquals(action, decoded!!.action)
+    }
 }
