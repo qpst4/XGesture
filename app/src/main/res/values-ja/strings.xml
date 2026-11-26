@@ -1049,6 +1049,12 @@
     <string name="float_nav_close">フローティングナビを閉じる</string>
     <string name="float_nav_drag">フローティングナビをドラッグ</string>
     <string name="float_nav_expand">フローティングナビを展開</string>
+    <string name="action_initial_form_title">初期形態</string>
+    <string name="action_form_horizontal">横向き</string>
+    <string name="action_form_vertical">縦向き</string>
+    <string name="action_form_memory">記憶</string>
+    <string name="float_nav_initial_form_summary">フローティングナビを開いたときの向きです。「記憶」は前回の形態を引き継ぎます。</string>
+    <string name="screen_draw_initial_form_summary">描画ツールバーを開いたときの向きです。「記憶」は前回の向きを引き継ぎます。</string>
     <string name="gesture_action_close_current_app">現在のアプリを閉じる</string>
     <string name="gesture_action_force_stop_current_app">現在のアプリを強制停止</string>
     <string name="gesture_action_force_stop_current_app_desc">前面のアプリのプロセスを強制終了します（Shizuku または root が必要）</string>

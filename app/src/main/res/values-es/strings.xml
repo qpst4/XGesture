@@ -2518,6 +2518,12 @@
     <string name="float_nav_close">Cerrar navegación flotante</string>
     <string name="float_nav_drag">Arrastrar navegación flotante</string>
     <string name="float_nav_expand">Expandir navegación flotante</string>
+    <string name="action_initial_form_title">Forma inicial</string>
+    <string name="action_form_horizontal">Horizontal</string>
+    <string name="action_form_vertical">Vertical</string>
+    <string name="action_form_memory">Recordar</string>
+    <string name="float_nav_initial_form_summary">Dirección de la barra de navegación flotante al abrirse. Recordar usa la última forma utilizada.</string>
+    <string name="screen_draw_initial_form_summary">Dirección de la barra de dibujo al abrirse. Recordar usa la última dirección utilizada.</string>
     <string name="gesture_action_close_current_app">Aplicación actual</string>
     <string name="gesture_action_force_stop_current_app">Aplicación actual para detener la fuerza</string>
     <string name="gesture_action_force_stop_current_app_desc">Matar el proceso de aplicación de primer plano (requiere Shizuku o root)</string>

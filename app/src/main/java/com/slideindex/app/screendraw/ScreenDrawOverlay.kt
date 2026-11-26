@@ -161,7 +161,8 @@ object ScreenDrawOverlay {
         canUndoState.value = false
         canRedoState.value = false
         minimized = false
-        orientationState.value = ScreenDrawOrientation.HORIZONTAL
+        val initialOrientation = ScreenDrawPrefs.resolveInitialOrientation(host)
+        orientationState.value = initialOrientation
         currentToolState.value = ScreenDrawPrefs.resolveInitialTool(host)
         popupOptionsToolState.value = null
         isOptionsPopupShowing = false
@@ -355,8 +356,8 @@ object ScreenDrawOverlay {
             }
         }
 
-        val tbWidth = dp(316f)
-        val tbHeight = dp(86f)
+        val (tbWidth, tbHeight) = toolbarSizePx(initialOrientation)
+        val (initialX, initialY) = initialToolbarPosition(initialOrientation, tbWidth, tbHeight)
         val toolbarLayout = WindowManager.LayoutParams(
             tbWidth,
             tbHeight,
@@ -368,8 +369,8 @@ object ScreenDrawOverlay {
             PixelFormat.TRANSLUCENT,
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = ((screenWidth - tbWidth) / 2).coerceAtLeast(0)
-            y = (screenHeight - tbHeight - dp(28f)).coerceAtLeast(0)
+            x = initialX
+            y = initialY
             layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
             OverlayWindowTypes.ensureNoBrightnessOverride(this)
@@ -568,23 +569,38 @@ object ScreenDrawOverlay {
         val isVertical = orientationState.value == ScreenDrawOrientation.VERTICAL
         val nextOrientation = if (isVertical) ScreenDrawOrientation.HORIZONTAL else ScreenDrawOrientation.VERTICAL
         orientationState.value = nextOrientation
+        hostContext?.let { ScreenDrawPrefs.writeLastOrientation(it, nextOrientation) }
 
         val view = toolbar ?: return
         val params = toolbarParams ?: return
         val wm = windowManager ?: return
 
-        if (nextOrientation == ScreenDrawOrientation.VERTICAL) {
-            params.width = dp(86f)
-            params.height = dp(316f)
-            params.x = (screenWidth - dp(86f) - dp(16f)).coerceAtLeast(0)
-            params.y = ((screenHeight - dp(316f)) / 2).coerceAtLeast(0)
-        } else {
-            params.width = dp(316f)
-            params.height = dp(86f)
-            params.x = ((screenWidth - dp(316f)) / 2).coerceAtLeast(0)
-            params.y = (screenHeight - dp(86f) - dp(28f)).coerceAtLeast(0)
-        }
+        val (width, height) = toolbarSizePx(nextOrientation)
+        val (x, y) = initialToolbarPosition(nextOrientation, width, height)
+        params.width = width
+        params.height = height
+        params.x = x
+        params.y = y
         runCatching { wm.updateViewLayout(view, params) }
+    }
+
+    private fun toolbarSizePx(orientation: ScreenDrawOrientation): Pair<Int, Int> =
+        if (orientation == ScreenDrawOrientation.VERTICAL) {
+            dp(86f) to dp(316f)
+        } else {
+            dp(316f) to dp(86f)
+        }
+
+    private fun initialToolbarPosition(
+        orientation: ScreenDrawOrientation,
+        width: Int,
+        height: Int,
+    ): Pair<Int, Int> = if (orientation == ScreenDrawOrientation.VERTICAL) {
+        (screenWidth - width - dp(16f)).coerceAtLeast(0) to
+            ((screenHeight - height) / 2).coerceAtLeast(0)
+    } else {
+        ((screenWidth - width) / 2).coerceAtLeast(0) to
+            (screenHeight - height - dp(28f)).coerceAtLeast(0)
     }
 
     private fun moveToolbarBy(dx: Float, dy: Float) {

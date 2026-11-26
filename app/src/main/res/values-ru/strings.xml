@@ -2592,6 +2592,12 @@
     <string name="float_nav_close">Закрыть плавающую навигацию</string>
     <string name="float_nav_drag">Перетащить плавающую навигацию</string>
     <string name="float_nav_expand">Развернуть плавающую навигацию</string>
+    <string name="action_initial_form_title">Начальная форма</string>
+    <string name="action_form_horizontal">Горизонтально</string>
+    <string name="action_form_vertical">Вертикально</string>
+    <string name="action_form_memory">Запоминать</string>
+    <string name="float_nav_initial_form_summary">Направление панели плавающей навигации при открытии. «Запоминать» использует последнюю форму.</string>
+    <string name="screen_draw_initial_form_summary">Направление панели рисования при открытии. «Запоминать» использует последнее направление.</string>
     <string name="gesture_action_close_current_app">Закрыть текущее приложение</string>
     <string name="gesture_action_force_stop_current_app">Принудительно остановить текущее приложение</string>
     <string name="gesture_action_force_stop_current_app_desc">Полностью завершить процесс приложения на переднем плане (требуется Shizuku или root)</string>

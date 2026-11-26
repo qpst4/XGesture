@@ -43,6 +43,9 @@ import com.slideindex.app.external.AppLinks
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureActionType
 import com.slideindex.app.overlay.MagnifierPrefs
+import com.slideindex.app.overlay.floatnav.FloatNavFormSetting
+import com.slideindex.app.overlay.floatnav.FloatNavPrefs
+import com.slideindex.app.screendraw.ScreenDrawPrefs
 import kotlin.math.round
 import com.slideindex.app.gesture.KeyEventPresets
 import com.slideindex.app.pagescroll.PageScrollPrefs
@@ -122,6 +125,12 @@ fun ActionDetailScreen(
     var pageScroll by remember(context) { mutableStateOf(PageScrollPrefs.read(context)) }
     var screenDrawDefaultTool by remember(context) {
         mutableStateOf(com.slideindex.app.screendraw.ScreenDrawPrefs.readDefaultTool(context))
+    }
+    var screenDrawInitialOrientation by remember(context) {
+        mutableStateOf(ScreenDrawPrefs.readInitialOrientation(context))
+    }
+    var floatNavInitialForm by remember(context) {
+        mutableStateOf(FloatNavPrefs.readInitialForm(context))
     }
     var magnifierFullscreenScale by remember(context) {
         mutableFloatStateOf(MagnifierPrefs.readFullscreenScale(context))
@@ -589,53 +598,108 @@ fun ActionDetailScreen(
                             onUpdate = onAppCarouselSwitcherChange,
                         ),
                     )
-                    entry.type == GestureActionType.SCREEN_DRAW -> add(
-                        settingsCardScopeItem("screen-draw-default-tool") {
-                            val toolValues = listOf(
-                                com.slideindex.app.screendraw.ScreenDrawTool.PEN.name,
-                                com.slideindex.app.screendraw.ScreenDrawTool.SHAPE.name,
-                                com.slideindex.app.screendraw.ScreenDrawTool.TEXT.name,
-                                com.slideindex.app.screendraw.ScreenDrawTool.MOSAIC.name,
-                                com.slideindex.app.screendraw.ScreenDrawTool.NUMBER.name,
-                                com.slideindex.app.screendraw.ScreenDrawTool.BOX_SELECT.name,
-                                com.slideindex.app.screendraw.ScreenDrawPrefs.MEMORY,
-                            )
-                            val toolLabels = listOf(
-                                stringResource(R.string.inspire_image_edit_mode_doodle),
-                                stringResource(R.string.inspire_image_edit_mode_shape),
-                                stringResource(R.string.inspire_image_edit_mode_text),
-                                stringResource(R.string.inspire_image_edit_mode_mosaic),
-                                stringResource(R.string.inspire_image_edit_mode_number),
-                                stringResource(R.string.inspire_image_edit_mode_crop),
-                                stringResource(R.string.screen_draw_tool_memory),
-                            )
-                            val toolDescs = listOf(
-                                stringResource(R.string.screen_draw_tool_desc_doodle),
-                                stringResource(R.string.screen_draw_tool_desc_shape),
-                                stringResource(R.string.screen_draw_tool_desc_text),
-                                stringResource(R.string.screen_draw_tool_desc_mosaic),
-                                stringResource(R.string.screen_draw_tool_desc_number),
-                                stringResource(R.string.screen_draw_tool_desc_crop),
-                                stringResource(R.string.screen_draw_tool_desc_memory),
-                            )
-                            val selectedIndex = toolValues.indexOf(screenDrawDefaultTool)
-                                .coerceIn(0, toolValues.lastIndex)
-                            SettingDropdownRow(
-                                title = stringResource(R.string.screen_draw_default_tool_title),
-                                subtitle = toolDescs[selectedIndex],
-                                items = toolLabels,
-                                selectedIndex = selectedIndex,
-                                enabled = true,
-                                onSelectedIndexChange = { index ->
-                                    toolValues.getOrNull(index)?.let { value ->
-                                        screenDrawDefaultTool = value
-                                        com.slideindex.app.screendraw.ScreenDrawPrefs
-                                            .writeDefaultTool(context, value)
+                    entry.type == GestureActionType.FLOAT_NAV -> add(
+                        settingsCardScopeItem("float-nav-initial-form") {
+                            InitialFormSettingContent(
+                                title = stringResource(R.string.action_initial_form_title),
+                                summary = stringResource(R.string.float_nav_initial_form_summary),
+                                items = listOf(
+                                    FloatNavFormSetting.HORIZONTAL,
+                                    FloatNavFormSetting.VERTICAL,
+                                    FloatNavFormSetting.MEMORY,
+                                ),
+                                selected = floatNavInitialForm,
+                                labelRes = { value ->
+                                    when (value) {
+                                        FloatNavFormSetting.HORIZONTAL -> R.string.action_form_horizontal
+                                        FloatNavFormSetting.VERTICAL -> R.string.action_form_vertical
+                                        FloatNavFormSetting.MEMORY -> R.string.action_form_memory
                                     }
+                                },
+                                onSelect = { value ->
+                                    floatNavInitialForm = value
+                                    FloatNavPrefs.writeInitialForm(context, value)
                                 },
                             )
                         },
                     )
+                    entry.type == GestureActionType.SCREEN_DRAW -> {
+                        add(
+                            settingsCardScopeItem("screen-draw-default-tool") {
+                                val toolValues = listOf(
+                                    com.slideindex.app.screendraw.ScreenDrawTool.PEN.name,
+                                    com.slideindex.app.screendraw.ScreenDrawTool.SHAPE.name,
+                                    com.slideindex.app.screendraw.ScreenDrawTool.TEXT.name,
+                                    com.slideindex.app.screendraw.ScreenDrawTool.MOSAIC.name,
+                                    com.slideindex.app.screendraw.ScreenDrawTool.NUMBER.name,
+                                    com.slideindex.app.screendraw.ScreenDrawTool.BOX_SELECT.name,
+                                    com.slideindex.app.screendraw.ScreenDrawPrefs.MEMORY,
+                                )
+                                val toolLabels = listOf(
+                                    stringResource(R.string.inspire_image_edit_mode_doodle),
+                                    stringResource(R.string.inspire_image_edit_mode_shape),
+                                    stringResource(R.string.inspire_image_edit_mode_text),
+                                    stringResource(R.string.inspire_image_edit_mode_mosaic),
+                                    stringResource(R.string.inspire_image_edit_mode_number),
+                                    stringResource(R.string.inspire_image_edit_mode_crop),
+                                    stringResource(R.string.screen_draw_tool_memory),
+                                )
+                                val toolDescs = listOf(
+                                    stringResource(R.string.screen_draw_tool_desc_doodle),
+                                    stringResource(R.string.screen_draw_tool_desc_shape),
+                                    stringResource(R.string.screen_draw_tool_desc_text),
+                                    stringResource(R.string.screen_draw_tool_desc_mosaic),
+                                    stringResource(R.string.screen_draw_tool_desc_number),
+                                    stringResource(R.string.screen_draw_tool_desc_crop),
+                                    stringResource(R.string.screen_draw_tool_desc_memory),
+                                )
+                                val selectedIndex = toolValues.indexOf(screenDrawDefaultTool)
+                                    .coerceIn(0, toolValues.lastIndex)
+                                SettingDropdownRow(
+                                    title = stringResource(R.string.screen_draw_default_tool_title),
+                                    subtitle = toolDescs[selectedIndex],
+                                    items = toolLabels,
+                                    selectedIndex = selectedIndex,
+                                    enabled = true,
+                                    onSelectedIndexChange = { index ->
+                                        toolValues.getOrNull(index)?.let { value ->
+                                            screenDrawDefaultTool = value
+                                            com.slideindex.app.screendraw.ScreenDrawPrefs
+                                                .writeDefaultTool(context, value)
+                                        }
+                                    },
+                                )
+                            },
+                        )
+                        add(
+                            settingsCardScopeItem("screen-draw-initial-form") {
+                                InitialFormSettingContent(
+                                    title = stringResource(R.string.action_initial_form_title),
+                                    summary = stringResource(R.string.screen_draw_initial_form_summary),
+                                    items = listOf(
+                                        ScreenDrawPrefs.InitialOrientation.HORIZONTAL,
+                                        ScreenDrawPrefs.InitialOrientation.VERTICAL,
+                                        ScreenDrawPrefs.InitialOrientation.MEMORY,
+                                    ),
+                                    selected = screenDrawInitialOrientation,
+                                    labelRes = { value ->
+                                        when (value) {
+                                            ScreenDrawPrefs.InitialOrientation.HORIZONTAL ->
+                                                R.string.action_form_horizontal
+                                            ScreenDrawPrefs.InitialOrientation.VERTICAL ->
+                                                R.string.action_form_vertical
+                                            ScreenDrawPrefs.InitialOrientation.MEMORY ->
+                                                R.string.action_form_memory
+                                        }
+                                    },
+                                    onSelect = { value ->
+                                        screenDrawInitialOrientation = value
+                                        ScreenDrawPrefs.writeInitialOrientation(context, value)
+                                    },
+                                )
+                            },
+                        )
+                    }
                     openSettings != null -> add(
                         settingsCardScopeItem("settings") {
                             SettingNavigationRow(
@@ -664,6 +728,43 @@ fun ActionDetailScreen(
                     )
                 }
             },
+        )
+    }
+}
+
+@Composable
+private fun <T> InitialFormSettingContent(
+    title: String,
+    summary: String,
+    items: List<T>,
+    selected: T,
+    labelRes: (T) -> Int,
+    onSelect: (T) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = title,
+            style = MiuixTheme.textStyles.headline1,
+            fontWeight = FontWeight.Medium,
+            color = MiuixTheme.colorScheme.onSurfaceContainer,
+        )
+        Text(
+            text = summary,
+            style = MiuixTheme.textStyles.body2,
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+        )
+        SegmentedControl(
+            items = items,
+            selected = selected,
+            labelRes = labelRes,
+            onSelect = onSelect,
+            containerColor = MiuixTheme.colorScheme.surface,
+            indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
         )
     }
 }

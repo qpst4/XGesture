@@ -10,6 +10,8 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.drawable.GradientDrawable
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -34,15 +36,15 @@ import kotlin.math.roundToInt
  * 浮动导航条视图。
  *
  * 视觉上是一块和项目其他悬浮面板同材质的胶囊：系统局部模糊 + 全局不透明度 + 圆角 +
- * 高光/描边；模糊不可用时退化为实色底 + 细描边。布局固定为
- * `把手 + 返回 + 主屏 + 最近 + 关闭`，展开方向朝屏幕中心；右侧/右半边整体镜像，
- * 让把手始终在展开方向的起点。
+ * 高光/描边；模糊不可用时退化为实色底 + 细描边。支持横向/竖向两种排列：
+ * 把柄在展开方向的起点，其余按键朝屏幕中心排列；右侧/下侧方向整体镜像。
  */
 @SuppressLint("ViewConstructor", "RtlHardcoded")
 internal class FloatNavView(
     context: Context,
     private var appSettings: AppSettings,
-    expandRight: Boolean,
+    form: FloatNavForm,
+    expandForward: Boolean,
     private val listener: Listener,
 ) : LinearLayout(context) {
 
@@ -50,6 +52,7 @@ internal class FloatNavView(
         fun onKey(key: FloatNavKey)
         fun onClose()
         fun onGripClick()
+        fun onGripLongPress()
         fun onDragStart()
         fun onDragBy(dx: Float, dy: Float)
         fun onDragEnd()
@@ -63,17 +66,21 @@ internal class FloatNavView(
     private var collapsed = false
     private var animating = false
     private var reordering = false
-    private var expandRightDirection = expandRight
+    private var currentForm = form
+    private var expandForwardDirection = expandForward
     private val reorderRunnable = Runnable { applyChildOrder() }
+    private val longPressHandler = Handler(Looper.getMainLooper())
 
     val isCollapsed: Boolean get() = collapsed
+    val form: FloatNavForm get() = currentForm
 
     init {
-        orientation = HORIZONTAL
+        orientation = if (currentForm == FloatNavForm.HORIZONTAL) HORIZONTAL else VERTICAL
         // 这是物理侧边导航条，阿拉伯语等 RTL 语言下也不能把左右顺序翻过来。
         layoutDirection = LAYOUT_DIRECTION_LTR
-        gravity = Gravity.CENTER_VERTICAL or if (expandRight) Gravity.LEFT else Gravity.RIGHT
+        applyGravity()
         setPadding(dp(6), dp(6), dp(6), dp(6))
+        minimumWidth = dp(56)
         minimumHeight = dp(56)
         isClickable = false
         importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
@@ -85,7 +92,7 @@ internal class FloatNavView(
             }
         }
 
-        // 展开方向朝屏幕中心：左侧/左半边把柄在左端，右侧/右半边把柄在右端。
+        // 展开方向朝屏幕中心：轴起点是 GRIP，其余按键沿水平/垂直方向排列。
         orderKeys().forEach { key ->
             val keyView = FloatNavKeyView(context, key, themeColors).apply {
                 contentDescription = descriptionFor(key)
@@ -101,14 +108,7 @@ internal class FloatNavView(
                     }
                 }
             }
-            addView(
-                keyView,
-                LayoutParams(widthFor(key), dp(44)).apply {
-                    gravity = Gravity.CENTER_VERTICAL
-                    marginStart = dp(2)
-                    marginEnd = dp(2)
-                },
-            )
+            addView(keyView, layoutParamsFor(key))
             keyViews[key] = keyView
         }
     }
@@ -118,7 +118,7 @@ internal class FloatNavView(
         if (width <= 0 || height <= 0) return
         val spec = OverlayMaterialSpec.fromContext(context)
         val isDark = resolveIsDark()
-        val corner = min(spec.cornerRadiusPx(density), height / 2f).coerceAtLeast(0f)
+        val corner = min(spec.cornerRadiusPx(density), min(width, height) / 2f).coerceAtLeast(0f)
         cornerRadiusPx = corner
 
         val wm = context.getSystemService(WindowManager::class.java)
@@ -196,6 +196,16 @@ internal class FloatNavView(
 
     fun collapsedWidthPx(): Int = dp(56)
 
+    fun collapsedHeightPx(): Int = dp(56)
+
+    /** 在极少数需要预测量“展开后尺寸”的场景使用（如收起态长按切形态）。 */
+    fun measureExpandedSizePx(): Pair<Int, Int> {
+        val probe = FloatNavView(context, appSettings, currentForm, expandForwardDirection, listener)
+        val spec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        probe.measure(spec, spec)
+        return probe.measuredWidth.coerceAtLeast(1) to probe.measuredHeight.coerceAtLeast(1)
+    }
+
     /** 设置回流时实时刷新主题，不能继续用构造时的浅色 colors 快照。 */
     fun updateSettings(settings: AppSettings) {
         appSettings = settings
@@ -220,10 +230,10 @@ internal class FloatNavView(
     }
 
     /** 动态换展开方向：不重建 View，只把现有子 View 按新顺序挂回去。 */
-    fun setExpandRight(value: Boolean) {
-        if (expandRightDirection == value) return
-        expandRightDirection = value
-        gravity = Gravity.CENTER_VERTICAL or if (value) Gravity.LEFT else Gravity.RIGHT
+    fun setExpandForward(value: Boolean) {
+        if (expandForwardDirection == value) return
+        expandForwardDirection = value
+        applyGravity()
         clearHighlight()
         // 这个方法可能在把柄自己的 onTouch 里被调用；同步 removeAllViews 会重入
         // cancelTouchTarget，先 post 到下一帧再重排。
@@ -232,6 +242,30 @@ internal class FloatNavView(
             post(reorderRunnable)
         } else {
             applyChildOrder()
+        }
+    }
+
+    /** 切换横/竖形态；收起态时窗口尺寸仍是 56×56，只更新内部布局。 */
+    fun setForm(form: FloatNavForm, expandForward: Boolean) {
+        val formChanged = currentForm != form
+        currentForm = form
+        if (formChanged) {
+            orientation = if (form == FloatNavForm.HORIZONTAL) HORIZONTAL else VERTICAL
+            keyViews.forEach { (key, view) ->
+                view.layoutParams = layoutParamsFor(key)
+            }
+        }
+        setExpandForward(expandForward)
+        applyGravity()
+        requestLayout()
+        invalidate()
+    }
+
+    private fun applyGravity() {
+        gravity = if (currentForm == FloatNavForm.HORIZONTAL) {
+            Gravity.CENTER_VERTICAL or if (expandForwardDirection) Gravity.LEFT else Gravity.RIGHT
+        } else {
+            Gravity.CENTER_HORIZONTAL or if (expandForwardDirection) Gravity.TOP else Gravity.BOTTOM
         }
     }
 
@@ -252,7 +286,7 @@ internal class FloatNavView(
         }
     }
 
-    private fun orderKeys(): List<FloatNavKey> = if (expandRightDirection) {
+    private fun orderKeys(): List<FloatNavKey> = if (expandForwardDirection) {
         listOf(
             FloatNavKey.GRIP,
             FloatNavKey.BACK,
@@ -271,8 +305,7 @@ internal class FloatNavView(
     }
 
     /**
-     * 收起时只留把柄，并把把柄加宽成一个 56×56dp 的圆角方块；展开时恢复完整按钮条。
-     * 收起/展开不改变高度，窗口只需按把柄所在边重新贴边。
+     * 收起时只留把柄，并把它变成 56×56dp 的圆角方块；展开时恢复完整按钮条。
      */
     fun setCollapsed(value: Boolean) {
         if (collapsed == value) return
@@ -281,7 +314,7 @@ internal class FloatNavView(
         keyViews.forEach { (key, view) ->
             val params = view.layoutParams as? LayoutParams ?: return@forEach
             if (key == FloatNavKey.GRIP) {
-                params.width = widthFor(key)
+                applyKeySize(key, params)
                 view.layoutParams = params
                 view.contentDescription = context.getString(
                     if (value) R.string.float_nav_expand else R.string.float_nav_drag,
@@ -301,6 +334,7 @@ internal class FloatNavView(
 
     override fun onDetachedFromWindow() {
         removeCallbacks(reorderRunnable)
+        longPressHandler.removeCallbacksAndMessages(null)
         super.onDetachedFromWindow()
     }
 
@@ -326,7 +360,42 @@ internal class FloatNavView(
         }
     }
 
+    private fun layoutParamsFor(key: FloatNavKey): LayoutParams =
+        if (currentForm == FloatNavForm.HORIZONTAL) {
+            LayoutParams(widthFor(key), dp(44)).apply {
+                gravity = Gravity.CENTER_VERTICAL
+                marginStart = if (collapsed && key == FloatNavKey.GRIP) 0 else dp(2)
+                marginEnd = if (collapsed && key == FloatNavKey.GRIP) 0 else dp(2)
+            }
+        } else {
+            LayoutParams(dp(44), heightFor(key)).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+                topMargin = if (collapsed && key == FloatNavKey.GRIP) 0 else dp(2)
+                bottomMargin = if (collapsed && key == FloatNavKey.GRIP) 0 else dp(2)
+            }
+        }
+
+    private fun applyKeySize(key: FloatNavKey, params: LayoutParams) {
+        if (currentForm == FloatNavForm.HORIZONTAL) {
+            params.width = widthFor(key)
+            params.height = dp(44)
+            params.marginStart = if (collapsed && key == FloatNavKey.GRIP) 0 else dp(2)
+            params.marginEnd = if (collapsed && key == FloatNavKey.GRIP) 0 else dp(2)
+        } else {
+            params.width = dp(44)
+            params.height = heightFor(key)
+            params.topMargin = if (collapsed && key == FloatNavKey.GRIP) 0 else dp(2)
+            params.bottomMargin = if (collapsed && key == FloatNavKey.GRIP) 0 else dp(2)
+        }
+    }
+
     private fun widthFor(key: FloatNavKey): Int = when (key) {
+        FloatNavKey.GRIP -> if (collapsed) dp(44) else dp(32)
+        FloatNavKey.CLOSE -> dp(40)
+        else -> dp(48)
+    }
+
+    private fun heightFor(key: FloatNavKey): Int = when (key) {
         FloatNavKey.GRIP -> if (collapsed) dp(44) else dp(32)
         FloatNavKey.CLOSE -> dp(40)
         else -> dp(48)
@@ -350,6 +419,13 @@ internal class FloatNavView(
         private var lastRawX = 0f
         private var lastRawY = 0f
         private var moved = false
+        private var longPressed = false
+        private val longPressRunnable = Runnable {
+            if (!moved && !longPressed) {
+                longPressed = true
+                listener.onGripLongPress()
+            }
+        }
 
         override fun onTouch(v: View, event: MotionEvent): Boolean {
             when (event.actionMasked) {
@@ -359,13 +435,21 @@ internal class FloatNavView(
                     lastRawX = event.rawX
                     lastRawY = event.rawY
                     moved = false
+                    longPressed = false
+                    longPressHandler.removeCallbacks(longPressRunnable)
+                    longPressHandler.postDelayed(
+                        longPressRunnable,
+                        ViewConfiguration.getLongPressTimeout().toLong(),
+                    )
                     return true
                 }
                 MotionEvent.ACTION_MOVE -> {
+                    if (longPressed) return true
                     if (!moved) {
                         val totalDx = event.rawX - downRawX
                         val totalDy = event.rawY - downRawY
                         if (hypot(totalDx, totalDy) >= slop) {
+                            longPressHandler.removeCallbacks(longPressRunnable)
                             moved = true
                             listener.onDragStart()
                             listener.onDragBy(totalDx, totalDy)
@@ -380,18 +464,24 @@ internal class FloatNavView(
                     return true
                 }
                 MotionEvent.ACTION_UP -> {
-                    if (moved) {
-                        listener.onDragEnd()
-                    } else {
-                        // 没有超过 slop：按点击处理，展开 / 收起浮条。
-                        v.performClick()
+                    longPressHandler.removeCallbacks(longPressRunnable)
+                    if (!longPressed) {
+                        if (moved) {
+                            listener.onDragEnd()
+                        } else {
+                            // 没有超过 slop：按点击处理，展开 / 收起浮条。
+                            v.performClick()
+                        }
                     }
                     moved = false
+                    longPressed = false
                     return true
                 }
                 MotionEvent.ACTION_CANCEL -> {
-                    if (moved && !reordering) listener.onDragEnd()
+                    longPressHandler.removeCallbacks(longPressRunnable)
+                    if (moved && !reordering && !longPressed) listener.onDragEnd()
                     moved = false
+                    longPressed = false
                     return true
                 }
             }

@@ -2658,6 +2658,12 @@
     <string name="float_nav_close">Close floating navigation</string>
     <string name="float_nav_drag">Drag floating navigation</string>
     <string name="float_nav_expand">Expand floating navigation</string>
+    <string name="action_initial_form_title">Initial form</string>
+    <string name="action_form_horizontal">Horizontal</string>
+    <string name="action_form_vertical">Vertical</string>
+    <string name="action_form_memory">Remember</string>
+    <string name="float_nav_initial_form_summary">Direction of the floating navigation bar when it opens. Remember keeps the last used form.</string>
+    <string name="screen_draw_initial_form_summary">Direction of the drawing toolbar when it opens. Remember keeps the last used direction.</string>
     <string name="gesture_action_close_current_app">Close current app</string>
     <string name="gesture_action_force_stop_current_app">Force stop current app</string>
     <string name="gesture_action_force_stop_current_app_desc">Kill the foreground app process outright (requires Shizuku or root)</string>

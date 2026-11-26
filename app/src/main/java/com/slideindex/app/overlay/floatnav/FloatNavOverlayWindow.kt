@@ -51,13 +51,15 @@ object FloatNavOverlayWindow {
     private var hostContext: Context? = null
     private var settings: AppSettings? = null
     private var side: PanelSide = PanelSide.RIGHT
-    private var expandRight = true
+    private var form: FloatNavForm = FloatNavForm.HORIZONTAL
+    private var expandForward = true
 
     private var tracking = false
     private var armed = false
     private var restoreCollapsedAfterSession = false
     private var toggleAnimator: ValueAnimator? = null
     private var expandedBarWidth = 0
+    private var expandedBarHeight = 0
     private var updatingDirection = false
     private var showRawX = 0f
     private var showRawY = 0f
@@ -96,13 +98,16 @@ object FloatNavOverlayWindow {
             this.side = side ?: this.side
             root?.let { view ->
                 view.updateSettings(settings)
-                if (!view.isCollapsed) expandedBarWidth = view.width
+                if (!view.isCollapsed) {
+                    expandedBarWidth = view.width
+                    expandedBarHeight = view.height
+                }
             }
             if (continuousTracking) {
-                val desiredExpandRight = computeExpandRight(this.side, anchorRawX)
-                if (desiredExpandRight != expandRight) {
-                    expandRight = desiredExpandRight
-                    root?.setExpandRight(desiredExpandRight)
+                val desiredExpandForward = computeExpandForward(this.side, anchorRawX, anchorRawY, form)
+                if (desiredExpandForward != expandForward) {
+                    expandForward = desiredExpandForward
+                    root?.setExpandForward(desiredExpandForward)
                 }
                 moveToAnchor(anchorRawX, anchorRawY)
                 startTracking(anchorRawX, anchorRawY)
@@ -125,21 +130,29 @@ object FloatNavOverlayWindow {
         screenHeight = metrics.second.coerceAtLeast(1)
         val density = host.resources.displayMetrics.density
         val resolvedSide = side ?: inferSide(anchorRawX, anchorRawY)
-        val resolvedExpandRight = computeExpandRight(resolvedSide, anchorRawX)
+        val resolvedForm = FloatNavPrefs.resolveInitialForm(host)
+        val resolvedExpandForward = computeExpandForward(
+            resolvedSide,
+            anchorRawX,
+            anchorRawY,
+            resolvedForm,
+        )
         val edgeInset = computeEdgeInset(settings, resolvedSide, density)
         val systemInsets = computeSystemInsets(wm, density, resolvedSide, edgeInset)
         edgeInsetPx = edgeInset
         topInsetPx = systemInsets.first
         bottomInsetPx = systemInsets.second
         this.side = resolvedSide
-        this.expandRight = resolvedExpandRight
+        this.form = resolvedForm
+        this.expandForward = resolvedExpandForward
         this.settings = settings
         hostContext = host
 
         val view = FloatNavView(
             context = host,
             appSettings = settings,
-            expandRight = resolvedExpandRight,
+            form = resolvedForm,
+            expandForward = resolvedExpandForward,
             listener = viewListener,
         )
         val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -147,6 +160,7 @@ object FloatNavOverlayWindow {
         val barWidth = view.measuredWidth.coerceAtLeast(1)
         val barHeight = view.measuredHeight.coerceAtLeast(1)
         expandedBarWidth = barWidth
+        expandedBarHeight = barHeight
         val position = positionFor(
             side = resolvedSide,
             anchorX = anchorRawX ?: (screenWidth / 2f),
@@ -156,7 +170,7 @@ object FloatNavOverlayWindow {
             density = density,
             collapsed = false,
         )
-        val lp = buildLayoutParams(host, position, barWidth)
+        val lp = buildLayoutParams(host, position, barWidth, barHeight)
         return runCatching {
             wm.addView(view, lp)
             root = view
@@ -212,7 +226,10 @@ object FloatNavOverlayWindow {
         this.settings = settings
         root?.let { view ->
             view.updateSettings(settings)
-            if (!view.isCollapsed) expandedBarWidth = view.width
+            if (!view.isCollapsed) {
+                expandedBarWidth = view.width
+                expandedBarHeight = view.height
+            }
         }
     }
 
@@ -318,10 +335,16 @@ object FloatNavOverlayWindow {
         val view = root ?: return
         val lp = layoutParams ?: return
         val oldScreenWidth = screenWidth
-        val currentLeft = if (expandRight) {
-            lp.x
+        val oldScreenHeight = screenHeight
+        val currentLeft = if (form == FloatNavForm.HORIZONTAL) {
+            if (expandForward) lp.x else oldScreenWidth - lp.x - view.width.coerceAtLeast(1)
         } else {
-            oldScreenWidth - lp.x - view.width.coerceAtLeast(1)
+            lp.x
+        }
+        val currentTop = if (form == FloatNavForm.HORIZONTAL) {
+            lp.y
+        } else {
+            if (expandForward) lp.y else oldScreenHeight - lp.y - view.height.coerceAtLeast(1)
         }
         val metrics = OverlayScreenMetrics.sizePx(wm, host.resources.displayMetrics)
         screenWidth = metrics.first.coerceAtLeast(1)
@@ -335,15 +358,28 @@ object FloatNavOverlayWindow {
         topInsetPx = systemInsets.first
         bottomInsetPx = systemInsets.second
         val gripOffset = gripOffsetPx(density, view.isCollapsed)
-        val gripCenterX = if (expandRight) {
-            currentLeft + gripOffset
+        val gripCenterX = if (form == FloatNavForm.HORIZONTAL) {
+            if (expandForward) {
+                currentLeft + gripOffset
+            } else {
+                currentLeft + view.width.coerceAtLeast(1) - gripOffset
+            }
         } else {
-            currentLeft + view.width.coerceAtLeast(1) - gripOffset
+            currentLeft + view.width.coerceAtLeast(1) / 2f
+        }
+        val gripCenterY = if (form == FloatNavForm.VERTICAL) {
+            if (expandForward) {
+                currentTop + gripOffset
+            } else {
+                currentTop + view.height.coerceAtLeast(1) - gripOffset
+            }
+        } else {
+            currentTop + view.height.coerceAtLeast(1) / 2f
         }
         val position = positionFor(
             side = resolvedSide,
             anchorX = gripCenterX,
-            anchorY = lp.y + view.height.coerceAtLeast(1) / 2f,
+            anchorY = gripCenterY,
             barWidth = view.width.coerceAtLeast(1),
             barHeight = view.height.coerceAtLeast(1),
             density = density,
@@ -351,7 +387,10 @@ object FloatNavOverlayWindow {
         )
         applyWindowPosition(lp, view, position)
         runCatching { wm.updateViewLayout(view, lp) }
-        if (!view.isCollapsed) expandedBarWidth = view.width
+        if (!view.isCollapsed) {
+            expandedBarWidth = view.width
+            expandedBarHeight = view.height
+        }
         view.applyTheme()
     }
 
@@ -368,6 +407,35 @@ object FloatNavOverlayWindow {
         density: Float,
         collapsed: Boolean,
     ): FloatNavPosition {
+        if (form == FloatNavForm.VERTICAL) {
+            val minX = edgeInsetPx
+            val maxX = (screenWidth - barWidth - edgeInsetPx).coerceAtLeast(minX)
+            val minY = topInsetPx
+            val maxY = (screenHeight - barHeight - bottomInsetPx).coerceAtLeast(minY)
+            val offset = gripOffsetPx(density, collapsed)
+            return when (side) {
+                PanelSide.LEFT -> FloatNavPosition(
+                    x = minX,
+                    y = (if (expandForward) anchorY - offset else anchorY - barHeight + offset)
+                        .roundToInt()
+                        .coerceIn(minY, maxY),
+                )
+                PanelSide.RIGHT -> FloatNavPosition(
+                    x = maxX,
+                    y = (if (expandForward) anchorY - offset else anchorY - barHeight + offset)
+                        .roundToInt()
+                        .coerceIn(minY, maxY),
+                )
+                PanelSide.TOP -> FloatNavPosition(
+                    x = (anchorX - barWidth / 2f).roundToInt().coerceIn(minX, maxX),
+                    y = minY,
+                )
+                PanelSide.BOTTOM -> FloatNavPosition(
+                    x = (anchorX - barWidth / 2f).roundToInt().coerceIn(minX, maxX),
+                    y = maxY,
+                )
+            }
+        }
         val base = FloatNavGeometry.computePosition(
             screenWidthPx = screenWidth,
             screenHeightPx = screenHeight,
@@ -382,7 +450,7 @@ object FloatNavOverlayWindow {
         )
         if (side != PanelSide.BOTTOM && side != PanelSide.TOP) return base
         val offset = gripOffsetPx(density, collapsed)
-        val rawX = if (expandRight) anchorX - offset else anchorX - barWidth + offset
+        val rawX = if (expandForward) anchorX - offset else anchorX - barWidth + offset
         val minX = edgeInsetPx
         val maxX = (screenWidth - barWidth - edgeInsetPx).coerceAtLeast(minX)
         return base.copy(x = rawX.roundToInt().coerceIn(minX, maxX))
@@ -399,20 +467,41 @@ object FloatNavOverlayWindow {
      * 这样宽度变化时由 WindowManager 保持锚定边，不会先长出去再跳回来。
      */
     private fun windowLeft(lp: WindowManager.LayoutParams, width: Int): Int =
-        if (expandRight) lp.x else screenWidth - lp.x - width.coerceAtLeast(1)
+        if (form == FloatNavForm.HORIZONTAL) {
+            if (expandForward) lp.x else screenWidth - lp.x - width.coerceAtLeast(1)
+        } else {
+            lp.x
+        }
+
+    private fun windowTop(lp: WindowManager.LayoutParams, height: Int): Int =
+        if (form == FloatNavForm.HORIZONTAL) {
+            lp.y
+        } else {
+            if (expandForward) lp.y else screenHeight - lp.y - height.coerceAtLeast(1)
+        }
 
     private fun applyWindowPosition(
         lp: WindowManager.LayoutParams,
         view: View,
         position: FloatNavPosition,
     ) {
-        lp.gravity = Gravity.TOP or if (expandRight) Gravity.LEFT else Gravity.RIGHT
-        lp.x = if (expandRight) {
-            position.x
+        if (form == FloatNavForm.HORIZONTAL) {
+            lp.gravity = Gravity.TOP or if (expandForward) Gravity.LEFT else Gravity.RIGHT
+            lp.x = if (expandForward) {
+                position.x
+            } else {
+                screenWidth - position.x - view.width.coerceAtLeast(1)
+            }
+            lp.y = position.y
         } else {
-            screenWidth - position.x - view.width.coerceAtLeast(1)
+            lp.gravity = (if (expandForward) Gravity.TOP else Gravity.BOTTOM) or Gravity.LEFT
+            lp.x = position.x
+            lp.y = if (expandForward) {
+                position.y
+            } else {
+                screenHeight - position.y - view.height.coerceAtLeast(1)
+            }
         }
-        lp.y = position.y
     }
 
     private fun startTracking(anchorRawX: Float?, anchorRawY: Float?) {
@@ -481,13 +570,20 @@ object FloatNavOverlayWindow {
         val lp = layoutParams ?: return
         if (dx == 0f && dy == 0f) return
         val width = view.width.coerceAtLeast(1)
+        val height = view.height.coerceAtLeast(1)
         val minX = edgeInsetPx
         val maxX = (screenWidth - width - edgeInsetPx).coerceAtLeast(minX)
         val minY = topInsetPx
-        val maxY = (screenHeight - view.height - bottomInsetPx).coerceAtLeast(minY)
+        val maxY = (screenHeight - height - bottomInsetPx).coerceAtLeast(minY)
         val left = (windowLeft(lp, width) + dx.roundToInt()).coerceIn(minX, maxX)
-        lp.x = if (expandRight) left else screenWidth - left - width
-        lp.y = (lp.y + dy.roundToInt()).coerceIn(minY, maxY)
+        val top = (windowTop(lp, height) + dy.roundToInt()).coerceIn(minY, maxY)
+        if (form == FloatNavForm.HORIZONTAL) {
+            lp.x = if (expandForward) left else screenWidth - left - width
+            lp.y = top
+        } else {
+            lp.x = left
+            lp.y = if (expandForward) top else screenHeight - top - height
+        }
         runCatching { wm.updateViewLayout(view, lp) }
     }
 
@@ -515,6 +611,10 @@ object FloatNavOverlayWindow {
             settings?.let { HapticHelper.confirmLaunch(view, it) }
         }
 
+        override fun onGripLongPress() {
+            toggleFormFromGrip()
+        }
+
         override fun onDragStart() = Unit
 
         override fun onDragBy(dx: Float, dy: Float) {
@@ -530,7 +630,61 @@ object FloatNavOverlayWindow {
     }
 
     /**
-     * 收起态拖到对侧/另一半屏后，按把柄当前位置重算展开方向，并保持当前左边缘不变。
+     * 收起态长按把柄切换横/竖；窗口仍是 56×56，只换内部布局和下一帧的展开方向。
+     */
+    private fun toggleFormFromGrip() {
+        if (tracking || toggleAnimator?.isRunning == true) return
+        val view = root ?: return
+        if (!view.isCollapsed) return
+        val wm = windowManager ?: return
+        val lp = layoutParams ?: return
+        val host = hostContext ?: return
+        val density = host.resources.displayMetrics.density
+        val width = view.width.coerceAtLeast(1)
+        val height = view.height.coerceAtLeast(1)
+        val centerX = windowLeft(lp, width) + width / 2f
+        val centerY = windowTop(lp, height) + height / 2f
+        val nextForm = if (form == FloatNavForm.HORIZONTAL) {
+            FloatNavForm.VERTICAL
+        } else {
+            FloatNavForm.HORIZONTAL
+        }
+        val nextForward = if (nextForm == FloatNavForm.HORIZONTAL) {
+            when (side) {
+                PanelSide.LEFT -> true
+                PanelSide.RIGHT -> false
+                PanelSide.TOP, PanelSide.BOTTOM -> centerX < screenWidth / 2f
+            }
+        } else {
+            when (side) {
+                PanelSide.TOP -> true
+                PanelSide.BOTTOM -> false
+                PanelSide.LEFT, PanelSide.RIGHT -> centerY < screenHeight / 2f
+            }
+        }
+        form = nextForm
+        expandForward = nextForward
+        view.setForm(nextForm, nextForward)
+        val (expandedWidth, expandedHeight) = view.measureExpandedSizePx()
+        expandedBarWidth = expandedWidth
+        expandedBarHeight = expandedHeight
+        val position = positionFor(
+            side = side,
+            anchorX = centerX,
+            anchorY = centerY,
+            barWidth = view.width.coerceAtLeast(1),
+            barHeight = view.height.coerceAtLeast(1),
+            density = density,
+            collapsed = true,
+        )
+        applyWindowPosition(lp, view, position)
+        runCatching { wm.updateViewLayout(view, lp) }
+        FloatNavPrefs.writeLastForm(host, nextForm)
+        settings?.let { HapticHelper.appTick(view, it) }
+    }
+
+    /**
+     * 收起态拖到对侧/另一半屏后，按把柄当前位置重算展开方向，并保持当前左上角不变。
      */
     private fun updateDirectionFromGrip(view: FloatNavView) {
         if (updatingDirection || toggleAnimator?.isRunning == true) return
@@ -541,30 +695,47 @@ object FloatNavOverlayWindow {
         try {
             val density = host.resources.displayMetrics.density
             val width = view.width.coerceAtLeast(1)
+            val height = view.height.coerceAtLeast(1)
             val left = windowLeft(lp, width)
+            val top = windowTop(lp, height)
             val offset = gripOffsetPx(density, view.isCollapsed)
-            val gripCenterX = if (expandRight) left + offset else left + width - offset
-            val gripCenterY = lp.y + view.height.coerceAtLeast(1) / 2f
+            val gripCenterX = if (form == FloatNavForm.HORIZONTAL) {
+                if (expandForward) left + offset else left + width - offset
+            } else {
+                left + width / 2f
+            }
+            val gripCenterY = if (form == FloatNavForm.VERTICAL) {
+                if (expandForward) top + offset else top + height - offset
+            } else {
+                top + height / 2f
+            }
             val desiredSide = when {
                 gripCenterY > screenHeight * 0.8f -> PanelSide.BOTTOM
                 gripCenterY < screenHeight * 0.2f -> PanelSide.TOP
                 gripCenterX < screenWidth / 2f -> PanelSide.LEFT
                 else -> PanelSide.RIGHT
             }
-            val desiredExpandRight = when (desiredSide) {
-                PanelSide.LEFT -> true
-                PanelSide.RIGHT -> false
-                PanelSide.TOP, PanelSide.BOTTOM -> gripCenterX < screenWidth / 2f
+            val desiredExpandForward = if (form == FloatNavForm.HORIZONTAL) {
+                when (desiredSide) {
+                    PanelSide.LEFT -> true
+                    PanelSide.RIGHT -> false
+                    PanelSide.TOP, PanelSide.BOTTOM -> gripCenterX < screenWidth / 2f
+                }
+            } else {
+                when (desiredSide) {
+                    PanelSide.TOP -> true
+                    PanelSide.BOTTOM -> false
+                    PanelSide.LEFT, PanelSide.RIGHT -> gripCenterY < screenHeight / 2f
+                }
             }
-            if (desiredSide == side && desiredExpandRight == expandRight) return
+            if (desiredSide == side && desiredExpandForward == expandForward) return
 
             // 先更新字段和锚点，再重排；重排是 post 的，不会再在 touch dispatch 中重入。
             side = desiredSide
-            expandRight = desiredExpandRight
-            lp.gravity = Gravity.TOP or if (expandRight) Gravity.LEFT else Gravity.RIGHT
-            lp.x = if (expandRight) left else screenWidth - left - width
+            expandForward = desiredExpandForward
+            applyWindowPosition(lp, view, FloatNavPosition(left, top))
             runCatching { wm.updateViewLayout(view, lp) }
-            view.setExpandRight(desiredExpandRight)
+            view.setExpandForward(desiredExpandForward)
         } finally {
             updatingDirection = false
         }
@@ -580,33 +751,52 @@ object FloatNavOverlayWindow {
         val host = hostContext ?: return
         if (toggleAnimator?.isRunning == true) return
         val collapsing = !view.isCollapsed
+        val vertical = form == FloatNavForm.VERTICAL
         val startWidth = view.width.coerceAtLeast(1)
+        val startHeight = view.height.coerceAtLeast(1)
         val density = host.resources.displayMetrics.density
-        val targetWidth = if (collapsing) {
+        val fallback = (248f * density).roundToInt()
+        val targetWidth = if (vertical) {
+            startWidth
+        } else if (collapsing) {
             view.collapsedWidthPx()
         } else {
-            expandedBarWidth.coerceAtLeast((248f * density).roundToInt())
+            expandedBarWidth.coerceAtLeast(fallback)
         }
-        if (targetWidth <= 0 || targetWidth == startWidth) {
+        val targetHeight = if (!vertical) {
+            startHeight
+        } else if (collapsing) {
+            view.collapsedHeightPx()
+        } else {
+            expandedBarHeight.coerceAtLeast(fallback)
+        }
+        val start = if (vertical) startHeight else startWidth
+        val target = if (vertical) targetHeight else targetWidth
+        if (target <= 0 || target == start) {
             view.setCollapsed(collapsing)
             return
         }
-        if (collapsing && startWidth <= targetWidth) return
-        if (!collapsing && startWidth >= targetWidth) return
+        if (collapsing && start <= target) return
+        if (!collapsing && start >= target) return
 
-        // 先把窗口宽度锁到当前值，避免 setCollapsed 触发 WRAP_CONTENT 立即跳变。
+        // 先把窗口尺寸锁到当前值，避免 setCollapsed 触发 WRAP_CONTENT 立即跳变。
         lp.width = startWidth
+        lp.height = startHeight
         runCatching { wm.updateViewLayout(view, lp) }
         view.setAnimating(true)
         // 收起：先只留把柄，再让窗口向把柄收；展开：先让窗口从把柄长出去，结束时再显示按键。
         if (collapsing) view.setCollapsed(true)
 
-        val animator = ValueAnimator.ofInt(startWidth, targetWidth).apply {
+        val animator = ValueAnimator.ofInt(start, target).apply {
             duration = 200L
             interpolator = DecelerateInterpolator()
             addUpdateListener { animation ->
-                val width = animation.animatedValue as Int
-                lp.width = width
+                val value = animation.animatedValue as Int
+                if (vertical) {
+                    lp.height = value
+                } else {
+                    lp.width = value
+                }
                 runCatching { wm.updateViewLayout(view, lp) }
             }
             addListener(object : AnimatorListenerAdapter() {
@@ -615,10 +805,14 @@ object FloatNavOverlayWindow {
                     toggleAnimator = null
                     if (!collapsing) view.setCollapsed(false)
                     lp.width = WindowManager.LayoutParams.WRAP_CONTENT
+                    lp.height = WindowManager.LayoutParams.WRAP_CONTENT
                     view.setAnimating(false)
                     view.applyMaterial()
                     runCatching { wm.updateViewLayout(view, lp) }
-                    if (!collapsing) expandedBarWidth = targetWidth
+                    if (!collapsing) {
+                        expandedBarWidth = targetWidth
+                        expandedBarHeight = targetHeight
+                    }
                 }
             })
         }
@@ -630,6 +824,7 @@ object FloatNavOverlayWindow {
         host: Context,
         position: FloatNavPosition,
         barWidth: Int,
+        barHeight: Int,
     ): WindowManager.LayoutParams = WindowManager.LayoutParams(
         WindowManager.LayoutParams.WRAP_CONTENT,
         WindowManager.LayoutParams.WRAP_CONTENT,
@@ -641,13 +836,23 @@ object FloatNavOverlayWindow {
             WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
         PixelFormat.TRANSLUCENT,
     ).apply {
-        gravity = Gravity.TOP or if (expandRight) Gravity.START else Gravity.END
-        x = if (expandRight) {
-            position.x
+        if (form == FloatNavForm.HORIZONTAL) {
+            gravity = Gravity.TOP or if (expandForward) Gravity.LEFT else Gravity.RIGHT
+            x = if (expandForward) {
+                position.x
+            } else {
+                screenWidth - position.x - barWidth.coerceAtLeast(1)
+            }
+            y = position.y
         } else {
-            screenWidth - position.x - barWidth.coerceAtLeast(1)
+            gravity = (if (expandForward) Gravity.TOP else Gravity.BOTTOM) or Gravity.LEFT
+            x = position.x
+            y = if (expandForward) {
+                position.y
+            } else {
+                screenHeight - position.y - barHeight.coerceAtLeast(1)
+            }
         }
-        y = position.y
         alpha = 1f
         title = "XG:float-nav"
         layoutInDisplayCutoutMode =
@@ -665,13 +870,29 @@ object FloatNavOverlayWindow {
         }
     }
 
-    /** 展开方向朝屏幕中心：左侧→右，右侧→左；上/下按触发点 X 落在哪半边。 */
-    private fun computeExpandRight(side: PanelSide, anchorRawX: Float?): Boolean = when (side) {
-        PanelSide.LEFT -> true
-        PanelSide.RIGHT -> false
-        PanelSide.TOP, PanelSide.BOTTOM -> {
-            val x = anchorRawX ?: (screenWidth / 2f)
-            x < screenWidth / 2f
+    /** 展开方向朝屏幕中心：横向看左/右半边，竖向看上/下半边。 */
+    private fun computeExpandForward(
+        side: PanelSide,
+        anchorRawX: Float?,
+        anchorRawY: Float?,
+        form: FloatNavForm,
+    ): Boolean = if (form == FloatNavForm.HORIZONTAL) {
+        when (side) {
+            PanelSide.LEFT -> true
+            PanelSide.RIGHT -> false
+            PanelSide.TOP, PanelSide.BOTTOM -> {
+                val x = anchorRawX ?: (screenWidth / 2f)
+                x < screenWidth / 2f
+            }
+        }
+    } else {
+        when (side) {
+            PanelSide.TOP -> true
+            PanelSide.BOTTOM -> false
+            PanelSide.LEFT, PanelSide.RIGHT -> {
+                val y = anchorRawY ?: (screenHeight / 2f)
+                y < screenHeight / 2f
+            }
         }
     }
 

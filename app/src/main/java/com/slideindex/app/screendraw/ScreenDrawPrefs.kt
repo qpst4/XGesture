@@ -16,9 +16,17 @@ internal object ScreenDrawPrefs {
     const val PREFS_NAME = "screen_draw"
     const val KEY_DEFAULT_TOOL = "default_tool"
     const val KEY_LAST_TOOL = "last_tool"
+    const val KEY_INITIAL_ORIENTATION = "initial_orientation"
+    const val KEY_LAST_ORIENTATION = "last_orientation"
 
     /** 「记忆」选项的存储值；不是 [ScreenDrawTool] 的枚举名。 */
     const val MEMORY = "MEMORY"
+
+    enum class InitialOrientation {
+        HORIZONTAL,
+        VERTICAL,
+        MEMORY,
+    }
 
     fun readDefaultTool(context: Context): String = runCatching {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -52,4 +60,37 @@ internal object ScreenDrawPrefs {
         return runCatching { ScreenDrawTool.valueOf(configured) }
             .getOrDefault(ScreenDrawTool.PEN)
     }
+
+    fun readInitialOrientation(context: Context): InitialOrientation = runCatching {
+        val raw = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_INITIAL_ORIENTATION, InitialOrientation.HORIZONTAL.name)
+        InitialOrientation.valueOf(raw ?: InitialOrientation.HORIZONTAL.name)
+    }.getOrDefault(InitialOrientation.HORIZONTAL)
+
+    fun writeInitialOrientation(context: Context, value: InitialOrientation) {
+        runCatching {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit().putString(KEY_INITIAL_ORIENTATION, value.name).apply()
+        }
+    }
+
+    fun readLastOrientation(context: Context): ScreenDrawOrientation = runCatching {
+        val raw = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_LAST_ORIENTATION, ScreenDrawOrientation.HORIZONTAL.name)
+        ScreenDrawOrientation.valueOf(raw ?: ScreenDrawOrientation.HORIZONTAL.name)
+    }.getOrDefault(ScreenDrawOrientation.HORIZONTAL)
+
+    fun writeLastOrientation(context: Context, value: ScreenDrawOrientation) {
+        runCatching {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit().putString(KEY_LAST_ORIENTATION, value.name).apply()
+        }
+    }
+
+    fun resolveInitialOrientation(context: Context): ScreenDrawOrientation =
+        when (readInitialOrientation(context)) {
+            InitialOrientation.HORIZONTAL -> ScreenDrawOrientation.HORIZONTAL
+            InitialOrientation.VERTICAL -> ScreenDrawOrientation.VERTICAL
+            InitialOrientation.MEMORY -> readLastOrientation(context)
+        }
 }

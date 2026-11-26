@@ -1081,6 +1081,12 @@
     <string name="float_nav_close">关闭浮动导航</string>
     <string name="float_nav_drag">拖动浮动导航</string>
     <string name="float_nav_expand">展开浮动导航</string>
+    <string name="action_initial_form_title">初始形态</string>
+    <string name="action_form_horizontal">横向</string>
+    <string name="action_form_vertical">竖向</string>
+    <string name="action_form_memory">记忆</string>
+    <string name="float_nav_initial_form_summary">浮动导航条打开时的方向；记忆会沿用上次实际形态。</string>
+    <string name="screen_draw_initial_form_summary">屏幕绘制工具栏打开时的方向；记忆会沿用上次实际方向。</string>
     <string name="gesture_action_close_current_app">关闭当前应用</string>
     <string name="gesture_action_force_stop_current_app">强行停止当前应用</string>
     <string name="gesture_action_force_stop_current_app_desc">彻底结束前台应用进程（需 Shizuku 或 root）</string>

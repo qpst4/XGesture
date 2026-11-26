@@ -20,6 +20,7 @@ class FloatNavViewCollapseTest {
         override fun onKey(key: FloatNavKey) = Unit
         override fun onClose() = Unit
         override fun onGripClick() = Unit
+        override fun onGripLongPress() = Unit
         override fun onDragStart() = Unit
         override fun onDragBy(dx: Float, dy: Float) = Unit
         override fun onDragEnd() = Unit
@@ -30,7 +31,8 @@ class FloatNavViewCollapseTest {
         val view = FloatNavView(
             context = RuntimeEnvironment.getApplication(),
             appSettings = AppSettings(),
-            expandRight = true,
+            form = FloatNavForm.HORIZONTAL,
+            expandForward = true,
             listener = listener,
         )
         val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -60,7 +62,8 @@ class FloatNavViewCollapseTest {
         val view = FloatNavView(
             context = context,
             appSettings = AppSettings(),
-            expandRight = false,
+            form = FloatNavForm.HORIZONTAL,
+            expandForward = false,
             listener = listener,
         )
         val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -74,19 +77,20 @@ class FloatNavViewCollapseTest {
     }
 
     @Test
-    fun setExpandRight_reordersLiveView() {
+    fun setExpandForward_reordersLiveView() {
         val context = RuntimeEnvironment.getApplication()
         val view = FloatNavView(
             context = context,
             appSettings = AppSettings(),
-            expandRight = true,
+            form = FloatNavForm.HORIZONTAL,
+            expandForward = true,
             listener = listener,
         )
         val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         view.measure(unspecified, unspecified)
         assertEquals(context.getString(R.string.float_nav_drag), view.getChildAt(0).contentDescription)
 
-        view.setExpandRight(false)
+        view.setExpandForward(false)
         view.measure(unspecified, unspecified)
 
         assertEquals(context.getString(R.string.float_nav_close), view.getChildAt(0).contentDescription)
@@ -94,5 +98,27 @@ class FloatNavViewCollapseTest {
             context.getString(R.string.float_nav_drag),
             view.getChildAt(view.childCount - 1).contentDescription,
         )
+    }
+
+    @Test
+    fun verticalForm_measuresTallAndCollapsesToSquare() {
+        val context = RuntimeEnvironment.getApplication()
+        val view = FloatNavView(
+            context = context,
+            appSettings = AppSettings(),
+            form = FloatNavForm.VERTICAL,
+            expandForward = true,
+            listener = listener,
+        )
+        val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        view.measure(unspecified, unspecified)
+        val expandedHeight = view.measuredHeight
+
+        assertTrue(view.measuredHeight > view.measuredWidth)
+        view.setCollapsed(true)
+        view.measure(unspecified, unspecified)
+
+        assertEquals(view.measuredWidth, view.measuredHeight)
+        assertTrue(view.measuredHeight < expandedHeight)
     }
 }

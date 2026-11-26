@@ -1029,6 +1029,12 @@
     <string name="float_nav_close">إغلاق التنقل العائم</string>
     <string name="float_nav_drag">سحب التنقل العائم</string>
     <string name="float_nav_expand">توسيع التنقل العائم</string>
+    <string name="action_initial_form_title">الشكل الابتدائي</string>
+    <string name="action_form_horizontal">أفقي</string>
+    <string name="action_form_vertical">رأسي</string>
+    <string name="action_form_memory">تذكّر</string>
+    <string name="float_nav_initial_form_summary">اتجاه شريط التنقل العائم عند فتحه. «تذكّر» يستخدم آخر شكل مستخدم.</string>
+    <string name="screen_draw_initial_form_summary">اتجاه شريط أدوات الرسم عند فتحه. «تذكّر» يستخدم آخر اتجاه مستخدم.</string>
     <string name="gesture_action_close_current_app">إغلاق التطبيق الحالي</string>
     <string name="gesture_action_force_stop_current_app">إيقاف التطبيق الحالي قسريًا</string>
     <string name="gesture_action_force_stop_current_app_desc">إنهاء عملية التطبيق في المقدمة نهائيًا (يتطلب Shizuku أو root)</string>
