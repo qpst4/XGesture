@@ -85,6 +85,8 @@ fun QuickLauncherAddPickerScreen(
     val tabs = remember { QuickLauncherEditorAddTab.entries }
     // 「手势宏」要先挑一条宏再落库：这里挂待处理回调，弹选择框。
     var pendingMacroPick by remember { mutableStateOf<((GestureAction) -> Unit)?>(null) }
+    val requestComposite = com.slideindex.app.ui.composite.rememberCompositePickRequester()
+    val requestOpenLink = com.slideindex.app.ui.composite.rememberOpenLinkRequester()
 
     val appsByPackage = remember(allApps) {
         allApps.groupBy { it.packageName }.mapValues { (_, apps) ->
@@ -227,6 +229,8 @@ fun QuickLauncherAddPickerScreen(
                     onOpenOpenLink = onOpenOpenLink,
                     onOpenSimulateKeyEvent = onOpenSimulateKeyEvent,
                     onRequestRunMacro = { onPicked -> pendingMacroPick = onPicked },
+                    onRequestComposite = requestComposite,
+                    onRequestOpenLink = requestOpenLink,
                     liveRingerMode = liveRingerMode,
                     columns = gridColumns,
                 )
@@ -311,6 +315,8 @@ fun QuickLauncherCreateFolderScreen(
     val tabs = remember { QuickLauncherEditorAddTab.entries }
     // 「手势宏」要先挑一条宏再落库：这里挂待处理回调，弹选择框。
     var pendingMacroPick by remember { mutableStateOf<((GestureAction) -> Unit)?>(null) }
+    val requestComposite = com.slideindex.app.ui.composite.rememberCompositePickRequester()
+    val requestOpenLink = com.slideindex.app.ui.composite.rememberOpenLinkRequester()
     var folderSelectedTab by remember { mutableIntStateOf(0) }
 
     val appsByPackage = remember(allApps) {
@@ -472,6 +478,8 @@ fun QuickLauncherCreateFolderScreen(
                     onOpenOpenLink = onOpenOpenLink,
                     onOpenSimulateKeyEvent = onOpenSimulateKeyEvent,
                     onRequestRunMacro = { onPicked -> pendingMacroPick = onPicked },
+                    onRequestComposite = requestComposite,
+                    onRequestOpenLink = requestOpenLink,
                     liveRingerMode = liveRingerMode,
                     columns = gridColumns,
                 )

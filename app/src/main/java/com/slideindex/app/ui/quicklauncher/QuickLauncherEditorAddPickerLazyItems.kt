@@ -74,12 +74,16 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
     onToggleItem: (QuickLauncherItem, Boolean) -> Unit,
     onOpenExecuteShellCommand: () -> Unit,
     onOpenOpenLink: () -> Unit = {},
+    /** 宿主提供共享「打开链接」弹窗时优先走它（null = 旧行为）。 */
+    onRequestOpenLink: (((GestureAction) -> Unit) -> Unit)? = null,
     onOpenSimulateKeyEvent: () -> Unit = {},
     /**
      * 「手势宏」必须带 macroId 才有意义：这里把"挑一条宏"的动作交回给调用方（由它挂选择框），
      * 拿到结果后再落库。缺省空实现时保持旧行为（不推荐，等于存了个空动作）。
      */
     onRequestRunMacro: ((GestureAction) -> Unit) -> Unit = {},
+    /** 「组合动作」：挑一条已保存的组合，再落 CompositeRef。 */
+    onRequestComposite: ((GestureAction) -> Unit) -> Unit = {},
     singleSelect: Boolean = false,
     noneSelected: Boolean = false,
     onSelectNone: () -> Unit = {},
@@ -230,7 +234,22 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
                                     onSelectNone()
                                 } else {
                                     when (action.type) {
-                                        GestureActionType.OPEN_LINK -> onOpenOpenLink()
+                                        GestureActionType.OPEN_LINK -> {
+                                            val request = onRequestOpenLink
+                                            if (request != null) {
+                                                request { picked ->
+                                                    onToggleItem(
+                                                        QuickLauncherItem.action(
+                                                            picked,
+                                                            gestureActionLabelText(context, picked),
+                                                        ),
+                                                        false,
+                                                    )
+                                                }
+                                            } else {
+                                                onOpenOpenLink()
+                                            }
+                                        }
                                         GestureActionType.EXECUTE_SHELL_COMMAND -> {
                                             requestPermissionForAdjustAction(context, action)
                                             onOpenExecuteShellCommand()
@@ -238,6 +257,16 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
                                         GestureActionType.SIMULATE_KEY_EVENT -> {
                                             requestPermissionForAdjustAction(context, action)
                                             onOpenSimulateKeyEvent()
+                                        }
+                                        GestureActionType.COMPOSITE -> onRequestComposite { picked ->
+                                            if (!added) requestPermissionForAdjustAction(context, picked)
+                                            onToggleItem(
+                                                QuickLauncherItem.action(
+                                                    picked,
+                                                    gestureActionLabelText(context, picked),
+                                                ),
+                                                false,
+                                            )
                                         }
                                         GestureActionType.RUN_MACRO -> onRequestRunMacro { picked ->
                                             if (!added) requestPermissionForAdjustAction(context, picked)
