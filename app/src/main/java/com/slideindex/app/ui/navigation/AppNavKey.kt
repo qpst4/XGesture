@@ -437,6 +437,9 @@ sealed interface AppNavKey : NavKey {
     @Serializable data object ExtensionExternalInvocations : AppNavKey
     @Serializable data object ExtensionLauncherShortcutMenu : AppNavKey
     @Serializable data object ExtensionAbout : AppNavKey
+
+/** 组合动作库（命名保存的组合）。 */
+@Serializable data object ExtensionCompositePresets : AppNavKey
     @Serializable data object DragDropFlowSettings : AppNavKey
     @Serializable data object FileShareEngineSettings : AppNavKey
     @Serializable data object FileSharePickApp : AppNavKey

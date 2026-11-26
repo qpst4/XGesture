@@ -103,6 +103,7 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             onOpenShareSheet = { ctx.navigate(AppNavKey.ShareSheetSettings) },
             onOpenFreezer = { ctx.navigate(AppNavKey.ExtensionFreezer) },
             onOpenMacro = { ctx.navigate(AppNavKey.MacroList) },
+            onOpenCompositePresets = { ctx.navigate(AppNavKey.ExtensionCompositePresets) },
             onOpenSettingsBackup = { ctx.navigate(AppNavKey.ExtensionBackup) },
             onOpenNativeEnginePacks = { ctx.navigate(AppNavKey.NativeEnginePacks) },
             onOpenDiagnosticLogs = { ctx.navigate(AppNavKey.ExtensionDiagnosticLogs) },
@@ -111,6 +112,12 @@ fun NavEntryBuilder.extensionHubNavEntries(ctx: MainNavContext) {
             onOpenIconLibrary = { ctx.navigate(AppNavKey.GlobalIconLibrary) },
             onOpenIconTheme = { ctx.navigate(AppNavKey.IconThemeSettings) },
             onOpenAbout = { ctx.navigate(AppNavKey.ExtensionAbout) },
+        )
+    }
+
+    hiltEntry<AppNavKey.ExtensionCompositePresets> {
+        com.slideindex.app.ui.composite.CompositeActionPresetsScreen(
+            onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
         )
     }
 

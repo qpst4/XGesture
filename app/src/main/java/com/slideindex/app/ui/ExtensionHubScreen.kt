@@ -57,6 +57,7 @@ fun ExtensionHubScreen(
     onOpenIconTheme: () -> Unit = {},
     onOpenFreezer: () -> Unit = {},
     onOpenMacro: () -> Unit = {},
+    onOpenCompositePresets: () -> Unit = {},
     onOpenSettingsBackup: () -> Unit,
     onOpenNativeEnginePacks: () -> Unit,
     onOpenDiagnosticLogs: () -> Unit,
@@ -256,6 +257,16 @@ fun ExtensionHubScreen(
                 add(
                     settingsCardScopeItem("macro") {
                         MacroEntryCard(onClick = onOpenMacro)
+                    }
+                )
+                add(
+                    settingsCardScopeItem("composite-presets") {
+                        SettingNavigationRow(
+                            icon = { label -> SymbolsIcon("Bolt", contentDescription = label) },
+                            title = stringResource(R.string.composite_library_title),
+                            subtitle = stringResource(R.string.composite_library_hub_subtitle),
+                            onClick = onOpenCompositePresets,
+                        )
                     }
                 )
             }
