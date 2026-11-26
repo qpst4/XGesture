@@ -33,9 +33,12 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -361,6 +364,9 @@ fun HistoryPanelScreen(
      * 逻辑的锚点，搬出来动的地方比这个功能本身还多）。
      */
     var listScrolled by remember { mutableStateOf(false) }
+    // 剪贴板页多选：批量删除用（闪念页不动）。
+    var clipboardSelectionActive by remember { mutableStateOf(false) }
+    var selectedClipboardIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     /** 深链带 query 进来时把光标请进搜索框（现在搜索框是常驻的，不再有"展开"这回事）。 */
     val searchFocusRequester = remember { FocusRequester() }
     val searchFocusScope = rememberCoroutineScope()
@@ -1386,10 +1392,40 @@ fun HistoryPanelScreen(
                                 onManageTags = openTagManager,
                                 onStarredToggled = viewModel::toggleStarredFilter,
                             )
-                            HistoryPanelTab.Clipboard -> HistoryClipboardFilterChips(
-                                selected = clipboardFilter,
-                                onSelected = viewModel::setClipboardFilter,
-                            )
+                            HistoryPanelTab.Clipboard -> Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    HistoryClipboardFilterChips(
+                                        selected = clipboardFilter,
+                                        onSelected = viewModel::setClipboardFilter,
+                                    )
+                                }
+                                Text(
+                                    text = stringResource(
+                                        if (clipboardSelectionActive) {
+                                            R.string.clipboard_float_selection_done
+                                        } else {
+                                            R.string.clipboard_float_multi_select
+                                        },
+                                    ),
+                                    style = MiuixTheme.textStyles.body2,
+                                    color = scheme.primary,
+                                    modifier = Modifier
+                                        .clickable(
+                                            interactionSource = remember {
+                                                MutableInteractionSource()
+                                            },
+                                            indication = null,
+                                        ) {
+                                            clipboardSelectionActive = !clipboardSelectionActive
+                                            if (!clipboardSelectionActive) {
+                                                selectedClipboardIds = emptySet()
+                                            }
+                                        }
+                                        .padding(start = 8.dp),
+                                )
+                            }
                         }
                     },
                 )
@@ -1463,6 +1499,27 @@ fun HistoryPanelScreen(
                                 onShowMessage = showPanelMessage,
                                 onDismissPanel = onDismiss,
                                 onListScrolledChange = { listScrolled = it },
+                                selectionActive = clipboardSelectionActive,
+                                selectedIds = selectedClipboardIds,
+                                onToggleSelection = { id ->
+                                    selectedClipboardIds = if (id in selectedClipboardIds) {
+                                        selectedClipboardIds - id
+                                    } else {
+                                        selectedClipboardIds + id
+                                    }
+                                },
+                                onSelectAll = {
+                                    selectedClipboardIds =
+                                        filteredClipboardEntries.mapTo(HashSet()) { it.id }
+                                },
+                                onDeleteSelected = { ids ->
+                                    scope.launch {
+                                        ids.forEach { id -> clipboardRepo?.delete(id) }
+                                        viewModel.refreshClipboardPages()
+                                        clipboardSelectionActive = false
+                                        selectedClipboardIds = emptySet()
+                                    }
+                                },
                             )
                         }
                     }
@@ -2337,6 +2394,12 @@ private fun HistoryClipboardTabBody(
     onDismissPanel: () -> Unit,
     /** 列表滑离顶部 → 上报给宿主决定头部收不收（§0.16.5）。 */
     onListScrolledChange: (Boolean) -> Unit,
+    /** 多选态：为 true 时点击卡片改为勾选。 */
+    selectionActive: Boolean = false,
+    selectedIds: Set<String> = emptySet(),
+    onToggleSelection: (String) -> Unit = {},
+    onSelectAll: () -> Unit = {},
+    onDeleteSelected: (Set<String>) -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -2429,10 +2492,49 @@ private fun HistoryClipboardTabBody(
             }
         }
         else -> {
+            Column(modifier = Modifier.fillMaxSize()) {
+            if (selectionActive) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.clipboard_float_selected_count,
+                            selectedIds.size,
+                        ),
+                        style = MiuixTheme.textStyles.body2,
+                        color = scheme.onSurface,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = stringResource(R.string.clipboard_float_select_all),
+                        style = MiuixTheme.textStyles.body2,
+                        color = scheme.primary,
+                        modifier = Modifier.clickable { onSelectAll() },
+                    )
+                    Text(
+                        text = stringResource(R.string.clipboard_float_delete_selected),
+                        style = MiuixTheme.textStyles.body2,
+                        color = if (selectedIds.isEmpty()) {
+                            scheme.onSurfaceVariantSummary
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        },
+                        modifier = Modifier.clickable(enabled = selectedIds.isNotEmpty()) {
+                            onDeleteSelected(selectedIds)
+                        },
+                    )
+                }
+            }
             LazyColumn(
                 state = listState,
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxWidth()
+                    .weight(1f),
                 contentPadding = PaddingValues(
                     start = 12.dp,
                     end = 12.dp,
@@ -2450,6 +2552,8 @@ private fun HistoryClipboardTabBody(
                 ) { entry ->
                     val expanded = entry.id in expandedEntryIds
                     val selectedIndex = selectedImageIndices[entry.id] ?: 0
+                    val entrySelected = entry.id in selectedIds
+                    Box {
                     HistoryClipboardEntryCard(
                         entry = entry,
                         expanded = expanded,
@@ -2478,6 +2582,41 @@ private fun HistoryClipboardTabBody(
                             scope.launch { clipboardRepo?.delete(entry.id) }
                         },
                     )
+                    if (selectionActive) {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clip(RoundedCornerShape(HistoryRadii.lg))
+                                .then(
+                                    if (entrySelected) {
+                                        Modifier.border(
+                                            1.5.dp,
+                                            scheme.primary,
+                                            RoundedCornerShape(HistoryRadii.lg),
+                                        )
+                                    } else {
+                                        Modifier
+                                    },
+                                )
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                ) { onToggleSelection(entry.id) },
+                        ) {
+                            if (entrySelected) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = scheme.primary,
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(8.dp)
+                                        .size(20.dp),
+                                )
+                            }
+                        }
+                    }
+                    }
                 }
                 if (!isSearching && totalCount > 0) {
                     item(key = "clipboard_record_count") {
@@ -2513,6 +2652,7 @@ private fun HistoryClipboardTabBody(
                         }
                     }
                 }
+            }
             }
         }
     }
