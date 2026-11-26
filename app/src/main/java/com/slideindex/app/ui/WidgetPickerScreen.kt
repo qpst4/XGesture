@@ -149,6 +149,36 @@ fun WidgetPickerScreen(
   var searchExpanded by remember { mutableStateOf(false) }
   val searchFocusRequester = remember { FocusRequester() }
   var subScreen by remember { mutableStateOf<WidgetPickerSubScreen>(WidgetPickerSubScreen.Main) }
+  val requestComposite = com.slideindex.app.ui.composite.rememberCompositePickRequester()
+  val requestOpenLink = com.slideindex.app.ui.composite.rememberOpenLinkRequester()
+  var pendingMacroPick by remember { mutableStateOf<((GestureAction) -> Unit)?>(null) }
+  var shellDialogVisible by remember { mutableStateOf(false) }
+  val submitConfiguredAction: (GestureAction) -> Unit = { action ->
+    val key = QuickLauncherItemCodec.actionKey(action)
+    addedActionKeys = addedActionKeys + key
+    if (onToggleAction != null) onToggleAction(action, false) else onActionSelected?.invoke(action)
+  }
+  val macroPick = pendingMacroPick
+  if (macroPick != null) {
+    com.slideindex.app.ui.gesturepicker.MacroPickDialog(
+      show = true,
+      onDismissRequest = { pendingMacroPick = null },
+      onPick = { macro ->
+        pendingMacroPick = null
+        macroPick(GestureAction.RunMacro(macro.id))
+      },
+    )
+  }
+  if (shellDialogVisible) {
+    com.slideindex.app.ui.composite.ShellCommandActionDialog(
+      onDismissRequest = { shellDialogVisible = false },
+      onConfirm = { command ->
+        shellDialogVisible = false
+        submitConfiguredAction(GestureAction.ExecuteShellCommand(command))
+      },
+    )
+  }
+
 
   val settingsRepository = com.slideindex.app.ui.compose.rememberSettingsRepository()
   val appSettings by settingsRepository.settings.collectAsStateWithLifecycle(initialValue = com.slideindex.app.settings.AppSettings())
@@ -647,8 +677,10 @@ fun WidgetPickerScreen(
               }
             }
           },
-          onOpenExecuteShellCommand = {},
-          onOpenOpenLink = {},
+          onOpenExecuteShellCommand = { shellDialogVisible = true },
+          onRequestOpenLink = requestOpenLink,
+          onRequestComposite = requestComposite,
+          onRequestRunMacro = { onPicked -> pendingMacroPick = onPicked },
           onOpenSimulateKeyEvent = {},
           searchQuery = searchQuery,
         )
