@@ -190,6 +190,11 @@ object QuickLauncherIconResolver {
                 context?.let { ctx ->
                     ManagedShortcutIconResolver.drawableForQuickItem(ctx, item, activityShortcuts)
                         ?.let { return it }
+                    // 导入时抓的图标快照优先于"宿主 App 图标"兜底（反馈 #6）。
+                    QuickLauncherItemCodec.shortcutItemKey(item)?.let { key ->
+                        com.slideindex.app.activity.ShortcutIconSnapshotStore
+                            .drawable(ctx, key, 128)?.let { return it }
+                    }
                 }
                 shortcutDrawable(item.payload, context)
             }
@@ -308,6 +313,25 @@ object QuickLauncherIconResolver {
         payload: String,
         context: Context?,
     ): Drawable? {
+        // 快照优先：按 payload 能还原出的身份键查（intent / 组件）。
+        context?.let { ctx ->
+            val store = com.slideindex.app.activity.ShortcutIconSnapshotStore
+            QuickLauncherItemCodec.parseIntentPayload(payload)?.let { uri ->
+                store.drawable(ctx, "intent:$uri", 128)?.let { return it }
+            }
+            QuickLauncherItemCodec.parseIntentListPayload(payload)?.let { uris ->
+                val key = if (uris.size == 1) {
+                    "intent:${uris[0]}"
+                } else {
+                    "intents:${uris.joinToString(QuickLauncherItemCodec.INTENT_LIST_SEP)}"
+                }
+                store.drawable(ctx, key, 128)?.let { return it }
+            }
+            if (payload.startsWith("c:")) {
+                val flat = payload.removePrefix("c:").substringBefore('\u001D')
+                store.drawable(ctx, flat, 128)?.let { return it }
+            }
+        }
         QuickLauncherItemCodec.resolveHostPackageName(payload) { uri ->
             KnownAppShortcuts.packageForIntentUri(uri)
         }?.let { packageName ->
@@ -332,7 +356,10 @@ object QuickLauncherIconResolver {
         is GestureShortcutPayload.Decoded.Dynamic ->
             hostAppDrawable(decoded.packageName, context)
         is GestureShortcutPayload.Decoded.Component ->
-            packageFromComponentFlat(decoded.componentFlat)?.let { hostAppDrawable(it, context) }
+            context?.let { ctx ->
+                com.slideindex.app.activity.ShortcutIconSnapshotStore
+                    .drawable(ctx, decoded.componentFlat, 128)
+            } ?: packageFromComponentFlat(decoded.componentFlat)?.let { hostAppDrawable(it, context) }
         is GestureShortcutPayload.Decoded.IntentShortcut ->
             resolveIntentShortcutDrawable(decoded.intentUri, context)
         is GestureShortcutPayload.Decoded.IntentsShortcut ->
@@ -346,6 +373,11 @@ object QuickLauncherIconResolver {
         intentUri: String,
         context: Context?,
     ): Drawable? {
+        // 快照优先：这是"创建快捷方式"回传的真实自定义图标。
+        context?.let { ctx ->
+            com.slideindex.app.activity.ShortcutIconSnapshotStore
+                .drawable(ctx, "intent:$intentUri", 128)?.let { return it }
+        }
         QuickLauncherItemCodec.resolveHostPackageName(
             "${QuickLauncherItemCodec.INTENT_PAYLOAD_PREFIX}$intentUri",
         ) { uri -> KnownAppShortcuts.packageForIntentUri(uri) }?.let { hostAppDrawable(it, context) }?.let { return it }

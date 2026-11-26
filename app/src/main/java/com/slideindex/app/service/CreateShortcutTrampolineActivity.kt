@@ -25,7 +25,7 @@ class CreateShortcutTrampolineActivity : ComponentActivity() {
         val hostPackage = pendingHostPackage
         pendingHostPackage = null
         val created = if (result.resultCode == RESULT_OK && hostPackage != null) {
-            AppShortcutLoader.parseCreateShortcutResult(hostPackage, result.data)
+            AppShortcutLoader.parseCreateShortcutResult(hostPackage, result.data, this)
         } else {
             null
         }

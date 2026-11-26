@@ -120,7 +120,7 @@ fun QuickLauncherAddPickerScreen(
         val host = pendingCreateHost
         pendingCreateHost = null
         if (result.resultCode != android.app.Activity.RESULT_OK || host == null) return@rememberLauncherForActivityResult
-        val created = AppShortcutLoader.parseCreateShortcutResult(host.packageName, result.data)
+        val created = AppShortcutLoader.parseCreateShortcutResult(host.packageName, result.data, context)
             ?: return@rememberLauncherForActivityResult
         onAddItem(created.toQuickLauncherItem())
     }
@@ -326,7 +326,7 @@ fun QuickLauncherCreateFolderScreen(
         val host = pendingCreateHost
         pendingCreateHost = null
         if (result.resultCode != android.app.Activity.RESULT_OK || host == null) return@rememberLauncherForActivityResult
-        val created = AppShortcutLoader.parseCreateShortcutResult(host.packageName, result.data)
+        val created = AppShortcutLoader.parseCreateShortcutResult(host.packageName, result.data, context)
             ?: return@rememberLauncherForActivityResult
         onAddItem(created.toQuickLauncherItem())
     }

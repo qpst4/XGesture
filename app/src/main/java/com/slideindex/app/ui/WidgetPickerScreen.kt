@@ -211,7 +211,7 @@ fun WidgetPickerScreen(
       val host = pendingCreateHost
       pendingCreateHost = null
       if (result.resultCode != Activity.RESULT_OK || host == null) return@rememberLauncherForActivityResult
-      val created = AppShortcutLoader.parseCreateShortcutResult(host.packageName, result.data)
+      val created = AppShortcutLoader.parseCreateShortcutResult(host.packageName, result.data, context)
         ?: return@rememberLauncherForActivityResult
       val entry = ShortcutEntry(
         packageName = created.hostPackageName,
