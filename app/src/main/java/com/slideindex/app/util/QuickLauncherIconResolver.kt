@@ -197,7 +197,7 @@ object QuickLauncherIconResolver {
             }
             QuickLauncherItemType.SHORTCUT -> {
                 context?.let { ctx ->
-                    ManagedShortcutIconResolver.drawableForQuickItem(ctx, item, activityShortcuts)
+                    ManagedShortcutIconResolver.drawableForQuickItem(ctx, item, activityShortcuts, "quickLauncher")
                         ?.let { return it }
                     // 导入时抓的图标快照优先于"宿主 App 图标"兜底（反馈 #6）。
                     QuickLauncherItemCodec.shortcutItemKey(item)?.let { key ->
