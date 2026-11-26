@@ -148,6 +148,7 @@ object MacroRecordingInstaller {
                         onKeyStep = { key -> recorder.addSystemKey(key) },
                     )
 
+                    Log.i(TAG, "recording start: macro=$macroId target=$targetPackage")
                     capture = captureLayer
                     overlay = recordOverlay
                     // 先让控制条挂上并完成布局，再建捕获层：否则首帧拿不到条的真实矩形，
@@ -155,8 +156,10 @@ object MacroRecordingInstaller {
                     recordOverlay.show()
                     recordOverlay.runAfterLayout {
                         if (overlay !== recordOverlay) return@runAfterLayout
+                        Log.i(TAG, "overlay laid out, barRect=${overlay?.barRectOnScreen()}")
                         captureLayer.show()
                         captureLayer.updateHole()
+                        Log.i(TAG, "capture shown, barRect=${overlay?.barRectOnScreen()}")
                     }
                     // 关键安全网：录制期间全屏层会吞掉所有触摸，所以必须有"用户一定能退出"的出口。
                     // 灭屏 → 自动结束；硬超时 → 自动结束。

@@ -124,10 +124,20 @@ class MacroRecordOverlay(
         recorder.onStepsChanged = { actions, waits -> onStepsChanged(actions, waits) }
         // 条的高度会因为"已录 N 步"计数文本而变化：一变就通知捕获层重算洞，
         // 否则新增的那一截会露在捕获窗底下，从那里起手拖动就会被录成手势。
-        content.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+        content.addOnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
+            // 反馈：条的高度一变就要重算洞，否则新增的那一截会露在捕获窗底下。
+            Log.i(
+                TAG,
+                "bar layout changed: height=${bottom - top} (was ${oldBottom - oldTop}) -> updateHole",
+            )
             onMoved?.invoke()
         }
         refresh()
+        // 首帧布局完成后再补一次（onLayoutChange 不一定在 show 的那一帧触发）。
+        content.post {
+            Log.i(TAG, "bar first layout: rect=${barRectOnScreen()}")
+            onMoved?.invoke()
+        }
     }
 
     /**
@@ -265,7 +275,13 @@ class MacroRecordOverlay(
             MacroStep.SystemKey.HOME to R.string.macro_key_step_home,
             MacroStep.SystemKey.RECENTS to R.string.macro_key_step_recents,
         ).forEachIndexed { index, (key, labelRes) ->
-            val button = createButton { onKeyStep(key) }.apply {
+            val button = createButton {
+                // 反馈：三键"点了没反应"——先把点击打点，再防御性刷新一次计数，
+                // 这样即使 onStepsChanged 还没挂上也能看到变化。
+                Log.i(TAG, "key step button clicked: $key")
+                onKeyStep(key)
+                refresh()
+            }.apply {
                 text = hostContext.getString(labelRes)
             }
             keyRow.addView(button, buttonParams(isFirst = index == 0))

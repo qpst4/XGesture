@@ -147,6 +147,7 @@ class MacroRecordingTouchCapture(
         if (panes.isEmpty()) return
         val manager = windowManager ?: return
         val rects = computePaneRects()
+        Log.i(TAG, "updateHole rects=$rects")
         panes.forEachIndexed { index, pane ->
             val rect = rects.getOrNull(index) ?: return@forEachIndexed
             pane.params.width = rect.width().coerceAtLeast(1)

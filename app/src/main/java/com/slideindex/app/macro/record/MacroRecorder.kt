@@ -184,6 +184,7 @@ class MacroRecorder(
         }
         recorded.add(MacroStep.Key(key))
         lastInputAtMs = now
+        android.util.Log.i("MacroRecorder", "system key step added: $key, steps=${recorded.size}")
         notifyStepsChanged()
     }
 

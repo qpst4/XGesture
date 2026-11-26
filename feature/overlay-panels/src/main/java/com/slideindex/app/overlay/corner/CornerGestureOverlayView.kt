@@ -968,16 +968,34 @@ class CornerGestureOverlayView(
         val anchor = activeAnchor ?: return false
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                // 反馈：编辑模式是"钉住的轮盘"，触点走的是这里而不是 handleTouch，
+                // 所以拖动换位必须也在这一条链路上调度。
+                if (sessionMode == SessionMode.EDIT) {
+                    scheduleSlotDrag(anchor, event.rawX, event.rawY)
+                }
                 updateInteraction(anchor, event.rawX, event.rawY, event.eventTime)
                 invalidate()
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
+                if (dragSlot >= 0 || dragging) {
+                    updateSlotDrag(anchor, event.rawX, event.rawY)
+                    invalidate()
+                    return true
+                }
                 updateInteraction(anchor, event.rawX, event.rawY, event.eventTime)
                 invalidate()
                 return true
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                if (dragSlot >= 0 || dragging) {
+                    if (event.actionMasked == MotionEvent.ACTION_CANCEL) {
+                        cancelSlotDrag(clearHighlight = true)
+                    } else {
+                        finishSlotDrag(anchor)
+                    }
+                    return true
+                }
                 return handleRelease(anchor, event, fromPinned = true)
             }
         }
