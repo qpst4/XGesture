@@ -645,20 +645,24 @@ fun PickResultPanelTextSlot(
     val isDark = com.slideindex.app.ui.theme.LocalAppDarkTheme.current
     val cardBg = if (isDark) Color(0x10FFFFFF) else Color(0xB2FFFFFF)
     val cardBorder = if (isDark) Color(0x24FFFFFF) else Color(0x12000000)
+    // 反馈 #401/#5：平铺只作用于「分段卡片」——去掉这两张卡的底色/描边/圆角与左右外扩，
+    // 外层面板材质保持不变。
+    val flatSection = rememberPickResultFlatMode()
+    val sectionHorizontalPadding = if (flatSection) 4.dp else 16.dp
 
     androidx.compose.material3.Surface(
         modifier = if (useExpandedLayout) {
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = sectionHorizontalPadding)
         } else {
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = sectionHorizontalPadding)
         },
-        shape = RoundedCornerShape(16.dp),
-        color = cardBg,
-        border = androidx.compose.foundation.BorderStroke(0.5.dp, cardBorder)
+        shape = if (flatSection) RoundedCornerShape(0.dp) else RoundedCornerShape(16.dp),
+        color = if (flatSection) Color.Transparent else cardBg,
+        border = if (flatSection) null else androidx.compose.foundation.BorderStroke(0.5.dp, cardBorder)
     ) {
         Box(
             modifier = if (useExpandedLayout) {
@@ -763,9 +767,6 @@ fun PickResultPanelSlideHost(
         label = "pickPanelSlide"
     )
     val isPanelSlideAnimating = panelSlideOffset > 0.5.dp
-    // 反馈 #401：平铺模式 —— 不套卡片底板/阴影/模糊，只留一条细线分隔文字区与图片区。
-    val flatModeContext = LocalContext.current
-    val flatPanel = remember(flatModeContext) { PickResultFlatPrefs.isEnabled(flatModeContext) }
     val cornerPx = with(density) { PickResultPanelCardCorner.toPx() }
     val blurRadiusPx = (57f * density.density).roundToInt()
     val isDark = LocalAppDarkTheme.current
@@ -799,7 +800,7 @@ fun PickResultPanelSlideHost(
         modifier = Modifier
             .drawBehind {
                 val shadow = panelShadow
-                if (!flatPanel && shadow != null && panelRevealed && !isPanelSlideAnimating) {
+                if (shadow != null && panelRevealed && !isPanelSlideAnimating) {
                     val pad = shadowPaddingPx.roundToInt()
                     drawImage(
                         image = shadow,
@@ -821,10 +822,10 @@ fun PickResultPanelSlideHost(
                 }
             }
             .then(
-                when {
-                    flatPanel -> Modifier
-                    centered -> Modifier.pickResultPanelCard()
-                    else -> Modifier.pickResultBottomPanelCard(suppressShadow = isPanelSlideAnimating)
+                if (centered) {
+                    Modifier.pickResultPanelCard()
+                } else {
+                    Modifier.pickResultBottomPanelCard(suppressShadow = isPanelSlideAnimating)
                 }
             )
             .onSizeChanged { cardSize = it }
@@ -835,14 +836,7 @@ fun PickResultPanelSlideHost(
             }
     ) {
         val spec = rememberOverlayMaterialSpec()
-        if (flatPanel) {
-            // 平铺：整块直接铺开，不要模糊/底板，但仍保留可读的实色底。
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(androidx.compose.ui.graphics.Color(spec.solidFallbackColor(isDark))),
-            )
-        } else if (spec.isPickResultCardBlurEnabled) {
+        if (spec.isPickResultCardBlurEnabled) {
             LocalFrostedGlassBackdrop(
                 modifier = Modifier.matchParentSize(),
                 cornerRadiusPx = cornerPx,

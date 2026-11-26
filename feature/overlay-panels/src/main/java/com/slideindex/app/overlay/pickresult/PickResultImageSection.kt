@@ -156,14 +156,16 @@ fun PickResultImageSectionGallery(
     val isDark = com.slideindex.app.ui.theme.LocalAppDarkTheme.current
     val cardBg = if (isDark) Color(0x10FFFFFF) else Color(0xB2FFFFFF)
     val cardBorder = if (isDark) Color(0x24FFFFFF) else Color(0x12000000)
+    // 反馈 #401/#5：平铺模式下图片区不再套 16dp 卡片，直接铺满面板宽度。
+    val flatSection = rememberPickResultFlatMode()
 
     androidx.compose.material3.Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = cardBg,
-        border = androidx.compose.foundation.BorderStroke(0.5.dp, cardBorder)
+            .padding(horizontal = if (flatSection) 4.dp else 16.dp),
+        shape = if (flatSection) RoundedCornerShape(0.dp) else RoundedCornerShape(16.dp),
+        color = if (flatSection) Color.Transparent else cardBg,
+        border = if (flatSection) null else androidx.compose.foundation.BorderStroke(0.5.dp, cardBorder)
     ) {
         Column(
             modifier = Modifier

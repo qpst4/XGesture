@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import android.widget.Toast
 import com.slideindex.app.R
 import com.slideindex.app.activity.ActivityShortcut
+import com.slideindex.app.activity.ShortcutIconCapture
 import com.slideindex.app.activity.toActivityShortcut
 import com.slideindex.app.overlay.TaskSwitcherMenuItem
 import com.slideindex.app.service.CreateShortcutTrampoline
@@ -72,7 +73,16 @@ fun ActivityShortcutPickAppShortcutScreen(
                 host = host,
                 onPrepare = {},
                 onResult = { created ->
-                    val shortcut = created?.toActivityShortcutOrNull()
+                    val capturedIconPath = ShortcutIconCapture.captureFromIntent(
+                        context,
+                        created?.shortcutIntent,
+                    )
+                    val base = created?.toActivityShortcutOrNull()
+                    val shortcut = if (base != null && capturedIconPath != null) {
+                        base.copy(iconPath = capturedIconPath)
+                    } else {
+                        base
+                    }
                     if (shortcut == null) {
                         Toast.makeText(
                             context,
