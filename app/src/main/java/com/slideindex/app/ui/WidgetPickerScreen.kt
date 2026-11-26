@@ -618,13 +618,17 @@ fun WidgetPickerScreen(
                 },
                 onResult = { created ->
                   if (created != null) {
+                    val createdIcon = created.iconProviderIntent
+                      ?.getParcelableExtra<android.graphics.Bitmap>(android.content.Intent.EXTRA_SHORTCUT_ICON)
+                      ?: created.shortcutIntent
+                        ?.getParcelableExtra<android.graphics.Bitmap>(android.content.Intent.EXTRA_SHORTCUT_ICON)
                     val entry = ShortcutEntry(
                       packageName = created.hostPackageName,
                       shortcutId = "created_${created.label.hashCode()}",
                       label = created.label,
                       sortKey = created.label,
                       initialKey = "",
-                      iconBitmap = null,
+                      iconBitmap = createdIcon?.asImageBitmap(),
                       intentUri = created.intentUri.orEmpty(),
                     )
                     val scKey = created.hostPackageName + "/" + created.intentUri.orEmpty()

@@ -102,6 +102,11 @@ class HomeDetailSettingsViewModel @Inject constructor(
         }
     }
 
+    fun setActivityShortcuts(value: List<com.slideindex.app.activity.ActivityShortcut>) =
+        launchSettingsWrite {
+            settingsRepository.setActivityShortcuts(value)
+        }
+
     fun setKeyboardTriggerBehavior(behavior: KeyboardTriggerBehavior, landscape: Boolean) = launchSettingsWrite {
         if (landscape) {
             settingsRepository.setKeyboardTriggerBehaviorLandscape(behavior)

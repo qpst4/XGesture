@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.slideindex.app.R
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.activity.activityShortcutFromQuickLauncherItem
+import com.slideindex.app.activity.toActivityShortcutOrNull
 import com.slideindex.app.activity.toLaunchShortcut
 import com.slideindex.app.activity.toQuickLauncherItem
 import androidx.compose.ui.focus.FocusRequester
@@ -53,7 +54,9 @@ fun CornerSlotSubMenuShortcutPickScreen(
     onAddShortcut: (GestureAction.LaunchShortcut) -> Unit,
     onOpenMyShortcuts: () -> Unit,
     onOpenPresetShortcuts: () -> Unit,
-    onBrowseActivityShortcut: () -> Unit
+    onBrowseActivityShortcut: () -> Unit,
+    /** 创建快捷方式后把它登记进应用内直达目录（图标解析依赖这个目录）。 */
+    onRegisterShortcut: ((com.slideindex.app.activity.ActivityShortcut) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val appRepository = rememberAppRepository()
@@ -106,6 +109,16 @@ fun CornerSlotSubMenuShortcutPickScreen(
         if (result.resultCode != Activity.RESULT_OK || host == null) return@rememberLauncherForActivityResult
         val created = AppShortcutLoader.parseCreateShortcutResult(host.packageName, result.data, context)
             ?: return@rememberLauncherForActivityResult
+        // 自定义图标在回传的外层 Intent 上：先落盘，再把快捷方式登记进目录，
+        // 否则渲染层按目录查不到图标，只能回退应用图标。
+        val iconPath = com.slideindex.app.activity.ShortcutIconCapture.captureFromIntent(
+            context,
+            created.iconProviderIntent ?: created.shortcutIntent,
+        )
+        val managed = created.toActivityShortcutOrNull()?.let { base ->
+            if (iconPath != null) base.copy(iconPath = iconPath) else base
+        }
+        if (managed != null) onRegisterShortcut?.invoke(managed)
         val shortcut = launchShortcutFromCreated(created)
         if (shortcut.payloadKey !in existingPayloadKeys) {
             onAddShortcut(shortcut)
