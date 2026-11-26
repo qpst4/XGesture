@@ -545,8 +545,8 @@
     <string name="corner_gesture_slot_submenu_remove_item">ショートカットを削除</string>
     <string name="corner_gesture_slot_submenu_add">ショートカットを追加</string>
     <string name="corner_gesture_slot_submenu_add_desc">システムショートカット一覧から選択</string>
-    <string name="corner_gesture_slot_submenu_add_action">アクションを追加</string>
-    <string name="corner_gesture_slot_submenu_add_action_desc">アクション一覧から選択（アプリ・内蔵アクション）</string>
+    <string name="corner_gesture_slot_submenu_add_action">項目を追加</string>
+    <string name="corner_gesture_slot_submenu_add_action_desc">操作選択ページからアクション・アプリ・ショートカットを選びます</string>
     <string name="corner_gesture_slot_order_section">スロットの並び順</string>
     <string name="corner_gesture_slot_order_prev">前のスロットと入れ替え</string>
     <string name="corner_gesture_slot_order_prev_desc">前のスロットと動作を交換します（作り直し不要）</string>
@@ -2451,6 +2451,9 @@
     <string name="search_app_settings_hide">非表示</string>
     <string name="search_app_settings_show">再表示</string>
     <string name="search_app_settings_empty">一致するアプリがありません</string>
+    <string name="search_app_settings_search_label">アプリを検索</string>
+    <string name="search_app_settings_only_hidden">非表示のみ</string>
+    <string name="search_app_settings_hidden_count">%1$d 件を検索から非表示中</string>
     <string name="search_panel_settings_search_desc">システム設定を検索して開く（システムインデックス優先、Settings マニフェストにフォールバック）</string>
     <string name="search_panel_settings_search_title">システム設定検索</string>
     <string name="search_panel_settings_index_title">設定インデックス</string>

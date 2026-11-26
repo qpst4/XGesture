@@ -560,8 +560,8 @@
     <string name="corner_gesture_slot_submenu_remove_item">移除快捷项</string>
     <string name="corner_gesture_slot_submenu_add">添加快捷项</string>
     <string name="corner_gesture_slot_submenu_add_desc">从系统快捷方式列表中选择</string>
-    <string name="corner_gesture_slot_submenu_add_action">添加动作</string>
-    <string name="corner_gesture_slot_submenu_add_action_desc">从动作列表中选择（应用 / 内置动作）</string>
+    <string name="corner_gesture_slot_submenu_add_action">添加项</string>
+    <string name="corner_gesture_slot_submenu_add_action_desc">从选择操作类型页里挑动作、应用或快捷方式</string>
     <string name="corner_gesture_slot_order_section">槽位排序</string>
     <string name="corner_gesture_slot_order_prev">与上一个槽位交换</string>
     <string name="corner_gesture_slot_order_prev_desc">与上一个槽位的动作互换，不用删了重建</string>
@@ -2713,6 +2713,9 @@
     <string name="search_app_settings_hide">隐藏</string>
     <string name="search_app_settings_show">恢复</string>
     <string name="search_app_settings_empty">没有匹配的应用</string>
+    <string name="search_app_settings_search_label">搜索应用</string>
+    <string name="search_app_settings_only_hidden">只看已隐藏</string>
+    <string name="search_app_settings_hidden_count">已隐藏 %1$d 个应用</string>
     <string name="search_panel_settings_search_desc">搜索系统设置项并一键跳转（优先系统索引，不可用时解析 Settings 清单）</string>
     <string name="search_panel_settings_search_title">系统设置搜索</string>
     <string name="search_panel_settings_index_title">设置索引</string>

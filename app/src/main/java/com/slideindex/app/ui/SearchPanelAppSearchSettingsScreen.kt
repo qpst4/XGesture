@@ -70,6 +70,8 @@ fun SearchPanelAppSearchSettingsScreen(
     var revision by remember { mutableIntStateOf(0) }
     var aliasTarget by remember { mutableStateOf<AppInfo?>(null) }
     var aliasText by remember { mutableStateOf("") }
+    // 只看已隐藏（反馈 #6）。
+    var onlyHidden by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         apps = withContext(Dispatchers.IO) {
@@ -81,16 +83,17 @@ fun SearchPanelAppSearchSettingsScreen(
     val hidden = remember(revision) { SearchAppPrefs.hiddenTargets(context) }
     val normalizedQuery = query.trim().lowercase()
 
-    val visibleApps = remember(apps, aliases, normalizedQuery) {
-        if (normalizedQuery.isEmpty()) {
-            apps
-        } else {
-            apps.filter { app ->
-                val alias = aliases[AppTarget.encode(app.packageName, app.cloneUserId)].orEmpty()
-                app.label.lowercase().contains(normalizedQuery) ||
-                    app.packageName.lowercase().contains(normalizedQuery) ||
-                    alias.lowercase().contains(normalizedQuery)
-            }
+    // 反馈 #6：隐藏项原来只能靠行尾按钮和一行小字分辨，长列表里根本找不到；
+    // 这里补上搜索框 + 「只看已隐藏」筛选，并把已隐藏数量显示出来。
+    val visibleApps = remember(apps, aliases, hidden, normalizedQuery, onlyHidden) {
+        apps.filter { app ->
+            val target = AppTarget.encode(app.packageName, app.cloneUserId)
+            if (onlyHidden && target !in hidden) return@filter false
+            if (normalizedQuery.isEmpty()) return@filter true
+            val alias = aliases[target].orEmpty()
+            app.label.lowercase().contains(normalizedQuery) ||
+                app.packageName.lowercase().contains(normalizedQuery) ||
+                alias.lowercase().contains(normalizedQuery)
         }
     }
 
@@ -99,6 +102,34 @@ fun SearchPanelAppSearchSettingsScreen(
         subtitle = stringResource(R.string.search_panel_app_search_desc),
         onBack = onBack,
     ) {
+        item(key = "app-search-field") {
+            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                MiuixLabeledTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    label = stringResource(R.string.search_app_settings_search_label),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+        groupedCardItems(
+            keyPrefix = "search-app-filter",
+            items = listOf(
+                settingsCardScopeItem("filter-hidden") {
+                    SettingSwitchRow(
+                        title = stringResource(R.string.search_app_settings_only_hidden),
+                        subtitle = stringResource(
+                            R.string.search_app_settings_hidden_count,
+                            hidden.size,
+                        ),
+                        checked = onlyHidden,
+                        enabled = true,
+                        onCheckedChange = { onlyHidden = it },
+                    )
+                },
+            ),
+        )
         if (visibleApps.isEmpty()) {
             item(key = "app-search-empty") {
                 SmallTitle(stringResource(R.string.search_app_settings_empty))

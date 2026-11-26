@@ -41,7 +41,6 @@ fun CornerGestureSlotSettingsScreen(
     onPickMainAction: () -> Unit,
     onSubMenuEnabledChange: (Boolean) -> Unit,
     onRemoveSubMenuItem: (Int) -> Unit,
-    onAddSubMenuShortcut: () -> Unit,
     onAddSubMenuAction: () -> Unit,
     onSwapWithPrevious: () -> Unit = {},
     onSwapWithNext: () -> Unit = {},
@@ -56,8 +55,6 @@ fun CornerGestureSlotSettingsScreen(
     val subMenuHint = stringResource(R.string.corner_gesture_slot_submenu_hint)
     val subMenuEnabledTitle = stringResource(R.string.corner_gesture_slot_submenu_enabled)
     val subMenuEnabledDesc = stringResource(R.string.corner_gesture_slot_submenu_enabled_desc)
-    val subMenuAddTitle = stringResource(R.string.corner_gesture_slot_submenu_add)
-    val subMenuAddDesc = stringResource(R.string.corner_gesture_slot_submenu_add_desc)
     val subMenuAddActionTitle = stringResource(R.string.corner_gesture_slot_submenu_add_action)
     val subMenuAddActionDesc = stringResource(R.string.corner_gesture_slot_submenu_add_action_desc)
     val swapSectionTitle = stringResource(R.string.corner_gesture_slot_order_section)
@@ -211,16 +208,8 @@ fun CornerGestureSlotSettingsScreen(
             groupedCardItems(
                 keyPrefix = "corner-slot-submenu-add",
                 items = buildList {
-                    add(
-                        settingsCardScopeItem("add") {
-                            SettingNavigationRow(
-                                icon = { label -> SymbolsIcon("Add", contentDescription = label) },
-                                title = subMenuAddTitle,
-                                subtitle = subMenuAddDesc,
-                                onClick = onAddSubMenuShortcut
-                            )
-                        }
-                    )
+                    // 反馈 #11：只留一个「添加项」入口 —— 快捷方式本来就在「选择操作类型」页里，
+                    // 两个入口是重复的。
                     add(
                         settingsCardScopeItem("add-action") {
                             SettingNavigationRow(

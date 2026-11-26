@@ -47,7 +47,6 @@ internal sealed interface CornerSlotEditorPage {
     data object ActionPickPresetShortcuts : CornerSlotEditorPage
     data object ActionPickPickApp : CornerSlotEditorPage
     data class ActionPickPickActivity(val packageName: String) : CornerSlotEditorPage
-    data object SubMenuShortcutPick : CornerSlotEditorPage
     /** 反馈 #385：从二级菜单里挑一个任意动作（应用 / 内置动作）。 */
     data object SubMenuActionPick : CornerSlotEditorPage
     data object SubMenuMyShortcuts : CornerSlotEditorPage
@@ -60,7 +59,6 @@ internal sealed interface CornerSlotEditorPage {
 internal fun CornerSlotEditorPage.navDepth(): Int = when (this) {
     CornerSlotEditorPage.SlotSettings -> 0
     CornerSlotEditorPage.ActionPick,
-    CornerSlotEditorPage.SubMenuShortcutPick,
     CornerSlotEditorPage.SubMenuActionPick -> 1
     CornerSlotEditorPage.ActionPickMyShortcuts,
     CornerSlotEditorPage.ActionPickPresetShortcuts,
@@ -79,7 +77,6 @@ private fun CornerSlotEditorPage.contentKey(): Any = when (this) {
     CornerSlotEditorPage.ActionPickPresetShortcuts -> "actionPickPresetShortcuts"
     CornerSlotEditorPage.ActionPickPickApp -> "actionPickPickApp"
     is CornerSlotEditorPage.ActionPickPickActivity -> "actionPickPickActivity:$packageName"
-    CornerSlotEditorPage.SubMenuShortcutPick -> "subMenuShortcutPick"
     CornerSlotEditorPage.SubMenuActionPick -> "subMenuActionPick"
     CornerSlotEditorPage.SubMenuMyShortcuts -> "subMenuMyShortcuts"
     CornerSlotEditorPage.SubMenuPresetShortcuts -> "subMenuPresetShortcuts"
@@ -204,11 +201,10 @@ fun CornerGestureSlotEditorHost(
             CornerSlotEditorPage.ActionPickPresetShortcuts -> page = CornerSlotEditorPage.ActionPick
             CornerSlotEditorPage.ActionPickPickApp -> page = CornerSlotEditorPage.ActionPick
             is CornerSlotEditorPage.ActionPickPickActivity -> page = CornerSlotEditorPage.ActionPickPickApp
-            CornerSlotEditorPage.SubMenuShortcutPick -> page = CornerSlotEditorPage.SlotSettings
-            CornerSlotEditorPage.SubMenuActionPick -> page = CornerSlotEditorPage.SubMenuShortcutPick
-            CornerSlotEditorPage.SubMenuMyShortcuts -> page = CornerSlotEditorPage.SubMenuShortcutPick
-            CornerSlotEditorPage.SubMenuPresetShortcuts -> page = CornerSlotEditorPage.SubMenuShortcutPick
-            CornerSlotEditorPage.SubMenuPickApp -> page = CornerSlotEditorPage.SubMenuShortcutPick
+            CornerSlotEditorPage.SubMenuActionPick -> page = CornerSlotEditorPage.SlotSettings
+            CornerSlotEditorPage.SubMenuMyShortcuts -> page = CornerSlotEditorPage.SubMenuActionPick
+            CornerSlotEditorPage.SubMenuPresetShortcuts -> page = CornerSlotEditorPage.SubMenuActionPick
+            CornerSlotEditorPage.SubMenuPickApp -> page = CornerSlotEditorPage.SubMenuActionPick
             is CornerSlotEditorPage.SubMenuPickActivity -> page = CornerSlotEditorPage.SubMenuPickApp
             is CornerSlotEditorPage.ShellCommand -> page = CornerSlotEditorPage.ActionPick
         }
@@ -244,7 +240,6 @@ fun CornerGestureSlotEditorHost(
                         updateDraftSubMenu(draftSubMenu.copy(items = items))
                     }
                 },
-                onAddSubMenuShortcut = { page = CornerSlotEditorPage.SubMenuShortcutPick },
                 onAddSubMenuAction = { page = CornerSlotEditorPage.SubMenuActionPick },
                 onSwapWithPrevious = { swapWithNeighbor(-1) },
                 onSwapWithNext = { swapWithNeighbor(1) },
@@ -338,17 +333,6 @@ fun CornerGestureSlotEditorHost(
             )
         }
 
-        CornerSlotEditorPage.SubMenuShortcutPick -> {
-            CornerSlotSubMenuShortcutPickScreen(
-                appSettings = appSettings,
-                existingPayloadKeys = existingPayloadKeys,
-                onBack = { page = CornerSlotEditorPage.SlotSettings },
-                onAddShortcut = appendSubMenuItem,
-                onOpenMyShortcuts = { page = CornerSlotEditorPage.SubMenuMyShortcuts },
-                onOpenPresetShortcuts = { page = CornerSlotEditorPage.SubMenuPresetShortcuts },
-                onBrowseActivityShortcut = { page = CornerSlotEditorPage.SubMenuPickApp },
-            )
-        }
 
         CornerSlotEditorPage.SubMenuActionPick -> {
             // 反馈 #385：二级菜单也能放应用/内置动作（任意 GestureAction）。
@@ -356,17 +340,17 @@ fun CornerGestureSlotEditorHost(
                 trigger = GestureTriggerType.SHORT_SWIPE_IN,
                 current = GestureAction.None,
                 catalogPolicy = ActionPickerCatalogPolicy.Slot(SlotPickerKind.CornerWheel),
-                onDismiss = { page = CornerSlotEditorPage.SubMenuShortcutPick },
+                onDismiss = { page = CornerSlotEditorPage.SlotSettings },
                 onSelect = { action ->
                     appendSubMenuItem(action)
-                    page = CornerSlotEditorPage.SubMenuShortcutPick
+                    page = CornerSlotEditorPage.SlotSettings
                 },
                 onOpenMyShortcuts = { page = CornerSlotEditorPage.SubMenuMyShortcuts },
                 onOpenPresetShortcuts = { page = CornerSlotEditorPage.SubMenuPresetShortcuts },
                 onOpenPickApp = { page = CornerSlotEditorPage.SubMenuPickApp },
                 onOpenExecuteShellCommand = { command ->
                     appendSubMenuItem(GestureAction.ExecuteShellCommand(command))
-                    page = CornerSlotEditorPage.SubMenuShortcutPick
+                    page = CornerSlotEditorPage.SlotSettings
                 },
             )
         }
@@ -374,7 +358,7 @@ fun CornerGestureSlotEditorHost(
         CornerSlotEditorPage.SubMenuMyShortcuts -> {
             MyShortcutsFolderScreen(
                 activityShortcuts = appSettings.activityShortcuts,
-                onBack = { page = CornerSlotEditorPage.SubMenuShortcutPick },
+                onBack = { page = CornerSlotEditorPage.SubMenuActionPick },
                 onBrowseNewShortcut = { page = CornerSlotEditorPage.SubMenuPickApp },
                 configuredShortcutKeys = configuredSubMenuShortcutKeys,
                 onToggle = { item, added ->
@@ -391,7 +375,7 @@ fun CornerGestureSlotEditorHost(
 
         CornerSlotEditorPage.SubMenuPresetShortcuts -> {
             PresetShortcutsFolderScreen(
-                onBack = { page = CornerSlotEditorPage.SubMenuShortcutPick },
+                onBack = { page = CornerSlotEditorPage.SubMenuActionPick },
                 configuredShortcutKeys = configuredSubMenuShortcutKeys,
                 onToggle = { item, added ->
                     if (!added && item.type == QuickLauncherItemType.SHORTCUT) {
@@ -416,7 +400,7 @@ fun CornerGestureSlotEditorHost(
 
         CornerSlotEditorPage.SubMenuPickApp -> {
             ActivityShortcutPickAppScreen(
-                onBack = { page = CornerSlotEditorPage.SubMenuShortcutPick },
+                onBack = { page = CornerSlotEditorPage.SubMenuActionPick },
                 onSelectApp = { app ->
                     page = CornerSlotEditorPage.SubMenuPickActivity(app.packageName)
                 },

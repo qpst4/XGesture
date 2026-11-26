@@ -545,8 +545,8 @@
     <string name="corner_gesture_slot_submenu_remove_item">إزالة عنصر الاختصار</string>
     <string name="corner_gesture_slot_submenu_add">إضافة عنصر اختصار</string>
     <string name="corner_gesture_slot_submenu_add_desc">اختر من قائمة اختصارات النظام</string>
-    <string name="corner_gesture_slot_submenu_add_action">إضافة إجراء</string>
-    <string name="corner_gesture_slot_submenu_add_action_desc">اختر أي إجراء أو تطبيق</string>
+    <string name="corner_gesture_slot_submenu_add_action">إضافة عنصر</string>
+    <string name="corner_gesture_slot_submenu_add_action_desc">اختر إجراءً أو تطبيقًا أو اختصارًا من صفحة اختيار الإجراء</string>
     <string name="corner_gesture_slot_order_section">ترتيب الفتحات</string>
     <string name="corner_gesture_slot_order_prev">التبديل مع السابق</string>
     <string name="corner_gesture_slot_order_prev_desc">تبديل الإجراء مع الفتحة السابقة دون إعادة الإنشاء</string>
@@ -2449,6 +2449,9 @@
     <string name="search_app_settings_hide">إخفاء</string>
     <string name="search_app_settings_show">استعادة</string>
     <string name="search_app_settings_empty">لا توجد تطبيقات مطابقة</string>
+    <string name="search_app_settings_search_label">بحث عن التطبيقات</string>
+    <string name="search_app_settings_only_hidden">المخفية فقط</string>
+    <string name="search_app_settings_hidden_count">%1$d تطبيق مخفي من البحث</string>
     <string name="search_panel_settings_search_desc">البحث عن عناصر الإعدادات بالنظام والانتقال إليها مباشرة (يستخدم فهرس النظام أولًا، وإذا لم يكن متاحًا، يحلل قائمة الإعدادات)</string>
     <string name="search_panel_settings_search_title">بحث إعدادات النظام</string>
     <string name="search_panel_settings_index_title">فهرس الإعدادات</string>

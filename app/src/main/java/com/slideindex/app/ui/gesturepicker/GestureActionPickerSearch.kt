@@ -376,7 +376,23 @@ fun launchShortcutDisplayLabel(action: GestureAction.LaunchShortcut): String =
     }
 
 private fun gestureActionBaseLabelText(context: Context, action: GestureAction): String = when (action) {
-    is GestureAction.LaunchApp -> launchAppActionLabel(context, action.packageName, action.cloneUserId)
+    is GestureAction.LaunchApp -> {
+        // 反馈 #385 ④ / #10：不再拼「启动应用：」前缀（图标已说明类型）。
+        if (action.packageName.isBlank()) {
+            context.getString(R.string.gesture_action_launch_app)
+        } else {
+            val base = resolveAppDisplayName(context, action.packageName)
+            if (action.cloneUserId > 0) {
+                com.slideindex.app.overlay.CloneAppsIndex.labelForUser(
+                    context,
+                    action.cloneUserId,
+                    base,
+                )
+            } else {
+                base
+            }
+        }
+    }
     is GestureAction.LaunchShortcut -> {
         // 反馈 #385：命中名称只显示快捷方式自己的名字，不再拼「启动快捷方式：」前缀
         //（前缀在小尺寸文字里占位太多，图标已经把类型说清楚了）。
@@ -388,10 +404,7 @@ private fun gestureActionBaseLabelText(context: Context, action: GestureAction):
         if (action.command.isBlank()) {
             context.getString(R.string.gesture_action_execute_shell_command)
         } else {
-            context.getString(
-                R.string.gesture_action_execute_shell_command_named,
-                gestureExecuteShellCommandPreview(action.command),
-            )
+            gestureExecuteShellCommandPreview(action.command)
         }
     }
     is GestureAction.OpenLink -> {
@@ -403,8 +416,12 @@ private fun gestureActionBaseLabelText(context: Context, action: GestureAction):
         }
     }
     is GestureAction.SimulateKeyEvent -> {
-        val name = if (action.keyName.isNotBlank()) action.keyName else com.slideindex.app.gesture.KeyEventPresets.getDisplayName(context, action.keyCode)
-        context.getString(R.string.gesture_action_simulate_key_event_named, name)
+        // 同上：不再拼「模拟按键：」前缀。
+        if (action.keyName.isNotBlank()) {
+            action.keyName
+        } else {
+            com.slideindex.app.gesture.KeyEventPresets.getDisplayName(context, action.keyCode)
+        }
     }
     else -> when (action.type) {
         GestureActionType.RUN_MACRO -> {

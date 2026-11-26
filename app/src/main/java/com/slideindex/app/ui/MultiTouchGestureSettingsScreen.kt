@@ -307,22 +307,24 @@ fun MultiTouchGestureSettingsScreen(
         val lastEntryIndex = settings.entries.lastIndex
         settings.entries.forEachIndexed { index, entry ->
             val entryKey = ENTRY_ITEM_KEY_PREFIX + entry.id
-            item(key = "multitouch-entries:$entryKey") {
+            // 反馈 #1：拖拽手柄不能包住整行 —— 行自己带 clickable，会把 down/up 吃掉，
+            // 父级的 longPressDraggableHandle 永远收不到事件。手柄只挂在左侧图标上。
+            item(key = entryKey) {
                 ReorderableItem(state = entryReorderState, key = entryKey) { _ ->
-                    Box(modifier = Modifier.longPressDraggableHandle()) {
-                        CardSegment(
-                            isFirst = false,
-                            isLast = index == lastEntryIndex,
-                            outerHorizontalPadding = 12.dp,
-                            outerBottomPadding = if (index == lastEntryIndex) 12.dp else 0.dp,
-                        ) {
-                            EntryRow(
-                                entry = entry,
-                                enabled = settings.enabled,
-                                onClick = { editingEntry = entry },
-                                onEnabledChange = { value -> onEntryEnabledChange(entry.id, value) },
-                            )
-                        }
+                    val dragHandle = Modifier.longPressDraggableHandle()
+                    CardSegment(
+                        isFirst = false,
+                        isLast = index == lastEntryIndex,
+                        outerHorizontalPadding = 12.dp,
+                        outerBottomPadding = if (index == lastEntryIndex) 12.dp else 0.dp,
+                    ) {
+                        EntryRow(
+                            entry = entry,
+                            enabled = settings.enabled,
+                            onClick = { editingEntry = entry },
+                            onEnabledChange = { value -> onEntryEnabledChange(entry.id, value) },
+                            dragHandleModifier = dragHandle,
+                        )
                     }
                 }
             }
@@ -622,14 +624,18 @@ fun MultiTouchGestureSettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(12.dp))
+                // 反馈 #2：这两行原来用 Material 的 bodyMedium，比页面其它行小一号、字体也不统一；
+                // 统一成 Miuix 文本体系，并给到 48dp 行高（开关更好点）。
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = stringResource(R.string.multitouch_entry_enabled_label),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MiuixTheme.textStyles.title4,
+                        color = MiuixTheme.colorScheme.onSurfaceContainer,
                         modifier = Modifier.weight(1f),
                     )
                     MiuixSwitch(
@@ -640,21 +646,24 @@ fun MultiTouchGestureSettingsScreen(
                         },
                     )
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = stringResource(R.string.multitouch_entry_hint_label),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MiuixTheme.textStyles.title4,
+                            color = MiuixTheme.colorScheme.onSurfaceContainer,
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = stringResource(R.string.multitouch_entry_hint_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         )
                     }
                     MiuixSwitch(
@@ -668,8 +677,8 @@ fun MultiTouchGestureSettingsScreen(
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = stringResource(R.string.multitouch_trigger_area_title),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 SegmentedControl(
@@ -715,6 +724,8 @@ private fun EntryRow(
     enabled: Boolean,
     onClick: () -> Unit,
     onEnabledChange: (Boolean) -> Unit,
+    /** 挂在左侧图标上的拖拽手柄（反馈 #1：不能包整行，否则点击会吃掉手势）。 */
+    dragHandleModifier: Modifier = Modifier,
 ) {
     Row(
         modifier = Modifier
@@ -723,7 +734,12 @@ private fun EntryRow(
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        GesturePreview(entry = entry, modifier = Modifier.size(44.dp))
+        GesturePreview(
+            entry = entry,
+            modifier = Modifier
+                .size(44.dp)
+                .then(dragHandleModifier),
+        )
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -736,21 +752,22 @@ private fun EntryRow(
                         triggerAreaLabel(entry.triggerArea.key),
                     )
                 },
-                style = MaterialTheme.typography.bodyLarge,
+                style = MiuixTheme.textStyles.title4,
                 color = if (entry.enabled) {
-                    MaterialTheme.colorScheme.onSurface
+                    MiuixTheme.colorScheme.onSurfaceContainer
                 } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                    MiuixTheme.colorScheme.onSurfaceVariantSummary
                 },
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = if (entry.enabled) {
                     gestureActionLabel(entry.action)
                 } else {
                     stringResource(R.string.multitouch_entry_disabled_label)
                 },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MiuixTheme.textStyles.body2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             )
         }
         MiuixSwitch(
