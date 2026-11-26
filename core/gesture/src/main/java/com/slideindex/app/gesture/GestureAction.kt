@@ -847,7 +847,15 @@ sealed class GestureAction {
         override val payload: String = encodeChildren(actions)
 
         companion object {
-            private const val CHILD_SEP = '\u001F'
+            /**
+             * 子动作分隔符。
+             *
+             * ⚠️ 不能用 `\u001F`：它同时是 `GestureRuleCodec`（触钮规则）的字段分隔符，
+             * 组合 2 个以上动作时 payload 会多出分隔符，规则解码按段数判断就会失败，
+             * 动作变成 None（反馈：触钮里配两个动作后“没选中组合动作”）。
+             * `\u0003` 在动作正文里不会被任何编码器使用。
+             */
+            private const val CHILD_SEP = '\u0003'
             private const val FIELD_SEP = '\u001E'
 
             fun encodeChildren(actions: List<GestureAction>): String =
