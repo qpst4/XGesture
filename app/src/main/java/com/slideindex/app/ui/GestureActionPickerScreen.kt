@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
@@ -148,6 +150,8 @@ fun GestureActionPickerScreen(
     var quickWheelConfigVisible by remember { mutableStateOf(false) }
     // 「组合动作」编辑弹窗：按顺序勾选要执行的动作。
     var compositeVisible by remember { mutableStateOf(false) }
+    var compositePresetNameVisible by remember { mutableStateOf(false) }
+    var compositePresetName by remember { mutableStateOf("") }
     var compositeDraft by remember { mutableStateOf<List<GestureAction>>(emptyList()) }
     val quickLauncherInitial = remember(current) {
         val ql = current as? GestureAction.QuickLauncher
@@ -549,12 +553,77 @@ fun GestureActionPickerScreen(
                             Text(stringResource(android.R.string.cancel))
                         }
                         androidx.compose.material3.TextButton(
+                            onClick = { compositePresetName = ""; compositePresetNameVisible = true },
+                            enabled = compositeDraft.isNotEmpty(),
+                        ) {
+                            Text(stringResource(R.string.composite_library_save_as_preset))
+                        }
+                        androidx.compose.material3.TextButton(
                             onClick = {
                                 compositeVisible = false
                                 safeSelect(GestureAction.Composite(compositeDraft))
                             },
                         ) {
                             Text(stringResource(R.string.gesture_action_composite_save))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (compositePresetNameVisible) {
+        val presetSaveContext = LocalContext.current
+        Dialog(
+            onDismissRequest = { compositePresetNameVisible = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            androidx.compose.material3.Surface(
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 6.dp,
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .padding(16.dp),
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = stringResource(R.string.composite_library_save_preset_title),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    androidx.compose.material3.OutlinedTextField(
+                        value = compositePresetName,
+                        onValueChange = { compositePresetName = it },
+                        singleLine = true,
+                        label = { Text(stringResource(R.string.composite_library_name)) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        androidx.compose.material3.TextButton(
+                            onClick = { compositePresetNameVisible = false },
+                        ) {
+                            Text(stringResource(android.R.string.cancel))
+                        }
+                        androidx.compose.material3.TextButton(
+                            enabled = compositePresetName.isNotBlank(),
+                            onClick = {
+                                com.slideindex.app.ui.composite.CompositeActionPresetStore.upsert(
+                                    presetSaveContext,
+                                    com.slideindex.app.ui.composite.CompositeActionPreset(
+                                        id = com.slideindex.app.ui.composite.CompositeActionPresetStore.newId(),
+                                        name = compositePresetName.trim(),
+                                        actions = compositeDraft,
+                                    ),
+                                )
+                                compositePresetNameVisible = false
+                            },
+                        ) {
+                            Text(stringResource(R.string.composite_library_save))
                         }
                     }
                 }
