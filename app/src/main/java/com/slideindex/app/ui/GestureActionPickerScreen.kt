@@ -7,6 +7,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,11 +37,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import top.yukonga.miuix.kmp.window.WindowDialog
 import com.slideindex.app.R
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.gesture.GestureAction
@@ -149,10 +153,7 @@ fun GestureActionPickerScreen(
     }
     var quickWheelConfigVisible by remember { mutableStateOf(false) }
     // 「组合动作」编辑弹窗：按顺序勾选要执行的动作。
-    var compositeVisible by remember { mutableStateOf(false) }
-    var compositePresetNameVisible by remember { mutableStateOf(false) }
-    var compositePresetName by remember { mutableStateOf("") }
-    var compositeDraft by remember { mutableStateOf<List<GestureAction>>(emptyList()) }
+    var compositePickVisible by remember { mutableStateOf(false) }
     val quickLauncherInitial = remember(current) {
         val ql = current as? GestureAction.QuickLauncher
         Triple(ql?.panelId.orEmpty(), ql?.pinned == true, ql?.pinCurrentApp == true)
@@ -348,9 +349,7 @@ fun GestureActionPickerScreen(
                         current = current,
                         onSelect = { picked ->
                             if (picked is GestureAction.Composite) {
-                                compositeDraft = (current as? GestureAction.Composite)
-                                    ?.actions.orEmpty()
-                                compositeVisible = true
+                                compositePickVisible = true
                             } else {
                                 safeSelect(picked)
                             }
@@ -441,195 +440,103 @@ fun GestureActionPickerScreen(
             }
         }
 
-        if (compositeVisible) {
-        Dialog(
-            onDismissRequest = { compositeVisible = false },
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-        ) {
-            androidx.compose.material3.Surface(
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 6.dp,
-                modifier = Modifier
-                    .fillMaxWidth(0.92f)
-                    .padding(16.dp),
+        if (compositePickVisible) {
+            val pickContext = LocalContext.current
+            var presetsRevision by remember { mutableStateOf(0) }
+            val presets = remember(compositePickVisible, presetsRevision) {
+                com.slideindex.app.ui.composite.CompositeActionPresetStore.load(pickContext)
+            }
+            var createVisible by remember { mutableStateOf(false) }
+
+            WindowDialog(
+                show = true,
+                title = stringResource(R.string.gesture_action_composite),
+                onDismissRequest = { compositePickVisible = false },
             ) {
-                Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    Text(
-                        text = stringResource(R.string.gesture_action_composite),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                    )
-                    Text(
-                        text = stringResource(R.string.gesture_action_composite_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
-                    )
-                    val presetContext = LocalContext.current
-                    val compositePresets = remember(compositeVisible) {
-                        com.slideindex.app.ui.composite.CompositeActionPresetStore
-                            .load(presetContext)
-                    }
-                    if (compositePresets.isNotEmpty()) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    if (presets.isEmpty()) {
                         Text(
-                            text = stringResource(R.string.composite_library_my_presets),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+                            text = stringResource(R.string.composite_pick_empty),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
                         )
-                        compositePresets.forEach { preset ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        compositeVisible = false
-                                        safeSelect(GestureAction.Composite(preset.actions))
-                                    }
-                                    .padding(horizontal = 20.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = preset.name,
-                                    modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                )
-                                Text(
-                                    text = preset.actions.size.toString(),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                    }
-                    androidx.compose.foundation.lazy.LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 360.dp),
-                    ) {
-                        val candidates = filteredActions.filter {
-                            it.type != GestureActionType.NONE && it !is GestureAction.Composite
-                        }
-                        items(candidates.size, key = { candidates[it].payload.ifBlank { candidates[it].type.id.toString() } }) { index ->
-                            val candidate = candidates[index]
-                            val selectedIndex = compositeDraft.indexOfFirst {
-                                it.type == candidate.type && it.payload == candidate.payload
-                            }
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        compositeDraft = if (selectedIndex >= 0) {
-                                            compositeDraft.toMutableList().also { it.removeAt(selectedIndex) }
-                                        } else {
-                                            compositeDraft + candidate
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 360.dp)
+                                .verticalScroll(rememberScrollState()),
+                        ) {
+                            presets.forEach { preset ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            compositePickVisible = false
+                                            safeSelect(GestureAction.CompositeRef(preset.id))
                                         }
-                                    }
-                                    .padding(horizontal = 20.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = gestureActionLabel(candidate, appSettings),
-                                    modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                )
-                                if (selectedIndex >= 0) {
+                                        .padding(horizontal = 8.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
                                     Text(
-                                        text = (selectedIndex + 1).toString(),
+                                        text = preset.name.ifBlank {
+                                            stringResource(R.string.composite_library_untitled)
+                                        },
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = Modifier.weight(1f),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Text(
+                                        text = stringResource(
+                                            R.string.composite_library_action_count,
+                                            preset.actions.size,
+                                        ),
                                         style = MaterialTheme.typography.labelLarge,
-                                        color = MaterialTheme.colorScheme.primary,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                             }
                         }
                     }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                        horizontalArrangement = Arrangement.End,
-                    ) {
-                        androidx.compose.material3.TextButton(onClick = { compositeVisible = false }) {
-                            Text(stringResource(android.R.string.cancel))
-                        }
-                        androidx.compose.material3.TextButton(
-                            onClick = { compositePresetName = ""; compositePresetNameVisible = true },
-                            enabled = compositeDraft.isNotEmpty(),
-                        ) {
-                            Text(stringResource(R.string.composite_library_save_as_preset))
-                        }
-                        androidx.compose.material3.TextButton(
-                            onClick = {
-                                compositeVisible = false
-                                safeSelect(GestureAction.Composite(compositeDraft))
-                            },
-                        ) {
-                            Text(stringResource(R.string.gesture_action_composite_save))
-                        }
-                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    top.yukonga.miuix.kmp.basic.TextButton(
+                        text = stringResource(R.string.composite_library_add),
+                        onClick = { createVisible = true },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    top.yukonga.miuix.kmp.basic.TextButton(
+                        text = stringResource(android.R.string.cancel),
+                        onClick = { compositePickVisible = false },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             }
-        }
-    }
 
-    if (compositePresetNameVisible) {
-        val presetSaveContext = LocalContext.current
-        Dialog(
-            onDismissRequest = { compositePresetNameVisible = false },
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-        ) {
-            androidx.compose.material3.Surface(
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 6.dp,
-                modifier = Modifier
-                    .fillMaxWidth(0.92f)
-                    .padding(16.dp),
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        text = stringResource(R.string.composite_library_save_preset_title),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    androidx.compose.material3.OutlinedTextField(
-                        value = compositePresetName,
-                        onValueChange = { compositePresetName = it },
-                        singleLine = true,
-                        label = { Text(stringResource(R.string.composite_library_name)) },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
-                    ) {
-                        androidx.compose.material3.TextButton(
-                            onClick = { compositePresetNameVisible = false },
-                        ) {
-                            Text(stringResource(android.R.string.cancel))
-                        }
-                        androidx.compose.material3.TextButton(
-                            enabled = compositePresetName.isNotBlank(),
-                            onClick = {
-                                com.slideindex.app.ui.composite.CompositeActionPresetStore.upsert(
-                                    presetSaveContext,
-                                    com.slideindex.app.ui.composite.CompositeActionPreset(
-                                        id = com.slideindex.app.ui.composite.CompositeActionPresetStore.newId(),
-                                        name = compositePresetName.trim(),
-                                        actions = compositeDraft,
-                                    ),
-                                )
-                                compositePresetNameVisible = false
-                            },
-                        ) {
-                            Text(stringResource(R.string.composite_library_save))
-                        }
-                    }
-                }
+            if (createVisible) {
+                com.slideindex.app.ui.composite.CompositePresetEditorDialog(
+                    initial = null,
+                    onDismiss = { createVisible = false },
+                    onSave = { name, actions ->
+                        val id = com.slideindex.app.ui.composite.CompositeActionPresetStore.newId()
+                        com.slideindex.app.ui.composite.CompositeActionPresetStore.upsert(
+                            pickContext,
+                            com.slideindex.app.ui.composite.CompositeActionPreset(
+                                id = id,
+                                name = name,
+                                actions = actions,
+                            ),
+                        )
+                        createVisible = false
+                        compositePickVisible = false
+                        presetsRevision++
+                        safeSelect(GestureAction.CompositeRef(id))
+                    },
+                )
             }
         }
-    }
 
     if (quickWheelConfigVisible) {
             Dialog(
