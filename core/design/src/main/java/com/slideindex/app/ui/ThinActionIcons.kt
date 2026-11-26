@@ -312,6 +312,35 @@ object ThinActionIcons {
         }
     }
 
+    /** 浮动导航按钮条：横向胶囊 + 三个导航点。 */
+    val FloatNav: ImageVector by lazy {
+        createThinIcon("ThinFloatNav") {
+            path(
+                stroke = strokeBrush,
+                strokeLineWidth = STROKE_WIDTH,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                moveTo(6.5f, 8.5f)
+                lineTo(17.5f, 8.5f)
+                curveTo(19.2f, 8.5f, 20.5f, 9.8f, 20.5f, 11.5f)
+                lineTo(20.5f, 12.5f)
+                curveTo(20.5f, 14.2f, 19.2f, 15.5f, 17.5f, 15.5f)
+                lineTo(6.5f, 15.5f)
+                curveTo(4.8f, 15.5f, 3.5f, 14.2f, 3.5f, 12.5f)
+                lineTo(3.5f, 11.5f)
+                curveTo(3.5f, 9.8f, 4.8f, 8.5f, 6.5f, 8.5f)
+                close()
+                moveTo(8f, 12f)
+                lineTo(8.5f, 12f)
+                moveTo(11.75f, 12f)
+                lineTo(12.25f, 12f)
+                moveTo(15.5f, 12f)
+                lineTo(16f, 12f)
+            }
+        }
+    }
+
     val QuickMenu: ImageVector by lazy {
         createThinIcon("ThinQuickMenu") {
             path(

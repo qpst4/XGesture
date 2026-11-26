@@ -2652,6 +2652,11 @@
     <string name="gesture_action_back">Back</string>
     <string name="gesture_action_home">Home</string>
     <string name="gesture_action_recents">Recents</string>
+    <string name="gesture_action_float_nav">Floating navigation</string>
+    <string name="gesture_action_float_nav_desc">Show a draggable Back / Home / Recents bar. On release: show after you lift. Immediate: show as soon as the trigger distance is reached. Continuous: keep sliding onto a button and release to run that navigation key.</string>
+    <string name="gesture_action_float_nav_permission">Requires accessibility service</string>
+    <string name="float_nav_close">Close floating navigation</string>
+    <string name="float_nav_drag">Drag floating navigation</string>
     <string name="gesture_action_close_current_app">Close current app</string>
     <string name="gesture_action_force_stop_current_app">Force stop current app</string>
     <string name="gesture_action_force_stop_current_app_desc">Kill the foreground app process outright (requires Shizuku or root)</string>
@@ -4862,6 +4867,9 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="gesture_search_fingertip_1">Fingertip ring</string>
     <string name="gesture_search_fingertip_2">Ring</string>
     <string name="gesture_search_fingertip_3">Radial</string>
+    <string name="gesture_search_float_nav_1">Floating navigation</string>
+    <string name="gesture_search_float_nav_2">Navigation buttons</string>
+    <string name="gesture_search_float_nav_3">Virtual navigation</string>
     <string name="gesture_search_screen_off_1">Fake screen off</string>
     <string name="gesture_search_screen_off_2">Screen-off keep-alive</string>
     <string name="gesture_search_screen_off_3">Keep awake</string>

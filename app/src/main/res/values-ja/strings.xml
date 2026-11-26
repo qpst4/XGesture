@@ -1043,6 +1043,11 @@
     <string name="gesture_action_back">戻る</string>
     <string name="gesture_action_home">ホーム</string>
     <string name="gesture_action_recents">最近使ったアプリ</string>
+    <string name="gesture_action_float_nav">フローティングナビ</string>
+    <string name="gesture_action_float_nav_desc">ドラッグできる「戻る / ホーム / 最近使ったアプリ」バーを表示します。離して表示：指を離すと表示。即時：トリガー距離に達したらすぐ表示。連続：押したままボタンまでスライドし、離すと対応するナビゲーションキーを実行します。</string>
+    <string name="gesture_action_float_nav_permission">ユーザー補助サービスが必要です</string>
+    <string name="float_nav_close">フローティングナビを閉じる</string>
+    <string name="float_nav_drag">フローティングナビをドラッグ</string>
     <string name="gesture_action_close_current_app">現在のアプリを閉じる</string>
     <string name="gesture_action_force_stop_current_app">現在のアプリを強制停止</string>
     <string name="gesture_action_force_stop_current_app_desc">前面のアプリのプロセスを強制終了します（Shizuku または root が必要）</string>
@@ -4525,6 +4530,9 @@
     <string name="gesture_search_fingertip_1">指先リング</string>
     <string name="gesture_search_fingertip_2">リング</string>
     <string name="gesture_search_fingertip_3">ラジアル</string>
+    <string name="gesture_search_float_nav_1">フローティングナビ</string>
+    <string name="gesture_search_float_nav_2">ナビゲーションボタン</string>
+    <string name="gesture_search_float_nav_3">仮想ナビ</string>
     <string name="gesture_search_screen_off_1">疑似スリープ</string>
     <string name="gesture_search_screen_off_2">画面オフ常時起動</string>
     <string name="gesture_search_screen_off_3">スリープ防止</string>

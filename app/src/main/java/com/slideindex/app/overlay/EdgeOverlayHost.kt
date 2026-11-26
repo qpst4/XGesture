@@ -450,6 +450,7 @@ class EdgeOverlayHost(
             "host",
             "teardownOverlayWindows：拆掉整个浮层宿主（面板/触钮全没，且在重挂前不会再出现）"
         )
+        runCatching { com.slideindex.app.overlay.floatnav.FloatNavOverlayWindow.dismiss() }
         runCatching { floatBallController?.stop() }
         floatBallController = null
         runCatching { cornerGestureHost?.stop() }
@@ -496,6 +497,7 @@ class EdgeOverlayHost(
 
     fun onConfigurationChanged() {
         floatBallController?.onConfigurationChanged()
+        com.slideindex.app.overlay.floatnav.FloatNavOverlayWindow.onConfigurationChanged()
         RegionalPickOverlay.onConfigurationChanged()
         overlayManager?.relayoutTriggersForConfigurationChange()
         cornerGestureHost?.onConfigurationChanged()

@@ -171,6 +171,10 @@ internal class EdgeGestureTouchDispatcher(
                 }
                 setEdgeCaptureTouchActive(false)
                 val canceled = event.actionMasked == MotionEvent.ACTION_CANCEL
+                if (canceled) {
+                    // CANCEL 也走 onTouchUp；先清掉跟手选择态，避免把一次系统取消当成“松手确认”。
+                    gestureSession.cancelFloatNavContinuousPick()
+                }
                 val continuedHandoff = isContinuedOverlayTouchActive()
                 if (continuedHandoff) {
                     forwardContinuedOverlayTouch(event)

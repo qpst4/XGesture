@@ -50,4 +50,34 @@ class GestureActionContinuousTrackingTest {
             )
         )
     }
+
+    @Test
+    fun floatNav_supportsContinuousOnSwipeAndLongPress() {
+        assertTrue(GestureAction.FloatNav.isContinuousTrackingKind())
+        assertTrue(
+            GestureAction.FloatNav.supportsContinuousTracking(GestureTriggerType.SHORT_SWIPE_IN)
+        )
+        assertTrue(
+            GestureAction.FloatNav.supportsContinuousTracking(GestureTriggerType.LONG_LONG_PRESS)
+        )
+        assertFalse(
+            GestureAction.FloatNav.supportsContinuousTracking(GestureTriggerType.SHORT_SINGLE_TAP)
+        )
+    }
+
+    @Test
+    fun floatNav_continuousModeSelectable() {
+        assertTrue(
+            GestureTriggerMode.CONTINUOUS.supportsAction(
+                GestureAction.FloatNav,
+                GestureTriggerType.SHORT_SWIPE_IN,
+            )
+        )
+        assertFalse(
+            GestureTriggerMode.CONTINUOUS.supportsAction(
+                GestureAction.FloatNav,
+                GestureTriggerType.SHORT_SINGLE_TAP,
+            )
+        )
+    }
 }

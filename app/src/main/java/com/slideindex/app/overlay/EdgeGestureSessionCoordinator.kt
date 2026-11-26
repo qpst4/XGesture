@@ -50,6 +50,16 @@ internal class GestureSessionCallbackBridge : GestureSession.Callbacks {
         delegate.onFingertipRingPointerMove(rawX, rawY)
     override fun onFingertipRingContinuousRelease(rawX: Float, rawY: Float) =
         delegate.onFingertipRingContinuousRelease(rawX, rawY)
+    override fun onShowFloatNav(
+        continuousPick: Boolean,
+        rawX: Float,
+        rawY: Float
+    ): Boolean = delegate.onShowFloatNav(continuousPick, rawX, rawY)
+    override fun onFloatNavPointerMove(rawX: Float, rawY: Float) =
+        delegate.onFloatNavPointerMove(rawX, rawY)
+    override fun onFloatNavContinuousRelease(rawX: Float, rawY: Float) =
+        delegate.onFloatNavContinuousRelease(rawX, rawY)
+    override fun onFloatNavCanceled() = delegate.onFloatNavCanceled()
     override fun onShowAdjustPanel(
         mode: com.slideindex.app.util.ContinuousAdjustController.Mode,
         fraction: Float,
@@ -199,6 +209,7 @@ internal class EdgeGestureSessionCoordinator(
         HoneycombAppPickerOverlayWindow.onGestureSessionEnd()
         RingLauncherOverlayWindow.onGestureSessionEnd()
         com.slideindex.app.overlay.fingertip.FingertipRingOverlayWindow.onGestureSessionEnd()
+        com.slideindex.app.overlay.floatnav.FloatNavOverlayWindow.onGestureSessionEnd()
         com.slideindex.app.overlay.carousel.AppCarouselSwitcherOverlay.onGestureSessionEnd()
         com.slideindex.app.overlay.quickwheel.QuickWheelOverlayWindow.onGestureSessionEnd()
         layoutCoordinator.notifyOverlayLayoutIfNeeded()
@@ -355,6 +366,33 @@ internal class EdgeGestureSessionCoordinator(
             },
         )
         gestureSession.clearFingertipRingContinuousPick()
+    }
+
+    override fun onShowFloatNav(
+        continuousPick: Boolean,
+        rawX: Float,
+        rawY: Float
+    ): Boolean = com.slideindex.app.overlay.floatnav.FloatNavOverlayWindow.show(
+        context = view.context,
+        settings = settingsProvider(),
+        anchorRawX = rawX,
+        anchorRawY = rawY,
+        side = gestureSession.sessionSide,
+        continuousTracking = continuousPick,
+        toggleIfVisible = !continuousPick,
+    )
+
+    override fun onFloatNavPointerMove(rawX: Float, rawY: Float) {
+        com.slideindex.app.overlay.floatnav.FloatNavOverlayWindow.updatePointer(rawX, rawY)
+    }
+
+    override fun onFloatNavContinuousRelease(rawX: Float, rawY: Float) {
+        com.slideindex.app.overlay.floatnav.FloatNavOverlayWindow.confirmTrackingRelease(rawX, rawY)
+        gestureSession.clearFloatNavContinuousPick()
+    }
+
+    override fun onFloatNavCanceled() {
+        com.slideindex.app.overlay.floatnav.FloatNavOverlayWindow.cancelTracking()
     }
 
     override fun onShowAdjustPanel(

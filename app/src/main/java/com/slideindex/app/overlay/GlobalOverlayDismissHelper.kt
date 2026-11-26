@@ -59,6 +59,7 @@ object GlobalOverlayDismissHelper {
         runCatching { HoneycombAppPickerOverlayWindow.dismiss() }
         runCatching { RingLauncherOverlayWindow.dismiss() }
         runCatching { com.slideindex.app.overlay.fingertip.FingertipRingOverlayWindow.dismiss() }
+        runCatching { com.slideindex.app.overlay.floatnav.FloatNavOverlayWindow.dismiss() }
         runCatching { com.slideindex.app.overlay.carousel.AppCarouselSwitcherOverlay.dismiss() }
         runCatching { com.slideindex.app.overlay.quickwheel.QuickWheelOverlayWindow.dismiss() }
         runCatching { FloatBallImageSearchPanel.dismiss() }

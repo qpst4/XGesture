@@ -2586,6 +2586,11 @@
     <string name="gesture_action_back">Назад</string>
     <string name="gesture_action_home">Главная</string>
     <string name="gesture_action_recents">Недавние</string>
+    <string name="gesture_action_float_nav">Плавающая навигация</string>
+    <string name="gesture_action_float_nav_desc">Показывает перетаскиваемую панель «Назад / Домой / Недавние». По отпусканию: показывается после подъёма пальца. Сразу: показывается при достижении порога. Непрерывно: удерживайте и проведите к кнопке, затем отпустите, чтобы выполнить соответствующую навигационную клавишу.</string>
+    <string name="gesture_action_float_nav_permission">Требуется служба доступности</string>
+    <string name="float_nav_close">Закрыть плавающую навигацию</string>
+    <string name="float_nav_drag">Перетащить плавающую навигацию</string>
     <string name="gesture_action_close_current_app">Закрыть текущее приложение</string>
     <string name="gesture_action_force_stop_current_app">Принудительно остановить текущее приложение</string>
     <string name="gesture_action_force_stop_current_app_desc">Полностью завершить процесс приложения на переднем плане (требуется Shizuku или root)</string>
@@ -4757,6 +4762,9 @@
     <string name="gesture_search_fingertip_1">Кольцо у пальца</string>
     <string name="gesture_search_fingertip_2">Кольцо</string>
     <string name="gesture_search_fingertip_3">Радиальное</string>
+    <string name="gesture_search_float_nav_1">Плавающая навигация</string>
+    <string name="gesture_search_float_nav_2">Кнопки навигации</string>
+    <string name="gesture_search_float_nav_3">Виртуальная навигация</string>
     <string name="gesture_search_screen_off_1">Фейковое выключение экрана</string>
     <string name="gesture_search_screen_off_2">Keep-alive с выключенным экраном</string>
     <string name="gesture_search_screen_off_3">Не выключать экран</string>

@@ -2512,6 +2512,11 @@
     <string name="gesture_action_back">Atrás</string>
     <string name="gesture_action_home">Inicio</string>
     <string name="gesture_action_recents">Recientes</string>
+    <string name="gesture_action_float_nav">Navegación flotante</string>
+    <string name="gesture_action_float_nav_desc">Muestra una barra arrastrable con Atrás / Inicio / Recientes. Al soltar: aparece al levantar el dedo. Inmediato: aparece al alcanzar la distancia de activación. Continuo: sigue deslizando hasta un botón y suelta para ejecutar esa tecla de navegación.</string>
+    <string name="gesture_action_float_nav_permission">Requiere el servicio de accesibilidad</string>
+    <string name="float_nav_close">Cerrar navegación flotante</string>
+    <string name="float_nav_drag">Arrastrar navegación flotante</string>
     <string name="gesture_action_close_current_app">Aplicación actual</string>
     <string name="gesture_action_force_stop_current_app">Aplicación actual para detener la fuerza</string>
     <string name="gesture_action_force_stop_current_app_desc">Matar el proceso de aplicación de primer plano (requiere Shizuku o root)</string>
@@ -4639,6 +4644,9 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="gesture_search_fingertip_1">Anillo de punta fina</string>
     <string name="gesture_search_fingertip_2">Anillo</string>
     <string name="gesture_search_fingertip_3">Radial</string>
+    <string name="gesture_search_float_nav_1">Navegación flotante</string>
+    <string name="gesture_search_float_nav_2">Botones de navegación</string>
+    <string name="gesture_search_float_nav_3">Navegación virtual</string>
     <string name="gesture_search_screen_off_1">Pantalla falsa apagada</string>
     <string name="gesture_search_screen_off_2">Screen-off guard-alive</string>
     <string name="gesture_search_screen_off_3">Mantente despierto</string>

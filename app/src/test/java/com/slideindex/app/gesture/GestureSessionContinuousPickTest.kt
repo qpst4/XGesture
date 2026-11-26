@@ -14,6 +14,7 @@ class GestureSessionContinuousPickTest {
         assertFalse(pick.quickLauncherActive())
         assertFalse(pick.shellActive())
         assertFalse(pick.honeycombActive())
+        assertFalse(pick.floatNavActive())
     }
 
     @Test
@@ -82,5 +83,22 @@ class GestureSessionContinuousPickTest {
         assertTrue(pick.quickLauncherActive())
         assertTrue(pick.shellActive())
         assertFalse(pick.honeycombActive())
+    }
+
+    @Test
+    fun floatNav_isClearedIndependentlyAndByReset() {
+        val pick = GestureSessionContinuousPick().apply {
+            quickLauncher = true
+            floatNav = true
+        }
+
+        pick.clearFloatNav()
+
+        assertFalse(pick.floatNavActive())
+        assertTrue(pick.quickLauncherActive())
+
+        pick.floatNav = true
+        pick.reset()
+        assertFalse(pick.floatNavActive())
     }
 }

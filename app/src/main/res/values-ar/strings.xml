@@ -1023,6 +1023,11 @@
     <string name="gesture_action_back">مفتاح الرجوع</string>
     <string name="gesture_action_home">الشاشة الرئيسية</string>
     <string name="gesture_action_recents">المهام المتعددة</string>
+    <string name="gesture_action_float_nav">تنقل عائم</string>
+    <string name="gesture_action_float_nav_desc">يعرض شريطًا قابلًا للسحب يحتوي على الرجوع / الرئيسية / المهام الأخيرة. عند الإفلات: يظهر بعد رفع الإصبع. الفوري: يظهر فور بلوغ مسافة التشغيل. المستمر: استمر في السحب إلى أحد الأزرار ثم أفلت لتنفيذ مفتاح التنقل المقابل.</string>
+    <string name="gesture_action_float_nav_permission">يتطلب خدمة إمكانية الوصول</string>
+    <string name="float_nav_close">إغلاق التنقل العائم</string>
+    <string name="float_nav_drag">سحب التنقل العائم</string>
     <string name="gesture_action_close_current_app">إغلاق التطبيق الحالي</string>
     <string name="gesture_action_force_stop_current_app">إيقاف التطبيق الحالي قسريًا</string>
     <string name="gesture_action_force_stop_current_app_desc">إنهاء عملية التطبيق في المقدمة نهائيًا (يتطلب Shizuku أو root)</string>
@@ -4510,6 +4515,9 @@
     <string name="gesture_search_fingertip_1">عجلة أطراف الأصابع</string>
     <string name="gesture_search_fingertip_2">العجلة</string>
     <string name="gesture_search_fingertip_3">شعاعي</string>
+    <string name="gesture_search_float_nav_1">تنقل عائم</string>
+    <string name="gesture_search_float_nav_2">أزرار التنقل</string>
+    <string name="gesture_search_float_nav_3">تنقل افتراضي</string>
     <string name="gesture_search_screen_off_1">شاشة مغلقة زائفة</string>
     <string name="gesture_search_screen_off_2">تعليق الشاشة المغلقة</string>
     <string name="gesture_search_screen_off_3">إبقاء مستيقظاً</string>

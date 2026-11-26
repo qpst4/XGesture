@@ -51,6 +51,7 @@ fun gestureActionTypeOutlinedIcon(type: GestureActionType): ImageVector = when (
     GestureActionType.BACK -> ThinActionIcons.Back
     GestureActionType.HOME -> ThinActionIcons.Home
     GestureActionType.RECENTS -> ThinActionIcons.Recents
+    GestureActionType.FLOAT_NAV -> ThinActionIcons.FloatNav
     GestureActionType.CLOSE_CURRENT_APP -> ThinActionIcons.Close
     GestureActionType.FORCE_STOP_CURRENT_APP -> ThinActionIcons.ForceStopApp
     GestureActionType.FREE_WINDOW_CURRENT_APP -> ThinActionIcons.FreeWindow
@@ -183,6 +184,7 @@ fun gestureActionTypeThinIcon(type: GestureActionType): ImageVector = when (type
     GestureActionType.BACK -> ThinActionIcons.Back
     GestureActionType.HOME -> ThinActionIcons.Home
     GestureActionType.RECENTS -> ThinActionIcons.Recents
+    GestureActionType.FLOAT_NAV -> ThinActionIcons.FloatNav
     GestureActionType.CLOSE_CURRENT_APP -> ThinActionIcons.Close
     GestureActionType.FORCE_STOP_CURRENT_APP -> ThinActionIcons.ForceStopApp
     GestureActionType.FREE_WINDOW_CURRENT_APP -> ThinActionIcons.FreeWindow

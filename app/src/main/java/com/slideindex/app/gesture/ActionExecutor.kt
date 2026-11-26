@@ -593,6 +593,14 @@ class ActionExecutor(
                     overlayAnchorX,
                     settings.overlayBlurEnabled,
                 )
+            GestureAction.FloatNav ->
+                com.slideindex.app.overlay.floatnav.FloatNavOverlayWindow.toggle(
+                    context = context,
+                    settings = settings,
+                    anchorRawX = overlayAnchorX,
+                    anchorRawY = overlayAnchorY,
+                    side = resolvedSide,
+                )
             GestureAction.ScreenDraw ->
                 com.slideindex.app.screendraw.ScreenDrawOverlay.toggle(context)
             GestureAction.GalleryImageEdit ->

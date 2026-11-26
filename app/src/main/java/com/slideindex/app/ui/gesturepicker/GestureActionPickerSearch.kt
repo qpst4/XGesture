@@ -122,6 +122,15 @@ fun gestureActionSearchAliases(context: Context, action: GestureAction): List<St
         "radial",
         "ring menu",
     )
+    GestureActionType.FLOAT_NAV -> listOf(
+        context.getString(R.string.gesture_search_float_nav_1),
+        context.getString(R.string.gesture_search_float_nav_2),
+        context.getString(R.string.gesture_search_float_nav_3),
+        "floating nav",
+        "floating navigation",
+        "navigation bar",
+        "virtual navigation",
+    )
     GestureActionType.SCREEN_OFF_KEEP_AWAKE -> listOf(
         context.getString(R.string.gesture_search_screen_off_1),
         context.getString(R.string.gesture_search_screen_off_2),
@@ -447,6 +456,7 @@ private fun gestureActionBaseLabelText(context: Context, action: GestureAction):
         GestureActionType.BACK -> context.getString(R.string.gesture_action_back)
         GestureActionType.HOME -> context.getString(R.string.gesture_action_home)
         GestureActionType.RECENTS -> context.getString(R.string.gesture_action_recents)
+        GestureActionType.FLOAT_NAV -> context.getString(R.string.gesture_action_float_nav)
         GestureActionType.CLOSE_CURRENT_APP -> context.getString(R.string.gesture_action_close_current_app)
         GestureActionType.FORCE_STOP_CURRENT_APP -> context.getString(R.string.gesture_action_force_stop_current_app)
         GestureActionType.FREE_WINDOW_CURRENT_APP -> context.getString(R.string.gesture_action_free_window_current_app)
@@ -680,6 +690,7 @@ private fun gestureActionBaseLabel(action: GestureAction, settings: AppSettings?
         GestureActionType.BACK -> stringResource(R.string.gesture_action_back)
         GestureActionType.HOME -> stringResource(R.string.gesture_action_home)
         GestureActionType.RECENTS -> stringResource(R.string.gesture_action_recents)
+        GestureActionType.FLOAT_NAV -> stringResource(R.string.gesture_action_float_nav)
         GestureActionType.CLOSE_CURRENT_APP -> stringResource(R.string.gesture_action_close_current_app)
         GestureActionType.FORCE_STOP_CURRENT_APP -> stringResource(R.string.gesture_action_force_stop_current_app)
         GestureActionType.FREE_WINDOW_CURRENT_APP -> stringResource(R.string.gesture_action_free_window_current_app)
@@ -939,6 +950,7 @@ fun gestureActionDescription(action: GestureAction): String? = when (action.type
     GestureActionType.MICROPHONE_MENU -> stringResource(R.string.gesture_action_microphone_menu_desc)
     GestureActionType.WIDGET_POPUP_OVERLAY -> stringResource(R.string.gesture_action_widget_popup_overlay_desc)
     GestureActionType.FLOATING_POINTER -> stringResource(R.string.gesture_action_floating_pointer_desc)
+    GestureActionType.FLOAT_NAV -> stringResource(R.string.gesture_action_float_nav_desc)
     GestureActionType.OPEN_STASH_PANEL -> stringResource(R.string.gesture_action_open_stash_panel_desc)
     GestureActionType.EXECUTE_SHELL_COMMAND -> stringResource(R.string.gesture_action_execute_shell_command_desc)
     GestureActionType.OPEN_CLIPBOARD_PANEL -> stringResource(R.string.gesture_action_open_clipboard_panel_desc)
@@ -1126,6 +1138,10 @@ fun gestureActionPermissionHintText(
         GestureActionType.FLOATING_POINTER -> {
             if (PermissionHelper.isAccessibilityServiceEnabledForOverlays(context)) return null
             context.getString(R.string.gesture_action_floating_pointer_permission)
+        }
+        GestureActionType.FLOAT_NAV -> {
+            if (PermissionHelper.isAccessibilityServiceEnabledForOverlays(context)) return null
+            context.getString(R.string.gesture_action_float_nav_permission)
         }
         GestureActionType.SIMULATE_POINTER_SWIPE -> {
             if (PermissionHelper.isAccessibilityServiceEnabledForOverlays(context)) return null

@@ -11,6 +11,9 @@ internal class GestureSessionContinuousPick {
     var appCarouselSwitcher = false
     var fingertipRing = false
 
+    /** 浮动导航：本次手势是否已显示并进入跟手选择态。 */
+    var floatNav = false
+
     /** 快捷轮盘（本次新增）。 */
     var quickWheel = false
 
@@ -54,6 +57,12 @@ internal class GestureSessionContinuousPick {
         fingertipRing = false
     }
 
+    fun floatNavActive(): Boolean = floatNav
+
+    fun clearFloatNav() {
+        floatNav = false
+    }
+
     fun clearQuickWheel() {
         quickWheel = false
     }
@@ -66,6 +75,7 @@ internal class GestureSessionContinuousPick {
         ringLauncher = false
         appCarouselSwitcher = false
         fingertipRing = false
+        floatNav = false
         quickWheel = false
     }
 }

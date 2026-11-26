@@ -42,6 +42,10 @@ class GestureSession(
         fun onShowFingertipRing(continuousPick: Boolean, rawX: Float, rawY: Float): Boolean
         fun onFingertipRingPointerMove(rawX: Float, rawY: Float)
         fun onFingertipRingContinuousRelease(rawX: Float, rawY: Float)
+        fun onShowFloatNav(continuousPick: Boolean, rawX: Float, rawY: Float): Boolean = false
+        fun onFloatNavPointerMove(rawX: Float, rawY: Float) {}
+        fun onFloatNavContinuousRelease(rawX: Float, rawY: Float) {}
+        fun onFloatNavCanceled() {}
         fun onShowAdjustPanel(
             mode: ContinuousAdjustController.Mode,
             fraction: Float,
@@ -343,6 +347,17 @@ class GestureSession(
         sessionContinuousPick.clearFingertipRing()
     }
 
+    fun clearFloatNavContinuousPick() {
+        sessionContinuousPick.clearFloatNav()
+    }
+
+    /** 取消/丢失 UP：清掉跟手态，但保留已显示的浮条。 */
+    fun cancelFloatNavContinuousPick() {
+        if (!sessionContinuousPick.floatNavActive()) return
+        sessionContinuousPick.clearFloatNav()
+        callbacks.onFloatNavCanceled()
+    }
+
     fun quickWheelContinuousPickActive(): Boolean = sessionContinuousPick.quickWheelActive()
 
     fun clearQuickWheelContinuousPick() {
@@ -354,6 +369,7 @@ class GestureSession(
             sessionContinuousPick.ringLauncherActive() ||
             sessionContinuousPick.appCarouselSwitcherActive() ||
             sessionContinuousPick.fingertipRingActive() ||
+            sessionContinuousPick.floatNavActive() ||
             sessionContinuousPick.quickWheelActive() ||
             sessionContinuousPick.shellActive() ||
             sessionContinuousPick.taskSwitcherActive() ||
@@ -409,6 +425,7 @@ class GestureSession(
         sessionMoveTimeActionFired = false
         thresholdTracker.reset()
         sessionContinuousPick.reset()
+        callbacks.onFloatNavCanceled()
         lastRawX = rawX
         lastRawY = rawY
         sessionTouchDownRawX = rawX
@@ -468,6 +485,11 @@ class GestureSession(
 
         if (sessionContinuousPick.fingertipRingActive()) {
             callbacks.onFingertipRingPointerMove(rawX, rawY)
+            return
+        }
+
+        if (sessionContinuousPick.floatNavActive()) {
+            callbacks.onFloatNavPointerMove(rawX, rawY)
             return
         }
 
@@ -565,6 +587,13 @@ class GestureSession(
                     sessionContinuousPick.clearFingertipRing()
                     callbacks.onFingertipRingContinuousRelease(rawX, rawY)
                     finishContinuousPickRelease()
+                    return
+                }
+
+                if (sessionContinuousPick.floatNavActive()) {
+                    sessionContinuousPick.clearFloatNav()
+                    callbacks.onFloatNavContinuousRelease(rawX, rawY)
+                    endSession()
                     return
                 }
 
@@ -833,6 +862,7 @@ class GestureSession(
         sessionPanelMode = OverlayPanelMode.NONE
         sessionMoveTimeActionFired = false
         sessionContinuousPick.reset()
+        callbacks.onFloatNavCanceled()
         thresholdTracker.reset()
         sessionActiveHandleId = TriggerHandle.DEFAULT_ID
         sessionQuickLauncherPanelId = ""
@@ -897,6 +927,7 @@ class GestureSession(
             sessionContinuousPick.honeycombActive() ||
             sessionContinuousPick.ringLauncherActive() ||
             sessionContinuousPick.appCarouselSwitcherActive() ||
+            sessionContinuousPick.floatNavActive() ||
             sessionContinuousPick.quickWheelActive()
         ) {
             return

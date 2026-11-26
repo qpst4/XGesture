@@ -186,6 +186,22 @@ internal fun GestureSession.trackContinuousGesture(
             }
         }
 
+        GestureAction.FloatNav -> {
+            if (!sessionContinuousPick.floatNav) {
+                val shown = sessionCallbacks.onShowFloatNav(
+                    continuousPick = true,
+                    rawX = rawX,
+                    rawY = rawY,
+                )
+                if (shown) {
+                    sessionContinuousPick.floatNav = true
+                    sessionCallbacks.hapticConfirmLaunch()
+                }
+            } else {
+                sessionCallbacks.onFloatNavPointerMove(rawX, rawY)
+            }
+        }
+
         GestureAction.AdjustVolume -> enterAdjustMode(ContinuousAdjustController.Mode.VOLUME, rawY)
 
         GestureAction.AdjustBrightness -> enterAdjustMode(ContinuousAdjustController.Mode.BRIGHTNESS, rawY)
@@ -392,6 +408,24 @@ internal fun GestureSession.handleClassifiedGesture(
                 classification.trigger,
                 sessionActiveHandleId
             )
+            if (triggerMode != GestureTriggerMode.IMMEDIATE) {
+                endSession()
+            }
+        }
+
+        GestureAction.FloatNav -> {
+            sessionCallbacks.hapticConfirmLaunch()
+            val triggerMode = sessionSettings.resolvedTriggerMode(
+                sessionSide,
+                classification.trigger,
+                sessionActiveHandleId,
+            )
+            sessionCallbacks.onShowFloatNav(
+                continuousPick = triggerMode == GestureTriggerMode.CONTINUOUS,
+                rawX = rawX,
+                rawY = rawY,
+            )
+            // 直接触发要等手指抬起再结束会话；按住期间浮条只是可见，当前事件流仍归边缘窗口。
             if (triggerMode != GestureTriggerMode.IMMEDIATE) {
                 endSession()
             }

@@ -280,6 +280,14 @@ enum class GestureActionType(val id: Int) {
 
     /** 「静音」：把铃声模式设成 / 切到静音（菜单：切换 / 打开 / 关闭）。 */
     RINGER_SILENT(129),
+
+    /**
+     * 「浮动导航」：显示一条可拖动的返回 / 主屏 / 最近任务按钮条。
+     *
+     * 松手触发在抬手后显示；直接触发在越过触发距离时显示；持续触发在越过触发距离后进入
+     * 跟手选择态，松手落在哪个键上就执行哪个导航键。
+     */
+    FLOAT_NAV(130),
     ;
 
     companion object {
@@ -903,6 +911,17 @@ sealed class GestureAction {
         override val payload = ""
     }
 
+    /**
+     * 浮动导航按钮条：返回 / 主屏 / 最近任务，可拖动。
+     *
+     * 浮条是独立常驻窗口，不随边缘会话结束而收起；持续触发时由手势会话按屏幕坐标
+     * 命中按钮，松手执行对应导航键。
+     */
+    data object FloatNav : GestureAction() {
+        override val type = GestureActionType.FLOAT_NAV
+        override val payload = ""
+    }
+
     /** Simulates a swipe starting at the floating pointer position. */
     data class SimulatePointerSwipe(
         val config: PointerSwipeConfig = PointerSwipeConfig.DEFAULT,
@@ -1455,25 +1474,29 @@ sealed class GestureAction {
 
     companion object {
         /** Actions that support [GestureTriggerMode.CONTINUOUS] on compatible triggers. */
-        val continuousTrackingActions: List<GestureAction> = listOf(
-            OpenIndex,
-            QuickLauncher(),
-            TaskSwitcher,
-            ShellCommandPanel,
-            HoneycombLauncher,
-            RingLauncher,
-            AppCarouselSwitcher,
-            FingertipRing,
-            AdjustVolume,
-            AdjustBrightness,
-            FloatingPointer,
-            RegionalScreenshotPick,
-            QuickWheel(),
-            // 「页面滚动」在持续触发下 = 按住并拖动（逐页滚动），所以它也算支持持续跟踪的动作。
-            PageScroll,
-            // 「放大镜」持续触发 = 按住放大、手指移动跟随、松手恢复。
-            Magnifier,
-        )
+        val continuousTrackingActions: List<GestureAction> by lazy {
+            listOf(
+                OpenIndex,
+                QuickLauncher(),
+                TaskSwitcher,
+                ShellCommandPanel,
+                HoneycombLauncher,
+                RingLauncher,
+                AppCarouselSwitcher,
+                FingertipRing,
+                AdjustVolume,
+                AdjustBrightness,
+                FloatingPointer,
+                // 浮条在持续触发下进入跟手选择态，松手落在哪个键上执行哪个导航键。
+                FloatNav,
+                RegionalScreenshotPick,
+                QuickWheel(),
+                // 「页面滚动」在持续触发下 = 按住并拖动（逐页滚动），所以它也算支持持续跟踪的动作。
+                PageScroll,
+                // 「放大镜」持续触发 = 按住放大、手指移动跟随、松手恢复。
+                Magnifier,
+            )
+        }
 
         fun from(type: GestureActionType, payload: String): GestureAction =
             when (type) {
@@ -1545,6 +1568,7 @@ sealed class GestureAction {
                 GestureActionType.CLIPBOARD_PICK -> ClipboardPick
                 GestureActionType.CLIPBOARD_PASTE -> ClipboardPaste
                 GestureActionType.FLOATING_POINTER -> FloatingPointer
+                GestureActionType.FLOAT_NAV -> FloatNav
                 GestureActionType.SIMULATE_POINTER_SWIPE -> SimulatePointerSwipe.fromPayload(payload)
                 GestureActionType.POINTER_GESTURE_RECORDER -> PointerGestureRecorder
                 GestureActionType.POINTER_REALTIME_GESTURE -> PointerRealtimeGesture
@@ -1695,6 +1719,7 @@ fun GestureAction.supportsContinuousTracking(trigger: GestureTriggerType): Boole
         GestureAction.AppCarouselSwitcher,
         GestureAction.FingertipRing,
         GestureAction.HoneycombLauncher,
+        GestureAction.FloatNav,
         is GestureAction.QuickLauncher,
         is GestureAction.QuickWheel,
         GestureAction.ShellCommandPanel,
