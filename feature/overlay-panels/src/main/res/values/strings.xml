@@ -752,4 +752,6 @@
     <string name="drag_drop_flow_action_convert_to_text">Convert to text</string>
     <string name="drag_drop_flow_action_convert_to_image">Convert to image</string>
     <string name="drag_drop_flow_convert_empty">No text recognized</string>
+    <string name="pick_word_granularity_word">分词</string>
+    <string name="pick_word_granularity_character">按字</string>
 </resources>

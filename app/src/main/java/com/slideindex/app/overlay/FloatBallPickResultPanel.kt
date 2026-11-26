@@ -1545,6 +1545,10 @@ object FloatBallPickResultPanel {
                     onTranslate = { FloatBallTranslateCoordinator.translate(context, it) },
                     onTranslateTargetSelect = { code ->
                         // 长按翻译键弹出的目标语言菜单里选一项：写设置 + Toast 确认。
+                        android.util.Log.i(
+                            "PickTranslate",
+                            "panel onTranslateTargetSelect code=$code",
+                        )
                         val repository = OverlayDependencyAccess.overlayDependencies(overlayContext)
                             ?.settingsRepository
                         if (repository != null) {

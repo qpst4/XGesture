@@ -757,6 +757,12 @@ fun FloatBallPickResultContent(
                                             .clickable {
                                                 translateTargetMenuVisible = false
                                                 onTranslateTargetSelect?.invoke(option.code)
+                                                // 选完语言直接翻译当前选中的文字，省一次点击。
+                                                android.util.Log.i(
+                                                    "PickTranslate",
+                                                    "target language selected code=${option.code}, auto translate",
+                                                )
+                                                onTranslate(activeText)
                                             }
                                             .padding(horizontal = 20.dp, vertical = 13.dp),
                                         verticalAlignment = Alignment.CenterVertically,
