@@ -62,6 +62,15 @@ object QuickLauncherIconResolver {
             append('\u0000').append(shellCommands.size).append(':').append(shellCommands.hashCode())
             // 图标覆盖变更后必须换 key，否则会一直命中改图标前的旧缓存
             append('\u0000').append(com.slideindex.app.ui.GlobalIconStore.revision)
+            // 「创建快捷方式」的图标覆盖存在独立表里：换了图标必须换缓存 key
+            if (context != null) {
+                append('\u0000').append(
+                    com.slideindex.app.activity.ShortcutIconOverrideStore.iconPath(
+                        context,
+                        QuickLauncherItemCodec.shortcutItemKey(item),
+                    ),
+                )
+            }
             append('\u0000').append(com.slideindex.app.ui.IconPlateModeState.mode)
             append('\u0000').append(com.slideindex.app.ui.IconPlateModeState.lastResolvedDark)
             // 「运行宏」的图标按宏目标 App 解析：宏改了目标 App / 改名都要重取

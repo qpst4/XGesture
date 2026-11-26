@@ -143,9 +143,26 @@ private fun enrichIntentUriWithPackage(intentUri: String, packageName: String): 
         intent.toUri(Intent.URI_INTENT_SCHEME)
     }.getOrDefault(intentUri)
 
+
+private fun normalizeIntentUriForMatch(raw: String?): String? {
+    val uri = raw?.takeIf { it.isNotBlank() } ?: return null
+    return runCatching {
+        android.content.Intent.parseUri(uri, android.content.Intent.URI_INTENT_SCHEME)
+            .toUri(android.content.Intent.URI_INTENT_SCHEME)
+    }.getOrNull()
+}
+
+/** intent URI 的 extras 编码顺序/转义差异不影响匹配：先各自规范化再比。 */
+private fun List<ActivityShortcut>.findByIntentEquivalence(rawIntentUri: String?): ActivityShortcut? {
+    val target = normalizeIntentUriForMatch(rawIntentUri) ?: return null
+    return firstOrNull { shortcut ->
+        shortcut.intentUris.any { normalizeIntentUriForMatch(it) == target }
+    }
+}
+
 fun List<ActivityShortcut>.findForLaunchShortcut(payloadKey: String): ActivityShortcut? {
     val decoded = GestureShortcutPayload.decode(payloadKey) ?: return null
-    return when (decoded) {
+    val exact = when (decoded) {
         is GestureShortcutPayload.Decoded.Dynamic ->
             findByIdentityKey(
                 QuickLauncherItemCodec.shortcutKey(decoded.packageName, decoded.shortcutId)
@@ -163,12 +180,22 @@ fun List<ActivityShortcut>.findForLaunchShortcut(payloadKey: String): ActivitySh
                 }
             )
     }
+    if (exact != null) return exact
+    val rawIntent = when (decoded) {
+        is GestureShortcutPayload.Decoded.IntentShortcut -> decoded.intentUri
+        is GestureShortcutPayload.Decoded.IntentsShortcut -> decoded.intentUris.singleOrNull()
+        else -> null
+    }
+    return findByIntentEquivalence(rawIntent)
 }
 
 fun List<ActivityShortcut>.findForQuickLauncherItem(item: QuickLauncherItem): ActivityShortcut? {
     if (item.type != QuickLauncherItemType.SHORTCUT) return null
-    val key = QuickLauncherItemCodec.shortcutItemKey(item) ?: return null
-    return findByIdentityKey(key)
+    val key = QuickLauncherItemCodec.shortcutItemKey(item)
+    key?.let { findByIdentityKey(it) }?.let { return it }
+    val rawIntent = QuickLauncherItemCodec.parseIntentPayload(item.payload)
+        ?: QuickLauncherItemCodec.parseIntentListPayload(item.payload)?.singleOrNull()
+    return findByIntentEquivalence(rawIntent)
 }
 
 fun activityShortcutFromQuickLauncherItem(item: QuickLauncherItem): ActivityShortcut? {
