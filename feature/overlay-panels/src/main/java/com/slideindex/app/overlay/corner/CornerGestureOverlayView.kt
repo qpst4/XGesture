@@ -49,6 +49,9 @@ private const val DISPLACE_ANIM_MS = 140L
 /** 松手后等新顺序回流的最长时间；超时就直接收掉让位画面，避免卡住。 */
 private const val COMMIT_TIMEOUT_MS = 400L
 
+/** 松手后被拖图标滑到目标槽位中心的时长。 */
+private const val SETTLE_ANIM_MS = 130L
+
 class CornerGestureOverlayView(
     context: Context,
     private val appRepository: AppRepository,
@@ -144,9 +147,11 @@ class CornerGestureOverlayView(
         this.settings = settings
         this.cornerSettings = settings.cornerGestureSettings
         this.density = density
-        if (pendingCommit) {
-            // 新顺序已回流：把拖动时的临时让位收掉。
-            clearDragVisuals()
+        val override = overrideSlots
+        val overrideFor = overrideAnchor
+        if (override != null && overrideFor != null) {
+            // 真实顺序已经追上乐观顺序 → 不再需要 override。
+            if (cornerSettings.slotsFor(overrideFor) == override) clearOverride()
         }
         if (menuVisualActive) {
             onMenuVisualActiveChange(true)
@@ -167,6 +172,7 @@ class CornerGestureOverlayView(
 
     fun beginSession(anchor: CornerAnchor, event: MotionEvent) {
         if (wheelPinned) dismissWheel()
+        clearOverride()
         activeAnchor = anchor
         wheelPinned = false
         sessionMode = SessionMode.NORMAL
@@ -268,9 +274,16 @@ class CornerGestureOverlayView(
     private var dragX = 0f
     private var dragY = 0f
     private var dragLongPress: Runnable? = null
-    /** 已松手、正在等新顺序回流：此时仍保持让位画面，避免先退回旧顺序。 */
-    private var pendingCommit = false
-    private var commitTimeout: Runnable? = null
+    /** 松手后乐观采用的新顺序：立刻按它绘制，等真实设置回流再清掉。 */
+    private var overrideSlots: List<GestureAction>? = null
+    private var overrideAnchor: CornerAnchor? = null
+    private var overrideClearTimeout: Runnable? = null
+    private var settleAnimator: ValueAnimator? = null
+    private var settleFrom = Offset.Zero
+    private var settleTo = Offset.Zero
+    private var settleAction: GestureAction = GestureAction.None
+    private var settleToSlot = -1
+    private var settleProgress = 1f
     private val slotOffsets = HashMap<Int, Offset>()
     private var displaceAnimator: ValueAnimator? = null
 
@@ -335,22 +348,38 @@ class CornerGestureOverlayView(
             clearDragVisuals()
             return
         }
-        // 松手后先**保持**拖动时的让位画面，等新顺序回流（applySettings）再收，
-        // 否则会先退回旧顺序、再被写入过程中的中间态一点点纠正（图标"一个一个挪"）。
-        pendingCommit = true
-        highlightedSlot = to
+        // 松手瞬间就按"插入后的最终顺序"绘制（override），不等 DataStore 往返；
+        // 同时让被拖图标从手指位置滑到目标槽位中心，避免"顿一下再跳过去"。
+        val reordered = cornerSettings.slotsFor(anchor).toMutableList().apply {
+            val moved = removeAt(from)
+            add(to, moved)
+        }
+        overrideSlots = reordered
+        overrideAnchor = anchor
+        clearDragVisuals()
+        settleAction = reordered.getOrElse(to) { GestureAction.None }
+        settleToSlot = to
+        val (anchorX, anchorY) = anchorCenter(anchor)
+        settleFrom = Offset(dragX, dragY)
+        settleTo = CornerRadialMenuGeometry.bubbleCenterForSlot(
+            anchor = anchor,
+            anchorX = anchorX,
+            anchorY = anchorY,
+            slotIndex = to,
+            settings = cornerSettings,
+            density = density,
+        )
+        playSettleAnimation()
         onMoveSlots(anchor, from, to)
-        commitTimeout?.let { removeCallbacks(it) }
-        val timeout = Runnable { clearDragVisuals() }
-        commitTimeout = timeout
+        overrideClearTimeout?.let { removeCallbacks(it) }
+        val timeout = Runnable { clearOverride() }
+        overrideClearTimeout = timeout
         postDelayed(timeout, COMMIT_TIMEOUT_MS)
         invalidate()
     }
 
     /** 结束拖动/提交，把临时让位与跟手图标一并收掉。 */
     private fun clearDragVisuals() {
-        commitTimeout?.let { removeCallbacks(it) }
-        commitTimeout = null
         dragLongPress?.let { removeCallbacks(it) }
         dragLongPress = null
         displaceAnimator?.cancel()
@@ -358,7 +387,6 @@ class CornerGestureOverlayView(
         slotOffsets.clear()
         dragSlot = -1
         liveTargetSlot = -1
-        pendingCommit = false
         dragging = false
         highlightedSlot = -1
         invalidate()
@@ -368,7 +396,42 @@ class CornerGestureOverlayView(
         clearDragVisuals()
     }
 
+    private fun playSettleAnimation() {
+        settleAnimator?.cancel()
+        settleProgress = 0f
+        settleAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = SETTLE_ANIM_MS
+            addUpdateListener { animator ->
+                settleProgress = animator.animatedValue as Float
+                if (settleProgress >= 1f) settleToSlot = -1
+                invalidate()
+            }
+        }.also { it.start() }
+    }
+
     /** 离手指最近的槽位（拖动时用它算插入位置，比精确命中宽容）。 */
+    /**
+     * 当前"应该显示/执行"的槽位顺序。
+     *
+     * 松手后先按乐观顺序（override）绘制与命中，等真实设置回流（或超时）再清掉，
+     * 这样不用等一次 DataStore 往返，视觉上松手即定位。
+     */
+    private fun effectiveSlots(anchor: CornerAnchor): List<GestureAction> =
+        overrideSlots?.takeIf { overrideAnchor == anchor } ?: cornerSettings.slotsFor(anchor)
+
+    private fun clearOverride() {
+        overrideClearTimeout?.let { removeCallbacks(it) }
+        overrideClearTimeout = null
+        if (overrideSlots == null) return
+        overrideSlots = null
+        overrideAnchor = null
+        // 真实顺序已到：落位动画直接收尾，避免和目标槽位的图标重影。
+        settleAnimator?.cancel()
+        settleProgress = 1f
+        settleToSlot = -1
+        invalidate()
+    }
+
     private fun nearestSlot(anchor: CornerAnchor, rawX: Float, rawY: Float): Int? {
         val (anchorX, anchorY) = anchorCenter(anchor)
         val last = CornerRadialMenuGeometry.lastVisibleSlotIndex(cornerSettings.enabledLayerCount)
@@ -511,7 +574,7 @@ class CornerGestureOverlayView(
                 return activated || fromPinned
             }
             mode == SessionMode.NORMAL && slot >= 0 -> {
-                val action = cornerSettings.slotsFor(anchor).getOrElse(slot) { GestureAction.None }
+                val action = effectiveSlots(anchor).getOrElse(slot) { GestureAction.None }
                 if (action.isEffective()) {
                     val longPress = slotLongPressTriggered(event, slot, action)
                     if (longPress) {
@@ -733,7 +796,7 @@ class CornerGestureOverlayView(
         val screenW = width.toFloat()
         val screenH = height.toFloat()
         val editMode = sessionMode == SessionMode.EDIT
-        val slots = cornerSettings.slotsFor(anchor)
+        val slots = effectiveSlots(anchor)
 
         updateActiveLayerCount(anchor, anchorX, anchorY, rawX, rawY)
 
@@ -1141,7 +1204,7 @@ class CornerGestureOverlayView(
             anchorX = anchorX,
             anchorY = anchorY,
             settings = cornerSettings,
-            slots = cornerSettings.slotsFor(anchor),
+            slots = effectiveSlots(anchor),
             highlightedSlot = highlightedSlot,
             highlightedEditButton = highlightedEditButton,
             editMode = sessionMode == SessionMode.EDIT,
@@ -1165,7 +1228,11 @@ class CornerGestureOverlayView(
             hintLabelSuffix = modeSuffix,
             hintPipArmed = modePip,
             slotOffsetPx = { slot -> slotOffsets[slot] ?: Offset.Zero },
-            hiddenSlot = if (dragging || pendingCommit) dragSlot else -1,
+            hiddenSlot = when {
+                dragging -> dragSlot
+                settleProgress < 1f -> settleToSlot
+                else -> -1
+            },
             // 反馈 #9：命中提示卡片按日夜换配色（日间浅底深字）。
             isDark = (resources.configuration.uiMode and
                 android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
@@ -1181,15 +1248,27 @@ class CornerGestureOverlayView(
         anchorX: Float,
         anchorY: Float,
     ) {
-        if ((!dragging && !pendingCommit) || dragSlot < 0) return
-        val action = cornerSettings.slotsFor(anchor).getOrElse(dragSlot) { GestureAction.None }
+        if (dragging && dragSlot >= 0) {
+            val action = effectiveSlots(anchor).getOrElse(dragSlot) { GestureAction.None }
+            drawFloatingSlotIcon(
+                canvas = canvas,
+                action = action,
+                centerX = dragX,
+                centerY = dragY,
+                alpha = 255,
+                scale = 1.12f,
+            )
+            return
+        }
+        if (settleProgress >= 1f || settleAction is GestureAction.None) return
+        val t = settleProgress.coerceIn(0f, 1f)
         drawFloatingSlotIcon(
             canvas = canvas,
-            action = action,
-            centerX = dragX,
-            centerY = dragY,
-            alpha = 255,
-            scale = 1.12f,
+            action = settleAction,
+            centerX = settleFrom.x + (settleTo.x - settleFrom.x) * t,
+            centerY = settleFrom.y + (settleTo.y - settleFrom.y) * t,
+            alpha = (255 * (1f - t * 0.15f)).toInt().coerceIn(0, 255),
+            scale = 1.12f - 0.12f * t,
         )
     }
     private fun drawFloatingSlotIcon(
