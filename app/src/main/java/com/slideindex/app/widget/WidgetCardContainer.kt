@@ -121,7 +121,7 @@ class WidgetCardContainer(
               // 否则会按启动 Intent 的包名（我们自己的预览 Activity）取成 XGesture 图标。
               if (action is com.slideindex.app.gesture.GestureAction.LaunchShortcut) {
                 com.slideindex.app.activity.ManagedShortcutIconResolver
-                  .drawableForLaunchShortcut(context, action, appSettings.activityShortcuts)
+                  .drawableForLaunchShortcut(context, action, appSettings.activityShortcuts, "widget")
                   ?.let { drawable ->
                     val bitmap = drawable.toBitmap(iconSizePx, iconSizePx)
                     val normalized = com.slideindex.app.overlay.layout.IconShapeNormalizer
@@ -145,6 +145,93 @@ class WidgetCardContainer(
               normalizedBitmap.toDrawable(resources)
             } else null
           } else if (item.itemType == ITEM_TYPE_SHORTCUT) {
+            val appSettingsEarly = com.slideindex.app.overlay.panels.PanelRuntimeHooks
+              .settingsSnapshot?.invoke(context)
+              ?: com.slideindex.app.settings.AppSettings()
+            val rawHeldIntent = item.intentUri
+            // 图片直达：intent 里带 extra_image_uri（可能被 URL 编码），按原图 URI 反查目录。
+            val embeddedImageUri = if (rawHeldIntent.contains("extra_image_uri=")) {
+              android.net.Uri.decode(
+                rawHeldIntent.substringAfter("extra_image_uri=").substringBefore(';'),
+              )
+            } else null
+            val imageMatched = embeddedImageUri?.let { targetUri ->
+              appSettingsEarly.activityShortcuts.firstOrNull { sc ->
+                com.slideindex.app.activity.ActivityShortcutImageSupport
+                  .configFrom(sc)?.uri == targetUri
+              }
+            }
+            if (imageMatched != null) {
+              com.slideindex.app.activity.ManagedShortcutIconResolver
+                .drawableForManaged(context, imageMatched)
+                ?.let { drawable ->
+                  val iconSizePx = (44 * density).roundToInt()
+                  val shape = appSettingsEarly.widgetPanelIconShape
+                    .resolve(appSettingsEarly.globalIconShape)
+                  val bitmap = drawable.toBitmap(iconSizePx, iconSizePx)
+                  val normalized = com.slideindex.app.overlay.layout.IconShapeNormalizer
+                    .normalizeBitmap(bitmap, shape)
+                  return@apply setImageDrawable(normalized.toDrawable(resources))
+                }
+            }
+            // 宿主快捷方式在 intent 里带 `S.iconuri=...`：
+            // package:<包名> / file:// / content:// 三种形态都要支持（值可能被 URL 编码）。
+            val iconRef = Regex("iconuri=([^;]+)")
+              .find(rawHeldIntent)
+              ?.groupValues?.getOrNull(1)
+              ?.let { android.net.Uri.decode(it) }
+            if (!iconRef.isNullOrBlank()) {
+              val shape = appSettingsEarly.widgetPanelIconShape
+                .resolve(appSettingsEarly.globalIconShape)
+              when {
+                iconRef.startsWith("package:") -> {
+                  val pkg = iconRef.removePrefix("package:")
+                  if (pkg.isNotBlank()) {
+                    val tagValue = pkg
+                    tag = tagValue
+                    WidgetAppIconCache.load(context, tagValue) { bitmap ->
+                      if (tag == tagValue) {
+                        val normalized = com.slideindex.app.overlay.layout.IconShapeNormalizer
+                          .normalizeBitmap(bitmap, shape)
+                        setImageDrawable(normalized.toDrawable(resources))
+                      }
+                    }
+                    return@apply
+                  }
+                }
+                iconRef.startsWith("content://") -> {
+                  val bitmap = runCatching {
+                    com.slideindex.app.util.ImageDecodeGuard.decodeUri(
+                      context,
+                      android.net.Uri.parse(iconRef),
+                      maxSidePx = (44 * density).roundToInt(),
+                    )
+                  }.getOrNull()
+                  if (bitmap != null) {
+                    val normalized = com.slideindex.app.overlay.layout.IconShapeNormalizer
+                      .normalizeBitmap(bitmap, shape)
+                    return@apply setImageDrawable(normalized.toDrawable(resources))
+                  }
+                }
+                iconRef.startsWith("file://") -> {
+                  val path = android.net.Uri.parse(iconRef).path
+                  val bitmap = path?.let { filePath ->
+                    runCatching {
+                      com.slideindex.app.util.ImageDecodeGuard.decodeFile(
+                        filePath,
+                        (44 * density).roundToInt(),
+                      )
+                    }.getOrNull()
+                  }
+                  if (bitmap != null) {
+                    val normalized = com.slideindex.app.overlay.layout.IconShapeNormalizer
+                      .normalizeBitmap(bitmap, shape)
+                    return@apply setImageDrawable(normalized.toDrawable(resources))
+                  }
+                }
+              }
+            }
+
             // 「创建快捷方式」不在应用内直达目录里：先查按身份存的图标覆盖表。
             val overrideKey = item.intentUri.takeIf { it.isNotBlank() }?.let { "intent:$it" }
               ?: "{item.packageName}/{item.className}"
@@ -174,6 +261,16 @@ class WidgetCardContainer(
                   it.shortcutId == item.shortcutId &&
                   item.shortcutId.isNotBlank()
               }
+              ?: appSettings.activityShortcuts.firstOrNull {
+                it.packageName == item.packageName &&
+                  item.className.isNotBlank() &&
+                  it.activityClassName == item.className
+              }
+              ?: appSettings.activityShortcuts.firstOrNull {
+                it.packageName == item.packageName &&
+                  item.label.isNotBlank() &&
+                  it.label == item.label
+              }
             if (managed != null) {
               com.slideindex.app.activity.ManagedShortcutIconResolver
                 .drawableForManaged(context, managed)
@@ -192,7 +289,12 @@ class WidgetCardContainer(
               val launcherApps = context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as? android.content.pm.LauncherApps
               val query = android.content.pm.LauncherApps.ShortcutQuery().apply {
                 setPackage(item.packageName)
-                setShortcutIds(listOf(item.shortcutId))
+                val intentQueryId = runCatching {
+                  android.content.Intent
+                    .parseUri(item.intentUri, android.content.Intent.URI_INTENT_SCHEME)
+                    .data?.getQueryParameter("id")
+                }.getOrNull()
+                setShortcutIds(listOf(intentQueryId ?: item.shortcutId))
                 setQueryFlags(
                   android.content.pm.LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST or
                   android.content.pm.LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC or

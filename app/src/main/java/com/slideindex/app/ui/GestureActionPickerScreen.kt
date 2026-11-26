@@ -288,7 +288,18 @@ fun GestureActionPickerScreen(
         if (result.resultCode != Activity.RESULT_OK || host == null) return@rememberLauncherForActivityResult
         val created = AppShortcutLoader.parseCreateShortcutResult(host.packageName, result.data, context)
             ?: return@rememberLauncherForActivityResult
-        onSelect(launchShortcutFromCreated(created))
+        val iconPath = com.slideindex.app.activity.ShortcutIconCapture.captureFromIntent(
+            context,
+            created.iconProviderIntent ?: created.shortcutIntent,
+        )
+        val createdAction = launchShortcutFromCreated(created)
+        // 图标跟着这条快捷方式走：按 payloadKey 存覆盖表（不写应用内直达目录）。
+        com.slideindex.app.activity.ShortcutIconOverrideStore.put(
+            context,
+            createdAction.payloadKey,
+            iconPath,
+        )
+        onSelect(createdAction)
     }
 
     var hasSelected by remember { mutableStateOf(false) }

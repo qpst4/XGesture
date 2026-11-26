@@ -428,6 +428,22 @@ fun WidgetPickerOverlayRoot(
                 },
                 onResult = { created ->
                   if (created != null) {
+                    // 和快速启动器一致：创建结果回传时先把自定义图标抓下来存好，
+                    // 否则面板 item 只有包名/shortcutId，解析时只能退回 App 图标。
+                    val capturedIcon = com.slideindex.app.activity.ShortcutIconCapture
+                      .captureFromIntent(
+                        hostContext,
+                        created.iconProviderIntent ?: created.shortcutIntent,
+                      )
+                    val overrideKey = created.intentUri
+                      ?.takeIf { it.isNotBlank() }
+                      ?.let { "intent:$it" }
+                      ?: created.componentFlat?.takeIf { it.isNotBlank() }
+                    com.slideindex.app.activity.ShortcutIconOverrideStore.put(
+                      hostContext,
+                      overrideKey,
+                      capturedIcon,
+                    )
                     WidgetPickerTrampoline.deliverShortcutSuccess(
                       packageName = created.hostPackageName,
                       shortcutId = "created_${created.label.hashCode()}",

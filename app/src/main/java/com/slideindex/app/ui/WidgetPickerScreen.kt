@@ -257,13 +257,30 @@ fun WidgetPickerScreen(
       if (result.resultCode != Activity.RESULT_OK || host == null) return@rememberLauncherForActivityResult
       val created = AppShortcutLoader.parseCreateShortcutResult(host.packageName, result.data, context)
         ?: return@rememberLauncherForActivityResult
+      // 和快速启动器一致：先把回传的自定义图标抓下来（位图 extra），存盘并记进覆盖表。
+      val capturedPath = com.slideindex.app.activity.ShortcutIconCapture.captureFromIntent(
+        context,
+        created.iconProviderIntent ?: created.shortcutIntent,
+      )
+      val overrideKey = created.intentUri
+        ?.takeIf { it.isNotBlank() }
+        ?.let { "intent:$it" }
+        ?: created.componentFlat?.takeIf { it.isNotBlank() }
+      com.slideindex.app.activity.ShortcutIconOverrideStore.put(context, overrideKey, capturedPath)
+      val capturedBitmap = capturedPath?.let {
+        com.slideindex.app.activity.ShortcutIconStorage.loadBitmap(context, it)
+      }?.asImageBitmap()
+      val legacyBitmap = created.iconProviderIntent
+        ?.getParcelableExtra<android.graphics.Bitmap>(android.content.Intent.EXTRA_SHORTCUT_ICON)
+        ?: created.shortcutIntent
+          ?.getParcelableExtra<android.graphics.Bitmap>(android.content.Intent.EXTRA_SHORTCUT_ICON)
       val entry = ShortcutEntry(
         packageName = created.hostPackageName,
         shortcutId = "created_${created.label.hashCode()}",
         label = created.label,
         sortKey = created.label,
         initialKey = "",
-        iconBitmap = null,
+        iconBitmap = capturedBitmap ?: legacyBitmap?.asImageBitmap(),
         intentUri = created.intentUri.orEmpty(),
       )
       addedShortcutKeys = addedShortcutKeys + (created.hostPackageName + "/" + created.intentUri.orEmpty())
@@ -310,14 +327,19 @@ fun WidgetPickerScreen(
           onToggle = { item, added ->
             val key = QuickLauncherItemCodec.shortcutItemKey(item).orEmpty()
             addedShortcutKeys = if (added) addedShortcutKeys - key else addedShortcutKeys + key
+            // 「我的直达」/预设快捷方式：不能把编码后的 payload 当包名/intent 存，
+            // 要还原成 ActivityShortcut，再用真实包名 / shortcutId / intent URI。
+            val managedShortcut =
+              com.slideindex.app.activity.activityShortcutFromQuickLauncherItem(item)
             val entry = ShortcutEntry(
-              packageName = item.payload.substringBefore('/'),
-              shortcutId = item.payload,
-              label = item.label,
+              packageName = managedShortcut?.packageName
+                ?: item.payload.substringBefore('/'),
+              shortcutId = managedShortcut?.shortcutId.orEmpty(),
+              label = managedShortcut?.label ?: item.label,
               sortKey = item.label,
               initialKey = "",
               iconBitmap = null,
-              intentUri = item.payload,
+              intentUri = managedShortcut?.intentUris?.firstOrNull().orEmpty(),
             )
             if (onToggleShortcut != null) {
               onToggleShortcut(entry, added)
@@ -339,14 +361,19 @@ fun WidgetPickerScreen(
           onToggle = { item, added ->
             val key = QuickLauncherItemCodec.shortcutItemKey(item).orEmpty()
             addedShortcutKeys = if (added) addedShortcutKeys - key else addedShortcutKeys + key
+            // 「我的直达」/预设快捷方式：不能把编码后的 payload 当包名/intent 存，
+            // 要还原成 ActivityShortcut，再用真实包名 / shortcutId / intent URI。
+            val managedShortcut =
+              com.slideindex.app.activity.activityShortcutFromQuickLauncherItem(item)
             val entry = ShortcutEntry(
-              packageName = item.payload.substringBefore('/'),
-              shortcutId = item.payload,
-              label = item.label,
+              packageName = managedShortcut?.packageName
+                ?: item.payload.substringBefore('/'),
+              shortcutId = managedShortcut?.shortcutId.orEmpty(),
+              label = managedShortcut?.label ?: item.label,
               sortKey = item.label,
               initialKey = "",
               iconBitmap = null,
-              intentUri = item.payload,
+              intentUri = managedShortcut?.intentUris?.firstOrNull().orEmpty(),
             )
             if (onToggleShortcut != null) {
               onToggleShortcut(entry, added)

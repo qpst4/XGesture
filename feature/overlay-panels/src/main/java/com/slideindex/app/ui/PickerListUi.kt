@@ -479,12 +479,26 @@ fun Md3PickerLaunchShortcutLeading(
         if (managed != null) {
             Md3PickerManagedShortcutLeading(shortcut = managed, selected = selected)
         } else {
-            val hostPackage = com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutHostPackage?.invoke(action.payloadKey).orEmpty()
-            Md3PickerPackageLeading(
-                packageName = hostPackage,
-                contentDescription = action.label,
-                selected = selected,
-            )
+            // 「创建快捷方式」不在应用内直达目录里：走 managed hook（内部含覆盖表）。
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val managedBitmap = remember(action.payloadKey, activityShortcuts) {
+                com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutBitmap
+                    ?.invoke(context, action, 96, activityShortcuts)
+            }
+            if (managedBitmap != null) {
+                androidx.compose.foundation.Image(
+                    bitmap = managedBitmap.asImageBitmap(),
+                    contentDescription = action.label,
+                    modifier = androidx.compose.ui.Modifier.size(40.dp),
+                )
+            } else {
+                val hostPackage = com.slideindex.app.overlay.panels.PanelRuntimeHooks.managedShortcutHostPackage?.invoke(action.payloadKey).orEmpty()
+                Md3PickerPackageLeading(
+                    packageName = hostPackage,
+                    contentDescription = action.label,
+                    selected = selected,
+                )
+            }
         }
         when {
             action.showsShellActivityShortcutBadge(activityShortcuts) -> {
