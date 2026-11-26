@@ -5369,4 +5369,6 @@
     <string name="search_group_pick_existing_subtitle">Выберите из установленных целей отправки</string>
     <string name="search_group_create_new">Создать группу для отправки</string>
     <string name="search_group_create_new_subtitle">Объедините несколько целей отправки изображений в одну запись</string>
+    <string name="trigger_passthrough_title">Передача жестов с края</string>
+    <string name="trigger_passthrough_desc">Смахивания, начатые в этой области, передаются текущему приложению. Требуется модуль LSPosed.</string>
 </resources>

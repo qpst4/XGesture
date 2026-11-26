@@ -69,6 +69,7 @@ fun SideGestureSettingsScreen(
     side: PanelSide,
     handleId: String,
     settings: AppSettings,
+    layoutPreviewVisible: Boolean,
     serviceEnabled: Boolean,
     onBack: () -> Unit,
     onOpenAppearanceSettings: () -> Unit,
@@ -80,6 +81,7 @@ fun SideGestureSettingsScreen(
     onEdgeLongPressChange: (Int) -> Unit = {},
     onPreviewStart: () -> Unit = {},
     onPreviewStop: () -> Unit = {},
+    onPassthroughChange: ((Boolean) -> Unit)? = null,
 ) {
     val pairIndex = settings.triggerCollectionEntries().indexOfFirst { it.handleId == handleId }.let {
         if (it >= 0) it + 1 else 1
@@ -96,12 +98,15 @@ fun SideGestureSettingsScreen(
     val title = if (pairCount > 1) "$baseTitle · $pairIndex" else baseTitle
 
     TriggerHandlePreviewLifecycle(
-        enabled = serviceEnabled,
+        enabled = serviceEnabled && (onPassthroughChange != null || !selectedHandle.passthrough),
         side = side,
         handleId = handleId,
         onPreviewStart = { _, _ -> onPreviewStart() },
         onPreviewStop = onPreviewStop,
     )
+    if (layoutPreviewVisible && (onPassthroughChange != null || selectedHandle.passthrough)) {
+        FocusedSideTriggerLayoutPreview(settings, side, handleId)
+    }
 
     val slotSide = settings.gestureConfigSide(side, handleId)
     var showMirrorDirectionDialog by remember { mutableStateOf(false) }
@@ -147,6 +152,34 @@ fun SideGestureSettingsScreen(
         onBack = onBack,
         modifier = Modifier.fillMaxSize(),
     ) {
+        if (onPassthroughChange != null) {
+            groupedCardItems(
+                keyPrefix = "trigger-passthrough",
+                items = listOf(settingsCardScopeItem("enabled") {
+                    SettingSwitchRow(
+                        title = stringResource(R.string.trigger_passthrough_title),
+                        subtitle = stringResource(R.string.trigger_passthrough_desc),
+                        checked = selectedHandle.passthrough,
+                        enabled = serviceEnabled,
+                        onCheckedChange = onPassthroughChange,
+                    )
+                }),
+            )
+        }
+        if (selectedHandle.passthrough) {
+            groupedCardItems(
+                keyPrefix = "passthrough-layout",
+                items = listOf(settingsCardScopeItem("layout") {
+                    SettingNavigationRow(
+                        icon = { label -> SymbolsIcon("Animation", contentDescription = label) },
+                        title = stringResource(R.string.side_gestures_handle_section),
+                        subtitle = stringResource(R.string.trigger_passthrough_desc),
+                        onClick = onOpenAppearanceSettings,
+                    )
+                }),
+            )
+            return@SettingsLazyScreenScaffold
+        }
         settingsLazySmallTitle(
             key = "section-swipe-directions",
             title = swipeDirectionsSectionTitle,

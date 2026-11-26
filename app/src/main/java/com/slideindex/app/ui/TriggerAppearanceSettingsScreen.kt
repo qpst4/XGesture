@@ -21,6 +21,10 @@ import com.slideindex.app.ui.settings.components.settingsGroupedRowBackground
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +48,7 @@ import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.SettingsCardRow
 import com.slideindex.app.ui.settings.components.SettingsCardScope
 import com.slideindex.app.ui.settings.components.LazySettingsItem
+import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
@@ -56,6 +61,7 @@ fun TriggerAppearanceSettingsScreen(
     side: PanelSide,
     handleId: String,
     settings: AppSettings,
+    layoutPreviewVisible: Boolean,
     serviceEnabled: Boolean,
     onBack: () -> Unit,
     onShortSwipeDistanceChange: (Float) -> Unit,
@@ -94,6 +100,30 @@ fun TriggerAppearanceSettingsScreen(
     val selectedHandle = settings.triggerHandle(side, handleId)
         ?: settings.primaryTriggerHandle(side)
     val handleWidth = settings.triggerHandleEdgeWidthDp(side, handleId)
+    val useFocusedPreview = (side.isHorizontalEdge && !profileScoped) || selectedHandle.passthrough
+    val previewEnabled = serviceEnabled
+    val showNativePreview = previewEnabled && !useFocusedPreview
+    val showFocusedPreview = previewEnabled && useFocusedPreview
+    val showSwipeDistanceHints = previewEnabled && !selectedHandle.passthrough
+    var previewWidth by remember(side, handleId, handleWidth) { mutableStateOf<Float?>(null) }
+    var previewSpan by remember(side, handleId, selectedHandle.topFraction, selectedHandle.bottomFraction) {
+        mutableStateOf<ClosedFloatingPointRange<Float>?>(null)
+    }
+    var swipeDistances by remember(side, handleId) { mutableStateOf<Pair<Float, Float>?>(null) }
+    val startSwipePreview = {
+        if (showFocusedPreview) {
+            swipeDistances = selectedHandle.shortSwipeDistanceDp to selectedHandle.longSwipeDistanceDp
+        } else {
+            onSwipeDistancePreviewStart()
+        }
+    }
+    val stopSwipePreview = {
+        swipeDistances = null
+        if (showNativePreview) {
+            onTriggerLayoutPreviewStop()
+            onSwipeDistancePreviewStop()
+        }
+    }
     val maxHandleWidth = side.maxTriggerEdgeWidthDp()
     val pairSuffix = if (pairCount > 1) " · $pairIndex" else ""
     val context = LocalContext.current
@@ -101,7 +131,7 @@ fun TriggerAppearanceSettingsScreen(
         SystemBackGestureConflictHelper.hasPotentialConflict(settings, context)
 
     TriggerHandlePreviewLifecycle(
-        enabled = serviceEnabled,
+        enabled = previewEnabled,
         side = side,
         handleId = handleId,
         onPreviewStart = { _, _ -> onPreviewStart() },
@@ -111,12 +141,18 @@ fun TriggerAppearanceSettingsScreen(
     val previewHint = stringResource(R.string.side_gestures_preview_hint)
     val handleSectionTitle = stringResource(R.string.side_gestures_handle_section)
 
+    if (layoutPreviewVisible) {
+        val focusedSettings = settings.takeIf { showFocusedPreview }
+        FocusedSideTriggerLayoutPreview(focusedSettings, side, handleId, previewWidth, previewSpan, swipeDistances)
+    }
     SettingsScreenScaffold(
         title = stringResource(R.string.trigger_appearance_title),
         subtitle = stringResource(R.string.trigger_appearance_desc) + pairSuffix,
         onBack = onBack,
     ) {
-        settingsLazyHint(key = "trigger-appearance-preview-hint", text = previewHint)
+        if (showSwipeDistanceHints) {
+            settingsLazyHint(key = "trigger-appearance-preview-hint", text = previewHint)
+        }
 
         if (showBackGestureConflict) {
             LazySettingsItem(key = "back-gesture-conflict") {
@@ -161,12 +197,18 @@ fun TriggerAppearanceSettingsScreen(
                             startLabel = stringResource(R.string.handle_width_small),
                             endLabel = stringResource(R.string.handle_width_large),
                             triggersLayoutPreview = true,
-                            onLayoutPreviewStart = onLayoutPreviewStart,
+                            onLayoutPreviewStart = { if (showNativePreview) onLayoutPreviewStart() },
                             onLayoutPreviewStop = {
-                                onTriggerLayoutPreviewStop()
-                                onLayoutPreviewStop()
+                                previewWidth = null
+                                if (showNativePreview) {
+                                    onTriggerLayoutPreviewStop()
+                                    onLayoutPreviewStop()
+                                }
                             },
-                            onLayoutPreviewValueChange = onEdgeWidthPreviewChange,
+                            onLayoutPreviewValueChange = { width ->
+                                if (selectedHandle.passthrough) previewWidth = width
+                                if (showNativePreview) onEdgeWidthPreviewChange(width)
+                            },
                             onValueChange = onEdgeWidthChange,
                         )
                     },
@@ -193,13 +235,19 @@ fun TriggerAppearanceSettingsScreen(
                             },
                             enabled = serviceEnabled,
                             triggersLayoutPreview = true,
-                            onLayoutPreviewStart = onLayoutPreviewStart,
+                            onLayoutPreviewStart = { if (showNativePreview) onLayoutPreviewStart() },
                             onLayoutPreviewStop = {
-                                onTriggerLayoutPreviewStop()
-                                onLayoutPreviewStop()
+                                previewSpan = null
+                                if (showNativePreview) {
+                                    onTriggerLayoutPreviewStop()
+                                    onLayoutPreviewStop()
+                                }
                             },
                             onLayoutPreviewValueChange = { range ->
-                                onTriggerVerticalRangePreviewChange(range.start, range.endInclusive)
+                                if (selectedHandle.passthrough) previewSpan = range
+                                if (showNativePreview) {
+                                    onTriggerVerticalRangePreviewChange(range.start, range.endInclusive)
+                                }
                             },
                             onValueChange = { range ->
                                 onTriggerVerticalRangeChange(handleId, range.start, range.endInclusive)
@@ -207,7 +255,7 @@ fun TriggerAppearanceSettingsScreen(
                         )
                     },
                 )
-                add(
+                if (!selectedHandle.passthrough) add(
                     settingsCardScopeItem("short-swipe-distance") {
                         SettingsSliderRow(
                             title = stringResource(R.string.short_swipe_distance),
@@ -219,18 +267,18 @@ fun TriggerAppearanceSettingsScreen(
                             formatLabel = { "${it.roundToInt()} dp" },
                             startLabel = stringResource(R.string.swipe_distance_small),
                             endLabel = stringResource(R.string.swipe_distance_large),
-                            triggersLayoutPreview = true,
-                            onLayoutPreviewStart = onSwipeDistancePreviewStart,
-                            onLayoutPreviewStop = {
-                                onTriggerLayoutPreviewStop()
-                                onSwipeDistancePreviewStop()
+                            triggersLayoutPreview = showSwipeDistanceHints,
+                            onLayoutPreviewStart = startSwipePreview,
+                            onLayoutPreviewStop = stopSwipePreview,
+                            onLayoutPreviewValueChange = { distance ->
+                                if (showNativePreview) onShortSwipeDistancePreviewChange(distance)
+                                else swipeDistances = distance to selectedHandle.longSwipeDistanceDp
                             },
-                            onLayoutPreviewValueChange = onShortSwipeDistancePreviewChange,
                             onValueChange = onShortSwipeDistanceChange,
                         )
                     },
                 )
-                add(
+                if (!selectedHandle.passthrough) add(
                     settingsCardScopeItem("long-swipe-distance") {
                         SettingsSliderRow(
                             title = stringResource(R.string.long_swipe_distance),
@@ -243,13 +291,13 @@ fun TriggerAppearanceSettingsScreen(
                             formatLabel = { "${it.roundToInt()} dp" },
                             startLabel = stringResource(R.string.swipe_distance_small),
                             endLabel = stringResource(R.string.swipe_distance_large),
-                            triggersLayoutPreview = true,
-                            onLayoutPreviewStart = onSwipeDistancePreviewStart,
-                            onLayoutPreviewStop = {
-                                onTriggerLayoutPreviewStop()
-                                onSwipeDistancePreviewStop()
+                            triggersLayoutPreview = showSwipeDistanceHints,
+                            onLayoutPreviewStart = startSwipePreview,
+                            onLayoutPreviewStop = stopSwipePreview,
+                            onLayoutPreviewValueChange = { distance ->
+                                if (showNativePreview) onLongSwipeDistancePreviewChange(distance)
+                                else swipeDistances = selectedHandle.shortSwipeDistanceDp to distance
                             },
-                            onLayoutPreviewValueChange = onLongSwipeDistancePreviewChange,
                             onValueChange = onLongSwipeDistanceChange,
                         )
                     },

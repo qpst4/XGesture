@@ -132,6 +132,7 @@ class MainNavContext(
         side: PanelSide,
         handleId: String,
         showPairedGroup: Boolean = false,
+        drawInOverlay: Boolean = true,
     ) {
         retainFocusedTriggerPreview(
             triggerPreviewFocus(
@@ -139,7 +140,7 @@ class MainNavContext(
                 handleId = handleId,
                 showSwipeDistances = false,
                 showPairedGroup = showPairedGroup,
-            ),
+            ).copy(drawInOverlay = drawInOverlay),
         )
     }
 
@@ -154,17 +155,6 @@ class MainNavContext(
                 handleId = handleId,
                 showSwipeDistances = true,
                 showPairedGroup = showPairedGroup,
-            ),
-        )
-    }
-
-    fun startTriggerDesignPreview(side: PanelSide, handleId: String) {
-        retainFocusedTriggerPreview(
-            LayoutPreviewFocus(
-                side = side,
-                handleId = handleId,
-                showSwipeDistances = false,
-                showPairedGroup = side.isHorizontalEdge,
             ),
         )
     }
@@ -380,18 +370,6 @@ class MainNavContext(
             handleId = handleId,
             shortSwipeDistanceDp = shortSwipeDistanceDp,
             longSwipeDistanceDp = longSwipeDistanceDp,
-        )
-    }
-
-    fun previewTriggerHandleDesign(
-        side: PanelSide,
-        handleId: String,
-        design: com.slideindex.app.gesture.TriggerHandleDesign,
-    ) {
-        activity.overlayServiceController.previewTriggerHandle(
-            side = side,
-            handleId = handleId,
-            design = design,
         )
     }
 

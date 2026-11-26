@@ -5341,4 +5341,6 @@
     <string name="search_group_pick_existing_subtitle">اختر من أهداف المشاركة المثبتة</string>
     <string name="search_group_create_new">إنشاء مجموعة مشاركة</string>
     <string name="search_group_create_new_subtitle">دمج عدة أهداف لمشاركة الصور في إدخال واحد</string>
+    <string name="trigger_passthrough_title">تمرير إيماءات الحافة</string>
+    <string name="trigger_passthrough_desc">تُمرَّر عمليات السحب التي تبدأ في هذه المنطقة إلى التطبيق الحالي. يتطلب ذلك وحدة LSPosed.</string>
 </resources>

@@ -13,6 +13,18 @@ import org.robolectric.annotation.Config
 @Config(sdk = [31])
 class ModuleHookSnapshotTest {
   @Test
+  fun jsonRoundTrip_restoresManualReservedRegions() {
+    val sideId = ModuleHookBridgeContract.SIDE_LEFT
+    val region = ModuleHookHandle(topFraction = 0.2f, heightFraction = 0.3f, widthDp = 18f)
+    val side = ModuleHookSide(sideId, widthDp = 20f, reservedHandles = listOf(region))
+    val snapshot = ModuleHookSnapshot(sides = listOf(side))
+    val restored = ModuleHookSnapshot.parse(snapshot.toJson())!!.side(sideId)!!
+    assertEquals(listOf(region), restored.reservedHandles)
+    assertTrue(restored.handles.isEmpty())
+    assertTrue(ModuleHookSnapshot.parse("{\"back_reserved_areas\":15}")!!.sides.isEmpty())
+  }
+
+  @Test
   fun jsonRoundTrip_preservesGroupsAndGeometry() {
     val snapshot = ModuleHookSnapshot(
       takeoverGroups = ModuleHookBridgeContract.GROUP_SIDES or ModuleHookBridgeContract.GROUP_BOTTOM,

@@ -763,3 +763,10 @@ fun MainBottomNavDestination.toRootNavKey(): AppNavKey = when (this) {
     MainBottomNavDestination.Notification -> AppNavKey.NotificationHub
     MainBottomNavDestination.Extension -> AppNavKey.ExtensionHub
 }
+
+internal fun AppNavKey?.focusedTriggerPreviewKey(): AppNavKey.HomeSideGestures? = when (this) {
+    is AppNavKey.HomeSideGestures -> this
+    is AppNavKey.HomeSideGesturesAppearance -> AppNavKey.HomeSideGestures(side, handleId, profileId)
+    is AppNavKey.HomeSideGesturesDesign -> AppNavKey.HomeSideGestures(side, handleId, profileId)
+    else -> null
+}

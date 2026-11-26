@@ -5400,4 +5400,6 @@ adb 模式应返回 uid=2000。
     <string name="search_group_pick_existing_subtitle">从已安装的分享目标里挑选</string>
     <string name="search_group_create_new">创建分享组</string>
     <string name="search_group_create_new_subtitle">把多个图片分享目标组合成一个入口</string>
+    <string name="trigger_passthrough_title">边缘透传</string>
+    <string name="trigger_passthrough_desc">从此范围开始的滑动交给当前应用。需要 LSPosed 模块。</string>
 </resources>

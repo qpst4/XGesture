@@ -30,6 +30,8 @@ data class ModuleHookSnapshot(
 ) {
   fun hasGroup(group: Int): Boolean = (takeoverGroups and group) != 0
 
+  fun hasReservedAreas(): Boolean = sides.any { it.reservedHandles.isNotEmpty() }
+
   fun side(sideId: Int): ModuleHookSide? = sides.firstOrNull { it.sideId == sideId }
 
   fun toJson(): String = JSONObject().apply {
@@ -170,6 +172,7 @@ data class ModuleHookSide(
   val sideId: Int,
   val widthDp: Float,
   val handles: List<ModuleHookHandle> = emptyList(),
+  val reservedHandles: List<ModuleHookHandle> = emptyList(),
 ) {
   fun toJson(): JSONObject = JSONObject().apply {
     put(KEY_SIDE, sideId)
@@ -180,25 +183,30 @@ data class ModuleHookSide(
         handles.forEach { put(it.toJson()) }
       },
     )
+    if (reservedHandles.isNotEmpty()) {
+      put(KEY_RESERVED_HANDLES, JSONArray().apply { reservedHandles.forEach { put(it.toJson()) } })
+    }
   }
 
   companion object {
     private const val KEY_SIDE = "side"
     private const val KEY_WIDTH_DP = "width_dp"
     private const val KEY_HANDLES = "handles"
+    private const val KEY_RESERVED_HANDLES = "reserved_handles"
 
     fun fromJson(json: JSONObject): ModuleHookSide {
-      val handlesJson = json.optJSONArray(KEY_HANDLES) ?: JSONArray()
-      val handles = buildList {
-        for (index in 0 until handlesJson.length()) {
-          val item = handlesJson.optJSONObject(index) ?: continue
+      fun readHandles(key: String): List<ModuleHookHandle> = buildList {
+        val values = json.optJSONArray(key) ?: return@buildList
+        for (index in 0 until values.length()) {
+          val item = values.optJSONObject(index) ?: continue
           add(ModuleHookHandle.fromJson(item))
         }
       }
       return ModuleHookSide(
         sideId = json.optInt(KEY_SIDE, ModuleHookBridgeContract.SIDE_LEFT),
         widthDp = json.optDouble(KEY_WIDTH_DP, 0.0).toFloat(),
-        handles = handles,
+        handles = readHandles(KEY_HANDLES),
+        reservedHandles = readHandles(KEY_RESERVED_HANDLES),
       )
     }
   }

@@ -373,6 +373,10 @@ class HomeDetailSettingsViewModel @Inject constructor(
         settingsRepository.setInterceptSystemBackGesture(enabled)
     }
 
+    fun setTriggerPassthrough(side: PanelSide, handleId: String, enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setTriggerPassthrough(side, handleId, enabled, landscapeEditing())
+    }
+
     fun setSystemGestureTakeoverTop(enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setSystemGestureTakeoverTop(enabled)
     }

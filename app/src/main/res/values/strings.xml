@@ -5381,4 +5381,6 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="search_group_pick_existing_subtitle">Choose from installed share targets</string>
     <string name="search_group_create_new">Create share group</string>
     <string name="search_group_create_new_subtitle">Combine multiple image share targets into one entry</string>
+    <string name="trigger_passthrough_title">Edge passthrough</string>
+    <string name="trigger_passthrough_desc">Swipes starting in this area go to the current app. Requires the LSPosed module.</string>
 </resources>

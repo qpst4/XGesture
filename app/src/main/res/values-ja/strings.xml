@@ -5337,4 +5337,6 @@
     <string name="search_group_pick_existing_subtitle">インストール済みの共有先から選択</string>
     <string name="search_group_create_new">共有グループを作成</string>
     <string name="search_group_create_new_subtitle">複数の画像共有先を 1 つの項目にまとめます</string>
+    <string name="trigger_passthrough_title">画面端のジェスチャーを通過させる</string>
+    <string name="trigger_passthrough_desc">この範囲で始まるスワイプは現在のアプリに渡されます。LSPosed モジュールが必要です。</string>
 </resources>

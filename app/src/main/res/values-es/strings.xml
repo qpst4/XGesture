@@ -5344,4 +5344,6 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="search_group_pick_existing_subtitle">Elige entre los destinos instalados</string>
     <string name="search_group_create_new">Crear grupo para compartir</string>
     <string name="search_group_create_new_subtitle">Combina varios destinos de imágenes en una sola entrada</string>
+    <string name="trigger_passthrough_title">Paso de gestos de borde</string>
+    <string name="trigger_passthrough_desc">Los deslizamientos que empiezan en esta zona se envían a la aplicación actual. Requiere el módulo LSPosed.</string>
 </resources>

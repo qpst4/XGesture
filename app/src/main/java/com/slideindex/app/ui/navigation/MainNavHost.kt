@@ -62,6 +62,7 @@ import com.slideindex.app.settings.BottomNavStyle
 import com.slideindex.app.settings.OverlaySettings
 import com.slideindex.app.settings.usesBottomNavHaze
 import com.slideindex.app.ui.FloatingBottomNavBar
+import com.slideindex.app.ui.FocusedSideTriggerLayoutPreviewHost
 import com.slideindex.app.ui.ClassicFloatingSideNavRailOverlay
 import com.slideindex.app.ui.LocalMainNavContentStartInset
 import com.slideindex.app.ui.classicFloatingSideNavRailSlotWidth
@@ -827,14 +828,17 @@ internal fun MainTabNavStackSingle(
                 },
             ),
     ) {
-        NavDisplay(
-            backStack = backStack,
-            onBack = { backStack.pop() },
-            effects = NavDisplayEffects(
-                cornerClipRadius = rememberNavSystemCornerRadius(),
-            ),
-            content = registerEntries,
-        )
+        val previewFocus = if (isActiveForHaze) backStack.currentAppNavKey().focusedTriggerPreviewKey() else null
+        FocusedSideTriggerLayoutPreviewHost(focus = previewFocus) {
+            NavDisplay(
+                backStack = backStack,
+                onBack = { backStack.pop() },
+                effects = NavDisplayEffects(
+                    cornerClipRadius = rememberNavSystemCornerRadius(),
+                ),
+                content = registerEntries,
+            )
+        }
     }
 }
 

@@ -4,8 +4,10 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
+import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.withSave
 import com.slideindex.app.gesture.GestureZoneLayout
+import com.slideindex.app.gesture.TriggerHandleDesign
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.primaryTriggerHandle
 import com.slideindex.app.settings.triggerHandle
@@ -57,7 +59,7 @@ internal object TriggerZonePreviewRenderer {
             if (!handle.design.isVisible) {
                 drawZoneWidthPreview(canvas, zone, corner, dp, hidden = true)
                 if (showSwipeDistances && isFocusedHandle) {
-                    drawSwipeDistancePreview(canvas, side, settings, zone, handleId, dp)
+                    drawSwipeDistancePreview(canvas, side, zone, handle.shortSwipeDistanceDp, handle.longSwipeDistanceDp, dp)
                 }
                 return@forEach
             }
@@ -66,40 +68,33 @@ internal object TriggerZonePreviewRenderer {
                 drawZoneWidthPreview(canvas, zone, corner, dp, hidden = false)
             }
 
-            val glowWidth = zoneLayout.glowAwareEdgeWidthPx(handle)
-            val (drawWidthPx, drawHeightPx, drawLeft) = when (side) {
-                PanelSide.BOTTOM, PanelSide.TOP -> Triple(
-                    zone.width().toInt().coerceAtLeast(1),
-                    zone.height().toInt().coerceAtLeast(1),
-                    zone.left
-                )
-                PanelSide.LEFT -> Triple(
-                    glowWidth,
-                    zone.height().toInt().coerceAtLeast(1),
-                    0f
-                )
-                PanelSide.RIGHT -> Triple(
-                    glowWidth,
-                    zone.height().toInt().coerceAtLeast(1),
-                    zone.right - glowWidth
-                )
-            }
-            canvas.withSave {
-                translate(drawLeft, zone.top)
-                TriggerHandleRenderer.draw(
-                    canvas = this,
-                    side = side,
-                    design = handle.design,
-                    density = density,
-                    widthPx = drawWidthPx,
-                    heightPx = drawHeightPx
-                )
-            }
+            drawHandleDesign(canvas, side, handle.design, zone, density, zoneLayout.glowAwareEdgeWidthPx(handle))
 
             if (showSwipeDistances && isFocusedHandle) {
-                drawSwipeDistancePreview(canvas, side, settings, zone, handleId, dp)
+                drawSwipeDistancePreview(canvas, side, zone, handle.shortSwipeDistanceDp, handle.longSwipeDistanceDp, dp)
             }
         }
+    }
+
+    fun drawHandleDesign(
+        canvas: Canvas,
+        side: PanelSide,
+        design: TriggerHandleDesign,
+        zone: RectF,
+        density: Float,
+        glowWidth: Int = maxOf(zone.width(), design.haloSizeDp * 2f * density).toInt(),
+    ) {
+        if (!design.isVisible) return
+        val width = if (side.isHorizontalEdge) glowWidth else zone.width().toInt().coerceAtLeast(1)
+        val left = if (side == PanelSide.RIGHT) zone.right - width else zone.left
+        canvas.withSave {
+            translate(left, zone.top)
+            TriggerHandleRenderer.draw(this, side, design, density, width, zone.height().toInt().coerceAtLeast(1))
+        }
+    }
+
+    fun drawLayoutBounds(canvas: Canvas, zone: RectF, density: Float, groupColor: Int? = null) {
+        drawZoneWidthPreview(canvas, zone, 6f * density, { it * density }, hidden = true, groupColor = groupColor)
     }
 
     private fun drawZoneWidthPreview(
@@ -107,7 +102,8 @@ internal object TriggerZonePreviewRenderer {
         zone: RectF,
         corner: Float,
         dp: (Float) -> Float,
-        hidden: Boolean
+        hidden: Boolean,
+        groupColor: Int? = null,
     ) {
         if (hidden) {
             fillPaint.color = Color.argb(72, 255, 152, 0)
@@ -118,6 +114,10 @@ internal object TriggerZonePreviewRenderer {
             strokePaint.color = Color.argb(150, 66, 165, 245)
             strokePaint.strokeWidth = dp(1.5f)
         }
+        if (groupColor != null) {
+            fillPaint.color = ColorUtils.setAlphaComponent(groupColor, fillPaint.alpha)
+            strokePaint.color = ColorUtils.setAlphaComponent(groupColor, strokePaint.alpha)
+        }
         fillPaint.style = Paint.Style.FILL
         strokePaint.style = Paint.Style.STROKE
         strokePaint.pathEffect = null
@@ -125,17 +125,16 @@ internal object TriggerZonePreviewRenderer {
         canvas.drawRoundRect(zone, corner, corner, strokePaint)
     }
 
-    private fun drawSwipeDistancePreview(
+    fun drawSwipeDistancePreview(
         canvas: Canvas,
         side: PanelSide,
-        settings: AppSettings,
         zone: RectF,
-        handleId: String,
+        shortDistanceDp: Float,
+        longDistanceDp: Float,
         dp: (Float) -> Float
     ) {
-        val handle = settings.triggerHandle(side, handleId) ?: settings.primaryTriggerHandle(side)
-        val shortR = dp(handle.shortSwipeDistanceDp)
-        val longR = dp(handle.longSwipeDistanceDp)
+        val shortR = dp(shortDistanceDp)
+        val longR = dp(longDistanceDp)
         if (longR <= shortR) return
 
         val cx = when (side) {

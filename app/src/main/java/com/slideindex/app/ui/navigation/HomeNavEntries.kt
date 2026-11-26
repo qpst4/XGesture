@@ -716,17 +716,24 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
         val settings = triggerScope.settings
         TriggerLandscapeOrientationEffect(triggerScope.landscapeEditing)
         val side = key.side.toPanelSide()
+        val canChangePassthrough = side.isHorizontalEdge && key.profileId == null
         SideGestureSettingsScreen(
             side = side,
             handleId = key.handleId,
             settings = settings,
+            layoutPreviewVisible = ctx.backStack.currentAppNavKey() == key,
             serviceEnabled = true,
+            onPassthroughChange = if (canChangePassthrough) {
+                { enabled -> viewModel.setTriggerPassthrough(side, key.handleId, enabled) }
+            } else {
+                null
+            },
             onBack = {
                 ctx.stopTriggerPreview()
                 ctx.navigateBackTo(triggerScope.collectionKey)
             },
             onPreviewStart = {
-                ctx.startFocusedTriggerPreview(side, key.handleId)
+                ctx.startFocusedTriggerPreview(side, key.handleId, drawInOverlay = !canChangePassthrough)
             },
             onPreviewStop = {
                 ctx.releaseFocusedTriggerPreview()
@@ -1440,10 +1447,14 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
         TriggerLandscapeOrientationEffect(triggerScope.landscapeEditing)
         val side = key.side.toPanelSide()
         val gesturesKey = AppNavKey.HomeSideGestures(key.side, key.handleId, key.profileId)
+        val useFocusedPreview = (side.isHorizontalEdge && key.profileId == null) ||
+            settings.triggerHandle(side, key.handleId)?.passthrough == true
+        val showNativePreview = !useFocusedPreview
         TriggerAppearanceSettingsScreen(
             side = side,
             handleId = key.handleId,
             settings = settings,
+            layoutPreviewVisible = ctx.backStack.currentAppNavKey() == key,
             serviceEnabled = true,
             profileId = key.profileId,
             onBack = { ctx.navigateBackTo(gesturesKey) },
@@ -1461,7 +1472,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
                 triggerScope.mutate(
                     global = { viewModel.setTriggerEdgeWidthDp(side, key.handleId, value) },
                 ) { it.withUpdatedTriggerHandleEdgeWidth(side, key.handleId, value) }
-                ctx.refreshFocusedTriggerPreview(side, key.handleId)
+                if (showNativePreview) ctx.refreshFocusedTriggerPreview(side, key.handleId)
             },
             onTriggerVerticalRangeChange = { handleId, top, bottom ->
                 triggerScope.mutate(
@@ -1540,7 +1551,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
                     }
                     updated
                 }
-                ctx.refreshFocusedTriggerPreview(side, key.handleId)
+                if (showNativePreview) ctx.refreshFocusedTriggerPreview(side, key.handleId)
             },
             onInterceptBackChange = viewModel::setInterceptSystemBackGesture,
             onLimitInterceptLengthChange = viewModel::setLimitMaxInterceptLength,
@@ -1549,7 +1560,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
                 viewModel.setLimitMaxInterceptLength(true)
             },
             onPreviewStart = {
-                ctx.startFocusedTriggerPreview(side, key.handleId)
+                ctx.startFocusedTriggerPreview(side, key.handleId, drawInOverlay = !useFocusedPreview)
             },
             onPreviewStop = {
                 ctx.clearTriggerHandleLayoutPreview()
@@ -1579,6 +1590,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             handleId = key.handleId,
             settings = settings,
             serviceEnabled = true,
+            layoutPreviewVisible = ctx.backStack.currentAppNavKey() == key,
             onBack = { ctx.navigateBackTo(gesturesKey) },
             onDesignChange = { design ->
                 triggerScope.mutate(
@@ -1649,16 +1661,11 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
                 }
             },
             onPreviewStart = {
-                ctx.startTriggerDesignPreview(side, key.handleId)
+                ctx.startFocusedTriggerPreview(side, key.handleId, drawInOverlay = false)
             },
             onPreviewStop = {
-                ctx.clearTriggerHandleLayoutPreview()
                 ctx.releaseFocusedTriggerPreview()
             },
-            onDesignPreview = { design ->
-                ctx.previewTriggerHandleDesign(side, key.handleId, design)
-            },
-            onDesignPreviewStop = { ctx.commitTriggerHandleLayoutPreview() },
         )
     }
 

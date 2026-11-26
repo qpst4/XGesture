@@ -465,7 +465,7 @@ fun AppSettings.triggerHandles(side: PanelSide): List<TriggerHandle> = when (sid
     PanelSide.RIGHT -> rightTriggerHandles
     PanelSide.BOTTOM -> bottomTriggerHandles
     PanelSide.TOP -> topTriggerHandles
-}.filter { it.enabled }
+}.filter { it.enabled && !it.passthrough }
 
 fun AppSettings.allTriggerHandles(side: PanelSide): List<TriggerHandle> = when (side) {
     PanelSide.LEFT -> leftTriggerHandles
@@ -805,6 +805,12 @@ fun AppSettings.withReplacedTriggerHandle(
     return withTriggerHandles(side, updated)
 }
 
+fun AppSettings.withUpdatedTriggerPassthrough(side: PanelSide, handleId: String, enabled: Boolean): AppSettings {
+    if (!side.isHorizontalEdge) return this
+    val handle = triggerHandle(side, handleId) ?: return this
+    return withReplacedTriggerHandle(side, handleId, handle.copy(passthrough = enabled))
+}
+
 fun AppSettings.withSyncedTriggerHandle(
     sourceSide: PanelSide,
     handleId: String,
@@ -813,8 +819,13 @@ fun AppSettings.withSyncedTriggerHandle(
     var updated = withReplacedTriggerHandle(sourceSide, handleId, handle)
     if (handle.alignOppositeSide != false) {
         val otherSide = sourceSide.opposite()
-        if (updated.triggerHandle(otherSide, handleId) != null) {
-            updated = updated.withReplacedTriggerHandle(otherSide, handleId, handle)
+        val oppositeHandle = updated.triggerHandle(otherSide, handleId)
+        if (oppositeHandle != null) {
+            updated = updated.withReplacedTriggerHandle(
+                otherSide,
+                handleId,
+                handle.copy(passthrough = oppositeHandle.passthrough),
+            )
         }
     }
     return updated
