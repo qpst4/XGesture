@@ -639,9 +639,21 @@ class CornerGestureController(
         handleCaptureTouch(anchor, strip, event)
     }
 
-    /** 输入层会话结束：结束轮盘会话并把捕获窗收回空闲尺寸。 */
-    fun cancelForwardedTouch(anchor: CornerAnchor) {
-        overlayView?.cancelSession()
+    /**
+     * 输入层会话结束：结束轮盘会话并把捕获窗收回空闲尺寸。
+     *
+     * [keepPinned] 为 true（模块正常松手结束）时，如果轮盘已经钉住，这里**不动它**：
+     * 钉住是设计上的常驻状态（"无动作"/编辑模式），模块发来的会话结束只代表"这一笔手指走了"，
+     * 不代表要关轮盘。以前一刀切 `cancelSession()`，真机表现就是：滑到圆心或 edit 按钮松手，
+     * 钉住的轮盘在 1ms 后被这里清掉（看起来像闪退）。
+     *
+     * 此时全屏捕获窗保持展开（轮盘还要接后续的点击/拖动），由 [captureGuard] 按钉住态低频巡检兜底；
+     * 用户真正关掉轮盘时走 `onSessionEnd` → `restoreCaptureSize()` + `detachOverlay()`。
+     */
+    fun cancelForwardedTouch(anchor: CornerAnchor, keepPinned: Boolean = false) {
+        val view = overlayView
+        if (keepPinned && view?.isWheelPinned() == true) return
+        view?.cancelSession()
         expandedCaptureAnchor = null
         expandedCaptureStrip = null
         cancelCaptureGuard()

@@ -57,9 +57,9 @@ class CornerGestureHost(
         controller?.handleForwardedTouch(anchor, event)
     }
 
-    /** 输入层会话结束：取消该角落进行中的轮盘会话。 */
-    fun cancelForwardedTouch(anchor: CornerAnchor) {
-        controller?.cancelForwardedTouch(anchor)
+    /** 输入层会话结束：取消该角落进行中的轮盘会话（[keepPinned] 含义见控制器同名参数）。 */
+    fun cancelForwardedTouch(anchor: CornerAnchor, keepPinned: Boolean = false) {
+        controller?.cancelForwardedTouch(anchor, keepPinned)
     }
 
     fun start() {

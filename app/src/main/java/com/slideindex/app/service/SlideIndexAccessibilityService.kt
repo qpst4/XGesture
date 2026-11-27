@@ -330,7 +330,7 @@ class SlideIndexAccessibilityService : AccessibilityService() {
                 "module",
                 "模块会话结束 sessionId=$sessionId reason=${moduleEndReasonName(reason)} target=$target → " +
                     if (gracefulEnd) {
-                        "正常终止：边缘触钮不再强制复位（驻留面板留在屏幕上；悬浮球/角轮盘照旧收窗）"
+                        "正常终止：边缘触钮与已钉住的角轮盘不再强制复位（驻留面板/轮盘留在屏幕上；悬浮球照旧收窗）"
                     } else {
                         "异常终止：强制复位，收回可能卡住的全屏直触"
                     }
@@ -347,7 +347,8 @@ class SlideIndexAccessibilityService : AccessibilityService() {
                 if (side != null) {
                     service.edgeOverlayHost?.cancelForwardedTouch(side)
                 } else if (cornerAnchor != null) {
-                    CornerGestureHost.instanceOrNull()?.cancelForwardedTouch(cornerAnchor)
+                    // 正常松手 ≠ 关轮盘：已钉住的角轮盘要留住，否则「滑到圆心 / edit 按钮松手」会在 1ms 后消失。
+                    CornerGestureHost.instanceOrNull()?.cancelForwardedTouch(cornerAnchor, keepPinned = gracefulEnd)
                 } else if (target.isFloatBallTarget()) {
                     // 多指/桥断等非正常结束：先清选中态再收手势，避免线条侧“cancel 变提交”。
                     com.slideindex.app.overlay.FloatBallOverlay.cancelForwardedTouch(
