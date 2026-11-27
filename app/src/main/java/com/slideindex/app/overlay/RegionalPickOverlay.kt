@@ -211,6 +211,7 @@ object RegionalPickOverlay {
         continuedGestureActive = false
         sessionActive = false
         primaryPointerId = -1
+        PickTouchGuard.disarm(this)
         EdgeContinuedOverlayHandoff.clearIfInactive()
         cancelPauseTimer()
         cancelCacheRefresh()
@@ -393,6 +394,12 @@ object RegionalPickOverlay {
         scheduleInitialPreviewBoundsCache()
         applyPreviewBoundsFromCache()
         syncCursorAppearance()
+        // 主指接在贴边触钮条上，第二根手指落到屏幕中间时会命中下面的 App —— 必须自己挡一层全屏窗才接得住。
+        PickTouchGuard.arm(
+            owner = this,
+            context = appContext,
+            onExtraFinger = { revertRegionalToPick() }
+        )
         val service = SlideIndexAccessibilityService.accessibilityInstance()
         if (service != null) {
             com.slideindex.app.link.LinkRadarOverlay.startSession(
@@ -467,6 +474,8 @@ object RegionalPickOverlay {
             if (!regionalActive) {
                 ensurePreviewBoundsForPick()
             }
+            // 先撤挡层：结果面板是另一扇窗，挡层盖在上面会吃掉它的点击。
+            PickTouchGuard.disarm(this)
             submitPick(host, currentSettings)
         } else {
             val density = cursorPreviewView?.resources?.displayMetrics?.density ?: 1f
@@ -852,6 +861,7 @@ object RegionalPickOverlay {
             kotlin.math.abs(current.bottom - next.bottom) <= slopPx
 
     private fun resetSessionState() {
+        PickTouchGuard.disarm(this)
         cancelPauseTimer()
         cancelCacheRefresh()
         cancelInitialCacheRefresh()

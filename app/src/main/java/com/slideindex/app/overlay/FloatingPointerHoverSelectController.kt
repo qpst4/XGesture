@@ -55,6 +55,13 @@ internal class FloatingPointerHoverSelectController(
         scheduleInitialPreviewBoundsCache()
         applyPreviewBoundsFromCache()
         publishChrome()
+        // 主指在指针触摸层（一个小圆窗）里，第二根手指落到别处会命中下面的 App ——
+        // 必须自己挡一层全屏窗，才可能收到"又有一根手指按下"。
+        PickTouchGuard.arm(
+            owner = this,
+            context = SlideIndexAccessibilityService.accessibilityInstance(),
+            onExtraFinger = { revertRegionalToPick() }
+        )
     }
 
     fun onPointerMoved(pointerX: Float, pointerY: Float, density: Float) {
@@ -87,6 +94,8 @@ internal class FloatingPointerHoverSelectController(
         if (!regionalActive) {
             ensurePreviewBoundsForPick()
         }
+        // 先撤挡层：结果面板是另一扇窗，挡层盖在上面会吃掉它的点击。
+        PickTouchGuard.disarm(this)
         val submitted = submitPick(host, settings)
         reset()
         return submitted
@@ -357,6 +366,7 @@ internal class FloatingPointerHoverSelectController(
     }
 
     private fun reset() {
+        PickTouchGuard.disarm(this)
         cancelPauseTimer()
         cancelInitialCacheRefresh()
         boundsLookupGeneration++

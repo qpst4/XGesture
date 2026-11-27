@@ -335,6 +335,9 @@ internal class FloatingPointerWindowLifecycle(
     }
 
     fun cleanup() {
+        // 浮层整体拆窗：取词挡层如果还挂着，这里必须无条件撤掉，
+        // 否则异常收尾（外部点击/熄屏/被系统摘窗）会留下一层吞整屏触摸的空窗。
+        PickTouchGuard.forceDisarmAll()
         com.slideindex.app.link.LinkRadarOverlay.stopSession()
         OverlayPerformanceMonitorBinding.onOverlayHidden(window.appContext)
         cancelPendingCleanup()
