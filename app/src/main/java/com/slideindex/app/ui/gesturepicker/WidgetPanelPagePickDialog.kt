@@ -28,6 +28,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.miuix.MiuixDialogActionsRow
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
 import com.slideindex.app.R
 import com.slideindex.app.widget.WidgetPanelPage
 import top.yukonga.miuix.kmp.basic.TextButton
@@ -42,14 +44,15 @@ import top.yukonga.miuix.kmp.window.WindowDialog
  */
 @Composable
 fun WidgetPanelPagePickDialog(
+    show: Boolean,
     pages: List<WidgetPanelPage>,
     /** 当前已绑定的页 id：列表里标出来，换页时不用自己找。 */
     selectedPageId: String?,
     onDismissRequest: () -> Unit,
     onPick: (WidgetPanelPage) -> Unit,
 ) {
-    WindowDialog(
-        show = true,
+    MiuixAdaptiveDialog(
+        show = show,
         title = stringResource(R.string.widget_panel_pick_page_title),
         onDismissRequest = onDismissRequest,
     ) {
@@ -64,15 +67,9 @@ fun WidgetPanelPagePickDialog(
             )
 
             Spacer(Modifier.height(16.dp))
-            TextButton(
-                text = stringResource(R.string.cancel),
-                onClick = onDismissRequest,
-                modifier = Modifier.defaultMinSize(minHeight = 44.dp),
-                minHeight = 44.dp,
-                insideMargin = androidx.compose.foundation.layout.PaddingValues(
-                    horizontal = 16.dp,
-                    vertical = 10.dp,
-                ),
+                        MiuixDialogActionsRow(
+                secondaryText = stringResource(R.string.cancel),
+                onSecondary = onDismissRequest,
             )
         }
     }

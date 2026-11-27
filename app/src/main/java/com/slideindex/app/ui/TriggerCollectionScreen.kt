@@ -421,7 +421,6 @@ fun TriggerCollectionScreen(
         }
     }
     MiuixConfirmDialog(
-        confirmDestructive = true,
         show = removeTarget != null,
         onDismissRequest = { pendingRemove = null },
         title = sideLabel?.let {

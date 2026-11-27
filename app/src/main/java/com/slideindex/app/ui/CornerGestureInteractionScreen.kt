@@ -352,14 +352,13 @@ fun CornerGestureInteractionScreen(
                                 PanelIconShape.ORIGINAL to R.string.fv_icon_shape_original,
                             )
                         }
-                        SettingSpinnerRow(
+                        SettingDropdownRow(
                             title = stringResource(R.string.corner_gesture_slot_icon_shape),
                             subtitle = stringResource(
                                 shapes.firstOrNull { it.first == corner.slotIconShape }?.second
                                     ?: R.string.icon_shape_follow_global,
                             ),
-                            dialogButtonText = stringResource(R.string.cancel),
-                            items = shapes.map { DropdownItem(text = stringResource(it.second)) },
+                            items = shapes.map { stringResource(it.second) },
                             selectedIndex = shapes.indexOfFirst { it.first == corner.slotIconShape }
                                 .coerceAtLeast(0),
                             enabled = serviceEnabled && corner.enabled,

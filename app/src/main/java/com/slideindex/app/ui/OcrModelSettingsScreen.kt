@@ -41,9 +41,9 @@ import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixListSettingsCard
 import com.slideindex.app.ui.miuix.MiuixProgressCard
-import com.slideindex.app.ui.miuix.MiuixTabRowWithContour
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.miuix.miuixGroupedRowInsets
+import com.slideindex.app.ui.miuix.MiuixGlassSegmentedTabRow
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import top.yukonga.miuix.kmp.preference.SwitchPreference
@@ -133,16 +133,17 @@ fun OcrModelSettingsScreen(
         title = stringResource(R.string.ocr_models_title),
         subtitle = stringResource(R.string.ocr_models_subtitle),
         onBack = onBack,
-    ) {
-        LazySettingsItem(key = "ocr-tab-row") {
-            MiuixTabRowWithContour(
+
+        bottomContent = {
+            MiuixGlassSegmentedTabRow(
                 tabs = tabs,
                 selectedTabIndex = selectedTabIndex,
                 onTabSelected = { selectedTabIndex = it },
                 contentHorizontalPadding = 12.dp,
-                modifier = Modifier.padding(bottom = 6.dp),
+                verticalPadding = 6.dp,
             )
-        }
+        },
+    ) {
 
         if (selectedTabIndex == 0) {
             // ==================== 本地 (离线) TAB ====================
@@ -286,37 +287,35 @@ fun OcrModelSettingsScreen(
         }
     }
 
-    if (showPromptDialog) {
-        val isDefault = editingPrompt.trim() == defaultSystemPrompt.trim()
-        MiuixFormDialog(
-            show = true,
-            onDismissRequest = { showPromptDialog = false },
-            title = stringResource(R.string.ocr_global_system_prompt),
-            confirmText = stringResource(R.string.gesture_angle_save),
-            onConfirm = {
-                vlmConfigManager?.commonPrompt = editingPrompt.trim()
-            },
-            dismissText = stringResource(R.string.cancel),
-            secondaryConfirmText = stringResource(R.string.ocr_restore_default),
-            onSecondaryConfirm = {
-                editingPrompt = defaultSystemPrompt
-            },
-            secondaryConfirmEnabled = !isDefault,
-            secondaryDismissOnConfirm = false,
+    val isDefault = editingPrompt.trim() == defaultSystemPrompt.trim()
+    MiuixFormDialog(
+        show = showPromptDialog,
+        onDismissRequest = { showPromptDialog = false },
+        title = stringResource(R.string.ocr_global_system_prompt),
+        confirmText = stringResource(R.string.gesture_angle_save),
+        onConfirm = {
+            vlmConfigManager?.commonPrompt = editingPrompt.trim()
+        },
+        dismissText = stringResource(R.string.cancel),
+        secondaryConfirmText = stringResource(R.string.ocr_restore_default),
+        onSecondaryConfirm = {
+            editingPrompt = defaultSystemPrompt
+        },
+        secondaryConfirmEnabled = !isDefault,
+        secondaryDismissOnConfirm = false,
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                MiuixLabeledTextField(
-                    value = editingPrompt,
-                    onValueChange = { editingPrompt = it },
-                    label = stringResource(R.string.ocr_global_system_prompt_field),
-                    singleLine = false,
-                    minLines = 6,
-                    maxLines = 14,
-                )
-            }
+            MiuixLabeledTextField(
+                value = editingPrompt,
+                onValueChange = { editingPrompt = it },
+                label = stringResource(R.string.ocr_global_system_prompt_field),
+                singleLine = false,
+                minLines = 6,
+                maxLines = 14,
+            )
         }
     }
 }

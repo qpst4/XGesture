@@ -51,7 +51,6 @@ import com.slideindex.app.ui.settings.components.SettingSwitchRow
 import com.slideindex.app.ui.settings.components.settingsCardItems
 import top.yukonga.miuix.kmp.icon.extended.Add
 import top.yukonga.miuix.kmp.icon.extended.Edit
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
@@ -256,7 +255,6 @@ fun ImageSearchEngineSettingsScreen(
                 },
                 title = stringResource(R.string.search_group_pick_existing),
                 subtitle = stringResource(R.string.search_group_pick_existing_subtitle),
-                backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
                 onClick = {
                     showAddSheet = false
                     onOpenBatchPicker()
@@ -273,7 +271,6 @@ fun ImageSearchEngineSettingsScreen(
                 },
                 title = stringResource(R.string.search_group_create_new),
                 subtitle = stringResource(R.string.search_group_create_new_subtitle),
-                backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
                 onClick = {
                     showAddSheet = false
                     onCreateGroup()
@@ -290,7 +287,6 @@ fun ImageSearchEngineSettingsScreen(
                 },
                 title = stringResource(R.string.search_engine_import_paste_json),
                 subtitle = stringResource(R.string.search_engine_import_paste_json_subtitle),
-                backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
                 onClick = {
                     showAddSheet = false
                     showJsonImport = true
@@ -318,7 +314,6 @@ fun ImageSearchEngineSettingsScreen(
 
     val engineToDelete = deletingEngine
     MiuixConfirmDialog(
-        confirmDestructive = true,
         show = engineToDelete != null,
         onDismissRequest = { deletingEngine = null },
         title = stringResource(R.string.search_engine_delete_title),

@@ -46,6 +46,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.width
+import com.slideindex.app.ui.miuix.MiuixGlassSurfaceScope
+import com.slideindex.app.ui.miuix.MiuixDialogActionsRow
+import com.slideindex.app.ui.miuix.MiuixDialogAction
 import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.glass.GlassDialog
@@ -508,10 +511,13 @@ fun GestureActionPickerScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
-                    top.yukonga.miuix.kmp.basic.TextButton(
-                        text = stringResource(android.R.string.cancel),
-                        onClick = { compositePickVisible = false },
-                        modifier = Modifier.fillMaxWidth(),
+                    MiuixDialogActionsRow(
+                        actions = listOf(
+                            MiuixDialogAction(
+                                text = stringResource(android.R.string.cancel),
+                                onClick = { compositePickVisible = false },
+                            ),
+                        ),
                     )
                 }
             }
@@ -522,7 +528,7 @@ fun GestureActionPickerScreen(
                     show = true,
                     backdrop = compositeBackdrop,
                     title = dialogTitle,
-                    content = body,
+                    content = { MiuixGlassSurfaceScope(body) },
                 )
             } else {
                 WindowDialog(
@@ -589,17 +595,17 @@ fun GestureActionPickerScreen(
             }
         }
 
-        if (widgetPanelPickVisible) {
-            com.slideindex.app.ui.gesturepicker.WidgetPanelPagePickDialog(
-                pages = widgetPanelPages,
-                selectedPageId = (current as? GestureAction.WidgetPopupOverlay)?.panelId,
-                onDismissRequest = { widgetPanelPickVisible = false },
-                onPick = { page ->
-                    widgetPanelPickVisible = false
-                    safeSelect(GestureAction.WidgetPopupOverlay(page.id.toString()))
-                },
-            )
-        }
+        // 对话框常驻组合，只由 show 驱动，关闭时才有退出动画。
+        com.slideindex.app.ui.gesturepicker.WidgetPanelPagePickDialog(
+            show = widgetPanelPickVisible,
+            pages = widgetPanelPages,
+            selectedPageId = (current as? GestureAction.WidgetPopupOverlay)?.panelId,
+            onDismissRequest = { widgetPanelPickVisible = false },
+            onPick = { page ->
+                widgetPanelPickVisible = false
+                safeSelect(GestureAction.WidgetPopupOverlay(page.id.toString()))
+            },
+        )
 
         pendingLaunchApp?.let { app ->
             val currentLaunchApp = current as? GestureAction.LaunchApp
@@ -617,30 +623,28 @@ fun GestureActionPickerScreen(
             )
         }
 
-        if (macroPickVisible) {
-            MacroPickDialog(
-                show = true,
-                onDismissRequest = { macroPickVisible = false },
-                onPick = { macro ->
-                    macroPickVisible = false
-                    safeSelect(GestureAction.RunMacro(macro.id))
-                },
-                // 已经绑着某条宏时，把它标出来（换宏时不用自己在列表里找）。
-                selectedMacroId = (current as? GestureAction.RunMacro)?.macroId,
-            )
-        }
+        MacroPickDialog(
+            show = macroPickVisible,
+            onDismissRequest = { macroPickVisible = false },
+            onPick = { macro ->
+                macroPickVisible = false
+                safeSelect(GestureAction.RunMacro(macro.id))
+            },
+            // 已经绑着某条宏时，把它标出来（换宏时不用自己在列表里找）。
+            selectedMacroId = (current as? GestureAction.RunMacro)?.macroId,
+        )
 
-        if (shakeMenuPickVisible) {
-            ShakeMenuPickDialog(
-                menus = appSettings.shakeGestureSettings.menus,
-                selectedMenuId = (current as? GestureAction.OpenShakeMenu)?.menuId,
-                onDismissRequest = { shakeMenuPickVisible = false },
-                onPick = { menu ->
-                    shakeMenuPickVisible = false
-                    safeSelect(GestureAction.OpenShakeMenu(menu.id))
-                },
-            )
-        }
+        // 对话框常驻组合，只由 show 驱动，关闭时才有退出动画。
+        ShakeMenuPickDialog(
+            show = shakeMenuPickVisible,
+            menus = appSettings.shakeGestureSettings.menus,
+            selectedMenuId = (current as? GestureAction.OpenShakeMenu)?.menuId,
+            onDismissRequest = { shakeMenuPickVisible = false },
+            onPick = { menu ->
+                shakeMenuPickVisible = false
+                safeSelect(GestureAction.OpenShakeMenu(menu.id))
+            },
+        )
     }
 }
 
@@ -682,26 +686,19 @@ private fun OpenLinkMiuixDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                top.yukonga.miuix.kmp.basic.TextButton(
-                    text = stringResource(android.R.string.cancel),
-                    onClick = onDismissRequest,
-                    modifier = Modifier
-                        .weight(1f)
-                        .defaultMinSize(minHeight = 44.dp),
-                    minHeight = 44.dp,
-                    insideMargin = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
-                )
-                Spacer(modifier = Modifier.width(20.dp))
-                top.yukonga.miuix.kmp.basic.TextButton(
-                    text = stringResource(R.string.composite_library_save),
-                    onClick = { onConfirm(url.trim(), label.trim()) },
-                    enabled = canSave,
-                    modifier = Modifier
-                        .weight(1f)
-                        .defaultMinSize(minHeight = 44.dp),
-                    minHeight = 44.dp,
-                    insideMargin = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
-                    colors = ButtonDefaults.textButtonColorsPrimary(),
+                MiuixDialogActionsRow(
+                    actions = listOf(
+                        MiuixDialogAction(
+                            text = stringResource(android.R.string.cancel),
+                            onClick = onDismissRequest,
+                        ),
+                        MiuixDialogAction(
+                            text = stringResource(R.string.composite_library_save),
+                            onClick = { onConfirm(url.trim(), label.trim()) },
+                            enabled = canSave,
+                            primary = true,
+                        ),
+                    ),
                 )
             }
         }
@@ -714,7 +711,7 @@ private fun OpenLinkMiuixDialog(
             show = true,
             backdrop = backdrop,
             title = dialogTitle,
-            content = body,
+            content = { MiuixGlassSurfaceScope(body) },
         )
     } else {
         WindowDialog(

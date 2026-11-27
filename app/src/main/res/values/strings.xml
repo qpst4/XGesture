@@ -144,6 +144,7 @@
     <string name="gesture_app_profiles_restore_confirm_title">Restore from global?</string>
     <string name="gesture_app_profiles_restore_confirm_message">Every change in this profile will be replaced by the current global settings. This cannot be undone.</string>
     <string name="gesture_app_profiles_new">New profile</string>
+    <string name="gesture_app_profiles_new_desc">Give one app its own gesture setup</string>
     <string name="gesture_app_profiles_new_title">New profile</string>
     <string name="gesture_app_profiles_name_hint">Profile name (leave empty to auto-name)</string>
     <string name="gesture_app_profiles_default_name">Profile %1$d</string>
@@ -4481,6 +4482,7 @@ Questions: open a GitHub Issue on the project repository.</string>
     <string name="clipboard_float_blacklist_empty">No blocked apps</string>
     <string name="clipboard_float_blacklist_remove">Remove</string>
     <string name="clipboard_float_blacklist_section_add">Add app</string>
+    <string name="clipboard_float_blacklist_section_add_desc">Pick apps that never show in the floating clipboard</string>
     <string name="clipboard_float_opacity_title">Floating window opacity</string>
     <string name="clipboard_float_blur_title">Background blur</string>
     <string name="clipboard_float_blur_desc">Blurs the content behind the floating window (Android 12+); falls back to a solid background where blur is unavailable</string>

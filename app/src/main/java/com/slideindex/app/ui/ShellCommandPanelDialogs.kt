@@ -410,15 +410,15 @@ fun ShellCommandEditorScreen(
                         onCopyOutput = { copyShellOutputWithToast(context, result.output) },
                     )
                 }
-                testDialogResult?.let { result ->
-                    MiuixFormDialog(
-                        show = true,
-                        onDismissRequest = { testDialogResult = null },
-                        title = stringResource(R.string.shell_panel_test_result),
-                        confirmText = stringResource(R.string.confirm),
-                        onConfirm = { testDialogResult = null },
-                        dismissText = null,
-                    ) {
+                MiuixFormDialog(
+                    show = testDialogResult != null,
+                    onDismissRequest = { testDialogResult = null },
+                    title = stringResource(R.string.shell_panel_test_result),
+                    confirmText = stringResource(R.string.confirm),
+                    onConfirm = { testDialogResult = null },
+                    dismissText = null,
+                ) {
+                    testDialogResult?.let { result ->
                         ShellInlineTestResultCard(
                             exitCode = result.exitCode,
                             output = result.output,
@@ -854,15 +854,15 @@ private fun ShellCommandEditorOverlayBody(
                 onCopyOutput = { copyShellOutputWithToast(context, result.output) },
             )
         }
-        testDialogResult?.let { result ->
-            MiuixFormDialog(
-                show = true,
-                onDismissRequest = { testDialogResult = null },
-                title = stringResource(R.string.shell_panel_test_result),
-                confirmText = stringResource(R.string.confirm),
-                onConfirm = { testDialogResult = null },
-                dismissText = null,
-            ) {
+        MiuixFormDialog(
+            show = testDialogResult != null,
+            onDismissRequest = { testDialogResult = null },
+            title = stringResource(R.string.shell_panel_test_result),
+            confirmText = stringResource(R.string.confirm),
+            onConfirm = { testDialogResult = null },
+            dismissText = null,
+        ) {
+            testDialogResult?.let { result ->
                 ShellInlineTestResultCard(
                     exitCode = result.exitCode,
                     output = result.output,

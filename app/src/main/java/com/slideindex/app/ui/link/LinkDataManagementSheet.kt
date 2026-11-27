@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slideindex.app.R
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
+import com.slideindex.app.ui.miuix.LocalMiuixSheetHeaderPadding
 
 /**
  * 一墨「数据管理中心」BottomSheet 的原样移植。
@@ -55,13 +56,15 @@ fun LinkDataManagementSheet(
         show = show,
         onDismissRequest = onDismiss,
         insideMargin = DpSize(0.dp, 0.dp),
+        scrollUnderHeader = true,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 32.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .padding(LocalMiuixSheetHeaderPadding.current),
         ) {
             Box(
                 modifier = Modifier

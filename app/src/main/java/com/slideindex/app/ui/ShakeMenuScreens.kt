@@ -1,5 +1,7 @@
 package com.slideindex.app.ui
 
+import com.slideindex.app.ui.miuix.MiuixLabeledTextField
+import com.slideindex.app.ui.miuix.MiuixFormDialog
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -7,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -74,21 +75,22 @@ fun ShakeMenuSettingsScreen(
     val addedSectionTitle = stringResource(R.string.shake_menu_added_section)
     val emptyDesc = stringResource(R.string.shake_menu_empty_desc)
 
-    pendingRemoval?.let { menu ->
-        MiuixConfirmDialog(
-            confirmDestructive = true,
-            show = true,
-            onDismissRequest = { pendingRemoval = null },
-            title = stringResource(R.string.shake_menu_delete),
-            message = stringResource(R.string.shake_menu_delete_confirm, menu.name),
-            confirmText = stringResource(R.string.confirm),
-            onConfirm = {
-                pendingRemoval = null
-                onRemoveMenu(menu.id)
-            },
-            dismissText = stringResource(R.string.cancel),
-        )
-    }
+    // show 绑状态、对话框常驻组合，关闭时才有退出动画。
+    val removingMenu = pendingRemoval
+    MiuixConfirmDialog(
+        show = removingMenu != null,
+        onDismissRequest = { pendingRemoval = null },
+        title = stringResource(R.string.shake_menu_delete),
+        message = removingMenu?.let { menu ->
+            stringResource(R.string.shake_menu_delete_confirm, menu.name)
+        } ?: "",
+        confirmText = stringResource(R.string.confirm),
+        onConfirm = {
+            removingMenu?.let { onRemoveMenu(it.id) }
+            pendingRemoval = null
+        },
+        dismissText = stringResource(R.string.cancel),
+    )
 
     SettingsScreenScaffold(
         title = stringResource(R.string.shake_menu_title),
@@ -242,16 +244,16 @@ fun ShakeMenuEditScreen(
     // LazyListScope 的 content 不是 @Composable，字符串必须在进入前取好。
     val directionsSectionTitle = stringResource(R.string.shake_menu_directions_section)
 
-    if (nameDialogVisible) {
-        ShakeMenuNameDialog(
-            initial = menu.name,
-            onDismiss = { nameDialogVisible = false },
-            onConfirm = { name ->
-                nameDialogVisible = false
-                onRename(name)
-            },
-        )
-    }
+    // 对话框常驻组合，只由 show 驱动，关闭时才有退出动画。
+    ShakeMenuNameDialog(
+        show = nameDialogVisible,
+        initial = menu.name,
+        onDismiss = { nameDialogVisible = false },
+        onConfirm = { name ->
+            nameDialogVisible = false
+            onRename(name)
+        },
+    )
 
     SettingsScreenScaffold(
         title = ShakeMenuLimits.displayName(menu, menuIndex),
@@ -299,44 +301,37 @@ fun ShakeMenuEditScreen(
 
 @Composable
 private fun ShakeMenuNameDialog(
+    show: Boolean,
     initial: String,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
 ) {
-    var text by remember { mutableStateOf(initial) }
-    AlertDialog(
+    var text by remember(initial) { mutableStateOf(initial) }
+    MiuixFormDialog(
+        show = show,
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.shake_menu_name)) },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it.take(ShakeMenuNameMaxLength) },
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.shake_menu_name_hint)) },
-                )
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = "${text.length}/$ShakeMenuNameMaxLength",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip,
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onConfirm(text.trim()) },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        },
-    )
+        title = stringResource(R.string.shake_menu_name),
+        confirmText = stringResource(R.string.confirm),
+        onConfirm = { onConfirm(text.trim()) },
+        confirmEnabled = text.isNotBlank(),
+        dismissText = stringResource(R.string.cancel),
+        dismissOnConfirm = false,
+    ) {
+        MiuixLabeledTextField(
+            value = text,
+            onValueChange = { text = it.take(ShakeMenuNameMaxLength) },
+            label = stringResource(R.string.shake_menu_name_hint),
+            singleLine = true,
+            useLabelAsPlaceholder = false,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = "\${text.length}/\$ShakeMenuNameMaxLength",
+            style = MiuixTheme.textStyles.footnote1,
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            maxLines = 1,
+            overflow = TextOverflow.Clip,
+        )
+    }
 }

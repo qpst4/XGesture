@@ -22,6 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.miuix.MiuixDialogActionsRow
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
 import com.slideindex.app.R
 import com.slideindex.app.shake.ShakeMenu
 import com.slideindex.app.shake.ShakeMenuLimits
@@ -36,14 +38,15 @@ import top.yukonga.miuix.kmp.window.WindowDialog
  */
 @Composable
 fun ShakeMenuPickDialog(
+    show: Boolean,
     menus: List<ShakeMenu>,
     onDismissRequest: () -> Unit,
     onPick: (ShakeMenu) -> Unit,
     /** 当前已绑定的菜单 id：列表里标出来，换菜单时不用自己找。 */
     selectedMenuId: String? = null,
 ) {
-    WindowDialog(
-        show = true,
+    MiuixAdaptiveDialog(
+        show = show,
         title = stringResource(R.string.shake_menu_pick_title),
         onDismissRequest = onDismissRequest,
     ) {
@@ -102,14 +105,9 @@ fun ShakeMenuPickDialog(
             }
 
             Spacer(Modifier.height(16.dp))
-            TextButton(
-                text = stringResource(R.string.cancel),
-                onClick = onDismissRequest,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 44.dp),
-                minHeight = 44.dp,
-                insideMargin = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                        MiuixDialogActionsRow(
+                secondaryText = stringResource(R.string.cancel),
+                onSecondary = onDismissRequest,
             )
         }
     }

@@ -1,5 +1,6 @@
 package com.slideindex.app.ui
 
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -113,6 +114,7 @@ fun FileShareEngineSettingsScreen(
                                 MiuixIcon(
                                     imageVector = MiuixIcons.Delete,
                                     contentDescription = stringResource(R.string.search_engine_delete_confirm),
+                                    tint = MiuixTheme.colorScheme.error,
                                 )
                             }
                         },
@@ -124,7 +126,6 @@ fun FileShareEngineSettingsScreen(
 
     val engineToDelete = deletingEngine
     MiuixConfirmDialog(
-        confirmDestructive = true,
         show = engineToDelete != null,
         onDismissRequest = { deletingEngine = null },
         title = stringResource(R.string.search_engine_delete_title),

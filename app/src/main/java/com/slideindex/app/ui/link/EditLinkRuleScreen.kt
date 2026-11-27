@@ -77,6 +77,7 @@ import com.slideindex.app.ui.SegmentedControl
 import com.slideindex.app.ui.miuix.CardItem
 import com.slideindex.app.ui.miuix.CardSegment
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
+import com.slideindex.app.ui.miuix.LocalMiuixSheetHeaderPadding
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -955,11 +956,13 @@ internal fun LinkRuleLiveTestBottomSheet(
         show = show,
         title = if (candidateRule != null) "规则实时测试" else "规则测试",
         onDismissRequest = onDismissRequest,
+        scrollUnderHeader = true,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
+                .padding(LocalMiuixSheetHeaderPadding.current)
                 .padding(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {

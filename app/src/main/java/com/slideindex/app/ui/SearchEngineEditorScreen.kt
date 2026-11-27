@@ -592,33 +592,31 @@ fun SearchEngineEditorScreen(
         )
     }
 
-    if (showIdentityDialog) {
-        MiuixFormDialog(
-            show = true,
-            title = stringResource(R.string.search_engine_edit_identity_title),
-            onDismissRequest = { showIdentityDialog = false },
-            confirmText = stringResource(R.string.search_engine_save),
-            confirmEnabled = name.isNotBlank(),
-            onConfirm = { showIdentityDialog = false },
+    MiuixFormDialog(
+        show = showIdentityDialog,
+        title = stringResource(R.string.search_engine_edit_identity_title),
+        onDismissRequest = { showIdentityDialog = false },
+        confirmText = stringResource(R.string.search_engine_save),
+        confirmEnabled = name.isNotBlank(),
+        onConfirm = { showIdentityDialog = false },
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                MiuixLabeledTextField(
-                    value = name,
-                    onValueChange = { onUpdateDraft { d -> d.copy(name = it) } },
-                    label = stringResource(R.string.search_engine_name_hint),
-                )
-                MiuixLabeledTextField(
-                    value = aliasCode,
-                    onValueChange = { onUpdateDraft { d -> d.copy(aliasCode = it) } },
-                    label = stringResource(R.string.search_engine_alias_hint),
-                )
-                MiuixHintText(stringResource(R.string.search_engine_alias_support))
-            }
+            MiuixLabeledTextField(
+                value = name,
+                onValueChange = { onUpdateDraft { d -> d.copy(name = it) } },
+                label = stringResource(R.string.search_engine_name_hint),
+            )
+            MiuixLabeledTextField(
+                value = aliasCode,
+                onValueChange = { onUpdateDraft { d -> d.copy(aliasCode = it) } },
+                label = stringResource(R.string.search_engine_alias_hint),
+            )
+            MiuixHintText(stringResource(R.string.search_engine_alias_support))
         }
     }
 }

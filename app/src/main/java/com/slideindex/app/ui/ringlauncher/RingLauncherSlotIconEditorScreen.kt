@@ -173,32 +173,30 @@ internal fun RingLauncherSlotIconEditorHost(
         }
     }
 
-    if (showTextIconDialog) {
-        var textIconInput by remember { mutableStateOf(iconDraft.textIcon.orEmpty()) }
-        MiuixFormDialog(
-            show = true,
-            onDismissRequest = { showTextIconDialog = false },
-            title = stringResource(R.string.search_engine_text_icon_title),
-            confirmEnabled = textIconInput.trim().isNotEmpty(),
-            onConfirm = {
-                val trimmed = textIconInput.trim()
-                if (trimmed.isNotEmpty()) {
-                    discardSlotPendingIconPath(context, iconDraft.iconPath, initialOverride?.iconPath)
-                    iconDraft = iconDraft.copy(
-                        pendingIconUri = null,
-                        iconPath = null,
-                        textIcon = trimmed,
-                    )
-                }
-                showTextIconDialog = false
-            },
-        ) {
-            MiuixLabeledTextField(
-                value = textIconInput,
-                onValueChange = { if (it.length <= 8) textIconInput = it },
-                label = stringResource(R.string.search_engine_text_icon_hint),
-            )
-        }
+    var textIconInput by remember { mutableStateOf(iconDraft.textIcon.orEmpty()) }
+    MiuixFormDialog(
+        show = showTextIconDialog,
+        onDismissRequest = { showTextIconDialog = false },
+        title = stringResource(R.string.search_engine_text_icon_title),
+        confirmEnabled = textIconInput.trim().isNotEmpty(),
+        onConfirm = {
+            val trimmed = textIconInput.trim()
+            if (trimmed.isNotEmpty()) {
+                discardSlotPendingIconPath(context, iconDraft.iconPath, initialOverride?.iconPath)
+                iconDraft = iconDraft.copy(
+                    pendingIconUri = null,
+                    iconPath = null,
+                    textIcon = trimmed,
+                )
+            }
+            showTextIconDialog = false
+        },
+    ) {
+        MiuixLabeledTextField(
+            value = textIconInput,
+            onValueChange = { if (it.length <= 8) textIconInput = it },
+            label = stringResource(R.string.search_engine_text_icon_hint),
+        )
     }
 }
 

@@ -21,6 +21,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.miuix.MiuixGlassSurfaceScope
+import com.slideindex.app.ui.miuix.MiuixDialogActionsRow
+import com.slideindex.app.ui.miuix.MiuixDialogAction
 import com.slideindex.app.R
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
@@ -90,10 +93,13 @@ fun CompositeActionPickDialog(
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
-            top.yukonga.miuix.kmp.basic.TextButton(
-                text = stringResource(android.R.string.cancel),
-                onClick = onDismissRequest,
-                modifier = Modifier.fillMaxWidth(),
+            MiuixDialogActionsRow(
+                actions = listOf(
+                    MiuixDialogAction(
+                        text = stringResource(android.R.string.cancel),
+                        onClick = onDismissRequest,
+                    ),
+                ),
             )
         }
     }
@@ -105,7 +111,7 @@ fun CompositeActionPickDialog(
             show = true,
             backdrop = backdrop,
             title = title,
-            content = body,
+            content = { MiuixGlassSurfaceScope(body) },
         )
     } else {
         WindowDialog(
@@ -176,19 +182,19 @@ fun OpenLinkActionDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                top.yukonga.miuix.kmp.basic.TextButton(
-                    text = stringResource(android.R.string.cancel),
-                    onClick = onDismissRequest,
-                    modifier = Modifier.weight(1f),
-                    colors = top.yukonga.miuix.kmp.basic.ButtonDefaults.textButtonColors(),
-                )
-                Spacer(modifier = androidx.compose.ui.Modifier.width(20.dp))
-                top.yukonga.miuix.kmp.basic.TextButton(
-                    text = stringResource(R.string.composite_library_save),
-                    onClick = { onConfirm(url.trim(), label.trim()) },
-                    enabled = canSave,
-                    modifier = Modifier.weight(1f),
-                    colors = top.yukonga.miuix.kmp.basic.ButtonDefaults.textButtonColorsPrimary(),
+                MiuixDialogActionsRow(
+                    actions = listOf(
+                        MiuixDialogAction(
+                            text = stringResource(android.R.string.cancel),
+                            onClick = onDismissRequest,
+                        ),
+                        MiuixDialogAction(
+                            text = stringResource(R.string.composite_library_save),
+                            onClick = { onConfirm(url.trim(), label.trim()) },
+                            enabled = canSave,
+                            primary = true,
+                        ),
+                    ),
                 )
             }
         }
@@ -200,7 +206,7 @@ fun OpenLinkActionDialog(
             show = true,
             backdrop = backdrop,
             title = title,
-            content = body,
+            content = { MiuixGlassSurfaceScope(body) },
         )
     } else {
         WindowDialog(

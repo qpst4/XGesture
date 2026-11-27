@@ -6,15 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.slideindex.app.ui.miuix.LocalMiuixContentUnderBar
-import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
-import com.slideindex.app.ui.miuix.LocalMiuixScreenBackdrop
 import com.slideindex.app.ui.miuix.MiuixTabRowContourHost
-import com.slideindex.app.ui.miuix.MiuixTabRowWithContour
+import com.slideindex.app.ui.miuix.MiuixGlassSegmentedTabRow
 import top.yukonga.miuix.kmp.basic.TabRowColors
 import com.slideindex.app.ui.miuix.miuixTabRowContourColors
-import top.yukonga.miuix.kmp.glass.GlassSegmentedTabRow
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * 挑应用页面统一的 tab 条（动作 / 应用程序 / 快捷方式 / 小组件 的任意子集）。
@@ -44,24 +39,7 @@ fun AppPickerTabRow(
     /** false = ??????(???????????,????????????)? */
     glass: Boolean = true,
 ) {
-    val backdrop = LocalMiuixScreenBackdrop.current ?: LocalMiuixPageBackdrop.current
-    if (backdrop != null && glass) {
-        GlassSegmentedTabRow(
-            tabs = tabs,
-            selectedIndex = selectedTabIndex,
-            onSelect = onTabSelected,
-            backdrop = backdrop,
-            surfaceAlpha = if (LocalMiuixContentUnderBar.current.value) 1f else 0f,
-            selectedContentColor = MiuixTheme.colorScheme.primary,
-            contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-            modifier = modifier.padding(
-                horizontal = contentHorizontalPadding,
-                vertical = verticalPadding,
-            ),
-        )
-        return
-    }
-    MiuixTabRowWithContour(
+    MiuixGlassSegmentedTabRow(
         tabs = tabs,
         selectedTabIndex = selectedTabIndex,
         onTabSelected = onTabSelected,
@@ -71,5 +49,6 @@ fun AppPickerTabRow(
         verticalPadding = verticalPadding,
         contourHost = contourHost,
         colors = colors,
+        glass = glass,
     )
 }

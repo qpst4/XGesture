@@ -226,14 +226,12 @@ fun HoneycombLauncherAddPickerScreen(
     }
 
     val macroPick = pendingMacroPick
-    if (macroPick != null) {
-        MacroPickDialog(
-            show = true,
-            onDismissRequest = { pendingMacroPick = null },
-            onPick = { macro ->
-                pendingMacroPick = null
-                macroPick(GestureAction.RunMacro(macro.id))
-            },
-        )
-    }
+    MacroPickDialog(
+        show = macroPick != null,
+        onDismissRequest = { pendingMacroPick = null },
+        onPick = { macro ->
+            pendingMacroPick = null
+            macroPick?.invoke(GestureAction.RunMacro(macro.id))
+        },
+    )
 }

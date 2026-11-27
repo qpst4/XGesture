@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.slideindex.app.ui.miuix.MiuixGlassSegmentedTabRow
 import com.slideindex.app.R
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureActionType
@@ -45,13 +44,11 @@ import com.slideindex.app.iconpack.IconPackProvenanceStore
 import com.slideindex.app.iconpack.IconPackTarget
 import com.slideindex.app.iconpack.IconThemeStore
 import com.slideindex.app.service.IconPackPickerTrampolineActivity
-import com.slideindex.app.ui.miuix.LocalMiuixContentUnderBar
 import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
 import com.slideindex.app.ui.miuix.LocalMiuixScreenBackdrop
 import com.slideindex.app.ui.miuix.MiuixExpandableSearchBottomContent
 import com.slideindex.app.ui.miuix.MiuixExpandableSearchIconAction
 import com.slideindex.app.ui.miuix.MiuixGlassDropdownMenu
-import com.slideindex.app.ui.miuix.MiuixTabRowWithContour
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import com.slideindex.app.ui.viewmodel.GlobalIconLibraryViewModel
 import kotlinx.coroutines.Dispatchers
@@ -150,27 +147,14 @@ fun GlobalIconLibraryScreen(
                 onSearchQueryChange = { searchQuery = it },
                 focusRequester = searchFocusRequester,
                 extraContent = {
-                    if (tabBackdrop != null) {
-                        GlassSegmentedTabRow(
-                            tabs = tabs,
-                            selectedIndex = tab,
-                            onSelect = { tab = it },
-                            backdrop = tabBackdrop,
-                            surfaceAlpha = if (LocalMiuixContentUnderBar.current.value) 1f else 0f,
-                            selectedContentColor = MiuixTheme.colorScheme.primary,
-                            contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                        )
-                    } else {
-                        MiuixTabRowWithContour(
-                            tabs = tabs,
-                            selectedTabIndex = tab,
-                            onTabSelected = { tab = it },
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        )
-                    }
+MiuixGlassSegmentedTabRow(
+    tabs = tabs,
+    selectedTabIndex = tab,
+    onTabSelected = { tab = it },
+    modifier = Modifier.fillMaxWidth(),
+    contentHorizontalPadding = 16.dp,
+    verticalPadding = 8.dp,
+)
                 },
             )
         },

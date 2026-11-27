@@ -1,5 +1,7 @@
 package com.slideindex.app.ui
 
+import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
+import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -23,9 +25,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.DropdownItem
+import com.slideindex.app.ui.miuix.MiuixDialogAction
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
+import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import com.slideindex.app.ui.miuix.MiuixGlassDropdownMenu
 import com.slideindex.app.ui.miuix.MiuixGlassDropdownPreference
 import androidx.compose.material3.DropdownMenuItem
@@ -490,17 +494,18 @@ fun QuickWheelConfigScreen(
                     items = buildList {
                         add(
                             settingsCardScopeItem("name") {
-                                OutlinedTextField(
+                                MiuixLabeledTextField(
                                     value = nameInput,
                                     onValueChange = { value ->
                                         nameInput = value
                                         patchDraft { it.copy(name = value) }
                                     },
+                                    label = stringResource(R.string.quick_wheel_name_hint),
+                                    singleLine = true,
+                                    useLabelAsPlaceholder = false,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                                    singleLine = true,
-                                    label = { Text(stringResource(R.string.quick_wheel_name_hint)) },
+                                        .padding(horizontal = 12.dp, vertical = 8.dp),
                                 )
                             }
                         )
@@ -1102,33 +1107,30 @@ fun QuickWheelConfigScreen(
 
             if (showLeaveDialog) {
                 // 居中弹窗：带未保存改动返回时询问「保存后退出 / 直接退出」。
-                AlertDialog(
+                MiuixAdaptiveDialog(
                     onDismissRequest = { showLeaveDialog = false },
-                    title = { Text(stringResource(R.string.quick_wheel_unsaved_title)) },
-                    text = { Text(stringResource(R.string.quick_wheel_unsaved_message)) },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                showLeaveDialog = false
-                                saveDraft()
-                                onBack()
-                            },
-                        ) {
-                            Text(stringResource(R.string.quick_wheel_save_and_exit))
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(
+                    title = stringResource(R.string.quick_wheel_unsaved_title),
+                    summary = stringResource(R.string.quick_wheel_unsaved_message),
+                    actions = listOf(
+                        MiuixDialogAction(
+                            text = stringResource(R.string.quick_wheel_exit_without_save),
                             onClick = {
                                 showLeaveDialog = false
                                 // 直接退出：草稿不落盘，设置里的值保持原样。
                                 onBack()
                             },
-                        ) {
-                            Text(stringResource(R.string.quick_wheel_exit_without_save))
-                        }
-                    },
-                )
+                        ),
+                        MiuixDialogAction(
+                            text = stringResource(R.string.quick_wheel_save_and_exit),
+                            onClick = {
+                                showLeaveDialog = false
+                                saveDraft()
+                                onBack()
+                            },
+                            primary = true,
+                        ),
+                    ),
+                ) {}
             }
         }
     }
@@ -1280,7 +1282,7 @@ internal fun QuickWheelSwitchRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        MiuixSwitch(checked = checked, onCheckedChange = { onCheckedChange(it) })
     }
 }
 
@@ -1532,17 +1534,16 @@ private fun SettingsCardScope.QuickWheelBackdropTintRow(
             },
         )
     }
-    if (customOpen) {
-        MiuixColorPickerDialog(
-            title = stringResource(R.string.quick_wheel_backdrop_tint),
-            initialColorArgb = currentArgb,
-            onDismiss = { customOpen = false },
-            onConfirm = { picked ->
-                customOpen = false
-                onPick(picked or 0xFF000000.toInt())
-            },
-        )
-    }
+    MiuixColorPickerDialog(
+        show = customOpen,
+        title = stringResource(R.string.quick_wheel_backdrop_tint),
+        initialColorArgb = currentArgb,
+        onDismiss = { customOpen = false },
+        onConfirm = { picked ->
+            customOpen = false
+            onPick(picked or 0xFF000000.toInt())
+        },
+    )
 }
 
 /** 浮层跨窗口模糊半径（px）上限，与 QuickWheelOverlayWindow 的 coerceIn(1, 80) 保持一致。 */

@@ -166,16 +166,14 @@ fun WidgetPickerScreen(
     }
   }
   val macroPick = pendingMacroPick
-  if (macroPick != null) {
-    com.slideindex.app.ui.gesturepicker.MacroPickDialog(
-      show = true,
-      onDismissRequest = { pendingMacroPick = null },
-      onPick = { macro ->
-        pendingMacroPick = null
-        macroPick(GestureAction.RunMacro(macro.id))
-      },
-    )
-  }
+com.slideindex.app.ui.gesturepicker.MacroPickDialog(
+    show = macroPick != null,
+  onDismissRequest = { pendingMacroPick = null },
+  onPick = { macro ->
+    pendingMacroPick = null
+    macroPick?.invoke(GestureAction.RunMacro(macro.id))
+  },
+)
 
 
   val settingsRepository = com.slideindex.app.ui.compose.rememberSettingsRepository()

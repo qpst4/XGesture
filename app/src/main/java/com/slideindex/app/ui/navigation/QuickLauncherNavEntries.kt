@@ -81,7 +81,7 @@ fun NavEntryBuilder.quickLauncherNavEntries(ctx: MainNavContext) {
         QuickLauncherEditorScreen(
             viewModel = viewModel,
             panelId = key.panelId,
-            onBack = { ctx.navigateBackTo(AppNavKey.QuickLauncherEdit(key.panelId)) },
+            onBack = { ctx.backStack.removeLastOrNull() },
             onAdd = { panelId, folderIndex ->
                 ctx.navigate(AppNavKey.QuickLauncherAdd(panelId, folderIndex))
             },
@@ -96,7 +96,7 @@ fun NavEntryBuilder.quickLauncherNavEntries(ctx: MainNavContext) {
             panelId = key.panelId,
             folderIndex = key.folderIndex,
             settings = settings,
-            onBack = { ctx.navigateBackTo(AppNavKey.QuickLauncherEdit(key.panelId)) },
+            onBack = { ctx.backStack.removeLastOrNull() },
             onToggleItem = { item, added ->
                 viewModel.toggleQuickLauncherPanelItem(key.panelId, item, added, key.folderIndex)
             },

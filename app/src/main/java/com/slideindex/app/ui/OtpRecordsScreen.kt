@@ -181,7 +181,6 @@ fun rememberOtpRecordsUi(
     val overlays: @Composable () -> Unit = {
         val deleteRecord = pendingDelete
         MiuixConfirmDialog(
-            confirmDestructive = true,
             show = deleteRecord != null,
             onDismissRequest = { pendingDelete = null },
             title = stringResource(R.string.otp_records_delete_title),

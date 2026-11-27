@@ -318,7 +318,6 @@ fun QuickLauncherPanelManagementSection(
     }
 
     MiuixConfirmDialog(
-        confirmDestructive = true,
         show = deleteTarget != null,
         onDismissRequest = { deleteTarget = null },
         title = stringResource(R.string.quick_launcher_panel_delete),

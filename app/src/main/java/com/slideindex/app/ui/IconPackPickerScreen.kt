@@ -49,6 +49,7 @@ import com.slideindex.app.ui.viewmodel.GlobalIconLibraryViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -335,7 +336,7 @@ private fun IconPackIconsStage(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
-                Text(stringResource(R.string.icon_pack_use))
+                MiuixText(stringResource(R.string.icon_pack_use))
             }
         },
     ) {

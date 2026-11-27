@@ -422,20 +422,18 @@ fun SearchGroupEditorScreen(
         )
     }
 
-    if (showDeleteDialog && onDelete != null) {
-        MiuixConfirmDialog(
-            confirmDestructive = true,
-            show = true,
-            onDismissRequest = { showDeleteDialog = false },
-            title = stringResource(R.string.search_group_delete_title),
-            message = stringResource(R.string.search_group_delete_message, draft.name),
-            confirmText = stringResource(R.string.search_group_delete),
-            onConfirm = {
-                showDeleteDialog = false
-                onDelete()
-            },
-        )
-    }
+    // show 由状态驱动、对话框常驻组合；onDelete 可空，动作里做安全调用。
+    MiuixConfirmDialog(
+        show = showDeleteDialog && onDelete != null,
+        onDismissRequest = { showDeleteDialog = false },
+        title = stringResource(R.string.search_group_delete_title),
+        message = stringResource(R.string.search_group_delete_message, draft.name),
+        confirmText = stringResource(R.string.search_group_delete),
+        onConfirm = {
+            showDeleteDialog = false
+            onDelete?.invoke()
+        },
+    )
 }
 
 private fun SearchGroupDraft.toShareEngine(kind: SearchGroupKind): SearchEngineConfig {

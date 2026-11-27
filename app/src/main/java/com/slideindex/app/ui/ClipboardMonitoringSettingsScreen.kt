@@ -48,6 +48,7 @@ import com.slideindex.app.ui.settings.clipboard.ClipboardLsposedModuleStatus
 import com.slideindex.app.ui.settings.clipboard.isClipboardMonitoringBackendReady
 import com.slideindex.app.ui.settings.clipboard.rememberClipboardMonitoringUiState
 import com.slideindex.app.ui.settings.components.SettingLinkRow
+import com.slideindex.app.ui.settings.components.SettingSegmentedRow
 import com.slideindex.app.ui.settings.components.SettingRadioRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
 import com.slideindex.app.ui.settings.components.SettingsCardRow
@@ -230,6 +231,11 @@ fun ClipboardMonitoringSettingsScreen(
         )
     }
     val diagnosticsSectionTitle = stringResource(R.string.clipboard_monitoring_section_diagnostics)
+    // 分段控件的标签要在 composable 上下文里取好：LazyListScope 的 content 里没法调 stringResource。
+    val captureItems = ClipboardMonitoringCapture.entries
+    val captureLabels = captureItems.map { clipboardMonitoringCaptureLabel(it) }
+    val captureSubtitle =
+        clipboardMonitoringCaptureDescription(settings.clipboardMonitoringCapture)
 
     SettingsScreenScaffold(
         title = stringResource(R.string.clipboard_monitoring_page_title),
@@ -306,26 +312,23 @@ fun ClipboardMonitoringSettingsScreen(
         }
 
         if (settings.clipboardMonitoringChannel.usesCaptureMethod) {
-            settingsLazySmallTitle(
-                key = "clipboard-monitor-capture-section",
-                title = captureSectionTitle,
-            )
+            // 只有两项的枚举不该占一整张单选卡：用全站统一的分段控件行，
+            // 副标题跟着当前选择变，等于把原来每项的解释收敛到一行里。
             groupedCardItems(
                 keyPrefix = "clipboard-monitor-capture",
                 items = buildList {
-                    ClipboardMonitoringCapture.entries.forEach { capture ->
-                        add(
-                            settingsCardScopeItem("capture-${capture.name}") {
-                                SettingRadioRow(
-                                    title = clipboardMonitoringCaptureLabel(capture),
-                                    subtitle = clipboardMonitoringCaptureDescription(capture),
-                                    selected = settings.clipboardMonitoringCapture == capture,
-                                    segmentKey = capture.name,
-                                    onClick = { onClipboardMonitoringCaptureChange(capture) },
-                                )
-                            },
-                        )
-                    }
+                    add(
+                        settingsCardScopeItem("capture-method") {
+                            SettingSegmentedRow(
+                                title = captureSectionTitle,
+                                subtitle = captureSubtitle,
+                                items = captureItems,
+                                selected = settings.clipboardMonitoringCapture,
+                                labels = captureLabels,
+                                onSelect = onClipboardMonitoringCaptureChange,
+                            )
+                        },
+                    )
                     // Shizuku·系统日志 这一档要单独授权读日志（原来在「剪贴板」页，搬到这里跟采集方式放一起）。
                     if (effectiveMode == ClipboardMonitoringMode.SHIZUKU_LOGS && !readLogsGranted) {
                         add(

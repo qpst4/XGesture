@@ -126,20 +126,24 @@ fun MacroListScreen(
         }
     }
 
-    pendingDelete?.let { target ->
-        MiuixConfirmDialog(
-            confirmDestructive = true,
-            show = true,
-            onDismissRequest = { pendingDelete = null },
-            title = stringResource(R.string.macro_delete_title),
-            message = stringResource(
+    // show 绑状态、对话框常驻组合，关闭时才有退出动画。
+    val deletingMacro = pendingDelete
+    MiuixConfirmDialog(
+        show = deletingMacro != null,
+        onDismissRequest = { pendingDelete = null },
+        title = stringResource(R.string.macro_delete_title),
+        message = deletingMacro?.let { target ->
+            stringResource(
                 R.string.macro_delete_message,
                 MacroPresentation.displayName(target.name),
-            ),
-            confirmText = stringResource(R.string.macro_delete_confirm),
-            onConfirm = { onDeleteMacro(target.id) },
-        )
-    }
+            )
+        } ?: "",
+        confirmText = stringResource(R.string.macro_delete_confirm),
+        onConfirm = {
+            deletingMacro?.let { onDeleteMacro(it.id) }
+            pendingDelete = null
+        },
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)

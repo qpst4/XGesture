@@ -1,5 +1,14 @@
 package com.slideindex.app.ui
 
+import top.yukonga.miuix.kmp.preference.ArrowPreference
+import com.slideindex.app.ui.miuix.MiuixDialogAction
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Switch
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import com.slideindex.app.ui.miuix.MiuixDialogActionButton
+import com.slideindex.app.ui.miuix.MiuixLabeledTextField
+import com.slideindex.app.ui.miuix.MiuixFormDialog
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.BackHandler
@@ -25,7 +34,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import com.slideindex.app.ui.miuix.MiuixGlassDropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -194,7 +202,6 @@ fun QuickWheelSlotEditorScreen(
     var pickTarget by remember { mutableStateOf(QuickWheelSlotActionTarget.TAP) }
     var iconMenuExpanded by remember { mutableStateOf(false) }
     var showIconLibrary by remember { mutableStateOf(false) }
-    var showAppPicker by remember { mutableStateOf(false) }
     var pendingGalleryPick by remember { mutableStateOf(false) }
 
     fun patch(transform: (QuickWheelSlot) -> QuickWheelSlot) {
@@ -507,131 +514,110 @@ fun QuickWheelSlotEditorScreen(
         }
     }
 
-    if (showIconLibrary) {
-        // 「文字图标」：用户输入的文字直接作为容器图标（存放在 iconValue）。
-        // ⚠️ 初值只在"当前本来就是文字图标"时回填自己的文字：
-        // 应用包名（APP_ICON）/ 图库路径（GALLERY）/ 字体库 key（ICON_LIBRARY）都不是用户想显示的文字，
-        // 带进来只会让人先删一段无关内容。
-        var textInput by remember {
-            mutableStateOf(if (draft.iconSource == QuickWheelIconSource.TEXT) draft.iconValue else "")
-        }
-        // 文字颜色：null = 自动（跟底板反色）。同样只在"当前是文字图标"时回填。
-        var textColor by remember {
-            mutableStateOf(draft.textColorArgb.takeIf { draft.iconSource == QuickWheelIconSource.TEXT })
-        }
-        var colorPickerOpen by remember { mutableStateOf(false) }
-        AlertDialog(
-            onDismissRequest = { showIconLibrary = false },
-            title = { Text(stringResource(R.string.quick_wheel_text_icon_title)) },
-            text = {
-                Column {
-                    OutlinedTextField(
-                        value = textInput,
-                        onValueChange = { textInput = it },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text(stringResource(R.string.quick_wheel_text_icon_hint)) },
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        text = stringResource(R.string.quick_wheel_text_icon_color),
-                        style = MaterialTheme.typography.labelLarge,
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        FilterChip(
-                            selected = textColor == null,
-                            onClick = { textColor = null },
-                            label = { Text(stringResource(R.string.quick_wheel_text_icon_color_auto)) },
-                        )
-                        Spacer(Modifier.weight(1f))
-                        TextButton(onClick = { colorPickerOpen = true }) {
-                            Text(stringResource(R.string.quick_wheel_text_icon_color_custom))
-                        }
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        QuickWheelTextColorPresets.forEach { preset ->
-                            val selected = textColor == preset
-                            Box(
-                                modifier = Modifier
-                                    .size(26.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(preset))
-                                    .border(
-                                        width = if (selected) 3.dp else 1.dp,
-                                        color = if (selected) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            MaterialTheme.colorScheme.outlineVariant
-                                        },
-                                        shape = CircleShape,
-                                    )
-                                    .clickable { textColor = preset },
-                            )
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        patch {
-                            it.copy(
-                                iconSource = QuickWheelIconSource.TEXT,
-                                iconValue = textInput.trim(),
-                                textColorArgb = textColor,
-                            )
-                        }
-                        showIconLibrary = false
-                    },
-                    // 空白文字存下去等于"图标消失"，直接禁用更直白（想清空就取消）。
-                    enabled = textInput.isNotBlank(),
-                ) {
-                    Text(stringResource(R.string.quick_wheel_slot_save))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showIconLibrary = false }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            },
+    // 「文字图标」：用户输入的文字直接作为容器图标（存放在 iconValue）。
+    // ⚠️ 初值只在"当前本来就是文字图标"时回填自己的文字：
+    // 应用包名（APP_ICON）/ 图库路径（GALLERY）/ 字体库 key（ICON_LIBRARY）都不是用户想显示的文字，
+    // 带进来只会让人先删一段无关内容。
+    var textInput by remember {
+        mutableStateOf(if (draft.iconSource == QuickWheelIconSource.TEXT) draft.iconValue else "")
+    }
+    // 文字颜色：null = 自动（跟底板反色）。同样只在"当前是文字图标"时回填。
+    var textColor by remember {
+        mutableStateOf(draft.textColorArgb.takeIf { draft.iconSource == QuickWheelIconSource.TEXT })
+    }
+    var colorPickerOpen by remember { mutableStateOf(false) }
+    MiuixFormDialog(
+        show = showIconLibrary,
+        onDismissRequest = { showIconLibrary = false },
+        title = stringResource(R.string.quick_wheel_text_icon_title),
+        confirmText = stringResource(R.string.quick_wheel_slot_save),
+        onConfirm = {
+            patch {
+                it.copy(
+                    iconSource = QuickWheelIconSource.TEXT,
+                    iconValue = textInput.trim(),
+                    textColorArgb = textColor,
+                )
+            }
+            showIconLibrary = false
+        },
+        // 空白文字存下去等于"图标消失"，直接禁用更直白（想清空就取消）。
+        confirmEnabled = textInput.isNotBlank(),
+        dismissText = stringResource(R.string.cancel),
+        dismissOnConfirm = false,
+    ) {
+        MiuixLabeledTextField(
+            value = textInput,
+            onValueChange = { textInput = it },
+            label = stringResource(R.string.quick_wheel_text_icon_hint),
+            singleLine = true,
+            useLabelAsPlaceholder = false,
+            modifier = Modifier.fillMaxWidth(),
         )
-        if (colorPickerOpen) {
-            MiuixColorPickerDialog(
-                title = stringResource(R.string.quick_wheel_text_icon_color),
-                // 初始色：已选的色；"自动"时给个可见的起点（当前主题的正文色）。
-                initialColorArgb = textColor ?: MaterialTheme.colorScheme.onSurface.toArgb(),
-                onDismiss = { colorPickerOpen = false },
-                onConfirm = { picked ->
-                    textColor = picked
-                    colorPickerOpen = false
-                },
+        Spacer(Modifier.height(12.dp))
+        MiuixText(
+            text = stringResource(R.string.quick_wheel_text_icon_color),
+            color = MiuixTheme.colorScheme.onSurface,
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Switch(
+                checked = textColor == null,
+                onCheckedChange = { textColor = null },
+            )
+            Spacer(Modifier.size(8.dp))
+            MiuixText(
+                text = stringResource(R.string.quick_wheel_text_icon_color_auto),
+                color = MiuixTheme.colorScheme.onSurface,
+            )
+            Spacer(Modifier.weight(1f))
+            MiuixDialogActionButton(
+                text = stringResource(R.string.quick_wheel_text_icon_color_custom),
+                onClick = { colorPickerOpen = true },
             )
         }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            QuickWheelTextColorPresets.forEach { preset ->
+                val selected = textColor == preset
+                Box(
+                    modifier = Modifier
+                        .size(26.dp)
+                        .clip(CircleShape)
+                        .background(Color(preset))
+                        .border(
+                            width = if (selected) 3.dp else 1.dp,
+                            color = if (selected) {
+                                MiuixTheme.colorScheme.primary
+                            } else {
+                                MiuixTheme.colorScheme.outline
+                            },
+                            shape = CircleShape,
+                        )
+                        .clickable { textColor = preset },
+                )
+            }
+        }
     }
+    MiuixColorPickerDialog(
+        show = colorPickerOpen,
+        title = stringResource(R.string.quick_wheel_text_icon_color),
+        // 初始色：已选的色；"自动"时给个可见的起点（当前主题的正文色）。
+        initialColorArgb = textColor ?: MaterialTheme.colorScheme.onSurface.toArgb(),
+        onDismiss = { colorPickerOpen = false },
+        onConfirm = { picked ->
+            textColor = picked
+            colorPickerOpen = false
+        },
+    )
 
-    if (showAppPicker) {
-        QuickWheelAppPickerDialog(
-            onDismiss = { showAppPicker = false },
-            onPick = { packageName ->
-                patch {
-                    it.copy(
-                        iconSource = QuickWheelIconSource.APP_ICON,
-                        iconValue = packageName,
-                    )
-                }
-                showAppPicker = false
-            },
-        )
-    }
 }
 
 @Composable
@@ -1069,13 +1055,14 @@ private fun QuickWheelIconNameRow(
                 )
             }
         }
-        OutlinedTextField(
+        MiuixLabeledTextField(
             // 名称为空时，默认显示所选动作的名字（应用名 / 功能名等）；手动输入即成为自定义名称。
             value = slot.name.ifBlank { gestureActionLabelText(context, slot.tapAction) },
             onValueChange = onNameChange,
             modifier = Modifier.weight(1f),
             singleLine = true,
-            label = { Text(stringResource(R.string.quick_wheel_slot_label)) },
+            useLabelAsPlaceholder = false,
+            label = stringResource(R.string.quick_wheel_slot_label),
         )
     }
 }
@@ -1117,62 +1104,6 @@ private fun QuickWheelActionRow(
     }
 }
 
-@Composable
-private fun QuickWheelAppPickerDialog(
-    onDismiss: () -> Unit,
-    onPick: (String) -> Unit,
-) {
-    val context = LocalContext.current
-    val apps = remember {
-        OverlayDependencyAccess.overlayDependencies(context)
-            ?.appRepository
-            ?.getCachedApps()
-            .orEmpty()
-            .sortedBy { it.pinyinKey }
-    }
-    var query by remember { mutableStateOf("") }
-    val filtered = remember(query, apps) {
-        if (query.isBlank()) {
-            apps
-        } else {
-            val needle = query.lowercase(Locale.getDefault())
-            apps.filter {
-                it.label.lowercase(Locale.getDefault()).contains(needle) ||
-                    it.packageName.lowercase(Locale.getDefault()).contains(needle)
-            }
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.quick_wheel_icon_pick_app)) },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.quick_wheel_pick_app)) },
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                LazyColumn(modifier = Modifier.heightIn(max = 360.dp)) {
-                    items(filtered, key = { it.packageName }) { app ->
-                        TextButton(
-                            onClick = { onPick(app.packageName) },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(app.label.ifBlank { app.packageName })
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
-        },
-    )
-}
 
 /** 图库图片复制到应用私有目录，返回落盘绝对路径。 */
 private fun copyIntoGalleryDir(context: Context, uri: Uri): String? = runCatching {

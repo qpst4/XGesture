@@ -55,6 +55,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.slideindex.app.ui.miuix.MiuixDialogActionsRow
+import com.slideindex.app.ui.miuix.MiuixDialogAction
 import com.slideindex.app.R
 import com.slideindex.app.gesture.multitouch.MultiPointerGesture
 import com.slideindex.app.gesture.multitouch.MultiTouchGestureEntry
@@ -68,6 +70,7 @@ import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.components.reorderable.ReorderableItem
 import com.slideindex.app.ui.components.reorderable.rememberReorderableLazyListState
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
+import com.slideindex.app.ui.miuix.LocalMiuixSheetHeaderPadding
 import com.slideindex.app.ui.miuix.groupedCardItems
 import com.slideindex.app.ui.settings.components.MiuixNavigationRow
 import com.slideindex.app.ui.settings.components.SettingSwitchRow
@@ -78,10 +81,13 @@ import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.SettingsCardScopeContent
 import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
+import top.yukonga.miuix.kmp.glass.GlassDialogButtonRole
+import top.yukonga.miuix.kmp.glass.GlassDialogButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import com.slideindex.app.ui.miuix.CardSegment
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
+import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
@@ -93,6 +99,7 @@ import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.icon.extended.Refresh
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
+import com.slideindex.app.ui.miuix.MiuixGlassDialog
 import kotlinx.coroutines.delay
 
 private val PreviewColors = listOf(
@@ -347,29 +354,39 @@ fun MultiTouchGestureSettingsScreen(
         show = showKindPicker,
         title = stringResource(R.string.multitouch_pick_kind_title),
         onDismissRequest = { showKindPicker = false },
+        scrollUnderHeader = true,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 460.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .padding(LocalMiuixSheetHeaderPadding.current),
         ) {
-            MiuixArrowRow(
-                title = stringResource(R.string.multitouch_kind_path),
-                summary = stringResource(R.string.multitouch_draw_summary),
-                onClick = {
-                    showKindPicker = false
-                    onOpenRecorder()
-                },
-            )
-            multiTouchPresetKinds.forEach { kind ->
+            // 玻璃抽屉里的行统一包成一张玻璃卡片（示例的 GlassCard 形态），
+            // 去掉 heightIn 上限后抽屉高度交给内容自然撑开。
+            CardSegment(
+                isFirst = true,
+                isLast = true,
+                outerHorizontalPadding = 0.dp,
+                outerBottomPadding = 16.dp,
+            ) {
                 MiuixArrowRow(
-                    title = kind.displayName(),
+                    title = stringResource(R.string.multitouch_kind_path),
+                    summary = stringResource(R.string.multitouch_draw_summary),
                     onClick = {
                         showKindPicker = false
-                        pendingKind = kind
+                        onOpenRecorder()
                     },
                 )
+                multiTouchPresetKinds.forEach { kind ->
+                    MiuixArrowRow(
+                        title = kind.displayName(),
+                        onClick = {
+                            showKindPicker = false
+                            pendingKind = kind
+                        },
+                    )
+                }
             }
         }
     }
@@ -411,11 +428,17 @@ fun MultiTouchGestureSettingsScreen(
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
-            TextButton(
-                text = stringResource(R.string.cancel),
+            GlassDialogButton(
+                role = GlassDialogButtonRole.Normal,
                 onClick = { pendingKind = null },
                 modifier = Modifier.align(Alignment.End),
-            )
+            ) {
+                MiuixText(
+                    text = stringResource(R.string.cancel),
+                    style = MiuixTheme.textStyles.button,
+                    maxLines = 1,
+                )
+            }
         }
     }
 
@@ -428,7 +451,7 @@ fun MultiTouchGestureSettingsScreen(
         show = showDiagnostics,
         title = stringResource(R.string.multitouch_status_title),
         startAction = {
-            IconButton(onClick = { showDiagnostics = false }) {
+            MiuixTopBarIconButton(onClick = { showDiagnostics = false }) {
                 MiuixIcon(
                     imageVector = MiuixIcons.Medium.Close,
                     contentDescription = stringResource(R.string.multitouch_diagnostics_close),
@@ -437,7 +460,7 @@ fun MultiTouchGestureSettingsScreen(
             }
         },
         endAction = {
-            IconButton(
+            MiuixTopBarIconButton(
                 onClick = {
                     showDiagnostics = false
                     onRetry()
@@ -461,7 +484,6 @@ fun MultiTouchGestureSettingsScreen(
                 CardSegment(
                     isFirst = true,
                     isLast = true,
-                    color = MiuixTheme.colorScheme.secondaryContainer,
                     outerHorizontalPadding = 0.dp,
                     outerBottomPadding = 16.dp,
                     insidePadding = PaddingValues(16.dp),
@@ -485,7 +507,6 @@ fun MultiTouchGestureSettingsScreen(
                     CardSegment(
                         isFirst = true,
                         isLast = !hasCustomDevices,
-                        color = MiuixTheme.colorScheme.secondaryContainer,
                         outerHorizontalPadding = 0.dp,
                     ) {
                         RadioButtonPreference(
@@ -513,7 +534,6 @@ fun MultiTouchGestureSettingsScreen(
                         CardSegment(
                             isFirst = false,
                             isLast = index == touchDevices.lastIndex,
-                            color = MiuixTheme.colorScheme.secondaryContainer,
                             outerHorizontalPadding = 0.dp,
                         ) {
                             RadioButtonPreference(
@@ -553,7 +573,6 @@ fun MultiTouchGestureSettingsScreen(
                 CardSegment(
                     isFirst = index == 0,
                     isLast = index == options.lastIndex,
-                    color = MiuixTheme.colorScheme.secondaryContainer,
                     outerHorizontalPadding = 0.dp,
                 ) {
                     RadioButtonPreference(
@@ -574,12 +593,12 @@ fun MultiTouchGestureSettingsScreen(
     if (editing != null) {
         // 名称输入框的本地草稿：跟着条目 id 重置，输入即时回写。
         var nameText by remember(editing.id) { mutableStateOf(editing.name) }
-        WindowDialog(
-            show = true,
-            title = stringResource(R.string.multitouch_edit_title),
+        MiuixGlassDialog(
             onDismissRequest = { editingEntry = null },
-        ) {
-            // WindowDialog 自带内容内边距，这里不再叠加；行卡片自带行内边距就够了。
+            show = true,
+            backdrop = LocalMiuixPageBackdrop.current,
+            title = stringResource(R.string.multitouch_edit_title),
+        ) {            // WindowDialog 自带内容内边距，这里不再叠加；行卡片自带行内边距就够了。
             Column(modifier = Modifier.fillMaxWidth()) {
                 Box(
                     modifier = Modifier
@@ -642,32 +661,40 @@ fun MultiTouchGestureSettingsScreen(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 // 「启用」只在列表行提供开关，弹窗不再重复（反馈）。
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 56.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                // 开关行同样放进卡片：弹窗里其余行都是卡片行，单独裸奔一条会显得它不属于这组。
+                CardSegment(
+                    isFirst = true,
+                    isLast = true,
+                    outerHorizontalPadding = 0.dp,
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.multitouch_entry_hint_label),
-                            style = MiuixTheme.textStyles.title4,
-                            color = MiuixTheme.colorScheme.onSurfaceContainer,
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = stringResource(R.string.multitouch_entry_hint_desc),
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                            .heightIn(min = 56.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.multitouch_entry_hint_label),
+                                style = MiuixTheme.textStyles.title4,
+                                color = MiuixTheme.colorScheme.onSurfaceContainer,
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = stringResource(R.string.multitouch_entry_hint_desc),
+                                style = MiuixTheme.textStyles.body2,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                        }
+                        MiuixSwitch(
+                            checked = editing.showHint,
+                            onCheckedChange = { value ->
+                                editingEntry = editing.copy(showHint = value)
+                                onEntryShowHintChange(editing.id, value)
+                            },
                         )
                     }
-                    MiuixSwitch(
-                        checked = editing.showHint,
-                        onCheckedChange = { value ->
-                            editingEntry = editing.copy(showHint = value)
-                            onEntryShowHintChange(editing.id, value)
-                        },
-                    )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
@@ -687,27 +714,22 @@ fun MultiTouchGestureSettingsScreen(
                     },
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    TextButton(
-                        text = stringResource(R.string.multitouch_delete),
-                        onClick = {
-                            editingEntry = null
-                            onRemoveEntry(editing.id)
-                        },
-                        modifier = Modifier.weight(1f),
-                        minHeight = 44.dp,
-                    )
-                    TextButton(
-                        text = stringResource(R.string.multitouch_done),
-                        onClick = { editingEntry = null },
-                        modifier = Modifier.weight(1f),
-                        minHeight = 44.dp,
-                        colors = ButtonDefaults.textButtonColorsPrimary(),
-                    )
-                }
+                MiuixDialogActionsRow(
+                    actions = listOf(
+                        MiuixDialogAction(
+                            text = stringResource(R.string.multitouch_delete),
+                            onClick = {
+                                editingEntry = null
+                                onRemoveEntry(editing.id)
+                            },
+                        ),
+                        MiuixDialogAction(
+                            text = stringResource(R.string.multitouch_done),
+                            onClick = { editingEntry = null },
+                            primary = true,
+                        ),
+                    ),
+                )
             }
         }
     }

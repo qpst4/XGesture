@@ -96,45 +96,41 @@ fun UpdateHost(
         },
     )
 
-    if (uiState.showCheckFailedDialog && !rationaleShowing) {
-        val titleRes = when (uiState.checkFailedReason) {
-            UpdateViewModel.CheckFailedReason.RateLimited -> R.string.update_check_rate_limited_title
-            UpdateViewModel.CheckFailedReason.NoApk -> R.string.update_check_no_apk_title
-            UpdateViewModel.CheckFailedReason.NetworkUnavailable -> R.string.update_check_network_failed_title
-            UpdateViewModel.CheckFailedReason.Generic -> R.string.update_check_failed_title
-        }
-        val messageRes = when (uiState.checkFailedReason) {
-            UpdateViewModel.CheckFailedReason.RateLimited -> R.string.update_check_rate_limited_message
-            UpdateViewModel.CheckFailedReason.NoApk -> R.string.update_check_no_apk_message
-            UpdateViewModel.CheckFailedReason.NetworkUnavailable -> R.string.update_check_network_failed_message
-            UpdateViewModel.CheckFailedReason.Generic -> R.string.update_check_failed_message
-        }
-        MiuixConfirmDialog(
-            show = true,
-            onDismissRequest = viewModel::dismissCheckFailedDialog,
-            title = stringResource(titleRes),
-            message = stringResource(messageRes),
-            confirmText = stringResource(R.string.update_view_on_github),
-            onConfirm = {
-                context.startActivity(
-                    Intent(Intent.ACTION_VIEW, UpdateChecker.RELEASES_PAGE_URL.toUri()),
-                )
-            },
-        )
+    val titleRes = when (uiState.checkFailedReason) {
+        UpdateViewModel.CheckFailedReason.RateLimited -> R.string.update_check_rate_limited_title
+        UpdateViewModel.CheckFailedReason.NoApk -> R.string.update_check_no_apk_title
+        UpdateViewModel.CheckFailedReason.NetworkUnavailable -> R.string.update_check_network_failed_title
+        UpdateViewModel.CheckFailedReason.Generic -> R.string.update_check_failed_title
     }
+    val messageRes = when (uiState.checkFailedReason) {
+        UpdateViewModel.CheckFailedReason.RateLimited -> R.string.update_check_rate_limited_message
+        UpdateViewModel.CheckFailedReason.NoApk -> R.string.update_check_no_apk_message
+        UpdateViewModel.CheckFailedReason.NetworkUnavailable -> R.string.update_check_network_failed_message
+        UpdateViewModel.CheckFailedReason.Generic -> R.string.update_check_failed_message
+    }
+    MiuixConfirmDialog(
+        show = uiState.showCheckFailedDialog && !rationaleShowing,
+        onDismissRequest = viewModel::dismissCheckFailedDialog,
+        title = stringResource(titleRes),
+        message = stringResource(messageRes),
+        confirmText = stringResource(R.string.update_view_on_github),
+        onConfirm = {
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW, UpdateChecker.RELEASES_PAGE_URL.toUri()),
+            )
+        },
+    )
 
-    if (rationaleShowing) {
-        MiuixConfirmDialog(
-            show = true,
-            onDismissRequest = viewModel::dismissNotificationRationale,
-            title = stringResource(R.string.update_notification_permission_title),
-            message = stringResource(R.string.update_notification_permission_rationale),
-            confirmText = stringResource(android.R.string.ok),
-            onConfirm = {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                }
-            },
-        )
-    }
+    MiuixConfirmDialog(
+        show = rationaleShowing,
+        onDismissRequest = viewModel::dismissNotificationRationale,
+        title = stringResource(R.string.update_notification_permission_title),
+        message = stringResource(R.string.update_notification_permission_rationale),
+        confirmText = stringResource(android.R.string.ok),
+        onConfirm = {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        },
+    )
 }

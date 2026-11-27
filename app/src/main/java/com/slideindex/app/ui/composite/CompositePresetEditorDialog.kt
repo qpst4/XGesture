@@ -33,6 +33,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.miuix.MiuixGlassSurfaceScope
+import com.slideindex.app.ui.miuix.MiuixDialogActionsRow
+import com.slideindex.app.ui.miuix.MiuixDialogAction
 import com.slideindex.app.R
 import com.slideindex.app.gesture.ActionPickerCatalogPolicy
 import com.slideindex.app.gesture.GestureAction
@@ -106,6 +109,8 @@ internal fun CompositePresetEditorDialog(
         },
     )
     val body: @Composable () -> Unit = {
+        // 弹窗内容区自带左右内边距（与 MiuixFormDialog 的调用方一致）：
+        // 这里再叠 padding 会变成 12/16/20 三种缩进混排，视觉上左边参差不齐。
         Column(modifier = Modifier.fillMaxWidth()) {
             if (picking) {
                 MiuixLabeledTextField(
@@ -114,9 +119,7 @@ internal fun CompositePresetEditorDialog(
                     label = stringResource(R.string.composite_library_search_hint),
                     singleLine = true,
                     useLabelAsPlaceholder = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyColumn(
@@ -133,7 +136,7 @@ internal fun CompositePresetEditorDialog(
                                     query = ""
                                     picking = false
                                 }
-                                .padding(horizontal = 20.dp, vertical = 12.dp),
+                                .padding(vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
@@ -146,7 +149,7 @@ internal fun CompositePresetEditorDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                        .padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.End,
                 ) {
                     TextButton(
@@ -161,15 +164,12 @@ internal fun CompositePresetEditorDialog(
                     label = stringResource(R.string.composite_library_name),
                     singleLine = true,
                     useLabelAsPlaceholder = false,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = stringResource(R.string.composite_library_actions),
                     style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.padding(horizontal = 20.dp),
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 LazyColumn(
@@ -183,7 +183,7 @@ internal fun CompositePresetEditorDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 2.dp),
+                                .padding(vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
@@ -191,7 +191,7 @@ internal fun CompositePresetEditorDialog(
                                 style = MaterialTheme.typography.bodyLarge,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .padding(start = 8.dp, end = 4.dp),
+                                    .padding(end = 4.dp),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
@@ -238,7 +238,7 @@ internal fun CompositePresetEditorDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { picking = true }
-                                .padding(horizontal = 20.dp, vertical = 12.dp),
+                                .padding(vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
@@ -249,49 +249,21 @@ internal fun CompositePresetEditorDialog(
                         }
                     }
                 }
-                if (isNew && steps.isEmpty()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        COMPOSITE_TEMPLATES.forEach { (titleRes, actions) ->
-                            TextButton(
-                                text = stringResource(titleRes),
-                                onClick = { steps = actions },
-                            )
-                        }
-                    }
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    TextButton(
-                        text = stringResource(android.R.string.cancel),
-                        onClick = onDismiss,
-                        modifier = Modifier
-                            .weight(1f)
-                            .defaultMinSize(minHeight = 44.dp),
-                        minHeight = 44.dp,
-                        insideMargin = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
-                    )
-                    Spacer(modifier = Modifier.width(20.dp))
-                    TextButton(
-                        text = stringResource(R.string.composite_library_save),
-                        onClick = { onSave(name.trim(), steps) },
-                        enabled = name.isNotBlank() && steps.isNotEmpty(),
-                        modifier = Modifier
-                            .weight(1f)
-                            .defaultMinSize(minHeight = 44.dp),
-                        minHeight = 44.dp,
-                        insideMargin = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
-                        colors = ButtonDefaults.textButtonColorsPrimary(),
-                    )
-                }
+                Spacer(modifier = Modifier.height(8.dp))
+                MiuixDialogActionsRow(
+                    actions = listOf(
+                        MiuixDialogAction(
+                            text = stringResource(android.R.string.cancel),
+                            onClick = onDismiss,
+                        ),
+                        MiuixDialogAction(
+                            text = stringResource(R.string.composite_library_save),
+                            onClick = { onSave(name.trim(), steps) },
+                            enabled = name.isNotBlank() && steps.isNotEmpty(),
+                            primary = true,
+                        ),
+                    ),
+                )
             }
         }
     }
@@ -302,7 +274,7 @@ internal fun CompositePresetEditorDialog(
             show = true,
             backdrop = backdrop,
             title = dialogTitle,
-            content = body,
+            content = { MiuixGlassSurfaceScope(body) },
         )
     } else {
         WindowDialog(

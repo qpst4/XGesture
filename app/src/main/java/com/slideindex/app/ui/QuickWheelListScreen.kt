@@ -1,5 +1,11 @@
 package com.slideindex.app.ui
 
+import sh.calvin.reorderable.rememberReorderableLazyListState
+import sh.calvin.reorderable.ReorderableItem
+import com.slideindex.app.ui.miuix.CardSegment
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -15,7 +21,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +43,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.slideindex.app.ui.miuix.MiuixLabeledTextField
+import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.R
 import com.slideindex.app.overlay.layout.QuickWheelLayoutEngine
 import com.slideindex.app.overlay.layout.QuickWheelShape
@@ -87,8 +94,26 @@ fun QuickWheelListScreen(
         )
     }
 
+    // 长按整行拖动排序：需要外部持有 listState 才能算出 from/to。
+    val wheelListState = rememberLazyListState()
+    val wheelReorderState = rememberReorderableLazyListState(lazyListState = wheelListState) { from, to ->
+        val fromId = (from.key as? String)?.removePrefix("quick-wheel-")
+        val toId = (to.key as? String)?.removePrefix("quick-wheel-")
+        if (fromId != null && toId != null) {
+            val fromIndex = wheels.indexOfFirst { it.id == fromId }
+            val toIndex = wheels.indexOfFirst { it.id == toId }
+            if (fromIndex >= 0 && toIndex >= 0 && fromIndex != toIndex) {
+                val mutable = wheels.toMutableList()
+                val moved = mutable.removeAt(fromIndex)
+                mutable.add(toIndex, moved)
+                onUpdateWheels(mutable)
+            }
+        }
+    }
+
     MiuixSettingsScreenScaffold(
         title = stringResource(R.string.quick_wheel_title),
+        listState = wheelListState,
         subtitle = stringResource(R.string.quick_wheel_list_subtitle),
         onBack = onBack,
         floatingActionButton = {
@@ -132,22 +157,28 @@ fun QuickWheelListScreen(
             return@MiuixSettingsScreenScaffold
         }
 
-        groupedCardItems(
-            keyPrefix = "quick_wheel_list",
-            items = buildList {
-                wheels.forEach { wheel ->
-                    add(
-                        settingsCardScopeItem("wheel-${wheel.id}") {
-                            QuickWheelRow(
-                                wheel = wheel,
-                                onClick = { onOpenWheel(wheel.id) },
-                                onLongClick = { manageTarget = wheel },
-                            )
-                        }
-                    )
+        wheels.forEachIndexed { index, wheel ->
+            val itemKey = "quick-wheel-${wheel.id}"
+            item(key = itemKey) {
+                ReorderableItem(state = wheelReorderState, key = itemKey) { _ ->
+                    val haptic = LocalHapticFeedback.current
+                    CardSegment(
+                        isFirst = index == 0,
+                        isLast = index == wheels.lastIndex,
+                        modifier = Modifier.longPressDraggableHandle(
+                            onDragStarted = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            },
+                        ),
+                    ) {
+                        QuickWheelRow(
+                            wheel = wheel,
+                            onClick = { onOpenWheel(wheel.id) },
+                        )
+                    }
                 }
-            },
-        )
+            }
+        }
     }
 
     manageTarget?.let { target ->
@@ -235,35 +266,32 @@ fun QuickWheelListScreen(
         }
     }
 
-    renameTarget?.let { target ->
-        AlertDialog(
-            onDismissRequest = { renameTarget = null },
-            title = { Text(stringResource(R.string.quick_wheel_rename)) },
-            text = {
-                OutlinedTextField(
-                    value = renameText,
-                    onValueChange = { renameText = it },
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.quick_wheel_name_hint)) },
+    // show 绑状态、对话框常驻组合，关闭时才有退出动画。
+    val renamingWheel = renameTarget
+    MiuixFormDialog(
+        show = renamingWheel != null,
+        onDismissRequest = { renameTarget = null },
+        title = stringResource(R.string.quick_wheel_rename),
+        confirmText = stringResource(R.string.quick_wheel_done),
+        confirmEnabled = renameText.isNotBlank(),
+        onConfirm = {
+            renamingWheel?.let { target ->
+                onUpdateWheels(
+                    wheels.map { if (it.id == target.id) it.copy(name = renameText) else it },
                 )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onUpdateWheels(
-                            wheels.map { if (it.id == target.id) it.copy(name = renameText) else it },
-                        )
-                        renameTarget = null
-                    },
-                ) {
-                    Text(stringResource(R.string.quick_wheel_done))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { renameTarget = null }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            },
+            }
+            renameTarget = null
+        },
+        dismissText = stringResource(R.string.cancel),
+        dismissOnConfirm = false,
+    ) {
+        MiuixLabeledTextField(
+            value = renameText,
+            onValueChange = { renameText = it },
+            label = stringResource(R.string.quick_wheel_name_hint),
+            singleLine = true,
+            useLabelAsPlaceholder = false,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
@@ -273,12 +301,11 @@ fun QuickWheelListScreen(
 private fun QuickWheelRow(
     wheel: QuickWheel,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         Text(

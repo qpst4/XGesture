@@ -28,6 +28,7 @@ import com.slideindex.app.ui.settings.components.SettingsHintText
 import com.slideindex.app.ui.settings.components.SettingsLabeledTextFieldRow
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
+import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -108,6 +109,21 @@ fun OtpRulesScreen(
         }
     }
     val advancedTitle = stringResource(R.string.otp_advanced_section)
+    // 菜单项要在 composable 上下文里建好再传进去：LazyListScope 的 content 里取不到 stringResource。
+    val rulesMenuItems = listOf(
+        DropdownItem(
+            text = stringResource(R.string.otp_rules_export),
+            onClick = { onExportRules() },
+        ),
+        DropdownItem(
+            text = stringResource(R.string.otp_rules_import),
+            onClick = { onImportRules() },
+        ),
+        DropdownItem(
+            text = stringResource(R.string.otp_rules_refresh),
+            onClick = { onRefreshOfficialRules() },
+        ),
+    )
 
     SettingsLazyScreenScaffold(
         title = stringResource(R.string.otp_match_rules_entry_title),
@@ -142,7 +158,7 @@ fun OtpRulesScreen(
                         rule.copy(id = java.util.UUID.randomUUID().toString(), isOfficial = false),
                 )
             },
-            onOpenRulesMenu = { showRulesMenu = true },
+            rulesMenuItems = rulesMenuItems,
         )
         settingsLazySmallTitle(key = "otp_advanced_section", title = advancedTitle)
         groupedCardItems(keyPrefix = "otp-advanced", items = advancedItems)
@@ -176,47 +192,4 @@ fun OtpRulesScreen(
             },
         )
     }
-    MiuixBottomSheet(
-        show = showRulesMenu,
-        title = stringResource(R.string.otp_rules_more),
-        onDismissRequest = { showRulesMenu = false },
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            RulesMenuOption(
-                label = stringResource(R.string.otp_rules_export),
-                onClick = {
-                    showRulesMenu = false
-                    onExportRules()
-                },
-            )
-            RulesMenuOption(
-                label = stringResource(R.string.otp_rules_import),
-                onClick = {
-                    showRulesMenu = false
-                    onImportRules()
-                },
-            )
-            RulesMenuOption(
-                label = stringResource(R.string.otp_rules_refresh),
-                onClick = {
-                    showRulesMenu = false
-                    onRefreshOfficialRules()
-                },
-            )
-        }
-    }
-}
-
-/** 规则页「⋮」菜单项。 */
-@Composable
-internal fun RulesMenuOption(label: String, onClick: () -> Unit) {
-    Text(
-        text = label,
-        style = MiuixTheme.textStyles.body1,
-        color = MiuixTheme.colorScheme.onSurface,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 0.dp, vertical = 16.dp),
-    )
 }

@@ -38,8 +38,8 @@ import com.slideindex.app.ui.settings.components.settingsLazyHint
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
 import com.slideindex.app.ui.miuix.CardSegment
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
-import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -438,7 +438,7 @@ fun PhysicalKeySettingsScreen(
         show = showDiagnostics,
         title = diagnosticsDialogTitle,
         startAction = {
-            IconButton(onClick = { showDiagnostics = false }) {
+            MiuixTopBarIconButton(onClick = { showDiagnostics = false }) {
                 MiuixIcon(
                     imageVector = MiuixIcons.Medium.Close,
                     contentDescription = closeDescription,
@@ -447,7 +447,7 @@ fun PhysicalKeySettingsScreen(
             }
         },
         endAction = {
-            IconButton(
+            MiuixTopBarIconButton(
                 onClick = {
                     onRetry()
                     onRefreshDiagnostics()
@@ -471,7 +471,6 @@ fun PhysicalKeySettingsScreen(
                 CardSegment(
                     isFirst = true,
                     isLast = true,
-                    color = MiuixTheme.colorScheme.secondaryContainer,
                     outerHorizontalPadding = 0.dp,
                     outerBottomPadding = 16.dp,
                     insidePadding = PaddingValues(16.dp),

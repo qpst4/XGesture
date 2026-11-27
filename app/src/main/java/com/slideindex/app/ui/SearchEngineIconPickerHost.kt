@@ -1,5 +1,7 @@
 package com.slideindex.app.ui
 
+import com.slideindex.app.ui.miuix.MiuixDialogAction
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,7 +22,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -207,60 +208,60 @@ private fun SearchEngineAppIconPickerDialog(
 ) {
     val context = LocalContext.current
     val apps = remember { loadInstalledAppIcons(context) }
-    AlertDialog(
+    MiuixAdaptiveDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.action_icon_from_app)) },
-        text = {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(5),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(360.dp),
-            ) {
-                items(apps, key = { it.packageName }) { app ->
-                    Column(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .clickable { onPick(app.packageName) }
-                            .padding(4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        val bitmap = remember(app.packageName) {
-                            app.icon?.toBitmap(40, 40)
-                        }
-                        if (bitmap != null) {
-                            Image(
-                                bitmap = bitmap.asImageBitmap(),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(10.dp)),
-                                contentScale = ContentScale.Crop,
-                            )
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(MiuixTheme.colorScheme.surfaceContainerHigh),
-                            )
-                        }
-                        Text(
-                            text = app.label,
-                            fontSize = 8.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            modifier = Modifier.padding(top = 2.dp),
+        title = stringResource(R.string.action_icon_from_app),
+        actions = listOf(
+            MiuixDialogAction(
+                text = stringResource(R.string.cancel),
+                onClick = onDismiss,
+            ),
+        ),
+    ) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(5),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(360.dp),
+        ) {
+            items(apps, key = { it.packageName }) { app ->
+                Column(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable { onPick(app.packageName) }
+                        .padding(4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    val bitmap = remember(app.packageName) {
+                        app.icon?.toBitmap(40, 40)
+                    }
+                    if (bitmap != null) {
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(10.dp)),
+                            contentScale = ContentScale.Crop,
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MiuixTheme.colorScheme.surfaceContainerHigh),
                         )
                     }
+                    Text(
+                        text = app.label,
+                        fontSize = 8.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        },
-    )
+        }
+    }
 }

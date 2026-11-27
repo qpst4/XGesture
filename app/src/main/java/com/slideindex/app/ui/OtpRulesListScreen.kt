@@ -20,6 +20,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -32,6 +35,8 @@ import com.slideindex.app.ui.miuix.CardItem
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.groupedCardItems
+import com.slideindex.app.ui.miuix.MiuixGlassDropdownMenu
+import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Switch
@@ -59,7 +64,8 @@ internal fun LazyListScope.otpRulesListItems(
     onShowTestDialog: (() -> Unit)?,
     onEditRule: (OtpMatchRule) -> Unit,
     onCopyOfficialRule: ((OtpMatchRule) -> Unit)? = null,
-    onOpenRulesMenu: (() -> Unit)? = null,
+    /** 「⋮」菜单项；空列表表示不显示这个按钮。菜单走玻璃下拉（本仓统一口径），不再开底部弹窗。 */
+    rulesMenuItems: List<DropdownItem> = emptyList(),
 ) {
     if (embeddedInHub) {
         item(key = "rules_toolbar") {
@@ -75,14 +81,28 @@ internal fun LazyListScope.otpRulesListItems(
                     onClick = { onShowTestDialog?.invoke() },
                 )
                 Spacer(Modifier.weight(1f))
-                if (onOpenRulesMenu != null) {
-                    IconButton(onClick = onOpenRulesMenu) {
+                if (rulesMenuItems.isNotEmpty()) {
+                    // 玻璃下拉菜单：锚点自己接管点击，IconButton 只负责开。
+                    var menuExpanded by remember { mutableStateOf(false) }
+                    var menuAnchor by remember { mutableStateOf(Rect.Zero) }
+                    IconButton(
+                        onClick = { menuExpanded = true },
+                        modifier = Modifier.onGloballyPositioned {
+                            menuAnchor = it.boundsInWindow()
+                        },
+                    ) {
                         Icon(
                             MiuixIcons.Medium.More,
                             contentDescription = stringResource(R.string.otp_rules_more),
                             tint = MiuixTheme.colorScheme.onSurfaceSecondary,
                         )
                     }
+                    MiuixGlassDropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
+                        anchorBounds = menuAnchor,
+                        items = rulesMenuItems,
+                    )
                 }
             }
         }

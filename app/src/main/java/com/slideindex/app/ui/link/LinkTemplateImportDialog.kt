@@ -20,6 +20,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.HorizontalDivider
+import top.yukonga.miuix.kmp.glass.GlassDialogButtonRole
+import top.yukonga.miuix.kmp.glass.GlassDialogButton
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,7 +58,6 @@ import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
-import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.net.URL
 import java.util.UUID
@@ -554,12 +555,17 @@ fun LinkExemptsBottomSheet(
                 }
             }
 
-            MiuixTextButton(
-                text = "+ 添加豁免域名",
-                colors = ButtonDefaults.textButtonColorsPrimary(),
+            GlassDialogButton(
+                role = GlassDialogButtonRole.Primary,
                 onClick = { showAddSheet = true },
                 modifier = Modifier.fillMaxWidth(),
-            )
+            ) {
+                MiuixText(
+                    text = "+ 添加豁免域名",
+                    style = MiuixTheme.textStyles.button,
+                    maxLines = 1,
+                )
+            }
         }
     }
 
@@ -587,29 +593,40 @@ fun LinkExemptsBottomSheet(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    MiuixTextButton(
-                        text = "取消",
+                    GlassDialogButton(
+                        role = GlassDialogButtonRole.Normal,
                         onClick = { showAddSheet = false },
                         modifier = Modifier.weight(1f),
-                    )
-                    MiuixTextButton(
-                        text = "添加",
-                        colors = ButtonDefaults.textButtonColorsPrimary(),
+                    ) {
+                        MiuixText(
+                            text = "取消",
+                            style = MiuixTheme.textStyles.button,
+                            maxLines = 1,
+                        )
+                    }
+                    GlassDialogButton(
+                        role = GlassDialogButtonRole.Primary,
                         onClick = {
                             val normalized = normalizeExemptDomain(newDomainInput.trim())
                             if (normalized == null) {
                                 Toast.makeText(context, "请输入有效域名", Toast.LENGTH_SHORT).show()
-                                return@MiuixTextButton
+                                return@GlassDialogButton
                             }
                             if (exempts.any { it.domain.equals(normalized, ignoreCase = true) }) {
                                 Toast.makeText(context, "该域名已存在", Toast.LENGTH_SHORT).show()
-                                return@MiuixTextButton
+                                return@GlassDialogButton
                             }
                             onAddExempt(LinkExemptDomain(id = UUID.randomUUID().toString(), domain = normalized))
                             showAddSheet = false
                         },
                         modifier = Modifier.weight(1f),
-                    )
+                    ) {
+                        MiuixText(
+                            text = "添加",
+                            style = MiuixTheme.textStyles.button,
+                            maxLines = 1,
+                        )
+                    }
                 }
             }
         }
@@ -713,15 +730,20 @@ fun LinkExtractsBottomSheet(
                 }
             }
 
-            MiuixTextButton(
-                text = "+ 添加提取规则",
-                colors = ButtonDefaults.textButtonColorsPrimary(),
+            GlassDialogButton(
+                role = GlassDialogButtonRole.Primary,
                 onClick = {
                     editingExtract = null
                     showEditorSheet = true
                 },
                 modifier = Modifier.fillMaxWidth(),
-            )
+            ) {
+                MiuixText(
+                    text = "+ 添加提取规则",
+                    style = MiuixTheme.textStyles.button,
+                    maxLines = 1,
+                )
+            }
         }
     }
 
@@ -760,29 +782,40 @@ fun LinkExtractsBottomSheet(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     if (current != null && !current.isBuiltin) {
-                        MiuixTextButton(
-                            text = "删除",
+                        GlassDialogButton(
+                            role = GlassDialogButtonRole.Normal,
                             onClick = {
                                 onDeleteExtract(current)
                                 showEditorSheet = false
                             },
                             modifier = Modifier.weight(1f),
-                        )
+                        ) {
+                            MiuixText(
+                                text = "删除",
+                                style = MiuixTheme.textStyles.button,
+                                maxLines = 1,
+                            )
+                        }
                     } else {
-                        MiuixTextButton(
-                            text = "取消",
+                        GlassDialogButton(
+                            role = GlassDialogButtonRole.Normal,
                             onClick = { showEditorSheet = false },
                             modifier = Modifier.weight(1f),
-                        )
+                        ) {
+                            MiuixText(
+                                text = "取消",
+                                style = MiuixTheme.textStyles.button,
+                                maxLines = 1,
+                            )
+                        }
                     }
-                    MiuixTextButton(
-                        text = "保存",
-                        colors = ButtonDefaults.textButtonColorsPrimary(),
+                    GlassDialogButton(
+                        role = GlassDialogButtonRole.Primary,
                         onClick = {
                             val trimmed = editPattern.trim()
                             if (trimmed.isEmpty() || runCatching { Regex(trimmed) }.isFailure) {
                                 Toast.makeText(context, "正则表达式无效", Toast.LENGTH_SHORT).show()
-                                return@MiuixTextButton
+                                return@GlassDialogButton
                             }
                             val finalName = editName.trim().ifEmpty { trimmed.take(24) }
                             if (current == null) {
@@ -806,7 +839,13 @@ fun LinkExtractsBottomSheet(
                             showEditorSheet = false
                         },
                         modifier = Modifier.weight(1f),
-                    )
+                    ) {
+                        MiuixText(
+                            text = "保存",
+                            style = MiuixTheme.textStyles.button,
+                            maxLines = 1,
+                        )
+                    }
                 }
             }
         }

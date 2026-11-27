@@ -1,5 +1,8 @@
 package com.slideindex.app.ui
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
@@ -12,7 +15,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.glass.GlassDialogButton
 import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.Modifier
 import com.slideindex.app.R
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
@@ -22,15 +30,14 @@ import com.slideindex.app.ui.miuix.MiuixLabeledTextField
  */
 @Composable
 fun SearchEngineImportJsonDialog(
-    show: Boolean,
+    show: Boolean = true,
     onDismiss: () -> Unit,
     onImport: (String) -> Unit,
 ) {
-    if (!show) return
     val context = LocalContext.current
     var text by remember { mutableStateOf("") }
     MiuixFormDialog(
-        show = true,
+        show = show,
         onDismissRequest = onDismiss,
         title = stringResource(R.string.search_engine_import_config_title),
         confirmEnabled = text.isNotBlank(),
@@ -61,7 +68,8 @@ fun SearchEngineImportJsonDialog(
             minLines = 6,
             maxLines = 12,
         )
-        TextButton(
+        Spacer(Modifier.height(10.dp))
+        GlassDialogButton(
             onClick = {
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE)
                     as? ClipboardManager
@@ -72,8 +80,13 @@ fun SearchEngineImportJsonDialog(
                     .orEmpty()
                 if (clipText.isNotBlank()) text = clipText
             },
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            Text(stringResource(R.string.search_engine_import_paste_action))
+            MiuixText(
+                text = stringResource(R.string.search_engine_import_paste_action),
+                style = MiuixTheme.textStyles.button,
+                maxLines = 1,
+            )
         }
     }
 }

@@ -16,11 +16,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.miuix.MiuixGlassSegmentedTabRow
 import com.slideindex.app.R
 import com.slideindex.app.ui.miuix.LocalMiuixContentUnderBar
 import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
 import com.slideindex.app.ui.miuix.LocalMiuixScreenBackdrop
-import com.slideindex.app.ui.miuix.MiuixTabRowWithContour
 import top.yukonga.miuix.kmp.glass.GlassSegmentedTabRow
 
 internal enum class NotificationFilterTab {
@@ -46,25 +46,14 @@ internal fun NotificationHistoryTabRow(
     // 对齐 miuix 示例：内容滚到栏下（canScrollBackward）才升起玻璃；空列表退回纯色，
     // 避免没有可采样内容时走 shader 出现越界伪影。
     val contentUnderBar = LocalMiuixContentUnderBar.current.value
-    if (backdrop != null) {
-        GlassSegmentedTabRow(
-            tabs = tabs,
-            selectedIndex = selectedTab,
-            onSelect = onTabSelected,
-            backdrop = backdrop,
-            surfaceAlpha = if (contentUnderBar) 1f else 0f,
-            // 选中项用主题主色（原来的蓝字观感），未选中用次要文字色。
-            selectedContentColor = MiuixTheme.colorScheme.primary,
-            contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
-        )
-    } else {
-        MiuixTabRowWithContour(
-            tabs = tabs,
-            selectedTabIndex = selectedTab,
-            onTabSelected = onTabSelected,
-        )
-    }
+MiuixGlassSegmentedTabRow(
+    tabs = tabs,
+    selectedTabIndex = selectedTab,
+    onTabSelected = onTabSelected,
+    modifier = Modifier,
+    contentHorizontalPadding = 4.dp,
+    verticalPadding = 4.dp,
+)
 }
 
 internal fun LazyListScope.notificationHistoryFilterBarItems(

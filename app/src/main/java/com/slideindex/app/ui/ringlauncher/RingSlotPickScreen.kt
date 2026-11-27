@@ -471,18 +471,16 @@ fun RingSlotPickScreen(
     }
 
     val macroPick = pendingMacroPick
-    if (macroPick != null) {
-        MacroPickDialog(
-            show = true,
-            onDismissRequest = { pendingMacroPick = null },
-            onPick = { macro ->
-                pendingMacroPick = null
-                val action = GestureAction.RunMacro(macro.id)
-                macroPick(action)
-                onSelectItem(QuickLauncherItem.action(action, macro.name))
-            },
-        )
-    }
+    MacroPickDialog(
+        show = macroPick != null,
+        onDismissRequest = { pendingMacroPick = null },
+        onPick = { macro ->
+            pendingMacroPick = null
+            val action = GestureAction.RunMacro(macro.id)
+            macroPick?.invoke(action)
+            onSelectItem(QuickLauncherItem.action(action, macro.name))
+        },
+    )
 }
 
 private sealed interface RingSlotPage {

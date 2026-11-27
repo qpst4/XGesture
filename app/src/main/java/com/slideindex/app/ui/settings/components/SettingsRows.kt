@@ -431,7 +431,14 @@ fun SettingsCardScope.SettingNavigationRow(
     onClick: () -> Unit,
     trailingContent: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
-    /** 行卡片底色；null 用默认 surfaceContainer（白）。bottom sheet 内容可传 secondaryContainer 拿灰卡。 */
+    /**
+     * 行卡片底色；null（默认）用当前表面：普通页面是 `surfaceContainer`（白），
+     * 玻璃浮层（`LocalMiuixGlassSurface`，如 `GlassBottomSheet` / 玻璃弹窗）是
+     * `GlassCardDefaults.color()` 的半透明色。
+     *
+     * **玻璃浮层里不要再传颜色**：显式颜色会跳过玻璃分支（`miuixGroupedCardItem` 的
+     * `color != Unspecified` 优先），把玻璃材质盖成一块不透明灰卡。
+     */
     backgroundColor: Color? = null,
 ) {
     val deferredClick = rememberDeferredNavigationClick(onClick)
@@ -699,6 +706,51 @@ fun <T> SettingsCardScope.SettingSegmentedRow(
                 items = items,
                 selected = selected,
                 labelRes = labelRes,
+                onSelect = onSelect,
+                containerColor = MiuixTheme.colorScheme.surface,
+                indicatorColor = MiuixTheme.colorScheme.surfaceContainer,
+            )
+        }
+    }
+}
+
+/**
+ * 同 [SettingSegmentedRow]，但标签直接给字符串（标签不是字符串资源时用，
+ * 与 `SegmentedControl` 的两个重载同口径）。
+ */
+@Composable
+fun <T> SettingsCardScope.SettingSegmentedRow(
+    title: String,
+    subtitle: String? = null,
+    items: List<T>,
+    selected: T,
+    labels: List<String>,
+    onSelect: (T) -> Unit,
+) {
+    SettingsCardRow(key = "$title-segmented") { position ->
+        Column(
+            modifier = Modifier
+                .settingsGroupedRowBackground(position.index, position.count)
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = title,
+                style = MiuixTheme.textStyles.headline1,
+                fontWeight = FontWeight.Medium,
+            )
+            subtitle?.let {
+                Text(
+                    text = it,
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                )
+            }
+            SegmentedControl(
+                items = items,
+                selected = selected,
+                labels = labels,
                 onSelect = onSelect,
                 containerColor = MiuixTheme.colorScheme.surface,
                 indicatorColor = MiuixTheme.colorScheme.surfaceContainer,

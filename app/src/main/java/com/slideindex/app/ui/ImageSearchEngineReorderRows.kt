@@ -19,6 +19,7 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Delete
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun ImageShareEngineReorderRow(
@@ -46,6 +47,7 @@ fun ImageShareEngineReorderRow(
                 MiuixIcon(
                     imageVector = MiuixIcons.Delete,
                     contentDescription = stringResource(R.string.search_engine_delete_confirm),
+                    tint = MiuixTheme.colorScheme.error,
                 )
             }
         },

@@ -37,6 +37,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.miuix.MiuixDialogActionButton
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
 import com.slideindex.app.R
 import com.slideindex.app.overlay.searchpanel.FilePermissionTrampolineActivity
 import com.slideindex.app.search.files.DeviceFileEntry
@@ -322,10 +324,10 @@ private fun FolderSearchDialog(
         searching = false
     }
 
-    top.yukonga.miuix.kmp.window.WindowDialog(
+    MiuixAdaptiveDialog(
         show = true,
-        onDismissRequest = onDismiss,
         title = title,
+        onDismissRequest = onDismiss,
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             if (!hasPermission) {
@@ -367,7 +369,7 @@ private fun FolderSearchDialog(
                 }
             }
             androidx.compose.foundation.layout.Spacer(Modifier.height(16.dp))
-            top.yukonga.miuix.kmp.basic.TextButton(
+            MiuixDialogActionButton(
                 text = stringResource(android.R.string.cancel),
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth(),

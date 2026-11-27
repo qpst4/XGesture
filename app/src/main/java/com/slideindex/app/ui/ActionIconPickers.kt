@@ -1,5 +1,6 @@
 package com.slideindex.app.ui
 
+import com.slideindex.app.ui.miuix.MiuixFormDialog
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -448,26 +449,27 @@ internal fun ActionTextIconDialog(
     onDismiss: () -> Unit,
 ) {
     var text by remember { mutableStateOf(ActionIconKeyCodec.textOf(initial).orEmpty()) }
-    androidx.compose.material3.AlertDialog(
+    MiuixFormDialog(
+        show = true,
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.action_icon_text_title)) },
-        text = {
-            MiuixLabeledTextField(
-                value = text,
-                onValueChange = { text = it.take(2) },
-                label = stringResource(R.string.action_icon_text_hint),
-                modifier = Modifier.fillMaxWidth(),
-            )
+        title = stringResource(R.string.action_icon_text_title),
+        confirmText = stringResource(R.string.confirm),
+        onConfirm = {
+            if (text.isNotBlank()) onPick(ActionIconKeyCodec.text(text.trim()))
         },
-        confirmButton = {
-            TextButton(onClick = { if (text.isNotBlank()) onPick(ActionIconKeyCodec.text(text.trim())) }) {
-                Text(stringResource(R.string.confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
-        },
-    )
+        confirmEnabled = text.isNotBlank(),
+        dismissText = stringResource(R.string.cancel),
+        dismissOnConfirm = false,
+    ) {
+        MiuixLabeledTextField(
+            value = text,
+            onValueChange = { text = it.take(2) },
+            label = stringResource(R.string.action_icon_text_hint),
+            singleLine = true,
+            useLabelAsPlaceholder = false,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }
 
 internal data class InstalledAppIcon(

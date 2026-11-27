@@ -1,5 +1,6 @@
 package com.slideindex.app.ui.settings.components
 
+import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -213,31 +214,21 @@ private fun SectionAliasEditDialog(
             onSave(normalized.ifEmpty { defaultAlias })
         },
     ) {
-        OutlinedTextField(
+        MiuixLabeledTextField(
             value = draft,
             onValueChange = { draft = it },
+            label = stringResource(R.string.search_panel_section_alias_label),
+            singleLine = true,
+            useLabelAsPlaceholder = false,
+            supportingText = when {
+                !isValid -> stringResource(R.string.search_panel_section_alias_invalid)
+                conflict != null -> stringResource(R.string.search_panel_section_alias_conflict)
+                else -> stringResource(R.string.search_panel_section_alias_hint)
+            },
+            isError = !isValid || conflict != null,
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester),
-            singleLine = true,
-            label = { Text(stringResource(R.string.search_panel_section_alias_label)) },
-            supportingText = {
-                val message = when {
-                    !isValid -> stringResource(R.string.search_panel_section_alias_invalid)
-                    conflict != null -> stringResource(R.string.search_panel_section_alias_conflict)
-                    else -> stringResource(R.string.search_panel_section_alias_hint)
-                }
-                Text(message)
-            },
-            isError = !isValid || conflict != null,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    if (canSave) {
-                        onSave(normalized.ifEmpty { defaultAlias })
-                    }
-                },
-            ),
         )
     }
 }

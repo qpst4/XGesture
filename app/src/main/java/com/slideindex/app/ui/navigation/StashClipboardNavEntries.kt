@@ -153,6 +153,7 @@ fun NavEntryBuilder.stashClipboardNavEntries(ctx: MainNavContext) {
             emptyRes = R.string.clipboard_float_blacklist_empty,
             removeActionDescriptionRes = R.string.clipboard_float_blacklist_remove,
             addSectionTitleRes = R.string.clipboard_float_blacklist_section_add,
+            addSectionSubtitleRes = R.string.clipboard_float_blacklist_section_add_desc,
         )
     }
 

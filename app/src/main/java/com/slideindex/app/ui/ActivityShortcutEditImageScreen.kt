@@ -444,26 +444,24 @@ fun ActivityShortcutEditImageScreen(
     }
 
     // URL 输入弹窗
-    if (showUrlInputDialog) {
-        MiuixConfirmDialog(
-            show = true,
-            title = stringResource(R.string.activity_shortcut_image_url_dialog_title),
-            onDismissRequest = { showUrlInputDialog = false },
-            onConfirm = {
-                imageUri = inputUrlText.trim()
-                sourceType = ImageSourceType.URL
-                showUrlInputDialog = false
-            },
-            text = {
-                MiuixLabeledTextField(
-                    value = inputUrlText,
-                    onValueChange = { inputUrlText = it },
-                    label = "https://...",
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                )
-            },
-        )
-    }
+    MiuixConfirmDialog(
+        show = showUrlInputDialog,
+        title = stringResource(R.string.activity_shortcut_image_url_dialog_title),
+        onDismissRequest = { showUrlInputDialog = false },
+        onConfirm = {
+            imageUri = inputUrlText.trim()
+            sourceType = ImageSourceType.URL
+            showUrlInputDialog = false
+        },
+        text = {
+            MiuixLabeledTextField(
+                value = inputUrlText,
+                onValueChange = { inputUrlText = it },
+                label = "https://...",
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        },
+    )
 
     // 横竖屏单选弹窗
     if (showOrientationDialog) {

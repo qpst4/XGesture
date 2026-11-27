@@ -40,11 +40,14 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
 import com.slideindex.app.R
 import com.slideindex.app.fvgesture.FvGesturePanel
 import com.slideindex.app.fvgesture.mirroredGesture
 import com.slideindex.app.ui.miuix.MiuixArrowRow
 import com.slideindex.app.ui.miuix.MiuixSwitchRow
+import com.slideindex.app.ui.miuix.MiuixDialogActionButton
+import top.yukonga.miuix.kmp.glass.GlassDialogButtonRole
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.window.WindowDialog
@@ -60,6 +63,7 @@ import top.yukonga.miuix.kmp.window.WindowDialog
  */
 @Composable
 internal fun FvCustomGestureEditDialog(
+    show: Boolean = true,
     initialGesture: Gesture?,
     initialMirror: Boolean,
     actionLabel: String,
@@ -78,8 +82,8 @@ internal fun FvCustomGestureEditDialog(
         (LocalWindowInfo.current.containerSize.height / 3).toDp()
     }
 
-    WindowDialog(
-        show = true,
+    MiuixAdaptiveDialog(
+        show = show,
         title = stringResource(R.string.fv_custom_gesture_dialog_title),
         onDismissRequest = onDismiss,
     ) {
@@ -135,13 +139,13 @@ internal fun FvCustomGestureEditDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                TextButton(
+                MiuixDialogActionButton(
                     text = stringResource(R.string.cancel),
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f).defaultMinSize(minHeight = 44.dp),
-                    minHeight = 44.dp,
                 )
-                TextButton(
+                MiuixDialogActionButton(
+                role = GlassDialogButtonRole.Primary,
                     text = stringResource(R.string.confirm),
                     onClick = {
                         val gesture = panelState.value?.gesture
@@ -154,8 +158,6 @@ internal fun FvCustomGestureEditDialog(
                         onConfirm(gesture, mirrored, mirror)
                     },
                     modifier = Modifier.weight(1f).defaultMinSize(minHeight = 44.dp),
-                    minHeight = 44.dp,
-                    colors = ButtonDefaults.textButtonColorsPrimary(),
                 )
             }
         }

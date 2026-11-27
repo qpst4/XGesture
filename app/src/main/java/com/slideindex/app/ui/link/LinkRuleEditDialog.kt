@@ -27,6 +27,8 @@ import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material3.Icon
 import androidx.compose.ui.res.painterResource
+import top.yukonga.miuix.kmp.glass.GlassDialogButtonRole
+import top.yukonga.miuix.kmp.glass.GlassDialogButton
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,6 +57,7 @@ import com.slideindex.app.shortcut.port.ApkTools
 import com.slideindex.app.ui.SegmentedControl
 import com.slideindex.app.ui.miuix.CardSegment
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
+import com.slideindex.app.ui.miuix.LocalMiuixSheetHeaderPadding
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -63,7 +66,6 @@ import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
-import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.glass.ImageOutline
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -292,11 +294,13 @@ fun LinkRuleEditDialog(
         show = true,
         title = if (originalRule == null) "新建规则" else "编辑规则",
         onDismissRequest = onDismissRequest,
+        scrollUnderHeader = true,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
+                .padding(LocalMiuixSheetHeaderPadding.current)
                 .padding(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -524,30 +528,35 @@ fun LinkRuleEditDialog(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (originalRule != null && onDelete != null) {
-                    MiuixTextButton(
-                        text = "删除",
+                    GlassDialogButton(
+                        role = GlassDialogButtonRole.Normal,
                         onClick = {
                             onDelete(originalRule)
                             onDismissRequest()
                         },
                         modifier = Modifier.weight(1f),
-                    )
+                    ) {
+                        MiuixText(
+                            text = "删除",
+                            style = MiuixTheme.textStyles.button,
+                            maxLines = 1,
+                        )
+                    }
                 }
-                MiuixTextButton(
-                    text = "保存",
-                    colors = ButtonDefaults.textButtonColorsPrimary(),
+                GlassDialogButton(
+                    role = GlassDialogButtonRole.Primary,
                     onClick = {
                         val trimmedPattern = pattern.trim()
                         val trimmedPkg = targetPackage.trim()
                         if (trimmedPattern.isEmpty()) {
                             Toast.makeText(context, "请填写匹配内容", Toast.LENGTH_SHORT).show()
-                            return@MiuixTextButton
+                            return@GlassDialogButton
                         }
                         if (matchType == LinkMatchType.REGEX) {
                             val validRegex = runCatching { Regex(trimmedPattern, RegexOption.IGNORE_CASE) }.isSuccess
                             if (!validRegex) {
                                 Toast.makeText(context, "正则表达式无效", Toast.LENGTH_SHORT).show()
-                                return@MiuixTextButton
+                                return@GlassDialogButton
                             }
                         }
                         val effectiveStrategy = if (resolveShortLink) {
@@ -557,7 +566,7 @@ fun LinkRuleEditDialog(
                         }
                         if (trimmedPkg.isEmpty() && effectiveStrategy != LinkResolveStrategy.REDISPATCH) {
                             Toast.makeText(context, "请选择目标应用", Toast.LENGTH_SHORT).show()
-                            return@MiuixTextButton
+                            return@GlassDialogButton
                         }
                         val resultRule = (originalRule ?: LinkDispatchRule(id = UUID.randomUUID().toString())).copy(
                             name = name.trim().ifEmpty { trimmedPattern },
@@ -576,7 +585,13 @@ fun LinkRuleEditDialog(
                         onDismissRequest()
                     },
                     modifier = Modifier.weight(1f),
-                )
+                ) {
+                    MiuixText(
+                        text = "保存",
+                        style = MiuixTheme.textStyles.button,
+                        maxLines = 1,
+                    )
+                }
             }
         }
     }
@@ -661,11 +676,17 @@ internal fun LinkTargetAppPickerBottomSheet(
             )
 
             if (allowClearForRedispatch && selectedPackage.isNotBlank()) {
-                MiuixTextButton(
-                    text = "清空目标应用（仅作为短链重分发）",
+                GlassDialogButton(
+                    role = GlassDialogButtonRole.Normal,
                     onClick = { onSelectApp("", "") },
                     modifier = Modifier.fillMaxWidth(),
-                )
+                ) {
+                    MiuixText(
+                        text = "清空目标应用（仅作为短链重分发）",
+                        style = MiuixTheme.textStyles.button,
+                        maxLines = 1,
+                    )
+                }
             }
 
             if (isLoading) {

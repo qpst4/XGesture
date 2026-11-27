@@ -30,7 +30,8 @@ import com.slideindex.app.overlay.CloneAppsIndex
 import com.slideindex.app.settings.SettingsRepository
 import com.slideindex.app.ui.compose.rememberAppRepository
 import com.slideindex.app.ui.miuix.MiuixConfirmDialog
-import com.slideindex.app.ui.miuix.MiuixTabRowWithContour
+import com.slideindex.app.ui.miuix.MiuixGlassSegmentedTabRow
+import com.slideindex.app.ui.miuix.MiuixScaffoldTabRowBottomContent
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffoldWithExpandableSearch
 import com.slideindex.app.ui.settings.components.settingsLazyTipCard
 import com.slideindex.app.util.TaskManagerUtil
@@ -179,25 +180,29 @@ fun FreezerAppsPickerScreen(
                 )
             }
         },
+        // Tab 条必须挂在顶栏的附加内容里，不能放进列表：
+        // 它采样的是栏级背板，而 surfaceAlpha 在「内容滚到栏下」时才变 1 ——
+        // 放在被录制的那块列表里，一滚动就开始采样到自己，HWUI 渲染树无限嵌套直接原生闪退。
+        extraBottomContent = {
+            MiuixScaffoldTabRowBottomContent {
+                MiuixGlassSegmentedTabRow(
+                    tabs = filterTabs,
+                    selectedTabIndex = selectedFilterTabIndex,
+                    onTabSelected = { index ->
+                        listFilter = when (index) {
+                            0 -> FreezerPickerFilter.IN_LIST
+                            else -> FreezerPickerFilter.ALL
+                        }
+                    },
+                )
+            }
+        },
     ) {
         // 只在真的没授权时出现：原来「Shizuku 已授权」这种正常状态也常驻一行灰字，属于没信息量的日志。
         if (privilegedAccessGranted == false) {
             settingsLazyTipCard(
                 key = "freezer-picker-permission",
                 text = permissionBannerText,
-            )
-        }
-        item(key = "freezer-picker-filter-tabs") {
-            MiuixTabRowWithContour(
-                tabs = filterTabs,
-                selectedTabIndex = selectedFilterTabIndex,
-                onTabSelected = { index ->
-                    listFilter = when (index) {
-                        0 -> FreezerPickerFilter.IN_LIST
-                        else -> FreezerPickerFilter.ALL
-                    }
-                },
-                contentHorizontalPadding = 12.dp
             )
         }
         when {
@@ -277,7 +282,6 @@ fun FreezerAppsPickerScreen(
         val state = FreezerOperations.stateOf(context, app)
         val frozen = state.isFrozen
         MiuixConfirmDialog(
-            confirmDestructive = true,
             show = true,
             onDismissRequest = { pendingRemove = null },
             title = app.label,

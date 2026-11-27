@@ -46,6 +46,8 @@ import com.slideindex.app.ui.settings.components.SettingsCardScope
 import com.slideindex.app.ui.settings.components.SettingsCardSegmentContent
 import com.slideindex.app.ui.settings.components.settingsCardItems
 import com.slideindex.app.ui.settings.components.settingsGroupedRowBackground
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.glass.GlassDialogButton
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
@@ -248,41 +250,49 @@ internal fun ShellExecutionEnvironmentCard(
     }
     card.RenderRows()
 
-    if (showDetails) {
-        MiuixFormDialog(
-            show = true,
-            onDismissRequest = { showDetails = false },
-            title = stringResource(R.string.shell_panel_environment_title),
-            confirmText = stringResource(R.string.confirm),
-            onConfirm = { showDetails = false },
-            dismissText = null,
-        ) {
-            Column {
-                Text(
-                    stringResource(
-                        R.string.shell_panel_environment_detail_shizuku,
-                        shizukuText,
-                    ),
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    stringResource(
-                        R.string.shell_panel_environment_detail_root,
-                        rootText,
-                    ),
-                )
-                Spacer(Modifier.height(16.dp))
-                MiuixTextButton(
+    MiuixFormDialog(
+        show = showDetails,
+        onDismissRequest = { showDetails = false },
+        title = stringResource(R.string.shell_panel_environment_title),
+        confirmText = stringResource(R.string.confirm),
+        onConfirm = { showDetails = false },
+        dismissText = null,
+    ) {
+        Column {
+            Text(
+                stringResource(
+                    R.string.shell_panel_environment_detail_shizuku,
+                    shizukuText,
+                ),
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                stringResource(
+                    R.string.shell_panel_environment_detail_root,
+                    rootText,
+                ),
+            )
+            Spacer(Modifier.height(16.dp))
+            GlassDialogButton(
+                onClick = onCheckRoot,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                MiuixText(
                     text = stringResource(R.string.shell_panel_root_check),
-                    onClick = onCheckRoot,
-                    modifier = Modifier.fillMaxWidth(),
+                    style = MiuixTheme.textStyles.button,
+                    maxLines = 1,
                 )
-                if (shizukuGranted && PrivilegeGateway.isShizukuMode()) {
-                    Spacer(Modifier.height(8.dp))
-                    MiuixTextButton(
+            }
+            if (shizukuGranted && PrivilegeGateway.isShizukuMode()) {
+                Spacer(Modifier.height(8.dp))
+                GlassDialogButton(
+                    onClick = onRestartService,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    MiuixText(
                         text = stringResource(R.string.shell_panel_restart_shizuku),
-                        onClick = onRestartService,
-                        modifier = Modifier.fillMaxWidth(),
+                        style = MiuixTheme.textStyles.button,
+                        maxLines = 1,
                     )
                 }
             }

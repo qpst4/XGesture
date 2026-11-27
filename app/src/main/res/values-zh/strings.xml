@@ -113,6 +113,7 @@
     <string name="gesture_app_profiles_restore_confirm_title">恢复为全局？</string>
     <string name="gesture_app_profiles_restore_confirm_message">本档当前的全部改动会被当前全局设置覆盖，且不可撤销。</string>
     <string name="gesture_app_profiles_new">新建档</string>
+    <string name="gesture_app_profiles_new_desc">为一个应用单独指定手势方案</string>
     <string name="gesture_app_profiles_new_title">新建档</string>
     <string name="gesture_app_profiles_name_hint">档名（留空则自动命名）</string>
     <string name="gesture_app_profiles_default_name">档 %1$d</string>
@@ -4588,6 +4589,7 @@
     <string name="clipboard_float_blacklist_empty">暂无屏蔽应用</string>
     <string name="clipboard_float_blacklist_remove">移除</string>
     <string name="clipboard_float_blacklist_section_add">添加应用</string>
+    <string name="clipboard_float_blacklist_section_add_desc">选择不在浮动剪贴板里显示内容的应用</string>
     <string name="clipboard_float_opacity_title">悬浮窗透明度</string>
     <string name="clipboard_float_blur_title">背景模糊</string>
     <string name="clipboard_float_blur_desc">模糊浮窗背后的内容（Android 12+）；不支持时回落实色面板</string>

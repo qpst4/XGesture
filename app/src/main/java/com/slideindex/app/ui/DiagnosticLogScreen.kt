@@ -152,7 +152,6 @@ fun DiagnosticLogListScreen(
     }
 
     MiuixConfirmDialog(
-        confirmDestructive = true,
         show = showClearCrashesConfirm,
         onDismissRequest = { showClearCrashesConfirm = false },
         title = stringResource(R.string.diagnostic_log_clear_crash_title),

@@ -160,20 +160,21 @@ fun CompositeActionPresetsScreen(
         )
     }
 
-    deleteTarget?.let { target ->
-        com.slideindex.app.ui.miuix.MiuixConfirmDialog(
-            confirmDestructive = true,
-            show = true,
-            onDismissRequest = { deleteTarget = null },
-            title = stringResource(R.string.composite_library_delete),
-            message = stringResource(R.string.composite_library_delete_confirm),
-            confirmText = stringResource(R.string.composite_library_delete),
-            onConfirm = {
+    // 同上：show 绑状态，避免关闭时整棵子树立即离开组合。
+    val deletingPreset = deleteTarget
+    com.slideindex.app.ui.miuix.MiuixConfirmDialog(
+        show = deletingPreset != null,
+        onDismissRequest = { deleteTarget = null },
+        title = stringResource(R.string.composite_library_delete),
+        message = stringResource(R.string.composite_library_delete_confirm),
+        confirmText = stringResource(R.string.composite_library_delete),
+        onConfirm = {
+            deletingPreset?.let { target ->
                 CompositeActionPresetStore.delete(context, target.id)
-                deleteTarget = null
-                revision++
-            },
-            dismissText = stringResource(android.R.string.cancel),
-        )
-    }
+            }
+            deleteTarget = null
+            revision++
+        },
+        dismissText = stringResource(android.R.string.cancel),
+    )
 }

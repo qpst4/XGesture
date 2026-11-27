@@ -117,6 +117,7 @@ import com.slideindex.app.ui.link.LinkTemplateImportDialog
 import com.slideindex.app.ui.link.linkAppNameCache
 import com.slideindex.app.ui.miuix.CardSegment
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
+import com.slideindex.app.ui.miuix.LocalMiuixSheetHeaderPadding
 import com.slideindex.app.ui.miuix.MiuixGlassDropdownMenu
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixRadioSelectDialog
@@ -126,6 +127,8 @@ import com.slideindex.app.ui.settings.components.settingsCardScopeItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import top.yukonga.miuix.kmp.glass.GlassDialogButtonRole
+import top.yukonga.miuix.kmp.glass.GlassDialogButton
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
@@ -921,6 +924,7 @@ fun LinkDispatchSettingsScreen(
             show = true,
             title = "选择兜底备选浏览器",
             onDismissRequest = { showBrowserPickerSheet = false },
+            scrollUnderHeader = true,
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
@@ -934,6 +938,7 @@ fun LinkDispatchSettingsScreen(
                     LazyColumn(
                         modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
+                        contentPadding = LocalMiuixSheetHeaderPadding.current,
                     ) {
                         items(items = installedBrowsers, key = { it.packageName }) { browser ->
                             CardSegment(isFirst = true, isLast = true, outerHorizontalPadding = 0.dp) {
@@ -1005,9 +1010,8 @@ private fun LinkExemptsBottomSheet(
                         singleLine = true,
                     )
                 }
-                MiuixTextButton(
-                    text = "添加",
-                    colors = ButtonDefaults.textButtonColorsPrimary(),
+                GlassDialogButton(
+                    role = GlassDialogButtonRole.Primary,
                     enabled = newDomain.trim().isNotBlank(),
                     onClick = {
                         val trimmed = newDomain.trim()
@@ -1016,7 +1020,13 @@ private fun LinkExemptsBottomSheet(
                             newDomain = ""
                         }
                     },
-                )
+                ) {
+                    MiuixText(
+                        text = "添加",
+                        style = MiuixTheme.textStyles.button,
+                        maxLines = 1,
+                    )
+                }
             }
 
             if (exempts.isEmpty()) {
@@ -1181,9 +1191,8 @@ private fun LinkExtractsBottomSheet(
                     minLines = 2,
                     maxLines = 4,
                 )
-                MiuixTextButton(
-                    text = "确认添加",
-                    colors = ButtonDefaults.textButtonColorsPrimary(),
+                GlassDialogButton(
+                    role = GlassDialogButtonRole.Primary,
                     enabled = addRegex.trim().isNotBlank(),
                     onClick = {
                         val trimmedRegex = addRegex.trim()
@@ -1194,7 +1203,13 @@ private fun LinkExtractsBottomSheet(
                         }
                     },
                     modifier = Modifier.fillMaxWidth().height(44.dp),
-                )
+                ) {
+                    MiuixText(
+                        text = "确认添加",
+                        style = MiuixTheme.textStyles.button,
+                        maxLines = 1,
+                    )
+                }
             }
         }
     }
@@ -1298,18 +1313,20 @@ private fun ExtractPatternAccordionItem(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        MiuixTextButton(
-                            text = "删除此规则",
-                            colors = ButtonDefaults.textButtonColors(
-                                color = MiuixTheme.colorScheme.error,
-                            ),
+                        GlassDialogButton(
+                            role = GlassDialogButtonRole.Normal,
                             onClick = onDelete,
                             modifier = Modifier.weight(1f),
-                        )
+                        ) {
+                            MiuixText(
+                                text = "删除此规则",
+                                style = MiuixTheme.textStyles.button,
+                                maxLines = 1,
+                            )
+                        }
 
-                        MiuixTextButton(
-                            text = "完成并收起",
-                            colors = ButtonDefaults.textButtonColorsPrimary(),
+                        GlassDialogButton(
+                            role = GlassDialogButtonRole.Primary,
                             enabled = editedPattern.trim().isNotBlank(),
                             onClick = {
                                 val trimmedPattern = editedPattern.trim()
@@ -1318,7 +1335,13 @@ private fun ExtractPatternAccordionItem(
                                 isExpanded = false
                             },
                             modifier = Modifier.weight(1f),
-                        )
+                        ) {
+                            MiuixText(
+                                text = "完成并收起",
+                                style = MiuixTheme.textStyles.button,
+                                maxLines = 1,
+                            )
+                        }
                     }
                 }
             }

@@ -4,15 +4,11 @@ import android.os.Build
 import androidx.compose.foundation.layout.fillMaxWidth
 import com.slideindex.app.ui.miuix.MiuixTabRowWithContourInCard
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.ui.unit.dp
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import com.slideindex.app.ui.settings.components.MiuixNavigationRow

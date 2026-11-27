@@ -191,7 +191,6 @@ fun WidgetPanelPageManagementSection(
     }
 
     MiuixConfirmDialog(
-        confirmDestructive = true,
         show = deleteTarget != null,
         onDismissRequest = { deleteTarget = null },
         title = stringResource(R.string.widget_panel_remove_page),

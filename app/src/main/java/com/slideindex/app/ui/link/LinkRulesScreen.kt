@@ -749,48 +749,44 @@ fun LinkRulesScreen(
         },
     )
 
-    if (showManualImportDialog) {
-        MiuixFormDialog(
-            show = true,
-            onDismissRequest = { showManualImportDialog = false },
-            title = "手动输入识别",
-            confirmEnabled = manualImportText.isNotBlank(),
-            onConfirm = {
-                showManualImportDialog = false
-                importText(manualImportText)
-            },
-        ) {
-            MiuixLabeledTextField(
-                value = manualImportText,
-                onValueChange = { manualImportText = it },
-                label = "粘贴规则 JSON",
-                singleLine = false,
-                minLines = 6,
-                maxLines = 12,
-            )
-        }
+    MiuixFormDialog(
+        show = showManualImportDialog,
+        onDismissRequest = { showManualImportDialog = false },
+        title = "手动输入识别",
+        confirmEnabled = manualImportText.isNotBlank(),
+        onConfirm = {
+            showManualImportDialog = false
+            importText(manualImportText)
+        },
+    ) {
+        MiuixLabeledTextField(
+            value = manualImportText,
+            onValueChange = { manualImportText = it },
+            label = "粘贴规则 JSON",
+            singleLine = false,
+            minLines = 6,
+            maxLines = 12,
+        )
     }
 
-    if (showDeleteSelectedDialog) {
-        MiuixFormDialog(
-            show = true,
-            onDismissRequest = { showDeleteSelectedDialog = false },
-            title = "删除确认",
-            confirmText = "彻底删除",
-            onConfirm = {
-                showDeleteSelectedDialog = false
-                val ids = selectedIds.toSet()
-                scope.launch {
-                    LinkRuleRepository.updateRules(context) { cur ->
-                        cur.filterNot { it.id in ids }
-                    }
-                    localRules = localRules.filterNot { it.id in ids }
-                    exitSelectionMode(saveOrder = false)
+    MiuixFormDialog(
+        show = showDeleteSelectedDialog,
+        onDismissRequest = { showDeleteSelectedDialog = false },
+        title = "删除确认",
+        confirmText = "彻底删除",
+        onConfirm = {
+            showDeleteSelectedDialog = false
+            val ids = selectedIds.toSet()
+            scope.launch {
+                LinkRuleRepository.updateRules(context) { cur ->
+                    cur.filterNot { it.id in ids }
                 }
-            },
-        ) {
-            MiuixText(text = "确定要删除选中的 ${selectedIds.size} 条规则吗？此操作无法撤销。")
-        }
+                localRules = localRules.filterNot { it.id in ids }
+                exitSelectionMode(saveOrder = false)
+            }
+        },
+    ) {
+        MiuixText(text = "确定要删除选中的 ${selectedIds.size} 条规则吗？此操作无法撤销。")
     }
 }
 

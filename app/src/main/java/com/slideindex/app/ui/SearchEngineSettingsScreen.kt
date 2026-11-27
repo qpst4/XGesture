@@ -241,7 +241,6 @@ fun SearchEngineSettingsScreen(
                 },
                 title = stringResource(R.string.search_engine_settings_preset_catalog),
                 subtitle = stringResource(R.string.search_engine_settings_preset_catalog_subtitle),
-                backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
                 onClick = {
                     showAddSheet = false
                     onOpenPresetPicker()
@@ -258,7 +257,6 @@ fun SearchEngineSettingsScreen(
                 },
                 title = stringResource(R.string.search_engine_import_paste_json),
                 subtitle = stringResource(R.string.search_engine_import_paste_json_subtitle),
-                backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
                 onClick = {
                     showAddSheet = false
                     showJsonImport = true
@@ -275,7 +273,6 @@ fun SearchEngineSettingsScreen(
                 },
                 title = stringResource(R.string.search_engine_add_title),
                 subtitle = stringResource(R.string.search_engine_add_subtitle),
-                backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
                 onClick = {
                     showAddSheet = false
                     onOpenEditor(null)
@@ -292,7 +289,6 @@ fun SearchEngineSettingsScreen(
                 },
                 title = stringResource(R.string.search_group_entry_title),
                 subtitle = stringResource(R.string.search_group_entry_subtitle),
-                backgroundColor = MiuixTheme.colorScheme.secondaryContainer,
                 onClick = {
                     showAddSheet = false
                     onCreateGroup()
@@ -320,7 +316,6 @@ fun SearchEngineSettingsScreen(
 
     val engineToDelete = deletingEngine
     MiuixConfirmDialog(
-        confirmDestructive = true,
         show = engineToDelete != null,
         onDismissRequest = { deletingEngine = null },
         title = stringResource(R.string.search_engine_delete_title),

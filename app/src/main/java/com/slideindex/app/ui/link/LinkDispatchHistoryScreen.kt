@@ -48,12 +48,13 @@ import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.settings.components.SettingsScreenScaffold
 import kotlinx.coroutines.launch
+import top.yukonga.miuix.kmp.glass.GlassDialogButtonRole
+import top.yukonga.miuix.kmp.glass.GlassDialogButton
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.glass.Delete
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
-import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -245,18 +246,23 @@ fun LinkDispatchHistoryScreen(
                     modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    MiuixTextButton(
-                        text = "复制网址",
+                    GlassDialogButton(
+                        role = GlassDialogButtonRole.Normal,
                         onClick = {
                             clipboardManager.setText(AnnotatedString(detail.finalUrl))
                             Toast.makeText(context, "网址已复制", Toast.LENGTH_SHORT).show()
                             selectedItemForDetail = null
                         },
                         modifier = Modifier.weight(1f),
-                    )
-                    MiuixTextButton(
-                        text = "重新打开",
-                        colors = ButtonDefaults.textButtonColorsPrimary(),
+                    ) {
+                        MiuixText(
+                            text = "复制网址",
+                            style = MiuixTheme.textStyles.button,
+                            maxLines = 1,
+                        )
+                    }
+                    GlassDialogButton(
+                        role = GlassDialogButtonRole.Primary,
                         onClick = {
                             val pkg = detail.targetPackage.orEmpty()
                             scope.launch {
@@ -270,7 +276,13 @@ fun LinkDispatchHistoryScreen(
                             selectedItemForDetail = null
                         },
                         modifier = Modifier.weight(1f),
-                    )
+                    ) {
+                        MiuixText(
+                            text = "重新打开",
+                            style = MiuixTheme.textStyles.button,
+                            maxLines = 1,
+                        )
+                    }
                 }
             }
         }

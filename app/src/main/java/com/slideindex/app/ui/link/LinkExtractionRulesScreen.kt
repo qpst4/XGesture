@@ -58,6 +58,7 @@ import com.slideindex.app.link.LinkExtractor
 import com.slideindex.app.link.LinkRuleRepository
 import com.slideindex.app.ui.miuix.CardSegment
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
+import com.slideindex.app.ui.miuix.LocalMiuixSheetHeaderPadding
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixSettingsFab
@@ -65,10 +66,11 @@ import com.slideindex.app.ui.miuix.MiuixSettingsFabInset
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
+import top.yukonga.miuix.kmp.glass.GlassDialogButtonRole
+import top.yukonga.miuix.kmp.glass.GlassDialogButton
 import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
-import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.glass.GlassIconButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -183,44 +185,42 @@ fun LinkExtractionRulesScreen(
         }
     }
 
-    if (showAddDialog) {
-        MiuixFormDialog(
-            show = true,
-            onDismissRequest = { showAddDialog = false },
-            title = "添加提取规则",
-            confirmText = "添加",
-            confirmEnabled = newRegex.isNotBlank(),
-            onConfirm = {
-                val trimmed = newRegex.trim()
-                val added = LinkExtractPattern(
-                    id = UUID.randomUUID().toString(),
-                    name = newName.trim().ifBlank { trimmed },
-                    pattern = trimmed,
-                )
-                scope.launch {
-                    LinkRuleRepository.updateExtractPatterns(context) { it + added }
-                }
-                showAddDialog = false
-                newName = ""
-                newRegex = ""
-            },
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                MiuixLabeledTextField(
-                    value = newName,
-                    onValueChange = { newName = it },
-                    label = "规则名称",
-                    singleLine = true,
-                )
-                MiuixLabeledTextField(
-                    value = newRegex,
-                    onValueChange = { newRegex = it },
-                    label = "正则表达式",
-                    singleLine = false,
-                    minLines = 2,
-                    maxLines = 4,
-                )
+    MiuixFormDialog(
+        show = showAddDialog,
+        onDismissRequest = { showAddDialog = false },
+        title = "添加提取规则",
+        confirmText = "添加",
+        confirmEnabled = newRegex.isNotBlank(),
+        onConfirm = {
+            val trimmed = newRegex.trim()
+            val added = LinkExtractPattern(
+                id = UUID.randomUUID().toString(),
+                name = newName.trim().ifBlank { trimmed },
+                pattern = trimmed,
+            )
+            scope.launch {
+                LinkRuleRepository.updateExtractPatterns(context) { it + added }
             }
+            showAddDialog = false
+            newName = ""
+            newRegex = ""
+        },
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            MiuixLabeledTextField(
+                value = newName,
+                onValueChange = { newName = it },
+                label = "规则名称",
+                singleLine = true,
+            )
+            MiuixLabeledTextField(
+                value = newRegex,
+                onValueChange = { newRegex = it },
+                label = "正则表达式",
+                singleLine = false,
+                minLines = 2,
+                maxLines = 4,
+            )
         }
     }
 
@@ -228,11 +228,13 @@ fun LinkExtractionRulesScreen(
         show = showTestSheet,
         title = "测试链接提取效果",
         onDismissRequest = { showTestSheet = false },
+        scrollUnderHeader = true,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
+                .padding(LocalMiuixSheetHeaderPadding.current)
                 .padding(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -249,23 +251,30 @@ fun LinkExtractionRulesScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                MiuixTextButton(
-                    text = "清空",
-                    colors = ButtonDefaults.textButtonColors(
-                        color = MiuixTheme.colorScheme.surfaceContainerHigh,
-                        textColor = MiuixTheme.colorScheme.onSurface,
-                    ),
+                GlassDialogButton(
+                    role = GlassDialogButtonRole.Normal,
                     onClick = { testInput = "" },
                     modifier = Modifier.weight(1f),
-                )
-                MiuixTextButton(
-                    text = "粘贴最新",
-                    colors = ButtonDefaults.textButtonColorsPrimary(),
+                ) {
+                    MiuixText(
+                        text = "清空",
+                        style = MiuixTheme.textStyles.button,
+                        maxLines = 1,
+                    )
+                }
+                GlassDialogButton(
+                    role = GlassDialogButtonRole.Primary,
                     onClick = {
                         clipboardManager.getText()?.text?.let { testInput = it }
                     },
                     modifier = Modifier.weight(1f),
-                )
+                ) {
+                    MiuixText(
+                        text = "粘贴最新",
+                        style = MiuixTheme.textStyles.button,
+                        maxLines = 1,
+                    )
+                }
             }
 
             when {
@@ -429,24 +438,32 @@ private fun ExtractPatternCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        MiuixTextButton(
-                            text = "删除",
-                            colors = ButtonDefaults.textButtonColors(
-                                color = MiuixTheme.colorScheme.error,
-                            ),
+                        GlassDialogButton(
+                            role = GlassDialogButtonRole.Normal,
                             onClick = onDelete,
                             modifier = Modifier.weight(1f),
-                        )
-                        MiuixTextButton(
-                            text = "保存",
-                            colors = ButtonDefaults.textButtonColorsPrimary(),
+                        ) {
+                            MiuixText(
+                                text = "删除",
+                                style = MiuixTheme.textStyles.button,
+                                maxLines = 1,
+                            )
+                        }
+                        GlassDialogButton(
+                            role = GlassDialogButtonRole.Primary,
                             enabled = regex.trim().isNotBlank(),
                             onClick = {
                                 onSave(pattern.copy(name = name.trim().ifBlank { regex.trim() }, pattern = regex.trim()))
                                 expanded = false
                             },
                             modifier = Modifier.weight(1f),
-                        )
+                        ) {
+                            MiuixText(
+                                text = "保存",
+                                style = MiuixTheme.textStyles.button,
+                                maxLines = 1,
+                            )
+                        }
                     }
                 }
             }

@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
 import com.slideindex.app.R
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.gesture.GestureTriggerType
@@ -45,6 +46,8 @@ import com.slideindex.app.ui.miuix.MiuixHintText
 import com.slideindex.app.ui.miuix.MiuixInsetCardComponentMargin
 import com.slideindex.app.ui.miuix.MiuixSliderRow
 import com.slideindex.app.ui.miuix.MiuixGroupedTabSettingsCard
+import com.slideindex.app.ui.miuix.MiuixDialogActionButton
+import top.yukonga.miuix.kmp.glass.GlassDialogButtonRole
 import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import com.slideindex.app.ui.miuix.groupedCardItems
@@ -388,20 +391,19 @@ fun SideGestureSettingsScreen(
         }
     }
 
-    if (showMirrorDirectionDialog) {
-        AlignOppositeGesturesMirrorDialog(
-            currentSide = side,
-            onDismiss = { showMirrorDirectionDialog = false },
-            onCopyCurrentToOpposite = {
-                showMirrorDirectionDialog = false
-                onAlignOppositeGesturesChange(true, side)
-            },
-            onCopyOppositeToCurrent = {
-                showMirrorDirectionDialog = false
-                onAlignOppositeGesturesChange(true, side.opposite())
-            },
-        )
-    }
+    AlignOppositeGesturesMirrorDialog(
+        show = showMirrorDirectionDialog,
+        currentSide = side,
+        onDismiss = { showMirrorDirectionDialog = false },
+        onCopyCurrentToOpposite = {
+            showMirrorDirectionDialog = false
+            onAlignOppositeGesturesChange(true, side)
+        },
+        onCopyOppositeToCurrent = {
+            showMirrorDirectionDialog = false
+            onAlignOppositeGesturesChange(true, side.opposite())
+        },
+    )
 }
 
 /** 组合页的一条路径：短滑档 + 可选长滑档（折返只有短滑档）。 */
@@ -532,6 +534,7 @@ private fun sideGestureSlotCardItems(
 
 @Composable
 private fun AlignOppositeGesturesMirrorDialog(
+    show: Boolean,
     currentSide: PanelSide,
     onDismiss: () -> Unit,
     onCopyCurrentToOpposite: () -> Unit,
@@ -540,28 +543,29 @@ private fun AlignOppositeGesturesMirrorDialog(
     val currentSideLabel = horizontalGestureSideLabel(currentSide)
     val oppositeSideLabel = horizontalGestureSideLabel(currentSide.opposite())
 
-    top.yukonga.miuix.kmp.window.WindowDialog(
-        show = true,
-        onDismissRequest = onDismiss,
+    // show 由调用方状态驱动，关闭时保留组合才有退出动画。
+    MiuixAdaptiveDialog(
+        show = show,
         title = stringResource(R.string.align_opposite_gestures_mirror_title),
+        onDismissRequest = onDismiss,
         summary = stringResource(R.string.align_opposite_gestures_mirror_message),
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
         ) {
-            top.yukonga.miuix.kmp.basic.TextButton(
+            MiuixDialogActionButton(
                 text = stringResource(R.string.align_opposite_gestures_use_this_side, currentSideLabel),
                 onClick = onCopyCurrentToOpposite,
                 modifier = Modifier.fillMaxWidth(),
-                colors = top.yukonga.miuix.kmp.basic.ButtonDefaults.textButtonColorsPrimary(),
+                role = GlassDialogButtonRole.Primary,
             )
-            top.yukonga.miuix.kmp.basic.TextButton(
+            MiuixDialogActionButton(
                 text = stringResource(R.string.align_opposite_gestures_use_opposite_side, oppositeSideLabel),
                 onClick = onCopyOppositeToCurrent,
                 modifier = Modifier.fillMaxWidth(),
             )
-            top.yukonga.miuix.kmp.basic.TextButton(
+            MiuixDialogActionButton(
                 text = stringResource(android.R.string.cancel),
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth(),

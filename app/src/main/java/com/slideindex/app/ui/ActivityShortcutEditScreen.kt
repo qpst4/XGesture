@@ -571,59 +571,53 @@ fun ActivityShortcutEditScreen(
         }
     }
 
-    if (showDuplicateDialog) {
-        val duplicate = pendingSave?.duplicate
-        val duplicateLabel = duplicate?.let { it.label.ifBlank { it.packageName } }.orEmpty()
-        MiuixConfirmDialog(
-            show = true,
-            title = stringResource(R.string.activity_shortcut_duplicate_title),
-            message = stringResource(
-                R.string.activity_shortcut_duplicate_message,
-                duplicateLabel,
-            ),
-            confirmText = stringResource(R.string.activity_shortcut_merge),
-            onConfirm = {
-                showDuplicateDialog = false
-                pendingSave?.let { pending ->
-                    if (collectIssues(context, pending.updated).isNotEmpty()) {
-                        showWarningDialog = true
-                    } else {
-                        commitSave(pending.updated, pending.duplicate)
-                    }
+    val duplicate = pendingSave?.duplicate
+    val duplicateLabel = duplicate?.let { it.label.ifBlank { it.packageName } }.orEmpty()
+    MiuixConfirmDialog(
+        show = showDuplicateDialog,
+        title = stringResource(R.string.activity_shortcut_duplicate_title),
+        message = stringResource(
+            R.string.activity_shortcut_duplicate_message,
+            duplicateLabel,
+        ),
+        confirmText = stringResource(R.string.activity_shortcut_merge),
+        onConfirm = {
+            showDuplicateDialog = false
+            pendingSave?.let { pending ->
+                if (collectIssues(context, pending.updated).isNotEmpty()) {
+                    showWarningDialog = true
+                } else {
+                    commitSave(pending.updated, pending.duplicate)
                 }
-            },
-            onDismissRequest = { showDuplicateDialog = false },
-        )
-    }
+            }
+        },
+        onDismissRequest = { showDuplicateDialog = false },
+    )
 
-    if (showWarningDialog) {
-        MiuixConfirmDialog(
-            show = true,
-            title = stringResource(R.string.activity_shortcut_warning_save_title),
-            message = stringResource(R.string.activity_shortcut_warning_save_message),
-            confirmText = stringResource(R.string.activity_shortcut_save_anyway),
-            onConfirm = {
-                showWarningDialog = false
-                pendingSave?.let { commitSave(it.updated, it.duplicate) }
-            },
-            onDismissRequest = { showWarningDialog = false },
-        )
-    }
+    // show 由状态驱动、对话框常驻组合，关闭时才有退出动画。
+    MiuixConfirmDialog(
+        show = showWarningDialog,
+        title = stringResource(R.string.activity_shortcut_warning_save_title),
+        message = stringResource(R.string.activity_shortcut_warning_save_message),
+        confirmText = stringResource(R.string.activity_shortcut_save_anyway),
+        onConfirm = {
+            showWarningDialog = false
+            pendingSave?.let { commitSave(it.updated, it.duplicate) }
+        },
+        onDismissRequest = { showWarningDialog = false },
+    )
 
-    if (showDiscardDialog) {
-        MiuixConfirmDialog(
-            confirmDestructive = true,
-            show = true,
-            title = stringResource(R.string.activity_shortcut_discard_title),
-            message = stringResource(R.string.activity_shortcut_discard_message),
-            confirmText = stringResource(R.string.activity_shortcut_discard_confirm),
-            onConfirm = {
-                showDiscardDialog = false
-                onBack()
-            },
-            onDismissRequest = { showDiscardDialog = false },
-        )
-    }
+    MiuixConfirmDialog(
+        show = showDiscardDialog,
+        title = stringResource(R.string.activity_shortcut_discard_title),
+        message = stringResource(R.string.activity_shortcut_discard_message),
+        confirmText = stringResource(R.string.activity_shortcut_discard_confirm),
+        onConfirm = {
+            showDiscardDialog = false
+            onBack()
+        },
+        onDismissRequest = { showDiscardDialog = false },
+    )
 }
 
 private data class PendingSave(
@@ -711,7 +705,7 @@ private fun IconSourceAction(
             contentDescription = null,
             modifier = Modifier.size(18.dp),
         )
-        Text(
+        MiuixText(
             text = label,
             modifier = Modifier.padding(start = 4.dp),
             style = MiuixTheme.textStyles.footnote1,

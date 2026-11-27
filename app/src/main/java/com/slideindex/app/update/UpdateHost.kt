@@ -49,8 +49,8 @@ import androidx.compose.ui.unit.sp
 import com.slideindex.app.BuildConfig
 import com.slideindex.app.R
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
-import top.yukonga.miuix.kmp.basic.IconButton
 
 @Composable
 fun UpdateDialog(
@@ -75,7 +75,7 @@ fun UpdateDialog(
         title = stringResource(titleRes),
         onDismissRequest = onDismissRequest,
         endAction = {
-            IconButton(onClick = onOpenRelease) {
+            MiuixTopBarIconButton(onClick = onOpenRelease) {
                 MiuixIcon(
                     imageVector = Icons.AutoMirrored.Filled.OpenInNew,
                     contentDescription = stringResource(R.string.update_view_on_github),

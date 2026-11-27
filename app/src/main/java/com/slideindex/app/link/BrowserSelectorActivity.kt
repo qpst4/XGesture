@@ -86,6 +86,7 @@ import com.slideindex.app.ui.components.reorderable.rememberReorderableLazyGridS
 import com.slideindex.app.ui.link.LinkAppIcon
 import com.slideindex.app.ui.link.linkAppNameCache
 import com.slideindex.app.ui.miuix.MiuixBottomSheet
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -415,7 +416,7 @@ private fun BrowserSelectorSheet(
         show = show,
         title = if (isEditing) "管理应用" else "选择应用打开",
         startAction = {
-            IconButton(onClick = requestClose) {
+            MiuixTopBarIconButton(onClick = requestClose) {
                 Icon(
                     imageVector = MiuixIcons.Medium.Close,
                     contentDescription = "关闭",
@@ -424,7 +425,7 @@ private fun BrowserSelectorSheet(
             }
         },
         endAction = {
-            IconButton(
+            MiuixTopBarIconButton(
                 onClick = {
                     if (isEditing) {
                         saveOrderAndHidden()

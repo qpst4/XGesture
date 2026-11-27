@@ -37,14 +37,21 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.miuix.MiuixDialogActionsRow
+import com.slideindex.app.ui.miuix.MiuixDialogAction
 import com.slideindex.app.R
 import com.slideindex.app.launcher.AppTarget
 import com.slideindex.app.macro.Macro
+import com.slideindex.app.ui.miuix.MiuixGlassDialog
 import com.slideindex.app.macro.MacroStore
 import com.slideindex.app.macro.MacroTargetIconResolver
 import com.slideindex.app.overlay.CloneBadgeOverlay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.glass.GlassDialogButtonRole
+import top.yukonga.miuix.kmp.glass.GlassDialogButton
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.window.WindowDialog
 
@@ -123,13 +130,12 @@ fun MacroPickOverlay(
  */
 @Composable
 fun MacroPickDialog(
-    show: Boolean,
+    show: Boolean = true,
     onDismissRequest: () -> Unit,
     onPick: (Macro) -> Unit,
     /** 当前已绑定（或正在编辑）的宏 id：列表里给它上色，换宏时不用自己找。 */
     selectedMacroId: String? = null,
 ) {
-    if (!show) return
     val context = LocalContext.current
     val macros = remember(show) { MacroStore.all(context) }
 
@@ -161,29 +167,28 @@ fun MacroPickDialog(
             }
 
             Spacer(Modifier.height(16.dp))
-            TextButton(
-                text = stringResource(R.string.cancel),
-                onClick = onDismissRequest,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 44.dp),
-                minHeight = 44.dp,
-                insideMargin = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+            MiuixDialogActionsRow(
+            actions = listOf(
+            MiuixDialogAction(
+            text = stringResource(R.string.cancel),
+            onClick = onDismissRequest,
+            ),
+            ),
             )
         }
     }
     val backdrop = com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop.current
     if (backdrop != null) {
-        top.yukonga.miuix.kmp.glass.GlassDialog(
+        MiuixGlassDialog(
             onDismissRequest = onDismissRequest,
-            show = true,
+            show = show,
             backdrop = backdrop,
             title = dialogTitle,
             content = body,
         )
     } else {
         WindowDialog(
-            show = true,
+            show = show,
             title = dialogTitle,
             onDismissRequest = onDismissRequest,
         ) {
