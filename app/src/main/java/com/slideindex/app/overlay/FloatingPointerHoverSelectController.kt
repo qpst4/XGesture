@@ -62,7 +62,7 @@ internal class FloatingPointerHoverSelectController(
         PickTouchGuard.arm(
             owner = this,
             context = SlideIndexAccessibilityService.accessibilityInstance(),
-            onExtraFinger = { revertRegionalToPick() }
+            onExtraFinger = { cancelPickToActive() }
         )
     }
 
@@ -143,35 +143,30 @@ internal class FloatingPointerHoverSelectController(
     }
 
     /**
-     * 第二根手指按下：撤销区域截图框，**立即**回到取词态（不用等十字退回起点、也不用再等一次超时）。
+     * 第二根手指按下：取消当前暂停态/区域选择，回到红色未暂停态。
      *
-     * 锚点重置成**当前**十字位置，而不是最初的超时点：指针与手指是 1:1 位移，把十字挪回起点
-     * 会在下一帧 MOVE 被立刻拉回，视觉上闪一下；重置到当前位置则天然带滞回 —— 要再移出
-     * [FloatingPointerSession.regionalCancelSlopPx] 才会重新进区域态，不会按下第二指就弹回去。
+     * 不动就保持红（取消暂停计时、把计时基线设到当前锚点）；移动后重新走
+     * 悬停 → 暂停 → 选区 的常规流程。取消后 [hasPickIntent] 为 false，抬手不会提交。
      *
-     * @return true 表示确实从区域态回退了（此时事件应当被消费）。
+     * @return true 表示确实取消了一次暂停/选区（此时事件应当被消费）。
      */
-    fun revertRegionalToPick(): Boolean {
+    fun cancelPickToActive(): Boolean {
+        if (!active) return false
+        if (!paused && selectionStart == null && !regionalActive) return false
         android.util.Log.i(
             "HoverSelect",
-            "revertRegionalToPick active=$active regional=$regionalActive paused=$paused"
+            "cancelPickToActive active=$active regional=$regionalActive paused=$paused"
         )
-        if (!active || !regionalActive) return false
         regionalActive = false
+        paused = false
+        selectionStart = null
+        selectionPreviewBounds = null
         cancelPauseTimer()
         boundsLookupGeneration++
         PickPrefetchCache.invalidate()
-        selectionPreviewBounds = null
         val anchor = pickAnchor
-        selectionStart = anchor
-        paused = true
-        val bounds = FloatBallPreviewBoundsCache.hitTestAt(anchor.x, anchor.y)
-        if (bounds != null) {
-            selectionPreviewBounds = bounds
-            maybeStartPickPrefetch()
-        } else {
-            launchPreviewBoundsLookupFallback(anchor)
-        }
+        lastPauseScheduleX = anchor.x
+        lastPauseScheduleY = anchor.y
         publishChrome()
         return true
     }

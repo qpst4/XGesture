@@ -183,17 +183,17 @@ internal class FloatingPointerInputHandler(
                 adoptPrimaryPointer(event)
                 handleTouch(event)
             }
-            // 第二根手指按下：撤销区域截图框，立即回退到取词态。
+            // 第二根手指按下：取消当前暂停/区域选择，回到红色未暂停态。
             MotionEvent.ACTION_POINTER_DOWN -> {
                 adoptPrimaryPointer(event)
-                val reverted = hoverSelectController.revertRegionalToPick()
-                if (reverted) {
+                val canceled = hoverSelectController.cancelPickToActive()
+                if (canceled) {
                     android.util.Log.i(
                         "FloatingPointer",
-                        "extra finger down → revert regional to text pick"
+                        "extra finger down → cancel pick to active"
                     )
                 }
-                reverted
+                canceled
             }
             // 主指先抬起：剩下的手指坐标不是这次手势的锚点，按取消收尾，避免错位提交。
             MotionEvent.ACTION_POINTER_UP -> {
@@ -281,11 +281,11 @@ internal class FloatingPointerInputHandler(
                 primaryPointerId = -1
                 return handled
             }
-            // 第二根手指按下：撤销区域截图框，立即回退到取词态（指针层自己收到多指的情形）。
+            // 第二根手指按下：取消当前暂停/区域选择，回到红色未暂停态（指针层自己收到多指的情形）。
             MotionEvent.ACTION_POINTER_DOWN -> {
                 if (!capturing) return false
                 adoptPrimaryPointer(event)
-                return hoverSelectController.revertRegionalToPick()
+                return hoverSelectController.cancelPickToActive()
             }
             // 主指先抬起：剩余手指的坐标不是这次手势的锚点，按取消收尾。
             MotionEvent.ACTION_POINTER_UP -> {

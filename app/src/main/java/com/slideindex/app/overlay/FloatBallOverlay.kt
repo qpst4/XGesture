@@ -3215,21 +3215,18 @@ object FloatBallOverlay : PickGuardSession {
         cursorPausedState?.value == true || regionalPickActive
 
     /**
-     * 第二根手指：撤销黄框/区域框，立即回到黄框取词态（与另外两条取词链路一致）。
+     * 第二根手指：取消黄框/区域选择，回到红十字；**不**重新锁黄。
      *
-     * 检测器那边的「取消选中」只回到红十字、要再停一次超时才变黄；这里补一次重新锁定，
-     * 免得三种取词手段第二根手指的手感不一样。
+     * 检测器自己会在第二指按下时清掉暂停锁定并抑制抬手提交，[onSelectionCancel] 还会把暂停计时
+     * 基线挪到当前锚点——不动就保持红，移动超过取消容差才重新计时。这里不能再调 [onCursorPaused]，
+     * 否则会立刻重新变黄，和 FV 的手感相反。
      */
-    private fun revertBallPickToText(): Boolean {
-        val canceled = if (dragOriginatedFromLine) {
+    private fun cancelBallPickSelection(): Boolean =
+        if (dragOriginatedFromLine) {
             lineTouchHost?.cancelPickSelection() == true
         } else {
             touchHost?.cancelPickSelection() == true
         }
-        if (!canceled) return false
-        onCursorPaused()
-        return true
-    }
 
     private fun onCursorPaused() {
         if (cursorVisibleState?.value != true) return
@@ -3259,7 +3256,7 @@ object FloatBallOverlay : PickGuardSession {
         PickTouchGuard.arm(
             owner = this,
             context = appContext,
-            onExtraFinger = { revertBallPickToText() }
+            onExtraFinger = { cancelBallPickSelection() }
         )
         val settings = settingsState?.value
         val editableForPaste = if (settings?.floatBallDragPasteEnabled == true) {
