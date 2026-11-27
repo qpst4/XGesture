@@ -5427,4 +5427,6 @@
 <string name="ring_slot_none_auto_fill">自動入力（最近のアプリ）</string>
     <string name="trigger_passthrough_title">画面端のジェスチャーを通過させる</string>
     <string name="trigger_passthrough_desc">この範囲で始まるスワイプは現在のアプリに渡されます。LSPosed モジュールが必要です。</string>
+<string name="trigger_passthrough_module_checking">LSPosed モジュールの状態を確認しています…</string>
+<string name="trigger_passthrough_module_inactive">LSPosed モジュールが有効ではありません。オフにすると元のジェスチャーに戻ります。</string>
 </resources>

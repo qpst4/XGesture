@@ -5431,4 +5431,6 @@
 <string name="ring_slot_none_auto_fill">ملء تلقائي (التطبيقات الأخيرة)</string>
     <string name="trigger_passthrough_title">تمرير إيماءات الحافة</string>
     <string name="trigger_passthrough_desc">تُمرَّر عمليات السحب التي تبدأ في هذه المنطقة إلى التطبيق الحالي. يتطلب ذلك وحدة LSPosed.</string>
+<string name="trigger_passthrough_module_checking">جارٍ التحقق من حالة وحدة LSPosed…</string>
+<string name="trigger_passthrough_module_inactive">وحدة LSPosed غير مفعّلة. أوقف هذا الخيار لاستعادة الإيماءات الأصلية.</string>
 </resources>

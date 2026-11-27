@@ -5459,4 +5459,6 @@
 <string name="ring_slot_none_auto_fill">Автозаполнение (недавние приложения)</string>
     <string name="trigger_passthrough_title">Передача жестов с края</string>
     <string name="trigger_passthrough_desc">Смахивания, начатые в этой области, передаются текущему приложению. Требуется модуль LSPosed.</string>
+<string name="trigger_passthrough_module_checking">Проверка состояния модуля LSPosed…</string>
+<string name="trigger_passthrough_module_inactive">Модуль LSPosed не активен. Отключите, чтобы вернуть исходные жесты.</string>
 </resources>

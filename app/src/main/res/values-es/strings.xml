@@ -5434,4 +5434,6 @@ o revocar Root permanente para Shell en APatch.</string>
 <string name="ring_slot_none_auto_fill">Autorrellenar (apps recientes)</string>
     <string name="trigger_passthrough_title">Paso de gestos de borde</string>
     <string name="trigger_passthrough_desc">Los deslizamientos que empiezan en esta zona se envían a la aplicación actual. Requiere el módulo LSPosed.</string>
+<string name="trigger_passthrough_module_checking">Comprobando el estado del módulo LSPosed…</string>
+<string name="trigger_passthrough_module_inactive">El módulo LSPosed no está activo. Desactiva esto para recuperar los gestos originales.</string>
 </resources>

@@ -5474,4 +5474,6 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="ring_slot_none_auto_fill">Auto-fill (recent apps)</string>
     <string name="trigger_passthrough_title">Edge passthrough</string>
     <string name="trigger_passthrough_desc">Swipes starting in this area go to the current app. Requires the LSPosed module.</string>
+    <string name="trigger_passthrough_module_checking">Checking LSPosed module status…</string>
+    <string name="trigger_passthrough_module_inactive">LSPosed module isn\'t active. Turn this off to restore the original gestures.</string>
 </resources>

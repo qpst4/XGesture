@@ -100,6 +100,11 @@ fun SideGestureSettingsScreen(
     }
     val title = if (pairCount > 1) "$baseTitle · $pairIndex" else baseTitle
 
+    // 「边缘透传」只对装了 LSPosed 且模块生效的用户展示：未生效时关着就整行隐藏，
+    // 避免日常用户每天看到一张点了也没反应的卡；状态未知先置灰等探针。
+    val moduleReady = rememberPassthroughModuleReady(enabled = onPassthroughChange != null)
+    val passthroughVisibility = triggerPassthroughVisibility(moduleReady, selectedHandle.passthrough)
+
     TriggerHandlePreviewLifecycle(
         enabled = serviceEnabled && (onPassthroughChange != null || !selectedHandle.passthrough),
         side = side,
@@ -155,15 +160,22 @@ fun SideGestureSettingsScreen(
         onBack = onBack,
         modifier = Modifier.fillMaxSize(),
     ) {
-        if (onPassthroughChange != null) {
+        if (onPassthroughChange != null && passthroughVisibility != PassthroughRowVisibility.Hidden) {
             groupedCardItems(
                 keyPrefix = "trigger-passthrough",
                 items = listOf(settingsCardScopeItem("enabled") {
+                    val passthroughSubtitle = when {
+                        passthroughVisibility == PassthroughRowVisibility.Disabled ->
+                            stringResource(R.string.trigger_passthrough_module_checking)
+                        moduleReady == false && selectedHandle.passthrough ->
+                            stringResource(R.string.trigger_passthrough_module_inactive)
+                        else -> stringResource(R.string.trigger_passthrough_desc)
+                    }
                     SettingSwitchRow(
                         title = stringResource(R.string.trigger_passthrough_title),
-                        subtitle = stringResource(R.string.trigger_passthrough_desc),
+                        subtitle = passthroughSubtitle,
                         checked = selectedHandle.passthrough,
-                        enabled = serviceEnabled,
+                        enabled = serviceEnabled && passthroughVisibility == PassthroughRowVisibility.Enabled,
                         onCheckedChange = onPassthroughChange,
                     )
                 }),
