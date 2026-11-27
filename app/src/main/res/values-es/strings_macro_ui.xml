@@ -37,6 +37,8 @@
     <string name="macro_target_pick_subtitle">Sólo se enumeran las aplicaciones que se pueden lanzar desde elpantalla de inicio.</string>
     <string name="macro_target_empty">No se ha encontrado ninguna aplicación lanzable</string>
     <string name="macro_target_selected">Seleccionado ·%1$s</string>
+    <string name="macro_target_pick_none">Sin aplicación</string>
+    <string name="macro_target_pick_none_desc">La grabación y la reproducción empiezan en la pantalla actual</string>
     <string name="macro_recording_unavailable">La grabación no está disponible en esta compilación aún</string>
     <string name="macro_recording_start_failed">No podía empezar a grabar</string>
     <string name="macro_recording_saved">Grabación guardada: pasos %1$d</string>

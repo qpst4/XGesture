@@ -46,6 +46,8 @@
     <string name="macro_target_pick_subtitle">只列出能从桌面启动的应用。</string>
     <string name="macro_target_empty">没有找到可启动的应用</string>
     <string name="macro_target_selected">已选择 · %1$s</string>
+    <string name="macro_target_pick_none">不指定应用</string>
+    <string name="macro_target_pick_none_desc">录制与回放都从当前界面开始</string>
 
     <!-- 录制器接线状态 -->
     <string name="macro_recording_unavailable">当前版本还没接入录制功能</string>

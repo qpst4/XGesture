@@ -46,6 +46,8 @@
     <string name="macro_target_pick_subtitle">Only apps that can be launched from the home screen are listed.</string>
     <string name="macro_target_empty">No launchable app found</string>
     <string name="macro_target_selected">Selected · %1$s</string>
+    <string name="macro_target_pick_none">No app</string>
+    <string name="macro_target_pick_none_desc">Recording and playback start from the current screen</string>
 
     <!-- 录制器接线状态 -->
     <string name="macro_recording_unavailable">Recording is not available in this build yet</string>

@@ -46,6 +46,8 @@
     <string name="macro_target_pick_subtitle">Показаны только приложения, которые можно запустить с главного экрана.</string>
     <string name="macro_target_empty">Не найдено приложений для запуска</string>
     <string name="macro_target_selected">Выбрано · %1$s</string>
+    <string name="macro_target_pick_none">Без приложения</string>
+    <string name="macro_target_pick_none_desc">Запись и воспроизведение начинаются с текущего экрана</string>
 
     <!-- 录制器接线状态 -->
     <string name="macro_recording_unavailable">Запись пока недоступна в этой сборке</string>

@@ -46,6 +46,8 @@
     <string name="macro_target_pick_subtitle">تُعرض فقط التطبيقات التي يمكن تشغيلها من الشاشة الرئيسية.</string>
     <string name="macro_target_empty">لم يُعثر على تطبيق قابل للتشغيل</string>
     <string name="macro_target_selected">المحدد · %1$s</string>
+    <string name="macro_target_pick_none">بدون تطبيق</string>
+    <string name="macro_target_pick_none_desc">يبدأ التسجيل والتشغيل من الشاشة الحالية</string>
 
     <!-- 录制器接线状态 -->
     <string name="macro_recording_unavailable">التسجيل غير متاح في هذا الإصدار بعد</string>

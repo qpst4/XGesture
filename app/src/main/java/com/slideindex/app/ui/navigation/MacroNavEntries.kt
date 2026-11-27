@@ -193,7 +193,16 @@ fun NavEntryBuilder.macroNavEntries(ctx: MainNavContext) {
             selectedTarget = draft?.targetPackage
                 ?: MacroStore.byId(context, key.macroId)?.targetPackage.orEmpty(),
             onBack = { ctx.navigateBackTo(AppNavKey.MacroEdit(key.macroId)) },
-            onSelect = { app -> applyMacroTargetApp(ctx, context, key.macroId, app) },
+            onSelect = { app ->
+                applyMacroTarget(
+                    ctx,
+                    context,
+                    key.macroId,
+                    com.slideindex.app.launcher.AppTarget.encode(app.packageName, app.cloneUserId),
+                )
+            },
+            // 选「不指定应用」= 清空目标（全局宏：不拉起 App，从当前界面开始）。
+            onClearSelection = { applyMacroTarget(ctx, context, key.macroId, "") },
         )
     }
 }
@@ -214,23 +223,28 @@ private fun createMacroDraftAndOpen(ctx: MainNavContext) {
     ctx.navigate(AppNavKey.MacroEdit(macroDraft!!.id))
 }
 
-/** 选目标 App：写回**草稿**（不落盘），然后回编辑页。 */
-private fun applyMacroTargetApp(
+/**
+ * 写回目标应用（选一个 App，或传空串 = 不指定 = 全局宏）：只改**草稿**（不落盘），然后回编辑页。
+ *
+ * 两个入口（选具体应用 / 选「不指定应用」）共用这一条路径，避免清空目标时漏掉作用域推导。
+ */
+private fun applyMacroTarget(
     ctx: MainNavContext,
     context: Context,
     macroId: String,
-    app: com.slideindex.app.data.AppInfo,
+    targetPackage: String,
 ) {
     val draft = macroDraft?.takeIf { it.id == macroId }
     if (draft != null) {
-        draft.targetPackage = com.slideindex.app.launcher.AppTarget.encode(app.packageName, app.cloneUserId)
+        draft.targetPackage = targetPackage
     } else {
         // 兜底（没有草稿时，例如异常路径）：直接按旧行为写盘，别让选择丢掉。
         val current = MacroStore.byId(context, macroId) ?: return
         MacroStore.upsert(
             context,
             current.copy(
-                targetPackage = com.slideindex.app.launcher.AppTarget.encode(app.packageName, app.cloneUserId),
+                targetPackage = targetPackage,
+                scope = scopeFor(targetPackage),
                 updatedAtMs = System.currentTimeMillis(),
             ),
         )

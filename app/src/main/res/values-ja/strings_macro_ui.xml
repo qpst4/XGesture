@@ -46,6 +46,8 @@
     <string name="macro_target_pick_subtitle">ホーム画面から起動できるアプリだけが表示されます。</string>
     <string name="macro_target_empty">起動できるアプリが見つかりません</string>
     <string name="macro_target_selected">選択中 · %1$s</string>
+    <string name="macro_target_pick_none">アプリを指定しない</string>
+    <string name="macro_target_pick_none_desc">録画も再生も現在の画面から始まります</string>
 
     <!-- 录制器接线状态 -->
     <string name="macro_recording_unavailable">このビルドではまだ記録を利用できません</string>
