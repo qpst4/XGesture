@@ -1,5 +1,10 @@
 package com.slideindex.app.ui.miuix
 
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.Text
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
@@ -14,6 +19,8 @@ import androidx.compose.ui.unit.DpSize
 import kotlinx.coroutines.flow.distinctUntilChanged
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.TextFieldDefaults
+import top.yukonga.miuix.kmp.glass.GlassTextField
+import top.yukonga.miuix.kmp.glass.GlassTextFieldDefaults
 
 /**
  * 与外部 [value] 双向同步的 Miuix 表单输入框，用于替代 Material [androidx.compose.material3.OutlinedTextField]。
@@ -24,11 +31,13 @@ fun MiuixLabeledTextField(
     onValueChange: (String) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
-    insideMargin: DpSize = TextFieldDefaults.InsideMargin,
+    insideMargin: DpSize? = null,
     singleLine: Boolean = true,
     minLines: Int = 1,
     maxLines: Int = if (singleLine) 1 else 6,
     useLabelAsPlaceholder: Boolean = true,
+    supportingText: String? = null,
+    isError: Boolean = false,
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
 ) {
@@ -69,16 +78,18 @@ fun MiuixLabeledTextField(
         )
     }
 
-    TextField(
+    LabeledTextFieldImpl(
         state = state,
-        modifier = modifier.fillMaxWidth(),
         label = label,
+        modifier = modifier,
+        insideMargin = insideMargin,
         useLabelAsPlaceholder = useLabelAsPlaceholder,
         lineLimits = lineLimits,
-        insideMargin = insideMargin,
         leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
-    )
+        supportingText = supportingText,
+            isError = isError,
+        )
 }
 
 /**
@@ -89,11 +100,13 @@ fun MiuixLabeledTextField(
     state: TextFieldState,
     label: String,
     modifier: Modifier = Modifier,
-    insideMargin: DpSize = TextFieldDefaults.InsideMargin,
+    insideMargin: DpSize? = null,
     singleLine: Boolean = true,
     minLines: Int = 1,
     maxLines: Int = if (singleLine) 1 else 6,
     useLabelAsPlaceholder: Boolean = true,
+    supportingText: String? = null,
+    isError: Boolean = false,
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
 ) {
@@ -106,14 +119,76 @@ fun MiuixLabeledTextField(
         )
     }
 
-    TextField(
+    LabeledTextFieldImpl(
         state = state,
-        modifier = modifier.fillMaxWidth(),
         label = label,
+        modifier = modifier,
+        insideMargin = insideMargin,
         useLabelAsPlaceholder = useLabelAsPlaceholder,
         lineLimits = lineLimits,
-        insideMargin = insideMargin,
         leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
-    )
+        supportingText = supportingText,
+            isError = isError,
+        )
+}
+
+/**
+ * 玻璃浮层内、且**不在卡片里**时自动换成 rc01 的 `GlassTextField`（半透明胶囊输入框）；
+ * 其余情况保持 miuix `TextField`。
+ *
+ * 依据：`miuix docs/components/glass/glasstextfield.md` 与示例 `GlassHalfBottomSheetDemo`
+ * 都把它直接放在抽屉 body 上；卡片里的输入框再叠一层玻璃会发灰，所以用 [LocalMiuixInCard] 排除。
+ */
+@Composable
+private fun LabeledTextFieldImpl(
+    state: TextFieldState,
+    label: String,
+    modifier: Modifier,
+    insideMargin: DpSize?,
+    useLabelAsPlaceholder: Boolean,
+    supportingText: String?,
+    isError: Boolean,
+    lineLimits: TextFieldLineLimits,
+    leadingIcon: @Composable (() -> Unit)?,
+    trailingIcon: @Composable (() -> Unit)?,
+) {
+    val useGlass = LocalMiuixGlassSurface.current && !LocalMiuixInCard.current
+    Column(modifier = Modifier.fillMaxWidth()) {
+    if (useGlass) {
+        GlassTextField(
+            state = state,
+            modifier = modifier.fillMaxWidth(),
+            insideMargin = insideMargin ?: GlassTextFieldDefaults.InsideMargin,
+            label = label,
+            useLabelAsPlaceholder = useLabelAsPlaceholder,
+            lineLimits = lineLimits,
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+        )
+    } else {
+        TextField(
+            state = state,
+            modifier = modifier.fillMaxWidth(),
+            insideMargin = insideMargin ?: TextFieldDefaults.InsideMargin,
+            label = label,
+            useLabelAsPlaceholder = useLabelAsPlaceholder,
+            lineLimits = lineLimits,
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+        )
+    }
+        if (supportingText != null) {
+            Text(
+                text = supportingText,
+                style = MiuixTheme.textStyles.footnote1,
+                color = if (isError) {
+                    MiuixTheme.colorScheme.error
+                } else {
+                    MiuixTheme.colorScheme.onSurfaceVariantSummary
+                },
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp),
+            )
+        }
+    }
 }

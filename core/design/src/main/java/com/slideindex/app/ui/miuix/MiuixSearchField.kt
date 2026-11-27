@@ -22,6 +22,7 @@ import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.icon.extended.Search
+import top.yukonga.miuix.kmp.glass.GlassTextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import com.slideindex.app.design.R
 
@@ -61,38 +62,56 @@ fun MiuixSearchField(
             }
     }
 
-    TextField(
-        state = state,
-        modifier = modifier
-            .fillMaxWidth()
-            .then(
-                if (focusRequester != null) {
-                    Modifier.focusRequester(focusRequester)
-                } else {
-                    Modifier
-                },
-            ),
-        label = hint,
-        useLabelAsPlaceholder = true,
-        lineLimits = TextFieldLineLimits.SingleLine,
-        leadingIcon = {
-            Icon(
-                imageVector = MiuixIcons.Search,
-                contentDescription = hint,
-                modifier = Modifier.padding(horizontal = 12.dp),
-                tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-            )
-        },
-        trailingIcon = {
-            if (state.text.isNotEmpty()) {
-                IconButton(onClick = { state.clearText() }) {
-                    Icon(
-                        imageVector = MiuixIcons.Close,
-                        contentDescription = stringResource(R.string.search_clear),
-                        tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    )
-                }
+    val fieldModifier = modifier
+        .fillMaxWidth()
+        .then(
+            if (focusRequester != null) {
+                Modifier.focusRequester(focusRequester)
+            } else {
+                Modifier
+            },
+        )
+    val leading: @Composable (() -> Unit) = {
+        Icon(
+            imageVector = MiuixIcons.Search,
+            contentDescription = hint,
+            modifier = Modifier.padding(horizontal = 12.dp),
+            tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+        )
+    }
+    val trailing: @Composable (() -> Unit) = {
+        if (state.text.isNotEmpty()) {
+            IconButton(onClick = { state.clearText() }) {
+                Icon(
+                    imageVector = MiuixIcons.Close,
+                    contentDescription = stringResource(R.string.search_clear),
+                    tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                )
             }
-        },
-    )
+        }
+    }
+    // 玻璃浮层里必须跟着换玻璃件（与 MiuixLabeledTextField 同口径）：
+    // 否则输入框画的是一块不透明的页面底色，在 GlassDialog 里材质明显不搭
+    // （搜索面板文件页「添加黑名单文件夹」弹窗最明显）。
+    if (LocalMiuixGlassSurface.current && !LocalMiuixInCard.current) {
+        GlassTextField(
+            state = state,
+            modifier = fieldModifier,
+            label = hint,
+            useLabelAsPlaceholder = true,
+            lineLimits = TextFieldLineLimits.SingleLine,
+            leadingIcon = leading,
+            trailingIcon = trailing,
+        )
+    } else {
+        TextField(
+            state = state,
+            modifier = fieldModifier,
+            label = hint,
+            useLabelAsPlaceholder = true,
+            lineLimits = TextFieldLineLimits.SingleLine,
+            leadingIcon = leading,
+            trailingIcon = trailing,
+        )
+    }
 }

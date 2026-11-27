@@ -1,12 +1,15 @@
 package com.slideindex.app.ui.miuix
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
@@ -33,6 +36,18 @@ fun MiuixBottomSheet(
     applyNavigationBarInset: Boolean = true,
     /** 关闭动画播完后回调；需先让 [show] 变 false 才会触发，关闭被中途取消时不触发。 */
     onDismissFinished: (() -> Unit)? = null,
+    /**
+     * 内容是否从浮动头部下方**穿行**。
+     *
+     * - `false`（默认）：包装层把头部实测高度垫在内容外面。安全，首行不会被盖，但滚动时内容
+     *   到不了模糊带下面，观感等于"固定磨砂头"。
+     * - `true`：包装层不垫，把头高通过 [LocalMiuixSheetHeaderPadding] 下发给内容，
+     *   由内容把它加在滚动容器**内侧**：
+     *   `.verticalScroll(state).padding(LocalMiuixSheetHeaderPadding.current)`，
+     *   或 `LazyColumn(contentPadding = ...)`。滚动时内容从模糊带下穿过 ——
+     *   与 miuix 示例 `GlassBottomSheetDemo` 的 `Column(verticalScroll, padding(innerPadding))` 一致。
+     */
+    scrollUnderHeader: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val insetContent: @Composable () -> Unit = {
@@ -58,8 +73,18 @@ fun MiuixBottomSheet(
             content = { headerPadding ->
                 // rc01 的头部是**浮**在内容上的（progressiveBlur），实测头部高度以 PaddingValues 下发。
                 // 不消费它，首行内容就会被盖在头部的模糊带下面。
-                Box(Modifier.padding(top = headerPadding.calculateTopPadding())) {
-                    insetContent()
+                MiuixGlassSurfaceScope {
+                    if (scrollUnderHeader) {
+                        CompositionLocalProvider(
+                            LocalMiuixSheetHeaderPadding provides headerPadding,
+                        ) {
+                            insetContent()
+                        }
+                    } else {
+                        Box(Modifier.padding(top = headerPadding.calculateTopPadding())) {
+                            insetContent()
+                        }
+                    }
                 }
             },
         )
@@ -76,9 +101,20 @@ fun MiuixBottomSheet(
         onDismissRequest = onDismissRequest,
         insideMargin = insideMargin ?: BottomSheetDefaults.insideMargin,
         onDismissFinished = onDismissFinished,
-        content = insetContent,
+        // 窗口版没有浮动头部，下发的内边距恒为 0。
+        content = {
+            CompositionLocalProvider(LocalMiuixSheetHeaderPadding provides PaddingValues(0.dp)) {
+                insetContent()
+            }
+        },
     )
 }
+
+/**
+ * 浮动头部的实测高度。只有 `MiuixBottomSheet(scrollUnderHeader = true)` 会下发非零值，
+ * 其余场景恒为 0，所以内容里无条件 `padding(LocalMiuixSheetHeaderPadding.current)` 是安全的。
+ */
+val LocalMiuixSheetHeaderPadding = compositionLocalOf { PaddingValues(0.dp) }
 
 /**
  * miuix 的 BottomSheet 只内建输入法内边距，导航栏留白明确交给调用方

@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.glass.GlassCard
+import top.yukonga.miuix.kmp.glass.GlassCardDefaults
 
 /**
  * 类型 1：列表设置卡（灰底上的白 Card，多行开关/箭头/滑条）。
@@ -99,13 +101,11 @@ fun MiuixTabSettingsCard(
 ) {
     val showTabs = !tabs.isNullOrEmpty()
     val resolvedContentTopPadding = contentTopPadding ?: if (showTabs) 12.dp else 0.dp
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = outerHorizontalPadding)
-            .padding(bottom = outerBottomPadding),
-        insideMargin = PaddingValues(16.dp),
-    ) {
+    val cardModifier = modifier
+        .fillMaxWidth()
+        .padding(horizontal = outerHorizontalPadding)
+        .padding(bottom = outerBottomPadding)
+    val body: @Composable ColumnScope.() -> Unit = {
         Column(modifier = Modifier.fillMaxWidth()) {
             if (showTabs) {
                 val tabLabels = tabs
@@ -125,6 +125,22 @@ fun MiuixTabSettingsCard(
             )
         }
     }
+    // 玻璃浮层内换成 GlassCard（半透明填充，透出下层材质）；普通页面保持不透明 Card。
+    if (LocalMiuixGlassSurface.current) {
+        GlassCard(
+            modifier = cardModifier,
+            cornerRadius = MiuixGlassCardCornerRadius,
+            insideMargin = MiuixGlassCardInsideMargin,
+        ) {
+            body()
+        }
+    } else {
+        Card(
+            modifier = cardModifier,
+            insideMargin = PaddingValues(16.dp),
+            content = body,
+        )
+    }
 }
 
 /** 自定义块：下载/安装进度等临时信息卡（外 12dp，内 16dp）。 */
@@ -133,14 +149,31 @@ fun MiuixProgressCard(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            content = content,
-        )
+    val cardModifier = modifier
+        .fillMaxWidth()
+        .padding(horizontal = 12.dp)
+    if (LocalMiuixGlassSurface.current) {
+        GlassCard(
+            modifier = cardModifier,
+            cornerRadius = MiuixGlassCardCornerRadius,
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                content = content,
+            )
+        }
+    } else {
+        Card(modifier = cardModifier) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                content = content,
+            )
+        }
     }
 }
+
+/** 玻璃卡片圆角：与全站 Card 的 16dp 对齐（`CardDefaults.CornerRadius`）。 */
+private val MiuixGlassCardCornerRadius = GlassCardDefaults.CornerRadius
+
+/** 玻璃卡片内边距：与 `Card(insideMargin = 16.dp)` 保持一致。 */
+private val MiuixGlassCardInsideMargin = PaddingValues(16.dp)

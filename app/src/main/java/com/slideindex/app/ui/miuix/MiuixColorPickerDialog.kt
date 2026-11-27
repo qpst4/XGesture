@@ -16,6 +16,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.miuix.MiuixDialogActionsRow
+import com.slideindex.app.ui.miuix.MiuixDialogAction
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
 import com.slideindex.app.R
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.ColorPicker
@@ -31,6 +34,7 @@ import top.yukonga.miuix.kmp.window.WindowDialog
  */
 @Composable
 fun MiuixColorPickerDialog(
+    show: Boolean = true,
     title: String,
     initialColorArgb: Int,
     onDismiss: () -> Unit,
@@ -38,8 +42,8 @@ fun MiuixColorPickerDialog(
 ) {
     var picked by remember(initialColorArgb) { mutableStateOf(Color(initialColorArgb)) }
 
-    WindowDialog(
-        show = true,
+    MiuixAdaptiveDialog(
+        show = show,
         title = title,
         onDismissRequest = onDismiss,
     ) {
@@ -49,20 +53,19 @@ fun MiuixColorPickerDialog(
                 onColorChanged = { picked = it },
             )
             Spacer(Modifier.height(20.dp))
-            Row(modifier = Modifier.fillMaxWidth()) {
-                TextButton(
-                    text = stringResource(R.string.cancel),
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f),
-                )
-                Spacer(Modifier.width(20.dp))
-                TextButton(
-                    text = stringResource(R.string.confirm),
-                    onClick = { onConfirm(picked.toArgb()) },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.textButtonColorsPrimary(),
-                )
-            }
+            MiuixDialogActionsRow(
+                actions = listOf(
+                    MiuixDialogAction(
+                        text = stringResource(R.string.cancel),
+                        onClick = onDismiss,
+                    ),
+                    MiuixDialogAction(
+                        text = stringResource(R.string.confirm),
+                        onClick = { onConfirm(picked.toArgb()) },
+                        primary = true,
+                    ),
+                ),
+            )
         }
     }
 }

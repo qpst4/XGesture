@@ -20,6 +20,7 @@ import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.glass.GlassDropdownPopup
 import top.yukonga.miuix.kmp.glass.GlassPopupItem
+import top.yukonga.miuix.kmp.glass.GlassPopupSizing
 
 /**
  * 行/块触发的**玻璃**下拉菜单（替代 miuix `WindowIconDropdownMenu`）。
@@ -36,11 +37,13 @@ import top.yukonga.miuix.kmp.glass.GlassPopupItem
 fun MiuixGlassDropdownMenu(
     entry: DropdownEntry,
     modifier: Modifier = Modifier,
+    sizing: GlassPopupSizing? = null,
     content: @Composable () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     var anchorBounds by remember { mutableStateOf(Rect.Zero) }
     val backdrop: LayerBackdrop? = LocalMiuixPageBackdrop.current ?: LocalMiuixScreenBackdrop.current
+    val resolvedSizing = sizing ?: rememberAutoGlassPopupSizing(entry.items.size)
 
     Box(
         modifier = modifier.onGloballyPositioned { anchorBounds = it.boundsInWindow() },
@@ -56,6 +59,7 @@ fun MiuixGlassDropdownMenu(
             onDismissRequest = { expanded = false },
             anchorBounds = anchorBounds,
             backdrop = backdrop,
+            sizing = resolvedSizing,
         ) {
             entry.items.forEach { item ->
                 GlassPopupItem(
@@ -85,14 +89,17 @@ fun MiuixGlassDropdownMenu(
     onDismissRequest: () -> Unit,
     anchorBounds: Rect,
     items: List<top.yukonga.miuix.kmp.basic.DropdownItem>,
+    sizing: GlassPopupSizing? = null,
 ) {
     val backdrop: LayerBackdrop? = LocalMiuixPageBackdrop.current ?: LocalMiuixScreenBackdrop.current
+    val resolvedSizing = sizing ?: rememberAutoGlassPopupSizing(items.size)
     TopLayer {
         GlassDropdownPopup(
             show = expanded,
             onDismissRequest = onDismissRequest,
             anchorBounds = anchorBounds,
             backdrop = backdrop,
+            sizing = resolvedSizing,
         ) {
             items.forEach { item ->
                 GlassPopupItem(

@@ -12,6 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.miuix.MiuixDialogActionsRow
+import com.slideindex.app.ui.miuix.MiuixDialogActionButton
+import com.slideindex.app.ui.miuix.MiuixDialogAction
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
 import com.slideindex.app.R
 import com.slideindex.app.ui.Md3PickerListRow
 import com.slideindex.app.ui.PickerTrailingMode
@@ -29,10 +33,9 @@ fun MiuixPickerDialog(
     showDismissButton: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    if (!show) return
-
-    WindowDialog(
-        show = true,
+    // show 直接透传：提前 return 会让对话框在关闭瞬间就离开组合，退出动画丢失。
+    MiuixAdaptiveDialog(
+        show = show,
         title = title,
         onDismissRequest = onDismissRequest,
     ) {
@@ -46,7 +49,7 @@ fun MiuixPickerDialog(
             )
             if (showDismissButton) {
                 Spacer(Modifier.height(16.dp))
-                TextButton(
+                MiuixDialogActionButton(
                     text = dismissText,
                     onClick = onDismissRequest,
                     modifier = Modifier.fillMaxWidth(),

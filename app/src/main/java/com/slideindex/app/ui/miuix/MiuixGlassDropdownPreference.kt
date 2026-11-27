@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.glass.GlassDropdownPreference
+import top.yukonga.miuix.kmp.glass.GlassPopupSizing
 
 /**
  * 设置行里的**玻璃下拉偏好项**（`GlassDropdownPreference` 的项目侧封装）：
@@ -28,8 +29,11 @@ fun MiuixGlassDropdownPreference(
     summary: String? = null,
     enabled: Boolean = true,
     startAction: (@Composable () -> Unit)? = null,
+    /** 浮层尺寸；null 时按项数自动决定（长列表用更高的面板）。 */
+    sizing: GlassPopupSizing? = null,
 ) {
     val backdrop: LayerBackdrop? = LocalMiuixPageBackdrop.current ?: LocalMiuixScreenBackdrop.current
+    val resolvedSizing = sizing ?: rememberAutoGlassPopupSizing(items.size)
     GlassDropdownPreference(
         onSelectedIndexChange = onSelectedIndexChange,
         items = items,
@@ -40,5 +44,6 @@ fun MiuixGlassDropdownPreference(
         enabled = enabled,
         summary = summary,
         startAction = startAction,
+        sizing = resolvedSizing,
     )
 }

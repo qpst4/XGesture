@@ -22,6 +22,7 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.glass.GlassIconButton
 import top.yukonga.miuix.kmp.glass.GlassIconDropdownMenu
 import top.yukonga.miuix.kmp.glass.GlassTopAppBarDefaults
+import top.yukonga.miuix.kmp.glass.GlassPopupSizing
 import top.yukonga.miuix.kmp.glass.glassPopupAnchor
 import top.yukonga.miuix.kmp.glass.glassPopupAnchorContent
 import top.yukonga.miuix.kmp.glass.rememberGlassPopupAnchor
@@ -51,10 +52,13 @@ fun MiuixGlassIconDropdown(
     tint: Color = MiuixTheme.colorScheme.onSurface,
     capsule: Boolean = true,
     horizontalAlignment: Alignment.Horizontal = Alignment.End,
+    /** 浮层尺寸；null 时按项数自动决定（长列表用更高的面板）。 */
+    sizing: GlassPopupSizing? = null,
 ) {
     val anchor = rememberGlassPopupAnchor()
     var expanded by remember { mutableStateOf(false) }
     val pageBackdrop = LocalMiuixPageBackdrop.current
+    val resolvedSizing = sizing ?: rememberAutoGlassPopupSizing(entries.sumOf { it.items.size })
     val triggerModifier = modifier.glassPopupAnchor(
         anchor = anchor,
         cornerRadius = GlassTopAppBarDefaults.ButtonSize / 2,
@@ -108,6 +112,7 @@ fun MiuixGlassIconDropdown(
             entries = entries,
             backdrop = pageBackdrop,
             horizontalAlignment = horizontalAlignment,
+            sizing = resolvedSizing,
         )
     }
 }

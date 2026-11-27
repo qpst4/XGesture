@@ -58,6 +58,7 @@ import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.glass.ChevronBackward
 import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.glass.GlassCardDefaults
 import top.yukonga.miuix.kmp.glass.GlassIconButton
 import top.yukonga.miuix.kmp.glass.GlassTopAppBarDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -374,6 +375,9 @@ fun MiuixGlassBackNavigationIcon(onBack: () -> Unit) {
 
 /**
  * 分组圆角卡片行背景：每行独立 LazyColumn item，保持虚拟化。
+ *
+ * 玻璃浮层内自动换成 `GlassCardDefaults.color()` 的半透明填充（与 `CardSegment` 同口径），
+ * 普通页面保持不透明 `surfaceContainer`。
  */
 @Composable
 fun Modifier.miuixGroupedCardItem(
@@ -382,12 +386,17 @@ fun Modifier.miuixGroupedCardItem(
     outerHorizontalPadding: Dp = 12.dp,
     outerTopPadding: Dp = 0.dp,
     outerBottomPadding: Dp = 0.dp,
-    color: androidx.compose.ui.graphics.Color = MiuixTheme.colorScheme.surfaceContainer,
+    color: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Unspecified,
 ): Modifier {
     val r = CardDefaults.CornerRadius
     val z = 0.dp
     val top = index == 0
     val bottom = index == count - 1
+    val resolvedColor = when {
+        color != androidx.compose.ui.graphics.Color.Unspecified -> color
+        LocalMiuixGlassSurface.current -> GlassCardDefaults.color()
+        else -> MiuixTheme.colorScheme.surfaceContainer
+    }
     return fillMaxWidth()
         .padding(
             start = outerHorizontalPadding,
@@ -396,7 +405,7 @@ fun Modifier.miuixGroupedCardItem(
             bottom = if (bottom) outerBottomPadding else 0.dp,
         )
         .miuixSquircleSurface(
-            color = color,
+            color = resolvedColor,
             topStart = if (top) r else z,
             topEnd = if (top) r else z,
             bottomEnd = if (bottom) r else z,
