@@ -162,6 +162,7 @@ fun CompositeActionPresetsScreen(
 
     deleteTarget?.let { target ->
         com.slideindex.app.ui.miuix.MiuixConfirmDialog(
+            confirmDestructive = true,
             show = true,
             onDismissRequest = { deleteTarget = null },
             title = stringResource(R.string.composite_library_delete),

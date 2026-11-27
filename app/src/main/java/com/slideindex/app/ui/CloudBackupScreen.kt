@@ -293,6 +293,7 @@ fun CloudBackupScreen(
     }
 
     MiuixConfirmDialog(
+        confirmDestructive = true,
         show = pendingDelete != null,
         onDismissRequest = { onRequestDelete(null) },
         title = stringResource(R.string.cloud_backup_delete_confirm_title),

@@ -133,6 +133,7 @@ fun StashClipboardSettingsScreen(
     }
 
     MiuixConfirmDialog(
+        confirmDestructive = true,
         show = showClearStashDialog,
         onDismissRequest = { showClearStashDialog = false },
         title = stringResource(R.string.stash_clear_all_confirm_title),
@@ -394,6 +395,7 @@ fun ClipboardHistorySettingsScreen(
     }
 
     MiuixConfirmDialog(
+        confirmDestructive = true,
         show = showClearClipboardDialog,
         onDismissRequest = { showClearClipboardDialog = false },
         title = stringResource(R.string.clipboard_clear_history_confirm_title),

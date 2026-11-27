@@ -45,7 +45,7 @@ webkit = "1.17.0"
 material = "1.14.0"
 hiddenapibypass = "6.1"
 libsuperuser = "1.1.1"
-miuix = "0.9.5-beta03"
+miuix = "0.9.5-rc01"
 materialkolor-utilities = "6.0.0"
 # noinspection GradleDependency
 compose-material3 = "1.5.0-alpha28"

@@ -150,6 +150,7 @@ fun GestureAppProfilesScreen(
 
     val target = deleteTarget
     MiuixConfirmDialog(
+        confirmDestructive = true,
         show = target != null,
         onDismissRequest = { deleteTarget = null },
         title = stringResource(

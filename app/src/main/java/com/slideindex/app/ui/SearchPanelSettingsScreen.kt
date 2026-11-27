@@ -571,6 +571,7 @@ fun SearchPanelSettingsScreen(
     }
 
     MiuixConfirmDialog(
+        confirmDestructive = true,
         show = showClearHistoryDialog,
         onDismissRequest = { showClearHistoryDialog = false },
         title = stringResource(R.string.search_panel_history_clear_confirm_title),

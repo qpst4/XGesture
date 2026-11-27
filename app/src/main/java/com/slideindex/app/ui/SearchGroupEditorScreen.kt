@@ -424,6 +424,7 @@ fun SearchGroupEditorScreen(
 
     if (showDeleteDialog && onDelete != null) {
         MiuixConfirmDialog(
+            confirmDestructive = true,
             show = true,
             onDismissRequest = { showDeleteDialog = false },
             title = stringResource(R.string.search_group_delete_title),

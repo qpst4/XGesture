@@ -184,6 +184,7 @@ fun SearchPanelClipboardSearchSettingsScreen(
     }
 
     MiuixConfirmDialog(
+        confirmDestructive = true,
         show = showClearDialog,
         onDismissRequest = { showClearDialog = false },
         title = stringResource(R.string.search_panel_clipboard_clear_confirm_title),

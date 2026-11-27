@@ -153,6 +153,7 @@ fun ShellOutputHistoryScreen(
     }
 
     MiuixConfirmDialog(
+        confirmDestructive = true,
         show = showClearConfirm,
         onDismissRequest = { showClearConfirm = false },
         title = stringResource(R.string.shell_panel_history_clear_confirm_title),

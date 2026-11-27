@@ -612,6 +612,7 @@ fun ActivityShortcutEditScreen(
 
     if (showDiscardDialog) {
         MiuixConfirmDialog(
+            confirmDestructive = true,
             show = true,
             title = stringResource(R.string.activity_shortcut_discard_title),
             message = stringResource(R.string.activity_shortcut_discard_message),

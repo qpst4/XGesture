@@ -347,6 +347,7 @@ fun CloudStorageConfigEditorScreen(
     )
 
     MiuixConfirmDialog(
+        confirmDestructive = true,
         show = confirmRemove,
         onDismissRequest = { confirmRemove = false },
         title = stringResource(R.string.cloud_storage_delete_confirm_title),

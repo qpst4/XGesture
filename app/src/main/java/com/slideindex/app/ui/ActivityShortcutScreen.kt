@@ -590,6 +590,7 @@ private fun ActivityShortcutDeleteDialog(
     onConfirm: (ActivityShortcut) -> Unit
 ) {
     MiuixConfirmDialog(
+        confirmDestructive = true,
         show = target != null,
         onDismissRequest = onDismiss,
         title = stringResource(R.string.activity_shortcut_delete_title),

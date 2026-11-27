@@ -5,12 +5,14 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.glass.GlassBottomSheet
+import top.yukonga.miuix.kmp.glass.GlassBottomSheetDefaults
 import top.yukonga.miuix.kmp.layout.BottomSheetDefaults
 import top.yukonga.miuix.kmp.window.WindowBottomSheet
 
@@ -23,6 +25,8 @@ fun MiuixBottomSheet(
     allowDismiss: Boolean = true,
     startAction: @Composable (() -> Unit)? = null,
     endAction: @Composable (() -> Unit)? = null,
+    /** 钉在标题下方、头部内部的一行（rc01 的 `headerBottomContent`），会随浮动头部一起模糊。 */
+    headerBottomContent: @Composable () -> Unit = {},
     /** 内容区四边留白；null 用 miuix 默认。sheet 内放带自身外边距的行（如 settingsCardItems）时传小值避免双层缩进。 */
     insideMargin: DpSize? = null,
     /** 是否统一补"实心导航条"（三键导航）的底部留白；需要内容铺到导航栏后面的 sheet 可传 false。 */
@@ -46,9 +50,18 @@ fun MiuixBottomSheet(
             allowDismiss = allowDismiss,
             startAction = startAction,
             endAction = endAction,
-            insideMargin = insideMargin ?: BottomSheetDefaults.insideMargin,
+            headerBottomContent = headerBottomContent,
+            // rc01 起玻璃抽屉的内容留白改成 12dp（`GlassBottomSheetDefaults.InsideMargin`），
+            // 与全站 12dp 页边基线一致；旧版这里是 `BottomSheetDefaults.insideMargin`（24dp）。
+            insideMargin = insideMargin ?: GlassBottomSheetDefaults.InsideMargin,
             onDismissFinished = onDismissFinished,
-            content = insetContent,
+            content = { headerPadding ->
+                // rc01 的头部是**浮**在内容上的（progressiveBlur），实测头部高度以 PaddingValues 下发。
+                // 不消费它，首行内容就会被盖在头部的模糊带下面。
+                Box(Modifier.padding(top = headerPadding.calculateTopPadding())) {
+                    insetContent()
+                }
+            },
         )
         return
     }

@@ -277,6 +277,7 @@ fun FreezerAppsPickerScreen(
         val state = FreezerOperations.stateOf(context, app)
         val frozen = state.isFrozen
         MiuixConfirmDialog(
+            confirmDestructive = true,
             show = true,
             onDismissRequest = { pendingRemove = null },
             title = app.label,

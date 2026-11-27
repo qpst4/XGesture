@@ -128,6 +128,7 @@ fun MacroListScreen(
 
     pendingDelete?.let { target ->
         MiuixConfirmDialog(
+            confirmDestructive = true,
             show = true,
             onDismissRequest = { pendingDelete = null },
             title = stringResource(R.string.macro_delete_title),

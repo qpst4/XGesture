@@ -339,6 +339,7 @@ fun NotificationHistoryScreen(
 
     val deleteItem = pendingDeleteItem
     MiuixConfirmDialog(
+        confirmDestructive = true,
         show = deleteItem != null,
         onDismissRequest = { pendingDeleteItem = null },
         title = stringResource(R.string.notification_history_delete_confirm_title),
@@ -352,6 +353,7 @@ fun NotificationHistoryScreen(
     )
 
     MiuixConfirmDialog(
+        confirmDestructive = true,
         show = showClearAllConfirm,
         onDismissRequest = { showClearAllConfirm = false },
         title = stringResource(R.string.notification_history_clear_all_confirm_title),

@@ -318,6 +318,7 @@ fun ImageSearchEngineSettingsScreen(
 
     val engineToDelete = deletingEngine
     MiuixConfirmDialog(
+        confirmDestructive = true,
         show = engineToDelete != null,
         onDismissRequest = { deletingEngine = null },
         title = stringResource(R.string.search_engine_delete_title),

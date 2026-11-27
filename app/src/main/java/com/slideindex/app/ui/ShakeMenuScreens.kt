@@ -76,6 +76,7 @@ fun ShakeMenuSettingsScreen(
 
     pendingRemoval?.let { menu ->
         MiuixConfirmDialog(
+            confirmDestructive = true,
             show = true,
             onDismissRequest = { pendingRemoval = null },
             title = stringResource(R.string.shake_menu_delete),
