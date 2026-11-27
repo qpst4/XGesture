@@ -22,6 +22,7 @@ internal class SystemGestureTakeoverController(
   private val configReader = HookConfigReader(log)
   private val bridge = ModuleGestureBridgeClient(context, log)
   private val policy = TakeoverSessionPolicy()
+  private var primaryPointerId = MotionEvent.INVALID_POINTER_ID
 
   @Volatile
   private var cachedRects: List<TakeoverRect> = emptyList()
@@ -134,6 +135,10 @@ internal class SystemGestureTakeoverController(
       if (!canAccept(hit.sideId, event.rawX, event.rawY)) return false
     }
     val injected = (policyFlags and POLICY_FLAG_INJECTED) != 0
+    val activeSide = policy.activeSideId()
+    val keepRegionalPick = !injected && action == MotionEvent.ACTION_POINTER_DOWN &&
+      activeSide != TakeoverSessionPolicy.NO_SIDE &&
+      bridge.cancelRegionalPickSelection(policy.activeSessionId(), activeSide)
     val decision = policy.onEvent(
       actionMasked = action,
       pointerCount = event.pointerCount,
@@ -143,8 +148,12 @@ internal class SystemGestureTakeoverController(
       injected = injected,
       bridgeAvailable = bridgeAvailable,
       rects = rects,
+      keepRegionalPick = keepRegionalPick,
+      primaryPointerLifted = action == MotionEvent.ACTION_POINTER_UP &&
+        event.getPointerId(event.actionIndex) == primaryPointerId,
     )
     if (!decision.swallow) return false
+    if (decision.isSessionStart) primaryPointerId = event.getPointerId(0)
 
     if (decision.forwardToApp) {
       val forwarded = bridge.sendTouch(

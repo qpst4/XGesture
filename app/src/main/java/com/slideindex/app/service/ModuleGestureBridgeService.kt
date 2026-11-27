@@ -60,6 +60,9 @@ class ModuleGestureBridgeService : Service() {
       SlideIndexAccessibilityService.handleModuleGestureSessionEnd(sessionId, reason)
     }
 
+    override fun cancelRegionalPickSelection(sessionId: Long, sideId: Int): Boolean =
+      enforceTrustedCaller() && SlideIndexAccessibilityService.cancelModuleRegionalPickSelection(sessionId, sideId)
+
     private fun enforceTrustedCaller(): Boolean {
       val callingUid = Binder.getCallingUid()
       if (!isTrustedCaller(callingUid)) {

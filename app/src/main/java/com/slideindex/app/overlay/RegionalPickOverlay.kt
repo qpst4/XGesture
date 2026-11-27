@@ -76,6 +76,7 @@ object RegionalPickOverlay : PickGuardSession {
     private var paused = false
     private var regionalActive = false
     private var sessionActive = false
+    private var selectionCancelled = false
 
     /**
      * 定义这次取词的「主指」。
@@ -99,6 +100,7 @@ object RegionalPickOverlay : PickGuardSession {
     private var ballVisualDockSide: FloatBallSide? = null
     private var edgePickDockSide: FloatBallSide = FloatBallSide.RIGHT
 
+    @Volatile
     var continuedGestureActive = false
         private set
 
@@ -233,33 +235,37 @@ object RegionalPickOverlay : PickGuardSession {
     }
 
     fun forwardContinuedTouch(event: MotionEvent): Boolean {
-        if (!continuedGestureActive) return false
+        if (!continuedGestureActive || !sessionActive) return false
+        if (primaryPointerId == MotionEvent.INVALID_POINTER_ID && event.pointerCount > 0) {
+            // 交接进来的第一个事件里，index 0 通常是最早那根手指；若首个事件本身是 pointer-down
+            // 且落在 index 0，则主指在 index 1。
+            val primaryIndex = if (event.actionMasked == MotionEvent.ACTION_POINTER_DOWN && event.actionIndex == 0) 1 else 0
+            primaryPointerId = event.getPointerId(primaryIndex)
+        }
         when (event.actionMasked) {
             MotionEvent.ACTION_MOVE -> {
-                adoptPrimaryPointer(event)
-                handleTouch(event.rawX, event.rawY, MotionEvent.ACTION_MOVE)
+                // 多指期间不跟着移动：等第二指抬起、回到单指后再恢复十字跟随。
+                if (event.pointerCount == 1 && event.getPointerId(0) == primaryPointerId) {
+                    handleTouch(event.rawX, event.rawY, MotionEvent.ACTION_MOVE)
+                }
                 return true
             }
-            // 第二根手指按下 = 撤销区域截图框，立即回退到取词态。
+            // 第二根手指按下：取消当前暂停/区域选择，回到红色未暂停态；松手不提交。
             MotionEvent.ACTION_POINTER_DOWN -> {
-                adoptPrimaryPointer(event)
-                val reverted = revertRegionalToPick()
-                if (reverted) {
-                    Log.i(TAG, "extra finger down → revert regional to text pick")
-                }
-                return reverted
+                cancelContinuedSelection()
+                return true
             }
-            // 主指先抬起：剩下的手指坐标已不是这次手势的锚点，继续走会按它的位置提交一个错误区域。
+            // 主指先抬起：剩下的手指坐标已不是这次手势的锚点，继续走会按它的位置提交错误区域。
             MotionEvent.ACTION_POINTER_UP -> {
-                adoptPrimaryPointer(event)
-                if (event.getPointerId(event.actionIndex) != primaryPointerId) return false
-                Log.i(TAG, "primary pointer up while others down → cancel pick")
-                dismiss()
+                if (event.getPointerId(event.actionIndex) == primaryPointerId) dismiss()
                 return true
             }
             MotionEvent.ACTION_UP -> {
-                adoptPrimaryPointer(event)
-                handleTouch(event.rawX, event.rawY, MotionEvent.ACTION_UP)
+                if (event.getPointerId(0) == primaryPointerId) {
+                    handleTouch(event.rawX, event.rawY, MotionEvent.ACTION_UP)
+                } else {
+                    dismiss()
+                }
                 continuedGestureActive = false
                 EdgeContinuedOverlayHandoff.clearIfInactive()
                 return true
@@ -272,11 +278,6 @@ object RegionalPickOverlay : PickGuardSession {
             }
         }
         return false
-    }
-
-    /** 交接进来的第一个事件里，index 0 始终是最早那根手指，可以直接学它。 */
-    private fun adoptPrimaryPointer(event: MotionEvent) {
-        if (primaryPointerId == -1) primaryPointerId = event.getPointerId(0)
     }
 
     private fun ensureDisplayWindow(hostContext: Context, appSettings: AppSettings): Boolean {
@@ -418,7 +419,7 @@ object RegionalPickOverlay : PickGuardSession {
         PickTouchGuard.arm(
             owner = this,
             context = appContext,
-            onExtraFinger = { revertRegionalToPick() }
+            onExtraFinger = { cancelContinuedSelection() }
         )
         val service = SlideIndexAccessibilityService.accessibilityInstance()
         if (service != null) {
@@ -429,7 +430,7 @@ object RegionalPickOverlay : PickGuardSession {
                 initialRadiusPx = 22f * density,
             )
             com.slideindex.app.link.LinkRadarOverlay.setOnTargetBannerReadyListener { holdMs ->
-                if (sessionActive && !paused) {
+                if (sessionActive && !paused && !selectionCancelled) {
                     if (holdMs <= 0) {
                         cancelPauseTimer()
                     } else {
@@ -463,13 +464,7 @@ object RegionalPickOverlay : PickGuardSession {
         val distFromStart = hypot(pickAnchor.x - start.x, pickAnchor.y - start.y)
         if (regionalActive) {
             if (distFromStart < movePx) {
-                regionalActive = false
-                com.slideindex.app.link.LinkRadarOverlay.setTargetSuppressed(false)
-                paused = false
-                selectionStart = null
-                selectionPreviewBounds = null
-                boundsLookupGeneration++
-                PickPrefetchCache.invalidate()
+                clearSelection()
             }
             return
         }
@@ -480,6 +475,27 @@ object RegionalPickOverlay : PickGuardSession {
             PickPrefetchCache.invalidate()
             selectionPreviewBounds = null
         }
+    }
+
+    private fun clearSelection() {
+        regionalActive = false
+        paused = false
+        selectionStart = null
+        selectionPreviewBounds = null
+        boundsLookupGeneration++
+        liveBoundsLookupGeneration++
+        PickPrefetchCache.invalidate()
+        com.slideindex.app.link.LinkRadarOverlay.setTargetSuppressed(false)
+    }
+
+    internal fun cancelContinuedSelection() {
+        if (!sessionActive || (!paused && selectionStart == null && !regionalActive)) return
+        selectionCancelled = true
+        clearSelection()
+        cancelPauseTimer()
+        lastPauseScheduleX = pickAnchor.x
+        lastPauseScheduleY = pickAnchor.y
+        syncCursorAppearance()
     }
 
     private fun finishSession() {
@@ -497,7 +513,7 @@ object RegionalPickOverlay : PickGuardSession {
             // 先撤挡层：结果面板是另一扇窗，挡层盖在上面会吃掉它的点击。
             PickTouchGuard.disarm(this)
             submitPick(host, currentSettings)
-        } else {
+        } else if (!selectionCancelled) {
             val density = cursorPreviewView?.resources?.displayMetrics?.density ?: 1f
             com.slideindex.app.link.LinkRadarOverlay.onPointerTapRequested(
                 pickAnchor.x,
@@ -656,6 +672,7 @@ object RegionalPickOverlay : PickGuardSession {
         val anchor = pickAnchor
         selectionStart = anchor
         paused = true
+        selectionCancelled = false
         val bounds = FloatBallPreviewBoundsCache.hitTestAt(anchor.x, anchor.y)
         if (bounds != null) {
             selectionPreviewBounds = bounds
@@ -664,41 +681,6 @@ object RegionalPickOverlay : PickGuardSession {
             launchPreviewBoundsLookupFallback(anchor)
         }
         syncCursorAppearance()
-    }
-
-    /**
-     * 第二根手指按下：撤销区域截图框，**立即**回到取词态（不用等十字退回起点、也不用再等一次超时）。
-     *
-     * 锚点重置成**当前**十字位置，而不是最初的超时点：指针与手指是 1:1 位移，把十字挪回起点
-     * 会在下一帧 MOVE 被立刻拉回，视觉上闪一下；重置到当前位置则天然带滞回 —— 要再移出
-     * [AppSettings.floatBallRegionalCancelSlopDp] 才会重新进区域态，不会按下第二指就弹回去。
-     *
-     * @return true 表示确实从区域态回退了（此时事件应当被消费）。
-     */
-    fun revertRegionalToPick(): Boolean {
-        Log.i(
-            TAG,
-            "revertRegionalToPick session=$sessionActive regional=$regionalActive paused=$paused"
-        )
-        if (!sessionActive || !regionalActive) return false
-        regionalActive = false
-        cancelPauseTimer()
-        com.slideindex.app.link.LinkRadarOverlay.setTargetSuppressed(true)
-        boundsLookupGeneration++
-        PickPrefetchCache.invalidate()
-        selectionPreviewBounds = null
-        val anchor = pickAnchor
-        selectionStart = anchor
-        paused = true
-        val bounds = FloatBallPreviewBoundsCache.hitTestAt(anchor.x, anchor.y)
-        if (bounds != null) {
-            selectionPreviewBounds = bounds
-            maybeStartPickPrefetch()
-        } else {
-            launchPreviewBoundsLookupFallback(anchor)
-        }
-        syncCursorAppearance()
-        return true
     }
 
     private fun launchPreviewBoundsLookupFallback(anchor: Offset) {
@@ -903,6 +885,7 @@ object RegionalPickOverlay : PickGuardSession {
         selectionPreviewBounds = null
         paused = false
         regionalActive = false
+        selectionCancelled = false
         primaryPointerId = -1
         lastPauseScheduleX = Float.NaN
         lastPauseScheduleY = Float.NaN

@@ -27,6 +27,7 @@ class TakeoverSessionPolicy(
     val sideId: Int,
     var lastEventAtMs: Long,
     var appDetached: Boolean = false,
+    var keepRegionalPick: Boolean = false,
   )
 
   private var session: Session? = null
@@ -35,6 +36,7 @@ class TakeoverSessionPolicy(
   val hasActiveSession: Boolean get() = session != null
 
   fun activeSessionId(): Long = session?.id ?: NO_SESSION
+  fun activeSideId(): Int = session?.takeUnless { it.appDetached }?.sideId ?: NO_SIDE
 
   /** 丢弃当前会话并返回其 id（用于屏幕关闭、配置变更等场景）。 */
   fun reset(): Long {
@@ -52,6 +54,8 @@ class TakeoverSessionPolicy(
     injected: Boolean,
     bridgeAvailable: Boolean,
     rects: List<TakeoverRect>,
+    keepRegionalPick: Boolean = false,
+    primaryPointerLifted: Boolean = false,
   ): Decision {
     if (injected) return pass()
 
@@ -83,6 +87,18 @@ class TakeoverSessionPolicy(
       }
 
       if (pointerCount > 1) {
+        if (keepRegionalPick) active.keepRegionalPick = true
+        if (active.keepRegionalPick && !active.appDetached && !primaryPointerLifted) {
+          return Decision(
+            swallow = true,
+            forwardToApp = false,
+            sessionId = active.id,
+            sideId = active.sideId,
+            isSessionStart = false,
+            notifyAppEnd = false,
+            endReason = REASON_NONE,
+          )
+        }
         // 多指：保持吞流以免半条流漏给系统，同时让 app 放弃当前手势。
         val notify = !active.appDetached
         active.appDetached = true

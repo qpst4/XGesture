@@ -84,7 +84,7 @@ object ModuleHookBridgeContract {
    * 覆盖安装前的旧模块代码，需要完成热重载；框架不支持热重载时才需要重启。
    * 只是普通构建、模块代码没改时这个值不变，所以不会每次安装都误报。
    */
-  const val MODULE_CODE_VERSION = 6
+  const val MODULE_CODE_VERSION = 7
 
   /** 模块所属 APK 的安装路径：区分同代码版本的不同安装代，支持热重载后免重启。 */
   const val STATUS_DETAIL_APK_PREFIX = "apk="

@@ -99,7 +99,8 @@ class SlideIndexAccessibilityService : AccessibilityService() {
     }
 
     /** 当前由输入层接管并转发过来的目标（SIDE_* / TARGET_*），用于会话结束时精确取消。 */
-    private var activeForwardedTarget: Int = NO_FORWARDED_TARGET
+    @Volatile private var activeForwardedTarget: Int = NO_FORWARDED_TARGET
+    @Volatile private var activeForwardedSessionId: Long = -1L
 
     private lateinit var foregroundTracker: SlideIndexAccessibilityForegroundTracker
     private lateinit var watchdog: SlideIndexAccessibilityWatchdog
@@ -273,6 +274,7 @@ class SlideIndexAccessibilityService : AccessibilityService() {
             }
             if (action == android.view.MotionEvent.ACTION_DOWN) {
                 service.activeForwardedTarget = sideId
+                service.activeForwardedSessionId = sessionId
             }
             EdgeDiag.log(
                 "module",
@@ -296,10 +298,21 @@ class SlideIndexAccessibilityService : AccessibilityService() {
             return true
         }
 
+        fun cancelModuleRegionalPickSelection(sessionId: Long, sideId: Int): Boolean {
+            val service = instance ?: return false
+            if (sideId.toPanelSideOrNull() == null || service.activeForwardedSessionId != sessionId ||
+                service.activeForwardedTarget != sideId ||
+                !com.slideindex.app.overlay.RegionalPickOverlay.isConsumingEdgeGestureTouch()
+            ) return false
+            mainHandler.post { com.slideindex.app.overlay.RegionalPickOverlay.cancelContinuedSelection() }
+            return true
+        }
+
         fun handleModuleGestureSessionEnd(sessionId: Long, reason: Int) {
             val service = instance ?: return
             val target = service.activeForwardedTarget
             service.activeForwardedTarget = NO_FORWARDED_TARGET
+            service.activeForwardedSessionId = -1L
             // 「正常终止」与「流被打断」必须分开处理：
             //
             // 模块只有在手指抬起/系统取消（ACTION_UP / ACTION_CANCEL）时才会发 REASON_UP / REASON_CANCEL，
