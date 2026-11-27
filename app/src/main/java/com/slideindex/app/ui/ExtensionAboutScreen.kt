@@ -133,13 +133,16 @@ fun ExtensionAboutScreen(
         }
     }
 
-    val heroCollapsed by remember { derivedStateOf { scrollProgressState.value == 1f } }
     val titleAlpha by remember {
         derivedStateOf { ((scrollProgressState.value - 0.35f) / 0.65f).coerceIn(0f, 1f) }
     }
 
+    // 背板**不按折叠态门控**：顶栏在 `expandable = false` 时由 `isContentScrolled`
+    // （maskProgress）驱动 band，只有 backdrop 非空才会走磨砂分支。若等 hero 完全收起
+    // 才把背板交给顶栏，折叠前那段就只剩一层 surface 色 band —— 浅色主题下就是
+    // "稍微一滚顶栏立刻变白"。对齐 miuix 示例 AboutPage / Mishka 的 BlurredBar：
+    // 页面背板无条件 provide，折叠态只决定要不要再额外叠一层模糊。
     val backdrop = rememberMiuixBlurBackdrop()
-    val blurActive = backdrop != null && heroCollapsed
 
     Scaffold(
         topBar = {
@@ -147,7 +150,7 @@ fun ExtensionAboutScreen(
                 AdaptiveTopAppBar(
                     modifier = Modifier.fillMaxWidth(),
                     title = stringResource(R.string.about_section_title),
-                    backdrop = if (blurActive) backdrop else null,
+                    backdrop = backdrop,
                     expandable = false,
                     defaultWindowInsetsPadding = false,
                     scrollBehavior = scrollBehavior,
