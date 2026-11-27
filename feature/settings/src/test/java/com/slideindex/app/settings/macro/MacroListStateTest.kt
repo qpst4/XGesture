@@ -95,18 +95,21 @@ class MacroListStateTest {
     }
 
     @Test
-    fun `编辑页保存只要名字开始录制还要目标应用`() {
+    fun `编辑页保存与开始录制都只要名字`() {
         val fresh = MacroEditState(macroId = "id")
         assertFalse(fresh.canSave)
         assertFalse(fresh.canStartRecording)
 
         val named = fresh.copy(name = "签到")
         assertTrue(named.canSave)
-        assertFalse(named.canStartRecording)
+        // 目标应用可选：没选 = 全局宏，一样能开始录制（从当前界面开始）。
+        assertTrue(named.canStartRecording)
+        assertFalse(named.hasTargetPackage)
 
         val ready = named.copy(targetPackage = "com.example.target")
         assertTrue(ready.canSave)
         assertTrue(ready.canStartRecording)
+        assertTrue(ready.hasTargetPackage)
     }
 
     @Test

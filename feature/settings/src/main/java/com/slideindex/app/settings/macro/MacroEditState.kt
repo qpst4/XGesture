@@ -17,14 +17,18 @@ data class MacroEditState(
     /** 名字是否已填（保存的前置条件）。 */
     val hasName: Boolean get() = MacroValidation.isNameValid(name)
 
-    /** 是否已选目标 App（开始录制的前置条件）。 */
+    /** 是否已选目标 App；没选 = 全局宏（不拉起任何 App，从当前界面开始录 / 放）。 */
     val hasTargetPackage: Boolean get() = targetPackage.isNotBlank()
 
     /** 点"保存"该不该被拦住：只有名字是硬性的。 */
     val canSave: Boolean get() = hasName
 
-    /** 点"开始录制"该不该被拦住：名字 + 目标 App 都要有。 */
-    val canStartRecording: Boolean get() = hasName && hasTargetPackage
+    /**
+     * 点"开始录制"该不该被拦住：只有名字是硬性的。
+     *
+     * 目标应用是**可选**的（未选 = 全局宏，从当前界面开始录），所以不参与这里。
+     */
+    val canStartRecording: Boolean get() = hasName
 }
 
 /** 宏名的校验规则。 */
