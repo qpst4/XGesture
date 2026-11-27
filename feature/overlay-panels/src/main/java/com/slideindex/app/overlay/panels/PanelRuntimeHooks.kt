@@ -509,10 +509,10 @@ object PanelRuntimeHooks {
     var pickerApps:
         (suspend (Context, com.slideindex.app.data.AppRepository?, Set<String>) -> List<com.slideindex.app.data.AppInfo>)? =
         null
-    /** 持久化环状启动器槽位。 */
+    /** 持久化环状启动器槽位；item 为 null 表示删除绑定（恢复「自动填充」）。 */
     @Volatile
     var persistRingLauncherSlot:
-        ((com.slideindex.app.settings.FvRingLauncherAxis, Int, com.slideindex.app.launcher.QuickLauncherItem) -> Unit)? =
+        ((com.slideindex.app.settings.FvRingLauncherAxis, Int, com.slideindex.app.launcher.QuickLauncherItem?) -> Unit)? =
         null
     /** 当前设置快照（`:app` 的 settingsRepository.readSnapshot()）。 */
     @Volatile
@@ -600,6 +600,8 @@ fun interface RingSlotConfigSheetContent {
         apps: List<com.slideindex.app.data.AppInfo>,
         onDismiss: () -> Unit,
         onSelectItem: (com.slideindex.app.launcher.QuickLauncherItem?) -> Unit,
+        /** 圆环槽位「无 → 自动填充」：删除槽位绑定。 */
+        onRemoveSlot: () -> Unit,
         onOpenCustomIconEditor: () -> Unit,
         launchCreateShortcut: (Any, (Any?) -> Unit) -> Unit,
     )

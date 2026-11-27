@@ -727,6 +727,35 @@ class OverlaySettingsMutator @Inject constructor(
         }
     }
 
+    /**
+     * 删除槽位绑定（= 恢复「自动填充」）：key 不存在才是未配置，
+     * 只写空条目（「透明」）无法让自动填充重新接管。
+     */
+    suspend fun removeFvRingLauncherSlot(
+        axis: FvRingLauncherAxis,
+        index: Int,
+    ) = editor.edit { prefs ->
+        val linkSlots = prefs[SettingsPreferenceKeys.FV_RING_LAUNCHER_LINK_SLOT_AXES]
+            ?: FvRingLauncherSettings.linkFlagsFromPreferences(prefs).linkSlotAxes
+        val targetAxes = if (linkSlots) {
+            listOf(FvRingLauncherAxis.VERTICAL, FvRingLauncherAxis.HORIZONTAL)
+        } else {
+            listOf(axis)
+        }
+        targetAxes.forEach { targetAxis ->
+            val currentSettings = FvRingLauncherSettings.fromPreferences(prefs, targetAxis)
+            val current = currentSettings.slots.toMutableMap()
+            val overrides = currentSettings.slotIconOverrides.toMutableMap()
+            current.remove(index)
+            overrides.remove(index)
+            FvRingLauncherSettings.writeSlotsAxis(
+                prefs,
+                targetAxis,
+                currentSettings.copy(slots = current, slotIconOverrides = overrides),
+            )
+        }
+    }
+
     suspend fun setFvRingLauncherSlotIconOverride(
         axis: FvRingLauncherAxis,
         index: Int,

@@ -91,6 +91,26 @@ class RingLauncherSlotPayloadSurvivalTest {
     }
 
     @Test
+    fun removingSlotRestoresAutoFill() = runBlocking {
+        val editor = SettingsPreferencesEditor(context)
+        val mutator = OverlaySettingsMutator(editor)
+        val none = QuickLauncherItem(QuickLauncherItemType.APP, "", "")
+
+        mutator.setFvRingLauncherSlot(FvRingLauncherAxis.VERTICAL, 0, none).getOrThrow()
+        assertEquals(
+            "「透明」应存成空条目",
+            none,
+            FvRingLauncherSettings.fromPreferences(editor.readRawPreferences(), FvRingLauncherAxis.VERTICAL).itemAt(0),
+        )
+
+        mutator.removeFvRingLauncherSlot(FvRingLauncherAxis.VERTICAL, 0).getOrThrow()
+
+        val after = FvRingLauncherSettings.fromPreferences(editor.readRawPreferences(), FvRingLauncherAxis.VERTICAL)
+        assertNull("删除绑定后应回到未配置（自动填充）", after.itemAt(0))
+        assertNull("图标覆盖也要一起清掉", after.iconOverrideAt(0))
+    }
+
+    @Test
     fun panelReferenceMigration_doesNotWipeDecodableSlots() = runBlocking {
         val editor = SettingsPreferencesEditor(context)
         val mutator = OverlaySettingsMutator(editor)

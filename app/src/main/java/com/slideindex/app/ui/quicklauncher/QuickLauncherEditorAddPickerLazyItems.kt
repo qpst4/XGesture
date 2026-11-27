@@ -27,6 +27,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import com.slideindex.app.ui.miuix.MiuixGlassDropdownMenu
+import com.slideindex.app.ui.ringlauncher.RingSlotNoneMode
 import com.slideindex.app.ui.miuix.CardSegment
 import com.slideindex.app.ui.gesturepicker.ACTION_GRID_COLUMNS
 import com.slideindex.app.ui.Md3PickerAppEntryLeading
@@ -87,6 +91,12 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
     singleSelect: Boolean = false,
     noneSelected: Boolean = false,
     onSelectNone: () -> Unit = {},
+    /**
+     * 圆环槽位专用：非 null 时「无」不再是一键清空，而是弹出「透明 / 自动填充」菜单。
+     * 其它槽位页不传，保持原来的单击行为。
+     */
+    noneMode: RingSlotNoneMode? = null,
+    onSelectNoneMode: ((RingSlotNoneMode) -> Unit)? = null,
     searchQuery: String = "",
     /** 定位到已选动作时的闪烁脉冲（0..1）。 */
     highlightPulse: Float = 0f,
@@ -175,6 +185,7 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
                             gestureActionLabelText(context, action)
                         }
                     }
+                    val selectNoneMode = onSelectNoneMode
                     if (modeOptions != null) {
                         if (!singleSelect && added && bound != null) {
                             // 多选页：已选中的开关再点 = 取消（与其它格子一致）。
@@ -224,6 +235,20 @@ fun LazyListScope.quickLauncherAddPickerActionItems(
                                     com.slideindex.app.ui.ActionIconSlot(action = liveIconAction, sizeDp = 27)
                                 }
                             }
+                        }
+                    } else if (isNone && selectNoneMode != null) {
+                        // 圆环槽位：「无」展开成「透明 / 自动填充」菜单，两种状态都可见、可回退。
+                        val pickNoneMode = selectNoneMode
+                        val noneCellPulse = if (singleSelect && noneSelected) highlightPulse else 0f
+                        RingSlotNoneMenuCell(
+                            label = cellLabel,
+                            selected = noneSelected,
+                            currentMode = noneMode,
+                            onPick = pickNoneMode,
+                            highlightPulse = noneCellPulse,
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            com.slideindex.app.ui.ActionIconSlot(action = action, sizeDp = 27)
                         }
                     } else {
                         val actionSelected = if (isNone) noneSelected else added
@@ -531,6 +556,49 @@ private fun PickerGridCell(
                     modifier = Modifier.size(10.dp),
                 )
             }
+        }
+    }
+}
+
+/**
+ * 「无」格子的菜单形态：点格子弹出「透明（固定留空）/ 自动填充（最近应用）」。
+ * 传进来的 content 不能自带 clickable，点击由菜单锚点接管。
+ */
+@Composable
+private fun RingSlotNoneMenuCell(
+    label: String,
+    selected: Boolean,
+    currentMode: RingSlotNoneMode?,
+    onPick: (RingSlotNoneMode) -> Unit,
+    highlightPulse: Float,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val items = listOf(
+        DropdownItem(
+            text = stringResource(R.string.ring_slot_none_transparent),
+            selected = currentMode == RingSlotNoneMode.TRANSPARENT,
+            onClick = { onPick(RingSlotNoneMode.TRANSPARENT) },
+        ),
+        DropdownItem(
+            text = stringResource(R.string.ring_slot_none_auto_fill),
+            selected = currentMode == RingSlotNoneMode.AUTO_FILL,
+            onClick = { onPick(RingSlotNoneMode.AUTO_FILL) },
+        ),
+    )
+    MiuixGlassDropdownMenu(
+        entry = DropdownEntry(items = items),
+        modifier = modifier,
+    ) {
+        PickerGridCell(
+            label = label,
+            selected = selected,
+            singleSelect = true,
+            highlightPulse = highlightPulse,
+            onClick = null,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            content()
         }
     }
 }

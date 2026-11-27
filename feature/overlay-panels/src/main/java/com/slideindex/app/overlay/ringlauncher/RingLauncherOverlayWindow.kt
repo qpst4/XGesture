@@ -177,6 +177,11 @@ object RingLauncherOverlayWindow {
                                 ?.invoke(axis, slotIndex, itemToSet)
                             settingsScope.launch { refreshFromSettings() }
                         },
+                        onRemoveSlot = {
+                            com.slideindex.app.overlay.panels.PanelRuntimeHooks.persistRingLauncherSlot
+                                ?.invoke(axis, slotIndex, null)
+                            settingsScope.launch { refreshFromSettings() }
+                        },
                         onOpenCustomIconEditor = {
                             suspendForSlotIconEditor()
                             val intent =

@@ -1293,10 +1293,14 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
             }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.persistRingLauncherSlot = { axis, slotIndex, item ->
             hookScope.launch {
-                com.slideindex.app.di.OverlayDependencyAccess
+                val repository = com.slideindex.app.di.OverlayDependencyAccess
                     .overlayDependencies(this@SlideIndexApp)
                     ?.settingsRepository
-                    ?.setFvRingLauncherSlot(axis, slotIndex, item)
+                if (item == null) {
+                    repository?.removeFvRingLauncherSlot(axis, slotIndex)
+                } else {
+                    repository?.setFvRingLauncherSlot(axis, slotIndex, item)
+                }
             }
         }
         com.slideindex.app.overlay.panels.PanelRuntimeHooks.ringSlotConfigSheetContent =
@@ -1309,6 +1313,7 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                     apps: List<com.slideindex.app.data.AppInfo>,
                     onDismiss: () -> Unit,
                     onSelectItem: (com.slideindex.app.launcher.QuickLauncherItem?) -> Unit,
+                    onRemoveSlot: () -> Unit,
                     onOpenCustomIconEditor: () -> Unit,
                     launchCreateShortcut: (Any, (Any?) -> Unit) -> Unit,
                 ) {
@@ -1321,6 +1326,14 @@ class SlideIndexApp : Application(), androidx.work.Configuration.Provider {
                         quickLauncherPanels = settings.quickLauncherPanels,
                         onDismiss = onDismiss,
                         onSelectItem = onSelectItem,
+                        onSelectNoneMode = { mode ->
+                            when (mode) {
+                                com.slideindex.app.ui.ringlauncher.RingSlotNoneMode.TRANSPARENT ->
+                                    onSelectItem(null)
+                                com.slideindex.app.ui.ringlauncher.RingSlotNoneMode.AUTO_FILL ->
+                                    onRemoveSlot()
+                            }
+                        },
                         onOpenCustomIconEditor = onOpenCustomIconEditor,
                         launchCreateShortcut = { host, result ->
                             launchCreateShortcut(host) { created -> result(created as? com.slideindex.app.util.AppShortcutLoader.CreatedShortcut) }

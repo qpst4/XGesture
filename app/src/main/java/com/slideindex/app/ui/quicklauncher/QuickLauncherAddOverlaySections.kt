@@ -52,6 +52,7 @@ import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.launcher.QuickLauncherItemType
 import com.slideindex.app.overlay.TaskSwitcherMenuItem
 import com.slideindex.app.ui.AppPackageEntry
+import com.slideindex.app.ui.ringlauncher.RingSlotNoneMode
 import com.slideindex.app.ui.Md3PickerAppEntryLeading
 import com.slideindex.app.ui.Md3PickerAppLeading
 import com.slideindex.app.ui.Md3PickerIconLeading
@@ -164,6 +165,9 @@ internal fun QuickLauncherAddOverlaySheetBody(
     pinNoneAtTop: Boolean = false,
     slotEmpty: Boolean = false,
     onClearSlot: () -> Unit = {},
+    /** 圆环槽位专用：非 null 时「无」展开成「透明 / 自动填充」菜单。 */
+    noneMode: RingSlotNoneMode? = null,
+    onSelectNoneMode: ((RingSlotNoneMode) -> Unit)? = null,
     folderName: String = "",
     folderItems: List<QuickLauncherItem> = emptyList(),
     folderPickerActive: Boolean = false,
@@ -459,6 +463,8 @@ internal fun QuickLauncherAddOverlaySheetBody(
                         pinNoneAtTop = pinNoneAtTop,
                         noneSelected = slotEmpty,
                         onSelectNone = onClearSlot,
+                        noneMode = noneMode,
+                        onSelectNoneMode = onSelectNoneMode,
                         focusKey = focusItemKey,
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -643,6 +649,8 @@ private fun QuickLauncherAddActionsTab(
     pinNoneAtTop: Boolean = false,
     noneSelected: Boolean = false,
     onSelectNone: () -> Unit = {},
+    noneMode: com.slideindex.app.ui.ringlauncher.RingSlotNoneMode? = null,
+    onSelectNoneMode: ((com.slideindex.app.ui.ringlauncher.RingSlotNoneMode) -> Unit)? = null,
     focusKey: String? = null,
 ) {
     val filtered = rememberQuickLauncherFilteredActions(searchQuery)
@@ -697,6 +705,8 @@ private fun QuickLauncherAddActionsTab(
             singleSelect = singleSelect,
             noneSelected = noneSelected,
             onSelectNone = onSelectNone,
+            noneMode = noneMode,
+            onSelectNoneMode = onSelectNoneMode,
             searchQuery = searchQuery,
             highlightPulse = highlightPulse.value,
         )

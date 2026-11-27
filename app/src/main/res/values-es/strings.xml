@@ -5430,4 +5430,6 @@ o revocar Root permanente para Shell en APatch.</string>
 <string name="settings_section_panel_blur_mode">Modo de los paneles flotantes</string>
 <string name="widget_panel_blur_mode_desc">Ajusta el desenfoque de la tarjeta emergente de widgets y su fondo</string>
 <string name="widget_panel_blur_mode_title">Desenfoque del panel de widgets</string>
+<string name="ring_slot_none_transparent">Transparente (siempre vacío)</string>
+<string name="ring_slot_none_auto_fill">Autorrellenar (apps recientes)</string>
 </resources>

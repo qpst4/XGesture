@@ -5489,4 +5489,6 @@ adb 模式应返回 uid=2000。
     <string name="quick_launcher_panel_delete_confirm_named">删除「%1$s」？删除后，绑定此面板的手势将改为打开默认面板。</string>
     <string name="composite_pick_empty">还没有组合，请到 扩展 → 组合动作库 新建</string>
     <string name="composite_library_delete_confirm">删除后，已绑定此组合的手势会变成「无动作」。</string>
+    <string name="ring_slot_none_transparent">透明（固定留空）</string>
+    <string name="ring_slot_none_auto_fill">自动填充（最近应用）</string>
 </resources>

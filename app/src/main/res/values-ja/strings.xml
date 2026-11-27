@@ -5423,4 +5423,6 @@
 <string name="settings_section_panel_blur_mode">フローティングパネルのモード</string>
 <string name="widget_panel_blur_mode_desc">ウィジェットのポップアップカードと背景のぼかしモードを調整します</string>
 <string name="widget_panel_blur_mode_title">ウィジェットパネルのぼかし</string>
+<string name="ring_slot_none_transparent">透明（常に空）</string>
+<string name="ring_slot_none_auto_fill">自動入力（最近のアプリ）</string>
 </resources>

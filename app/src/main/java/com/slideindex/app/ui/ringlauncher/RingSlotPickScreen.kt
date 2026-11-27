@@ -89,6 +89,7 @@ fun RingSlotPickScreen(
     settings: AppSettings,
     onBack: () -> Unit,
     onSelectItem: (QuickLauncherItem?) -> Unit,
+    onSelectNoneMode: (RingSlotNoneMode) -> Unit,
     onOpenCustomIconEditor: () -> Unit,
     launchCreateShortcut: (
         AppShortcutLoader.CreateShortcutHost,
@@ -233,10 +234,10 @@ fun RingSlotPickScreen(
     }
     val slotTitle = stringResource(R.string.ring_launcher_slot_title, slotIndex + 1)
     val boundLabel = currentItem?.label?.ifBlank { currentItem.payload }.orEmpty()
-    val subtitle = if (currentItem != null) {
-        stringResource(R.string.ring_launcher_slot_bound, boundLabel)
-    } else {
-        stringResource(R.string.ring_launcher_slot_unconfigured)
+    val subtitle = when (currentItem.ringSlotNoneMode()) {
+        RingSlotNoneMode.TRANSPARENT -> stringResource(R.string.ring_slot_none_transparent)
+        RingSlotNoneMode.AUTO_FILL -> stringResource(R.string.ring_slot_none_auto_fill)
+        null -> stringResource(R.string.ring_launcher_slot_bound, boundLabel)
     }
 
     val currentPage = page
@@ -302,8 +303,10 @@ fun RingSlotPickScreen(
                             onRequestComposite = requestComposite,
                             onRequestOpenLink = requestOpenLink,
                             singleSelect = true,
-                            noneSelected = currentItem == null,
+                            noneSelected = currentItem == null || currentItem.payload.isBlank(),
                             onSelectNone = { onSelectItem(null) },
+                            noneMode = currentItem.ringSlotNoneMode(),
+                            onSelectNoneMode = onSelectNoneMode,
                             searchQuery = searchQuery,
                             columns = gridColumns,
                         )
@@ -501,9 +504,10 @@ private fun QuickLauncherItem.panelIdOf(): String? {
     return (action as? GestureAction.QuickLauncher)?.panelId
 }
 
-private fun initTabFor(item: QuickLauncherItem?): Int = when (item?.type) {
-    QuickLauncherItemType.APP -> 1
-    QuickLauncherItemType.SHORTCUT -> 2
+private fun initTabFor(item: QuickLauncherItem?): Int = when {
+    item == null || item.payload.isBlank() -> 0
+    item.type == QuickLauncherItemType.APP -> 1
+    item.type == QuickLauncherItemType.SHORTCUT -> 2
     else -> 0
 }
 

@@ -529,6 +529,9 @@ class SettingsRepository @Inject constructor(
         item: com.slideindex.app.launcher.QuickLauncherItem,
     ) = overlay.setFvRingLauncherSlot(axis, index, item)
 
+    suspend fun removeFvRingLauncherSlot(axis: FvRingLauncherAxis, index: Int) =
+        overlay.removeFvRingLauncherSlot(axis, index)
+
     suspend fun setFvRingLauncherSlotIconOverride(
         axis: FvRingLauncherAxis,
         index: Int,

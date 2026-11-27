@@ -94,6 +94,8 @@ fun RingLauncherSlotConfigSheet(
     quickLauncherPanels: List<QuickLauncherPanel> = emptyList(),
     onDismiss: () -> Unit,
     onSelectItem: (QuickLauncherItem?) -> Unit,
+    /** 圆环槽位「无 → 自动填充」：删除绑定，让自动填充重新接管。 */
+    onSelectNoneMode: ((RingSlotNoneMode) -> Unit)? = null,
     onOpenCustomIconEditor: () -> Unit = {},
     launchCreateShortcut: (
         AppShortcutLoader.CreateShortcutHost,
@@ -244,19 +246,22 @@ fun RingLauncherSlotConfigSheet(
             stringResource(R.string.quick_launcher_create_folder)
         else -> stringResource(R.string.ring_launcher_slot_title, slotIndex + 1)
     }
-    val statusText = if (slotBound) {
-        val boundLabel = if (currentItem.quickLauncherPanelId() != null) {
-            val panelIndex = panels.indexOfFirst { it.id == selectedPanelId }.coerceAtLeast(0)
-            stringResource(
-                R.string.gesture_action_quick_launcher_named,
-                panelDisplayNames.getOrElse(panelIndex) { "" },
-            )
-        } else {
-            currentItem.label.ifBlank { currentItem.payload }
+    val statusText = when {
+        slotBound -> {
+            val boundLabel = if (currentItem.quickLauncherPanelId() != null) {
+                val panelIndex = panels.indexOfFirst { it.id == selectedPanelId }.coerceAtLeast(0)
+                stringResource(
+                    R.string.gesture_action_quick_launcher_named,
+                    panelDisplayNames.getOrElse(panelIndex) { "" },
+                )
+            } else {
+                currentItem.label.ifBlank { currentItem.payload }
+            }
+            stringResource(R.string.ring_launcher_slot_bound, boundLabel)
         }
-        stringResource(R.string.ring_launcher_slot_bound, boundLabel)
-    } else {
-        stringResource(R.string.ring_launcher_slot_unconfigured)
+        currentItem.ringSlotNoneMode() == RingSlotNoneMode.TRANSPARENT ->
+            stringResource(R.string.ring_slot_none_transparent)
+        else -> stringResource(R.string.ring_slot_none_auto_fill)
     }
 
     val headerActions: @Composable RowScope.() -> Unit = {
@@ -362,6 +367,13 @@ fun RingLauncherSlotConfigSheet(
                         onClearSlot = {
                             onSelectItem(null)
                             requestDismiss()
+                        },
+                        noneMode = currentItem.ringSlotNoneMode(),
+                        onSelectNoneMode = onSelectNoneMode?.let { pick ->
+                            { mode: RingSlotNoneMode ->
+                                pick(mode)
+                                requestDismiss()
+                            }
                         },
                         onReportEmbedParentConfirm = { embedParentConfirm = it },
                         onRequestRunMacro = { onPicked -> pendingMacroPick = onPicked },

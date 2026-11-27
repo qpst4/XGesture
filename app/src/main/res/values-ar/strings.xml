@@ -5427,4 +5427,6 @@
 <string name="settings_section_panel_blur_mode">وضع اللوحات العائمة</string>
 <string name="widget_panel_blur_mode_desc">يضبط وضع تمويه بطاقة الأدوات المصغّرة وخلفيتها</string>
 <string name="widget_panel_blur_mode_title">تمويه لوحة الأدوات المصغّرة</string>
+<string name="ring_slot_none_transparent">شفاف (فارغ دائمًا)</string>
+<string name="ring_slot_none_auto_fill">ملء تلقائي (التطبيقات الأخيرة)</string>
 </resources>

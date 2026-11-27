@@ -29,6 +29,7 @@ import com.slideindex.app.ui.compose.LocalAppDependencies
 import com.slideindex.app.ui.miuix.theme.ModuleTheme
 import com.slideindex.app.ui.picker.PickerApps
 import com.slideindex.app.ui.ringlauncher.RingSlotPickScreen
+import com.slideindex.app.ui.ringlauncher.RingSlotNoneMode
 import com.slideindex.app.ui.ringlauncher.RingLauncherSlotIconEditorHost
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -138,6 +139,25 @@ class RingLauncherSlotConfigActivity : ComponentActivity() {
                                             index = slotIndex,
                                             item = itemToSet,
                                         )
+                                        RingLauncherOverlayWindow.refreshFromSettings()
+                                        finishPicker()
+                                    }
+                                },
+                                onSelectNoneMode = { mode ->
+                                    scope.launch {
+                                        when (mode) {
+                                            RingSlotNoneMode.TRANSPARENT ->
+                                                deps.settingsRepository.setFvRingLauncherSlot(
+                                                    axis = axis,
+                                                    index = slotIndex,
+                                                    item = QuickLauncherItem(QuickLauncherItemType.APP, "", ""),
+                                                )
+                                            RingSlotNoneMode.AUTO_FILL ->
+                                                deps.settingsRepository.removeFvRingLauncherSlot(
+                                                    axis = axis,
+                                                    index = slotIndex,
+                                                )
+                                        }
                                         RingLauncherOverlayWindow.refreshFromSettings()
                                         finishPicker()
                                     }
