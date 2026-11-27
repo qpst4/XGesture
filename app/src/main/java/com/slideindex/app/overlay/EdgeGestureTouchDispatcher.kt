@@ -159,6 +159,24 @@ internal class EdgeGestureTouchDispatcher(
                 }
                 return true
             }
+            // 多指：只在「直接区域取词 / 悬浮指针」已经接管这次手势时才有意义。
+            //
+            // ⚠️ 特意不走 [forwardContinuedOverlayTouch]：那条路径上的
+            // [EdgeContinuedOverlayLaunchCoordinator.onEdgeMoveWhileHandoff] 会把事件 obtain 起来
+            // 延后重放，对 POINTER_DOWN/UP 是语义错乱 —— 第二根手指的按下会被推迟到下一次 MOVE 才生效。
+            MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_POINTER_UP -> {
+                if (!edgeCaptureTouchActive()) return false
+                val actionName = MotionEvent.actionToString(event.actionMasked)
+                if (RegionalPickOverlay.forwardContinuedTouch(event)) {
+                    EdgeDiag.log("route", "multi-touch $actionName → 区域取词（回退取词态 / 取消）")
+                    return true
+                }
+                if (FloatingPointerOverlayWindow.forwardContinuedTouch(event)) {
+                    EdgeDiag.log("route", "multi-touch $actionName → 悬浮指针（回退取词态 / 取消）")
+                    return true
+                }
+                return false
+            }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 if (!gestureSession.isActive()) {
                     val consumed = edgeCaptureTouchActive()

@@ -131,6 +131,36 @@ internal class FloatingPointerHoverSelectController(
         publishChrome()
     }
 
+    /**
+     * 第二根手指按下：撤销区域截图框，**立即**回到取词态（不用等十字退回起点、也不用再等一次超时）。
+     *
+     * 锚点重置成**当前**十字位置，而不是最初的超时点：指针与手指是 1:1 位移，把十字挪回起点
+     * 会在下一帧 MOVE 被立刻拉回，视觉上闪一下；重置到当前位置则天然带滞回 —— 要再移出
+     * [FloatingPointerSession.regionalCancelSlopPx] 才会重新进区域态，不会按下第二指就弹回去。
+     *
+     * @return true 表示确实从区域态回退了（此时事件应当被消费）。
+     */
+    fun revertRegionalToPick(): Boolean {
+        if (!active || !regionalActive) return false
+        regionalActive = false
+        cancelPauseTimer()
+        boundsLookupGeneration++
+        PickPrefetchCache.invalidate()
+        selectionPreviewBounds = null
+        val anchor = pickAnchor
+        selectionStart = anchor
+        paused = true
+        val bounds = FloatBallPreviewBoundsCache.hitTestAt(anchor.x, anchor.y)
+        if (bounds != null) {
+            selectionPreviewBounds = bounds
+            maybeStartPickPrefetch()
+        } else {
+            launchPreviewBoundsLookupFallback(anchor)
+        }
+        publishChrome()
+        return true
+    }
+
     private fun launchPreviewBoundsLookupFallback(anchor: Offset) {
         val generation = ++boundsLookupGeneration
         scope.launch(Dispatchers.Default) {
