@@ -34,22 +34,66 @@ import android.view.WindowManager
  *   所以它就是"另一根手指"。
  * - 这一层的触摸全部吞掉，不再漏给下层 App —— 顺带修掉"取词中第二根手指把下面的开关点了"的问题。
  */
+internal interface PickGuardSession {
+    /** 取词会话是否还在进行；false 时挡层会立刻撤除。 */
+    fun isPickGuardNeeded(): Boolean
+}
+
 internal object PickTouchGuard {
     private const val TAG = "PickTouchGuard"
 
-    /** 保险丝：万一 UP/CANCEL 丢了，最多挡这么久就自己撤掉，绝不常驻。 */
-    private const val MAX_ARM_MS = 15_000L
+    /**
+     * 最后一道保险：万一 liveness 轮询本身失效（owner 被回收、主线程卡死），
+     * 最多挡这么久也一定撤掉，绝不留下常驻的整屏可触摸窗。
+     *
+     * ⚠️ 这个值**不能**当成正常收尾手段。上一版设成 15s，实测取词会话照样活着，
+     * 挡层先被撤掉 → 之后按第二根手指就直接漏到下面的 App，正是"时好时坏"的来源。
+     */
+    private const val MAX_ARM_MS = 60_000L
+
+    /** 会话存活轮询间隔：比 fuse 更早发现会话结束。 */
+    private const val LIVENESS_CHECK_MS = 500L
 
     private val mainHandler = Handler(Looper.getMainLooper())
 
-    private var owner: Any? = null
+    private var owner: PickGuardSession? = null
     private var guardView: View? = null
+    private var guardParams: WindowManager.LayoutParams? = null
     private var windowManager: WindowManager? = null
     private var onExtraFinger: (() -> Unit)? = null
 
     private val autoDisarm = Runnable {
-        android.util.Log.w(TAG, "auto disarm: pick session outlived $MAX_ARM_MS ms")
+        android.util.Log.w(TAG, "auto disarm: guard outlived $MAX_ARM_MS ms")
         detach()
+    }
+
+    private val livenessCheck = object : Runnable {
+        override fun run() {
+            val session = owner ?: return
+            if (!session.isPickGuardNeeded()) {
+                android.util.Log.i(TAG, "session finished → disarm")
+                detach()
+                return
+            }
+            reattachIfDetached()
+            mainHandler.postDelayed(this, LIVENESS_CHECK_MS)
+        }
+    }
+
+    /**
+     * 会话还在、窗却被摘掉（系统策略 / 被别的层顶掉）时补挂。
+     *
+     * 这一条是纯粹的防御：本地日志里没观察到系统摘窗，但一旦发生，表现就是
+     * "取词中第二根手指又漏到下面的 App"，而且不会有任何 DOWN 日志 —— 只能靠轮询发现。
+     */
+    private fun reattachIfDetached() {
+        val view = guardView ?: return
+        if (view.isAttachedToWindow) return
+        val wm = windowManager ?: return
+        val params = guardParams ?: return
+        android.util.Log.w(TAG, "guard detached while session alive → re-attach")
+        runCatching { wm.addView(view, params) }
+            .onFailure { android.util.Log.w(TAG, "re-attach failed", it) }
     }
 
     fun isArmedBy(candidate: Any): Boolean = owner === candidate && guardView != null
@@ -59,21 +103,41 @@ internal object PickTouchGuard {
      *
      * @return true 表示挡层确实可用。
      */
-    fun arm(owner: Any, context: Context?, onExtraFinger: () -> Unit): Boolean {
+    fun arm(owner: PickGuardSession, context: Context?, onExtraFinger: () -> Unit): Boolean {
         this.onExtraFinger = onExtraFinger
         if (guardView != null) {
             this.owner = owner
-            mainHandler.removeCallbacks(autoDisarm)
-            mainHandler.postDelayed(autoDisarm, MAX_ARM_MS)
+            scheduleLifetimeChecks()
             return true
         }
-        if (context == null) return false
-        val wm = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager ?: return false
+        if (context == null) {
+            android.util.Log.w(TAG, "arm skipped: context unavailable")
+            return false
+        }
+        val wm = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager ?: run {
+            android.util.Log.w(TAG, "arm skipped: WindowManager unavailable")
+            return false
+        }
 
         val guard = View(context).apply {
             setBackgroundColor(Color.TRANSPARENT)
+            // 关键观测点：被系统（如 Oplus 反诈规则）摘窗时会走到这里。
+            addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v: View) {
+                    android.util.Log.i(TAG, "guard attached")
+                }
+
+                override fun onViewDetachedFromWindow(v: View) {
+                    android.util.Log.w(TAG, "guard DETACHED (removed while still needed?)")
+                }
+            })
             setOnTouchListener { _, event ->
                 if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                    android.util.Log.i(
+                        TAG,
+                        "guard DOWN pointerCount=${event.pointerCount} deviceId=${event.deviceId} " +
+                            "raw=(${event.rawX},${event.rawY})"
+                    )
                     this@PickTouchGuard.onExtraFinger?.invoke()
                 }
                 // 全部吞掉：取词期间不该有任何触摸漏到下面的 App。
@@ -104,15 +168,29 @@ internal object PickTouchGuard {
             return false
         }
         guardView = guard
+        guardParams = params
         windowManager = wm
         this.owner = owner
-        mainHandler.removeCallbacks(autoDisarm)
-        mainHandler.postDelayed(autoDisarm, MAX_ARM_MS)
+        scheduleLifetimeChecks()
+        android.util.Log.i(
+            TAG,
+            "arm owner=${owner.javaClass.simpleName} type=${params.type} " +
+                "flags=0x${Integer.toHexString(params.flags)} " +
+                "size=${params.width}x${params.height}"
+        )
         return true
     }
 
+    /** 轮询会话存活（正常收尾）+ 长保险丝（异常兜底）。 */
+    private fun scheduleLifetimeChecks() {
+        mainHandler.removeCallbacks(livenessCheck)
+        mainHandler.removeCallbacks(autoDisarm)
+        mainHandler.postDelayed(livenessCheck, LIVENESS_CHECK_MS)
+        mainHandler.postDelayed(autoDisarm, MAX_ARM_MS)
+    }
+
     /** 只有当前 owner 才能撤，避免两条取词通道互相拆台。 */
-    fun disarm(owner: Any) {
+    fun disarm(owner: PickGuardSession) {
         if (this.owner !== owner) return
         detach()
     }
@@ -130,10 +208,13 @@ internal object PickTouchGuard {
     }
 
     private fun detach() {
+        android.util.Log.i(TAG, "detach owner=${owner?.javaClass?.simpleName}")
+        mainHandler.removeCallbacks(livenessCheck)
         mainHandler.removeCallbacks(autoDisarm)
         val view = guardView
         val wm = windowManager
         guardView = null
+        guardParams = null
         windowManager = null
         onExtraFinger = null
         owner = null

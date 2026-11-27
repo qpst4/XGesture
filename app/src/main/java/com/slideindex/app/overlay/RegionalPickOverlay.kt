@@ -40,7 +40,7 @@ import kotlinx.coroutines.withContext
  * Touch events are forwarded from edge capture — never a second full-screen touch window.
  */
 @SuppressLint("StaticFieldLeak")
-object RegionalPickOverlay {
+object RegionalPickOverlay : PickGuardSession {
     private const val TAG = "RegionalPickOverlay"
     private const val REGIONAL_RECT_MIN_SIDE_DP = 3f
     /** FV I0: rebuild preview bounds cache after finger moves. */
@@ -102,6 +102,8 @@ object RegionalPickOverlay {
         private set
 
     val isActive: Boolean get() = sessionActive
+
+    override fun isPickGuardNeeded(): Boolean = sessionActive
 
     fun isConsumingEdgeGestureTouch(): Boolean = continuedGestureActive
 
@@ -656,6 +658,10 @@ object RegionalPickOverlay {
      * @return true 表示确实从区域态回退了（此时事件应当被消费）。
      */
     fun revertRegionalToPick(): Boolean {
+        Log.i(
+            TAG,
+            "revertRegionalToPick session=$sessionActive regional=$regionalActive paused=$paused"
+        )
         if (!sessionActive || !regionalActive) return false
         regionalActive = false
         cancelPauseTimer()

@@ -198,6 +198,13 @@ internal class FloatBallTouchHostLayout(
         ballDetector.lockPickFromPause()
     }
 
+    /**
+     * 第二根手指取消黄框/区域选择（回红十字、保留本次拖动）。
+     *
+     * @return true 表示确实取消了选中态（当前不在黄框/区域选择时返回 false）。
+     */
+    fun cancelPickSelection(): Boolean = ballDetector.cancelPickSelectionFromPause()
+
     fun unlockPickFromPause() {
         ballDetector.unlockPickFromPause()
     }

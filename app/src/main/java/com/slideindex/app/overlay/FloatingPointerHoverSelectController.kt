@@ -26,7 +26,7 @@ import kotlinx.coroutines.withContext
 internal class FloatingPointerHoverSelectController(
     private val session: FloatingPointerSession,
     private val mainHandler: Handler = Handler(Looper.getMainLooper())
-) {
+) : PickGuardSession {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var active = false
     private var paused = false
@@ -42,6 +42,8 @@ internal class FloatingPointerHoverSelectController(
 
     val hasPickIntent: Boolean
         get() = paused || selectionStart != null || regionalActive
+
+    override fun isPickGuardNeeded(): Boolean = active
 
     fun begin() {
         reset()
@@ -150,6 +152,10 @@ internal class FloatingPointerHoverSelectController(
      * @return true 表示确实从区域态回退了（此时事件应当被消费）。
      */
     fun revertRegionalToPick(): Boolean {
+        android.util.Log.i(
+            "HoverSelect",
+            "revertRegionalToPick active=$active regional=$regionalActive paused=$paused"
+        )
         if (!active || !regionalActive) return false
         regionalActive = false
         cancelPauseTimer()
