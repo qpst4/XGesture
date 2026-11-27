@@ -55,6 +55,11 @@ internal object FloatBallShow {
         }
 
         if (FloatBallOverlay.isShowing && !FloatBallOverlay.areChromeWindowsAttached()) {
+            // 截图期是我们**故意**把三个窗摘掉的（see FloatBallCaptureChrome.suppressForScreenshotCapture）。
+            // 不在这里拦住的话，摘窗本身产生的窗口变更事件会把自愈引进来：250ms 后
+            // dismiss()+ensureWindows() 把球装回去 —— 既可能赶在快门之前入镜，又会把
+            // captureSuppressed 清掉，让定时恢复变成空操作。
+            if (FloatBallOverlay.captureSuppressed) return
             // 熄屏/锁屏后系统可能摘掉 TYPE_ACCESSIBILITY_OVERLAY，本地引用仍在。
             // 先清理再重建，避免 isShowing=true 却永远不 ensureWindows。
             //
@@ -68,6 +73,8 @@ internal object FloatBallShow {
                 FloatBallOverlay.pendingChromeRebuild = true
                 FloatBallOverlay.mainHandler.postDelayed({
                     FloatBallOverlay.pendingChromeRebuild = false
+                    // 复核也要再判一次：请求可能是在截图开始**之前**排上的，正好在截图窗口里到点。
+                    if (FloatBallOverlay.captureSuppressed) return@postDelayed
                     if (FloatBallOverlay.isShowing && !FloatBallOverlay.areChromeWindowsAttached()) {
                         val persistPosition = FloatBallOverlay.onPositionPersisted
                         val persistSide = FloatBallOverlay.onActiveSidePersisted
