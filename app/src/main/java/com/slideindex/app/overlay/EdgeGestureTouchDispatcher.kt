@@ -168,11 +168,11 @@ internal class EdgeGestureTouchDispatcher(
                 if (!edgeCaptureTouchActive()) return false
                 val actionName = MotionEvent.actionToString(event.actionMasked)
                 if (RegionalPickOverlay.forwardContinuedTouch(event)) {
-                    EdgeDiag.log("route", "multi-touch $actionName → 区域取词（回退取词态 / 取消）")
+                    EdgeDiag.log("route", "multi-touch $actionName → 区域取词（取消暂停，回红）")
                     return true
                 }
                 if (FloatingPointerOverlayWindow.forwardContinuedTouch(event)) {
-                    EdgeDiag.log("route", "multi-touch $actionName → 悬浮指针（回退取词态 / 取消）")
+                    EdgeDiag.log("route", "multi-touch $actionName → 悬浮指针（取消暂停，回红）")
                     return true
                 }
                 return false
