@@ -51,6 +51,7 @@ import com.slideindex.app.ui.miuix.MiuixDialogActionsRow
 import com.slideindex.app.ui.miuix.MiuixDialogAction
 import com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.glass.GlassDialog
 import top.yukonga.miuix.kmp.window.WindowDialog
 import com.slideindex.app.R
@@ -84,6 +85,7 @@ import com.slideindex.app.ui.miuix.MiuixExpandableSearchIconAction
 import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixScaffoldSearchTabBottomContent
 import com.slideindex.app.ui.miuix.consumeExpandableSearchBack
+import com.slideindex.app.ui.miuix.syncCollapseAfterProgrammaticScroll
 import com.slideindex.app.ui.picker.filterShortcutCatalog
 import com.slideindex.app.ui.picker.rememberLoadedShortcutCatalog
 import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
@@ -92,6 +94,7 @@ import com.slideindex.app.util.AppShortcutLoader
 import com.slideindex.app.widget.WidgetPanelDefaults
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 
 /** 定位到位后目标行"亮"一下的时长（毫秒）。 */
 private const val HighlightPulseOnMs = 130
@@ -252,6 +255,9 @@ fun GestureActionPickerScreen(
     val pickerListState = rememberLazyListState(
         initialFirstVisibleItemIndex = (pickerTargetItemIndex?.minus(1) ?: 0).coerceAtLeast(0),
     )
+    // 顶栏折叠态（`TopAppBarState.heightOffset`）只由 nestedScroll 写；本页是程序化定位，
+    // 所以要把 behavior 注入脚手架，定位完成后再同步一次折叠态（见下面的 LaunchedEffect）。
+    val pickerScrollBehavior = MiuixScrollBehavior()
     // 应用 / 快捷方式目录是**异步到货**的：首帧 `filteredApps` / `filteredShortcuts` 还是空的，
     // 上面那个初值只能是 0，等列表到货后 `rememberLazyListState` 也不会再读初值 ——
     // 所以下标第一次变得可用时补一次定位。只在用户还没拖过列表时补，且只补一次。
@@ -273,7 +279,23 @@ fun GestureActionPickerScreen(
         if (pickerRevealApplied || pickerUserScrolled) return@LaunchedEffect
         pickerRevealApplied = true
         // 同步就绪的 tab 首帧已经在这个位置了，再滚一次是幂等的（不会抖）。
-        pickerListState.scrollToItem((target - 1).coerceAtLeast(0))
+        val targetIndex = (target - 1).coerceAtLeast(0)
+        pickerListState.scrollToItem(targetIndex)
+        // 程序化滚动不经过 nestedScroll：`TopAppBarState.heightOffset` 仍是 0，而玻璃顶栏
+        // 材质带（band + 渐进模糊 + scrim）的整层 alpha = collapsedFraction = heightOffset / limit，
+        // 于是顶栏会停在「展开 + 没有底色」——看起来透明，要等用户真的滑一下才恢复。
+        // 所以定位完成后在这里把折叠态同步一次（miuix 示例跳到搜索结果后也是手动同步的）。
+        //
+        // 两个坑：
+        // ① `heightOffsetLimit` 由首帧 layout 从大标题高度写回，初值是 `-Float.MAX_VALUE` 哨兵，
+        //    必须等它离开哨兵再写；否则 heightOffset 会落在荒谬值上，之后「滚到顶就展开」都回不来。
+        // ② 宽屏（`expandable = false`）时 limit 恒为 0，这里直接跳过，宽屏行为零变化。
+        launch {
+            if (targetIndex <= 0) return@launch
+            pickerScrollBehavior.syncCollapseAfterProgrammaticScroll(
+                canCollapse = { !pickerUserScrolled },
+            )
+        }
         // 先滚到位再闪（瞬时滚 + 闪），时序确定：不会出现"还在滚动时已经闪完了"。
         // 动画时长遵循系统的"动画时长缩放"，关掉动画时自动跳过；闪 2 次节奏干脆，不拖沓。
         repeat(2) {
@@ -334,6 +356,7 @@ fun GestureActionPickerScreen(
             onBack = handleBack,
             modifier = Modifier.fillMaxSize(),
             listState = pickerListState,
+            scrollBehavior = pickerScrollBehavior,
             actions = {
                 MiuixExpandableSearchIconAction(
                     expanded = searchExpanded,

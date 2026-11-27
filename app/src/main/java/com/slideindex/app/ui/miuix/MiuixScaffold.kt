@@ -156,6 +156,14 @@ fun MiuixListScaffold(
     bottomContent: @Composable () -> Unit = {},
     userScrollEnabled: Boolean = true,
     listState: LazyListState? = null,
+    /**
+     * 外部注入的顶栏滚动行为；null 时内部自建（默认，行为不变）。
+     *
+     * 需要「打开后用程序化滚动定位，再把顶栏折叠态同步过去」的页面传入：程序化滚动
+     * 不经过 nestedScroll，`TopAppBarState.heightOffset` 不会跟着变，而玻璃顶栏的
+     * 材质带 alpha 恰好等于 `collapsedFraction`，见 `GestureActionPickerScreen`。
+     */
+    scrollBehavior: ScrollBehavior? = null,
     bottomContentPadding: Dp = 0.dp,
     /** 悬浮按钮需要预留的底部空间，见 [MiuixSettingsFabInset]；默认 0 = 不做任何预留。 */
     fabInset: Dp = 0.dp,
@@ -163,7 +171,7 @@ fun MiuixListScaffold(
     content: LazyListScope.() -> Unit,
 ) {
     val resolvedListState = listState ?: rememberLazyListState()
-    val scrollBehavior = MiuixScrollBehavior()
+    val resolvedScrollBehavior = scrollBehavior ?: MiuixScrollBehavior()
     val barBackdrop = rememberMiuixBlurBackdrop()
     // 供顶栏内的玻璃组件（如 GlassSegmentedTabRow）决定 surfaceAlpha：内容滚到栏下才升起玻璃。
     val contentUnderBar = remember(resolvedListState) {
@@ -180,7 +188,7 @@ fun MiuixListScaffold(
             topBar = {
                 MiuixGlassTopBar(
                     title = title,
-                    scrollBehavior = scrollBehavior,
+                    scrollBehavior = resolvedScrollBehavior,
                     backdrop = barBackdrop,
                     contentUnderBar = contentUnderBar.value,
                     navigationIcon = { navigationIcon?.invoke() },
@@ -202,8 +210,8 @@ fun MiuixListScaffold(
                     .then(barBackdrop?.let { Modifier.layerBackdrop(it) } ?: Modifier)
                     .horizontalCutoutPadding()
                     .scrollEndHaptic()
-                    .miuixOverScrollVertical(scrollBehavior)
-                    .nestedScroll(scrollBehavior.nestedScrollConnection),
+                    .miuixOverScrollVertical(resolvedScrollBehavior)
+                    .nestedScroll(resolvedScrollBehavior.nestedScrollConnection),
                 contentPadding = innerPadding.withListContentPadding(layoutDirection),
                 overscrollEffect = null,
                 userScrollEnabled = userScrollEnabled,

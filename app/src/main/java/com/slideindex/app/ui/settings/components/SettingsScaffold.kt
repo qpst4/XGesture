@@ -34,6 +34,7 @@ import com.slideindex.app.ui.miuix.MiuixLabeledTextField
 import com.slideindex.app.ui.miuix.MiuixListScaffold
 import com.slideindex.app.ui.miuix.MiuixSettingsScreenScaffold
 import com.slideindex.app.ui.miuix.consumeExpandableSearchBack
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
 
 @Composable
 fun SettingsEmbeddedContent(
@@ -112,6 +113,8 @@ fun SettingsLazyScreenScaffold(
     fabInset: androidx.compose.ui.unit.Dp = 0.dp,
     /** 外部持有的滚动状态（例如「打开时定位到当前已绑定的那一项」需要给出初始下标）。 */
     listState: LazyListState? = null,
+    /** 透传给 [MiuixListScaffold]：程序化定位后需要同步顶栏折叠态的页面传入（见 `GestureActionPickerScreen`）。 */
+    scrollBehavior: ScrollBehavior? = null,
     bottomBar: @Composable () -> Unit = {},
     content: LazyListScope.() -> Unit,
 ) {
@@ -129,6 +132,7 @@ fun SettingsLazyScreenScaffold(
         userScrollEnabled = userScrollEnabled,
         fabInset = fabInset,
         listState = listState,
+        scrollBehavior = scrollBehavior,
     ) {
         content()
     }
