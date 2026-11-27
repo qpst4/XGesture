@@ -409,25 +409,34 @@ class RingLauncherOverlayView(
         } else {
             pointerSlot
         }
-        if (slot != highlightedSlot) {
-            highlightedSlot = slot
+        // 普通模式下空槽位（透明 / 未配置）不绘制，也不该响应：否则悬停震动、长按、提示卡片
+        // 都会指向一个看不见的格子。编辑模式下空槽位画成「+」，仍然可点。
+        val interactiveSlot = if (sessionMode == SessionMode.EDIT || slot < 0 ||
+            targets.getOrNull(slot) != null
+        ) {
+            slot
+        } else {
+            -1
+        }
+        if (interactiveSlot != highlightedSlot) {
+            highlightedSlot = interactiveSlot
             // 提示卡片的进度线自己记"进到这个槽位的时间"：不依赖 slotPressIndex，
             // 避免长按触发后底层把 press 状态清掉导致进度线消失。
-            if (slot != hintRingSlot) {
-                hintRingSlot = slot
+            if (interactiveSlot != hintRingSlot) {
+                hintRingSlot = interactiveSlot
                 hintRingEnteredAt = SystemClock.uptimeMillis()
             }
-            if (slot >= 0 && slot != lastHapticHighlightedSlot) {
-                lastHapticHighlightedSlot = slot
+            if (interactiveSlot >= 0 && interactiveSlot != lastHapticHighlightedSlot) {
+                lastHapticHighlightedSlot = interactiveSlot
                 HapticHelper.appTick(this, settings)
-            } else if (slot < 0) {
+            } else if (interactiveSlot < 0) {
                 lastHapticHighlightedSlot = -1
             }
         }
         if (sessionMode == SessionMode.EDIT) {
-            syncEditDragTracking(slot, localX, localY)
+            syncEditDragTracking(interactiveSlot, localX, localY)
         }
-        syncSlotPressTracking(slot, eventTime)
+        syncSlotPressTracking(interactiveSlot, eventTime)
     }
 
     /** 每次（重新）开始会话前复位"手指动过没有"：基准点还是配置时那个按下点。 */
