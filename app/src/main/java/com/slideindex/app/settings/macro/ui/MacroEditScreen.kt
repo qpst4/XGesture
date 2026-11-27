@@ -204,12 +204,14 @@ fun MacroEditScreen(
                     )
                 },
                 // 「试运行」：不绑手势也能跑一次，方便判断"回放本身"到底有没有生效。
+                // 不做"必须先选目标应用"的限制：未选目标 = 全局宏，执行器一样能当场回放
+                // （`MacroEngine` 只是不拉起 App）。真的没有步骤时由调用方给提示，而不是把这一行变灰。
                 settingsCardScopeItem("macro-test-run") {
                     SettingNavigationRow(
                         icon = { label -> SymbolsIcon("PlayArrow", contentDescription = label) },
                         title = stringResource(R.string.macro_test_run),
                         subtitle = stringResource(R.string.macro_test_run_desc),
-                        enabled = !recording && targetPackage.isNotBlank(),
+                        enabled = !recording,
                         onClick = onTestRun,
                     )
                 },
