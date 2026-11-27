@@ -174,6 +174,8 @@ internal object FloatBallDragFinish {
     }
 
     fun handlePickOnRelease(settings: AppSettings) {
+        // 提交前先撤挡层：结果面板是另一扇窗，挡层盖在上面会吃掉它的点击。
+        PickTouchGuard.disarm(FloatBallOverlay)
         val end = FloatBallOverlay.currentPickAnchor() ?: return
         val start = FloatBallOverlay.selectionStartState?.value ?: end
         val host = FloatBallOverlay.appContext ?: return

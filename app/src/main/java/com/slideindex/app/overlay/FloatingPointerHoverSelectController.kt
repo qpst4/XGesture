@@ -26,7 +26,7 @@ import kotlinx.coroutines.withContext
 internal class FloatingPointerHoverSelectController(
     private val session: FloatingPointerSession,
     private val mainHandler: Handler = Handler(Looper.getMainLooper())
-) {
+) : PickGuardSession {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var active = false
     private var paused = false
@@ -43,6 +43,8 @@ internal class FloatingPointerHoverSelectController(
     val hasPickIntent: Boolean
         get() = paused || selectionStart != null || regionalActive
 
+    override fun isPickGuardNeeded(): Boolean = active
+
     fun begin() {
         reset()
         active = true
@@ -55,6 +57,13 @@ internal class FloatingPointerHoverSelectController(
         scheduleInitialPreviewBoundsCache()
         applyPreviewBoundsFromCache()
         publishChrome()
+        // 主指在指针触摸层（一个小圆窗）里，第二根手指落到别处会命中下面的 App ——
+        // 必须自己挡一层全屏窗，才可能收到"又有一根手指按下"。
+        PickTouchGuard.arm(
+            owner = this,
+            context = SlideIndexAccessibilityService.accessibilityInstance(),
+            onExtraFinger = { revertRegionalToPick() }
+        )
     }
 
     fun onPointerMoved(pointerX: Float, pointerY: Float, density: Float) {
@@ -87,6 +96,8 @@ internal class FloatingPointerHoverSelectController(
         if (!regionalActive) {
             ensurePreviewBoundsForPick()
         }
+        // 先撤挡层：结果面板是另一扇窗，挡层盖在上面会吃掉它的点击。
+        PickTouchGuard.disarm(this)
         val submitted = submitPick(host, settings)
         reset()
         return submitted
@@ -129,6 +140,40 @@ internal class FloatingPointerHoverSelectController(
             launchPreviewBoundsLookupFallback(anchor)
         }
         publishChrome()
+    }
+
+    /**
+     * 第二根手指按下：撤销区域截图框，**立即**回到取词态（不用等十字退回起点、也不用再等一次超时）。
+     *
+     * 锚点重置成**当前**十字位置，而不是最初的超时点：指针与手指是 1:1 位移，把十字挪回起点
+     * 会在下一帧 MOVE 被立刻拉回，视觉上闪一下；重置到当前位置则天然带滞回 —— 要再移出
+     * [FloatingPointerSession.regionalCancelSlopPx] 才会重新进区域态，不会按下第二指就弹回去。
+     *
+     * @return true 表示确实从区域态回退了（此时事件应当被消费）。
+     */
+    fun revertRegionalToPick(): Boolean {
+        android.util.Log.i(
+            "HoverSelect",
+            "revertRegionalToPick active=$active regional=$regionalActive paused=$paused"
+        )
+        if (!active || !regionalActive) return false
+        regionalActive = false
+        cancelPauseTimer()
+        boundsLookupGeneration++
+        PickPrefetchCache.invalidate()
+        selectionPreviewBounds = null
+        val anchor = pickAnchor
+        selectionStart = anchor
+        paused = true
+        val bounds = FloatBallPreviewBoundsCache.hitTestAt(anchor.x, anchor.y)
+        if (bounds != null) {
+            selectionPreviewBounds = bounds
+            maybeStartPickPrefetch()
+        } else {
+            launchPreviewBoundsLookupFallback(anchor)
+        }
+        publishChrome()
+        return true
     }
 
     private fun launchPreviewBoundsLookupFallback(anchor: Offset) {
@@ -327,6 +372,7 @@ internal class FloatingPointerHoverSelectController(
     }
 
     private fun reset() {
+        PickTouchGuard.disarm(this)
         cancelPauseTimer()
         cancelInitialCacheRefresh()
         boundsLookupGeneration++

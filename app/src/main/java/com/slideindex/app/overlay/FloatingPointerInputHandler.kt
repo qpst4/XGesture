@@ -76,6 +76,14 @@ internal class FloatingPointerInputHandler(
         mainHandler.postDelayed(runnable, KEEP_JOYSTICK_IDLE_DISMISS_MS)
     }
     internal var capturing = false
+    /**
+     * 定义这次手势的「主指」。
+     *
+     * 区域态下多按一根手指时主指可能先抬起，剩下的手指会顶到 index 0，
+     * `event.rawX/rawY` 就变成那根手指的坐标了 —— 光标和区域框会跟着跳，甚至按错误位置提交。
+     * -1 表示还没从事件里学到（边缘触钮吃掉了 DOWN，交接进来时只剩 MOVE）。
+     */
+    private var primaryPointerId = -1
     /** QC `m81.s` — drives tap vs drag vs ring-slot routing for the current finger. */
     private var touchPhase = FloatingPointerTouchPhase.PendingTapOrDrag
     /** True while an edge continuous handoff finger is still driving this session. */
@@ -123,6 +131,7 @@ internal class FloatingPointerInputHandler(
     fun beginContinuedGesture(rawX: Float, rawY: Float, downTimeMs: Long) {
         host.onActivity()
         capturing = true
+        primaryPointerId = -1
         fromContinuedEdge = true
         setTouchPhase(FloatingPointerTouchPhase.Dragging)
         longPressTriggered = false
@@ -170,14 +179,66 @@ internal class FloatingPointerInputHandler(
             return false
         }
         return when (event.actionMasked) {
-            MotionEvent.ACTION_MOVE -> handleTouch(event)
+            MotionEvent.ACTION_MOVE -> {
+                adoptPrimaryPointer(event)
+                handleTouch(event)
+            }
+            // 第二根手指按下：撤销区域截图框，立即回退到取词态。
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                adoptPrimaryPointer(event)
+                val reverted = hoverSelectController.revertRegionalToPick()
+                if (reverted) {
+                    android.util.Log.i(
+                        "FloatingPointer",
+                        "extra finger down → revert regional to text pick"
+                    )
+                }
+                reverted
+            }
+            // 主指先抬起：剩下的手指坐标不是这次手势的锚点，按取消收尾，避免错位提交。
+            MotionEvent.ACTION_POINTER_UP -> {
+                adoptPrimaryPointer(event)
+                if (event.getPointerId(event.actionIndex) != primaryPointerId) {
+                    false
+                } else {
+                    android.util.Log.i(
+                        "FloatingPointer",
+                        "primary pointer up while others down → cancel gesture"
+                    )
+                    primaryPointerId = -1
+                    cancelCapturedGesture(event)
+                    true
+                }
+            }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 val handled = handleTouch(event)
                 capturing = false
+                primaryPointerId = -1
                 handled
             }
             else -> false
         }
+    }
+
+    /** 交接进来的第一个事件里，index 0 始终是最早那根手指，可以直接学它。 */
+    private fun adoptPrimaryPointer(event: MotionEvent) {
+        if (primaryPointerId == -1) primaryPointerId = event.getPointerId(0)
+    }
+
+    /**
+     * 主指中途离屏时，用真正的 ACTION_CANCEL 走一遍收尾：取消取词、收起光标，不提交任何结果。
+     *
+     * 不能直接拿 POINTER_UP 去跑 UP 分支 —— 那条分支会 `finishAndSubmit` 提交取词。
+     */
+    private fun cancelCapturedGesture(event: MotionEvent) {
+        val cancel = MotionEvent.obtain(event)
+        cancel.action = MotionEvent.ACTION_CANCEL
+        try {
+            handleTouch(cancel)
+        } finally {
+            cancel.recycle()
+        }
+        capturing = false
     }
 
     fun dispatchTouchEvent(event: MotionEvent): Boolean {
@@ -204,6 +265,7 @@ internal class FloatingPointerInputHandler(
             MotionEvent.ACTION_DOWN -> {
                 host.ensureTouchOverlayInteractive()
                 realtimeGestureMoved = false
+                primaryPointerId = event.getPointerId(0)
                 val handled = handleTouch(event)
                 capturing = handled
                 return handled
@@ -216,7 +278,27 @@ internal class FloatingPointerInputHandler(
                 }
                 val handled = handleTouch(event)
                 capturing = false
+                primaryPointerId = -1
                 return handled
+            }
+            // 第二根手指按下：撤销区域截图框，立即回退到取词态（指针层自己收到多指的情形）。
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                if (!capturing) return false
+                adoptPrimaryPointer(event)
+                return hoverSelectController.revertRegionalToPick()
+            }
+            // 主指先抬起：剩余手指的坐标不是这次手势的锚点，按取消收尾。
+            MotionEvent.ACTION_POINTER_UP -> {
+                if (!capturing) return false
+                adoptPrimaryPointer(event)
+                if (event.getPointerId(event.actionIndex) != primaryPointerId) return false
+                android.util.Log.i(
+                    "FloatingPointer",
+                    "primary pointer up while others down → cancel gesture"
+                )
+                primaryPointerId = -1
+                cancelCapturedGesture(event)
+                return true
             }
             else -> {
                 if (!capturing) return false

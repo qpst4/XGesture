@@ -40,7 +40,7 @@ import kotlinx.coroutines.withContext
  * Touch events are forwarded from edge capture — never a second full-screen touch window.
  */
 @SuppressLint("StaticFieldLeak")
-object RegionalPickOverlay {
+object RegionalPickOverlay : PickGuardSession {
     private const val TAG = "RegionalPickOverlay"
     private const val REGIONAL_RECT_MIN_SIDE_DP = 3f
     /** FV I0: rebuild preview bounds cache after finger moves. */
@@ -77,6 +77,15 @@ object RegionalPickOverlay {
     private var regionalActive = false
     private var sessionActive = false
 
+    /**
+     * 定义这次取词的「主指」。
+     *
+     * 区域态下多按一根手指时主指可能先抬起，剩下的手指会顶到 index 0，
+     * `event.rawX/rawY` 就变成那根手指的坐标了 —— 会把区域框挪到别处、甚至按错误位置提交。
+     * -1 表示还没从事件里学到（边缘触钮自己吃掉了 DOWN，交接进来时只剩 MOVE）。
+     */
+    private var primaryPointerId = -1
+
     private var pauseRunnable: Runnable? = null
     private var cacheRefreshRunnable: Runnable? = null
     private var initialCacheRunnable: Runnable? = null
@@ -94,6 +103,8 @@ object RegionalPickOverlay {
         private set
 
     val isActive: Boolean get() = sessionActive
+
+    override fun isPickGuardNeeded(): Boolean = sessionActive
 
     fun isConsumingEdgeGestureTouch(): Boolean = continuedGestureActive
 
@@ -202,6 +213,8 @@ object RegionalPickOverlay {
         }
         continuedGestureActive = false
         sessionActive = false
+        primaryPointerId = -1
+        PickTouchGuard.disarm(this)
         EdgeContinuedOverlayHandoff.clearIfInactive()
         cancelPauseTimer()
         cancelCacheRefresh()
@@ -221,25 +234,49 @@ object RegionalPickOverlay {
 
     fun forwardContinuedTouch(event: MotionEvent): Boolean {
         if (!continuedGestureActive) return false
-        return when (event.actionMasked) {
+        when (event.actionMasked) {
             MotionEvent.ACTION_MOVE -> {
+                adoptPrimaryPointer(event)
                 handleTouch(event.rawX, event.rawY, MotionEvent.ACTION_MOVE)
-                true
+                return true
+            }
+            // 第二根手指按下 = 撤销区域截图框，立即回退到取词态。
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                adoptPrimaryPointer(event)
+                val reverted = revertRegionalToPick()
+                if (reverted) {
+                    Log.i(TAG, "extra finger down → revert regional to text pick")
+                }
+                return reverted
+            }
+            // 主指先抬起：剩下的手指坐标已不是这次手势的锚点，继续走会按它的位置提交一个错误区域。
+            MotionEvent.ACTION_POINTER_UP -> {
+                adoptPrimaryPointer(event)
+                if (event.getPointerId(event.actionIndex) != primaryPointerId) return false
+                Log.i(TAG, "primary pointer up while others down → cancel pick")
+                dismiss()
+                return true
             }
             MotionEvent.ACTION_UP -> {
+                adoptPrimaryPointer(event)
                 handleTouch(event.rawX, event.rawY, MotionEvent.ACTION_UP)
                 continuedGestureActive = false
                 EdgeContinuedOverlayHandoff.clearIfInactive()
-                true
+                return true
             }
             MotionEvent.ACTION_CANCEL -> {
                 dismiss()
                 continuedGestureActive = false
                 EdgeContinuedOverlayHandoff.clearIfInactive()
-                true
+                return true
             }
-            else -> false
         }
+        return false
+    }
+
+    /** 交接进来的第一个事件里，index 0 始终是最早那根手指，可以直接学它。 */
+    private fun adoptPrimaryPointer(event: MotionEvent) {
+        if (primaryPointerId == -1) primaryPointerId = event.getPointerId(0)
     }
 
     private fun ensureDisplayWindow(hostContext: Context, appSettings: AppSettings): Boolean {
@@ -377,6 +414,12 @@ object RegionalPickOverlay {
         scheduleInitialPreviewBoundsCache()
         applyPreviewBoundsFromCache()
         syncCursorAppearance()
+        // 主指接在贴边触钮条上，第二根手指落到屏幕中间时会命中下面的 App —— 必须自己挡一层全屏窗才接得住。
+        PickTouchGuard.arm(
+            owner = this,
+            context = appContext,
+            onExtraFinger = { revertRegionalToPick() }
+        )
         val service = SlideIndexAccessibilityService.accessibilityInstance()
         if (service != null) {
             com.slideindex.app.link.LinkRadarOverlay.startSession(
@@ -451,6 +494,8 @@ object RegionalPickOverlay {
             if (!regionalActive) {
                 ensurePreviewBoundsForPick()
             }
+            // 先撤挡层：结果面板是另一扇窗，挡层盖在上面会吃掉它的点击。
+            PickTouchGuard.disarm(this)
             submitPick(host, currentSettings)
         } else {
             val density = cursorPreviewView?.resources?.displayMetrics?.density ?: 1f
@@ -619,6 +664,41 @@ object RegionalPickOverlay {
             launchPreviewBoundsLookupFallback(anchor)
         }
         syncCursorAppearance()
+    }
+
+    /**
+     * 第二根手指按下：撤销区域截图框，**立即**回到取词态（不用等十字退回起点、也不用再等一次超时）。
+     *
+     * 锚点重置成**当前**十字位置，而不是最初的超时点：指针与手指是 1:1 位移，把十字挪回起点
+     * 会在下一帧 MOVE 被立刻拉回，视觉上闪一下；重置到当前位置则天然带滞回 —— 要再移出
+     * [AppSettings.floatBallRegionalCancelSlopDp] 才会重新进区域态，不会按下第二指就弹回去。
+     *
+     * @return true 表示确实从区域态回退了（此时事件应当被消费）。
+     */
+    fun revertRegionalToPick(): Boolean {
+        Log.i(
+            TAG,
+            "revertRegionalToPick session=$sessionActive regional=$regionalActive paused=$paused"
+        )
+        if (!sessionActive || !regionalActive) return false
+        regionalActive = false
+        cancelPauseTimer()
+        com.slideindex.app.link.LinkRadarOverlay.setTargetSuppressed(true)
+        boundsLookupGeneration++
+        PickPrefetchCache.invalidate()
+        selectionPreviewBounds = null
+        val anchor = pickAnchor
+        selectionStart = anchor
+        paused = true
+        val bounds = FloatBallPreviewBoundsCache.hitTestAt(anchor.x, anchor.y)
+        if (bounds != null) {
+            selectionPreviewBounds = bounds
+            maybeStartPickPrefetch()
+        } else {
+            launchPreviewBoundsLookupFallback(anchor)
+        }
+        syncCursorAppearance()
+        return true
     }
 
     private fun launchPreviewBoundsLookupFallback(anchor: Offset) {
@@ -805,6 +885,7 @@ object RegionalPickOverlay {
             kotlin.math.abs(current.bottom - next.bottom) <= slopPx
 
     private fun resetSessionState() {
+        PickTouchGuard.disarm(this)
         cancelPauseTimer()
         cancelCacheRefresh()
         cancelInitialCacheRefresh()
@@ -822,6 +903,7 @@ object RegionalPickOverlay {
         selectionPreviewBounds = null
         paused = false
         regionalActive = false
+        primaryPointerId = -1
         lastPauseScheduleX = Float.NaN
         lastPauseScheduleY = Float.NaN
         lastCacheRefreshX = Float.NaN
