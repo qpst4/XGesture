@@ -408,11 +408,18 @@ fun QuickWheelEditorOverlay(
     Box(
         modifier = modifier
             .fillMaxSize()
-            // 编辑期间吞掉所有指针事件，避免误触下层设置项。
+            // 编辑期间挡掉下层的设置项：**只消费「按下」那一个事件**。
+            //
+            // ⚠️ 不能连 MOVE / UP 一起消费：容器、中心、「+」的 `.clickable` 都是本节点的子级，
+            // 它们在等抬起时由 `waitForUpOrCancellation()` 检查这次手势的 position change
+            // 是否被别人消费过（Main 之后还有一次 Final 复查）；一旦发现被消费就判定
+            // 「手势被抢」并取消点击。表现就是按下有按压反馈、却点不开容器。
+            // 只消费 DOWN 足够挡住下层：下层拿到的是已消费的 down。
             .pointerInput(Unit) {
                 awaitPointerEventScope {
                     while (true) {
-                        awaitPointerEvent().changes.forEach { it.consume() }
+                        val event = awaitPointerEvent()
+                        event.changes.firstOrNull { it.pressed && !it.previousPressed }?.consume()
                     }
                 }
             },

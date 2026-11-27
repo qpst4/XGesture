@@ -449,7 +449,7 @@ data class QuickWheel(
 
         /** 新轮盘预置的导航键容器数量：返回 / 主屏幕 / 多任务。 */
         const val DEFAULT_SLOT_COUNT = 3
-        const val MAX_SLOTS = 48
+        const val MAX_SLOTS = 64
         const val MAX_SUB_SLOTS = 24
         const val UNTITLED_NAME_PREFIX = "轮盘"
 
