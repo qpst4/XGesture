@@ -489,8 +489,6 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
-    androidTestImplementation(libs.androidx.test.ext.junit)
-    androidTestImplementation(libs.androidx.test.runner)
     // 模块侧（xposed/）代码现在有单测覆盖：libxposed api 是 compileOnly，
     // 单测运行时类路径上也得有，否则加载 ClipboardWhitelistHook 会 NoClassDefFoundError。
     testImplementation(libs.libxposed.api)
