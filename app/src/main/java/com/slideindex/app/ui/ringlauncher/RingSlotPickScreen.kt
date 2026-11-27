@@ -47,6 +47,7 @@ import com.slideindex.app.ui.miuix.MiuixExpandableSearchIconAction
 import com.slideindex.app.ui.miuix.MiuixScaffoldSearchTabBottomContent
 import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.miuix.consumeExpandableSearchBack
+import com.slideindex.app.ui.miuix.syncCollapseAfterProgrammaticScroll
 import com.slideindex.app.ui.picker.ActivityShortcutPickActivityScreen
 import com.slideindex.app.ui.picker.ActivityShortcutPickAppScreen
 import com.slideindex.app.ui.picker.AppPickerTabRow
@@ -70,8 +71,10 @@ import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
 import com.slideindex.app.util.AppShortcutLoader
 import com.slideindex.app.util.AppShortcutLoader.toQuickLauncherItem
 import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Image
+import kotlinx.coroutines.launch
 
 /**
  * 圆环启动器 · 槽位选择页（标准列表页，单选）。
@@ -103,6 +106,8 @@ fun RingSlotPickScreen(
     var searchQuery by remember { mutableStateOf("") }
     val searchFocusRequester = remember { FocusRequester() }
     val listState = rememberLazyListState()
+    // 顶栏折叠态只由 nestedScroll 写；本页是程序化定位，所以要把它注入脚手架再手动同步一次。
+    val listScrollBehavior = MiuixScrollBehavior()
     var page by remember { mutableStateOf<RingSlotPage>(RingSlotPage.Main) }
     var pendingMacroPick by remember { mutableStateOf<((GestureAction) -> Unit)?>(null) }
     val requestComposite = com.slideindex.app.ui.composite.rememberCompositePickRequester()
@@ -184,25 +189,45 @@ fun RingSlotPickScreen(
     }
 
     // 打开时定位到当前绑定的那一项（和旧浮层版一致）。
-    LaunchedEffect(selectedTab, currentItem) {
+    //
+    // ⚠️ `scrollToItem` 要的是 **LazyColumn 的 item 下标**，不是"网格行号"：
+    // - ACTIONS 每个分类只有「标题 item + 整节卡片 item」两个 item（卡片内部才按列排网格），
+    //   以前按 `chunked(4)` 的行号当 item 下标，行号远大于真实 item 数 → 被夹到列表末尾，
+    //   真机表现就是"打开就停在底部"；
+    // - APPS 是每行一个 item（`appPickerGridItems`），行号 = 下标 / 列数（列数与列表一致）；
+    // - 两种情况都要加上列表开头由脚手架插入的 header item（见 [RingSlotListHeaderItems]）。
+    var revealApplied by remember(selectedTab, currentItem) { mutableStateOf(false) }
+    LaunchedEffect(selectedTab, currentItem, filteredActions, filteredApps, gridColumns) {
+        if (revealApplied) return@LaunchedEffect
         val item = currentItem ?: return@LaunchedEffect
-        when (tabs[selectedTab]) {
+        val target = when (tabs[selectedTab]) {
             QuickLauncherEditorAddTab.ACTIONS -> {
                 val key = QuickLauncherItemCodec.parseActionPayload(item.payload)
                     ?.let(QuickLauncherItemCodec::actionKey)
                     ?: return@LaunchedEffect
-                val index = ringActionItemIndex(filteredActions, key)
-                if (index >= 0) listState.scrollToItem(index)
+                ringActionScrollItemIndex(filteredActions, key)
             }
             QuickLauncherEditorAddTab.APPS -> {
-                if (item.type == QuickLauncherItemType.APP) {
-                    val index = filteredApps.indexOfFirst { app ->
+                val index = if (item.type == QuickLauncherItemType.APP) {
+                    filteredApps.indexOfFirst { app ->
                         AppTarget.encode(app.packageName, app.cloneUserId) == item.payload
                     }
-                    if (index >= 0) listState.scrollToItem(index / 4)
+                } else {
+                    -1
                 }
+                if (index < 0) -1 else RingSlotListHeaderItems + index / gridColumns
             }
-            QuickLauncherEditorAddTab.SHORTCUTS -> Unit
+            QuickLauncherEditorAddTab.SHORTCUTS -> -1
+        }
+        if (target < 0) return@LaunchedEffect
+        listState.scrollToItem(target)
+        revealApplied = true
+        // 程序化定位不经过 nestedScroll：不补这一步，顶栏会停在
+        // "内容已经在中间、材质 alpha 仍是 0" 的透明态（和选择操作页同一个病根）。
+        launch {
+            listScrollBehavior.syncCollapseAfterProgrammaticScroll(
+                canCollapse = { listState.canScrollBackward },
+            )
         }
     }
 
@@ -249,6 +274,7 @@ fun RingSlotPickScreen(
                 modifier = Modifier.fillMaxSize(),
                 enableBackHandler = false,
                 listState = listState,
+                scrollBehavior = listScrollBehavior,
                 onBack = handleBack,
                 actions = {
                     MiuixExpandableSearchIconAction(
@@ -512,21 +538,32 @@ private fun initTabFor(item: QuickLauncherItem?): Int = when {
 }
 
 /**
- * 动作 tab 里某个动作对应第几个 LazyColumn item（含分区标题）。
- * 与 Body 里的 actionGridItemIndex 同算法，用于打开时定位到当前绑定动作。
+ * 列表最前面由 `MiuixListScaffold(pageHint = null, subtitle = 非空)` 插入的 header item 数。
+ * 对应 `settingsPageHeaderItems`：`pageHint ?: subtitle` 非空 → 1 个 page-hint item，
+ * `pageHint != null && subtitle != null` 的第二个 item 本页不成立。
  */
-private fun ringActionItemIndex(actions: List<GestureAction>, key: String): Int {
+private const val RingSlotListHeaderItems = 1
+
+/**
+ * 当前绑定动作在 ACTIONS 列表里的 **item 下标**（0 起，含列表开头的 header item）。
+ *
+ * 列表结构：每个分类 = 1 个标题 item + 1 张整节卡片 item
+ * （见 `quickLauncherAddPickerActionItems`），卡片内部才按列排网格，
+ * 所以定位目标是"目标分类那张卡片"，与网格列数无关。
+ *
+ * @return -1 = 当前列表里没有这个动作（被搜索过滤掉，或该动作已不存在）
+ */
+internal fun ringActionScrollItemIndex(
+    actions: List<GestureAction>,
+    key: String,
+    headerItems: Int = RingSlotListHeaderItems,
+): Int {
+    if (actions.isEmpty()) return -1
     val sections = GestureActionCatalog.groupIntoSections(actions)
-    var itemIndex = 0
-    sections.forEach { section ->
-        itemIndex += 1
-        val rows = section.actions.chunked(4)
-        rows.forEachIndexed { rowIndex, row ->
-            if (row.any { QuickLauncherItemCodec.actionKey(it) == key }) {
-                return itemIndex + rowIndex
-            }
+    sections.forEachIndexed { sectionIndex, section ->
+        if (section.actions.any { QuickLauncherItemCodec.actionKey(it) == key }) {
+            return headerItems + sectionIndex * 2 + 1
         }
-        itemIndex += rows.size
     }
     return -1
 }
