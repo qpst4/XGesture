@@ -4,6 +4,9 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.graphics.RectF
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
@@ -56,6 +59,18 @@ class CornerGestureController(
     private var capturesAttached = false
     private var expandedCaptureAnchor: CornerAnchor? = null
     private var expandedCaptureStrip: CornerZoneStrip? = null
+
+    /**
+     * 全屏捕获窗的守卫。
+     *
+     * 角轮盘会话期间捕获窗会扩到整屏（手指要能拖到屏幕任何位置）。但整屏窗口只要没被收回，
+     * 它就会把下面所有应用的触摸吃掉（窗口范围内的 DOWN 不会再转发给下层窗口）——历史故障：
+     * 轮盘可视层已经被系统摘掉/隐藏，捕获窗还停在整屏，整屏只有状态栏/导航手势能动。
+     * 因此这里只认“可视层真的挂着 + 会话真的活着”，否则定时收回。
+     */
+    private val captureGuardHandler = Handler(Looper.getMainLooper())
+    private var captureGuardScheduled = false
+    private var lastCaptureTouchAtMs = 0L
     /**
      * 输入层接管（system_server 模块）用的命中快照。
      *
@@ -225,12 +240,14 @@ class CornerGestureController(
         val strip = suspendedCaptureStrip
         suspendedCaptureAnchor = null
         suspendedCaptureStrip = null
-        if (anchor != null && strip != null) {
-            expandCaptureForSession(anchor, strip)
-        }
+        // 先把可视层恢复成“可见 + 可交互”，再放大捕获窗：
+        // syncCaptureWindows() 只有在可视层真的可见时才允许全屏，顺序反了会被它立即收回。
         root.visibility = View.VISIBLE
         OverlayWindowTypes.applyPresentationInteractiveFlags(params)
         runCatching { windowManager.updateViewLayout(root, params) }
+        if (anchor != null && strip != null) {
+            expandCaptureForSession(anchor, strip)
+        }
         overlayView?.invalidate()
     }
 
@@ -239,6 +256,7 @@ class CornerGestureController(
             ?.invoke(settings, context, true) == true
 
     fun destroy() {
+        cancelCaptureGuard()
         detachPreview()
         detachGestureLayers()
         overlayView = null
@@ -332,6 +350,20 @@ class CornerGestureController(
             overlayParams = OverlayWindowTypes.createPresentationParams(context).apply {
                 OverlayWindowTypes.applyFullScreen(this)
             }
+            // 系统自己摘窗（无障碍重连 / 进程回收）不会走 detachOverlay()：本地 overlayAttached
+            // 会一直停在 true，之后既不会再挂回去，捕获窗也永远缩不回来。必须在这里兜住。
+            overlayRoot?.addOnAttachStateChangeListener(
+                object : View.OnAttachStateChangeListener {
+                    override fun onViewAttachedToWindow(v: View) = Unit
+
+                    override fun onViewDetachedFromWindow(v: View) {
+                        if (v !== overlayRoot || !overlayAttached) return
+                        Log.w(TAG, "corner overlay detached by system → collapse capture")
+                        overlayAttached = false
+                        restoreCaptureSize()
+                    }
+                },
+            )
         }
         ensureCaptureSlots()
         overlayView?.applySettings(settings, density)
@@ -366,6 +398,15 @@ class CornerGestureController(
 
     private fun syncCaptureWindows() {
         val corner = settings.cornerGestureSettings
+        // 全屏捕获窗只在“轮盘可视层真的挂着、可见、可交互”时才允许存在。
+        // 否则一旦会话收尾漏了（丢 UP / 系统摘窗 / 挂起恢复失败），整屏触摸会被这个
+        // 全屏窗口吃掉：窗口范围内的 DOWN 不会转发给下层应用，表现就是整机点不动。
+        if (expandedCaptureAnchor != null && !isOverlayShown()) {
+            Log.w(TAG, "syncCaptureWindows: overlay not shown → collapse full-screen capture")
+            expandedCaptureAnchor = null
+            expandedCaptureStrip = null
+            cancelCaptureGuard()
+        }
         attachCapturesIfNeeded()
         captureSlots.forEach { slot ->
             val anchorEnabled = when (slot.anchor) {
@@ -415,7 +456,11 @@ class CornerGestureController(
         } else {
             OverlayWindowTypes.ensureNoBrightnessOverride(params)
             runCatching { windowManager.updateViewLayout(slot.host, params) }
-                .onFailure { Log.e(TAG, "Failed to update corner capture", it) }
+                .onFailure {
+                    // 尺寸没改成功就绝不能留着一个可能还是整屏的窗口：先摘掉，下一次 sync 会重新挂小条。
+                    Log.e(TAG, "Failed to update corner capture, drop window", it)
+                    runCatching { windowManager.removeView(slot.host) }
+                }
         }
     }
 
@@ -423,13 +468,90 @@ class CornerGestureController(
         expandedCaptureAnchor = anchor
         expandedCaptureStrip = strip
         syncCaptureWindows()
+        scheduleCaptureGuard()
     }
 
+    /**
+     * 收回全屏捕获窗。
+     *
+     * 这里**不能**再用 `expandedCaptureAnchor == null` 当早退条件：状态字段和窗口真实尺寸
+     * 可能已经不同步（异常被吞、系统摘窗等），一旦字段先被清掉，这个函数就再也不会把
+     * 整屏窗口改回小条，窗口就永久吃掉整屏触摸。所以一律按“小条尺寸”重设已挂载的窗口。
+     */
     private fun restoreCaptureSize() {
-        if (expandedCaptureAnchor == null) return
         expandedCaptureAnchor = null
         expandedCaptureStrip = null
+        cancelCaptureGuard()
+        // 走完整 sync：会话期间为了放大，另一条触发带（如右侧横向小条）会被临时摘掉，
+        // 这里要把它加回来，否则“轮盘用一次之后另一个角就哑了”，直到下次设置刷新才恢复。
         syncCaptureWindows()
+    }
+
+    /** 只重设已挂载捕获窗的尺寸，不新增窗口（拆卸路径不能顺手把窗口加回来）。 */
+    private fun collapseCaptureLayout() {
+        captureSlots.forEach { slot ->
+            if (slot.host.parent == null) return@forEach
+            val rect = zoneLayout.stripRect(slot.anchor, slot.strip) ?: return@forEach
+            applyStripCaptureLayout(slot.params, rect)
+            OverlayWindowTypes.ensureNoBrightnessOverride(slot.params)
+            runCatching { windowManager.updateViewLayout(slot.host, slot.params) }
+                .onFailure {
+                    Log.e(TAG, "collapseCaptureLayout: update failed, drop window", it)
+                    runCatching { windowManager.removeView(slot.host) }
+                }
+        }
+    }
+
+    private fun scheduleCaptureGuard(delayMs: Long = CAPTURE_GUARD_INTERVAL_MS) {
+        if (captureGuardScheduled) return
+        captureGuardScheduled = true
+        captureGuardHandler.postDelayed(captureGuard, delayMs)
+    }
+
+    private fun cancelCaptureGuard() {
+        captureGuardScheduled = false
+        captureGuardHandler.removeCallbacks(captureGuard)
+    }
+
+    /** 定时校验“全屏捕获窗”的前提是否还成立，不成立就强制收尾（整屏被吃时的最后一道保险）。 */
+    private val captureGuard = Runnable {
+        captureGuardScheduled = false
+        if (expandedCaptureAnchor == null) return@Runnable
+        val view = overlayView
+        if (!isOverlayShown()) {
+            releaseStuckCapture("overlay not shown")
+            return@Runnable
+        }
+        if (view == null || (!view.isSessionActive() && !view.isWheelPinned())) {
+            releaseStuckCapture("no live session")
+            return@Runnable
+        }
+        if (!view.isWheelPinned() &&
+            SystemClock.uptimeMillis() - lastCaptureTouchAtMs > CAPTURE_STALL_MS
+        ) {
+            releaseStuckCapture("no touch for ${CAPTURE_STALL_MS}ms")
+            return@Runnable
+        }
+        // 钉住的轮盘本来就可以长时间停在屏幕上，低频巡检即可。
+        scheduleCaptureGuard(
+            if (view.isWheelPinned()) CAPTURE_PINNED_GUARD_INTERVAL_MS else CAPTURE_GUARD_INTERVAL_MS,
+        )
+    }
+
+    private fun releaseStuckCapture(reason: String) {
+        Log.w(TAG, "capture guard: $reason → collapse full-screen capture")
+        overlayView?.cancelSession()
+        restoreCaptureSize()
+        detachOverlay()
+    }
+
+    /** 全屏捕获窗的唯一合法前提：可视层已挂载、可见、且可交互。 */
+    private fun isOverlayShown(): Boolean {
+        if (!overlayAttached) return false
+        val root = overlayRoot ?: return false
+        if (!root.isShown) return false
+        val flags = overlayParams?.flags ?: return false
+        return flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE == 0
     }
 
     private fun applyStripCaptureLayout(params: WindowManager.LayoutParams, rect: RectF) {
@@ -522,6 +644,7 @@ class CornerGestureController(
         overlayView?.cancelSession()
         expandedCaptureAnchor = null
         expandedCaptureStrip = null
+        cancelCaptureGuard()
         if (capturesAttached) syncCaptureWindows()
     }
 
@@ -578,10 +701,25 @@ class CornerGestureController(
     }
 
     private fun ensureOverlayAttached() {
-        if (overlayAttached) return
         val root = overlayRoot ?: return
         val params = overlayParams ?: return
         val view = overlayView ?: return
+        // 系统摘窗时我们的标志可能没跟上（回调丢失）：按未挂载处理，走下面的 addView 重建。
+        if (overlayAttached && !root.isAttachedToWindow) {
+            Log.w(TAG, "ensureOverlayAttached: root no longer attached → treat as detached")
+            overlayAttached = false
+        }
+        if (overlayAttached) {
+            // 挂着但不可见/不可交互（挂起恢复失败等）：补一次，避免“轮盘看不见却在吃触摸”。
+            if (!suspendedForExternalActivity && !isOverlayShown()) {
+                root.visibility = View.VISIBLE
+                OverlayWindowTypes.applyPresentationInteractiveFlags(params)
+                runCatching { windowManager.updateViewLayout(root, params) }
+                    .onFailure { Log.w(TAG, "Failed to restore corner overlay visibility", it) }
+            }
+            return
+        }
+        root.visibility = View.VISIBLE
         OverlayWindowTypes.applyFullScreen(params)
         OverlayWindowTypes.applyPresentationInteractiveFlags(params)
         OverlayWindowTypes.ensureNoBrightnessOverride(params)
@@ -604,8 +742,11 @@ class CornerGestureController(
         suspendedCaptureStrip = null
         overlayView?.cancelSession()
         syncOverlayBackgroundBlur(active = false)
-        overlayRoot?.let { runCatching { windowManager.removeView(it) } }
+        // 先清标志再摘窗：摘窗会触发 OnAttachStateChange 回调，避免那里重复走一遍收尾。
         overlayAttached = false
+        overlayRoot?.let { runCatching { windowManager.removeView(it) } }
+        cancelCaptureGuard()
+        collapseCaptureLayout()
     }
 
     private fun syncOverlayBackgroundBlur(active: Boolean) {
@@ -651,6 +792,7 @@ class CornerGestureController(
         event: MotionEvent,
     ): Boolean {
         if (!settings.cornerGestureSettings.enabled) return false
+        lastCaptureTouchAtMs = SystemClock.uptimeMillis()
         val view = overlayView ?: return false
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
@@ -662,6 +804,14 @@ class CornerGestureController(
                     resumeOverlayAfterExternalActivity()
                 }
                 if (view.isWheelPinned()) {
+                    if (!isOverlayShown()) {
+                        // 钉住的轮盘不可见还在吃触摸：直接收掉，绝不把整屏交出去。
+                        Log.w(TAG, "pinned wheel without visible overlay → dismiss")
+                        view.dismissPinnedWheel()
+                        restoreCaptureSize()
+                        detachOverlay()
+                        return false
+                    }
                     ensureOverlayAttached()
                     return view.handlePinnedTouchEvent(event)
                 }
@@ -711,6 +861,16 @@ class CornerGestureController(
 
     companion object {
         private const val TAG = "CornerGestureController"
+
+        /** 全屏捕获窗的一致性巡检间隔（只在窗口已放大时运行）。 */
+        private const val CAPTURE_GUARD_INTERVAL_MS = 2_000L
+
+        /** 钉住轮盘期间的巡检间隔（钉住是合法长驻状态，低频即可）。 */
+        private const val CAPTURE_PINNED_GUARD_INTERVAL_MS = 30_000L
+
+        /** 会话还挂着、但这么久没有任何触摸：判定为丢了 UP，强制收尾。 */
+        private const val CAPTURE_STALL_MS = 15_000L
+
         private val FORWARD_ANCHORS = listOf(CornerAnchor.LEFT, CornerAnchor.RIGHT)
         private val FORWARD_STRIPS = listOf(CornerZoneStrip.VERTICAL, CornerZoneStrip.HORIZONTAL)
     }
