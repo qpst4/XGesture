@@ -8,6 +8,75 @@ identical to the Chinese file so that the release pipeline can line up both lang
 
 Where the two files differ, `CHANGELOG.md` is authoritative.
 
+## [1.85.0] - 2026-11-27
+
+### Added
+- Added a floating navigation action that shows a draggable back / home / recents button bar, expands toward the screen center, and follows light and dark themes
+- Added composite actions that run several actions in order
+- Added an action combo library with named save, reuse, edit, and delete, plus combo references that apply to every bound gesture when a combo changes
+- Corner wheel ring sizes are now configurable per ring with a variable total, and slots support long-press drag reordering and sorting
+- Corner wheel second-level menus can hold actions and apps
+- Ring launcher slots can now be set to transparent (always empty) or auto-fill (recent apps) from the "None" menu
+- Trigger button settings offer manual edge passthrough with Xposed module status hints
+- Cycle input method supports a target input method and a rotation exclusion list that can skip voice input
+- The floating clipboard, the Stash clipboard page, and the flash note page support multi-select batch deletion
+- The search panel supports app aliases, and chosen apps can be hidden from a settings page
+- Gesture macros support a global scope and an empty target app, and keep playing after switching apps
+- Gesture macro steps support back, home, and recents
+- Physical keys support separate action sets for screen on and screen off
+- Pin controls sit in a fixed bottom bar, and pinned images can be rotated
+- Text picking can auto-translate after choosing a language, and long-press switches pick granularity
+- The pick panel adds a flat layout toggle
+- A second finger can step back to text picking, and cancels selection during drag-pick
+- Screen drawing adds a default tool setting that can remember the last used tool
+- Quick wheel adds a "show top hint" toggle
+- Global touch supports per-gesture names, enable and hint toggles, and long-press drag sorting
+- The quick launcher is now a list page with a create button, and the panel limit is raised to 30
+- Widget panels now support composite actions, open link, macros, and shell commands
+- Custom shortcut icons are kept in corner wheel, ring launcher, and widget panel entries
+- Overlay material settings split into "Panel material" and "Full-screen backdrop & scrim" cards, with separate panel glass, panel blur, backdrop blur, and backdrop scrim controls
+- Global icon shape can be unified, and each launcher can still override it
+
+### Changed
+- A second finger on the floating ball and floating pointer now cancels and turns red
+- The screen recording bar follows light and dark theme colors
+- Screenshot restore delay is raised from 0.8 s to 2 s
+- Quick launcher keeps drawing its action bar while the panel exit animation runs
+- Quick wheel top-level containers support up to 64 items
+- Corner wheel snaps into place on release
+- Screenshots no longer include trigger buttons or the Stash docked handle
+- Bottom sheets and bottom panels leave room for the three-button navigation bar
+- The three-button navigation bar is fully transparent again
+- Corner wheel and ring launcher highlights follow icon shapes, and hint plates are removed
+- Search panel candidate icons follow the global icon shape, and search engine shapes are simplified
+- Volume and brightness indicator bars draw their glass separately and read better in light mode
+- Quick launcher page indicator aligns to the bottom of the last row
+- Region pick restores its drag cursor after accessibility reconnects
+- Open link, composite action, and macro pickers use adaptive glass dialogs with two buttons per row
+- The search panel drops type prefixes, and aliases take priority over hiding
+- Update dialog buttons support two-line labels
+- Macro recording no longer requires choosing a target app first
+
+### Fixed
+- Fixed short presses on the corner wheel and global touch gestures triggering the wrong action
+- Fixed message reminders intercepting every notification when no allowed app was configured
+- Fixed transparent or unconfigured ring launcher slots still vibrating on hover and long press, and auto-filling after choosing "None"
+- Fixed the full-screen capture window still taking touches after the corner wheel closes
+- Fixed releasing normally on the input layer closing a pinned corner wheel
+- Fixed the quick launcher editor container not opening, and stutter when the top bar enters or layout caches refresh
+- Fixed the collapsed top bar state not syncing after programmatic scrolling, and the ring launcher slot page not locating the target category
+- Fixed the floating ball being restored by self-healing during a screenshot
+- Fixed broadcast timeouts from accessibility rebinding after an in-place update
+- Fixed composite action separators conflicting with trigger button rules, which decoded two or more actions as no action
+- Fixed macros without a target app failing the test run
+- Fixed shortcut icons falling back to the app icon or the XGesture icon in some entries
+- Fixed tapping blank space below text in the pick editor not showing the cursor, and a second finger failing to step back to picking
+- Fixed glass warm-up and first-frame delay when the volume indicator bar expands its secondary bar
+- Fixed Link Radar reporting the same link again when one region was contained in another
+- Fixed screen drawing not following UI scaling
+- Fixed the About top bar backdrop fading with the collapsed state
+- Fixed the corner wheel editor panel being too tall with blank taps not focusing, and the pin bar being too tall with mismatched drag hint colors
+
 ## [1.80.0] - 2026-11-23
 
 ### Added

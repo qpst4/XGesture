@@ -39,8 +39,8 @@ android {
         applicationId = "com.slideindex.app"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = 37
-        versionCode = 90
-        versionName = "1.80.0"
+        versionCode = 91
+        versionName = "1.85.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // 输入法诊断日志（ImeDiagnostics）。默认关：正式包零开销。
