@@ -41,6 +41,7 @@ android {
         targetSdk = 37
         versionCode = 90
         versionName = "1.80.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // 输入法诊断日志（ImeDiagnostics）。默认关：正式包零开销。
         // 出诊断包：`./gradlew :app:assembleFullRelease -PimeDiag=true`（release 构建可用同签名，
@@ -484,6 +485,8 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
     // 模块侧（xposed/）代码现在有单测覆盖：libxposed api 是 compileOnly，
