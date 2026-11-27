@@ -58,7 +58,9 @@ fun HoneycombLauncherEditorScreen(
 ) {
     val uiState = HoneycombLauncherUiState(
         items = settings.honeycombLauncher.honeycombRuntimeItems(),
-        displaySettings = settings.honeycombDisplay
+        displaySettings = settings.honeycombDisplay,
+        activityShortcuts = settings.activityShortcuts,
+        shellCommands = settings.shellCommands,
     )
     HoneycombLauncherEditorContent(
         uiState = uiState,
@@ -124,6 +126,8 @@ fun HoneycombLauncherEditorContent(
                     items = uiState.items,
                     display = uiState.displaySettings,
                     appsByPackage = uiState.appsByPackage,
+                    activityShortcuts = uiState.activityShortcuts,
+                    shellCommands = uiState.shellCommands,
                     onItemsChange = onSaveItems,
                     onAdd = onAdd,
                     onInteractionActiveChange = onInteractionActiveChange,
