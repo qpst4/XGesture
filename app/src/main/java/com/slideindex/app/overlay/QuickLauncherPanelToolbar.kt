@@ -229,15 +229,20 @@ internal class QuickLauncherPanelToolbar(
     }
 
     /**
-     * 底部操作栏是否显示。
+     * 操作栏是否显示。
      *
      * 编辑态**强制显示**：那条栏里的「✓」是从编辑态退出来的唯一入口，设置里关掉操作栏之后
      * 如果编辑态也不画，用户会卡在编辑态里出不来（Back 键虽然也能退，但面板内就没有可见出口了）。
+     *
+     * 添加流程（真正的添加页/浮层 sheet）期间不画；但**面板正在退出动画时仍然画**：
+     * 点「＋」会先把面板收起再起添加页，若这时就按 `isAddDialogShowing()` 藏栏，顶栏会比面板
+     * 早一步消失，留下"栏没了、面板还在滑出"的缺口。退出期间继续画，它就跟面板共用同一个
+     * `drawWithAnimation` 的位移与 alpha，一起滑出、一起淡掉。
      */
     fun shouldShowToolbar(): Boolean =
         host.isPanelReady() &&
             controller.displayItems().isNotEmpty() &&
-            !host.isAddDialogShowing() &&
+            (!host.isAddDialogShowing() || host.isPanelExiting()) &&
             (controller.editMode || (host.settings().quickLauncherDisplay.showToolbar && host.hasMultiplePanels()))
 
     fun toolbarLayoutMetrics(): ToolbarLayoutMetrics = ToolbarLayoutMetrics(

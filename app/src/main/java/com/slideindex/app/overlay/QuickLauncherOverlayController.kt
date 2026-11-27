@@ -141,6 +141,7 @@ internal class QuickLauncherOverlayController(
             override fun isPanelReady(): Boolean = true
             override fun isAddDialogShowing(): Boolean =
                 QuickLauncherAddTrampoline.isActive() || quickLauncherOverlayDialogHost.isShowing
+            override fun isPanelExiting(): Boolean = quickLauncherExiting
             override fun dp(value: Float): Float = host.dp(value)
             override fun sp(value: Float): Float = host.sp(value)
             override fun invalidate() = host.invalidate()

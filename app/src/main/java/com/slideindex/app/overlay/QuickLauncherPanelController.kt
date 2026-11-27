@@ -25,6 +25,14 @@ internal class QuickLauncherPanelController(
         fun apps(): List<AppInfo>
         fun isPanelReady(): Boolean
         fun isAddDialogShowing(): Boolean
+
+        /**
+         * 面板是否正在播退出动画（含"点加号先把面板收起再起添加页"这一段）。
+         *
+         * 退出动画期间面板本体仍在画，顶栏必须继续参与绘制，才能跟面板同一个位移/透明度
+         * 一起滑出；否则会出现"顶栏先消失、面板还留在屏上"的缺口。
+         */
+        fun isPanelExiting(): Boolean
         fun dp(value: Float): Float
         fun sp(value: Float): Float
         fun invalidate()
