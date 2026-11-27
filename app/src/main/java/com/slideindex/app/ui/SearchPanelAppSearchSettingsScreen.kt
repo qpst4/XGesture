@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -73,6 +74,8 @@ fun SearchPanelAppSearchSettingsScreen(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
+    // 弹窗回调里要取文案：用 LocalResources（跟随 Configuration），别用 LocalContext 取资源。
+    val resources = LocalResources.current
     val appRepository = rememberAppRepository()
     var apps by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
     var query by remember { mutableStateOf("") }
@@ -193,7 +196,7 @@ fun SearchPanelAppSearchSettingsScreen(
                 revision++
                 Toast.makeText(
                     context,
-                    context.getString(R.string.search_app_settings_alias_saved, target.label),
+                    resources.getString(R.string.search_app_settings_alias_saved, target.label),
                     Toast.LENGTH_SHORT,
                 ).show()
             }

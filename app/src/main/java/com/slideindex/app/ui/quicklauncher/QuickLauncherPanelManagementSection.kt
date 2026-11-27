@@ -98,6 +98,11 @@ fun QuickLauncherPanelManagementSection(
     val duplicateLabel = stringResource(R.string.quick_launcher_panel_duplicate)
     val deleteLabel = stringResource(R.string.quick_launcher_panel_delete)
     val customIconLabel = stringResource(R.string.quick_launcher_panel_custom_icon)
+    // 文案在组合期取好：LocalContext 取资源不跟随 Configuration（lint: LocalContextGetResourceValueCall）。
+    val panelLimitReachedMessage = stringResource(
+        R.string.quick_launcher_panel_limit_reached,
+        QuickLauncherPanelDefaults.MAX_PANELS,
+    )
     val panelMenuEntry = DropdownEntry(
         items = listOf(
             DropdownItem(
@@ -228,10 +233,7 @@ fun QuickLauncherPanelManagementSection(
                             if (added == null) {
                                 Toast.makeText(
                                     context,
-                                    context.getString(
-                                        R.string.quick_launcher_panel_limit_reached,
-                                        QuickLauncherPanelDefaults.MAX_PANELS,
-                                    ),
+                                    panelLimitReachedMessage,
                                     Toast.LENGTH_SHORT,
                                 ).show()
                                 return@IconButton
