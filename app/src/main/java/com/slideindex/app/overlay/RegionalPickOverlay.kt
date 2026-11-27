@@ -75,6 +75,8 @@ object RegionalPickOverlay {
     private var paused = false
     private var regionalActive = false
     private var sessionActive = false
+    private var selectionCancelled = false
+    private var primaryPointerId = MotionEvent.INVALID_POINTER_ID
 
     private var pauseRunnable: Runnable? = null
     private var cacheRefreshRunnable: Runnable? = null
@@ -89,6 +91,7 @@ object RegionalPickOverlay {
     private var ballVisualDockSide: FloatBallSide? = null
     private var edgePickDockSide: FloatBallSide = FloatBallSide.RIGHT
 
+    @Volatile
     var continuedGestureActive = false
         private set
 
@@ -219,14 +222,32 @@ object RegionalPickOverlay {
     }
 
     fun forwardContinuedTouch(event: MotionEvent): Boolean {
-        if (!continuedGestureActive) return false
+        if (!continuedGestureActive || !sessionActive) return false
+        if (primaryPointerId == MotionEvent.INVALID_POINTER_ID && event.pointerCount > 0) {
+            val primaryIndex = if (event.actionMasked == MotionEvent.ACTION_POINTER_DOWN && event.actionIndex == 0) 1 else 0
+            primaryPointerId = event.getPointerId(primaryIndex)
+        }
         return when (event.actionMasked) {
             MotionEvent.ACTION_MOVE -> {
-                handleTouch(event.rawX, event.rawY, MotionEvent.ACTION_MOVE)
+                if (event.pointerCount == 1 && event.getPointerId(0) == primaryPointerId) {
+                    handleTouch(event.rawX, event.rawY, MotionEvent.ACTION_MOVE)
+                }
+                true
+            }
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                cancelContinuedSelection()
+                true
+            }
+            MotionEvent.ACTION_POINTER_UP -> {
+                if (event.getPointerId(event.actionIndex) == primaryPointerId) dismiss()
                 true
             }
             MotionEvent.ACTION_UP -> {
-                handleTouch(event.rawX, event.rawY, MotionEvent.ACTION_UP)
+                if (event.getPointerId(0) == primaryPointerId) {
+                    handleTouch(event.rawX, event.rawY, MotionEvent.ACTION_UP)
+                } else {
+                    dismiss()
+                }
                 continuedGestureActive = false
                 EdgeContinuedOverlayHandoff.clearIfInactive()
                 true
@@ -368,7 +389,7 @@ object RegionalPickOverlay {
                 initialRadiusPx = 22f * density,
             )
             com.slideindex.app.link.LinkRadarOverlay.setOnTargetBannerReadyListener { holdMs ->
-                if (sessionActive && !paused) {
+                if (sessionActive && !paused && !selectionCancelled) {
                     if (holdMs <= 0) {
                         cancelPauseTimer()
                     } else {
@@ -402,13 +423,7 @@ object RegionalPickOverlay {
         val distFromStart = hypot(pickAnchor.x - start.x, pickAnchor.y - start.y)
         if (regionalActive) {
             if (distFromStart < movePx) {
-                regionalActive = false
-                com.slideindex.app.link.LinkRadarOverlay.setTargetSuppressed(false)
-                paused = false
-                selectionStart = null
-                selectionPreviewBounds = null
-                boundsLookupGeneration++
-                PickPrefetchCache.invalidate()
+                clearSelection()
             }
             return
         }
@@ -419,6 +434,27 @@ object RegionalPickOverlay {
             PickPrefetchCache.invalidate()
             selectionPreviewBounds = null
         }
+    }
+
+    private fun clearSelection() {
+        regionalActive = false
+        paused = false
+        selectionStart = null
+        selectionPreviewBounds = null
+        boundsLookupGeneration++
+        liveBoundsLookupGeneration++
+        PickPrefetchCache.invalidate()
+        com.slideindex.app.link.LinkRadarOverlay.setTargetSuppressed(false)
+    }
+
+    internal fun cancelContinuedSelection() {
+        if (!sessionActive || (!paused && selectionStart == null && !regionalActive)) return
+        selectionCancelled = true
+        clearSelection()
+        cancelPauseTimer()
+        lastPauseScheduleX = pickAnchor.x
+        lastPauseScheduleY = pickAnchor.y
+        syncCursorAppearance()
     }
 
     private fun finishSession() {
@@ -434,7 +470,7 @@ object RegionalPickOverlay {
                 ensurePreviewBoundsForPick()
             }
             submitPick(host, currentSettings)
-        } else {
+        } else if (!selectionCancelled) {
             val density = cursorPreviewView?.resources?.displayMetrics?.density ?: 1f
             com.slideindex.app.link.LinkRadarOverlay.onPointerTapRequested(
                 pickAnchor.x,
@@ -593,6 +629,7 @@ object RegionalPickOverlay {
         val anchor = pickAnchor
         selectionStart = anchor
         paused = true
+        selectionCancelled = false
         val bounds = FloatBallPreviewBoundsCache.hitTestAt(anchor.x, anchor.y)
         if (bounds != null) {
             selectionPreviewBounds = bounds
@@ -804,6 +841,8 @@ object RegionalPickOverlay {
         selectionPreviewBounds = null
         paused = false
         regionalActive = false
+        selectionCancelled = false
+        primaryPointerId = MotionEvent.INVALID_POINTER_ID
         lastPauseScheduleX = Float.NaN
         lastPauseScheduleY = Float.NaN
         lastCacheRefreshX = Float.NaN

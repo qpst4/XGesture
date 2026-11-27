@@ -105,6 +105,37 @@ class TakeoverSessionPolicyTest {
   }
 
   @Test
+  fun regionalPick_continuesAfterTheSecondFingerLifts() {
+    val policy = TakeoverSessionPolicy()
+    policy.onEvent(ACTION_DOWN, 1, 500f, 1950f, 1_000L, false, true, listOf(rect))
+    val secondDown = policy.onEvent(ACTION_POINTER_DOWN, 2, 600f, 1950f, 1_010L, false, true, listOf(rect), keepRegionalPick = true)
+    val bothMove = policy.onEvent(ACTION_MOVE, 2, 600f, 1950f, 1_020L, false, true, listOf(rect))
+    val secondUp = policy.onEvent(ACTION_POINTER_UP, 2, 600f, 1950f, 1_030L, false, true, listOf(rect))
+    val primaryMove = policy.onEvent(ACTION_MOVE, 1, 600f, 1950f, 1_040L, false, true, listOf(rect))
+
+    listOf(secondDown, bothMove, secondUp).forEach { decision ->
+      assertTrue(decision.swallow)
+      assertFalse(decision.forwardToApp)
+      assertFalse(decision.notifyAppEnd)
+    }
+    assertTrue(primaryMove.forwardToApp)
+  }
+
+  @Test
+  fun regionalPick_abortsWhenThePrimaryFingerLiftsAndSwallowsTheTail() {
+    val policy = TakeoverSessionPolicy()
+    policy.onEvent(ACTION_DOWN, 1, 500f, 1950f, 1_000L, false, true, listOf(rect))
+    policy.onEvent(ACTION_POINTER_DOWN, 2, 600f, 1950f, 1_010L, false, true, listOf(rect), keepRegionalPick = true)
+    val primaryUp = policy.onEvent(ACTION_POINTER_UP, 2, 600f, 1950f, 1_020L, false, true, listOf(rect), primaryPointerLifted = true)
+    val tail = policy.onEvent(ACTION_UP, 1, 600f, 1950f, 1_030L, false, true, listOf(rect))
+
+    assertTrue(primaryUp.notifyAppEnd)
+    assertEquals(TakeoverSessionPolicy.REASON_MULTI_TOUCH, primaryUp.endReason)
+    assertTrue(tail.swallow)
+    assertFalse(tail.forwardToApp)
+  }
+
+  @Test
   fun staleSession_passesThroughAndResets() {
     val policy = TakeoverSessionPolicy(sessionTimeoutMs = 500L)
     policy.onEvent(ACTION_DOWN, 1, 500f, 1950f, 1_000L, false, true, listOf(rect))
@@ -131,5 +162,6 @@ class TakeoverSessionPolicyTest {
     const val ACTION_UP = 1
     const val ACTION_MOVE = 2
     const val ACTION_POINTER_DOWN = 5
+    const val ACTION_POINTER_UP = 6
   }
 }

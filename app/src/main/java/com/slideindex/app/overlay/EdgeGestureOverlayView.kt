@@ -434,6 +434,10 @@ class EdgeGestureOverlayView(
             "cancelForwardedTouch（LSPosed 接管会话结束/模块侧取消）→ 会 forceReset 并摘掉刚开的面板"
         )
         edgeCaptureTouchActive = false
+        if (RegionalPickOverlay.isConsumingEdgeGestureTouch()) {
+            RegionalPickOverlay.dismiss()
+            EdgeContinuedOverlayLaunchCoordinator.clearAfterHandoffEnd()
+        }
         forceRecoverInteractionState()
     }
 

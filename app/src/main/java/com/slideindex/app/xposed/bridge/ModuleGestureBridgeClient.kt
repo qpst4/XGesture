@@ -166,6 +166,9 @@ class ModuleGestureBridgeClient(
     runCatching { target.onSessionEnd(sessionId, reason) }
   }
 
+  fun cancelRegionalPickSelection(sessionId: Long, sideId: Int): Boolean =
+    runCatching { bridge?.cancelRegionalPickSelection(sessionId, sideId) == true }.getOrDefault(false)
+
   fun dispose() {
     bridge = null
     binding = false

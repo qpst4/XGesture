@@ -41,4 +41,5 @@ interface IModuleGestureBridge {
     );
 
     oneway void onSessionEnd(long sessionId, int reason);
+    boolean cancelRegionalPickSelection(long sessionId, int sideId);
 }

@@ -101,6 +101,16 @@ internal class EdgeGestureTouchDispatcher(
             OverlayPanelMode.NONE -> Unit
         }
         when (event.actionMasked) {
+            MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_POINTER_UP -> {
+                if (!RegionalPickOverlay.isConsumingEdgeGestureTouch()) return false
+                val handled = forwardContinuedOverlayTouch(event)
+                if (handled && !RegionalPickOverlay.isConsumingEdgeGestureTouch()) {
+                    setEdgeCaptureTouchActive(false)
+                    gestureSession.forceReset()
+                    gestureAnimationCoordinator.onTouchCanceled()
+                }
+                return handled
+            }
             MotionEvent.ACTION_DOWN -> {
                 // 同 beginCaptureStripTouch：钉住面板用「再划一次同一手势」关闭，记下来供分类后吞掉重开。
                 val pinnedIdle = gestureSession.quickLauncherPinnedIdle()
