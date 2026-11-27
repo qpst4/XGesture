@@ -34,7 +34,9 @@ object FloatBallPreviewBoundsCache {
 
     fun isReady(): Boolean = entriesRef.get().isNotEmpty()
 
-    fun hitTestAt(rawX: Float, rawY: Float): Rect? {
+    fun hitTestAt(rawX: Float, rawY: Float): Rect? = hitTestEntryAt(rawX, rawY)?.rect
+
+    fun hitTestEntryAt(rawX: Float, rawY: Float): AccessibilityTextExtractor.PreviewBoundsEntry? {
         return AccessibilityTextExtractor.hitTestPreviewBounds(
             entries = entriesRef.get(),
             px = rawX.toInt(),

@@ -271,7 +271,15 @@ object AccessibilityTextExtractor {
         rawY: Float,
         activeWindowOnly: Boolean = false,
         maxNodes: Int = DEFAULT_MAX_TRAVERSAL_NODES
-    ): Rect? {
+    ): Rect? = findControlPreviewAt(service, rawX, rawY, activeWindowOnly, maxNodes)?.rect
+
+    fun findControlPreviewAt(
+        service: AccessibilityService,
+        rawX: Float,
+        rawY: Float,
+        activeWindowOnly: Boolean = false,
+        maxNodes: Int = DEFAULT_MAX_TRAVERSAL_NODES
+    ): PreviewBoundsEntry? {
         val px = rawX.toInt()
         val py = rawY.toInt()
         val nodeBounds = Rect()
@@ -283,12 +291,12 @@ object AccessibilityTextExtractor {
                 return null
             }
             return try {
-                findControlBoundsInNode(active, px, py, nodeBounds, budget)?.rect
+                findControlBoundsInNode(active, px, py, nodeBounds, budget)
             } finally {
                 releaseNode(active)
             }
         }
-        var best: BoundsCandidate? = null
+        var best: PreviewBoundsEntry? = null
         val windowBounds = Rect()
         for (window in service.windows) {
             if (shouldSkipPickWindow(window)) continue
@@ -320,12 +328,14 @@ object AccessibilityTextExtractor {
                 releaseNode(active)
             }
         }
-        return best?.rect
+        return best
     }
 
     data class PreviewBoundsEntry(
         val rect: Rect,
-        val score: Int
+        val score: Int,
+        val hasNodeText: Boolean = false,
+        val isImage: Boolean = false
     )
 
     data class ScreenTextBlock(
@@ -462,7 +472,7 @@ object AccessibilityTextExtractor {
         entries: List<PreviewBoundsEntry>,
         px: Int,
         py: Int
-    ): Rect? {
+    ): PreviewBoundsEntry? {
         var best: PreviewBoundsEntry? = null
         for (entry in entries) {
             if (!entry.rect.contains(px, py)) continue
@@ -470,7 +480,7 @@ object AccessibilityTextExtractor {
                 best = entry
             }
         }
-        return best?.rect
+        return best
     }
 
     /**
@@ -518,8 +528,7 @@ object AccessibilityTextExtractor {
                         includeNodeForPickTraversal(current) &&
                         isMeaningfulPickTarget(current)
                     ) {
-                        val score = controlTargetScore(current) * 1_000_000 + area
-                        previewResults.add(PreviewBoundsEntry(Rect(bounds), score))
+                        previewResults.add(previewBoundsEntry(current, bounds, area))
                     }
                     if (editableResults != null && ClipboardPasteHelper.isPasteTarget(current)) {
                         editableResults.add(PreviewBoundsEntry(Rect(bounds), area))
@@ -535,15 +544,28 @@ object AccessibilityTextExtractor {
         }
     }
 
-    private data class BoundsCandidate(
-        val rect: Rect,
-        val score: Int
-    )
+    private fun previewBoundsEntry(node: AccessibilityNodeInfo, bounds: Rect, area: Int): PreviewBoundsEntry {
+        val isImage = when (node.className?.toString()) {
+            "android.widget.Image", "android.widget.ImageView", "android.widget.ImageButton" -> true
+            else -> false
+        }
+        val hasNodeText = if (isImage) {
+            !node.text.isNullOrBlank() || !node.contentDescription.isNullOrBlank()
+        } else {
+            nodeText(node) != null
+        }
+        return PreviewBoundsEntry(
+            rect = Rect(bounds),
+            score = controlTargetScore(node) * 1_000_000 + area,
+            hasNodeText = hasNodeText,
+            isImage = isImage,
+        )
+    }
 
     private fun pickBetterBoundsCandidate(
-        current: BoundsCandidate?,
-        next: BoundsCandidate?
-    ): BoundsCandidate? {
+        current: PreviewBoundsEntry?,
+        next: PreviewBoundsEntry?
+    ): PreviewBoundsEntry? {
         if (next == null) return current
         if (current == null) return next
         return if (next.score < current.score) next else current
@@ -564,8 +586,8 @@ object AccessibilityTextExtractor {
         py: Int,
         bounds: Rect,
         budget: NodeTraversalBudget
-    ): BoundsCandidate? {
-        var best: BoundsCandidate? = null
+    ): PreviewBoundsEntry? {
+        var best: PreviewBoundsEntry? = null
         val stack = ArrayDeque<AccessibilityNodeInfo>()
         val childBounds = Rect()
         stack.addLast(node)
@@ -579,8 +601,7 @@ object AccessibilityTextExtractor {
                 if (!bounds.contains(px, py)) continue
                 if (includeNodeForPickTraversal(current) && isMeaningfulPickTarget(current)) {
                     val area = bounds.width().coerceAtLeast(1) * bounds.height().coerceAtLeast(1)
-                    val score = controlTargetScore(current) * 1_000_000 + area
-                    best = pickBetterBoundsCandidate(best, BoundsCandidate(Rect(bounds), score))
+                    best = pickBetterBoundsCandidate(best, previewBoundsEntry(current, bounds, area))
                 }
                 for (i in current.childCount - 1 downTo 0) {
                     val child = current.getChild(i) ?: continue
