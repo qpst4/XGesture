@@ -5472,6 +5472,7 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="composite_library_delete_confirm">删除后，已绑定此组合的手势会变成「无动作」。</string>
     <string name="ring_slot_none_transparent">Transparent (always blank)</string>
     <string name="ring_slot_none_auto_fill">Auto-fill (recent apps)</string>
+    <string name="trigger_layout_preview_title">Preview trigger layout</string>
     <string name="trigger_passthrough_title">Edge passthrough</string>
     <string name="trigger_passthrough_desc">Swipes starting in this area go to the current app. Requires the LSPosed module.</string>
     <string name="trigger_passthrough_module_checking">Checking LSPosed module status…</string>

@@ -31,6 +31,7 @@ import com.slideindex.app.ui.navigation.AppNavKey
 import com.slideindex.app.ui.navigation.focusedTriggerPreviewKey
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -51,10 +52,15 @@ class FocusedTriggerPreviewTransitionTest {
     fun touchingTheEdgeKeepsTheDesignPreviewVisible() =
         verifyEditorPreview(R.string.trigger_design_title, R.string.trigger_design_section, touchEdge = true)
 
+    @Test
+    fun collectionRangesRemainVisibleInTheDesignEditor() =
+        verifyEditorPreview(R.string.trigger_design_title, R.string.trigger_design_section, collectionPreview = true)
+
     private fun verifyEditorPreview(
         editorTitle: Int,
         editorContent: Int,
         touchEdge: Boolean = false,
+        collectionPreview: Boolean = false,
     ) {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val automation = instrumentation.getUiAutomation(android.app.UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES)
@@ -69,6 +75,9 @@ class FocusedTriggerPreviewTransitionTest {
         val repository = activity.deps.settingsRepository
         val settings = repository.readSnapshot()
         try {
+            if (settings.triggerLayoutPreviewEnabled != collectionPreview) {
+                runBlocking { repository.setTriggerLayoutPreviewEnabled(collectionPreview) }
+            }
             val entries = settings.triggerCollectionEntries()
             val index = entries.indexOfFirst { entry -> entry.right?.let { it.enabled && !it.passthrough } == true }
             assertTrue("An enabled ordinary right-edge trigger is required", index >= 0)
@@ -161,7 +170,8 @@ class FocusedTriggerPreviewTransitionTest {
             }
             var initial = emptyList<Float>()
             instrumentation.runOnMainSync { initial = renderedRanges() }
-            assertEquals("Trigger settings", 1, initial.size)
+            if (collectionPreview) assertTrue("Trigger settings", initial.isNotEmpty())
+            else assertEquals("Trigger settings", 1, initial.size)
             val frames = mutableListOf<List<Float>>()
             val sample = ViewTreeObserver.OnPreDrawListener {
                 frames.add(renderedRanges())
@@ -185,6 +195,9 @@ class FocusedTriggerPreviewTransitionTest {
                 instrumentation.runOnMainSync { decor.viewTreeObserver.removeOnPreDrawListener(sample) }
             }
         } finally {
+            if (settings.triggerLayoutPreviewEnabled != collectionPreview) {
+                runBlocking { repository.setTriggerLayoutPreviewEnabled(settings.triggerLayoutPreviewEnabled) }
+            }
             instrumentation.runOnMainSync { activity.finish() }
         }
     }

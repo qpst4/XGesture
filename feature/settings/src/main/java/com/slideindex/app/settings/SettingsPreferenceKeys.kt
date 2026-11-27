@@ -39,6 +39,7 @@ internal object SettingsPreferenceKeys {
     val BOTTOM_DEFAULT_TRIGGER_MODE_LANDSCAPE = intPreferencesKey("bottom_default_trigger_mode_landscape")
     val TOP_DEFAULT_TRIGGER_MODE_LANDSCAPE = intPreferencesKey("top_default_trigger_mode_landscape")
     val INTERCEPT_SYSTEM_BACK = booleanPreferencesKey("intercept_system_back_gesture")
+    val TRIGGER_LAYOUT_PREVIEW = booleanPreferencesKey("trigger_layout_preview_enabled")
     val SYSTEM_GESTURE_TAKEOVER_TOP = booleanPreferencesKey("system_gesture_takeover_top")
     val SYSTEM_GESTURE_TAKEOVER_SIDES = booleanPreferencesKey("system_gesture_takeover_sides")
     val SYSTEM_GESTURE_TAKEOVER_BOTTOM = booleanPreferencesKey("system_gesture_takeover_bottom")

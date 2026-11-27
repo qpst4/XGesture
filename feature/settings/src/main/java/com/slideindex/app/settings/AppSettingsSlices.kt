@@ -61,6 +61,7 @@ data class EdgeTriggerSettings(
     val systemGestureTakeoverSides: Boolean = false,
     /** 由 LSPosed 模块在输入层接管底部触钮区域，覆盖上滑回桌面等系统手势。 */
     val systemGestureTakeoverBottom: Boolean = false,
+    val triggerLayoutPreviewEnabled: Boolean = false,
     val limitMaxInterceptLength: Boolean = false,
     val leftDefaultTriggerMode: GestureTriggerMode = GestureTriggerMode.ON_RELEASE,
     val rightDefaultTriggerMode: GestureTriggerMode = GestureTriggerMode.ON_RELEASE,

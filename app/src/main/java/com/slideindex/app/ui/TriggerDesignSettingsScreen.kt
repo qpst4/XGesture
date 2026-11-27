@@ -93,11 +93,13 @@ fun TriggerDesignSettingsScreen(
     )
 
     if (layoutPreviewVisible) {
+        if (settings.triggerLayoutPreviewEnabled) TriggerLayoutPreview(settings)
         FocusedSideTriggerLayoutPreview(
             settings,
             side,
             handleId,
             designDraft = sliderPreview ?: design,
+            showRange = !settings.triggerLayoutPreviewEnabled,
         )
     }
 

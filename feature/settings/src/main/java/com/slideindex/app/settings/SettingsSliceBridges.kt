@@ -29,6 +29,7 @@ fun GestureSettings.toMinimalAppSettings(): AppSettings = AppSettings(
         bottomDefaultTriggerModeLandscape = bottomDefaultTriggerModeLandscape,
         topDefaultTriggerModeLandscape = topDefaultTriggerModeLandscape,
         interceptSystemBackGesture = interceptSystemBackGesture,
+        triggerLayoutPreviewEnabled = triggerLayoutPreviewEnabled,
         limitMaxInterceptLength = limitMaxInterceptLength,
         leftDefaultTriggerMode = leftDefaultTriggerMode,
         rightDefaultTriggerMode = rightDefaultTriggerMode,

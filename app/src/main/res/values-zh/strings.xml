@@ -5491,6 +5491,7 @@ adb 模式应返回 uid=2000。
     <string name="composite_library_delete_confirm">删除后，已绑定此组合的手势会变成「无动作」。</string>
     <string name="ring_slot_none_transparent">透明（固定留空）</string>
     <string name="ring_slot_none_auto_fill">自动填充（最近应用）</string>
+    <string name="trigger_layout_preview_title">预览触钮布局</string>
     <string name="trigger_passthrough_title">边缘透传</string>
     <string name="trigger_passthrough_desc">从此范围开始的滑动交给当前应用。需要 LSPosed 模块。</string>
     <string name="trigger_passthrough_module_checking">正在检测 LSPosed 模块状态…</string>

@@ -72,8 +72,8 @@ fun SideGestureSettingsScreen(
     side: PanelSide,
     handleId: String,
     settings: AppSettings,
-    layoutPreviewVisible: Boolean,
     serviceEnabled: Boolean,
+    layoutPreviewVisible: Boolean,
     onBack: () -> Unit,
     onOpenAppearanceSettings: () -> Unit,
     onOpenDesignSettings: () -> Unit,
@@ -106,15 +106,13 @@ fun SideGestureSettingsScreen(
     val passthroughVisibility = triggerPassthroughVisibility(moduleReady, selectedHandle.passthrough)
 
     TriggerHandlePreviewLifecycle(
-        enabled = serviceEnabled && (onPassthroughChange != null || !selectedHandle.passthrough),
+        enabled = serviceEnabled && !settings.triggerLayoutPreviewEnabled &&
+            (onPassthroughChange != null || !selectedHandle.passthrough),
         side = side,
         handleId = handleId,
         onPreviewStart = { _, _ -> onPreviewStart() },
         onPreviewStop = onPreviewStop,
     )
-    if (layoutPreviewVisible && (onPassthroughChange != null || selectedHandle.passthrough)) {
-        FocusedSideTriggerLayoutPreview(settings, side, handleId)
-    }
 
     val slotSide = settings.gestureConfigSide(side, handleId)
     var showMirrorDirectionDialog by remember { mutableStateOf(false) }
@@ -155,6 +153,13 @@ fun SideGestureSettingsScreen(
         onOpenSlotConfig = onOpenSlotConfig,
     )
 
+    if (layoutPreviewVisible) {
+        if (settings.triggerLayoutPreviewEnabled) {
+            TriggerLayoutPreview(settings)
+        }
+        val focusedSettings = settings.takeIf { !it.triggerLayoutPreviewEnabled && (onPassthroughChange != null || selectedHandle.passthrough) }
+        FocusedSideTriggerLayoutPreview(focusedSettings, side, handleId)
+    }
     SettingsLazyScreenScaffold(
         title = title,
         onBack = onBack,

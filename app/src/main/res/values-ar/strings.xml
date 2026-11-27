@@ -5429,6 +5429,7 @@
 <string name="widget_panel_blur_mode_title">تمويه لوحة الأدوات المصغّرة</string>
 <string name="ring_slot_none_transparent">شفاف (فارغ دائمًا)</string>
 <string name="ring_slot_none_auto_fill">ملء تلقائي (التطبيقات الأخيرة)</string>
+    <string name="trigger_layout_preview_title">معاينة تخطيط أزرار الحافة</string>
     <string name="trigger_passthrough_title">تمرير إيماءات الحافة</string>
     <string name="trigger_passthrough_desc">تُمرَّر عمليات السحب التي تبدأ في هذه المنطقة إلى التطبيق الحالي. يتطلب ذلك وحدة LSPosed.</string>
 <string name="trigger_passthrough_module_checking">جارٍ التحقق من حالة وحدة LSPosed…</string>
