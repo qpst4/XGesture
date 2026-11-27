@@ -1,6 +1,7 @@
 package com.slideindex.app.screencapture
 
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -169,10 +170,13 @@ internal class RecordingDock(
         val wm = windowManager ?: return
         val view = dockView ?: return
         val canBlur = OverlayBlurGate.canBlur(wm, userEnabled)
+        // 日/夜两条路都要用：模糊底与玻璃描边读 isDark，模糊不可用时的实色底和图标也得跟着换，
+        // 否则日间会停在「浅色磨砂底 + 白图标」这种看不清的组合上。
+        val spec = OverlayMaterialSpec.fromContext(appContext)
+        val isDark = OverlayPanelTheme.isDarkTheme(appContext)
         view.setBlurred(canBlur)
+        view.applyTheme(spec, isDark)
         if (canBlur) {
-            val spec = OverlayMaterialSpec.fromContext(appContext)
-            val isDark = OverlayPanelTheme.isDarkTheme(appContext)
             val corner = dp(HEIGHT_DP.toFloat(), densityScale) / 2f
             setupBackgroundBlur(
                 view = view,
@@ -246,21 +250,25 @@ internal class RecordingDock(
      */
     private inner class DockView(context: Context, private val density: Float) : View(context) {
         private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
-        private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = BG_COLOR }
+        /**
+         * 日/夜只决定这一层的取色：材质规范里的实色兜底、描边、图标与三个语义色。
+         * 模糊能用时底色由 `BackgroundBlurDrawable` 按同一份 [OverlayMaterialSpec] 画，这里只负责前景。
+         */
+        private var isDark = OverlayPanelTheme.isDarkTheme(context)
+        private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = 1f * density
-            color = BORDER_COLOR
         }
         private val iconPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.FILL
-            color = ICON_COLOR
+            color = ICON_COLOR_DARK
         }
         private val iconStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeCap = Paint.Cap.ROUND
             strokeJoin = Paint.Join.ROUND
-            color = ICON_COLOR
+            color = ICON_COLOR_DARK
         }
         private val rect = RectF()
         private val path = Path()
@@ -270,6 +278,18 @@ internal class RecordingDock(
         private var downIndex = -1
         private var dragging = false
         private var blurred = false
+
+        init {
+            applyTheme(OverlayMaterialSpec.fromContext(appContext), isDark)
+        }
+
+        /** 按当前材质规范与日/夜刷新实色底与描边；图标颜色在 [onDraw] 里按 [isDark] 现取。 */
+        fun applyTheme(spec: OverlayMaterialSpec, dark: Boolean) {
+            isDark = dark
+            bgPaint.color = spec.solidFallbackColor(dark)
+            borderPaint.color = spec.innerBorderColor(dark)
+            invalidate()
+        }
 
         /** 模糊生效时背景交给 `BackgroundBlurDrawable` 画，这里只留描边和图标。 */
         fun setBlurred(value: Boolean) {
@@ -285,26 +305,32 @@ internal class RecordingDock(
             rect.set(0f, 0f, w, h)
             if (!blurred) {
                 canvas.drawRoundRect(rect, radius, radius, bgPaint)
+                // 模糊时描边由 OverlayGlassForegroundDrawable 按同一份规范画，别叠两遍。
+                canvas.drawRoundRect(rect, radius, radius, borderPaint)
             }
-            canvas.drawRoundRect(rect, radius, radius, borderPaint)
 
             val slot = w / 3f
-            iconPaint.color = ICON_COLOR
-            iconStrokePaint.color = ICON_COLOR
+            val idleColor = if (isDark) ICON_COLOR_DARK else ICON_COLOR_LIGHT
 
             // 1) 暂停 / 继续
-            setIconColor(if (paused) PAUSED_COLOR else ICON_COLOR)
+            setIconColor(if (paused) pausedColor() else idleColor)
             val c1x = slot / 2f
             if (paused) drawPlay(canvas, c1x, h / 2f) else drawPause(canvas, c1x, h / 2f)
 
             // 2) 停止
-            setIconColor(STOP_COLOR)
+            setIconColor(stopColor())
             drawStop(canvas, slot * 1.5f, h / 2f)
 
             // 3) 绘制
-            setIconColor(if (drawActive) ACTIVE_COLOR else ICON_COLOR)
+            setIconColor(if (drawActive) activeColor() else idleColor)
             drawPen(canvas, slot * 2.5f, h / 2f)
         }
+
+        private fun stopColor(): Int = if (isDark) STOP_COLOR_DARK else STOP_COLOR_LIGHT
+
+        private fun pausedColor(): Int = if (isDark) PAUSED_COLOR_DARK else PAUSED_COLOR_LIGHT
+
+        private fun activeColor(): Int = if (isDark) ACTIVE_COLOR_DARK else ACTIVE_COLOR_LIGHT
 
         private fun setIconColor(color: Int) {
             iconPaint.color = color
@@ -403,6 +429,13 @@ internal class RecordingDock(
             }
             return super.onTouchEvent(event)
         }
+
+        override fun onConfigurationChanged(newConfig: Configuration) {
+            super.onConfigurationChanged(newConfig)
+            // 录屏可能持续几分钟，中途切日夜要连模糊 tint / 玻璃描边一起换：
+            // 只 invalidate 会留下"新图标配旧底色"。
+            applyBlurForCurrentSetting()
+        }
     }
 
     private fun dp(value: Float, density: Float): Int = (value * density).roundToInt()
@@ -414,12 +447,18 @@ internal class RecordingDock(
         private const val BLUR_RADIUS_DP = 30
         private const val MAX_BLUR_PX = 80
 
-        private val BG_COLOR = Color.parseColor("#E6212121")
+        // 实色兜底与描边不再写死：跟模糊路径一样走材质规范（见 applyTheme）。
         private const val BLUR_TINT = 0x331C1C1E
-        private val BORDER_COLOR = Color.parseColor("#33FFFFFF")
-        private val ICON_COLOR = Color.WHITE
-        private val STOP_COLOR = Color.parseColor("#FFEF5350")
-        private val PAUSED_COLOR = Color.parseColor("#FFFFB300")
-        private val ACTIVE_COLOR = Color.parseColor("#FF66BB6A")
+        private val ICON_COLOR_DARK = Color.WHITE
+
+        /** 日间图标基色：材质规范 light 主题的正文色（#1E1E1E，90% 不透明）。 */
+        private val ICON_COLOR_LIGHT = Color.argb(0xE6, 0x1E, 0x1E, 0x1E)
+
+        private val STOP_COLOR_DARK = Color.parseColor("#FFEF5350")
+        private val STOP_COLOR_LIGHT = Color.parseColor("#FFD32F2F")
+        private val PAUSED_COLOR_DARK = Color.parseColor("#FFFFB300")
+        private val PAUSED_COLOR_LIGHT = Color.parseColor("#FFE65100")
+        private val ACTIVE_COLOR_DARK = Color.parseColor("#FF66BB6A")
+        private val ACTIVE_COLOR_LIGHT = Color.parseColor("#FF388E3C")
     }
 }
