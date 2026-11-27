@@ -83,7 +83,8 @@ class MessageNotificationFilterTest {
         assertFalse(
             MessageNotificationFilter.shouldShowNotification(
                 context = context,
-                settings = MessageSettings(),
+                // 允许列表必须非空，否则会被 isPackageAllowed 先拦掉，测不到「自己的包」这条。
+                settings = MessageSettings(enabledPackages = setOf(context.packageName)),
                 sbn = sbn,
                 data = data,
                 environmentPort = object : MessageEnvironmentPort {
@@ -100,7 +101,10 @@ class MessageNotificationFilterTest {
     fun shouldShowNotification_blocksDisabledPackage() {
         val sbn = statusBarNotification("com.example.chat", "chat")
         val data = sampleData(packageName = "com.example.chat")
-        val settings = MessageSettings(disabledPackages = setOf("com.example.chat"))
+        val settings = MessageSettings(
+            enabledPackages = setOf("com.example.chat"),
+            disabledPackages = setOf("com.example.chat"),
+        )
         assertFalse(
             MessageNotificationFilter.shouldShowNotification(
                 context = context,
@@ -121,7 +125,10 @@ class MessageNotificationFilterTest {
     fun shouldShowNotification_blocksSystemDndWhenConfigured() {
         val sbn = statusBarNotification("com.example.chat", "chat")
         val data = sampleData(packageName = "com.example.chat")
-        val settings = MessageSettings(suppressWhenSystemDnd = true)
+        val settings = MessageSettings(
+            enabledPackages = setOf("com.example.chat"),
+            suppressWhenSystemDnd = true,
+        )
         assertFalse(
             MessageNotificationFilter.shouldShowNotification(
                 context = context,
@@ -143,6 +150,28 @@ class MessageNotificationFilterTest {
         val sbn = statusBarNotification("com.example.chat", "chat")
         val data = sampleData(packageName = "com.example.chat")
         assertTrue(
+            MessageNotificationFilter.shouldShowNotification(
+                context = context,
+                settings = MessageSettings(enabledPackages = setOf("com.example.chat")),
+                sbn = sbn,
+                data = data,
+                environmentPort = object : MessageEnvironmentPort {
+                    override fun isSystemDndEnabled(context: Context) = false
+                },
+                foregroundPort = object : MessageForegroundPort {
+                    override fun foregroundPackage() = null
+                },
+            ),
+        )
+    }
+
+    @Test
+    fun shouldShowNotification_blocksWhenAllowlistEmpty() {
+        // 允许列表空 = 不允许，与「允许的应用」界面一致（见 MessageSettings.isPackageAllowed）。
+        // 这条锁住语义：改动时不能悄悄退回「空 = 全允许」。
+        val sbn = statusBarNotification("com.example.chat", "chat")
+        val data = sampleData(packageName = "com.example.chat")
+        assertFalse(
             MessageNotificationFilter.shouldShowNotification(
                 context = context,
                 settings = MessageSettings(),
