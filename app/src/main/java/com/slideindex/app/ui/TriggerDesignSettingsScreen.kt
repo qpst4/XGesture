@@ -51,6 +51,7 @@ fun TriggerDesignSettingsScreen(
     handleId: String,
     settings: AppSettings,
     serviceEnabled: Boolean,
+    layoutPreviewVisible: Boolean,
     onBack: () -> Unit,
     onDesignChange: (TriggerHandleDesign) -> Unit,
     onPresetApply: (TriggerDesignPreset) -> Unit,
@@ -58,8 +59,6 @@ fun TriggerDesignSettingsScreen(
     onResetDefaults: () -> Unit,
     onPreviewStart: () -> Unit = {},
     onPreviewStop: () -> Unit = {},
-    onDesignPreview: (TriggerHandleDesign) -> Unit = {},
-    onDesignPreviewStop: () -> Unit = {},
 ) {
     val pairIndex = settings.triggerCollectionEntries().indexOfFirst { it.handleId == handleId }.let {
         if (it >= 0) it + 1 else 1
@@ -82,6 +81,7 @@ fun TriggerDesignSettingsScreen(
         }
     }
     val design = draftDesign
+    var sliderPreview by remember(side, handleId, design) { mutableStateOf<TriggerHandleDesign?>(null) }
     val pairSuffix = if (pairCount > 1) " · $pairIndex" else ""
 
     TriggerHandlePreviewLifecycle(
@@ -91,6 +91,15 @@ fun TriggerDesignSettingsScreen(
         onPreviewStart = { _, _ -> onPreviewStart() },
         onPreviewStop = onPreviewStop,
     )
+
+    if (layoutPreviewVisible) {
+        FocusedSideTriggerLayoutPreview(
+            settings,
+            side,
+            handleId,
+            designDraft = sliderPreview ?: design,
+        )
+    }
 
     fun updateDesign(updated: TriggerHandleDesign) {
         hasLocalEdits = true
@@ -230,9 +239,8 @@ fun TriggerDesignSettingsScreen(
                                     formatLabel = { "${it.roundToInt()} dp" },
                                     triggersLayoutPreview = true,
                                     onLayoutPreviewValueChange = { value ->
-                                        onDesignPreview(design.copy(sizeDp = value))
+                                        sliderPreview = design.copy(sizeDp = value)
                                     },
-                                    onLayoutPreviewStop = onDesignPreviewStop,
                                     onValueChange = { updateDesign(design.copy(sizeDp = it)) },
                                 )
                             },
@@ -249,9 +257,8 @@ fun TriggerDesignSettingsScreen(
                                     formatLabel = { "${it.roundToInt()} dp" },
                                     triggersLayoutPreview = true,
                                     onLayoutPreviewValueChange = { value ->
-                                        onDesignPreview(design.copy(cornerRadiusDp = value))
+                                        sliderPreview = design.copy(cornerRadiusDp = value)
                                     },
-                                    onLayoutPreviewStop = onDesignPreviewStop,
                                     onValueChange = { updateDesign(design.copy(cornerRadiusDp = it)) },
                                 )
                             },
@@ -296,9 +303,8 @@ fun TriggerDesignSettingsScreen(
                                     formatLabel = { "${it.roundToInt()} dp" },
                                     triggersLayoutPreview = true,
                                     onLayoutPreviewValueChange = { value ->
-                                        onDesignPreview(design.copy(borderSizeDp = value))
+                                        sliderPreview = design.copy(borderSizeDp = value)
                                     },
-                                    onLayoutPreviewStop = onDesignPreviewStop,
                                     onValueChange = { updateDesign(design.copy(borderSizeDp = it)) },
                                 )
                             },
@@ -330,9 +336,8 @@ fun TriggerDesignSettingsScreen(
                                     formatLabel = { "${it.roundToInt()} dp" },
                                     triggersLayoutPreview = true,
                                     onLayoutPreviewValueChange = { value ->
-                                        onDesignPreview(design.copy(haloSizeDp = value))
+                                        sliderPreview = design.copy(haloSizeDp = value)
                                     },
-                                    onLayoutPreviewStop = onDesignPreviewStop,
                                     onValueChange = { updateDesign(design.copy(haloSizeDp = it)) },
                                 )
                             },

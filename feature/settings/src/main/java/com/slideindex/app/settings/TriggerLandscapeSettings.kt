@@ -192,7 +192,7 @@ private fun List<TriggerHandle>.hasOverlappingSpans(): Boolean {
 
 fun AppSettings.runtimeTriggerHandles(side: PanelSide, isLandscape: Boolean): List<TriggerHandle> {
     if (!isLandscape || !landscapeTriggersInitialized) return triggerHandles(side)
-    return storedLandscapeTriggerHandles(side).filter { it.enabled }
+    return storedLandscapeTriggerHandles(side).filter { it.enabled && !it.passthrough }
 }
 
 fun AppSettings.runtimeAllTriggerHandles(side: PanelSide, isLandscape: Boolean): List<TriggerHandle> {

@@ -5432,4 +5432,6 @@ o revocar Root permanente para Shell en APatch.</string>
 <string name="widget_panel_blur_mode_title">Desenfoque del panel de widgets</string>
 <string name="ring_slot_none_transparent">Transparente (siempre vacío)</string>
 <string name="ring_slot_none_auto_fill">Autorrellenar (apps recientes)</string>
+    <string name="trigger_passthrough_title">Paso de gestos de borde</string>
+    <string name="trigger_passthrough_desc">Los deslizamientos que empiezan en esta zona se envían a la aplicación actual. Requiere el módulo LSPosed.</string>
 </resources>

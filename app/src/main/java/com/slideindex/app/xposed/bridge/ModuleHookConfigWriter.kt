@@ -7,6 +7,7 @@ import com.slideindex.app.overlay.PanelSide
 import com.slideindex.app.overlay.FloatBallScreenMetrics
 import com.slideindex.app.overlay.TakeoverExtraRects
 import com.slideindex.app.settings.AppSettings
+import com.slideindex.app.settings.allTriggerHandles
 import com.slideindex.app.settings.interceptWindowWidthDp
 import com.slideindex.app.settings.maxEdgeTriggerWidthDp
 import com.slideindex.app.settings.triggerHandleEdgeWidthDp
@@ -147,10 +148,26 @@ object ModuleHookConfigWriter {
     } else {
       interceptWindowWidthDp(side)
     }
+    val reservedSideEnabled = when (side) {
+      PanelSide.LEFT -> leftEdgeEnabled
+      PanelSide.RIGHT -> rightEdgeEnabled
+      else -> false
+    }
+    val reservedHandles = if (serviceEnabled && reservedSideEnabled) {
+      allTriggerHandles(side).mapNotNull { handle ->
+        if (!handle.enabled || !handle.passthrough || handle.heightFraction <= 0f) return@mapNotNull null
+        val width = triggerHandleEdgeWidthDp(side, handle.id)
+        if (width <= 0f) return@mapNotNull null
+        ModuleHookHandle(handle.topFraction, handle.heightFraction, width)
+      }
+    } else {
+      emptyList()
+    }
     return ModuleHookSide(
       sideId = side.toSnapshotSideId(),
       widthDp = widthDp,
       handles = handles,
+      reservedHandles = reservedHandles,
     )
   }
 

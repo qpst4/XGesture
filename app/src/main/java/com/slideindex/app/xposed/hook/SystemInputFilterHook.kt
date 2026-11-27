@@ -73,6 +73,7 @@ class SystemInputFilterHook(private val moduleApkPath: () -> String? = { null })
   private val eventsPassed = AtomicLong()
   private var applyingEnable = false
   private val mainHandler = Handler(Looper.getMainLooper())
+  private val reservedEdgeHook = SystemReservedEdgeHook { message -> XposedLog.w(TAG, message) }
   private var bridgeReceiver: BroadcastReceiver? = null
   private var forwardingFilter: Any? = null
   @Volatile private var retired = false
@@ -80,6 +81,7 @@ class SystemInputFilterHook(private val moduleApkPath: () -> String? = { null })
   /** 热重载前断开旧代的系统回调，避免旧 receiver 继续回报已经卸载的 Hook。 */
   fun detach() {
     retired = true
+    reservedEdgeHook.detach()
     mainHandler.removeCallbacksAndMessages(null)
     bridgeReceiver?.let { receiver -> runCatching { systemContext?.unregisterReceiver(receiver) } }
     bridgeReceiver = null
@@ -160,6 +162,9 @@ class SystemInputFilterHook(private val moduleApkPath: () -> String? = { null })
       }
 
     val handles = mutableListOf<XposedInterface.HookHandle>()
+    reservedEdgeHook.setSnapshot(takeoverController.snapshot())
+    runCatching { handles += reservedEdgeHook.install(xposed, classLoader) }
+      .onFailure { recordModuleError(describe("reservedEdges", it)) }
     val imsClass = LibXposedReflect.findClassIfExists(
       "com.android.server.input.InputManagerService",
       classLoader,
@@ -202,7 +207,9 @@ class SystemInputFilterHook(private val moduleApkPath: () -> String? = { null })
 
   /** 状态请求到达时按需重试未完成的步骤（例如首次安装部分失败）。 */
   private fun retryInstallIfNeeded() {
-    if (filterHookInstalled && enableHookInstalled && startHookInstalled && receiverRegistered) return
+    if (filterHookInstalled && enableHookInstalled && startHookInstalled && receiverRegistered &&
+      (reservedEdgeHook.isInstalled || controller?.snapshot()?.hasReservedAreas() != true)
+    ) return
     val xposed = xposedInterface ?: return
     val classLoader = currentClassLoader ?: return
     install(xposed, classLoader)
@@ -434,7 +441,12 @@ class SystemInputFilterHook(private val moduleApkPath: () -> String? = { null })
    * 旧实现把 `bridge-pending` 也算 `ready`，于是出现了「状态显示已就绪、实际一个事件都没接管」的假阳性。
    */
   private fun buildStatusReport(): StatusReport {
-    val controllerDetail = controller?.statusDetail() ?: CONTROLLER_NO_CONTROLLER
+    val reservedRequested = controller?.snapshot()?.hasReservedAreas() == true
+    val reservedEffective = reservedRequested && reservedEdgeHook.isEffective()
+    val controllerDetail = when {
+      reservedEffective && controller?.hasEnabledGroups() != true -> "ready:reserved-edges"
+      else -> controller?.statusDetail() ?: CONTROLLER_NO_CONTROLLER
+    }
     val errors = synchronized(moduleErrors) { moduleErrors.toList() }
     val steps = buildString {
       append("hook=").append(if (filterHookInstalled) "ok" else "fail")
@@ -450,6 +462,7 @@ class SystemInputFilterHook(private val moduleApkPath: () -> String? = { null })
       append(",code=").append(ModuleHookBridgeContract.MODULE_CODE_VERSION)
       moduleApkPath()?.let { append(",apk=").append(it) }
       append(",clip=").append(ClipboardWhitelistHook.installStatus)
+      append(",reserved=").append(if (reservedEdgeHook.isInstalled) "ok" else "fail")
       // 模块当前生效的白名单大小：app 侧拿它和本地设置比对，不一致就是"配置没下发到 system_server"。
       append(",wl=").append(ClipboardWhitelistHook.activeWhitelist().size)
       if (errors.isNotEmpty()) {
@@ -462,12 +475,13 @@ class SystemInputFilterHook(private val moduleApkPath: () -> String? = { null })
       receiverRegistered
     // 吞流靠"原样转发过滤器"（proxy）或 Java 侧 filterInputEvent hook，两者至少要有一个可用。
     val transportReady = filterHookInstalled || forwardingFilterInstalled
-    val active = moduleArmed &&
+    val reservedArmed = reservedRequested && reservedEdgeHook.isInstalled && receiverRegistered
+    val takeoverActive = moduleArmed &&
       transportReady &&
       controllerDetail.startsWith(SystemGestureTakeoverController.STATUS_READY_PREFIX)
     val state = when {
-      active -> ACTIVE_STATE
-      moduleArmed -> ModuleHookBridgeContract.STATUS_STATE_ARMED
+      takeoverActive || (reservedArmed && reservedEffective) -> ACTIVE_STATE
+      moduleArmed || reservedArmed -> ModuleHookBridgeContract.STATUS_STATE_ARMED
       else -> ModuleHookBridgeContract.STATUS_STATE_NOT_READY
     }
     return StatusReport(state = state, detail = "$state:$steps")
@@ -475,6 +489,7 @@ class SystemInputFilterHook(private val moduleApkPath: () -> String? = { null })
 
   /** 让 native 层的 InputFilter 开关与当前接管开关保持一致。 */
   private fun syncFilterEnabled(takeoverController: SystemGestureTakeoverController) {
+    reservedEdgeHook.setSnapshot(takeoverController.snapshot())
     val enabled = takeoverController.hasEnabledGroups()
     val ims = inputManagerService
     if (ims != null) {

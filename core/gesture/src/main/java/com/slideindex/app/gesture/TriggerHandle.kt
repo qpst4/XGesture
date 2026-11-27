@@ -15,6 +15,7 @@ data class TriggerHandle(
     val edgeWidthDp: Float? = null,
     val design: TriggerHandleDesign = TriggerHandleDesign(),
     val rectanglePresetState: TriggerRectanglePresetState = TriggerRectanglePresetState.Empty,
+    val passthrough: Boolean = false,
 ) {
     val bottomFraction: Float get() = topFraction + heightFraction
 
@@ -68,7 +69,7 @@ object TriggerHandleCodec {
         if (handle.alignOppositeDesign) "1" else "0",
         handle.edgeWidthDp?.toString() ?: "",
         if (handle.alignOppositeGestures) "1" else "0",
-    ).joinToString(SEP)
+    ).joinToString(SEP) + if (handle.passthrough) "${SEP}1" else ""
 
     fun decode(
         raw: String,
@@ -77,7 +78,7 @@ object TriggerHandleCodec {
         legacyZeroMeansInherit: Boolean = false,
     ): TriggerHandle? {
         val parts = raw.split(SEP)
-        if (parts.size !in 4..12) return null
+        if (parts.size !in 4..13) return null
         val top = parts[1].toFloatOrNull() ?: return null
         val height = parts[2].toFloatOrNull() ?: return null
         val short = parts.getOrNull(5)?.toFloatOrNull() ?: defaultShortSwipeDistanceDp
@@ -95,6 +96,7 @@ object TriggerHandleCodec {
             alignOppositeDesign = parts.getOrNull(9)?.let { it == "1" } ?: true,
             edgeWidthDp = decodeEdgeWidthDp(parts.getOrNull(10), legacyZeroMeansInherit),
             alignOppositeGestures = parts.getOrNull(11)?.let { it == "1" } ?: true,
+            passthrough = parts.getOrNull(12) == "1",
         ).let(TriggerRectanglePresetLogic::ensureMigrated)
     }
 

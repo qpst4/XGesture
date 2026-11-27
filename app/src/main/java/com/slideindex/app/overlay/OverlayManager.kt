@@ -578,36 +578,37 @@ class OverlayManager(
         if (!currentSettings.serviceEnabled) return
         val content = previewContent
         val focus = previewFocus
+        val drawInOverlay = previewMode && focus?.drawInOverlay != false
         if (focus?.showPairedGroup == true && focus.side.isHorizontalEdge) {
             leftController?.setPreviewMode(
-                enabled = previewMode,
+                enabled = drawInOverlay,
                 content = content,
                 focus = focus.copy(side = PanelSide.LEFT)
             )
             rightController?.setPreviewMode(
-                enabled = previewMode,
+                enabled = drawInOverlay,
                 content = content,
                 focus = focus.copy(side = PanelSide.RIGHT)
             )
             return
         }
         leftController?.setPreviewMode(
-            enabled = previewMode && (focus == null || focus.side == PanelSide.LEFT),
+            enabled = drawInOverlay && (focus == null || focus.side == PanelSide.LEFT),
             content = content,
             focus = focus?.takeIf { it.side == PanelSide.LEFT }
         )
         rightController?.setPreviewMode(
-            enabled = previewMode && (focus == null || focus.side == PanelSide.RIGHT),
+            enabled = drawInOverlay && (focus == null || focus.side == PanelSide.RIGHT),
             content = content,
             focus = focus?.takeIf { it.side == PanelSide.RIGHT }
         )
         bottomController?.setPreviewMode(
-            enabled = previewMode && (focus == null || focus.side == PanelSide.BOTTOM),
+            enabled = drawInOverlay && (focus == null || focus.side == PanelSide.BOTTOM),
             content = content,
             focus = focus?.takeIf { it.side == PanelSide.BOTTOM }
         )
         topController?.setPreviewMode(
-            enabled = previewMode && (focus == null || focus.side == PanelSide.TOP),
+            enabled = drawInOverlay && (focus == null || focus.side == PanelSide.TOP),
             content = content,
             focus = focus?.takeIf { it.side == PanelSide.TOP }
         )

@@ -671,7 +671,8 @@ private fun TriggerEntryList(
                                 dotColor = dotColor,
                                 title = stringResource(R.string.trigger_side_left_item),
                                 pairLabel = pairLabel,
-                                summary = triggerHandleActionSummary(
+                                summary = if (left.passthrough) stringResource(R.string.trigger_passthrough_title)
+                                else triggerHandleActionSummary(
                                     settings,
                                     settings.gestureConfigSide(PanelSide.LEFT, handleId),
                                     handleId,
@@ -703,7 +704,8 @@ private fun TriggerEntryList(
                                 dotColor = dotColor,
                                 title = stringResource(R.string.trigger_side_right_item),
                                 pairLabel = pairLabel,
-                                summary = triggerHandleActionSummary(
+                                summary = if (right.passthrough) stringResource(R.string.trigger_passthrough_title)
+                                else triggerHandleActionSummary(
                                     settings,
                                     settings.gestureConfigSide(PanelSide.RIGHT, handleId),
                                     handleId,
