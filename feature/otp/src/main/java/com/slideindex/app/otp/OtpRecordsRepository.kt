@@ -170,11 +170,18 @@ class OtpRecordsRepository @Inject constructor(
             val limit = limits[category] ?: OtpRecordLimits.DEFAULT
             if (limit <= 0) return@repositoryRunCatching null
             val current = readFromDisk()
+            // Notification and LSPosed SMS channels can report the same code within
+            // a few hundred milliseconds. De-duplicate across those two categories,
+            // while keeping PLAIN_SMS (no code) isolated by its original text.
             val duplicate = current.firstOrNull { existing ->
-                existing.category == category &&
-                    existing.code == code &&
-                    (category != OtpRecordCategory.PLAIN_SMS || existing.text == text) &&
+                val sameCode = existing.code == code &&
                     (timestampMs - existing.timestampMs) in 0..DEDUPE_WINDOW_MS
+                if (category == OtpRecordCategory.PLAIN_SMS) {
+                    sameCode && existing.category == OtpRecordCategory.PLAIN_SMS &&
+                        existing.text == text
+                } else {
+                    sameCode && existing.category != OtpRecordCategory.PLAIN_SMS
+                }
             }
             if (duplicate != null) return@repositoryRunCatching duplicate.id
 

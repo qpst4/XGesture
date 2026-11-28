@@ -528,6 +528,7 @@ fun NavEntryBuilder.notificationNavEntries(ctx: MainNavContext) {
             onDelayChange = viewModel::setOtpAutoInputDelayMs,
             onIntervalChange = viewModel::setOtpAutoInputIntervalMs,
             onLsposedSystemInjectChange = viewModel::setOtpLsposedSystemInjectEnabled,
+            onLsposedSmsCaptureChange = viewModel::setOtpLsposedSmsCaptureEnabled,
         )
     }
 
