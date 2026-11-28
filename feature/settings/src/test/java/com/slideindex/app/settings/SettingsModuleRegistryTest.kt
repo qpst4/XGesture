@@ -37,6 +37,7 @@ class SettingsModuleRegistryTest {
         // 这几条专门锁「宽前缀不能抢走特例」：bottom_nav_ 不能落进触钮的 bottom_，quick_launcher 也不能落进通用。
         assertEquals(SettingsModule.THEME_UI, SettingsModuleRegistry.moduleOf("bottom_nav_style_id"))
         assertEquals(SettingsModule.EDGE_GESTURE, SettingsModuleRegistry.moduleOf("bottom_default_trigger_mode"))
+        assertEquals(SettingsModule.EDGE_GESTURE, SettingsModuleRegistry.moduleOf(SettingsPreferenceKeys.TRIGGER_LAYOUT_PREVIEW.name))
         assertEquals(SettingsModule.THEME_UI, SettingsModuleRegistry.moduleOf("top_app_bar_blur_style_id"))
         assertEquals(SettingsModule.QUICK_LAUNCHER, SettingsModuleRegistry.moduleOf("quick_launcher"))
         assertEquals(SettingsModule.FREE_WINDOW, SettingsModuleRegistry.moduleOf("app_launch_policy_id"))
@@ -133,10 +134,10 @@ class SettingsModuleRegistryTest {
         // 725 = 709 + 16：全局长按强行拖放 6 个键（`drag_drop_flow_global_press_*`，落 DRAG_DROP）
         //            + 物理 dp 小窗 10 个 `free_window_*_v2` 键（落 FREE_WINDOW）。
         // 747 = 746 + 1：边角轮盘「每圈数量」`corner_gesture_layer_slot_counts`（CORNER_WHEEL）。
-        const val EXPECTED_TOTAL_KEYS = 747
+        const val EXPECTED_TOTAL_KEYS = 748
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
-            SettingsModule.EDGE_GESTURE to 85,
+            SettingsModule.EDGE_GESTURE to 86,
             SettingsModule.CORNER_WHEEL to 36,
             SettingsModule.QUICK_WHEEL to 2,
             SettingsModule.FLOAT_BALL to 79,

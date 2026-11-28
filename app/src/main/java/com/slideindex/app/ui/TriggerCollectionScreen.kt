@@ -67,6 +67,7 @@ import com.slideindex.app.settings.triggerCollectionEntries
 import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SettingNavigationRow
+import com.slideindex.app.ui.settings.components.SettingSwitchRow
 import com.slideindex.app.ui.settings.components.SettingsCardScope
 import com.slideindex.app.ui.settings.components.settingsCardItems
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
@@ -110,6 +111,8 @@ fun TriggerCollectionScreen(
     onAddTopTrigger: () -> Unit,
     onRemoveTriggerHandle: (PanelSide, String) -> Unit,
     onTriggerHandleEnabledChange: (PanelSide, String, Boolean) -> Unit,
+    onLayoutPreviewEnabledChange: (Boolean) -> Unit,
+    layoutPreviewVisible: Boolean,
 ) {
     val configuration = LocalConfiguration.current
     val systemLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -163,11 +166,6 @@ fun TriggerCollectionScreen(
     val entries = displaySettings.triggerCollectionEntries()
     val bottomHandles = displaySettings.allTriggerHandles(PanelSide.BOTTOM)
     val topHandles = displaySettings.allTriggerHandles(PanelSide.TOP)
-    val pairColors = listOf(
-        Color(0xFF7E57C2),
-        Color(0xFF26A69A),
-        Color(0xFFFF7043),
-    )
 
     val longPressRemoveHint = stringResource(R.string.trigger_collection_long_press_remove_hint)
 
@@ -189,6 +187,7 @@ fun TriggerCollectionScreen(
     // ⚠️ DSL 里的 `settingsLazySmallTitle` 不是 @Composable，文案要在组合期先取好。
     val profileBoundAppsTitle = stringResource(R.string.gesture_app_profiles_configured)
 
+    if (layoutPreviewVisible) TriggerLayoutPreview(displaySettings)
     SettingsScreenScaffold(
         title = screenTitle,
         pageHint = pageHint,
@@ -274,11 +273,21 @@ fun TriggerCollectionScreen(
             )
         }
 
+        groupedCardItems(
+            keyPrefix = "trigger-layout-preview",
+            items = listOf(settingsCardScopeItem("enabled") {
+                SettingSwitchRow(
+                    title = stringResource(R.string.trigger_layout_preview_title),
+                    checked = settings.triggerLayoutPreviewEnabled,
+                    enabled = true,
+                    onCheckedChange = onLayoutPreviewEnabledChange,
+                )
+            }),
+        )
         LazySettingsItem(key = "trigger-side-section") {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 TriggerEntryList(
                     entries = entries,
-                    pairColors = pairColors,
                     settings = displaySettings,
                     serviceEnabled = serviceEnabled,
                     sideExpanded = sideExpanded,
@@ -565,7 +574,6 @@ private fun SettingsCardScope.TriggerEdgeHandleRow(
 @Composable
 private fun TriggerEntryList(
     entries: List<TriggerCollectionEntry>,
-    pairColors: List<Color>,
     settings: AppSettings,
     serviceEnabled: Boolean,
     sideExpanded: Boolean,
@@ -643,7 +651,7 @@ private fun TriggerEntryList(
             renderingIds.forEachIndexed { displayIndex, handleId ->
                 val entry = entryCache[handleId] ?: return@forEachIndexed
                 val entryIndex = targetIds.indexOf(handleId).takeIf { it >= 0 } ?: displayIndex
-                val dotColor = pairColors[entryIndex % pairColors.size]
+                val dotColor = triggerPairColor(entryIndex)
                 val pairLabel = if (targetIds.size > 1) {
                     stringResource(R.string.trigger_pair_index, entryIndex + 1)
                 } else {

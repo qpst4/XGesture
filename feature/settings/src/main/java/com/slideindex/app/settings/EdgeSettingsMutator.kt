@@ -308,6 +308,9 @@ class EdgeSettingsMutator @Inject constructor(
 
     suspend fun setInterceptSystemBackGesture(enabled: Boolean) = editor.edit { it[SettingsPreferenceKeys.INTERCEPT_SYSTEM_BACK] = enabled }
 
+    suspend fun setTriggerLayoutPreviewEnabled(enabled: Boolean) =
+        editor.edit { it[SettingsPreferenceKeys.TRIGGER_LAYOUT_PREVIEW] = enabled }
+
     suspend fun setTriggerPassthrough(side: PanelSide, handleId: String, enabled: Boolean, landscape: Boolean) =
         editTriggerHandleProfile(landscape) { it.withUpdatedTriggerPassthrough(side, handleId, enabled) }
 

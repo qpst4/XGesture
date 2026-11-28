@@ -5425,6 +5425,7 @@
 <string name="widget_panel_blur_mode_title">ウィジェットパネルのぼかし</string>
 <string name="ring_slot_none_transparent">透明（常に空）</string>
 <string name="ring_slot_none_auto_fill">自動入力（最近のアプリ）</string>
+    <string name="trigger_layout_preview_title">トリガーの配置をプレビュー</string>
     <string name="trigger_passthrough_title">画面端のジェスチャーを通過させる</string>
     <string name="trigger_passthrough_desc">この範囲で始まるスワイプは現在のアプリに渡されます。LSPosed モジュールが必要です。</string>
 <string name="trigger_passthrough_module_checking">LSPosed モジュールの状態を確認しています…</string>

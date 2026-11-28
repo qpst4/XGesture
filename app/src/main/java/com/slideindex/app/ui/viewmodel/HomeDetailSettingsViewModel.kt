@@ -378,6 +378,10 @@ class HomeDetailSettingsViewModel @Inject constructor(
         settingsRepository.setInterceptSystemBackGesture(enabled)
     }
 
+    fun setTriggerLayoutPreviewEnabled(enabled: Boolean) = launchSettingsWrite {
+        settingsRepository.setTriggerLayoutPreviewEnabled(enabled)
+    }
+
     fun setTriggerPassthrough(side: PanelSide, handleId: String, enabled: Boolean) = launchSettingsWrite {
         settingsRepository.setTriggerPassthrough(side, handleId, enabled, landscapeEditing())
     }

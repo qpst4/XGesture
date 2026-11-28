@@ -235,6 +235,8 @@ class SettingsRepository @Inject constructor(
         landscape: Boolean = false,
     ) = edge.applyTriggerDesignPreset(side, handleId, preset, landscape)
     suspend fun setInterceptSystemBackGesture(enabled: Boolean) = edge.setInterceptSystemBackGesture(enabled)
+    suspend fun setTriggerLayoutPreviewEnabled(enabled: Boolean) = edge.setTriggerLayoutPreviewEnabled(enabled)
+
     suspend fun setTriggerPassthrough(side: PanelSide, handleId: String, enabled: Boolean, landscape: Boolean) =
         edge.setTriggerPassthrough(side, handleId, enabled, landscape)
 

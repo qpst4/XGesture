@@ -231,6 +231,7 @@ data class AppSettings(
     val systemGestureTakeoverTop get() = edgeTrigger.systemGestureTakeoverTop
     val systemGestureTakeoverSides get() = edgeTrigger.systemGestureTakeoverSides
     val systemGestureTakeoverBottom get() = edgeTrigger.systemGestureTakeoverBottom
+    val triggerLayoutPreviewEnabled get() = edgeTrigger.triggerLayoutPreviewEnabled
     val limitMaxInterceptLength get() = edgeTrigger.limitMaxInterceptLength
     val leftDefaultTriggerMode get() = edgeTrigger.leftDefaultTriggerMode
     val rightDefaultTriggerMode get() = edgeTrigger.rightDefaultTriggerMode

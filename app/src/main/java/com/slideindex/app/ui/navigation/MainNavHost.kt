@@ -2,6 +2,9 @@
 
 package com.slideindex.app.ui.navigation
 
+import com.slideindex.app.ui.TriggerLayoutPreviewHost
+import com.slideindex.app.ui.FocusedSideTriggerLayoutPreviewHost
+
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -62,7 +65,6 @@ import com.slideindex.app.settings.BottomNavStyle
 import com.slideindex.app.settings.OverlaySettings
 import com.slideindex.app.settings.usesBottomNavHaze
 import com.slideindex.app.ui.FloatingBottomNavBar
-import com.slideindex.app.ui.FocusedSideTriggerLayoutPreviewHost
 import com.slideindex.app.ui.ClassicFloatingSideNavRailOverlay
 import com.slideindex.app.ui.LocalMainNavContentStartInset
 import com.slideindex.app.ui.classicFloatingSideNavRailSlotWidth
@@ -828,16 +830,28 @@ internal fun MainTabNavStackSingle(
                 },
             ),
     ) {
-        val previewFocus = if (isActiveForHaze) backStack.currentAppNavKey().focusedTriggerPreviewKey() else null
-        FocusedSideTriggerLayoutPreviewHost(focus = previewFocus) {
-            NavDisplay(
-                backStack = backStack,
-                onBack = { backStack.pop() },
-                effects = NavDisplayEffects(
-                    cornerClipRadius = rememberNavSystemCornerRadius(),
-                ),
-                content = registerEntries,
-            )
+        val currentRoute = backStack.currentAppNavKey()
+        val triggerPreviewRoute = when (currentRoute) {
+            AppNavKey.HomeTriggerCollection,
+            AppNavKey.HomeTriggerCollectionLandscape,
+            is AppNavKey.HomeGestureAppProfileDetail,
+            is AppNavKey.HomeSideGestures,
+            is AppNavKey.HomeSideGesturesAppearance,
+            is AppNavKey.HomeSideGesturesDesign -> true
+            else -> false
+        }
+        TriggerLayoutPreviewHost(enabled = isActiveForHaze && triggerPreviewRoute) {
+            val previewFocus = if (isActiveForHaze) currentRoute.focusedTriggerPreviewKey() else null
+            FocusedSideTriggerLayoutPreviewHost(focus = previewFocus) {
+                NavDisplay(
+                    backStack = backStack,
+                    onBack = { backStack.pop() },
+                    effects = NavDisplayEffects(
+                        cornerClipRadius = rememberNavSystemCornerRadius(),
+                    ),
+                    content = registerEntries,
+                )
+            }
         }
     }
 }

@@ -126,13 +126,6 @@ class GestureZoneLayout(
             .coerceAtLeast(dp(TriggerHandle.MIN_EDGE_WIDTH_DP).toInt())
     }
 
-    /** Edge strip width wide enough to render the full halo glow (preview / capture windows). */
-    fun glowAwareEdgeWidthPx(handle: TriggerHandle): Int = computeGlowAwareEdgeWidthPx(
-        edgeTriggerWidthDp = settings.triggerHandleEdgeWidthDp(side, handle.id),
-        handles = listOf(handle),
-        density = density
-    )
-
     fun interceptZoneRect(): RectF {
         if (side.isVerticalEdge || !settings.interceptSystemBackGesture) return triggerZoneUnionRect()
         val trigger = triggerZoneUnionRect()

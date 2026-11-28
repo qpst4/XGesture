@@ -164,6 +164,8 @@ private fun GestureAppProfileDetailRoute(ctx: MainNavContext, profileId: String)
         // 集合页自己按当前展示方向做 forLandscapeEditing()，所以这里交原样设置（与全局集合页一致）。
         settings = triggerScope.rawSettings,
         serviceEnabled = true,
+        layoutPreviewVisible = ctx.backStack.currentAppNavKey() == AppNavKey.HomeGestureAppProfileDetail(profileId),
+        onLayoutPreviewEnabledChange = viewModel::setTriggerLayoutPreviewEnabled,
         profileScope = baseScope.copy(
             boundAppEntries = boundEntries,
             onOpenBindApp = { ctx.navigate(AppNavKey.HomeGestureAppProfileBind(profileId)) },

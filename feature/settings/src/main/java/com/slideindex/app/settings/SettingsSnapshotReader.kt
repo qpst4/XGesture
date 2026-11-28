@@ -193,6 +193,7 @@ internal object SettingsSnapshotReader {
                     ?: GestureTriggerMode.ON_RELEASE.id,
             ),
             interceptSystemBackGesture = prefs[SettingsPreferenceKeys.INTERCEPT_SYSTEM_BACK] ?: false,
+            triggerLayoutPreviewEnabled = prefs[SettingsPreferenceKeys.TRIGGER_LAYOUT_PREVIEW] ?: false,
             systemGestureTakeoverTop = prefs[SettingsPreferenceKeys.SYSTEM_GESTURE_TAKEOVER_TOP] ?: false,
             systemGestureTakeoverSides = prefs[SettingsPreferenceKeys.SYSTEM_GESTURE_TAKEOVER_SIDES] ?: false,
             systemGestureTakeoverBottom = prefs[SettingsPreferenceKeys.SYSTEM_GESTURE_TAKEOVER_BOTTOM] ?: false,

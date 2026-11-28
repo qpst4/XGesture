@@ -61,8 +61,8 @@ fun TriggerAppearanceSettingsScreen(
     side: PanelSide,
     handleId: String,
     settings: AppSettings,
-    layoutPreviewVisible: Boolean,
     serviceEnabled: Boolean,
+    layoutPreviewVisible: Boolean,
     onBack: () -> Unit,
     onShortSwipeDistanceChange: (Float) -> Unit,
     onLongSwipeDistanceChange: (Float) -> Unit,
@@ -101,7 +101,7 @@ fun TriggerAppearanceSettingsScreen(
         ?: settings.primaryTriggerHandle(side)
     val handleWidth = settings.triggerHandleEdgeWidthDp(side, handleId)
     val useFocusedPreview = (side.isHorizontalEdge && !profileScoped) || selectedHandle.passthrough
-    val previewEnabled = serviceEnabled
+    val previewEnabled = serviceEnabled && !settings.triggerLayoutPreviewEnabled
     val showNativePreview = previewEnabled && !useFocusedPreview
     val showFocusedPreview = previewEnabled && useFocusedPreview
     val showSwipeDistanceHints = previewEnabled && !selectedHandle.passthrough
@@ -142,6 +142,9 @@ fun TriggerAppearanceSettingsScreen(
     val handleSectionTitle = stringResource(R.string.side_gestures_handle_section)
 
     if (layoutPreviewVisible) {
+        if (settings.triggerLayoutPreviewEnabled) {
+            TriggerLayoutPreview(settings, TriggerLayoutPreviewDraft(side, handleId, previewWidth, previewSpan))
+        }
         val focusedSettings = settings.takeIf { showFocusedPreview }
         FocusedSideTriggerLayoutPreview(focusedSettings, side, handleId, previewWidth, previewSpan, swipeDistances)
     }
@@ -199,14 +202,13 @@ fun TriggerAppearanceSettingsScreen(
                             triggersLayoutPreview = true,
                             onLayoutPreviewStart = { if (showNativePreview) onLayoutPreviewStart() },
                             onLayoutPreviewStop = {
-                                previewWidth = null
                                 if (showNativePreview) {
                                     onTriggerLayoutPreviewStop()
                                     onLayoutPreviewStop()
                                 }
                             },
                             onLayoutPreviewValueChange = { width ->
-                                if (selectedHandle.passthrough) previewWidth = width
+                                previewWidth = width
                                 if (showNativePreview) onEdgeWidthPreviewChange(width)
                             },
                             onValueChange = onEdgeWidthChange,
@@ -237,14 +239,13 @@ fun TriggerAppearanceSettingsScreen(
                             triggersLayoutPreview = true,
                             onLayoutPreviewStart = { if (showNativePreview) onLayoutPreviewStart() },
                             onLayoutPreviewStop = {
-                                previewSpan = null
                                 if (showNativePreview) {
                                     onTriggerLayoutPreviewStop()
                                     onLayoutPreviewStop()
                                 }
                             },
                             onLayoutPreviewValueChange = { range ->
-                                if (selectedHandle.passthrough) previewSpan = range
+                                previewSpan = range
                                 if (showNativePreview) {
                                     onTriggerVerticalRangePreviewChange(range.start, range.endInclusive)
                                 }

@@ -507,11 +507,11 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
     }
 
     hiltEntry<AppNavKey.HomeTriggerCollection> {
-        HomeTriggerCollectionRoute(ctx)
+        HomeTriggerCollectionRoute(ctx, AppNavKey.HomeTriggerCollection)
     }
 
     hiltEntry<AppNavKey.HomeTriggerCollectionLandscape> {
-        HomeTriggerCollectionRoute(ctx, initialManualLandscapeOverride = true)
+        HomeTriggerCollectionRoute(ctx, AppNavKey.HomeTriggerCollectionLandscape, initialManualLandscapeOverride = true)
     }
 
     gestureAppProfileNavEntries(ctx)
@@ -1450,7 +1450,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
         val gesturesKey = AppNavKey.HomeSideGestures(key.side, key.handleId, key.profileId)
         val useFocusedPreview = (side.isHorizontalEdge && key.profileId == null) ||
             settings.triggerHandle(side, key.handleId)?.passthrough == true
-        val showNativePreview = !useFocusedPreview
+        val showNativePreview = !settings.triggerLayoutPreviewEnabled && !useFocusedPreview
         TriggerAppearanceSettingsScreen(
             side = side,
             handleId = key.handleId,
@@ -1828,6 +1828,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
 @Composable
 private fun HomeTriggerCollectionRoute(
     ctx: MainNavContext,
+    key: AppNavKey,
     initialManualLandscapeOverride: Boolean? = null,
 ) {
     val viewModel: HomeDetailSettingsViewModel = hiltViewModel()
@@ -1845,6 +1846,8 @@ private fun HomeTriggerCollectionRoute(
     TriggerCollectionScreen(
         settings = settings,
         serviceEnabled = true,
+        layoutPreviewVisible = ctx.backStack.currentAppNavKey() == key,
+        onLayoutPreviewEnabledChange = viewModel::setTriggerLayoutPreviewEnabled,
         initialManualLandscapeOverride = initialManualLandscapeOverride,
         onEnsureLandscapeInitialized = viewModel::ensureLandscapeTriggerHandlesInitialized,
         onCopyPortraitToLandscape = viewModel::copyPortraitToLandscape,

@@ -5457,6 +5457,7 @@
 <string name="widget_panel_blur_mode_title">Размытие панели виджетов</string>
 <string name="ring_slot_none_transparent">Прозрачно (всегда пусто)</string>
 <string name="ring_slot_none_auto_fill">Автозаполнение (недавние приложения)</string>
+    <string name="trigger_layout_preview_title">Предпросмотр расположения триггеров</string>
     <string name="trigger_passthrough_title">Передача жестов с края</string>
     <string name="trigger_passthrough_desc">Смахивания, начатые в этой области, передаются текущему приложению. Требуется модуль LSPosed.</string>
 <string name="trigger_passthrough_module_checking">Проверка состояния модуля LSPosed…</string>
