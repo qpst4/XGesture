@@ -4327,7 +4327,7 @@
     <string name="overlay_blur_enabled">面板毛玻璃</string>
     <string name="overlay_blur_enabled_desc">悬浮面板的毛玻璃背景。关闭后改用实色面板：系统跨窗模糊与面板内模糊一并关闭。壁纸模糊不受影响</string>
     <string name="overlay_blur_radius_title">面板模糊强度</string>
-    <string name="overlay_opacity_title">面板透光浓度</string>
+    <string name="overlay_opacity_title">面板不透明度</string>
     <string name="overlay_corner_radius_title">全局卡片圆角</string>
     <string name="overlay_border_shimmer_title">玻璃微光反光</string>
     <string name="overlay_advanced_shimmer_title">高级光影微调</string>

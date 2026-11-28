@@ -71,7 +71,7 @@ data class HomeMainSettings(
     val overlayVerticalGlossPercent: Int = 0,
     val backdropBlurEnabled: Boolean = true,
     val backdropBlurRadiusDp: Int = 80,
-    val backdropDimPercent: Int = 35,
+    val backdropDimPercent: Int = 15,
     val searchPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
     val expandPanelBlurModeId: Int = OverlayBlurMode.BACKDROP_ONLY.id,
     val pickResultBlurModeId: Int = OverlayBlurMode.DISABLED.id,

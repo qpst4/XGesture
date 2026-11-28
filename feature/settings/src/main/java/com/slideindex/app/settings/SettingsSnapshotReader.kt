@@ -859,7 +859,7 @@ internal object SettingsSnapshotReader {
                 overlayVerticalGlossPercent = prefs[SettingsPreferenceKeys.OVERLAY_VERTICAL_GLOSS_PERCENT] ?: 0,
                 backdropBlurEnabled = prefs[SettingsPreferenceKeys.BACKDROP_BLUR_ENABLED] ?: true,
                 backdropBlurRadiusDp = prefs[SettingsPreferenceKeys.BACKDROP_BLUR_RADIUS_DP] ?: 80,
-                backdropDimPercent = prefs[SettingsPreferenceKeys.BACKDROP_DIM_PERCENT] ?: 35,
+                backdropDimPercent = prefs[SettingsPreferenceKeys.BACKDROP_DIM_PERCENT] ?: 15,
                 searchPanelBlurModeId = prefs[SettingsPreferenceKeys.SEARCH_PANEL_BLUR_MODE_ID] ?: OverlayBlurMode.BACKDROP_ONLY.id,
                 expandPanelBlurModeId = prefs[SettingsPreferenceKeys.EXPAND_PANEL_BLUR_MODE_ID] ?: OverlayBlurMode.BACKDROP_ONLY.id,
                 pickResultBlurModeId = prefs[SettingsPreferenceKeys.PICK_RESULT_BLUR_MODE_ID] ?: OverlayBlurMode.DISABLED.id,

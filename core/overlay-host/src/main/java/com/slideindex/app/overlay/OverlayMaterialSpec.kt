@@ -31,7 +31,7 @@ data class OverlayMaterialSpec(
     val verticalGlossPercent: Int = 0,
     val backdropBlurEnabled: Boolean = true,
     val backdropBlurRadiusDp: Int = 80,
-    val backdropDimPercent: Int = 35,
+    val backdropDimPercent: Int = 15,
     val searchPanelBlurModeId: Int = 1,
     val expandPanelBlurModeId: Int = 1,
     val pickResultBlurModeId: Int = 0,
