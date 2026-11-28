@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.Flow
 data class OverlayMaterialSpec(
     val blurEnabled: Boolean = true,
     val blurRadiusDp: Int = 40,
-    val opacityPercent: Int = 30,
+    val opacityPercent: Int = 61,
     val cornerRadiusDp: Int = 18,
     val borderShimmerPercent: Int = 0,
     val advancedShimmerEnabled: Boolean = true,

@@ -739,8 +739,8 @@ data class OverlayBlurSettings(
     val overlayBlurEnabled: Boolean = true,
     /** 全局悬浮窗背景模糊半径（dp）；默认 40dp，区间 0..100。 */
     val overlayBlurRadiusDp: Int = 40,
-    /** 全局悬浮窗面板不透明度百分比（%）；默认 30%，区间 0..100。 */
-    val overlayOpacityPercent: Int = 30,
+    /** 全局悬浮窗面板不透明度百分比（%）；默认 61%，区间 0..100。 */
+    val overlayOpacityPercent: Int = 61,
     /** 全局悬浮窗卡片圆角（dp）；默认 18dp，区间 12..28。 */
     val overlayCornerRadiusDp: Int = 18,
     /** 全局悬浮窗微光反光强度百分比（%）；默认 0%，区间 0..100。 */
