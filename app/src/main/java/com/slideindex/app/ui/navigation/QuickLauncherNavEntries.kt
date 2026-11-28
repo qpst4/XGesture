@@ -3,9 +3,12 @@ package com.slideindex.app.ui.navigation
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.nav.core.NavEntryBuilder
 import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.launcher.QuickLauncherItem
@@ -60,6 +63,9 @@ fun NavEntryBuilder.quickLauncherNavEntries(ctx: MainNavContext) {
         val gestureSettings by viewModel.gestureSettings.collectAsStateWithLifecycle()
         val settings = gestureSettings.toMinimalAppSettings()
         val panels = QuickLauncherPanelDefaults.effectivePanels(settings.quickLauncherPanels)
+        val scope = rememberCoroutineScope()
+        // 写盘期间挡重复点击：否则会连建两块并连跳两次。
+        val creating = remember { mutableStateOf(false) }
         // 系统返回 / 侧滑可能绕过编辑页的 onBack：回到列表时再兜一次底。
         LaunchedEffect(Unit) {
             val snapshot = provisionalNewPanel ?: return@LaunchedEffect
@@ -75,17 +81,27 @@ fun NavEntryBuilder.quickLauncherNavEntries(ctx: MainNavContext) {
             panels = panels,
             onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
             onCreate = {
-                val updated = com.slideindex.app.launcher.QuickLauncherPanelMutator.addPanel(
-                    panels = panels,
-                    defaultColumns = settings.quickLauncherColumnsPerPage,
-                    defaultRows = settings.quickLauncherRowsPerPage,
-                )
-                val newPanel = updated?.lastOrNull()
-                if (newPanel != null) {
-                    // 记下新建时的内容：原样返回就回收，改过（条目/名称/行列）才留下。
-                    provisionalNewPanel = newPanel
-                    viewModel.setQuickLauncherPanels(updated)
-                    ctx.navigate(AppNavKey.QuickLauncherEdit(newPanel.id))
+                if (!creating.value) {
+                    val updated = com.slideindex.app.launcher.QuickLauncherPanelMutator.addPanel(
+                        panels = panels,
+                        defaultColumns = settings.quickLauncherColumnsPerPage,
+                        defaultRows = settings.quickLauncherRowsPerPage,
+                    )
+                    val newPanel = updated?.lastOrNull()
+                    if (newPanel != null) {
+                        creating.value = true
+                        // 记下新建时的内容：原样返回就回收，改过（条目/名称/行列/图标）才留下。
+                        provisionalNewPanel = newPanel
+                        // 等落盘完成再进编辑页：编辑页首帧就能拿到这块面板，不会再卡在加载态。
+                        scope.launch {
+                            try {
+                                viewModel.applyQuickLauncherPanels(updated)
+                            } finally {
+                                creating.value = false
+                            }
+                            ctx.navigate(AppNavKey.QuickLauncherEdit(newPanel.id))
+                        }
+                    }
                 }
             },
             onOpen = { panelId ->

@@ -1836,6 +1836,7 @@
     <string name="shizuku_start_service_hint">请先在 Shizuku 中启动服务，返回后再点击授权</string>
     <string name="shizuku_not_installed">未检测到 Shizuku，请先安装并在 Shizuku 中启动服务</string>
     <string name="quick_launcher_editor_title">快速启动器</string>
+    <string name="quick_launcher_editor_slow_hint">面板还没加载出来，返回后再进来一次试试。</string>
     <string name="honeycomb_launcher_editor_title">蜂窝启动器</string>
     <string name="honeycomb_launcher_add">添加应用</string>
     <string name="honeycomb_launcher_editor_desc">配置蜂窝启动器显示的应用与快捷方式。建议将手势触发模式设为「持续触发」，按住滑动选择，松手启动。</string>
