@@ -36,30 +36,17 @@ object PickPrefetchCache {
         service: AccessibilityService,
         rect: Rect,
         generation: Int
-    ) {
+    ): Deferred<List<String>> {
         val normalized = Rect(rect)
-        val cachedRect = prefetchRect
-        if (
-            cachedRect != null &&
-            cachedRect == normalized &&
-            prefetchGeneration == generation &&
-            prefetchDeferred?.isActive == true
-        ) {
-            return
-        }
-        if (
-            cachedRect != null &&
-            cachedRect == normalized &&
-            prefetchGeneration == generation &&
-            prefetchDeferred?.isCompleted == true
-        ) {
-            return
+        val cached = prefetchDeferred
+        if (cached != null && prefetchRect == normalized && prefetchGeneration == generation) {
+            return cached
         }
         prefetchDeferred?.cancel()
         prefetchGeneration = generation
         prefetchRect = normalized
         val capturedRect = Rect(normalized)
-        prefetchDeferred = scope.async {
+        return scope.async {
             val a11yStart = SystemClock.elapsedRealtime()
             PickPerf.mark("a11y_prefetch_start", "rect=$capturedRect gen=$generation")
             val words = runInterruptible {
@@ -70,7 +57,7 @@ object PickPrefetchCache {
                 .orEmpty()
             PickPerf.markStepDuration("a11y_prefetch_end", a11yStart, "words=${words.size}")
             words
-        }
+        }.also { prefetchDeferred = it }
     }
 
     suspend fun consumePreviewA11y(rect: Rect): List<String>? {

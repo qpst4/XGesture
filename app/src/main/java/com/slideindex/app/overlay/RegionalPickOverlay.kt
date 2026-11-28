@@ -20,6 +20,8 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.compose.ui.geometry.Offset
 import com.slideindex.app.inspire.PickPrefetchCache
+import com.slideindex.app.overlay.FloatBallCursorPreviewView.HintMode
+import com.slideindex.app.service.AccessibilityTextExtractor
 import com.slideindex.app.perf.PickPerf
 import com.slideindex.app.service.SlideIndexAccessibilityService
 import com.slideindex.app.settings.AppSettings
@@ -91,6 +93,7 @@ object RegionalPickOverlay : PickGuardSession {
     private var cacheRefreshRunnable: Runnable? = null
     private var initialCacheRunnable: Runnable? = null
     private var boundsLookupGeneration = 0
+    private var pausedPreviewHint = HintMode.HIDDEN
     private var lastPauseScheduleX = Float.NaN
     private var lastPauseScheduleY = Float.NaN
     private var lastCacheRefreshX = Float.NaN
@@ -673,33 +676,46 @@ object RegionalPickOverlay : PickGuardSession {
         selectionStart = anchor
         paused = true
         selectionCancelled = false
-        val bounds = FloatBallPreviewBoundsCache.hitTestAt(anchor.x, anchor.y)
-        if (bounds != null) {
-            selectionPreviewBounds = bounds
-            maybeStartPickPrefetch()
-        } else {
+        pausedPreviewHint = HintMode.HIDDEN
+        val preview = FloatBallPreviewBoundsCache.hitTestEntryAt(anchor.x, anchor.y)
+        if (preview == null) {
             launchPreviewBoundsLookupFallback(anchor)
+            syncCursorAppearance()
+        } else {
+            applyPausedPreview(preview)
         }
-        syncCursorAppearance()
     }
 
     private fun launchPreviewBoundsLookupFallback(anchor: Offset) {
         val generation = ++boundsLookupGeneration
+        val service = SlideIndexAccessibilityService.accessibilityInstance() ?: return
         overlayScope.launch(Dispatchers.Default) {
-            val bounds = SlideIndexAccessibilityService.findControlBoundsAt(
+            val preview = AccessibilityTextExtractor.findControlPreviewAt(
+                service = service,
                 rawX = anchor.x,
                 rawY = anchor.y
             )
             withContext(Dispatchers.Main) {
                 if (generation != boundsLookupGeneration) return@withContext
                 if (!sessionActive || !paused || regionalActive) return@withContext
-                if (bounds != null) {
-                    selectionPreviewBounds = bounds
+                if (preview != null) {
+                    applyPausedPreview(preview)
+                } else {
                     maybeStartPickPrefetch()
-                    syncCursorAppearance()
                 }
             }
         }
+    }
+
+    private fun applyPausedPreview(preview: AccessibilityTextExtractor.PreviewBoundsEntry) {
+        selectionPreviewBounds = preview.rect
+        pausedPreviewHint = when {
+            preview.hasNodeText -> HintMode.TEXT
+            preview.isImage -> HintMode.SCREENSHOT
+            else -> HintMode.HIDDEN
+        }
+        maybeStartPickPrefetch()
+        syncCursorAppearance()
     }
 
     private fun ensurePreviewBoundsForPick() {
@@ -724,11 +740,20 @@ object RegionalPickOverlay : PickGuardSession {
         if (!paused) return
         val bounds = selectionPreviewBounds ?: return
         val service = SlideIndexAccessibilityService.accessibilityInstance() ?: return
-        PickPrefetchCache.startPreviewA11yPrefetch(
+        val generation = boundsLookupGeneration
+        val prefetch = PickPrefetchCache.startPreviewA11yPrefetch(
             service = service,
             rect = bounds,
-            generation = boundsLookupGeneration
+            generation = generation
         )
+        if (pausedPreviewHint != HintMode.HIDDEN) return
+        overlayScope.launch {
+            val text = runCatching { prefetch.await() }.getOrNull() ?: return@launch
+            if (generation != boundsLookupGeneration) return@launch
+            if (!sessionActive || !paused || regionalActive) return@launch
+            pausedPreviewHint = if (text.any { it.isNotBlank() }) HintMode.TEXT else HintMode.SCREENSHOT
+            syncCursorAppearance()
+        }
     }
 
     private fun schedulePauseTimerIfMoved() {
@@ -824,7 +849,15 @@ object RegionalPickOverlay : PickGuardSession {
     private fun applyPreviewBoundsFromCache() {
         if (!sessionActive) return
         if (regionalActive) return
-        if (paused && selectionStart != null) return
+        val pausedAnchor = selectionStart
+        if (paused && pausedAnchor != null) {
+            if (selectionPreviewBounds == null) {
+                val preview = FloatBallPreviewBoundsCache.hitTestEntryAt(pausedAnchor.x, pausedAnchor.y) ?: return
+                boundsLookupGeneration++
+                applyPausedPreview(preview)
+            }
+            return
+        }
         val cached = FloatBallPreviewBoundsCache.hitTestAt(pickAnchor.x, pickAnchor.y)
         if (cached != null) {
             updatePreviewBoundsIfChanged(cached)
@@ -897,9 +930,10 @@ object RegionalPickOverlay : PickGuardSession {
         val view = cursorPreviewView ?: return
         val currentSettings = settings
         val hintMode = when {
-            !paused -> FloatBallCursorPreviewView.HintMode.HIDDEN
-            regionalActive -> FloatBallCursorPreviewView.HintMode.SCREENSHOT
-            else -> FloatBallCursorPreviewView.HintMode.TEXT
+            !paused -> HintMode.HIDDEN
+            regionalActive -> HintMode.SCREENSHOT
+            selectionPreviewBounds != null -> pausedPreviewHint
+            else -> HintMode.HIDDEN
         }
         view.setChromeState(
             visible = sessionActive,
