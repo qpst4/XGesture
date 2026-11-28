@@ -103,7 +103,6 @@ overlay 迁移已完成到"可维护"的程度，**不再启动项目级重构**
 1. **页面级统一外边距**：设置页所有卡片以及外部表单 Column 的左右外边距基线必须统一为 **12dp**（`padding(horizontal = 12.dp)`）。**严禁**在外层手写 16dp 导致上下卡片呈现阶梯状错位。
 2. **弹窗脱外边距**：在 `MiuixBottomSheet` / 底部弹窗内使用 `CardSegment` 时，由于 Sheet 自身已内置 `insideMargin`，必须显式指定 `outerHorizontalPadding = 0.dp`，**严禁双重缩进**。
 3. **卡片行内部边距**：卡片行自身的 `insideMargin` 必须用 `BasicComponentDefaults.InsideMargin`（左右 16dp，水波纹撑满切角），**严禁**使用横向为 0 的 `MiuixInsetCardComponentMargin`。
-4. **交付前必须截图自检**：`adb shell screencap` 拉图，确认整页在同一条垂线上对齐、页面外边距 12dp（卡片行内部左右 16dp）、卡片圆角/背景与同页一致。截图随交付一起给用户，不截图不算完成。
 
 ## 六、多入口功能排查（硬规则）
 
