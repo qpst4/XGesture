@@ -5106,6 +5106,9 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="quick_wheel_empty_hint">Tap “+” in the bottom-right corner to create a custom wheel</string>
     <string name="quick_wheel_create">New wheel</string>
     <string name="quick_wheel_rename">Rename</string>
+    <string name="quick_wheel_edit">Edit</string>
+    <string name="quick_wheel_manage">Manage</string>
+    <string name="quick_wheel_sort">Sort</string>
     <string name="quick_wheel_duplicate">Duplicate</string>
     <string name="quick_wheel_duplicate_name">%1$s copy</string>
     <string name="quick_wheel_delete">Delete</string>

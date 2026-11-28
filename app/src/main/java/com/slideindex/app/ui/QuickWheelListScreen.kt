@@ -7,52 +7,50 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import com.slideindex.app.ui.miuix.MiuixLabeledTextField
-import com.slideindex.app.ui.miuix.MiuixFormDialog
 import com.slideindex.app.R
 import com.slideindex.app.overlay.layout.QuickWheelLayoutEngine
 import com.slideindex.app.overlay.layout.QuickWheelShape
 import com.slideindex.app.settings.QuickWheel
+import com.slideindex.app.ui.miuix.MiuixGlassDropdownMenu
+import com.slideindex.app.ui.miuix.MiuixNavigationBackHandler
 import com.slideindex.app.ui.miuix.MiuixSettingsScreenScaffold
-import com.slideindex.app.ui.miuix.groupedCardItems
-import com.slideindex.app.ui.settings.components.settingsCardScopeItem
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Ok
+import top.yukonga.miuix.kmp.icon.extended.Sort
 import java.util.UUID
 
 /**
@@ -69,31 +67,12 @@ fun QuickWheelListScreen(
     onOpenWheel: (String) -> Unit,
     onUpdateWheels: (List<QuickWheel>) -> Unit,
 ) {
-    var manageTarget by remember { mutableStateOf<QuickWheel?>(null) }
-    var renameTarget by remember { mutableStateOf<QuickWheel?>(null) }
-    var renameText by remember { mutableStateOf("") }
-
-    fun moveWheel(target: QuickWheel, delta: Int) {
-        val index = wheels.indexOfFirst { it.id == target.id }
-        val destination = index + delta
-        if (index < 0 || destination !in wheels.indices) return
-        val mutable = wheels.toMutableList()
-        val item = mutable.removeAt(index)
-        mutable.add(destination, item)
-        onUpdateWheels(mutable)
-    }
-
-    /** 复制轮盘：除 id / 名称 / 排序外**全部照搬**（容器与二级、两级样式、扇区、长按时间、背景参数）。 */
-    fun duplicateWheel(source: QuickWheel, copyName: String) {
-        if (wheels.size >= QuickWheel.MAX_WHEELS) return
-        onUpdateWheels(
-            wheels + source.copy(
-                id = UUID.randomUUID().toString(),
-                name = copyName,
-                order = wheels.size,
-            ),
-        )
-    }
+    // 长按卡片：弹锚在手指位置的玻璃下拉菜单（编辑 / 复制 / 删除）。
+    var menuTarget by remember { mutableStateOf<QuickWheel?>(null) }
+    var lastMenuTarget by remember { mutableStateOf<QuickWheel?>(null) }
+    var menuAnchor by remember { mutableStateOf<Rect?>(null) }
+    // 列表编辑态：顶栏 sort 键进入，进入后才能拖动排序；正常态长按弹管理菜单。
+    var editing by rememberSaveable { mutableStateOf(false) }
 
     // 拖拽排序：拖动期间只改本地顺序（dragOrder），松手才写一次设置。
     // 以前 onMove 里直接 onUpdateWheels(...)：写盘是异步的，列表要等回灌才刷新，
@@ -107,6 +86,21 @@ fun QuickWheelListScreen(
         if (wheels.map { it.id } == pending.map { it.id }) {
             pendingOrder = null
         }
+    }
+
+    // 编辑态返回先退出编辑，而不是直接退页面。
+    MiuixNavigationBackHandler(enabled = editing) { editing = false }
+
+    /** 复制轮盘：除 id / 名称 / 排序外**全部照搬**（容器与二级、两级样式、扇区、长按时间、背景参数）。 */
+    fun duplicateWheel(source: QuickWheel, copyName: String) {
+        if (displayWheels.size >= QuickWheel.MAX_WHEELS) return
+        onUpdateWheels(
+            displayWheels + source.copy(
+                id = UUID.randomUUID().toString(),
+                name = copyName,
+                order = displayWheels.size,
+            ),
+        )
     }
 
     fun commitDragOrder() {
@@ -138,8 +132,22 @@ fun QuickWheelListScreen(
         listState = wheelListState,
         subtitle = stringResource(R.string.quick_wheel_list_subtitle),
         onBack = onBack,
+        actions = {
+            MiuixTopBarIconButton(
+                onClick = { editing = !editing },
+                // 0/1 个轮盘没有排序意义；编辑态下始终可点（用来退出）。
+                enabled = editing || displayWheels.size > 1,
+            ) {
+                Icon(
+                    imageVector = if (editing) MiuixIcons.Medium.Ok else MiuixIcons.Medium.Sort,
+                    contentDescription = stringResource(
+                        if (editing) R.string.quick_wheel_done else R.string.quick_wheel_sort,
+                    ),
+                )
+            }
+        },
         floatingActionButton = {
-            if (wheels.size < QuickWheel.MAX_WHEELS) {
+            if (!editing && displayWheels.size < QuickWheel.MAX_WHEELS) {
                 FloatingActionButton(
                     onClick = onCreate,
                     modifier = Modifier.padding(20.dp),
@@ -187,105 +195,30 @@ fun QuickWheelListScreen(
                     CardSegment(
                         isFirst = index == 0,
                         isLast = index == displayWheels.lastIndex,
-                        modifier = Modifier.longPressDraggableHandle(
-                            onDragStarted = {
-                                // 整个拖动期间只动这份副本，松手才落盘。
-                                dragOrder = displayWheels.toList()
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            },
-                            onDragStopped = {
-                                commitDragOrder()
-                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                            },
-                        ),
+                        // 编辑态：整张卡就是拖拽把手，按下即可拖（不用再长按一次）。
+                        modifier = if (editing) {
+                            Modifier.draggableHandle(
+                                onDragStarted = {
+                                    // 整个拖动期间只动这份副本，松手才落盘。
+                                    dragOrder = displayWheels.toList()
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                },
+                                onDragStopped = {
+                                    commitDragOrder()
+                                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                },
+                            )
+                        } else {
+                            Modifier
+                        },
                     ) {
                         QuickWheelRow(
                             wheel = wheel,
+                            enabled = !editing,
                             onClick = { onOpenWheel(wheel.id) },
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    manageTarget?.let { target ->
-        val currentIndex = wheels.indexOfFirst { it.id == target.id }
-        // 用 Dialog 而不是 AlertDialog：AlertDialog 会给按钮区预留一块空白（本菜单已去掉「取消」，
-        // 底下多出来的那一截就是它留下的），这里自己画卡片，底部不再多一截。
-        Dialog(
-            onDismissRequest = { manageTarget = null },
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-        ) {
-            // 复制项的默认名称：源名称 + "副本"（源名称为空时用兜底名）。
-            val copyName = stringResource(
-                R.string.quick_wheel_duplicate_name,
-                target.name.ifBlank { stringResource(R.string.quick_wheel_label_fallback) },
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    // 点卡片以外的空白处收起：本弹窗铺满整屏，Dialog 自带的"点外部关闭"用不上。
-                    // Main 阶段 + requireUnconsumed：按在卡片 / 选项上会被子控件消费，不会误关。
-                    .pointerInput(Unit) {
-                        awaitPointerEventScope {
-                            while (true) {
-                                awaitFirstDown(
-                                    requireUnconsumed = true,
-                                    pass = PointerEventPass.Main,
-                                )
-                                manageTarget = null
-                            }
-                        }
-                    },
-                contentAlignment = Alignment.Center,
-            ) {
-                Surface(
-                    modifier = Modifier.width(300.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    tonalElevation = 6.dp,
-                    shadowElevation = 6.dp,
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        QuickWheelManageAction(
-                            label = stringResource(R.string.quick_wheel_rename),
-                            onClick = {
-                                renameText = target.name
-                                renameTarget = target
-                                manageTarget = null
-                            },
-                        )
-                        QuickWheelManageAction(
-                            label = stringResource(R.string.quick_wheel_duplicate),
-                            enabled = wheels.size < QuickWheel.MAX_WHEELS,
-                            onClick = {
-                                duplicateWheel(target, copyName)
-                                manageTarget = null
-                            },
-                        )
-                        QuickWheelManageAction(
-                            label = stringResource(R.string.quick_wheel_move_up),
-                            enabled = currentIndex > 0,
-                            onClick = {
-                                moveWheel(target, -1)
-                                manageTarget = null
-                            },
-                        )
-                        QuickWheelManageAction(
-                            label = stringResource(R.string.quick_wheel_move_down),
-                            enabled = currentIndex in 0 until wheels.lastIndex,
-                            onClick = {
-                                moveWheel(target, 1)
-                                manageTarget = null
-                            },
-                        )
-                        QuickWheelManageAction(
-                            label = stringResource(R.string.quick_wheel_delete),
-                            destructive = true,
-                            onClick = {
-                                onUpdateWheels(wheels.filterNot { it.id == target.id })
-                                manageTarget = null
+                            onLongClick = { anchor ->
+                                menuAnchor = anchor
+                                menuTarget = wheel
                             },
                         )
                     }
@@ -294,32 +227,36 @@ fun QuickWheelListScreen(
         }
     }
 
-    // show 绑状态、对话框常驻组合，关闭时才有退出动画。
-    val renamingWheel = renameTarget
-    MiuixFormDialog(
-        show = renamingWheel != null,
-        onDismissRequest = { renameTarget = null },
-        title = stringResource(R.string.quick_wheel_rename),
-        confirmText = stringResource(R.string.quick_wheel_done),
-        confirmEnabled = renameText.isNotBlank(),
-        onConfirm = {
-            renamingWheel?.let { target ->
-                onUpdateWheels(
-                    wheels.map { if (it.id == target.id) it.copy(name = renameText) else it },
-                )
-            }
-            renameTarget = null
-        },
-        dismissText = stringResource(R.string.cancel),
-        dismissOnConfirm = false,
-    ) {
-        MiuixLabeledTextField(
-            value = renameText,
-            onValueChange = { renameText = it },
-            label = stringResource(R.string.quick_wheel_name_hint),
-            singleLine = true,
-            useLabelAsPlaceholder = false,
-            modifier = Modifier.fillMaxWidth(),
+    // 长按菜单：锚在手指按下位置的 miuix 玻璃下拉。保留最后一次目标/锚点，
+    // 关闭时先播完退场动画再移除（否则会瞬间消失）。
+    val shownMenuTarget = menuTarget ?: lastMenuTarget
+    if (menuTarget != null) lastMenuTarget = menuTarget
+    val shownMenuAnchor = menuAnchor
+    if (shownMenuTarget != null && shownMenuAnchor != null) {
+        val target = shownMenuTarget
+        val copyName = stringResource(
+            R.string.quick_wheel_duplicate_name,
+            target.name.ifBlank { stringResource(R.string.quick_wheel_label_fallback) },
+        )
+        MiuixGlassDropdownMenu(
+            expanded = menuTarget != null,
+            onDismissRequest = { menuTarget = null },
+            anchorBounds = shownMenuAnchor,
+            items = listOf(
+                DropdownItem(
+                    text = stringResource(R.string.quick_wheel_edit),
+                    onClick = { onOpenWheel(target.id) },
+                ),
+                DropdownItem(
+                    text = stringResource(R.string.quick_wheel_duplicate),
+                    enabled = displayWheels.size < QuickWheel.MAX_WHEELS,
+                    onClick = { duplicateWheel(target, copyName) },
+                ),
+                DropdownItem(
+                    text = stringResource(R.string.quick_wheel_delete),
+                    onClick = { onUpdateWheels(displayWheels.filterNot { it.id == target.id }) },
+                ),
+            ),
         )
     }
 }
@@ -328,12 +265,37 @@ fun QuickWheelListScreen(
 @Composable
 private fun QuickWheelRow(
     wheel: QuickWheel,
+    enabled: Boolean,
     onClick: () -> Unit,
+    onLongClick: (anchor: Rect) -> Unit,
 ) {
+    var rowBounds by remember { mutableStateOf(Rect.Zero) }
+    var pressPosition by remember { mutableStateOf(Offset.Zero) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .onGloballyPositioned { rowBounds = it.boundsInWindow() }
+            // 只被动记录按下点（不消费事件），点击/长按照旧交给 combinedClickable。
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        if (event.type == PointerEventType.Press) {
+                            event.changes.firstOrNull()?.let { pressPosition = it.position }
+                        }
+                    }
+                }
+            }
+            // 正常态：单击进配置，长按弹管理菜单；编辑态整张卡交给拖拽，点击直接禁用。
+            .combinedClickable(
+                enabled = enabled,
+                onClick = onClick,
+                onLongClick = {
+                    val point = rowBounds.topLeft + pressPosition
+                    onLongClick(Rect(point.x, point.y, point.x, point.y))
+                },
+                onLongClickLabel = stringResource(R.string.quick_wheel_manage),
+            )
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         Text(
@@ -347,33 +309,6 @@ private fun QuickWheelRow(
             text = quickWheelSummary(wheel),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-/** 长按管理菜单的一行：整行横向任何位置都可点，文字居中（不再只有文字本身能点）。 */
-@Composable
-private fun QuickWheelManageAction(
-    label: String,
-    enabled: Boolean = true,
-    destructive: Boolean = false,
-    onClick: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = enabled) { onClick() }
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = when {
-                !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-                destructive -> MaterialTheme.colorScheme.error
-                else -> MaterialTheme.colorScheme.onSurface
-            },
         )
     }
 }
