@@ -3035,6 +3035,7 @@
     <string name="shizuku_start_service_hint">Сначала запустите службу Shizuku, затем вернитесь и снова нажмите «Предоставить»</string>
     <string name="shizuku_not_installed">Shizuku не установлен. Установите его и сначала запустите службу</string>
     <string name="quick_launcher_editor_title">Быстрый лаунчер</string>
+    <string name="quick_launcher_editor_slow_hint">Панель ещё не загрузилась. Вернитесь назад и откройте её снова.</string>
     <string name="honeycomb_launcher_editor_title">Сотовый лаунчер</string>
     <string name="honeycomb_launcher_add">Добавить приложение</string>
     <string name="honeycomb_launcher_editor_desc">Выберите приложения и ярлыки для сотового лаунчера. Используйте непрерывный режим срабатывания: удерживайте и ведите для выбора, отпустите для запуска.</string>
@@ -3122,6 +3123,10 @@
     <string name="quick_launcher_panel_add">Новая панель</string>
     <string name="quick_launcher_panel_limit_reached">Не более %1$d панелей</string>
     <string name="quick_launcher_panel_rename">Переименовать</string>
+    <string name="quick_launcher_panel_edit">Изменить</string>
+    <string name="quick_launcher_panel_manage">Управлять</string>
+    <string name="quick_launcher_panel_sort">Сортировка</string>
+    <string name="quick_launcher_panel_done">Готово</string>
     <string name="quick_launcher_panel_duplicate">Дублировать</string>
     <string name="quick_launcher_panel_delete">Удалить панель</string>
     <string name="quick_launcher_panel_delete_confirm">Жесты, привязанные к этой панели, будут открывать панель по умолчанию.</string>
@@ -5009,6 +5014,9 @@
     <string name="quick_wheel_empty_hint">Нажмите «+» в правом нижнем углу, чтобы создать пользовательское колесо</string>
     <string name="quick_wheel_create">Новое колесо</string>
     <string name="quick_wheel_rename">Переименовать</string>
+    <string name="quick_wheel_edit">Изменить</string>
+    <string name="quick_wheel_manage">Управлять</string>
+    <string name="quick_wheel_sort">Сортировка</string>
     <string name="quick_wheel_duplicate">Дублировать</string>
     <string name="quick_wheel_duplicate_name">Копия %1$s</string>
     <string name="quick_wheel_delete">Удалить</string>
@@ -5447,6 +5455,8 @@
 <string name="overlay_vertical_gloss_title">Вертикальный блик сверху</string>
 <string name="pick_result_blur_mode_desc">Настраивает режим размытия панелей выделения и распознавания текста</string>
 <string name="pick_result_blur_mode_title">Размытие панели выбора слов</string>
+<string name="pick_result_more_actions">Другие действия</string>
+<string name="pick_result_translate_target_title">Перевести на…</string>
 <string name="search_panel_app_icon_shape_title">Форма значков приложений</string>
 <string name="search_panel_blur_mode_desc">Управляет размытием в интерфейсе объединённого поиска</string>
 <string name="search_panel_blur_mode_title">Размытие фона поиска</string>

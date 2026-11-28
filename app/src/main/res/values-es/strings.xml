@@ -2938,6 +2938,7 @@
     <string name="shizuku_start_service_hint">Comience el servicio Shizuku primero, luego regrese y grite Grant de nuevo</string>
     <string name="shizuku_not_installed">Shizuku no está instalado. Instalarlo y comenzar el servicio primero</string>
     <string name="quick_launcher_editor_title">Lanzador rápido</string>
+    <string name="quick_launcher_editor_slow_hint">El panel aún no se ha cargado. Vuelve atrás y ábrelo de nuevo.</string>
     <string name="honeycomb_launcher_editor_title">Lanzador hexagonal</string>
     <string name="honeycomb_launcher_add">Añadir app</string>
     <string name="honeycomb_launcher_editor_desc">Elija aplicaciones y atajos para el lanzador de panal. Utilice el modo de activación continuo: mantener y deslizarse para seleccionar, soltar al lanzamiento.</string>
@@ -3025,6 +3026,10 @@
     <string name="quick_launcher_panel_add">Nuevo panel</string>
     <string name="quick_launcher_panel_limit_reached">Máximo %1$d paneles</string>
     <string name="quick_launcher_panel_rename">Renombrar</string>
+    <string name="quick_launcher_panel_edit">Editar</string>
+    <string name="quick_launcher_panel_manage">Administrar</string>
+    <string name="quick_launcher_panel_sort">Ordenar</string>
+    <string name="quick_launcher_panel_done">Listo</string>
     <string name="quick_launcher_panel_duplicate">Duplicar</string>
     <string name="quick_launcher_panel_delete">Suprímase el panel</string>
     <string name="quick_launcher_panel_delete_confirm">Las Gesturas atadas a este panel abrirán el panel predeterminado.</string>
@@ -4891,6 +4896,9 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="quick_wheel_empty_hint">Pulsa “+” en la esquina inferior derecha para crear una rueda personalizada</string>
     <string name="quick_wheel_create">Nueva rueda</string>
     <string name="quick_wheel_rename">Renombrar</string>
+    <string name="quick_wheel_edit">Editar</string>
+    <string name="quick_wheel_manage">Administrar</string>
+    <string name="quick_wheel_sort">Ordenar</string>
     <string name="quick_wheel_duplicate">Duplicar</string>
     <string name="quick_wheel_duplicate_name">Copia %1$s</string>
     <string name="quick_wheel_delete">Eliminar</string>
@@ -5082,6 +5090,11 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="share_sheet_toast_pinned">Se fijó “%1$s”</string>
     <string name="share_sheet_toast_unpinned">Se quitó el anclado de “%1$s”</string>
     <string name="share_sheet_use_system">Ficha de participación del sistema</string>
+    <string name="share_sheet_set_default">Establecer como predeterminado</string>
+    <string name="share_sheet_default_badge">Destino de compartir predeterminado</string>
+    <string name="share_sheet_clear_default">Borrar destino de compartir predeterminado</string>
+    <string name="share_sheet_toast_default_set">Establecido como predeterminado: «%1$s»</string>
+    <string name="share_sheet_toast_default_cleared">Destino de compartir predeterminado borrado</string>
     <string name="share_sheet_settings_title">Panel de acción</string>
     <string name="share_sheet_settings_subtitle">Cuadrícula de participación integrada en lugar de la hoja del sistema</string>
     <string name="share_sheet_hub_subtitle">Panel de rejilla con objetivos fijos</string>
@@ -5422,6 +5435,8 @@ o revocar Root permanente para Shell en APatch.</string>
 <string name="overlay_vertical_gloss_title">Brillo vertical superior</string>
 <string name="pick_result_blur_mode_desc">Ajusta el modo de desenfoque de las capas de selección de texto y OCR</string>
 <string name="pick_result_blur_mode_title">Desenfoque de la capa de selección de palabras</string>
+<string name="pick_result_more_actions">Más acciones</string>
+<string name="pick_result_translate_target_title">Traducir a…</string>
 <string name="search_panel_app_icon_shape_title">Forma de los iconos de aplicaciones</string>
 <string name="search_panel_blur_mode_desc">Controla el desenfoque de la interfaz de búsqueda unificada</string>
 <string name="search_panel_blur_mode_title">Desenfoque del fondo de búsqueda</string>

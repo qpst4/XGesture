@@ -1771,6 +1771,7 @@
     <string name="shizuku_start_service_hint">先に Shizuku サービスを起動し、戻ってから再度「許可」をタップしてください</string>
     <string name="shizuku_not_installed">Shizuku がインストールされていません。インストールしてサービスを起動してください</string>
     <string name="quick_launcher_editor_title">クイックランチャー</string>
+    <string name="quick_launcher_editor_slow_hint">パネルがまだ読み込まれていません。戻ってからもう一度開いてください。</string>
     <string name="honeycomb_launcher_editor_title">ハニカムランチャー</string>
     <string name="honeycomb_launcher_add">アプリを追加</string>
     <string name="honeycomb_launcher_editor_desc">ハニカムランチャー用のアプリとショートカットを選択します。連続トリガーモード：長押ししてスライドで選択、離して起動。</string>
@@ -1859,6 +1860,10 @@
     <string name="quick_launcher_panel_add">新規パネル</string>
     <string name="quick_launcher_panel_limit_reached">パネルは最大 %1$d 個までです</string>
     <string name="quick_launcher_panel_rename">名前を変更</string>
+    <string name="quick_launcher_panel_edit">編集</string>
+    <string name="quick_launcher_panel_manage">管理</string>
+    <string name="quick_launcher_panel_sort">並べ替え</string>
+    <string name="quick_launcher_panel_done">完了</string>
     <string name="quick_launcher_panel_duplicate">複製</string>
     <string name="quick_launcher_panel_delete">パネルを削除</string>
     <string name="quick_launcher_panel_delete_confirm">このパネルに紐づくジェスチャーは、代わりにデフォルトパネルを開きます。</string>
@@ -4883,6 +4888,9 @@
     <string name="quick_wheel_empty_hint">右下の「+」をタップしてカスタムホイールを作成します</string>
     <string name="quick_wheel_create">新しいホイール</string>
     <string name="quick_wheel_rename">名前を変更</string>
+    <string name="quick_wheel_edit">編集</string>
+    <string name="quick_wheel_manage">管理</string>
+    <string name="quick_wheel_sort">並べ替え</string>
     <string name="quick_wheel_duplicate">複製</string>
     <string name="quick_wheel_duplicate_name">%1$s のコピー</string>
     <string name="quick_wheel_delete">削除</string>
@@ -5415,6 +5423,8 @@
 <string name="overlay_vertical_gloss_title">上部の縦方向の光沢</string>
 <string name="pick_result_blur_mode_desc">テキスト選択と OCR のオーバーレイのぼかしモードを調整します</string>
 <string name="pick_result_blur_mode_title">単語選択パネルのぼかし</string>
+<string name="pick_result_more_actions">その他の操作</string>
+<string name="pick_result_translate_target_title">翻訳先…</string>
 <string name="search_panel_app_icon_shape_title">アプリアイコンの形状</string>
 <string name="search_panel_blur_mode_desc">統合検索画面のぼかしを調整します</string>
 <string name="search_panel_blur_mode_title">検索画面の背景のぼかし</string>

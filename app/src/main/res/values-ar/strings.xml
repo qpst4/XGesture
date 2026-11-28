@@ -1760,6 +1760,7 @@
     <string name="shizuku_start_service_hint">يرجى تشغيل الخدمة أولاً في Shizuku، ثم العودة والنقر على التفويض</string>
     <string name="shizuku_not_installed">لم يتم اكتشاف Shizuku، يرجى تثبيته وتشغيل الخدمة فيه أولاً</string>
     <string name="quick_launcher_editor_title">المشغل السريع</string>
+    <string name="quick_launcher_editor_slow_hint">لم تُحمَّل اللوحة بعد. ارجع وافتحها من جديد.</string>
     <string name="honeycomb_launcher_editor_title">مشغل خلية النحل</string>
     <string name="honeycomb_launcher_add">إضافة تطبيق</string>
     <string name="honeycomb_launcher_editor_desc">تكوين التطبيقات والاختصارات المعروضة في مشغل خلية النحل. يُنصح بتعيين وضع تشغيل الإيماءة على «التشغيل المستمر»، اضغط واسحب للاختيار، أفلت للتشغيل.</string>
@@ -1848,6 +1849,10 @@
     <string name="quick_launcher_panel_add">لوحة جديدة</string>
     <string name="quick_launcher_panel_limit_reached">الحد الأقصى %1$d لوحات</string>
     <string name="quick_launcher_panel_rename">إعادة التسمية</string>
+    <string name="quick_launcher_panel_edit">تحرير</string>
+    <string name="quick_launcher_panel_manage">إدارة</string>
+    <string name="quick_launcher_panel_sort">فرز</string>
+    <string name="quick_launcher_panel_done">تم</string>
     <string name="quick_launcher_panel_duplicate">نسخ</string>
     <string name="quick_launcher_panel_delete">حذف اللوحة</string>
     <string name="quick_launcher_panel_delete_confirm">بعد الحذف، سيتم تغيير الإيماءات المرتبطة بهذه اللوحة لفتح اللوحة الافتراضية.</string>
@@ -4887,6 +4892,9 @@
     <string name="quick_wheel_empty_hint">انقر على «+» في الزاوية السفلية لإنشاء عجلة مخصّصة</string>
     <string name="quick_wheel_create">عجلة جديدة</string>
     <string name="quick_wheel_rename">إعادة تسمية</string>
+    <string name="quick_wheel_edit">تحرير</string>
+    <string name="quick_wheel_manage">إدارة</string>
+    <string name="quick_wheel_sort">فرز</string>
     <string name="quick_wheel_duplicate">تكرار</string>
     <string name="quick_wheel_duplicate_name">نسخة من %1$s</string>
     <string name="quick_wheel_delete">حذف</string>
@@ -5419,6 +5427,8 @@
 <string name="overlay_vertical_gloss_title">لمعان رأسي من الأعلى</string>
 <string name="pick_result_blur_mode_desc">يضبط وضع التمويه لواجهات تحديد النص والتعرّف الضوئي على الحروف</string>
 <string name="pick_result_blur_mode_title">تمويه لوحة تحديد الكلمات</string>
+<string name="pick_result_more_actions">مزيد من الإجراءات</string>
+<string name="pick_result_translate_target_title">ترجمة إلى…</string>
 <string name="search_panel_app_icon_shape_title">شكل أيقونات التطبيقات</string>
 <string name="search_panel_blur_mode_desc">يضبط التمويه في واجهة البحث الموحّد</string>
 <string name="search_panel_blur_mode_title">تمويه خلفية البحث</string>
