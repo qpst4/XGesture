@@ -11,15 +11,20 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,8 +33,10 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateSet
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.nav.core.NavBackStack
 import com.slideindex.app.MainActivity
 import com.slideindex.app.di.AppDependencies
@@ -64,7 +71,19 @@ internal fun MainTabPagerHost(
     permissionStates: NavPermissionStates,
     swipeDismissEnabled: Boolean,
     floatingPointerAreaPreviewEnabledState: MutableState<Boolean>,
-    rootBottomContentPadding: Dp,
+    /**
+     * 把底栏实测出的「内容需要让开的高度」回传给宿主，宿主用它算 `rootBottomContentPadding`。
+     *
+     * 底栏是 [Scaffold] 的 `bottomBar`，真实高度由 Scaffold 量，**不要再写死常量**：
+     * miuix `GlassNavigationBar` 的高度会随字号涨，Mishka 液态玻璃的胶囊高度也随
+     * label 显隐切换（62/56dp），任何静态数字都会在某个场景下不够或过量。
+     */
+    onBottomBarClearanceChange: (Dp) -> Unit,
+    /**
+     * snackbar 槽：交给 [Scaffold] 摆位，它会按**底栏实测高度**把 snackbar 放到胶囊上沿
+     * （见 miuix `Scaffold.kt` 的 `snackbarOffsetFromBottom`），不需要任何手写 bottom padding。
+     */
+    snackbarHost: @Composable () -> Unit = {},
     bottomNavReselectCounts: Map<MainBottomNavDestination, Int>,
     hazeState: HazeState,
     bottomNavUsesHaze: Boolean,
@@ -138,6 +157,7 @@ internal fun MainTabPagerHost(
     // 对齐 Mishka MainPage：外层 Scaffold 固定铺 background，pager 边缘 overscroll 不会露底。
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        snackbarHost = snackbarHost,
         bottomBar = {
             AnimatedVisibility(
                 visible = isRootDestination,
@@ -183,7 +203,17 @@ internal fun MainTabPagerHost(
                 }
             }
         },
-    ) { _ ->
+    ) { innerPadding ->
+        // 底栏是 Scaffold 的 bottomBar：存在 bottomBar 时 `innerPadding.bottom` 就是它的**实测高度**
+        // （MiuixScaffold 不再叠加 contentWindowInsets，见 Scaffold KDoc：topBar/bottomBar 自己负责 insets）。
+        // 页面自己的 Scaffold 已经让开了 systemBars 底部，所以这里只取「底栏高出系统栏的那一截」，
+        // 否则两侧各让一次，页面底部会空出一整条。
+        val density = LocalDensity.current
+        val systemBottom = with(density) {
+            WindowInsets.systemBars.union(WindowInsets.displayCutout).getBottom(density).toDp()
+        }
+        val barClearance = (innerPadding.calculateBottomPadding() - systemBottom).coerceAtLeast(0.dp)
+        SideEffect { onBottomBarClearanceChange(barClearance) }
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -213,7 +243,7 @@ internal fun MainTabPagerHost(
                     permissionStates = permissionStates,
                     swipeDismissEnabled = swipeDismissEnabled,
                     floatingPointerAreaPreviewEnabledState = floatingPointerAreaPreviewEnabledState,
-                    rootBottomContentPadding = rootBottomContentPadding,
+                    rootBottomContentPadding = barClearance,
                     bottomNavReselectCount = bottomNavReselectCounts[destination] ?: 0,
                     hazeState = hazeState,
                     bottomNavUsesHaze = bottomNavUsesHaze,

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.draw.clipToBounds
@@ -81,8 +82,6 @@ import com.slideindex.app.ui.MainBottomNavHorizontalPadding
 import com.slideindex.app.ui.MainBottomNavOuterPadding
 import com.slideindex.app.ui.mainAppPrefersNavigationRail
 import com.slideindex.app.ui.mainAppRootBottomContentPadding
-import com.slideindex.app.ui.MainMiuixBottomNavOuterPadding
-import com.slideindex.app.ui.MainFloatingNavBarBottomOffset
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.slideindex.app.update.UpdateHost
@@ -91,7 +90,7 @@ import com.slideindex.app.ui.OcrEnginePackMigrationHost
 import com.slideindex.app.ui.OnboardingScreen
 import com.slideindex.app.util.PermissionHelper
 import com.slideindex.app.ui.compose.LocalAppDependencies
-import com.slideindex.app.ui.feedback.UserMessageSnackbarHost
+import com.slideindex.app.ui.feedback.UserMessageBusCollector
 import com.slideindex.app.ui.miuix.theme.ModuleTheme
 import com.slideindex.app.ui.miuix.theme.toModuleThemeSettings
 import androidx.navigationevent.NavigationEventInfo
@@ -245,12 +244,21 @@ fun MainNavHost(
     val showBottomNavLabels = BottomNavMode.fromId(
         overlayUiSettings.bottomNavModeId,
     ).showLabels
-    val rootBottomContentPadding = mainAppRootBottomContentPadding(
+    // pager 风格的底栏是 Scaffold.bottomBar，真实高度由它量出来再回传（见 MainTabPagerHost）：
+    // miuix 玻璃底栏会随字号长高、Mishka 液态玻璃在 label 显隐时会换高度，写死常量必然有一头不对。
+    // 实测值优先；未测量到（首帧 / 非 pager 样式）才退回常量表。
+    var pagerBottomBarClearance by remember { mutableStateOf<Dp?>(null) }
+    val fallbackBottomContentPadding = mainAppRootBottomContentPadding(
         prefersNavigationRail = showSideNavRail,
         isRootDestination = isRootDestination,
         bottomNavStyle = effectiveBottomNavStyle,
         showBottomNavLabels = showBottomNavLabels,
     )
+    val rootBottomContentPadding = if (usePagerBottomNav && isRootDestination) {
+        pagerBottomBarClearance ?: fallbackBottomContentPadding
+    } else {
+        fallbackBottomContentPadding
+    }
 
     SideEffect {
         if (initialNavRoute?.startsWith(MainActivity.NAV_ROUTE_ACTION_DETAIL_PREFIX) == true) {
@@ -399,13 +407,16 @@ fun MainNavHost(
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
+    // 消息桥接只留一份，渲染位置随底栏样式换宿主（见下方 snackbarHost 分支）。
+    UserMessageBusCollector(
+        userMessageBus = deps.userMessageBus,
+        snackbarHostState = snackbarHostState,
+    )
     val updateViewModel: UpdateViewModel = hiltViewModel(activity)
+    // pager 样式的 snackbar 由 Scaffold 的 snackbarHost 槽摆位（miuix 按底栏实测高度算，gap 为 0），
+    // 这里的 padding 只服务 CLASSIC / 侧栏这类浮层底栏。
     val snackbarBottomPadding = when {
         showSideNavRail -> MainBottomNavOuterPadding
-        isRootDestination && useLiquidGlassBottomNav ->
-            rootBottomContentPadding + MainMiuixBottomNavOuterPadding
-        isRootDestination && useFloatingNavBottomNav ->
-            rootBottomContentPadding + MainFloatingNavBarBottomOffset
         isRootDestination -> rootBottomContentPadding + MainBottomNavOuterPadding
         else -> 16.dp
     }
@@ -485,7 +496,8 @@ fun MainNavHost(
                                     permissionStates = permissionStates,
                                     swipeDismissEnabled = homeMainSettings.swipeDismissEnabled,
                                     floatingPointerAreaPreviewEnabledState = floatingPointerAreaPreviewEnabledState,
-                                    rootBottomContentPadding = rootBottomContentPadding,
+                                    onBottomBarClearanceChange = { pagerBottomBarClearance = it },
+                                    snackbarHost = { SnackbarHost(state = snackbarHostState) },
                                     bottomNavReselectCounts = bottomNavReselectCounts,
                                     hazeState = hazeState,
                                     bottomNavUsesHaze = bottomNavUsesHaze,
@@ -615,14 +627,17 @@ fun MainNavHost(
                         )
                     }
                 }
-                UserMessageSnackbarHost(
-                    userMessageBus = deps.userMessageBus,
-                    snackbarHostState = snackbarHostState,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .padding(bottom = snackbarBottomPadding),
-                )
+                if (!usePagerBottomNav) {
+                    // pager 样式的由 MainTabPagerHost 的 Scaffold.snackbarHost 槽摆放，这里只兜住
+                    // CLASSIC / 侧栏：它们没有 Scaffold bottomBar，只能手算避让。
+                    SnackbarHost(
+                        state = snackbarHostState,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .navigationBarsPadding()
+                            .padding(bottom = snackbarBottomPadding),
+                    )
+                }
                 val globalNavContext = remember(
                     activeBackStack,
                     rootBottomContentPadding,

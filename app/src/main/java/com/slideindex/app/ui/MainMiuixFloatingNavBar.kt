@@ -24,11 +24,6 @@ import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.glass.GlassNavigationBar
 import top.yukonga.miuix.kmp.glass.GlassNavigationItem
 
-/** Miuix 官方浮动底栏内容区留白（栏高 + 底部悬浮间距）。 */
-val MainFloatingNavBarHeight = 52.dp
-val MainFloatingNavBarBottomOffset = 26.dp
-val MainFloatingNavBarContentClearance = MainFloatingNavBarHeight + MainFloatingNavBarBottomOffset
-
 /**
  * Miuix 官方 OS4 玻璃底栏（0.9.5 的 `GlassNavigationBar`）。
  *

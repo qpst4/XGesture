@@ -15,12 +15,6 @@ import com.slideindex.app.ui.theme.LocalAppDarkTheme
 import top.yukonga.miuix.kmp.basic.NavigationItem
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 
-/** WeKit 式液态玻璃底栏高度（含内边距）。 */
-val MainMiuixBottomNavBarHeight = 64.dp
-
-/** 胶囊与系统导航栏之间的留白，对齐 Mishka IosLiquidGlass（8dp）。 */
-val MainMiuixBottomNavOuterPadding = 8.dp
-
 /**
  * 液态玻璃底栏：内部直接使用 Mishka 的 [IosLiquidGlassNavigationBar] 实现。
  *

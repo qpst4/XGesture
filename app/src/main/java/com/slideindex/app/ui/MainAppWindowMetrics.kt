@@ -31,6 +31,14 @@ fun mainAppPrefersNavigationRail(): Boolean {
 @Composable
 fun mainAppPrefersWideContentLayout(): Boolean = rememberIsWideScreen()
 
+/**
+ * 根级页面的底部内容避让。
+ *
+ * CLASSIC（及侧栏）用常量：底栏是浮在页面之上的兄弟节点，没人替它量高。
+ * LIQUID_GLASS / FLOATING_NAV 走 pager 宿主，底栏是 `Scaffold.bottomBar`，真实高度由
+ * Scaffold 量出来回传（`MainTabPagerHost` → `pagerBottomBarClearance`）。这里返回 0，
+ * 只作为测量到之前那一帧的兜底；**不要再往这里加手写高度**。
+ */
 fun mainAppRootBottomContentPadding(
     prefersNavigationRail: Boolean,
     isRootDestination: Boolean,
@@ -39,9 +47,7 @@ fun mainAppRootBottomContentPadding(
 ): Dp = when {
     !isRootDestination -> 16.dp
     prefersNavigationRail -> MainBottomNavOuterPadding
-    bottomNavStyle == BottomNavStyle.LIQUID_GLASS ->
-        MainMiuixBottomNavBarHeight + MainMiuixBottomNavOuterPadding
-    bottomNavStyle == BottomNavStyle.FLOATING_NAV ->
-        MainFloatingNavBarContentClearance
+    bottomNavStyle == BottomNavStyle.LIQUID_GLASS -> 0.dp
+    bottomNavStyle == BottomNavStyle.FLOATING_NAV -> 0.dp
     else -> classicBottomNavBarHeight(showBottomNavLabels) + MainBottomNavOuterPadding
 }
