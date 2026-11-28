@@ -1991,6 +1991,8 @@
     <string name="float_ball_pick_panel_placement">パネル表示位置</string>
     <string name="float_ball_pick_panel_placement_bottom">画面下部に固定</string>
     <string name="float_ball_pick_panel_placement_center">画面中央</string>
+    <string name="float_ball_pick_panel_placement_custom">カスタム</string>
+    <string name="float_ball_pick_panel_custom_bottom_inset">画面下部からの距離</string>
     <string name="float_ball_pick_search_grid_state_title">検索バーの展開方式</string>
     <string name="float_ball_pick_search_grid_state_desc">パネル表示時の検索エンジンエリアの初期表示状態を制御します</string>
     <string name="float_ball_pick_search_grid_state_remember">記憶</string>

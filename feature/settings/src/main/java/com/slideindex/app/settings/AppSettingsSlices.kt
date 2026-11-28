@@ -319,8 +319,10 @@ data class FloatBallSettings(
     val floatBallPickTextFirstPanel: Boolean = false,
     /** Pick panel presentation style: INTEGRATED_SCROLL vs TAB_PAGED. */
     val floatBallPickPanelStyle: PickResultPanelStyle = PickResultPanelStyle.TAB_PAGED,
-    /** 取词面板在屏幕上的落位方式：贴底（默认）或屏幕中间。 */
+    /** 取词面板在屏幕上的落位方式：贴底（默认）、屏幕中间或自定义。 */
     val floatBallPickPanelPlacement: PickResultPanelPlacement = PickResultPanelPlacement.BOTTOM_DOCKED,
+    /** 自定义落位：面板底边距屏幕底部的间距（dp），0 = 等同贴底。 */
+    val floatBallPickPanelCustomBottomInsetDp: Float = 0f,
     /** Pick panel: default search grid display state (REMEMBER_LAST, ALWAYS_EXPANDED, ALWAYS_COLLAPSED). */
     val floatBallPickSearchGridDefaultState: PickResultSearchGridDefaultState = PickResultSearchGridDefaultState.REMEMBER_LAST,
     /** Pick panel: last search grid expanded state for REMEMBER_LAST mode. */

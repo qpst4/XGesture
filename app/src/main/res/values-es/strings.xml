@@ -1139,6 +1139,8 @@
     <string name="float_ball_pick_panel_placement">Posición del Grupo</string>
     <string name="float_ball_pick_panel_placement_bottom">Anclado abajo</string>
     <string name="float_ball_pick_panel_placement_center">Centro de pantalla</string>
+    <string name="float_ball_pick_panel_placement_custom">Personalizado</string>
+    <string name="float_ball_pick_panel_custom_bottom_inset">Distancia desde el borde inferior</string>
     <string name="float_ball_pick_search_grid_state_title">Búsqueda barra ampliación modo</string>
     <string name="float_ball_pick_search_grid_state_desc">Controla el estado inicial del área de motores de búsqueda inferior cuando el panel abre</string>
     <string name="float_ball_pick_search_grid_state_remember">Recuerde último estado (Recomendado)</string>

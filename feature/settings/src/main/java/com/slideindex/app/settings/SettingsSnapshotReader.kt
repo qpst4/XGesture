@@ -596,6 +596,12 @@ internal object SettingsSnapshotReader {
             floatBallPickPanelPlacement = PickResultPanelPlacement.fromStorageKey(
                 prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_PANEL_PLACEMENT],
             ),
+            floatBallPickPanelCustomBottomInsetDp =
+                (prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_PANEL_CUSTOM_BOTTOM_INSET_DP] ?: 0f)
+                    .coerceIn(
+                        AppSettings.FLOAT_BALL_PICK_PANEL_CUSTOM_INSET_MIN_DP,
+                        AppSettings.FLOAT_BALL_PICK_PANEL_CUSTOM_INSET_MAX_DP,
+                    ),
             floatBallPickSearchGridDefaultState =
                 PickResultSearchGridDefaultState.fromStorageKey(prefs[SettingsPreferenceKeys.FLOAT_BALL_PICK_SEARCH_GRID_DEFAULT_STATE]),
             floatBallPickSearchGridLastExpanded =

@@ -817,6 +817,10 @@ class ExtensionSettingsViewModel @Inject constructor(
         settingsRepository.setFloatBallPickPanelPlacement(placement)
     }
 
+    fun setFloatBallPickPanelCustomBottomInsetDp(value: Float) = launchSettingsWrite {
+        settingsRepository.setFloatBallPickPanelCustomBottomInsetDp(value)
+    }
+
     fun setFloatBallPickSearchGridDefaultState(state: com.slideindex.app.settings.PickResultSearchGridDefaultState) = launchSettingsWrite {
         settingsRepository.setFloatBallPickSearchGridDefaultState(state)
     }

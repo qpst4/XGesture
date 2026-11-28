@@ -134,13 +134,15 @@ class SettingsModuleRegistryTest {
         // 725 = 709 + 16：全局长按强行拖放 6 个键（`drag_drop_flow_global_press_*`，落 DRAG_DROP）
         //            + 物理 dp 小窗 10 个 `free_window_*_v2` 键（落 FREE_WINDOW）。
         // 747 = 746 + 1：边角轮盘「每圈数量」`corner_gesture_layer_slot_counts`（CORNER_WHEEL）。
-        const val EXPECTED_TOTAL_KEYS = 748
+        // 749 = 748 + 1：取词面板「自定义落位」的底部间距 `float_ball_pick_panel_custom_bottom_inset_dp`（FLOAT_BALL）。
+        const val EXPECTED_TOTAL_KEYS = 749
 
         val EXPECTED_COUNTS: Map<SettingsModule, Int> = mapOf(
             SettingsModule.EDGE_GESTURE to 86,
             SettingsModule.CORNER_WHEEL to 36,
             SettingsModule.QUICK_WHEEL to 2,
-            SettingsModule.FLOAT_BALL to 79,
+            // 80 = 79 + 1：`float_ball_pick_panel_custom_bottom_inset_dp`。
+            SettingsModule.FLOAT_BALL to 80,
             SettingsModule.FLOATING_POINTER to 54,
             SettingsModule.FINGERTIP_RING to 13,
             SettingsModule.QUICK_LAUNCHER to 98,

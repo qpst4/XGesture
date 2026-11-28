@@ -2144,6 +2144,8 @@
     <string name="float_ball_pick_panel_placement">面板显示位置</string>
     <string name="float_ball_pick_panel_placement_bottom">贴底显示</string>
     <string name="float_ball_pick_panel_placement_center">屏幕中间</string>
+    <string name="float_ball_pick_panel_placement_custom">自定义</string>
+    <string name="float_ball_pick_panel_custom_bottom_inset">距屏幕底部</string>
     <string name="float_ball_pick_search_grid_state_title">搜索引擎栏展开方式</string>
     <string name="float_ball_pick_search_grid_state_desc">控制呼出取词面板时底部搜索引擎区域的初始展现形式</string>
     <string name="float_ball_pick_search_grid_state_remember">记住</string>

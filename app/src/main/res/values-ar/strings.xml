@@ -1980,6 +1980,8 @@
     <string name="float_ball_pick_panel_placement">موضع اللوحة</string>
     <string name="float_ball_pick_panel_placement_bottom">ملتصقة بالأسفل</string>
     <string name="float_ball_pick_panel_placement_center">منتصف الشاشة</string>
+    <string name="float_ball_pick_panel_placement_custom">مخصص</string>
+    <string name="float_ball_pick_panel_custom_bottom_inset">المسافة من أسفل الشاشة</string>
     <string name="float_ball_pick_search_grid_state_title">طريقة توسيع شريط البحث</string>
     <string name="float_ball_pick_search_grid_state_desc">الحالة الابتدائية لمنطقة محركات البحث السفلية عند فتح اللوحة</string>
     <string name="float_ball_pick_search_grid_state_remember">تذكر</string>
