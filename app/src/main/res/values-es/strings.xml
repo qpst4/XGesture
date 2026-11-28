@@ -5493,4 +5493,9 @@ o revocar Root permanente para Shell en APatch.</string>
     <string name="quick_launcher_panel_item_count">%1$d elementos</string>
     <string name="quick_launcher_panel_move_down">Bajar</string>
     <string name="quick_launcher_panel_move_up">Subir</string>
+    <!-- 设置搜索（首页顶栏的全局设置搜索） -->
+    <string name="settings_search_hint">Buscar ajustes</string>
+    <string name="settings_search_empty">No hay ajustes coincidentes</string>
+    <string name="settings_search_section_pages">Páginas de ajustes</string>
+    <string name="settings_search_section_rows">Opciones de ajustes</string>
 </resources>

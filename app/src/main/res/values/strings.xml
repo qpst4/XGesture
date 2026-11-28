@@ -5510,4 +5510,9 @@ or revoke permanent Root for Shell in APatch.</string>
     <string name="share_sheet_clear_default">Clear default share target</string>
     <string name="share_sheet_toast_default_set">Set as default: “%1$s”</string>
     <string name="share_sheet_toast_default_cleared">Default share target cleared</string>
+    <!-- 设置搜索（首页顶栏的全局设置搜索） -->
+    <string name="settings_search_hint">Search settings</string>
+    <string name="settings_search_empty">No matching settings</string>
+    <string name="settings_search_section_pages">Settings pages</string>
+    <string name="settings_search_section_rows">Settings items</string>
 </resources>

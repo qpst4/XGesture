@@ -62,6 +62,7 @@ private val navBarSlideSpec = tween<IntOffset>(durationMillis = MainNavTransitio
  */
 @Composable
 internal fun MainTabPagerHost(
+    navigateToSettingsPage: (MainBottomNavDestination, AppNavKey) -> Unit,
     bottomNavStyle: BottomNavStyle,
     currentTab: MainBottomNavDestination,
     visitedTabs: SnapshotStateSet<MainBottomNavDestination>,
@@ -236,6 +237,7 @@ internal fun MainTabPagerHost(
                 val destination = MainBottomNavDestination.entries[page]
                 if (destination !in visitedTabs) return@HorizontalPager
                 MainTabNavStackSingle(
+                    navigateToSettingsPage = navigateToSettingsPage,
                     destination = destination,
                     backStack = backStacks[destination]!!,
                     activity = activity,

@@ -5485,4 +5485,9 @@
     <string name="quick_launcher_panel_item_count">%1$d عناصر</string>
     <string name="quick_launcher_panel_move_down">تحريك لأسفل</string>
     <string name="quick_launcher_panel_move_up">تحريك لأعلى</string>
+    <!-- 设置搜索（首页顶栏的全局设置搜索） -->
+    <string name="settings_search_hint">ابحث في الإعدادات</string>
+    <string name="settings_search_empty">لا توجد إعدادات مطابقة</string>
+    <string name="settings_search_section_pages">صفحات الإعدادات</string>
+    <string name="settings_search_section_rows">عناصر الإعدادات</string>
 </resources>

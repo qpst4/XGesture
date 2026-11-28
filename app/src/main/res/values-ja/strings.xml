@@ -5481,4 +5481,9 @@
     <string name="quick_launcher_panel_item_count">%1$d 個の項目</string>
     <string name="quick_launcher_panel_move_down">下へ移動</string>
     <string name="quick_launcher_panel_move_up">上へ移動</string>
+    <!-- 设置搜索（首页顶栏的全局设置搜索） -->
+    <string name="settings_search_hint">設定を検索</string>
+    <string name="settings_search_empty">一致する設定がありません</string>
+    <string name="settings_search_section_pages">設定ページ</string>
+    <string name="settings_search_section_rows">設定項目</string>
 </resources>

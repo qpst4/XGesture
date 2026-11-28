@@ -5506,4 +5506,9 @@ adb 模式应返回 uid=2000。
     <string name="trigger_passthrough_desc">从此范围开始的滑动交给当前应用。需要 LSPosed 模块。</string>
     <string name="trigger_passthrough_module_checking">正在检测 LSPosed 模块状态…</string>
     <string name="trigger_passthrough_module_inactive">LSPosed 模块未生效；关闭后恢复原手势。</string>
+    <!-- 设置搜索（首页顶栏的全局设置搜索） -->
+    <string name="settings_search_hint">搜索设置项</string>
+    <string name="settings_search_empty">没有找到匹配的设置项</string>
+    <string name="settings_search_section_pages">设置页面</string>
+    <string name="settings_search_section_rows">设置项</string>
 </resources>

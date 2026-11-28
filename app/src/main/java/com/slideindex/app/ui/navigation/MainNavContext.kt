@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import top.yukonga.miuix.kmp.nav.core.NavBackStack
 import com.slideindex.app.MainActivity
 import com.slideindex.app.R
+import com.slideindex.app.ui.MainBottomNavDestination
 import com.slideindex.app.clipboard.ClipboardPermissionHelper
 import com.slideindex.app.di.AppDependencies
 import com.slideindex.app.overlay.LayoutPreviewContent
@@ -42,6 +43,13 @@ class MainNavContext(
     val bottomNavReselectCount: Int = 0,
     val onBottomNavBlurPreviewChange: (Float) -> Unit = {},
     val onBottomNavBlurPreviewStop: () -> Unit = {},
+    /**
+     * 跨 tab 跳页（设置搜索用）：先切到 [tab] 再把它压进该 tab 的返回栈。
+     *
+     * 不能直接用 [navigate]：每个 tab 只注册自己那批路由，往当前栈压一个别 tab 的路由会让
+     * `NavDisplay` 抛 `No entry … registered for`。实现见 `MainNavHost`。
+     */
+    val navigateToSettingsPage: (MainBottomNavDestination, AppNavKey) -> Unit = { _, _ -> },
 ) {
     @Composable
     fun collectAppSettings(): AppSettings {

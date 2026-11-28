@@ -228,6 +228,7 @@ fun NavEntryBuilder.homeNavEntries(ctx: MainNavContext) {
             },
             bottomContentPadding = ctx.rootBottomContentPadding,
             bottomNavReselectCount = ctx.bottomNavReselectCount,
+            onNavigateSettingsPage = { tab, key -> ctx.navigateToSettingsPage(tab, key) },
         )
     }
 

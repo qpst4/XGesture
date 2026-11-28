@@ -346,15 +346,25 @@ fun MiuixHubScaffold(
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
     bottomContentPadding: Dp = 0.dp,
+    /** 顶栏右侧动作（首页放全局搜索入口）；其余 Hub 页面不传即保持空槽。 */
+    actions: @Composable RowScope.() -> Unit = {},
+    /** 盖在整页之上的浮层（首页的设置搜索层）。 */
+    overlay: @Composable BoxScope.() -> Unit = {},
     content: LazyListScope.() -> Unit,
 ) {
-    MiuixListScaffold(
-        title = title,
-        modifier = modifier,
-        listState = listState,
-        bottomContentPadding = 8.dp + bottomContentPadding,
-        content = content,
-    )
+    // 浮层必须画在 Scaffold 之外、同一个 Box 里：`Scaffold` 的 topBar 是后画的，
+    // 放进 content 里的浮层会被顶栏压住。
+    Box(modifier = modifier) {
+        MiuixListScaffold(
+            title = title,
+            modifier = Modifier.fillMaxSize(),
+            listState = listState,
+            actions = actions,
+            bottomContentPadding = 8.dp + bottomContentPadding,
+            content = content,
+        )
+        overlay()
+    }
 }
 
 @Composable

@@ -1,11 +1,16 @@
 package com.slideindex.app.ui
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
@@ -18,7 +23,10 @@ import com.slideindex.app.settings.KeyboardTriggerBehavior
 import com.slideindex.app.settings.PrivilegeMode
 import com.slideindex.app.ui.animationstyle.GestureAnimationSettingsRows
 import com.slideindex.app.ui.miuix.MiuixHubScaffold
+import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import com.slideindex.app.ui.miuix.groupedCardItems
+import com.slideindex.app.ui.navigation.AppNavKey
+import com.slideindex.app.ui.search.SettingsSearchOverlay
 import com.slideindex.app.ui.settings.components.LazySettingsItem
 import com.slideindex.app.ui.settings.components.SETTINGS_SLIDER_PERCENT_KEY_POINTS_100
 import com.slideindex.app.ui.settings.components.SettingExpandableDropdownRow
@@ -28,6 +36,9 @@ import com.slideindex.app.ui.settings.components.SettingsCardScopeContent
 import com.slideindex.app.ui.settings.components.SettingsSliderRow
 import com.slideindex.app.ui.settings.components.settingsCardItem
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.glass.Search
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -82,10 +93,14 @@ fun MainScreen(
     onKeyboardTriggerNarrowPercentChange: (Int) -> Unit = {},
     bottomContentPadding: Dp = 0.dp,
     bottomNavReselectCount: Int = 0,
+    /** 全局设置搜索：命中后跳到目标页（跨 tab 的栈切换由宿主处理）。 */
+    onNavigateSettingsPage: (MainBottomNavDestination, AppNavKey) -> Unit = { _, _ -> },
 ) {
     val gestureActive = settings.serviceEnabled && accessibilityGranted && notificationGranted
     val gestureSwitchChecked = gestureActive
     val listState = rememberLazyListState()
+    // 全局设置搜索：入口在顶栏，结果层盖在整页之上（见 MiuixListScaffold 的 overlay 槽）。
+    var settingsSearchExpanded by remember { mutableStateOf(false) }
     BottomNavReselectScrollEffect(
         reselectCount = bottomNavReselectCount,
         listState = listState,
@@ -175,6 +190,29 @@ fun MainScreen(
         modifier = Modifier.fillMaxSize(),
         listState = listState,
         bottomContentPadding = bottomContentPadding,
+        actions = {
+            MiuixTopBarIconButton(onClick = { settingsSearchExpanded = true }) {
+                Icon(
+                    imageVector = MiuixIcons.Glass.Search,
+                    contentDescription = stringResource(R.string.settings_search_hint),
+                    modifier = Modifier.size(28.dp),
+                    tint = MiuixTheme.colorScheme.onBackground,
+                )
+            }
+        },
+        overlay = {
+            SettingsSearchOverlay(
+                expanded = settingsSearchExpanded,
+                onDismissRequest = { settingsSearchExpanded = false },
+                onOpenPage = { page ->
+                    // 先收覆盖层，再在同一帧把页面推上去：覆盖层收起是 400ms 独立动画，
+                    // 与页面转场同时进行不会打架；原先的 delay 反而会让点击看起来无效。
+                    settingsSearchExpanded = false
+                    onNavigateSettingsPage(page.tab, page.key)
+                },
+                bottomPadding = bottomContentPadding,
+            )
+        },
     ) {
         LazySettingsItem(key = "pending-permissions") {
             if (pendingPermissions.isNotEmpty()) {
@@ -534,3 +572,4 @@ fun SettingsCardScope.PreviousAppBlacklistEntryCard(
         onClick = onClick,
     )
 }
+

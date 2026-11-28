@@ -201,6 +201,27 @@ fun MainNavHost(
         mutableStateSetOf(currentTab)
     }
 
+    /**
+     * 设置搜索的跨 tab 跳页：每个 tab 的 NavDisplay 只注册自己那批路由
+     * （见 registerMainTabNavEntries），所以必须先切 tab 再把目标 key 压进它的栈；
+     * 直接往当前栈压别 tab 的路由会让 miuix-nav 抛 `No entry … registered for`。
+     *
+     * 必须在这里（`backStacks`/`visitedTabs` 就绪之后、各 tab 容器之前）定义：每个 tab
+     * 的 `MainNavContext` 是在 `MainTabNavStackSingle` 里各自 new 的，参数要一路透传下去，
+     * 否则页面拿到的是 `MainNavContext` 的默认空实现，点了什么都不发生。
+     */
+    val navigateToSettingsPage: (MainBottomNavDestination, AppNavKey) -> Unit = remember {
+        { tab: MainBottomNavDestination, key: AppNavKey ->
+            val stack = backStacks.getValue(tab)
+            visitedTabs.add(tab)
+            // 首次合成的 tab 会走 deferred 路径；这里直接落定，底栏指示器才不会停在旧 tab。
+            deferredTabSelection = null
+            savedBottomNavTab = tab.name
+            // 目标页已在栈里时用回退定位，否则会压出一个重复条目；不在栈里才 push。
+            if (key in stack) stack.navigateBackTo(key) else stack.add(key)
+        }
+    }
+
     val floatingPointerAreaPreviewEnabledState = rememberSaveable { mutableStateOf(false) }
     val floatingPointerAreaPreviewEnabled by floatingPointerAreaPreviewEnabledState
     val shellPrefersNavigationRail = mainAppPrefersNavigationRail()
@@ -498,6 +519,7 @@ fun MainNavHost(
                                     floatingPointerAreaPreviewEnabledState = floatingPointerAreaPreviewEnabledState,
                                     onBottomBarClearanceChange = { pagerBottomBarClearance = it },
                                     snackbarHost = { SnackbarHost(state = snackbarHostState) },
+                                    navigateToSettingsPage = navigateToSettingsPage,
                                     bottomNavReselectCounts = bottomNavReselectCounts,
                                     hazeState = hazeState,
                                     bottomNavUsesHaze = bottomNavUsesHaze,
@@ -519,6 +541,7 @@ fun MainNavHost(
                         } else {
                             saveableStateHolder.SaveableStateProvider("stacks") {
                                 MainTabNavStacks(
+                                    navigateToSettingsPage = navigateToSettingsPage,
                                     currentTab = currentTab,
                                     visitedTabs = visitedTabs,
                                     backStacks = backStacks,
@@ -651,6 +674,7 @@ fun MainNavHost(
                         floatingPointerAreaPreviewEnabledState = floatingPointerAreaPreviewEnabledState,
                         rootBottomContentPadding = rootBottomContentPadding,
                         bottomNavReselectCount = bottomNavReselectCounts[currentTab] ?: 0,
+                        navigateToSettingsPage = navigateToSettingsPage,
                     )
                 }
                 UpdateHost(
@@ -675,6 +699,7 @@ fun MainNavHost(
 
 @Composable
 private fun MainTabNavStacks(
+    navigateToSettingsPage: (MainBottomNavDestination, AppNavKey) -> Unit,
     currentTab: MainBottomNavDestination,
     visitedTabs: SnapshotStateSet<MainBottomNavDestination>,
     backStacks: Map<MainBottomNavDestination, NavBackStack>,
@@ -770,6 +795,7 @@ private fun MainTabNavStacks(
                     },
             ) {
                 MainTabNavStackSingle(
+                    navigateToSettingsPage = navigateToSettingsPage,
                     destination = destination,
                     backStack = stack,
                     activity = activity,
@@ -792,6 +818,7 @@ private fun MainTabNavStacks(
 
 @Composable
 internal fun MainTabNavStackSingle(
+    navigateToSettingsPage: (MainBottomNavDestination, AppNavKey) -> Unit,
     destination: MainBottomNavDestination,
     backStack: NavBackStack,
     activity: MainActivity,
@@ -812,6 +839,7 @@ internal fun MainTabNavStackSingle(
         backStack,
         rootBottomContentPadding,
         bottomNavReselectCount,
+        navigateToSettingsPage,
     ) {
         MainNavContext(
             activity = activity,
@@ -823,6 +851,7 @@ internal fun MainTabNavStackSingle(
             bottomNavReselectCount = bottomNavReselectCount,
             onBottomNavBlurPreviewChange = onBottomNavBlurPreviewChange,
             onBottomNavBlurPreviewStop = onBottomNavBlurPreviewStop,
+            navigateToSettingsPage = navigateToSettingsPage,
         )
     }
     val swipeBackDirection = when (LocalLayoutDirection.current) {

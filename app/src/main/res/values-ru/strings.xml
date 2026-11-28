@@ -5513,4 +5513,9 @@
     <string name="quick_launcher_panel_item_count">Элементов: %1$d</string>
     <string name="quick_launcher_panel_move_down">Вниз</string>
     <string name="quick_launcher_panel_move_up">Вверх</string>
+    <!-- 设置搜索（首页顶栏的全局设置搜索） -->
+    <string name="settings_search_hint">Поиск настроек</string>
+    <string name="settings_search_empty">Настройки не найдены</string>
+    <string name="settings_search_section_pages">Страницы настроек</string>
+    <string name="settings_search_section_rows">Пункты настроек</string>
 </resources>
