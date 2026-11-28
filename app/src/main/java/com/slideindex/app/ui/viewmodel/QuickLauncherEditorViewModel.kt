@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.slideindex.app.activity.ActivityShortcut
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.data.AppRepository
-import com.slideindex.app.launcher.QuickLauncherDefaults
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherPanel
 import com.slideindex.app.launcher.QuickLauncherPanelDefaults
@@ -83,7 +82,6 @@ class QuickLauncherEditorViewModel @Inject constructor(
     private val _selection = MutableStateFlow(PanelSelection())
     private val _isGridInteractionActive = MutableStateFlow(false)
     private val _appsByPackage = MutableStateFlow<Map<String, AppInfo>>(emptyMap())
-    private var defaultsSeeded = false
 
     val uiState: StateFlow<QuickLauncherEditorUiState> = combine(
         this.settings,
@@ -138,26 +136,7 @@ class QuickLauncherEditorViewModel @Inject constructor(
                 appRepository.loadApps(force = false)
             }
             _appsByPackage.value = loaded.associateBy { it.packageName }
-            seedDefaultsIfNeeded(loaded)
         }
-    }
-
-    private fun seedDefaultsIfNeeded(apps: List<AppInfo>) {
-        if (defaultsSeeded || apps.isEmpty()) return
-        val state = uiState.value
-        // 首帧的占位状态（isLoading=true）恰好也是「只有一个空面板」，不能据此判断“全新安装”：
-        // 那会把用户已有的面板列表整个覆盖成单个默认面板，属于同一类异步竞态。
-        if (state.isLoading) return
-        val currentPanels = state.panels
-        if (currentPanels.size == 1 && currentPanels.first().items.isEmpty()) {
-            val onlyPanel = currentPanels.first()
-            val effective = QuickLauncherDefaults.effectiveItems(emptyList(), apps)
-            if (effective.isNotEmpty()) {
-                val updated = QuickLauncherPanelMutator.updatePanelItems(currentPanels, onlyPanel.id, effective)
-                setPanels(updated)
-            }
-        }
-        defaultsSeeded = true
     }
 
     fun selectPanel(index: Int) {

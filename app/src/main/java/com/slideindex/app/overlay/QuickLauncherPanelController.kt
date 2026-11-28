@@ -6,7 +6,6 @@ import android.graphics.RectF
 import android.view.MotionEvent
 import com.slideindex.app.data.AppInfo
 import com.slideindex.app.launcher.QuickLauncherGridLogic.moveIndex
-import com.slideindex.app.launcher.QuickLauncherDefaults
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.launcher.QuickLauncherItemType
@@ -91,20 +90,23 @@ internal class QuickLauncherPanelController(
     var itemPageOffset: Int = 0
         internal set
 
-    private var localItems: List<QuickLauncherItem> = emptyList()
-    private var defaultsPersisted = false
+    /**
+     * 编辑 / 拖拽期间的本地副本；`null` 表示"直接显示面板里保存的那份"。
+     *
+     * 用可空而不是空列表：用户把最后一项删掉时，本地副本就是空列表，必须照样算"有本地改动"
+     * 并写回，否则会退回读设置里的旧列表，最后一项看起来又复活了。
+     */
+    private var localItems: List<QuickLauncherItem>? = null
 
     fun reset() {
         editMode = false
         toolbar.reset()
         management.reset()
-        localItems = emptyList()
-        defaultsPersisted = false
+        localItems = null
     }
 
     fun onActivePanelChanged() {
-        localItems = emptyList()
-        defaultsPersisted = false
+        localItems = null
     }
 
     fun setEditMode(enabled: Boolean) {
@@ -113,9 +115,7 @@ internal class QuickLauncherPanelController(
         if (!enabled) {
             management.onEditModeDisabled()
             toolbar.onEditModeDisabled()
-            if (localItems.isNotEmpty()) {
-                persistLocalItems()
-            }
+            persistLocalItems()
         }
         host.invalidate()
     }
@@ -127,32 +127,18 @@ internal class QuickLauncherPanelController(
     fun syncSettings(@Suppress("UNUSED_PARAMETER") settings: AppSettings) {
         if (!host.isQuickLauncherVisible()) return
         if (editMode || management.isDragging()) return
-        localItems = emptyList()
-        defaultsPersisted = false
+        localItems = null
     }
 
-    fun displayItems(settings: AppSettings, panel: QuickLauncherPanel): List<QuickLauncherItem> {
-        if (shouldUseLocalItems(panel)) return localItems
-        return QuickLauncherDefaults.effectiveItems(configuredItems(settings, panel), host.apps())
-    }
+    fun displayItems(panel: QuickLauncherPanel): List<QuickLauncherItem> =
+        itemsForDisplay() ?: panel.items
 
-    private fun shouldUseLocalItems(panel: QuickLauncherPanel): Boolean {
-        if (localItems.isEmpty()) return false
-        if (editMode || management.isDragging()) return true
-        return defaultsPersisted && configuredItems(host.settings(), panel).isEmpty()
-    }
+    /** 编辑 / 拖拽期间用本地副本，其余时候面板内容就是设置里保存的那份（没有"空面板自动填充"）。 */
+    private fun itemsForDisplay(): List<QuickLauncherItem>? =
+        localItems?.takeIf { editMode || management.isDragging() }
 
     internal fun displayItems(): List<QuickLauncherItem> =
-        displayItems(host.settings(), host.activeQuickLauncherPanel())
-
-    fun ensureDefaultsPersisted(settings: AppSettings) {
-        if (defaultsPersisted || configuredItems(settings, host.activeQuickLauncherPanel()).isNotEmpty()) return
-        val defaults = QuickLauncherDefaults.fromApps(host.apps())
-        if (defaults.isEmpty()) return
-        defaultsPersisted = true
-        localItems = defaults
-        host.onPersist(defaults)
-    }
+        displayItems(host.activeQuickLauncherPanel())
 
     fun shouldShowToolbar(settings: AppSettings): Boolean = toolbar.shouldShowToolbar()
     fun toolbarLayoutMetrics(): ToolbarLayoutMetrics = toolbar.toolbarLayoutMetrics()
@@ -348,14 +334,8 @@ internal class QuickLauncherPanelController(
         host.onFolderItemsUpdated(folderGlobalIndex, updatedChildren)
     }
 
-    internal fun workingItems(): List<QuickLauncherItem> {
-        val panel = host.activeQuickLauncherPanel()
-        if (shouldUseLocalItems(panel)) return localItems
-        return QuickLauncherDefaults.effectiveItems(
-            configuredItems(host.settings(), panel),
-            host.apps()
-        )
-    }
+    internal fun workingItems(): List<QuickLauncherItem> =
+        itemsForDisplay() ?: host.activeQuickLauncherPanel().items
 
     internal fun removeItemAt(pageLocalIndex: Int) {
         val index = itemPageOffset + pageLocalIndex
@@ -388,13 +368,15 @@ internal class QuickLauncherPanelController(
         }
     }
 
+    /**
+     * 写回当前面板的条目。
+     *
+     * 空列表照样写：用户把最后一项删掉后，"面板是空的"必须落盘，否则下次打开会读回旧列表。
+     */
     private fun persistLocalItems() {
-        val items = localItems.ifEmpty { return }
+        val items = localItems ?: return
         host.onPersist(items)
     }
-
-    private fun configuredItems(settings: AppSettings, panel: QuickLauncherPanel): List<QuickLauncherItem> =
-        panel.items
 
     fun collectAccessibilityNodes(context: Context, panelRect: RectF): List<OverlayVirtualNode> =
         toolbar.collectAccessibilityNodes(context, panelRect)

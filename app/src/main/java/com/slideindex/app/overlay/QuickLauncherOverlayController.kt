@@ -985,7 +985,6 @@ internal class QuickLauncherOverlayController(
         quickLauncherEdgePageZone = 0
         quickLauncherEdgeAutoPageSeeded = false
         cancelBlankLongPress()
-        quickLauncherPanelController.ensureDefaultsPersisted(host.settings())
         renderer.prewarm(quickLauncherPrewarmOrder())
         quickLauncherAnchorRawY = quickLauncherAnchorRawY
             ?.takeIf { it > 0f }
@@ -1236,7 +1235,7 @@ internal class QuickLauncherOverlayController(
         quickLauncherColumnsPerPage() * quickLauncherRowsPerPage()
 
     internal fun quickLauncherRootItems(): List<QuickLauncherItem> =
-        quickLauncherPanelController.displayItems(host.settings(), activeQuickLauncherPanel())
+        quickLauncherPanelController.displayItems()
 
     internal fun quickLauncherItemCacheKey(item: QuickLauncherItem): String =
         // 宏会影响「运行宏」条目的图标与名字（标签每次按宏表解析），代次必须进 key，
