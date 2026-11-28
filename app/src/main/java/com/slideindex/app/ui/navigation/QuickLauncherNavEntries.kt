@@ -1,5 +1,6 @@
 package com.slideindex.app.ui.navigation
 
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -10,6 +11,7 @@ import com.slideindex.app.gesture.GestureAction
 import com.slideindex.app.launcher.QuickLauncherItem
 import com.slideindex.app.launcher.QuickLauncherItemCodec
 import com.slideindex.app.launcher.QuickLauncherItemType
+import com.slideindex.app.launcher.QuickLauncherPanel
 import com.slideindex.app.launcher.QuickLauncherPanelDefaults
 import com.slideindex.app.launcher.resolveFolderItems
 import com.slideindex.app.settings.toMinimalAppSettings
@@ -27,12 +29,40 @@ import com.slideindex.app.ui.quicklauncher.QuickLauncherCreateFolderScreen
 import com.slideindex.app.ui.viewmodel.ExtensionSettingsViewModel
 import com.slideindex.app.ui.viewmodel.QuickLauncherEditorViewModel
 
+/**
+ * 刚从列表页新建、还没被改过的面板（返回列表时若仍未改动就回收）。
+ *
+ * 新建是先落盘再进编辑器（编辑器 / 添加页都按 id 读面板），所以只能事后判断：
+ * 名称、条目、行列都和创建时一模一样，就当作没建过。
+ */
+private var provisionalNewPanel: QuickLauncherPanel? = null
+
+private fun discardProvisionalPanelIfUntouched(
+    currentPanels: List<QuickLauncherPanel>,
+    panelId: String,
+    writer: ExtensionSettingsViewModel,
+) {
+    val snapshot = provisionalNewPanel ?: return
+    if (snapshot.id != panelId) return
+    provisionalNewPanel = null
+    val current = currentPanels.firstOrNull { it.id == panelId }
+    if (current == snapshot) {
+        writer.setQuickLauncherPanels(currentPanels.filterNot { it.id == panelId })
+    }
+}
+
 fun NavEntryBuilder.quickLauncherNavEntries(ctx: MainNavContext) {
     hiltEntry<AppNavKey.QuickLauncher> {
         val viewModel: ExtensionSettingsViewModel = hiltViewModel(ctx.activity)
         val gestureSettings by viewModel.gestureSettings.collectAsStateWithLifecycle()
         val settings = gestureSettings.toMinimalAppSettings()
         val panels = QuickLauncherPanelDefaults.effectivePanels(settings.quickLauncherPanels)
+        // 系统返回 / 侧滑可能绕过编辑页的 onBack：回到列表时再兜一次底。
+        LaunchedEffect(Unit) {
+            val snapshot = provisionalNewPanel ?: return@LaunchedEffect
+            if (ctx.backStack.currentAppNavKey() != AppNavKey.QuickLauncher) return@LaunchedEffect
+            discardProvisionalPanelIfUntouched(panels, snapshot.id, viewModel)
+        }
         com.slideindex.app.ui.quicklauncher.QuickLauncherListScreen(
             panels = panels,
             onBack = { ctx.navigateBackTo(AppNavKey.ExtensionHub) },
@@ -44,44 +74,61 @@ fun NavEntryBuilder.quickLauncherNavEntries(ctx: MainNavContext) {
                 )
                 val newPanel = updated?.lastOrNull()
                 if (newPanel != null) {
+                    // 记下新建时的内容：原样返回就回收，改过（条目/名称/行列）才留下。
+                    provisionalNewPanel = newPanel
                     viewModel.setQuickLauncherPanels(updated)
                     ctx.navigate(AppNavKey.QuickLauncherEdit(newPanel.id))
                 }
             },
-            onOpen = { panelId -> ctx.navigate(AppNavKey.QuickLauncherEdit(panelId)) },
-            onRename = { panelId, name ->
-                val panel = panels.firstOrNull { it.id == panelId } ?: return@QuickLauncherListScreen
-                viewModel.setQuickLauncherPanels(
-                    com.slideindex.app.launcher.QuickLauncherPanelMutator.replacePanel(
-                        panels,
-                        panelId,
-                        panel.copy(name = name),
-                    ),
-                )
+            onOpen = { panelId ->
+                provisionalNewPanel = null
+                ctx.navigate(AppNavKey.QuickLauncherEdit(panelId))
+            },
+            // 拖动排序：松手一次写回整份顺序。
+            onReorder = { updated -> viewModel.setQuickLauncherPanels(updated) },
+            onDuplicate = { panelId ->
+                com.slideindex.app.launcher.QuickLauncherPanelMutator.duplicatePanel(panels, panelId)
+                    ?.let(viewModel::setQuickLauncherPanels)
             },
             onDelete = { panelId ->
                 com.slideindex.app.launcher.QuickLauncherPanelMutator.removePanel(panels, panelId)
                     ?.let(viewModel::setQuickLauncherPanels)
-            },
-            onMove = { panelId, delta ->
-                val current = panels.toMutableList()
-                val index = current.indexOfFirst { it.id == panelId }
-                val target = index + delta
-                if (index >= 0 && target in current.indices) {
-                    val panel = current.removeAt(index)
-                    current.add(target, panel)
-                    viewModel.setQuickLauncherPanels(current)
-                }
             },
         )
     }
 
     hiltEntry<AppNavKey.QuickLauncherEdit> { key ->
         val viewModel: QuickLauncherEditorViewModel = hiltViewModel()
+        // 回收写盘用 activity 级 VM：编辑页 entry 的 VM 会随出栈销毁，写盘可能被取消。
+        val listViewModel: ExtensionSettingsViewModel = hiltViewModel(ctx.activity)
+
+        fun discardIfUntouched() {
+            // 从 activity 级设置读当前面板：编辑页 VM 可能已经/即将被销毁。
+            discardProvisionalPanelIfUntouched(
+                currentPanels = listViewModel.settings.value.quickLauncherPanels,
+                panelId = key.panelId,
+                writer = listViewModel,
+            )
+        }
+
+        DisposableEffect(key.panelId) {
+            onDispose {
+                // 只有在编辑页真的出栈时才回收：前进到添加页时它还在栈里，不能误删。
+                val stillInStack = ctx.backStack.any {
+                    it == AppNavKey.QuickLauncherEdit(key.panelId)
+                }
+                if (!stillInStack) discardIfUntouched()
+            }
+        }
+
         QuickLauncherEditorScreen(
             viewModel = viewModel,
             panelId = key.panelId,
-            onBack = { ctx.backStack.removeLastOrNull() },
+            onBack = {
+                // 新建后没做任何修改就返回：别在列表里留下一个没动过的空面板。
+                discardIfUntouched()
+                ctx.backStack.removeLastOrNull()
+            },
             onAdd = { panelId, folderIndex ->
                 ctx.navigate(AppNavKey.QuickLauncherAdd(panelId, folderIndex))
             },

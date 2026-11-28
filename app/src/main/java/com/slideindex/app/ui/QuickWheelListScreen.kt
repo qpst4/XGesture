@@ -13,11 +13,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,14 +42,20 @@ import com.slideindex.app.R
 import com.slideindex.app.overlay.layout.QuickWheelLayoutEngine
 import com.slideindex.app.overlay.layout.QuickWheelShape
 import com.slideindex.app.settings.QuickWheel
+import com.slideindex.app.ui.miuix.LocalMiuixScreenBackdrop
+import com.slideindex.app.ui.miuix.MiuixConfirmDialog
 import com.slideindex.app.ui.miuix.MiuixGlassDropdownMenu
 import com.slideindex.app.ui.miuix.MiuixNavigationBackHandler
+import com.slideindex.app.ui.miuix.MiuixSettingsFabInset
 import com.slideindex.app.ui.miuix.MiuixSettingsScreenScaffold
 import com.slideindex.app.ui.miuix.MiuixTopBarIconButton
 import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.glass.GlassFloatingActionButton
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Ok
 import top.yukonga.miuix.kmp.icon.extended.Sort
+import top.yukonga.miuix.kmp.material.GlassShape
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.util.UUID
 
 /**
@@ -71,6 +76,7 @@ fun QuickWheelListScreen(
     var menuTarget by remember { mutableStateOf<QuickWheel?>(null) }
     var lastMenuTarget by remember { mutableStateOf<QuickWheel?>(null) }
     var menuAnchor by remember { mutableStateOf<Rect?>(null) }
+    var deleteTarget by remember { mutableStateOf<QuickWheel?>(null) }
     // 列表编辑态：顶栏 sort 键进入，进入后才能拖动排序；正常态长按弹管理菜单。
     var editing by rememberSaveable { mutableStateOf(false) }
 
@@ -127,6 +133,9 @@ fun QuickWheelListScreen(
         }
     }
 
+    // FAB 与它的底部预留同时开/关：编辑态藏按钮时，尾部也不该再留一截空白。
+    val showFab = !editing && displayWheels.size < QuickWheel.MAX_WHEELS
+
     MiuixSettingsScreenScaffold(
         title = stringResource(R.string.quick_wheel_title),
         listState = wheelListState,
@@ -143,25 +152,29 @@ fun QuickWheelListScreen(
                     contentDescription = stringResource(
                         if (editing) R.string.quick_wheel_done else R.string.quick_wheel_sort,
                     ),
+                    // 排序态用主色，跟顶栏普通动作键区分开。
+                    tint = if (editing) MiuixTheme.colorScheme.primary else LocalContentColor.current,
                 )
             }
         },
         floatingActionButton = {
-            if (!editing && displayWheels.size < QuickWheel.MAX_WHEELS) {
-                FloatingActionButton(
+            if (showFab) {
+                GlassFloatingActionButton(
                     onClick = onCreate,
-                    modifier = Modifier.padding(20.dp),
-                    shape = RoundedCornerShape(18.dp),
-                    containerColor = QuickWheelAccent,
-                    contentColor = Color.White,
+                    // 列表级背板（FAB 在录制范围外，不会自采样）；模糊不可用时自动退成实心主色圆。
+                    backdrop = LocalMiuixScreenBackdrop.current,
+                    // 保留原来的圆角方块外形（18dp），只是换成玻璃材质。
+                    shape = remember { GlassShape(18.dp) },
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = stringResource(R.string.quick_wheel_create),
+                        tint = MiuixTheme.colorScheme.onPrimary,
                     )
                 }
             }
         },
+        fabInset = if (showFab) MiuixSettingsFabInset else 0.dp,
     ) {
         if (displayWheels.isEmpty()) {
             item(key = "quick-wheel-empty") {
@@ -254,9 +267,27 @@ fun QuickWheelListScreen(
                 ),
                 DropdownItem(
                     text = stringResource(R.string.quick_wheel_delete),
-                    onClick = { onUpdateWheels(displayWheels.filterNot { it.id == target.id }) },
+                    onClick = { deleteTarget = target },
                 ),
             ),
+        )
+    }
+
+    // 删除确认：保留最后一次目标，关闭时先播完退场动画，标题/文案不会先变空。
+    var lastDeleteTarget by remember { mutableStateOf<QuickWheel?>(null) }
+    if (deleteTarget != null) lastDeleteTarget = deleteTarget
+    val deleteShownTarget = deleteTarget ?: lastDeleteTarget
+    if (deleteShownTarget != null) {
+        MiuixConfirmDialog(
+            show = deleteTarget != null,
+            onDismissRequest = { deleteTarget = null },
+            title = stringResource(R.string.quick_wheel_delete),
+            message = stringResource(R.string.quick_wheel_delete_message),
+            confirmText = stringResource(R.string.composite_library_delete),
+            onConfirm = {
+                onUpdateWheels(displayWheels.filterNot { it.id == deleteShownTarget.id })
+            },
+            dismissText = stringResource(android.R.string.cancel),
         )
     }
 }

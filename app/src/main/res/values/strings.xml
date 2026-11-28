@@ -3194,6 +3194,10 @@
     <string name="quick_launcher_panel_add">New panel</string>
     <string name="quick_launcher_panel_limit_reached">At most %1$d panels</string>
     <string name="quick_launcher_panel_rename">Rename</string>
+    <string name="quick_launcher_panel_edit">Edit</string>
+    <string name="quick_launcher_panel_manage">Manage</string>
+    <string name="quick_launcher_panel_sort">Sort</string>
+    <string name="quick_launcher_panel_done">Done</string>
     <string name="quick_launcher_panel_duplicate">Duplicate</string>
     <string name="quick_launcher_panel_delete">Delete panel</string>
     <string name="quick_launcher_panel_delete_confirm">Gestures bound to this panel will open the default panel instead.</string>

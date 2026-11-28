@@ -1928,6 +1928,10 @@
     <string name="quick_launcher_panel_add">新建面板</string>
     <string name="quick_launcher_panel_limit_reached">最多只能创建 %1$d 个面板</string>
     <string name="quick_launcher_panel_rename">重命名</string>
+    <string name="quick_launcher_panel_edit">编辑</string>
+    <string name="quick_launcher_panel_manage">管理</string>
+    <string name="quick_launcher_panel_sort">排序</string>
+    <string name="quick_launcher_panel_done">完成</string>
     <string name="quick_launcher_panel_duplicate">复制</string>
     <string name="quick_launcher_panel_delete">删除面板</string>
     <string name="quick_launcher_panel_delete_confirm">删除后，绑定此面板的手势将改为打开默认面板。</string>
