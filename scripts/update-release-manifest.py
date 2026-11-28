@@ -2,6 +2,9 @@
 """
 Update update.json manifest after release and purge jsDelivr cache.
 Cross-platform, UTF-8 safe script for CI and local usage.
+
+回填后校验远端清单走指数退避重试：发版 bot 推完 update.json 紧接着就查，raw / jsdelivr
+的边缘缓存此时常停在上一版，一次断言会把成功的发版判红（v1.85.0 事故）。
 """
 import argparse
 import json
@@ -142,11 +145,22 @@ def verify_remote_url(
     url: str,
     version: str,
     apk_size: int,
-    retries: int = 1,
-    retry_delay_sec: float = 0.0,
+    attempts: int = 8,
+    initial_delay_sec: float = 5.0,
+    max_delay_sec: float = 60.0,
+    backoff: float = 2.0,
 ) -> None:
+    """Fetch one manifest URL until it matches, with exponential backoff.
+
+    发版 bot 推完 update.json 紧接着就校验，中间只隔十几秒；而 raw.githubusercontent.com
+    与 jsdelivr 的边缘缓存在这段时间里经常还停在上一版（v1.85.0 就是因此把发版流水线判红，
+    本地用同一个 APK 复跑两个源都对）。原来的实现只给 raw 1 次机会、jsdelivr 固定 10s×6，
+    对"刚推完就查"不够稳，所以统一改成指数退避：默认 8 次、5s 起、60s 封顶（约 5 分钟）。
+
+    只在版本/大小不匹配或网络错误时重试；参数可由 CLI 覆盖，方便本地快速复现。
+    """
     last_error: Exception | None = None
-    for attempt in range(1, retries + 1):
+    for attempt in range(1, attempts + 1):
         try:
             req = urllib.request.Request(
                 url,
@@ -164,37 +178,50 @@ def verify_remote_url(
                     raise ValueError(
                         f"Remote apkSize mismatch at {url}: {remote_size} (expected {apk_size})"
                     )
-                print(f"Verified {url} (version={remote_version}, apkSize={remote_size})")
+                if attempt > 1:
+                    print(
+                        f"Verified {url} on attempt {attempt}/{attempts} "
+                        f"(version={remote_version}, apkSize={remote_size})"
+                    )
+                else:
+                    print(f"Verified {url} (version={remote_version}, apkSize={remote_size})")
                 return
         except Exception as e:
             last_error = e
-            if attempt < retries:
+            if attempt < attempts:
+                delay = min(initial_delay_sec * (backoff ** (attempt - 1)), max_delay_sec)
                 print(
-                    f"WARNING: Verify attempt {attempt}/{retries} failed for {url}: {e}",
+                    f"WARNING: Verify attempt {attempt}/{attempts} failed for {url}: {e}; "
+                    f"retrying in {delay:g}s",
                     file=sys.stderr,
                 )
-                time.sleep(retry_delay_sec)
-    print(f"ERROR: Failed to verify {url}: {last_error}", file=sys.stderr)
-    raise last_error
+                time.sleep(delay)
+    print(
+        f"ERROR: Failed to verify {url} after {attempts} attempt(s): {last_error}",
+        file=sys.stderr,
+    )
+    raise last_error  # type: ignore[misc]
 
 
 def verify_remote(
     version: str,
     apk_size: int,
     repo: str = "qpst4/XGesture",
-    jsdelivr_retries: int = 6,
-    jsdelivr_retry_delay_sec: float = 10.0,
+    attempts: int = 8,
+    initial_delay_sec: float = 5.0,
+    max_delay_sec: float = 60.0,
 ) -> None:
     raw_url = f"https://raw.githubusercontent.com/{repo}/main/update.json"
     jsdelivr_url = f"https://cdn.jsdelivr.net/gh/{repo}@main/update.json"
-    verify_remote_url(raw_url, version=version, apk_size=apk_size)
-    verify_remote_url(
-        jsdelivr_url,
-        version=version,
-        apk_size=apk_size,
-        retries=jsdelivr_retries,
-        retry_delay_sec=jsdelivr_retry_delay_sec,
-    )
+    for url in (raw_url, jsdelivr_url):
+        verify_remote_url(
+            url,
+            version=version,
+            apk_size=apk_size,
+            attempts=attempts,
+            initial_delay_sec=initial_delay_sec,
+            max_delay_sec=max_delay_sec,
+        )
 
 
 def main():
@@ -230,6 +257,24 @@ def main():
     parser.add_argument("--purge-only", action="store_true", help="Only purge jsDelivr cache and exit")
     parser.add_argument("--verify-remote", action="store_true", help="Verify raw & jsDelivr remote manifests")
     parser.add_argument("--verify-only", action="store_true", help="Only verify remote manifests and exit")
+    parser.add_argument(
+        "--verify-attempts",
+        type=int,
+        default=8,
+        help="Attempts for remote manifest verification (default: 8, exponential backoff)",
+    )
+    parser.add_argument(
+        "--verify-initial-delay",
+        type=float,
+        default=5.0,
+        help="Initial retry delay in seconds for remote verification (default: 5)",
+    )
+    parser.add_argument(
+        "--verify-max-delay",
+        type=float,
+        default=60.0,
+        help="Max retry delay in seconds for remote verification (default: 60)",
+    )
 
     args = parser.parse_args()
 
@@ -250,7 +295,14 @@ def main():
         if apk_size is None or apk_size <= 0:
             print("ERROR: --apk-size or valid --apk-file must be provided (> 0).", file=sys.stderr)
             sys.exit(1)
-        verify_remote(version=v, apk_size=apk_size, repo=args.repo)
+        verify_remote(
+            version=v,
+            apk_size=apk_size,
+            repo=args.repo,
+            attempts=args.verify_attempts,
+            initial_delay_sec=args.verify_initial_delay,
+            max_delay_sec=args.verify_max_delay,
+        )
         return
 
     # Resolve APK size
@@ -349,7 +401,14 @@ def main():
         purge_jsdelivr(repo=args.repo)
 
     if args.verify_remote:
-        verify_remote(version=v, apk_size=apk_size, repo=args.repo)
+        verify_remote(
+            version=v,
+            apk_size=apk_size,
+            repo=args.repo,
+            attempts=args.verify_attempts,
+            initial_delay_sec=args.verify_initial_delay,
+            max_delay_sec=args.verify_max_delay,
+        )
 
 
 if __name__ == "__main__":
