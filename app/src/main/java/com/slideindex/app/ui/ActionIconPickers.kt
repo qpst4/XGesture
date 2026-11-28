@@ -1,5 +1,10 @@
 package com.slideindex.app.ui
 
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import androidx.compose.runtime.LaunchedEffect
+import com.slideindex.app.ui.miuix.MiuixDialogAction
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
 import com.slideindex.app.ui.miuix.MiuixFormDialog
 import android.content.Context
 import android.graphics.Bitmap
@@ -53,6 +58,7 @@ import com.slideindex.app.R
 import com.slideindex.app.ui.miuix.MiuixExpandableSearchFieldStrip
 import com.slideindex.app.ui.miuix.consumeExpandableSearchBack
 import com.slideindex.app.ui.miuix.MiuixExpandableSearchIconAction
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import com.slideindex.app.ui.settings.components.settingsCardScopeItem
@@ -275,27 +281,25 @@ internal fun ActionIconPickerHost(
     }
 
 
-    if (textDialogOpen) {
-        ActionTextIconDialog(
-            initial = iconKey,
-            onPick = { picked ->
-                textDialogOpen = false
-                onIconChange(picked)
-            },
-            onDismiss = { textDialogOpen = false },
-        )
-    }
+    ActionTextIconDialog(
+        show = textDialogOpen,
+        initial = iconKey,
+        onPick = { picked ->
+            textDialogOpen = false
+            onIconChange(picked)
+        },
+        onDismiss = { textDialogOpen = false },
+    )
 
-    if (appDialogOpen) {
-        ActionAppIconPickerDialog(
-            action = action,
-            onPick = { picked ->
-                appDialogOpen = false
-                onIconChange(picked)
-            },
-            onDismiss = { appDialogOpen = false },
-        )
-    }
+    ActionAppIconPickerDialog(
+        show = appDialogOpen,
+        action = action,
+        onPick = { picked ->
+            appDialogOpen = false
+            onIconChange(picked)
+        },
+        onDismiss = { appDialogOpen = false },
+    )
 }
 
 /**
@@ -444,13 +448,14 @@ private fun StyleChip(
 /** 「文字图标」：输入 1~2 个字，直接当图标显示。 */
 @Composable
 internal fun ActionTextIconDialog(
+    show: Boolean,
     initial: String?,
     onPick: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var text by remember { mutableStateOf(ActionIconKeyCodec.textOf(initial).orEmpty()) }
     MiuixFormDialog(
-        show = true,
+        show = show,
         onDismissRequest = onDismiss,
         title = stringResource(R.string.action_icon_text_title),
         confirmText = stringResource(R.string.confirm),
@@ -499,6 +504,7 @@ internal fun loadInstalledAppIcons(context: Context): List<InstalledAppIcon> {
 /** 「选择应用图标」：列出已装应用，取它的图标落盘。 */
 @Composable
 internal fun ActionAppIconPickerDialog(
+    show: Boolean,
     action: GestureAction,
     onPick: (String) -> Unit,
     onDismiss: () -> Unit,
@@ -506,12 +512,40 @@ internal fun ActionAppIconPickerDialog(
     storageKey: String? = null,
 ) {
     val context = LocalContext.current
-    val apps = remember { loadInstalledAppIcons(context) }
-    androidx.compose.material3.AlertDialog(
+    // 枚举全部可启动应用 + 逐个 loadIcon 是重活：只在真正显示时、放到 IO 线程做，
+    // 否则弹窗一被组合就卡（常驻组合后这个成本会落在打开弹窗的那一帧）。
+    var apps by remember { mutableStateOf<List<InstalledAppIcon>>(emptyList()) }
+    var appsLoaded by remember { mutableStateOf(false) }
+    LaunchedEffect(show) {
+        if (show && !appsLoaded) {
+            apps = withContext(Dispatchers.IO) { loadInstalledAppIcons(context) }
+            appsLoaded = true
+        }
+    }
+    MiuixAdaptiveDialog(
+        show = show,
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.action_icon_from_app)) },
-        text = {
-            LazyVerticalGrid(
+        title = stringResource(R.string.action_icon_from_app),
+        actions = listOf(
+            MiuixDialogAction(
+                text = stringResource(R.string.cancel),
+                onClick = onDismiss,
+            ),
+        ),
+    ) {
+        if (!appsLoaded) {
+            // 枚举应用 + 解码图标要几秒，先给 miuix 的转圈，避免弹窗一片空白。
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(360.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
+            return@MiuixAdaptiveDialog
+        }
+        LazyVerticalGrid(
                 columns = GridCells.Fixed(5),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -564,11 +598,7 @@ internal fun ActionAppIconPickerDialog(
                     }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
-        },
-    )
+    }
 }
 
 private fun android.graphics.drawable.Drawable.toBitmapSafe(): Bitmap? {

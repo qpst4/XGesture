@@ -30,6 +30,6 @@ fun MiuixGlassDialog(
         modifier = modifier,
         title = title,
         onDismissFinished = onDismissFinished,
-        content = { MiuixGlassSurfaceScope(content) },
+        content = { MiuixGlassDialogScope(backdrop) { content() } },
     )
 }

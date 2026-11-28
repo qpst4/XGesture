@@ -279,10 +279,14 @@ fun QuickLauncherPanelManagementSection(
         }
     }
 
-    val iconTargetPanel = iconTarget
+    // 保留最后一次目标：关闭时先播完退场动画，内容不会瞬间消失。
+    var lastIconTarget by remember { mutableStateOf(iconTarget) }
+    if (iconTarget != null) lastIconTarget = iconTarget
+    val iconTargetPanel = iconTarget ?: lastIconTarget
     if (iconTargetPanel != null) {
         val targetIndex = latestPanels.indexOfFirst { it.id == iconTargetPanel.id }
         PanelIconPickerDialog(
+            show = iconTarget != null,
             panel = iconTargetPanel,
             displayName = iconTargetPanel.name.ifBlank {
                 if (targetIndex >= 0) {

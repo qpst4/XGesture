@@ -40,6 +40,7 @@ import com.slideindex.app.ui.miuix.MiuixFormDialog
  */
 @Composable
 internal fun PanelIconPickerDialog(
+    show: Boolean,
     panel: QuickLauncherPanel,
     displayName: String,
     initialIconKey: String?,
@@ -48,7 +49,7 @@ internal fun PanelIconPickerDialog(
 ) {
     var iconKey by remember(panel.id, initialIconKey) { mutableStateOf(initialIconKey) }
     MiuixFormDialog(
-        show = true,
+        show = show,
         onDismissRequest = onDismissRequest,
         title = stringResource(R.string.quick_launcher_panel_custom_icon),
         confirmText = stringResource(R.string.confirm),

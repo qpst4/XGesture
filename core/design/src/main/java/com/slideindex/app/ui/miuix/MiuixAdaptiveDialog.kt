@@ -49,7 +49,7 @@ fun MiuixAdaptiveDialog(
             modifier = modifier,
             title = title,
             summary = summary,
-            content = { MiuixGlassSurfaceScope(body) },
+            content = { MiuixGlassDialogScope(backdrop) { body() } },
         )
         return
     }

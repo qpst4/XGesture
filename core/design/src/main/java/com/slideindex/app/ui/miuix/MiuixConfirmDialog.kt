@@ -101,7 +101,7 @@ fun MiuixConfirmDialog(
             backdrop = glassBackdrop,
             title = title,
             onDismissFinished = onDismissFinished,
-            content = { MiuixGlassSurfaceScope { body() } },
+            content = { MiuixGlassDialogScope(glassBackdrop) { body() } },
         )
         return
     }
@@ -212,7 +212,7 @@ fun MiuixFormDialog(
             backdrop = glassBackdrop,
             title = title,
             onDismissFinished = onDismissFinished,
-            content = { MiuixGlassSurfaceScope { body() } },
+            content = { MiuixGlassDialogScope(glassBackdrop) { body() } },
         )
         return
     }

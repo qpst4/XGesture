@@ -3,6 +3,8 @@ package com.slideindex.app.ui.miuix
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
+import top.yukonga.miuix.kmp.blur.Backdrop
+import top.yukonga.miuix.kmp.blur.LayerBackdrop
 
 /**
  * 当前是否处在**玻璃浮层**内部（`GlassBottomSheet` / `GlassDialog` 的内容区）。
@@ -34,6 +36,31 @@ val LocalMiuixInCard = staticCompositionLocalOf { false }
 @Composable
 fun MiuixGlassSurfaceScope(content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalMiuixGlassSurface provides true) {
+        content()
+    }
+}
+
+/**
+ * 玻璃浮层内容的统一作用域：标记"站在玻璃上"，并**重新下发页面背板**。
+ *
+ * 为什么必须重新下发：`GlassDialog` 的内容渲染在根 scaffold 的浮层里，那里位于
+ * `MiuixPageBackdropBox` 的 provider 之外 —— 若在弹窗内容里再开一个弹窗，它会读到
+ * `LocalMiuixPageBackdrop == null`，从而退化成 `WindowDialog`（完全不玻璃）。
+ * 重新 provide 之后，嵌套弹窗继承同一个背板，与 miuix 示例
+ * （`GlassPage.kt` 内外两层都显式 `backdrop = pageBackdrop`）等价。
+ */
+@Composable
+fun MiuixGlassDialogScope(
+    backdrop: Backdrop?,
+    content: @Composable () -> Unit,
+) {
+    // 只有 LayerBackdrop 能塞回 local（它就是页面背板的类型）；其它实现按 null 处理，
+    // 嵌套弹窗退化成窗口弹窗，不影响正确性。
+    val layerBackdrop = backdrop as? LayerBackdrop
+    CompositionLocalProvider(
+        LocalMiuixPageBackdrop provides layerBackdrop,
+        LocalMiuixGlassSurface provides true,
+    ) {
         content()
     }
 }

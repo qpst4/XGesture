@@ -551,32 +551,30 @@ private fun GlobalIconRow(
         }
     }
 
-    if (textDialogOpen) {
-        ActionTextIconDialog(
-            initial = key,
-            onPick = { picked ->
-                textDialogOpen = false
-                clearPackSource()
-                key = picked
-                onPick(picked)
-            },
-            onDismiss = { textDialogOpen = false },
-        )
-    }
+    ActionTextIconDialog(
+        show = textDialogOpen,
+        initial = key,
+        onPick = { picked ->
+            textDialogOpen = false
+            clearPackSource()
+            key = picked
+            onPick(picked)
+        },
+        onDismiss = { textDialogOpen = false },
+    )
 
-    if (appDialogOpen) {
-        ActionAppIconPickerDialog(
-            action = GestureAction.None,
-            storageKey = resetKey,
-            onPick = { picked ->
-                appDialogOpen = false
-                clearPackSource()
-                key = picked
-                onPick(picked)
-            },
-            onDismiss = { appDialogOpen = false },
-        )
-    }
+    ActionAppIconPickerDialog(
+        show = appDialogOpen,
+        action = GestureAction.None,
+        storageKey = resetKey,
+        onPick = { picked ->
+            appDialogOpen = false
+            clearPackSource()
+            key = picked
+            onPick(picked)
+        },
+        onDismiss = { appDialogOpen = false },
+    )
 }
 
 /**
