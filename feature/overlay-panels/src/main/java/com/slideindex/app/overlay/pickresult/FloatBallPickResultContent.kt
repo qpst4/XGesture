@@ -191,6 +191,15 @@ fun FloatBallPickResultContent(
         !isEditMode
     val centeredPanel = appSettings.floatBallPickPanelPlacement ==
         com.slideindex.app.settings.PickResultPanelPlacement.CENTER
+    // 自定义落位：面板**底边**距屏幕底部的间距（0 = 等同贴底）。
+    val customBottomInsetDp = if (
+        appSettings.floatBallPickPanelPlacement ==
+        com.slideindex.app.settings.PickResultPanelPlacement.CUSTOM
+    ) {
+        appSettings.floatBallPickPanelCustomBottomInsetDp.dp
+    } else {
+        0.dp
+    }
     // 面板高度上限 = **整块容器高度**（不再是 0.85 屏高）。
     //
     // 取词面板的落位是贴底，所以"再高也不会跑到屏幕外"——顶边最多贴到屏幕顶。定这个上限的
@@ -202,7 +211,9 @@ fun FloatBallPickResultContent(
         overlayContainerHeightDp() *
             overlayPickPanelMaxHeightFraction(appSettings.floatBallPickPanelPlacement)
     } else {
-        overlayContainerHeightDp()
+        // 贴底 = 整屏可用高度；自定义还要扣掉底部间距 —— 这正是"间距调大时面板自己变矮、
+        // 顶边始终不超出屏幕顶部"的实现。
+        (overlayContainerHeightDp() - customBottomInsetDp).coerceAtLeast(PANEL_MIN_TOTAL_HEIGHT)
     }
     val panelLayoutWidth = overlayPickPanelMaxWidth(appSettings.floatBallPickPanelPlacement)
         ?: overlayContainerWidthDp()
@@ -540,8 +551,13 @@ fun FloatBallPickResultContent(
                 modifier = Modifier
                     .overlayPickPanelWidth(appSettings.floatBallPickPanelPlacement)
                     .then(
-                        // 居中样式：把居中山区域抬到输入法之上，避免被键盘遮住。
-                        if (centeredPanel) Modifier.padding(bottom = overlayImeBottom) else Modifier
+                        when {
+                            // 居中样式：把居中山区域抬到输入法之上，避免被键盘遮住。
+                            centeredPanel -> Modifier.padding(bottom = overlayImeBottom)
+                            // 自定义落位：整块面板按设定值上浮（面板高度上限已在上面扣过同样的值）。
+                            customBottomInsetDp > 0.dp -> Modifier.padding(bottom = customBottomInsetDp)
+                            else -> Modifier
+                        }
                     )
             ) {
             PickResultPanelSlideHost(
@@ -549,7 +565,9 @@ fun FloatBallPickResultContent(
                 panelSlideDistance = panelSlideDistance,
                 panelEnterAnimationMs = appSettings.floatBallPickPanelEnterAnimationMs,
                 panelExitAnimationMs = appSettings.floatBallPickPanelExitAnimationMs,
-                centered = centeredPanel,
+                // 自定义落位（间距 > 0）时面板是"浮起来"的，用四角圆角的卡片外观，
+                // 而不是贴底那种"下边两角是直角"的形状。
+                centered = centeredPanel || customBottomInsetDp > 0.dp,
                 onPanelBoundsInRoot = { panelBoundsInRoot = it }
             ) { freezeCollapseAnimation ->
                 PickResultCollapsePanelColumn(

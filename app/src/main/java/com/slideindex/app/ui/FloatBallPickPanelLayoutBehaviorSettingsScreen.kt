@@ -47,6 +47,8 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
     onBack: () -> Unit,
     onPickPanelStyleChange: (com.slideindex.app.settings.PickResultPanelStyle) -> Unit,
     onPickPanelPlacementChange: (com.slideindex.app.settings.PickResultPanelPlacement) -> Unit,
+    /** 自定义落位：面板底边距屏幕底部的距离（dp）。 */
+    onPickPanelCustomBottomInsetChange: (Float) -> Unit,
     onPickSearchGridDefaultStateChange: (com.slideindex.app.settings.PickResultSearchGridDefaultState) -> Unit,
     onPickTextModeDefaultChange: (com.slideindex.app.settings.PickResultTextModeDefault) -> Unit,
     onPickWordTapGranularityChange: (com.slideindex.app.settings.PickResultWordTapGranularity) -> Unit,
@@ -180,6 +182,7 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                             items = listOf(
                                 com.slideindex.app.settings.PickResultPanelPlacement.BOTTOM_DOCKED,
                                 com.slideindex.app.settings.PickResultPanelPlacement.CENTER,
+                                com.slideindex.app.settings.PickResultPanelPlacement.CUSTOM,
                             ),
                             selected = localPanelPlacement,
                             labelRes = { placement ->
@@ -189,6 +192,9 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
 
                                     com.slideindex.app.settings.PickResultPanelPlacement.CENTER ->
                                         R.string.float_ball_pick_panel_placement_center
+
+                                    com.slideindex.app.settings.PickResultPanelPlacement.CUSTOM ->
+                                        R.string.float_ball_pick_panel_placement_custom
                                 }
                             },
                             onSelect = { placement ->
@@ -198,6 +204,28 @@ fun FloatBallPickPanelLayoutBehaviorSettingsScreen(
                         )
                     },
                 )
+                // 自定义落位：只在选中「自定义」时出现；数值 = 面板底边距屏幕底部的距离。
+                if (localPanelPlacement ==
+                    com.slideindex.app.settings.PickResultPanelPlacement.CUSTOM
+                ) {
+                    add(
+                        settingsCardScopeItem("panel-placement-custom-inset") {
+                            SettingsSliderRow(
+                                title = stringResource(R.string.float_ball_pick_panel_custom_bottom_inset),
+                                value = settings.floatBallPickPanelCustomBottomInsetDp,
+                                valueRange = 0f..AppSettings.FLOAT_BALL_PICK_PANEL_CUSTOM_INSET_MAX_DP,
+                                // 10dp 一档：够细，滑杆也不会抖。
+                                steps = 59,
+                                enabled = true,
+                                label = stringResource(
+                                    R.string.corner_gesture_zone_dp_value,
+                                    settings.floatBallPickPanelCustomBottomInsetDp.roundToInt(),
+                                ),
+                                onValueChange = onPickPanelCustomBottomInsetChange,
+                            )
+                        },
+                    )
+                }
                 // 底栏样式放卡片最底部：样式行 + 对应配置（经典位置 / 纯图标工具条）。
                 add(
                     settingsCardScopeItem("pick-bar-style") {

@@ -1133,6 +1133,8 @@
     <string name="float_ball_pick_panel_placement">Положение панели</string>
     <string name="float_ball_pick_panel_placement_bottom">Пристыкована внизу</string>
     <string name="float_ball_pick_panel_placement_center">Центр экрана</string>
+    <string name="float_ball_pick_panel_placement_custom">Настраиваемое</string>
+    <string name="float_ball_pick_panel_custom_bottom_inset">Отступ от нижнего края экрана</string>
     <string name="float_ball_pick_search_grid_state_title">Режим раскрытия строки поиска</string>
     <string name="float_ball_pick_search_grid_state_desc">Управляет начальным состоянием нижней области поисковых систем при открытии панели</string>
     <string name="float_ball_pick_search_grid_state_remember">Запомнить</string>

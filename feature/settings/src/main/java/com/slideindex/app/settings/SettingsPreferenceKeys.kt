@@ -681,8 +681,11 @@ internal object SettingsPreferenceKeys {
         floatPreferencesKey("float_ball_pick_bottom_transition_fraction_v2")
     val FLOAT_BALL_PICK_TEXT_FIRST_PANEL = booleanPreferencesKey("float_ball_pick_text_first_panel")
     val FLOAT_BALL_PICK_PANEL_STYLE = stringPreferencesKey("float_ball_pick_panel_style")
-    /** 取词面板落位方式：贴底 / 屏幕中间。 */
+    /** 取词面板落位方式：贴底 / 屏幕中间 / 自定义。 */
     val FLOAT_BALL_PICK_PANEL_PLACEMENT = stringPreferencesKey("float_ball_pick_panel_placement")
+    /** 自定义落位时，面板底边距屏幕底部的间距（dp）。 */
+    val FLOAT_BALL_PICK_PANEL_CUSTOM_BOTTOM_INSET_DP =
+        floatPreferencesKey("float_ball_pick_panel_custom_bottom_inset_dp")
     val FLOAT_BALL_PICK_SEARCH_GRID_DEFAULT_STATE = stringPreferencesKey("float_ball_pick_search_grid_default_state")
     val FLOAT_BALL_PICK_SEARCH_GRID_LAST_EXPANDED = booleanPreferencesKey("float_ball_pick_search_grid_last_expanded")
     val FLOAT_BALL_PICK_TEXT_MODE_DEFAULT = stringPreferencesKey("float_ball_pick_text_mode_default")

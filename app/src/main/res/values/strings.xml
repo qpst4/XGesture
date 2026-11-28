@@ -1178,6 +1178,8 @@
     <string name="float_ball_pick_panel_placement">Panel position</string>
     <string name="float_ball_pick_panel_placement_bottom">Bottom docked</string>
     <string name="float_ball_pick_panel_placement_center">Screen center</string>
+    <string name="float_ball_pick_panel_placement_custom">Custom</string>
+    <string name="float_ball_pick_panel_custom_bottom_inset">Distance from screen bottom</string>
     <string name="float_ball_pick_search_grid_state_title">Search bar expand mode</string>
     <string name="float_ball_pick_search_grid_state_desc">Controls the initial state of the bottom search engines area when the panel opens</string>
     <string name="float_ball_pick_search_grid_state_remember">Remember</string>

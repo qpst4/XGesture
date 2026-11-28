@@ -720,6 +720,9 @@ class SettingsRepository @Inject constructor(
     suspend fun setFloatBallPickPanelPlacement(placement: PickResultPanelPlacement) =
         overlay.setFloatBallPickPanelPlacement(placement)
 
+    suspend fun setFloatBallPickPanelCustomBottomInsetDp(value: Float) =
+        overlay.setFloatBallPickPanelCustomBottomInsetDp(value)
+
     suspend fun setFloatBallPickSearchGridDefaultState(state: PickResultSearchGridDefaultState) =
         overlay.setFloatBallPickSearchGridDefaultState(state)
 

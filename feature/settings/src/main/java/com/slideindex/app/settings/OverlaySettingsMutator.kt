@@ -1183,6 +1183,15 @@ class OverlaySettingsMutator @Inject constructor(
         it[SettingsPreferenceKeys.FLOAT_BALL_PICK_PANEL_PLACEMENT] = placement.storageKey
     }
 
+    /** 自定义落位：面板底边距屏幕底部的间距（dp）。 */
+    suspend fun setFloatBallPickPanelCustomBottomInsetDp(value: Float) = editor.edit {
+        it[SettingsPreferenceKeys.FLOAT_BALL_PICK_PANEL_CUSTOM_BOTTOM_INSET_DP] =
+            value.coerceIn(
+                AppSettings.FLOAT_BALL_PICK_PANEL_CUSTOM_INSET_MIN_DP,
+                AppSettings.FLOAT_BALL_PICK_PANEL_CUSTOM_INSET_MAX_DP,
+            )
+    }
+
     suspend fun setFloatBallPickSearchGridDefaultState(state: PickResultSearchGridDefaultState) = editor.edit {
         it[SettingsPreferenceKeys.FLOAT_BALL_PICK_SEARCH_GRID_DEFAULT_STATE] = state.storageKey
     }

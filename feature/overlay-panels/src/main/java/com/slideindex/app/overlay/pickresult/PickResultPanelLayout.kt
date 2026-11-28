@@ -110,6 +110,10 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 val PANEL_MIN_IMAGE_HEIGHT = 48.dp
+
+/** 面板最小总高度：自定义落位把底部间距调得很大时，仍留一块可用高度，不至于压成一条。 */
+val PANEL_MIN_TOTAL_HEIGHT = 160.dp
+
 val PANEL_VERTICAL_PADDING = 12.dp
 val PANEL_ACTION_BAR_BOTTOM_GAP = 20.dp
 val TEXT_IMAGE_DIVIDER_HEIGHT = 10.dp
