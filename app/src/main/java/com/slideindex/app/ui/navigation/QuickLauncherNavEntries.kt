@@ -18,6 +18,7 @@ import com.slideindex.app.settings.toMinimalAppSettings
 import com.slideindex.app.ui.GestureExecuteShellCommandScreen
 import com.slideindex.app.ui.GestureOpenLinkScreen
 import com.slideindex.app.ui.GestureSimulateKeyEventScreen
+import com.slideindex.app.ui.GlobalIconStore
 import com.slideindex.app.ui.QuickLauncherEditorScreen
 import com.slideindex.app.ui.displayLabelForExecuteShellCommand
 import com.slideindex.app.ui.picker.ActivityShortcutPickActivityScreen
@@ -33,7 +34,7 @@ import com.slideindex.app.ui.viewmodel.QuickLauncherEditorViewModel
  * 刚从列表页新建、还没被改过的面板（返回列表时若仍未改动就回收）。
  *
  * 新建是先落盘再进编辑器（编辑器 / 添加页都按 id 读面板），所以只能事后判断：
- * 名称、条目、行列都和创建时一模一样，就当作没建过。
+ * 名称、条目、行列都和创建时一模一样，且没设过自定义图标，就当作没建过。
  */
 private var provisionalNewPanel: QuickLauncherPanel? = null
 
@@ -41,12 +42,14 @@ private fun discardProvisionalPanelIfUntouched(
     currentPanels: List<QuickLauncherPanel>,
     panelId: String,
     writer: ExtensionSettingsViewModel,
+    /** 只设过自定义图标也算“动过”：图标在 GlobalIconStore，不在面板数据里。 */
+    hasCustomIcon: Boolean,
 ) {
     val snapshot = provisionalNewPanel ?: return
     if (snapshot.id != panelId) return
     provisionalNewPanel = null
     val current = currentPanels.firstOrNull { it.id == panelId }
-    if (current == snapshot) {
+    if (current == snapshot && !hasCustomIcon) {
         writer.setQuickLauncherPanels(currentPanels.filterNot { it.id == panelId })
     }
 }
@@ -61,7 +64,12 @@ fun NavEntryBuilder.quickLauncherNavEntries(ctx: MainNavContext) {
         LaunchedEffect(Unit) {
             val snapshot = provisionalNewPanel ?: return@LaunchedEffect
             if (ctx.backStack.currentAppNavKey() != AppNavKey.QuickLauncher) return@LaunchedEffect
-            discardProvisionalPanelIfUntouched(panels, snapshot.id, viewModel)
+            discardProvisionalPanelIfUntouched(
+                currentPanels = panels,
+                panelId = snapshot.id,
+                writer = viewModel,
+                hasCustomIcon = GlobalIconStore.panelIcon(ctx.activity, snapshot.id) != null,
+            )
         }
         com.slideindex.app.ui.quicklauncher.QuickLauncherListScreen(
             panels = panels,
@@ -108,6 +116,7 @@ fun NavEntryBuilder.quickLauncherNavEntries(ctx: MainNavContext) {
                 currentPanels = listViewModel.settings.value.quickLauncherPanels,
                 panelId = key.panelId,
                 writer = listViewModel,
+                hasCustomIcon = GlobalIconStore.panelIcon(ctx.activity, key.panelId) != null,
             )
         }
 
