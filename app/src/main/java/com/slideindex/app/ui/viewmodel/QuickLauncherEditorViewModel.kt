@@ -83,25 +83,39 @@ class QuickLauncherEditorViewModel @Inject constructor(
     private val _isGridInteractionActive = MutableStateFlow(false)
     private val _appsByPackage = MutableStateFlow<Map<String, AppInfo>>(emptyMap())
 
+    /**
+     * 刚新建、写盘可能还没回灌的面板。
+     *
+     * 新建后立刻进编辑页时先用它占位（不用等设置流），设置流追上后自动撤掉：
+     * 既不会卡加载态，也不会在用户删掉它之后又把它“复活”。
+     */
+    private val _seedPanel = MutableStateFlow<QuickLauncherPanel?>(null)
+
     val uiState: StateFlow<QuickLauncherEditorUiState> = combine(
         this.settings,
         _selection,
         _isGridInteractionActive,
         _appsByPackage,
-    ) { currentSettings, selection, gridActive, appsMap ->
+        _seedPanel,
+    ) { currentSettings, selection, gridActive, appsMap, seedPanel ->
         val rawPanels = currentSettings.quickLauncherPanels
         val effectivePanels = QuickLauncherPanelDefaults.effectivePanels(rawPanels)
+        val panels = if (seedPanel != null && effectivePanels.none { it.id == seedPanel.id }) {
+            effectivePanels + seedPanel
+        } else {
+            effectivePanels
+        }
         val targetIndex = selection.panelId
-            ?.let { targetId -> effectivePanels.indexOfFirst { it.id == targetId } }
+            ?.let { targetId -> panels.indexOfFirst { it.id == targetId } }
             ?: -1
         val safeIndex = if (targetIndex >= 0) {
             targetIndex
         } else {
-            selection.fallbackIndex.coerceIn(0, (effectivePanels.size - 1).coerceAtLeast(0))
+            selection.fallbackIndex.coerceIn(0, (panels.size - 1).coerceAtLeast(0))
         }
 
         QuickLauncherEditorUiState(
-            panels = effectivePanels,
+            panels = panels,
             selectedPanelIndex = safeIndex,
             displaySettings = currentSettings.quickLauncherDisplay,
             defaultColumns = currentSettings.quickLauncherColumnsPerPage,
@@ -124,6 +138,15 @@ class QuickLauncherEditorViewModel @Inject constructor(
 
     init {
         loadAppsAndIcons()
+        // 设置流里已经出现种子面板后就不再需要它，避免之后删除它又被初值复活。
+        viewModelScope.launch {
+            settings.collect { current ->
+                val seed = _seedPanel.value ?: return@collect
+                if (current.quickLauncherPanels.any { it.id == seed.id }) {
+                    _seedPanel.value = null
+                }
+            }
+        }
     }
 
     private fun loadAppsAndIcons() {
@@ -152,6 +175,12 @@ class QuickLauncherEditorViewModel @Inject constructor(
     fun setTargetPanel(panelId: String?) {
         if (panelId.isNullOrBlank() || _selection.value.panelId == panelId) return
         _selection.value = PanelSelection(panelId = panelId, fallbackIndex = 0)
+    }
+
+    /** 新建后立刻进编辑页：先把刚建的面板作为初值占位，不必等写盘回灌。 */
+    fun seedPanel(panel: QuickLauncherPanel) {
+        _seedPanel.value = panel
+        setTargetPanel(panel.id)
     }
 
     fun setGridInteractionActive(active: Boolean) {

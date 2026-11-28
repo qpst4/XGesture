@@ -115,18 +115,6 @@ class ExtensionSettingsViewModel @Inject constructor(
         )
     }
 
-    /**
-     * 同 [setQuickLauncherPanels]，但会挂起到写盘完成。
-     *
-     * 新建面板要等落盘再进编辑页：否则编辑页可能先拿到写盘前的旧快照，
-     * 一直等“目标面板出现”而停在加载态。
-     */
-    suspend fun applyQuickLauncherPanels(panels: List<QuickLauncherPanel>) {
-        settingsRepository.setQuickLauncherPanels(
-            QuickLauncherPanelDefaults.effectivePanels(panels),
-        )
-    }
-
     fun setQuickLauncherDisplaySettings(settings: com.slideindex.app.settings.QuickLauncherDisplaySettings) =
         launchSettingsWrite {
             settingsRepository.setQuickLauncherDisplaySettings(settings)

@@ -47,12 +47,15 @@ fun QuickLauncherEditorScreen(
     onBack: () -> Unit,
     onAdd: (panelId: String, folderIndex: Int) -> Unit,
     panelId: String? = null,
+    /** 刚新建的面板：写盘还没回灌时用它占位，保证进页面立刻能编辑。 */
+    initialPanel: QuickLauncherPanel? = null,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(panelId) {
         // 只记下目标 id：真正选中的下标由 ViewModel 在每次设置更新时重新解析，
         // 新建面板的写盘晚到时也能自动落到它上面（以前会静默停在第一个面板）。
         viewModel.setTargetPanel(panelId)
+        if (initialPanel != null) viewModel.seedPanel(initialPanel)
     }
     // 等太久就不再无声转圈：给一句提示，让用户返回重进（重进会重新读一次设置）。
     var showSlowHint by remember(panelId) { mutableStateOf(false) }
