@@ -868,9 +868,12 @@ object ScreenDrawOverlay {
         val tView = toolbar
         val tParams = toolbarParams
         if (tView != null && tParams != null && wm != null) {
-            val isVertical = orientationState.value == ScreenDrawOrientation.VERTICAL
-            tParams.width = if (isVertical) dp(86f) else dp(316f)
-            tParams.height = if (isVertical) dp(316f) else dp(86f)
+            // 尺寸**必须**从 toolbarSizePx() 取：它含「胶囊 + 40dp 阴影外扩」和 uiScale 两项。
+            // 这里曾手写 dp(316f)/dp(86f)，于是「缩小成球再展开」后窗口比内容小 40dp：
+            // 第二行被压成 0 高（只剩第一行），第一行也被夹窄，等于把 5878fa124 的阴影修复回退了。
+            val (tbWidth, tbHeight) = toolbarSizePx(orientationState.value)
+            tParams.width = tbWidth
+            tParams.height = tbHeight
             tView.visibility = View.VISIBLE
             tParams.flags = tParams.flags and
                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv() and
