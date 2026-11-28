@@ -29,6 +29,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -94,19 +95,40 @@ fun QuickWheelListScreen(
         )
     }
 
+    // 拖拽排序：拖动期间只改本地顺序（dragOrder），松手才写一次设置。
+    // 以前 onMove 里直接 onUpdateWheels(...)：写盘是异步的，列表要等回灌才刷新，
+    // 于是每拖过一格卡一下、回灌时整块跳一下。pendingOrder 负责在写盘期间顶住回灌。
+    var dragOrder by remember { mutableStateOf<List<QuickWheel>?>(null) }
+    var pendingOrder by remember { mutableStateOf<List<QuickWheel>?>(null) }
+    val displayWheels = dragOrder ?: pendingOrder ?: wheels
+
+    LaunchedEffect(wheels) {
+        val pending = pendingOrder ?: return@LaunchedEffect
+        if (wheels.map { it.id } == pending.map { it.id }) {
+            pendingOrder = null
+        }
+    }
+
+    fun commitDragOrder() {
+        val order = dragOrder ?: return
+        dragOrder = null
+        // 拖了但没跨过任何一格（顺序没变）就不写盘。
+        if (order.map { it.id } == wheels.map { it.id }) return
+        pendingOrder = order
+        onUpdateWheels(order)
+    }
+
     // 长按整行拖动排序：需要外部持有 listState 才能算出 from/to。
     val wheelListState = rememberLazyListState()
     val wheelReorderState = rememberReorderableLazyListState(lazyListState = wheelListState) { from, to ->
         val fromId = (from.key as? String)?.removePrefix("quick-wheel-")
         val toId = (to.key as? String)?.removePrefix("quick-wheel-")
+        val current = dragOrder ?: return@rememberReorderableLazyListState
         if (fromId != null && toId != null) {
-            val fromIndex = wheels.indexOfFirst { it.id == fromId }
-            val toIndex = wheels.indexOfFirst { it.id == toId }
+            val fromIndex = current.indexOfFirst { it.id == fromId }
+            val toIndex = current.indexOfFirst { it.id == toId }
             if (fromIndex >= 0 && toIndex >= 0 && fromIndex != toIndex) {
-                val mutable = wheels.toMutableList()
-                val moved = mutable.removeAt(fromIndex)
-                mutable.add(toIndex, moved)
-                onUpdateWheels(mutable)
+                dragOrder = current.toMutableList().apply { add(toIndex, removeAt(fromIndex)) }
             }
         }
     }
@@ -133,7 +155,7 @@ fun QuickWheelListScreen(
             }
         },
     ) {
-        if (wheels.isEmpty()) {
+        if (displayWheels.isEmpty()) {
             item(key = "quick-wheel-empty") {
                 Column(
                     modifier = Modifier
@@ -157,17 +179,23 @@ fun QuickWheelListScreen(
             return@MiuixSettingsScreenScaffold
         }
 
-        wheels.forEachIndexed { index, wheel ->
+        displayWheels.forEachIndexed { index, wheel ->
             val itemKey = "quick-wheel-${wheel.id}"
             item(key = itemKey) {
                 ReorderableItem(state = wheelReorderState, key = itemKey) { _ ->
                     val haptic = LocalHapticFeedback.current
                     CardSegment(
                         isFirst = index == 0,
-                        isLast = index == wheels.lastIndex,
+                        isLast = index == displayWheels.lastIndex,
                         modifier = Modifier.longPressDraggableHandle(
                             onDragStarted = {
+                                // 整个拖动期间只动这份副本，松手才落盘。
+                                dragOrder = displayWheels.toList()
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            },
+                            onDragStopped = {
+                                commitDragOrder()
+                                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                             },
                         ),
                     ) {
