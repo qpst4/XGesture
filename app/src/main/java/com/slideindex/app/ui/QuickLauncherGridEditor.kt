@@ -722,7 +722,10 @@ fun QuickLauncherGridEditor(
                 )
             }
 
-            if (activeFolderIndex >= 0) {
+            // 保留最后一次有效索引：关闭时先播完退场动画，内容不会瞬间消失。
+            var lastFolderIndex by remember { mutableStateOf(activeFolderIndex) }
+            if (activeFolderIndex >= 0) lastFolderIndex = activeFolderIndex
+            if (lastFolderIndex >= 0) {
                 MiuixFormDialog(
                     show = renameDialogOpen,
                     onDismissRequest = { renameDialogOpen = false },

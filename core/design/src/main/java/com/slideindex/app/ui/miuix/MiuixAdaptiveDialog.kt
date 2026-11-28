@@ -29,6 +29,8 @@ fun MiuixAdaptiveDialog(
     summary: String? = null,
     modifier: Modifier = Modifier,
     actions: List<MiuixDialogAction> = emptyList(),
+    /** 退出动画播完后回调；调用方在这之后再清数据。 */
+    onDismissFinished: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     val body: @Composable () -> Unit = {
@@ -56,6 +58,7 @@ fun MiuixAdaptiveDialog(
         title = title,
         summary = summary,
         onDismissRequest = onDismissRequest,
+        onDismissFinished = onDismissFinished,
     ) {
         body()
     }

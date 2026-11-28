@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
 import com.slideindex.app.R
 import com.slideindex.app.launcher.QuickLauncherPanel
 import com.slideindex.app.ui.SymbolsIcon
@@ -132,11 +133,15 @@ fun QuickLauncherListScreen(
         }
     }
 
-    renameTarget?.let { target ->
-        WindowDialog(
-            show = true,
-            title = stringResource(R.string.quick_launcher_panel_rename),
+    // 保留最后一次目标：关闭时先播完退场动画，内容不会先变空。
+    var lastRenameTarget by remember { mutableStateOf(renameTarget) }
+    if (renameTarget != null) lastRenameTarget = renameTarget
+    val renameShown = renameTarget ?: lastRenameTarget
+    renameShown?.let { target ->
+        MiuixAdaptiveDialog(
             onDismissRequest = { renameTarget = null },
+            show = renameTarget != null,
+            title = stringResource(R.string.quick_launcher_panel_rename),
         ) {
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 MiuixLabeledTextField(

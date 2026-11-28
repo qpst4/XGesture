@@ -194,9 +194,14 @@ fun SearchPanelFileSearchSettingsScreen(
     }
 
     val dialogTarget = folderDialogTarget
-    if (dialogTarget != null) {
+    // 保留最后一次目标：关闭时先让 miuix 播完退场动画，标题不会先变空。
+    var lastDialogTarget by remember { mutableStateOf(dialogTarget) }
+    if (dialogTarget != null) lastDialogTarget = dialogTarget
+    val shownTarget = dialogTarget ?: lastDialogTarget
+    if (shownTarget != null) {
         FolderSearchDialog(
-            title = when (dialogTarget) {
+            show = dialogTarget != null,
+            title = when (shownTarget) {
                 FolderFilterTarget.Whitelist ->
                     stringResource(R.string.search_panel_file_folder_add_title_whitelist)
                 FolderFilterTarget.Blacklist ->
@@ -213,7 +218,7 @@ fun SearchPanelFileSearchSettingsScreen(
                 val path = FolderPathPatternMatcher.folderDisplayPath(folder)
                 val pattern = FolderPathPatternMatcher.normalizePathFilterPattern(path)
                     ?: return@FolderSearchDialog
-                when (dialogTarget) {
+                when (shownTarget) {
                     FolderFilterTarget.Whitelist ->
                         onSetFolderWhitelist(settings.searchPanelFileFolderWhitelist + pattern)
                     FolderFilterTarget.Blacklist ->
@@ -296,6 +301,7 @@ private fun LazyListScope.folderFilterGroupedItems(
 
 @Composable
 private fun FolderSearchDialog(
+    show: Boolean,
     title: String,
     hasPermission: Boolean,
     onRequestPermission: () -> Unit,
@@ -325,13 +331,13 @@ private fun FolderSearchDialog(
     }
 
     MiuixAdaptiveDialog(
-        show = true,
+        show = show,
         title = title,
         onDismissRequest = onDismiss,
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             if (!hasPermission) {
-                top.yukonga.miuix.kmp.basic.TextButton(
+                MiuixDialogActionButton(
                     text = stringResource(R.string.search_panel_file_permission_missing),
                     onClick = onRequestPermission,
                     modifier = Modifier.fillMaxWidth(),

@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
 import com.slideindex.app.ui.miuix.MiuixDialogActionsRow
 import com.slideindex.app.ui.miuix.MiuixDialogAction
 import com.slideindex.app.R
@@ -168,33 +169,21 @@ fun MacroPickDialog(
 
             Spacer(Modifier.height(16.dp))
             MiuixDialogActionsRow(
-            actions = listOf(
-            MiuixDialogAction(
-            text = stringResource(R.string.cancel),
-            onClick = onDismissRequest,
-            ),
-            ),
+                actions = listOf(
+                    MiuixDialogAction(
+                        text = stringResource(R.string.cancel),
+                        onClick = onDismissRequest,
+                    ),
+                ),
             )
         }
     }
-    val backdrop = com.slideindex.app.ui.miuix.LocalMiuixPageBackdrop.current
-    if (backdrop != null) {
-        MiuixGlassDialog(
-            onDismissRequest = onDismissRequest,
-            show = show,
-            backdrop = backdrop,
-            title = dialogTitle,
-            content = body,
-        )
-    } else {
-        WindowDialog(
-            show = show,
-            title = dialogTitle,
-            onDismissRequest = onDismissRequest,
-        ) {
-            body()
-        }
-    }
+    MiuixAdaptiveDialog(
+        onDismissRequest = onDismissRequest,
+        show = show,
+        title = dialogTitle,
+        content = body,
+    )
 }
 
 /** 一行宏选择项的数据：目标 App 图标 / 名称 / 是否分身。 */

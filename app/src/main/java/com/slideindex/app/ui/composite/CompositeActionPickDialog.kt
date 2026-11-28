@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
 import com.slideindex.app.ui.miuix.MiuixGlassSurfaceScope
 import com.slideindex.app.ui.miuix.MiuixDialogActionsRow
 import com.slideindex.app.ui.miuix.MiuixDialogAction
@@ -104,24 +105,11 @@ fun CompositeActionPickDialog(
         }
     }
 
-    val backdrop = LocalMiuixPageBackdrop.current
-    if (backdrop != null) {
-        GlassDialog(
-            onDismissRequest = onDismissRequest,
-            show = true,
-            backdrop = backdrop,
-            title = title,
-            content = { MiuixGlassSurfaceScope(body) },
-        )
-    } else {
-        WindowDialog(
-            show = true,
-            title = title,
-            onDismissRequest = onDismissRequest,
-        ) {
-            body()
-        }
-    }
+    MiuixAdaptiveDialog(
+        onDismissRequest = onDismissRequest,
+        title = title,
+        content = body,
+    )
 }
 /**
  * 宿主一行接入：al requestComposite = rememberCompositePickRequester()，
@@ -199,22 +187,11 @@ fun OpenLinkActionDialog(
             }
         }
     }
-    val backdrop = LocalMiuixPageBackdrop.current
-    if (backdrop != null) {
-        GlassDialog(
-            onDismissRequest = onDismissRequest,
-            show = true,
-            backdrop = backdrop,
-            title = title,
-            content = { MiuixGlassSurfaceScope(body) },
-        )
-    } else {
-        WindowDialog(
-            show = true,
-            title = title,
-            onDismissRequest = onDismissRequest,
-        ) { body() }
-    }
+    MiuixAdaptiveDialog(
+        onDismissRequest = onDismissRequest,
+        title = title,
+        content = body,
+    )
 }
 
 /** 宿主一行接入：拿到“要配置打开链接”的回调，弹窗由本函数渲染。 */

@@ -590,12 +590,16 @@ fun MultiTouchGestureSettingsScreen(
     }
 
     val editing = editingEntry
-    if (editing != null) {
+    // 保留最后一次非空条目：关闭时先让 miuix 播完退场动画，内容不会先变空。
+    var lastEditing by remember { mutableStateOf(editing) }
+    if (editing != null) lastEditing = editing
+    val dialogEntry = editing ?: lastEditing
+    if (dialogEntry != null) {
         // 名称输入框的本地草稿：跟着条目 id 重置，输入即时回写。
-        var nameText by remember(editing.id) { mutableStateOf(editing.name) }
+        var nameText by remember(dialogEntry.id) { mutableStateOf(dialogEntry.name) }
         MiuixGlassDialog(
             onDismissRequest = { editingEntry = null },
-            show = true,
+            show = editing != null,
             backdrop = LocalMiuixPageBackdrop.current,
             title = stringResource(R.string.multitouch_edit_title),
         ) {            // WindowDialog 自带内容内边距，这里不再叠加；行卡片自带行内边距就够了。
@@ -606,14 +610,14 @@ fun MultiTouchGestureSettingsScreen(
                         .height(140.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable(enabled = editing.isPath) {
+                        .clickable(enabled = dialogEntry.isPath) {
                             editingEntry = null
-                            onOpenPathEditor(editing)
+                            onOpenPathEditor(dialogEntry)
                         },
                 ) {
-                    GesturePreview(entry = editing, modifier = Modifier.fillMaxWidth().height(140.dp))
+                    GesturePreview(entry = dialogEntry, modifier = Modifier.fillMaxWidth().height(140.dp))
                 }
-                if (editing.isPath) {
+                if (dialogEntry.isPath) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = stringResource(R.string.multitouch_edit_rerecord_hint),
@@ -627,7 +631,7 @@ fun MultiTouchGestureSettingsScreen(
                     value = nameText,
                     onValueChange = { value ->
                         nameText = value
-                        onEntryNameChange(editing.id, value)
+                        onEntryNameChange(dialogEntry.id, value)
                     },
                     label = stringResource(R.string.multitouch_entry_name_label),
                     singleLine = true,
@@ -644,17 +648,17 @@ fun MultiTouchGestureSettingsScreen(
                     MiuixArrowRow(
                         title = stringResource(
                             R.string.multitouch_entry_label,
-                            editing.fingerCount,
-                            editing.kind.displayName(),
+                            dialogEntry.fingerCount,
+                            dialogEntry.kind.displayName(),
                         ),
-                        summary = gestureActionLabel(editing.action),
+                        summary = gestureActionLabel(dialogEntry.action),
                         onClick = {
                             editingEntry = null
                             onOpenActionPick(
-                                editing.kind,
-                                editing.fingerCount,
-                                encodePathStrokes(editing.pathStrokes),
-                                editing.id,
+                                dialogEntry.kind,
+                                dialogEntry.fingerCount,
+                                encodePathStrokes(dialogEntry.pathStrokes),
+                                dialogEntry.id,
                             )
                         },
                     )
@@ -688,10 +692,10 @@ fun MultiTouchGestureSettingsScreen(
                             )
                         }
                         MiuixSwitch(
-                            checked = editing.showHint,
+                            checked = dialogEntry.showHint,
                             onCheckedChange = { value ->
-                                editingEntry = editing.copy(showHint = value)
-                                onEntryShowHintChange(editing.id, value)
+                                editingEntry = dialogEntry.copy(showHint = value)
+                                onEntryShowHintChange(dialogEntry.id, value)
                             },
                         )
                     }
@@ -705,12 +709,12 @@ fun MultiTouchGestureSettingsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 SegmentedControl(
                     items = MultiTouchTriggerArea.entries.map { it.key },
-                    selected = editing.triggerArea.key,
+                    selected = dialogEntry.triggerArea.key,
                     labelRes = ::triggerAreaLabelRes,
                     onSelect = { key ->
                         val area = MultiTouchTriggerArea.fromKey(key)
-                        editingEntry = editing.copy(triggerArea = area)
-                        onEntryAreaChange(editing.id, key)
+                        editingEntry = dialogEntry.copy(triggerArea = area)
+                        onEntryAreaChange(dialogEntry.id, key)
                     },
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -720,7 +724,7 @@ fun MultiTouchGestureSettingsScreen(
                             text = stringResource(R.string.multitouch_delete),
                             onClick = {
                                 editingEntry = null
-                                onRemoveEntry(editing.id)
+                                onRemoveEntry(dialogEntry.id)
                             },
                         ),
                         MiuixDialogAction(

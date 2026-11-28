@@ -48,6 +48,8 @@ fun MiuixConfirmDialog(
     secondaryConfirmText: String? = null,
     onSecondaryConfirm: (() -> Unit)? = null,
     secondaryDismissOnConfirm: Boolean = true,
+    /** 退出动画播完后回调；调用方在这之后再清数据，退场期间内容不会先变空。 */
+    onDismissFinished: (() -> Unit)? = null,
 ) {
     // 玻璃路径的判定要前置：`body` 里的动作行需要知道该用玻璃按钮还是普通 TextButton。
     val glassBackdrop = LocalMiuixPageBackdrop.current
@@ -90,21 +92,24 @@ fun MiuixConfirmDialog(
     }
 
 
-    if (!show) return
+    // 不再用 `if (!show) return`：那会把 Dialog 从组合里摘掉，退场动画直接被吃掉。
+    // 常驻组合、只把 show 传下去，由 miuix 自己播完进场/退场（Mishka 与 miuix 文档的写法）。
     if (glassBackdrop != null) {
         GlassDialog(
             onDismissRequest = onDismissRequest,
             show = show,
             backdrop = glassBackdrop,
             title = title,
+            onDismissFinished = onDismissFinished,
             content = { MiuixGlassSurfaceScope { body() } },
         )
         return
     }
     WindowDialog(
-        show = true,
+        show = show,
         title = title,
         onDismissRequest = onDismissRequest,
+        onDismissFinished = onDismissFinished,
     ) {
         body()
     }
@@ -124,6 +129,8 @@ fun MiuixFormDialog(
     onSecondaryConfirm: (() -> Unit)? = null,
     secondaryConfirmEnabled: Boolean = true,
     secondaryDismissOnConfirm: Boolean = false,
+    /** 退出动画播完后回调；调用方在这之后再清数据，退场期间内容不会先变空。 */
+    onDismissFinished: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     val glassBackdrop = LocalMiuixPageBackdrop.current
@@ -196,21 +203,24 @@ fun MiuixFormDialog(
     }
 
 
-    if (!show) return
+    // 不再用 `if (!show) return`：那会把 Dialog 从组合里摘掉，退场动画直接被吃掉。
+    // 常驻组合、只把 show 传下去，由 miuix 自己播完进场/退场（Mishka 与 miuix 文档的写法）。
     if (glassBackdrop != null) {
         GlassDialog(
             onDismissRequest = onDismissRequest,
             show = show,
             backdrop = glassBackdrop,
             title = title,
+            onDismissFinished = onDismissFinished,
             content = { MiuixGlassSurfaceScope { body() } },
         )
         return
     }
     WindowDialog(
-        show = true,
+        show = show,
         title = title,
         onDismissRequest = onDismissRequest,
+        onDismissFinished = onDismissFinished,
     ) {
         body()
     }
@@ -224,6 +234,8 @@ fun MiuixScrollableConfirmDialog(
     confirmText: String = stringResource(R.string.confirm),
     onConfirm: () -> Unit,
     dismissText: String = stringResource(R.string.cancel),
+    /** 退出动画播完后回调；调用方在这之后再清数据，退场期间内容不会先变空。 */
+    onDismissFinished: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     MiuixConfirmDialog(
@@ -233,6 +245,7 @@ fun MiuixScrollableConfirmDialog(
         confirmText = confirmText,
         onConfirm = onConfirm,
         dismissText = dismissText,
+        onDismissFinished = onDismissFinished,
         text = {
             Column(
                 modifier = Modifier

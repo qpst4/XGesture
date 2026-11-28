@@ -20,6 +20,7 @@ fun MiuixGlassDialog(
     backdrop: Backdrop?,
     modifier: Modifier = Modifier,
     title: String? = null,
+    onDismissFinished: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     GlassDialog(
@@ -28,6 +29,7 @@ fun MiuixGlassDialog(
         backdrop = backdrop,
         modifier = modifier,
         title = title,
+        onDismissFinished = onDismissFinished,
         content = { MiuixGlassSurfaceScope(content) },
     )
 }

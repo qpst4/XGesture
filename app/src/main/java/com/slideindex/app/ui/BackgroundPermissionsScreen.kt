@@ -541,21 +541,20 @@ fun BackgroundPermissionsScreen(
         settingsLazyHint(key = "bgperm-manifest-hint", text = manifestHint)
     }
 
-    if (showAdbDialog) {
-        MiuixConfirmDialog(
-            show = showAdbDialog,
-            onDismissRequest = { showAdbDialog = false },
-            title = stringResource(R.string.secure_settings_adb_dialog_title),
-            message = stringResource(R.string.secure_settings_adb_dialog_message, adbCommand),
-            confirmText = stringResource(R.string.secure_settings_adb_copy),
-            dismissOnConfirm = false,
-            onConfirm = {
-                copyToClipboard(context, adbCommand)
-                Toast.makeText(context, copiedMessage, Toast.LENGTH_SHORT).show()
-            },
-            dismissText = stringResource(R.string.confirm),
-        )
-    }
+    // 不再用 if 包住：常驻组合、只把 show 传下去，关闭时才能播完退场动画。
+    MiuixConfirmDialog(
+        show = showAdbDialog,
+        onDismissRequest = { showAdbDialog = false },
+        title = stringResource(R.string.secure_settings_adb_dialog_title),
+        message = stringResource(R.string.secure_settings_adb_dialog_message, adbCommand),
+        confirmText = stringResource(R.string.secure_settings_adb_copy),
+        dismissOnConfirm = false,
+        onConfirm = {
+            copyToClipboard(context, adbCommand)
+            Toast.makeText(context, copiedMessage, Toast.LENGTH_SHORT).show()
+        },
+        dismissText = stringResource(R.string.confirm),
+    )
 }
 
 /** 一条权限：标题 + 已开启/未开启胶囊 + 用途说明，整行点击去授权。 */

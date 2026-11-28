@@ -46,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.width
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
 import com.slideindex.app.ui.miuix.MiuixGlassSurfaceScope
 import com.slideindex.app.ui.miuix.MiuixDialogActionsRow
 import com.slideindex.app.ui.miuix.MiuixDialogAction
@@ -544,24 +545,11 @@ fun GestureActionPickerScreen(
                     )
                 }
             }
-            val compositeBackdrop = LocalMiuixPageBackdrop.current
-            if (compositeBackdrop != null) {
-                GlassDialog(
-                    onDismissRequest = { compositePickVisible = false },
-                    show = true,
-                    backdrop = compositeBackdrop,
-                    title = dialogTitle,
-                    content = { MiuixGlassSurfaceScope(body) },
-                )
-            } else {
-                WindowDialog(
-                    show = true,
-                    title = dialogTitle,
-                    onDismissRequest = { compositePickVisible = false },
-                ) {
-                    body()
-                }
-            }
+            MiuixAdaptiveDialog(
+                onDismissRequest = { compositePickVisible = false },
+                title = dialogTitle,
+                content = body,
+            )
         }
 
     if (quickWheelConfigVisible) {
@@ -727,22 +715,9 @@ private fun OpenLinkMiuixDialog(
         }
     }
 
-    val backdrop = LocalMiuixPageBackdrop.current
-    if (backdrop != null) {
-        GlassDialog(
-            onDismissRequest = onDismissRequest,
-            show = true,
-            backdrop = backdrop,
-            title = dialogTitle,
-            content = { MiuixGlassSurfaceScope(body) },
-        )
-    } else {
-        WindowDialog(
-            show = true,
-            title = dialogTitle,
-            onDismissRequest = onDismissRequest,
-        ) {
-            body()
-        }
-    }
+    MiuixAdaptiveDialog(
+        onDismissRequest = onDismissRequest,
+        title = dialogTitle,
+        content = body,
+    )
 }

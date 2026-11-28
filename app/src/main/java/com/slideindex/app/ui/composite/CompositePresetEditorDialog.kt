@@ -33,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.slideindex.app.ui.miuix.MiuixAdaptiveDialog
 import com.slideindex.app.ui.miuix.MiuixGlassSurfaceScope
 import com.slideindex.app.ui.miuix.MiuixDialogActionsRow
 import com.slideindex.app.ui.miuix.MiuixDialogAction
@@ -267,22 +268,9 @@ internal fun CompositePresetEditorDialog(
             }
         }
     }
-    val backdrop = LocalMiuixPageBackdrop.current
-    if (backdrop != null) {
-        GlassDialog(
-            onDismissRequest = onDismiss,
-            show = true,
-            backdrop = backdrop,
-            title = dialogTitle,
-            content = { MiuixGlassSurfaceScope(body) },
-        )
-    } else {
-        WindowDialog(
-            show = true,
-            title = dialogTitle,
-            onDismissRequest = onDismiss,
-        ) {
-            body()
-        }
-    }
+    MiuixAdaptiveDialog(
+        onDismissRequest = onDismiss,
+        title = dialogTitle,
+        content = body,
+    )
 }
