@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 
@@ -104,9 +105,15 @@ class SettingsPreferencesEditor @Inject constructor(
      * 必须保留"订阅即最新"的语义——`.settings.first()` 在写完某个键之后立刻读，必须拿到刚写入的
      * 值；全仓有 30 多个 trampoline / 浮层入口是这么用的。共享快照 [snapshot] 只服务切片与仓库缓存，
      * 不替换这条路径（否则 `.first()` 会先拿到 replay 的旧快照，出现"写完读不到"的竞态）。
+     *
+     * 解析固定在 IO 上做：这是纯解析（只读 Preferences + context，不碰 UI），而订阅方几乎都在
+     * `viewModelScope`（Main）。以前没有 `flowOn` 时，map 跑在收集者线程上 → 每次设置写入后
+     * 都要在**主线程**把整份设置重解析一遍，拖拽落位、滑条松手这类"写一次"的动作会卡一帧。
+     * `flowOn` 只改执行线程，不改"订阅即最新"（冷流每次订阅仍重新读）。
      */
     val settings: Flow<AppSettings> = context.dataStore.data
         .map { prefs -> SettingsSnapshotReader.read(prefs, context) }
+        .flowOn(Dispatchers.IO)
 
     /** 进程内共享的快照（切片与仓库缓存用）：同一份 Preferences 只解析一次。 */
     internal val snapshotFlow: Flow<AppSettings> = snapshot
