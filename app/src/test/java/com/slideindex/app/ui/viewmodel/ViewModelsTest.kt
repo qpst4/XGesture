@@ -30,6 +30,7 @@ import com.slideindex.app.message.NotificationData
 import com.slideindex.app.settings.AppSettings
 import com.slideindex.app.settings.clearTestSettings
 import com.slideindex.app.settings.testSettingsRepository
+import com.slideindex.app.launcher.QuickLauncherPanel
 import com.slideindex.app.ui.feedback.UserMessage
 import com.slideindex.app.ui.feedback.UserMessageBus
 import kotlinx.coroutines.CoroutineScope
@@ -785,5 +786,53 @@ private class ThrowingPackageManagerContext(
 ) : android.content.ContextWrapper(base) {
     override fun getPackageManager(): android.content.pm.PackageManager {
         throw IOException("package manager failed")
+    }
+}
+
+/**
+ * 快速启动器编辑页「按 id 进入」的面板选中逻辑。
+ *
+ * 回归点：列表页新建面板是异步写盘的，进入编辑页时设置里还读不到它。老实现把 panelId 一次性
+ * 换算成下标、换算失败就静默落到下标 0，整个页面停在第一个面板上，用户的增删改都会写错面板。
+ */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [31])
+class QuickLauncherEditorPanelSelectionTest : ViewModelCoroutineTest() {
+    @Test
+    fun targetPanel_setBeforePanelExists_resolvesWhenPanelsArrive() = runViewModelTest {
+        val context = RuntimeEnvironment.getApplication()
+        clearTestSettings(context)
+        val repository = testSettingsRepository(context)
+        val viewModel = QuickLauncherEditorViewModel(
+            settingsRepository = repository,
+            userMessageBus = UserMessageBus(),
+            appRepository = testAppRepository(context),
+            context = context,
+        )
+        val firstPanel = QuickLauncherPanel(id = "panel-1", name = "Panel 1")
+        val secondPanel = QuickLauncherPanel(id = "panel-2", name = "Panel 2")
+
+        // 刚新建完就进编辑页：设置里还没有第二个面板。
+        viewModel.setTargetPanel(secondPanel.id)
+        val awaiting = withTimeout(5_000) {
+            viewModel.uiState.first { it.isAwaitingPanel || it.currentPanel.id == secondPanel.id }
+        }
+        assertTrue("目标面板未出现时应处于等待态，而不是先渲染第一个面板", awaiting.isAwaitingPanel)
+
+        // 写盘完成、面板列表送达：必须自动落到目标面板（老实现会一直停在面板 1）。
+        repository.setQuickLauncherPanels(listOf(firstPanel, secondPanel))
+        val resolved = withTimeout(5_000) {
+            viewModel.uiState.first { state ->
+                state.panels.any { it.id == secondPanel.id } && !state.isAwaitingPanel
+            }
+        }
+        assertEquals(secondPanel.id, resolved.currentPanel.id)
+
+        // 页内显式换面板（复制/删除后）仍按下标生效，不会被目标 id 拽回去。
+        viewModel.selectPanel(0)
+        val afterExplicitSelect = withTimeout(5_000) {
+            viewModel.uiState.first { it.currentPanel.id == firstPanel.id }
+        }
+        assertEquals(firstPanel.id, afterExplicitSelect.currentPanel.id)
     }
 }

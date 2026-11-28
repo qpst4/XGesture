@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
@@ -29,6 +31,7 @@ import com.slideindex.app.ui.settings.components.SettingsLazyScreenScaffold
 import com.slideindex.app.ui.settings.components.settingsLazySmallTitle
 import com.slideindex.app.ui.viewmodel.QuickLauncherEditorUiState
 import com.slideindex.app.ui.viewmodel.QuickLauncherEditorViewModel
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -39,19 +42,47 @@ fun QuickLauncherEditorScreen(
     panelId: String? = null,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    androidx.compose.runtime.LaunchedEffect(panelId) {
-        if (panelId != null) viewModel.selectPanelById(panelId)
+    LaunchedEffect(panelId) {
+        // 只记下目标 id：真正选中的下标由 ViewModel 在每次设置更新时重新解析，
+        // 新建面板的写盘晚到时也能自动落到它上面（以前会静默停在第一个面板）。
+        viewModel.setTargetPanel(panelId)
     }
-    QuickLauncherEditorContent(
-        uiState = uiState,
+    if (uiState.isLoading || uiState.isAwaitingPanel) {
+        // 目标面板还没出现在设置里：先不渲染任何面板，避免用户把条目加进第一个面板。
+        QuickLauncherEditorLoading(onBack = onBack)
+    } else {
+        QuickLauncherEditorContent(
+            uiState = uiState,
+            onBack = onBack,
+            onSelectPanel = viewModel::selectPanel,
+            onSavePanels = viewModel::setPanels,
+            onDisplayChange = viewModel::setDisplaySettings,
+            onItemsChange = viewModel::updateCurrentPanelItems,
+            onInteractionActiveChange = viewModel::setGridInteractionActive,
+            onAdd = { folderIndex -> onAdd(uiState.currentPanel.id, folderIndex) },
+        )
+    }
+}
+
+/** 编辑页等待目标面板出现时的占位页（只保留返回，不渲染任何面板）。 */
+@Composable
+private fun QuickLauncherEditorLoading(onBack: () -> Unit) {
+    SettingsLazyScreenScaffold(
+        title = stringResource(R.string.quick_launcher_editor_title),
         onBack = onBack,
-        onSelectPanel = viewModel::selectPanel,
-        onSavePanels = viewModel::setPanels,
-        onDisplayChange = viewModel::setDisplaySettings,
-        onItemsChange = viewModel::updateCurrentPanelItems,
-        onInteractionActiveChange = viewModel::setGridInteractionActive,
-        onAdd = { folderIndex -> onAdd(uiState.currentPanel.id, folderIndex) },
-    )
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        item(key = "quick-launcher-editor-loading") {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 48.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(28.dp))
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
