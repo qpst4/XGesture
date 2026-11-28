@@ -8,6 +8,34 @@ identical to the Chinese file so that the release pipeline can line up both lang
 
 Where the two files differ, `CHANGELOG.md` is authoritative.
 
+## [1.86.0] - 2026-11-28
+
+### Added
+- Trigger settings can preview the trigger layout and show each trigger's position and index
+- The quick wheel list supports a sort mode: enter it from the top-bar sort button, drag to reorder, and long-press for an edit / duplicate / delete menu
+- The quick launcher list supports sorting and a long-press menu, and rows show custom panel icons
+
+### Changed
+- The create buttons in the quick wheel and quick launcher lists are now glass floating buttons, and the list leaves room for them
+- Deleting a quick wheel or a quick launcher panel now asks for confirmation first
+- The backdrop scrim default drops from 35% to 15%, and the density label is now "Panel opacity"
+- Settings parsing moves off the main thread, so changing a setting no longer stutters
+- Dialogs finish their exit animation, so content no longer disappears first
+- Missing strings are added for English, Arabic, Spanish, Japanese, and Russian
+
+### Fixed
+- Fixed the quick launcher editor selecting the first panel after creating one, which added items to the wrong panel
+- Fixed new quick launcher panels auto-filling default apps; new panels stay empty
+- Fixed an empty panel remaining after creating one and going straight back
+- Fixed the quick launcher editor waiting and spinning after a panel is created
+- Fixed a new panel being removed as unmodified when only its custom icon was set
+- Fixed quick wheel drag reordering jumping on release and stuttering before release
+- Fixed the edge text-pick hint not following the selection's text or screenshot
+- Fixed drag text picking in WeChat articles failing to select web text and falling back to screenshots
+- Fixed the screen drawing toolbar showing only its first row after collapsing and expanding
+- Fixed nested glass dialogs animating and rendering wrongly, plus lag in the icon picker
+- Fixed the quick launcher list not showing custom panel icons on rows
+
 ## [1.85.0] - 2026-11-27
 
 ### Added
